@@ -41,7 +41,6 @@
   },
   "files": [
     "bin/rspeedy.js",
-    "client",
     "dist",
     "client.d.ts",
     "CHANGELOG.md",
@@ -56,9 +55,6 @@
   "dependencies": {
     "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:^",
     "@lynx-js/rsbuild-plugin": "workspace:*",
-    "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
-    "@lynx-js/webpack-dev-transport": "workspace:^",
-    "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-css-minimizer": "2.0.1",
     "@rsdoctor/rspack-plugin": "~1.6.1"
@@ -74,7 +70,6 @@
     "eventemitter3": "^5.0.4",
     "exit-hook": "^5.1.0",
     "expect-type": "^1.2.1",
-    "ipaddr.js": "^2.4.0",
     "javascript-stringify": "^2.1.0",
     "picocolors": "^1.1.1",
     "rsbuild-plugin-arethetypeswrong": "0.3.1",

@@ -1,6 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { AddressInfo } from 'node:net'
+import path from 'node:path'
+
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
@@ -477,6 +480,90 @@ describe('pluginSourcemap', () => {
           filename: '[file].map[query]',
           columns: false,
           module: true,
+          noSources: false,
+        }),
+      )
+    })
+
+    test('with server.port', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        server: {
+          port: 4000,
+        },
+      })
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalled()
+      // cheap-module-source-map with publicPath applied
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          publicPath: expect.stringContaining(':4000/') as string,
+          filename: '[file].map[query]',
+          columns: false, // cheap
+          module: true, // module
+          noSources: false,
+          debugIds: false,
+        }),
+      )
+    })
+
+    test('with dev.assetPrefix contains "<port>" and port being occupied', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const net = await import('node:net')
+
+      // We get a port that is occupied by the server we just created
+      const port = await (function getPort() {
+        return new Promise<number>((resolve, reject) => {
+          const server = net.createServer()
+          server.unref()
+          server.on('error', reject)
+          server.listen(0, () => {
+            resolve((server.address() as AddressInfo).port)
+          })
+        })
+      })()
+
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        source: {
+          entry: {
+            main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+          },
+        },
+        dev: {
+          assetPrefix: `http://example.com:<port>/`,
+        },
+        server: {
+          port,
+        },
+      })
+
+      await using server = await rsbuild.usingDevServer()
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.output?.publicPath).toBe(
+        `http://example.com:${server.port}/`,
+      )
+
+      await server.waitDevCompileDone()
+
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalled()
+      // cheap-module-source-map with publicPath applied
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          publicPath: config.output?.publicPath,
+          filename: '[file].map[query]',
+          columns: false, // cheap
+          module: true, // module
           noSources: false,
         }),
       )
