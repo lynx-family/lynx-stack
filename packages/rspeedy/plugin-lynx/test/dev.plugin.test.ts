@@ -53,6 +53,8 @@ describe('pluginDev', () => {
     expect(isIP(hostname)).not.toBe(0)
     expect(isIPv4(hostname)).toBe(true)
     expect(pathname).toBe('/')
+
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
   })
 
   test('defaults fallback to ipv6 when no ipv4 is found', async () => {
@@ -76,7 +78,7 @@ describe('pluginDev', () => {
 
     const config = await rsbuild.unwrapConfig()
 
-    expect(rsbuild.getRsbuildConfig().server!.host).toBe('fd00::1')
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('::')
     expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
   })
@@ -204,7 +206,7 @@ describe('pluginDev', () => {
     )
     expect(config.resolve?.alias).toHaveProperty(
       '@rspack/core/hot/dev-server',
-      expect.stringContaining('hot/dev-server.js'.replaceAll('/', path.sep)),
+      expect.stringContaining('hotDevServer.js'),
     )
     expect(config.resolve?.alias).toHaveProperty(
       '@lynx-js/webpack-dev-transport/client',
@@ -233,6 +235,9 @@ describe('pluginDev', () => {
         'default',
       ],
     })
+    expect(ProvidePlugin).not.toBeCalledWith(
+      expect.objectContaining({ WebSocket: expect.anything() as unknown }),
+    )
   })
 
   test('not inject entry and provide variables in production', async () => {
@@ -696,7 +701,7 @@ describe('pluginDev', () => {
   })
 
   test('server.base without /', async () => {
-    try {
+    await expect(async () => {
       const rsbuild = await createDevStubRsbuild({
         server: {
           base: 'dist',
@@ -704,11 +709,9 @@ describe('pluginDev', () => {
       })
 
       await rsbuild.unwrapConfig()
-    } catch (error) {
-      expect(error).toMatchInlineSnapshot(
-        `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
-      )
-    }
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
+    )
   })
 
   test('dev.assetPrefix with server.base', async () => {
