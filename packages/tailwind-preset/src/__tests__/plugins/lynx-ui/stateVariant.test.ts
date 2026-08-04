@@ -24,13 +24,15 @@ export function extractVariants(
 }
 
 describe('uiVariants plugin', () => {
-  it('registers variants with default prefix ui', () => {
+  it('registers only ui variants by default', () => {
     const plugin = uiVariants({});
     const { api } = runPlugin(plugin);
     const variants = extractVariants(vi.mocked(api.matchVariant));
 
-    expect(Object.keys(variants)).toEqual(
-      expect.arrayContaining(['ui']),
+    const keys = Object.keys(variants);
+    expect(keys).toHaveLength(4);
+    expect(keys).toEqual(
+      expect.arrayContaining(['ui', 'group-ui', 'peer-ui', 'parent-ui']),
     );
 
     const ui = variants['ui'];
@@ -38,6 +40,10 @@ describe('uiVariants plugin', () => {
     expect(ui?.('active', {})).toBe('&.ui-active');
     expect(ui?.('disabled', {})).toBe('&.ui-disabled');
     expect(ui?.('readonly', {})).toBe('&.ui-readonly');
+    expect(ui?.('focused', {})).toBe('&.ui-focused');
+    expect(ui?.('complete', {})).toBe('&.ui-complete');
+    expect(ui?.('filled', {})).toBe('&.ui-filled');
+    expect(ui?.('dragging', {})).toBe('&.ui-dragging');
   });
 
   it('registers group, peer, and parent variants', () => {
@@ -113,10 +119,10 @@ describe('uiVariants plugin', () => {
     expect(parent?.('active')).toBe('');
   });
 
-  it('allows function-based prefixes config with default inheritance', () => {
+  it('allows function-based prefixes config with built-in inheritance', () => {
     const plugin = uiVariants({
-      prefixes: (defaults) => ({
-        custom: [...defaults.ui, 'custom-state'],
+      prefixes: (builtins) => ({
+        custom: [...builtins.ui, 'custom-state'],
         'custom-side': ['left', 'right'],
       }),
     });
