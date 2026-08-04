@@ -33,6 +33,7 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
   // requires callers to select the bundled core through options or this env.
   std::env::set_var("LYNX_CORE_JS_PATH", fixture_lynx_core());
   let result = judge_page(JudgePageRequest {
+    include_geqi: false,
     reference: None,
     reference_image: None,
     screenshot_settle: Duration::from_millis(16),

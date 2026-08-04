@@ -9,6 +9,35 @@ import {
   runGenuiBenchUiJudge,
 } from '../service/genui-bench-judge.js';
 
+const GEQI_DIMENSIONS = [
+  ['usability-interaction', 'Usability & Interaction Logic', 30],
+  ['visual-aesthetics', 'Visual Communication & Aesthetics', 25],
+  ['consistency-standards', 'Consistency & Standards', 15],
+  ['architecture-writing', 'Information Architecture & UX Writing', 15],
+] as const;
+
+function geqiResponse(score: number): {
+  dimensions: Array<{
+    dimension: string;
+    dimensionLabel: string;
+    score: number;
+    weight: number;
+  }>;
+  geqiScore: number;
+  score: number;
+} {
+  return {
+    dimensions: GEQI_DIMENSIONS.map(([dimension, dimensionLabel, weight]) => ({
+      dimension,
+      dimensionLabel,
+      score,
+      weight,
+    })),
+    geqiScore: score * 20,
+    score,
+  };
+}
+
 describe('probeGenuiBenchUiJudge', () => {
   test('selects the OpenUI bundle independently', async () => {
     const capability = await probeGenuiBenchUiJudge('openui', {
@@ -71,7 +100,7 @@ describe('runGenuiBenchUiJudge', () => {
       (_input, init) => {
         const requestBody = typeof init?.body === 'string' ? init.body : '';
         body = JSON.parse(requestBody) as unknown;
-        return Promise.resolve(Response.json({ score: 4 }));
+        return Promise.resolve(Response.json(geqiResponse(4)));
       },
     );
 
@@ -83,6 +112,7 @@ describe('runGenuiBenchUiJudge', () => {
         speed: 0,
         theme: 'light',
       },
+      includeGeqi: true,
       includeScreenshot: true,
       screenshotSettleMs: 1_000,
       steps: [],
@@ -90,7 +120,9 @@ describe('runGenuiBenchUiJudge', () => {
       url: 'file:///tmp/openui.lynx.js',
     });
     expect(result).toEqual({
+      dimensions: geqiResponse(4).dimensions,
       errors: [],
+      geqiScore: 80,
       score: 4,
       status: 'complete',
       warnings: [],
@@ -120,7 +152,7 @@ describe('runGenuiBenchUiJudge', () => {
       (_input, init) => {
         const requestBody = typeof init?.body === 'string' ? init.body : '';
         body = JSON.parse(requestBody) as unknown;
-        return Promise.resolve(Response.json({ score: 4 }));
+        return Promise.resolve(Response.json(geqiResponse(4)));
       },
     );
 
@@ -138,6 +170,7 @@ describe('runGenuiBenchUiJudge', () => {
         speed: 0,
         theme: 'light',
       },
+      includeGeqi: true,
       includeScreenshot: true,
       screenshotSettleMs: 1_000,
       steps: [],
@@ -145,7 +178,9 @@ describe('runGenuiBenchUiJudge', () => {
       url: 'file:///tmp/a2ui.lynx.js',
     });
     expect(result).toEqual({
+      dimensions: geqiResponse(4).dimensions,
       errors: [],
+      geqiScore: 80,
       score: 4,
       status: 'complete',
       warnings: [],
@@ -192,7 +227,7 @@ describe('runGenuiBenchUiJudge', () => {
               { status: 503 },
             )
             : Response.json({
-              score: 5,
+              ...geqiResponse(5),
               screenshotDataUrl: 'data:image/png;base64,iVBORw0KGgo=',
             }),
         );
@@ -206,7 +241,9 @@ describe('runGenuiBenchUiJudge', () => {
     ]);
     expect(requestBodies[0]).toBe(requestBodies[1]);
     expect(result).toEqual({
+      dimensions: geqiResponse(5).dimensions,
       errors: [],
+      geqiScore: 100,
       score: 5,
       screenshotDataUrl: 'data:image/png;base64,iVBORw0KGgo=',
       status: 'complete',

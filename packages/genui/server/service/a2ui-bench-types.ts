@@ -116,6 +116,8 @@ export interface BenchRunResult {
   ttiMs: number;
   renderMs: number;
   attempts: number;
+  judgeDimensions?: BenchJudgeDimensionResult[];
+  judgeGeqiScore?: number;
   judgeScore: number;
   judgeReason?: string;
   judgeStatus?: 'complete' | 'failed' | 'skipped';
@@ -131,6 +133,16 @@ export interface BenchRunResult {
   screenshotDataUrl?: string;
   adapterMetadata?: Record<string, unknown>;
   text?: string;
+}
+
+export interface BenchJudgeDimensionResult {
+  dimension: string;
+  dimensionLabel: string;
+  error?: string;
+  reason?: string;
+  score: number;
+  summary?: string;
+  weight: number;
 }
 
 export interface BenchGroupSummary {
@@ -149,6 +161,7 @@ export interface BenchGroupSummary {
   avgTtiMs: number;
   avgRenderMs: number;
   avgJudgeScore: number;
+  avgJudgeGeqiScore?: number;
   judgeRunCount: number;
   avgAttempts: number;
 }

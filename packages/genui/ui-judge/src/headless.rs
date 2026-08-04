@@ -11,7 +11,9 @@ use serde_json::json;
 use thiserror::Error;
 
 use crate::judge::{
-  error_result, judge_screenshot, JudgeScreenshotRequest, UiJudgeError, UiJudgeResult,
+  calculate_geqi_score, error_result, geqi_error_result, judge_geqi_dimension, judge_screenshot,
+  GeqiDimension, JudgeScreenshotRequest, UiJudgeDimensionResult, UiJudgeError, UiJudgeResult,
+  GEQI_DIMENSIONS,
 };
 use crate::model::{ModelClient, ModelError, ModelOptions};
 use crate::visual::compare_reference_image;
@@ -24,6 +26,12 @@ const STEP_SYSTEM_PROMPT: &str = "You control a headless Lynx page. Return exact
 /// Inputs for loading, interacting with, capturing, and judging a Lynx page.
 #[derive(Debug, Clone)]
 pub struct JudgePageRequest {
+  /// Whether to score all four weighted GEQI dimensions from the final screenshot.
+  ///
+  /// Visual correctness is always scored and remains the top-level `score`.
+  /// Enabling this option adds four independent VLM evaluations and returns
+  /// `dimensions` plus the weighted 0-100 `geqi_score`.
+  pub include_geqi: bool,
   /// Optional textual target included in the VLM prompt.
   pub reference: Option<String>,
   /// Optional image used only by the independent deterministic comparison.
@@ -40,9 +48,10 @@ pub struct JudgePageRequest {
   /// Maximum duration for each independently timed operation.
   ///
   /// The connection, navigation, every individual natural-language step,
-  /// final screenshot capture, VLM scoring, and optional reference-image
-  /// comparison each receive this full duration. This preserves the legacy UI
-  /// Judge behavior and is not an overall deadline for the entire request.
+  /// final screenshot capture, visual-correctness scoring, every enabled GEQI
+  /// dimension, and optional reference-image comparison each receive this full
+  /// duration. This preserves the legacy UI Judge behavior and is not an
+  /// overall deadline for the entire request.
   pub timeout: Duration,
   /// The `file://`, `http://`, or `https://` Lynx page URL to load.
   pub url: String,
@@ -257,16 +266,10 @@ async fn capture_loaded_page(
   page: &mut Page,
   request: &JudgePageRequest,
 ) -> Result<CapturedPage, UiJudgeResult> {
-  let reference = request.reference.clone();
-
   let steps = match run_page_steps(client, page, &request.steps, request.timeout).await {
     Ok(steps) => steps,
     Err(error) => {
-      let mut result = error_result(
-        request.reference.clone(),
-        page.url().to_string(),
-        error.to_string(),
-      );
+      let mut result = request_error_result(request, page.url().to_string(), error.to_string());
       result.steps = normalize_steps(&request.steps);
       return Err(result);
     }
@@ -279,17 +282,13 @@ async fn capture_loaded_page(
   {
     Ok(Ok(screenshot)) => screenshot,
     Ok(Err(error)) => {
-      let mut result = error_result(
-        request.reference.clone(),
-        page.url().to_string(),
-        error.to_string(),
-      );
+      let mut result = request_error_result(request, page.url().to_string(), error.to_string());
       result.steps = steps;
       return Err(result);
     }
     Err(_) => {
-      let mut result = error_result(
-        reference,
+      let mut result = request_error_result(
+        request,
         page.url().to_string(),
         operation_timeout("screenshot capture", request.timeout).to_string(),
       );
@@ -311,14 +310,17 @@ pub(crate) async fn score_captured_page(
   capture: CapturedPage,
 ) -> UiJudgeResult {
   let CapturedPage { png, steps, url } = capture;
-  let vlm_scoring = judge_screenshot(
+  let scoring_request = JudgeScreenshotRequest {
+    reference: request.reference.clone(),
+    screenshot_data_url: png_data_url(&png),
+    task: task_with_steps(&request.task, &steps),
+    url: url.clone(),
+  };
+  let vlm_scoring = score_screenshot(
     client,
-    JudgeScreenshotRequest {
-      reference: request.reference.clone(),
-      screenshot_data_url: png_data_url(&png),
-      task: task_with_steps(&request.task, &steps),
-      url: url.clone(),
-    },
+    &scoring_request,
+    request.include_geqi,
+    request.timeout,
   );
   let reference_comparison = async {
     match request.reference_image.as_deref() {
@@ -335,18 +337,7 @@ pub(crate) async fn score_captured_page(
 
   // The VLM and deterministic comparison are independent consumers of the
   // captured PNG. Neither result is an input to the other evaluation chain.
-  let (vlm_result, comparison_result) = tokio::join!(
-    tokio::time::timeout(request.timeout, vlm_scoring),
-    reference_comparison,
-  );
-  let mut result = match vlm_result {
-    Ok(result) => result,
-    Err(_) => error_result(
-      request.reference.clone(),
-      url.clone(),
-      operation_timeout("VLM scoring", request.timeout).to_string(),
-    ),
-  };
+  let (mut result, comparison_result) = tokio::join!(vlm_scoring, reference_comparison);
   if let Some(comparison_result) = comparison_result {
     match comparison_result {
       Ok(Ok(comparison)) => {
@@ -373,6 +364,62 @@ pub(crate) async fn score_captured_page(
   result
 }
 
+async fn score_screenshot(
+  client: &ModelClient,
+  request: &JudgeScreenshotRequest,
+  include_geqi: bool,
+  timeout: Duration,
+) -> UiJudgeResult {
+  if !include_geqi {
+    return match tokio::time::timeout(timeout, judge_screenshot(client, request)).await {
+      Ok(result) => result,
+      Err(_) => error_result(
+        request.reference.clone(),
+        request.url.clone(),
+        operation_timeout("VLM scoring", timeout).to_string(),
+      ),
+    };
+  }
+
+  let (visual, usability, aesthetics, consistency, architecture) = tokio::join!(
+    tokio::time::timeout(timeout, judge_screenshot(client, request)),
+    score_geqi_dimension(client, request, GEQI_DIMENSIONS[0], timeout),
+    score_geqi_dimension(client, request, GEQI_DIMENSIONS[1], timeout),
+    score_geqi_dimension(client, request, GEQI_DIMENSIONS[2], timeout),
+    score_geqi_dimension(client, request, GEQI_DIMENSIONS[3], timeout),
+  );
+  let mut result = match visual {
+    Ok(result) => result,
+    Err(_) => error_result(
+      request.reference.clone(),
+      request.url.clone(),
+      operation_timeout("VLM scoring", timeout).to_string(),
+    ),
+  };
+  result.dimensions = vec![usability, aesthetics, consistency, architecture];
+  result.geqi_score = calculate_geqi_score(&result.dimensions);
+  result
+}
+
+async fn score_geqi_dimension(
+  client: &ModelClient,
+  request: &JudgeScreenshotRequest,
+  dimension: GeqiDimension,
+  timeout: Duration,
+) -> UiJudgeDimensionResult {
+  match tokio::time::timeout(timeout, judge_geqi_dimension(client, request, dimension)).await {
+    Ok(result) => result,
+    Err(_) => geqi_error_result(
+      dimension,
+      format!(
+        "headless {} scoring timed out after {} ms",
+        dimension.id(),
+        timeout.as_millis()
+      ),
+    ),
+  }
+}
+
 fn is_supported_page_url(url: &str) -> bool {
   ["file://", "http://", "https://"].iter().any(|prefix| {
     url
@@ -382,12 +429,26 @@ fn is_supported_page_url(url: &str) -> bool {
 }
 
 fn page_request_error(request: &JudgePageRequest, message: impl Into<String>) -> UiJudgeResult {
-  let mut result = error_result(
-    request.reference.clone(),
-    request.url.clone(),
-    message.into(),
-  );
+  let mut result = request_error_result(request, request.url.clone(), message);
   result.steps = normalize_steps(&request.steps);
+  result
+}
+
+fn request_error_result(
+  request: &JudgePageRequest,
+  url: String,
+  message: impl Into<String>,
+) -> UiJudgeResult {
+  let message = message.into();
+  let mut result = error_result(request.reference.clone(), url, message.clone());
+  if request.include_geqi {
+    result.dimensions = GEQI_DIMENSIONS
+      .iter()
+      .copied()
+      .map(|dimension| geqi_error_result(dimension, message.clone()))
+      .collect();
+    result.geqi_score = calculate_geqi_score(&result.dimensions);
+  }
   result
 }
 
@@ -592,6 +653,7 @@ mod tests {
 
   fn page_request(url: &str, task: &str) -> JudgePageRequest {
     JudgePageRequest {
+      include_geqi: false,
       reference: None,
       reference_image: None,
       screenshot_settle: Duration::ZERO,
@@ -664,6 +726,21 @@ mod tests {
   }
 
   #[tokio::test(flavor = "current_thread")]
+  async fn geqi_request_errors_preserve_all_dimension_slots() {
+    let mut request = page_request("  ", "Render the form");
+    request.include_geqi = true;
+    let result = judge_page(request).await;
+
+    assert!(result.error.is_some());
+    assert_eq!(result.geqi_score, Some(0.0));
+    assert_eq!(result.dimensions.len(), GEQI_DIMENSIONS.len());
+    assert!(result
+      .dimensions
+      .iter()
+      .all(|dimension| dimension.error.is_some() && dimension.score == 0));
+  }
+
+  #[tokio::test(flavor = "current_thread")]
   async fn judge_page_rejects_an_empty_task_before_initializing_runtime_dependencies() {
     let result = judge_page(page_request("file:///tmp/ui.lynx.bundle", "  ")).await;
 
@@ -712,6 +789,86 @@ mod tests {
     assert_eq!(result.different_blocks, Some(0));
     assert_eq!(result.total_blocks, Some(1));
     assert!(result.diff_image_base64.is_some());
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn scores_all_geqi_dimensions_from_the_same_final_screenshot() {
+    const PNG_BASE64: &str =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
+    request.include_geqi = true;
+    let client = ModelClient::mock(
+      r#"{"score":4,"reason":"Strong UI.","summary":"The requested dimension is strong."}"#,
+    );
+
+    let result = score_captured_page(
+      &client,
+      &request,
+      CapturedPage {
+        png,
+        steps: vec![],
+        url: request.url.clone(),
+      },
+    )
+    .await;
+
+    assert_eq!(result.score, 4);
+    assert!(result
+      .geqi_score
+      .is_some_and(|score| (score - 80.0).abs() < f64::EPSILON * 100.0));
+    assert_eq!(result.dimensions.len(), 4);
+    assert_eq!(
+      result
+        .dimensions
+        .iter()
+        .map(|dimension| (
+          dimension.dimension.as_str(),
+          dimension.weight,
+          dimension.score
+        ))
+        .collect::<Vec<_>>(),
+      vec![
+        ("usability-interaction", 30, 4),
+        ("visual-aesthetics", 25, 4),
+        ("consistency-standards", 15, 4),
+        ("architecture-writing", 15, 4),
+      ]
+    );
+    assert!(result
+      .dimensions
+      .iter()
+      .all(|dimension| dimension.error.is_none()));
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn geqi_failures_stay_independent_from_each_other_and_the_visual_result() {
+    const PNG_BASE64: &str =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
+    request.include_geqi = true;
+    let client = ModelClient::mock("not JSON");
+
+    let result = score_captured_page(
+      &client,
+      &request,
+      CapturedPage {
+        png,
+        steps: vec![],
+        url: request.url.clone(),
+      },
+    )
+    .await;
+
+    assert!(result.error.is_some());
+    assert_eq!(result.score, 0);
+    assert_eq!(result.geqi_score, Some(0.0));
+    assert_eq!(result.dimensions.len(), 4);
+    assert!(result
+      .dimensions
+      .iter()
+      .all(|dimension| dimension.error.is_some() && dimension.score == 0));
   }
 
   #[tokio::test(flavor = "current_thread")]

@@ -27,7 +27,9 @@ export interface BenchUiJudgeCapability {
 }
 
 export interface BenchUiJudgeResult {
+  dimensions?: BenchUiJudgeDimensionResult[];
   errors: string[];
+  geqiScore?: number;
   reason?: string;
   score: number;
   screenshotDataUrl?: string;
@@ -36,10 +38,22 @@ export interface BenchUiJudgeResult {
   warnings: string[];
 }
 
+export interface BenchUiJudgeDimensionResult {
+  dimension: string;
+  dimensionLabel: string;
+  error?: string;
+  reason?: string;
+  score: number;
+  summary?: string;
+  weight: number;
+}
+
 interface UiJudgeResponse {
+  dimensions?: unknown;
   error?: {
     message?: unknown;
   };
+  geqiScore?: unknown;
   reason?: unknown;
   score?: unknown;
   screenshotDataUrl?: unknown;
@@ -53,6 +67,13 @@ export interface BenchUiJudgeScenario
   name?: string;
   type?: string;
 }
+
+const GEQI_DIMENSION_WEIGHTS = new Map<string, number>([
+  ['usability-interaction', 30],
+  ['visual-aesthetics', 25],
+  ['consistency-standards', 15],
+  ['architecture-writing', 15],
+]);
 
 interface RunBenchUiJudgeOptions {
   messages: A2UIMessage[];
@@ -374,6 +395,7 @@ export async function runBenchUiJudgeRequest(
   }
   const body = {
     globalProps: options.globalProps,
+    includeGeqi: true,
     ...(options.includeScreenshot ? { includeScreenshot: true } : {}),
     ...(options.screenshotSettleMs === undefined
       ? {}
@@ -455,6 +477,13 @@ export async function runBenchUiJudgeRequest(
     errors.push('ui-judge returned an invalid score.');
   }
 
+  const dimensions = responseError
+    ? undefined
+    : parseGeqiDimensions(result.dimensions, errors);
+  const geqiScore = responseError
+    ? undefined
+    : parseGeqiScore(result.geqiScore, dimensions, errors);
+
   const reason = typeof result.reason === 'string' && result.reason.trim()
     ? result.reason.trim()
     : undefined;
@@ -474,14 +503,129 @@ export async function runBenchUiJudgeRequest(
       'ui-judge returned an invalid screenshotDataUrl; the screenshot was discarded.',
     );
   }
+  const complete = errors.length === 0;
 
   return {
+    ...(complete && dimensions ? { dimensions } : {}),
     errors,
-    ...(reason ? { reason } : {}),
-    score: errors.length === 0 ? score : 0,
+    ...(complete && geqiScore !== undefined ? { geqiScore } : {}),
+    ...(complete && reason ? { reason } : {}),
+    score: complete ? score : 0,
     ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
-    status: errors.length === 0 ? 'complete' : 'failed',
-    ...(summary ? { summary } : {}),
+    status: complete ? 'complete' : 'failed',
+    ...(complete && summary ? { summary } : {}),
     warnings: resultWarnings,
   };
+}
+
+function parseGeqiDimensions(
+  value: unknown,
+  errors: string[],
+): BenchUiJudgeDimensionResult[] | undefined {
+  if (!Array.isArray(value)) {
+    errors.push('ui-judge returned no GEQI dimensions.');
+    return undefined;
+  }
+
+  const dimensions: BenchUiJudgeDimensionResult[] = [];
+  const seen = new Set<string>();
+  for (const rawDimension of value) {
+    if (!isRecord(rawDimension)) {
+      errors.push('ui-judge returned an invalid GEQI dimension result.');
+      continue;
+    }
+    const dimension = typeof rawDimension.dimension === 'string'
+      ? rawDimension.dimension
+      : '';
+    const expectedWeight = GEQI_DIMENSION_WEIGHTS.get(dimension);
+    if (expectedWeight === undefined || seen.has(dimension)) {
+      errors.push(
+        `ui-judge returned an unknown or duplicate GEQI dimension: ${
+          dimension || 'missing'
+        }.`,
+      );
+      continue;
+    }
+    seen.add(dimension);
+
+    const score = rawDimension.score;
+    const weight = rawDimension.weight;
+    if (
+      typeof score !== 'number'
+      || !Number.isInteger(score)
+      || score < 0
+      || score > 5
+      || weight !== expectedWeight
+    ) {
+      errors.push(`ui-judge returned invalid ${dimension} score metadata.`);
+      continue;
+    }
+
+    const dimensionError = readResponseError(rawDimension);
+    if (dimensionError) {
+      errors.push(`ui-judge ${dimension} failed: ${dimensionError}`);
+    }
+    const dimensionLabel = typeof rawDimension.dimensionLabel === 'string'
+        && rawDimension.dimensionLabel.trim()
+      ? rawDimension.dimensionLabel.trim()
+      : dimension;
+    const reason = typeof rawDimension.reason === 'string'
+        && rawDimension.reason.trim()
+      ? rawDimension.reason.trim()
+      : undefined;
+    const summary = typeof rawDimension.summary === 'string'
+        && rawDimension.summary.trim()
+      ? rawDimension.summary.trim()
+      : undefined;
+    dimensions.push({
+      dimension,
+      dimensionLabel,
+      ...(dimensionError ? { error: dimensionError } : {}),
+      ...(reason ? { reason } : {}),
+      score,
+      ...(summary ? { summary } : {}),
+      weight,
+    });
+  }
+
+  for (const dimension of GEQI_DIMENSION_WEIGHTS.keys()) {
+    if (!seen.has(dimension)) {
+      errors.push(`ui-judge response is missing GEQI dimension ${dimension}.`);
+    }
+  }
+  return dimensions;
+}
+
+function parseGeqiScore(
+  value: unknown,
+  dimensions: BenchUiJudgeDimensionResult[] | undefined,
+  errors: string[],
+): number | undefined {
+  if (
+    typeof value !== 'number'
+    || !Number.isFinite(value)
+    || value < 0
+    || value > 100
+  ) {
+    errors.push('ui-judge returned an invalid GEQI score.');
+    return undefined;
+  }
+  if (!dimensions || dimensions.length !== GEQI_DIMENSION_WEIGHTS.size) {
+    return value;
+  }
+
+  const totalWeight = dimensions.reduce(
+    (sum, dimension) => sum + dimension.weight,
+    0,
+  );
+  const calculated = dimensions.reduce(
+    (sum, dimension) => sum + (dimension.score / 5) * dimension.weight,
+    0,
+  ) / totalWeight * 100;
+  if (Math.abs(calculated - value) > 1e-6) {
+    errors.push(
+      `ui-judge returned an inconsistent GEQI score: ${value} vs ${calculated}.`,
+    );
+  }
+  return value;
 }
