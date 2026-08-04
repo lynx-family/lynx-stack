@@ -21,7 +21,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4')
     expect(ip).toBe('192.168.1.1')
@@ -43,7 +43,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4', true)
     expect(ip).toBe('127.0.0.1')
@@ -66,7 +66,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v6')
     expect(ip).toBe('[fd00::1]')
@@ -96,7 +96,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4')
     expect(ip).toBe('192.168.1.1') // should use the first ip
@@ -126,7 +126,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4')
     expect(ip).toBe('192.168.1.1') // should ignore internal ips
@@ -158,7 +158,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4')
     expect(ip).toBe('192.168.1.1')
@@ -190,7 +190,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4')
     expect(ip).toBe('192.168.1.1')
@@ -212,7 +212,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     const ip = await findIp('v4')
     expect(ip).toBe('172.31.252.23')
@@ -235,7 +235,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     await expect(findIp('v4')).resolves.toBeUndefined()
   })
@@ -245,7 +245,7 @@ describe('findIp', () => {
 
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({})
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     await expect(findIp('v4')).resolves.toBeUndefined()
   })
@@ -258,7 +258,7 @@ describe('findIp', () => {
       eth0: null,
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     await expect(findIp('v4')).resolves.toBeUndefined()
   })
@@ -275,7 +275,7 @@ describe('findIp', () => {
       ],
     })
 
-    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+    const { findIp } = await import('../src/plugins/dev.plugin.js')
 
     await expect(findIp('v4')).resolves.toBeUndefined()
   })
