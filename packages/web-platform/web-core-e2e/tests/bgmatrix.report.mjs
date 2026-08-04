@@ -321,7 +321,7 @@ for (const { prefix, title, blurb } of GROUPS) {
       return `<tr class="v-${v.key}">
         <th><code>${escapeHtml(label)}</code><small>${escapeHtml(note)}</small>
           <p class="verdict">${escapeHtml(v.text)}</p></th>
-        <td>${
+        <td class="mtr">${
         frameCell(
           entry,
           'MTR',
@@ -329,7 +329,7 @@ for (const { prefix, title, blurb } of GROUPS) {
           result.mtr?.ids ?? [],
         )
       }</td>
-        <td>${
+        <td class="btr">${
         frameCell(
           entry,
           'BTR',
@@ -354,10 +354,10 @@ for (const { prefix, title, blurb } of GROUPS) {
       ).join('')
     }
         </div>
-        <table class="frames">
-          <thead><tr><th>enableMTSRendering</th><th>MTR — main thread alone</th><th>BTR — after hydration</th><th>main-thread chunk</th></tr></thead>
+        <div class="scroll"><table class="frames">
+          <thead><tr><th>enableMTSRendering</th><th class="mtr">MTR — main thread alone</th><th class="btr">BTR — after hydration</th><th>main-thread chunk</th></tr></thead>
           <tbody>${rows}</tbody>
-        </table>
+        </table></div>
       </div>
     </section>`);
   }
@@ -497,17 +497,29 @@ const html = `<!doctype html>
 <meta charset="utf-8">
 <title>&lt;Background&gt; matrix — source → MTR → BTR</title>
 <style>
-  :root {
-    --bg: #fbfbfd; --fg: #16181d; --muted: #6b7280; --line: #e3e6ec;
+  /* Neutrals carry a slight blue cast, from the same family as the deferred
+     subtree's own colour in the fixtures. --mtr / --btr tint the two frame
+     columns: the provisional frame and the settled one. */
+  :root, :root[data-theme="light"] {
+    --bg: #fbfbfd; --fg: #16181d; --muted: #656c7a; --line: #e2e5ec;
     --card: #fff; --good: #1a7f37; --partial: #9a6700; --blank: #b42318;
-    --rejected: #5b5f6b; --code: #f6f7f9;
+    --rejected: #5b5f6b; --code: #f5f6f9; --accent: #2f6fd0;
+    --mtr: #9a670022; --btr: #2f6fd022;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f1115; --fg: #e6e8ee; --muted: #9aa1ae; --line: #262a33;
+      --bg: #0f1115; --fg: #e6e8ee; --muted: #99a0ae; --line: #262a33;
       --card: #161922; --good: #4ac26b; --partial: #d4a72c; --blank: #f2705c;
-      --rejected: #8b909c; --code: #12141a;
+      --rejected: #8b909c; --code: #12141a; --accent: #79a9f0;
+      --mtr: #d4a72c1f; --btr: #79a9f01f;
     }
+  }
+  /* The viewer's own toggle wins over the OS preference, in both directions. */
+  :root[data-theme="dark"] {
+    --bg: #0f1115; --fg: #e6e8ee; --muted: #99a0ae; --line: #262a33;
+    --card: #161922; --good: #4ac26b; --partial: #d4a72c; --blank: #f2705c;
+    --rejected: #8b909c; --code: #12141a; --accent: #79a9f0;
+    --mtr: #d4a72c1f; --btr: #79a9f01f;
   }
   * { box-sizing: border-box }
   body { margin: 0; background: var(--bg); color: var(--fg);
@@ -531,12 +543,25 @@ const html = `<!doctype html>
   .file pre { margin: 0; padding: 9px; overflow-x: auto; background: var(--code);
     font: 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: pre-wrap; overflow-wrap: break-word }
-  .k { color: #a626a4 } .s { color: #0a7d3f } .c { color: var(--muted); font-style: italic }
-  .bg { color: #b45309; font-weight: 700; background: rgba(180,83,9,.11); border-radius: 3px; padding: 0 2px }
-  @media (prefers-color-scheme: dark) {
-    .k { color: #d2a8ff } .s { color: #7ee787 } .bg { color: #ffa657; background: rgba(255,166,87,.13) }
+  :root, :root[data-theme="light"] {
+    --kw: #a626a4; --str: #0a7d3f; --bnd: #b45309; --bnd-bg: #b453091c;
   }
+  @media (prefers-color-scheme: dark) {
+    :root { --kw: #d2a8ff; --str: #7ee787; --bnd: #ffa657; --bnd-bg: #ffa65721 }
+  }
+  :root[data-theme="dark"] {
+    --kw: #d2a8ff; --str: #7ee787; --bnd: #ffa657; --bnd-bg: #ffa65721;
+  }
+  .k { color: var(--kw) } .s { color: var(--str) }
+  .c { color: var(--muted); font-style: italic }
+  .bg { color: var(--bnd); font-weight: 700; background: var(--bnd-bg);
+    border-radius: 3px; padding: 0 2px }
   table { border-collapse: collapse; width: 100% }
+  .scroll { overflow-x: auto }
+  /* The two frame columns are the provisional frame and the settled one —
+     tinted so a row can be read across without checking the header. */
+  .frames td.mtr { background: var(--mtr) } .frames td.btr { background: var(--btr) }
+  .frames thead th.mtr { background: var(--mtr) } .frames thead th.btr { background: var(--btr) }
   .frames th, .frames td { border: 1px solid var(--line); padding: 8px; vertical-align: top; text-align: left }
   .frames thead th { font-size: 11.5px; color: var(--muted); font-weight: 600; background: var(--code) }
   .frames tbody th { width: 168px; font-weight: 600 }
@@ -554,6 +579,7 @@ const html = `<!doctype html>
   .fact.yes { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent) }
   .fact.no { color: var(--blank); border-color: color-mix(in srgb, var(--blank) 40%, transparent) }
   .fact.none, .fact.size { color: var(--muted) }
+  .fact.size, .overview td { font-variant-numeric: tabular-nums }
   tr.v-good th .verdict { color: var(--good) }
   tr.v-partial th .verdict { color: var(--partial) }
   tr.v-blank th .verdict, tr.v-bad th .verdict { color: var(--blank) }
@@ -564,7 +590,9 @@ const html = `<!doctype html>
   .overview td.v-good { color: var(--good) } .overview td.v-partial { color: var(--partial) }
   .overview td.v-blank, .overview td.v-bad { color: var(--blank) }
   .overview td.v-rejected { color: var(--rejected) }
-  .overview a { color: inherit }
+  .overview a { color: var(--accent) }
+  a:focus-visible, .overview a:focus-visible { outline: 2px solid var(--accent);
+    outline-offset: 2px; border-radius: 2px }
   .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 10px 0 0 }
   .findings { max-width: 82ch; margin: 26px 0 8px }
   .findings h2 { margin-top: 0; border: 0; padding-top: 0 }
@@ -584,7 +612,7 @@ const html = `<!doctype html>
   </p>
   ${findings}
   <h2>Every permutation</h2>
-  ${overview}
+  <div class="scroll">${overview}</div>
   <p class="legend">
     <span class="v-good">good — fallback at 0.0 and the deferred code left the chunk</span>
     <span class="v-partial">partial — renders correctly, but the chunk kept the deferred code</span>
