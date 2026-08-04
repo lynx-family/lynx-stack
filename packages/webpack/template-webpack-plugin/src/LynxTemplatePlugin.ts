@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 
 import type {
@@ -1418,6 +1419,30 @@ function collectChunkGroupResources(
   );
 }
 
+// A lazy bundle name ends up as a path on the device's file system, where an
+// offline package unpacks it. Resolved module paths are unbounded — a pnpm
+// virtual store directory alone can be 200+ characters — so past this limit the
+// name is replaced by a readable label plus a digest. Names below it keep their
+// full path, so existing output names are unaffected.
+const LAZY_BUNDLE_NAME_LIMIT = 100;
+
+/**
+ * Shorten a lazy bundle name to a single bounded segment. The digest is taken
+ * over the full name, so the result stays unique, stable across builds, and
+ * identical for the main-thread and background chunks of one lazy bundle.
+ */
+function shortenLazyBundleName(name: string): string {
+  const label = name
+    .split('/')
+    .slice(-2)
+    .join('_')
+    .replace(/\.[^.]*$/, '')
+    .replace(/[^\w.-]/g, '_')
+    .slice(0, 32);
+  const digest = createHash('sha256').update(name).digest('hex').slice(0, 8);
+  return `${label}-${digest}`;
+}
+
 /**
  * Derive a lazy bundle name from the resolved module paths. The name is
  * relative to the compiler context with `..` segments replaced, so the
@@ -1427,7 +1452,7 @@ function resourcesToLazyBundleName(
   resources: string[],
   context: string,
 ): string {
-  return resources
+  const name = resources
     .map(resource =>
       path.relative(context, resource)
         .split(path.sep)
@@ -1435,6 +1460,10 @@ function resourcesToLazyBundleName(
         .join('/')
     )
     .join('_');
+
+  return name.length > LAZY_BUNDLE_NAME_LIMIT
+    ? shortenLazyBundleName(name)
+    : name;
 }
 
 export function predicateNonHotModuleReplacementAsset(
