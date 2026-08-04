@@ -7,6 +7,7 @@
 use super::MainThreadWasmContext;
 use crate::constants;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
 /**
  * for return of __GetEvents
@@ -219,6 +220,11 @@ impl MainThreadWasmContext {
     let target_element_data = binding.borrow();
 
     let target_element_dataset = target_element_data.dataset.clone();
+    let target_element = self
+      .unique_id_to_dom_map
+      .get(&target_unique_id)
+      .and_then(js_sys::WeakRef::deref)
+      .and_then(|element| element.dyn_into::<web_sys::HtmlElement>().ok());
 
     let iter: Box<dyn Iterator<Item = &usize> + '_> = if is_capture {
       Box::new(bubble_unique_id_path.iter().rev())
@@ -244,6 +250,22 @@ impl MainThreadWasmContext {
         None => continue,
       };
       let current_target_element_data = binding.borrow();
+      let current_target_element = match self
+        .unique_id_to_dom_map
+        .get(unique_id)
+        .and_then(js_sys::WeakRef::deref)
+        .and_then(|element| element.dyn_into::<web_sys::HtmlElement>().ok())
+      {
+        Some(element) => element,
+        None => continue,
+      };
+      let current_target_dataset = current_target_element_data.dataset.clone();
+      let (resolved_target_element, resolved_target_dataset) =
+        if let Some(target_element) = target_element.as_ref() {
+          (target_element, &target_element_dataset)
+        } else {
+          (&current_target_element, &current_target_dataset)
+        };
       {
         // cross thread handler
         let bind_handler = current_target_element_data
@@ -267,10 +289,10 @@ impl MainThreadWasmContext {
               handler,
               current_target_parent_component_id.as_deref(),
               serialized_event,
-              target_unique_id,
-              &target_element_dataset.clone().into(),
-              *unique_id,
-              &current_target_element_data.dataset.clone().into(),
+              resolved_target_element,
+              &resolved_target_dataset.clone().into(),
+              &current_target_element,
+              &current_target_dataset.clone().into(),
             ) {
               self.defer_binding_error(error);
             }
@@ -289,10 +311,10 @@ impl MainThreadWasmContext {
             if let Err(error) = self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
-              target_unique_id,
-              &target_element_dataset.clone().into(),
-              *unique_id,
-              &current_target_element_data.dataset.clone().into(),
+              resolved_target_element,
+              &resolved_target_dataset.clone().into(),
+              &current_target_element,
+              &current_target_dataset.clone().into(),
             ) {
               self.defer_binding_error(error);
             }
@@ -301,10 +323,10 @@ impl MainThreadWasmContext {
             if let Err(error) = self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
-              target_unique_id,
-              &target_element_dataset.clone().into(),
-              *unique_id,
-              &current_target_element_data.dataset.clone().into(),
+              resolved_target_element,
+              &resolved_target_dataset.clone().into(),
+              &current_target_element,
+              &current_target_dataset.clone().into(),
             ) {
               self.defer_binding_error(error);
             }
@@ -350,6 +372,11 @@ impl MainThreadWasmContext {
     let event_name_lowercase = event_name.to_ascii_lowercase();
     let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
 
+    let target_element = self
+      .unique_id_to_dom_map
+      .get(&target_unique_id)
+      .and_then(js_sys::WeakRef::deref)
+      .and_then(|element| element.dyn_into::<web_sys::HtmlElement>().ok());
     let target_element_dataset =
       if let Some(binding) = self.get_element_data_by_unique_id(target_unique_id) {
         binding.borrow().dataset.clone()
@@ -369,6 +396,22 @@ impl MainThreadWasmContext {
         None => continue,
       };
       let current_target_element_data = binding.borrow();
+      let current_target_element = match self
+        .unique_id_to_dom_map
+        .get(&unique_id)
+        .and_then(js_sys::WeakRef::deref)
+        .and_then(|element| element.dyn_into::<web_sys::HtmlElement>().ok())
+      {
+        Some(element) => element,
+        None => continue,
+      };
+      let current_target_dataset = current_target_element_data.dataset.clone();
+      let (resolved_target_element, resolved_target_dataset) =
+        if let Some(target_element) = target_element.as_ref() {
+          (target_element, &target_element_dataset)
+        } else {
+          (&current_target_element, &current_target_dataset)
+        };
 
       let bind_handler = current_target_element_data
         .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent");
@@ -388,10 +431,10 @@ impl MainThreadWasmContext {
           &handler,
           current_target_parent_component_id.as_deref(),
           serialized_event,
-          target_unique_id,
-          &target_element_dataset.clone().into(),
-          unique_id,
-          &current_target_element_data.dataset.clone().into(),
+          resolved_target_element,
+          &resolved_target_dataset.clone().into(),
+          &current_target_element,
+          &current_target_dataset.clone().into(),
         ) {
           self.defer_binding_error(error);
         }
@@ -403,10 +446,10 @@ impl MainThreadWasmContext {
         if let Err(error) = self.mts_binding.publish_mts_event(
           &handler,
           serialized_event,
-          target_unique_id,
-          &target_element_dataset.clone().into(),
-          unique_id,
-          &current_target_element_data.dataset.clone().into(),
+          resolved_target_element,
+          &resolved_target_dataset.clone().into(),
+          &current_target_element,
+          &current_target_dataset.clone().into(),
         ) {
           self.defer_binding_error(error);
         }

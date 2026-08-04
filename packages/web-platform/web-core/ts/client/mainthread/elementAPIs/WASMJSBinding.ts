@@ -149,33 +149,22 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   runWorklet(
     handler: { value: unknown },
     eventObject: LynxCrossThreadEvent,
-    targetUniqueId: number,
+    target: DecoratedHTMLElement,
     targetDataset: Record<string, string>,
-    currentTargetUniqueId: number,
+    currentTarget: DecoratedHTMLElement,
     currentTargetDataset: Record<string, string>,
   ) {
     try {
-      const target = this.getElementByUniqueId(targetUniqueId);
-      const currentTarget = this.getElementByUniqueId(
-        currentTargetUniqueId,
-      );
-      const resolvedTarget = (target ?? currentTarget) as
-        | DecoratedHTMLElement
-        | undefined;
-      if (!resolvedTarget) return;
-      const resolvedTargetDataset = target
-        ? targetDataset
-        : currentTargetDataset;
       eventObject.target = this.generateTargetObject(
-        resolvedTarget,
-        resolvedTargetDataset,
+        target,
+        targetDataset,
       );
       eventObject.currentTarget = this.generateTargetObject(
-        currentTarget as DecoratedHTMLElement,
+        currentTarget,
         currentTargetDataset,
       );
       // @ts-expect-error
-      eventObject.target.elementRefptr = resolvedTarget;
+      eventObject.target.elementRefptr = target;
       // @ts-expect-error
       eventObject.currentTarget.elementRefptr = currentTarget;
       this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
@@ -190,32 +179,18 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     handlerName: string,
     parentComponentId: string | undefined,
     eventObject: LynxCrossThreadEvent,
-    targetUniqueId: number,
+    target: DecoratedHTMLElement,
     targetDataset: CloneableObject,
-    currentTargetUniqueId: number,
+    currentTarget: DecoratedHTMLElement,
     currentTargetDataset: CloneableObject,
   ) {
     try {
-      const target = this.getElementByUniqueId(targetUniqueId);
-      const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
-      // The Rust dispatcher only reaches this code with target_unique_id == 0
-      // on the global-bindevent path (regular bind/catch handlers early-return
-      // when the bubble path has no element). For that case the DOM event
-      // originated outside the Lynx element tree, so fall back to currentTarget
-      // (the element that registered the global handler).
-      const resolvedTarget = (target ?? currentTarget) as
-        | DecoratedHTMLElement
-        | undefined;
-      if (!resolvedTarget) return;
-      const resolvedTargetDataset = target
-        ? targetDataset
-        : currentTargetDataset;
       eventObject.target = this.generateTargetObject(
-        resolvedTarget,
-        resolvedTargetDataset,
+        target,
+        targetDataset,
       );
       eventObject.currentTarget = this.generateTargetObject(
-        currentTarget as DecoratedHTMLElement,
+        currentTarget,
         currentTargetDataset,
       );
       if (parentComponentId) {

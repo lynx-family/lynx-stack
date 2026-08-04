@@ -219,11 +219,23 @@ test.describe('web-elements test suite', () => {
           element.textContent =
             'This text is long enough to span several lines and be truncated.';
           element.addEventListener('layout', (event) => {
-            resolve(structuredClone((event as CustomEvent).detail));
+            const detail = structuredClone((event as CustomEvent).detail);
+            if (
+              detail.lines.some((
+                line: { ellipsisCount: number },
+              ) => line.ellipsisCount > 0)
+            ) {
+              resolve(detail);
+            } else if (!element.hasAttribute('text-maxlength')) {
+              setTimeout(() => element.setAttribute('text-maxlength', '5'));
+            }
           });
           document.body.append(element);
         })
-      );
+      ) as {
+        lineCount: number;
+        lines: { start: number; end: number; ellipsisCount: number }[];
+      };
       expect(detail).toEqual({
         lineCount: expect.any(Number),
         lines: expect.arrayContaining([
@@ -234,6 +246,7 @@ test.describe('web-elements test suite', () => {
           },
         ]),
       });
+      expect(detail.lines.some((line) => line.ellipsisCount > 0)).toBe(true);
     });
     test(
       'x-text/text-maxline-basic-with-lynx-wrapper',

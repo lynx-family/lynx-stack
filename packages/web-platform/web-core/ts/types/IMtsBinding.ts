@@ -5,6 +5,7 @@
  */
 
 import type { CloneableObject } from './Cloneable.js';
+import type { DecoratedHTMLElement } from './Element.js';
 import type { LynxCrossThreadEvent } from './EventType.js';
 
 /**
@@ -14,9 +15,9 @@ export interface RustMainthreadContextBinding {
   runWorklet(
     handler: unknown,
     eventObject: LynxCrossThreadEvent,
-    targetUniqueId: number,
+    targetElement: DecoratedHTMLElement,
     targetDataset: CloneableObject,
-    currentTargetUniqueId: number,
+    currentTargetElement: DecoratedHTMLElement,
     currentTargetDataset: CloneableObject,
   ): void;
 
@@ -24,9 +25,9 @@ export interface RustMainthreadContextBinding {
     handlerName: string,
     parentComponentId: string | undefined,
     eventObject: LynxCrossThreadEvent,
-    targetUniqueId: number,
+    targetElement: DecoratedHTMLElement,
     targetDataset: CloneableObject,
-    currentTargetUniqueId: number,
+    currentTargetElement: DecoratedHTMLElement,
     currentTargetDataset: CloneableObject,
   ): void;
 

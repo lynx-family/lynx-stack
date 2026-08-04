@@ -13,6 +13,7 @@ function App() {
         && typeof firstLine.start === 'number'
         && typeof firstLine.end === 'number'
         && typeof firstLine.ellipsisCount === 'number',
+      hasTruncation: e.detail.lines.some((line) => line.ellipsisCount > 0),
     });
   }, [setData]);
   return (
@@ -29,7 +30,7 @@ function App() {
         {data
           ? `${typeof data.lineCount}:${String(data.linesIsArray)}:${
             String(data.firstLineIsValid)
-          }`
+          }:${String(data.hasTruncation)}`
           : 'pending'}
       </text>
       {data && <view id='created-after-layout-event' />}

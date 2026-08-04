@@ -15,9 +15,9 @@ extern "C" {
     this: &RustMainthreadContextBinding,
     handler_name: &wasm_bindgen::JsValue,
     event_object: &wasm_bindgen::JsValue,
-    target_element_unique_id: usize,
+    target_element: &web_sys::HtmlElement,
     target_dataset: &wasm_bindgen::JsValue,
-    current_target_element_unique_id: usize,
+    current_target_element: &web_sys::HtmlElement,
     current_target_dataset: &wasm_bindgen::JsValue,
   ) -> Result<(), JsValue>;
 
@@ -27,9 +27,9 @@ extern "C" {
     handler_name: &str,
     parent_component_id: Option<&str>,
     event_object: &wasm_bindgen::JsValue,
-    target_element_unique_id: usize,
+    target_element: &web_sys::HtmlElement,
     target_dataset: &wasm_bindgen::JsValue,
-    current_target_element_unique_id: usize,
+    current_target_element: &web_sys::HtmlElement,
     current_target_dataset: &wasm_bindgen::JsValue,
   ) -> Result<(), JsValue>;
 

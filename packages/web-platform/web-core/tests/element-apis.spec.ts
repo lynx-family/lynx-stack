@@ -1642,9 +1642,15 @@ describe('Element APIs', () => {
       'height': '100px',
     });
     mtsGlobalThis.__FlushElementTree();
+    const getDomSpy = rstest
+      .spyOn(mtsBinding.wasmContext!, 'get_dom_by_unique_id')
+      .mockImplementation(() => {
+        throw new Error('event dispatch must not re-enter the wasm context');
+      });
     rootDom.querySelector('#child_id')?.dispatchEvent(
       new window.Event('click'),
     );
+    expect(getDomSpy).not.toHaveBeenCalled();
     expect(mtsBinding.addEventListener).toBeCalledTimes(1);
     expect(mtsBinding.addEventListener).toBeCalledWith('tap');
     expect(mtsBinding.publishEvent).toBeCalledTimes(1);
@@ -1663,9 +1669,9 @@ describe('Element APIs', () => {
           uid: expect.any(Number),
         }),
       }),
-      expect.any(Number),
+      child,
       undefined,
-      expect.any(Number),
+      child,
       undefined,
     );
   });
@@ -1954,9 +1960,9 @@ describe('Element APIs', () => {
       'child_hname',
       'id1',
       expect.any(Object),
-      expect.any(Number),
+      child,
       undefined,
-      expect.any(Number),
+      child,
       undefined,
     );
   });
@@ -2191,9 +2197,9 @@ describe('Element APIs', () => {
       'global-handler',
       undefined,
       expect.any(Object),
-      expect.any(Number),
+      element1,
       undefined,
-      expect.any(Number),
+      element2,
       undefined,
     );
 
@@ -2244,9 +2250,9 @@ describe('Element APIs', () => {
     expect(runWorkletSpy).toHaveBeenCalledWith(
       { name: 'worklet-handler' },
       expect.any(Object),
-      expect.any(Number),
+      element1,
       undefined,
-      expect.any(Number),
+      element2,
       undefined,
     );
 

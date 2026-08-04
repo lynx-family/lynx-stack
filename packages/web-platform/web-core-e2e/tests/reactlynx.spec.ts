@@ -2774,12 +2774,12 @@ test.describe('reactlynx3 tests', () => {
 
       test('basic-element-text-bindlayout', async ({ page }, { title }) => {
         await goto(page, title);
+        await wait(100);
         await page.locator('#layout-event-target').evaluate((element) => {
-          element.setAttribute('text-maxlength', '20');
+          element.setAttribute('text-maxlength', '5');
         });
-        await expect(page.locator('#layout-result')).not.toHaveText('pending');
         await expect(page.locator('#layout-result')).toHaveText(
-          'number:true:true',
+          'number:true:true:true',
         );
         await expect(page.locator('#created-after-layout-event')).toHaveCount(
           1,
