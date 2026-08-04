@@ -201,6 +201,35 @@ describe('root <MainThread> island build', () => {
     }
   })
 
+  test('an island named by the boundary does reach the main thread', async () => {
+    // The same `Header`, inside the same `Deferred`, one line different: the
+    // boundary names it with `island` instead of leaving it to a
+    // `<MainThread>` down in the deferred subtree. That is the whole
+    // distinction — the main thread renders what the boundary declares, and
+    // a position declared *at* the boundary is one it can reach.
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-island-prop-'),
+    )
+
+    try {
+      const { mainThread, warnings } = await buildIslandFixture(
+        'island-prop.tsx',
+        tmp,
+      )
+
+      expect(warnings).toEqual([])
+      expect(mainThread).toContain('__initMTSDefines')
+
+      // The island is compiled and rendered here…
+      expect(mainThread).toContain('root-main-thread-header-body-marker')
+      expect(mainThread).toContain('root-main-thread-header-marker')
+      // …and what the boundary defers still is not.
+      expect(mainThread).not.toContain('root-main-thread-deferred-body-marker')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test(`'main thread component' reaches the main thread with nothing referencing it there`, async () => {
     const tmp = await fs.mkdtemp(
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-component-'),

@@ -28,6 +28,27 @@ export interface BackgroundProps {
    * @defaultValue `null` (render nothing during the first screen)
    */
   fallback?: ReactNode | undefined;
+
+  /**
+   * First-screen content that belongs *inside* this boundary: an island the
+   * main thread renders on the first frame and the background thread then
+   * adopts, in the middle of a region that is otherwise deferred.
+   *
+   * The boundary renders `island` ahead of the deferred arm on both threads —
+   * `[island, fallback]` on the main thread, `[island, children]` on the
+   * background — so the island sits at the same position in both trees and
+   * the first-screen hydration matches it rather than replacing it. That
+   * fixed position is the restriction the prop exists to impose, and the
+   * reason the island is named here instead of somewhere inside `children`:
+   * the main thread never runs `children`, so a boundary it did not declare
+   * is a position the main thread cannot know.
+   *
+   * Render it here only. An island that also appears inside `children`
+   * renders twice on the background thread.
+   *
+   * @defaultValue `undefined` (the boundary defers its whole subtree)
+   */
+  island?: ReactNode | undefined;
 }
 
 /**
@@ -114,11 +135,26 @@ export interface BackgroundProps {
  * is compiled for the main thread, and that is the cost it pays for the first
  * frame.
  *
+ * To keep a piece of first-screen content *inside* a deferred region, name it
+ * with {@link BackgroundProps.island} rather than reaching for
+ * {@link MainThread} down in `children` — the main thread never runs
+ * `children`, so a boundary declared in there is at a position it cannot
+ * know:
+ *
+ * ```tsx
+ * <Background island={<Nav />} fallback={<FeedSkeleton />}>
+ *   <Feed />
+ * </Background>
+ * ```
+ *
  * @public
  */
 export function Background(props: BackgroundProps): ReactNode {
-  if (__MAIN_THREAD__) {
-    return props.fallback ?? null;
+  const deferred = __MAIN_THREAD__ ? props.fallback : props.children;
+  if (props.island === undefined) {
+    return deferred ?? null;
   }
-  return props.children ?? null;
+  // Both threads render the same two-slot list, so the island keeps its index
+  // across the hand-over and the hydration adopts it.
+  return [props.island, deferred ?? null];
 }

@@ -302,4 +302,75 @@ root.render(<Background {...props}><HeavyApp /></Background>);
     expect(code).toContain('HeavyApp');
     expect(code).toContain('Background');
   });
+
+  describe('island', () => {
+    const withIsland = `
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+import { Skeleton } from "./Skeleton.jsx";
+import { Nav } from "./Nav.jsx";
+
+root.render(
+  <Background island={<Nav />} fallback={<Skeleton />}>
+    <HeavyApp />
+  </Background>,
+);
+`;
+
+    it('keeps the island and puts it ahead of the fallback', async () => {
+      const { code } = await fold(withIsland);
+
+      expect(code).toContain('Nav');
+      expect(code).toContain('Skeleton');
+      expect(code).not.toContain('HeavyApp');
+      // The order is the contract: the background renders `[island,
+      // children]`, so the main thread has to render `[island, fallback]` for
+      // the first-screen diff to find the island at the same index. The two
+      // arms come out as one fragment, island first.
+      const rendered = code.slice(code.indexOf('root.render('));
+      expect(rendered).toContain('_Fragment');
+      expect(rendered.indexOf('Nav')).toBeLessThan(rendered.indexOf('Skeleton'));
+    });
+
+    it('keeps the island when the boundary declares no fallback', async () => {
+      const { code } = await fold(`
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+import { Nav } from "./Nav.jsx";
+root.render(<Background island={<Nav />}><HeavyApp /></Background>);
+`);
+
+      expect(code).toContain('Nav');
+      expect(code).not.toContain('HeavyApp');
+    });
+
+    it('folds a <Background> inside an island to its own fallback', async () => {
+      const { code } = await fold(`
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+import { Skeleton } from "./Skeleton.jsx";
+import { Nav } from "./Nav.jsx";
+root.render(
+  <Background
+    island={<Background fallback={<Skeleton />}><HeavyApp /></Background>}
+    fallback={<Nav />}
+  >
+    <HeavyApp />
+  </Background>,
+);
+`);
+
+      expect(code).toContain('Skeleton');
+      expect(code).toContain('Nav');
+      expect(code).not.toContain('HeavyApp');
+    });
+
+    it('leaves the background target alone', async () => {
+      const { code } = await transformReactLynx(withIsland, options('JS'));
+
+      expect(code).toContain('HeavyApp');
+      expect(code).toContain('Nav');
+      expect(code).toContain('Background');
+    });
+  });
 });

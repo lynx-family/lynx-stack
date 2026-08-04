@@ -15,6 +15,18 @@
 //! <Background fallback={<Skeleton/>}><App/></Background>   =>   <Skeleton/>
 //! ```
 //!
+//! An `island` names first-screen content *inside* the boundary, so the fold
+//! keeps it and puts it where the boundary sat, ahead of the fallback:
+//!
+//! ```text
+//! <Background island={<Nav/>} fallback={<Skeleton/>}><App/></Background>
+//!   =>   <>{<Nav/>}{<Skeleton/>}</>
+//! ```
+//!
+//! which is the same list the background thread renders (`island` then
+//! `children`) with the deferred arm swapped — so the first-screen diff finds
+//! the island at the same index and adopts it.
+//!
 //! The `<App/>` reference is gone, so the bundler drops its module closure
 //! from the main-thread bundle, while `<Skeleton/>` — and everything it
 //! references — stays and is compiled for the main thread exactly like any
@@ -34,9 +46,9 @@
 use swc_core::common::errors::HANDLER;
 use swc_core::common::{Spanned, DUMMY_SP};
 use swc_core::ecma::ast::{
-  Expr, ImportDecl, ImportSpecifier, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
-  JSXElementChild, JSXElementName, JSXExpr, JSXExprContainer, Lit, Module, ModuleDecl, ModuleItem,
-  Null, Script,
+  Expr, ImportDecl, ImportSpecifier, JSXAttrName, JSXAttrOrSpread, JSXAttrValue,
+  JSXClosingFragment, JSXElement, JSXElementChild, JSXElementName, JSXExpr, JSXExprContainer,
+  JSXFragment, JSXOpeningFragment, Lit, Module, ModuleDecl, ModuleItem, Null, Script,
 };
 use swc_core::ecma::atoms::Atom;
 use swc_core::ecma::visit::{VisitMut, VisitMutWith};
@@ -109,26 +121,31 @@ impl BackgroundFallbackVisitor {
     }
   }
 
-  /// The expression a `<Background>` folds to: its `fallback`, or `null`.
+  /// The expression a `<Background>` folds to.
+  ///
+  /// Its `fallback` alone, or — when the boundary also names an `island` —
+  /// the two of them in a fragment, island first. That order is the contract:
+  /// the background thread renders `island` then `children`, so putting the
+  /// island ahead of the fallback here puts it at the same index in both
+  /// trees, which is what lets the first-screen diff adopt it.
   ///
   /// Returns `None` when the element is not a `<Background>` at all.
-  fn fold_to_fallback(&self, element: &JSXElement) -> Option<Box<Expr>> {
+  fn fold_boundary(&self, element: &JSXElement) -> Option<Box<Expr>> {
     if !self.is_background(&element.opening.name) {
       return None;
     }
 
     let mut fallback: Option<Box<Expr>> = None;
+    let mut island: Option<Box<Expr>> = None;
     for attr in &element.opening.attrs {
       match attr {
         JSXAttrOrSpread::JSXAttr(attr) => {
-          let is_fallback = match &attr.name {
-            JSXAttrName::Ident(ident) => ident.sym == "fallback",
-            JSXAttrName::JSXNamespacedName(_) => false,
+          let slot = match &attr.name {
+            JSXAttrName::Ident(ident) if ident.sym == "fallback" => &mut fallback,
+            JSXAttrName::Ident(ident) if ident.sym == "island" => &mut island,
+            _ => continue,
           };
-          if !is_fallback {
-            continue;
-          }
-          fallback = Some(match &attr.value {
+          *slot = Some(match &attr.value {
             Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
               expr: JSXExpr::Expr(expr),
               ..
@@ -147,15 +164,15 @@ impl BackgroundFallbackVisitor {
           });
         }
         JSXAttrOrSpread::SpreadElement(spread) => {
-          // A spread may carry `fallback`, and which one wins depends on the
-          // runtime value. Folding either way would be a guess.
+          // A spread may carry `fallback` or `island`, and which one wins
+          // depends on the runtime value. Folding either way would be a guess.
           HANDLER.with(|handler| {
             handler
               .struct_span_err(
                 spread.span(),
                 "`enableMTSRendering: false` does not support a spread on `<Background>`: the \
-                 main thread compiles no business code, so its `fallback` has to be resolvable \
-                 at compile time. Pass `fallback` as an explicit attribute.",
+                 main thread compiles no business code, so its `fallback` and `island` have to \
+                 be resolvable at compile time. Pass them as explicit attributes.",
               )
               .emit();
           });
@@ -166,8 +183,28 @@ impl BackgroundFallbackVisitor {
 
     // No `fallback` attribute is the documented degenerate case: the main
     // thread renders nothing until the background hydrates.
-    Some(fallback.unwrap_or_else(null_expr))
+    let fallback = fallback.unwrap_or_else(null_expr);
+    Some(match island {
+      Some(island) => fragment_of(island, fallback),
+      None => fallback,
+    })
   }
+}
+
+/// `<>{first}{second}</>` — the two arms in one node, in order.
+fn fragment_of(first: Box<Expr>, second: Box<Expr>) -> Box<Expr> {
+  let child = |expr: Box<Expr>| {
+    JSXElementChild::JSXExprContainer(JSXExprContainer {
+      span: DUMMY_SP,
+      expr: JSXExpr::Expr(expr),
+    })
+  };
+  Box::new(Expr::JSXFragment(JSXFragment {
+    span: DUMMY_SP,
+    opening: JSXOpeningFragment { span: DUMMY_SP },
+    children: vec![child(first), child(second)],
+    closing: JSXClosingFragment { span: DUMMY_SP },
+  }))
 }
 
 fn is_runtime_package(src: &str) -> bool {
@@ -197,7 +234,7 @@ impl VisitMut for BackgroundFallbackVisitor {
 
   fn visit_mut_expr(&mut self, expr: &mut Expr) {
     if let Expr::JSXElement(element) = expr {
-      if let Some(mut folded) = self.fold_to_fallback(element) {
+      if let Some(mut folded) = self.fold_boundary(element) {
         // Recurse into the replacement: the fallback may itself hold a
         // `<Background>`, which folds to *its* fallback.
         folded.visit_mut_with(self);
@@ -210,7 +247,7 @@ impl VisitMut for BackgroundFallbackVisitor {
 
   fn visit_mut_jsx_element_child(&mut self, child: &mut JSXElementChild) {
     if let JSXElementChild::JSXElement(element) = child {
-      if let Some(mut folded) = self.fold_to_fallback(element) {
+      if let Some(mut folded) = self.fold_boundary(element) {
         folded.visit_mut_with(self);
         *child = JSXElementChild::JSXExprContainer(JSXExprContainer {
           span: DUMMY_SP,

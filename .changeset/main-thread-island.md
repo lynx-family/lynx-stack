@@ -30,3 +30,13 @@ export function Widget() {
 ```
 
 The build then compiles its module for the main thread regardless of who references it.
+
+For first-screen content _inside_ a deferred region, name it on the boundary rather than reaching for a `<MainThread>` in its `children` — the main thread never runs `children`, so a boundary declared in there sits at a position it cannot know:
+
+```tsx
+<Background island={<Nav />} fallback={<FeedSkeleton />}>
+  <Feed />
+</Background>;
+```
+
+Both threads render the island ahead of their own arm — `[island, fallback]` on the main thread, `[island, children]` on the background — so it is at the same index in both trees and the first-screen hydration adopts it while replacing only the fallback.

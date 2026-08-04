@@ -92,6 +92,15 @@ export interface MainThreadProps {
  * with the `'main thread component'` directive, which puts its module in the
  * main-thread bundle regardless of who references it.
  *
+ * That directive settles *compilation*, not *position*, and the two are
+ * separate problems. A `<MainThread>` only renders on the first frame if the
+ * whole spine down to it is main-thread code; inside a `<Background>`'s
+ * `children` — which the main thread never runs — there is no position for it
+ * to render at, and the island appears only once the background has
+ * hydrated. To keep something on the first frame inside a deferred region,
+ * name it on the boundary with `<Background island={…}>`, which puts it at a
+ * position both threads agree on.
+ *
  * @public
  */
 export function MainThread(props: MainThreadProps): ReactNode {

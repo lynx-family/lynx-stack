@@ -48,6 +48,7 @@ export function Background(props: BackgroundProps): ReactNode;
 export interface BackgroundProps {
     children?: ReactNode | undefined;
     fallback?: ReactNode | undefined;
+    island?: ReactNode | undefined;
 }
 
 // @public

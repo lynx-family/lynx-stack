@@ -55,17 +55,22 @@ function Feed() {
   );
 }
 
+/** What the entry does on the main thread: render this tree, then paint. */
+function renderTree(tree) {
+  __root.__jsx = tree;
+  renderPage();
+}
+
 /**
  * What the entry does on the main thread once the build has compiled it:
  * `root.render(<MainThread><Island/></MainThread>)`, then `renderPage`.
  */
 function renderIsland(Island) {
-  __root.__jsx = (
+  renderTree(
     <MainThread>
       <Island />
-    </MainThread>
+    </MainThread>,
   );
-  renderPage();
 }
 
 /** Hand the main thread's first screen over and apply the resulting patch. */
@@ -250,6 +255,81 @@ describe('main-thread island', () => {
     renderPage();
 
     expect(__root.__element_root.children).toHaveLength(0);
+  });
+
+  it('keeps an island named on a <Background>, and replaces only the fallback', async () => {
+    // The other way to reach the main thread from inside a deferred region:
+    // instead of a `<MainThread>` down in `children` — a position the main
+    // thread never walks to — the boundary itself names the island, so it is
+    // at a fixed index in both threads' trees.
+    function Nav() {
+      return <view class='nav' />;
+    }
+
+    function Page() {
+      return (
+        <view class='page'>
+          <Background island={<Nav />} fallback={<view class='feed-skeleton' />}>
+            <Feed />
+          </Background>
+        </view>
+      );
+    }
+
+    renderTree(<Page />);
+
+    // The main thread built both arms: the island, then the fallback.
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          class="page"
+        >
+          <view
+            class="nav"
+          />
+          <view
+            class="feed-skeleton"
+          />
+        </view>
+      </page>
+    `);
+
+    const nav = __root.__element_root.children[0].children[0];
+
+    const patch = await handOver(<Page />);
+
+    // Only the deferred arm moves: the fallback out, the feed in. The island
+    // is adopted where it stands.
+    expect(operations(patch)).toEqual([
+      SnapshotOperation.RemoveChild,
+      SnapshotOperation.CreateElement,
+      SnapshotOperation.InsertBefore,
+    ]);
+    expect(elementTree.root.children[0].children[0]).toBe(nav);
+    expect(elementTree.root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          class="page"
+        >
+          <view
+            class="nav"
+          />
+          <view
+            class="feed"
+          >
+            <text>
+              <raw-text
+                text="feed"
+              />
+            </text>
+          </view>
+        </view>
+      </page>
+    `);
   });
 
   it('keeps rendering the island when `updatePage` runs before the first screen', () => {
