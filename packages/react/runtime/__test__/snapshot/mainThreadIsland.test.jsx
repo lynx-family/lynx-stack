@@ -6,11 +6,9 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { Background, MainThread, useState } from '../../src/index';
-import { MAIN_THREAD_ROOT_ISLAND, installMainThreadIslandFirstFrame } from '../../src/main-thread-island';
 import { __root } from '../../src/root';
 import { setupPage } from '../../src/snapshot';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
-import { setMainThreadFirstFrame } from '../../src/snapshot/lifecycle/render';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { SnapshotOperation } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { globalEnvManager } from './utils/envManager';
@@ -154,7 +152,7 @@ describe('main-thread island', () => {
     const islandText = islandView.children[0];
 
     const patch = await handOver(
-      <MainThread fallback={<view class='fallback' />}>
+      <MainThread>
         <Shell />
       </MainThread>,
     );

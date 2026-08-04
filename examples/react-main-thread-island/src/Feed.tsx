@@ -5,13 +5,12 @@ const items = Array.from({ length: 20 }, (_, index) => ({
   title: `Row ${index}`,
 }));
 
+// The other end of the dial. The `<Background>` that wraps this component in
+// `Shell` is folded to its fallback for the main thread, so neither this
+// module nor anything it imports reaches the main-thread bundle — while its
+// element definitions still travel there, because the hydration needs them to
+// build the real content.
 export function Feed() {
-  // The other end of the dial. `<Background>` defers this subtree at runtime;
-  // the directive keeps its render body out of the main-thread bundle too, so
-  // the island does not drag the feed's code along. Its element definitions
-  // are still retained — the hydration needs them to build the real content.
-  'background only';
-
   const [selected, setSelected] = useState('none');
 
   return (

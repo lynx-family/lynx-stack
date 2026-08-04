@@ -12,12 +12,15 @@ function onSpin(e: MainThread.TouchEvent): void {
   ], { duration: 1000, iterations: 1 });
 }
 
+// The island. Nothing marks this module: the root `<MainThread>` references
+// it, so the build compiles it — and everything it renders — for the main
+// thread. Keep those imports small, and put what should not come along behind
+// a `<Background>` (see `Feed` below), which the main thread folds away.
+//
+// A component that must be on the main thread even though nothing on this
+// path reaches it says so at its definition, with the
+// `'main thread component'` directive.
 export function Shell() {
-  // The marker that puts this module in the main-thread layer. Everything it
-  // imports comes with it, so keep the island's imports small and mark the
-  // deferred parts `'background only'` (see `Feed`).
-  'main thread component';
-
   return (
     <view className='App'>
       <text className='Title'>main-thread island</text>
