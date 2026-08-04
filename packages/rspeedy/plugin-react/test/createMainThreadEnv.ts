@@ -62,10 +62,32 @@ export function createMainThreadEnv() {
     __CreateList: () => create('list'),
     __AppendElement: (parent: StubElement, child: StubElement) =>
       parent.children.push(child),
-    __InsertElementBefore: (parent: StubElement, child: StubElement) =>
-      parent.children.push(child),
+    __InsertElementBefore: (
+      parent: StubElement,
+      child: StubElement,
+      before?: StubElement,
+    ) => {
+      const index = before ? parent.children.indexOf(before) : -1
+      if (index === -1) {
+        parent.children.push(child)
+      } else {
+        parent.children.splice(index, 0, child)
+      }
+    },
     __RemoveElement: (parent: StubElement, child: StubElement) => {
       parent.children = parent.children.filter(element => element !== child)
+    },
+    __ReplaceElement: (newElement: StubElement, oldElement: StubElement) => {
+      const walk = (node: StubElement | undefined): boolean => {
+        if (!node) return false
+        const index = node.children.indexOf(oldElement)
+        if (index !== -1) {
+          node.children[index] = newElement
+          return true
+        }
+        return node.children.some((child) => walk(child))
+      }
+      walk(page)
     },
     __SetAttribute: (
       element: StubElement,
@@ -89,6 +111,7 @@ export function createMainThreadEnv() {
       key: string,
       value: unknown,
     ) => (element.attributes[`data-${key}`] = value),
+    __GetTag: (element: StubElement) => element.tag,
     __SetCSSId: noop,
     __AddEvent: noop,
     __SetEvents: noop,
