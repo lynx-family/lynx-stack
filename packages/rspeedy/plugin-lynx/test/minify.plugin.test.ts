@@ -87,12 +87,12 @@ describe('pluginMinify', () => {
         minify: {
           mainThreadOptions: {
             minimizerOptions: {
-              compress: { pure_funcs: ['__MAIN__'] },
+              compress: { pure_funcs: ['lynx.getJSModule'] },
             },
           },
           backgroundOptions: {
             minimizerOptions: {
-              compress: { pure_funcs: ['__BG__'] },
+              compress: { pure_funcs: ['lynx.registerDataProcessors'] },
             },
           },
         } as NonNullable<NonNullable<RsbuildConfig['output']>['minify']>,
@@ -106,8 +106,8 @@ describe('pluginMinify', () => {
     const serialized = JSON.stringify(
       minimizers.map((minimizer) => minimizer._args[0]),
     )
-    expect(serialized).toContain('__MAIN__')
-    expect(serialized).toContain('__BG__')
+    expect(serialized).toContain('lynx.getJSModule')
+    expect(serialized).toContain('lynx.registerDataProcessors')
 
     const mainThreadPattern = /.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$/
     const backgroundPattern = /.*background(?:\.[A-Fa-f0-9]*)?\.js$/
