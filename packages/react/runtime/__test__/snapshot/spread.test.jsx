@@ -10,6 +10,7 @@ import { useState } from '../../src/index';
 import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { setupPage, snapshotInstanceManager, hydrate, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { transformSpread } from '../../src/snapshot/snapshot/spread';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
 
@@ -41,9 +42,113 @@ afterEach(() => {
   backgroundSnapshotInstanceManager.nextId = 0;
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
+  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
 });
 
 describe('spreadUpdate', () => {
+  it('preserves spread attribute names when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(
+      transformSpread(
+        { __id: 6 },
+        1,
+        {
+          __spread: true,
+          textMaxline: 2,
+          onClick: vi.fn(),
+        },
+      ),
+    ).toEqual({
+      textMaxline: 2,
+      onClick: '6:1:onClick',
+    });
+  });
+
+  it('transforms builtin attribute names and preserves event handler lookup keys', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+
+    expect(
+      transformSpread(
+        { __id: 7 },
+        2,
+        {
+          __spread: true,
+          textMaxline: 2,
+          tailColorConvert: false,
+          onClick: vi.fn(),
+          onCatchTap: vi.fn(),
+          onReady: null,
+          bindchange: vi.fn(),
+        },
+      ),
+    ).toEqual({
+      'text-maxline': 2,
+      'tail-color-convert': false,
+      bindtap: '7:2:onClick',
+      catchtap: '7:2:onCatchTap',
+      bindready: null,
+      bindchange: '7:2:bindchange',
+    });
+  });
+
+  it('transforms only after identifying special spread attributes', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
+      rename: {
+        className: 'renamed-class',
+        ref: 'renamed-ref',
+        textMaxline: 'custom-maxline',
+      },
+    };
+
+    expect(
+      transformSpread(
+        { __id: 8 },
+        3,
+        {
+          __spread: true,
+          className: 'primary',
+          ref: null,
+          textMaxline: 2,
+        },
+      ),
+    ).toEqual({
+      className: 'primary',
+      ref: undefined,
+      'custom-maxline': 2,
+    });
+  });
+
+  it('renders camel-case spread attributes with transformed element state', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+
+    function Comp() {
+      const attributes = {
+        textMaxline: '2',
+        tailColorConvert: false,
+      };
+      return <text {...attributes}>1</text>;
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+
+    expect(scratch.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <text
+          tail-color-convert={false}
+          text-maxline="2"
+        >
+          <raw-text
+            text="1"
+          />
+        </text>
+      </page>
+    `);
+  });
+
   it('basic', async function() {
     function Comp() {
       const [spread, setSpread] = useState({

@@ -108,4 +108,36 @@ describe('element PAPI', () => {
     __ElementAnimate(view, [4, /* FINISH */ 'anim-5']);
     expect(elementTree.animationMap.get('anim-5').state).toBe('finished');
   });
+
+  it('__GetComputedStyleByKey should work', () => {
+    const view = __CreateView(0);
+    __SetInlineStyles(view, 'color: red; font-size: 16px;');
+
+    expect(__GetComputedStyleByKey(view, 'color')).toBe('rgb(255, 0, 0)');
+    expect(__GetComputedStyleByKey(view, 'font-size')).toBe('16px');
+  });
+
+  it('__GetComputedStyleByKey should work with dash notation', () => {
+    const view = __CreateView(0);
+    __SetInlineStyles(view, 'background-color: blue; margin-top: 10px;');
+
+    expect(__GetComputedStyleByKey(view, 'background-color')).toBe(
+      'rgb(0, 0, 255)',
+    );
+    expect(__GetComputedStyleByKey(view, 'margin-top')).toBe('10px');
+  });
+
+  it('__GetComputedStyleByKey should return empty string for unknown key', () => {
+    const view = __CreateView(0);
+
+    expect(__GetComputedStyleByKey(view, 'non-existent-property')).toBe('');
+  });
+
+  it('__GetComputedStyleByKey should only accept kebab-case', () => {
+    const view = __CreateView(0);
+    __SetInlineStyles(view, 'font-size: 16px;');
+
+    expect(__GetComputedStyleByKey(view, 'font-size')).toBe('16px');
+    expect(__GetComputedStyleByKey(view, 'fontSize')).toBe('');
+  });
 });

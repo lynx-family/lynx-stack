@@ -250,7 +250,7 @@ export {
 // 'stroke'
 // 'strokeWidth'
 
-/** filter-related plugins, only gradyscale and blur are supported*/
+/** filter-related plugins, only grayscale and blur are supported */
 
 // 'brightness'
 // 'contrast'

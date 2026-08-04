@@ -27,6 +27,11 @@ export interface ChatOptions {
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /**
+   * Set to false for controlled runs that must not inherit the process-wide
+   * OPENAI_REASONING_EFFORT setting.
+   */
+  inheritReasoningEffort?: boolean | undefined;
   onPerformanceEvent?: (
     event: string,
     details?: Record<string, unknown>,

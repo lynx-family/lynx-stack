@@ -29,7 +29,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc6 --project tsconfig.build.json",
     "test": "rstest"
   },
   "dependencies": {

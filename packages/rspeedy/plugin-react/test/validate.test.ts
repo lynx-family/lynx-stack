@@ -184,6 +184,62 @@ describe('Validation', () => {
       `)
   })
 
+  test('experimental_transformBuiltinAttributeNames', () => {
+    expect(
+      validateConfig({ experimental_transformBuiltinAttributeNames: false }),
+    ).toStrictEqual({ experimental_transformBuiltinAttributeNames: false })
+    expect(
+      validateConfig({ experimental_transformBuiltinAttributeNames: true }),
+    ).toStrictEqual({ experimental_transformBuiltinAttributeNames: true })
+    expect(
+      validateConfig({
+        experimental_transformBuiltinAttributeNames: {
+          mode: 'dash-case',
+          preserve: ['tailColorConvert'],
+          rename: {
+            textMaxline: 'custom-maxline',
+          },
+        },
+      }),
+    ).toStrictEqual({
+      experimental_transformBuiltinAttributeNames: {
+        mode: 'dash-case',
+        preserve: ['tailColorConvert'],
+        rename: {
+          textMaxline: 'custom-maxline',
+        },
+      },
+    })
+    expect(() =>
+      validateConfig({
+        // @ts-expect-error Testing runtime validation.
+        experimental_transformBuiltinAttributeNames: (
+          attributeName: string,
+        ) => attributeName,
+      })
+    ).toThrow(
+      'Invalid config on pluginReactLynx: `$input.experimental_transformBuiltinAttributeNames`',
+    )
+    expect(() =>
+      validateConfig({
+        experimental_transformBuiltinAttributeNames: {
+          // @ts-expect-error Testing runtime validation.
+          mode: 'custom',
+        },
+      })
+    ).toThrow(
+      'Invalid config on pluginReactLynx: `$input.experimental_transformBuiltinAttributeNames.mode`',
+    )
+    expect(() =>
+      validateConfig({
+        // @ts-expect-error Testing runtime validation.
+        experimental_transformBuiltinAttributeNames: 'dash-case',
+      })
+    ).toThrow(
+      'Invalid config on pluginReactLynx: `$input.experimental_transformBuiltinAttributeNames`',
+    )
+  })
+
   test('experimental_useElementTemplate', () => {
     expect(validateConfig({ experimental_useElementTemplate: true }))
       .toStrictEqual({

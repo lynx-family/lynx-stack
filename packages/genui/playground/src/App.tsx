@@ -11,10 +11,15 @@ import {
 
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
-import { BenchPlannedPage } from './pages/bench/BenchPlannedPage.js';
+import {
+  readBenchLocale,
+  writeBenchLocale,
+} from './pages/bench/benchLocale.js';
+import type { BenchLocale } from './pages/bench/benchLocale.js';
 import { BenchResultPage } from './pages/bench/BenchResultPage.js';
+import { BenchRunnerPage } from './pages/bench/BenchRunnerPage.js';
 import { BenchShell } from './pages/bench/BenchShell.js';
-import { BenchPage } from './pages/BenchPage.js';
+import { PhaseTwoReportPage } from './pages/bench/PhaseTwoReportPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
@@ -118,6 +123,7 @@ export function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     return getForcedTheme() ?? getInitialTheme();
   });
+  const [benchLocale, setBenchLocale] = useState<BenchLocale>(readBenchLocale);
   const embedded = useMemo(() => isEmbedded(), []);
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
@@ -143,6 +149,10 @@ export function App() {
       // Ignore localStorage errors.
     }
   }, [theme, forcedTheme]);
+
+  useEffect(() => {
+    writeBenchLocale(benchLocale);
+  }, [benchLocale]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -233,16 +243,25 @@ export function App() {
 
     switch (route.tab) {
       case 'bench': {
-        let benchPage = <BenchPage key='bench-runner' showHeader={false} />;
+        let benchPage = (
+          <BenchRunnerPage key='bench-runner' locale={benchLocale} />
+        );
         switch (route.benchSlug) {
           case undefined:
           case 'runner':
             break;
           case 'phase-1':
-            benchPage = <BenchResultPage key='bench-phase-1' />;
+            benchPage = (
+              <BenchResultPage key='bench-phase-1' locale={benchLocale} />
+            );
             break;
           case 'phase-2':
-            benchPage = <BenchPlannedPage key='bench-phase-2' />;
+            benchPage = (
+              <PhaseTwoReportPage
+                key='bench-phase-2-report'
+                locale={benchLocale}
+              />
+            );
             break;
           default:
             break;
@@ -250,7 +269,9 @@ export function App() {
         return (
           <BenchShell
             activeSlug={route.benchSlug}
+            locale={benchLocale}
             theme={theme}
+            onChangeLocale={setBenchLocale}
             onToggleTheme={handleThemeToggle}
           >
             {benchPage}
@@ -293,6 +314,7 @@ export function App() {
     route.componentName,
     route.demoId,
     route.benchSlug,
+    benchLocale,
     theme,
     handleThemeToggle,
   ]);

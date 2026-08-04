@@ -99,8 +99,13 @@ peerDependencyRules:
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.58.12"
+  typescript: &typescript-version "6.0.3"
 
 catalogs:
+  # Packages vendored from the Lynx toolchain.
+  lynxjs:
+    preact: "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c"
+
   adb:
     "@yume-chan/adb": ^2.6.0
     "@yume-chan/adb-scrcpy": ^2.3.2
@@ -118,7 +123,7 @@ catalogs:
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "0.23.2"
+    "@rslib/core": "1.0.0-beta.1"
 
   # Rspack monorepo packages
   rspack:
@@ -146,6 +151,14 @@ overrides:
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
 
 packageExtensions:
+  # Typia's internal packages import TypeScript without declaring it. Keep
+  # their TypeFlags aligned with the TypeScript instance used by the transformer.
+  "@typia/core@*":
+    dependencies:
+      typescript: *typescript-version
+  "@typia/transform@*":
+    dependencies:
+      typescript: *typescript-version
   "@rspack/test-tools@*":
     dependencies:
       wast-loader: ^1.14.1

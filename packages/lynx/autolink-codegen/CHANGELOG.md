@@ -1,5 +1,11 @@
 # @lynx-js/autolink-codegen
 
+## 0.4.0
+
+### Minor Changes
+
+- Add HarmonyOS Native Module spec generation and complete HAR scaffolding for Lynx Autolink libraries. ([#2990](https://github.com/lynx-family/lynx-stack/pull/2990))
+
 ## 0.3.0
 
 ### Minor Changes

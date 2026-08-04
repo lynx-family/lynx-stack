@@ -1,5 +1,11 @@
 # @lynx-js/motion
 
+## 0.0.5
+
+### Patch Changes
+
+- Allow the Motion main-thread shim to provide its Lynx element and window compatibility surfaces in Lynx for Web. ([#3295](https://github.com/lynx-family/lynx-stack/pull/3295))
+
 ## 0.0.4
 
 ### Patch Changes

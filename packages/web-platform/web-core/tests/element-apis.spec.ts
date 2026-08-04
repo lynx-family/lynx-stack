@@ -412,6 +412,35 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'name')).toBe('name');
   });
 
+  test('__GetComputedStyleByKey returns the computed value', () => {
+    const view = mtsGlobalThis.__CreateView(0);
+    rootDom.appendChild(view);
+    mtsGlobalThis.__SetInlineStyles(view, 'color:red;margin-top:10px;');
+
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'color')).toBe(
+      'rgb(255, 0, 0)',
+    );
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'margin-top')).toBe(
+      '10px',
+    );
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'not-a-property')).toBe(
+      '',
+    );
+    // The style name must be in kebab-case, so camelCase resolves to nothing.
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'marginTop')).toBe('');
+  });
+
+  test('__GetComputedStyleByKey falls back to an empty string', () => {
+    // An element owned by a document with no browsing context has no
+    // defaultView, so there is no window to resolve computed styles against.
+    const detached = document.implementation.createHTMLDocument()
+      .createElement('div') as unknown as Parameters<
+        typeof mtsGlobalThis.__GetComputedStyleByKey
+      >[0];
+
+    expect(mtsGlobalThis.__GetComputedStyleByKey(detached, 'color')).toBe('');
+  });
+
   test('__CreateComponent drops __Card__ entryName', () => {
     const ret = mtsGlobalThis.__CreateComponent(
       0,
@@ -2062,6 +2091,29 @@ describe('Element APIs', () => {
       expect(html4).toContain('calc(50 * var(--vw-unit))');
       expect(html4).toContain('calc(100 * var(--vh-unit))');
       expect(html4).toContain('calc(10 * var(--rpx-unit))');
+    });
+
+    test('ssr __GetComputedStyleByKey returns an empty string', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+      };
+      const { globalThisAPIs: api } = createServerElementAPI(
+        binding,
+        undefined,
+        '',
+        config,
+      );
+
+      const root = api.__CreatePage('page', 0);
+      const view = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(view, 'color: red;');
+      api.__AppendElement(root, view);
+
+      // SSR has neither layout nor cascade resolution.
+      expect(api.__GetComputedStyleByKey(view, 'color')).toBe('');
     });
 
     test('create element infer css id from parent component in SSR', () => {

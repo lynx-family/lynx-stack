@@ -28,6 +28,7 @@ function testingLoader(
     compat = false,
     defineDCE = { define: {} },
     engineVersion = '',
+    experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate = false,
     shake = false,
     transformPath = '@lynx-js/react/transform',
@@ -93,6 +94,9 @@ function testingLoader(
       },
       refresh: false,
       cssScope: false,
+      ...(experimental_transformBuiltinAttributeNames !== undefined && {
+        experimental_transformBuiltinAttributeNames,
+      }),
     },
   );
 

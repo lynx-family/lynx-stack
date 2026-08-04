@@ -6,6 +6,7 @@ import { describe, expect, test } from '@rstest/core';
 
 import {
   ProviderAgentCache,
+  buildOpenAIRunOptions,
   createStableValueHash,
 } from '../service/common/provider.js';
 
@@ -95,5 +96,15 @@ describe('createStableValueHash', () => {
     expect(createStableValueHash(changed)).not.toBe(
       createStableValueHash(first),
     );
+  });
+});
+
+describe('buildOpenAIRunOptions', () => {
+  test('passes the request abort signal to model runs', () => {
+    const controller = new AbortController();
+
+    expect(buildOpenAIRunOptions({}, controller.signal)).toMatchObject({
+      abortSignal: controller.signal,
+    });
   });
 });

@@ -76,9 +76,11 @@ export interface SourceMap {
   /**
    * Whether to generate CSS source maps.
    *
+   * @defaultValue `true`
+   *
    * @remarks
    *
-   * Defaults to `true`. In Lynx builds, all `.map` assets are removed before emit.
+   * In Lynx builds, all `.map` assets are removed before emit.
    *
    * @example
    *

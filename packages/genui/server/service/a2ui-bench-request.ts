@@ -6,6 +6,8 @@ import type {
   BenchCatalogLabel,
   BenchGroupRequest,
   BenchJobRequest,
+  BenchProfile,
+  BenchProtocol,
   BenchRole,
   BenchScenarioRequest,
   BenchSettings,
@@ -18,6 +20,7 @@ const MAX_REPEATS = 10;
 const MAX_PARALLELISM = 4;
 const MAX_PROMPT_CHARS = 4_000;
 const MAX_TEXT_FIELD_CHARS = 1_000;
+const MAX_PLANNED_GENERATION_ATTEMPTS = 120;
 
 const CATALOG_LABELS = new Set<BenchCatalogLabel>([
   'Full Catalog',
@@ -26,10 +29,13 @@ const CATALOG_LABELS = new Set<BenchCatalogLabel>([
 ]);
 
 const ROLES = new Set<BenchRole>(['control', 'experiment']);
+const PROTOCOLS = new Set<BenchProtocol>(['a2ui', 'openui']);
+const PROFILES = new Set<BenchProfile>(['native', 'matched-core']);
 const VARIABLES = new Set<BenchVariable>([
   'model',
   'prompt',
   'catalog',
+  'protocol',
   'custom',
 ]);
 
@@ -89,6 +95,23 @@ function readVariable(value: unknown): BenchVariable {
   return 'custom';
 }
 
+function readProtocol(value: unknown): BenchProtocol {
+  if (typeof value === 'string' && PROTOCOLS.has(value as BenchProtocol)) {
+    return value as BenchProtocol;
+  }
+  return 'a2ui';
+}
+
+function readProfile(
+  value: unknown,
+  protocol: BenchProtocol,
+): BenchProfile {
+  if (typeof value === 'string' && PROFILES.has(value as BenchProfile)) {
+    return value as BenchProfile;
+  }
+  return protocol === 'openui' ? 'matched-core' : 'native';
+}
+
 function readStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const items = value
@@ -133,14 +156,20 @@ function normalizeGroups(
       const model = clientOverrideAccepted
         ? readOptionalString(item.model, 240)
         : undefined;
+      const protocol = readProtocol(item.protocol);
+      const profile = readProfile(item.profile, protocol);
       return {
         id,
         role: readRole(item.role),
         name,
         variable: readVariable(item.variable),
         enabled: item.enabled !== false,
+        protocol,
+        profile,
         ...(model ? { model } : {}),
-        catalog: readCatalog(item.catalog),
+        ...(protocol === 'a2ui' && profile === 'native'
+          ? { catalog: readCatalog(item.catalog) }
+          : {}),
         extraInstruction: readString(item.extraInstruction, '', 2_000),
       };
     })
@@ -207,6 +236,10 @@ export function normalizeBenchJobRequest(
       ?? providerRecord.api,
   );
   const clientOverrideAccepted = options.clientOverrideAccepted;
+  const requestedGroupModelOverride = Array.isArray(value.groups)
+    && value.groups.some((group) =>
+      isRecord(group) && readOptionalString(group.model, 240) !== undefined
+    );
   const api =
     providerRecord.api === 'chat' || providerRecord.api === 'responses'
       ? providerRecord.api
@@ -235,6 +268,17 @@ export function normalizeBenchJobRequest(
       error: 'at least one enabled group is required',
     };
   }
+  if (
+    enabledGroups.some((group) =>
+      group.protocol === 'openui' && group.profile !== 'matched-core'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'openui groups require the "matched-core" profile',
+    };
+  }
 
   const scenarios = normalizeScenarios(value.scenarios);
   if (scenarios.length === 0) {
@@ -246,9 +290,34 @@ export function normalizeBenchJobRequest(
   }
 
   const settings = normalizeSettings(value.settings);
+  const mixedProtocols = new Set(enabledGroups.map((group) => group.protocol))
+    .size > 1;
   const totalRuns = enabledGroups.length * scenarios.length * settings.repeats;
+  const plannedGenerationAttempts = totalRuns
+    * (settings.maxRepairAttempts + 1);
+  if (
+    (settings.judgeEnabled
+      || enabledGroups.some((group) => group.profile === 'matched-core'))
+    && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
+  ) {
+    return {
+      ok: false,
+      status: 422,
+      error:
+        `benchmark workload exceeds the ${MAX_PLANNED_GENERATION_ATTEMPTS} planned generation-attempt limit`,
+    };
+  }
   const warnings: string[] = [];
-  if (!clientOverrideAccepted && requestedProviderOverride) {
+  if (mixedProtocols && settings.parallelism !== 1) {
+    settings.parallelism = 1;
+    warnings.push(
+      'Mixed-protocol jobs run one sample at a time so benchmark arms remain paired; settings.parallelism was set to 1.',
+    );
+  }
+  if (
+    !clientOverrideAccepted
+    && (requestedProviderOverride || requestedGroupModelOverride)
+  ) {
     warnings.push(
       'Client provider overrides are disabled by server policy; using server environment provider settings.',
     );
