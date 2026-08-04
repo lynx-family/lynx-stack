@@ -1432,9 +1432,9 @@ const LAZY_BUNDLE_NAME_LIMIT = 100;
  * identical for the main-thread and background chunks of one lazy bundle.
  */
 function shortenLazyBundleName(name: string): string {
-  // The tail identifies the module; separators become `_` so the name stays a
-  // single path segment.
-  const label = name.slice(-32).replace(/\//g, '_');
+  // Keep the file name, which identifies the module and is short in practice,
+  // and drop the directories — the unbounded part.
+  const label = name.slice(name.lastIndexOf('/') + 1);
   const digest = createHash('sha256').update(name).digest('hex').slice(0, 8);
   return `${label}-${digest}`;
 }
