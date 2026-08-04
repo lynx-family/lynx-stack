@@ -334,6 +334,7 @@ fn lower_to_main_thread_syntax(
     compat::es2020::optional_chaining(Default::default(), unresolved_mark),
     compat::es2020::nullish_coalescing(Default::default()),
     compat::es2021::logical_assignments(),
+    compat::es2015::block_scoping(unresolved_mark),
     helpers::inject_helpers(unresolved_mark),
     hygiene_with_config(Config {
       top_level_mark,
