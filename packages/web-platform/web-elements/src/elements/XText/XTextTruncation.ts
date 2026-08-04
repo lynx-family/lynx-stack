@@ -404,7 +404,7 @@ export class XTextTruncation
     const getTextMeasure = () =>
       this.#textMeasure ??= new TextRenderingMeasureTool(
         this.#dom,
-        this.#dom.getBoundingClientRect(),
+        this.#getInnerBox().getBoundingClientRect(),
       );
     const getLineCount = () => lines?.length ?? getTextMeasure().getLineCount();
     const getLines = () =>
