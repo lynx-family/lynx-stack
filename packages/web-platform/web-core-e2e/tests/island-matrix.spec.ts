@@ -7,6 +7,16 @@ import path from 'node:path';
 import { expect, test } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 
+import {
+  COLOR,
+  type Frame,
+  type Mode,
+  MODES,
+  type Phase,
+  type Shown,
+  renderReport,
+} from './island-matrix-report.js';
+
 /**
  * The first-screen boundary matrix, end to end.
  *
@@ -32,21 +42,6 @@ import type { Page } from '@playwright/test';
  * 2. The main thread's own frame is what the model predicts, per case.
  * 3. Islands are adopted; fallbacks are replaced.
  */
-
-const MODES = ['ifr', 'mts'] as const;
-type Mode = typeof MODES[number];
-
-const PHASES = ['main-thread', 'stamped', 'hydrated'] as const;
-type Phase = typeof PHASES[number];
-
-/** The colours the fixtures paint with, as the browser reports them. */
-const COLOR = {
-  skeleton: 'rgb(201, 213, 227)',
-  deferred: 'rgb(46, 139, 87)',
-  island: 'rgb(47, 111, 208)',
-  header: 'rgb(26, 26, 46)',
-  stamp: 'rgb(245, 166, 35)',
-} as const;
 
 /**
  * Hold the background thread by buffering the messages that start it: the RPC
@@ -115,12 +110,6 @@ async function releaseBackgroundThread(page: Page): Promise<number> {
   );
 }
 
-/** One identified element the page is showing. */
-interface Shown {
-  id: string;
-  color: string;
-}
-
 /**
  * The identified elements on screen, in document order, with the colour each
  * is actually painted. Lynx for Web renders inside `lynx-view`'s shadow root,
@@ -160,16 +149,6 @@ const REPORT_DIR = path.join(
   '..',
   'island-matrix-report',
 );
-
-/** One captured frame, for the side-by-side report. */
-interface Frame {
-  casename: string;
-  mode: Mode;
-  phase: Phase;
-  shown: Shown[];
-  /** The screenshot, base64 PNG — inlined so the report is one file. */
-  png: string;
-}
 
 const frames: Frame[] = [];
 
@@ -418,108 +397,7 @@ test.describe('first-screen boundary matrix', () => {
     );
     await fs.writeFile(
       path.join(REPORT_DIR, 'index.html'),
-      renderReport(frames),
+      renderReport(frames, CASES),
     );
   });
 });
-
-/** The side-by-side report: every case, both builds, all three phases. */
-function renderReport(all: Frame[]): string {
-  const escape = (text: string) =>
-    text.replace(
-      /[&<>]/g,
-      (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char]!,
-    );
-
-  const cell = (casename: string, mode: Mode, phase: Phase): string => {
-    const frame = all.find((f) =>
-      f.casename === casename && f.mode === mode && f.phase === phase
-    );
-    if (!frame) {
-      return `<td class="cell"><em>not captured</em></td>`;
-    }
-    const rows = frame.shown.length === 0
-      ? '<li class="empty">— empty —</li>'
-      : frame.shown
-        .map(({ id, color }) =>
-          `<li><span class="swatch" style="background:${
-            escape(color)
-          }"></span>${escape(id)}</li>`
-        )
-        .join('');
-    return `<td class="cell">
-      <img src="data:image/png;base64,${frame.png}" alt="${
-      escape(`${casename} ${mode} ${phase}`)
-    }" />
-      <ul class="ids">${rows}</ul>
-    </td>`;
-  };
-
-  const caseRows = CASES.map((casename) =>
-    `<section>
-      <h2>${escape(casename)}</h2>
-      <table>
-        <thead>
-          <tr><th></th>${
-      PHASES.map((phase) => `<th>${escape(phase)}</th>`).join('')
-    }</tr>
-        </thead>
-        <tbody>
-          ${
-      MODES.map((mode) =>
-        `<tr><th class="mode">${
-          mode === 'ifr'
-            ? 'enableMTSRendering: true'
-            : 'enableMTSRendering: false'
-        }</th>${
-          PHASES.map((phase) => cell(casename, mode, phase)).join('')
-        }</tr>`
-      ).join('')
-    }
-        </tbody>
-      </table>
-    </section>`
-  ).join('\n');
-
-  return `<!doctype html>
-<meta charset="utf-8">
-<title>First-screen boundary matrix</title>
-<style>
-  body { font: 14px/1.5 system-ui, sans-serif; margin: 2rem; color: #1a1a2e; }
-  h1 { font-size: 1.4rem; }
-  section { margin: 2.5rem 0; }
-  h2 { font-size: 1.1rem; font-family: ui-monospace, monospace; }
-  table { border-collapse: collapse; }
-  th, td { border: 1px solid #d8dee9; padding: .5rem; vertical-align: top; }
-  th { background: #f4f6fa; font-weight: 600; text-align: left; }
-  th.mode { font-family: ui-monospace, monospace; font-weight: 400; width: 14rem; }
-  img { display: block; width: 200px; border: 1px solid #e6e9f0; }
-  ul.ids { list-style: none; margin: .5rem 0 0; padding: 0;
-           font-family: ui-monospace, monospace; font-size: 12px; }
-  ul.ids li { display: flex; align-items: center; gap: .4rem; }
-  li.empty { color: #8a94a6; font-style: italic; }
-  .swatch { width: .8rem; height: .8rem; border: 1px solid #c3c9d4; }
-  .legend { display: flex; gap: 1.2rem; flex-wrap: wrap; padding: 0; list-style: none; }
-  .legend li { display: flex; align-items: center; gap: .4rem; }
-</style>
-<h1>First-screen boundary matrix</h1>
-<p>
-  Every case is built twice from identical source and observed three times:
-  the frame the main thread built alone (the background thread is held), the
-  same frame after every main-thread-built element has been tapped, and the
-  frame after the background was released and handed over. A stamp that
-  survives the hand-over means the element was <strong>adopted</strong>; a
-  stamp that vanishes means it was <strong>replaced</strong>.
-</p>
-<ul class="legend">
-  ${
-    Object.entries(COLOR)
-      .map(([name, value]) =>
-        `<li><span class="swatch" style="background:${value}"></span>${name}</li>`
-      )
-      .join('')
-  }
-</ul>
-${caseRows}
-`;
-}
