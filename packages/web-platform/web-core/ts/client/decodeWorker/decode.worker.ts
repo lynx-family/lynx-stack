@@ -20,6 +20,7 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
+import { looksLikeLynxXML, xmlToTemplate } from './xmlTemplate.js';
 
 const MTS_CODE_WRAPPER_PREFIX =
   '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
@@ -112,6 +113,19 @@ function postHeartbreak() {
   postMessage({ type: 'heartbreak' } as MainMessage);
 }
 
+/**
+ * Decodes two consecutive chunks of a UTF-8 stream as a single string.
+ *
+ * Decoding each chunk on its own would mis-decode a multi-byte sequence split
+ * across the boundary, so the chunks are joined before decoding.
+ */
+function decodeConcatenatedUTF8(head: Uint8Array, tail: Uint8Array): string {
+  const joined = new Uint8Array(head.length + tail.length);
+  joined.set(head);
+  joined.set(tail, head.length);
+  return new TextDecoder().decode(joined);
+}
+
 function unrefTimer(timer: ReturnType<typeof setTimeout>) {
   if (typeof timer === 'object' && timer !== null && 'unref' in timer) {
     (timer as { unref: () => void }).unref();
@@ -154,7 +168,11 @@ self.onmessage = async (
     try {
       const response = await fetch(fetchUrl, {
         headers: {
-          'Accept': 'application/octet-stream, application/json',
+          // Advertise the markup format too. Servers routinely ignore `Accept`
+          // for static files, so the format is decided by sniffing the payload
+          // in `handleStream` rather than by the response's `Content-Type`.
+          'Accept':
+            'application/octet-stream, application/json, application/xml, text/xml',
         },
       });
       if (!response.body || response.status !== 200) {
@@ -209,6 +227,31 @@ async function handleStream(
       overrideConfig,
     );
     return;
+  }
+
+  // Check if Lynx XML markup. A binary bundle starts with the `SDRA` magic and a
+  // JSON artifact with `{`, so a leading `<` (optionally preceded by a BOM or
+  // whitespace) unambiguously identifies the markup format. The prelude may be
+  // an XML declaration, a doctype, a comment or the `<lynx>` root, all of which
+  // begin with `<`; sniffing the first 8 bytes is therefore enough.
+  {
+    const decoder = new TextDecoder();
+    if (looksLikeLynxXML(decoder.decode(headerBytes))) {
+      const rest = await streamReader.readRest();
+      // Decode the two chunks as one buffer: a multi-byte UTF-8 sequence may
+      // straddle the 8 byte boundary, and decoding the halves separately would
+      // corrupt it.
+      const source = decodeConcatenatedUTF8(headerBytes, rest);
+      await handleXML(
+        source,
+        url,
+        transformVW,
+        transformVH,
+        transformREM,
+        overrideConfig,
+      );
+      return;
+    }
   }
 
   const view = new DataView(
@@ -504,6 +547,39 @@ async function handleJSON(
       'ElementTemplates in JSON artifacts are not supported yet.',
     );
   }
+}
+
+/**
+ * Handles a single file Lynx XML markup document.
+ *
+ * The document is translated into the JSON artifact shape and then assembled by
+ * {@link handleJSON}, so both buildless formats emit exactly the same section
+ * message sequence.
+ *
+ * A parse failure is reported by throwing, which the `load` handler forwards
+ * through the worker's `error` channel; the thrown message is the parser's
+ * `formattedMessage`, which carries the byte offset of the failure.
+ */
+async function handleXML(
+  source: string,
+  url: string,
+  transformVW: boolean,
+  transformVH: boolean,
+  transformREM: boolean,
+  overrideConfig?: Partial<PageConfig>,
+) {
+  const result = xmlToTemplate(source);
+  if (!result.success) {
+    throw new Error(result.message);
+  }
+  await handleJSON(
+    result.template,
+    url,
+    transformVW,
+    transformVH,
+    transformREM,
+    overrideConfig,
+  );
 }
 
 postMessage({ type: 'ready' } as MainMessage);
