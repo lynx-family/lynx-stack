@@ -233,6 +233,9 @@ describe('pluginDev', () => {
         'default',
       ],
     })
+    expect(ProvidePlugin).not.toBeCalledWith(
+      expect.objectContaining({ WebSocket: expect.anything() as unknown }),
+    )
   })
 
   test('not inject entry and provide variables in production', async () => {
@@ -696,7 +699,7 @@ describe('pluginDev', () => {
   })
 
   test('server.base without /', async () => {
-    try {
+    await expect(async () => {
       const rsbuild = await createDevStubRsbuild({
         server: {
           base: 'dist',
@@ -704,11 +707,9 @@ describe('pluginDev', () => {
       })
 
       await rsbuild.unwrapConfig()
-    } catch (error) {
-      expect(error).toMatchInlineSnapshot(
-        `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
-      )
-    }
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
+    )
   })
 
   test('dev.assetPrefix with server.base', async () => {

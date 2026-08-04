@@ -547,13 +547,13 @@ describe('pluginSourcemap', () => {
 
       await using server = await rsbuild.usingDevServer()
 
+      await server.waitDevCompileDone()
+
       const config = await rsbuild.unwrapConfig()
 
       expect(config.output?.publicPath).toBe(
         `http://example.com:${server.port}/`,
       )
-
-      await server.waitDevCompileDone()
 
       expect(config.devtool).toBe(false)
       expect(SourceMapDevToolPlugin).toBeCalled()
