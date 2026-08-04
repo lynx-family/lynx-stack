@@ -21,6 +21,7 @@ import {
 import { BackgroundThread } from './Background.js';
 import { BoundingClientRectService } from './BoundingClientRectService.js';
 import { I18nManager } from './I18n.js';
+import { IntersectionObserverService } from './IntersectionObserverService.js';
 import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
 import { createInvokeUIMethod } from './elementAPIs/createInvokeUIMethod.js';
 import { ExposureServices } from './ExposureServices.js';
@@ -67,6 +68,7 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly backgroundThread: BackgroundThread;
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
+  readonly intersectionObserverService: IntersectionObserverService;
   readonly webElementsLoadingPromises: Promise<void>[] = [];
 
   // A `.web.bundle` url is only ever loaded one way — as a lazy component
@@ -132,6 +134,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.exposureServices = new ExposureServices(
       this,
     );
+    this.intersectionObserverService = new IntersectionObserverService(this);
     this.backgroundThread.markTiming('create_lynx_start');
   }
 
@@ -362,6 +365,7 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async [Symbol.asyncDispose]() {
     this.boundingClientRectService.dispose();
+    this.intersectionObserverService.dispose();
     await this.backgroundThread[Symbol.asyncDispose]();
     this.exposureServices.dispose();
     // Detach DOM event listeners synchronously. Some (keydown/keyup) are

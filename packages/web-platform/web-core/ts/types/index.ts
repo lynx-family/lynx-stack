@@ -25,3 +25,4 @@ export type * from './UpdateDataOptions.js';
 export type * from './BTSChunk.js';
 export type * from './PageConfig.js';
 export type * from './DecodedTemplate.js';
+export type * from './IntersectionObserver.js';

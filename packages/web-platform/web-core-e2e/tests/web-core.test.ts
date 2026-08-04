@@ -46,6 +46,136 @@ async function getBackgroundThreadWorker(
 }
 
 test.describe('web core tests', () => {
+  test('lynx.createIntersectionObserver observes Web elements', async ({ page }) => {
+    await goto(page);
+    await page.evaluate(() => {
+      const root = globalThis.runtime.__CreatePage('0', '0', {});
+      const target = globalThis.runtime.__CreateView(0);
+      globalThis.runtime.__SetID(target, 'intersection-target');
+      globalThis.runtime.__SetInlineStyles(
+        target,
+        'width: 100px; height: 80px;',
+      );
+      globalThis.runtime.__AppendElement(root, target);
+      globalThis.runtime.__FlushElementTree();
+    });
+    const worker = await getBackgroundThreadWorker(page);
+
+    const entry = await worker.evaluate(() => {
+      return new Promise<{
+        boundingClientRect: {
+          bottom: number;
+          left: number;
+          right: number;
+          top: number;
+        };
+        intersectionRatio: number;
+        intersectionRect: {
+          bottom: number;
+          left: number;
+          right: number;
+          top: number;
+        };
+        isIntersecting: boolean;
+        observerId: string;
+        relativeRect: {
+          bottom: number;
+          left: number;
+          right: number;
+          top: number;
+        };
+        time: number;
+      }>((resolve) => {
+        const observer = globalThis.runtime.lynx.createIntersectionObserver(
+          { componentId: '' },
+          { initialRatio: -1, thresholds: [0] },
+        );
+        observer.relativeToViewport();
+        observer.observe('#intersection-target', (result: unknown) => {
+          observer.disconnect();
+          resolve(result);
+        });
+      });
+    });
+
+    expect(entry.isIntersecting).toBe(true);
+    expect(entry.intersectionRatio).toBe(1);
+    expect(entry.observerId).toBe('intersection-target');
+    expect(entry.time).toBe(0);
+    expect(entry.boundingClientRect.right - entry.boundingClientRect.left)
+      .toBe(100);
+    expect(entry.boundingClientRect.bottom - entry.boundingClientRect.top)
+      .toBe(80);
+    expect(entry.intersectionRect).toEqual(entry.boundingClientRect);
+    expect(entry.relativeRect.right).toBeGreaterThan(
+      entry.boundingClientRect.right,
+    );
+    expect(entry.relativeRect.bottom).toBeGreaterThanOrEqual(
+      entry.boundingClientRect.bottom,
+    );
+  });
+
+  test('lynx.createIntersectionObserver leaves exact thresholds upward', async ({ page }) => {
+    await goto(page);
+    await page.evaluate(() => {
+      const pageElement = globalThis.runtime.__CreatePage('0', '0', {});
+      const root = globalThis.runtime.__CreateView(0);
+      globalThis.runtime.__SetID(root, 'intersection-root');
+      globalThis.runtime.__SetInlineStyles(
+        root,
+        'position: relative; width: 100px; height: 100px; overflow: hidden;',
+      );
+      const target = globalThis.runtime.__CreateView(0);
+      globalThis.runtime.__SetID(target, 'intersection-threshold-target');
+      globalThis.runtime.__SetInlineStyles(
+        target,
+        'position: absolute; left: 50px; width: 100px; height: 100px;',
+      );
+      globalThis.runtime.__AppendElement(root, target);
+      globalThis.runtime.__AppendElement(pageElement, root);
+      globalThis.runtime.__FlushElementTree();
+    });
+    const worker = await getBackgroundThreadWorker(page);
+
+    const firstEntry = await worker.evaluate(() => {
+      return new Promise<{ intersectionRatio: number }>((resolve) => {
+        const workerGlobal = globalThis as any;
+        workerGlobal.__thresholdEntries = [];
+        const observer = globalThis.runtime.lynx.createIntersectionObserver(
+          { componentId: '' },
+          { initialRatio: -1, thresholds: [0.5] },
+        );
+        workerGlobal.__thresholdObserver = observer;
+        observer.relativeTo('#intersection-root');
+        observer.observe(
+          '#intersection-threshold-target',
+          (result: { intersectionRatio: number }) => {
+            workerGlobal.__thresholdEntries.push(result);
+            if (workerGlobal.__thresholdEntries.length === 1) resolve(result);
+          },
+        );
+      });
+    });
+    expect(firstEntry.intersectionRatio).toBeCloseTo(0.5);
+
+    await page.evaluate(() => {
+      const target = document.querySelector('lynx-view')!.shadowRoot!
+        .querySelector<HTMLElement>('#intersection-threshold-target')!;
+      target.style.left = '40px';
+    });
+    await expect.poll(() =>
+      worker.evaluate(() => (globalThis as any).__thresholdEntries.length)
+    ).toBe(2);
+    const secondEntry = await worker.evaluate(() => {
+      const workerGlobal = globalThis as any;
+      workerGlobal.__thresholdObserver.disconnect();
+      return workerGlobal.__thresholdEntries[1] as {
+        intersectionRatio: number;
+      };
+    });
+    expect(secondEntry.intersectionRatio).toBeCloseTo(0.6);
+  });
+
   test('selectComponent', async ({ page, browserName }) => {
     // firefox not support
     test.skip(browserName === 'firefox');
