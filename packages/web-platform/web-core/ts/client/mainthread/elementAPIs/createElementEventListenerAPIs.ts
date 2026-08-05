@@ -11,10 +11,8 @@ import type {
   MainThreadScriptEvent,
   RemoveEventListenerPAPI,
 } from '../../../types/index.js';
-import {
-  LynxEventNameToW3cCommon,
-  uniqueIdSymbol,
-} from '../../../constants.js';
+import { LynxEventNameToW3cCommon } from '../../../constants.js';
+import { __GetElementUniqueID } from './pureElementPAPIs.js';
 import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
 
@@ -92,19 +90,6 @@ function listenerKey(
 }
 
 /**
- * The element's Lynx unique id, or `undefined` when it has none.
- *
- * Every element built through the Element PAPIs carries one, but a card can
- * hand these APIs an arbitrary object. Without this check such elements would
- * all key on the string `"undefined"`, so listeners on unrelated elements would
- * collide and removal would detach the wrong one.
- */
-function lynxUniqueIdOf(element: HTMLElement): number | undefined {
-  const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
-  return typeof uniqueId === 'number' ? uniqueId : undefined;
-}
-
-/**
  * Element-level event listener PAPIs (`__AddEventListener` /
  * `__RemoveEventListener`).
  *
@@ -155,8 +140,8 @@ export function createElementEventListenerAPIs(
     const target = (domEvent.target ?? currentTarget) as DecoratedHTMLElement;
     const wasmContext = mtsBinding.wasmContext;
     const datasetOf = (element: DecoratedHTMLElement) => {
-      const uniqueId = element[uniqueIdSymbol];
-      if (wasmContext && typeof uniqueId === 'number' && uniqueId >= 0) {
+      const uniqueId = __GetElementUniqueID(element);
+      if (wasmContext && uniqueId >= 0) {
         try {
           return wasmContext.get_dataset(uniqueId) as Record<string, string>;
         } catch {
@@ -208,8 +193,11 @@ export function createElementEventListenerAPIs(
       return;
     }
 
-    const uniqueId = lynxUniqueIdOf(element);
-    if (uniqueId === undefined) {
+    // `__GetElementUniqueID` yields -1 for anything not built through the
+    // Element PAPIs. Such elements must not be keyed, or they would all share
+    // one key and a listener added on one would be removable through another.
+    const uniqueId = __GetElementUniqueID(element);
+    if (uniqueId === -1) {
       return;
     }
     const key = listenerKey(uniqueId, eventName, resolved.capture);
@@ -271,8 +259,8 @@ export function createElementEventListenerAPIs(
       // with `undefined` would take its "no identifier" branch, which also
       // clears the worklet handler for the same (element, type, name) triple -
       // detaching a `main-thread:bind` handler that this call never touched.
-      const uniqueId = lynxUniqueIdOf(element);
-      if (uniqueId !== undefined) {
+      const uniqueId = __GetElementUniqueID(element);
+      if (uniqueId !== -1) {
         mtsBinding.wasmContext?.add_cross_thread_event(
           uniqueId,
           resolved.catchEvent ? 'catchEvent' : 'bindEvent',
@@ -287,8 +275,11 @@ export function createElementEventListenerAPIs(
       return;
     }
 
-    const uniqueId = lynxUniqueIdOf(element);
-    if (uniqueId === undefined) {
+    // `__GetElementUniqueID` yields -1 for anything not built through the
+    // Element PAPIs. Such elements must not be keyed, or they would all share
+    // one key and a listener added on one would be removable through another.
+    const uniqueId = __GetElementUniqueID(element);
+    if (uniqueId === -1) {
       return;
     }
     const key = listenerKey(uniqueId, eventName, resolved.capture);

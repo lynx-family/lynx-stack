@@ -63,8 +63,10 @@ export interface ElementEventListenerOptions {
   once?: boolean;
   passive?: boolean;
   /**
-   * Accepted for signature parity with the engine PAPI. `AbortSignal`-style
-   * cancellation is not implemented on web; use `__RemoveEventListener`.
+   * A flag, not a DOM `AbortSignal`: the engine reads this key as a boolean, so
+   * the type matches it rather than the web platform's option of the same name.
+   * It is accepted for parity and otherwise ignored - remove a listener with
+   * `__RemoveEventListener`.
    */
   signal?: boolean;
   /**
