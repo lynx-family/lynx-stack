@@ -167,7 +167,7 @@
   },
   "g01-assert-folded": {
     "what": "The deferred module asserts it with `import 'background-only'`.",
-    "reading": "The same shape as `p01-root`, plus an assertion in the deferred module. The fold reaches it, so the module is not in the main-thread graph and the assertion passes — under `true` the classic build compiles it for the main thread and the assertion fails, which is the correct answer there.",
+    "reading": "The same shape as `p01-root`, plus an assertion in the deferred module. The fold reaches it, so the module is not in the main-thread graph and the assertion holds — and under `true` the classic build compiles it there, so the build fails. That failure is the assertion's real cost: it is not a free guardrail but a declaration that this module has no place in any main-thread-rendering build, development included, where `'auto'` always resolves to the classic path. Compare `p01-root`, which is this case without the assertion and builds in all three.",
     "expectBuildError": [
       "on"
     ],
@@ -178,7 +178,7 @@
   },
   "g02-assert-not-folded": {
     "what": "`i04-wrapper`, with the same assertion — the case the fold cannot cut.",
-    "reading": "This is the deliverable of the whole matrix: the one shape where the bundle win is silently lost becomes a named build error, from a mechanism the repo already ships. The assertion is on the *module*, so it does not care where the reference lives.",
+    "reading": "This is the deliverable of the whole matrix. `i04-wrapper` is this exact app without the assertion: it builds everywhere, paints correctly everywhere, and silently ships the deferred logic under `'auto'`/`false` — a loss nothing but reading the chunk would reveal. The assertion is on the *module*, so it does not care where the reference lives, and turns that silence into a build error naming the file.",
     "expectBuildError": [
       "auto",
       "off",
