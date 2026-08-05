@@ -116,7 +116,7 @@ function postHeartbreak() {
 /**
  * Decodes two consecutive chunks of a UTF-8 stream as a single string.
  *
- * Decoding each chunk on its own would mis-decode a multi-byte sequence split
+ * Decoding each chunk on its own would corrupt a multi-byte sequence split
  * across the boundary, so the chunks are joined before decoding.
  */
 function decodeConcatenatedUTF8(head: Uint8Array, tail: Uint8Array): string {

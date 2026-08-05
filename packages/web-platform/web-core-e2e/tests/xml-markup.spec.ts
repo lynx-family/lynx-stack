@@ -132,7 +132,7 @@ test.describe('Lynx XML markup card', () => {
     }
 
     // The regions nest the way the script assembles them, so a flat "each one
-    // exists" check cannot pass while the tree is actually mis-parented.
+    // exists" check would still pass if the tree were assembled incorrectly.
     for (
       const [parent, child] of [
         ['scroll-view', '.shell'],
