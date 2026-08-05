@@ -2,6 +2,7 @@
   "files.associations": {
     "api-extractor.json": "jsonc",
     "renovate.json": "jsonc",
+    "renovate.json5": "jsonc",
     "*.mdx": "mdx",
     "*.snap.txt": "markdown",
   },
