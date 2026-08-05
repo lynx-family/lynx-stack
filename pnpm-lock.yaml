@@ -1120,6 +1120,12 @@ importers:
         specifier: workspace:^
         version: link:../autolink-codegen
     devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../../rspeedy/plugin-react
       '@lynx-js/rspeedy':
         specifier: workspace:^
         version: link:../../rspeedy/core
