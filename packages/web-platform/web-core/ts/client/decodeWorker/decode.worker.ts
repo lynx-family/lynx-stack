@@ -20,7 +20,11 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
-import { looksLikeLynxXML, xmlToTemplate } from './xmlTemplate.js';
+import {
+  isAllXMLLeadingWhitespace,
+  looksLikeLynxXML,
+  xmlToTemplate,
+} from './xmlTemplate.js';
 
 const MTS_CODE_WRAPPER_PREFIX =
   '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
@@ -233,15 +237,26 @@ async function handleStream(
   // JSON artifact with `{`, so a leading `<` (optionally preceded by a BOM or
   // whitespace) unambiguously identifies the markup format. The prelude may be
   // an XML declaration, a doctype, a comment or the `<lynx>` root, all of which
-  // begin with `<`; sniffing the first 8 bytes is therefore enough.
+  // begin with `<`.
   {
     const decoder = new TextDecoder();
-    if (looksLikeLynxXML(decoder.decode(headerBytes))) {
-      const rest = await streamReader.readRest();
-      // Decode the two chunks as one buffer: a multi-byte UTF-8 sequence may
-      // straddle the 8 byte boundary, and decoding the halves separately would
-      // corrupt it.
-      const source = decodeConcatenatedUTF8(headerBytes, rest);
+    const header = decoder.decode(headerBytes);
+    // The parser tolerates unlimited leading whitespace, so a document whose
+    // first 8 bytes are all whitespace would otherwise be missed here and then
+    // fail the magic-header check with an error describing the wrong cause.
+    // Only such a header needs the rest of the payload to classify.
+    const rest = isAllXMLLeadingWhitespace(header)
+      ? await streamReader.readRest()
+      : undefined;
+    // Decode the chunks as one buffer: a multi-byte UTF-8 sequence may straddle
+    // the boundary, and decoding the halves separately would corrupt it.
+    const sniffed = rest === undefined
+      ? header
+      : decodeConcatenatedUTF8(headerBytes, rest);
+    if (looksLikeLynxXML(sniffed)) {
+      const source = rest === undefined
+        ? decodeConcatenatedUTF8(headerBytes, await streamReader.readRest())
+        : sniffed;
       await handleXML(
         source,
         url,
@@ -251,6 +266,11 @@ async function handleStream(
         overrideConfig,
       );
       return;
+    }
+    if (rest !== undefined) {
+      // The payload is fully consumed and is not markup, so the magic-header
+      // check below cannot run against a partially read stream.
+      throw new Error('Invalid Magic Header');
     }
   }
 
@@ -558,7 +578,8 @@ async function handleJSON(
  *
  * A parse failure is reported by throwing, which the `load` handler forwards
  * through the worker's `error` channel; the thrown message is the parser's
- * `formattedMessage`, which carries the byte offset of the failure.
+ * `formattedMessage`, which locates the failure by JS string index (UTF-16
+ * code units, not bytes - the distinction matters for non-ASCII documents).
  */
 async function handleXML(
   source: string,

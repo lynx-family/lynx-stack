@@ -13,6 +13,7 @@ import path from 'node:path';
 import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
 import { TemplateSectionLabel } from '../ts/constants.js';
 import {
+  isAllXMLLeadingWhitespace,
   looksLikeLynxXML,
   xmlToTemplate,
 } from '../ts/client/decodeWorker/xmlTemplate.js';
@@ -468,5 +469,28 @@ describe('looksLikeLynxXML', () => {
     expect(looksLikeLynxXML('SDRAWROF')).toBe(false);
     expect(looksLikeLynxXML('')).toBe(false);
     expect(looksLikeLynxXML('   ')).toBe(false);
+  });
+
+  test('reports a whitespace only window as undecided', () => {
+    // The worker sniffs a fixed size window first. Whitespace carries no
+    // evidence either way, so a document that begins with more whitespace than
+    // the window holds has to be classified against the rest of the payload -
+    // otherwise it would fall through to the magic header check and fail with
+    // an error describing the wrong cause.
+    expect(isAllXMLLeadingWhitespace('        ')).toBe(true);
+    expect(isAllXMLLeadingWhitespace('\uFEFF\n\t\r\f ')).toBe(true);
+    expect(isAllXMLLeadingWhitespace('')).toBe(true);
+    expect(isAllXMLLeadingWhitespace('   <lynx')).toBe(false);
+    expect(isAllXMLLeadingWhitespace('SDRAWROF')).toBe(false);
+  });
+});
+
+describe('decode worker: whitespace heavy markup', () => {
+  test('loads a document whose whitespace outruns the sniff window', async () => {
+    // Ten leading newlines exceed the 8 byte window the worker reads first.
+    const messages = await loadTemplate(`${'\n'.repeat(10)}${fixture}`);
+
+    expect(messages.some((message) => message.type === 'error')).toBe(false);
+    expect(sectionOf(messages, TemplateSectionLabel.LepusCode)).toBeDefined();
   });
 });

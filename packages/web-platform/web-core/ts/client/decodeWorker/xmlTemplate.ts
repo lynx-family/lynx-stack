@@ -128,15 +128,37 @@ const xmlPageConfig: Record<string, string> = {
 export function looksLikeLynxXML(source: string): boolean {
   for (let index = 0; index < source.length; index++) {
     const char = source[index]!;
-    if (
-      char === ' ' || char === '\t' || char === '\n' || char === '\r'
-      || char === '\f' || char === '\uFEFF'
-    ) {
+    if (isXMLLeadingWhitespace(char)) {
       continue;
     }
     return char === '<';
   }
   return false;
+}
+
+/**
+ * Whether every character of `source` is skippable prelude, i.e. it carries no
+ * evidence either way about the payload's format.
+ *
+ * A caller sniffing a fixed size window uses this to decide whether it has to
+ * read further before {@link looksLikeLynxXML} can classify the payload.
+ */
+export function isAllXMLLeadingWhitespace(source: string): boolean {
+  for (let index = 0; index < source.length; index++) {
+    if (!isXMLLeadingWhitespace(source[index]!)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * The whitespace the XML parser skips before the first markup character, plus a
+ * byte order mark, which it also tolerates.
+ */
+function isXMLLeadingWhitespace(char: string): boolean {
+  return char === ' ' || char === '\t' || char === '\n' || char === '\r'
+    || char === '\f' || char === '\uFEFF';
 }
 
 /**
