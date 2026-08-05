@@ -32,7 +32,18 @@ describe('__AddEventListener / __RemoveEventListener', () => {
     const lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
     mtsBinding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
-    mts = createElementAPI(rootDom, mtsBinding, true, true, true);
+    // All eight parameters are declared required; the three `transform_*` flags
+    // only affect `__SetInlineStyles`, which these tests never call.
+    mts = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    );
   });
 
   test('the PAPIs are exposed on the element API surface', () => {
@@ -319,6 +330,27 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       expect(eventName).toBe('tap');
       expect(handlerName).toBe('onTapHandler');
     });
+
+    test('removing a kClient handler leaves the worklet handler alone', () => {
+      const node = mts.__CreateView(0);
+      rootDom.appendChild(node);
+      const addCrossThreadEvent = rstest.fn();
+      const addRunWorkletEvent = rstest.fn();
+      mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext!, {
+        add_cross_thread_event: addCrossThreadEvent,
+        add_run_worklet_event: addRunWorkletEvent,
+      }) as any;
+
+      mts.__RemoveEventListener(node, 'tap', 'onTapHandler', {
+        closure_type: 3,
+      });
+
+      // Only the cross-thread slot may be cleared: a `main-thread:bind` handler
+      // on the same (element, type, name) triple is a separate registration.
+      expect(addCrossThreadEvent).toHaveBeenCalledTimes(1);
+      expect(addCrossThreadEvent.mock.calls[0]![3]).toBeUndefined();
+      expect(addRunWorkletEvent).not.toHaveBeenCalled();
+    });
   });
 
   describe('disposal', () => {
@@ -342,6 +374,31 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       expect(() => {
         mtsBinding.disposeEventListeners();
         mtsBinding.disposeEventListeners();
+      }).not.toThrow();
+    });
+  });
+
+  describe('elements without a Lynx unique id', () => {
+    test('are ignored instead of sharing a registry key', () => {
+      // Elements not built through the Element PAPIs carry no unique id. Keying
+      // them anyway would put every such element under the same key, so a
+      // listener added on one would be reachable - and removable - through
+      // another.
+      const foreign = document.createElement('div');
+      const otherForeign = document.createElement('div');
+      rootDom.appendChild(foreign);
+      rootDom.appendChild(otherForeign);
+      const handler = rstest.fn();
+
+      expect(() => {
+        mts.__AddEventListener(foreign, 'tap', handler, {});
+      }).not.toThrow();
+      clickOn(foreign);
+      expect(handler).not.toHaveBeenCalled();
+
+      // Removing through a different id-less element must not throw either.
+      expect(() => {
+        mts.__RemoveEventListener(otherForeign, 'tap', handler, {});
       }).not.toThrow();
     });
   });

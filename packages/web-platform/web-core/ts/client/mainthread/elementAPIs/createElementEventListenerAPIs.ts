@@ -92,6 +92,19 @@ function listenerKey(
 }
 
 /**
+ * The element's Lynx unique id, or `undefined` when it has none.
+ *
+ * Every element built through the Element PAPIs carries one, but a card can
+ * hand these APIs an arbitrary object. Without this check such elements would
+ * all key on the string `"undefined"`, so listeners on unrelated elements would
+ * collide and removal would detach the wrong one.
+ */
+function lynxUniqueIdOf(element: HTMLElement): number | undefined {
+  const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+  return typeof uniqueId === 'number' ? uniqueId : undefined;
+}
+
+/**
  * Element-level event listener PAPIs (`__AddEventListener` /
  * `__RemoveEventListener`).
  *
@@ -195,7 +208,10 @@ export function createElementEventListenerAPIs(
       return;
     }
 
-    const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+    const uniqueId = lynxUniqueIdOf(element);
+    if (uniqueId === undefined) {
+      return;
+    }
     const key = listenerKey(uniqueId, eventName, resolved.capture);
     let listeners = registry.get(key);
     if (!listeners) {
@@ -251,12 +267,19 @@ export function createElementEventListenerAPIs(
       typeof callback === 'string'
       && resolved.closureType === ClosureType.kClient
     ) {
-      __AddEvent(
-        element,
-        resolved.catchEvent ? 'catchEvent' : 'bindEvent',
-        eventName,
-        undefined,
-      );
+      // Clear only the cross-thread slot. Routing this through `__AddEvent`
+      // with `undefined` would take its "no identifier" branch, which also
+      // clears the worklet handler for the same (element, type, name) triple -
+      // detaching a `main-thread:bind` handler that this call never touched.
+      const uniqueId = lynxUniqueIdOf(element);
+      if (uniqueId !== undefined) {
+        mtsBinding.wasmContext?.add_cross_thread_event(
+          uniqueId,
+          resolved.catchEvent ? 'catchEvent' : 'bindEvent',
+          eventName,
+          undefined,
+        );
+      }
       return;
     }
 
@@ -264,7 +287,10 @@ export function createElementEventListenerAPIs(
       return;
     }
 
-    const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
+    const uniqueId = lynxUniqueIdOf(element);
+    if (uniqueId === undefined) {
+      return;
+    }
     const key = listenerKey(uniqueId, eventName, resolved.capture);
     const listeners = registry.get(key);
     const registration = listeners?.get(callback);
