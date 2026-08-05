@@ -245,6 +245,9 @@ export class XTextTruncation
     }
     const truncateAt = Math.min(maxLengthEndAt, maxLineEndAt);
     if (truncateAt < Infinity) {
+      const measuredLines = this.#enableLayoutEvent
+        ? this.#materializeLayoutLines(measure, truncateAt)
+        : undefined;
       const targetNodeInfo = measure.getNodeInfoByCharIndex(truncateAt);
       if (targetNodeInfo) {
         const truncatePositionInNode = truncateAt - targetNodeInfo.start;
@@ -294,7 +297,7 @@ export class XTextTruncation
         }
         this.#dom.setAttribute(XTextTruncation.exceedMathLengthAttribute, '');
       }
-      this.#sendLayoutEvent(truncateAt);
+      this.#sendLayoutEvent(truncateAt, measuredLines);
     }
   }
 
@@ -371,61 +374,53 @@ export class XTextTruncation
     this.#enableLayoutEvent = status;
   }
 
-  #sendLayoutEvent(truncateAt?: number) {
-    if (!this.#enableLayoutEvent) return;
-    const detail = new Proxy(this, {
-      get(that, property): any {
-        if (property === 'lineCount') {
-          if (!that.#textMeasure) {
-            that.#textMeasure = new TextRenderingMeasureTool(
-              that.#dom,
-              that.#dom.getBoundingClientRect(),
-            );
-          }
-          return that.#textMeasure.getLineCount();
-        } else if (property === 'lines') {
-          // event.detail.lines
-          return new Proxy(that, {
-            get(that, lineIndex): any {
-              // event.detail.lines[num]
-              const lineIndexNum = parseFloat(lineIndex.toString());
-              if (!isNaN(lineIndexNum)) {
-                if (!that.#textMeasure) {
-                  that.#textMeasure = new TextRenderingMeasureTool(
-                    that.#dom,
-                    that.#dom.getBoundingClientRect(),
-                  );
-                }
-                const lineInfo = that.#textMeasure.getLineInfo(lineIndexNum);
-                if (lineInfo) {
-                  return new Proxy(lineInfo, {
-                    get(lineInfo, property): any {
-                      // event.detail.lines[num].(<start>, <end>, <ellipsisCount>)
-                      switch (property) {
-                        case 'start':
-                        case 'end':
-                          return lineInfo[property];
-                        case 'ellipsisCount':
-                          if (
-                            truncateAt !== undefined
-                            && truncateAt >= lineInfo.start
-                            && truncateAt < lineInfo.end
-                          ) {
-                            return lineInfo.end - truncateAt;
-                          }
-                          return 0;
-                      }
-                    },
-                  });
-                }
-              }
-            },
-          });
-        }
-      },
+  #materializeLayoutLines(
+    measure: TextRenderingMeasureTool,
+    truncateAt?: number,
+  ) {
+    return Array.from({ length: measure.getLineCount() }, (_, lineIndex) => {
+      const lineInfo = measure.getLineInfo(lineIndex)!;
+      const ellipsisCount = truncateAt !== undefined
+          && truncateAt >= lineInfo.start
+          && truncateAt < lineInfo.end
+        ? lineInfo.end - truncateAt
+        : 0;
+      return {
+        start: lineInfo.start,
+        end: lineInfo.end,
+        ellipsisCount,
+      };
     });
+  }
+
+  #sendLayoutEvent(
+    truncateAt?: number,
+    measuredLines?: { start: number; end: number; ellipsisCount: number }[],
+  ) {
+    if (!this.#enableLayoutEvent) return;
+    let lines = measuredLines;
+    // Truncated layouts preserve their pre-mutation measurement snapshot.
+    // Otherwise, detail getters materialize and cache plain cloneable values.
+    const getTextMeasure = () =>
+      this.#textMeasure ??= new TextRenderingMeasureTool(
+        this.#dom,
+        this.#getInnerBox().getBoundingClientRect(),
+      );
+    const getLineCount = () => lines?.length ?? getTextMeasure().getLineCount();
+    const getLines = () =>
+      lines ??= this.#materializeLayoutLines(getTextMeasure(), truncateAt);
     this.#dom.dispatchEvent(
-      new CustomEvent('layout', { ...commonComponentEventSetting, detail }),
+      new CustomEvent('layout', {
+        ...commonComponentEventSetting,
+        detail: {
+          get lineCount() {
+            return getLineCount();
+          },
+          get lines() {
+            return getLines();
+          },
+        },
+      }),
     );
   }
 
