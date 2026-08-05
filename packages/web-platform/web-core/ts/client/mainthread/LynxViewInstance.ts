@@ -15,6 +15,7 @@ import type {
   PageConfig,
 } from '../../types/index.js';
 import {
+  EngineMessageEventType,
   loadUnknownElementEventName,
   systemInfoBase,
 } from '../../constants.js';
@@ -26,6 +27,10 @@ import { createInvokeUIMethod } from './elementAPIs/createInvokeUIMethod.js';
 import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
+import {
+  dispatchEngineEventWithFallback,
+  LynxEngineContextImpl,
+} from './LynxEngineContext.js';
 import { templateManager } from './TemplateManager.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 // @ts-expect-error
@@ -68,6 +73,13 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
   readonly webElementsLoadingPromises: Promise<void>[] = [];
+  /**
+   * The Engine context proxy handed to main-thread scripts via
+   * `lynx.getEngine()`. Buildless cards subscribe here for engine lifecycle
+   * events; see {@link dispatchEngineEvent} for the fallback semantics that
+   * keep `globalThis.renderPage`-style bundles working.
+   */
+  readonly engineContext: LynxEngineContextImpl = new LynxEngineContextImpl();
 
   // A `.web.bundle` url is only ever loaded one way — as a lazy component
   // (`queryComponent`) or as an external bundle (`loadExternalBundle`), never
@@ -195,6 +207,24 @@ export class LynxViewInstance implements AsyncDisposable {
     }
   }
 
+  /**
+   * Deliver an engine lifecycle event to the main-thread script with the
+   * "listener wins, else direct call" fallback semantics. See
+   * {@link dispatchEngineEventWithFallback}.
+   */
+  #dispatchEngineEvent(
+    eventName: string,
+    directCall: () => void,
+    args: unknown[],
+  ): void {
+    dispatchEngineEventWithFallback(
+      this.engineContext,
+      eventName,
+      directCall,
+      args,
+    );
+  }
+
   onMTSScriptsExecuted() {
     this.backgroundThread.markTiming('lepus_execute_end');
     this.webElementsLoadingPromises.length = 0;
@@ -218,7 +248,11 @@ export class LynxViewInstance implements AsyncDisposable {
     if (this.isSSR) {
       this.rootDom.querySelector('[part="page"]')?.remove();
     }
-    this.mainThreadGlobalThis.renderPage?.(processedData);
+    this.#dispatchEngineEvent(
+      EngineMessageEventType.RenderPage,
+      () => this.mainThreadGlobalThis.renderPage?.(processedData),
+      [processedData],
+    );
     this.mainThreadGlobalThis.__FlushElementTree();
   }
 
@@ -331,11 +365,28 @@ export class LynxViewInstance implements AsyncDisposable {
         && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(data, processorName)
       : data;
-    this.mainThreadGlobalThis.updatePage?.(processedData, { processorName });
+    this.#dispatchEngineEvent(
+      EngineMessageEventType.UpdatePage,
+      () =>
+        this.mainThreadGlobalThis.updatePage?.(processedData, {
+          processorName,
+        }),
+      [processedData, { processorName }],
+    );
     await this.backgroundThread.updateData(processedData, { processorName });
   }
 
   async updateGlobalProps(data: Cloneable) {
+    // `__UpdateGlobalProps` has no legacy global-function counterpart on web
+    // (the engine calls `kUpdateGlobalProps`, which web-platform never
+    // exposed), so the fallback branch is a no-op: cards that subscribe get
+    // the event, and everything else keeps relying solely on the
+    // background-thread notification below.
+    this.#dispatchEngineEvent(
+      EngineMessageEventType.UpdateGlobalProps,
+      () => {},
+      [data],
+    );
     await this.backgroundThread.updateGlobalProps(data);
   }
 
@@ -361,6 +412,27 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
+    // Give the card a chance to clean up (remove element listeners, notify the
+    // background thread) while the element tree and wasmContext are still
+    // alive. Mirrors the `__DestroyLifetime` dispatch in
+    // `LynxShell::Destroy` / `BTSRuntime`, which likewise fires before the
+    // engine is torn down. `dispatchEvent` runs listeners synchronously, so
+    // the card's cleanup has completed by the time this returns.
+    try {
+      // `data` is `undefined` rather than an empty array on purpose: unlike
+      // `__RenderPage` / `__UpdatePage`, this event does not travel through the
+      // engine's argument-packing path, so it carries no positional arguments.
+      // Cards subscribe to it purely as a teardown signal.
+      this.engineContext.dispatchEvent({
+        type: EngineMessageEventType.DestroyLifetime,
+        data: undefined,
+      });
+    } catch (e) {
+      // A throwing card cleanup must not abort teardown of the rest of the
+      // instance, otherwise we leak workers and DOM listeners.
+      console.error('[lynx-web] error while dispatching __DestroyLifetime', e);
+    }
+    this.engineContext.dispose();
     this.boundingClientRectService.dispose();
     await this.backgroundThread[Symbol.asyncDispose]();
     this.exposureServices.dispose();
