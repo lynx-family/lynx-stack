@@ -66,7 +66,18 @@ const GROUPS = [
   },
 ];
 
-/** Markers the fixtures export, so presence in a chunk is a fact, not a guess. */
+/**
+ * Markers the fixtures export, so presence in a chunk is a fact, not a guess.
+ *
+ * They are *logic* markers, and the labels below say so. The boundary defers
+ * code, never element shapes: the main thread is the only thread that can
+ * touch the element tree, so it must own a snapshot creator for every shape
+ * the background will ever hydrate, deferred or not. What leaves is the
+ * component bodies and their transitive imports; what stays is one creator
+ * per distinct JSX shape — see `p01-root`, `p05-siblings` and `p10-heavy`,
+ * whose assembled blocks are byte-for-byte identical at 1170 B despite
+ * 46 KB of source and two boundaries respectively.
+ */
 const DEFERRED_MARKER = 'REAL-LOGIC';
 const FALLBACK_MARKER = 'SK-LOGIC';
 
@@ -163,8 +174,8 @@ function verdict(result, facts, def, suffix) {
     : facts === undefined
     ? 'not built'
     : facts.deferred
-    ? 'deferred code stayed'
-    : 'deferred code left';
+    ? 'deferred logic stayed'
+    : 'deferred logic left';
   const chunkWin = classicBuild || (facts !== undefined && !facts.deferred);
 
   // (1)
@@ -274,8 +285,8 @@ function factsCell(facts, classic, isClassic) {
   return [
     `<span class="fact size">${(facts.bytes / 1024).toFixed(1)} KB</span>`,
     delta,
-    chip(facts.fallback, `fallback ${facts.fallback ? 'in' : 'out'}`),
-    chip(!facts.deferred, `deferred ${facts.deferred ? 'in' : 'out'}`),
+    chip(facts.fallback, `fallback logic ${facts.fallback ? 'in' : 'out'}`),
+    chip(!facts.deferred, `deferred logic ${facts.deferred ? 'in' : 'out'}`),
     facts.assembled ? `<span class="fact yes">assembled</span>` : '',
   ].join('');
 }
@@ -427,7 +438,9 @@ const findings = `<section class="findings">
       <strong>A bundling boundary.</strong> On the main-thread target the
       transform replaces the element with its fallback, which deletes the only
       reference to the deferred subtree and lets tree-shaking take the modules
-      behind it. This half is <em>partial</em>, and it is partial for one
+      behind it — the bodies and their imports, not the element templates,
+      which the main thread needs in order to hydrate at all. This half is
+      <em>partial</em>, and it is partial for one
       reason: a fold can only delete a reference it can see, in the module
       where the boundary is written.
     </li>
@@ -606,7 +619,10 @@ const html = `<!doctype html>
     Each row holds the main thread's own first frame (MTR, captured with the
     background thread's messages held) beside the frame after the background
     thread was released (BTR). <code>sk-*</code> is the fallback island,
-    <code>real-*</code> the deferred subtree. The last column reads the Lynx
+    <code>real-*</code> the deferred subtree. The chunk column tracks
+    <em>logic</em> markers, because a boundary defers code and never element
+    shapes — the main thread owns a snapshot creator for every shape the
+    background will hydrate either way. It reads the Lynx
     <code>main-thread.js</code> chunk directly — the web bundle packs both
     threads together and cannot answer what left it.
   </p>

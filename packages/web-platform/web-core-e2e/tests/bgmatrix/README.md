@@ -40,6 +40,39 @@ rendered text: host-element text travels to the main thread as part of the
 snapshot definitions whether or not the code behind it did, so an assertion on
 text would pass for the wrong reason.
 
+## What a boundary actually defers
+
+Code, never element shapes — and the distinction is not an implementation
+detail, it is the architecture. Only the main thread can touch the element
+tree. Hydration is the background thread saying _"instantiate snapshot X with
+these values"_, so the main thread has to own a creator for X or there is
+nothing to instantiate. `experimental_enableMTSRendering: false` means the
+main thread compiles no business _code_; it never meant the main thread knows
+nothing about the app's element _shapes_.
+
+So for `p01-root`'s `<Real>`:
+
+|                                                        | main-thread chunk              |
+| ------------------------------------------------------ | ------------------------------ |
+| `Real`'s body, `realLogic`, and everything they import | gone                           |
+| one snapshot creator for `<view><text/></view>`        | present, in `__initMTSDefines` |
+
+Nothing dynamic is frozen into that creator — `id`, text content and every
+other value arrive through `ctx.__values` at hydration. What is frozen is the
+element types and the static literals.
+
+The scaling follows, and the matrix measures it cleanly: `p01-root`,
+`p05-siblings` and `p10-heavy` carry **byte-for-byte identical 1170 B
+assembled blocks**, one define each — despite `p10-heavy` having 46 KB of
+source behind its boundary and `p05-siblings` having two boundaries. The
+assembled cost scales with the number of _distinct JSX shapes_, not with code
+size and not with boundary count.
+
+Which means deferral is **logic-shaped, not markup-shaped**. A logic-heavy
+subtree is nearly free to defer (`p10-heavy`: −35.9 KB against the classic
+build). A markup-heavy one — a large static layout with little behaviour —
+barely shrinks, because the snapshots dominate and they cannot leave.
+
 ## What it found
 
 `<Background>` is two mechanisms under one name, and they have different
