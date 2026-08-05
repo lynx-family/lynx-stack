@@ -231,8 +231,11 @@ test.describe('Lynx XML markup card', () => {
     expect(await computedStyle(shell, 'display')).toBe('flex');
     expect(await computedStyle(shell, 'flex-direction')).toBe('column');
 
-    // `border-radius: 1.75rem` resolved against the `calc()`-derived root font
-    // size (1.75 * 16 = 28), proving `rem` units really are live.
+    // `border-radius: 1.75rem` resolved to 28px, proving `rem` reaches the
+    // browser as a live unit rather than being rewritten away. Note `rem`
+    // resolves against the *document* root font size, which keeps the 16px
+    // default here - not against `.page`'s `calc()`-derived size, which only
+    // affects `em` and font-relative lengths inside the card.
     const card = page.locator('lynx-view .card');
     expect(await computedStyle(card, 'border-radius')).toBe('28px');
     expect(await computedStyle(card, 'overflow')).toBe('hidden');
