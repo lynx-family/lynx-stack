@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import './jsdom.js';
-import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import { registerDisposeHandler } from '../ts/client/background/background-apis/crossThreadHandlers/registerDisposeHandler.js';
 import { disposeEndpoint } from '../ts/client/endpoints.js';
 import type { NativeApp } from '../ts/types/index.js';
@@ -26,7 +33,7 @@ describe('registerDisposeHandler', () => {
   let handler: () => void;
   let rpc: Rpc;
   let nativeApp: NativeApp;
-  let consoleError: ReturnType<typeof rstest.fn>;
+  let consoleError: ReturnType<typeof rstest.spyOn>;
 
   beforeEach(() => {
     handler = () => {
@@ -39,8 +46,13 @@ describe('registerDisposeHandler', () => {
       },
     } as unknown as Rpc;
     nativeApp = { id: '0' } as unknown as NativeApp;
-    consoleError = rstest.fn();
-    console.error = consoleError as unknown as typeof console.error;
+    // Spy rather than assign, so real error output is restored for other specs
+    // that may share this worker.
+    consoleError = rstest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleError.mockRestore();
   });
 
   test('calls the lifetime hook before destroying the card', () => {
