@@ -1,0 +1,25 @@
+packages/lynx/create-lynx-library/package.json
+  s_ca2c6f1b3ece1b::t_abb54b2db54df3 43
+packages/lynx/create-lynx-library/template-common/example/package.json
+  s_ca2c6f1b3ece1b::t_0e74764c9068ce 11
+pnpm-lock.yaml
+  s_ca2c6f1b3ece1b::t_890cfb31325985 1123-1125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a4701b75e9e9166485f6be790f35b9a591d4c82e",
+  "prompts": {},
+  "sessions": {
+    "s_ca2c6f1b3ece1b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcff7-26e6-71c1-b5f0-f202c224b813",
+        "model": "unknown"
+      },
+      "human_author": "jianliang00 <wangjianliang0@126.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
