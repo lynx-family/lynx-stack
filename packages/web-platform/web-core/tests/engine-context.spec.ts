@@ -64,7 +64,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       });
 
       expect(received).toHaveLength(1);
-      const event = received[0] as MessageEvent;
+      const event = received[0]!;
       expect(event.type).toBe('__RenderPage');
       expect(event.data).toStrictEqual([{ hello: 'world' }]);
       expect(result).toBe(DispatchEventResult.NotCanceled);
@@ -236,7 +236,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
 
       expect(usedEventChannel).toBe(true);
       expect(listener).toHaveBeenCalledTimes(1);
-      expect((listener.mock.calls[0]![0] as MessageEvent).data).toStrictEqual([
+      expect(listener.mock.calls[0]![0].data).toStrictEqual([
         { a: 1 },
       ]);
       expect(directCall).not.toHaveBeenCalled();
@@ -294,7 +294,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
         { processorName: 'p' },
       ]);
 
-      expect((listener.mock.calls[0]![0] as MessageEvent).data).toStrictEqual([
+      expect(listener.mock.calls[0]![0].data).toStrictEqual([
         { data: 1 },
         { processorName: 'p' },
       ]);

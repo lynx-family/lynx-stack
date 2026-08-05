@@ -34,12 +34,12 @@ export interface EngineMessageEvent {
 export interface LynxEngineContext {
   addEventListener(
     type: string,
-    listener: (event: Event) => void,
+    listener: (event: EngineMessageEvent) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
   removeEventListener(
     type: string,
-    listener: (event: Event) => void,
+    listener: (event: EngineMessageEvent) => void,
     options?: boolean | EventListenerOptions,
   ): void;
   dispatchEvent(event: ContextCrossThreadEvent): number;

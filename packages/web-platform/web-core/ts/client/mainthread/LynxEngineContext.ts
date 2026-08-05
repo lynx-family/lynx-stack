@@ -12,7 +12,7 @@ import type {
 import { DispatchEventResult } from '../LynxCrossThreadContext.js';
 
 interface Registration {
-  listener: (event: Event) => void;
+  listener: (event: EngineMessageEvent) => void;
   once: boolean;
 }
 
@@ -53,7 +53,7 @@ export class LynxEngineContextImpl implements LynxEngineContext {
    */
   #listeners: Map<
     string,
-    Map<boolean, Map<(event: Event) => void, Registration>>
+    Map<boolean, Map<(event: EngineMessageEvent) => void, Registration>>
   > = new Map();
 
   static #captureOf(
@@ -64,7 +64,7 @@ export class LynxEngineContextImpl implements LynxEngineContext {
 
   addEventListener(
     type: string,
-    listener: (event: Event) => void,
+    listener: (event: EngineMessageEvent) => void,
     options?: boolean | AddEventListenerOptions,
   ): void {
     if (typeof listener !== 'function') return;
@@ -90,7 +90,7 @@ export class LynxEngineContextImpl implements LynxEngineContext {
 
   removeEventListener(
     type: string,
-    listener: (event: Event) => void,
+    listener: (event: EngineMessageEvent) => void,
     options?: boolean | EventListenerOptions,
   ): void {
     const capture = LynxEngineContextImpl.#captureOf(options);
@@ -139,7 +139,7 @@ export class LynxEngineContextImpl implements LynxEngineContext {
           this.removeEventListener(event.type, registration.listener, capture);
         }
         try {
-          registration.listener(messageEvent as unknown as Event);
+          registration.listener(messageEvent);
         } catch (e) {
           console.error(
             `[lynx-web] error in engine "${event.type}" listener`,
@@ -175,7 +175,9 @@ export class LynxEngineContextImpl implements LynxEngineContext {
  * unchanged.
  *
  * `args` is passed as an array, matching the engine, which packs `args...`
- * into a `lepus::CArray`.
+ * into a `lepus::CArray`. Events dispatched outside this helper - such as
+ * `__DestroyLifetime`, a bare teardown signal - carry no arguments and so do
+ * not use the array shape.
  *
  * @returns `true` when the event channel was used, `false` when `directCall`
  * ran. Returned for observability (tests, tracing); callers may ignore it.

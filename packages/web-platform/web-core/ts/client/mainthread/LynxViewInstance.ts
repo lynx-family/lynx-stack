@@ -419,6 +419,10 @@ export class LynxViewInstance implements AsyncDisposable {
     // engine is torn down. `dispatchEvent` runs listeners synchronously, so
     // the card's cleanup has completed by the time this returns.
     try {
+      // `data` is `undefined` rather than an empty array on purpose: unlike
+      // `__RenderPage` / `__UpdatePage`, this event does not travel through the
+      // engine's argument-packing path, so it carries no positional arguments.
+      // Cards subscribe to it purely as a teardown signal.
       this.engineContext.dispatchEvent({
         type: EngineMessageEventType.DestroyLifetime,
         data: undefined,
