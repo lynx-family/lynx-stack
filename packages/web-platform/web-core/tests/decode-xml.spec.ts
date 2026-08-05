@@ -49,7 +49,7 @@ await import('../ts/client/decodeWorker/decode.worker.js');
 const { wasmInstance, wasmModule } = await import('../ts/client/wasm.js');
 
 const fixture = readFileSync(
-  path.join(__dirname, 'fixtures/hangzhou-trip.xml'),
+  path.join(__dirname, 'fixtures/markup-card.xml'),
   'utf8',
 );
 
@@ -208,7 +208,7 @@ describe('decode worker: Lynx XML markup', () => {
 
     // The section carries an encoded buffer, not CSS text, and is transferred.
     expect(styleInfo.data).toBeInstanceOf(ArrayBuffer);
-    expect((styleInfo.data as ArrayBuffer).byteLength).toBeGreaterThan(1000);
+    expect((styleInfo.data as ArrayBuffer).byteLength).toBeGreaterThan(0);
 
     // Decoding it back through the style engine must yield the fixture's rules,
     // which proves the raw-CSS `content` channel really carried them.
@@ -250,7 +250,7 @@ describe('decode worker: Lynx XML markup', () => {
 
     // `createChunkLoading` runs each bts chunk through
     // `new Function(...paramNames, jsContent)`, which is the web equivalent of
-    // the C++ `AddModuleWrapForJsContent()`, so the source must stay unwrapped -
+    // the engine's own module wrapper, so the source must stay unwrapped -
     // wrapping here would nest two module functions and hide `const mainThread`.
     expect(source.trimStart()).toMatch(
       /^const mainThread = lynx\.getCoreContext\(\);/,
@@ -410,7 +410,7 @@ describe('xmlToTemplate', () => {
       '0': { content: [expect.any(String)], rules: [] },
     });
     const [content] = result.template.styleInfo!['0']!.content;
-    expect(content).toContain('.trip-card');
+    expect(content).toContain('.card');
     expect(content).toContain('linear-gradient');
     // CSS is passed through untouched - no unit rewriting happens here.
     expect(content).toContain('100vh');

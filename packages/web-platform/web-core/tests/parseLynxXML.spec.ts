@@ -448,12 +448,12 @@ describe('parseLynxXML', () => {
   });
 
   describe('real world fixture', () => {
-    it('parses hangzhou-trip.xml into three non-empty sections', () => {
+    it('parses markup-card.xml into three non-empty sections', () => {
       const source = readFileSync(
         join(
           dirname(fileURLToPath(import.meta.url)),
           'fixtures',
-          'hangzhou-trip.xml',
+          'markup-card.xml',
         ),
         'utf8',
       );
@@ -480,13 +480,12 @@ describe('parseLynxXML', () => {
   });
 
   /**
-   * The corpus below is copied verbatim from the authoritative C++ test
-   * `LynxTemplateBundleFromXMLTest` in
-   * `lynx/core/template_bundle/template_bundle_builder_style_parser_unittest.cc`,
-   * so that any behavioral drift from the reference parser is caught here.
+   * The corpus below mirrors the rejection and acceptance cases of the
+   * engine-side reference parser, so that any behavioral drift from it is
+   * caught here.
    */
-  describe('parity with the C++ reference parser', () => {
-    it('rejects every document the C++ parser rejects', () => {
+  describe('parity with the reference parser', () => {
+    it('rejects every document the reference parser rejects', () => {
       const sources = [
         '<script main-thread>main</script>',
         '<!doctype html><lynx version="5.4.2">'
@@ -520,7 +519,7 @@ describe('parseLynxXML', () => {
       }
     });
 
-    it('extracts the same sections as the C++ parser', () => {
+    it('extracts the same sections as the reference parser', () => {
       const full = expectSuccess(parseLynxXML(
         '<?xml version="1.0"?>\n'
           + '<!-- A Lynx single-file bundle. -->\n'
