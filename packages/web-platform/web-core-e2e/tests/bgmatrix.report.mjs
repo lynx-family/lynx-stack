@@ -473,17 +473,22 @@ const findings = `<section class="findings">
     <code>g01</code> and <code>g02</code> are the same app twice —
     <code>g01</code> where the fold reaches, <code>g02</code> in the wrapper
     shape where it cannot — and the assertion turns the second from a silent
-    ${
-  (() => {
-    const w = bundleFacts('i04-wrapper', 'off');
-    const c = bundleFacts('i04-wrapper', 'on');
-    return w && c
-      ? `${((w.bytes - c.bytes) / 1024).toFixed(1)} KB of dead weight`
-      : 'loss of the bundle win';
-  })()
-}
-    into a named build error. Keep the element boundary for the frame; state
-    the module boundary when the bundle matters.
+    loss into a named build error. (How large a loss is not readable from
+    these fixtures: the delta against the classic build is dominated by this
+    mode's fixed overhead, which <code>p01-root</code> pays too with the fold
+    working. What the failed fold actually costs is the deferred subtree's own
+    weight, and <code>p10-heavy</code> is the case sized to show it.)
+  </p>
+  <p>
+    The assertion is not free, and <code>g01</code> is where that shows: it
+    builds under the assembled mode and <em>fails</em> under the classic one,
+    because a classic build compiles every module for the main thread, which
+    is exactly what the module just swore never happens. So it is a
+    declaration that this module has no place in a main-thread-rendering
+    build at all — including development, where <code>'auto'</code> always
+    resolves to the classic path. Keep the element boundary for the frame;
+    reach for the module boundary when the bundle matters more than building
+    both ways.
   </p>
 </section>`;
 
