@@ -902,8 +902,8 @@ class LynxTemplatePluginImpl {
 
   #getAsyncFilenameTemplate(filename: string) {
     return this.#options.lazyBundleFilename.replace(
-      /\[name\]/,
-      filename,
+      /\[name\]/g,
+      () => filename,
     );
   }
 
