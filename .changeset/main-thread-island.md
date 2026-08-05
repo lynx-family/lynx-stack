@@ -6,7 +6,7 @@
 
 Add main-thread islands: `<MainThread>` and the `'main thread component'` directive.
 
-They are the opt-in end of the first-screen dial, the mirror of `<Background>` and `'background only'`. On a build whose main thread compiles no business code of its own (`experimental_enableMTSRendering: false`, which a root-level boundary turns on by itself), a root `<MainThread>` promotes one subtree back onto the first frame:
+They are the opt-in end of the first-screen dial, where `<Background>` and `'background only'` are the opt-out end. On a build whose main thread compiles no business code of its own (`experimental_enableMTSRendering: false`, which a root-level boundary turns on by itself), a root `<MainThread>` promotes one subtree back onto the first frame:
 
 ```tsx
 root.render(
@@ -40,3 +40,5 @@ For first-screen content _inside_ a deferred region, name it on the boundary rat
 ```
 
 Both threads render the island ahead of their own arm — `[island, fallback]` on the main thread, `[island, children]` on the background — so it is at the same index in both trees and the first-screen hydration adopts it while replacing only the fallback.
+
+The three shapes are one primitive with one axis: how much of a boundary's two arms is shared. Sharing nothing is a plain `<Background fallback={…}>`, and the hand-over replaces everything; sharing a prefix is `island`, and the hand-over adopts that prefix; sharing everything is `<MainThread>`, which is why `<MainThread>{i}</MainThread>` and `<Background fallback={i}>{i}</Background>` render the same frames.
