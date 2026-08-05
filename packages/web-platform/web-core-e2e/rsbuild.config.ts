@@ -44,6 +44,14 @@ export default defineConfig({
         copyOnBuild: false,
         watch: false,
       },
+      // Serves the Lynx XML markup fixtures owned by `web-core` (which uses
+      // them for its unit tests) so the e2e suite can load the very same bytes
+      // over HTTP instead of keeping a second copy in `resources/`.
+      {
+        name: '../web-core/tests/fixtures',
+        copyOnBuild: false,
+        watch: false,
+      },
     ],
     htmlFallback: false,
   },

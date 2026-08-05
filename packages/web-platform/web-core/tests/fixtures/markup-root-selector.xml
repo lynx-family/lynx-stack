@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE lynx>
+<lynx version="5.4.2">
+<style><![CDATA[
+  /*
+    This card exists to pin down a known limitation, so its CSS is deliberately
+    written the way a card author would naturally - but wrongly - write it.
+
+    The CSS of a markup card travels through the raw-content channel verbatim
+    instead of being tokenized, so no selector rewriting happens on the way in.
+    A `:root` rule consequently keeps its literal meaning and matches the host
+    document rather than the card's root element, which makes both of the
+    declarations below unreachable for the card:
+
+      - `background-color` never reaches the card's root element;
+      - `--root-accent` is never in scope for the card, so the `var()` in
+        `.probe` has nothing to resolve against and that whole declaration is
+        invalid at computed-value time.
+
+    `.control` is the same construct written the way cards should write it, and
+    it does resolve. Keeping both here means the only difference between a
+    working and a dead custom property is the selector the property is declared
+    on, which is what makes this card evidence rather than an absence of it.
+
+    See `markup-card.xml`, which uses `.page` for exactly this reason.
+  */
+  :root {
+    --root-accent: #2f6d54;
+    background-color: #2f6d54;
+  }
+
+  .page {
+    --page-accent: #4c8665;
+  }
+
+  .probe {
+    width: 100%;
+    height: 20px;
+    background-color: var(--root-accent);
+  }
+
+  .control {
+    width: 100%;
+    height: 20px;
+    background-color: var(--page-accent);
+  }
+]]></style>
+
+<script main-thread="true"><![CDATA[
+  const page = __CreatePage('0', 0);
+  const pageId = __GetElementUniqueID(page);
+  const engine = lynx.getEngine();
+  let rendered = false;
+
+  __SetClasses(page, 'page');
+
+  Object.assign(globalThis, {
+    processData(data) {
+      return data;
+    },
+  });
+
+  function onRenderPage() {
+    if (rendered) {
+      return;
+    }
+    rendered = true;
+    ['probe', 'control'].forEach((className) => {
+      const node = __CreateView(pageId);
+      __SetClasses(node, className);
+      __AppendElement(page, node);
+    });
+  }
+
+  engine.addEventListener('__RenderPage', onRenderPage);
+]]></script>
+
+<script background="true"><![CDATA[
+  lynx.getCoreContext();
+]]></script>
+</lynx>
