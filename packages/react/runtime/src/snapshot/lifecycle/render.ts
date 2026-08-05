@@ -16,6 +16,13 @@ function renderMainThread(): void {
     return;
   }
 
+  // With the main thread compiling no business code, an entry that declares
+  // no root `<Background>` never calls `root.render`, so there is nothing to
+  // render even though a sibling entry in the same build brought a fallback.
+  if (__root.__jsx === undefined) {
+    return;
+  }
+
   let opcodes;
   try {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

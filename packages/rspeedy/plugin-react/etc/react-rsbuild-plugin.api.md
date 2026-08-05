@@ -78,7 +78,7 @@ export interface PluginReactLynxOptions {
     enableSSR?: boolean;
     enableUiSourceMap?: boolean;
     engineVersion?: string;
-    experimental_enableMTSRendering?: boolean;
+    experimental_enableMTSRendering?: boolean | 'auto';
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;

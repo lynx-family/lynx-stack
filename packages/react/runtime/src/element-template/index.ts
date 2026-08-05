@@ -34,6 +34,7 @@ import {
   useState,
 } from '@lynx-js/react/hooks';
 
+import { Background } from '../core/background.js';
 import { installComponentCompat } from '../core/component.js';
 import { createGlobalProps } from '../core/globalProps.js';
 import type { GlobalProps } from '../core/globalProps.js';
@@ -77,9 +78,11 @@ export default {
   Suspense,
   lazy,
   createElement,
+  Background,
 };
 
 export {
+  Background,
   Children,
   createRef,
   Fragment,
@@ -128,6 +131,7 @@ export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => v
 
 export { withInitDataInState };
 export { useLynxGlobalEventListener };
+export type { BackgroundProps } from '../core/background.js';
 
 export * from './client/root.js';
 export { runOnBackground } from './runtime/template/main-thread-background-function.js';

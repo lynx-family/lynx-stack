@@ -25,7 +25,7 @@ export function App() {
 
   return (
     <view className='App'>
-      <text className='Title'>enableMTSRendering: false</text>
+      <text className='Title'>experimental_enableMTSRendering: false</text>
       <text className='Description'>
         The main thread renders nothing: this UI is inserted by the background
         thread, using the snapshot and worklet definitions collected while

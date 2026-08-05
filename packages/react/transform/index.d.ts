@@ -746,6 +746,17 @@ export interface TransformNodiffOptions {
   inject?: boolean | InjectVisitorConfig
   /** @internal */
   collectMTSDefines?: boolean
+  /**
+   * Fold `<Background>` to its `fallback` at compile time.
+   *
+   * Set on the main-thread target when the main thread compiles no business
+   * code of its own: the `children` reference is what would otherwise keep
+   * the whole app in the main-thread module graph, while the `fallback` is
+   * compiled for the main thread as ordinary code.
+   *
+   * @internal
+   */
+  foldBackgroundToFallback?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {

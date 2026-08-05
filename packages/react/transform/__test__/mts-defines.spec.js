@@ -200,4 +200,124 @@ function f() {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].text).toMatch(/runtime: 'shared'/);
   });
+
+  it('is still left to the bundler when the main thread only reports ids', async () => {
+    // The hazard is relocation, not collection: on this target the
+    // definitions stay where they are — collection only reports which ids
+    // this bundle owns, so the import resolves as it always has. A
+    // `<Background>` fallback may therefore use a shared-runtime module.
+    const result = await transformReactLynx(
+      sharedSource,
+      options('LEPUS', {
+        collectMTSDefines: true,
+        foldBackgroundToFallback: true,
+      }),
+    );
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.code).toContain('new Foo()');
+  });
+});
+
+describe('root <Background> fold on the main thread', () => {
+  const entry = `
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+import { Skeleton } from "./Skeleton.jsx";
+
+root.render(
+  <page>
+    <Background fallback={<Skeleton />}>
+      <HeavyApp />
+    </Background>
+  </page>,
+);
+`;
+
+  const fold = (source, target = 'LEPUS') =>
+    transformReactLynx(source, options(target, { foldBackgroundToFallback: true }));
+
+  it('renders the fallback and drops the deferred subtree', async () => {
+    const { code } = await fold(entry);
+
+    expect(code).toContain('Skeleton');
+    expect(code).not.toContain('HeavyApp');
+    // The host wrapper around the boundary is untouched.
+    expect(code).toContain('ReactLynxRuntimeComponents.Page');
+  });
+
+  it('keeps a component fallback as a component, not a snapshot', async () => {
+    const { code } = await fold(entry);
+
+    expect(code).toMatch(/_jsx\(Skeleton, \{\s*\}\)/);
+  });
+
+  it('follows an aliased import', async () => {
+    const { code } = await fold(`
+import { root, Background as Boundary } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+import { Skeleton } from "./Skeleton.jsx";
+root.render(<Boundary fallback={<Skeleton />}><HeavyApp /></Boundary>);
+`);
+
+    expect(code).toContain('Skeleton');
+    expect(code).not.toContain('HeavyApp');
+  });
+
+  it('ignores a `Background` that is not the runtime one', async () => {
+    const { code } = await fold(`
+import { root } from "@lynx-js/react";
+import { Background } from "./my-background.jsx";
+import { HeavyApp } from "./HeavyApp.jsx";
+root.render(<Background fallback={null}><HeavyApp /></Background>);
+`);
+
+    expect(code).toContain('HeavyApp');
+  });
+
+  it('folds a nested <Background> to its own fallback', async () => {
+    const { code } = await fold(`
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+import { Skeleton } from "./Skeleton.jsx";
+root.render(
+  <Background fallback={<Background fallback={<Skeleton />}><HeavyApp /></Background>}>
+    <HeavyApp />
+  </Background>,
+);
+`);
+
+    expect(code).toContain('Skeleton');
+    expect(code).not.toContain('HeavyApp');
+  });
+
+  it('renders nothing when the boundary declares no fallback', async () => {
+    const { code } = await fold(`
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+root.render(<Background><HeavyApp /></Background>);
+`);
+
+    expect(code).toContain('root.render(null)');
+    expect(code).not.toContain('HeavyApp');
+  });
+
+  it('fails the build on a spread it cannot resolve', async () => {
+    const result = await fold(`
+import { root, Background } from "@lynx-js/react";
+import { HeavyApp } from "./HeavyApp.jsx";
+const props = { fallback: null };
+root.render(<Background {...props}><HeavyApp /></Background>);
+`);
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toMatch(/spread on `<Background>`/);
+  });
+
+  it('leaves the background target alone', async () => {
+    const { code } = await transformReactLynx(entry, options('JS'));
+
+    expect(code).toContain('HeavyApp');
+    expect(code).toContain('Background');
+  });
 });

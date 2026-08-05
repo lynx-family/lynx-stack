@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type {
   NormalizedEnvironmentConfig,
@@ -20,6 +21,11 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
+import { MTS_ENTRY_QUERY } from './loaders/mts-defines-entry-loader.js'
+import {
+  entriesDeclaringRootBackground,
+  resolveMTSRendering,
+} from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
@@ -27,6 +33,7 @@ const PLUGIN_NAME_REACT = 'lynx:react'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
+const RULE_MTS_DEFINES_ENTRY = 'react:mts-defines-entry'
 
 const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
 const DEFAULT_FILENAME_HASH = '.[contenthash:8]'
@@ -50,7 +57,6 @@ export function applyEntry(
     firstScreenSyncTiming,
     globalPropsMode,
     enableSSR,
-    experimental_enableMTSRendering,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
@@ -72,9 +78,72 @@ export function applyEntry(
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    const mainThreadImports = experimental_enableMTSRendering ? undefined : [
-      path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
-    ]
+    // A root-level `<Background>` in an entry is the declarative trigger for
+    // the assembled main-thread bundle (`experimental_enableMTSRendering:
+    // false` is its
+    // implementation) — resolve `'auto'` against the entry sources before the
+    // entry points are rewritten below.
+    const resolvedEnableMTSRendering = resolveMTSRendering(
+      options,
+      isProd,
+      chain,
+      api.context.rootPath,
+      (message) => void (api.logger ?? console).warn(message),
+    )
+
+    const mtsDefinesEntry = path.join(
+      reactLynxDir,
+      'runtime/mts-rendering-disabled/index.js',
+    )
+
+    // Which entries declare a root `<Background>`, and so have a fallback the
+    // main thread should compile and render. An entry without one keeps the
+    // degenerate shape: the assembled definitions only, and an empty first
+    // frame until the background hydrates.
+    const entriesWithRootBackground = resolvedEnableMTSRendering
+      ? new Set<string>()
+      : entriesDeclaringRootBackground(chain, api.context.rootPath)
+
+    /**
+     * The main thread compiles the entry only to render a root
+     * `<Background>`'s fallback: the transform folds the boundary to that
+     * fallback, so the app's own module closure never reaches this bundle.
+     *
+     * The two are pulled in through a single generated root rather than as
+     * two entry imports — see `loaders/mts-defines-entry-loader`, which is
+     * where the reason lives.
+     */
+    const mainThreadImportsFor = (
+      entryName: string,
+      imports: string[],
+    ): string[] | undefined => {
+      if (resolvedEnableMTSRendering) {
+        return undefined
+      }
+      if (!entriesWithRootBackground.has(entryName)) {
+        return [mtsDefinesEntry]
+      }
+      return [
+        `${mtsDefinesEntry}?${MTS_ENTRY_QUERY}=${
+          encodeURIComponent(JSON.stringify(imports))
+        }`,
+      ]
+    }
+
+    if (!resolvedEnableMTSRendering) {
+      chain
+        .module
+        .rule(RULE_MTS_DEFINES_ENTRY)
+        .test(mtsDefinesEntry)
+        .resourceQuery(new RegExp(`[?&]${MTS_ENTRY_QUERY}=`))
+        .use(RULE_MTS_DEFINES_ENTRY)
+        .loader(mtsDefinesEntryLoaderPath())
+    }
+
+    // The main thread only has something to render when at least one entry
+    // brought a fallback with it; otherwise the render path is shaken out.
+    const rendersOnMainThread = resolvedEnableMTSRendering
+      || entriesWithRootBackground.size > 0
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -178,7 +247,7 @@ export function applyEntry(
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
-            import: mainThreadImports ?? imports,
+            import: mainThreadImportsFor(entryName, imports) ?? imports,
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {
@@ -323,7 +392,8 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
-        experimental_enableMTSRendering,
+        experimental_enableMTSRendering: resolvedEnableMTSRendering,
+        rendersOnMainThread,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,
@@ -361,6 +431,20 @@ export function applyEntry(
       return undefined
     }
   })
+}
+
+/**
+ * Carries this module's own extension, so the path resolves both from the
+ * published `dist/index.js` and from `src/entry.ts` under the test runner —
+ * rspack resolves loaders with the JS extension list, which would not find a
+ * `.ts` sibling on its own.
+ */
+function mtsDefinesEntryLoaderPath(): string {
+  const self = fileURLToPath(import.meta.url)
+  return path.resolve(
+    path.dirname(self),
+    `loaders/mts-defines-entry-loader${path.extname(self)}`,
+  )
 }
 
 export const isDebug = (): boolean => {

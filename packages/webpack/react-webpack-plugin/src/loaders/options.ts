@@ -258,11 +258,24 @@ export function getMainThreadTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
-  const { shake } = this.getOptions();
+  const { shake, experimental_enableMTSRendering } = this.getOptions();
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
 
   return {
     ...commonOptions,
+    // With no business code of its own, the main thread renders a
+    // `<Background>`'s fallback and nothing else — folding the boundary here
+    // is what drops the `children` reference, and with it the deferred
+    // subtree's module closure, from the main-thread bundle.
+    //
+    // Collecting alongside it does not change this output (unlike on the
+    // background target, where it moves the definitions out): it only reports
+    // which definitions this bundle already carries as real code, so the
+    // assembled ones can leave them out.
+    ...(experimental_enableMTSRendering === false && {
+      foldBackgroundToFallback: true,
+      collectMTSDefines: true,
+    }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

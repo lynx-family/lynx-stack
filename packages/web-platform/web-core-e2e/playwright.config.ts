@@ -16,4 +16,10 @@ import { playwrightConfigCommon } from '@lynx-js/playwright-fixtures';
  */
 export default defineConfig({
   ...playwrightConfigCommon,
+  // The `<Background>` island suite keeps a deliberate *pair* of baselines per
+  // case (the main thread's own frame, then the hydrated one) and holds the
+  // background thread to get the first of them. It runs from
+  // `playwright.island.config.ts` on Chromium alone, so it stays out of the
+  // cross-browser sweep here.
+  testIgnore: '**/background-island.spec.ts',
 });

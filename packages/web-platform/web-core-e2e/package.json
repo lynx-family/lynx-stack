@@ -14,6 +14,7 @@
     "lh": "pnpm dlx @lhci/cli autorun",
     "serve": "rsbuild dev",
     "test": "playwright test",
+    "test:island": "playwright test --config=playwright.island.config.ts",
     "test:debug": "playwright test --ui",
     "test:install": "playwright install --with-deps chromium firefox webkit",
     "test:server": "rstest",

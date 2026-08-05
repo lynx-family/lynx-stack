@@ -1,0 +1,193 @@
+{
+  "p01-root": {
+    "what": "Boundary is the render root.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "p02-page-wrap": {
+    "what": "Boundary under a <page> host wrapper.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "p03-in-component": {
+    "what": "Boundary inside a component, one module away from the entry.",
+    "expectBuildError": [],
+    "files": [
+      "Section.jsx",
+      "index.jsx"
+    ]
+  },
+  "p04-deep": {
+    "what": "Boundary three components deep.",
+    "expectBuildError": [],
+    "files": [
+      "L3.jsx",
+      "L2.jsx",
+      "L1.jsx",
+      "index.jsx"
+    ]
+  },
+  "p05-siblings": {
+    "what": "Two boundaries as siblings, with first-screen content between them.",
+    "reading": "Two boundaries, one main-thread tree. They are holes in the same first frame, not two roots — nothing had to be added for the second one.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "p06-nested-children": {
+    "what": "A boundary inside another boundary’s children.",
+    "reading": "The inner boundary is inside the deferred subtree, so the main thread never reaches it: the outer fallback is the whole first frame, and `sk-b` only shows up after hydration.",
+    "expectBuildError": [],
+    "files": [
+      "Inner.jsx",
+      "index.jsx"
+    ]
+  },
+  "p07-nested-fallback": {
+    "what": "A boundary inside another boundary’s fallback.",
+    "reading": "The fold is recursive: the outer boundary is replaced by its fallback, which is itself a boundary and is replaced in turn. The first frame is the innermost fallback, `sk-inner`.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "p08-in-map": {
+    "what": "Boundaries produced by a .map() over data.",
+    "reading": "The fold is syntactic and happens once, at the element in the source; how many elements the loop produces at runtime is not a question it has to answer.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "p09-in-conditional": {
+    "what": "Boundary behind a runtime conditional.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "p10-heavy": {
+    "what": "Same shape as p01, with 46 KB of business code behind the boundary.",
+    "reading": "The other cases are micro-apps: their main-thread chunks measure this mode's fixed overhead and little else. Here the deferred subtree is big enough to read the size column directly — the fallback still paints at 0.0, and the 46 KB is not in the main-thread chunk.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx",
+      "real.jsx"
+    ]
+  },
+  "i01-aliased": {
+    "what": "Imported under an alias: import { Background as B }.",
+    "reading": "The fold follows the import binding, not the element name, so the alias is not a special case for it. The config-time scan asks the same question — does this module bind `Background` from the runtime — which is why the alias does not hide the entry from it either.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "i02-namespace": {
+    "what": "Used through a namespace import: <ReactLynx.Background>.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "i03-reexport": {
+    "what": "Re-exported through a local module, then imported from there.",
+    "reading": "The re-export is the first shape where the two mechanisms disagree. The scan sees `boundary.js` re-export the runtime and compiles the entry, so the runtime component renders the fallback correctly — but the fold works one module at a time and cannot tell that the local `Background` binding is the runtime's, so it leaves the element alone and the deferred code stays in the chunk.",
+    "expectBuildError": [],
+    "files": [
+      "boundary.js",
+      "index.jsx"
+    ]
+  },
+  "i04-wrapper": {
+    "what": "A user component wraps the boundary; callers never write <Background>.",
+    "reading": "The boundary is real and renders correctly, but it is inside `Deferred`, while the reference to the deferred subtree lives at the *call site*, in `children`. The fold cuts the reference where the element is written; here there is no element to cut at the place that holds the reference. Correct pixels, no bundle win — and no local rewrite can recover it.",
+    "expectBuildError": [],
+    "files": [
+      "Deferred.jsx",
+      "index.jsx"
+    ]
+  },
+  "i05-dynamic-type": {
+    "what": "The element type is chosen at runtime.",
+    "reading": "The element type is a value, not a name — deciding whether it is the boundary would mean evaluating the program. This is the hard limit of the static half; the runtime half still behaves, because `<Background>` is an ordinary component that renders its fallback on the main thread.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "f01-static-host": {
+    "what": "Fallback is static host elements only.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "f02-stateful-component": {
+    "what": "Fallback is a component using hooks.",
+    "reading": "The fallback is compiled for the main thread as ordinary code, so a component with state is not a special case — this is what rules out any design where the fallback may only be host elements.",
+    "expectBuildError": [],
+    "files": [
+      "Stateful.jsx",
+      "index.jsx"
+    ]
+  },
+  "f03-no-fallback": {
+    "what": "Boundary with no fallback at all.",
+    "reading": "The degenerate case: the boundary folds to nothing, so the first frame is whatever surrounds it. `hdr` paints, the boundary's own space stays empty until hydration.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "f04-fallback-uses-deferred": {
+    "what": "The fallback renders the very component the boundary defers.",
+    "reading": "The deferred code stays in the chunk because the author asked for it: the fallback names the same component. Correct, and the honest answer to “can I defer this?” is no — you just said you need it at 0.0.",
+    "expectBuildError": [],
+    "files": [
+      "index.jsx"
+    ],
+    "deferredByChoice": true
+  },
+  "f05-spread": {
+    "what": "Props spread onto the boundary — the fallback is not statically resolvable.",
+    "reading": "Refused rather than guessed. A spread can carry `fallback`, so folding would have to pick a value the compiler cannot see; the error names the boundary and the file instead of silently producing a blank first frame.",
+    "expectBuildError": [
+      "auto",
+      "off"
+    ],
+    "files": [
+      "index.jsx"
+    ]
+  },
+  "g01-assert-folded": {
+    "what": "The deferred module asserts it with `import 'background-only'`.",
+    "reading": "The same shape as `p01-root`, plus an assertion in the deferred module. The fold reaches it, so the module is not in the main-thread graph and the assertion holds — and under `true` the classic build compiles it there, so the build fails. That failure is the assertion's real cost: it is not a free guardrail but a declaration that this module has no place in any main-thread-rendering build, development included, where `'auto'` always resolves to the classic path. Compare `p01-root`, which is this case without the assertion and builds in all three.",
+    "expectBuildError": [
+      "on"
+    ],
+    "files": [
+      "index.jsx",
+      "real.jsx"
+    ]
+  },
+  "g02-assert-not-folded": {
+    "what": "`i04-wrapper`, with the same assertion — the case the fold cannot cut.",
+    "reading": "This is the deliverable of the whole matrix. `i04-wrapper` is this exact app without the assertion: it builds everywhere, paints correctly everywhere, and silently ships the deferred logic under `'auto'`/`false` — a loss nothing but reading the chunk would reveal. The assertion is on the *module*, so it does not care where the reference lives, and turns that silence into a build error naming the file.",
+    "expectBuildError": [
+      "auto",
+      "off",
+      "on"
+    ],
+    "files": [
+      "index.jsx",
+      "Deferred.jsx",
+      "real.jsx"
+    ]
+  }
+}

@@ -5,6 +5,7 @@ import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
+import { resolveMTSRendering } from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
 // The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
@@ -31,6 +32,7 @@ const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
 function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
+  resolvedEnableMTSRendering: boolean,
   isMainThread = false,
 ) {
   const { output } = api.getRsbuildConfig()
@@ -51,7 +53,6 @@ function getLoaderOptions(
     defineDCE,
     engineVersion,
     enableUiSourceMap,
-    experimental_enableMTSRendering,
 
     experimental_transformBuiltinAttributeNames,
     experimental_isLazyBundle,
@@ -67,7 +68,9 @@ function getLoaderOptions(
     engineVersion,
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
-    experimental_enableMTSRendering,
+    // The *resolved* boolean, not `options.experimental_enableMTSRendering`:
+    // `'auto'` has already been answered against the entry sources.
+    experimental_enableMTSRendering: resolvedEnableMTSRendering,
     ...isMainThread
       ? {
         enableUiSourceMap,
@@ -90,7 +93,14 @@ export function applyTestingLoaders(
     rule
       .use(TESTING_RULE_NAME)
       .loader(ReactWebpackPlugin.loaders.TESTING)
-      .options(getLoaderOptions(api, options))
+      // The testing environment always compiles the dual-thread shape.
+      .options(
+        getLoaderOptions(
+          api,
+          options,
+          options.experimental_enableMTSRendering === false ? false : true,
+        ),
+      )
       .end()
   })
 }
@@ -99,7 +109,17 @@ export function applyLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
-  api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+  api.modifyBundlerChain((chain, { CHAIN_ID, isProd }) => {
+    // Same resolution as `applyEntry` (which owns the user-facing warnings):
+    // a detected root-level `<Background>` turns the assembled main-thread
+    // bundle on, and the background loader then collects the MTS defines.
+    const resolvedEnableMTSRendering = resolveMTSRendering(
+      options,
+      isProd,
+      chain,
+      api.context.rootPath,
+    )
+
     const rule = chain.module.rule(CHAIN_ID.RULE.JS)
     const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
     const type = jsMainRule.get('type') as string | undefined
@@ -122,7 +142,7 @@ export function applyLoaders(
       .end()
       .use(LAYERS.BACKGROUND)
         .loader(ReactWebpackPlugin.loaders.BACKGROUND)
-        .options(getLoaderOptions(api, options))
+        .options(getLoaderOptions(api, options, resolvedEnableMTSRendering))
       .end()
 
     const mainThreadRule = jsMainRule.oneOf(LAYERS.MAIN_THREAD)
@@ -169,7 +189,7 @@ export function applyLoaders(
       })
       .use(LAYERS.MAIN_THREAD)
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
-        .options(getLoaderOptions(api, options, true))
+        .options(getLoaderOptions(api, options, resolvedEnableMTSRendering, true))
       .end()
   })
 }

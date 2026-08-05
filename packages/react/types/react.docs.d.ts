@@ -104,6 +104,17 @@ export const Children: ReactLynxChildren;
 export { createPortal } from '../runtime/lib/index.js';
 
 /**
+ * A first-screen boundary that opts its subtree out of the main-thread
+ * first-screen render (IFR, Instant First-Frame Rendering): the main thread
+ * renders `fallback` during the first screen, and the background thread
+ * replaces it with `children` when hydration completes.
+ *
+ * @public
+ */
+export { Background } from '../runtime/lib/index.js';
+export type { BackgroundProps } from '../runtime/lib/index.js';
+
+/**
  * Creates a ReactLynx element from a Lynx intrinsic element name or a
  * component type. Lynx intrinsic elements are processed by the ReactLynx
  * snapshot runtime.
