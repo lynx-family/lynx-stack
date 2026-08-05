@@ -39,7 +39,7 @@ interface Registration {
  * The engine and the main-thread script share a thread, so there is no event
  * tree to propagate through and no RPC hop; listeners are invoked
  * synchronously and receive a plain `{ type, data }` object. That mirrors the
- * C++ side, where `LepusClosureEventListener::ConvertEventToLepusValue` hands
+ * engine, where `LepusClosureEventListener::ConvertEventToLepusValue` hands
  * a `MessageEvent` to lepus as a plain object carrying `type` and `data`
  * rather than as a DOM event.
  */
@@ -174,7 +174,7 @@ export class LynxEngineContextImpl implements LynxEngineContext {
  * `globalThis.renderPage` and never touch `lynx.getEngine()` — working
  * unchanged.
  *
- * `args` is passed as an array, matching the C++ side, which packs `args...`
+ * `args` is passed as an array, matching the engine, which packs `args...`
  * into a `lepus::CArray`.
  *
  * @returns `true` when the event channel was used, `false` when `directCall`

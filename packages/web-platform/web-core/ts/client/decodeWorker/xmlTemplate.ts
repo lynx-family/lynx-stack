@@ -39,7 +39,7 @@ const cardCSSId = '0';
  * A buildless card has no build step, so `content` is the only channel available
  * without adding a CSS parser to this Worker.
  *
- * Two consequences, both verified by experiment:
+ * Three consequences, all verified by experiment:
  *
  * 1. `<lynx-view transform-vw / transform-vh / transform-rem>` has no effect on
  *    an XML card. Those attributes make the engine rewrite `vw` / `vh` / `rem`
@@ -51,6 +51,12 @@ const cardCSSId = '0';
  * 2. The Lynx `style_transformer` does not run, so Lynx-specific CSS semantics
  *    (for instance `display: linear` and the `linear-*` properties) are not
  *    translated. Plain web CSS is unaffected.
+ * 3. `:root` is not rewritten to `[part="page"]` either. A card renders inside a
+ *    shadow root, where `:root` matches nothing, so declarations and custom
+ *    properties written under `:root` never reach the card; they have to go on
+ *    the page's own selector instead. This fails *silently*: a `var()` reading
+ *    such a custom property becomes invalid at computed-value time, which drops
+ *    the whole declaration rather than reporting anything.
  *
  * Upgrade path: switch this to the `rules` channel, which requires a CSS parser
  * (`packages/repl/src/bundler/css-processor.ts` does exactly this with
@@ -73,20 +79,20 @@ export interface XMLDerivedTemplate {
 /**
  * The page config an XML card is rendered with.
  *
- * The values mirror `LynxTemplateBundle::Build()` in the authoritative C++
- * implementation, which hard-codes the config for XML bundles instead of
+ * The values mirror `LynxTemplateBundle::Build()` in the engine, which
+ * hard-codes the config for XML bundles instead of
  * reading it from the document (the markup format has no config section):
  * `app_type = CARD`, `front_end_dsl = REACT`, `enable_css_selector = true`,
  * `enable_css_parser = false`, `enable_css_variable = true`,
  * `enable_fiber_arch = true`.
  *
- * The web-only keys have no C++ counterpart and follow `buildLynxTemplate()` in
+ * The web-only keys have no engine counterpart and follow `buildLynxTemplate()` in
  * `packages/repl`, the established precedent for rendering a hand-written card
  * on web:
  * - `enableRemoveCSSScope: true` - an XML card has a single global stylesheet
  *   and no per-component css scoping, so scoping must not be applied.
  * - `defaultDisplayLinear: false` - **differs from `packages/repl`, which passes
- *   `true`.** The C++ authority is followed instead: `Build()` never sets this
+ *   `true`.** The engine is followed instead: `Build()` never sets this
  *   field, and the generated `PageConfig` declares
  *   `bool default_display_linear_{false}`, so a native XML bundle renders with
  *   `false`. This is also what hand-written CSS expects, since the document's
@@ -171,7 +177,7 @@ export function xmlToTemplate(
       lepusCode: { root: parsed.mainThreadScript },
       // The background source is kept verbatim: `createChunkLoading` runs each
       // bts chunk through `new Function(...paramNames, jsContent)`, which is
-      // the web equivalent of the C++ `AddModuleWrapForJsContent()` wrapper, so
+      // the web equivalent of the engine's module wrapper, so
       // wrapping here would nest two module functions and hide the source's
       // top-level bindings.
       manifest,

@@ -30,4 +30,10 @@ verbatim rather than tokenized, so the `transform-vw`/`transform-vh`/
 `transform-rem` attributes and Lynx-specific property rewriting (for example
 `display: linear`) do not apply to XML markup cards. Browsers resolve `rem`,
 `vh` and `calc()` natively, so cards written in plain web CSS are unaffected.
+
+For the same reason `:root` is not rewritten to the page element, and a card is
+rendered inside a shadow root where `:root` never matches, so rules and custom
+properties declared under `:root` do not reach the card. Declare them on the
+page's own selector (for example `.page`) instead.
+
 Tokenizing this CSS would require a CSS parser dependency in the decode worker.

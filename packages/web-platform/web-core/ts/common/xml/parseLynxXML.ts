@@ -5,10 +5,10 @@
 /**
  * A zero-dependency parser for the single file Lynx XML markup format.
  *
- * The behavior of this module mirrors the authoritative C++ implementation in
- * `lynx/core/template_bundle/template_bundle_xml_parser.cc`. It is written
- * without `DOMParser` or any third party XML library so that it can run inside
- * a Web Worker.
+ * The behavior of this module mirrors the reference parser in the Lynx engine,
+ * so that a document accepted here is accepted there and vice versa. It is
+ * written without `DOMParser` or any third party XML library so that it can run
+ * inside a Web Worker.
  *
  * The grammar accepted here is intentionally tiny:
  *
@@ -29,7 +29,7 @@
 export interface LynxXMLParseError {
   /**
    * The offset inside the source where the failure was detected, counted in
-   * JavaScript string indices, i.e. UTF-16 code units. Note that the C++
+   * JavaScript string indices, i.e. UTF-16 code units. Note that the reference
    * implementation counts UTF-8 bytes instead, so for documents containing
    * non-ASCII text before the failure the two numbers differ.
    */
@@ -39,7 +39,7 @@ export interface LynxXMLParseError {
    */
   message: string;
   /**
-   * The full message, formatted exactly like the C++ implementation:
+   * The full message, formatted exactly like the reference implementation:
    * `invalid TemplateBundle XML at offset <offset>: <message>`.
    */
   formattedMessage: string;
@@ -91,7 +91,7 @@ const lynxRootClosingTag = '</lynx>';
 const utf8ByteOrderMark = '\uFEFF';
 
 /**
- * The whitespace set of the C++ implementation. Note that this is narrower than
+ * The whitespace set of the reference implementation. Note that this is narrower than
  * what `String.prototype.trim` considers whitespace, therefore all trimming in
  * this module goes through {@link trimASCIIWhitespace}.
  */

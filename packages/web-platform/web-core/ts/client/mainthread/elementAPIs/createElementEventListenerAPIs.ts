@@ -78,7 +78,7 @@ function resolveOptions(
 }
 
 /**
- * Key identifying a registration. Matches the C++ `Matches()` contract for
+ * Key identifying a registration. Matches the engine's `Matches()` contract for
  * `LepusClosureEventListener`, which compares the closure and the capture
  * flag — so `(element, name, callback, capture)` is the identity, and
  * `once`/`passive` are not part of it.
@@ -203,7 +203,7 @@ export function createElementEventListenerAPIs(
       registry.set(key, listeners);
     }
     // Re-registering the same (element, name, callback, capture) triple is a
-    // no-op, matching both `EventTarget` and the C++ `Matches()` dedup.
+    // no-op, matching both `EventTarget` and the engine's `Matches()` dedup.
     if (listeners.has(callback)) {
       return;
     }

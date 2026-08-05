@@ -9,7 +9,7 @@ import type { Cloneable } from './Cloneable.js';
 /**
  * The event object an Engine context listener receives.
  *
- * A plain `{ type, data }` object rather than a DOM event: the C++ side hands
+ * A plain `{ type, data }` object rather than a DOM event: the engine hands
  * lepus the same shape via
  * `LepusClosureEventListener::ConvertEventToLepusValue`, which copies `type`
  * and `data` off the `MessageEvent`. `data` holds the engine call's positional

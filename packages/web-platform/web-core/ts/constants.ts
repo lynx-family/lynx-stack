@@ -31,7 +31,7 @@ export const i18nResourceMissedEventName = 'i18nResourceMissed' as const;
  * returned by `lynx.getEngine()`.
  *
  * Mirrors the `kMessageEventType*` constants in
- * `core/runtime/js/runtime_constant.h` of the Lynx C++ SDK.
+ * `core/runtime/js/runtime_constant.h` of the Lynx engine.
  */
 export const EngineMessageEventType = /*#__PURE__*/ {
   RenderPage: '__RenderPage',

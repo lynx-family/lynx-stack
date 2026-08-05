@@ -25,7 +25,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
     engine = new LynxEngineContextImpl();
   });
 
-  test('event type constants match the C++ SDK', () => {
+  test('event type constants match the engine', () => {
     // core/runtime/js/runtime_constant.h
     expect(EngineMessageEventType.RenderPage).toBe('__RenderPage');
     expect(EngineMessageEventType.UpdatePage).toBe('__UpdatePage');

@@ -63,7 +63,7 @@ export interface ElementEventListenerOptions {
   once?: boolean;
   passive?: boolean;
   /**
-   * Accepted for signature parity with the C++ PAPI. `AbortSignal`-style
+   * Accepted for signature parity with the engine PAPI. `AbortSignal`-style
    * cancellation is not implemented on web; use `__RemoveEventListener`.
    */
   signal?: boolean;

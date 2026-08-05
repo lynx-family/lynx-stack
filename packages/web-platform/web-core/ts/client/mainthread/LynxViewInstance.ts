@@ -378,7 +378,7 @@ export class LynxViewInstance implements AsyncDisposable {
 
   async updateGlobalProps(data: Cloneable) {
     // `__UpdateGlobalProps` has no legacy global-function counterpart on web
-    // (the C++ side calls `kUpdateGlobalProps`, which web-platform never
+    // (the engine calls `kUpdateGlobalProps`, which web-platform never
     // exposed), so the fallback branch is a no-op: cards that subscribe get
     // the event, and everything else keeps relying solely on the
     // background-thread notification below.
