@@ -111,9 +111,11 @@ function createFixture() {
   component.id = 'component';
   const target = document.createElement('div');
   target.id = 'target';
+  const secondTarget = document.createElement('div');
+  secondTarget.id = 'target';
   const relative = document.createElement('div');
   relative.id = 'relative';
-  component.append(relative, target);
+  component.append(relative, target, secondTarget);
   page.append(component);
   rootDom.append(page);
 
@@ -142,11 +144,14 @@ function createFixture() {
     page,
     parentDom,
     relative,
+    secondTarget,
     target,
   };
 }
 
 describe('IntersectionObserverService', () => {
+  const originalIntersectionObserver = globalThis.IntersectionObserver;
+
   beforeEach(() => {
     MockIntersectionObserver.instances = [];
     globalThis.IntersectionObserver =
@@ -155,6 +160,7 @@ describe('IntersectionObserverService', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+    globalThis.IntersectionObserver = originalIntersectionObserver;
   });
 
   test('resolves targets in the component and dispatches Lynx-relative entries', () => {
@@ -296,6 +302,60 @@ describe('IntersectionObserverService', () => {
           top: 50,
         },
       }),
+    );
+  });
+
+  test('observes every matching target when observeAll is enabled', () => {
+    const {
+      dispatchIntersectionObserverEvent,
+      instance,
+      secondTarget,
+      target,
+    } = createFixture();
+    const service = new IntersectionObserverService(instance);
+
+    service.handleCommand({
+      type: 'create',
+      observerId: 1,
+      componentId: 'component-id',
+      options: {
+        initialRatio: -1,
+        observeAll: true,
+      },
+    });
+    service.handleCommand({
+      type: 'observe',
+      observerId: 1,
+      selector: '#target',
+      callbackId: 2,
+    });
+
+    const browserObserver = MockIntersectionObserver.instances[0]!;
+    expect(browserObserver.observed).toEqual(new Set([target, secondTarget]));
+
+    browserObserver.emit([
+      createEntry(target, {
+        intersectionRatio: 1,
+        isIntersecting: true,
+      }),
+      createEntry(secondTarget, {
+        intersectionRatio: 1,
+        isIntersecting: true,
+      }),
+    ]);
+
+    expect(dispatchIntersectionObserverEvent).toHaveBeenCalledTimes(2);
+    expect(dispatchIntersectionObserverEvent).toHaveBeenNthCalledWith(
+      1,
+      1,
+      2,
+      expect.objectContaining({ observerId: 'target' }),
+    );
+    expect(dispatchIntersectionObserverEvent).toHaveBeenNthCalledWith(
+      2,
+      1,
+      2,
+      expect.objectContaining({ observerId: 'target' }),
     );
   });
 

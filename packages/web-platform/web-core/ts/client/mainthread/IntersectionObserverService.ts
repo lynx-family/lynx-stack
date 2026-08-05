@@ -230,10 +230,18 @@ export class IntersectionObserverService {
   ): void {
     const observer = this.#observers.get(observerId);
     if (!observer) return;
-    const target = this.#resolveTarget(observer.componentId, selector);
-    if (!target || observer.targets.has(target)) return;
-    observer.targets.set(target, { callbackId });
-    this.#ensureBrowserObserver(observerId, observer).observe(target);
+    const targets = observer.options.observeAll
+      ? this.#resolveTargets(observer.componentId, selector)
+      : [this.#resolveTarget(observer.componentId, selector)].filter(
+        (target): target is HTMLElement => target !== null,
+      );
+    if (targets.length === 0) return;
+    const browserObserver = this.#ensureBrowserObserver(observerId, observer);
+    for (const target of targets) {
+      if (observer.targets.has(target)) continue;
+      observer.targets.set(target, { callbackId });
+      browserObserver.observe(target);
+    }
   }
 
   #disconnect(observerId: number): void {
@@ -300,11 +308,19 @@ export class IntersectionObserverService {
     componentId: string,
     selector: string,
   ): HTMLElement | null {
+    return this.#resolveTargets(componentId, selector)[0] ?? null;
+  }
+
+  #resolveTargets(
+    componentId: string,
+    selector: string,
+  ): HTMLElement[] {
     if (!selector.startsWith('#')) {
-      if (!/^\d+$/.test(selector)) return null;
-      return this.#lynxViewInstance.mtsWasmBinding.getElementByUniqueId(
+      if (!/^\d+$/.test(selector)) return [];
+      const target = this.#lynxViewInstance.mtsWasmBinding.getElementByUniqueId(
         Number(selector),
-      ) ?? null;
+      );
+      return target ? [target] : [];
     }
 
     const componentRoot = componentId && componentId !== 'card'
@@ -312,21 +328,28 @@ export class IntersectionObserverService {
         componentId,
       )
       : null;
-    const scopedTarget = this.#querySelector(componentRoot ?? null, selector);
-    return scopedTarget
-      ?? this.#querySelector(this.#lynxViewInstance.rootDom, selector);
+    const scopedTargets = this.#querySelectorAll(
+      componentRoot ?? null,
+      selector,
+    );
+    return scopedTargets.length > 0
+      ? scopedTargets
+      : this.#querySelectorAll(this.#lynxViewInstance.rootDom, selector);
   }
 
-  #querySelector(
+  #querySelectorAll(
     root: Element | ShadowRoot | null,
     selector: string,
-  ): HTMLElement | null {
-    if (!root) return null;
+  ): HTMLElement[] {
+    if (!root) return [];
     try {
-      if (root instanceof HTMLElement && root.matches(selector)) return root;
-      return root.querySelector<HTMLElement>(selector);
+      const targets = [...root.querySelectorAll<HTMLElement>(selector)];
+      if (root instanceof HTMLElement && root.matches(selector)) {
+        targets.unshift(root);
+      }
+      return targets;
     } catch {
-      return null;
+      return [];
     }
   }
 

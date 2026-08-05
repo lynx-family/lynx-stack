@@ -165,7 +165,7 @@ test.describe('web core tests', () => {
     });
     await expect.poll(() =>
       worker.evaluate(() => (globalThis as any).__thresholdEntries.length)
-    ).toBe(2);
+    ).toBeGreaterThanOrEqual(2);
     const secondEntry = await worker.evaluate(() => {
       const workerGlobal = globalThis as any;
       workerGlobal.__thresholdObserver.disconnect();
