@@ -79,6 +79,8 @@ describe('create-lynx-library', () => {
       serviceName: 'ButtonService',
       dependencyVersions: {
         '@lynx-js/autolink-codegen': '^0.123.0',
+        '@lynx-js/react': '^0.987.0',
+        '@lynx-js/react-rsbuild-plugin': '^0.789.0',
         '@lynx-js/rspeedy': '^0.456.0',
       },
     });
@@ -192,6 +194,12 @@ describe('create-lynx-library', () => {
       '"@lynx-js/autolink-codegen": "^0.0.0"',
     );
     expect(read(dir, 'package.json')).not.toContain('workspace:');
+    expect(read(dir, 'example/package.json')).toContain(
+      '"@lynx-js/react": "^0.987.0"',
+    );
+    expect(read(dir, 'example/package.json')).toContain(
+      '"@lynx-js/react-rsbuild-plugin": "^0.789.0"',
+    );
     expect(read(dir, 'example/package.json')).toContain(
       '"@lynx-js/rspeedy": "^0.456.0"',
     );
@@ -936,6 +944,8 @@ describe('create-lynx-library', () => {
         dir,
         features: ['native-module'],
         dependencyVersions: {
+          '@lynx-js/react': '^0.987.0',
+          '@lynx-js/react-rsbuild-plugin': '^0.789.0',
           '@lynx-js/rspeedy': '^0.456.0',
         },
       })

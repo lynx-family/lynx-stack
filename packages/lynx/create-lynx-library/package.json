@@ -40,6 +40,8 @@
     "@lynx-js/autolink-codegen": "workspace:^"
   },
   "devDependencies": {
+    "@lynx-js/react": "workspace:^",
+    "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^"
   },
   "engines": {
