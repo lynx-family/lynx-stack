@@ -1,5 +1,5 @@
 ---
-"@lynx-js/web-core": patch
+"@lynx-js/web-core": minor
 ---
 
 Support `lynx.createIntersectionObserver` in Lynx for Web.
