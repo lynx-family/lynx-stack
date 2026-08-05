@@ -78,6 +78,7 @@ export interface PluginReactLynxOptions {
     enableSSR?: boolean;
     enableUiSourceMap?: boolean;
     engineVersion?: string;
+    experimental_backgroundIslands?: boolean;
     experimental_enableMTSRendering?: boolean | 'auto';
     // @alpha
     experimental_isLazyBundle?: boolean;

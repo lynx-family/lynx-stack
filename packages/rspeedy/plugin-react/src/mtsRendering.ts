@@ -192,6 +192,46 @@ export function resolveEnableMTSRendering(
   return true
 }
 
+/**
+ * Whether this build folds `<Background>` boundaries while the main thread
+ * keeps compiling and rendering everything around them.
+ *
+ * The fold and the assembled definitions do not depend on the main thread
+ * being empty — `experimental_enableMTSRendering: false` merely happens to leave it that
+ * way. Turning them on under the classic build is what makes a boundary a
+ * *hole* in a rendered tree rather than the whole first frame, and lets a
+ * multi-entry build defer in one entry without emptying another's first
+ * frame.
+ *
+ * Off in development, where the main thread compiles a `MIXED` target and
+ * HMR needs the full module graph: the `<Background>` component still renders
+ * its fallback at runtime, so the first frame is the same.
+ *
+ * @internal
+ */
+export function resolveBackgroundIslands(
+  options: {
+    experimental_backgroundIslands: boolean
+    experimental_useElementTemplate: boolean
+    enableSSR: boolean
+  },
+  experimental_enableMTSRendering: boolean,
+  isProd: boolean,
+): boolean {
+  if (!options.experimental_backgroundIslands || !isProd) {
+    return false
+  }
+  // `experimental_enableMTSRendering: false` already folds every boundary for the whole
+  // build; `pluginReactLynx` rejects the combination up front, and a `'auto'`
+  // detection landing on it resolves here.
+  if (!experimental_enableMTSRendering) {
+    return false
+  }
+  // Same demotions as the assembled bundle: neither backend can consume the
+  // assembled definitions yet.
+  return !options.experimental_useElementTemplate && !options.enableSSR
+}
+
 function tryReadFile(file: string): string | undefined {
   try {
     return fs.readFileSync(file, 'utf8')
@@ -228,6 +268,16 @@ export function collectEntryImports(
  *
  * @internal
  */
+function addResolved(
+  files: string[],
+  rootPath: string,
+  item: unknown,
+): void {
+  if (typeof item === 'string') {
+    files.push(path.resolve(rootPath, item))
+  }
+}
+
 export function collectEntryImportsByEntry(
   chain: RspackChain,
   rootPath: string,
@@ -236,20 +286,15 @@ export function collectEntryImportsByEntry(
   const entryPoints = chain.entryPoints.entries() ?? {}
   for (const [entryName, entryPoint] of Object.entries(entryPoints)) {
     const files: string[] = []
-    const add = (item: unknown) => {
-      if (typeof item === 'string') {
-        files.push(path.resolve(rootPath, item))
-      }
-    }
     for (const value of entryPoint.values()) {
       if (typeof value === 'string' || Array.isArray(value)) {
         for (const item of Array.isArray(value) ? value : [value]) {
-          add(item)
+          addResolved(files, rootPath, item)
         }
       } else if (value && typeof value === 'object' && 'import' in value) {
         const imports = (value as { import?: string | string[] }).import
         for (const item of Array.isArray(imports) ? imports : [imports]) {
-          add(item)
+          addResolved(files, rootPath, item)
         }
       }
     }

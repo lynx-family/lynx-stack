@@ -316,6 +316,39 @@ export interface PluginReactLynxOptions {
   experimental_enableMTSRendering?: boolean | 'auto'
 
   /**
+   * Compile `<Background>` subtrees out of the main-thread bundle while the
+   * main thread keeps rendering everything else.
+   *
+   * @remarks
+   *
+   * The same fold `experimental_enableMTSRendering: false` applies — each `<Background>`
+   * is rewritten to its `fallback` on the main-thread target, so the deferred
+   * subtree's module closure leaves that bundle and its element definitions
+   * are assembled there from the background compilation instead. The
+   * difference is what happens to everything *outside* the boundaries: they
+   * stay compiled and rendered on the main thread, exactly as in the classic
+   * dual-thread build.
+   *
+   * That makes the two modes complementary rather than alternatives:
+   *
+   * | | main thread compiles | first frame |
+   * |---|---|---|
+   * | `experimental_enableMTSRendering: false` | the entry and its fallbacks | the fallbacks |
+   * | this option | everything except deferred subtrees | the app, with fallbacks in the holes |
+   * | neither | everything | the app, `<Background>` renders its fallback at runtime |
+   *
+   * Reach for this when only part of the screen is deferred, or when a
+   * multi-entry build has boundaries in some entries but not others —
+   * `experimental_enableMTSRendering: false` applies to the whole build, so an entry
+   * without a boundary would render an empty first frame.
+   *
+   * @defaultValue `false`
+   *
+   * @experimental
+   */
+  experimental_backgroundIslands?: boolean
+
+  /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
    *
    * @defaultValue `true`
@@ -461,6 +494,7 @@ export function pluginReactLynx(
     experimental_isLazyBundle: false,
     experimental_transformBuiltinAttributeNames: false,
     experimental_useElementTemplate: false,
+    experimental_backgroundIslands: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }
@@ -477,6 +511,20 @@ export function pluginReactLynx(
     throw new Error(
       '`experimental_enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
     )
+  }
+
+  if (resolvedOptions.experimental_backgroundIslands) {
+    if (resolvedOptions.experimental_useElementTemplate) {
+      throw new Error(
+        '`experimental_backgroundIslands` does not support `experimental_useElementTemplate` yet.',
+      )
+    }
+    if (resolvedOptions.experimental_enableMTSRendering === false) {
+      throw new Error(
+        '`experimental_backgroundIslands` conflicts with `experimental_enableMTSRendering: false`, which already '
+          + 'folds every `<Background>` and assembles the definitions for the whole build. Drop one of them.',
+      )
+    }
   }
 
   return [

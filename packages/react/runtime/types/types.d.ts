@@ -24,6 +24,13 @@ declare global {
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
   declare const __ENABLE_MTS_RENDERING__: boolean;
+  declare const __BACKGROUND_ISLANDS__: boolean;
+  /**
+   * Emitted into the main-thread chunk's runtime by
+   * `@lynx-js/react-webpack-plugin` when definitions are assembled from the
+   * background compilation.
+   */
+  declare const __initMTSDefines: ((runtime: unknown) => void) | undefined;
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
   declare const __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__:

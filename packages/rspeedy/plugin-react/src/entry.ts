@@ -24,6 +24,7 @@ import {
 import { MTS_ENTRY_QUERY } from './loaders/mts-defines-entry-loader.js'
 import {
   entriesDeclaringRootBackground,
+  resolveBackgroundIslands,
   resolveMTSRendering,
 } from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
@@ -394,6 +395,11 @@ export function applyEntry(
         enableSSR,
         experimental_enableMTSRendering: resolvedEnableMTSRendering,
         rendersOnMainThread,
+        experimental_backgroundIslands: resolveBackgroundIslands(
+          options,
+          resolvedEnableMTSRendering,
+          isProd,
+        ),
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

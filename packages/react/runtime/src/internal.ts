@@ -7,6 +7,7 @@ import type { FC } from 'react';
 
 import './runtime-backend-marker.js';
 import './lynx.js';
+import './mtsDefinesInit.js';
 
 import { useMemo } from './core/hooks/react.js';
 import { loadLazyBundle } from './core/lynx/lazy-bundle.js';

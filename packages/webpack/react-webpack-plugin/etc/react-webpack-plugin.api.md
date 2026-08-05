@@ -29,6 +29,7 @@ export interface ReactLoaderOptions {
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
+    experimental_backgroundIslands?: boolean | undefined;
     experimental_enableMTSRendering?: boolean | undefined;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions | undefined;
     experimental_useElementTemplate?: boolean | undefined;
@@ -50,6 +51,7 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
+    experimental_backgroundIslands?: boolean;
     experimental_enableMTSRendering?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
