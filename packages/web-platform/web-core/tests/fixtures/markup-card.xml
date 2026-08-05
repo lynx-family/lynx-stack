@@ -12,10 +12,15 @@
     the main-thread script below, so it is the reliable place for card-wide
     values.
   */
+  /*
+    No `height` here on purpose: the card lets the host size itself, so
+    `lynx-view` can stay on its default `height="auto"` and grow with the
+    content. Pinning the page to `100vh` would force every embedder to give the
+    host a viewport-sized box just to avoid clipping.
+  */
   .page {
     --accent: #2f6d54;
     width: 100%;
-    height: 100vh;
     font-size: calc(100vw / 24);
     background-color: #edf4ef;
   }

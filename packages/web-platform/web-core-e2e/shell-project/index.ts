@@ -215,11 +215,6 @@ if (xmlName) {
   const lynxView = lynxViewTests(
     document.querySelector('lynx-view') as LynxViewElement | undefined,
   );
-  // The markup cards lay themselves out against the viewport (`100vh`) and
-  // scroll internally, so give the host a real viewport-sized box instead of
-  // the content-driven `height="auto"` used by the bundle cases.
-  lynxView.removeAttribute('height');
-  lynxView.style.height = '100vh';
   // `transform-*` must stay off: CSS from markup cards is passed through
   // verbatim rather than tokenized, so the unit conversions would silently not
   // apply. The browser handles `rem`/`vh` natively.
