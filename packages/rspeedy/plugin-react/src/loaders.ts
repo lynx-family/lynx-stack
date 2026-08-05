@@ -111,8 +111,9 @@ export function applyLoaders(
 ): void {
   api.modifyBundlerChain((chain, { CHAIN_ID, isProd }) => {
     // Same resolution as `applyEntry` (which owns the user-facing warnings):
-    // a detected root-level `<Background>` turns the assembled main-thread
-    // bundle on, and the background loader then collects the MTS defines.
+    // a detected root-level first-screen boundary turns the assembled
+    // main-thread bundle on, and the background loader then collects the MTS
+    // defines.
     const resolvedEnableMTSRendering = resolveMTSRendering(
       options,
       isProd,

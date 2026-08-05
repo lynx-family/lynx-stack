@@ -63,6 +63,7 @@ use swc_plugin_element_template::napi::{
 };
 use swc_plugin_element_template::ElementTemplateAsset as CoreElementTemplateAsset;
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
+use swc_plugin_main_thread_component::{MainThreadComponentVisitor, MainThreadIslandCollector};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{
@@ -334,6 +335,28 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "mtsDefines")]
   pub mts_defines: Option<Vec<MTSDefine>>,
+  /// @internal
+  #[napi(js_name = "mainThreadIslands")]
+  pub main_thread_islands: Option<MainThreadIslands>,
+}
+
+/// The components one module marks with the `'main thread component'`
+/// directive — the definition-site half of a main-thread island.
+///
+/// @internal
+#[napi(object)]
+pub struct MainThreadIslands {
+  /// @internal
+  pub components: Vec<MainThreadIslandComponent>,
+}
+
+/// @internal
+#[napi(object)]
+pub struct MainThreadIslandComponent {
+  /// @internal
+  pub name: String,
+  /// @internal
+  pub exported: Option<String>,
 }
 
 fn lower_to_main_thread_syntax(
@@ -415,6 +438,26 @@ fn take_element_templates(
       .drain(..)
       .map(|template| template.into())
       .collect()
+  })
+}
+
+/// `None` when the module declares no island at all, so the transform output
+/// keeps the shape it had before islands existed for every module that does
+/// not use them.
+fn take_main_thread_islands(collector: &MainThreadIslandCollector) -> Option<MainThreadIslands> {
+  let info = collector.borrow();
+  if info.components.is_empty() {
+    return None;
+  }
+  Some(MainThreadIslands {
+    components: info
+      .components
+      .iter()
+      .map(|component| MainThreadIslandComponent {
+        name: component.name.clone(),
+        exported: component.exported.clone(),
+      })
+      .collect(),
   })
 }
 
@@ -503,6 +546,7 @@ fn transform_react_lynx_inner(
           ui_source_map_records: vec![],
           element_templates: None,
           mts_defines: None,
+          main_thread_islands: None,
         };
       }
     };
@@ -671,6 +715,14 @@ fn transform_react_lynx_inner(
       .collect_mts_defines
       .unwrap_or(false)
       .then(|| Rc::new(RefCell::new(vec![])));
+
+    // Island discovery is unconditional: the `'main thread component'`
+    // directive is stripped from both layers' output (so the two stay
+    // byte-comparable), and the report is cheap enough to always produce.
+    let main_thread_island_collector: MainThreadIslandCollector = Default::default();
+    let main_thread_component_plugin = visit_mut_pass(MainThreadComponentVisitor::new(
+      main_thread_island_collector.clone(),
+    ));
 
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
@@ -897,7 +949,13 @@ fn transform_react_lynx_inner(
         unresolved_mark,
         top_level_mark,
       ),
-      dynamic_import_plugin,
+      (
+        dynamic_import_plugin,
+        // Runs before the worklet, snapshot and JSX transforms: it reads the
+        // same directive prologue the worklet transform inspects, and it
+        // matches on JSX the React transform would rewrite away.
+        main_thread_component_plugin,
+      ),
       refresh_plugin,
       (
         // Before any JSX-consuming pass: the folded-away `children` must never
@@ -1028,6 +1086,7 @@ fn transform_react_lynx_inner(
           },
           element_templates,
           mts_defines,
+          main_thread_islands: take_main_thread_islands(&main_thread_island_collector),
         }
       }
       Err(_) => {
@@ -1044,6 +1103,7 @@ fn transform_react_lynx_inner(
           },
           element_templates,
           mts_defines: None,
+          main_thread_islands: None,
         };
       }
     }
@@ -1059,6 +1119,7 @@ fn transform_react_lynx_inner(
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
     mts_defines: result.mts_defines,
+    main_thread_islands: result.main_thread_islands,
   };
 
   r

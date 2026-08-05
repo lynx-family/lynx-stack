@@ -30,17 +30,30 @@ import type { RspackChain } from '@rsbuild/core'
 // `{ … }` so a `Background` from another module never binds to a separate
 // `@lynx-js/react` statement.
 const LYNX_REACT = String.raw`['"]@lynx-js\/react(?:\/[^'"]*)?['"]`
-// import { Background } / { Background as B } / export { Background } from …
-const NAMED = String.raw`(?:import|export)[^{}]*\{[^}]*\bBackground\b[^}]*\}`
-// import * as ReactLynx from … — the namespace carries `Background` too.
+// import * as ReactLynx from … — the namespace carries either boundary.
 const NAMESPACE = String.raw`import\s*\*\s*as\s+\w+`
 // export * from … — re-exports the boundary along with everything else.
 const STAR = String.raw`export\s*\*`
-const BACKGROUND_BINDING_RE = new RegExp(
-  [NAMED, NAMESPACE, STAR]
-    .map(shape => String.raw`${shape}\s*from\s*${LYNX_REACT}`)
-    .join('|'),
-)
+// import { X } / { X as Y } / export { X } from …
+const bindingRe = (name: string) =>
+  new RegExp(
+    [
+      String.raw`(?:import|export)[^{}]*\{[^}]*\b${name}\b[^}]*\}`,
+      NAMESPACE,
+      STAR,
+    ]
+      .map(shape => String.raw`${shape}\s*from\s*${LYNX_REACT}`)
+      .join('|'),
+  )
+
+const BACKGROUND_BINDING_RE = bindingRe('Background')
+
+// The opt-in twin, matched the same way and for the same reason. A
+// `<MainThread>` says the wrapped island renders on the main thread's first
+// frame, which is the same whole-program statement a `<Background>` makes
+// from the other end: the main thread compiles what the boundaries leave
+// standing, and nothing else.
+const MAIN_THREAD_BINDING_RE = bindingRe('MainThread')
 
 // Relative specifiers only: a boundary inside a dependency is not something
 // this app can act on, and walking `node_modules` at config time would cost
@@ -87,6 +100,29 @@ export function sourceHasBackground(source: string): boolean {
 }
 
 /**
+ * Whether a single module binds `MainThread` from the runtime — the opt-in
+ * twin of `<Background>`, asked the same way and for the same reason: a miss
+ * is a blank first screen, a false positive costs nothing.
+ *
+ * @internal
+ */
+export function sourceHasMainThread(source: string): boolean {
+  return MAIN_THREAD_BINDING_RE.test(source)
+}
+
+/**
+ * Whether a single module's source uses either first-screen boundary. Both
+ * mean the same thing to the build: this entry is compiled for the main
+ * thread, and what it renders there is what the boundaries leave standing —
+ * a `<Background>` folds to its fallback, a `<MainThread>` keeps its island.
+ *
+ * @internal
+ */
+export function sourceHasBoundary(source: string): boolean {
+  return sourceHasBackground(source) || sourceHasMainThread(source)
+}
+
+/**
  * Resolve a relative import the way the bundler would, well enough to read
  * it. A specifier that does not land on a readable file is skipped: the scan
  * is an optimization hint, and a miss only keeps the classic build.
@@ -114,12 +150,13 @@ function resolveRelative(
 }
 
 /**
- * Whether an entry defers anything: a `<Background>` in the entry itself or
- * in any module reachable from it through relative imports.
+ * Whether an entry declares a first-screen boundary — a `<Background>` or a
+ * `<MainThread>` — in the entry itself or in any module reachable from it
+ * through relative imports.
  *
  * @internal
  */
-export function entryHasBackground(entryFile: string): boolean {
+export function entryHasBoundary(entryFile: string): boolean {
   const visited = new Set<string>()
 
   const walk = (file: string, depth: number): boolean => {
@@ -132,7 +169,7 @@ export function entryHasBackground(entryFile: string): boolean {
     if (source === undefined) {
       return false
     }
-    if (sourceHasBackground(source)) {
+    if (sourceHasBoundary(source)) {
       return true
     }
 
@@ -184,7 +221,7 @@ export function resolveEnableMTSRendering(
   }
 
   for (const file of entryFiles) {
-    if (entryHasBackground(file)) {
+    if (entryHasBoundary(file)) {
       return false
     }
   }
@@ -228,6 +265,16 @@ export function collectEntryImports(
  *
  * @internal
  */
+function addEntryImport(
+  files: string[],
+  rootPath: string,
+  item: unknown,
+): void {
+  if (typeof item === 'string') {
+    files.push(path.resolve(rootPath, item))
+  }
+}
+
 export function collectEntryImportsByEntry(
   chain: RspackChain,
   rootPath: string,
@@ -236,20 +283,15 @@ export function collectEntryImportsByEntry(
   const entryPoints = chain.entryPoints.entries() ?? {}
   for (const [entryName, entryPoint] of Object.entries(entryPoints)) {
     const files: string[] = []
-    const add = (item: unknown) => {
-      if (typeof item === 'string') {
-        files.push(path.resolve(rootPath, item))
-      }
-    }
     for (const value of entryPoint.values()) {
       if (typeof value === 'string' || Array.isArray(value)) {
         for (const item of Array.isArray(value) ? value : [value]) {
-          add(item)
+          addEntryImport(files, rootPath, item)
         }
       } else if (value && typeof value === 'object' && 'import' in value) {
         const imports = (value as { import?: string | string[] }).import
         for (const item of Array.isArray(imports) ? imports : [imports]) {
-          add(item)
+          addEntryImport(files, rootPath, item)
         }
       }
     }
@@ -259,12 +301,12 @@ export function collectEntryImportsByEntry(
 }
 
 /**
- * The entries whose sources declare a root-level `<Background>`, and so bring
- * a fallback the main thread should compile and render.
+ * The entries whose sources declare a first-screen boundary, and so bring
+ * something the main thread should compile and render.
  *
  * @internal
  */
-export function entriesDeclaringRootBackground(
+export function entriesDeclaringRootBoundary(
   chain: RspackChain,
   rootPath: string,
 ): Set<string> {
@@ -273,7 +315,7 @@ export function entriesDeclaringRootBackground(
     const [entryName, files] of collectEntryImportsByEntry(chain, rootPath)
   ) {
     for (const file of files) {
-      if (entryHasBackground(file)) {
+      if (entryHasBoundary(file)) {
         declaring.add(entryName)
         break
       }
@@ -318,7 +360,7 @@ export function resolveMTSRendering(
     return true
   }
 
-  const deferringEntries = entriesDeclaringRootBackground(chain, rootPath)
+  const deferringEntries = entriesDeclaringRootBoundary(chain, rootPath)
   if (deferringEntries.size === 0) {
     return true
   }

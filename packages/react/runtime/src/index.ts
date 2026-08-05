@@ -31,6 +31,7 @@ import {
   useRef,
   useState,
 } from './core/hooks/react.js';
+import { MainThread } from './core/main-thread.js';
 import { Children } from './snapshot/lynx/children.js';
 import { cloneElement, createElement } from './snapshot/lynx/element.js';
 import { createPortal } from './snapshot/lynx/portals.js';
@@ -38,6 +39,7 @@ import { Suspense } from './snapshot/lynx/suspense.js';
 
 export type { ReactLynxChildren } from './snapshot/lynx/children.js';
 export type { BackgroundProps } from './core/background.js';
+export type { MainThreadProps } from './core/main-thread.js';
 export type { CloneElement, CreateElement } from './snapshot/lynx/element.js';
 
 installComponentCompat();
@@ -78,10 +80,12 @@ export default {
   cloneElement,
   createPortal,
   Background,
+  MainThread,
 };
 
 export {
   Background,
+  MainThread,
   Children,
   createRef,
   Fragment,

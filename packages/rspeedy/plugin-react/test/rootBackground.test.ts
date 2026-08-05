@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from '@rstest/core'
 
 import {
-  entryHasBackground,
+  entryHasBoundary,
   resolveEnableMTSRendering,
   sourceHasBackground,
 } from '../src/mtsRendering.js'
@@ -119,21 +119,21 @@ describe('sourceHasBackground', () => {
   })
 })
 
-describe('entryHasBackground', () => {
+describe('entryHasBoundary', () => {
   test('finds a boundary in the entry itself', () => {
-    expect(entryHasBackground(fixture('root-background.jsx'))).toBe(true)
+    expect(entryHasBoundary(fixture('root-background.jsx'))).toBe(true)
   })
 
   test('finds one reachable only through a relative import', () => {
-    expect(entryHasBackground(fixture('entry-importing-middle.jsx'))).toBe(true)
+    expect(entryHasBoundary(fixture('entry-importing-middle.jsx'))).toBe(true)
   })
 
   test('stays false for an app that defers nothing', () => {
-    expect(entryHasBackground(fixture('no-background.jsx'))).toBe(false)
+    expect(entryHasBoundary(fixture('no-background.jsx'))).toBe(false)
   })
 
   test('stays false for an unreadable entry', () => {
-    expect(entryHasBackground('@lynx-js/react/refresh')).toBe(false)
+    expect(entryHasBoundary('@lynx-js/react/refresh')).toBe(false)
   })
 })
 

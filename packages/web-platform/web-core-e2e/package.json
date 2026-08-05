@@ -14,11 +14,12 @@
     "lh": "pnpm dlx @lhci/cli autorun",
     "serve": "rsbuild dev",
     "test": "playwright test",
-    "test:island": "playwright test --config=playwright.island.config.ts",
     "test:debug": "playwright test --ui",
     "test:install": "playwright install --with-deps chromium firefox webkit",
+    "test:island": "playwright test --config=playwright.island.config.ts",
     "test:server": "rstest",
-    "test:update": "playwright test --ui --update-snapshots"
+    "test:update": "playwright test --ui --update-snapshots",
+    "test:island-matrix": "playwright test --config=playwright.island-matrix.config.ts"
   },
   "devDependencies": {
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",

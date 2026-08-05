@@ -23,7 +23,7 @@ import {
 
 import { MTS_ENTRY_QUERY } from './loaders/mts-defines-entry-loader.js'
 import {
-  entriesDeclaringRootBackground,
+  entriesDeclaringRootBoundary,
   resolveMTSRendering,
 } from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
@@ -78,10 +78,11 @@ export function applyEntry(
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    // A root-level `<Background>` in an entry is the declarative trigger for
-    // the assembled main-thread bundle (`experimental_enableMTSRendering:
-    // false` is its
-    // implementation) — resolve `'auto'` against the entry sources before the
+    // A root-level `<Background>` — or its opt-in twin, a root-level
+    // `<MainThread>` — in an entry is the declarative trigger for the
+    // assembled main-thread bundle (`experimental_enableMTSRendering: false`
+    // is its implementation). Resolve `'auto'` against the entry sources
+    // before the
     // entry points are rewritten below.
     const resolvedEnableMTSRendering = resolveMTSRendering(
       options,
@@ -96,22 +97,24 @@ export function applyEntry(
       'runtime/mts-rendering-disabled/index.js',
     )
 
-    // Which entries declare a root `<Background>`, and so have a fallback the
-    // main thread should compile and render. An entry without one keeps the
-    // degenerate shape: the assembled definitions only, and an empty first
-    // frame until the background hydrates.
-    const entriesWithRootBackground = resolvedEnableMTSRendering
+    // Which entries declare a root first-screen boundary, and so have
+    // something the main thread should compile and render. An entry without
+    // one keeps the degenerate shape: the assembled definitions only, and an
+    // empty first frame until the background hydrates.
+    const entriesWithRootBoundary = resolvedEnableMTSRendering
       ? new Set<string>()
-      : entriesDeclaringRootBackground(chain, api.context.rootPath)
+      : entriesDeclaringRootBoundary(chain, api.context.rootPath)
 
     /**
-     * The main thread compiles the entry only to render a root
-     * `<Background>`'s fallback: the transform folds the boundary to that
-     * fallback, so the app's own module closure never reaches this bundle.
+     * The main thread compiles the entry only to render what its root
+     * boundary names: a `<Background>`'s fallback, which the transform folds
+     * the boundary down to so the app's own module closure never reaches this
+     * bundle — or a `<MainThread>`'s island, which is compiled for the main
+     * thread precisely because the boundary keeps referencing it.
      *
-     * The two are pulled in through a single generated root rather than as
-     * two entry imports — see `loaders/mts-defines-entry-loader`, which is
-     * where the reason lives.
+     * The definitions runtime and the entry are pulled in through a single
+     * generated root rather than as two entry imports — see
+     * `loaders/mts-defines-entry-loader`, which is where the reason lives.
      */
     const mainThreadImportsFor = (
       entryName: string,
@@ -120,7 +123,7 @@ export function applyEntry(
       if (resolvedEnableMTSRendering) {
         return undefined
       }
-      if (!entriesWithRootBackground.has(entryName)) {
+      if (!entriesWithRootBoundary.has(entryName)) {
         return [mtsDefinesEntry]
       }
       return [
@@ -141,9 +144,9 @@ export function applyEntry(
     }
 
     // The main thread only has something to render when at least one entry
-    // brought a fallback with it; otherwise the render path is shaken out.
+    // brought a first frame with it; otherwise the render path is shaken out.
     const rendersOnMainThread = resolvedEnableMTSRendering
-      || entriesWithRootBackground.size > 0
+      || entriesWithRootBoundary.size > 0
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')

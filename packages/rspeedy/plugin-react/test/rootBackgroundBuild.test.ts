@@ -10,8 +10,8 @@ import { logger } from '@rsbuild/core'
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { afterEach, describe, expect, rstest, test } from '@rstest/core'
 
-import type { PluginReactLynxOptions } from '../src/pluginReactLynx.js'
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
+import type { PluginReactLynxOptions } from '../src/pluginReactLynx.js'
 
 rstest
   .stubEnv('USE_RSPACK', 'true')

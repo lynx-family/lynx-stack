@@ -6,6 +6,7 @@ import { sExportsReact, target } from './target';
 
 export const {
   Background,
+  MainThread,
   Children,
   Component,
   Fragment,

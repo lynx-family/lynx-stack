@@ -48,6 +48,7 @@ export function Background(props: BackgroundProps): ReactNode;
 export interface BackgroundProps {
     children?: ReactNode | undefined;
     fallback?: ReactNode | undefined;
+    island?: ReactNode | undefined;
 }
 
 // @public
@@ -145,6 +146,14 @@ export { lazy }
 export interface Lynx {
     registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
+}
+
+// @public
+export function MainThread(props: MainThreadProps): ReactNode;
+
+// @public
+export interface MainThreadProps {
+    children?: ReactNode | undefined;
 }
 
 // Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts

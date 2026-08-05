@@ -26,6 +26,7 @@ swc_plugin_dynamic_import = { path = './crates/swc_plugin_dynamic_import', featu
 swc_plugin_element_template = { path = "./crates/swc_plugin_element_template", features = ["napi"] }
 swc_plugin_inject = { path = "./crates/swc_plugin_inject", features = ["napi"] }
 swc_plugin_list = { path = "./crates/swc_plugin_list", features = ["napi"] }
+swc_plugin_main_thread_component = { path = "./crates/swc_plugin_main_thread_component", features = ["napi"] }
 swc_plugin_shake = { path = './crates/swc_plugin_shake', features = ["napi"] }
 swc_plugin_snapshot = { path = "./crates/swc_plugin_snapshot", features = ["napi"] }
 swc_plugin_text = { path = './crates/swc_plugin_text', features = ["napi"] }

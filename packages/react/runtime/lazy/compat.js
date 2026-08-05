@@ -6,6 +6,7 @@ import { sExportsReactCompat, target } from './target.js';
 
 export const {
   Background,
+  MainThread,
   Children,
   Component,
   Fragment,

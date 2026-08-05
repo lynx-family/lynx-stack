@@ -5,3 +5,6 @@ resources/external-bundle/
 # the bgmatrix Playwright config, and tests/bgmatrix.report.mjs.
 bgmatrix-report/
 dist-bundle/
+
+# The boundary matrix's report — regenerate with `pnpm test:island-matrix`.
+island-matrix-report/

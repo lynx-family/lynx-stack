@@ -113,6 +113,8 @@ export { createPortal } from '../runtime/lib/index.js';
  */
 export { Background } from '../runtime/lib/index.js';
 export type { BackgroundProps } from '../runtime/lib/index.js';
+export { MainThread } from '../runtime/lib/index.js';
+export type { MainThreadProps } from '../runtime/lib/index.js';
 
 /**
  * Creates a ReactLynx element from a Lynx intrinsic element name or a

@@ -1,0 +1,65 @@
+:root {
+  background-color: #0d0d17;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 68px 24px 28px;
+  background-color: #0d0d17;
+}
+
+.Title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.Description {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.Card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  margin-top: 24px;
+  border-radius: 12px;
+  background-color: #1c1c2b;
+}
+
+.Card__label {
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.Feed {
+  flex: 1;
+  margin-top: 16px;
+}
+
+.FeedItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background-color: #1c1c2b;
+}
+
+.FeedList {
+  flex: 1;
+  margin-top: 8px;
+}
+
+.FeedSkeleton {
+  flex: 1;
+  margin-top: 24px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.06);
+}

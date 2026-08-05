@@ -19,6 +19,11 @@ import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 import {
+  MTS_ISLANDS_BUILD_INFO,
+  islandModuleWrapper,
+} from './MainThreadIslands.js';
+import type { MTSIslands } from './MainThreadIslands.js';
+import {
   collectMTSDefines,
   createMTSDefinesRuntimeModule,
   renderLazyMTSDefines,
@@ -443,6 +448,19 @@ class ReactWebpackPlugin {
       ),
     }).apply(compiler);
 
+    if (options.experimental_enableMTSRendering === false) {
+      compiler.hooks.finishMake.tapPromise(
+        this.constructor.name,
+        (compilation) =>
+          this.#includeIslandModules(
+            compiler,
+            compilation,
+            options.mainThreadEntries ?? {},
+            options.experimental_isLazyBundle,
+          ),
+      );
+    }
+
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
 
@@ -698,6 +716,110 @@ class ReactWebpackPlugin {
         );
       }
     });
+  }
+
+  /**
+   * Compile the modules that declare main-thread islands into the
+   * main-thread layer.
+   *
+   * Under `experimental_enableMTSRendering: false` the main thread compiles only what a
+   * root first-screen boundary names, reached from the entry. A marked
+   * component that nothing on that path references — an island placed
+   * behind a `<Background>`, or resolved indirectly — would not be there at
+   * all, so each module that marks one enters the main-thread entries as an
+   * extra entry module, compiled with the LEPUS target. The marker is the
+   * definition-site guarantee that the component is first-frame capable,
+   * independent of who happens to reference it.
+   *
+   * Because the added modules are compiled in the main-thread layer, their
+   * loader is the main-thread one, which never collects MTS defines — so an
+   * island never contributes definitions twice. The assembled definitions
+   * skip it from the other side as well (see `MTSDefinesRuntimeModule`).
+   */
+  async #includeIslandModules(
+    compiler: Compiler,
+    compilation: Compilation,
+    mainThreadEntryMap: Record<string, string>,
+    isLazyBundle: boolean,
+  ): Promise<void> {
+    const { EntryPlugin } = compiler.webpack;
+    const mainThreadEntries = Object.keys(mainThreadEntryMap);
+
+    // A lazy bundle has no main-thread chunk of its own under this mode — its
+    // section installs assembled definitions only — so there is no entry to
+    // compile an island into.
+    if (mainThreadEntries.length === 0 || isLazyBundle) {
+      if (isLazyBundle) {
+        this.#warnOnLazyBundleIslands(compiler, compilation);
+      }
+      return;
+    }
+
+    // Drain the module graph before doing anything asynchronous: awaiting
+    // while iterating `compilation.modules` lets the compilation take back
+    // the module graph the iterator is reading, which aborts the build.
+    const islandModules: string[] = [];
+    for (const module of compilation.modules) {
+      const islands = module.buildInfo?.[MTS_ISLANDS_BUILD_INFO] as
+        | MTSIslands
+        | undefined;
+      if (!islands || islands.components.length === 0) {
+        continue;
+      }
+      const resource = (module as { resource?: string }).resource;
+      if (typeof resource === 'string') {
+        islandModules.push(resource);
+      }
+    }
+
+    if (islandModules.length === 0) {
+      return;
+    }
+
+    await Promise.all(
+      islandModules.flatMap((resource) =>
+        // A marked component can be rendered from any entry, so every
+        // main-thread entry gets it. A module nobody renders costs size, not
+        // behavior.
+        mainThreadEntries.map((name) =>
+          new Promise<void>((resolve, reject) => {
+            compilation.addEntry(
+              compiler.context,
+              EntryPlugin.createDependency(islandModuleWrapper(resource)),
+              { name, layer: LAYERS.MAIN_THREAD },
+              (err) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+                resolve();
+              },
+            );
+          })
+        )
+      ),
+    );
+  }
+
+  #warnOnLazyBundleIslands(compiler: Compiler, compilation: Compilation): void {
+    for (const module of compilation.modules) {
+      const islands = module.buildInfo?.[MTS_ISLANDS_BUILD_INFO] as
+        | MTSIslands
+        | undefined;
+      if (!islands) {
+        continue;
+      }
+      compilation.warnings.push(
+        new compiler.webpack.WebpackError(
+          `${
+            (module as { resource?: string }).resource ?? module.identifier()
+          } declares a main-thread island, but a lazy bundle has no `
+            + `main-thread chunk to compile it into. The island renders only `
+            + `once the background hydrates.`,
+        ),
+      );
+      return;
+    }
   }
 
   #updateMainThreadInfo(compilation: Compilation, name: string) {

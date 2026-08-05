@@ -769,6 +769,30 @@ export interface TransformNodiffOutput {
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
   mtsDefines?: Array<MTSDefine>
+  /** @internal */
+  mainThreadIslands?: MainThreadIslands
+}
+/**
+ * @internal
+ * The components one module marks with the `'main thread component'`
+ * directive — the definition-site half of a main-thread island.
+ */
+export interface MainThreadIslands {
+  /** @internal */
+  components: Array<MainThreadIslandComponent>
+}
+/** @internal */
+export interface MainThreadIslandComponent {
+  /**
+   * @internal
+   * The declared (local) name, for diagnostics.
+   */
+  name: string
+  /**
+   * @internal
+   * The name the component is exported under, when it is exported.
+   */
+  exported?: string
 }
 /**
  * @internal

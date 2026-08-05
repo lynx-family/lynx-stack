@@ -5,6 +5,8 @@ import { createRequire } from 'node:module';
 
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
+import { MTS_ISLANDS_BUILD_INFO } from '../MainThreadIslands.js';
+import type { MTSIslands } from '../MainThreadIslands.js';
 import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
@@ -93,6 +95,22 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   })._module?.buildInfo;
   if (buildInfo && result.mtsDefines) {
     buildInfo[MTS_DEFINES_BUILD_INFO] = result.mtsDefines;
+  }
+
+  if (buildInfo) {
+    // The opt-in half: the components this module marks with
+    // `'main thread component'`. The plugin turns them into extra
+    // main-thread entries, so they are compiled for the main thread even
+    // when nothing on the first-frame render path references them.
+    //
+    // Written on every build, including the empty case, so a rebuild that
+    // *removes* the last marker does not leave a stale island behind.
+    const components = result.mainThreadIslands?.components;
+    if (components && components.length > 0) {
+      buildInfo[MTS_ISLANDS_BUILD_INFO] = { components } satisfies MTSIslands;
+    } else {
+      delete buildInfo[MTS_ISLANDS_BUILD_INFO];
+    }
   }
 
   this.callback(null, result.code, result.map);

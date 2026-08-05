@@ -80,7 +80,7 @@ export function collectMTSDefines<TChunk, TModule>(
   chunks: Iterable<TChunk>,
   getChunkModules: (chunk: TChunk) => Iterable<TModule>,
   getModuleIdentifier: (module: TModule) => string,
-  owned?: ReadonlySet<string> | undefined,
+  owned?: ReadonlySet<string>,
 ): MTSDefine[] {
   const collected: MTSDefine[] = [];
   const visitedModules = new Set<string>();

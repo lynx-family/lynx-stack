@@ -21,5 +21,8 @@ export default defineConfig({
   // background thread to get the first of them. It runs from
   // `playwright.island.config.ts` on Chromium alone, so it stays out of the
   // cross-browser sweep here.
-  testIgnore: '**/background-island.spec.ts',
+  testIgnore: [
+    '**/background-island.spec.ts',
+    '**/island-matrix.spec.ts',
+  ],
 });

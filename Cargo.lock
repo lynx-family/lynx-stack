@@ -2739,6 +2739,7 @@ dependencies = [
  "swc_plugin_element_template",
  "swc_plugin_inject",
  "swc_plugin_list",
+ "swc_plugin_main_thread_component",
  "swc_plugin_shake",
  "swc_plugin_snapshot",
  "swc_plugin_text",
@@ -4540,6 +4541,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "swc_plugin_main_thread_component"
+version = "0.1.0"
+dependencies = [
+ "swc_core",
+ "swc_plugins_shared",
 ]
 
 [[package]]
