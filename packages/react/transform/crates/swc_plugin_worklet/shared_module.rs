@@ -172,3 +172,62 @@ impl VisitMut for SharedRefRewriter<'_> {
     n.visit_mut_children_with(self);
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn shared_module_id_is_a_stable_16_hex_digest_of_filename_and_request() {
+    let id = shared_module_id("src/index.js", "./physics.js");
+
+    assert_eq!(id.len(), 16);
+    assert!(id.chars().all(|c| c.is_ascii_hexdigit()));
+    // Stable across calls, and across builds/machines — the bundler reuses the
+    // reported id verbatim rather than re-deriving it.
+    assert_eq!(id, shared_module_id("src/index.js", "./physics.js"));
+  }
+
+  #[test]
+  fn shared_module_id_separates_filename_from_request() {
+    // Without the delimiter these two would hash the same bytes.
+    assert_ne!(
+      shared_module_id("ab", "c"),
+      shared_module_id("a", "bc"),
+      "the filename and request must not be concatenated ambiguously"
+    );
+
+    // Both halves participate.
+    assert_ne!(
+      shared_module_id("src/a.js", "./physics.js"),
+      shared_module_id("src/b.js", "./physics.js")
+    );
+    assert_ne!(
+      shared_module_id("src/index.js", "./physics.js"),
+      shared_module_id("src/index.js", "./palette.js")
+    );
+  }
+
+  #[test]
+  fn valid_ident_names_are_emitted_as_plain_members() {
+    assert!(is_valid_ident_name("spring"));
+    assert!(is_valid_ident_name("_private"));
+    assert!(is_valid_ident_name("$dollar"));
+    assert!(is_valid_ident_name("camelCase123"));
+    assert!(is_valid_ident_name("A"));
+  }
+
+  #[test]
+  fn names_needing_computed_access_are_rejected() {
+    // A leading digit, or anything with a character an identifier cannot hold,
+    // has to go through `obj["name"]` instead of `obj.name`.
+    assert!(!is_valid_ident_name("1st"));
+    assert!(!is_valid_ident_name("with-dash"));
+    assert!(!is_valid_ident_name("with space"));
+    assert!(!is_valid_ident_name("with.dot"));
+    assert!(!is_valid_ident_name(""));
+    // Non-ASCII is legal in a JS identifier but is deliberately not treated as
+    // such here, so it takes the computed path rather than risking a bad emit.
+    assert!(!is_valid_ident_name("café"));
+  }
+}

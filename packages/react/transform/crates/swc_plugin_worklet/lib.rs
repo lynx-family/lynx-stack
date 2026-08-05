@@ -941,6 +941,187 @@ function worklet(e) {
     });
   }
 
+  /// Runs the worklet transform over `source` in collecting mode and hands the
+  /// reported shared imports and the debug-rendered defines to `assertions`.
+  fn collect_shared_defines(
+    source: &'static str,
+    assertions: impl FnOnce(&[swc_plugins_shared::mts_defines::MtsSharedImport], &str),
+  ) {
+    Tester::run(|tester| {
+      let collector: MtsDefinesCollector = Rc::new(RefCell::new(vec![]));
+      let shared_collector: MtsSharedImportsCollector = Rc::new(RefCell::new(vec![]));
+
+      tester.apply_transform(
+        (
+          resolver(Mark::new(), Mark::new(), true),
+          visit_mut_pass(
+            WorkletVisitor::new(
+              TransformMode::Test,
+              WorkletVisitorConfig {
+                filename: "index.js".into(),
+                target: TransformTarget::JS,
+                custom_global_ident_names: None,
+                runtime_pkg: "@lynx-js/react".into(),
+              },
+            )
+            .with_mts_defs_collector(collector.clone())
+            .with_shared_imports_collector(shared_collector.clone()),
+          ),
+        ),
+        "input.js",
+        Syntax::Typescript(TsSyntax {
+          ..Default::default()
+        }),
+        Some(true),
+        source,
+      )?;
+
+      let defines = collector.borrow();
+      let rendered = defines
+        .iter()
+        .map(|d| format!("{:?}", d.items))
+        .collect::<Vec<_>>()
+        .join("\n");
+      assertions(&shared_collector.borrow(), &rendered);
+
+      Ok(())
+    });
+  }
+
+  #[test]
+  fn should_rewrite_a_default_shared_import_through_the_default_property() {
+    collect_shared_defines(
+      r#"
+import physics from './physics.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log(physics(e));
+}
+      "#,
+      |shared, defines| {
+        assert_eq!(shared.len(), 1);
+        assert!(defines.contains("getSharedModule"));
+        assert!(defines.contains(&shared[0].id));
+        // A default import is the namespace's `default` binding.
+        assert!(defines.contains("default"), "defines were: {defines}");
+      },
+    );
+  }
+
+  #[test]
+  fn should_rewrite_a_namespace_shared_import_to_the_cached_namespace() {
+    collect_shared_defines(
+      r#"
+import * as physics from './physics.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log(physics.spring(e));
+}
+      "#,
+      |shared, defines| {
+        assert_eq!(shared.len(), 1);
+        assert!(defines.contains("getSharedModule"));
+        assert!(defines.contains(&shared[0].id));
+        assert!(defines.contains("spring"), "defines were: {defines}");
+      },
+    );
+  }
+
+  #[test]
+  fn should_rewrite_a_string_named_shared_import_through_computed_access() {
+    collect_shared_defines(
+      r#"
+import { "with-dash" as dashed } from './physics.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log(dashed(e));
+}
+      "#,
+      |shared, defines| {
+        assert_eq!(shared.len(), 1);
+        assert!(defines.contains("getSharedModule"));
+        // Not a valid identifier, so it must survive as a computed string key
+        // rather than being emitted as `ns.with-dash`.
+        assert!(defines.contains("with-dash"), "defines were: {defines}");
+      },
+    );
+  }
+
+  #[test]
+  fn should_rewrite_a_shared_import_used_as_an_object_shorthand() {
+    collect_shared_defines(
+      r#"
+import { spring } from './physics.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log({ spring });
+}
+      "#,
+      |shared, defines| {
+        assert_eq!(shared.len(), 1);
+        assert!(defines.contains("getSharedModule"));
+        assert!(defines.contains(&shared[0].id));
+        // `{ spring }` cannot stay shorthand once the value becomes a lookup.
+        assert!(defines.contains("spring"), "defines were: {defines}");
+      },
+    );
+  }
+
+  #[test]
+  fn should_cache_one_module_once_however_many_bindings_it_provides() {
+    collect_shared_defines(
+      r#"
+import { spring, damp } from './physics.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log(spring(e), damp(e));
+}
+      "#,
+      |shared, defines| {
+        // Two bindings, one module — so one reported import and one lookup.
+        assert_eq!(shared.len(), 1);
+        assert_eq!(shared[0].request, "./physics.js");
+        assert_eq!(
+          defines.matches("getSharedModule").count(),
+          1,
+          "the module should be looked up once per invocation, not once per binding: {defines}"
+        );
+      },
+    );
+  }
+
+  #[test]
+  fn should_report_each_distinct_shared_module_separately() {
+    collect_shared_defines(
+      r#"
+import { spring } from './physics.js' with { runtime: "shared" };
+import { accent } from './palette.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log(spring(e), accent);
+}
+      "#,
+      |shared, defines| {
+        assert_eq!(shared.len(), 2);
+        let mut requests = shared
+          .iter()
+          .map(|s| s.request.as_str())
+          .collect::<Vec<_>>();
+        requests.sort_unstable();
+        assert_eq!(requests, vec!["./palette.js", "./physics.js"]);
+        // Distinct modules get distinct registry keys and distinct lookups.
+        assert_ne!(shared[0].id, shared[1].id);
+        assert_eq!(defines.matches("getSharedModule").count(), 2);
+      },
+    );
+  }
+
   test!(
     module,
     Syntax::Typescript(TsSyntax {

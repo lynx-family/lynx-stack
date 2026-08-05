@@ -1,0 +1,6 @@
+{
+  "lynx": { "version": "4.1", "engine_sdk_version": "3400532428" },
+  "cache_files": {
+    "core_js": { "md5": "d41d8cd98f00b204e9800998ecf8427e", "cache_size": 53, "last_accessed": 1785918663 }
+  }
+}
