@@ -141,6 +141,7 @@ const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
 const casename2 = searchParams.get('casename2');
 const resourceName = searchParams.get('resourceName');
+const xmlName = searchParams.get('xmlName');
 const hasdir = searchParams.get('hasdir') === 'true';
 const isSSR = document.location.pathname.includes('ssr');
 
@@ -198,7 +199,7 @@ if (casename) {
     lynxView2.setAttribute('url', lynxTemplateUrl2);
     lynxView2.setAttribute('lynx-group-id', '2');
   }
-} else {
+} else if (!resourceName && !xmlName) {
   console.error('cannot find casename');
 }
 if (resourceName) {
@@ -206,4 +207,16 @@ if (resourceName) {
     document.querySelector('lynx-view') as LynxViewElement | undefined,
   );
   lynxView.setAttribute('url', `/resources/${resourceName}`);
+}
+if (xmlName) {
+  // Lynx XML markup ("vanilla") cards are served straight out of
+  // `web-core/tests/fixtures` (see `rsbuild.config.ts` `publicDir`), so the e2e
+  // suite exercises the very same bytes the unit tests parse.
+  const lynxView = lynxViewTests(
+    document.querySelector('lynx-view') as LynxViewElement | undefined,
+  );
+  // `transform-*` must stay off: CSS from markup cards is passed through
+  // verbatim rather than tokenized, so the unit conversions would silently not
+  // apply. The browser handles `rem`/`vh` natively.
+  lynxView.setAttribute('url', `/${xmlName}`);
 }
