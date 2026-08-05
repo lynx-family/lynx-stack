@@ -13,6 +13,7 @@ import {
 } from './holdBackgroundThread.js';
 import {
   COLOR,
+  type Sources,
   type Frame,
   type Mode,
   MODES,
@@ -261,6 +262,60 @@ const MODEL: Record<string, Record<Mode, string[]>> = {
 
 const CASES = Object.keys(MODEL);
 
+const FIXTURE_DIR = path.join(
+  import.meta.dirname,
+  'reactlynx',
+  'island-matrix',
+);
+
+/** The shared module every case is built from, shown once in the report. */
+const SHARED = 'parts.jsx';
+
+/**
+ * The source behind each case: its entry, plus any sibling module *only that
+ * case* uses. `p06` and `p11` are the reason this follows imports at all —
+ * what distinguishes them lives in a helper, not in the entry, and a report
+ * that showed only entries would hide the very thing they are built to show.
+ *
+ * `parts.jsx` is excluded here and shown once at the top: thirteen copies of
+ * the same file is noise, not evidence.
+ */
+async function collectSources(): Promise<Sources> {
+  const read = async (file: string) => ({
+    file,
+    code: await fs.readFile(path.join(FIXTURE_DIR, file), 'utf8'),
+  });
+
+  const sources: Sources = { __shared__: [await read(SHARED)] };
+
+  for (const casename of CASES) {
+    const entry = path.posix.join(casename, 'index.jsx');
+    const files = [await read(entry)];
+
+    for (
+      const [, specifier] of files[0]!.code.matchAll(
+        /from\s*['"]\.\.?\/([^'"]+)['"]/g,
+      )
+    ) {
+      if (
+        specifier === undefined || specifier === SHARED
+        || files.some((f) => f.file === specifier)
+      ) {
+        continue;
+      }
+      try {
+        files.push(await read(specifier));
+      } catch {
+        // Not a sibling of the fixture directory; nothing to show.
+      }
+    }
+
+    sources[casename] = files;
+  }
+
+  return sources;
+}
+
 test.describe('first-screen boundary matrix', () => {
   for (const casename of CASES) {
     test(casename, async ({ page }) => {
@@ -334,7 +389,7 @@ test.describe('first-screen boundary matrix', () => {
     );
     await fs.writeFile(
       path.join(REPORT_DIR, 'index.html'),
-      renderReport(frames, CASES),
+      renderReport(frames, CASES, await collectSources()),
     );
   });
 });

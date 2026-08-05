@@ -51,6 +51,20 @@ export interface Shown {
   color: string;
 }
 
+/** One fixture file, as written. */
+export interface Source {
+  /** Path relative to `tests/reactlynx/island-matrix/`. */
+  file: string;
+  code: string;
+}
+
+/**
+ * The sources behind the frames, per case: the entry, plus any module only
+ * that case uses. `parts.jsx` is shared by all thirteen and shown once, at
+ * the top, rather than thirteen times.
+ */
+export type Sources = Record<string, Source[]>;
+
 export interface Frame {
   casename: string;
   mode: Mode;
@@ -165,10 +179,38 @@ function cell(
       </td>`;
 }
 
-function caseSection(all: Frame[], casename: string): string {
+/** The fixture files, as one stacked block of source. */
+function sourceBlock(files: Source[]): string {
+  if (files.length === 0) {
+    return '<p class="missing">source unavailable</p>';
+  }
+  return files
+    .map(({ file, code }) =>
+      `<figure class="src">
+          <figcaption>${escape(file)}</figcaption>
+          <pre><code>${escape(code.trimEnd())}</code></pre>
+        </figure>`
+    )
+    .join('\n        ');
+}
+
+function caseSection(
+  all: Frame[],
+  casename: string,
+  sources: Sources,
+): string {
   const verdict = verdictOf(all, casename);
-  const body = MODES.map((mode) =>
+  // The source spans both rows: it is the same file for both builds, which is
+  // the claim the row pair exists to make.
+  const body = MODES.map((mode, index) =>
     `<tr>
+          ${
+      index === 0
+        ? `<td class="source" rowspan="${MODES.length}">${
+          sourceBlock(sources[casename] ?? [])
+        }</td>`
+        : ''
+    }
           <th scope="row"><code>${escape(MODE_LABEL[mode])}</code></th>
           ${
       PHASES.map((phase) => cell(all, casename, mode, phase)).join(
@@ -205,7 +247,7 @@ function caseSection(all: Frame[], casename: string): string {
       <div class="scroller">
         <table class="frames">
           <thead>
-            <tr><td></td>${
+            <tr><th scope="col">source</th><td></td>${
     PHASES.map((phase) => `<th scope="col">${escape(PHASE_LABEL[phase])}</th>`)
       .join('')
   }</tr>
@@ -261,6 +303,7 @@ function summary(all: Frame[], cases: readonly string[]): string {
 export function renderReport(
   all: Frame[],
   cases: readonly string[],
+  sources: Sources,
 ): string {
   const legend = (Object.keys(COLOR) as (keyof typeof COLOR)[])
     .map((name) =>
@@ -391,7 +434,7 @@ export function renderReport(
   .case__question { margin: 0; color: var(--ink-soft); max-width: 68ch; }
   .case__chips { margin: .25rem 0 0; }
 
-  .frames { min-width: 44rem; }
+  .frames { min-width: 70rem; }
   .frames thead th { padding-top: .8rem; }
   .frames tbody th { font-weight: 400; white-space: nowrap; color: var(--ink-soft); width: 1%; }
   .frames tbody tr + tr td, .frames tbody tr + tr th { border-top: 1px solid var(--rule-soft); }
@@ -402,6 +445,23 @@ export function renderReport(
   ul.ids { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .18rem; font-size: 12px; }
   ul.ids li { display: flex; align-items: center; }
   li.empty, .missing { color: var(--ink-mute); font-style: italic; font-size: 12px; }
+
+  .frames td.source, .shared { vertical-align: top; }
+  .frames td.source { width: 26rem; background: var(--rule-soft); }
+  figure.src { margin: 0; display: flex; flex-direction: column; gap: .3rem; }
+  figure.src + figure.src { margin-top: .9rem; }
+  figure.src figcaption {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11.5px; letter-spacing: .04em; color: var(--ink-mute);
+  }
+  figure.src pre {
+    margin: 0; padding: .7rem .8rem; overflow-x: auto;
+    background: var(--surface); border: 1px solid var(--rule);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.55; tab-size: 2;
+  }
+  .shared { max-width: 40rem; }
+  .shared__note { margin: 0 0 .9rem; color: var(--ink-soft); max-width: 68ch; }
 
   a:focus-visible { outline: 2px solid var(--island); outline-offset: 2px; }
 </style>
@@ -439,7 +499,16 @@ export function renderReport(
     ${summary(all, cases)}
   </section>
 
-  ${cases.map((casename) => caseSection(all, casename)).join('\n  ')}
+  <section>
+    <h2>What every case is built from</h2>
+    <p class="shared__note">
+      Each case below shows its own source. They all share these pieces —
+      the coloured boxes, and the main-thread tap handler that stamps them.
+    </p>
+    <div class="shared">${sourceBlock(sources['__shared__'] ?? [])}</div>
+  </section>
+
+  ${cases.map((casename) => caseSection(all, casename, sources)).join('\n  ')}
 </div>
 </body>
 </html>
