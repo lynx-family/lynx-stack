@@ -96,6 +96,103 @@ export const CASE_QUESTION: Record<string, string> = {
     'The same, through `<Background island={…}>`, which owns the position.',
 };
 
+/**
+ * What each case *shows* — the sentence a reader should leave with, as
+ * opposed to {@link CASE_QUESTION}, which is what it asks.
+ */
+export const CASE_TAKEAWAY: Record<string, string> = {
+  'p01-plain':
+    'With no boundary, the switch is the whole story: the classic build paints everything, the assembled one paints nothing until the background arrives. Every other case sits between these two.',
+  'p02-bg-root':
+    'A boundary at the root is a 0.0 first screen made of fallback. The fallback is real main-thread code — its component body ran here — and the hand-over throws all of it away.',
+  'p03-mt-root':
+    'The island is the first frame, it is interactive before a background thread exists, and the hand-over keeps the very elements the main thread built. This is D3 in one row.',
+  'p04-bg-mid':
+    'Deferral is local. The header around the boundary is untouched by the hand-over; only what the boundary named is replaced.',
+  'p05-mt-mid':
+    'An island does not have to be the whole app. It is adopted wherever it sits, as long as the path down to it is main-thread code.',
+  'p06-mt-in-bg':
+    'The island is inside the arm the main thread did not take, so there is no position for it to render at. It appears only once the background has run — and no compiler pass can fix that, because finding the position means running the code the boundary exists to defer.',
+  'p07-bg-in-mt':
+    'The two boundaries compose in this direction: an island can defer part of itself, and the deferred part is the only thing replaced.',
+  'p08-bg-in-bg':
+    'The outer boundary wins, and the inner one never runs on the main thread. Nesting deferrals does not compound them.',
+  'p09-mt-in-mt':
+    'A redundant island is a no-op, not a double render — which matters, because composition puts one there sooner or later.',
+  'p10-siblings':
+    'Both boundaries in one tree, independent. The island is adopted and the fallback replaced in the same hand-over.',
+  'p11-marked-in-bg':
+    'Identical to p06. The marker put the island’s module in the main-thread bundle and changed nothing about the frame — compilation and position are separate problems, and only the first is something a directive can settle.',
+  'p12-bg-shared-island':
+    'Naming the island in both arms, at the same index, is enough: the existing hydration finds it and adopts it. No new matching rule, no container, no key — this is what makes the prop below sound rather than clever.',
+  'p13-bg-island-prop':
+    'The same frames as p12 from half the source. The prop owns the position, so the two arms cannot drift apart.',
+  'p14-bg-equal-arms':
+    'Frame for frame identical to p03, with no <MainThread> written anywhere. <MainThread> is not a second mechanism — it is the name of a <Background> whose two arms coincide.',
+};
+
+/**
+ * The line each case turns on, quoted from its own source. Everything else in
+ * the fixture is scaffolding.
+ */
+export const CASE_PIVOT: Record<string, string> = {
+  'p01-plain': 'no boundary at all',
+  'p02-bg-root': `<Background fallback={<Skeleton id='p02' />}>`,
+  'p03-mt-root': '<MainThread>',
+  'p04-bg-mid': `<Background fallback={<Skeleton id='p04' />}>`,
+  'p05-mt-mid': '<MainThread>',
+  'p06-mt-in-bg': '<MainThread> — inside nested.jsx, below the boundary',
+  'p07-bg-in-mt': '<Background> inside <MainThread>',
+  'p08-bg-in-bg': `<Background fallback={<Skeleton id='p08-outer' />}>`,
+  'p09-mt-in-mt': '<MainThread> inside <MainThread>',
+  'p10-siblings': '<MainThread> … <Background> — siblings',
+  'p11-marked-in-bg': `'main thread component' — inside marked.jsx`,
+  'p12-bg-shared-island': '{island} in both arms, first in each',
+  'p13-bg-island-prop': 'island={<Island id=\'p13\' />}',
+  'p14-bg-equal-arms': 'fallback={<Island …/>} and children are the same tree',
+};
+
+/**
+ * Just enough highlighting to read JSX at a glance; no parser involved. The
+ * same technique the `<Background>` matrix report uses, extended to the other
+ * boundary and to the marker — those are the tokens a reader is here for.
+ */
+function highlight(source: string): string {
+  const tokens: string[] = [];
+  const stash = (cls: string, text: string) => {
+    tokens.push(`<span class="${cls}">${escape(text)}</span>`);
+    return `\u0000${tokens.length - 1}\u0000`;
+  };
+  const out = source
+    // Block comments first, and they matter: an apostrophe inside prose —
+    // `an entry's graph` — would otherwise open a string and mis-pair every
+    // quote after it for the rest of the file.
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => stash('c', m))
+    .replace(/\/\/[^\n]*/g, (m) => stash('c', m))
+    .replace(/'main thread(?: component)?'/g, (m) => stash('bnd', m))
+    .replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1/g, (m) => stash('s', m))
+    .replace(/\b(?:Background|MainThread)\b/g, (m) => stash('bnd', m))
+    .replace(/\bisland(?==)/g, (m) => stash('bnd', m))
+    .replace(
+      /\b(import|export|from|const|let|function|return|default|if|else)\b/g,
+      (m) => stash('k', m),
+    );
+  // Restore until stable: a later rule can stash a span that already contains
+  // an earlier sentinel, and one pass would leave the inner one as raw text.
+  let restored = escape(out);
+  for (
+    let pass = 0;
+    pass < tokens.length && restored.includes('\u0000');
+    pass++
+  ) {
+    restored = restored.replace(
+      /\u0000(\d+)\u0000/g,
+      (_, i: string) => tokens[Number(i)]!,
+    );
+  }
+  return restored;
+}
+
 const escape = (text: string): string =>
   text.replace(
     /[&<>"]/g,
@@ -145,6 +242,49 @@ function verdictOf(all: Frame[], casename: string): Verdict {
   };
 }
 
+type VerdictKind = 'good' | 'partial' | 'blank';
+
+/** What one build did, in a line — the row's own take-away. */
+function rowVerdict(
+  all: Frame[],
+  casename: string,
+  mode: Mode,
+): { text: string; kind: VerdictKind } {
+  const at = (phase: Phase): Shown[] =>
+    all.find((f) =>
+      f.casename === casename && f.mode === mode && f.phase === phase
+    )?.shown ?? [];
+
+  const first = at('main-thread');
+  if (first.length === 0) {
+    return {
+      text: 'blank first frame · everything arrives with the background',
+      kind: 'blank',
+    };
+  }
+
+  const built = [
+    first.some(({ id }) => isIsland(id)) ? 'island' : undefined,
+    first.some(({ id }) => isFallback(id)) ? 'fallback' : undefined,
+    first.some(({ id }) => id.endsWith('-header')) ? 'header' : undefined,
+  ].filter(Boolean).join(' + ');
+
+  const hydrated = at('hydrated');
+  const adopted = first.some(({ id }) => isIsland(id))
+    && hydrated.some(({ id, color }) => isIsland(id) && color === COLOR.stamp);
+  const replaced = first.some(({ id }) => isFallback(id));
+
+  const after = [
+    adopted ? 'island adopted' : undefined,
+    replaced ? 'fallback replaced' : undefined,
+  ].filter(Boolean).join(' · ');
+
+  return {
+    text: `${built} at 0.0 · ${after || 'nothing to replace'}`,
+    kind: adopted ? 'good' : 'partial',
+  };
+}
+
 function chip(kind: 'yes' | 'no' | 'note', text: string): string {
   return `<span class="chip chip--${kind}">${escape(text)}</span>`;
 }
@@ -179,19 +319,19 @@ function cell(
       </td>`;
 }
 
-/** The fixture files, as one stacked block of source. */
+/** The fixture files, full width, above the frames they explain. */
 function sourceBlock(files: Source[]): string {
   if (files.length === 0) {
     return '<p class="missing">source unavailable</p>';
   }
   return files
     .map(({ file, code }) =>
-      `<figure class="src">
-          <figcaption>${escape(file)}</figcaption>
-          <pre><code>${escape(code.trimEnd())}</code></pre>
-        </figure>`
+      `<div class="file">
+          <header>${escape(file)}</header>
+          <pre><code>${highlight(code.trimEnd())}</code></pre>
+        </div>`
     )
-    .join('\n        ');
+    .join('\n      ');
 }
 
 function caseSection(
@@ -200,30 +340,31 @@ function caseSection(
   sources: Sources,
 ): string {
   const verdict = verdictOf(all, casename);
-  // The source spans both rows: it is the same file for both builds, which is
-  // the claim the row pair exists to make.
-  const body = MODES.map((mode, index) =>
-    `<tr>
-          ${
-      index === 0
-        ? `<td class="source" rowspan="${MODES.length}">${
-          sourceBlock(sources[casename] ?? [])
-        }</td>`
-        : ''
-    }
-          <th scope="row"><code>${escape(MODE_LABEL[mode])}</code></th>
+  const rows = MODES.map((mode) => {
+    const row = rowVerdict(all, casename, mode);
+    return `<tr class="v-${row.kind}">
+          <th scope="row">
+            <code>${escape(MODE_LABEL[mode])}</code>
+            <small>${
+      mode === 'ifr'
+        ? 'classic dual-thread build'
+        : 'assembled main-thread bundle'
+    }</small>
+            <p class="verdict">${escape(row.text)}</p>
+          </th>
           ${
       PHASES.map((phase) => cell(all, casename, mode, phase)).join(
         '\n          ',
       )
     }
-        </tr>`
-  ).join('\n        ');
+        </tr>`;
+  }).join('\n        ');
 
   return `<section class="case" id="${escape(casename)}">
       <header class="case__head">
-        <h3><code>${escape(casename)}</code></h3>
-        <p class="case__question">${escape(CASE_QUESTION[casename] ?? '')}</p>
+        <h3><code>${escape(casename)}</code> <span>${
+    escape(CASE_QUESTION[casename] ?? '')
+  }</span></h3>
         <p class="case__chips">${
     [
       chip(
@@ -244,19 +385,28 @@ function caseSection(
     ].filter(Boolean).join('')
   }</p>
       </header>
+
+      ${sourceBlock(sources[casename] ?? [])}
+
+      <p class="pivot"><span>the line it turns on</span><code>${
+    escape(CASE_PIVOT[casename] ?? '')
+  }</code></p>
+
       <div class="scroller">
         <table class="frames">
           <thead>
-            <tr><th scope="col">source</th><td></td>${
+            <tr><td></td>${
     PHASES.map((phase) => `<th scope="col">${escape(PHASE_LABEL[phase])}</th>`)
       .join('')
   }</tr>
           </thead>
           <tbody>
-        ${body}
+        ${rows}
           </tbody>
         </table>
       </div>
+
+      <p class="takeaway">${escape(CASE_TAKEAWAY[casename] ?? '')}</p>
     </section>`;
 }
 
@@ -335,6 +485,11 @@ export function renderReport(
     --surface: #ffffff;
     --rule: #dde1e9;
     --rule-soft: #e9ecf2;
+    --code: #fbfcfe;
+    --kw: #8250df;
+    --str: #0a7b48;
+    --bnd: #b4530a;
+    --bnd-bg: #fdf0e2;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -349,17 +504,24 @@ export function renderReport(
       --surface: #171a23;
       --rule: #2b3140;
       --rule-soft: #232836;
+      --code: #12151d;
+      --kw: #c9a0ff;
+      --str: #7ee2a8;
+      --bnd: #f0a35e;
+      --bnd-bg: #3a2a17;
     }
   }
   :root[data-theme="dark"] {
     --island: #6ea3f0; --deferred: #55b184; --stamp: #f6b34a; --skeleton: #8996a8;
     --ink: #e7eaf1; --ink-soft: #b3bccd; --ink-mute: #8a93a6;
     --ground: #0f1118; --surface: #171a23; --rule: #2b3140; --rule-soft: #232836;
+    --code: #12151d; --kw: #c9a0ff; --str: #7ee2a8; --bnd: #f0a35e; --bnd-bg: #3a2a17;
   }
   :root[data-theme="light"] {
     --island: #2f6fd0; --deferred: #2e8b57; --stamp: #f5a623; --skeleton: #c9d5e3;
     --ink: #15171f; --ink-soft: #4a5164; --ink-mute: #6a7183;
     --ground: #f5f6f9; --surface: #ffffff; --rule: #dde1e9; --rule-soft: #e9ecf2;
+    --code: #fbfcfe; --kw: #8250df; --str: #0a7b48; --bnd: #b4530a; --bnd-bg: #fdf0e2;
   }
 
   * { box-sizing: border-box; }
@@ -429,14 +591,20 @@ export function renderReport(
   .chip--note { color: var(--stamp); border-color: color-mix(in srgb, var(--stamp) 55%, transparent); }
 
   .case { background: var(--surface); border: 1px solid var(--rule); }
-  .case__head { display: flex; flex-direction: column; gap: .3rem; padding: 1rem 1rem .85rem; border-bottom: 1px solid var(--rule-soft); }
+  .case__head { display: flex; flex-direction: column; gap: .35rem; padding: 1rem 1rem .85rem; }
   .case__head h3 { margin: 0; font-size: 1rem; font-weight: 600; }
-  .case__question { margin: 0; color: var(--ink-soft); max-width: 68ch; }
-  .case__chips { margin: .25rem 0 0; }
+  .case__head h3 span { font-family: inherit; font-weight: 400; color: var(--ink-soft); margin-left: .6rem; }
+  .case__chips { margin: 0; }
 
-  .frames { min-width: 70rem; }
+  .frames { min-width: 56rem; }
   .frames thead th { padding-top: .8rem; }
-  .frames tbody th { font-weight: 400; white-space: nowrap; color: var(--ink-soft); width: 1%; }
+  .frames tbody th { font-weight: 400; color: var(--ink-soft); width: 15rem; }
+  .frames tbody th code { display: block; font-size: 12px; color: var(--ink); }
+  .frames tbody th small { display: block; margin-top: .15rem; color: var(--ink-mute); font-size: 11.5px; }
+  .verdict { margin: .5rem 0 0; font-size: 12px; font-weight: 600; }
+  tr.v-good .verdict { color: var(--deferred); }
+  tr.v-partial .verdict { color: var(--ink-mute); }
+  tr.v-blank .verdict { color: var(--stamp); }
   .frames tbody tr + tr td, .frames tbody tr + tr th { border-top: 1px solid var(--rule-soft); }
   .cell img {
     display: block; width: 264px; height: 176px; max-width: 100%;
@@ -446,21 +614,48 @@ export function renderReport(
   ul.ids li { display: flex; align-items: center; }
   li.empty, .missing { color: var(--ink-mute); font-style: italic; font-size: 12px; }
 
-  .frames td.source, .shared { vertical-align: top; }
-  .frames td.source { width: 26rem; background: var(--rule-soft); }
-  figure.src { margin: 0; display: flex; flex-direction: column; gap: .3rem; }
-  figure.src + figure.src { margin-top: .9rem; }
-  figure.src figcaption {
+  /* Source, full width, above the frames it explains. */
+  .file { margin: 0 1rem 1rem; border: 1px solid var(--rule); background: var(--code); }
+  .file + .file { margin-top: -.4rem; }
+  .file header {
+    padding: .45rem .8rem; border-bottom: 1px solid var(--rule);
+    background: var(--rule-soft); color: var(--ink-mute);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 11.5px; letter-spacing: .04em; color: var(--ink-mute);
+    font-size: 11.5px; letter-spacing: .04em;
   }
-  figure.src pre {
-    margin: 0; padding: .7rem .8rem; overflow-x: auto;
-    background: var(--surface); border: 1px solid var(--rule);
+  .file pre {
+    margin: 0; padding: .8rem; overflow-x: auto;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 12px; line-height: 1.55; tab-size: 2;
+    font-size: 12.5px; line-height: 1.6; tab-size: 2;
   }
-  .shared { max-width: 40rem; }
+  .k { color: var(--kw); }
+  .s { color: var(--str); }
+  .c { color: var(--ink-mute); font-style: italic; }
+  .bnd {
+    color: var(--bnd); font-weight: 700;
+    background: var(--bnd-bg); padding: 0 2px;
+  }
+
+  .pivot {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem;
+    margin: 0 1rem 1rem;
+  }
+  .pivot span {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .pivot code {
+    color: var(--bnd); background: var(--bnd-bg);
+    padding: .15rem .45rem; font-size: 12.5px;
+  }
+
+  .takeaway {
+    margin: 0; padding: .9rem 1rem; border-top: 1px solid var(--rule-soft);
+    background: var(--rule-soft); color: var(--ink-soft); max-width: none;
+  }
+
+  .shared { max-width: 46rem; }
+  .shared .file { margin-left: 0; margin-right: 0; }
   .shared__note { margin: 0 0 .9rem; color: var(--ink-soft); max-width: 68ch; }
 
   a:focus-visible { outline: 2px solid var(--island); outline-offset: 2px; }
