@@ -26,7 +26,7 @@ export function getRouteHash(hash: string): string {
 }
 
 export function buildRouteHash(protocolName: ProtocolName, tab: Tab): string {
-  if (protocolName === 'a2ui' && tab === 'bench') {
+  if (tab === 'bench') {
     return '#/bench';
   }
   return tab === 'create'
