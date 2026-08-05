@@ -413,9 +413,14 @@ describe('xmlToTemplate', () => {
     const [content] = result.template.styleInfo!['0']!.content;
     expect(content).toContain('.card');
     expect(content).toContain('linear-gradient');
-    // CSS is passed through untouched - no unit rewriting happens here.
-    expect(content).toContain('100vh');
-    expect(content).toContain('rem');
+    // CSS is passed through untouched - no unit rewriting happens here. Assert
+    // units that appear in real declarations: a `vw` inside `calc()` and a
+    // `rem` length. Were rewriting ever added to this channel, these would
+    // become `var(--vw-unit)` / `var(--rem-unit)` and fail.
+    expect(content).toContain('calc(100vw / 24)');
+    expect(content).toContain('1.75rem');
+    expect(content).not.toContain('--vw-unit');
+    expect(content).not.toContain('--rem-unit');
   });
 
   test('distinguishes an absent section from an empty one', () => {
