@@ -1586,9 +1586,13 @@ test.describe('reactlynx3 tests', () => {
       await page.evaluate(() => {
         document.querySelector('lynx-view')!.remove();
       });
-      await wait(50);
-      expect(message).toContain('fin');
-      expect(currentWorkerCount - page.workers().length).toStrictEqual(1);
+      // Disposal has to travel from the element removal through worker
+      // teardown and the background's unmount before the cleanup logs, so wait
+      // for the effects rather than for a fixed 50ms that a loaded runner
+      // routinely overshoots.
+      await expect.poll(() => message).toContain('fin');
+      await expect.poll(() => currentWorkerCount - page.workers().length)
+        .toStrictEqual(1);
     });
 
     test('api-error', async ({ page }, { title }) => {
