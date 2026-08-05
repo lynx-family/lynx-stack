@@ -9,6 +9,7 @@ import {
   lynxDefaultOverflowVisibleAttribute,
   lynxDisposedAttribute,
   lynxEntryNameAttribute,
+  LynxEventNameToW3cCommon,
   uniqueIdSymbol,
 } from '../../../constants.js';
 import {
@@ -41,14 +42,19 @@ import {
   __QuerySelectorAll,
 } from './pureElementPAPIs.js';
 import type {
+  AddEventListenerPAPI,
   AddEventPAPI,
   DecoratedHTMLElement,
+  ElementPAPIEventListener,
   ElementPAPIs,
+  MainThreadScriptEvent,
+  RemoveEventListenerPAPI,
   SetCSSIdPAPI,
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
 import { requestIdleCallbackImpl } from '../utils/requestIdleCallback.js';
+import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 
 const {
   MainThreadWasmContext,
@@ -57,6 +63,16 @@ const {
   set_inline_styles_in_str,
   set_inline_styles_in_key_value_vec,
 } = wasmInstance;
+
+interface DirectEventListener {
+  element: HTMLElement;
+  eventName: string;
+  domEventName: string;
+  listener: ElementPAPIEventListener;
+  capture: boolean;
+  domOptions: AddEventListenerOptions;
+  domListener: EventListener;
+}
 
 function dispatchLynxViewLoadEvent(host: HTMLElement & { url?: string }) {
   host.dispatchEvent(
@@ -90,12 +106,21 @@ export function createElementAPI(
   );
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
+  const directEventListeners = new Set<DirectEventListener>();
   let disposed = false;
 
   mtsBinding.wasmContext = wasmContext;
   mtsBinding.disposeWasmContext = () => {
     if (disposed) return;
     disposed = true;
+    for (const listener of directEventListeners) {
+      listener.element.removeEventListener(
+        listener.domEventName,
+        listener.domListener,
+        listener.domOptions,
+      );
+    }
+    directEventListeners.clear();
     if (wasmContext) {
       wasmContext.free();
       // @ts-expect-error It's better to throw an Error than triggering an use-after-free of rust struct
@@ -164,6 +189,120 @@ export function createElementAPI(
       }
     }
   };
+
+  const getDirectEventListener = (
+    element: HTMLElement,
+    eventName: string,
+    listener: ElementPAPIEventListener,
+    capture: boolean,
+  ) => {
+    return [...directEventListeners].find((record) =>
+      record.element === element
+      && record.eventName === eventName
+      && record.listener === listener
+      && record.capture === capture
+    );
+  };
+
+  const createDirectEventTarget = (
+    target: EventTarget | null,
+    fallback: HTMLElement,
+  ) => {
+    const element = target instanceof HTMLElement ? target : fallback;
+    const uniqueId = __GetElementUniqueID(element);
+    const dataset = uniqueId === -1
+      ? {}
+      : wasmContext.get_dataset(uniqueId) ?? {};
+    return {
+      dataset: Object.assign(Object.create(null), dataset),
+      id: element.id || null,
+      uid: uniqueId,
+      elementRefptr: element,
+    };
+  };
+
+  const __AddEventListener: AddEventListenerPAPI = (
+    element,
+    eventName,
+    listener,
+    options = {},
+  ) => {
+    const normalizedEventName = eventName.toLowerCase();
+    const capture = options['capture'] === true;
+    if (
+      getDirectEventListener(
+        element,
+        normalizedEventName,
+        listener,
+        capture,
+      )
+    ) {
+      return;
+    }
+
+    const domEventName = LynxEventNameToW3cCommon[normalizedEventName]
+      ?? normalizedEventName;
+    const domOptions: AddEventListenerOptions = {
+      capture,
+      once: options['once'] === true,
+      passive: options['passive'] === true,
+    };
+    const record: DirectEventListener = {
+      element,
+      eventName: normalizedEventName,
+      domEventName,
+      listener,
+      capture,
+      domOptions,
+      domListener: () => {},
+    };
+    record.domListener = (event) => {
+      if (domOptions.once) {
+        element.removeEventListener(
+          domEventName,
+          record.domListener,
+          domOptions,
+        );
+        directEventListeners.delete(record);
+      }
+
+      const lynxEvent = createCrossThreadEvent(
+        event,
+        mtsBinding.lynxViewInstance.lynxViewClientLeft,
+        mtsBinding.lynxViewInstance.lynxViewClientTop,
+      ) as MainThreadScriptEvent;
+      lynxEvent.target = createDirectEventTarget(event.target, element);
+      lynxEvent.currentTarget = createDirectEventTarget(element, element);
+      listener(lynxEvent);
+    };
+
+    directEventListeners.add(record);
+    element.addEventListener(domEventName, record.domListener, domOptions);
+  };
+
+  const __RemoveEventListener: RemoveEventListenerPAPI = (
+    element,
+    eventName,
+    listener,
+    options = {},
+  ) => {
+    const normalizedEventName = eventName.toLowerCase();
+    const record = getDirectEventListener(
+      element,
+      normalizedEventName,
+      listener,
+      options['capture'] === true,
+    );
+    if (!record) return;
+
+    record.element.removeEventListener(
+      record.domEventName,
+      record.domListener,
+      record.domOptions,
+    );
+    directEventListeners.delete(record);
+  };
+
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
@@ -504,6 +643,8 @@ export function createElementAPI(
       }
     },
     __AddEvent,
+    __AddEventListener,
+    __RemoveEventListener,
     __GetEvent: (element, eventType, eventName) => {
       const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol];
       return wasmContext.get_event(uniqueId, eventType, eventName);

@@ -5,10 +5,14 @@
  */
 import type { Cloneable } from './Cloneable.js';
 import type { ExternalBundleLynxAPIs } from './ExternalBundle.js';
-import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
+import type {
+  LynxContextEventTarget,
+  LynxEventTarget,
+} from './LynxContextEventTarget.js';
 import type { LynxPerformance } from './NativeApp.js';
 export interface MainThreadLynx extends ExternalBundleLynxAPIs {
   performance: LynxPerformance;
+  getEngine: () => LynxEventTarget;
   getJSContext: () => LynxContextEventTarget;
   requestAnimationFrame: (cb: () => void) => number;
   cancelAnimationFrame: (handler: number) => void;

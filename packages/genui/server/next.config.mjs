@@ -6,6 +6,8 @@
 const nextConfig = {
   serverExternalPackages: [
     '@mastra/core',
+    '@sparticuz/chromium',
+    'playwright-core',
   ],
 };
 

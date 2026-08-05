@@ -6,12 +6,14 @@
 
 import type { MainThreadLynx } from '../types/MainThreadLynx.js';
 import type { Cloneable } from '../types/index.js';
+import { LynxEngineContext } from '../common/LynxEngineContext.js';
 
 export function createServerLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
 ): MainThreadLynx {
   let pipelineIdInc = 0;
+  const engineContext = new LynxEngineContext();
   return {
     performance: {
       _generatePipelineOptions: () => ({
@@ -26,6 +28,9 @@ export function createServerLynx(
       profileMark: () => {},
       profileFlowId: () => 0,
       isProfileRecording: () => false,
+    },
+    getEngine() {
+      return engineContext;
     },
     getJSContext() {
       // Return a basic mock for SSR

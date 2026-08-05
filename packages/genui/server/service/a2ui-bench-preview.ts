@@ -2,25 +2,34 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// Browser-backed bench previews are being split out of genui-server. Keep the
-// complete implementation disabled until a browser-capable service owns it.
-/*
-import type { Browser, LaunchOptions } from 'playwright-core';
+import { existsSync } from 'node:fs';
 
-import type { BenchJobRequest, BenchScenarioRequest } from './a2ui-bench-types';
+import type { Browser, LaunchOptions, Page } from 'playwright-core';
+
+import { judgeBenchScreenshot } from './a2ui-bench-judge';
+import type {
+  BenchJobRequest,
+  BenchProtocol,
+  BenchScenarioRequest,
+} from './a2ui-bench-types';
 import type { A2UIMessage } from '../agent/a2ui-validator';
 
-interface BenchPreviewOptions {
-  messages: A2UIMessage[];
+export interface BenchPreviewOptions {
+  abortSignal?: AbortSignal;
+  messages?: A2UIMessage[];
+  onJudgeStart?: () => void;
+  protocol: BenchProtocol;
   request: BenchJobRequest;
   runId: string;
   scenario: BenchScenarioRequest;
+  source?: string;
 }
 
-interface BenchPreviewResult {
+export interface BenchPreviewResult {
   errors: string[];
   fmpMs: number;
   judgeScore: number;
+  judgeSummary?: string;
   renderMs: number;
   screenshotDataUrl?: string;
   ttiMs: number;
@@ -33,11 +42,22 @@ interface PreviewMetricBag {
   tti?: unknown;
 }
 
+interface CapturedScreenshot {
+  bytes: Uint8Array;
+  dataUrl: string;
+}
+
+export interface BenchPreviewDependencies {
+  getBrowser: () => Promise<Browser>;
+  judgeScreenshot: typeof judgeBenchScreenshot;
+}
+
 const DEFAULT_PLAYGROUND_BASE_URL = 'https://lynx-stack.dev/genui/';
 const PREVIEW_WIDTH = 450;
 const PREVIEW_HEIGHT = 970;
 const IFRAME_WIDTH = 430;
 const IFRAME_HEIGHT = 932;
+const PREVIEW_TIMEOUT_MS = 20_000;
 
 let browserPromise: Promise<Browser> | null = null;
 
@@ -113,7 +133,7 @@ function resolvePlaygroundBaseUrl(request: BenchJobRequest): string {
   return DEFAULT_PLAYGROUND_BASE_URL;
 }
 
-function buildRenderUrl(baseUrl: string, metricId: string): string {
+function buildA2UIRenderUrl(baseUrl: string, metricId: string): string {
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'a2ui');
   url.searchParams.set('demoUrl', './a2ui.web.js');
@@ -126,10 +146,84 @@ function buildRenderUrl(baseUrl: string, metricId: string): string {
   return url.toString();
 }
 
+function buildOpenUIRenderUrl(
+  baseUrl: string,
+  metricId: string,
+  source: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'openui');
+  url.searchParams.set('demoUrl', './openui.web.js');
+  url.searchParams.set('theme', 'light');
+  url.searchParams.set('speed', '0');
+  url.searchParams.set('instant', '1');
+  url.searchParams.set('liveAction', '1');
+  url.searchParams.set('previewMetricId', metricId);
+  url.searchParams.set('rawText', source);
+  return url.toString();
+}
+
+function buildLynxXmlRenderUrl(
+  baseUrl: string,
+  metricId: string,
+  sourceUrl: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'lynx-xml');
+  url.searchParams.set('demoUrl', sourceUrl);
+  url.searchParams.set('theme', 'light');
+  url.searchParams.set('previewMetricId', metricId);
+  return url.toString();
+}
+
+export function buildBenchPreviewUrls(
+  options: Pick<
+    BenchPreviewOptions,
+    'protocol' | 'request' | 'runId' | 'source'
+  >,
+): { renderUrl: string; sourceUrl?: string } {
+  const baseUrl = resolvePlaygroundBaseUrl(options.request);
+  const metricId = `bench-${options.runId}`;
+  if (options.protocol === 'openui') {
+    return {
+      renderUrl: buildOpenUIRenderUrl(
+        baseUrl,
+        metricId,
+        options.source ?? '',
+      ),
+    };
+  }
+  if (options.protocol === 'lynx-xml') {
+    const sourceUrl = new URL(
+      `__bench-lynx-xml/${encodeURIComponent(options.runId)}/artifact.xml`,
+      baseUrl,
+    ).toString();
+    return {
+      renderUrl: buildLynxXmlRenderUrl(baseUrl, metricId, sourceUrl),
+      sourceUrl,
+    };
+  }
+  return {
+    renderUrl: buildA2UIRenderUrl(baseUrl, metricId),
+  };
+}
+
 function readMetric(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value)
     ? Math.max(0, Math.round(value))
     : 0;
+}
+
+function readTimeoutMs(request: BenchJobRequest): number {
+  const requested = request.settings.timeoutMs;
+  if (
+    typeof requested === 'number'
+    && Number.isSafeInteger(requested)
+    && requested > 0
+  ) {
+    return Math.min(requested, PREVIEW_TIMEOUT_MS);
+  }
+  return PREVIEW_TIMEOUT_MS;
 }
 
 function isServerlessRuntime(): boolean {
@@ -140,10 +234,27 @@ function isServerlessRuntime(): boolean {
   );
 }
 
+function findSystemChromiumExecutable(): string | undefined {
+  const candidates = process.platform === 'darwin'
+    ? [
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Chromium.app/Contents/MacOS/Chromium',
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    ]
+    : [
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+    ];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
 async function resolveChromiumLaunchOptions(): Promise<LaunchOptions> {
   const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
     ?? process.env.CHROME_EXECUTABLE_PATH
-    ?? process.env.CHROMIUM_EXECUTABLE_PATH;
+    ?? process.env.CHROMIUM_EXECUTABLE_PATH
+    ?? findSystemChromiumExecutable();
   if (executablePath) {
     return {
       args: ['--disable-dev-shm-usage', '--no-sandbox'],
@@ -186,23 +297,62 @@ async function getBenchBrowser(): Promise<Browser> {
   return browser;
 }
 
-async function renderMessagesInPreview(
+async function routeBenchSource(
+  page: Page,
+  sourceUrl: string,
+  source: string,
+): Promise<void> {
+  await page.route(sourceUrl, async (route) => {
+    await route.fulfill({
+      body: source,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-store',
+      },
+      status: 200,
+      contentType: 'application/xml; charset=utf-8',
+    });
+  });
+}
+
+async function renderResultInPreview(
   options: BenchPreviewOptions,
+  dependencies: BenchPreviewDependencies,
 ): Promise<{
   metrics: PreviewMetricBag;
-  page: Awaited<ReturnType<Browser['newPage']>>;
+  page: Page;
 }> {
-  const browser = await getBenchBrowser();
+  const browser = await dependencies.getBrowser();
   const page = await browser.newPage({
     deviceScaleFactor: 1,
     viewport: { height: PREVIEW_HEIGHT, width: PREVIEW_WIDTH },
   });
-  const renderUrl = buildRenderUrl(
-    resolvePlaygroundBaseUrl(options.request),
-    `bench-${options.runId}`,
-  );
+  const { renderUrl, sourceUrl } = buildBenchPreviewUrls(options);
+  const timeoutMs = readTimeoutMs(options.request);
+  page.setDefaultTimeout(timeoutMs);
 
   try {
+    if (options.protocol !== 'a2ui') {
+      if (
+        !options.source?.trim()
+        || (options.protocol === 'lynx-xml' && !sourceUrl)
+      ) {
+        const sourceProtocol = options.protocol === 'openui'
+          ? 'OpenUI'
+          : 'Lynx XML';
+        throw new Error(
+          `${sourceProtocol} preview requires a non-empty source.`,
+        );
+      }
+      if (sourceUrl) {
+        await routeBenchSource(
+          page,
+          sourceUrl,
+          options.source,
+        );
+      }
+    }
+
     await page.setContent(
       `<!doctype html>
 <html>
@@ -216,7 +366,7 @@ async function renderMessagesInPreview(
 </head>
 <body>
   <div class="shell">
-    <iframe id="preview" title="A2UI preview"></iframe>
+    <iframe id="preview" title="Bench preview"></iframe>
   </div>
 </body>
 </html>`,
@@ -224,7 +374,7 @@ async function renderMessagesInPreview(
     );
 
     const metrics = await page.evaluate(
-      ({ id, messages, src }) => {
+      ({ id, messages, protocol, src, timeout }) => {
         return new Promise<PreviewMetricBag>((resolve) => {
           const iframe = document.getElementById(
             'preview',
@@ -246,7 +396,7 @@ async function renderMessagesInPreview(
           };
 
           const postMessages = () => {
-            if (posted) return;
+            if (posted || protocol !== 'a2ui') return;
             posted = true;
             const targetOrigin = new URL(src).origin;
             const post = () => {
@@ -266,7 +416,7 @@ async function renderMessagesInPreview(
             if (!data || typeof data !== 'object') return;
             if (data.type === 'A2UI_RENDER_READY') {
               postMessages();
-              settleSoon(3500);
+              settleSoon(protocol === 'a2ui' ? 3500 : 1800);
               return;
             }
             if (data.type !== 'A2UI_PREVIEW_METRIC') return;
@@ -285,15 +435,22 @@ async function renderMessagesInPreview(
             }
           });
 
+          iframe.addEventListener('load', () => {
+            if (protocol !== 'a2ui') {
+              settleSoon(3000);
+            }
+          });
           iframe.src = src;
           window.setTimeout(postMessages, 800);
-          window.setTimeout(() => resolve(metricBag), 12_000);
+          window.setTimeout(() => resolve(metricBag), timeout);
         });
       },
       {
         id: `bench-${options.runId}`,
-        messages: options.messages,
+        messages: options.messages ?? [],
+        protocol: options.protocol,
         src: renderUrl,
+        timeout: timeoutMs,
       },
     );
 
@@ -306,22 +463,31 @@ async function renderMessagesInPreview(
 }
 
 async function capturePreviewScreenshot(
-  page: Awaited<ReturnType<Browser['newPage']>>,
-): Promise<string> {
+  page: Page,
+): Promise<CapturedScreenshot> {
   const bytes = await page.screenshot({
     fullPage: false,
-    quality: 76,
+    quality: 82,
     type: 'jpeg',
   });
-  return `data:image/jpeg;base64,${bytes.toString('base64')}`;
+  return {
+    bytes,
+    dataUrl: `data:image/jpeg;base64,${bytes.toString('base64')}`,
+  };
 }
+
+const defaultDependencies: BenchPreviewDependencies = {
+  getBrowser: getBenchBrowser,
+  judgeScreenshot: judgeBenchScreenshot,
+};
 
 export async function runBenchPreview(
   options: BenchPreviewOptions,
+  dependencies: BenchPreviewDependencies = defaultDependencies,
 ): Promise<BenchPreviewResult> {
   const shouldRender = options.request.settings.renderMetricsEnabled
     || options.request.settings.judgeEnabled;
-  if (!shouldRender || options.messages.length === 0) {
+  if (!shouldRender) {
     return {
       errors: [],
       fmpMs: 0,
@@ -330,33 +496,81 @@ export async function runBenchPreview(
       ttiMs: 0,
     };
   }
+  if (
+    options.protocol === 'a2ui'
+    && (!options.messages || options.messages.length === 0)
+  ) {
+    return {
+      errors: ['A2UI preview requires at least one protocol message.'],
+      fmpMs: 0,
+      judgeScore: 0,
+      renderMs: 0,
+      ttiMs: 0,
+    };
+  }
+  if (options.protocol !== 'a2ui' && !options.source?.trim()) {
+    const sourceProtocol = options.protocol === 'openui'
+      ? 'OpenUI'
+      : 'Lynx XML';
+    return {
+      errors: [`${sourceProtocol} preview requires source text.`],
+      fmpMs: 0,
+      judgeScore: 0,
+      renderMs: 0,
+      ttiMs: 0,
+    };
+  }
 
   const errors: string[] = [];
-  let page: Awaited<ReturnType<Browser['newPage']>> | undefined;
+  let page: Page | undefined;
 
   try {
-    const rendered = await renderMessagesInPreview(options);
+    if (options.abortSignal?.aborted) {
+      throw options.abortSignal.reason ?? new Error('Bench preview aborted.');
+    }
+    const rendered = await renderResultInPreview(options, dependencies);
     page = rendered.page;
-    let screenshotDataUrl: string | undefined;
+
+    let screenshot: CapturedScreenshot | undefined;
     try {
-      screenshotDataUrl = await capturePreviewScreenshot(page);
+      screenshot = await capturePreviewScreenshot(page);
     } catch (error) {
       errors.push(`preview screenshot failed: ${toErrorMessage(error)}`);
     }
 
+    let judgeScore = 0;
+    let judgeSummary: string | undefined;
     if (options.request.settings.judgeEnabled) {
-      errors.push(
-        'ui-judge failed: UI Judge server integration is temporarily unavailable; use the Rust library API.',
-      );
+      options.onJudgeStart?.();
+      if (screenshot) {
+        try {
+          const judged = await dependencies.judgeScreenshot({
+            ...(options.abortSignal
+              ? { abortSignal: options.abortSignal }
+              : {}),
+            request: options.request,
+            scenario: options.scenario,
+            screenshot: screenshot.bytes,
+          });
+          judgeScore = judged.score;
+          judgeSummary = judged.summary;
+        } catch (error) {
+          errors.push(`ui-judge failed: ${toErrorMessage(error)}`);
+        }
+      } else {
+        errors.push('ui-judge failed: no preview screenshot was captured.');
+      }
     }
 
+    const includeMetrics = options.request.settings.renderMetricsEnabled;
     return {
       errors,
-      fmpMs: readMetric(rendered.metrics.fmp),
-      judgeScore: 0,
-      renderMs: readMetric(rendered.metrics.render),
-      ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
-      ttiMs: readMetric(rendered.metrics.tti),
+      fmpMs: includeMetrics ? readMetric(rendered.metrics.fmp) : 0,
+      judgeScore,
+      ...(judgeSummary ? { judgeSummary } : {}),
+      renderMs: includeMetrics ? readMetric(rendered.metrics.render) : 0,
+      ...(screenshot ? { screenshotDataUrl: screenshot.dataUrl } : {}),
+      ttiMs: includeMetrics ? readMetric(rendered.metrics.tti) : 0,
     };
   } catch (error) {
     return {
@@ -370,6 +584,3 @@ export async function runBenchPreview(
     await page?.close().catch(noop);
   }
 }
-*/
-
-export {};

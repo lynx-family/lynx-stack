@@ -24,6 +24,7 @@ export function getRouteHash(hash: string): string {
 }
 
 export function buildRouteHash(protocolName: ProtocolName, tab: Tab): string {
+  if (tab === 'bench') return '#/bench';
   return tab === 'create'
     ? `#/${protocolName}`
     : `#/${protocolName}/${tab}`;
@@ -33,6 +34,10 @@ export function parseRouteHash(hash: string): Route {
   const cleaned = getRouteHash(hash).replace(/^#\/?/u, '');
   const parts = cleaned.split('/');
 
+  if (parts[0] === 'bench') {
+    return { protocol: DEFAULT_PROTOCOL, tab: 'bench' };
+  }
+
   let protocol: Protocol = DEFAULT_PROTOCOL;
   let rest = parts;
 
@@ -40,6 +45,7 @@ export function parseRouteHash(hash: string): Route {
     parts[0] === 'a2ui'
     || parts[0] === 'openui'
     || parts[0] === 'mcp-apps'
+    || parts[0] === 'lynx-xml'
   ) {
     protocol = getProtocol(parts[0]);
     rest = parts.slice(1);
@@ -62,8 +68,9 @@ export function parseRouteHash(hash: string): Route {
   if (rest[0] === 'chat' || rest[0] === 'create') {
     return { protocol, tab: 'create' };
   }
-  if (rest[0] === 'bench' && protocol.name === 'a2ui') {
-    return { protocol, tab: 'bench' };
+  // Back-compat: Bench used to live under the selected protocol.
+  if (rest[0] === 'bench') {
+    return { protocol: DEFAULT_PROTOCOL, tab: 'bench' };
   }
   // Back-compat: the standalone Playback tab is gone; route it to Examples.
   if (rest[0] === 'playback') {

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
 import { ChatController } from './ChatController.js';
+import { LYNX_XML_CHAT_ADAPTER } from './lynx-xml.js';
 import { MCP_APPS_CHAT_ADAPTER } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import type { Protocol } from '../../utils/protocol.js';
@@ -13,6 +14,15 @@ export interface ChatPageProps {
 }
 
 export function ChatPage(props: ChatPageProps) {
+  if (props.protocol.name === 'lynx-xml') {
+    return (
+      <ChatController
+        key='lynx-xml'
+        {...props}
+        adapter={LYNX_XML_CHAT_ADAPTER}
+      />
+    );
+  }
   if (props.protocol.name === 'mcp-apps') {
     return (
       <ChatController

@@ -4,6 +4,7 @@
 import type { NativeApp } from '../../../../types/index.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { disposeEndpoint } from '../../../endpoints.js';
+import type { LynxEngineContext } from '../../../../common/LynxEngineContext.js';
 
 export function registerDisposeHandler(
   rpc: Rpc,
@@ -11,9 +12,11 @@ export function registerDisposeHandler(
   destroyCard: typeof import('@lynx-js/lynx-core/web')['destroyCard'],
   callDestroyLifetimeFun:
     typeof import('@lynx-js/lynx-core/web')['callDestroyLifetimeFun'],
+  engineContext: LynxEngineContext,
 ): void {
   rpc.registerHandler(disposeEndpoint, () => {
     const id = nativeApp.id;
+    engineContext.dispatchDestroyLifetime();
     callDestroyLifetimeFun(id);
     destroyCard(id);
   });

@@ -8,10 +8,7 @@ export type ContextCrossThreadEvent = {
   type: string;
   data: Cloneable;
 };
-export interface LynxContextEventTarget {
-  onTriggerEvent?: (event: ContextCrossThreadEvent) => void;
-
-  postMessage(message: any): void;
+export interface LynxEventTarget {
   dispatchEvent(
     event: ContextCrossThreadEvent,
   ): number;
@@ -20,4 +17,10 @@ export interface LynxContextEventTarget {
     type: string,
     listener: (event: Event) => void,
   ): void;
+}
+
+export interface LynxContextEventTarget extends LynxEventTarget {
+  onTriggerEvent?: (event: ContextCrossThreadEvent) => void;
+
+  postMessage(message: any): void;
 }

@@ -3,9 +3,9 @@
 Generative UI primitives for Lynx applications.
 
 `@lynx-js/genui` is the single npm package for the GenUI toolchain. It exposes
-A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, and the CLI
-from one package while keeping implementation directories private to this
-monorepo.
+A2UI rendering, OpenUI rendering, the zero-build Lynx XML protocol, A2UI
+prompt/catalog utilities, and the CLI from one package while keeping
+implementation directories private to this monorepo.
 
 ## Installation
 
@@ -45,7 +45,19 @@ import { createMessageStore } from '@lynx-js/genui/a2ui/store';
 import { createOpenUiLibrary } from '@lynx-js/genui/openui';
 import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
 import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
+import { validateLynxXml } from '@lynx-js/genui/lynx-xml';
+import { buildLynxXmlSystemPrompt } from '@lynx-js/genui/lynx-xml/prompt';
 ```
+
+The Node-only Lynx XML generation prompt directly loads the
+[vanilla-lynx skill](https://github.com/lynx-community/skills/tree/main/packages/skills/vanilla-lynx).
+Lynx CSS constraints from `@byted-lynx/lynx-api-docs`
+`lynx-vs-web/unsupported-features.md` and `lynx-vs-web/css-differences.md`
+are written explicitly into the prompt; the Agent does not use a CSS
+compatibility query tool.
+It produces one source artifact containing Lynx CSS, main-thread Element PAPI
+JavaScript, and an optional background-thread script for direct preview in
+Lynx for Web.
 
 Catalog manifests are exported through a single public catalog entry:
 

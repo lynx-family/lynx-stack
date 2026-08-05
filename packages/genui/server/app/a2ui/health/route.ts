@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isOfficialOpenAIBaseURL } from '../../../agent/openai-utils';
+import { defaultOpenAIAPIStyle } from '../../../agent/openai-utils';
 import { corsPreflight, jsonWithCors } from '../../common/cors';
 
 export const runtime = 'nodejs';
@@ -21,9 +21,8 @@ export function GET(req: Request) {
   } = process.env;
   const hasKey = !!OPENAI_API_KEY;
   const baseURL = OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
-  const isOfficial = isOfficialOpenAIBaseURL(baseURL);
   const api = (OPENAI_API_STYLE as 'chat' | 'responses' | undefined)
-    ?? (isOfficial ? 'responses' : 'chat');
+    ?? defaultOpenAIAPIStyle(baseURL);
 
   return jsonWithCors(req, {
     ok: hasKey,

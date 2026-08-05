@@ -391,6 +391,61 @@ describe('Template Manager', () => {
     expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalled();
   });
 
+  test('should load Lynx-specific markup XML correctly', async () => {
+    const templateUrl = 'http://example.com/card.xml';
+    const encoded = new TextEncoder().encode(`<!doctype lynx>
+<style>.root { background-color: pink; }</style>
+<script main-thread>globalThis.renderPage = () => {};</script>
+<script background>globalThis.__lynx_worker_type = 'background';</script>`);
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoded.slice(0, 5));
+        controller.enqueue(encoded.slice(5));
+        controller.close();
+      },
+    });
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+    );
+
+    expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appType: 'card',
+        cardType: 'react',
+        defaultDisplayLinear: 'true',
+        defaultOverflowVisible: 'true',
+        enableCSSSelector: 'true',
+        isLazy: 'false',
+      }),
+    );
+    expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(
+      templateUrl,
+    );
+    expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      false,
+    );
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+    );
+    expect(templateManager.getBundle(templateUrl)?.lepusCode).toHaveProperty(
+      'root',
+    );
+    expect(templateManager.getBundle(templateUrl)?.backgroundCode)
+      .toHaveProperty('/app-service.js');
+  });
+
   test('should detect lazy appType from lepusCode.root prefix for json template', async () => {
     const jsonContent = {
       'lepusCode': {

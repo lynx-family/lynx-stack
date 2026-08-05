@@ -17,6 +17,7 @@ export interface A2UIAgentOptions extends OpenAIProviderOptions {
 
 interface A2UIAgentRunOptions {
   resourceId?: string | undefined;
+  maxRetries?: number | undefined;
 }
 
 export interface A2UIAgent {

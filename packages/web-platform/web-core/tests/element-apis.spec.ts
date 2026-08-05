@@ -1584,6 +1584,80 @@ describe('Element APIs', () => {
     expect(mtsBinding.publishEvent).toBeCalledTimes(1);
   });
 
+  test('__AddEventListener binds a normalized main-thread event', () => {
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const parent = mtsGlobalThis.__CreateView(0);
+    const child = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(parent, 'direct-listener-parent');
+    mtsGlobalThis.__SetID(child, 'direct-listener-child');
+    mtsGlobalThis.__SetDataset(parent, { role: 'parent' });
+    mtsGlobalThis.__SetDataset(child, { role: 'child' });
+    mtsGlobalThis.__AppendElement(parent, child);
+    mtsGlobalThis.__AppendElement(page, parent);
+
+    const listener = rstest.fn();
+    const options = {};
+    mtsGlobalThis.__AddEventListener(parent, 'Tap', listener, options);
+    mtsGlobalThis.__FlushElementTree();
+
+    child.dispatchEvent(
+      new window.MouseEvent('click', {
+        bubbles: true,
+        clientX: 12,
+        clientY: 24,
+      }),
+    );
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'tap',
+        detail: { x: 12, y: 24 },
+        target: expect.objectContaining({
+          id: 'direct-listener-child',
+          dataset: { role: 'child' },
+          elementRefptr: child,
+        }),
+        currentTarget: expect.objectContaining({
+          id: 'direct-listener-parent',
+          dataset: { role: 'parent' },
+          elementRefptr: parent,
+        }),
+      }),
+    );
+
+    mtsGlobalThis.__RemoveEventListener(parent, 'tap', listener, options);
+    child.dispatchEvent(new window.Event('click', { bubbles: true }));
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  test('__AddEventListener supports once and runtime disposal', () => {
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__FlushElementTree();
+
+    const onceListener = rstest.fn();
+    mtsGlobalThis.__AddEventListener(target, 'tap', onceListener, {
+      once: true,
+    });
+    target.dispatchEvent(new window.Event('click'));
+    target.dispatchEvent(new window.Event('click'));
+    expect(onceListener).toHaveBeenCalledTimes(1);
+
+    mtsGlobalThis.__AddEventListener(target, 'tap', onceListener, {
+      once: true,
+    });
+    target.dispatchEvent(new window.Event('click'));
+    expect(onceListener).toHaveBeenCalledTimes(2);
+
+    const disposedListener = rstest.fn();
+    mtsGlobalThis.__AddEventListener(target, 'tap', disposedListener);
+    mtsBinding.dispose();
+    target.dispatchEvent(new window.Event('click'));
+    expect(disposedListener).not.toHaveBeenCalled();
+  });
+
   test('publicComponentEvent', () => {
     rstest.spyOn(mtsBinding, 'addEventListener');
     rstest.spyOn(mtsBinding, 'publishEvent');

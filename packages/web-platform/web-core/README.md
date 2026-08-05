@@ -28,9 +28,40 @@ import '@lynx-js/web-core/client';
 document.body.innerHTML = `
 <lynx-view 
   style="height:100vh; width:100vw;" 
-  url="http://localhost:3000/main/main-thread.js"
+  url="http://localhost:3000/main/card.xml"
 >
 </lynx-view>`;
+```
+
+### Lynx markup artifacts
+
+In addition to binary and JSON templates, `<lynx-view>` can load a `.xml`
+artifact using the Lynx-specific markup format:
+
+```xml
+<!DOCTYPE lynx>
+<style>
+  /* css content */
+</style>
+<script main-thread>
+  /* main thread code */
+</script>
+<script background>
+  /* background thread code */
+</script>
+```
+
+Main-thread and background scripts can listen for page disposal through the
+engine environment:
+
+```js
+const engine = lynx.getEngine();
+
+function cleanup() {
+  engine.removeEventListener('__DestroyLifetime', cleanup);
+}
+
+engine.addEventListener('__DestroyLifetime', cleanup);
 ```
 
 ## Document

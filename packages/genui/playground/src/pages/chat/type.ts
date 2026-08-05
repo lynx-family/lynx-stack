@@ -62,7 +62,7 @@ export interface ChatArtifactView {
   id: string;
   label: string;
   text: string;
-  language: 'text' | 'json';
+  language: 'text' | 'json' | 'xml';
 }
 
 export interface ChatArtifact {

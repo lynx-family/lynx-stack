@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "isolatedDeclarations": false,
+    "lib": ["DOM", "ESNext"],
+    "noEmit": true,
+  },
+  "include": ["src", "rsbuild.config.ts"],
+}

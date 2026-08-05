@@ -26,9 +26,21 @@ import {
 } from '../components/Icon.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { copyToClipboard } from '../utils/clipboard.js';
+import { PROTOCOLS } from '../utils/protocol.js';
+import {
+  buildLynxXmlRenderUrl,
+  buildOpenUIRenderUrl,
+  buildRenderUrl,
+} from '../utils/renderUrl.js';
 
 type BenchRole = 'control' | 'experiment';
-type BenchVariable = 'model' | 'prompt' | 'catalog' | 'custom';
+type BenchVariable =
+  | 'model'
+  | 'prompt'
+  | 'catalog'
+  | 'protocol'
+  | 'custom';
+type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml';
 type BenchStatus = 'idle' | 'running' | 'complete' | 'failed' | 'cancelled';
 type BenchScreenshotState = 'captured' | 'failed' | 'missing';
 
@@ -43,6 +55,7 @@ interface BenchGroup {
   role: BenchRole;
   name: string;
   variable: BenchVariable;
+  protocol: BenchProtocol;
   model: string;
   catalog: string;
   extraInstruction: string;
@@ -71,6 +84,7 @@ interface BenchResult {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol?: BenchProtocol;
   scenarioId: string;
   scenarioName: string;
   repeatIndex?: number;
@@ -89,13 +103,16 @@ interface BenchResult {
   outputChars?: number;
   errors?: string[];
   error?: string;
+  messages?: unknown[];
   screenshotDataUrl?: string;
+  text?: string;
 }
 
 interface BenchGroupSummary {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol?: BenchProtocol;
   runCount?: number;
   failedRuns?: number;
   successRate?: number;
@@ -168,6 +185,7 @@ interface BenchJobSnapshot {
     totalRuns?: number;
     current?: {
       groupId: string;
+      protocol?: BenchProtocol;
       scenarioId: string;
       repeatIndex: number;
       phase: string;
@@ -213,6 +231,7 @@ interface BenchScreenshotMatrixCell {
 interface BenchScreenshotMatrixRow {
   key: string;
   group: BenchGroup;
+  protocol: BenchProtocol;
   cells: BenchScreenshotMatrixCell[];
 }
 
@@ -235,6 +254,14 @@ const CATALOG_OPTIONS = [
   'Core Catalog',
   'Minimal Catalog',
 ] as const;
+const PROTOCOL_OPTIONS = [
+  { value: 'a2ui', label: 'A2UI' },
+  { value: 'openui', label: 'OpenUI' },
+  { value: 'lynx-xml', label: 'Lynx XML' },
+] as const satisfies ReadonlyArray<{
+  value: BenchProtocol;
+  label: string;
+}>;
 
 const DEFAULT_ENV: BenchEnv = {
   apiKey: '',
@@ -272,32 +299,35 @@ const DEFAULT_GROUPS: BenchGroup[] = [
   {
     id: 'control-default',
     role: 'control',
-    name: 'Default Prompt',
-    variable: 'prompt',
+    name: 'A2UI',
+    variable: 'protocol',
+    protocol: 'a2ui',
     model: 'gpt-5.5-2026-04-24',
     catalog: 'Full Catalog',
     extraInstruction: '',
     enabled: true,
   },
   {
-    id: 'experiment-token',
+    id: 'experiment-openui',
     role: 'experiment',
-    name: 'Token Efficient',
-    variable: 'prompt',
+    name: 'OpenUI',
+    variable: 'protocol',
+    protocol: 'openui',
+    model: 'gpt-5.5-2026-04-24',
+    catalog: 'Full Catalog',
+    extraInstruction: '',
+    enabled: true,
+  },
+  {
+    id: 'experiment-lynx-xml',
+    role: 'experiment',
+    name: 'Lynx XML',
+    variable: 'protocol',
+    protocol: 'lynx-xml',
     model: 'gpt-5.5-2026-04-24',
     catalog: 'Full Catalog',
     extraInstruction:
-      'Keep the A2UI message stream as short as possible while preserving all required content.',
-    enabled: true,
-  },
-  {
-    id: 'experiment-core',
-    role: 'experiment',
-    name: 'Core Catalog',
-    variable: 'catalog',
-    model: 'gpt-5.5-2026-04-24',
-    catalog: 'Core Catalog',
-    extraInstruction: '',
+      'Keep the native Lynx XML artifact compact while preserving all required content and interaction.',
     enabled: true,
   },
 ];
@@ -498,12 +528,13 @@ function getA2UIBenchJobIdFromUrl(): string | null {
 
 function getA2UIBenchRecoveryUrl(jobId: string): string {
   const url = new URL(window.location.href);
-  url.searchParams.set('a2uiBenchJobId', jobId);
-  url.hash = '#/a2ui/bench';
+  url.searchParams.delete('a2uiBenchJobId');
+  url.searchParams.set('benchJobId', jobId);
+  url.hash = '#/bench';
   return url.toString();
 }
 
-function getA2UIPlaygroundBaseUrl(): string {
+function getBenchPlaygroundBaseUrl(): string {
   const url = new URL(window.location.href);
   url.hash = '';
   url.search = '';
@@ -590,7 +621,10 @@ function pluralize(count: number, singular: string, plural = `${singular}s`) {
 }
 
 function cloneBenchGroups(groups: BenchGroup[]): BenchGroup[] {
-  return groups.map((group) => ({ ...group }));
+  return groups.map((group) => ({
+    ...group,
+    protocol: getBenchProtocol(group.protocol),
+  }));
 }
 
 function cloneBenchScenarios(scenarios: BenchScenario[]): BenchScenario[] {
@@ -619,7 +653,22 @@ function isBenchVariable(value: unknown): value is BenchVariable {
   return value === 'model'
     || value === 'prompt'
     || value === 'catalog'
+    || value === 'protocol'
     || value === 'custom';
+}
+
+function isBenchProtocol(value: unknown): value is BenchProtocol {
+  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml';
+}
+
+function getBenchProtocol(value: unknown): BenchProtocol {
+  return isBenchProtocol(value) ? value : 'a2ui';
+}
+
+function getBenchProtocolLabel(protocol: BenchProtocol): string {
+  if (protocol === 'a2ui') return 'A2UI';
+  if (protocol === 'openui') return 'OpenUI';
+  return 'Lynx XML';
 }
 
 function createBenchSettingsFromReport(report: BenchReport): BenchSettings {
@@ -658,6 +707,11 @@ function createBenchGroupsFromReport(report: BenchReport): BenchGroup[] {
       role: isBenchRole(item.role) ? item.role : 'experiment',
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
+      protocol: getBenchProtocol(
+        item.protocol
+          ?? report.results.find((result) => result.groupId === item.id)
+            ?.protocol,
+      ),
       model: item.model ?? fallbackModel,
       catalog: item.catalog ?? 'Full Catalog',
       extraInstruction: item.extraInstruction ?? '',
@@ -712,10 +766,17 @@ function readBenchHistory(): BenchHistoryEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((entry) => isBenchHistoryEntry(entry)).slice(
-      0,
-      BENCH_HISTORY_LIMIT,
-    );
+    return parsed
+      .filter((entry) => isBenchHistoryEntry(entry))
+      .map((entry) => ({
+        ...entry,
+        config: {
+          ...entry.config,
+          settings: cloneBenchSettings(entry.config.settings),
+          groups: cloneBenchGroups(entry.config.groups),
+        },
+      }))
+      .slice(0, BENCH_HISTORY_LIMIT);
   } catch {
     return [];
   }
@@ -741,9 +802,14 @@ function createBenchHistoryEntry(
   settings: BenchSettings,
 ): BenchHistoryEntry {
   const totalRuns = report.summary?.totalRuns ?? report.results.length;
+  const protocolLabel = [...new Set(groups.map((group) => group.protocol))]
+    .map((protocol) => getBenchProtocolLabel(protocol))
+    .join(' + ');
   return {
     id: createId('bench-history'),
-    title: `${report.env.model || env.model} · ${pluralize(totalRuns, 'run')}`,
+    title: `${report.env.model || env.model} · ${protocolLabel} · ${
+      pluralize(totalRuns, 'run')
+    }`,
     savedAt: new Date().toISOString(),
     report,
     config: {
@@ -880,17 +946,103 @@ function isBenchRunFailed(result: BenchResult): boolean {
 function getScreenshotState(
   result: BenchResult,
 ): BenchScreenshotState {
-  if (result.screenshotDataUrl) return 'captured';
+  if (result.screenshotDataUrl || hasBenchPreviewPayload(result)) {
+    return 'captured';
+  }
   if (isBenchRunFailed(result)) return 'failed';
   return 'missing';
 }
 
 function getScreenshotStateLabelFromState(
   state: BenchScreenshotState,
+  result?: BenchResult | null,
 ): string {
-  if (state === 'captured') return 'Captured';
+  if (state === 'captured') {
+    return result?.screenshotDataUrl ? 'Captured' : 'Live preview';
+  }
   if (state === 'failed') return 'Failed';
   return 'No capture';
+}
+
+function hasBenchPreviewPayload(result: BenchResult): boolean {
+  const protocol = getBenchProtocol(result.protocol);
+  if (protocol === 'a2ui') {
+    return Array.isArray(result.messages) && result.messages.length > 0;
+  }
+  return typeof result.text === 'string' && result.text.trim().length > 0;
+}
+
+function BenchResultPreview(props: {
+  label: string;
+  result: BenchResult;
+}) {
+  const { label, result } = props;
+  const [renderUrl, setRenderUrl] = useState('');
+
+  useEffect(() => {
+    if (!hasBenchPreviewPayload(result)) {
+      setRenderUrl('');
+      return;
+    }
+
+    const protocol = getBenchProtocol(result.protocol);
+    const source = protocol === 'a2ui'
+      ? JSON.stringify(result.messages)
+      : result.text ?? '';
+    const baseUrl = getBenchPlaygroundBaseUrl();
+    if (protocol === 'openui') {
+      setRenderUrl(buildOpenUIRenderUrl(
+        {
+          rawText: source,
+          instant: true,
+          liveAction: true,
+          speed: 0,
+          theme: 'light',
+        },
+        baseUrl,
+      ));
+      return;
+    }
+
+    const sourceType = protocol === 'a2ui'
+      ? 'application/json; charset=utf-8'
+      : 'application/xml; charset=utf-8';
+    const sourceUrl = window.URL.createObjectURL(
+      new window.Blob([source], {
+        type: sourceType,
+      }),
+    );
+    const nextRenderUrl = protocol === 'lynx-xml'
+      ? buildLynxXmlRenderUrl(
+        { sourceUrl, theme: 'light' },
+        baseUrl,
+      )
+      : buildRenderUrl(
+        {
+          protocol: PROTOCOLS.a2ui,
+          demoUrl: './a2ui.web.js',
+          messages: [],
+          messagesUrl: sourceUrl,
+          instant: true,
+          speed: 0,
+          theme: 'light',
+        },
+        baseUrl,
+      );
+    setRenderUrl(nextRenderUrl);
+
+    return () => window.URL.revokeObjectURL(sourceUrl);
+  }, [result]);
+
+  if (!renderUrl) return null;
+  return (
+    <iframe
+      aria-label={label}
+      loading='lazy'
+      src={renderUrl}
+      title={label}
+    />
+  );
 }
 
 function getScreenshotPlaceholderText(result: BenchResult | null): string {
@@ -907,6 +1059,34 @@ function getScreenshotPlaceholderText(result: BenchResult | null): string {
   ) ?? 'No screenshot was captured for this run.';
 }
 
+function BenchResultVisual(props: {
+  label: string;
+  result: BenchResult | null;
+  state: BenchScreenshotState;
+}) {
+  const { label, result, state } = props;
+  if (result?.screenshotDataUrl) {
+    return (
+      <div className='benchScreenshotImageFrame'>
+        <img alt={label} src={result.screenshotDataUrl} />
+      </div>
+    );
+  }
+  if (result && hasBenchPreviewPayload(result)) {
+    return (
+      <div className='benchScreenshotImageFrame'>
+        <BenchResultPreview label={label} result={result} />
+      </div>
+    );
+  }
+  return (
+    <div className='benchScreenshotPlaceholder'>
+      <strong>{getScreenshotStateLabelFromState(state, result)}</strong>
+      <span>{getScreenshotPlaceholderText(result)}</span>
+    </div>
+  );
+}
+
 function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
   const reportGroups = Array.isArray(report.groups) ? report.groups : [];
   if (reportGroups.length > 0) return createBenchGroupsFromReport(report);
@@ -920,6 +1100,7 @@ function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
       role: result.role,
       name: result.groupName,
       variable: 'custom' as BenchVariable,
+      protocol: getBenchProtocol(result.protocol),
       model: result.model ?? report.env?.model ?? DEFAULT_ENV.model,
       catalog: result.catalog ?? 'Full Catalog',
       extraInstruction: '',
@@ -978,7 +1159,9 @@ function createBenchScreenshotMatrix(
   );
   const resultsByCell = new Map<string, BenchResult[]>();
   for (const result of report.results) {
-    const key = `${result.groupId}:${result.scenarioId}`;
+    const key = `${
+      getBenchProtocol(result.protocol)
+    }:${result.groupId}:${result.scenarioId}`;
     const results = resultsByCell.get(key) ?? [];
     results.push(result);
     resultsByCell.set(key, results);
@@ -988,9 +1171,13 @@ function createBenchScreenshotMatrix(
   let failed = 0;
   let missing = 0;
   const rows = matrixGroups.map((group) => {
+    const protocol = group.protocol;
     const cells = matrixScenarios.map((scenario) => {
       const results = [
-        ...(resultsByCell.get(`${group.id}:${scenario.id}`) ?? []),
+        ...(
+          resultsByCell.get(`${protocol}:${group.id}:${scenario.id}`)
+            ?? []
+        ),
       ].sort((a, b) => (a.repeatIndex ?? 1) - (b.repeatIndex ?? 1));
       const slots = Array.from({ length: repeatCount }, (_, index) => {
         const repeatIndex = index + 1;
@@ -1002,22 +1189,24 @@ function createBenchScreenshotMatrix(
         else if (state === 'failed') failed += 1;
         else missing += 1;
         return {
-          key: result?.id ?? `${group.id}:${scenario.id}:${repeatIndex}`,
+          key: result?.id
+            ?? `${protocol}:${group.id}:${scenario.id}:${repeatIndex}`,
           repeatIndex,
           result,
           state,
         };
       });
       return {
-        key: `${group.id}:${scenario.id}`,
+        key: `${protocol}:${group.id}:${scenario.id}`,
         group,
         scenario,
         slots,
       };
     });
     return {
-      key: group.id,
+      key: `${protocol}:${group.id}`,
       group,
+      protocol,
       cells,
     };
   });
@@ -1100,7 +1289,9 @@ export function BenchPage() {
     () => groups.filter((group) => group.enabled),
     [groups],
   );
-  const runCount = activeGroups.length * scenarios.length * settings.repeats;
+  const runCount = activeGroups.length
+    * scenarios.length
+    * settings.repeats;
   const activeScenarioTypes = useMemo(
     () => [...new Set(scenarios.map((scenario) => scenario.type))],
     [scenarios],
@@ -1268,6 +1459,7 @@ export function BenchPage() {
         role,
         name: role === 'control' ? 'New Control' : 'New Experiment',
         variable: 'custom',
+        protocol: 'a2ui',
         model: DEFAULT_ENV.model,
         catalog: 'Full Catalog',
         extraInstruction: '',
@@ -1375,7 +1567,7 @@ export function BenchPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             playground: {
-              baseUrl: getA2UIPlaygroundBaseUrl(),
+              baseUrl: getBenchPlaygroundBaseUrl(),
             },
             provider: providerConfigured
               ? filterProviderForEndpoint(env, jobsEndpoint)
@@ -1428,6 +1620,7 @@ export function BenchPage() {
         const describeRun = (value: unknown): string => {
           if (!value || typeof value !== 'object') return 'Running bench...';
           const record = value as Record<string, unknown>;
+          const protocol = getBenchProtocol(record.protocol);
           const groupId = typeof record.groupId === 'string'
             ? record.groupId
             : undefined;
@@ -1445,9 +1638,9 @@ export function BenchPage() {
           const scenarioName = scenarios.find((scenario) =>
             scenario.id === scenarioId
           )?.name ?? 'Scenario';
-          return `${groupName} · ${scenarioName} · #${
-            repeatIndex ?? 1
-          } · ${phase}`;
+          return `${groupName} · ${
+            getBenchProtocolLabel(protocol)
+          } · ${scenarioName} · #${repeatIndex ?? 1} · ${phase}`;
         };
 
         source.addEventListener('job', (event) => {
@@ -1750,7 +1943,7 @@ export function BenchPage() {
       <PageHeader
         className='benchHeader'
         title='Bench'
-        description='Compare A2UI model, prompt, and catalog variants across fixed generation scenarios.'
+        description='Compare group-specific models, prompts, catalogs, and output formats using the same generation scenarios.'
         topContent={
           <>
             <span className='chip'>{activeGroups.length} groups</span>
@@ -1769,7 +1962,7 @@ export function BenchPage() {
         <main className='benchMain' aria-label='Bench workspace'>
           <section className='benchOverviewBand'>
             <div className='benchOverviewCopy'>
-              <div className='benchEyebrow'>A2UI v0.9 bench plan</div>
+              <div className='benchEyebrow'>GenUI protocol bench plan</div>
               <h2 className='benchOverviewTitle'>
                 Model, prompt, and catalog comparisons in one matrix.
               </h2>
@@ -1951,13 +2144,37 @@ export function BenchPage() {
                       )}
                   />
                   <div className='benchGroupSummary'>
+                    <span>{getBenchProtocolLabel(group.protocol)}</span>
                     <span>{group.variable}</span>
-                    <span>{group.catalog}</span>
+                    {group.protocol === 'a2ui'
+                      ? <span>{group.catalog}</span>
+                      : null}
                     <span>{group.model || env.model}</span>
                   </div>
                   <details className='benchGroupDetails'>
                     <summary>Configure</summary>
                     <div className='benchGroupFields'>
+                      <label className='benchField'>
+                        <span className='benchFieldLabel'>Output format</span>
+                        <select
+                          className='benchSelect'
+                          value={group.protocol}
+                          onChange={(event) =>
+                            updateGroup(
+                              group.id,
+                              groupPatch(
+                                'protocol',
+                                event.target.value as BenchProtocol,
+                              ),
+                            )}
+                        >
+                          {PROTOCOL_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <label className='benchField'>
                         <span className='benchFieldLabel'>Variable</span>
                         <select
@@ -1975,28 +2192,33 @@ export function BenchPage() {
                           <option value='model'>Model</option>
                           <option value='prompt'>Prompt</option>
                           <option value='catalog'>Catalog</option>
+                          <option value='protocol'>Protocol</option>
                           <option value='custom'>Custom</option>
                         </select>
                       </label>
-                      <label className='benchField'>
-                        <span className='benchFieldLabel'>Catalog</span>
-                        <select
-                          className='benchSelect'
-                          value={group.catalog}
-                          onChange={(event) =>
-                            updateGroup(
-                              group.id,
-                              groupPatch('catalog', event.target.value),
-                            )}
-                        >
-                          {CATALOG_OPTIONS.map((catalog) => (
-                            <option key={catalog} value={catalog}>
-                              {catalog}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
                     </div>
+                    {group.protocol === 'a2ui'
+                      ? (
+                        <label className='benchField'>
+                          <span className='benchFieldLabel'>Catalog</span>
+                          <select
+                            className='benchSelect'
+                            value={group.catalog}
+                            onChange={(event) =>
+                              updateGroup(
+                                group.id,
+                                groupPatch('catalog', event.target.value),
+                              )}
+                          >
+                            {CATALOG_OPTIONS.map((catalog) => (
+                              <option key={catalog} value={catalog}>
+                                {catalog}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )
+                      : null}
                     <label className='benchField'>
                       <span className='benchFieldLabel'>Model override</span>
                       <input
@@ -2111,7 +2333,15 @@ export function BenchPage() {
                 <div className='benchInsightGrid'>
                   <div className='benchInsight'>
                     <span>Lowest tokens</span>
-                    <strong>{bestTokens?.groupName ?? 'n/a'}</strong>
+                    <strong>
+                      {bestTokens
+                        ? `${bestTokens.groupName} · ${
+                          getBenchProtocolLabel(
+                            getBenchProtocol(bestTokens.protocol),
+                          )
+                        }`
+                        : 'n/a'}
+                    </strong>
                     <small>
                       {bestTokens
                         ? formatNumber(bestTokens.avgTokens)
@@ -2120,7 +2350,15 @@ export function BenchPage() {
                   </div>
                   <div className='benchInsight'>
                     <span>Fastest agent</span>
-                    <strong>{fastestAgent?.groupName ?? 'n/a'}</strong>
+                    <strong>
+                      {fastestAgent
+                        ? `${fastestAgent.groupName} · ${
+                          getBenchProtocolLabel(
+                            getBenchProtocol(fastestAgent.protocol),
+                          )
+                        }`
+                        : 'n/a'}
+                    </strong>
                     <small>
                       {fastestAgent
                         ? formatMs(fastestAgent.avgAgentMs)
@@ -2129,7 +2367,15 @@ export function BenchPage() {
                   </div>
                   <div className='benchInsight'>
                     <span>Best judge</span>
-                    <strong>{topJudge?.groupName ?? 'n/a'}</strong>
+                    <strong>
+                      {topJudge
+                        ? `${topJudge.groupName} · ${
+                          getBenchProtocolLabel(
+                            getBenchProtocol(topJudge.protocol),
+                          )
+                        }`
+                        : 'n/a'}
+                    </strong>
                     <small>
                       {topJudge
                         ? `${topJudge.avgJudgeScore.toFixed(1)}/5`
@@ -2154,13 +2400,21 @@ export function BenchPage() {
                     </thead>
                     <tbody>
                       {report.summaries.map((summary) => (
-                        <tr key={summary.groupId}>
+                        <tr
+                          key={`${summary.groupId}:${
+                            getBenchProtocol(summary.protocol)
+                          }`}
+                        >
                           <td>
                             <div className='benchTableGroup'>
                               <span
                                 className={`benchRoleDot ${summary.role}`}
                               />
-                              <span>{summary.groupName}</span>
+                              <span>
+                                {summary.groupName} · {getBenchProtocolLabel(
+                                  getBenchProtocol(summary.protocol),
+                                )}
+                              </span>
                             </div>
                           </td>
                           <td>
@@ -2201,9 +2455,9 @@ export function BenchPage() {
                 <section className='benchScreenshotSection'>
                   <div className='benchSectionHeader'>
                     <div>
-                      <h3 className='benchSectionTitle'>Screenshots</h3>
+                      <h3 className='benchSectionTitle'>Web previews</h3>
                       <p className='benchSectionSub'>
-                        Complete run matrix with failed slots preserved
+                        Protocol-aware previews with failed slots preserved
                       </p>
                     </div>
                     <Button
@@ -2222,7 +2476,7 @@ export function BenchPage() {
                       <strong>{formatNumber(screenshotMatrix.total)}</strong>
                     </div>
                     <div>
-                      <span>Captured</span>
+                      <span>Available</span>
                       <strong>
                         {formatNumber(screenshotMatrix.captured)}
                       </strong>
@@ -2232,7 +2486,7 @@ export function BenchPage() {
                       <strong>{formatNumber(screenshotMatrix.failed)}</strong>
                     </div>
                     <div>
-                      <span>Missing</span>
+                      <span>Unavailable</span>
                       <strong>{formatNumber(screenshotMatrix.missing)}</strong>
                     </div>
                   </div>
@@ -2300,10 +2554,13 @@ export function BenchPage() {
                     id='bench-screenshots-title'
                     className='benchConfigTitle'
                   >
-                    Screenshots
+                    Web previews
                   </h2>
                   <p className='benchConfigSub'>
-                    {pluralize(screenshotMatrix.rows.length, 'group')} ×{' '}
+                    {pluralize(
+                      screenshotMatrix.rows.length,
+                      'group',
+                    )} ×{' '}
                     {pluralize(screenshotMatrix.scenarios.length, 'scenario')}
                     {' · '}
                     {pluralize(screenshotMatrix.repeatCount, 'repeat')}
@@ -2314,8 +2571,8 @@ export function BenchPage() {
                   size='sm'
                   iconOnly
                   iconBefore={X}
-                  aria-label='Close screenshots'
-                  title='Close screenshots'
+                  aria-label='Close web previews'
+                  title='Close web previews'
                   onClick={() => setScreenshotsOpen(false)}
                 />
               </header>
@@ -2327,7 +2584,7 @@ export function BenchPage() {
                     <strong>{formatNumber(screenshotMatrix.total)}</strong>
                   </div>
                   <div>
-                    <span>Captured</span>
+                    <span>Available</span>
                     <strong>{formatNumber(screenshotMatrix.captured)}</strong>
                   </div>
                   <div>
@@ -2335,7 +2592,7 @@ export function BenchPage() {
                     <strong>{formatNumber(screenshotMatrix.failed)}</strong>
                   </div>
                   <div>
-                    <span>Missing</span>
+                    <span>Unavailable</span>
                     <strong>{formatNumber(screenshotMatrix.missing)}</strong>
                   </div>
                 </div>
@@ -2365,9 +2622,12 @@ export function BenchPage() {
                           <div>
                             <strong>{row.group.name}</strong>
                             <span>
-                              {row.group.variable}
+                              {getBenchProtocolLabel(row.protocol)}
                               {' · '}
-                              {row.group.catalog}
+                              {row.group.variable}
+                              {row.protocol === 'a2ui'
+                                ? ` · ${row.group.catalog}`
+                                : ''}
                             </span>
                           </div>
                         </div>
@@ -2392,30 +2652,15 @@ export function BenchPage() {
                                     >
                                       {getScreenshotStateLabelFromState(
                                         slot.state,
+                                        item,
                                       )}
                                     </span>
                                   </div>
-                                  {item?.screenshotDataUrl
-                                    ? (
-                                      <div className='benchScreenshotImageFrame'>
-                                        <img
-                                          alt={`${cell.group.name} ${cell.scenario.name} #${slot.repeatIndex}`}
-                                          src={item.screenshotDataUrl}
-                                        />
-                                      </div>
-                                    )
-                                    : (
-                                      <div className='benchScreenshotPlaceholder'>
-                                        <strong>
-                                          {getScreenshotStateLabelFromState(
-                                            slot.state,
-                                          )}
-                                        </strong>
-                                        <span>
-                                          {getScreenshotPlaceholderText(item)}
-                                        </span>
-                                      </div>
-                                    )}
+                                  <BenchResultVisual
+                                    label={`${cell.group.name} ${cell.scenario.name} #${slot.repeatIndex}`}
+                                    result={item}
+                                    state={slot.state}
+                                  />
                                   <div className='benchScreenshotSlotMeta'>
                                     {item
                                       ? (
@@ -2458,7 +2703,7 @@ export function BenchPage() {
               <div
                 className='benchScreenshotResizeHandle'
                 role='separator'
-                aria-label='Resize screenshots dialog'
+                aria-label='Resize web previews dialog'
                 aria-orientation='vertical'
                 aria-valuemin={SCREENSHOT_DIALOG_MIN_WIDTH}
                 aria-valuemax={SCREENSHOT_DIALOG_MAX_WIDTH}
@@ -2630,7 +2875,9 @@ export function BenchPage() {
                                   <span>Groups</span>
                                   <strong>
                                     {entry.config.groups.map((group) =>
-                                      `${group.name} (${group.model})`
+                                      `${group.name} (${
+                                        getBenchProtocolLabel(group.protocol)
+                                      }, ${group.model})`
                                     ).join(', ')}
                                   </strong>
                                 </div>

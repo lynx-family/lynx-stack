@@ -26,6 +26,7 @@ export interface ChatOptions {
   baseURL?: string | undefined;
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
+  maxRetries?: number | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
   onPerformanceEvent?: (
     event: string,

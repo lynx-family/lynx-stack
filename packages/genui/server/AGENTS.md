@@ -1,7 +1,7 @@
 # GenUI Server
 
 This package contains the Next.js server for GenUI agent APIs, including
-A2UI, OpenUI, and MCP Apps.
+A2UI, OpenUI, Lynx XML, and MCP Apps.
 
 ## Deployment Model
 
@@ -50,8 +50,8 @@ instead so the playground keeps working.
 ## Security
 
 By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-`/a2ui/action`, and `/mcp-apps/stream` **cannot** override `apiKey` or
-`baseURL`. This
+`/a2ui/action`, `/openui/stream`, `/lynx-xml/stream`, and `/mcp-apps/stream`
+**cannot** override `apiKey` or `baseURL`. This
 prevents an unauthenticated client from turning the server into an open
 proxy that uses arbitrary keys against arbitrary OpenAI-compatible
 endpoints.
@@ -68,8 +68,8 @@ authentication and an allow-list are added in front of the server.
 
 ## Rate Limiting
 
-The `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and `/mcp-apps/stream`
-routes share an
+The `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, `/openui/stream`,
+`/lynx-xml/stream`, and `/mcp-apps/stream` routes share an
 in-process fixed-window rate limiter keyed by client IP (`x-forwarded-for`
 
 > `x-real-ip` > `unknown`). When a client exceeds the limit, the
@@ -95,8 +95,9 @@ front of this server.
 ## Conversation Context
 
 The server does not keep per-thread conversation memory. `/a2ui/chat`,
-`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, and
-`/mcp-apps/stream` accept an optional `conversation` request field:
+`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, `/openui/stream`,
+`/lynx-xml/stream`, and `/mcp-apps/stream` accept an optional `conversation`
+request field:
 
 ```json
 {
@@ -109,6 +110,58 @@ The server does not keep per-thread conversation memory. `/a2ui/chat`,
 
 The client owns truncation and lifetime. The playground keeps this context in
 memory only, so refreshing the page starts a fresh conversation.
+
+## Lynx XML
+
+`/lynx-xml/stream` uses the prompt and validator from
+`@lynx-js/genui-lynx-xml`. The Node-only prompt entry directly loads the
+installed `@lynx-js/skill-vanilla-lynx` package and adapts it to a
+self-contained `<!DOCTYPE lynx>` artifact. Keep the CSS restrictions from
+`@byted-lynx/lynx-api-docs` `lynx-vs-web/unsupported-features.md` and
+`lynx-vs-web/css-differences.md` explicit in the prompt. Do not add a CSS
+support Skill dependency or compatibility query tool, and do not infer CSS
+support from browser behavior.
+Lynx XML generation is non-streaming: wait for `agent.generate` to return the
+complete response, validate it, then return one JSON response. If validation
+fails, use bounded full-artifact regeneration with the normalized source,
+validation errors, and finish reason; do not append missing tags to potentially
+truncated JavaScript. Do not call `agent.stream` or forward model deltas. The
+legacy `/lynx-xml/stream` path is retained only for URL compatibility.
+
+`/lynx-xml/payload` validates the artifact again, then stores it as
+`application/xml`. `SUPABASE_LYNX_XML_STORAGE_PREFIX` optionally changes the
+default `lynx-xml` object prefix.
+
+## Bench Preview and Judge
+
+Bench preview uses Playwright to open the Playground `render.html` runtime.
+A2UI runs through its protocol-message bridge. OpenUI and Lynx XML are exposed
+to the browser through intercepted, same-origin source requests; Lynx XML
+executes directly in web-core without compilation. All protocols use the
+captured browser pixels for screenshots and visual judging. Keep the visual
+judge protocol-blind: its prompt may include the shared task, scenario, visible
+action, and interaction steps, but must not include protocol, model, group, or
+implementation metadata.
+
+Set `A2UI_BENCH_PLAYGROUND_BASE_URL` when the default deployed Playground is
+not reachable from the server. Local development URLs are accepted only in
+development. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`,
+`CHROME_EXECUTABLE_PATH`, or `CHROMIUM_EXECUTABLE_PATH` to select a browser
+binary; serverless deployments fall back to `@sparticuz/chromium`.
+
+Judge calls use the Bench provider by default. The following variables can
+override the visual model independently:
+
+```bash
+export A2UI_BENCH_JUDGE_API_KEY="..."
+export A2UI_BENCH_JUDGE_BASE_URL="..."
+export A2UI_BENCH_JUDGE_MODEL="..."
+export A2UI_BENCH_JUDGE_API="chat" # or responses
+```
+
+Legacy `MIDSCENE_MODEL_API_KEY`, `MIDSCENE_MODEL_BASE_URL`, and
+`MIDSCENE_MODEL_NAME` are accepted as fallback configuration names only; the
+Bench Judge does not depend on Midscene.
 
 ## Development
 

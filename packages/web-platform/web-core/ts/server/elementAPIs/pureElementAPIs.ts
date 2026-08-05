@@ -9,6 +9,7 @@ import type {
   AddConfigPAPI,
   AddDatasetPAPI,
   AddEventPAPI,
+  AddEventListenerPAPI,
   Cloneable,
   ElementIsEqualPAPI,
   FirstElementPAPI,
@@ -31,6 +32,7 @@ import type {
   RemoveElementPAPI,
   ReplaceElementPAPI,
   ReplaceElementsPAPI,
+  RemoveEventListenerPAPI,
   SetConfigPAPI,
   SetDatasetPAPI,
   SetEventsPAPI,
@@ -74,6 +76,14 @@ export const __GetChildren: GetChildrenPAPI = (_element: HTMLElement) => {
 
 export const __AddEvent: AddEventPAPI = () => {
   // Silent return for SSR compatibility
+};
+
+export const __AddEventListener: AddEventListenerPAPI = () => {
+  // Event callbacks only run after client hydration.
+};
+
+export const __RemoveEventListener: RemoveEventListenerPAPI = () => {
+  // Event callbacks only run after client hydration.
 };
 
 export const __GetEvent: GetEventPAPI = () => {

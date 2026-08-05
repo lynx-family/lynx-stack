@@ -20,6 +20,7 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
+import { parseLynxMarkup } from './parseLynxMarkup.js';
 
 const HEARTBREAK_INTERVAL_MS = 1000;
 let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
@@ -151,7 +152,8 @@ self.onmessage = async (
     try {
       const response = await fetch(fetchUrl, {
         headers: {
-          'Accept': 'application/octet-stream, application/json',
+          'Accept':
+            'application/octet-stream, application/json, application/xml, text/xml',
         },
       });
       if (!response.body || response.status !== 200) {
@@ -191,23 +193,6 @@ async function handleStream(
     throw new Error('Empty stream');
   }
 
-  // Check if JSON (starts with {)
-  if (headerBytes[0] === 123) {
-    const rest = await streamReader.readRest();
-    const decoder = new TextDecoder();
-    const jsonStr = decoder.decode(headerBytes) + decoder.decode(rest);
-    const json = JSON.parse(jsonStr);
-    await handleJSON(
-      json,
-      url,
-      transformVW,
-      transformVH,
-      transformREM,
-      overrideConfig,
-    );
-    return;
-  }
-
   const view = new DataView(
     headerBytes.buffer,
     headerBytes.byteOffset,
@@ -216,6 +201,38 @@ async function handleStream(
   const magic0 = view.getUint32(0, true);
   const magic1 = view.getUint32(4, true);
   if (magic0 !== MagicHeader0 || magic1 !== MagicHeader1) {
+    const rest = await streamReader.readRest();
+    const textBytes = new Uint8Array(headerBytes.length + rest.length);
+    textBytes.set(headerBytes);
+    textBytes.set(rest, headerBytes.length);
+    const decoder = new TextDecoder();
+    const text = decoder.decode(textBytes);
+    const textWithoutTrivia = text.replace(/^\s*/, '');
+
+    if (textWithoutTrivia.startsWith('{')) {
+      const json = JSON.parse(textWithoutTrivia);
+      await handleJSON(
+        json,
+        url,
+        transformVW,
+        transformVH,
+        transformREM,
+        overrideConfig,
+      );
+      return;
+    }
+
+    if (textWithoutTrivia.startsWith('<')) {
+      await handleLynxMarkup(
+        text,
+        url,
+        transformVW,
+        transformVH,
+        transformREM,
+        overrideConfig,
+      );
+      return;
+    }
     throw new Error('Invalid Magic Header');
   }
 
@@ -372,6 +389,49 @@ async function handleStream(
         throw new Error(`Unknown section label: ${label}`);
     }
   }
+}
+
+async function handleLynxMarkup(
+  source: string,
+  url: string,
+  transformVW: boolean,
+  transformVH: boolean,
+  transformREM: boolean,
+  overrideConfig?: Partial<PageConfig>,
+) {
+  const markup = parseLynxMarkup(source);
+  await handleJSON(
+    {
+      cardType: 'react',
+      appType: 'card',
+      pageConfig: {
+        enableCSSSelector: true,
+        defaultDisplayLinear: true,
+        defaultOverflowVisible: true,
+      },
+      ...(markup.style === undefined
+        ? {}
+        : {
+          styleInfo: {
+            0: {
+              content: [markup.style],
+              rules: [],
+            },
+          },
+        }),
+      ...(markup.mainThread === undefined
+        ? {}
+        : { lepusCode: { root: markup.mainThread } }),
+      ...(markup.background === undefined
+        ? {}
+        : { manifest: { '/app-service.js': markup.background } }),
+    },
+    url,
+    transformVW,
+    transformVH,
+    transformREM,
+    overrideConfig,
+  );
 }
 
 async function handleJSON(

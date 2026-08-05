@@ -27,6 +27,9 @@ function createMainThreadLynx(
         lynxViewInstance.backgroundThread,
       ),
     ),
+    getEngine() {
+      return lynxViewInstance.engineContext;
+    },
     getJSContext() {
       return lynxViewInstance.backgroundThread.jsContext;
     },

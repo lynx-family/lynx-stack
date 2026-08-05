@@ -1,0 +1,19 @@
+---
+applyTo: "packages/genui/{lynx-xml,server,playground}/**"
+---
+
+Lynx XML is a zero-build GenUI protocol: the LLM output starts with `<!DOCTYPE lynx>` and contains one `<style>`, one `<script main-thread>`, and an optional `<script background>` section. Keep generated UI creation and mutation in main-thread Element PAPI code, expose initial rendering as `globalThis.renderPage`, use `lynx.getEngine()` for `__DestroyLifetime` cleanup, and use `lynx.getJSContext()` / `lynx.getCoreContext()` only when background work is necessary.
+
+Build the Node-only Lynx XML generation prompt by directly loading `SKILL.md` and the required references from the installed `@lynx-js/skill-vanilla-lynx` package. Do not embed GitHub source URLs in the prompt API. Keep the CSS restrictions from `@byted-lynx/lynx-api-docs` `skills/using-lynx-api-docs/lynx-vs-web/unsupported-features.md` and `skills/using-lynx-api-docs/lynx-vs-web/css-differences.md` explicit in `buildLynxXmlSystemPrompt`; do not depend on `@lynx-js/skill-lynx-check-css-support`, expose a CSS compatibility query tool, or infer CSS support from browser behavior. Keep protocol parsing and validation in a browser-safe entry that does not import Node file-system APIs.
+
+Feed `examples/lynx-markup-hangzhou/public/hangzhou-trip.xml` to the Lynx XML system prompt as the complete worked example, and keep the package-local copy synchronized with it. Require every scrollable Element PAPI container to be created with `__CreateScrollView(pageId)`; use `__CreateView` only for non-scrollable containers. When generated content may exceed one viewport, require the outermost content container appended directly to the page to be a bounded vertical `__CreateScrollView(pageId)` and place all page sections inside it.
+
+Lynx XML generation is non-streaming. Wait for the complete `agent.generate` result, validate it, and only then return one JSON response; do not call `agent.stream` or forward partial model deltas to the Playground. When completed output fails validation, pass the normalized full artifact, validation errors, and finish reason back to the Agent and ask it to regenerate the entire compact artifact from `<!DOCTYPE lynx>` instead of blindly appending closing tags to potentially truncated JavaScript. Validate every repair result and keep repair attempts bounded. The legacy `/lynx-xml/stream` route name is retained only for URL compatibility. Validate the completed model response before publishing or previewing it. The Playground preview must load the published `.xml` source URL directly through `<lynx-view>`; do not add a ReactLynx renderer, JSX transform, or per-artifact Rspeedy build to this protocol.
+
+Keep the Playground artifact opaque: pass the complete XML source directly to Lynx Web Platform rendering and do not split it into style or script sections in the chat adapter.
+
+Serve Lynx XML payloads with `application/xml; charset=utf-8`. Local preview payload URLs must remain reachable from the browser-host URL used for QR sharing.
+
+In local Playground development, Lynx XML generation targets the GenUI server on port `3060`. Development builds must prefer that local server. Map an IPv6 loopback Playground host such as `[::1]` to the server's IPv4 loopback `127.0.0.1`, and keep the server CORS allowlist compatible with the original IPv6 page Origin. Preserve endpoint-aware network errors so an unreachable server reports the expected startup command instead of only `Failed to fetch`, and document endpoint overrides with the query string before the hash route.
+
+When detecting JSX in generated main-thread JavaScript, do not use broad tag regexes that can span ordinary comparison expressions such as `index < items.length`; mask strings and comments first, then match explicit JSX runtime identifiers and real tag-shaped syntax.

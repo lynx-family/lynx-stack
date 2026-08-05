@@ -1,0 +1,16 @@
+{
+  "name": "@lynx-js/example-lynx-markup-hangzhou",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "dev": "rsbuild dev --open",
+    "preview": "rsbuild preview"
+  },
+  "devDependencies": {
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild"
+  }
+}

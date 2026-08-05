@@ -112,4 +112,25 @@ describe('Server Compat Tests', () => {
     const html = binding.ssrResult;
     expect(html).toMatchSnapshot();
   });
+
+  it('accepts direct main-thread event listeners during SSR', () => {
+    const binding: any = {};
+    const { globalThisAPIs: api } = createElementAPI(
+      binding,
+      undefined,
+      '',
+      {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+      },
+    );
+    const view = api.__CreateView(0);
+    const listener = () => {};
+
+    expect(() => {
+      api.__AddEventListener(view, 'tap', listener, {});
+      api.__RemoveEventListener(view, 'tap', listener, {});
+    }).not.toThrow();
+  });
 });

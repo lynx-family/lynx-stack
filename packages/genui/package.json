@@ -87,7 +87,15 @@
       "default": "./mcp-apps/dist/protocol.js"
     },
     "./mcp-apps/render/styles.css": "./mcp-apps/dist/render/styles.css",
-    "./mcp-apps/styles.css": "./mcp-apps/dist/render/styles.css"
+    "./mcp-apps/styles.css": "./mcp-apps/dist/render/styles.css",
+    "./lynx-xml": {
+      "types": "./lynx-xml/dist/index.d.ts",
+      "default": "./lynx-xml/dist/index.js"
+    },
+    "./lynx-xml/prompt": {
+      "types": "./lynx-xml/dist/prompt.d.ts",
+      "default": "./lynx-xml/dist/prompt.js"
+    }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -119,7 +127,9 @@
     "openui/styles",
     "openui/*.md",
     "openui/docs/*.md",
-    "mcp-apps/dist"
+    "mcp-apps/dist",
+    "lynx-xml/dist",
+    "lynx-xml/README.md"
   ],
   "scripts": {
     "build": "pnpm run clean && tsc --project tsconfig.build.json",
@@ -127,6 +137,7 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
+    "@lynx-js/skill-vanilla-lynx": "github:lynx-community/skills#main&path:/packages/skills/vanilla-lynx",
     "@openuidev/lang-core": "^0.2.7",
     "@preact/signals": "^2.5.1",
     "typedoc": "^0.28.19",
@@ -137,6 +148,7 @@
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/genui-a2ui-prompt": "workspace:*",
     "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",

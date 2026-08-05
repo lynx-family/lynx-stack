@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["ESNext"],
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node"],
+  },
+  "include": ["src", "test", "rstest.config.ts"],
+  "references": [],
+}

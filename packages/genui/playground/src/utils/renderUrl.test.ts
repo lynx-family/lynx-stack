@@ -6,6 +6,7 @@ import { describe, expect, test } from '@rstest/core';
 import { decodeBase64Url } from './base64url.js';
 import {
   OPENUI_INLINE_RENDER_URL_MAX_LENGTH,
+  buildLynxXmlRenderUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   canInlineOpenUIRenderUrl,
@@ -94,5 +95,19 @@ describe('MCP Apps render URLs', () => {
       mcpAppData,
       theme: 'dark',
     });
+  });
+});
+
+describe('Lynx XML render URLs', () => {
+  test('loads the source artifact directly as the Lynx template', () => {
+    const sourceUrl = 'https://example.com/__lynx-xml/id/artifact.xml';
+    const url = new URL(buildLynxXmlRenderUrl({
+      sourceUrl,
+      theme: 'dark',
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(url.searchParams.get('protocol')).toBe('lynx-xml');
+    expect(url.searchParams.get('demoUrl')).toBe(sourceUrl);
+    expect(url.searchParams.get('theme')).toBe('dark');
   });
 });

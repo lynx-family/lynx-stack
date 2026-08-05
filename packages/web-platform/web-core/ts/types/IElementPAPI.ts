@@ -29,6 +29,19 @@ export type AddEventPAPI = (
   newEventHandler: ElementPAPIEventHandler,
 ) => void;
 
+export type ElementPAPIEventListener = (...args: unknown[]) => unknown;
+
+export type ElementPAPIEventListenerOptions = Record<string, unknown>;
+
+export type AddEventListenerPAPI = (
+  element: HTMLElement,
+  eventName: string,
+  listener: ElementPAPIEventListener,
+  options?: ElementPAPIEventListenerOptions,
+) => void;
+
+export type RemoveEventListenerPAPI = AddEventListenerPAPI;
+
 export type GetEventPAPI = (
   element: HTMLElement,
   eventName: string,
@@ -359,6 +372,8 @@ export interface ElementPAPIs {
   __MarkPartElement: MarkPartElementPAPI;
   __MarkTemplateElement: MarkTemplateElementPAPI;
   __AddEvent: AddEventPAPI;
+  __AddEventListener: AddEventListenerPAPI;
+  __RemoveEventListener: RemoveEventListenerPAPI;
   __GetEvent: GetEventPAPI;
   __GetEvents: GetEventsPAPI;
   __SetEvents: SetEventsPAPI;

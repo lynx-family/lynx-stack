@@ -4,13 +4,14 @@
 
 import { getA2UIAgentService } from './a2ui-agent';
 import { resolveBenchCatalog } from './a2ui-bench-catalog';
-// import { runBenchPreview } from './a2ui-bench-preview';
+import { runBenchPreview } from './a2ui-bench-preview';
 import { getBenchJobStore } from './a2ui-bench-store';
 import type {
   BenchCatalogLabel,
   BenchGroupRequest,
   BenchGroupSummary,
   BenchJobRequest,
+  BenchProtocol,
   BenchReport,
   BenchReportSummary,
   BenchRunPhase,
@@ -18,11 +19,22 @@ import type {
   BenchScenarioRequest,
 } from './a2ui-bench-types';
 import type { ChatMessage } from './common/types';
+import { getLynxXmlAgentService } from './lynx-xml-agent';
+import { getOpenUIAgentService } from './openui-agent';
 
 interface BenchRunItem {
   group: BenchGroupRequest;
   scenario: BenchScenarioRequest;
   repeatIndex: number;
+}
+
+interface BenchGenerationResult {
+  ok: boolean;
+  text: string;
+  errors: string[];
+  attempts: number;
+  usage?: unknown;
+  finishReason?: unknown;
 }
 
 interface UsageRecord {
@@ -80,11 +92,34 @@ function buildRunMatrix(request: BenchJobRequest): BenchRunItem[] {
 }
 
 function buildBenchPrompt(
+  protocol: BenchProtocol,
   group: BenchGroupRequest,
   scenario: BenchScenarioRequest,
 ): string {
+  let protocolName: string;
+  let protocolConstraints: string[];
+  if (protocol === 'a2ui') {
+    protocolName = 'A2UI v0.9';
+    protocolConstraints = [
+      '- Return only valid A2UI protocol messages.',
+      '- Use the selected catalog only.',
+    ];
+  } else if (protocol === 'openui') {
+    protocolName = 'OpenUI';
+    protocolConstraints = [
+      '- Return only one complete valid OpenUI Lang artifact.',
+      '- Start with the root assignment and do not use Markdown fences.',
+    ];
+  } else {
+    protocolName = 'Lynx XML';
+    protocolConstraints = [
+      '- Return only one complete valid Lynx XML artifact.',
+      '- Start with <!DOCTYPE lynx> and include the final closing </script> tag.',
+      '- Use main-thread Element PAPI instead of React or JSX.',
+    ];
+  }
   return [
-    'Generate one A2UI v0.9 UI for the following benchmark scenario.',
+    `Generate one ${protocolName} UI for the following benchmark scenario.`,
     '',
     `Scenario name: ${scenario.name}`,
     `Scenario type: ${scenario.type}`,
@@ -94,8 +129,7 @@ function buildBenchPrompt(
     scenario.prompt,
     '',
     'Benchmark constraints:',
-    '- Return only valid A2UI protocol messages.',
-    '- Use the selected catalog only.',
+    ...protocolConstraints,
     '- Do not include benchmark metadata in the UI.',
     '',
     group.extraInstruction
@@ -129,6 +163,7 @@ function emitRunPhase(
   const job = store.updateProgress(jobId, {
     current: {
       groupId: item.group.id,
+      protocol: item.group.protocol,
       scenarioId: item.scenario.id,
       repeatIndex: item.repeatIndex,
       phase,
@@ -137,6 +172,7 @@ function emitRunPhase(
   if (!job) return;
   store.emit(jobId, 'run-phase', {
     groupId: item.group.id,
+    protocol: item.group.protocol,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
     phase,
@@ -149,8 +185,12 @@ async function runOne(
   request: BenchJobRequest,
   item: BenchRunItem,
 ): Promise<BenchRunResult> {
+  // Mastra owns the only transport retry layer. A higher limit keeps transient
+  // upstream 5xx responses from failing an otherwise expensive benchmark run.
+  const a2uiMaxRetries = 4;
   const store = getBenchJobStore();
-  const runId = `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`;
+  const runId =
+    `${item.group.id}-${item.group.protocol}-${item.scenario.id}-${item.repeatIndex}`;
   const model = pickRunModel(request, item.group);
   const catalogLabel = pickRunCatalog(item.group);
   const catalog = resolveBenchCatalog(catalogLabel);
@@ -158,36 +198,75 @@ async function runOne(
   store.emit(jobId, 'run-start', {
     runId,
     groupId: item.group.id,
+    protocol: item.group.protocol,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
     progress: store.getJob(jobId)?.progress,
   });
 
   const messages: ChatMessage[] = [
-    { role: 'user', content: buildBenchPrompt(item.group, item.scenario) },
+    {
+      role: 'user',
+      content: buildBenchPrompt(item.group.protocol, item.group, item.scenario),
+    },
   ];
   const startedAt = performance.now();
   emitRunPhase(jobId, item, 'agent');
 
   try {
-    const result = await getA2UIAgentService().generateValidated(
-      messages,
-      {
-        resourceId: `bench:${jobId}:${runId}`,
-        apiKey: request.provider.apiKey,
-        baseURL: request.provider.baseURL,
-        model,
-        api: request.provider.api,
-        catalog,
-        maxRepairAttempts: request.settings.maxRepairAttempts,
-      },
-    );
+    const providerOptions = {
+      resourceId: `bench:${jobId}:${runId}`,
+      apiKey: request.provider.apiKey,
+      baseURL: request.provider.baseURL,
+      model,
+      api: request.provider.api,
+      maxRepairAttempts: request.settings.maxRepairAttempts,
+    };
+    let result: BenchGenerationResult;
+    let resultMessages: BenchRunResult['messages'];
+    if (item.group.protocol === 'a2ui') {
+      const generated = await getA2UIAgentService().generateValidated(
+        messages,
+        { ...providerOptions, catalog, maxRetries: a2uiMaxRetries },
+      );
+      result = generated;
+      resultMessages = generated.messages;
+    } else if (item.group.protocol === 'openui') {
+      const generated = await getOpenUIAgentService().generateRaw(
+        messages,
+        { ...providerOptions, maxRetries: a2uiMaxRetries },
+        undefined,
+        store.getJob(jobId)?.abortController.signal,
+      );
+      const text = generated.text.trim();
+      result = {
+        ok: text.length > 0,
+        text,
+        errors: text.length > 0 ? [] : ['OpenUI agent returned no output.'],
+        attempts: 1,
+        usage: generated.usage,
+        finishReason: generated.finishReason,
+      };
+    } else {
+      result = await getLynxXmlAgentService().generateValidated(
+        messages,
+        providerOptions,
+        undefined,
+        store.getJob(jobId)?.abortController.signal,
+      );
+    }
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
     const outputChars = result.text.length;
-    /*
     const preview = result.ok
-      ? await runBenchPreviewForItem(jobId, request, item, result.messages)
+      ? await runBenchPreviewForItem(
+        jobId,
+        request,
+        item,
+        resultMessages,
+        result.text,
+        store.getJob(jobId)?.abortController.signal,
+      )
       : {
         errors: [],
         fmpMs: 0,
@@ -195,12 +274,12 @@ async function runOne(
         renderMs: 0,
         ttiMs: 0,
       };
-    */
     return {
       id: runId,
       groupId: item.group.id,
       groupName: item.group.name,
       role: item.group.role,
+      protocol: item.group.protocol,
       scenarioId: item.scenario.id,
       scenarioName: item.scenario.name,
       repeatIndex: item.repeatIndex,
@@ -210,25 +289,23 @@ async function runOne(
       catalog: catalogLabel,
       tokens: parseTotalTokens(result.usage),
       agentMs: Math.round(agentMs),
-      // fmpMs: preview.fmpMs,
-      fmpMs: 0,
-      // ttiMs: preview.ttiMs,
-      ttiMs: 0,
-      // renderMs: preview.renderMs,
-      renderMs: 0,
+      fmpMs: preview.fmpMs,
+      ttiMs: preview.ttiMs,
+      renderMs: preview.renderMs,
       attempts: result.attempts,
-      // judgeScore: preview.judgeScore,
-      judgeScore: 0,
-      messageCount: result.messages.length,
+      judgeScore: preview.judgeScore,
+      ...(preview.judgeSummary
+        ? { judgeSummary: preview.judgeSummary }
+        : {}),
+      messageCount: resultMessages?.length ?? 0,
       outputChars,
-      // errors: [...result.errors, ...preview.errors],
-      errors: result.errors,
+      errors: [...result.errors, ...preview.errors],
       finishReason: result.finishReason,
       usage: result.usage,
-      messages: result.messages,
-      // ...(preview.screenshotDataUrl
-      //   ? { screenshotDataUrl: preview.screenshotDataUrl }
-      //   : {}),
+      ...(resultMessages ? { messages: resultMessages } : {}),
+      ...(preview.screenshotDataUrl
+        ? { screenshotDataUrl: preview.screenshotDataUrl }
+        : {}),
       text: result.text,
     };
   } catch (error) {
@@ -239,6 +316,7 @@ async function runOne(
       groupId: item.group.id,
       groupName: item.group.name,
       role: item.group.role,
+      protocol: item.group.protocol,
       scenarioId: item.scenario.id,
       scenarioName: item.scenario.name,
       repeatIndex: item.repeatIndex,
@@ -261,16 +339,27 @@ async function runOne(
   }
 }
 
-/*
 async function runBenchPreviewForItem(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
   messages: BenchRunResult['messages'],
+  source: string,
+  abortSignal?: AbortSignal,
 ) {
-  if (!messages || messages.length === 0) {
+  const hasPayload = item.group.protocol === 'a2ui'
+    ? Boolean(messages && messages.length > 0)
+    : Boolean(source.trim());
+  if (!hasPayload) {
+    const sourceProtocol = item.group.protocol === 'openui'
+      ? 'OpenUI'
+      : 'Lynx XML';
     return {
-      errors: [],
+      errors: [
+        item.group.protocol === 'a2ui'
+          ? 'A2UI preview requires protocol messages.'
+          : `${sourceProtocol} preview requires source text.`,
+      ],
       fmpMs: 0,
       judgeScore: 0,
       renderMs: 0,
@@ -293,20 +382,23 @@ async function runBenchPreviewForItem(
   emitRunPhase(
     jobId,
     item,
-    request.settings.renderMetricsEnabled ? 'render' : 'judge',
+    'render',
   );
   const preview = await runBenchPreview({
-    messages,
+    ...(abortSignal ? { abortSignal } : {}),
+    ...(messages ? { messages } : {}),
+    ...(request.settings.judgeEnabled
+      ? { onJudgeStart: () => emitRunPhase(jobId, item, 'judge') }
+      : {}),
+    protocol: item.group.protocol,
     request,
-    runId: `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`,
+    runId:
+      `${item.group.id}-${item.group.protocol}-${item.scenario.id}-${item.repeatIndex}`,
     scenario: item.scenario,
+    source,
   });
-  if (request.settings.judgeEnabled) {
-    emitRunPhase(jobId, item, 'judge');
-  }
   return preview;
 }
-*/
 
 function summarizeGroup(
   group: BenchGroupRequest,
@@ -320,6 +412,7 @@ function summarizeGroup(
     groupId: group.id,
     groupName: group.name,
     role: group.role,
+    protocol: group.protocol,
     runCount: groupResults.length,
     failedRuns,
     successRate: groupResults.length === 0
@@ -387,11 +480,10 @@ function buildReport(
     },
     capabilities: {
       agent: 'enabled',
-      // renderMetrics: request.settings.renderMetricsEnabled
-      //   ? 'enabled'
-      //   : 'disabled',
-      renderMetrics: 'disabled',
-      judge: 'disabled',
+      renderMetrics: request.settings.renderMetricsEnabled
+        ? 'enabled'
+        : 'disabled',
+      judge: request.settings.judgeEnabled ? 'enabled' : 'disabled',
     },
     warnings,
     groups: request.groups,

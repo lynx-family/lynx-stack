@@ -32,6 +32,7 @@ import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
 import type { LynxViewElement } from './LynxView.js';
 import { requestIdleCallbackImpl } from './utils/requestIdleCallback.js';
+import { LynxEngineContext } from '../../common/LynxEngineContext.js';
 loadAllWebElements().catch((e) => {
   console.error('[lynx-web] Failed to load web elements', e);
 });
@@ -62,6 +63,7 @@ export function createSystemInfo(
 }
 
 export class LynxViewInstance implements AsyncDisposable {
+  readonly engineContext = new LynxEngineContext();
   readonly mainThreadGlobalThis: MainThreadGlobalThis;
   readonly mtsWasmBinding: WASMJSBinding;
   readonly backgroundThread: BackgroundThread;
@@ -361,6 +363,7 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
+    this.engineContext.dispatchDestroyLifetime();
     this.boundingClientRectService.dispose();
     await this.backgroundThread[Symbol.asyncDispose]();
     this.exposureServices.dispose();

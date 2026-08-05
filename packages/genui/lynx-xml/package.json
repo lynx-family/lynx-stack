@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/genui-lynx-xml",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prompt and validation utilities for LLM-generated Lynx XML artifacts.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/lynx-xml"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./prompt": {
+      "types": "./dist/prompt.d.ts",
+      "default": "./dist/prompt.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "@lynx-js/skill-vanilla-lynx": "0.0.1"
+  },
+  "devDependencies": {
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.10.13",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

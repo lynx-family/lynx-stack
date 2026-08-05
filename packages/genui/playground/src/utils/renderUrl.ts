@@ -50,6 +50,11 @@ export interface McpAppsRenderInit {
   theme?: 'light' | 'dark';
 }
 
+export interface LynxXmlRenderInit {
+  sourceUrl: string;
+  theme?: 'light' | 'dark';
+}
+
 export function hasShareableA2UIRenderPayload(
   init: Pick<RenderInit, 'demoId' | 'messages' | 'messagesUrl'>,
 ): boolean {
@@ -198,6 +203,17 @@ export function buildMcpAppsRenderUrl(
       ...(init.theme ? { theme: init.theme } : {}),
     })),
   );
+  if (init.theme) url.searchParams.set('theme', init.theme);
+  return url.toString();
+}
+
+export function buildLynxXmlRenderUrl(
+  init: LynxXmlRenderInit,
+  baseUrl: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'lynx-xml');
+  url.searchParams.set('demoUrl', init.sourceUrl);
   if (init.theme) url.searchParams.set('theme', init.theme);
   return url.toString();
 }

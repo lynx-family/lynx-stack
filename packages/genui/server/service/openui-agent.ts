@@ -41,10 +41,16 @@ function buildDataModelSystemMessage(
 export default class OpenUIAgentService {
   private readonly agentCache = new ProviderAgentCache<OpenUIAgent>();
 
+  public constructor(
+    private readonly createAgent: (
+      opts: Parameters<typeof createOpenUIAgent>[0],
+    ) => { agent: OpenUIAgent } = createOpenUIAgent,
+  ) {}
+
   private getAgent(opts: ChatOptions): Promise<OpenUIAgent> {
     return this.agentCache.get(
       opts,
-      () => createOpenUIAgent(pickProviderConfig(opts)).agent,
+      () => this.createAgent(pickProviderConfig(opts)).agent,
     );
   }
 
@@ -114,9 +120,12 @@ export default class OpenUIAgentService {
     messages: ChatMessage[],
     opts: ChatOptions = {},
     conversation?: ConversationContext,
+    abortSignal?: AbortSignal,
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+    abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
-    const result = agent.generate(
+    abortSignal?.throwIfAborted();
+    const result = await agent.generate(
       toModelMessages(
         buildConversationMessages(
           messages,
@@ -124,7 +133,7 @@ export default class OpenUIAgentService {
           buildDataModelSystemMessage,
         ),
       ),
-      buildResourceRunOptions(opts),
+      buildResourceRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

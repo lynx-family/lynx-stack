@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "dependsOn": ["^build"],
       "inputs": [
         "index.ts",
         "package.json",
@@ -33,7 +34,11 @@
         "openui/styles/**",
         "openui/package.json",
         "openui/tsconfig.json",
-        "openui/tsconfig.build.json"
+        "openui/tsconfig.build.json",
+        "lynx-xml/src/**",
+        "lynx-xml/package.json",
+        "lynx-xml/tsconfig.json",
+        "lynx-xml/tsconfig.build.json"
       ],
       "outputs": [
         "dist/**",
@@ -41,7 +46,8 @@
         "a2ui-catalog-extractor/dist/**",
         "a2ui-prompt/dist/**",
         "cli/dist/**",
-        "openui/dist/**"
+        "openui/dist/**",
+        "lynx-xml/dist/**"
       ]
     }
   }

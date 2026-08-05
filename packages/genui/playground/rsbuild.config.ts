@@ -12,6 +12,8 @@ import { pluginReact } from '@rsbuild/plugin-react';
 const PORT = Number(process.env.PORT ?? 3000);
 const CLIENT_PAYLOAD_STORE_ENABLED = process.env.NODE_ENV !== 'production'
   && process.env.A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH !== '0';
+const LOCAL_GENUI_SERVER_ENABLED = process.env.NODE_ENV !== 'production'
+  && process.env.GENUI_PLAYGROUND_LOCAL_SERVER !== '0';
 
 // In-memory A2UI payload store. Keeps the dev-bundle / render URLs short
 // enough to fit inside a scannable QR code.
@@ -19,6 +21,7 @@ interface StoredPayload {
   messages?: unknown;
   actionMocks?: unknown;
   rawText?: string;
+  lynxXmlSource?: string;
   createdAt: number;
 }
 const payloadStore = new Map<string, StoredPayload>();
@@ -59,9 +62,14 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-function sendText(res: ServerResponse, status: number, body: string): void {
+function sendText(
+  res: ServerResponse,
+  status: number,
+  body: string,
+  contentType = 'text/plain; charset=utf-8',
+): void {
   res.statusCode = status;
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Content-Type', contentType);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -83,6 +91,8 @@ function a2uiPayloadMiddleware(
       || url.startsWith('/__a2ui/')
       || url.startsWith('/__openui_payload')
       || url.startsWith('/__openui/')
+      || url.startsWith('/__lynx_xml_payload')
+      || url.startsWith('/__lynx-xml/')
     )
   ) {
     res.statusCode = 204;
@@ -152,6 +162,35 @@ function a2uiPayloadMiddleware(
     return;
   }
 
+  if (req.method === 'POST' && url.startsWith('/__lynx_xml_payload')) {
+    void (async () => {
+      try {
+        gcPayloads();
+        const body = (await readJsonBody(req)) as {
+          source?: unknown;
+        };
+        if (typeof body.source !== 'string') {
+          sendJson(res, 400, { error: 'source is required' });
+          return;
+        }
+        const id = randomUUID();
+        payloadStore.set(id, {
+          lynxXmlSource: body.source,
+          createdAt: Date.now(),
+        });
+        sendJson(res, 200, {
+          id,
+          sourceUrl: `/__lynx-xml/${id}/artifact.xml`,
+        });
+      } catch (error) {
+        sendJson(res, 400, {
+          error: error instanceof Error ? error.message : 'bad request',
+        });
+      }
+    })();
+    return;
+  }
+
   if (req.method === 'GET' && url.startsWith('/__a2ui/')) {
     // Sweep expired entries before reads too — otherwise an idle dev
     // server keeps stale payloads retrievable far past the TTL.
@@ -180,6 +219,26 @@ function a2uiPayloadMiddleware(
       const entry = id ? payloadStore.get(id) : undefined;
       if (typeof entry?.rawText === 'string') {
         sendText(res, 200, entry.rawText);
+        return;
+      }
+    }
+    sendJson(res, 404, { error: 'not found' });
+    return;
+  }
+
+  if (req.method === 'GET' && url.startsWith('/__lynx-xml/')) {
+    gcPayloads();
+    const match = /^\/__lynx-xml\/([^/]+)\/artifact\.xml(?:\?|$)/u.exec(url);
+    if (match) {
+      const [, id] = match;
+      const entry = id ? payloadStore.get(id) : undefined;
+      if (typeof entry?.lynxXmlSource === 'string') {
+        sendText(
+          res,
+          200,
+          entry.lynxXmlSource,
+          'application/xml; charset=utf-8',
+        );
         return;
       }
     }
@@ -231,6 +290,9 @@ export default defineConfig({
     define: {
       __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: JSON.stringify(
         CLIENT_PAYLOAD_STORE_ENABLED,
+      ),
+      __GENUI_PLAYGROUND_LOCAL_SERVER__: JSON.stringify(
+        LOCAL_GENUI_SERVER_ENABLED,
       ),
     },
     entry: {

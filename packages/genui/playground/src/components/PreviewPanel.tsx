@@ -27,8 +27,12 @@ import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
-import { publishOpenUIPayload } from '../utils/publishPayload.js';
 import {
+  publishLynxXmlPayload,
+  publishOpenUIPayload,
+} from '../utils/publishPayload.js';
+import {
+  buildLynxXmlRenderUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
@@ -110,6 +114,12 @@ export interface McpAppsPreviewSource {
   theme?: 'light' | 'dark';
 }
 
+interface LynxXmlPreviewSource {
+  kind: 'lynx-xml';
+  source: string;
+  theme?: 'light' | 'dark';
+}
+
 interface PlaceholderPreviewSource {
   kind: 'placeholder';
   item: PreviewQrItem;
@@ -119,6 +129,7 @@ export type PreviewPanelSource =
   | A2UIPreviewSource
   | OpenUIPreviewSource
   | McpAppsPreviewSource
+  | LynxXmlPreviewSource
   | PlaceholderPreviewSource;
 
 export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
@@ -284,6 +295,27 @@ async function publishOpenUIRawTextToClientStore(
     throw new Error('Invalid local OpenUI payload response');
   }
   return absoluteUrl(data.rawTextUrl, payloadOrigin);
+}
+
+async function publishLynxXmlSourceToClientStore(
+  baseUrl: string,
+  source: string,
+): Promise<string> {
+  const payloadOrigin = new URL(baseUrl).origin;
+  const response = await window.fetch(
+    `${payloadOrigin}/__lynx_xml_payload`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source }),
+    },
+  );
+  if (!response.ok) throw new Error('Failed to publish local Lynx XML source');
+  const data = (await response.json()) as { sourceUrl?: unknown };
+  if (typeof data.sourceUrl !== 'string') {
+    throw new Error('Invalid local Lynx XML payload response');
+  }
+  return data.sourceUrl;
 }
 
 function isPreviewMetricName(value: unknown): value is PreviewMetricName {
@@ -798,6 +830,52 @@ export function PreviewPanel(props: PreviewPanelProps) {
         nativeUrl.searchParams.set('theme', previewSource.theme);
       }
       setLynxDevUrl(nativeUrl.toString());
+      return;
+    }
+
+    if (previewSource.kind === 'lynx-xml') {
+      setRenderUrl('');
+      setRenderShareUrl('');
+      setLynxDevUrl('');
+      if (!previewSource.source) return;
+
+      void (async () => {
+        try {
+          const localStore = shouldUseClientPayloadStore();
+          let publishedSourceUrl: string;
+          if (localStore) {
+            publishedSourceUrl = await publishLynxXmlSourceToClientStore(
+              baseUrl,
+              previewSource.source,
+            );
+          } else {
+            const published = await publishLynxXmlPayload(
+              previewSource.source,
+            );
+            publishedSourceUrl = published.sourceUrl;
+          }
+          if (seq !== buildSeqRef.current) return;
+
+          const previewSourceUrl = absoluteUrl(
+            publishedSourceUrl,
+            new URL(baseUrl).origin,
+          );
+          const shareSourceUrl = absoluteUrl(
+            publishedSourceUrl,
+            new URL(shareBaseUrl).origin,
+          );
+          setRenderUrl(buildLynxXmlRenderUrl({
+            sourceUrl: previewSourceUrl,
+            theme: previewSource.theme,
+          }, baseUrl));
+          setRenderShareUrl(buildLynxXmlRenderUrl({
+            sourceUrl: shareSourceUrl,
+            theme: previewSource.theme,
+          }, shareBaseUrl));
+        } catch (error) {
+          console.warn('[lynx-xml] Failed to publish preview source', error);
+        }
+      })();
       return;
     }
 

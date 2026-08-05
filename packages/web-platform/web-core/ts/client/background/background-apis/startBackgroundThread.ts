@@ -80,6 +80,7 @@ export function startBackgroundThread(
         nativeApp,
         destroyCard,
         callDestroyLifetimeFun,
+        nativeLynx.getEngine(),
       );
     },
   );

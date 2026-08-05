@@ -12,6 +12,8 @@ const SUPABASE_STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET
 const SUPABASE_STORAGE_PREFIX = process.env.SUPABASE_STORAGE_PREFIX ?? 'a2ui';
 const SUPABASE_OPENUI_STORAGE_PREFIX =
   process.env.SUPABASE_OPENUI_STORAGE_PREFIX ?? 'openui';
+const SUPABASE_LYNX_XML_STORAGE_PREFIX =
+  process.env.SUPABASE_LYNX_XML_STORAGE_PREFIX ?? 'lynx-xml';
 const SUPABASE_STORAGE_REGION = process.env.SUPABASE_STORAGE_REGION
   ?? 'us-east-1';
 
@@ -22,6 +24,10 @@ export interface A2UIPublishedPayload {
 
 export interface OpenUIPublishedPayload {
   rawTextUrl: string;
+}
+
+export interface LynxXmlPublishedPayload {
+  sourceUrl: string;
 }
 
 function trimSlashes(value: string): string {
@@ -175,6 +181,39 @@ export async function publishOpenUIRawText(
     console.warn(
       '[openui:payload-publisher] Supabase Storage upload failed',
       err,
+    );
+    return undefined;
+  }
+}
+
+export async function publishLynxXmlSource(
+  source: string,
+): Promise<LynxXmlPublishedPayload | undefined> {
+  if (!isSupabaseStorageConfigured()) {
+    console.warn(
+      '[lynx-xml:payload-publisher] Supabase Storage S3 is not configured',
+    );
+    return undefined;
+  }
+
+  try {
+    const id = crypto.randomUUID();
+    const sourcePath = buildSupabaseStoragePath(
+      id,
+      'artifact.xml',
+      SUPABASE_LYNX_XML_STORAGE_PREFIX,
+    );
+    await uploadSupabaseObject(
+      sourcePath,
+      source,
+      'application/xml; charset=utf-8',
+    );
+    const sourceUrl = buildSupabaseObjectUrl(sourcePath);
+    return sourceUrl ? { sourceUrl } : undefined;
+  } catch (error) {
+    console.warn(
+      '[lynx-xml:payload-publisher] Supabase Storage upload failed',
+      error,
     );
     return undefined;
   }

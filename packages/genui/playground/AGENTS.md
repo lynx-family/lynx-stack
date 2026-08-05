@@ -1,6 +1,7 @@
 # genui-playground (packages/genui/playground)
 
-This package is a playground app for `@lynx-js/genui/a2ui`.
+This package is a playground app for the A2UI, OpenUI, MCP Apps, and Lynx XML
+protocols exposed by `@lynx-js/genui`.
 
 It supports:
 
@@ -35,6 +36,12 @@ Web build has two entrypoints (see `rsbuild.config.ts`):
 
 The control panel builds a `/render.html?...` URL with base64-encoded payload
 (`src/utils/renderUrl.ts`) and embeds it in an `<iframe>`(see `PreviewViewport.tsx`).
+
+For Lynx XML, the control panel publishes the validated source to the local
+development payload store or the GenUI server, then sets that `.xml` URL as the
+`<lynx-view>` template URL. The source runs directly through the web-core Lynx
+markup loader; there is no ReactLynx or Rspeedy compilation step for the
+generated artifact.
 
 ## Lynx App Architecture (What Runs Inside <lynx-view>)
 

@@ -6,6 +6,7 @@ import type {
   BenchCatalogLabel,
   BenchGroupRequest,
   BenchJobRequest,
+  BenchProtocol,
   BenchRole,
   BenchScenarioRequest,
   BenchSettings,
@@ -30,8 +31,10 @@ const VARIABLES = new Set<BenchVariable>([
   'model',
   'prompt',
   'catalog',
+  'protocol',
   'custom',
 ]);
+const PROTOCOLS = new Set<BenchProtocol>(['a2ui', 'openui', 'lynx-xml']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -118,6 +121,12 @@ function normalizeSettings(value: unknown): BenchSettings {
   };
 }
 
+function readProtocol(value: unknown): BenchProtocol {
+  return typeof value === 'string' && PROTOCOLS.has(value as BenchProtocol)
+    ? value as BenchProtocol
+    : 'a2ui';
+}
+
 function normalizeGroups(
   value: unknown,
   clientOverrideAccepted: boolean,
@@ -138,6 +147,7 @@ function normalizeGroups(
         role: readRole(item.role),
         name,
         variable: readVariable(item.variable),
+        protocol: readProtocol(item.protocol),
         enabled: item.enabled !== false,
         ...(model ? { model } : {}),
         catalog: readCatalog(item.catalog),

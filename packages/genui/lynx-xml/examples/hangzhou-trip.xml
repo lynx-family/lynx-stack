@@ -1,0 +1,623 @@
+<!DOCTYPE lynx>
+<style>
+  .page {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f5f6f1;
+    font-size: calc(100vw / 23.4375);
+  }
+
+  .trip-scroll {
+    width: 100%;
+    height: 100%;
+  }
+
+  .trip-content {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 1.25rem 2rem;
+  }
+
+  .hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-height: 18.75rem;
+    margin: 0 -1.25rem 1.25rem;
+    padding: 4.25rem 1.5rem 1.5rem;
+    overflow: hidden;
+    background: linear-gradient(145deg, #173f37 0%, #286756 58%, #80a977 100%);
+  }
+
+  .hero-orb-large {
+    position: absolute;
+    top: -4rem;
+    right: -3.5rem;
+    width: 12rem;
+    height: 12rem;
+    border-radius: 50%;
+    background-color: #d9e6bd33;
+  }
+
+  .hero-orb-small {
+    position: absolute;
+    right: 3.75rem;
+    bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 4.5rem;
+    height: 4.5rem;
+    border: 1px solid #e7f0d84d;
+    border-radius: 50%;
+    background-color: #e7f0d81f;
+  }
+
+  .hero-orb-temperature {
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.15rem;
+  }
+
+  .hero-orb-weather {
+    margin-top: 0.12rem;
+    color: #d9ebd5;
+    font-size: 0.55rem;
+    font-weight: 600;
+    line-height: 0.75rem;
+  }
+
+  .hero-kicker {
+    color: #d9ebd5;
+    font-size: 0.69rem;
+    font-weight: 700;
+    line-height: 1rem;
+  }
+
+  .hero-title {
+    margin-top: 0.75rem;
+    color: #ffffff;
+    font-size: 2.45rem;
+    font-weight: 700;
+    line-height: 2.85rem;
+  }
+
+  .hero-subtitle {
+    margin-top: 0.35rem;
+    color: #d5e5de;
+    font-size: 0.85rem;
+    line-height: 1.3rem;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 1.4rem;
+  }
+
+  .hero-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border: 1px solid #ffffff66;
+    border-radius: 50%;
+    background-color: #f6d894;
+  }
+
+  .hero-avatar-text {
+    color: #4b4932;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .hero-meta-copy {
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.65rem;
+  }
+
+  .hero-meta-title {
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.05rem;
+  }
+
+  .hero-meta-subtitle {
+    color: #c4d8d0;
+    font-size: 0.65rem;
+    line-height: 0.95rem;
+  }
+
+  .summary-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 5rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #dfe5dc;
+    border-radius: 1.1rem;
+    background-color: #ffffff;
+    box-shadow: 0 0.35rem 1.25rem #244b3d12;
+  }
+
+  .summary-item {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .summary-value {
+    color: #1f493e;
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.4rem;
+  }
+
+  .summary-label {
+    margin-top: 0.15rem;
+    color: #899890;
+    font-size: 0.62rem;
+    line-height: 0.9rem;
+  }
+
+  .summary-divider {
+    width: 1px;
+    height: 2.15rem;
+    background-color: #e5e9e2;
+  }
+
+  .notice {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.85rem;
+    background-color: #e7efe6;
+  }
+
+  .notice-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background-color: #79a070;
+  }
+
+  .notice-text {
+    margin-left: 0.55rem;
+    color: #4d6f64;
+    font-size: 0.68rem;
+    line-height: 1rem;
+  }
+
+  .section-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin: 1.7rem 0 0.9rem;
+  }
+
+  .section-title {
+    color: #1c3d34;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.55rem;
+  }
+
+  .section-caption {
+    color: #91a098;
+    font-size: 0.65rem;
+    line-height: 1rem;
+  }
+
+  .day-card {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 0.8rem;
+    padding: 1rem;
+    border: 1px solid #e0e5df;
+    border-radius: 1.05rem;
+    background-color: #ffffff;
+    box-shadow: 0 0.25rem 1rem #27483e0d;
+  }
+
+  .day-card-selected {
+    border: 1px solid #6f9a89;
+    background-color: #f2f7f2;
+    box-shadow: 0 0.4rem 1.2rem #315d4e1f;
+  }
+
+  .day-index {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 2.65rem;
+  }
+
+  .day-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 50%;
+    background-color: #1f5749;
+  }
+
+  .day-number-text {
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .day-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 0.75rem;
+  }
+
+  .day-topline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .day-title {
+    color: #213f37;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+  }
+
+  .day-mood {
+    padding: 0.25rem 0.48rem;
+    border-radius: 0.7rem;
+    background-color: #f1e8ce;
+    color: #856e3f;
+    font-size: 0.57rem;
+    font-weight: 600;
+    line-height: 0.75rem;
+  }
+
+  .day-route {
+    margin-top: 0.42rem;
+    color: #587168;
+    font-size: 0.68rem;
+    line-height: 1.08rem;
+  }
+
+  .day-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 0.72rem;
+  }
+
+  .day-duration {
+    color: #95a29d;
+    font-size: 0.6rem;
+    line-height: 0.85rem;
+  }
+
+  .day-transport {
+    margin-left: 0.7rem;
+    color: #6f8a80;
+    font-size: 0.6rem;
+    line-height: 0.85rem;
+  }
+
+  .selection-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.1rem;
+    margin-top: 0.35rem;
+    padding: 0.7rem 1rem;
+    border-radius: 1rem;
+    background-color: #173f37;
+  }
+
+  .selection-status-text {
+    color: #eaf3ec;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1rem;
+    text-align: center;
+  }
+
+  .footnote {
+    margin-top: 0.95rem;
+    color: #9aa59f;
+    font-size: 0.58rem;
+    line-height: 0.9rem;
+    text-align: center;
+  }
+</style>
+
+<script main-thread>
+  const tripDays = [
+    {
+      day: 'DAY 1',
+      title: '湖滨初见',
+      mood: '轻松抵达',
+      route: '湖滨步行街 · 西湖音乐喷泉 · 南山路',
+      duration: '约 5 小时',
+      transport: '步行 6.2 km',
+    },
+    {
+      day: 'DAY 2',
+      title: '西湖经典',
+      mood: '环湖漫游',
+      route: '曲院风荷 · 苏堤 · 花港观鱼 · 雷峰塔',
+      duration: '约 8 小时',
+      transport: '骑行 + 步行',
+    },
+    {
+      day: 'DAY 3',
+      title: '禅意山林',
+      mood: '早起推荐',
+      route: '灵隐寺 · 法喜寺 · 青芝坞',
+      duration: '约 7 小时',
+      transport: '公交 + 步行',
+    },
+    {
+      day: 'DAY 4',
+      title: '宋韵慢游',
+      mood: '城市人文',
+      route: '小河直街 · 拱宸桥 · 京杭大运河',
+      duration: '约 6 小时',
+      transport: '地铁 + 水上巴士',
+    },
+    {
+      day: 'DAY 5',
+      title: '茶山收尾',
+      mood: '清新徒步',
+      route: '九溪烟树 · 龙井村 · 中国茶叶博物馆',
+      duration: '约 6 小时',
+      transport: '徒步 8.5 km',
+    },
+  ];
+
+  const nodeListeners = [];
+  let selectedCard;
+  let selectionStatusRawText;
+
+  const backgroundThread = lynx.getJSContext();
+  const engine = lynx.getEngine();
+
+  function createView(pageId, className) {
+    const view = __CreateView(pageId);
+    __SetClasses(view, className);
+    return view;
+  }
+
+  function createText(pageId, value, className) {
+    const text = __CreateText(pageId);
+    const rawText = __CreateRawText(value);
+    __SetClasses(text, className);
+    __AppendElement(text, rawText);
+    return { text, rawText };
+  }
+
+  function appendText(parent, pageId, value, className) {
+    const result = createText(pageId, value, className);
+    __AppendElement(parent, result.text);
+    return result.rawText;
+  }
+
+  function bindTap(node, handler) {
+    const options = {};
+    __AddEventListener(node, 'tap', handler, options);
+    nodeListeners.push({ node, handler, options });
+  }
+
+  function selectDay(card, item, index) {
+    if (selectedCard) {
+      __SetClasses(selectedCard, 'day-card');
+    }
+    selectedCard = card;
+    __SetClasses(card, 'day-card day-card-selected');
+    __SetAttribute(
+      selectionStatusRawText,
+      'text',
+      '正在生成 ' + item.day + ' · ' + item.title + ' 的行程提示…',
+    );
+    __FlushElementTree();
+
+    backgroundThread.dispatchEvent({
+      type: 'select-trip-day',
+      data: { index, day: item.day, title: item.title },
+    });
+  }
+
+  function onTripDaySelected(event) {
+    if (!selectionStatusRawText || !event.data) return;
+    __SetAttribute(selectionStatusRawText, 'text', event.data.message);
+    __FlushElementTree();
+  }
+
+  function clearListeners() {
+    for (const listener of nodeListeners.splice(0)) {
+      __RemoveEventListener(
+        listener.node,
+        'tap',
+        listener.handler,
+        listener.options,
+      );
+    }
+    backgroundThread.removeEventListener(
+      'trip-day-selected',
+      onTripDaySelected,
+    );
+    engine.removeEventListener('__DestroyLifetime', clearListeners);
+  }
+
+  backgroundThread.addEventListener('trip-day-selected', onTripDaySelected);
+  engine.addEventListener('__DestroyLifetime', clearListeners);
+
+  globalThis.renderPage = function renderPage() {
+    const page = __CreatePage('hangzhou-trip', 0);
+    const pageId = __GetElementUniqueID(page);
+    __SetClasses(page, 'page');
+
+    const scroll = __CreateScrollView(pageId);
+    __SetClasses(scroll, 'trip-scroll');
+    __SetAttribute(scroll, 'scroll-orientation', 'vertical');
+    __SetAttribute(scroll, 'scroll-bar-enable', false);
+    __AppendElement(page, scroll);
+
+    const content = createView(pageId, 'trip-content');
+    __AppendElement(scroll, content);
+
+    const hero = createView(pageId, 'hero');
+    __AppendElement(content, hero);
+    __AppendElement(hero, createView(pageId, 'hero-orb-large'));
+    const weatherOrb = createView(pageId, 'hero-orb-small');
+    __AppendElement(hero, weatherOrb);
+    appendText(weatherOrb, pageId, '18°', 'hero-orb-temperature');
+    appendText(weatherOrb, pageId, '晴', 'hero-orb-weather');
+    appendText(hero, pageId, '5 DAYS · HANGZHOU', 'hero-kicker');
+    appendText(hero, pageId, '去杭州，慢慢走', 'hero-title');
+    appendText(
+      hero,
+      pageId,
+      '西湖晨雾、寺院钟声与龙井茶香',
+      'hero-subtitle',
+    );
+
+    const heroMeta = createView(pageId, 'hero-meta');
+    const avatar = createView(pageId, 'hero-avatar');
+    const metaCopy = createView(pageId, 'hero-meta-copy');
+    __AppendElement(hero, heroMeta);
+    __AppendElement(heroMeta, avatar);
+    appendText(avatar, pageId, '杭', 'hero-avatar-text');
+    __AppendElement(heroMeta, metaCopy);
+    appendText(metaCopy, pageId, '春日限定路线', 'hero-meta-title');
+    appendText(metaCopy, pageId, '适合第一次到杭州的你', 'hero-meta-subtitle');
+
+    const summary = createView(pageId, 'summary-card');
+    __AppendElement(content, summary);
+    const summaryItems = [
+      ['5 天', '行程长度'],
+      ['14 处', '风景与人文'],
+      ['4.8', '轻松指数'],
+    ];
+    summaryItems.forEach((item, index) => {
+      if (index > 0) {
+        __AppendElement(summary, createView(pageId, 'summary-divider'));
+      }
+      const summaryItem = createView(pageId, 'summary-item');
+      __AppendElement(summary, summaryItem);
+      appendText(summaryItem, pageId, item[0], 'summary-value');
+      appendText(summaryItem, pageId, item[1], 'summary-label');
+    });
+
+    const notice = createView(pageId, 'notice');
+    __AppendElement(content, notice);
+    __AppendElement(notice, createView(pageId, 'notice-dot'));
+    appendText(
+      notice,
+      pageId,
+      '建议 3—5 月出发，雨天记得给西湖留一把伞',
+      'notice-text',
+    );
+
+    const sectionHeader = createView(pageId, 'section-header');
+    __AppendElement(content, sectionHeader);
+    appendText(sectionHeader, pageId, '每日路线', 'section-title');
+    appendText(sectionHeader, pageId, '轻点卡片查看提示', 'section-caption');
+
+    tripDays.forEach((item, index) => {
+      const card = createView(pageId, 'day-card');
+      const dayIndex = createView(pageId, 'day-index');
+      const dayNumber = createView(pageId, 'day-number');
+      const dayBody = createView(pageId, 'day-body');
+      const topLine = createView(pageId, 'day-topline');
+      const footer = createView(pageId, 'day-footer');
+
+      __SetAttribute(card, 'aria-label', item.day + ' ' + item.title);
+      __AppendElement(content, card);
+      __AppendElement(card, dayIndex);
+      __AppendElement(dayIndex, dayNumber);
+      appendText(dayNumber, pageId, String(index + 1), 'day-number-text');
+      __AppendElement(card, dayBody);
+      __AppendElement(dayBody, topLine);
+      appendText(topLine, pageId, item.title, 'day-title');
+      appendText(topLine, pageId, item.mood, 'day-mood');
+      appendText(dayBody, pageId, item.route, 'day-route');
+      __AppendElement(dayBody, footer);
+      appendText(footer, pageId, item.duration, 'day-duration');
+      appendText(footer, pageId, item.transport, 'day-transport');
+
+      bindTap(card, () => selectDay(card, item, index));
+    });
+
+    const selectionStatus = createView(pageId, 'selection-status');
+    __AppendElement(content, selectionStatus);
+    selectionStatusRawText = appendText(
+      selectionStatus,
+      pageId,
+      '选择一天，获取当天的旅行提示',
+      'selection-status-text',
+    );
+
+    appendText(
+      content,
+      pageId,
+      '路线仅作示例 · 出发前请确认景区开放时间',
+      'footnote',
+    );
+  };
+</script>
+
+<script background>
+  const mainThread = lynx.getCoreContext();
+  const engine = lynx.getEngine();
+
+  function onSelectTripDay(event) {
+    const item = event.data;
+    if (!item) return;
+
+    const tips = [
+      '傍晚 17:30 后到湖滨，晚霞和亮灯可以一起看。',
+      '苏堤路程较长，建议从北向南骑行，午后在花港休息。',
+      '灵隐寺尽量 8:00 前抵达，法喜寺请穿方便步行的鞋。',
+      '水上巴士班次有限，建议提前确认武林门码头时刻。',
+      '九溪石板路雨后湿滑，轻装徒步并预留返程时间。',
+    ];
+
+    mainThread.dispatchEvent({
+      type: 'trip-day-selected',
+      data: {
+        message: item.day + ' 旅行提示：' + tips[item.index],
+      },
+    });
+  }
+
+  function cleanup() {
+    mainThread.removeEventListener('select-trip-day', onSelectTripDay);
+    engine.removeEventListener('__DestroyLifetime', cleanup);
+  }
+
+  mainThread.addEventListener('select-trip-day', onSelectTripDay);
+  engine.addEventListener('__DestroyLifetime', cleanup);
+</script>

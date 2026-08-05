@@ -5,7 +5,13 @@
 import type { A2UIMessage } from '../agent/a2ui-validator';
 
 export type BenchRole = 'control' | 'experiment';
-export type BenchVariable = 'model' | 'prompt' | 'catalog' | 'custom';
+export type BenchVariable =
+  | 'model'
+  | 'prompt'
+  | 'catalog'
+  | 'protocol'
+  | 'custom';
+export type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml';
 export type BenchCatalogLabel =
   | 'Full Catalog'
   | 'Core Catalog'
@@ -51,6 +57,7 @@ export interface BenchGroupRequest {
   role: BenchRole;
   name: string;
   variable: BenchVariable;
+  protocol: BenchProtocol;
   enabled: boolean;
   model?: string;
   catalog?: BenchCatalogLabel;
@@ -81,6 +88,7 @@ export interface BenchProgress {
   totalRuns: number;
   current?: {
     groupId: string;
+    protocol: BenchProtocol;
     scenarioId: string;
     repeatIndex: number;
     phase: BenchRunPhase;
@@ -92,6 +100,7 @@ export interface BenchRunResult {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol: BenchProtocol;
   scenarioId: string;
   scenarioName: string;
   repeatIndex: number;
@@ -106,6 +115,7 @@ export interface BenchRunResult {
   renderMs: number;
   attempts: number;
   judgeScore: number;
+  judgeSummary?: string;
   messageCount: number;
   outputChars: number;
   errors: string[];
@@ -121,6 +131,7 @@ export interface BenchGroupSummary {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol: BenchProtocol;
   runCount: number;
   failedRuns: number;
   successRate: number;

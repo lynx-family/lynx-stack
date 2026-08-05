@@ -15,6 +15,7 @@ import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSec
 import { createElement } from './createElement.js';
 import type { Cloneable, NativeApp } from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
+import { LynxEngineContext } from '../../../common/LynxEngineContext.js';
 
 export function createBackgroundLynx(
   globalProps: Cloneable,
@@ -27,6 +28,7 @@ export function createBackgroundLynx(
     receiveEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     sendEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
   });
+  const engineContext = new LynxEngineContext();
   const devtoolContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
     receiveEventEndpoint: dispatchDevtoolEventOnBackgroundEndpoint,
@@ -44,6 +46,9 @@ export function createBackgroundLynx(
     },
     getCoreContext() {
       return coreContext;
+    },
+    getEngine() {
+      return engineContext;
     },
     getDevtool() {
       return devtoolContext;

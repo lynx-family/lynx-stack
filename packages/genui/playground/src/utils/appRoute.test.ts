@@ -25,11 +25,33 @@ describe('app route hash', () => {
     expect(buildRouteHash('a2ui', 'create')).toBe('#/a2ui');
     expect(buildRouteHash('openui', 'create')).toBe('#/openui');
     expect(buildRouteHash('mcp-apps', 'create')).toBe('#/mcp-apps');
+    expect(buildRouteHash('lynx-xml', 'create')).toBe('#/lynx-xml');
+  });
+
+  test('uses a protocol-independent canonical bench route', () => {
+    expect(buildRouteHash('a2ui', 'bench')).toBe('#/bench');
+    expect(buildRouteHash('lynx-xml', 'bench')).toBe('#/bench');
+    expect(parseRouteHash('#/bench')).toMatchObject({
+      protocol: { name: 'a2ui' },
+      tab: 'bench',
+    });
+  });
+
+  test('keeps protocol-scoped bench links as compatibility aliases', () => {
+    expect(parseRouteHash('#/a2ui/bench')).toMatchObject({ tab: 'bench' });
+    expect(parseRouteHash('#/lynx-xml/bench')).toMatchObject({ tab: 'bench' });
   });
 
   test('recognizes the MCP Apps protocol root', () => {
     expect(parseRouteHash('#/mcp-apps')).toMatchObject({
       protocol: { name: 'mcp-apps', version: '2026-01-26' },
+      tab: 'create',
+    });
+  });
+
+  test('recognizes the Lynx XML protocol root', () => {
+    expect(parseRouteHash('#/lynx-xml')).toMatchObject({
+      protocol: { name: 'lynx-xml', version: '1.0' },
       tab: 'create',
     });
   });

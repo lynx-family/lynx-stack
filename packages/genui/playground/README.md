@@ -1,9 +1,10 @@
 # GenUI Playground
 
 Interactive playground for the Lynx **GenUI** toolchain. Chat with an agent to
-generate A2UI / OpenUI surfaces, browse ready-made examples, and preview the
-result on the web or a real device — then rename, delete, or **share** any
-conversation as a durable preview link.
+generate A2UI, OpenUI, MCP Apps, or zero-build Lynx XML surfaces, browse
+ready-made examples, and preview the result — then rename, delete, or **share**
+any conversation as a durable preview link. Lynx XML contains Lynx CSS and
+Element PAPI JavaScript and is loaded directly by `<lynx-view>`.
 
 > Private development app; it is not published to npm. For the published library
 > see [`@lynx-js/genui`](../README.md).
@@ -38,8 +39,17 @@ On `localhost`, the Create tab automatically targets your local server on
 append the endpoint override to the playground URL:
 
 ```text
-?a2uiEndpoint=https://genui-server.vercel.app/a2ui/stream
+http://localhost:3000/?lynx-xmlEndpoint=https%3A%2F%2Fgenui-server.vercel.app%2Flynx-xml%2Fstream#/lynx-xml
 ```
+
+If generation reports that the local GenUI server is unreachable, verify that
+the server command in step 2 is still running and that port `3060` is
+accessible from the browser host.
+
+Development builds prefer the local GenUI server even when the Playground is
+opened through an IPv6 loopback or a custom development hostname. Set
+`GENUI_PLAYGROUND_LOCAL_SERVER=0` before starting the Playground to disable
+that behavior.
 
 ### Server environment
 
@@ -48,6 +58,8 @@ append the endpoint override to the playground URL:
 | `OPENAI_API_KEY`                                                             | Agent model access (required for the Create tab)   | —                   |
 | `OPENAI_MODEL`                                                               | Model id                                           | `gpt-4o-mini`       |
 | `OPENAI_BASE_URL`                                                            | Custom OpenAI-compatible endpoint                  | OpenAI              |
+| `OPENAI_FETCH_TIMEOUT_MS`                                                    | Upstream response headers/body inactivity timeout  | `600000` (10 min)   |
+| `AIDP_LOG_ID`                                                                | Optional `X-TT-LOGID` for the AIDP crawl endpoint  | Generated per call  |
 | `SUPABASE_URL`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | Short, shareable preview URLs via Supabase Storage | in-memory dev store |
 | `PEXELS_API_KEY`                                                             | Stock-image search in generated UIs                | —                   |
 

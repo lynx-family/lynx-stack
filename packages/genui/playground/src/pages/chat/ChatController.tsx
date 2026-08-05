@@ -9,6 +9,7 @@ import {
   EMPTY_CHAT_TOKEN_USAGE,
   addTokenUsage,
   createChatHost,
+  describeChatRequestError,
   formatTokenCount,
   parseSseFrame,
   targetOriginForUrl,
@@ -939,6 +940,7 @@ export function ChatController<
     setIsGenerating(true);
 
     void (async () => {
+      let requestUrl: string | undefined;
       try {
         const request = await adapter.createRequest({
           prompt,
@@ -947,6 +949,7 @@ export function ChatController<
           host,
           signal: controller.signal,
         });
+        requestUrl = request.url;
         const response = await window.fetch(
           request.url,
           requestInit(request, controller.signal),
@@ -1001,7 +1004,9 @@ export function ChatController<
           current.map((message) =>
             message.id === pendingId
               ? {
-                ...adapter.transcript.failure(getErrorMessage(error)),
+                ...adapter.transcript.failure(
+                  describeChatRequestError(error, requestUrl),
+                ),
                 id: pendingId,
               }
               : message
@@ -1456,7 +1461,7 @@ export function ChatController<
             >
               {adapter.copy.agentLabel}
             </span>
-            {protocol.name === 'mcp-apps'
+            {protocol.name === 'mcp-apps' || protocol.name === 'lynx-xml'
               ? null
               : (
                 <button

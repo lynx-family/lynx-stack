@@ -41,7 +41,6 @@ const A2UI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'catalog', label: 'Catalog' },
-  { id: 'bench', label: 'Bench' },
 ];
 
 const OPENUI_TABS: TabDef[] = [
@@ -51,6 +50,7 @@ const OPENUI_TABS: TabDef[] = [
 ];
 
 const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
+const LYNX_XML_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
 
 function ensureDefaultRouteHash(): void {
   if (!isEmptyRouteHash(window.location.hash)) return;
@@ -122,6 +122,8 @@ export function App() {
   let tabs = A2UI_TABS;
   if (protocol.name === 'mcp-apps') {
     tabs = MCP_APPS_TABS;
+  } else if (protocol.name === 'lynx-xml') {
+    tabs = LYNX_XML_TABS;
   } else if (protocol.name === 'openui') {
     tabs = OPENUI_TABS;
   }
@@ -154,20 +156,23 @@ export function App() {
     window.location.hash = buildRouteHash(protocol.name, id);
   }, [protocol.name]);
 
+  const handleBenchClick = useCallback(() => {
+    window.location.hash = buildRouteHash(protocol.name, 'bench');
+  }, [protocol.name]);
+
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    if (name === 'mcp-apps') {
+    if (name === 'mcp-apps' || name === 'lynx-xml') {
       window.location.hash = buildRouteHash(name, 'create');
       return;
     }
-    // When switching to OpenUI and current tab is A2UI-only, fallback to examples.
-    const tab = name === 'openui' && route.tab === 'bench'
-      ? 'examples'
-      : route.tab;
-    window.location.hash = buildRouteHash(name, tab);
+    window.location.hash = buildRouteHash(name, route.tab);
   }, [route.tab]);
 
   const page = useMemo(() => {
-    if (embedded) {
+    if (
+      embedded
+      && (protocol.name === 'a2ui' || protocol.name === 'openui')
+    ) {
       // Embedded mode (e.g. iframe on the Lynx website) only exposes the
       // component catalog: the All Components grid and per-component preview.
       return (
@@ -181,6 +186,10 @@ export function App() {
       );
     }
 
+    if (route.tab === 'bench') {
+      return <BenchPage key='bench' />;
+    }
+
     const createPage = (
       <ChatPage
         key={`${protocol.name}-create`}
@@ -189,7 +198,10 @@ export function App() {
       />
     );
 
-    if (protocol.name === 'mcp-apps') return createPage;
+    if (
+      protocol.name === 'mcp-apps'
+      || protocol.name === 'lynx-xml'
+    ) return createPage;
 
     if (protocol.name === 'openui') {
       switch (route.tab) {
@@ -225,8 +237,6 @@ export function App() {
     }
 
     switch (route.tab) {
-      case 'bench':
-        return <BenchPage key='bench' />;
       case 'examples':
         return route.demoId
           ? (
@@ -278,6 +288,9 @@ export function App() {
         <option value='mcp-apps'>
           MCP Apps v{PROTOCOLS['mcp-apps'].version}
         </option>
+        <option value='lynx-xml'>
+          Lynx XML v{PROTOCOLS['lynx-xml'].version}
+        </option>
       </select>
     </div>
   );
@@ -308,11 +321,20 @@ export function App() {
                 {t.label}
               </button>
             ))}
+            <button
+              type='button'
+              className={route.tab === 'bench'
+                ? 'tabNavItem active'
+                : 'tabNavItem'}
+              onClick={handleBenchClick}
+            >
+              Bench
+            </button>
           </nav>
 
           <div className='spacer' />
 
-          {protocolVersionControl}
+          {route.tab === 'bench' ? null : protocolVersionControl}
 
           <Button
             variant='ghost'

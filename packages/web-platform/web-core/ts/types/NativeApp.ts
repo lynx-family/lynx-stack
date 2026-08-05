@@ -4,7 +4,10 @@
 
 import type { ErrorCode, IdentifierType } from '../constants.js';
 import type { CloneableObject } from './Cloneable.js';
-import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
+import type {
+  LynxContextEventTarget,
+  LynxEventTarget,
+} from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './TimingAPIs.js';
 import type { II18nResource } from './I18nTypes.js';
 
@@ -39,6 +42,7 @@ export type NativeLynx = {
   getJSModule(_moduleName: string): unknown;
   getNativeApp(): NativeApp;
   getCoreContext(): LynxContextEventTarget;
+  getEngine(): LynxEventTarget;
   getDevtool(): LynxContextEventTarget;
   getCustomSectionSync(key: string): CloneableObject;
   getCustomSection(key: string): Promise<CloneableObject>;

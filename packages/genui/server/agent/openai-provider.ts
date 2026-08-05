@@ -2,10 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { randomUUID } from 'node:crypto';
+
 import { createOpenAI } from '@ai-sdk/openai';
 import type { AgentConfig } from '@mastra/core/agent';
+import { Agent, fetch as undiciFetch } from 'undici';
+import type { RequestInit as UndiciRequestInit } from 'undici';
 
-import { isOfficialOpenAIBaseURL } from './openai-utils';
+import {
+  defaultOpenAIAPIStyle,
+  isAIDPChatEndpoint,
+  isOfficialOpenAIBaseURL,
+  rewriteAIDPChatURL,
+} from './openai-utils';
 import type { ChatMessage } from '../service/common/types';
 
 export interface OpenAIProviderOptions {
@@ -16,6 +25,10 @@ export interface OpenAIProviderOptions {
 }
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_OPENAI_FETCH_TIMEOUT_MS = 10 * 60 * 1000;
+const MIN_OPENAI_FETCH_TIMEOUT_MS = 1000;
+const MAX_OPENAI_FETCH_TIMEOUT_MS = 30 * 60 * 1000;
+const openAIDispatchers = new Map<number, Agent>();
 
 interface LLMProvider {
   provider: ReturnType<typeof createOpenAI>;
@@ -35,19 +48,150 @@ interface CompatRequestBody {
   messages?: CompatChatMessage[];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
+async function normalizeAIDPChatResponse(
+  response: Response,
+): Promise<Response> {
+  if (
+    !response.ok
+    || !response.headers.get('content-type')?.includes('application/json')
+  ) {
+    return response;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = await response.clone().json();
+  } catch {
+    return response;
+  }
+  if (!isRecord(parsed) || !isUnknownArray(parsed.choices)) {
+    return response;
+  }
+
+  let touched = false;
+  const choices = parsed.choices.map((choice, index) => {
+    if (isRecord(choice) && choice.index === undefined) {
+      touched = true;
+      return { ...choice, index };
+    }
+    return choice;
+  });
+  if (!touched) {
+    return response;
+  }
+
+  const headers = new Headers(response.headers);
+  headers.delete('content-encoding');
+  headers.delete('content-length');
+  headers.delete('transfer-encoding');
+  return new Response(JSON.stringify({ ...parsed, choices }), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 interface OpenAIEnv {
+  AIDP_LOG_ID?: string | undefined;
   OPENAI_API_KEY?: string | undefined;
   OPENAI_API_STYLE?: 'chat' | 'responses' | undefined;
   OPENAI_BASE_URL?: string | undefined;
+  OPENAI_FETCH_TIMEOUT_MS?: string | undefined;
+  OPENAI_LOG_ID?: string | undefined;
   OPENAI_MODEL?: string | undefined;
 }
 
-function createCompatFetch(): typeof fetch {
+function requestURL(input: Parameters<typeof fetch>[0]): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+  return input instanceof URL ? input.href : input.url;
+}
+
+export function resolveOpenAIFetchTimeoutMs(
+  value: string | undefined,
+): number {
+  if (value === undefined || value.trim() === '') {
+    return DEFAULT_OPENAI_FETCH_TIMEOUT_MS;
+  }
+  const timeoutMs = Number(value);
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 0) {
+    return DEFAULT_OPENAI_FETCH_TIMEOUT_MS;
+  }
+  return Math.min(
+    Math.max(timeoutMs, MIN_OPENAI_FETCH_TIMEOUT_MS),
+    MAX_OPENAI_FETCH_TIMEOUT_MS,
+  );
+}
+
+function getOpenAIDispatcher(timeoutMs: number): Agent {
+  let dispatcher = openAIDispatchers.get(timeoutMs);
+  if (dispatcher === undefined) {
+    dispatcher = new Agent({
+      bodyTimeout: timeoutMs,
+      headersTimeout: timeoutMs,
+    });
+    openAIDispatchers.set(timeoutMs, dispatcher);
+  }
+  return dispatcher;
+}
+
+export function createOpenAITransportFetch(
+  timeoutMs = resolveOpenAIFetchTimeoutMs(
+    process.env.OPENAI_FETCH_TIMEOUT_MS,
+  ),
+): typeof fetch {
+  const dispatcher = getOpenAIDispatcher(timeoutMs);
   return async (input, init) => {
-    if (!init || !init.body || typeof init.body !== 'string') {
-      return fetch(input, init);
+    const response = await undiciFetch(requestURL(input), {
+      ...(init as UndiciRequestInit | undefined),
+      dispatcher,
+    });
+    return response as unknown as Response;
+  };
+}
+
+export function createOpenAICompatFetch(
+  baseURL: string,
+  apiKey: string,
+  fetchImpl: typeof fetch = createOpenAITransportFetch(),
+  logID?: string,
+): typeof fetch {
+  return async (input, init) => {
+    const originalURL = requestURL(input);
+    const rewrittenURL = rewriteAIDPChatURL(originalURL, baseURL, apiKey);
+    const requestInput = rewrittenURL === originalURL ? input : rewrittenURL;
+    const isAIDP = isAIDPChatEndpoint(baseURL);
+    let requestInit = init;
+    if (isAIDP) {
+      const headers = new Headers(init?.headers);
+      headers.delete('authorization');
+      headers.set(
+        'X-TT-LOGID',
+        logID
+          ?? process.env.AIDP_LOG_ID
+          ?? process.env.OPENAI_LOG_ID
+          ?? randomUUID(),
+      );
+      requestInit = { ...init, headers };
     }
-    let body = init.body;
+    if (
+      !requestInit
+      || !requestInit.body
+      || typeof requestInit.body !== 'string'
+    ) {
+      const response = await fetchImpl(requestInput, requestInit);
+      return isAIDP ? normalizeAIDPChatResponse(response) : response;
+    }
+    let body = requestInit.body;
     try {
       const parsed = JSON.parse(body) as CompatRequestBody;
       if (Array.isArray(parsed.messages)) {
@@ -64,7 +208,8 @@ function createCompatFetch(): typeof fetch {
     } catch {
       // body is not JSON, leave as-is
     }
-    return fetch(input, { ...init, body });
+    const response = await fetchImpl(requestInput, { ...requestInit, body });
+    return isAIDP ? normalizeAIDPChatResponse(response) : response;
   };
 }
 
@@ -85,12 +230,23 @@ export function createLLMProvider(
   const isOfficial = isOfficialOpenAIBaseURL(baseURL);
   const api = opts.api
     ?? env.OPENAI_API_STYLE
-    ?? (isOfficial ? 'responses' : 'chat');
+    ?? defaultOpenAIAPIStyle(baseURL);
 
+  const transportFetch = createOpenAITransportFetch(
+    resolveOpenAIFetchTimeoutMs(env.OPENAI_FETCH_TIMEOUT_MS),
+  );
   const providerSettings = {
     apiKey,
     baseURL,
-    ...(isOfficial ? {} : { fetch: createCompatFetch() }),
+    ...(isOfficial
+      ? { fetch: transportFetch }
+      : {
+        fetch: createOpenAICompatFetch(
+          baseURL,
+          apiKey,
+          transportFetch,
+        ),
+      }),
   };
   const provider = createOpenAI(providerSettings);
   const buildModel = (id: string) =>

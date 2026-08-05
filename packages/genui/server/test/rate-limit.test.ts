@@ -35,4 +35,23 @@ describe('rateLimitJsonResponse', () => {
       retryAfterSec: 12,
     });
   });
+
+  test('allows an IPv6 loopback Playground origin', () => {
+    const response = rateLimitJsonResponse(
+      new Request('http://[::1]:3060/api', {
+        headers: { Origin: 'http://[::1]:3000' },
+      }),
+      {
+        ok: false,
+        limit: 20,
+        remaining: 0,
+        resetAt: 1_700_000_000_123,
+        retryAfterSec: 12,
+      },
+    );
+
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+      'http://[::1]:3000',
+    );
+  });
 });

@@ -16,6 +16,12 @@ describe('shared conversation protocol metadata', () => {
     );
   });
 
+  test('keeps Lynx XML shared conversations explicit', () => {
+    expect(resolveSharedConversationProtocol({ protocol: 'lynx-xml' })).toBe(
+      'lynx-xml',
+    );
+  });
+
   test('rejects unknown shared conversation protocols', () => {
     expect(resolveSharedConversationProtocol({ protocol: 'unknown' })).toBe(
       null,

@@ -8,7 +8,11 @@ import type {
   ChatTokenUsage,
 } from './type.js';
 import type { ProtocolName } from '../../utils/protocol.js';
-import { isDevHost } from '../../utils/publishPayload.js';
+import {
+  getLocalGenUIServerOrigin,
+  isDevHost,
+  shouldUseLocalGenUIServer,
+} from '../../utils/publishPayload.js';
 
 export const ONLINE_GENUI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 export const LOCAL_GENUI_SERVER_PORT = '3060';
@@ -327,10 +331,41 @@ export function getChatEndpoint(
     const trustedEndpoint = resolveTrustedChatEndpoint(fromQuery, host);
     if (trustedEndpoint) return trustedEndpoint;
   }
-  if (host.protocol === 'http:' && isDevHost(host.hostname)) {
-    return `http://${host.hostname}:${LOCAL_GENUI_SERVER_PORT}/${protocol}/stream`;
+  if (shouldUseLocalGenUIServer(host)) {
+    return `${getLocalGenUIServerOrigin(host.hostname)}/${protocol}/stream`;
   }
   return `${ONLINE_GENUI_SERVER_ORIGIN}/${protocol}/stream`;
+}
+
+export function describeChatRequestError(
+  error: unknown,
+  requestUrl?: string,
+): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (
+    !requestUrl
+    || !(error instanceof TypeError)
+    || !/failed to fetch|load failed|networkerror/iu.test(message)
+  ) {
+    return message;
+  }
+
+  try {
+    const endpoint = new URL(requestUrl);
+    if (
+      endpoint.protocol === 'http:'
+      && endpoint.port === LOCAL_GENUI_SERVER_PORT
+      && isDevHost(endpoint.hostname)
+    ) {
+      return `Cannot reach the local GenUI server at ${endpoint.origin}. `
+        + 'Start it with `OPENAI_API_KEY=... pnpm -C packages/genui/server dev`, '
+        + 'then retry.';
+    }
+    return `Cannot reach the GenUI server at ${endpoint.origin}. `
+      + 'Check the network connection and the server CORS configuration.';
+  } catch {
+    return message;
+  }
 }
 
 export function getA2UIActionEndpoint(chatEndpoint: string): string {

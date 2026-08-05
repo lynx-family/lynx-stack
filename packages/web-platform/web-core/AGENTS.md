@@ -166,6 +166,26 @@ The external mts chunk is a webpack/rspack **library** that writes to bare `expo
 
 When testing external/lazy stylesheets, assert **`background-color`**, not `color`: the web style transformer makes `color` cascade/inherit, so a `color` assertion can pass even when the stylesheet was never applied (false positive). `decode_style_info`'s `entryName` (set when `isLazy`) scopes selectors with `[l-e-name="<url>"]`; pass `isLazy: 'false'` to load an external bundle's CSS globally.
 
+### Lynx markup XML artifacts
+
+The decode worker accepts the Lynx-specific `.xml` artifact alongside binary
+and JSON templates. The format is HTML-like rather than well-formed XML:
+`<script main-thread>` and `<script background>` use boolean attributes, so
+parse it with `parseLynxMarkup` instead of `DOMParser`. Route its sections
+through the existing template slots: `<style>` becomes legacy `StyleInfo`
+content, main-thread code becomes `LepusCode.root`, and background code becomes
+`Manifest["/app-service.js"]`. This preserves the existing style transform,
+blob URL, cache, and dual-thread startup paths.
+
+### Engine lifecycle context
+
+`lynx.getEngine()` returns one stable, realm-local `LynxEngineContext` for each
+page. Main-thread and background scripts use it for engine-defined lifecycle
+events. During page disposal, dispatch `__DestroyLifetime` exactly once in each
+realm before releasing that realm's listeners, worker/card state, or WASM
+resources, so application cleanup can still access its runtime objects. The SSR
+`lynx` object also exposes a stable engine context for API compatibility.
+
 ## Benchmarking
 
 ### Rust (wasm32)
