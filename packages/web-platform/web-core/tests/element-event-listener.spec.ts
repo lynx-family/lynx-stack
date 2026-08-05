@@ -326,7 +326,8 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       expect(addCrossThreadEvent).toHaveBeenCalledTimes(1);
       const [, eventType, eventName, handlerName] = addCrossThreadEvent.mock
         .calls[0]!;
-      expect(eventType).toBe('bindEvent');
+      // The dispatcher looks handlers up under the lowercase event type.
+      expect(eventType).toBe('bindevent');
       expect(eventName).toBe('tap');
       expect(handlerName).toBe('onTapHandler');
     });
@@ -375,6 +376,43 @@ describe('__AddEventListener / __RemoveEventListener', () => {
         mtsBinding.disposeEventListeners();
         mtsBinding.disposeEventListeners();
       }).not.toThrow();
+    });
+  });
+
+  describe('interop with __AddEvent', () => {
+    test('a catch bound via __AddEvent stops a callback on an ancestor', () => {
+      // Both binding forms are filed in the same handler table, so the
+      // dispatcher can stop one with the other. Binding callbacks directly with
+      // `element.addEventListener` would put them in a parallel dispatch that
+      // neither could reach.
+      const parent = mts.__CreateView(0);
+      const child = mts.__CreateView(0);
+      mts.__AppendElement(parent, child);
+      rootDom.appendChild(parent);
+      const onParent = rstest.fn();
+
+      mts.__AddEventListener(parent, 'tap', onParent, {});
+      mts.__AddEvent(child, 'catchEvent', 'tap', 'childCatch');
+      clickOn(child);
+
+      expect(onParent).not.toHaveBeenCalled();
+    });
+
+    test('a callback bound with catch stops an __AddEvent handler above it', () => {
+      const parent = mts.__CreateView(0);
+      const child = mts.__CreateView(0);
+      mts.__AppendElement(parent, child);
+      rootDom.appendChild(parent);
+      const publishEvent = rstest.spyOn(mtsBinding, 'publishEvent')
+        .mockImplementation(() => {});
+
+      mts.__AddEvent(parent, 'bindEvent', 'tap', 'parentHandler');
+      // BindType::kBubbleCatch === 4
+      mts.__AddEventListener(child, 'tap', rstest.fn(), { bind_type: 4 });
+      clickOn(child);
+
+      expect(publishEvent).not.toHaveBeenCalled();
+      publishEvent.mockRestore();
     });
   });
 

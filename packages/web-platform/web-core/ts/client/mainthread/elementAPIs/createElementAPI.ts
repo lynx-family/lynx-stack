@@ -166,12 +166,8 @@ export function createElementAPI(
       }
     }
   };
-  const {
-    __AddEventListener,
-    __RemoveEventListener,
-    disposeElementEventListeners,
-  } = createElementEventListenerAPIs(mtsBinding, __AddEvent);
-  mtsBinding.disposeElementEventListeners = disposeElementEventListeners;
+  const { __AddEventListener, __RemoveEventListener } =
+    createElementEventListenerAPIs(mtsBinding);
   return {
     __AddEventListener,
     __RemoveEventListener,

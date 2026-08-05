@@ -9,9 +9,15 @@ These bind a main-thread _function_ as an event listener, as opposed to
 worklet object for main-thread dispatch. Cards that build their UI directly from
 the Element PAPIs need the callback form.
 
+Callbacks are filed in the element's own handler table, the same one
+`__AddEvent` writes to, so they take part in the engine's event dispatch rather
+than in a second one: capture ordering, `catch` stopping propagation and
+global-bind all behave as they do for handler names, and the two forms can stop
+each other.
+
 `capture`, `once` and `passive` are honored, `closure_type` and `bind_type`
 select the binding semantics, and a `kClient` binding with a string handler is
-routed to `__AddEvent`. `signal` is accepted for signature parity but not
-implemented; use `__RemoveEventListener`. Listeners registered this way are
-detached on teardown, so a card that does not clean up after itself cannot leave
-closures attached to elements that outlive the `lynx-view`.
+filed as a cross-thread handler. `signal` is accepted for parity with the engine
+PAPI, which also reads it as a boolean, and is otherwise ignored; remove a
+listener with `__RemoveEventListener`. Several callbacks may be registered for
+one element and event, as with `addEventListener`.

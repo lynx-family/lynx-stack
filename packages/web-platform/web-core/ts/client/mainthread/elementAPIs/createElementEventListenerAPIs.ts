@@ -5,15 +5,10 @@
  */
 import type {
   AddEventListenerPAPI,
-  AddEventPAPI,
-  DecoratedHTMLElement,
   ElementEventListenerOptions,
-  MainThreadScriptEvent,
   RemoveEventListenerPAPI,
 } from '../../../types/index.js';
-import { LynxEventNameToW3cCommon } from '../../../constants.js';
 import { __GetElementUniqueID } from './pureElementPAPIs.js';
-import { createCrossThreadEvent } from './createCrossThreadEvent.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
 
 /**
@@ -39,54 +34,38 @@ const BindType = {
   kGlobalBind: 5,
 } as const;
 
-interface ResolvedOptions {
-  capture: boolean;
-  once: boolean;
-  passive: boolean;
-  closureType: number;
-  bindType: number;
-  /** `capture-catch` / `catchEvent`: stop propagation after the handler runs. */
-  catchEvent: boolean;
-}
-
-function resolveOptions(
-  options: ElementEventListenerOptions | undefined,
-): ResolvedOptions {
+/**
+ * The event *type* a handler is filed under, which is what the dispatcher reads
+ * to decide whether a handler runs during the capture or the bubble pass and
+ * whether it stops propagation.
+ *
+ * These four names are the ones `dispatch_event_by_path` looks up, plus
+ * `global-bindevent` for the separate global pass.
+ */
+function eventTypeOf(options: ElementEventListenerOptions | undefined): string {
   const closureType = typeof options?.closure_type === 'number'
     ? options.closure_type
     : ClosureType.kNone;
   const bindType = typeof options?.bind_type === 'number'
     ? options.bind_type
     : BindType.kBubble;
-  const isCaptureCatch = bindType === BindType.kCaptureCatch;
-  const isBubbleCatch = bindType === BindType.kBubbleCatch;
-  return {
-    // `capture` is honoured for the plain addEventListener path; the bind
-    // paths derive capture from `bind_type` instead, exactly as
-    // `FiberAddEventListener` does.
-    capture: closureType === ClosureType.kNone
-      ? options?.capture === true
-      : bindType === BindType.kCapture || isCaptureCatch,
-    once: options?.once === true,
-    passive: options?.passive === true,
-    closureType,
-    bindType,
-    catchEvent: isCaptureCatch || isBubbleCatch,
-  };
-}
 
-/**
- * Key identifying a registration. Matches the engine's `Matches()` contract for
- * `LepusClosureEventListener`, which compares the closure and the capture
- * flag — so `(element, name, callback, capture)` is the identity, and
- * `once`/`passive` are not part of it.
- */
-function listenerKey(
-  uniqueId: number,
-  eventName: string,
-  capture: boolean,
-): string {
-  return `${uniqueId}\u0000${eventName}\u0000${capture ? 'c' : 'b'}`;
+  if (bindType === BindType.kGlobalBind) {
+    return 'global-bindevent';
+  }
+  // For a plain callback the web platform's own `capture` flag selects the
+  // pass, because such a listener has no `bind_type` to derive it from. The
+  // bind forms follow `bind_type`, exactly as `FiberAddEventListener` does.
+  const capture = closureType === ClosureType.kNone
+    ? options?.capture === true
+    : bindType === BindType.kCapture || bindType === BindType.kCaptureCatch;
+  const isCatch = bindType === BindType.kCaptureCatch
+    || bindType === BindType.kBubbleCatch;
+
+  if (capture) {
+    return isCatch ? 'capture-catch' : 'capture-bind';
+  }
+  return isCatch ? 'catchevent' : 'bindevent';
 }
 
 /**
@@ -94,75 +73,44 @@ function listenerKey(
  * `__RemoveEventListener`).
  *
  * These are the *function callback* form of element event binding used by
- * buildless (vanilla) Lynx cards, as opposed to {@link AddEventPAPI}
- * (`__AddEvent`), which takes a string handler name or a worklet object and
- * routes dispatch through the Rust event delegation system.
+ * buildless (vanilla) Lynx cards, as opposed to `__AddEvent`, which binds a
+ * handler *name* dispatched across threads or a worklet object.
  *
- * Because the callback here is a live main-thread closure that must be invoked
- * synchronously in the MTS realm, this implementation keeps its own JS-side
- * registry and attaches real DOM listeners to the element rather than pushing
- * the handler into wasm: a `JsValue` closure cannot round-trip through the
- * Rust handler tables (which store handler *names* for cross-thread dispatch
- * and worklet descriptors for MTS dispatch), and no wasm change is needed.
+ * Both forms are filed in the element's own handler table on the Rust side, so
+ * a callback participates in the same dispatch as every other handler: one
+ * delegated DOM listener per event name feeds `common_event_handler`, which
+ * walks the ancestor path and runs the capture pass, the catch short-circuit,
+ * the bubble pass and the global-bind pass. Binding directly with
+ * `element.addEventListener` would instead create a second, parallel dispatch
+ * that could neither stop nor be stopped by those handlers.
+ *
+ * `once` is handled here rather than in Rust: the slot is cleared before the
+ * callback runs, so a re-entrant dispatch cannot see it twice. `passive` is
+ * accepted and ignored, because the delegated listener - not the per-element
+ * registration - is what decides passiveness, and it is already passive.
  */
 export function createElementEventListenerAPIs(
   mtsBinding: WASMJSBinding,
-  __AddEvent: AddEventPAPI,
 ): {
   __AddEventListener: AddEventListenerPAPI;
   __RemoveEventListener: RemoveEventListenerPAPI;
-  disposeElementEventListeners: () => void;
 } {
   /**
-   * `(uniqueId, eventName, capture)` -> user callback -> the DOM listener that
-   * wraps it. Needed because `__RemoveEventListener` is called with the
-   * original callback, not the wrapper.
+   * `once` wrappers, keyed weakly by element so an element that goes away takes
+   * its entries with it.
    */
-  const registry = new Map<
-    string,
-    Map<(event: MainThreadScriptEvent) => void, {
-      element: WeakRef<HTMLElement>;
-      w3cEventName: string;
-      domListener: (event: Event) => void;
-      capture: boolean;
-    }>
+  const onceWrappers = new WeakMap<
+    HTMLElement,
+    Map<unknown, (...args: unknown[]) => void>
   >();
-
-  function buildEventObject(
-    domEvent: Event,
-    currentTarget: HTMLElement,
-  ): MainThreadScriptEvent {
-    const eventObject = createCrossThreadEvent(
-      domEvent as never,
-      mtsBinding.lynxViewInstance.lynxViewClientLeft,
-      mtsBinding.lynxViewInstance.lynxViewClientTop,
-    ) as MainThreadScriptEvent;
-    const target = (domEvent.target ?? currentTarget) as DecoratedHTMLElement;
-    const wasmContext = mtsBinding.wasmContext;
-    const datasetOf = (element: DecoratedHTMLElement) => {
-      const uniqueId = __GetElementUniqueID(element);
-      if (wasmContext && uniqueId >= 0) {
-        try {
-          return wasmContext.get_dataset(uniqueId) as Record<string, string>;
-        } catch {
-          // The element may already be detached from the wasm side.
-        }
-      }
-      return {};
-    };
-    eventObject.target = Object.assign(
-      mtsBinding.generateTargetObject(target, datasetOf(target)),
-      { elementRefptr: target },
-    );
-    eventObject.currentTarget = Object.assign(
-      mtsBinding.generateTargetObject(
-        currentTarget as DecoratedHTMLElement,
-        datasetOf(currentTarget as DecoratedHTMLElement),
-      ),
-      { elementRefptr: currentTarget },
-    );
-    return eventObject;
-  }
+  const wrappersOf = (element: HTMLElement) => {
+    let wrappers = onceWrappers.get(element);
+    if (!wrappers) {
+      wrappers = new Map();
+      onceWrappers.set(element, wrappers);
+    }
+    return wrappers;
+  };
 
   const __AddEventListener: AddEventListenerPAPI = (
     element,
@@ -170,76 +118,73 @@ export function createElementEventListenerAPIs(
     callback,
     options,
   ) => {
-    const resolved = resolveOptions(options);
+    // `__GetElementUniqueID` yields -1 for anything not built through the
+    // Element PAPIs, which therefore has no handler table to file into.
+    const uniqueId = __GetElementUniqueID(element);
+    if (uniqueId === -1) {
+      return;
+    }
     const eventName = name.toLowerCase();
+    const eventType = eventTypeOf(options);
 
-    // `native:bind` — the handler is a string naming a client method, which is
-    // exactly what `__AddEvent` already routes cross-thread. Delegate instead
-    // of duplicating the dispatch path.
-    if (
-      typeof callback === 'string'
-      && resolved.closureType === ClosureType.kClient
-    ) {
-      __AddEvent(
-        element,
-        resolved.catchEvent ? 'catchEvent' : 'bindEvent',
+    if (typeof callback === 'string') {
+      // `native:bind`: the callback is a handler *name*, which is dispatched to
+      // the host rather than invoked here.
+      mtsBinding.wasmContext?.add_cross_thread_event(
+        uniqueId,
+        eventType,
         eventName,
         callback,
       );
       return;
     }
-
     if (typeof callback !== 'function') {
       return;
     }
 
-    // `__GetElementUniqueID` yields -1 for anything not built through the
-    // Element PAPIs. Such elements must not be keyed, or they would all share
-    // one key and a listener added on one would be removable through another.
-    const uniqueId = __GetElementUniqueID(element);
-    if (uniqueId === -1) {
-      return;
-    }
-    const key = listenerKey(uniqueId, eventName, resolved.capture);
-    let listeners = registry.get(key);
-    if (!listeners) {
-      listeners = new Map();
-      registry.set(key, listeners);
-    }
-    // Re-registering the same (element, name, callback, capture) triple is a
-    // no-op, matching both `EventTarget` and the engine's `Matches()` dedup.
-    if (listeners.has(callback)) {
+    if (options?.once !== true) {
+      mtsBinding.wasmContext?.add_closure_event(
+        uniqueId,
+        eventType,
+        eventName,
+        callback,
+        undefined,
+      );
+      onceWrappers.get(element)?.delete(callback);
       return;
     }
 
-    const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
-    const domListener = (domEvent: Event) => {
-      if (resolved.once) {
-        // Keep the registry in sync with the DOM's own `once` removal so a
-        // later `__RemoveEventListener` (and disposal) stays consistent.
-        listeners!.delete(callback);
-        if (listeners!.size === 0) registry.delete(key);
+    // `once` lives here rather than in the handler table. The wrapper guards
+    // with a flag so a re-entrant dispatch cannot deliver twice, then drops the
+    // registration in a microtask: the dispatcher owns the element data for the
+    // duration of the walk, so mutating the handler table from inside a callback
+    // would abort with "recursive use of an object".
+    let fired = false;
+    const wrapper = (...args: unknown[]) => {
+      if (fired) {
+        return;
       }
-      if (resolved.catchEvent) {
-        domEvent.stopPropagation();
-      }
-      callback(buildEventObject(domEvent, element));
+      fired = true;
+      queueMicrotask(() => {
+        mtsBinding.wasmContext?.add_closure_event(
+          uniqueId,
+          eventType,
+          eventName,
+          undefined,
+          wrapper,
+        );
+      });
+      wrappersOf(element).delete(callback);
+      (callback as (...args: unknown[]) => void)(...args);
     };
-
-    listeners.set(callback, {
-      element: new WeakRef(element),
-      w3cEventName,
-      domListener,
-      capture: resolved.capture,
-    });
-    element.addEventListener(w3cEventName, domListener, {
-      capture: resolved.capture,
-      once: resolved.once,
-      passive: resolved.passive,
-    });
-    // Custom elements such as `scroll-view` only emit some events once asked
-    // to; the Rust `__AddEvent` path does the same for allowlisted events.
-    mtsBinding.enableElementEvent(new WeakRef(element), eventName);
+    wrappersOf(element).set(callback, wrapper);
+    mtsBinding.wasmContext?.add_closure_event(
+      uniqueId,
+      eventType,
+      eventName,
+      wrapper,
+      undefined,
+    );
   };
 
   const __RemoveEventListener: RemoveEventListenerPAPI = (
@@ -248,78 +193,41 @@ export function createElementEventListenerAPIs(
     callback,
     options,
   ) => {
-    const resolved = resolveOptions(options);
-    const eventName = name.toLowerCase();
-
-    if (
-      typeof callback === 'string'
-      && resolved.closureType === ClosureType.kClient
-    ) {
-      // Clear only the cross-thread slot. Routing this through `__AddEvent`
-      // with `undefined` would take its "no identifier" branch, which also
-      // clears the worklet handler for the same (element, type, name) triple -
-      // detaching a `main-thread:bind` handler that this call never touched.
-      const uniqueId = __GetElementUniqueID(element);
-      if (uniqueId !== -1) {
-        mtsBinding.wasmContext?.add_cross_thread_event(
-          uniqueId,
-          resolved.catchEvent ? 'catchEvent' : 'bindEvent',
-          eventName,
-          undefined,
-        );
-      }
-      return;
-    }
-
-    if (typeof callback !== 'function') {
-      return;
-    }
-
-    // `__GetElementUniqueID` yields -1 for anything not built through the
-    // Element PAPIs. Such elements must not be keyed, or they would all share
-    // one key and a listener added on one would be removable through another.
     const uniqueId = __GetElementUniqueID(element);
     if (uniqueId === -1) {
       return;
     }
-    const key = listenerKey(uniqueId, eventName, resolved.capture);
-    const listeners = registry.get(key);
-    const registration = listeners?.get(callback);
-    if (!registration) {
+    const eventName = name.toLowerCase();
+    const eventType = eventTypeOf(options);
+
+    if (typeof callback === 'string') {
+      // Clear only the cross-thread slot, so removing a `native:bind` handler
+      // cannot disturb a callback or a worklet bound to the same triple.
+      mtsBinding.wasmContext?.add_cross_thread_event(
+        uniqueId,
+        eventType,
+        eventName,
+        undefined,
+      );
       return;
     }
-    listeners!.delete(callback);
-    if (listeners!.size === 0) {
-      registry.delete(key);
-    }
-    element.removeEventListener(
-      registration.w3cEventName,
-      registration.domListener,
-      registration.capture,
+
+    // A `once` registration was filed as a wrapper, so removal has to target
+    // that wrapper rather than the callback the caller hands back.
+    const registered = onceWrappers.get(element)?.get(
+      callback as (...args: unknown[]) => void,
+    ) ?? callback;
+    onceWrappers.get(element)?.delete(
+      callback as (...args: unknown[]) => void,
+    );
+    mtsBinding.wasmContext?.add_closure_event(
+      uniqueId,
+      eventType,
+      eventName,
+      undefined,
+      registered,
     );
   };
 
-  /**
-   * Detach every listener registered through `__AddEventListener`. Called on
-   * teardown so a card that does not clean up after itself cannot leave
-   * closures attached to elements that outlive the instance.
-   */
-  function disposeElementEventListeners(): void {
-    for (const listeners of registry.values()) {
-      for (const registration of listeners.values()) {
-        registration.element.deref()?.removeEventListener(
-          registration.w3cEventName,
-          registration.domListener,
-          registration.capture,
-        );
-      }
-    }
-    registry.clear();
-  }
-
-  return {
-    __AddEventListener,
-    __RemoveEventListener,
-    disposeElementEventListeners,
-  };
+  return { __AddEventListener, __RemoveEventListener };
 }

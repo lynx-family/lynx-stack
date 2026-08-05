@@ -32,11 +32,6 @@ const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
-  /**
-   * Detaches every listener registered via `__AddEventListener`. Installed by
-   * `createElementAPI`.
-   */
-  disposeElementEventListeners?: () => void;
   #addedEventListeners: Set<string> = new Set();
   #documentEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
@@ -133,6 +128,44 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
       eventObject,
     ]);
+  }
+
+  /**
+   * Invokes a callback registered through `__AddEventListener`.
+   *
+   * Called from the same per-element loop as `runWorklet` and `publishEvent`, so
+   * a callback sees the same `target` / `currentTarget` shape and takes part in
+   * the same capture, catch and bubble ordering.
+   */
+  runElementClosure(
+    closure: unknown,
+    eventObject: LynxCrossThreadEvent,
+    targetUniqueId: number,
+    targetDataset: Record<string, string>,
+    currentTargetUniqueId: number,
+    currentTargetDataset: Record<string, string>,
+  ) {
+    if (typeof closure !== 'function') return;
+    const target = this.getElementByUniqueId(targetUniqueId);
+    const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
+    const resolvedTarget = (target ?? currentTarget) as
+      | DecoratedHTMLElement
+      | undefined;
+    if (!resolvedTarget) return;
+    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
+    eventObject.target = this.generateTargetObject(
+      resolvedTarget,
+      resolvedTargetDataset,
+    );
+    eventObject.currentTarget = this.generateTargetObject(
+      currentTarget as DecoratedHTMLElement,
+      currentTargetDataset,
+    );
+    // @ts-expect-error
+    eventObject.target.elementRefptr = resolvedTarget;
+    // @ts-expect-error
+    eventObject.currentTarget.elementRefptr = currentTarget;
+    (closure as (event: LynxCrossThreadEvent) => void)(eventObject);
   }
 
   publishEvent(
@@ -245,7 +278,6 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   // before another LynxView instance mounts, otherwise stale handlers stay
   // attached to `document` and fire against a torn-down wasmContext.
   disposeEventListeners() {
-    this.disposeElementEventListeners?.();
     for (const eventName of this.#addedEventListeners) {
       if (this.#documentEventListeners.has(eventName)) {
         document.removeEventListener(eventName, this.#commonEventHandler, true);
