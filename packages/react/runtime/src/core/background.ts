@@ -55,6 +55,13 @@ export interface BackgroundProps {
  * A first-screen boundary that opts its subtree out of the main-thread
  * first-screen render (IFR, Instant First-Frame Rendering).
  *
+ * This is the primitive both first-screen boundaries are built from: it holds
+ * two arms and each thread takes one. How much the arms share is what varies.
+ * Sharing nothing defers the whole subtree and the hand-over replaces it;
+ * sharing a prefix — see {@link BackgroundProps.island} — adopts that prefix
+ * and replaces only the rest; sharing everything is {@link MainThread}, whose
+ * single arm both threads render and the hand-over adopts whole.
+ *
  * During the main-thread first-screen render, the boundary renders `fallback`
  * (or nothing) instead of `children`. The background thread always renders
  * `children`, and the first-screen hydration replaces the fallback with the

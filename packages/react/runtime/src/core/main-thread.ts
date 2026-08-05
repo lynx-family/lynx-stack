@@ -21,12 +21,37 @@ export interface MainThreadProps {
 
 /**
  * A first-screen boundary that opts its subtree *into* the main-thread
- * first-screen render — the mirror of {@link Background}.
+ * first-screen render.
  *
- * `<Background>` and `<MainThread>` are the two ends of the same dial.
- * `<Background>` defers a subtree on a build whose default is "everything
- * renders on the main thread's first frame"; `<MainThread>` promotes a
- * subtree on a build whose default is "nothing does".
+ * Both boundaries turn the same build mode on — the main thread compiles what
+ * they leave standing, and nothing else. `<Background>` defers a subtree on a
+ * build whose default is "everything renders on the main thread's first
+ * frame"; `<MainThread>` promotes one on a build whose default is "nothing
+ * does".
+ *
+ * They are not, however, mirror images of each other in the tree.
+ * `<Background>` *diverges*: it holds two arms and each thread takes one, so
+ * the hand-over **replaces** what the main thread built. `<MainThread>`
+ * *converges*: it holds one arm that both threads render, so the hand-over
+ * **adopts** it. Its children are not "the fallback" — they are the fallback
+ * and the deferred content at once, which is why
+ *
+ * ```tsx
+ * <MainThread>{island}</MainThread>
+ * ```
+ *
+ * and
+ *
+ * ```tsx
+ * <Background fallback={island}>{island}</Background>
+ * ```
+ *
+ * produce the same frames on both builds. `<Background>` is the primitive and
+ * this component names its fixed point, where the two arms coincide; what
+ * actually varies between them is how much of the two arms is shared. Sharing
+ * nothing is a plain deferral, sharing everything is this component, and
+ * sharing a prefix is {@link BackgroundProps.island}, which adopts the shared
+ * part and replaces the rest.
  *
  * At the render root, `<MainThread>` declares that the wrapped subtree — and
  * only it — is the main thread's first frame:

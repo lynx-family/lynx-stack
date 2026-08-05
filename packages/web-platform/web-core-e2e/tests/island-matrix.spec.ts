@@ -251,6 +251,13 @@ const MODEL: Record<string, Record<Mode, string[]>> = {
     ifr: ['p12-island', 'p12-skeleton-0', 'p12-skeleton-1'],
     mts: ['p12-island', 'p12-skeleton-0', 'p12-skeleton-1'],
   },
+  'p14-bg-equal-arms': {
+    // `p03` with no `<MainThread>` in sight: a `<Background>` whose two arms
+    // are the same tree. If it produces `p03`'s frames, then `<MainThread>`
+    // is not a second mechanism — it is the name of this degenerate case.
+    ifr: ['p14-island'],
+    mts: ['p14-island'],
+  },
   'p13-bg-island-prop': {
     // The same thing through `<Background island={…}>`, which owns the
     // position so the author cannot put the two arms out of step. Same frame
