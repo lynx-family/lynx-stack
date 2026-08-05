@@ -9,6 +9,7 @@ import {
 } from '../ts/client/mainthread/LynxEngineContext.js';
 import { DispatchEventResult } from '../ts/client/LynxCrossThreadContext.js';
 import { EngineMessageEventType } from '../ts/constants.js';
+import type { EngineMessageEvent } from '../ts/types/index.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 
@@ -55,7 +56,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
 
   describe('addEventListener / removeEventListener / dispatchEvent', () => {
     test('dispatches a MessageEvent carrying type and data', () => {
-      const received: Event[] = [];
+      const received: EngineMessageEvent[] = [];
       engine.addEventListener('__RenderPage', (e) => received.push(e));
 
       const result = engine.dispatchEvent({

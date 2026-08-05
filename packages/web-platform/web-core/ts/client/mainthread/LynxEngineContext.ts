@@ -5,7 +5,6 @@
  */
 import type {
   Cloneable,
-  ContextCrossThreadEvent,
   EngineMessageEvent,
   LynxEngineContext,
 } from '../../types/index.js';
@@ -121,7 +120,7 @@ export class LynxEngineContextImpl implements LynxEngineContext {
    * Listeners run synchronously. A throwing listener is reported and does not
    * prevent the remaining listeners from running, matching `EventTarget`.
    */
-  dispatchEvent(event: ContextCrossThreadEvent): number {
+  dispatchEvent(event: EngineMessageEvent): number {
     const byCapture = this.#listeners.get(event.type);
     if (!byCapture) return DispatchEventResult.NotCanceled;
 
@@ -191,7 +190,7 @@ export function dispatchEngineEventWithFallback(
   if (engineContext.hasEventListener(eventName)) {
     engineContext.dispatchEvent({
       type: eventName,
-      data: args as Cloneable,
+      data: args as Cloneable[],
     });
     return true;
   }

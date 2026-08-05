@@ -3,7 +3,6 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
-import type { ContextCrossThreadEvent } from './LynxContextEventTarget.js';
 import type { Cloneable } from './Cloneable.js';
 
 /**
@@ -18,7 +17,12 @@ import type { Cloneable } from './Cloneable.js';
  */
 export interface EngineMessageEvent {
   type: string;
-  data: Cloneable;
+  /**
+   * The engine call's positional arguments, or `undefined` for an event that
+   * carries none - `__DestroyLifetime` is a bare teardown signal, so it does
+   * not go through the argument-packing path at all.
+   */
+  data: Cloneable[] | undefined;
 }
 
 /**
@@ -42,7 +46,7 @@ export interface LynxEngineContext {
     listener: (event: EngineMessageEvent) => void,
     options?: boolean | EventListenerOptions,
   ): void;
-  dispatchEvent(event: ContextCrossThreadEvent): number;
+  dispatchEvent(event: EngineMessageEvent): number;
   /**
    * Whether at least one listener is currently registered for `type`.
    *
