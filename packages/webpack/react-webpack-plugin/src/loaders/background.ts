@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
-import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
+import { MTS_DEFINES_BUILD_INFO } from '../MTSDefines.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 

@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 
 export const MTS_DEFINES_BUILD_INFO = 'lynx:mts-defines';
 
@@ -13,6 +12,7 @@ export interface MTSDefine {
 
 interface ModuleWithMTSDefines {
   identifier?: (() => string) | undefined;
+  layer?: string | null | undefined;
   buildInfo?: Record<string, unknown> | undefined;
   modules?: Iterable<ModuleWithMTSDefines> | undefined;
 }
@@ -70,6 +70,32 @@ export function collectMTSDefines<TChunk, TModule>(
   return [...defines.values()];
 }
 
+export function collectLayerMTSDefines<
+  TModule extends { identifier(): string; layer?: string | null | undefined },
+>(
+  modules: Iterable<TModule>,
+  layer: string,
+): MTSDefine[] {
+  const layerModules = [...modules].filter((module) => module.layer === layer);
+  return collectMTSDefines(
+    [layerModules],
+    (chunk) => chunk,
+    (module) => module.identifier(),
+  );
+}
+
+export function selectMissingMTSDefines(
+  backgroundDefines: readonly MTSDefine[],
+  mainThreadDefines: readonly MTSDefine[],
+): MTSDefine[] {
+  const defined = new Set(
+    mainThreadDefines.map(({ kind, id }) => `${kind}:${id}`),
+  );
+  return backgroundDefines.filter(({ kind, id }) =>
+    !defined.has(`${kind}:${id}`)
+  );
+}
+
 export function renderMTSDefines(
   defines: readonly MTSDefine[],
 ): string {
@@ -85,84 +111,25 @@ ${body}
 `;
 }
 
-export function selectMissingMTSDefines(
-  backgroundDefines: readonly MTSDefine[],
-  mainThreadDefines: readonly MTSDefine[],
-): MTSDefine[] {
-  const defined = new Set(
-    mainThreadDefines.map(({ kind, id }) => `${kind}:${id}`),
-  );
-  return backgroundDefines.filter(({ kind, id }) =>
-    !defined.has(`${kind}:${id}`)
-  );
-}
-
-export function generateMTSDefines(
-  compilation: Pick<Compilation, 'entrypoints' | 'chunkGraph'>,
-  backgroundEntry: string,
-  mainThreadEntry: string,
+/**
+ * The source of the module injected into a main-thread entry to register the
+ * definitions its bundle dropped. It is a regular module (added through
+ * `compilation.addInclude` as a \`data:\` URI), so importing the runtime here
+ * keeps exactly what the definitions need alive — a bundle with nothing
+ * missing gets no module and pays nothing.
+ */
+export function renderMTSDefinesModule(
+  defines: readonly MTSDefine[],
 ): string {
-  const { chunkGraph } = compilation;
-  const collect = (entryName: string) => {
-    const entrypoint = compilation.entrypoints.get(entryName);
-    if (!entrypoint) {
-      throw new Error(
-        `No entrypoint named ${
-          JSON.stringify(entryName)
-        } to collect the main-thread definitions from.`,
-      );
-    }
-    return collectMTSDefines(
-      entrypoint.chunks,
-      (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
-      (module) => module.identifier(),
-    );
-  };
-
-  const missing = selectMissingMTSDefines(
-    collect(backgroundEntry),
-    collect(mainThreadEntry),
-  );
-  if (missing.length === 0) {
-    return '';
-  }
-  return renderMTSDefines(missing);
+  return `import * as ReactLynx from '@lynx-js/react/internal';
+${renderMTSDefines(defines)}__initMTSDefines(ReactLynx);
+`;
 }
 
-type MTSDefinesRuntimeModule = new(
-  backgroundEntry: string,
-  mainThreadEntry: string,
-) => RuntimeModule;
-
-export function createMTSDefinesRuntimeModule(
-  webpack: typeof import('@rspack/core').rspack,
-): MTSDefinesRuntimeModule {
-  return class MTSDefinesRuntimeModule extends webpack.RuntimeModule {
-    constructor(
-      private readonly backgroundEntry: string,
-      private readonly mainThreadEntry: string,
-    ) {
-      super(
-        'lynx main thread defines',
-        webpack.RuntimeModule.STAGE_NORMAL,
-      );
-      this.fullHash = true;
-    }
-
-    override shouldIsolate(): boolean {
-      return false;
-    }
-
-    override generate(): string {
-      const compilation = this.compilation as Compilation | null;
-      if (!compilation) {
-        return '';
-      }
-      return generateMTSDefines(
-        compilation,
-        this.backgroundEntry,
-        this.mainThreadEntry,
-      );
-    }
-  };
+export function renderMTSDefinesModuleURI(
+  defines: readonly MTSDefine[],
+): string {
+  return `data:text/javascript,${
+    encodeURIComponent(renderMTSDefinesModule(defines))
+  }`;
 }

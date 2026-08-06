@@ -18,7 +18,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
-import { createMTSDefinesRuntimeModule } from './MTSDefinesRuntimeModule.js';
+import {
+  collectLayerMTSDefines,
+  renderMTSDefinesModuleURI,
+  selectMissingMTSDefines,
+} from './MTSDefines.js';
 
 const require = createRequire(import.meta.url);
 
@@ -411,6 +415,45 @@ class ReactWebpackPlugin {
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
 
+    const mainThreadEntries = Object.entries(options.mainThreadEntries ?? {});
+    if (mainThreadEntries.length > 0) {
+      const { EntryPlugin } = compiler.webpack;
+      compiler.hooks.finishMake.tapPromise(
+        this.constructor.name,
+        async (compilation) => {
+          const backgroundDefines = collectLayerMTSDefines(
+            compilation.modules,
+            LAYERS.BACKGROUND,
+          );
+          if (backgroundDefines.length === 0) {
+            return;
+          }
+          const missing = selectMissingMTSDefines(
+            backgroundDefines,
+            collectLayerMTSDefines(compilation.modules, LAYERS.MAIN_THREAD),
+          );
+          if (missing.length === 0) {
+            return;
+          }
+          const request = renderMTSDefinesModuleURI(missing);
+          await Promise.all(
+            mainThreadEntries.map(([mainThreadEntry]) =>
+              new Promise<void>((resolve, reject) => {
+                // `addInclude` puts the module in the chunk without running it;
+                // `addEntry` also appends it to the entry startup sequence.
+                compilation.addEntry(
+                  compiler.context,
+                  EntryPlugin.createDependency(request),
+                  { name: mainThreadEntry, layer: LAYERS.MAIN_THREAD },
+                  (err) => err ? reject(err) : resolve(),
+                );
+              })
+            ),
+          );
+        },
+      );
+    }
+
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
 
@@ -442,31 +485,6 @@ class ReactWebpackPlugin {
           new LynxProcessEvalResultRuntimeModule(),
         );
       });
-
-      const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
-        compiler.webpack,
-      );
-      compilation.hooks.additionalTreeRuntimeRequirements.tap(
-        this.constructor.name,
-        (chunk) => {
-          for (
-            const [mainThreadEntry, backgroundEntry] of Object.entries(
-              options.mainThreadEntries ?? {},
-            )
-          ) {
-            if (
-              compilation.entrypoints.get(mainThreadEntry)
-                ?.getEntrypointChunk() !== chunk
-            ) {
-              continue;
-            }
-            compilation.addRuntimeModule(
-              chunk,
-              new MTSDefinesRuntimeModule(backgroundEntry, mainThreadEntry),
-            );
-          }
-        },
-      );
 
       compilation.hooks.processAssets.tap(
         {

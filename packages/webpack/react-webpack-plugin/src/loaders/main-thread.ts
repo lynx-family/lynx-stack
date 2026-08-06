@@ -7,7 +7,7 @@ import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
 
-import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
+import { MTS_DEFINES_BUILD_INFO } from '../MTSDefines.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 

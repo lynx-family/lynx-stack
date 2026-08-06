@@ -14,12 +14,13 @@ import { describe, expect, it } from '@rstest/core';
 import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 import {
   MTS_DEFINES_BUILD_INFO,
+  collectLayerMTSDefines,
   collectMTSDefines,
-  generateMTSDefines,
   renderMTSDefines,
+  renderMTSDefinesModule,
   selectMissingMTSDefines,
-} from '../src/MTSDefinesRuntimeModule.js';
-import type { MTSDefine } from '../src/MTSDefinesRuntimeModule.js';
+} from '../src/MTSDefines.js';
+import type { MTSDefine } from '../src/MTSDefines.js';
 
 function snapshot(id: string, code = `/* ${id} */`): MTSDefine {
   return { kind: 'snapshot', id, code };
@@ -154,63 +155,37 @@ describe('selectMissingMTSDefines', () => {
   });
 });
 
-function compilationOf(
-  entries: Record<string, TestModule[]>,
-): Parameters<typeof generateMTSDefines>[0] {
-  const entrypoints = new Map(
-    Object.entries(entries).map(([name, modules]) => [name, {
-      chunks: [{
-        modules: modules.map((module) => ({
-          ...module,
-          identifier: () => module.id,
-        })),
-      }],
-    }]),
-  );
+function layerModule(
+  layer: string,
+  module: TestModule,
+): { identifier(): string; layer: string } {
   return {
-    entrypoints,
-    chunkGraph: {
-      getChunkModules: (chunk: { modules: TestModule[] }) => chunk.modules,
-    },
-  } as unknown as Parameters<typeof generateMTSDefines>[0];
+    ...asModule(module),
+    layer,
+    identifier: () => module.id,
+  };
 }
 
-describe('generateMTSDefines', () => {
-  it('renders the definitions the main thread lacks', () => {
-    const code = generateMTSDefines(
-      compilationOf({
-        background: [
-          asModule({ id: 'a', defines: [snapshot('missing', 'registerA;')] }),
-          asModule({ id: 'b', defines: [snapshot('present')] }),
-        ],
-        'main-thread': [asModule({ id: 'a', defines: [snapshot('present')] })],
-      }),
-      'background',
-      'main-thread',
-    );
+describe('collectLayerMTSDefines', () => {
+  it('collects only the definitions of the given layer', () => {
+    const defines = collectLayerMTSDefines([
+      layerModule('background', { id: 'a', defines: [snapshot('BG')] }),
+      layerModule('main-thread', { id: 'b', defines: [snapshot('MT')] }),
+    ], 'background');
 
-    expect(code).toContain('var __initMTSDefines = function (');
+    expect(defines.map(({ id }) => id)).toEqual(['BG']);
+  });
+});
+
+describe('renderMTSDefinesModule', () => {
+  const code = renderMTSDefinesModule([snapshot('a', 'registerA;')]);
+
+  it('imports the runtime the definitions register with', () => {
+    expect(code).toContain(
+      'import * as ReactLynx from \'@lynx-js/react/internal\';',
+    );
     expect(code).toContain('registerA;');
-    expect(code).not.toContain('present');
-  });
-
-  it('renders nothing when the main thread defines everything', () => {
-    const code = generateMTSDefines(
-      compilationOf({
-        background: [asModule({ id: 'a', defines: [snapshot('x')] })],
-        'main-thread': [asModule({ id: 'b', defines: [snapshot('x')] })],
-      }),
-      'background',
-      'main-thread',
-    );
-
-    expect(code).toBe('');
-  });
-
-  it('fails on an entry it cannot collect from', () => {
-    expect(() =>
-      generateMTSDefines(compilationOf({}), 'background', 'main-thread')
-    ).toThrowError(/No entrypoint named "background"/);
+    expect(code).toContain('__initMTSDefines(ReactLynx);');
   });
 });
 
@@ -230,7 +205,7 @@ describe('renderMTSDefines', () => {
   });
 });
 
-describe('MTSDefinesRuntimeModule', () => {
+describe('missing definitions injection', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const require = createRequire(import.meta.url);
 
