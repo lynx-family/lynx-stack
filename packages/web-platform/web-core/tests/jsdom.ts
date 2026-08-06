@@ -117,4 +117,12 @@ Object.assign(globalThis, {
   DOMRect: window.DOMRect,
   Event: window.Event,
   MouseEvent: window.MouseEvent,
+  // `Event` above comes from jsdom, so `EventTarget` must too: Node's own
+  // `EventTarget.prototype.dispatchEvent` brand-checks its argument against
+  // Node's internal `Event`, which a jsdom `Event` is not. Mixing the two
+  // makes any `dispatchEvent` throw
+  // `TypeError: The "event" argument must be an instance of Event`, which is
+  // what production code built on `EventTarget` — `LynxCrossThreadContext`
+  // and `LynxEngineContextImpl` — relies on.
+  EventTarget: window.EventTarget,
 });
