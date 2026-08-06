@@ -30,7 +30,7 @@ function clickOn(node: HTMLElement): void {
   );
 }
 
-describe('__FlushElementTree called from inside a main-thread event handler', () => {
+describe('Element PAPIs called from inside a main-thread event handler', () => {
   let rootDom: ShadowRoot;
   let mts: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
@@ -52,6 +52,44 @@ describe('__FlushElementTree called from inside a main-thread event handler', ()
     );
   });
 
+  /**
+   * Runs `body` inside a `tap` handler on `node` and reports what it threw.
+   * The throw has to be captured here: it unwinds through the wasm frames and
+   * out of `dispatchEvent`, where jsdom reports it as an uncaught error instead
+   * of surfacing it to the caller.
+   */
+  const duringDispatch = (
+    node: HTMLElement,
+    body: () => void,
+  ): { called: boolean; error: unknown } => {
+    const result: { called: boolean; error: unknown } = {
+      called: false,
+      error: undefined,
+    };
+    mts.__AddEventListener(node, 'tap', () => {
+      result.called = true;
+      try {
+        body();
+      } catch (error) {
+        result.error = error;
+      }
+    }, {});
+    clickOn(node);
+    return result;
+  };
+
+  test('__FlushElementTree does not throw', () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+
+    const result = duringDispatch(node, () => {
+      mts.__FlushElementTree(node, undefined);
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+  });
+
   test('a flush does not abort the rest of the dispatch', () => {
     // The real damage of the throw: it unwinds the dispatcher, so every handler
     // ordered after the flushing one is skipped.
@@ -61,30 +99,113 @@ describe('__FlushElementTree called from inside a main-thread event handler', ()
     rootDom.appendChild(parent);
 
     const order: string[] = [];
-    mtsBinding.lynxViewInstance.mainThreadGlobalThis.runWorklet = (handler) => {
-      const id = (handler as { _wkltId: string })._wkltId;
-      order.push(id);
-      if (id === 'child') {
-        mts.__FlushElementTree(child, undefined);
-      }
-    };
-    mts.__AddEvent(child, 'bindEvent', 'tap', {
-      type: 'worklet',
-      value: { _wkltId: 'child' },
-    });
-    mts.__AddEvent(parent, 'bindEvent', 'tap', {
-      type: 'worklet',
-      value: { _wkltId: 'parent' },
-    });
+    mts.__AddEventListener(child, 'tap', () => {
+      order.push('child');
+      mts.__FlushElementTree(child, undefined);
+    }, {});
+    mts.__AddEventListener(parent, 'tap', () => {
+      order.push('parent');
+    }, {});
 
     clickOn(child);
 
     expect(order).toStrictEqual(['child', 'parent']);
   });
 
+  test('__AddEvent does not throw', () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+
+    const result = duringDispatch(node, () => {
+      mts.__AddEvent(node, 'bindEvent', 'longpress', 'onLongPress');
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+  });
+
+  test('__AddEventListener does not throw and the listener takes effect', () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+    const added = rstest.fn();
+
+    const result = duringDispatch(node, () => {
+      mts.__AddEventListener(node, 'longpress', added, {});
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+
+    node.dispatchEvent(
+      new (globalThis as any).Event('longpress', { bubbles: true }),
+    );
+    expect(added).toHaveBeenCalledTimes(1);
+  });
+
+  test('__SetDataset and __AddDataset do not throw', () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+
+    const result = duringDispatch(node, () => {
+      mts.__SetDataset(node, { a: '1' });
+      mts.__AddDataset(node, 'b', '2');
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+    expect(mts.__GetDataByKey(node, 'a')).toBe('1');
+    expect(mts.__GetDataByKey(node, 'b')).toBe('2');
+  });
+
+  test('__CreateView does not throw and yields a usable element', () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+    let created: HTMLElement | undefined;
+
+    const result = duringDispatch(node, () => {
+      created = mts.__CreateView(0);
+      mts.__AppendElement(node, created);
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+    expect(created?.parentElement).toBe(node);
+    // a freshly created element is fully registered, not a half-written slot
+    expect(mts.__GetElementUniqueID(created!)).toBeGreaterThan(0);
+  });
+
+  test('__SetCSSId does not throw', () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+
+    const result = duringDispatch(node, () => {
+      mts.__SetCSSId([node], 1);
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+  });
+
+  test('the handler can mutate the element it is dispatching on', () => {
+    // `dispatch_event_by_path` holds the current target's `LynxElementData`
+    // while it calls into JS, so a handler writing to its own currentTarget
+    // hits the inner `RefCell` rather than the wasm-bindgen guard.
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+
+    const result = duringDispatch(node, () => {
+      mts.__AddDataset(node, 'touched', 'yes');
+      mts.__AddEvent(node, 'bindEvent', 'longpress', 'onLongPress');
+    });
+
+    expect(result.called).toBe(true);
+    expect(result.error).toBe(undefined);
+    expect(mts.__GetDataByKey(node, 'touched')).toBe('yes');
+  });
+
   test('a worklet handler can flush', () => {
-    // `main-thread:bind*` goes through `runWorklet` while the Rust dispatcher
-    // still holds a shared borrow of the wasm context.
+    // `main-thread:bind*` goes through `runWorklet`, a different binding from
+    // the `__AddEventListener` closure path but the same dispatcher.
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     let error: unknown = undefined;

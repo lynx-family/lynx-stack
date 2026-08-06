@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 impl MainThreadWasmContext {
   pub fn set_dataset(
-    &mut self,
+    &self,
     unique_id: usize,
     dom: &web_sys::HtmlElement,
     new_dataset: &js_sys::Object,
@@ -55,7 +55,7 @@ impl MainThreadWasmContext {
   }
 
   pub fn add_dataset(
-    &mut self,
+    &self,
     unique_id: usize,
     key: &wasm_bindgen::JsValue,
     value: &wasm_bindgen::JsValue,

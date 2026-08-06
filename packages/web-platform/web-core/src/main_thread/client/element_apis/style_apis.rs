@@ -14,31 +14,31 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 impl MainThreadWasmContext {
   pub fn set_css_id(
-    &mut self,
+    &self,
     elements_unique_id: Vec<usize>,
     css_id: i32,
     entry_name: Option<String>,
   ) -> Result<(), JsError> {
     for unique_id in elements_unique_id.into_iter() {
       {
-        let element = self.unique_id_to_dom_map.get(&unique_id).expect_throw("El");
+        let element = self.get_dom_ref_by_unique_id(unique_id).expect_throw("El");
         if let Some(entry_name) = &entry_name {
           let _ = self.mts_binding.set_attribute(
-            element,
+            &element,
             constants::LYNX_ENTRY_NAME_ATTRIBUTE,
             entry_name,
           );
         }
         if css_id != 0 {
           let _ = self.mts_binding.set_attribute(
-            element,
+            &element,
             constants::CSS_ID_ATTRIBUTE,
             &css_id.to_string(),
           );
         } else {
           let _ = self
             .mts_binding
-            .remove_attribute(element, constants::CSS_ID_ATTRIBUTE);
+            .remove_attribute(&element, constants::CSS_ID_ATTRIBUTE);
         }
         {
           let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap_throw();
@@ -54,20 +54,23 @@ impl MainThreadWasmContext {
   }
 
   pub fn update_css_og_style(
-    &mut self,
+    &self,
     unique_id: usize,
     entry_name: Option<String>,
   ) -> Result<(), JsError> {
-    let element = self.unique_id_to_dom_map.get(&unique_id).expect_throw("El");
+    let element = self.get_dom_ref_by_unique_id(unique_id).expect_throw("El");
     let element_data_cell = self.get_element_data_by_unique_id(unique_id).unwrap_throw();
-    let element_data = element_data_cell.borrow_mut();
-    self.style_manager.update_css_og_style(
+    let css_id = element_data_cell.borrow().css_id;
+    // Both reads leave JS before the style manager is borrowed, so nothing is
+    // held across a call that could re-enter this context.
+    let class_names = self
+      .mts_binding
+      .get_class_name_list(&element)
+      .unwrap_or_default();
+    self.style_manager.borrow_mut().update_css_og_style(
       unique_id,
-      element_data.css_id,
-      self
-        .mts_binding
-        .get_class_name_list(element)
-        .unwrap_or_default(),
+      css_id,
+      class_names,
       entry_name,
     )?;
     Ok(())
