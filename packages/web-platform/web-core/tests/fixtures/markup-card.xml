@@ -3,14 +3,11 @@
 <lynx version="5.4.2">
 <style><![CDATA[
   /*
-    Custom properties are declared on the page's own class rather than on
-    `:root`, because the CSS of a markup card is carried verbatim and is not
-    tokenized: selectors are handed to the browser exactly as written here. A
-    `:root` rule therefore keeps matching the host document instead of the
-    card's root element, so anything declared under it - custom properties
-    included - is invisible to the card. `.page` is set on the root element by
-    the main-thread script below, so it is the reliable place for card-wide
-    values.
+    Card-wide custom properties are declared on the page's own class. `:root`
+    would work too - a markup card's CSS is tokenized, so `:root` is rewritten
+    to the card's root element - but `.page` is set on that same element by the
+    main-thread script below, so this keeps the stylesheet explicit about what
+    it targets. `markup-root-selector.xml` covers the `:root` form.
   */
   /*
     No `height` here on purpose: the card lets the host size itself, so
