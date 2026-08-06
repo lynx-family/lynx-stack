@@ -25,7 +25,7 @@ test('execution source URLs keep nested section names in one path segment', () =
   );
 });
 
-test('QueryComponent shares an in-flight request after its template is decoded', async () => {
+test('QueryComponent shares an in-flight request', async () => {
   type Result = Parameters<Parameters<NativeApp['queryComponent']>[1]>[0];
   let resolveQuery!: (result: Result) => void;
   const query = rstest.fn(
@@ -34,13 +34,11 @@ test('QueryComponent shares an in-flight request after its template is decoded',
         resolveQuery = resolve;
       }),
   );
-  let isReady = false;
-  const queryComponent = createQueryComponent(query, () => isReady);
+  const queryComponent = createQueryComponent(query);
   const first = rstest.fn();
   const second = rstest.fn();
 
   queryComponent('shared.bundle', first);
-  isReady = true;
   queryComponent('shared.bundle', second);
   resolveQuery({ code: 0, detail: { schema: 'shared.bundle' } });
   await new Promise(resolve => setTimeout(resolve, 0));

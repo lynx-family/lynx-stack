@@ -11,7 +11,15 @@ import {
 
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
-import { BenchPage } from './pages/BenchPage.js';
+import {
+  readBenchLocale,
+  writeBenchLocale,
+} from './pages/bench/benchLocale.js';
+import type { BenchLocale } from './pages/bench/benchLocale.js';
+import { BenchResultPage } from './pages/bench/BenchResultPage.js';
+import { BenchRunnerPage } from './pages/bench/BenchRunnerPage.js';
+import { BenchShell } from './pages/bench/BenchShell.js';
+import { PhaseTwoReportPage } from './pages/bench/PhaseTwoReportPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
@@ -115,6 +123,7 @@ export function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     return getForcedTheme() ?? getInitialTheme();
   });
+  const [benchLocale, setBenchLocale] = useState<BenchLocale>(readBenchLocale);
   const embedded = useMemo(() => isEmbedded(), []);
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
@@ -142,6 +151,10 @@ export function App() {
   }, [theme, forcedTheme]);
 
   useEffect(() => {
+    writeBenchLocale(benchLocale);
+  }, [benchLocale]);
+
+  useEffect(() => {
     const onHashChange = () => {
       ensureDefaultRouteHash();
       setRoute(parseRouteHash(getCurrentRouteHash()));
@@ -153,6 +166,10 @@ export function App() {
   const handleTabClick = useCallback((id: Tab) => {
     window.location.hash = buildRouteHash(protocol.name, id);
   }, [protocol.name]);
+
+  const handleThemeToggle = useCallback(() => {
+    setTheme((current) => current === 'dark' ? 'light' : 'dark');
+  }, []);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
     if (name === 'mcp-apps') {
@@ -225,8 +242,42 @@ export function App() {
     }
 
     switch (route.tab) {
-      case 'bench':
-        return <BenchPage key='bench' />;
+      case 'bench': {
+        let benchPage = (
+          <BenchRunnerPage key='bench-runner' locale={benchLocale} />
+        );
+        switch (route.benchSlug) {
+          case undefined:
+          case 'runner':
+            break;
+          case 'phase-1':
+            benchPage = (
+              <BenchResultPage key='bench-phase-1' locale={benchLocale} />
+            );
+            break;
+          case 'phase-2':
+            benchPage = (
+              <PhaseTwoReportPage
+                key='bench-phase-2-report'
+                locale={benchLocale}
+              />
+            );
+            break;
+          default:
+            break;
+        }
+        return (
+          <BenchShell
+            activeSlug={route.benchSlug}
+            locale={benchLocale}
+            theme={theme}
+            onChangeLocale={setBenchLocale}
+            onToggleTheme={handleThemeToggle}
+          >
+            {benchPage}
+          </BenchShell>
+        );
+      }
       case 'examples':
         return route.demoId
           ? (
@@ -262,7 +313,10 @@ export function App() {
     route.tab,
     route.componentName,
     route.demoId,
+    route.benchSlug,
+    benchLocale,
     theme,
+    handleThemeToggle,
   ]);
 
   const protocolVersionControl = (
@@ -284,7 +338,7 @@ export function App() {
 
   return (
     <div className={embedded ? 'appShell appShellEmbedded' : 'appShell'}>
-      {embedded ? null : (
+      {embedded || route.tab === 'bench' ? null : (
         <div className='topBar'>
           <div className='brandGroup'>
             <img
@@ -320,7 +374,7 @@ export function App() {
             iconOnly
             iconBefore={theme === 'dark' ? Sun : Moon}
             className='themeToggle'
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            onClick={handleThemeToggle}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           />

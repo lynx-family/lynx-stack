@@ -1,6 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { transformAttrName } from '../../shared/attribute-name.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
@@ -34,22 +35,36 @@ export interface PlatformInfo {
   'recyclable'?: boolean;
 }
 
+function collectListItemPlatformInfo(
+  object: Record<string, unknown>,
+  transformAttributeNames = false,
+): PlatformInfo {
+  const result: Record<string, unknown> = {};
+  for (const key in object) {
+    const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+        && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+        && transformAttributeNames
+      ? transformAttrName(key)
+      : key;
+    if (platformInfoAttributes.has(transformedKey)) {
+      result[transformedKey] = object[key];
+    }
+  }
+  return result as PlatformInfo;
+}
+
 function extractListItemPlatformInfo(value: unknown): PlatformInfo {
   if (value && typeof value === 'object') {
-    const object = value as Record<string, unknown>;
-    const result: Record<string, unknown> = {};
-    for (const key in object) {
-      if (platformInfoAttributes.has(key)) {
-        result[key] = object[key];
-      }
-    }
-    return result as PlatformInfo;
+    return collectListItemPlatformInfo(value as Record<string, unknown>);
   }
   return value as PlatformInfo;
 }
 
 function getListItemPlatformInfoFromIndexedValue(value: unknown, isSpreadValue = false): PlatformInfo {
-  if (isSpreadValue || (value && typeof value === 'object' && '__spread' in value)) {
+  if (value && typeof value === 'object' && '__spread' in value) {
+    return collectListItemPlatformInfo(value as Record<string, unknown>, true);
+  }
+  if (isSpreadValue) {
     return extractListItemPlatformInfo(value);
   }
   return value as PlatformInfo;

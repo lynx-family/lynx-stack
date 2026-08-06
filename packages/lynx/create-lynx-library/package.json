@@ -1,6 +1,6 @@
 {
   "name": "create-lynx-library",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Create native Lynx libraries",
   "keywords": [
     "Lynx",
@@ -36,8 +36,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.1",
+    "@clack/prompts": "1.7.0",
     "@lynx-js/autolink-codegen": "workspace:^"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:^",
+    "@lynx-js/react-rsbuild-plugin": "workspace:^",
+    "@lynx-js/rspeedy": "workspace:^"
   },
   "engines": {
     "node": "^20 || ^22 || ^24"

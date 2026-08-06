@@ -152,6 +152,9 @@ describe('Plugins - Output', () => {
         {
           "maxSize": 0,
         },
+        {
+          "maxSize": 0,
+        },
       ]
     `)
   })
@@ -186,6 +189,9 @@ describe('Plugins - Output', () => {
         {
           "maxSize": 9007199254740991,
         },
+        {
+          "maxSize": 9007199254740991,
+        },
       ]
     `)
   })
@@ -208,6 +214,9 @@ describe('Plugins - Output', () => {
       ),
     ).toMatchInlineSnapshot(`
       [
+        {
+          "maxSize": NaN,
+        },
         {
           "maxSize": NaN,
         },

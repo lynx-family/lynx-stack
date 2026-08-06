@@ -48,9 +48,16 @@ runs:
           toolchain="stable"
         fi
         printf 'toolchain=%s\n' "${toolchain}" >> "$GITHUB_OUTPUT"
+    # Restore unconditionally. `save-if` gates writing the cache, not reading
+    # it -- gating the restore too meant every pull request downloaded the
+    # toolchain from scratch, which is most of what `Setup Rust` spends time on.
+    # A failed restore must not fail the job: the install step below handles a
+    # miss on its own. Without this a transient download abort inside the cache
+    # action ("Error: aborted" from an unhandled stream error) takes the whole
+    # build down, which is worse than the slow path it replaced.
     - name: Restore rustup cache
       id: restore
-      if: ${{ inputs.save-if == 'true' }}
+      continue-on-error: true
       uses: lynx-infra/cache/restore@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
       with:
         path: ~/.rustup/toolchains

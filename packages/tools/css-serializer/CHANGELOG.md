@@ -1,5 +1,11 @@
 # @lynx-js/css-serializer
 
+## 0.1.7
+
+### Patch Changes
+
+- Update `css-tree` from `^3.1.0` to `^3.2.1` ([#3118](https://github.com/lynx-family/lynx-stack/pull/3118))
+
 ## 0.1.6
 
 ### Patch Changes

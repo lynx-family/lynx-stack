@@ -8,8 +8,6 @@
     ],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -21,11 +19,6 @@
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
-    "plugins": [
-      {
-        "name": "next",
-      },
-    ],
     "paths": {
       "@/*": [
         "./*",
@@ -33,14 +26,11 @@
     },
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
     "**/*.mts",
   ],
   "exclude": [
+    "dist",
     "node_modules",
   ],
 }

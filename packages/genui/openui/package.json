@@ -36,18 +36,18 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
-    "build:api": "tsc -p tsconfig.build.json"
+    "build": "tsc6 -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
+    "build:api": "tsc6 -p tsconfig.build.json"
   },
   "dependencies": {
-    "@openuidev/lang-core": "^0.2.7",
+    "@openuidev/lang-core": "^0.2.9",
     "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.0.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^19.2.17"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

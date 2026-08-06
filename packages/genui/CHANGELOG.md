@@ -1,5 +1,27 @@
 # @lynx-js/genui
 
+## 0.2.1
+
+### Patch Changes
+
+- Adopt lynx-ui primitives and Luna theme tokens for OpenUI controls, and refresh the OpenUI playground experience. ([#3257](https://github.com/lynx-family/lynx-stack/pull/3257))
+
+## 0.2.0
+
+### Minor Changes
+
+- Add an A2UI `McpApp` catalog component that embeds trusted MCP Apps Lynx bundles through `frame`. ([#3001](https://github.com/lynx-family/lynx-stack/pull/3001))
+
+### Patch Changes
+
+- Update `@preact/signals` from `^2.5.1` to `^2.9.4` ([#3116](https://github.com/lynx-family/lynx-stack/pull/3116))
+
+- Update `typedoc` from `^0.28.19` to `^0.28.20` ([#3202](https://github.com/lynx-family/lynx-stack/pull/3202))
+
+- Update `@a2ui/web_core` from `0.9.1` to `0.10.5` ([#3113](https://github.com/lynx-family/lynx-stack/pull/3113))
+
+- Update `@openuidev/lang-core` from `^0.2.7` to `^0.2.9` ([#3197](https://github.com/lynx-family/lynx-stack/pull/3197))
+
 ## 0.1.0
 
 ### Minor Changes

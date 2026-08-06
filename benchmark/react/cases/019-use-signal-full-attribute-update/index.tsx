@@ -1,0 +1,30 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { useSignal } from '@preact/signals';
+
+import { root, useEffect } from '@lynx-js/react';
+
+import { startUpdateBenchmark } from '../../src/UpdateBenchmark.js';
+import { FullAttributeUpdateBenchmark } from '../../src/UpdateBenchmarks.js';
+
+function App() {
+  const updatedSignal = useSignal(false);
+
+  useEffect(() => {
+    startUpdateBenchmark();
+    updatedSignal.value = true;
+  }, [updatedSignal]);
+
+  return (
+    <FullAttributeUpdateBenchmark
+      caseFilePath={__REPO_FILEPATH__}
+      readUpdated={() => updatedSignal.value}
+    />
+  );
+}
+
+runAfterLoadScript(() => {
+  root.render(<App />);
+});

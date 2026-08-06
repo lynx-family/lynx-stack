@@ -1,9 +1,8 @@
 name: Rust
 
 on:
-  push:
-    branches:
-      - main
+  # No `push` trigger: this needs the turbo cache the build job writes, and a
+  # standalone run races it. `deploy-main.yml` calls it after `build-all`.
   workflow_call:
     secrets:
       CODECOV_TOKEN:
@@ -51,7 +50,7 @@ jobs:
           key: test
           save-if: ${{ github.ref_name == 'main' }}
       - name: Install llvm-cov and nextest
-        uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7 # v2
+        uses: taiki-e/install-action@3d7d7cd5ac7f994c1892ae0c06165095b9139094 # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
       - name: Install runtime dependencies
@@ -105,10 +104,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+      # `cargo fmt --check` itself takes a second; installing the toolchain took
+      # over eight minutes on a bad day and pushed this past `timeout-minutes`,
+      # which GitHub then reports as `cancelled` and `Done` reads as a failure.
+      # The local action restores a cached toolchain and installs the minimal
+      # component set.
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
         with:
-          components: rustfmt
-          cache: false
+          key: lint
+          save-if: ${{ github.ref_name == 'main' }}
       - name: Format
         run: cargo fmt --check
 
@@ -121,9 +126,33 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
         with:
-          components: clippy
-          cache: false
+          key: lint
+          save-if: ${{ github.ref_name == 'main' }}
       - name: Clippy
         run: cargo clippy --tests --all-features -- -D warnings
+
+  lockfile:
+    runs-on: lynx-ubuntu-26.04-medium
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
+        with:
+          key: lint
+          save-if: ${{ github.ref_name == 'main' }}
+      # A `Cargo.toml` edit that is not reflected in `Cargo.lock` does not fail
+      # any build: the first cargo invocation silently rewrites the lock file.
+      # That leaves a dirty tree behind, which breaks anything downstream that
+      # expects a clean checkout after a build — `pnpm publish` aborts with
+      # `ERR_PNPM_GIT_UNCLEAN`. `cargo metadata --locked` resolves the graph
+      # without compiling and without writing, so it fails fast instead.
+      - name: Check Cargo.lock is up to date
+        run: cargo metadata --locked --format-version 1 > /dev/null

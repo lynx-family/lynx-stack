@@ -20,6 +20,10 @@
     "bench:013-attrs-runtime": "benchx_cli run dist/013-attrs-runtime.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:014-attrs-mixed": "benchx_cli run dist/014-attrs-mixed.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:015-attrs-component": "benchx_cli run dist/015-attrs-component.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:016-use-state-local-attribute-update": "benchx_cli run dist/016-use-state-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:017-use-signal-local-attribute-update": "benchx_cli run dist/017-use-signal-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:018-use-state-full-attribute-update": "benchx_cli run dist/018-use-state-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:019-use-signal-full-attribute-update": "benchx_cli run dist/019-use-signal-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -38,15 +42,20 @@
     "perfetto:013-attrs-runtime": "benchx_cli -o dist/013-attrs-runtime.ptrace run dist/013-attrs-runtime.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:014-attrs-mixed": "benchx_cli -o dist/014-attrs-mixed.ptrace run dist/014-attrs-mixed.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:015-attrs-component": "benchx_cli -o dist/015-attrs-component.ptrace run dist/015-attrs-component.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:016-use-state-local-attribute-update": "benchx_cli -o dist/016-use-state-local-attribute-update.ptrace run dist/016-use-state-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:017-use-signal-local-attribute-update": "benchx_cli -o dist/017-use-signal-local-attribute-update.ptrace run dist/017-use-signal-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:018-use-state-full-attribute-update": "benchx_cli -o dist/018-use-state-full-attribute-update.ptrace run dist/018-use-state-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:019-use-signal-full-attribute-update": "benchx_cli -o dist/019-use-signal-full-attribute-update.ptrace run dist/019-use-signal-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
+    "@preact/signals": "^2.9.4",
     "benchx_cli": "workspace:*",
-    "empathic": "^2.0.0",
+    "empathic": "^2.0.1",
     "event-target-polyfill": "^0.0.4",
     "magic-string": "^0.30.21",
-    "tinybench": "^5.1.0"
+    "tinybench": "^6.1.1"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
@@ -55,6 +64,7 @@
     "@lynx-js/trace-processor": "^0.0.1",
     "@lynx-js/type-element-api": "0.0.3",
     "@lynx-js/types": "4.0.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^19.2.17",
+    "preact": "catalog:lynxjs"
   }
 }

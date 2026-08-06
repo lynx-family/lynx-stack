@@ -21,4 +21,4 @@ client = ["web-sys"]
 server = []
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.58"
+wasm-bindgen-test = "0.3.76"

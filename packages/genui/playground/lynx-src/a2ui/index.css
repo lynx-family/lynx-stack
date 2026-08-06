@@ -17,6 +17,11 @@
   background-color: var(--canvas);
 }
 
+.bench-page {
+  padding: 10px;
+  background-color: var(--canvas);
+}
+
 .a2ui-root-container {
   flex: 1;
   min-height: 0;

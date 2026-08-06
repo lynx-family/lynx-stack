@@ -77,10 +77,7 @@ export async function createNativeApp(
     markExternalBundle,
     readScript,
   } = createChunkLoading(entryTemplateUrl, cardType);
-  const loadQueryComponent = createQueryComponent(
-    queryComponent,
-    source => templateCache.has(source),
-  );
+  const loadQueryComponent = createQueryComponent(queryComponent);
 
   mainThreadRpc.registerHandler(
     updateBTSChunkEndpoint,

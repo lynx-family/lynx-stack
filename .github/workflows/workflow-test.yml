@@ -81,7 +81,10 @@ jobs:
         with:
           save-if: ${{ github.ref_name == 'main' }}
       - name: Build
-        run: pnpm turbo build --summarize
+        # Kept in step with the build workflow -- if only that one filtered
+        # `benchx_cli` out, every test job would download the 91 MB binary
+        # itself on the resulting cache miss.
+        run: pnpm turbo build --summarize --filter '!benchx_cli' --filter '!@lynx-js/benchmark-*'
       - name: Test # zizmor: ignore[template-injection] The inputs.run is provided by us.
         id: test
         env:

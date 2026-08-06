@@ -1,5 +1,9 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.18.2
+
+## 0.18.1
+
 ## 0.18.0
 
 ### Patch Changes

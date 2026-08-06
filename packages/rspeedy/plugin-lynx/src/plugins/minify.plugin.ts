@@ -1,0 +1,223 @@
+// Copyright 2024 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { mergeRsbuildConfig } from '@rsbuild/core'
+import type { RsbuildConfig, RsbuildPlugin, Rspack } from '@rsbuild/core'
+
+import { debug } from '../debug.js'
+
+const MAIN_THREAD_JS_PATTERN = /.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$/
+const BACKGROUND_JS_PATTERN = /.*background(?:\.[A-Fa-f0-9]*)?\.js$/
+
+// TODO: `mainThreadOptions` and `backgroundOptions` are non-standard keys
+// tunneled through the Rsbuild config. They should be supported by the DSL
+// plugin (e.g. `pluginReactLynx`) with typed options instead of being read
+// here in `pluginLynx`.
+interface Minify {
+  js?: boolean | undefined
+  jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+  mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+  backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+}
+
+function mergeJsOptions(
+  baseOptions: NonNullable<Minify['jsOptions']>,
+  threadOptions: NonNullable<Minify['jsOptions']> | undefined,
+): NonNullable<Minify['jsOptions']> {
+  const merged = mergeRsbuildConfig(
+    { output: { minify: { jsOptions: baseOptions } } },
+    { output: { minify: { jsOptions: threadOptions } } },
+  )
+  return (merged.output?.minify as Minify | undefined)?.jsOptions ?? {}
+}
+
+export function pluginMinify(): RsbuildPlugin {
+  // When preact devtools is enabled (`REACT_DEVTOOL`), keep function and class
+  // names. Devtools relies on them to resolve component names (`type.name`) and
+  // to reconstruct the hook tree (it matches stack frames by function name).
+  // Without this, minification mangles/inlines those names away, so components
+  // show up as `Anonymous` and hook inspection breaks. Only enabled with
+  // devtools since it slightly increases bundle size.
+  const keepNames = Boolean(process.env['REACT_DEVTOOL'])
+
+  const defaultJsOptions = Object.freeze<NonNullable<Minify['jsOptions']>>({
+    minimizerOptions: {
+      compress: {
+        /**
+         * the module wrapper iife need to be kept to provide the return value
+         * for the module loader in lynx_core.js
+         */
+        negate_iife: false,
+        join_vars: false,
+        ecma: 2015,
+        inline: 2,
+        comparisons: false,
+
+        toplevel: true,
+
+        // Allow return in module wrapper
+        side_effects: false,
+
+        // `mangle.keep_*` below is what preserves most names, but it still lets
+        // the compressor inline single-use functions (incl. one-shot user
+        // components) into anonymity. `compress.keep_*` stops that, so devtools
+        // can still resolve their names. Cheap, so we keep both.
+        ...(keepNames
+          ? { keep_fnames: true, keep_classnames: true }
+          : {}),
+      },
+      format: {
+        keep_quoted_props: true,
+        comments: false,
+      },
+      mangle: {
+        toplevel: true,
+
+        ...(keepNames
+          ? { keep_fnames: true, keep_classnames: true }
+          : {}),
+      },
+    },
+  })
+  const defaultConfig = Object.freeze<RsbuildConfig>({
+    output: {
+      minify: {
+        js: true,
+        jsOptions: defaultJsOptions,
+        css: true,
+        cssOptions: {
+          minimizerOptions: {
+            // Disable the default targets by passing an empty string.
+            targets: '',
+            include: {
+              // Lynx does not support nesting, so we enable it here.
+              // https://lightningcss.dev/transpilation.html#nesting
+              nesting: true,
+
+              // Lynx does not support double position gradients, so we enable it here.
+              // https://lightningcss.dev/transpilation.html#double-position-gradients
+              doublePositionGradients: true,
+
+              // Lynx does not support space separated color notation, so we enable it here.
+              // https://lightningcss.dev/transpilation.html#space-separated-color-notation
+              spaceSeparatedColorNotation: true,
+            },
+            exclude: {
+              // Lynx does not support vendor prefixes, so we exclude it here.
+              // https://lightningcss.dev/transpilation.html#vendor-prefixing
+              vendorPrefixes: true,
+              // Lynx does not support logical properties(`dir`, `lang`, `is`), so we exclude it here.
+              // https://lightningcss.dev/transpilation.html#logical-properties
+              logicalProperties: true,
+
+              // Lynx does support hex alpha colors, so we exclude it here.
+              // https://lightningcss.dev/transpilation.html#hex-alpha-colors
+              hexAlphaColors: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  return {
+    name: 'lynx:rsbuild:minify',
+    setup(api) {
+      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        const userMinify = config.output?.minify
+
+        // Disable minification
+        if (userMinify === false) {
+          debug(`minification disabled`)
+          return config
+        }
+
+        if (typeof userMinify === 'object') {
+          debug(`merging minification options`)
+          return mergeRsbuildConfig(defaultConfig, config)
+        }
+
+        return mergeRsbuildConfig(config, defaultConfig)
+      })
+
+      api.modifyBundlerChain((chain, { rspack, CHAIN_ID }) => {
+        const currentConfig = api.getRsbuildConfig('normalized')
+        const minify = currentConfig.output?.minify as
+          | Minify
+          | boolean
+          | undefined
+
+        // Disable minification
+        if (
+          typeof minify !== 'object' || minify === null || minify.js === false
+        ) {
+          return
+        }
+
+        // No thread options, skip
+        if (
+          minify.mainThreadOptions === undefined
+          && minify.backgroundOptions === undefined
+        ) {
+          return
+        }
+
+        const jsOptions = minify.jsOptions ?? {}
+
+        // 1. Modify the default swc minimizer added by rsbuild
+        if (chain.optimization.minimizers.has(CHAIN_ID.MINIMIZER.JS)) {
+          chain.optimization.minimizer(CHAIN_ID.MINIMIZER.JS).tap(
+            (args: Rspack.SwcJsMinimizerRspackPluginOptions[]) => {
+              const defaultOptions = args[0] ?? {}
+              const threadExclude = [
+                MAIN_THREAD_JS_PATTERN,
+                BACKGROUND_JS_PATTERN,
+              ]
+              defaultOptions.exclude = defaultOptions.exclude
+                ? (Array.isArray(defaultOptions.exclude)
+                  ? [...defaultOptions.exclude, ...threadExclude]
+                  : [defaultOptions.exclude, ...threadExclude])
+                : threadExclude
+              return [defaultOptions]
+            },
+          )
+        }
+
+        // 2. Main thread minimizer
+        const mainThreadOptions = mergeJsOptions(
+          jsOptions,
+          minify.mainThreadOptions,
+        )
+        const mtInclude = [MAIN_THREAD_JS_PATTERN]
+        mainThreadOptions.include = mainThreadOptions.include
+          ? (Array.isArray(mainThreadOptions.include)
+            ? [...mainThreadOptions.include, ...mtInclude]
+            : [mainThreadOptions.include, ...mtInclude])
+          : mtInclude
+
+        chain.optimization
+          .minimizer('js-main-thread')
+          .use(rspack.SwcJsMinimizerRspackPlugin, [mainThreadOptions])
+          .end()
+
+        // 3. Background thread minimizer
+        const backgroundOptions = mergeJsOptions(
+          jsOptions,
+          minify.backgroundOptions,
+        )
+        const bgInclude = [BACKGROUND_JS_PATTERN]
+        backgroundOptions.include = backgroundOptions.include
+          ? (Array.isArray(backgroundOptions.include)
+            ? [...backgroundOptions.include, ...bgInclude]
+            : [backgroundOptions.include, ...bgInclude])
+          : bgInclude
+
+        chain.optimization
+          .minimizer('js-background')
+          .use(rspack.SwcJsMinimizerRspackPlugin, [backgroundOptions])
+          .end()
+      })
+    },
+  }
+}

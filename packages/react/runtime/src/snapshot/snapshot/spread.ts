@@ -15,10 +15,15 @@ import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-ru
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { updateEvent } from './event.js';
 import { updateGesture } from './gesture.js';
-import { extractListItemPlatformInfo, platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
+import {
+  getListItemPlatformInfoFromIndexedValue,
+  platformInfoAttributes,
+  updateListItemPlatformInfo,
+} from './platformInfo.js';
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
+import { transformAttrName } from '../../shared/attribute-name.js';
 import { isDirectOrDeepEqual, isEmptyObject } from '../../utils.js';
 import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
@@ -35,14 +40,6 @@ const eventTypeMap: Record<string, string> = {
   'capture-catch': 'capture-catch',
   'global-bind': 'global-bindEvent',
 };
-const noFlattenAttributes = /* @__PURE__ */ new Set<string>([
-  'name',
-  'clip-radius',
-  'overlap',
-  'exposure-scene',
-  'exposure-id',
-]);
-
 function retainSpreadWorkletCtx(newValue: Record<string, unknown>, oldValue: Record<string, unknown>): void {
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
@@ -80,8 +77,8 @@ function updateSpread(
 
   const list = snapshot.parentNode;
   if (list?.__snapshot_def.isListHolder) {
-    const oldPlatformInfo = extractListItemPlatformInfo(oldValue);
-    const platformInfo = extractListItemPlatformInfo(newValue);
+    const oldPlatformInfo = getListItemPlatformInfoFromIndexedValue(oldValue, true);
+    const platformInfo = getListItemPlatformInfoFromIndexedValue(newValue, true);
     if (!isDirectOrDeepEqual(oldPlatformInfo, platformInfo)) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
@@ -107,7 +104,7 @@ function updateSpread(
   } else if (isListItem) {
     // Only seed list-item platform info before the snapshot is attached to a list holder.
     // Non-platform spread attributes continue through the normal update loop below.
-    const platformInfo = extractListItemPlatformInfo(newValue);
+    const platformInfo = getListItemPlatformInfoFromIndexedValue(newValue, true);
     snapshot.__listItemPlatformInfo = platformInfo;
   }
 
@@ -350,15 +347,31 @@ function transformSpread(
       } else {
         result[key] = transformRef(value)?.__ref;
       }
-    } else if (typeof value === 'function') {
-      result[key] = `${snapshot.__id}:${index}:${key}`;
     } else if (key === '__self' || key === '__source') {
       // for react debug tools
+    } else if (typeof value === 'function') {
+      const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+          && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+        ? transformAttrName(key)
+        : key;
+      result[transformedKey] = `${snapshot.__id}:${index}:${key}`;
     } else {
-      if (!hasNoFlattenAttributes && noFlattenAttributes.has(key)) {
-        hasNoFlattenAttributes = true;
+      const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+          && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+        ? transformAttrName(key)
+        : key;
+      if (!hasNoFlattenAttributes) {
+        // Keep the switch for a small fixed list; consider Set.has if the list grows significantly.
+        switch (transformedKey) {
+          case 'name':
+          case 'clip-radius':
+          case 'overlap':
+          case 'exposure-scene':
+          case 'exposure-id':
+            hasNoFlattenAttributes = true;
+        }
       }
-      result[key] = value;
+      result[transformedKey] = value;
     }
   }
 

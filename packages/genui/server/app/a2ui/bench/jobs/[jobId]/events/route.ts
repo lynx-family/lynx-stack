@@ -2,31 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { getBenchJobStore } from '../../../../../../service/a2ui-bench-store';
 import type { BenchJobEvent } from '../../../../../../service/a2ui-bench-types';
-import { corsPreflight } from '../../../../../common/cors';
 import {
   encodeSSE,
   encodeSseComment,
   sseHeaders,
 } from '../../../../../common/sse';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const HEARTBEAT_INTERVAL_MS = 15_000;
-
-interface RouteContext {
-  params: Promise<{ jobId: string }> | { jobId: string };
-}
 
 function noop(): void {
   // Intentionally empty.
-}
-
-async function readJobId(context: RouteContext): Promise<string> {
-  const params = await context.params;
-  return params.jobId;
 }
 
 function encodeSseEvent(event: BenchJobEvent): Uint8Array {
@@ -37,12 +26,7 @@ function isTerminalEvent(event: BenchJobEvent): boolean {
   return event.event === 'report' || event.event === 'error';
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function GET(req: Request, context: RouteContext) {
-  const jobId = await readJobId(context);
+function getA2UIBenchJobEvents(req: Request, jobId: string) {
   const store = getBenchJobStore();
   const job = store.getJob(jobId);
   if (!job) {
@@ -121,3 +105,13 @@ export async function GET(req: Request, context: RouteContext) {
     headers: sseHeaders(req),
   });
 }
+
+const route = new Hono();
+
+route.get(
+  '/:jobId/events',
+  (context) =>
+    getA2UIBenchJobEvents(context.req.raw, context.req.param('jobId')),
+);
+
+export default route;

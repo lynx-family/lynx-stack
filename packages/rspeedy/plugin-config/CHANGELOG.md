@@ -1,5 +1,17 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- Upgrade `@lynx-js/type-config` to `4.1.3`, which adds `enableEventHandleRefactor` and `alignMouseEventWithW3C` to the supported Lynx config keys. ([#3253](https://github.com/lynx-family/lynx-stack/pull/3253))
+
+## 0.2.0
+
+### Minor Changes
+
+- Upgrade `@lynx-js/type-config` to `4.1.1` ([#3161](https://github.com/lynx-family/lynx-stack/pull/3161))
+
 ## 0.1.1
 
 ### Patch Changes

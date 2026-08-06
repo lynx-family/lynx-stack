@@ -15,7 +15,7 @@ import type {
 import type { z } from 'zod/v4';
 import type { $ZodObject } from 'zod/v4/core';
 
-import type { ReactNode } from '@lynx-js/react';
+import type { ReactElement, ReactNode } from '@lynx-js/react';
 
 // Re-export framework-agnostic types unchanged
 export type {
@@ -76,4 +76,4 @@ export function createLibrary(input: LibraryDefinition): Library {
   return coreCreateLibrary<ComponentRenderer<any>>(input) as Library;
 }
 
-export type RenderOutput = JSX.Element | JSX.Element[] | null;
+export type RenderOutput = ReactElement | ReactElement[] | null;

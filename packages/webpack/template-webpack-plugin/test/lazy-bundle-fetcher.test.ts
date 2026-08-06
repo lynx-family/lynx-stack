@@ -11,6 +11,7 @@
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, test } from '@rstest/core';
 import webpack from 'webpack';
@@ -22,7 +23,7 @@ import {
 } from '../src/index.js';
 
 const FIXTURE_ENTRY = './fixtures/lazy-bundle-fetcher/entry.js';
-const CONTEXT = dirname(new URL(import.meta.url).pathname);
+const CONTEXT = dirname(fileURLToPath(import.meta.url));
 
 interface CapturedEncode {
   outputName: string;

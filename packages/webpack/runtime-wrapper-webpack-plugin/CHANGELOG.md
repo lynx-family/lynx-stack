@@ -1,5 +1,11 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.2.3
+
+### Patch Changes
+
+- Prefer `globalThis` when resolving the global object in runtime wrappers. ([#3003](https://github.com/lynx-family/lynx-stack/pull/3003))
+
 ## 0.2.2
 
 ### Patch Changes

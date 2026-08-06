@@ -2,27 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { getBenchJobStore } from '../../../../../service/a2ui-bench-store';
-import { corsPreflight, jsonWithCors } from '../../../../common/cors';
+import { jsonWithCors } from '../../../../common/cors';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-interface RouteContext {
-  params: Promise<{ jobId: string }> | { jobId: string };
-}
-
-async function readJobId(context: RouteContext): Promise<string> {
-  const params = await context.params;
-  return params.jobId;
-}
-
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function GET(req: Request, context: RouteContext) {
-  const jobId = await readJobId(context);
+function getA2UIBenchJob(req: Request, jobId: string) {
   const snapshot = getBenchJobStore().getSnapshot(jobId);
   if (!snapshot) {
     return jsonWithCors(
@@ -34,8 +19,7 @@ export async function GET(req: Request, context: RouteContext) {
   return jsonWithCors(req, snapshot);
 }
 
-export async function DELETE(req: Request, context: RouteContext) {
-  const jobId = await readJobId(context);
+function deleteA2UIBenchJob(req: Request, jobId: string) {
   const job = getBenchJobStore().cancelJob(jobId);
   if (!job) {
     return jsonWithCors(
@@ -46,3 +30,16 @@ export async function DELETE(req: Request, context: RouteContext) {
   }
   return jsonWithCors(req, getBenchJobStore().getSnapshot(jobId));
 }
+
+const route = new Hono();
+
+route.get(
+  '/:jobId',
+  (context) => getA2UIBenchJob(context.req.raw, context.req.param('jobId')),
+);
+route.delete(
+  '/:jobId',
+  (context) => deleteA2UIBenchJob(context.req.raw, context.req.param('jobId')),
+);
+
+export default route;

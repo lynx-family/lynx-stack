@@ -1,5 +1,29 @@
 # @lynx-js/react
 
+## 0.123.2
+
+### Patch Changes
+
+- Resolve the `preact` peer dependency to the vendored `@lynx-js/internal-preact`, preventing duplicate preact copies in the dependency tree. ([#3276](https://github.com/lynx-family/lynx-stack/pull/3276))
+
+- Tell the main thread when a background commit produces no element mutations. ([#3010](https://github.com/lynx-family/lynx-stack/pull/3010))
+
+  When a background render commits without any snapshot patch (or ElementTemplate update op) and without any pending `runOnMainThread` task, `__FlushElementTree` is now called with `emptyPatch: true`. Hosts that understand the flag can end the pipeline early instead of walking the whole update path; older hosts simply ignore the unknown option, so this is safe on every engine version.
+
+- Optimize no-flatten attribute detection when transforming spread attributes. ([#3238](https://github.com/lynx-family/lynx-stack/pull/3238))
+
+- Add the experimental `experimental_transformBuiltinAttributeNames` option for transforming builtin element attribute names. `false` preserves attribute names. `true` transforms `onClick` to `bindtap`, `onCatchTap` to `catchtap`, other `onXXX` event names to `bindxxx`, and remaining camelCase names to dash-case. An object supports serializable custom rules through `mode`, `preserve`, and `rename`. Explicit JSX attributes are transformed during compilation, and spread attributes are transformed at runtime. ([#3274](https://github.com/lynx-family/lynx-stack/pull/3274))
+
+## 0.123.1
+
+### Patch Changes
+
+- refactor type of createElement and cloneElement ([#2995](https://github.com/lynx-family/lynx-stack/pull/2995))
+
+- Prevent stale snapshot teardown from destroying list callbacks and recycling state after rendered elements are transferred to a new snapshot instance. ([#3122](https://github.com/lynx-family/lynx-stack/pull/3122))
+
+- Update `@types/react` from `^18` to `^18 || ^19.0.0` ([#3144](https://github.com/lynx-family/lynx-stack/pull/3144))
+
 ## 0.123.0
 
 ### Minor Changes

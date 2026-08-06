@@ -1,5 +1,37 @@
 # create-lynx-library
 
+## 0.5.0
+
+### Minor Changes
+
+- Add HarmonyOS Native Module spec generation and complete HAR scaffolding for Lynx Autolink libraries. ([#2990](https://github.com/lynx-family/lynx-stack/pull/2990))
+
+### Patch Changes
+
+- Keep the generated example's `@lynx-js/rspeedy` version aligned with the workspace release. ([#3308](https://github.com/lynx-family/lynx-stack/pull/3308))
+
+- Updated dependencies [[`46dfcc2`](https://github.com/lynx-family/lynx-stack/commit/46dfcc2166a3750bbf2c5f5600d7b3721eac4dd2)]:
+  - @lynx-js/autolink-codegen@0.4.0
+
+## 0.4.0
+
+### Minor Changes
+
+- Add scaffolding and code generation support for Lynx Node-API addon libraries. ([#2958](https://github.com/lynx-family/lynx-stack/pull/2958))
+
+  `create-lynx-library` can now generate NAPI native module packages with shared C++ sources, Android and iOS addon manifest entries, Android CMake integration backed by PrimJS 4.x runtime libraries, iOS podspec wiring, generated addon-use headers, and Lynxtron C API registration.
+
+  `@lynx-js/autolink-codegen` now generates Node-API TypeScript facades, shared native module stubs, iOS wrapper and registration sources, Lynxtron registration sources, and an auto-installed `NativeModules` shim backed by the Lynx NAPI loader.
+
+  The generated projects also support older Android Gradle and CMake toolchains, install all build-time packages required by published consumers, use CocoaPods-compatible podspec and header paths, and exclude local CMake dependency caches from published library tarballs.
+
+### Patch Changes
+
+- Update `@clack/prompts` from `1.0.1` to `1.7.0` ([#3114](https://github.com/lynx-family/lynx-stack/pull/3114))
+
+- Updated dependencies [[`53fe61c`](https://github.com/lynx-family/lynx-stack/commit/53fe61cd0440c4e1b8b61d6e8899be008a6e5d9e)]:
+  - @lynx-js/autolink-codegen@0.3.0
+
 ## 0.3.0
 
 ### Minor Changes

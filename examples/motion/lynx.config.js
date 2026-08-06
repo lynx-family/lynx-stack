@@ -5,6 +5,10 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 
 export default defineConfig({
+  environments: {
+    lynx: {},
+    web: {},
+  },
   source: {
     entry: {
       main: './src/index.tsx',

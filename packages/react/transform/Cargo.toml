@@ -13,8 +13,6 @@ hex = { workspace = true }
 indexmap = { workspace = true }
 napi = { workspace = true, features = ["serde-json"] }
 napi-derive = { workspace = true }
-once_cell = { workspace = true }
-regex = { workspace = true }
 rustc-hash = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
@@ -37,10 +35,10 @@ swc_sourcemap = { workspace = true }
 version-compare = { workspace = true }
 
 [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
-version = "0.3.3"
+version = "0.4.3"
 
 [build-dependencies]
-napi-build = "2.2.3"
+napi-build = "2.3.2"
 
 [features]
 noop = []

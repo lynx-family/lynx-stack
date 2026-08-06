@@ -79,6 +79,16 @@ const SIDEBARS = {
     createAPI({
       name: 'config-rsbuild-plugin',
     }),
+    createAPI({
+      name: 'type-config',
+      text: '@lynx-js/type-config',
+      skips: [
+        'CompilerOptionsKeys',
+        'ConfigKeys',
+        'compilerOptionsKeys',
+        'configKeys',
+      ],
+    }),
   ],
   Webpack: [
     {
@@ -228,6 +238,17 @@ const SIDEBARS_ZH = {
     createAPI({
       base: 'zh/api',
       name: 'config-rsbuild-plugin',
+    }),
+    createAPI({
+      base: 'zh/api',
+      name: 'type-config',
+      text: '@lynx-js/type-config',
+      skips: [
+        'CompilerOptionsKeys',
+        'ConfigKeys',
+        'compilerOptionsKeys',
+        'configKeys',
+      ],
     }),
   ],
   Webpack: [

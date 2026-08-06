@@ -89,4 +89,71 @@ test.describe('x-webview', () => {
     const data = await page.evaluate(() => window._bindmessage_data);
     expect(data.msg).toBe('hello from iframe');
   });
+
+  test('should forward iframe postMessage as message event', async ({ page }) => {
+    await goto(page, 'x-webview/basics');
+    const webview = page.locator('x-webview');
+
+    const messageEvent = await webview.evaluate(
+      el =>
+        new Promise(resolve => {
+          el.addEventListener(
+            'message',
+            event => {
+              const messageEvent = event as CustomEvent<{
+                msg: unknown;
+                data: unknown;
+              }>;
+              resolve({
+                bubbles: messageEvent.bubbles,
+                composed: messageEvent.composed,
+                detail: messageEvent.detail,
+              });
+            },
+            { once: true },
+          );
+          el.setAttribute(
+            'html',
+            `<script>
+              window.parent.postMessage(
+                { type: 'greeting', text: 'hello from iframe' },
+                '*',
+              );
+            </script>`,
+          );
+        }),
+    );
+
+    expect(messageEvent).toEqual({
+      bubbles: true,
+      composed: true,
+      detail: {
+        msg: { type: 'greeting', text: 'hello from iframe' },
+        data: { type: 'greeting', text: 'hello from iframe' },
+      },
+    });
+  });
+
+  test('should not forward messages from outside its iframe', async ({ page }) => {
+    await goto(page, 'x-webview/basics');
+    const webview = page.locator('x-webview');
+
+    const messageCount = await webview.evaluate(el => {
+      let messageCount = 0;
+      const handleMessage = () => messageCount++;
+      el.addEventListener('message', handleMessage);
+
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'message from parent window',
+          source: window,
+        }),
+      );
+
+      el.removeEventListener('message', handleMessage);
+      return messageCount;
+    });
+
+    expect(messageCount).toBe(0);
+  });
 });

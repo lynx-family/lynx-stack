@@ -43,6 +43,7 @@
     rgba(59, 130, 246, 0.42)
   );
   --openui-color-on-primary: var(--primary-content, #ffffff);
+  --openui-color-backdrop: var(--backdrop, rgba(0, 0, 0, 0.25));
   --openui-color-error: #d92d20;
   --openui-color-error-surface: rgba(217, 45, 32, 0.08);
   --openui-color-skeleton-start: rgba(0, 0, 0, 0.06);
@@ -96,6 +97,7 @@
     rgba(96, 165, 250, 0.36)
   );
   --openui-color-on-primary: var(--primary-content, #010101);
+  --openui-color-backdrop: var(--backdrop, rgba(0, 0, 0, 0.32));
   --openui-color-error: #ff6b6b;
   --openui-color-error-surface: rgba(255, 107, 107, 0.12);
   --openui-color-skeleton-start: rgba(255, 255, 255, 0.08);

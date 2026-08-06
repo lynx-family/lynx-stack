@@ -16,6 +16,10 @@ When runtime code needs to distinguish Lynx for Web from native Lynx, prefer `Sy
 
 When wiring playback state between the Lynx app and the web preview, prefer `NativeModules.bridge.call('A2UI_PLAYBACK_SYNC', state, callback)` on the Lynx side and `lynxView.onNativeModulesCall` on the web preview side. Keep `window.postMessage` only as a compatibility fallback for older bundles. Do not add new playback sync paths that bypass the NativeModules bridge.
 
+When automating A2UI preview benchmarks, wrap `render.html` in a parent iframe with a `previewMetricId`, listen for `A2UI_PREVIEW_METRIC` in the parent, and inject generated messages with `A2UI_LIVE_MESSAGES` after `A2UI_RENDER_READY`. Loading generated messages only through the initial query payload can capture FCP/FMP/TTI, but it does not exercise the Create page's live-delivery path that reports the repeatable Render metric.
+
+Treat Bench reports as a protocol-neutral product area. Use `#/bench` as the canonical Runner route, keep `#/bench/runner` as a compatibility alias, and publish studies under phase routes such as `#/bench/phase-1`. This leaves later phases free to compare A2UI with other protocols. Keep legacy `#/a2ui/bench` hashes only as compatibility inputs. This route guidance does not apply to the A2UI server API paths under `/a2ui/bench/jobs`.
+
 ### Native Test Bundles
 
 When serving the playground's native Lynx bundles as static Android test fixtures, keep HMR/React refresh out of `a2ui.lynx.js` and `openui.lynx.js`. The Android Lynx runtime does not provide globals such as `__prefresh_utils__` or Node's `process`, so normalize `process.env.NODE_ENV` at build time and disable HMR for these bundles instead of relying on the caller's `NODE_ENV`.
@@ -91,6 +95,8 @@ When maintaining the OpenUI Lynx entry under `packages/genui/playground/lynx-src
 OpenUI catalog styles are bundled by each catalog component's relative CSS import, the renderer style is bundled by `renderer.tsx` importing `./renderer.css`, and Material Icons font CSS is bundled by the Icon component. If the native preview looks unstyled, fix the source-side CSS import in `packages/genui/openui` instead of adding a package-level aggregate stylesheet to the playground entry.
 
 OpenUI playground theming should apply matching classes such as `openui-light luna-light` or `openui-dark luna-dark` on the Lynx root view. Keep theme-specific feedback, loading, and scroll styling in the entry CSS instead of inline styles so Luna variables can control both the shell and renderer content.
+
+Gate host-specific OpenUI visual treatments behind an additional root class in the playground entry CSS instead of changing the shared OpenUI theme tokens. For transparent editorial previews, keep the root, page, and scroll backgrounds transparent; scope Card surface removal and enlarged typography/spacing to that host class so the package defaults and Modal/control boundaries remain intact. Keep the render document's `data-theme` and `color-scheme` synchronized with preview init data so transparent Lynx content inherits the correct neutral light or dark device canvas instead of the iframe's default white background.
 
 ### Large Preview Payloads
 

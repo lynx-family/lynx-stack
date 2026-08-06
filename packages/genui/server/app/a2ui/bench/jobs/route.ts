@@ -2,10 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { normalizeBenchJobRequest } from '../../../../service/a2ui-bench-request';
 import { startBenchJob } from '../../../../service/a2ui-bench-runner';
 import { getBenchJobStore } from '../../../../service/a2ui-bench-store';
-import { corsPreflight, jsonWithCors } from '../../../common/cors';
+import { jsonWithCors } from '../../../common/cors';
 import { clientOverridesAllowed } from '../../../common/provider-options';
 import {
   checkRateLimit,
@@ -13,14 +15,7 @@ import {
 } from '../../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../../common/request';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postA2UIBenchJob(req: Request) {
   const decision = checkRateLimit(req);
   if (!decision.ok) {
     return rateLimitJsonResponse(req, decision);
@@ -47,11 +42,27 @@ export async function POST(req: Request) {
   }
 
   const store = getBenchJobStore();
-  const job = store.createJob(
+  const admission = store.tryCreateJob(
     normalized.request,
     normalized.totalRuns,
     normalized.warnings,
   );
+  if (!admission.ok) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error: 'Bench active job capacity reached; retry later',
+        activeJobs: admission.activeJobs,
+        limit: admission.limit,
+      },
+      {
+        status: 503,
+        headers: { 'Retry-After': '5' },
+      },
+    );
+  }
+  const { job } = admission;
   startBenchJob(job.id);
 
   return jsonWithCors(req, {
@@ -63,3 +74,9 @@ export async function POST(req: Request) {
     warnings: normalized.warnings,
   });
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postA2UIBenchJob(context.req.raw));
+
+export default route;

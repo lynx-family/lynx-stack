@@ -14,6 +14,8 @@
  * Events:
  * - `bindload`: Fired when the page loads. Detail: `{ url }`.
  * - `binderror`: Fired when an error occurs. Detail: `{ errorMsg }`.
+ * - `message`: Fired when the page posts a message to its parent. Detail:
+ *   `{ msg, data }`.
  * - `bindmessage`: Fired when a message is received from the page. Detail: `{ msg }`.
  *
  * Methods:

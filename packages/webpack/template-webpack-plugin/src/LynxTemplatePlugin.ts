@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 
 import type {
@@ -947,8 +948,8 @@ class LynxTemplatePluginImpl {
 
   #getAsyncFilenameTemplate(filename: string) {
     return this.#options.lazyBundleFilename.replace(
-      /\[name\]/,
-      filename,
+      /\[name\]/g,
+      () => filename,
     );
   }
 
@@ -1472,16 +1473,33 @@ function collectChunkGroupResources(
   );
 }
 
+const LAZY_BUNDLE_NAME_LIMIT = 100;
+
+function shortenLazyBundleName(name: string): string {
+  const digest = createHash('sha256').update(name).digest('hex').slice(0, 16);
+  const budget = LAZY_BUNDLE_NAME_LIMIT - digest.length - 1;
+  const segments = name.split('/');
+  let tail = segments.at(-1)!;
+  for (let index = segments.length - 2; index >= 0; index--) {
+    const longerTail = `${segments[index]!}/${tail}`;
+    if (longerTail.length > budget) {
+      break;
+    }
+    tail = longerTail;
+  }
+  return `${tail.replace(/\//g, '_')}-${digest}`;
+}
+
 /**
  * Derive a lazy bundle name from the resolved module paths. The name is
  * relative to the compiler context with `..` segments replaced, so the
  * bundle never escapes the `lazy-bundle/` output directory.
  */
-function resourcesToLazyBundleName(
+export function resourcesToLazyBundleName(
   resources: string[],
   context: string,
 ): string {
-  return resources
+  const name = resources
     .map(resource =>
       path.relative(context, resource)
         .split(path.sep)
@@ -1489,6 +1507,10 @@ function resourcesToLazyBundleName(
         .join('/')
     )
     .join('_');
+
+  return name.length > LAZY_BUNDLE_NAME_LIMIT
+    ? shortenLazyBundleName(name)
+    : name.replace(/\//g, '_');
 }
 
 export function predicateNonHotModuleReplacementAsset(

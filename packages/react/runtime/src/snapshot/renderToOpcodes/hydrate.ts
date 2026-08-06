@@ -271,6 +271,26 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
         }
 
+        // Children match pairwise by type (the common case), so the diff is
+        // empty — do what `diffArrayLepus` + `diffArrayAction` would do without
+        // allocating the diff structures.
+        const length = filteredBeforeChildNodes.length;
+        if (length === filteredAfterChildNodes.length) {
+          let samePairwise = true;
+          for (let i = 0; i < length; i++) {
+            if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
+              samePairwise = false;
+              break;
+            }
+          }
+          if (samePairwise) {
+            for (let i = 0; i < length; i++) {
+              hydrate(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!, options);
+            }
+            break;
+          }
+        }
+
         const diffResult = diffArrayLepus(
           filteredBeforeChildNodes,
           filteredAfterChildNodes,

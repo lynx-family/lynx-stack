@@ -9,6 +9,9 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    // The package uses `node:` builtins and `Buffer`; without this the new tsgo
+    // reports them as TS2591.
+    "types": ["node"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

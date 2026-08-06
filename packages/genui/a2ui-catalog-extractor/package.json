@@ -32,16 +32,16 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
-    "build:api": "tsc --project tsconfig.build.json",
+    "build": "tsc6 --project tsconfig.build.json",
+    "build:api": "tsc6 --project tsconfig.build.json",
     "test": "rstest"
   },
   "dependencies": {
-    "typedoc": "^0.28.19"
+    "typedoc": "^0.28.20"
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.10.13"
+    "@types/node": "^24.13.3"
   },
   "engines": {
     "node": ">=22"

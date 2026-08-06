@@ -20,6 +20,6 @@
     "@rspack/core": "catalog:rspack"
   },
   "devDependencies": {
-    "@types/node": "^24.10.13"
+    "@types/node": "^24.13.3"
   }
 }

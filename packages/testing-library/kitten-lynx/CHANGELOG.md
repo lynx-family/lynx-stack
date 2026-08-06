@@ -1,5 +1,13 @@
 # @lynx-js/kitten-lynx-test-infra
 
+## 0.1.5
+
+### Patch Changes
+
+- Update `@yume-chan/adb` from `^2.5.1` to `^2.6.0` ([#3192](https://github.com/lynx-family/lynx-stack/pull/3192))
+
+- Update `@lynx-js/devtool-connector` from `0.1.1` to `0.9.5` ([#3204](https://github.com/lynx-family/lynx-stack/pull/3204))
+
 ## 0.1.4
 
 ### Patch Changes

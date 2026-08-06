@@ -14,7 +14,7 @@ export function createLepusCodeBlob(
     ? 'module.exports='
     : '';
   return new Blob([
-    '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
+    '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ',
     prefix,
     code as BlobPart,
     ` \n })()\n//# sourceURL=${sourceURL}\n`,

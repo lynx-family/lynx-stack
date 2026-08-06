@@ -40,6 +40,9 @@ const DEFAULT_APP_PACKAGE = 'com.lynx.explorer';
  */
 export class Lynx {
   private _connector: Connector | null = null;
+  // `Connector` no longer exposes a teardown; `Transport` owns it, so keep
+  // the one we create to close the ADB connection in `close()`.
+  private _transport: AndroidTransport | null = null;
   private _currentClient: any | null = null;
   private _currentClientId: string = '';
 
@@ -65,7 +68,8 @@ export class Lynx {
     const appPackage = options?.appPackage ?? DEFAULT_APP_PACKAGE;
 
     const lynx = new Lynx();
-    lynx._connector = new Connector([new AndroidTransport()]);
+    lynx._transport = new AndroidTransport();
+    lynx._connector = new Connector([lynx._transport]);
 
     const devices = await lynx._connector.listDevices();
     if (devices.length === 0) {
@@ -201,9 +205,10 @@ export class Lynx {
    * @returns A Promise resolving when the cleanup operation is fully processed.
    */
   async close(): Promise<void> {
-    if (this._connector) {
-      await this._connector.close();
+    if (this._transport) {
+      await this._transport.close();
     }
+    this._transport = null;
     this._connector = null;
     this._currentClient = null;
     this._currentClientId = '';

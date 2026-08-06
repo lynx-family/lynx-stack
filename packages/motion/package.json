@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/motion",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "private": false,
   "description": "This is a motion adapter for Lynx.js",
   "keywords": [
@@ -47,14 +47,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "framer-motion": "12.34.1",
-    "motion-dom": "12.23.12",
-    "motion-utils": "12.23.6"
+    "motion": "12.42.2",
+    "motion-dom": "12.42.2",
+    "motion-utils": "12.39.0"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.0.0",
-    "rsbuild-plugin-publint": "0.3.4"
+    "rsbuild-plugin-publint": "1.0.0"
   },
   "peerDependencies": {
     "@lynx-js/react": "*",

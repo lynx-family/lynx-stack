@@ -50,3 +50,18 @@ test('external main-thread chunks receive CommonJS bindings', async () => {
 
   expect(module.exports).toEqual({ value: 'external' });
 });
+
+test('external main-thread chunks can install a local window facade', async () => {
+  const blob = createLepusCodeBlob(
+    'window = { value: "shim" }; exports.value = window.value;',
+    'https://example.com/external.bundle/root',
+    false,
+    true,
+  );
+  const execute = new Function('module', await blob.text());
+  const module = { exports: undefined };
+
+  execute(module);
+
+  expect(module.exports).toEqual({ value: 'shim' });
+});

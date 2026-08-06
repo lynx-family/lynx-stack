@@ -1,12 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { Hono } from 'hono';
+
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
   validateConversation,
   validateMessages,
 } from '../../common/chat-validation';
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
@@ -14,14 +16,7 @@ import { extractUsageMetrics } from '../../common/usage';
 import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postA2UIChat(req: Request) {
   const decision = checkRateLimit(req);
   if (!decision.ok) {
     return rateLimitJsonResponse(req, decision);
@@ -88,3 +83,9 @@ export async function POST(req: Request) {
     return jsonWithCors(req, { ok: false, error: message, name });
   }
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postA2UIChat(context.req.raw));
+
+export default route;

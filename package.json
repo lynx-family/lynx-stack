@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc6 --build",
     "prepare": "husky && ts-patch install",
     "test": "vitest"
   },
@@ -37,8 +37,9 @@
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
     "@tsconfig/node22": "^22.0.5",
     "@tsconfig/strictest": "^2.0.8",
-    "@types/node": "^24.10.13",
-    "@typescript/native-preview": "7.0.0-dev.20260212.1",
+    "@types/node": "^24.13.3",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@typescript/typescript6": "6.0.2",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/eslint-plugin": "^1.6.23",
     "@vitest/ui": "^3.2.4",
@@ -57,13 +58,14 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "sort-package-json": "^3.7.1",
-    "ts-patch": "^3.3.0",
+    "ts-patch": "^4.0.1",
     "turbo": "^2.10.5",
-    "typescript": "^6.0.3",
+    "typescript": "catalog:",
     "typescript-eslint": "^8.64.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "yaml": "^2.9.0"
   },
-  "packageManager": "pnpm@11.15.1+sha512.81350b07e53c9538a02f1f2303b4290fa2d7be04e56e2a970c4cc4b417dc761de196edabd49d55c7dc9580db81007c44143e4e3d7e462b3000d23c255122d065",
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72",
   "engines": {
     "node": "^22 || ^24"
   }

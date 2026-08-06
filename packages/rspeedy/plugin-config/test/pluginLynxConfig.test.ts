@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-/* eslint-disable no-irregular-whitespace */
 import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createRspeedy } from '@lynx-js/rspeedy'
@@ -24,11 +23,11 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API https://rsbuild.rs/plugins/dev/core#apiexpose.
 
       Please upgrade Rspeedy and plugins to latest version.
 
-      See Upgrade Rspeedy (​https://www.npmjs.com/package/upgrade-rspeedy​) for more details.
+      See Upgrade Rspeedy https://www.npmjs.com/package/upgrade-rspeedy for more details.
       ]
     `)
   })
@@ -50,11 +49,11 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API https://rsbuild.rs/plugins/dev/core#apiexpose.
 
       Please upgrade @lynx-js/react-rsbuild-plugin to latest version.
 
-      See Upgrade Rspeedy (​https://www.npmjs.com/package/upgrade-rspeedy​) for more details.
+      See Upgrade Rspeedy https://www.npmjs.com/package/upgrade-rspeedy for more details.
       ]
     `)
   })
@@ -80,11 +79,11 @@ describe('pluginLynxConfig', () => {
 
     await expect(() => rspeedy.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API (​https://rsbuild.rs/plugins/dev/core#apiexpose​).
+      [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API https://rsbuild.rs/plugins/dev/core#apiexpose.
 
       Please upgrade @lynx-js/vue-rsbuild-plugin to latest version.
 
-      See Upgrade Rspeedy (​https://www.npmjs.com/package/upgrade-rspeedy​) for more details.
+      See Upgrade Rspeedy https://www.npmjs.com/package/upgrade-rspeedy for more details.
       ]
     `)
   })

@@ -28,10 +28,10 @@ import type { PluginWithOptions } from '../../helpers.js';
 import type { KeyValuePairOrList } from '../../types/plugin-types.js';
 
 /* -----------------------------------------------------------------------------
- * Default variant values per prefix
+ * Built-in variant values per prefix
  * -------------------------------------------------------------------------- */
 
-const DEFAULT_PREFIXES = {
+const BUILTIN_PREFIXES = {
   ui: [
     'active',
     'disabled',
@@ -47,17 +47,21 @@ const DEFAULT_PREFIXES = {
     'entering',
     'animating',
     'busy',
+    'focused',
+    'complete',
+    'filled',
+    'dragging',
   ],
   'ui-side': ['left', 'right', 'top', 'bottom'],
   'ui-align': ['start', 'end', 'center'],
 } as const;
 
-type DefaultPrefixMap = typeof DEFAULT_PREFIXES;
-type PrefixKey = keyof DefaultPrefixMap;
+type BuiltinPrefixMap = typeof BUILTIN_PREFIXES;
+type PrefixKey = keyof BuiltinPrefixMap;
 type PrefixConfig =
   | string[]
   | Record<string, KeyValuePairOrList>
-  | ((defaults: DefaultPrefixMap) => Record<string, KeyValuePairOrList>);
+  | ((builtins: BuiltinPrefixMap) => Record<string, KeyValuePairOrList>);
 
 interface UIVariantsOptions {
   /**
@@ -203,17 +207,17 @@ function normalizePrefixes(
   input?: PrefixConfig,
 ): Record<string, KeyValuePairOrList> {
   if (typeof input === 'function') {
-    return input(DEFAULT_PREFIXES);
+    return input(BUILTIN_PREFIXES);
   }
 
   if (Array.isArray(input)) {
     return Object.fromEntries(
       input.map((prefix) => [
         prefix,
-        DEFAULT_PREFIXES[prefix as PrefixKey] ?? [],
+        BUILTIN_PREFIXES[prefix as PrefixKey] ?? [],
       ]),
     );
   }
 
-  return input ?? { ui: DEFAULT_PREFIXES.ui };
+  return input ?? { ui: BUILTIN_PREFIXES.ui };
 }

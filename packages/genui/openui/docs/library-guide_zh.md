@@ -95,8 +95,14 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 | `TextField`     | 支持可选 regex 校验的短文本、数字、密码或多行输入。    |
 | `DateTimeInput` | 带 label、上下界和日期/时间展示开关的值。              |
 
-`RadioGroup`、`Slider` 和 `TextField` 使用 `@lynx-js/lynx-ui`；generated UI
-允许使用这些组件时，需要添加该 peer dependency。
+`Button`、`CheckBox`、`Modal`、`RadioGroup`、`Slider` 和 `TextField` 使用
+`@lynx-js/lynx-ui`；generated UI 允许使用这些组件时，需要添加该 peer
+dependency。
+
+默认视觉层使用 Luna：先引入 `@lynx-js/luna-styles/index.css`，再引入
+`@lynx-js/genui/openui/styles/theme.css`，并把 renderer 放在
+`luna-light`、`luna-dark`、`lunaris-light` 或 `lunaris-dark` 主题作用域内。
+lynx-ui 是 headless 组件库，因此 Luna 提供的是 tokens，不是替代组件 class。
 
 完整、最新的位置参数签名和 live preview 见
 [OpenUI Catalog](https://lynx-stack.dev/genui/#/openui/catalog)。Schema 是唯一事实来源：

@@ -155,14 +155,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && npm run build:catalog",
-    "build:api": "tsc --project tsconfig.build.json",
+    "build": "tsc6 --project tsconfig.build.json && npm run build:catalog",
+    "build:api": "tsc6 --project tsconfig.build.json",
     "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist --catalog-id https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json && node scripts/writeBasicFunctionCatalogs.js dist && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },
   "dependencies": {
-    "@a2ui/web_core": "0.9.1",
-    "@preact/signals": "^2.5.1"
+    "@a2ui/web_core": "0.10.5",
+    "@preact/signals": "^2.9.4"
   },
   "devDependencies": {
     "@lynx-js/genui-cli": "workspace:*",
@@ -170,7 +170,8 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.0.0",
     "@rstest/core": "catalog:rstest",
-    "@types/react": "^18.3.28"
+    "@types/react": "^19.2.17",
+    "preact": "catalog:lynxjs"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

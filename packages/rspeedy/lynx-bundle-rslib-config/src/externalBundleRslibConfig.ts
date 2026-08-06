@@ -93,10 +93,6 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
   format: 'cjs',
   syntax: 'es2015',
   autoExtension: false,
-  autoExternal: {
-    dependencies: false,
-    peerDependencies: false,
-  },
   shims: {
     cjs: {
       // Don't inject shim because Lynx don't support.
@@ -104,6 +100,10 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
     },
   },
   output: {
+    autoExternal: {
+      dependencies: false,
+      peerDependencies: false,
+    },
     minify: process.env['NODE_ENV'] === 'development'
       ? false
       : DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG,
@@ -754,7 +754,9 @@ const externalBundleRsbuildPlugin = ({
           .end()
         }
 
-        let encode: (opts: unknown) => Promise<{ buffer: Buffer }>
+        let encode: (
+          opts: unknown,
+        ) => { buffer: Buffer } | Promise<{ buffer: Buffer }>
         if (isWeb) {
           const { getWebEncodeMode } = await import('./webpack/webEncode.js')
           encode = getWebEncodeMode()

@@ -1,5 +1,27 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.6.2
+
+### Patch Changes
+
+- Align `@lynx-js/tasm` with `@lynx-js/template-webpack-plugin` on `0.0.49`. ([#3287](https://github.com/lynx-family/lynx-stack/pull/3287))
+
+- Require `@rslib/core` 0.22.0 or later and consume Rspack types through Rslib so ([#3271](https://github.com/lynx-family/lynx-stack/pull/3271))
+  the Rspack v2 toolchain is used without a separate `@rspack/core` dependency.
+- Updated dependencies [[`080da86`](https://github.com/lynx-family/lynx-stack/commit/080da8606b9792b2eb5aa59cbcbd7807ad598ce2), [`aeb9438`](https://github.com/lynx-family/lynx-stack/commit/aeb9438f817473f0f04baf719ef04d709f3894d6), [`e42a1a6`](https://github.com/lynx-family/lynx-stack/commit/e42a1a6e089a49f2647694ccae3301a291ff1129)]:
+  - @lynx-js/web-core@0.23.1
+
+## 0.6.1
+
+### Patch Changes
+
+- Update `@lynx-js/tasm` from `0.0.39` to `0.0.48` ([#3085](https://github.com/lynx-family/lynx-stack/pull/3085))
+
+- Updated dependencies [[`16248b5`](https://github.com/lynx-family/lynx-stack/commit/16248b55b37375402d63d2b53e40e832ab6544c6), [`7c08120`](https://github.com/lynx-family/lynx-stack/commit/7c08120315f1802d84d2f01a0075293c7e0059cb), [`924106b`](https://github.com/lynx-family/lynx-stack/commit/924106b049a0764900f2557abc1c31aec77ad037), [`0d3623b`](https://github.com/lynx-family/lynx-stack/commit/0d3623bae7741223083b2723af87a0d32226d01e), [`f5da344`](https://github.com/lynx-family/lynx-stack/commit/f5da34447cc8884cf7ca518f6fc1c1544be61352), [`6369383`](https://github.com/lynx-family/lynx-stack/commit/63693831513364aae6c2d8d13b3f6a50303a8d42), [`e75b561`](https://github.com/lynx-family/lynx-stack/commit/e75b5619c567d9fd28897990281f6332bf6d88c4), [`40c9804`](https://github.com/lynx-family/lynx-stack/commit/40c9804713ee982b99da37981e2e34408c370c77)]:
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.3
+  - @lynx-js/web-core@0.23.0
+  - @lynx-js/css-serializer@0.1.7
+
 ## 0.6.0
 
 ### Minor Changes

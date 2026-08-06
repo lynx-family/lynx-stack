@@ -10,31 +10,28 @@ type QueryComponentResult = Parameters<
 
 export function createQueryComponent(
   query: (source: string) => Promise<QueryComponentResult>,
-  isReady: (source: string) => boolean,
 ): NativeApp['queryComponent'] {
   const pending = new Map<string, Promise<QueryComponentResult>>();
 
   return (source, callback) => {
+    const queryFailure = {
+      code: -1,
+      detail: { schema: source },
+    };
     const existing = pending.get(source);
     if (existing) {
-      void existing.then(callback);
-      return;
-    }
-    if (isReady(source)) {
-      callback({ __hasReady: true });
+      void existing.then(callback, () => callback(queryFailure));
       return;
     }
 
-    const request = query(source).catch(() => ({
-      code: -1,
-      detail: { schema: source },
-    }));
+    const request = query(source);
     pending.set(source, request);
-    void request.then(result => {
+    const complete = (result: QueryComponentResult) => {
       if (pending.get(source) === request) {
         pending.delete(source);
       }
       callback(result);
-    });
+    };
+    void request.then(complete, () => complete(queryFailure));
   };
 }

@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.3.1
+
+### Patch Changes
+
+- Support the `__GetComputedStyleByKey` element PAPI. ([#3262](https://github.com/lynx-family/lynx-stack/pull/3262))
+
 ## 0.3.0
 
 ### Minor Changes

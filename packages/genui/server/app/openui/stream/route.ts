@@ -2,21 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { getOpenUIAgentService } from '../../../service/openui-agent';
 import {
   validateConversation,
   validateMessages,
 } from '../../common/chat-validation';
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
 import { createStreamLogger } from '../../common/stream-logger';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 interface OpenUIChatBody {
   messages?: unknown;
@@ -28,11 +27,7 @@ interface OpenUIChatBody {
   api?: 'chat' | 'responses';
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postOpenUIStream(req: Request) {
   const { log, requestId } = createStreamLogger('openui', '/openui/stream');
   log('request.received', {
     contentLength: req.headers.get('content-length'),
@@ -121,73 +116,121 @@ export async function POST(req: Request) {
     hasBaseURL: Boolean(opts.baseURL),
   });
 
+  let closed = false;
+  const generationController = new AbortController();
+  const abortGeneration = (reason?: unknown) => {
+    if (!generationController.signal.aborted) {
+      generationController.abort(reason);
+    }
+  };
+  const onRequestAbort = () => abortGeneration(req.signal.reason);
+  if (req.signal.aborted) {
+    onRequestAbort();
+  } else {
+    req.signal.addEventListener('abort', onRequestAbort, { once: true });
+  }
+
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
+    start(controller) {
       const enqueue = (event: string, data: unknown) => {
-        controller.enqueue(encodeSSE(event, data));
+        if (closed) return false;
+        try {
+          controller.enqueue(encodeSSE(event, data));
+          return true;
+        } catch {
+          closed = true;
+          return false;
+        }
       };
 
-      try {
-        const connectStartedAt = performance.now();
-        log('agent.connect.started');
-        const { textStream, finalize } = await service.streamAsAsyncIterable(
-          messages,
-          opts,
-          validatedConversation.conversation,
-        );
-        log('agent.connect.completed', {
-          durationMs: performance.now() - connectStartedAt,
-        });
+      const run = async () => {
+        try {
+          const connectStartedAt = performance.now();
+          log('agent.connect.started');
+          const { textStream, finalize } = await service.streamAsAsyncIterable(
+            messages,
+            opts,
+            validatedConversation.conversation,
+            generationController.signal,
+          );
+          log('agent.connect.completed', {
+            durationMs: performance.now() - connectStartedAt,
+          });
 
-        let streamedText = '';
-        let chunkCount = 0;
-        let firstChunkLogged = false;
+          let streamedText = '';
+          let chunkCount = 0;
+          let firstChunkLogged = false;
 
-        log('upstream.stream.started');
+          log('upstream.stream.started');
 
-        for await (const chunk of textStream) {
-          chunkCount += 1;
-          if (!firstChunkLogged) {
-            firstChunkLogged = true;
-            log('upstream.first_chunk', {
-              durationSinceConnectStartedMs: performance.now()
-                - connectStartedAt,
-              chunkLength: chunk.length,
-            });
+          for await (const chunk of textStream) {
+            chunkCount += 1;
+            if (!firstChunkLogged) {
+              firstChunkLogged = true;
+              log('upstream.first_chunk', {
+                durationSinceConnectStartedMs: performance.now()
+                  - connectStartedAt,
+                chunkLength: chunk.length,
+              });
+            }
+            streamedText += chunk;
+            if (!enqueue('delta', { text: chunk })) break;
           }
-          streamedText += chunk;
-          enqueue('delta', { text: chunk });
+
+          generationController.signal.throwIfAborted();
+          log('upstream.stream.ended', {
+            chunkCount,
+            streamedTextLength: streamedText.length,
+          });
+
+          const { text, usage, finishReason } = await finalize();
+          generationController.signal.throwIfAborted();
+          const finalText = text ?? streamedText;
+          log('done.enqueued', {
+            finalTextLength: finalText.length,
+            finishReason,
+            hasUsage: usage !== undefined,
+            requestId,
+          });
+          enqueue('done', {
+            ok: true,
+            text: finalText,
+            usage,
+            finishReason,
+          });
+        } catch (err: unknown) {
+          if (!closed && !generationController.signal.aborted) {
+            const error = errorMessage(err);
+            log('error.enqueued', error);
+            enqueue('error', error);
+          }
+        } finally {
+          req.signal.removeEventListener('abort', onRequestAbort);
+          if (!closed) {
+            closed = true;
+            log('stream.closed');
+            try {
+              controller.close();
+            } catch {
+              // The reader may have canceled between the state check and close.
+            }
+          }
         }
-
-        log('upstream.stream.ended', {
-          chunkCount,
-          streamedTextLength: streamedText.length,
-        });
-
-        const { text, usage, finishReason } = await finalize();
-        const finalText = text ?? streamedText;
-        log('done.enqueued', {
-          finalTextLength: finalText.length,
-          finishReason,
-          hasUsage: usage !== undefined,
-          requestId,
-        });
-        enqueue('done', {
-          ok: true,
-          text: finalText,
-          usage,
-          finishReason,
-        });
-      } catch (err: unknown) {
-        const error = errorMessage(err);
-        log('error.enqueued', error);
-        enqueue('error', error);
-      } finally {
-        log('stream.closed');
-        controller.close();
-      }
+      };
+      void run();
+    },
+    cancel(reason) {
+      closed = true;
+      req.signal.removeEventListener('abort', onRequestAbort);
+      abortGeneration(reason);
     },
   });
 
   return new Response(stream, { status: 200, headers: sseHeaders(req) });
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postOpenUIStream(context.req.raw));
+
+export default route;

@@ -132,10 +132,9 @@ function readMetric(value: unknown): number {
     : 0;
 }
 
-function isServerlessRuntime(): boolean {
+function isAwsLambdaRuntime(): boolean {
   return Boolean(
-    process.env.VERCEL
-      ?? process.env.AWS_LAMBDA_FUNCTION_NAME
+    process.env.AWS_LAMBDA_FUNCTION_NAME
       ?? process.env.AWS_EXECUTION_ENV,
   );
 }
@@ -152,7 +151,7 @@ async function resolveChromiumLaunchOptions(): Promise<LaunchOptions> {
     };
   }
 
-  if (!isServerlessRuntime()) {
+  if (!isAwsLambdaRuntime()) {
     return { headless: true };
   }
 

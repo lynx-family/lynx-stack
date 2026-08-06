@@ -2,25 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { Hono } from 'hono';
+
+import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { publishA2UIPayload } from '../payload-publisher';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 interface A2UIPayloadBody {
   messages?: unknown;
   actionMocks?: unknown;
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postA2UIPayload(req: Request) {
   const decision = checkRateLimit(req);
   if (!decision.ok) {
     return rateLimitJsonResponse(req, decision);
@@ -65,3 +60,9 @@ export async function POST(req: Request) {
     );
   }
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postA2UIPayload(context.req.raw));
+
+export default route;

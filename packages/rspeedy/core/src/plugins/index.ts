@@ -30,10 +30,6 @@ export async function applyDefaultPlugins(
   const defaultPlugins = Object.freeze<Promise<RsbuildPlugin>[]>([
     import('./api.plugin.js').then(({ pluginAPI }) => pluginAPI(config)),
 
-    import('./chunkLoading.plugin.js').then(({ pluginChunkLoading }) =>
-      pluginChunkLoading()
-    ),
-
     import('@lynx-js/debug-metadata-rsbuild-plugin').then(
       ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
     ),
@@ -42,40 +38,19 @@ export async function applyDefaultPlugins(
       pluginDev(config.dev, config.server)
     ),
 
-    import('./minify.plugin.js').then(({ pluginMinify }) =>
-      pluginMinify(config.output?.minify)
-    ),
-
-    import('./optimization.plugin.js').then(({ pluginOptimization }) =>
-      pluginOptimization()
-    ),
-
-    import('./output.plugin.js').then(({ pluginOutput }) =>
-      pluginOutput(config.output)
-    ),
-
-    import('./resolve.plugin.js').then(({ pluginResolve }) => pluginResolve()),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
-    ),
-
-    import('./sourcemap.plugin.js').then(({ pluginSourcemap }) =>
-      pluginSourcemap()
     ),
 
     import('./statsJson.plugin.js').then(({ pluginStatsJson }) =>
       pluginStatsJson(config)
     ),
-
-    import('./swc.plugin.js').then(({ pluginSwc }) => pluginSwc()),
-
-    import('./target.plugin.js').then(({ pluginTarget }) => pluginTarget()),
   ])
 
   const promises: Promise<void>[] = [
-    Promise.all(defaultPlugins).then(plugins => {
-      rsbuildInstance.addPlugins(plugins)
+    Promise.all(defaultPlugins).then(async plugins => {
+      const { pluginLynx } = await import('@lynx-js/rsbuild-plugin')
+      rsbuildInstance.addPlugins([...pluginLynx(), ...plugins])
     }),
   ]
 

@@ -4,10 +4,9 @@
 
 ```ts
 
-import type { BannerPluginArgument } from '@rspack/core';
-import type { Compiler } from '@rspack/core';
 import type { LibConfig } from '@rslib/core';
 import type { RslibConfig } from '@rslib/core';
+import type { Rspack } from '@rslib/core';
 
 // @public
 export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions;
@@ -37,14 +36,16 @@ export interface ExternalBundleLibConfig extends LibConfig {
 export class ExternalBundleWebpackPlugin {
     constructor(options: ExternalBundleWebpackPluginOptions);
     // (undocumented)
-    apply(compiler: Compiler): void;
+    apply(compiler: Rspack.Compiler): void;
 }
 
 // @public
 export interface ExternalBundleWebpackPluginOptions {
     bundleFileName: string;
     enableJsBytecode?: boolean | undefined;
-    encode: (opts: unknown) => Promise<{
+    encode: (opts: unknown) => {
+        buffer: Buffer;
+    } | Promise<{
         buffer: Buffer;
     }>;
     engineVersion?: string | undefined;
@@ -83,12 +84,12 @@ export type ExternalsPresetValue = boolean | {
 export class MainThreadRuntimeWrapperWebpackPlugin {
     constructor(options?: Partial<MainThreadRuntimeWrapperWebpackPluginOptions>);
     // (undocumented)
-    apply(compiler: Compiler): void;
+    apply(compiler: Rspack.Compiler): void;
 }
 
 // @public
 export interface MainThreadRuntimeWrapperWebpackPluginOptions {
-    test: Extract<BannerPluginArgument, {
+    test: Extract<Rspack.BannerPluginArgument, {
         banner: unknown;
     }>['test'];
 }

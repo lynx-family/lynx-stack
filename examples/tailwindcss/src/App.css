@@ -1,22 +1,97 @@
 @tailwind base;
+@tailwind components;
 @tailwind utilities;
 
-:root {
-  --radius: 8px;
-  --color-base-1: rgba(0, 0, 0, 1);
-  --color-base-2: rgba(38, 38, 38, 1);
-  --color-base-3: rgba(0, 0, 0, 1);
-  --color-base-4: rgba(38, 38, 38, 1);
-  --color-base-content: rgba(255, 255, 255, 1);
-  --color-primary: rgba(255, 100, 72, 1);
-  --color-primary-content: rgba(255, 255, 255, 1);
-  --color-secondary: rgba(61, 234, 231, 1);
-  --color-secondary-content: rgb(0, 0, 0, 1);
-  --color-muted: rgba(38, 38, 38, 1);
-  --color-muted-content: rgba(163, 163, 163, 1);
-  --color-neutral: rgba(0, 0, 0, 1);
-  --color-neutral-content: rgba(255, 255, 255, 1);
-  --color-border: rgba(64, 64, 64, 1);
-  --color-ring: rgba(61, 234, 231, 1);
-  --color-field: rgba(64, 64, 64, 1);
+.lunaris-light {
+  --canvas: #ffffff;
+  --canvas-ambient: #f4f4f4;
+  --paper: #f8f8f8;
+  --paper-clear: #ffffff;
+  --paper-veil: rgba(248, 248, 248, 0.3);
+  --paper-film: rgba(248, 248, 248, 0.15);
+  --backdrop: rgba(0, 0, 0, 0.25);
+  --backdrop-subtle: rgba(0, 0, 0, 0.1);
+  --backdrop-heavy: rgba(0, 0, 0, 0.5);
+  --content: #010101;
+  --content-2: #333333;
+  --content-muted: #5d5d5d;
+  --content-subtle: #9e9e9e;
+  --content-faint: #d0d0d0;
+  --content-faded: rgba(0, 0, 0, 0.6);
+  --primary: #ff1a6e;
+  --primary-2: #ff558e;
+  --primary-muted: #f992b1;
+  --primary-content: #ffffff;
+  --primary-content-faded: rgba(255, 255, 255, 0.4);
+  --secondary: #fbcfdc;
+  --secondary-2: #fce5ed;
+  --secondary-content: #a92d5a;
+  --secondary-content-faded: rgba(60, 60, 60, 0.3);
+  --neutral: #010101;
+  --neutral-2: #333333;
+  --neutral-subtle: #b3b3b3;
+  --neutral-faint: #d9d9d9;
+  --neutral-ambient: #eeeeee;
+  --neutral-veil: rgba(0, 0, 0, 0.24);
+  --neutral-film: rgba(0, 0, 0, 0.05);
+  --neutral-content: #f8f8f8;
+  --neutral-content-faded: rgba(248, 248, 248, 0.4);
+  --line: rgba(0, 0, 0, 0.17);
+  --rule: #e5e5e5;
+  --gradient-a: #ff3d63;
+  --gradient-b: #ff5d99;
+  --gradient-c: #a998bf;
+  --gradient-d: #3dd5e9;
+  --gradient-content: #ffffff;
+  --gradient-content-faded: rgba(255, 255, 255, 0.68);
+  --gradient-content-trace: rgba(255, 255, 255, 0.12);
+}
+
+.lunaris-dark {
+  --canvas: #0d0d0d;
+  --canvas-ambient: #000000;
+  --paper: #1a1a1a;
+  --paper-clear: #232323;
+  --paper-veil: rgba(0, 0, 0, 0.1);
+  --paper-film: rgba(0, 0, 0, 0.05);
+  --backdrop: rgba(0, 0, 0, 0.32);
+  --backdrop-subtle: rgba(0, 0, 0, 0.2);
+  --backdrop-heavy: rgba(0, 0, 0, 0.7);
+  --content: #f8f8f8;
+  --content-2: #d9d9d9;
+  --content-muted: #b3b3b3;
+  --content-subtle: #6e6e6e;
+  --content-faint: #4f4f4f;
+  --content-faded: rgba(248, 248, 248, 0.6);
+  --primary: #ff8ab5;
+  --primary-2: #ff4f8f;
+  --primary-muted: #d04377;
+  --primary-content: #010101;
+  --primary-content-faded: rgba(0, 0, 0, 0.3);
+  --secondary: #534363;
+  --secondary-2: #362e46;
+  --secondary-content: #eee5f6;
+  --secondary-content-faded: rgba(224, 224, 224, 0.25);
+  --neutral: #f8f8f8;
+  --neutral-2: #d0d0d0;
+  --neutral-subtle: #656565;
+  --neutral-faint: #505050;
+  --neutral-ambient: #2c2c2c;
+  --neutral-veil: rgba(248, 248, 248, 0.5);
+  --neutral-film: rgba(248, 248, 248, 0.08);
+  --neutral-content: #010101;
+  --neutral-content-faded: rgba(0, 0, 0, 0.25);
+  --line: rgba(248, 248, 248, 0.32);
+  --rule: #333333;
+  --gradient-a: #ff7385;
+  --gradient-b: #fe69a1;
+  --gradient-c: #a998bf;
+  --gradient-d: #00d0f1;
+  --gradient-content: #ffffff;
+  --gradient-content-faded: rgba(255, 255, 255, 0.68);
+  --gradient-content-trace: rgba(255, 255, 255, 0.12);
+}
+
+.luna-gradient-berry {
+  background: linear-gradient(0deg, var(--gradient-b), var(--gradient-c));
 }

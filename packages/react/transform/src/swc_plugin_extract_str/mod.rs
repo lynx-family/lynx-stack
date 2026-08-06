@@ -17,8 +17,7 @@ pub struct ExtractStrConfig {
   /// @public
   /// The minimum length of string literals to be extracted.
   ///
-  /// @remarks
-  /// Default value: `20`.
+  /// @defaultValue `20`
   ///
   /// @example
   ///

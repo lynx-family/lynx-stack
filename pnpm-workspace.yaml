@@ -53,6 +53,8 @@ minimumReleaseAgeExclude:
   - "@rstest/*"
   # Renovate security update: turbo@2.9.14
   - turbo@2.9.14
+  # Renovate security update: dompurify@3.4.0
+  - dompurify@3.4.0
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
@@ -61,6 +63,13 @@ minimumReleaseAgeStrict: false
 
 peerDependencyRules:
   allowedVersions:
+    # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
+    # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
+    # predates the release. Verified by building and testing the one package
+    # that uses it, `testing-library/examples/react-compiler`.
+    "vite-plugin-babel>@babel/core": "^7.0.0 || ^8.0.0"
+    "@ai-sdk/provider-utils>zod": "^3.23.8 || ^4.0.0"
+    "@ai-sdk/ui-utils>zod": "^3.23.8 || ^4.0.0"
     "@lynx-js/lynx-ui>@types/react": "^19.2.0"
     "@lynx-js/lynx-ui-button>@types/react": "^19.2.0"
     "@lynx-js/lynx-ui-checkbox>@types/react": "^19.2.0"
@@ -89,9 +98,14 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.58.11"
+  "@microsoft/api-extractor": "7.58.12"
+  typescript: &typescript-version "6.0.3"
 
 catalogs:
+  # Packages vendored from the Lynx toolchain.
+  lynxjs:
+    preact: "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c"
+
   adb:
     "@yume-chan/adb": ^2.6.0
     "@yume-chan/adb-scrcpy": ^2.3.2
@@ -100,29 +114,29 @@ catalogs:
     "@yume-chan/fetch-scrcpy-server": ^1.0.0
     "@yume-chan/scrcpy": ^2.3.0
     "@yume-chan/scrcpy-decoder-webcodecs": ^2.5.3
-    "@yume-chan/stream-extra": ^2.1.0
+    "@yume-chan/stream-extra": ^2.6.1
     "@yume-chan/struct": ^2.1.0
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.1.4"
+    "@rsbuild/core": "2.1.7"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "0.23.2"
+    "@rslib/core": "1.0.0-beta.1"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.1.4"
-    "@rspack/core": "2.1.4"
+    "@rspack/cli": "2.1.5"
+    "@rspack/core": "2.1.5"
     "@rspack/dev-server": "2.1.0"
     "@rspack/test-tools": "2.1.3"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.0"
-    "@rstest/coverage-istanbul": "0.11.0"
-    "@rstest/core": "0.11.0"
+    "@rstest/adapter-rsbuild": "0.11.3"
+    "@rstest/coverage-istanbul": "0.11.3"
+    "@rstest/core": "0.11.3"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
@@ -137,6 +151,14 @@ overrides:
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
 
 packageExtensions:
+  # Typia's internal packages import TypeScript without declaring it. Keep
+  # their TypeFlags aligned with the TypeScript instance used by the transformer.
+  "@typia/core@*":
+    dependencies:
+      typescript: *typescript-version
+  "@typia/transform@*":
+    dependencies:
+      typescript: *typescript-version
   "@rspack/test-tools@*":
     dependencies:
       wast-loader: ^1.14.1

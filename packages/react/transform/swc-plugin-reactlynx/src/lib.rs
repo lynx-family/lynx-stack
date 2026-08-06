@@ -114,7 +114,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
   let source_map = std::sync::Arc::new(metadata.source_map);
   let pos = source_map.lookup_char_pos(program.span().lo);
 
-  let hash = pos.file.src_hash as u32;
+  let hash = pos.file.src_hash() as u32;
 
   let content_hash = match options.mode {
     Some(TransformMode::Test) => "test".into(),

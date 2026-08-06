@@ -1,5 +1,33 @@
 # @lynx-js/rspeedy
 
+## 0.16.2
+
+### Patch Changes
+
+- Move `pluginChunkLoading`, `pluginOptimization`, `pluginResolve`, `pluginSourcemap`, `pluginSwc`, and `pluginTarget` into `pluginLynx()`. `@lynx-js/rspeedy` now depends on `@lynx-js/rsbuild-plugin`. ([#3301](https://github.com/lynx-family/lynx-stack/pull/3301))
+
+- Minify `stats.json` and exclude module `reasons` to avoid invalid string length when building large projects ([#3239](https://github.com/lynx-family/lynx-stack/pull/3239))
+
+- Updated dependencies [[`ae05f98`](https://github.com/lynx-family/lynx-stack/commit/ae05f984807079abb7a6574b3e083f33bbeec708), [`c1136da`](https://github.com/lynx-family/lynx-stack/commit/c1136da9ce58fc4b09ee7753d46e1b057740926d)]:
+  - @lynx-js/rsbuild-plugin@0.0.1
+  - @lynx-js/web-rsbuild-server-middleware@0.23.1
+
+## 0.16.1
+
+### Patch Changes
+
+- Update `@rsdoctor/rspack-plugin` from `~1.5.6` to `~1.6.1` ([#3117](https://github.com/lynx-family/lynx-stack/pull/3117))
+
+- Update `@rsbuild/core` from `2.1.4` to `2.1.7` ([#3071](https://github.com/lynx-family/lynx-stack/pull/3071))
+
+- Update `@rsbuild/plugin-css-minimizer` from `2.0.0` to `2.0.1` ([#3067](https://github.com/lynx-family/lynx-stack/pull/3067))
+
+- Widen the optional `typescript` peer dependency range from `5.1.6 - 5.9.x` to `5.1.6 - 6.0.x` so projects on TypeScript 6.0 are supported. ([#2976](https://github.com/lynx-family/lynx-stack/pull/2976))
+
+- Updated dependencies [[`3897792`](https://github.com/lynx-family/lynx-stack/commit/38977927bf0229a330b5d4cf7bacc0a2bcb1bebc), [`d576431`](https://github.com/lynx-family/lynx-stack/commit/d576431db510756b9c2ac4dbedf0e0da6b10bc8b)]:
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.2.1
+  - @lynx-js/web-rsbuild-server-middleware@0.23.0
+
 ## 0.16.0
 
 ### Minor Changes

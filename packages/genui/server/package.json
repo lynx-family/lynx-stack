@@ -2,30 +2,35 @@
   "name": "a2ui-server",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "next build",
-    "dev": "next dev -p 3060",
-    "lint": "eslint --ignore-pattern .next --ignore-pattern .vercel .",
-    "start": "next start -p 3060",
+    "build": "tsc6 --noEmit && rslib build",
+    "dev": "pnpm build && pnpm run --parallel \"/^dev:(build|server)$/\"",
+    "dev:build": "rslib build --watch",
+    "dev:server": "node --watch dist/index.js",
+    "lint": "eslint --ignore-pattern dist .",
+    "start": "node dist/index.js",
     "test": "rstest"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.63",
-    "@aws-sdk/client-s3": "^3.1053.0",
+    "@ai-sdk/openai": "^3.0.87",
+    "@aws-sdk/client-s3": "^3.1093.0",
+    "@hono/node-server": "^2.0.11",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
-    "@mastra/core": "1.13.2",
-    "ajv": "^8.18.0",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "zod": "^3.25.76"
+    "@mastra/core": "1.52.0",
+    "@openuidev/lang-core": "^0.2.9",
+    "hono": "4.12.12",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.10.13",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^19.2.3",
+    "@types/node": "^24.13.3",
+    "ajv": "^8.18.0",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": "^22 || ^24"
   }
 }
