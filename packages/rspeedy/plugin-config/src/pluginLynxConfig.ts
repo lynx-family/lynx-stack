@@ -27,8 +27,6 @@ const defaultUpgradeRspeedyLink =
 /**
  * A configuration interface for Lynx Config defined by `@lynx-js/type-config`.
  *
- * See all available options in {@link https://lynxjs.org/next/api/lynx-config/config-reference.html}.
- *
  * @public
  */
 export interface Config extends LynxConfig, LynxCompilerOptions {}
@@ -84,7 +82,7 @@ export interface Options {
  * export default defineConfig({
  *   plugins: [
  *     pluginLynxConfig({
- *       enableCheckExposureOptimize: false,
+ *       alignMouseEventWithW3C: true,
  *     }),
  *   ],
  * })
