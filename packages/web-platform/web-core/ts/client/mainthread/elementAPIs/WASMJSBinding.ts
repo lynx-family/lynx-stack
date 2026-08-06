@@ -130,6 +130,44 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     ]);
   }
 
+  /**
+   * Invokes a callback registered through `__AddEventListener`.
+   *
+   * Called from the same per-element loop as `runWorklet` and `publishEvent`, so
+   * a callback sees the same `target` / `currentTarget` shape and takes part in
+   * the same capture, catch and bubble ordering.
+   */
+  runElementClosure(
+    closure: unknown,
+    eventObject: LynxCrossThreadEvent,
+    targetUniqueId: number,
+    targetDataset: Record<string, string>,
+    currentTargetUniqueId: number,
+    currentTargetDataset: Record<string, string>,
+  ) {
+    if (typeof closure !== 'function') return;
+    const target = this.getElementByUniqueId(targetUniqueId);
+    const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
+    const resolvedTarget = (target ?? currentTarget) as
+      | DecoratedHTMLElement
+      | undefined;
+    if (!resolvedTarget) return;
+    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
+    eventObject.target = this.generateTargetObject(
+      resolvedTarget,
+      resolvedTargetDataset,
+    );
+    eventObject.currentTarget = this.generateTargetObject(
+      currentTarget as DecoratedHTMLElement,
+      currentTargetDataset,
+    );
+    // @ts-expect-error
+    eventObject.target.elementRefptr = resolvedTarget;
+    // @ts-expect-error
+    eventObject.currentTarget.elementRefptr = currentTarget;
+    (closure as (event: LynxCrossThreadEvent) => void)(eventObject);
+  }
+
   publishEvent(
     handlerName: string,
     parentComponentId: string | undefined,

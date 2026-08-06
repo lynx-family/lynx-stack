@@ -135,6 +135,74 @@ impl MainThreadWasmContext {
     }
   }
 
+  /// Registers or removes a callback bound through `__AddEventListener`.
+  ///
+  /// `closure` of `None` removes: a specific callback when `remove_target` is
+  /// given, otherwise every callback for this event name and type. Unlike the
+  /// cross-thread and worklet slots, which hold a single handler each, this one
+  /// holds a list, so clearing has to know *which* callback to drop.
+  pub fn add_closure_event(
+    &mut self,
+    unique_id: usize,
+    event_type: String,
+    event_name: String,
+    closure: Option<JsValue>,
+    remove_target: Option<JsValue>,
+  ) {
+    let event_name = event_name.to_ascii_lowercase();
+    let event_name_str = event_name.as_str();
+    let event_type = event_type.to_ascii_lowercase();
+    self.enable_event(&event_name);
+
+    let is_allowlisted = constants::ELEMENT_REACTIVE_EVENTS.contains(event_name_str);
+    let mut should_enable = false;
+    let mut should_disable = false;
+    let mut has_handler = false;
+
+    if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
+      let mut element_data = binding.borrow_mut();
+      let had_handler = !element_data
+        .get_closure_event_handlers(&event_name, &event_type)
+        .is_empty();
+
+      if let Some(closure) = closure {
+        element_data.add_closure_event_handler(event_name.clone(), event_type.clone(), closure);
+        has_handler = true;
+      } else {
+        has_handler = element_data.remove_closure_event_handler(
+          &event_name,
+          &event_type,
+          remove_target.as_ref(),
+        );
+      }
+
+      if is_allowlisted {
+        // Only the transition between "no handler" and "some handler" toggles
+        // the delegated DOM listener.
+        should_enable = !had_handler && has_handler;
+        should_disable = had_handler && !has_handler;
+      }
+    }
+
+    if event_type == "global-bindevent" {
+      self.update_global_bind_events(unique_id, &event_name, has_handler);
+    }
+
+    if should_enable {
+      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+        let _ = self
+          .mts_binding
+          .enable_element_event(element, event_name_str);
+      }
+    } else if should_disable {
+      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+        let _ = self
+          .mts_binding
+          .disable_element_event(element, event_name_str);
+      }
+    }
+  }
+
   fn update_global_bind_events(&mut self, unique_id: usize, event_name: &str, has_handler: bool) {
     if has_handler {
       self
@@ -301,6 +369,35 @@ impl MainThreadWasmContext {
               &target_element_dataset.clone().into(),
               *unique_id,
               &current_target_element_data.dataset.clone().into(),
+            );
+          }
+        }
+      }
+      {
+        // callback registered through `__AddEventListener`
+        let bind_handlers =
+          current_target_element_data.get_closure_event_handlers(&event_name, bind_handler_name);
+        let catch_handlers =
+          current_target_element_data.get_closure_event_handlers(&event_name, catch_handler_name);
+        if !bind_handlers.is_empty() || !catch_handlers.is_empty() {
+          // Assigned, not accumulated, matching the two blocks above: the
+          // callback form is not expected to be mixed with the handler-name or
+          // worklet forms on the same element, event name and type.
+          is_caught = !catch_handlers.is_empty();
+          let current_target_dataset: JsValue = current_target_element_data.dataset.clone().into();
+          // Release the element data before entering JS. A callback is free to
+          // register or remove listeners - a `once` listener removes itself -
+          // which re-enters this context, and holding the borrow across the call
+          // would abort with "recursive use of an object".
+          drop(current_target_element_data);
+          for closure in bind_handlers.iter().chain(catch_handlers.iter()) {
+            self.mts_binding.run_element_closure(
+              closure,
+              serialized_event,
+              target_unique_id,
+              &target_element_dataset.clone().into(),
+              *unique_id,
+              &current_target_dataset,
             );
           }
         }

@@ -19,6 +19,7 @@ export const decode_style_info: (a: any, b: number, c: number, d: number, e: num
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
 export const get_font_face_content: (a: any) => [number, number, number, number];
 export const get_style_content: (a: any) => [number, number, number, number];
+export const mainthreadwasmcontext_add_closure_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d: any) => [number, number];
 export const mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
