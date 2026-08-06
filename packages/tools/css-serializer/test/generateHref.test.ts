@@ -45,7 +45,21 @@ import { parse } from '../src/index.js';
  * The original, pre-change implementation, transcribed verbatim on top of
  * `node:path`. This is the oracle - it is intentionally *not* refactored, so it
  * keeps matching the code that shipped in 0.1.7.
+ *
+ * The oracle pins `path.posix` where the original used the platform-dependent
+ * default export. That default *is* `path.posix` on Linux and macOS, so there
+ * this stays a verbatim transcription. On Windows the default is `path.win32`,
+ * which treats `\` as a separator and `C:\` as absolute; an unpinned oracle
+ * would therefore demand win32 semantics from an implementation that is now
+ * deliberately POSIX-only, and disagree on inputs such as `\a.css`, `C:\x.css`
+ * or `\\srv\share\x.css`. Pinning keeps the oracle a fixed description of the
+ * behaviour that shipped instead of one that changes with the runner's OS.
+ *
+ * `path.win32.sep` below is deliberately left as-is: the original names that
+ * one explicitly, so it is win32 on every platform.
  */
+const oraclePath = path.posix;
+
 function getFullPathOracle(
   projectRoot: string,
   filename: string,
@@ -53,11 +67,11 @@ function getFullPathOracle(
 ): string {
   let fullPath = '';
   if (importStmt.startsWith('/')) {
-    fullPath = path.join(projectRoot, importStmt);
+    fullPath = oraclePath.join(projectRoot, importStmt);
   } else if (importStmt.startsWith('@')) {
     fullPath = importStmt;
   } else {
-    fullPath = path.resolve(filename, '..', importStmt);
+    fullPath = oraclePath.resolve(filename, '..', importStmt);
   }
 
   return fullPath;
@@ -68,17 +82,17 @@ function generateHrefOracle(
   filename: string,
   origin: string,
 ): string {
-  filename = path.isAbsolute(filename)
+  filename = oraclePath.isAbsolute(filename)
     ? filename
-    : path.join(projectRoot, filename);
+    : oraclePath.join(projectRoot, filename);
   const fullPath = getFullPathOracle(projectRoot, filename, origin);
 
-  let projectPath = path.relative(projectRoot, fullPath);
+  let projectPath = oraclePath.relative(projectRoot, fullPath);
 
   if (fullPath.startsWith('@')) {
     return fullPath.replaceAll(path.win32.sep, '/');
   } else if (!projectPath.startsWith('.')) {
-    projectPath = path.join(path.sep, projectPath);
+    projectPath = oraclePath.join(oraclePath.sep, projectPath);
   }
 
   return projectPath.replaceAll(path.win32.sep, '/');
@@ -184,9 +198,9 @@ describe('generateHref', () => {
             // `getFullPath` is exported but unused in-repo, and it forwards a
             // caller-supplied `filename` straight to `resolve`, so only feed it
             // absolute filenames - a relative one is cwd dependent.
-            const absFilename = path.isAbsolute(filename)
+            const absFilename = oraclePath.isAbsolute(filename)
               ? filename
-              : path.join(projectRoot, filename);
+              : oraclePath.join(projectRoot, filename);
             const actual = getFullPath(projectRoot, absFilename, origin);
             const expected = getFullPathOracle(
               projectRoot,
