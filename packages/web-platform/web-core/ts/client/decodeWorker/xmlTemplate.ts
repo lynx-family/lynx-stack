@@ -39,9 +39,9 @@ const cardCSSId = '0';
  * `styleInfo` accepts raw text on the `content` channel, which the engine emits
  * verbatim, or pre-parsed rules on the `rules` channel, which it rewrites.
  * Since a buildless card has no build step to tokenize its CSS, that work
- * happens here instead - see `common/xml/cssToStyleInfo.ts`, which reuses
- * `@lynx-js/css-serializer` (already a dependency of this package, it backs
- * `encode/encodeCSS.ts`).
+ * happens here instead - see `common/xml/cssToStyleInfo.ts`, which parses with
+ * `css-tree`, loaded on demand so the parser does not weigh down the decode
+ * Worker's chunk for the built-card path that never needs it.
  *
  * Tokenizing is what makes the engine's style handling run, all verified by
  * experiment:
@@ -180,13 +180,20 @@ function isXMLLeadingWhitespace(char: string): boolean {
  *
  * Returns the parser's structured error instead of throwing, so the caller can
  * forward `formattedMessage` through the worker's `error` channel.
+ *
+ * Asynchronous because the CSS parser is fetched on demand - it is a large
+ * dependency that only a buildless card needs, so it is kept out of the decode
+ * Worker's eagerly loaded chunk (see `common/xml/cssToStyleInfo.ts`). A document
+ * with no `<style>` section resolves without any such fetch.
  */
-export function xmlToTemplate(
+export async function xmlToTemplate(
   source: string,
-): { success: true; template: XMLDerivedTemplate } | {
-  success: false;
-  message: string;
-} {
+): Promise<
+  { success: true; template: XMLDerivedTemplate } | {
+    success: false;
+    message: string;
+  }
+> {
   const parsed = parseLynxXML(source);
   if (!parsed.success) {
     return { success: false, message: parsed.error.formattedMessage };
@@ -204,7 +211,7 @@ export function xmlToTemplate(
       [cardCSSId]: {
         content: [] as never[],
         rules: [] as never[],
-        ordered: convertCSSToStyleInfo(parsed.style).ordered,
+        ordered: (await convertCSSToStyleInfo(parsed.style)).ordered,
       },
     }
     : undefined;

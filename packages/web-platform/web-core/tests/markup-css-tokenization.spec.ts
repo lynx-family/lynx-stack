@@ -42,12 +42,14 @@ function card(css: string): string {
  * The encoded section is a binary buffer whose style text is stored as plain
  * UTF-8, so decoding it and cutting at the first NUL yields exactly the CSS the
  * engine will install.
+ *
+ * Asynchronous because `xmlToTemplate` fetches the CSS parser on demand.
  */
-function engineCSS(
+async function engineCSS(
   css: string,
   transform: { vw?: boolean; vh?: boolean; rem?: boolean } = {},
-): string {
-  const result = xmlToTemplate(card(css));
+): Promise<string> {
+  const result = await xmlToTemplate(card(css));
   if (!result.success) {
     throw new Error(result.message);
   }
@@ -72,20 +74,22 @@ describe('markup card CSS tokenization', () => {
    * viewport. The rewrite happens while tokenizing, so it only reaches a card
    * whose CSS is tokenized.
    */
-  test('applies `transform-rem` to a markup card', () => {
-    expect(engineCSS('.card { padding: 1rem; }', { rem: true }))
+  test('applies `transform-rem` to a markup card', async () => {
+    expect(await engineCSS('.card { padding: 1rem; }', { rem: true }))
       .toContain('padding:calc(1 * var(--rem-unit));');
 
     // Same input, attribute off: the unit is left as the author wrote it. This
     // is the half that proves the rewrite is driven by the attribute and not
     // unconditional.
-    const untransformed = engineCSS('.card { padding: 1rem; }', { rem: false });
+    const untransformed = await engineCSS('.card { padding: 1rem; }', {
+      rem: false,
+    });
     expect(untransformed).toContain('padding:1rem;');
     expect(untransformed).not.toContain('--rem-unit');
   });
 
-  test('applies `transform-vw` to a markup card, including inside `calc()`', () => {
-    const transformed = engineCSS(
+  test('applies `transform-vw` to a markup card, including inside `calc()`', async () => {
+    const transformed = await engineCSS(
       '.card { width: 50vw; font-size: calc(100vw / 24); }',
       { vw: true },
     );
@@ -96,7 +100,9 @@ describe('markup card CSS tokenization', () => {
       /font-size:calc\(calc\(100 \* var\(--vw-unit\)\)\s*\/\s*24\);/,
     );
 
-    const untransformed = engineCSS('.card { width: 50vw; }', { vw: false });
+    const untransformed = await engineCSS('.card { width: 50vw; }', {
+      vw: false,
+    });
     expect(untransformed).toContain('width:50vw;');
     expect(untransformed).not.toContain('--vw-unit');
   });
@@ -107,8 +113,8 @@ describe('markup card CSS tokenization', () => {
    * block` - collapsing the intended layout. The Lynx `style_transformer`
    * translates it, and only runs on tokenized declarations.
    */
-  test('translates Lynx-specific `display: linear`', () => {
-    const css = engineCSS(
+  test('translates Lynx-specific `display: linear`', async () => {
+    const css = await engineCSS(
       '.card { display: linear; linear-direction: column; }',
     );
 
@@ -138,8 +144,8 @@ describe('markup card CSS tokenization', () => {
    * element. Without the rewrite every declaration under `:root` - custom
    * properties included - is silently unreachable.
    */
-  test('rewrites `:root` to the card root', () => {
-    const css = engineCSS(':root { --accent: #2f6d54; color: red; }');
+  test('rewrites `:root` to the card root', async () => {
+    const css = await engineCSS(':root { --accent: #2f6d54; color: red; }');
 
     expect(css).toContain('[part="page"]');
     expect(css).toMatch(/--accent:\s*#2f6d54;/);
@@ -147,11 +153,11 @@ describe('markup card CSS tokenization', () => {
     expect(css).not.toContain(':root');
   });
 
-  test('resolves a `var()` declared under `:root` from a class rule', () => {
+  test('resolves a `var()` declared under `:root` from a class rule', async () => {
     // The end-to-end shape of limitation 3: a custom property declared on
     // `:root` and read elsewhere. Both halves have to land on the card for the
     // `var()` to resolve.
-    const css = engineCSS(
+    const css = await engineCSS(
       ':root { --accent: #2f6d54; } .tab { background-color: var(--accent); }',
     );
     expect(css).toContain('[part="page"]');
@@ -162,9 +168,9 @@ describe('markup card CSS tokenization', () => {
   });
 
   describe('CSS custom properties', () => {
-    test('restores `var()` with and without a fallback', () => {
+    test('restores `var()` with and without a fallback', async () => {
       // `var()` has to survive tokenization as real CSS, fallback included.
-      const css = engineCSS(
+      const css = await engineCSS(
         '.a { color: var(--c); } .b { color: var(--d, blue); }'
           + ' .c { width: calc(var(--w) * 2); }',
       );
@@ -177,10 +183,10 @@ describe('markup card CSS tokenization', () => {
     });
   });
 
-  test('keeps `!important` on a declaration', () => {
+  test('keeps `!important` on a declaration', async () => {
     // `css-tree` reports `!important` separately from the value, so it has to be
     // re-appended explicitly or the declaration silently loses its priority.
-    const css = engineCSS('.a { color: red !important; }');
+    const css = await engineCSS('.a { color: red !important; }');
     expect(css).toContain('!important');
   });
 
@@ -188,12 +194,12 @@ describe('markup card CSS tokenization', () => {
     /**
      * The binary style format's rule kinds are `StyleRule` / `FontFaceRule` /
      * `KeyframesRule` only, so a conditional group rule cannot be tokenized.
-     * `css-serializer` parses `@media` happily and reports no error, so a
+     * `css-tree` parses `@media` happily and reports no error, so a
      * converter that simply ignored unknown node types would drop the block
      * without any signal - hence these tests.
      */
-    test('preserves `@media` verbatim instead of dropping it', () => {
-      const css = engineCSS(
+    test('preserves `@media` verbatim instead of dropping it', async () => {
+      const css = await engineCSS(
         '.a { color: red; } @media (min-width: 600px) { .a { color: blue; } }',
       );
       // The block reaches the browser, which honours it natively.
@@ -201,31 +207,35 @@ describe('markup card CSS tokenization', () => {
       expect(css).toContain('color:blue');
     });
 
-    test('preserves `@supports` and `@layer` verbatim', () => {
-      const supports = engineCSS(
+    test('preserves `@supports` and `@layer` verbatim', async () => {
+      const supports = await engineCSS(
         '@supports (display: grid) { .a { color: red; } }',
       );
       expect(supports).toMatch(/@supports \(display:\s*grid\)/);
       expect(supports).toContain('color:red');
 
-      const layer = engineCSS('@layer base { .a { color: red; } }');
+      const layer = await engineCSS('@layer base { .a { color: red; } }');
       expect(layer).toContain('@layer base');
       expect(layer).toContain('color:red');
     });
 
-    test('preserves a non-numeric `@import` rather than failing the card', () => {
+    test('preserves a non-numeric `@import` rather than failing the card', async () => {
       // `encodeCSS`'s import handling does `Number(href)` and throws when that
       // is `NaN`. Inside the decode worker a throw fails the whole card, so an
-      // authored `@import url("theme.css")` must not reach it.
-      expect(() => engineCSS('@import url("theme.css"); .a { color: red; }'))
-        .not.toThrow();
-      const css = engineCSS('@import url("theme.css"); .a { color: red; }');
+      // authored `@import url("theme.css")` must not reach it. The conversion is
+      // async, so the failure mode to rule out is a rejection, not a throw.
+      await expect(
+        engineCSS('@import url("theme.css"); .a { color: red; }'),
+      ).resolves.toBeTypeOf('string');
+      const css = await engineCSS(
+        '@import url("theme.css"); .a { color: red; }',
+      );
       expect(css).toContain('@import url("theme.css")');
       expect(css).toContain('color:red;');
     });
 
-    test('reports which at-rule kinds stayed verbatim', () => {
-      const { verbatimKinds } = convertCSSToStyleInfo(
+    test('reports which at-rule kinds stayed verbatim', async () => {
+      const { verbatimKinds } = await convertCSSToStyleInfo(
         '.a { color: red; }'
           + ' @media screen { .a { color: blue; } }'
           + ' @supports (display: grid) { .a { display: grid; } }'
@@ -235,7 +245,7 @@ describe('markup card CSS tokenization', () => {
 
       // A stylesheet with nothing unsupported reports nothing, so this cannot
       // pass vacuously.
-      expect(convertCSSToStyleInfo('.a { color: red; }').verbatimKinds)
+      expect((await convertCSSToStyleInfo('.a { color: red; }')).verbatimKinds)
         .toEqual([]);
     });
 
@@ -247,8 +257,8 @@ describe('markup card CSS tokenization', () => {
      * two declarations of equal specificity that inverts which one wins, which
      * is a silent rendering change - so the converter keeps one ordered list.
      */
-    test('keeps a preserved at-rule at its source position', () => {
-      const css = engineCSS(
+    test('keeps a preserved at-rule at its source position', async () => {
+      const css = await engineCSS(
         '.a { color: red; }'
           + ' @media (min-width: 600px) { .a { color: blue; } }'
           + ' .b { color: green; }',
@@ -266,11 +276,11 @@ describe('markup card CSS tokenization', () => {
       expect(media).toBeLessThan(last);
     });
 
-    test('CSS inside a preserved at-rule is not tokenized', () => {
+    test('CSS inside a preserved at-rule is not tokenized', async () => {
       // The documented, narrower limitation that replaces the old one. Outside
       // the block `rem` is rewritten; inside it the text is passed through, so
       // the author's unit survives untouched.
-      const css = engineCSS(
+      const css = await engineCSS(
         '.a { padding: 1rem; }'
           + ' @media (min-width: 600px) { .b { padding: 2rem; } }',
         { rem: true },
@@ -282,8 +292,8 @@ describe('markup card CSS tokenization', () => {
   });
 
   describe('rule kinds the binary format does represent', () => {
-    test('tokenizes `@keyframes`', () => {
-      const css = engineCSS(
+    test('tokenizes `@keyframes`', async () => {
+      const css = await engineCSS(
         '@keyframes fade { from { opacity: 0; } to { opacity: 1; } }',
       );
       expect(css).toContain('@keyframes fade');
@@ -291,8 +301,8 @@ describe('markup card CSS tokenization', () => {
       expect(css).toContain('opacity:1;');
     });
 
-    test('tokenizes `@font-face`', () => {
-      const css = engineCSS(
+    test('tokenizes `@font-face`', async () => {
+      const css = await engineCSS(
         '@font-face { font-family: "Card"; src: url("card.woff2"); }',
       );
       expect(css).toContain('@font-face');
@@ -301,12 +311,12 @@ describe('markup card CSS tokenization', () => {
   });
 
   describe('selector shapes', () => {
-    test('carries combinators, pseudo classes and attribute selectors', () => {
+    test('carries combinators, pseudo classes and attribute selectors', async () => {
       // Selectors are rebuilt section by section, so a shape that the rebuild
       // mishandles would surface as a mangled or missing selector rather than as
       // an error. The engine emits a combinator surrounded by spaces, and a
       // descendant combinator as a run of spaces.
-      const css = engineCSS(
+      const css = await engineCSS(
         '.a > .b { color: red; }'
           + ' .c .d { color: red; }'
           + ' .e:hover { color: red; }'
@@ -322,21 +332,21 @@ describe('markup card CSS tokenization', () => {
       expect(css).toContain('.f.g');
     });
 
-    test('carries a sibling combinator', () => {
-      expect(engineCSS('.e + .f { color: red; }')).toContain('.e + .f');
-      expect(engineCSS('.g ~ .h { color: red; }')).toContain('.g ~ .h');
+    test('carries a sibling combinator', async () => {
+      expect(await engineCSS('.e + .f { color: red; }')).toContain('.e + .f');
+      expect(await engineCSS('.g ~ .h { color: red; }')).toContain('.g ~ .h');
     });
 
-    test('keeps every selector of a selector list', () => {
-      const css = engineCSS('.a, .b { color: red; }');
+    test('keeps every selector of a selector list', async () => {
+      const css = await engineCSS('.a, .b { color: red; }');
       expect(css).toContain('.a');
       expect(css).toContain('.b');
     });
   });
 
-  test('leaves an empty stylesheet empty', () => {
-    expect(convertCSSToStyleInfo('').ordered).toEqual([]);
+  test('leaves an empty stylesheet empty', async () => {
+    expect((await convertCSSToStyleInfo('')).ordered).toEqual([]);
     // Comments carry no rules either, and must not produce a stray entry.
-    expect(convertCSSToStyleInfo('/* nothing */').ordered).toEqual([]);
+    expect((await convertCSSToStyleInfo('/* nothing */')).ordered).toEqual([]);
   });
 });
