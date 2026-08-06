@@ -25,8 +25,8 @@ import type { ConsoleMessage, Locator, Page } from '@playwright/test';
 const XML_CARD = 'markup-card.xml';
 
 /**
- * A second, minimal card whose only job is to pin down the `:root` limitation
- * documented on the last test in this file.
+ * A second, minimal card covering `:root` rewriting and `@media` preservation,
+ * asserted by the last tests in this file.
  */
 const ROOT_SELECTOR_CARD = 'markup-root-selector.xml';
 
@@ -53,6 +53,11 @@ const gotoMarkupCard = async (
   page: Page,
   xmlName: string,
   readySelector: string,
+  /**
+   * Extra query parameters, used to switch on the shell's `transform-*`
+   * attributes for the tests that assert unit rewriting.
+   */
+  options: Record<string, string> = {},
 ) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
@@ -65,7 +70,8 @@ const gotoMarkupCard = async (
     pageErrors.push(error.message);
   });
 
-  await page.goto(`/?xmlName=${xmlName}`, { waitUntil: 'load' });
+  const query = new URLSearchParams({ xmlName, ...options });
+  await page.goto(`/?${query.toString()}`, { waitUntil: 'load' });
   // The card only appears once the decode worker has parsed the markup and the
   // main-thread script has answered `__RenderPage`, which is asynchronous with
   // respect to `load`.
@@ -213,8 +219,10 @@ test.describe('Lynx XML markup card', () => {
     await gotoXMLCard(page);
 
     // `transform-vw` / `transform-vh` / `transform-rem` are deliberately left
-    // unset: CSS from markup cards is passed through verbatim instead of being
-    // tokenized, so the browser is what resolves `rem` / `vh` / `calc()` here.
+    // unset here, which is the default: the card's CSS is tokenized either way,
+    // but with the attributes off the units keep their native browser meaning,
+    // so the browser is what resolves `rem` / `vh` / `calc()` below. The
+    // `transform-rem` test at the end of this file covers the opt-in.
 
     const cardPage = page.locator('lynx-view div.page');
 
@@ -225,14 +233,14 @@ test.describe('Lynx XML markup card', () => {
       'rgb(237, 244, 239)',
     );
 
-    // Flex layout from the stylesheet, not from a Lynx `display:linear`
-    // translation (which markup cards do not get).
+    // Flex layout from the stylesheet's own `display: flex`. The card does not
+    // use Lynx's `display: linear`, which tokenization would also translate.
     const shell = page.locator('lynx-view .shell');
     expect(await computedStyle(shell, 'display')).toBe('flex');
     expect(await computedStyle(shell, 'flex-direction')).toBe('column');
 
     // `border-radius: 1.75rem` resolved to 28px, proving `rem` reaches the
-    // browser as a live unit rather than being rewritten away. Note `rem`
+    // browser as a live unit because `transform-rem` is off. Note `rem`
     // resolves against the *document* root font size, which keeps the 16px
     // default here - not against `.page`'s `calc()`-derived size, which only
     // affects `em` and font-relative lengths inside the card.
@@ -246,8 +254,7 @@ test.describe('Lynx XML markup card', () => {
       'linear-gradient(145deg, rgb(18, 63, 53) 0%, rgb(76, 134, 101) 100%)',
     );
 
-    // Custom properties work, as long as they are declared on a selector that
-    // matches inside the card (see the `:root` test at the end of this file).
+    // Custom properties resolve for a markup card.
     // `.tab-active` only sets `background-color: var(--accent)`, so resolving to
     // the accent colour is only possible if the variable was really in scope -
     // an unresolvable `var()` would leave the declaration invalid at
@@ -344,20 +351,14 @@ test.describe('Lynx XML markup card', () => {
   });
 
   /**
-   * Known limitation, asserted on purpose so that it cannot change silently.
+   * `:root` is rewritten to the card's own root element, because a markup card's
+   * CSS is tokenized on the way in.
    *
-   * The CSS of a markup card rides the raw-content channel verbatim and is not
-   * tokenized, so - unlike the CSS of a built card - its selectors are never
-   * rewritten. `:root` therefore keeps its literal meaning and matches the host
-   * document instead of the card's root element, which makes every declaration
-   * under it unreachable from the card.
-   *
-   * This is expected behaviour today, not a bug to patch casually: giving
-   * markup cards the rewrite means routing their CSS through the tokenized
-   * channel, which is a deliberate design change. If that happens, this test
-   * turns red and forces the choice to be made explicitly.
+   * A card renders inside a shadow root, where a literal `:root` matches
+   * nothing, so without the rewrite every declaration under it - custom
+   * properties included - would be unreachable, and silently so.
    */
-  test('does not rewrite `:root` for markup cards', async ({ page }) => {
+  test('rewrites `:root` for markup cards', async ({ page }) => {
     const { consoleErrors, pageErrors } = await gotoMarkupCard(
       page,
       ROOT_SELECTOR_CARD,
@@ -366,22 +367,22 @@ test.describe('Lynx XML markup card', () => {
 
     const cardPage = page.locator('lynx-view div.page');
 
-    // A plain declaration under `:root` never reaches the card's root element.
+    // A plain declaration under `:root` reaches the card's root element.
     expect(await computedStyle(cardPage, 'background-color')).toBe(
-      'rgba(0, 0, 0, 0)',
+      'rgb(47, 109, 84)',
     );
-    // Nor is a custom property declared there ever in scope for the card.
-    expect(await computedStyle(cardPage, '--root-accent')).toBe('');
-    // So `background-color: var(--root-accent)` has nothing to resolve against
-    // and the whole declaration is invalid at computed-value time - the element
-    // ends up transparent rather than accent-coloured.
+    // And a custom property declared there is in scope for the card.
+    expect(await computedStyle(cardPage, '--root-accent')).toBe('#2f6d54');
+    // So `background-color: var(--root-accent)` resolves. An unresolvable
+    // `var()` would leave the declaration invalid at computed-value time and the
+    // element transparent, which is what this asserts against.
     expect(
       await computedStyle(page.locator('lynx-view .probe'), 'background-color'),
-    ).toBe('rgba(0, 0, 0, 0)');
+    ).toBe('rgb(47, 109, 84)');
 
-    // Control: the identical construct declared on the root element's own class
-    // does resolve, which isolates the selector as the cause above instead of
-    // custom properties being broken for markup cards in general.
+    // Control: the same construct declared on the root element's own class. Both
+    // resolving is what shows the rewrite happened, rather than the card having
+    // avoided `:root`.
     expect(
       await computedStyle(
         page.locator('lynx-view .control'),
@@ -389,8 +390,71 @@ test.describe('Lynx XML markup card', () => {
       ),
     ).toBe('rgb(76, 134, 101)');
 
-    // The limitation is silent: nothing is reported to the page about it.
     expect(consoleErrors).toStrictEqual([]);
     expect(pageErrors).toStrictEqual([]);
+  });
+
+  /**
+   * The remaining limitation, asserted so that it cannot change silently.
+   *
+   * `@media` / `@supports` / `@layer` have no representation in the binary style
+   * format, whose rule kinds are only `StyleRule` / `FontFaceRule` /
+   * `KeyframesRule`. They are therefore kept verbatim and honoured by the
+   * browser - dropping them would be a silent capability loss - but the CSS
+   * inside such a block is consequently not tokenized.
+   */
+  test('preserves an `@media` block for markup cards', async ({ page }) => {
+    const { consoleErrors, pageErrors } = await gotoMarkupCard(
+      page,
+      ROOT_SELECTOR_CARD,
+      '.probe',
+    );
+
+    // The block's query always matches, so its declaration must be in effect.
+    // Had the at-rule been dropped on the way in, this element would have no
+    // background at all.
+    expect(
+      await computedStyle(
+        page.locator('lynx-view .preserved'),
+        'background-color',
+      ),
+    ).toBe('rgb(18, 63, 53)');
+
+    expect(consoleErrors).toStrictEqual([]);
+    expect(pageErrors).toStrictEqual([]);
+  });
+
+  /**
+   * `transform-rem` reaches a markup card, which is only possible because its
+   * CSS is tokenized: the rewrite of `1.75rem` into
+   * `calc(1.75 * var(--rem-unit))` happens while tokenizing, so on the raw
+   * `content` channel the attribute had no effect at all.
+   *
+   * `--rem-unit` itself is the embedder's to define - that is the point of the
+   * feature, per the `transformREM` release note - so the test sets it and
+   * asserts the card's lengths follow it.
+   */
+  test('honours `transform-rem` on a markup card', async ({ page }) => {
+    await gotoMarkupCard(page, XML_CARD, '.panel', {
+      'transform-rem': 'true',
+    });
+
+    const card = page.locator('lynx-view .card');
+
+    // 10px per rem: `border-radius: 1.75rem` must resolve to 17.5px. Without the
+    // rewrite the declaration would keep its native meaning and land on 28px
+    // (16px document default), which is what the default-attributes test above
+    // asserts - so this value can only be produced by the rewrite.
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty('--rem-unit', '10px');
+    });
+    expect(await computedStyle(card, 'border-radius')).toBe('17.5px');
+
+    // Driving the same declaration to a second value proves the length really
+    // tracks the variable, rather than having coincidentally matched once.
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty('--rem-unit', '20px');
+    });
+    expect(await computedStyle(card, 'border-radius')).toBe('35px');
   });
 });
