@@ -45,17 +45,11 @@ interface TabDef {
   label: string;
 }
 
-const A2UI_TABS: TabDef[] = [
+const GENUI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'catalog', label: 'Catalog' },
   { id: 'bench', label: 'Bench' },
-];
-
-const OPENUI_TABS: TabDef[] = [
-  { id: 'create', label: 'Create' },
-  { id: 'examples', label: 'Examples' },
-  { id: 'catalog', label: 'Catalog' },
 ];
 
 const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
@@ -128,12 +122,7 @@ export function App() {
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
-  let tabs = A2UI_TABS;
-  if (protocol.name === 'mcp-apps') {
-    tabs = MCP_APPS_TABS;
-  } else if (protocol.name === 'openui') {
-    tabs = OPENUI_TABS;
-  }
+  const tabs = protocol.name === 'mcp-apps' ? MCP_APPS_TABS : GENUI_TABS;
 
   useLayoutEffect(() => {
     ensureDefaultRouteHash();
@@ -176,11 +165,7 @@ export function App() {
       window.location.hash = buildRouteHash(name, 'create');
       return;
     }
-    // When switching to OpenUI and current tab is A2UI-only, fallback to examples.
-    const tab = name === 'openui' && route.tab === 'bench'
-      ? 'examples'
-      : route.tab;
-    window.location.hash = buildRouteHash(name, tab);
+    window.location.hash = buildRouteHash(name, route.tab);
   }, [route.tab]);
 
   const page = useMemo(() => {
