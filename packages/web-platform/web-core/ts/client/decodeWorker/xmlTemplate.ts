@@ -15,6 +15,10 @@
  */
 
 import { parseLynxXML } from '../../common/xml/parseLynxXML.js';
+import {
+  convertCSSToStyleInfo,
+  type OrderedStyleEntry,
+} from '../../common/xml/cssToStyleInfo.js';
 
 /**
  * The `manifest` key a card's background chunk is expected to live under. The
@@ -29,39 +33,43 @@ const backgroundChunkPath = '/app-service.js';
 const cardCSSId = '0';
 
 /**
- * Known limitation: an XML card's CSS is carried as **raw text**, not as
- * pre-parsed rules.
+ * An XML card's CSS is tokenized at load time, so it goes through the same
+ * style pipeline as a card produced by a build step.
  *
- * `styleInfo` accepts two channels. The `rules` channel takes rules that a build
- * step already tokenized, and the style engine then rewrites them. The `content`
- * channel (used here, see `cssLoader.parseAndPushContentRules`) hands the text
- * to the engine as an `UnknownText` selector section, which is emitted verbatim.
- * A buildless card has no build step, so `content` is the only channel available
- * without adding a CSS parser to this Worker.
+ * `styleInfo` accepts raw text on the `content` channel, which the engine emits
+ * verbatim, or pre-parsed rules on the `rules` channel, which it rewrites.
+ * Since a buildless card has no build step to tokenize its CSS, that work
+ * happens here instead - see `common/xml/cssToStyleInfo.ts`, which reuses
+ * `@lynx-js/css-serializer` (already a dependency of this package, it backs
+ * `encode/encodeCSS.ts`).
  *
- * Three consequences, all verified by experiment:
+ * Tokenizing is what makes the engine's style handling run, all verified by
+ * experiment:
  *
- * 1. `<lynx-view transform-vw / transform-vh / transform-rem>` has no effect on
- *    an XML card. Those attributes make the engine rewrite `vw` / `vh` / `rem`
- *    into `calc(... * var(--vw-unit))` etc. so the units resolve against the
- *    lynx-view box instead of the browser viewport; the rewrite happens during
- *    tokenization, which the `content` channel skips. On web this only means the
- *    units keep their **native** browser meaning, so a card that does not set
- *    those attributes - the default - renders correctly.
- * 2. The Lynx `style_transformer` does not run, so Lynx-specific CSS semantics
- *    (for instance `display: linear` and the `linear-*` properties) are not
- *    translated. Plain web CSS is unaffected.
- * 3. `:root` is not rewritten to `[part="page"]` either. A card renders inside a
- *    shadow root, where `:root` matches nothing, so declarations and custom
- *    properties written under `:root` never reach the card; they have to go on
- *    the page's own selector instead. This fails *silently*: a `var()` reading
- *    such a custom property becomes invalid at computed-value time, which drops
- *    the whole declaration rather than reporting anything.
+ * 1. `<lynx-view transform-vw / transform-vh / transform-rem>` takes effect, so
+ *    `vw` / `vh` / `rem` resolve against the lynx-view box instead of the
+ *    browser viewport (`padding: 1rem` becomes
+ *    `padding: calc(1 * var(--rem-unit))`).
+ * 2. The Lynx `style_transformer` runs, so Lynx-specific semantics are
+ *    translated - `display: linear` becomes `display: flex` plus the
+ *    `--lynx-display-*` custom properties, and `linear-direction` maps to
+ *    `--lynx-linear-orientation`.
+ * 3. `:root` is rewritten to `[part="page"]`, so it addresses the card's own
+ *    root element. A card renders inside a shadow root, where a literal `:root`
+ *    would match nothing.
  *
- * Upgrade path: switch this to the `rules` channel, which requires a CSS parser
- * (`packages/repl/src/bundler/css-processor.ts` does exactly this with
- * `css-tree`). That adds a runtime dependency to a Worker-loaded path, so it is
- * deliberately left out of scope here.
+ * Remaining limitation: `@media`, `@supports`, `@layer` and `@import` have no
+ * representation in the binary style format, whose rule kinds are only
+ * `StyleRule` / `FontFaceRule` / `KeyframesRule`. Those are kept on the
+ * `content` channel so the browser still honours them natively - dropping them
+ * would be a silent capability loss - but the CSS *inside* such a block is
+ * consequently not tokenized, so the three rewrites above do not apply there.
+ *
+ * Ordering matters and is handled explicitly: `cssLoader.loadStyleFromJSON`
+ * drains the whole `content` channel before the `rules` channel, so splitting a
+ * stylesheet across both would hoist every preserved at-rule ahead of every
+ * tokenized rule and change which of two equal-specificity declarations wins.
+ * The converter therefore emits a single `ordered` list in document order.
  */
 
 /**
@@ -71,7 +79,13 @@ const cardCSSId = '0';
  */
 export interface XMLDerivedTemplate {
   pageConfig: Record<string, string>;
-  styleInfo: Record<string, { content: string[]; rules: never[] }> | undefined;
+  styleInfo:
+    | Record<string, {
+      content: never[];
+      rules: never[];
+      ordered: OrderedStyleEntry[];
+    }>
+    | undefined;
   lepusCode: { root: string };
   manifest: Record<string, string> | undefined;
 }
@@ -181,8 +195,18 @@ export function xmlToTemplate(
   // A `<style></style>` section that is present but empty yields `''`, which is
   // meaningfully different from an absent section, so test against `undefined`
   // rather than for truthiness.
+  //
+  // `content` / `rules` stay empty: the stylesheet travels as one `ordered`
+  // list so that tokenized rules and preserved at-rules keep their relative
+  // document order (see the note on ordering above).
   const styleInfo = parsed.style !== undefined
-    ? { [cardCSSId]: { content: [parsed.style], rules: [] as never[] } }
+    ? {
+      [cardCSSId]: {
+        content: [] as never[],
+        rules: [] as never[],
+        ordered: convertCSSToStyleInfo(parsed.style).ordered,
+      },
+    }
     : undefined;
 
   const manifest = parsed.backgroundThreadScript !== undefined
