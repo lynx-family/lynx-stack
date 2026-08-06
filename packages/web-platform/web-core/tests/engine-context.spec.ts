@@ -200,6 +200,224 @@ describe('Engine context proxy (lynx.getEngine)', () => {
     });
   });
 
+  // `hasEventListener` is backed by a ledger kept alongside `EventTarget`'s own
+  // registrations, so every case where `EventTarget` does *not* store what a
+  // naive counter would assume has to stay in sync. Drift here is worse than a
+  // merely wrong boolean: it silently flips the engine between the event
+  // channel and the direct `globalThis.renderPage` call.
+  describe('ledger parity with EventTarget', () => {
+    test('a duplicate add is one registration, cleared by one remove', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener);
+      engine.addEventListener('__RenderPage', listener);
+
+      // The duplicate add must not register a second time...
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      // ...so a single remove has to clear the type entirely.
+      engine.removeEventListener('__RenderPage', listener);
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('capture and bubble are independent registrations of one callback', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener, { capture: true });
+      engine.addEventListener('__RenderPage', listener);
+
+      // Both registrations are live, so the callback runs twice per dispatch.
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(2);
+
+      // Removing the bubble one leaves the capture one behind.
+      engine.removeEventListener('__RenderPage', listener);
+      expect(engine.hasEventListener('__RenderPage')).toBe(true);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(3);
+
+      engine.removeEventListener('__RenderPage', listener, { capture: true });
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(3);
+    });
+
+    test('a capture flag passed as a boolean is the same registration', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener, { capture: true });
+      // `true` and `{ capture: true }` denote one registration for EventTarget.
+      engine.removeEventListener('__RenderPage', listener, true);
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    test('removing with a mismatched capture flag removes nothing', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener, { capture: true });
+      engine.removeEventListener('__RenderPage', listener);
+      expect(engine.hasEventListener('__RenderPage')).toBe(true);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('removing one of two distinct callbacks keeps the type reported', () => {
+      const a = rstest.fn();
+      const b = rstest.fn();
+      engine.addEventListener('__RenderPage', a);
+      engine.addEventListener('__RenderPage', b);
+      engine.removeEventListener('__RenderPage', a);
+      expect(engine.hasEventListener('__RenderPage')).toBe(true);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(a).not.toHaveBeenCalled();
+      expect(b).toHaveBeenCalledTimes(1);
+    });
+
+    test('a redundant remove does not corrupt a later add', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener);
+      engine.removeEventListener('__RenderPage', listener);
+      engine.removeEventListener('__RenderPage', listener);
+      engine.addEventListener('__RenderPage', listener);
+      expect(engine.hasEventListener('__RenderPage')).toBe(true);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('a listener added during dispatch survives the dispatch', () => {
+      const late = rstest.fn();
+      engine.addEventListener('__RenderPage', () => {
+        engine.addEventListener('__UpdatePage', late);
+      }, { once: true });
+
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+
+      // The spent `once` listener is gone but the newly added one is not.
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      expect(engine.hasEventListener('__UpdatePage')).toBe(true);
+      engine.dispatchEvent({ type: '__UpdatePage', data: undefined });
+      expect(late).toHaveBeenCalledTimes(1);
+    });
+
+    test('a once listener may re-arm itself from inside its handler', () => {
+      let calls = 0;
+      const handler = () => {
+        calls++;
+        engine.addEventListener('__UpdatePage', handler, { once: true });
+      };
+      engine.addEventListener('__UpdatePage', handler, { once: true });
+
+      engine.dispatchEvent({ type: '__UpdatePage', data: undefined });
+      // Re-armed, so it must still be reported and must fire again.
+      expect(engine.hasEventListener('__UpdatePage')).toBe(true);
+      engine.dispatchEvent({ type: '__UpdatePage', data: undefined });
+      expect(calls).toBe(2);
+      expect(engine.hasEventListener('__UpdatePage')).toBe(true);
+    });
+
+    test('a once listener removed before firing is not reported', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener, { once: true });
+      engine.removeEventListener('__RenderPage', listener);
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    test('one once listener firing does not unregister its siblings', () => {
+      const onceFn = rstest.fn();
+      const persistent = rstest.fn();
+      engine.addEventListener('__RenderPage', onceFn, { once: true });
+      engine.addEventListener('__RenderPage', persistent);
+
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(engine.hasEventListener('__RenderPage')).toBe(true);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+
+      expect(onceFn).toHaveBeenCalledTimes(1);
+      expect(persistent).toHaveBeenCalledTimes(2);
+    });
+
+    test('a throwing listener still settles the once bookkeeping', () => {
+      const consoleError = rstest.spyOn(console, 'error').mockImplementation(
+        () => {},
+      );
+      engine.addEventListener('__RenderPage', () => {
+        throw new Error('boom');
+      }, { once: true });
+
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    test('a throwing listener does not stop the remaining listeners', () => {
+      const consoleError = rstest.spyOn(console, 'error').mockImplementation(
+        () => {},
+      );
+      const after = rstest.fn();
+      engine.addEventListener('__RenderPage', () => {
+        throw new Error('boom');
+      });
+      engine.addEventListener('__RenderPage', after);
+
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+
+      expect(after).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    test('capture listeners run before bubble listeners', () => {
+      const order: string[] = [];
+      engine.addEventListener('__RenderPage', () => order.push('bubble'));
+      engine.addEventListener('__RenderPage', () => order.push('capture'), {
+        capture: true,
+      });
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(order).toStrictEqual(['capture', 'bubble']);
+    });
+
+    test('a non-function listener is ignored rather than reported', () => {
+      engine.addEventListener(
+        '__RenderPage',
+        undefined as unknown as () => void,
+      );
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+    });
+  });
+
+  // The card-visible event object must keep the `{ type, data }` shape the
+  // engine hands lepus, even though it now travels as a real `MessageEvent`.
+  describe('event payload shape', () => {
+    test('an argument-less event carries undefined, not null', () => {
+      // `new MessageEvent(type, { data: undefined })` coerces `data` to `null`;
+      // `__DestroyLifetime` is a bare signal and must stay `undefined`.
+      let seen: unknown = 'unset';
+      engine.addEventListener('__DestroyLifetime', (e) => {
+        seen = e.data;
+      });
+      engine.dispatchEvent({ type: '__DestroyLifetime', data: undefined });
+      expect(seen).toBe(undefined);
+      expect(seen).not.toBe(null);
+    });
+
+    test('packed arguments survive as the same array contents', () => {
+      let seen: unknown;
+      engine.addEventListener('__UpdatePage', (e) => {
+        seen = e.data;
+      });
+      engine.dispatchEvent({
+        type: '__UpdatePage',
+        data: [{ a: 1 }, { b: 2 }],
+      });
+      expect(seen).toStrictEqual([{ a: 1 }, { b: 2 }]);
+    });
+  });
+
   describe('dispose', () => {
     test('drops every listener', () => {
       const render = rstest.fn();
@@ -215,6 +433,34 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       engine.dispatchEvent({ type: '__DestroyLifetime', data: undefined });
       expect(render).not.toHaveBeenCalled();
       expect(destroy).not.toHaveBeenCalled();
+    });
+
+    test('a listener registered after disposal is inert', () => {
+      const late = rstest.fn();
+      engine.dispose();
+
+      // A card that subscribes during its own teardown must not resurrect the
+      // channel, and the engine must stay on the direct-call path.
+      engine.addEventListener('__RenderPage', late);
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(late).not.toHaveBeenCalled();
+
+      const directCall = rstest.fn();
+      expect(
+        dispatchEngineEventWithFallback(engine, '__RenderPage', directCall, []),
+      ).toBe(false);
+      expect(directCall).toHaveBeenCalledTimes(1);
+    });
+
+    test('disposal is idempotent', () => {
+      const listener = rstest.fn();
+      engine.addEventListener('__RenderPage', listener);
+      engine.dispose();
+      engine.dispose();
+      expect(engine.hasEventListener('__RenderPage')).toBe(false);
+      engine.dispatchEvent({ type: '__RenderPage', data: undefined });
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

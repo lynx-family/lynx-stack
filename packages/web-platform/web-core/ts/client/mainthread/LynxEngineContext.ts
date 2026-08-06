@@ -10,9 +10,53 @@ import type {
 } from '../../types/index.js';
 import { DispatchEventResult } from '../LynxCrossThreadContext.js';
 
-interface Registration {
-  listener: (event: EngineMessageEvent) => void;
-  once: boolean;
+type EngineEventListener = (event: EngineMessageEvent) => void;
+
+function captureOf(
+  options?: boolean | AddEventListenerOptions | EventListenerOptions,
+): boolean {
+  return typeof options === 'boolean' ? options : options?.capture === true;
+}
+
+/**
+ * Ledger key. `capture` is part of listener identity for `EventTarget` — the
+ * same callback added once capturing and once bubbling is two registrations —
+ * so it is part of the key too.
+ */
+function ledgerKey(type: string, capture: boolean): string {
+  return `${capture ? 'C' : 'B'}\u0000${type}`;
+}
+
+/** An `Event` carrying the engine's `data` payload. See {@link engineEvent}. */
+interface EngineEventCtor {
+  new(type: string, data: Cloneable[] | undefined): Event;
+}
+let EngineEvent: EngineEventCtor | undefined;
+
+/**
+ * Build the object handed to `super.dispatchEvent`.
+ *
+ * `EventTarget` only accepts a real `Event`, so the engine's `{ type, data }`
+ * has to travel as one. It is deliberately an `Event` subclass rather than a
+ * `MessageEvent`: `new MessageEvent(type, { data: undefined })` coerces `data`
+ * to `null`, whereas the engine uses `undefined` to mark an event that carries
+ * no packed arguments (`__DestroyLifetime`), and the public
+ * `EngineMessageEvent.data` type admits no `null`. Subclassing also keeps the
+ * event in the same realm as the `Event` this class was defined against, which
+ * `dispatchEvent` brand-checks.
+ *
+ * The class is built on first use because `Event` is not guaranteed to exist
+ * when this module is evaluated.
+ */
+function engineEvent(type: string, data: Cloneable[] | undefined): Event {
+  EngineEvent ??= class extends Event {
+    readonly data: Cloneable[] | undefined;
+    constructor(eventType: string, eventData: Cloneable[] | undefined) {
+      super(eventType);
+      this.data = eventData;
+    }
+  };
+  return new EngineEvent(type, data);
 }
 
 /**
@@ -34,70 +78,105 @@ interface Registration {
  * `TemplateAssembler::DispatchEventFromEngineToCoreContext` and
  * {@link dispatchEngineEventWithFallback}.
  *
- * Unlike `LynxCrossThreadContext`, this is not backed by a DOM `EventTarget`.
- * The engine and the main-thread script share a thread, so there is no event
- * tree to propagate through and no RPC hop; listeners are invoked
- * synchronously and receive a plain `{ type, data }` object. That mirrors the
- * engine, where `LepusClosureEventListener::ConvertEventToLepusValue` hands
- * a `MessageEvent` to lepus as a plain object carrying `type` and `data`
- * rather than as a DOM event.
+ * Registration identity, invocation order, `once` and duplicate-add semantics
+ * are delegated to `EventTarget`, exactly as `LynxCrossThreadContext` does for
+ * `lynx.getJSContext()`, so the two contexts a card can reach behave alike.
+ * Listeners receive an event whose `type` and `data` mirror the engine, where
+ * `LepusClosureEventListener::ConvertEventToLepusValue` reads those same two
+ * fields off the event before handing them to lepus.
+ *
+ * Unlike the JS context there is no RPC hop: the engine and the main-thread
+ * script share a thread, so `dispatchEvent` delivers synchronously.
  */
-export class LynxEngineContextImpl implements LynxEngineContext {
+export class LynxEngineContextImpl extends EventTarget
+  implements LynxEngineContext
+{
   /**
-   * `type` -> capture flag -> registrations, in insertion order.
+   * Mirror of what has been handed to `EventTarget`, keyed by
+   * {@link ledgerKey} and mapping each card callback to the wrapper actually
+   * registered for it.
    *
-   * `capture` is part of listener identity for `EventTarget` parity (adding
-   * the same callback once capturing and once bubbling yields two
-   * registrations), even though there is no tree to capture through.
+   * `EventTarget` exposes no way to ask whether a type has listeners, and the
+   * engine needs exactly that to choose between the event channel and the
+   * legacy direct call. The ledger answers {@link hasEventListener} and holds
+   * the wrappers needed to unregister; it never decides ordering or delivery.
+   * Empty buckets are dropped, so a bucket's presence is itself the answer.
    */
-  #listeners: Map<
-    string,
-    Map<boolean, Map<(event: EngineMessageEvent) => void, Registration>>
-  > = new Map();
+  #ledger: Map<string, Map<EngineEventListener, EventListener>> = new Map();
 
-  static #captureOf(
-    options?: boolean | AddEventListenerOptions | EventListenerOptions,
-  ): boolean {
-    return typeof options === 'boolean' ? options : options?.capture === true;
-  }
+  #disposed = false;
 
-  addEventListener(
+  // @ts-expect-error the listener receives the `{ type, data }` view of the
+  // dispatched `MessageEvent`, which is narrower than DOM `EventListener`.
+  override addEventListener(
     type: string,
-    listener: (event: EngineMessageEvent) => void,
+    listener: EngineEventListener,
     options?: boolean | AddEventListenerOptions,
   ): void {
-    if (typeof listener !== 'function') return;
-    const capture = LynxEngineContextImpl.#captureOf(options);
-    let byCapture = this.#listeners.get(type);
-    if (!byCapture) {
-      byCapture = new Map();
-      this.#listeners.set(type, byCapture);
+    if (typeof listener !== 'function' || this.#disposed) return;
+    const capture = captureOf(options);
+    const key = ledgerKey(type, capture);
+    let bucket = this.#ledger.get(key);
+    if (!bucket) {
+      bucket = new Map();
+      this.#ledger.set(key, bucket);
     }
-    let registrations = byCapture.get(capture);
-    if (!registrations) {
-      registrations = new Map();
-      byCapture.set(capture, registrations);
+    if (bucket.has(listener)) {
+      // `EventTarget` ignores a repeated (type, listener, capture) triple and
+      // keeps the first registration's options. Returning here keeps that
+      // no-op exact: re-registering the same wrapper would be ignored anyway,
+      // but building a *new* wrapper would read as a distinct listener and be
+      // invoked a second time.
+      return;
     }
-    // Re-adding the same (type, listener, capture) triple is a no-op, matching
-    // `EventTarget`.
-    if (registrations.has(listener)) return;
-    registrations.set(listener, {
-      listener,
-      once: typeof options === 'object' && options?.once === true,
-    });
+    const once = typeof options === 'object' && options.once === true;
+    const wrapper = ((event: Event) => {
+      // `EventTarget` unregisters a `once` listener *before* invoking it, so
+      // the ledger can settle up here rather than trying to predict from the
+      // outside which registrations a dispatch consumed. Doing it first also
+      // means a handler that re-arms itself (`addEventListener(type, self,
+      // { once: true })` from inside its own call) re-enters the ledger after
+      // this removal and is correctly kept.
+      if (once) this.#forget(key, listener);
+      try {
+        listener(event as unknown as EngineMessageEvent);
+      } catch (e) {
+        // Report and carry on, so one broken card callback cannot stop the
+        // remaining listeners — or, on the `__DestroyLifetime` path, abort
+        // teardown and leak the worker. `EventTarget` would otherwise hand the
+        // throw to the host's "report an exception" step, which a bare jsdom
+        // realm discards silently.
+        console.error(`[lynx-web] error in engine "${type}" listener`, e);
+      }
+    }) as EventListener;
+    bucket.set(listener, wrapper);
+    super.addEventListener(type, wrapper, options);
   }
 
-  removeEventListener(
+  // @ts-expect-error see `addEventListener`.
+  override removeEventListener(
     type: string,
-    listener: (event: EngineMessageEvent) => void,
+    listener: EngineEventListener,
     options?: boolean | EventListenerOptions,
   ): void {
-    const capture = LynxEngineContextImpl.#captureOf(options);
-    const byCapture = this.#listeners.get(type);
-    const registrations = byCapture?.get(capture);
-    if (!registrations?.delete(listener)) return;
-    if (registrations.size === 0) byCapture!.delete(capture);
-    if (byCapture!.size === 0) this.#listeners.delete(type);
+    if (typeof listener !== 'function') return;
+    const capture = captureOf(options);
+    const wrapper = this.#forget(ledgerKey(type, capture), listener);
+    if (wrapper) super.removeEventListener(type, wrapper, capture);
+  }
+
+  /** Drop `listener` from the ledger, returning the wrapper to unregister. */
+  #forget(
+    key: string,
+    listener: EngineEventListener,
+  ): EventListener | undefined {
+    const bucket = this.#ledger.get(key);
+    if (!bucket) return undefined;
+    const wrapper = bucket.get(listener);
+    if (bucket.delete(listener) && bucket.size === 0) {
+      this.#ledger.delete(key);
+    }
+    return wrapper;
   }
 
   /**
@@ -107,56 +186,40 @@ export class LynxEngineContextImpl implements LynxEngineContext {
    * between the event channel and the legacy direct call.
    */
   hasEventListener(type: string): boolean {
-    return this.#listeners.has(type);
+    return this.#ledger.has(ledgerKey(type, true))
+      || this.#ledger.has(ledgerKey(type, false));
   }
 
   /**
    * Dispatch an engine message event to the main-thread script.
    *
-   * Accepts the `{ type, data }` shape used by `LynxCrossThreadContext` so
-   * card code can dispatch onto the engine proxy with the same call shape it
-   * uses for `lynx.getJSContext()`.
-   *
-   * Listeners run synchronously. A throwing listener is reported and does not
-   * prevent the remaining listeners from running, matching `EventTarget`.
+   * Accepts the `{ type, data }` shape used by `LynxCrossThreadContext` so card
+   * code can dispatch onto the engine proxy with the same call shape it uses
+   * for `lynx.getJSContext()`. Listeners run synchronously.
    */
-  dispatchEvent(event: EngineMessageEvent): number {
-    const byCapture = this.#listeners.get(event.type);
-    if (!byCapture) return DispatchEventResult.NotCanceled;
-
-    const messageEvent: EngineMessageEvent = {
-      type: event.type,
-      data: event.data,
-    };
-    // Capture listeners first, then bubble ones, mirroring DOM ordering.
-    for (const capture of [true, false]) {
-      const registrations = byCapture.get(capture);
-      if (!registrations) continue;
-      // Snapshot: a listener may add or remove listeners while running.
-      for (const registration of [...registrations.values()]) {
-        if (registration.once) {
-          this.removeEventListener(event.type, registration.listener, capture);
-        }
-        try {
-          registration.listener(messageEvent);
-        } catch (e) {
-          console.error(
-            `[lynx-web] error in engine "${event.type}" listener`,
-            e,
-          );
-        }
-      }
-    }
+  // @ts-expect-error the engine dispatches the `{ type, data }` shape and reads
+  // back a `DispatchEventResult`, not the DOM `boolean`.
+  override dispatchEvent(event: EngineMessageEvent): number {
+    if (this.#disposed) return DispatchEventResult.NotCanceled;
+    // `once` bookkeeping is settled by the wrapper itself, as `EventTarget`
+    // invokes it, so nothing has to be reconciled around this call.
+    super.dispatchEvent(engineEvent(event.type, event.data));
     return DispatchEventResult.NotCanceled;
   }
 
   /**
-   * Drop every listener. Called on teardown *after* `__DestroyLifetime` has
-   * been delivered, so a card that forgets to unsubscribe cannot keep the
-   * main-thread realm alive through this proxy.
+   * Stop delivering events. Called on teardown *after* `__DestroyLifetime` has
+   * been delivered.
+   *
+   * Listeners are not individually unregistered. This proxy is owned by the
+   * `LynxViewInstance` being destroyed — its only construction site — so once
+   * that instance is unreachable the proxy and every listener it holds are
+   * collected together. Clearing the ledger and refusing further dispatch is
+   * the part callers can observe.
    */
   dispose(): void {
-    this.#listeners.clear();
+    this.#disposed = true;
+    this.#ledger.clear();
   }
 }
 
