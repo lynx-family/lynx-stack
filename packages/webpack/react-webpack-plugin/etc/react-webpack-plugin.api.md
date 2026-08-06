@@ -18,8 +18,8 @@ export { ExtractStrConfig }
 //
 // @public (undocumented)
 export const LAYERS: {
-    readonly BACKGROUND: "react:background";
-    readonly MAIN_THREAD: "react:main-thread";
+    readonly BACKGROUND: 'react:background';
+    readonly MAIN_THREAD: 'react:main-thread';
 };
 
 // @public
@@ -58,6 +58,7 @@ export interface ReactWebpackPluginOptions {
     globalPropsMode?: 'reactive' | 'event';
     lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
+    mainThreadEntries?: Record<string, string>;
     profile?: boolean | undefined;
     workletRuntimePath: string;
 }

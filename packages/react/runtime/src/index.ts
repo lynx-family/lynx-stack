@@ -4,6 +4,7 @@
 
 import './runtime-backend-marker.js';
 import './lynx.js';
+import './snapshot/snapshot/initMTSDefines.js';
 import {
   Component,
   Fragment,

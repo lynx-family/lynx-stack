@@ -18,6 +18,7 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
+import { createMTSDefinesRuntimeModule } from './MTSDefinesRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
 
@@ -200,6 +201,11 @@ interface ReactWebpackPluginOptions {
   mainThreadChunks?: string[] | undefined;
 
   /**
+   * The background entry name of each main-thread entry.
+   */
+  mainThreadEntries?: Record<string, string>;
+
+  /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
    *
@@ -323,6 +329,7 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
+      mainThreadEntries: {},
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
@@ -435,6 +442,31 @@ class ReactWebpackPlugin {
           new LynxProcessEvalResultRuntimeModule(),
         );
       });
+
+      const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
+        compiler.webpack,
+      );
+      compilation.hooks.additionalTreeRuntimeRequirements.tap(
+        this.constructor.name,
+        (chunk) => {
+          for (
+            const [mainThreadEntry, backgroundEntry] of Object.entries(
+              options.mainThreadEntries ?? {},
+            )
+          ) {
+            if (
+              compilation.entrypoints.get(mainThreadEntry)
+                ?.getEntrypointChunk() !== chunk
+            ) {
+              continue;
+            }
+            compilation.addRuntimeModule(
+              chunk,
+              new MTSDefinesRuntimeModule(backgroundEntry, mainThreadEntry),
+            );
+          }
+        },
+      );
 
       compilation.hooks.processAssets.tap(
         {

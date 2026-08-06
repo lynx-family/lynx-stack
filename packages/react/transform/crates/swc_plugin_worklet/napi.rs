@@ -4,7 +4,10 @@ use swc_core::ecma::ast::*;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
 
 use crate::{WorkletVisitor as CoreVisitor, WorkletVisitorConfig as CoreConfig};
-use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
+use swc_plugins_shared::{
+  mts_defines::MtsDefinesCollector, target_napi::TransformTarget,
+  transform_mode_napi::TransformMode,
+};
 
 #[derive(Clone, Debug)]
 #[napi(object)]
@@ -98,6 +101,11 @@ impl VisitMut for WorkletVisitor {
 impl WorkletVisitor {
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.inner.content_hash = content_hash;
+    self
+  }
+
+  pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {
+    self.inner.mts_defs_collector = Some(collector);
     self
   }
 

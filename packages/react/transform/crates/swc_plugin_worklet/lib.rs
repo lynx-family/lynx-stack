@@ -21,7 +21,11 @@ use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
 use swc_core::quote;
 use worklet_type::WorkletType;
 
-use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
+use swc_plugins_shared::{
+  mts_defines::{collect_mts_define, MtsDefineKind, MtsDefinesCollector},
+  target::TransformTarget,
+  transform_mode::TransformMode,
+};
 
 #[cfg(feature = "napi")]
 pub mod napi;
@@ -64,6 +68,7 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
+  mts_defs_collector: Option<MtsDefinesCollector>,
 }
 
 impl Default for WorkletVisitor {
@@ -105,24 +110,28 @@ impl VisitMut for WorkletVisitor {
             || collector.has_extracted_js_fns());
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+        let collect_mts = self.mts_defs_collector.is_some();
+        let collected_hash = collect_mts.then(|| hash.clone());
         let m = n.as_method().unwrap().clone();
         let original_function = m.function.clone();
-        let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
-          self.mode,
-          worklet_type.unwrap(),
-          hash,
-          self.cfg.target,
-          m.key
-            .clone()
-            .ident()
-            .unwrap_or(Ident::dummy().into())
-            .into(),
-          m.function,
-          &mut collector,
-          true,
-          &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
-        );
+        let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
+          StmtGen::transform_worklet(
+            self.mode,
+            worklet_type.unwrap(),
+            hash,
+            self.cfg.target,
+            m.key
+              .clone()
+              .ident()
+              .unwrap_or(Ident::dummy().into())
+              .into(),
+            m.function,
+            &mut collector,
+            true,
+            &mut self.named_imports,
+            self.worklet_runtime_loaded_ident.clone(),
+            collect_mts,
+          );
 
         // For JS worklets, the ctx object is later converted to a function by `transformWorklet(..)`
         // and invoked with `this` bound to the ctx object (not the component instance). Therefore,
@@ -180,6 +189,10 @@ impl VisitMut for WorkletVisitor {
           }
           .into();
         }
+        self.collect_worklet_define(
+          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          main_thread_stmt,
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -233,22 +246,26 @@ impl VisitMut for WorkletVisitor {
           || collector.has_extracted_js_fns();
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
-          self.mode,
-          worklet_type.unwrap(),
-          hash,
-          self.cfg.target,
-          p.key
-            .clone()
-            .ident()
-            .unwrap_or(Ident::dummy().into())
-            .into(),
-          function,
-          &mut collector,
-          true,
-          &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
-        );
+        let collect_mts = self.mts_defs_collector.is_some();
+        let collected_hash = collect_mts.then(|| hash.clone());
+        let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
+          StmtGen::transform_worklet(
+            self.mode,
+            worklet_type.unwrap(),
+            hash,
+            self.cfg.target,
+            p.key
+              .clone()
+              .ident()
+              .unwrap_or(Ident::dummy().into())
+              .into(),
+            function,
+            &mut collector,
+            true,
+            &mut self.named_imports,
+            self.worklet_runtime_loaded_ident.clone(),
+            collect_mts,
+          );
 
         if should_use_getter {
           let getter_fn: Function = Function {
@@ -287,6 +304,10 @@ impl VisitMut for WorkletVisitor {
           p.value = Some(worklet_object_expr);
         }
 
+        self.collect_worklet_define(
+          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          main_thread_stmt,
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -318,7 +339,9 @@ impl VisitMut for WorkletVisitor {
     n.visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
+    let collect_mts = self.mts_defs_collector.is_some();
+    let collected_hash = collect_mts.then(|| hash.clone());
+    let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
       hash,
@@ -329,6 +352,7 @@ impl VisitMut for WorkletVisitor {
       false,
       &mut self.named_imports,
       self.worklet_runtime_loaded_ident.clone(),
+      collect_mts,
     );
 
     *n = VarDecl {
@@ -344,6 +368,10 @@ impl VisitMut for WorkletVisitor {
       }],
     }
     .into();
+    self.collect_worklet_define(
+      collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+      main_thread_stmt,
+    );
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -366,43 +394,51 @@ impl VisitMut for WorkletVisitor {
         n.visit_mut_with(&mut collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
-          self.mode,
-          worklet_type.unwrap(),
-          hash,
-          self.cfg.target,
-          Ident::dummy(),
-          Box::new(Function {
-            ctxt: n.as_mut_arrow().unwrap().ctxt,
-            body: n
-              .as_mut_arrow()
-              .unwrap()
-              .body
-              .as_block_stmt()
-              .unwrap()
-              .clone()
-              .into(),
-            span: n.as_mut_arrow().unwrap().span,
-            return_type: n.as_mut_arrow().unwrap().return_type.clone(),
-            is_async: n.as_mut_arrow().unwrap().is_async,
-            is_generator: n.as_mut_arrow().unwrap().is_generator,
-            type_params: n.as_mut_arrow().unwrap().type_params.clone(),
-            decorators: vec![],
-            params: n
-              .as_mut_arrow()
-              .unwrap()
-              .params
-              .iter()
-              .map(|p| p.clone().into())
-              .collect(),
-          }),
-          &mut collector,
-          false,
-          &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
-        );
+        let collect_mts = self.mts_defs_collector.is_some();
+        let collected_hash = collect_mts.then(|| hash.clone());
+        let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
+          StmtGen::transform_worklet(
+            self.mode,
+            worklet_type.unwrap(),
+            hash,
+            self.cfg.target,
+            Ident::dummy(),
+            Box::new(Function {
+              ctxt: n.as_mut_arrow().unwrap().ctxt,
+              body: n
+                .as_mut_arrow()
+                .unwrap()
+                .body
+                .as_block_stmt()
+                .unwrap()
+                .clone()
+                .into(),
+              span: n.as_mut_arrow().unwrap().span,
+              return_type: n.as_mut_arrow().unwrap().return_type.clone(),
+              is_async: n.as_mut_arrow().unwrap().is_async,
+              is_generator: n.as_mut_arrow().unwrap().is_generator,
+              type_params: n.as_mut_arrow().unwrap().type_params.clone(),
+              decorators: vec![],
+              params: n
+                .as_mut_arrow()
+                .unwrap()
+                .params
+                .iter()
+                .map(|p| p.clone().into())
+                .collect(),
+            }),
+            &mut collector,
+            false,
+            &mut self.named_imports,
+            self.worklet_runtime_loaded_ident.clone(),
+            collect_mts,
+          );
 
         *n = *worklet_object_expr;
+        self.collect_worklet_define(
+          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          main_thread_stmt,
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -422,20 +458,28 @@ impl VisitMut for WorkletVisitor {
         n.visit_mut_with(&mut collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
-          self.mode,
-          worklet_type.unwrap(),
-          hash,
-          self.cfg.target,
-          Ident::dummy(),
-          n.as_mut_fn_expr().unwrap().function.take(),
-          &mut collector,
-          false,
-          &mut self.named_imports,
-          self.worklet_runtime_loaded_ident.clone(),
-        );
+        let collect_mts = self.mts_defs_collector.is_some();
+        let collected_hash = collect_mts.then(|| hash.clone());
+        let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
+          StmtGen::transform_worklet(
+            self.mode,
+            worklet_type.unwrap(),
+            hash,
+            self.cfg.target,
+            Ident::dummy(),
+            n.as_mut_fn_expr().unwrap().function.take(),
+            &mut collector,
+            false,
+            &mut self.named_imports,
+            self.worklet_runtime_loaded_ident.clone(),
+            collect_mts,
+          );
 
         *n = *worklet_object_expr;
+        self.collect_worklet_define(
+          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          main_thread_stmt,
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -495,7 +539,9 @@ impl VisitMut for WorkletVisitor {
       .visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
+    let collect_mts = self.mts_defs_collector.is_some();
+    let collected_hash = collect_mts.then(|| hash.clone());
+    let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
       hash,
@@ -512,12 +558,17 @@ impl VisitMut for WorkletVisitor {
       false,
       &mut self.named_imports,
       self.worklet_runtime_loaded_ident.clone(),
+      collect_mts,
     );
 
     *n = ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
       span: n.span(),
       expr: worklet_object_expr,
     });
+    self.collect_worklet_define(
+      collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+      main_thread_stmt,
+    );
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -710,7 +761,29 @@ impl WorkletVisitor {
       shared_identifiers: FxHashSet::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
+      mts_defs_collector: None,
     }
+  }
+
+  pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {
+    self.mts_defs_collector = Some(collector);
+    self
+  }
+
+  fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
+    let (Some(hash), Some(stmt)) = (hash, stmt) else {
+      return;
+    };
+    let guard = quote!(
+      "const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt,
+      loaded = self.worklet_runtime_loaded_ident.clone(),
+    );
+    collect_mts_define(
+      &self.mts_defs_collector,
+      MtsDefineKind::Worklet,
+      hash,
+      vec![ModuleItem::Stmt(guard), ModuleItem::Stmt(stmt)],
+    );
   }
 
   fn check_is_worklet_block(&self, n: &mut BlockStmt) -> Option<WorkletType> {
