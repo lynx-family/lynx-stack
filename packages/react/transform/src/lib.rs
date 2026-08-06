@@ -486,7 +486,7 @@ fn transform_react_lynx_inner(
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
-          errors: errors.read().unwrap().clone(),
+          errors: vec![],
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
@@ -1011,7 +1011,7 @@ fn transform_react_lynx_inner(
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
-          errors: errors.read().unwrap().clone(),
+          errors: vec![],
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: if use_element_template_plugin {
             vec![]
@@ -1025,10 +1025,13 @@ fn transform_react_lynx_inner(
     }
   });
 
+  let mut transform_errors = errors.read().unwrap().clone();
+  transform_errors.extend(result.errors);
+
   let r = TransformNodiffOutput {
     code: result.code,
     map: result.map,
-    errors: errors.read().unwrap().clone(),
+    errors: transform_errors,
     warnings: warnings.read().unwrap().clone(),
     ui_source_map_records: result.ui_source_map_records,
     // Preserve the element-template assets collected in the successful transform
