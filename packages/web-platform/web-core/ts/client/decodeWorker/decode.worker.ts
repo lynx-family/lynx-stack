@@ -580,6 +580,10 @@ async function handleJSON(
  * through the worker's `error` channel; the thrown message is the parser's
  * `formattedMessage`, which locates the failure by JS string index (UTF-16
  * code units, not bytes - the distinction matters for non-ASCII documents).
+ *
+ * Awaiting the translation matters: it fetches the CSS parser on demand, so a
+ * floating promise here would both drop the card's sections and escape the
+ * `load` handler's `catch`, leaving the failure unreported.
  */
 async function handleXML(
   source: string,
@@ -589,7 +593,7 @@ async function handleXML(
   transformREM: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
-  const result = xmlToTemplate(source);
+  const result = await xmlToTemplate(source);
   if (!result.success) {
     throw new Error(result.message);
   }

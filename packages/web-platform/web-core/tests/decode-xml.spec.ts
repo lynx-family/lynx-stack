@@ -397,8 +397,8 @@ describe('decode worker: existing bypasses are unaffected', () => {
  * most easily pinned down by (and needs no wasm).
  */
 describe('xmlToTemplate', () => {
-  test('tokenizes CSS onto the ordered channel', () => {
-    const result = xmlToTemplate(fixture);
+  test('tokenizes CSS onto the ordered channel', async () => {
+    const result = await xmlToTemplate(fixture);
     if (!result.success) {
       throw new Error(result.message);
     }
@@ -451,8 +451,8 @@ describe('xmlToTemplate', () => {
     expect(JSON.stringify(declarations)).not.toContain('--vw-unit');
   });
 
-  test('distinguishes an absent section from an empty one', () => {
-    const withEmpty = xmlToTemplate(
+  test('distinguishes an absent section from an empty one', async () => {
+    const withEmpty = await xmlToTemplate(
       `<lynx version="5.4.2">
 <style></style>
 <script main-thread="true"><![CDATA[ x ]]></script>
@@ -466,7 +466,7 @@ describe('xmlToTemplate', () => {
     });
     expect(withEmpty.template.manifest).toEqual({ '/app-service.js': '' });
 
-    const withNeither = xmlToTemplate(
+    const withNeither = await xmlToTemplate(
       `<lynx version="5.4.2">
 <script main-thread="true"><![CDATA[ x ]]></script>
 </lynx>`,
@@ -476,8 +476,8 @@ describe('xmlToTemplate', () => {
     expect(withNeither.template.manifest).toBeUndefined();
   });
 
-  test('never throws, returning the parser message instead', () => {
-    const result = xmlToTemplate('<lynx>');
+  test('never throws, returning the parser message instead', async () => {
+    const result = await xmlToTemplate('<lynx>');
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.message).toContain('invalid TemplateBundle XML at offset');

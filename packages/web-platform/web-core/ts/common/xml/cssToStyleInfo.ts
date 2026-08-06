@@ -18,18 +18,42 @@
  *
  * `ts/encode/encodeCSS.ts` does the same job for the encode path using
  * `@lynx-js/css-serializer`, and reusing it here would have been the obvious
- * move. It cannot be done: `css-serializer`'s `parse` imports `generateHref`,
- * which imports `node:path`, and the package exposes no subpath exports to
- * import around it. That is fine for `encodeCSS.ts`, which only ever runs in the
- * Node/server bundle, but this module is loaded by the decode Worker in a
- * browser, where bundling `node:path` fails outright.
+ * move. Three things rule it out, none of which a change to that package would
+ * fix on its own:
  *
- * `css-tree` is what `css-serializer` itself parses with, is browser safe, and
- * is already used this way by `packages/repl`. Going straight to it also removes
- * a round trip: `css-serializer` rewrites every `var()` into a `{{--name}}`
- * placeholder plus a side table of fallbacks, purely as its own interchange
- * format, which the encode path then has to undo. Reading declarations from the
- * `css-tree` AST keeps `var()` intact throughout.
+ * 1. It would not remove the `css-tree` dependency anyway. `css-serializer`
+ *    reports a rule's selector as `StyleRule.selectorText`, a flat string rather
+ *    than a selector AST - which is exactly why `encodeCSS.ts` has to re-parse
+ *    it with `CSS.csstree.parse(...)` to recover the sections. This converter
+ *    needs the same per-section data (the `[plain, pseudoClass, pseudoElement,
+ *    combinator]` groups below), so it would parse with `css-serializer` and
+ *    then parse again with `css-tree`. `css-serializer` also declares `css-tree`
+ *    as a runtime dependency and re-exports it, so it stays in the graph either
+ *    way.
+ * 2. `css-serializer.parse` silently drops at-rules it has no case for,
+ *    `@charset` and `@namespace` among them: they vanish from the result with an
+ *    empty `errors` array. This converter deliberately preserves an unknown
+ *    at-rule verbatim (see the fall-through at the end of the loop), so adopting
+ *    it would turn that into silent data loss.
+ * 3. `css-serializer` rewrites every `var()` into a `{{--name}}` placeholder
+ *    plus a side table of fallbacks, purely as its own interchange format, which
+ *    the encode path then has to undo. Reading declarations from the `css-tree`
+ *    AST keeps `var()` intact throughout, with no lossy round trip.
+ *
+ * `css-tree` is also browser safe and already used this way by `packages/repl`.
+ *
+ * ## Why the parser is loaded on demand
+ *
+ * A CSS parser is a large dependency - `css-tree` is the single biggest module
+ * in the decode Worker's chunk - and only a buildless markup card needs one, a
+ * card produced by a build step arrives already tokenized. The `import()` in
+ * {@link convertCSSToStyleInfo} therefore keeps it out of the eagerly fetched
+ * (`webpackPreload`ed) worker chunk and behind a request that is made the first
+ * time a markup card with a `<style>` section is actually loaded. That is also
+ * why this module holds no top-level value import of it: one would defeat the
+ * split by pulling the parser back into whatever chunk imports this file.
+ *
+ * The bundler caches both the chunk and the module, so the cost is paid once.
  *
  * ## Why the output uses both channels
  *
@@ -58,7 +82,32 @@
  * entry by entry.
  */
 
-import * as csstree from 'css-tree';
+import type * as csstree from 'css-tree';
+
+/**
+ * The two `css-tree` entry points this module uses, loaded on demand.
+ *
+ * `import type` above erases at compile time, so the only reference to the
+ * package that survives into the bundle is the `import()` below - which is what
+ * puts the parser in its own chunk. See the note on on-demand loading above.
+ */
+type CSSTree = Pick<typeof csstree, 'parse' | 'generate'>;
+
+/**
+ * The in-flight or settled parser load.
+ *
+ * Cached as the promise rather than the module so that two cards arriving
+ * together share one load instead of racing, and so a resolved load costs an
+ * already-settled `await` rather than a second `import()`.
+ */
+let csstreePromise: Promise<CSSTree> | undefined;
+
+/**
+ * Loads the CSS parser, reusing the previous load.
+ */
+function loadCSSTree(): Promise<CSSTree> {
+  return csstreePromise ??= import('css-tree');
+}
 
 /**
  * One tokenized rule, in the shape `cssLoader` pushes into the wasm encoder.
@@ -118,8 +167,14 @@ const verbatimAtRules = new Set(['media', 'supports', 'layer']);
  * The grouping matters: the style engine reads a combinator as the end of a
  * compound selector, so sections have to be flushed in the order they appear
  * rather than collected by kind.
+ *
+ * `generate` is passed in rather than imported, because the parser is loaded on
+ * demand and this helper must stay synchronous.
  */
-function selectorSections(prelude: csstree.Raw | csstree.SelectorList) {
+function selectorSections(
+  prelude: csstree.Raw | csstree.SelectorList,
+  generate: CSSTree['generate'],
+) {
   if (prelude.type !== 'SelectorList') {
     return [];
   }
@@ -152,13 +207,13 @@ function selectorSections(prelude: csstree.Raw | csstree.SelectorList) {
           plain.push(child.name);
           break;
         case 'AttributeSelector':
-          plain.push(csstree.generate(child));
+          plain.push(generate(child));
           break;
         case 'PseudoClassSelector':
-          pseudoClass.push(csstree.generate(child));
+          pseudoClass.push(generate(child));
           break;
         case 'PseudoElementSelector':
-          pseudoElement.push(csstree.generate(child));
+          pseudoElement.push(generate(child));
           break;
         case 'Combinator':
           flush([child.name]);
@@ -185,14 +240,19 @@ function selectorSections(prelude: csstree.Raw | csstree.SelectorList) {
  * Custom properties are included: they are ordinary declarations to `css-tree`,
  * and a card relies on them, so they must not be filtered out. `!important` is
  * re-appended because `css-tree` reports it separately from the value.
+ *
+ * `generate` is passed in for the same reason as in {@link selectorSections}.
  */
-function declarationsOf(block: csstree.Block): [string, string][] {
+function declarationsOf(
+  block: csstree.Block,
+  generate: CSSTree['generate'],
+): [string, string][] {
   const declarations: [string, string][] = [];
   for (const node of block.children.toArray()) {
     if (node.type !== 'Declaration') {
       continue;
     }
-    const value = csstree.generate(node.value)
+    const value = generate(node.value)
       + (node.important ? ' !important' : '');
     declarations.push([node.property, value]);
   }
@@ -208,14 +268,29 @@ function declarationsOf(block: csstree.Block): [string, string][] {
  * A stylesheet that does not parse at all is passed through verbatim, which is
  * the previous behaviour for every card and strictly better than rendering
  * nothing.
+ *
+ * Asynchronous only because the parser is fetched on demand, see the note on
+ * that above. A stylesheet that turns out to be empty is answered without
+ * loading it at all, so a markup card with no CSS pays nothing.
  */
-export function convertCSSToStyleInfo(source: string): ConvertedCSS {
+export async function convertCSSToStyleInfo(
+  source: string,
+): Promise<ConvertedCSS> {
   const ordered: OrderedStyleEntry[] = [];
   const verbatimKinds = new Set<string>();
 
+  // Nothing to tokenize, and therefore no reason to fetch a parser. This is not
+  // just an optimisation for the empty case: `<style></style>` is a section that
+  // is present but carries nothing, and it must not trigger a network request.
+  if (source.trim().length === 0) {
+    return { ordered, verbatimKinds: [] };
+  }
+
+  const { parse, generate } = await loadCSSTree();
+
   let ast: csstree.StyleSheet;
   try {
-    ast = csstree.parse(source, {
+    ast = parse(source, {
       parseValue: false,
       parseAtrulePrelude: false,
       parseCustomProperty: false,
@@ -224,10 +299,8 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
     }) as csstree.StyleSheet;
   } catch {
     return {
-      ordered: source.trim().length > 0
-        ? [{ channel: 'verbatim', text: source }]
-        : [],
-      verbatimKinds: source.trim().length > 0 ? ['unparsed'] : [],
+      ordered: [{ channel: 'verbatim', text: source }],
+      verbatimKinds: ['unparsed'],
     };
   }
 
@@ -237,8 +310,8 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
         channel: 'tokenized',
         rule: {
           type: 'StyleRule',
-          sel: selectorSections(node.prelude),
-          decl: declarationsOf(node.block),
+          sel: selectorSections(node.prelude, generate),
+          decl: declarationsOf(node.block, generate),
         },
       });
       continue;
@@ -260,7 +333,7 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
           channel: 'tokenized',
           rule: {
             type: 'FontFaceRule',
-            decl: declarationsOf(node.block),
+            decl: declarationsOf(node.block, generate),
           },
         });
       }
@@ -275,15 +348,15 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
             continue;
           }
           steps.push({
-            keyText: csstree.generate(step.prelude),
-            decl: declarationsOf(step.block),
+            keyText: generate(step.prelude),
+            decl: declarationsOf(step.block, generate),
           });
         }
         ordered.push({
           channel: 'tokenized',
           rule: {
             type: 'KeyframesRule',
-            name: node.prelude ? csstree.generate(node.prelude) : '',
+            name: node.prelude ? generate(node.prelude) : '',
             children: steps,
             decl: [],
           },
@@ -296,7 +369,7 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
       // No binary representation, so the block is preserved at its source
       // position and left for the browser to apply.
       verbatimKinds.add(`@${node.name}`);
-      ordered.push({ channel: 'verbatim', text: csstree.generate(node) });
+      ordered.push({ channel: 'verbatim', text: generate(node) });
       continue;
     }
 
@@ -305,7 +378,7 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
       // buildless card has no use for: it owns a single stylesheet (css id 0)
       // and has nothing to link to. The rule is left for the browser to resolve.
       verbatimKinds.add('@import');
-      ordered.push({ channel: 'verbatim', text: csstree.generate(node) });
+      ordered.push({ channel: 'verbatim', text: generate(node) });
       continue;
     }
 
@@ -313,7 +386,7 @@ export function convertCSSToStyleInfo(source: string): ConvertedCSS {
     // something this converter understands, so it is passed through rather than
     // dropped.
     verbatimKinds.add(`@${node.name}`);
-    ordered.push({ channel: 'verbatim', text: csstree.generate(node) });
+    ordered.push({ channel: 'verbatim', text: generate(node) });
   }
 
   return { ordered, verbatimKinds: [...verbatimKinds] };

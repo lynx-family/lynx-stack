@@ -38,6 +38,8 @@ are unaffected, and their relative order with the rest of the stylesheet is
 preserved.
 
 Tokenizing at load time needs a CSS parser in the decode Worker, so `css-tree` is
-now a dependency of this package. It is bundled only into the template loader
-chunk, which is where the decode Worker runs, and does not affect the main thread
-bundle.
+now a dependency of this package. It does not affect the main thread bundle, and
+it is loaded through a dynamic `import()` rather than bundled into the decode
+Worker's chunk, so it is fetched only once a markup card with a `<style>` section
+is actually loaded - a card produced by a build step arrives already tokenized and
+never pays for it.
