@@ -3,26 +3,26 @@
 <lynx version="5.4.2">
 <style><![CDATA[
   /*
-    This card exists to pin down a known limitation, so its CSS is deliberately
-    written the way a card author would naturally - but wrongly - write it.
+    This card pins down selector rewriting and at-rule preservation.
 
-    The CSS of a markup card travels through the raw-content channel verbatim
-    instead of being tokenized, so no selector rewriting happens on the way in.
-    A `:root` rule consequently keeps its literal meaning and matches the host
-    document rather than the card's root element, which makes both of the
-    declarations below unreachable for the card:
+    A markup card's CSS is tokenized on the way in, so `:root` is rewritten to
+    the card's own root element. Both declarations below therefore reach the
+    card even though it renders inside a shadow root, where a literal `:root`
+    would match nothing:
 
-      - `background-color` never reaches the card's root element;
-      - `--root-accent` is never in scope for the card, so the `var()` in
-        `.probe` has nothing to resolve against and that whole declaration is
-        invalid at computed-value time.
+      - `background-color` applies to the card's root element;
+      - `--root-accent` is in scope for the card, so the `var()` in `.probe`
+        resolves against it.
 
-    `.control` is the same construct written the way cards should write it, and
-    it does resolve. Keeping both here means the only difference between a
-    working and a dead custom property is the selector the property is declared
-    on, which is what makes this card evidence rather than an absence of it.
+    `.control` is the same construct declared on the root element's own class.
+    Both resolving is what proves the rewrite happened rather than the card
+    having simply avoided `:root`.
 
-    See `markup-card.xml`, which uses `.page` for exactly this reason.
+    `.preserved` sits inside an `@media` block. Conditional group rules have no
+    representation in the binary style format, so they are kept verbatim and
+    honoured by the browser instead of being tokenized - and must not be
+    dropped. The query is written to always match so the declaration is
+    observable.
   */
   :root {
     --root-accent: #2f6d54;
@@ -43,6 +43,14 @@
     width: 100%;
     height: 20px;
     background-color: var(--page-accent);
+  }
+
+  @media (min-width: 1px) {
+    .preserved {
+      width: 100%;
+      height: 20px;
+      background-color: #123f35;
+    }
   }
 ]]></style>
 
@@ -65,7 +73,7 @@
       return;
     }
     rendered = true;
-    ['probe', 'control'].forEach((className) => {
+    ['probe', 'control', 'preserved'].forEach((className) => {
       const node = __CreateView(pageId);
       __SetClasses(node, className);
       __AppendElement(page, node);

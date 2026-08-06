@@ -397,30 +397,58 @@ describe('decode worker: existing bypasses are unaffected', () => {
  * most easily pinned down by (and needs no wasm).
  */
 describe('xmlToTemplate', () => {
-  test('routes CSS through the raw-text `content` channel', () => {
+  test('tokenizes CSS onto the ordered channel', () => {
     const result = xmlToTemplate(fixture);
     if (!result.success) {
       throw new Error(result.message);
     }
 
-    // The whole stylesheet is handed over as one raw-text entry under css id 0
-    // (the card's own, non component scoped rules) with no pre-parsed `rules`.
-    // `cssLoader.parseAndPushContentRules` turns it into an `UnknownText`
-    // selector section, which the style engine emits verbatim.
-    expect(result.template.styleInfo).toEqual({
-      '0': { content: [expect.any(String)], rules: [] },
-    });
-    const [content] = result.template.styleInfo!['0']!.content;
-    expect(content).toContain('.card');
-    expect(content).toContain('linear-gradient');
-    // CSS is passed through untouched - no unit rewriting happens here. Assert
-    // units that appear in real declarations: a `vw` inside `calc()` and a
-    // `rem` length. Were rewriting ever added to this channel, these would
-    // become `var(--vw-unit)` / `var(--rem-unit)` and fail.
-    expect(content).toContain('calc(100vw / 24)');
-    expect(content).toContain('1.75rem');
-    expect(content).not.toContain('--vw-unit');
-    expect(content).not.toContain('--rem-unit');
+    // The stylesheet is handed over under css id 0 (the card's own, non
+    // component scoped rules) as a single `ordered` list. `content` / `rules`
+    // stay empty: `cssLoader` drains those two one after the other, which would
+    // reorder the cascade, so document order is carried by `ordered` instead.
+    const info = result.template.styleInfo!['0']!;
+    expect(info.content).toEqual([]);
+    expect(info.rules).toEqual([]);
+    expect(info.ordered.length).toBeGreaterThan(0);
+
+    // Every entry of this fixture is tokenizable, so nothing stays verbatim.
+    expect(info.ordered.every((entry) => entry.channel === 'tokenized')).toBe(
+      true,
+    );
+
+    // Declarations arrive as parsed pairs rather than as CSS text, which is what
+    // lets the style engine rewrite them.
+    const selectors = info.ordered.flatMap((entry) =>
+      entry.channel === 'tokenized' ? [entry.rule.sel] : []
+    );
+    expect(JSON.stringify(selectors)).toContain('.card');
+
+    const declarations = info.ordered.flatMap((entry) =>
+      entry.channel === 'tokenized' ? entry.rule.decl : []
+    );
+    // A `var()` must survive as real CSS. `css-serializer` rewrites every
+    // `var()` into a `{{--name}}` placeholder, so a missing restore step would
+    // show up here as a literal placeholder and kill the declaration.
+    expect(declarations).toContainEqual([
+      'background-color',
+      'var(--accent)',
+    ]);
+    expect(JSON.stringify(declarations)).not.toContain('{{');
+    // Custom properties are ordinary declarations here and must survive. Their
+    // value is preserved verbatim, leading whitespace included, which is what
+    // the CSS spec requires of a custom property's value.
+    expect(
+      declarations.find(([property]) => property === '--accent')?.[1]?.trim(),
+    ).toBe('#2f6d54');
+    expect(
+      declarations.find(([property]) => property === 'background')?.[1],
+    ).toContain('linear-gradient(145deg');
+    // Units are left alone at this stage: rewriting is the style engine's job
+    // and depends on the `transform-*` attributes, which are not known here.
+    expect(declarations).toContainEqual(['border-radius', '1.75rem']);
+    expect(JSON.stringify(declarations)).not.toContain('--rem-unit');
+    expect(JSON.stringify(declarations)).not.toContain('--vw-unit');
   });
 
   test('distinguishes an absent section from an empty one', () => {
@@ -432,9 +460,9 @@ describe('xmlToTemplate', () => {
 </lynx>`,
     );
     if (!withEmpty.success) throw new Error(withEmpty.message);
-    // Present but empty: the entries exist, carrying empty sources.
+    // Present but empty: the entry exists, carrying nothing to tokenize.
     expect(withEmpty.template.styleInfo).toEqual({
-      '0': { content: [''], rules: [] },
+      '0': { content: [], rules: [], ordered: [] },
     });
     expect(withEmpty.template.manifest).toEqual({ '/app-service.js': '' });
 
