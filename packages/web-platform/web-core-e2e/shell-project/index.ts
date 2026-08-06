@@ -215,8 +215,14 @@ if (xmlName) {
   const lynxView = lynxViewTests(
     document.querySelector('lynx-view') as LynxViewElement | undefined,
   );
-  // `transform-*` must stay off: CSS from markup cards is passed through
-  // verbatim rather than tokenized, so the unit conversions would silently not
-  // apply. The browser handles `rem`/`vh` natively.
+  // A markup card's CSS is tokenized, so the `transform-*` attributes do reach
+  // it. They stay off by default - a card written against browser units expects
+  // `rem` / `vw` to keep their native meaning - and a test opts in explicitly
+  // through the query string to assert the rewriting.
+  for (const attribute of ['transform-vw', 'transform-vh', 'transform-rem']) {
+    if (searchParams.get(attribute) === 'true') {
+      lynxView.setAttribute(attribute, 'true');
+    }
+  }
   lynxView.setAttribute('url', `/${xmlName}`);
 }

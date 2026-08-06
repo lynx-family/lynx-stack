@@ -17,18 +17,27 @@ and locates the problem by offset. Internally the document is translated into th
 JSON artifact shape and handed to the existing assembly path, so all three
 artifact formats emit the same section sequence.
 
-Known limitation: the CSS carried by `<style>` reaches the style pipeline
-verbatim rather than tokenized. Three consequences:
+The CSS carried by `<style>` is tokenized, so a markup card goes through the same
+style pipeline as a built one:
 
-- the `transform-vw` / `transform-vh` / `transform-rem` attributes do not apply.
-  Browsers resolve `rem`, `vh` and `calc()` natively, so a card written in plain
-  web CSS renders correctly by default.
-- Lynx-specific property rewriting, for example `display: linear`, does not run.
-- `:root` is not rewritten to the card's root element. Since a card renders
-  inside a shadow root, where `:root` matches nothing, rules and custom
-  properties declared under `:root` never reach the card; declare them on the
-  root element's own class instead. This one fails silently, because a `var()`
-  reading such a property is invalid at computed-value time and drops the whole
-  declaration.
+- the `transform-vw` / `transform-vh` / `transform-rem` attributes apply, so
+  those units resolve against the `lynx-view` box. They remain off by default, in
+  which case the units keep their native browser meaning.
+- Lynx-specific property rewriting runs, so `display: linear` and the `linear-*`
+  properties are translated.
+- `:root` is rewritten to the card's own root element. A card renders inside a
+  shadow root, where a literal `:root` matches nothing, so without this rules and
+  custom properties declared under `:root` would never reach the card.
 
-Tokenizing this CSS would require a CSS parser dependency in the decode worker.
+Remaining limitation: `@media`, `@supports`, `@layer` and `@import` have no
+representation in the binary style format, whose rule kinds are only style,
+`@font-face` and `@keyframes`. Such a block is passed through to the browser
+verbatim, which honours it natively, but the CSS inside it is **not** tokenized -
+so the three rewrites above do not apply there. Declarations outside those blocks
+are unaffected, and their relative order with the rest of the stylesheet is
+preserved.
+
+Tokenizing at load time needs a CSS parser in the decode Worker, so `css-tree` is
+now a dependency of this package. It is bundled only into the template loader
+chunk, which is where the decode Worker runs, and does not affect the main thread
+bundle.
