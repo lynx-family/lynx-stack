@@ -221,6 +221,72 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
+    test('re-adding the same once listener is a no-op', () => {
+      // Registration identity is (element, name, callback, capture), so a second
+      // add of the same triple must not file a second wrapper: the callback
+      // would run twice, and the first wrapper would be orphaned where
+      // `__RemoveEventListener` could no longer reach it.
+      const node = mts.__CreateView(0);
+      rootDom.appendChild(node);
+      const handler = rstest.fn();
+
+      mts.__AddEventListener(node, 'tap', handler, { once: true });
+      mts.__AddEventListener(node, 'tap', handler, { once: true });
+      clickOn(node);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    test('adding once over a plain registration keeps one listener', () => {
+      const node = mts.__CreateView(0);
+      rootDom.appendChild(node);
+      const handler = rstest.fn();
+
+      mts.__AddEventListener(node, 'tap', handler, {});
+      mts.__AddEventListener(node, 'tap', handler, { once: true });
+      clickOn(node);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    test('adding plain over a once registration keeps one listener', () => {
+      const node = mts.__CreateView(0);
+      rootDom.appendChild(node);
+      const handler = rstest.fn();
+
+      mts.__AddEventListener(node, 'tap', handler, { once: true });
+      mts.__AddEventListener(node, 'tap', handler, {});
+      clickOn(node);
+      clickOn(node);
+
+      // The plain registration wins, so it keeps firing.
+      expect(handler).toHaveBeenCalledTimes(2);
+    });
+
+    test('once listeners for different events do not collide', () => {
+      // The wrapper bookkeeping is keyed by (event name, event type, callback).
+      // Keyed by callback alone, the second registration would be mistaken for a
+      // duplicate of the first and dropped, so `tap` would be the only one left.
+      const node = mts.__CreateView(0);
+      rootDom.appendChild(node);
+      const handler = rstest.fn();
+
+      mts.__AddEventListener(node, 'tap', handler, { once: true });
+      mts.__AddEventListener(node, 'longpress', handler, { once: true });
+
+      // Each event fires its own registration exactly once.
+      clickOn(node);
+      expect(handler).toHaveBeenCalledTimes(1);
+      // `longpress` has no W3C alias, so it is dispatched under its own name.
+      node.dispatchEvent(
+        new (globalThis as any).Event('longpress', {
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      expect(handler).toHaveBeenCalledTimes(2);
+    });
+
     test('removing a once listener before it fires prevents it', () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);

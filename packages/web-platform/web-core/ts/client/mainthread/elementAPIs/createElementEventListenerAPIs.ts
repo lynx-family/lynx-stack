@@ -96,21 +96,35 @@ export function createElementEventListenerAPIs(
   __RemoveEventListener: RemoveEventListenerPAPI;
 } {
   /**
-   * `once` wrappers, keyed weakly by element so an element that goes away takes
-   * its entries with it.
+   * The wrapper filed for a `once` registration, so that
+   * `__RemoveEventListener` - which is called with the *original* callback - can
+   * find what was actually registered.
+   *
+   * Keyed by element (weakly, so a collected element takes its entries with it)
+   * and then by the full registration identity, `(eventName, eventType,
+   * callback)`. Keying by callback alone would conflate registrations for
+   * different events or passes on the same element.
    */
   const onceWrappers = new WeakMap<
     HTMLElement,
-    Map<unknown, (...args: unknown[]) => void>
+    Map<string, Map<unknown, (...args: unknown[]) => void>>
   >();
-  const wrappersOf = (element: HTMLElement) => {
-    let wrappers = onceWrappers.get(element);
+  const wrappersOf = (element: HTMLElement, slot: string) => {
+    let bySlot = onceWrappers.get(element);
+    if (!bySlot) {
+      bySlot = new Map();
+      onceWrappers.set(element, bySlot);
+    }
+    let wrappers = bySlot.get(slot);
     if (!wrappers) {
       wrappers = new Map();
-      onceWrappers.set(element, wrappers);
+      bySlot.set(slot, wrappers);
     }
     return wrappers;
   };
+  /** Identifies a registration slot within one element. */
+  const slotKey = (eventName: string, eventType: string) =>
+    `${eventName}\u0000${eventType}`;
 
   const __AddEventListener: AddEventListenerPAPI = (
     element,
@@ -142,7 +156,23 @@ export function createElementEventListenerAPIs(
       return;
     }
 
+    const slot = slotKey(eventName, eventType);
+    const wrappers = wrappersOf(element, slot);
+    const existingWrapper = wrappers.get(callback);
+
     if (options?.once !== true) {
+      // Re-registering the same callback without `once` has to drop the wrapper
+      // a previous `once` registration filed, otherwise both would run.
+      if (existingWrapper) {
+        mtsBinding.wasmContext?.add_closure_event(
+          uniqueId,
+          eventType,
+          eventName,
+          undefined,
+          existingWrapper,
+        );
+        wrappers.delete(callback);
+      }
       mtsBinding.wasmContext?.add_closure_event(
         uniqueId,
         eventType,
@@ -150,9 +180,27 @@ export function createElementEventListenerAPIs(
         callback,
         undefined,
       );
-      onceWrappers.get(element)?.delete(callback);
       return;
     }
+
+    // Already registered for this exact identity, so this is a no-op, as with
+    // `EventTarget`. Filing a second wrapper would make the callback run twice
+    // and orphan the first wrapper, which nothing could then remove.
+    if (existingWrapper) {
+      return;
+    }
+
+    // The same callback may already be filed *unwrapped* by an earlier
+    // registration without `once`. `EventTarget` treats that as the same
+    // listener and ignores the second add, so drop the bare one rather than
+    // letting both run.
+    mtsBinding.wasmContext?.add_closure_event(
+      uniqueId,
+      eventType,
+      eventName,
+      undefined,
+      callback,
+    );
 
     // `once` lives here rather than in the handler table. The wrapper guards
     // with a flag so a re-entrant dispatch cannot deliver twice, then drops the
@@ -174,10 +222,10 @@ export function createElementEventListenerAPIs(
           wrapper,
         );
       });
-      wrappersOf(element).delete(callback);
+      wrappers.delete(callback);
       (callback as (...args: unknown[]) => void)(...args);
     };
-    wrappersOf(element).set(callback, wrapper);
+    wrappers.set(callback, wrapper);
     mtsBinding.wasmContext?.add_closure_event(
       uniqueId,
       eventType,
@@ -214,12 +262,10 @@ export function createElementEventListenerAPIs(
 
     // A `once` registration was filed as a wrapper, so removal has to target
     // that wrapper rather than the callback the caller hands back.
-    const registered = onceWrappers.get(element)?.get(
-      callback as (...args: unknown[]) => void,
-    ) ?? callback;
-    onceWrappers.get(element)?.delete(
-      callback as (...args: unknown[]) => void,
-    );
+    const slot = slotKey(eventName, eventType);
+    const wrappers = onceWrappers.get(element)?.get(slot);
+    const registered = wrappers?.get(callback) ?? callback;
+    wrappers?.delete(callback);
     mtsBinding.wasmContext?.add_closure_event(
       uniqueId,
       eventType,
