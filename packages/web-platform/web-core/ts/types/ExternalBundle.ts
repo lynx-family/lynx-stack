@@ -21,6 +21,7 @@ export interface ExternalBundleResponse {
 export interface FetchBundleOptions {
   /** Decode the bundle as a lazy component instead of an external container. */
   isLazyBundle?: boolean;
+  [key: string]: unknown;
 }
 
 /**
