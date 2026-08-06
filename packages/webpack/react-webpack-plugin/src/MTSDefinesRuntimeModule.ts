@@ -97,6 +97,38 @@ export function selectMissingMTSDefines(
   );
 }
 
+export function generateMTSDefines(
+  compilation: Pick<Compilation, 'entrypoints' | 'chunkGraph'>,
+  backgroundEntry: string,
+  mainThreadEntry: string,
+): string {
+  const { chunkGraph } = compilation;
+  const collect = (entryName: string) => {
+    const entrypoint = compilation.entrypoints.get(entryName);
+    if (!entrypoint) {
+      throw new Error(
+        `No entrypoint named ${
+          JSON.stringify(entryName)
+        } to collect the main-thread definitions from.`,
+      );
+    }
+    return collectMTSDefines(
+      entrypoint.chunks,
+      (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
+      (module) => module.identifier(),
+    );
+  };
+
+  const missing = selectMissingMTSDefines(
+    collect(backgroundEntry),
+    collect(mainThreadEntry),
+  );
+  if (missing.length === 0) {
+    return '';
+  }
+  return renderMTSDefines(missing);
+}
+
 type MTSDefinesRuntimeModule = new(
   backgroundEntry: string,
   mainThreadEntry: string,
@@ -126,31 +158,11 @@ export function createMTSDefinesRuntimeModule(
       if (!compilation) {
         return '';
       }
-      const { chunkGraph } = compilation;
-      const collect = (entryName: string) => {
-        const entrypoint = compilation.entrypoints.get(entryName);
-        if (!entrypoint) {
-          throw new Error(
-            `No entrypoint named ${
-              JSON.stringify(entryName)
-            } to collect the main-thread definitions from.`,
-          );
-        }
-        return collectMTSDefines(
-          entrypoint.chunks,
-          (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
-          (module) => module.identifier(),
-        );
-      };
-
-      const missing = selectMissingMTSDefines(
-        collect(this.backgroundEntry),
-        collect(this.mainThreadEntry),
+      return generateMTSDefines(
+        compilation,
+        this.backgroundEntry,
+        this.mainThreadEntry,
       );
-      if (missing.length === 0) {
-        return '';
-      }
-      return renderMTSDefines(missing);
     }
   };
 }

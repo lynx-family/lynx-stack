@@ -1,11 +1,21 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { mkdtempSync } from 'node:fs';
+import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { rspack } from '@rspack/core';
 import { describe, expect, it } from '@rstest/core';
 
+import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 import {
   MTS_DEFINES_BUILD_INFO,
   collectMTSDefines,
+  generateMTSDefines,
   renderMTSDefines,
   selectMissingMTSDefines,
 } from '../src/MTSDefinesRuntimeModule.js';
@@ -144,6 +154,66 @@ describe('selectMissingMTSDefines', () => {
   });
 });
 
+function compilationOf(
+  entries: Record<string, TestModule[]>,
+): Parameters<typeof generateMTSDefines>[0] {
+  const entrypoints = new Map(
+    Object.entries(entries).map(([name, modules]) => [name, {
+      chunks: [{
+        modules: modules.map((module) => ({
+          ...module,
+          identifier: () => module.id,
+        })),
+      }],
+    }]),
+  );
+  return {
+    entrypoints,
+    chunkGraph: {
+      getChunkModules: (chunk: { modules: TestModule[] }) => chunk.modules,
+    },
+  } as unknown as Parameters<typeof generateMTSDefines>[0];
+}
+
+describe('generateMTSDefines', () => {
+  it('renders the definitions the main thread lacks', () => {
+    const code = generateMTSDefines(
+      compilationOf({
+        background: [
+          asModule({ id: 'a', defines: [snapshot('missing', 'registerA;')] }),
+          asModule({ id: 'b', defines: [snapshot('present')] }),
+        ],
+        'main-thread': [asModule({ id: 'a', defines: [snapshot('present')] })],
+      }),
+      'background',
+      'main-thread',
+    );
+
+    expect(code).toContain('var __initMTSDefines = function (');
+    expect(code).toContain('registerA;');
+    expect(code).not.toContain('present');
+  });
+
+  it('renders nothing when the main thread defines everything', () => {
+    const code = generateMTSDefines(
+      compilationOf({
+        background: [asModule({ id: 'a', defines: [snapshot('x')] })],
+        'main-thread': [asModule({ id: 'b', defines: [snapshot('x')] })],
+      }),
+      'background',
+      'main-thread',
+    );
+
+    expect(code).toBe('');
+  });
+
+  it('fails on an entry it cannot collect from', () => {
+    expect(() =>
+      generateMTSDefines(compilationOf({}), 'background', 'main-thread')
+    ).toThrowError(/No entrypoint named "background"/);
+  });
+});
+
 describe('renderMTSDefines', () => {
   it('gives each definition its own block scope', () => {
     const code = renderMTSDefines([
@@ -157,5 +227,79 @@ describe('renderMTSDefines', () => {
 
   it('reaches for no bundler internal', () => {
     expect(renderMTSDefines([])).not.toContain('__webpack_require__');
+  });
+});
+
+describe('MTSDefinesRuntimeModule', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const require = createRequire(import.meta.url);
+
+  function compile(defines: MTSDefine[]) {
+    const compiler = rspack({
+      context: __dirname,
+      mode: 'none',
+      entry: {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      experiments: { layers: true },
+      output: {
+        path: mkdtempSync(path.join(tmpdir(), 'mts-defines-')),
+        filename: '[name].js',
+      },
+      plugins: [
+        new ReactWebpackPlugin({
+          mainThreadChunks: ['main__main-thread.js'],
+          mainThreadEntries: { 'main__main-thread': 'main' },
+          workletRuntimePath: require.resolve(
+            '@lynx-js/react/worklet-dev-runtime',
+          ),
+        }),
+        (compiler: import('@rspack/core').Compiler) => {
+          compiler.hooks.thisCompilation.tap('test', (compilation) => {
+            compilation.hooks.succeedModule.tap('test', (module) => {
+              if (module.layer === LAYERS.BACKGROUND) {
+                module.buildInfo![MTS_DEFINES_BUILD_INFO] = defines;
+              }
+            });
+          });
+        },
+      ],
+    });
+    return new Promise<string>((resolve, reject) => {
+      compiler.run((err, stats) => {
+        if (err || stats?.hasErrors()) {
+          reject(err ?? new Error(stats!.toString()));
+          return;
+        }
+        resolve(compiler.options.output.path!);
+      });
+    });
+  }
+
+  it('renders the background definitions into the main-thread chunk', async () => {
+    const outputPath = await compile([
+      snapshot('bg-only', 'registerBackgroundOnly;'),
+    ]);
+    const content = await fs.readFile(
+      path.join(outputPath, 'main__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(content).toContain('var __initMTSDefines = function (');
+    expect(content).toContain('registerBackgroundOnly;');
+  });
+
+  it('renders nothing when the background has no extra definitions', async () => {
+    const outputPath = await compile([]);
+    const content = await fs.readFile(
+      path.join(outputPath, 'main__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(content).not.toContain('__initMTSDefines');
   });
 });
