@@ -48,10 +48,10 @@ catalogs:
 
 overrides:
   '@lynx-js/react': workspace:*
-  '@rspack/core': 2.1.5
-  '@rsbuild/core>@rspack/core': 2.1.5
-  '@rsdoctor/rspack-plugin>@rspack/core': 2.1.5
-  '@rsdoctor/types>@rspack/core': 2.1.5
+  '@rspack/core': 2.1.7
+  '@rsbuild/core>@rspack/core': 2.1.7
+  '@rsdoctor/rspack-plugin>@rspack/core': 2.1.7
+  '@rsdoctor/types>@rspack/core': 2.1.7
 
 packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 
@@ -88,8 +88,8 @@ importers:
         specifier: catalog:rslib
         version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@6.0.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -340,7 +340,7 @@ importers:
         version: 4.0.0
       '@rsbuild/plugin-babel':
         specifier: 2.0.1
-        version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17
@@ -1011,7 +1011,7 @@ importers:
         version: 2.1.7(core-js@3.49.0)
       '@rsbuild/plugin-react':
         specifier: 2.1.0
-        version: 2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))
+        version: 2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -1331,8 +1331,8 @@ importers:
         specifier: workspace:*
         version: link:../swc-plugin-reactlynx-compat
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
     devDependencies:
       '@types/node':
         specifier: ^24.13.3
@@ -1389,7 +1389,7 @@ importers:
         version: 2.1.7(core-js@3.49.0)
       '@rsbuild/plugin-react':
         specifier: 2.1.0
-        version: 2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))
+        version: 2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))
       '@tailwindcss/postcss':
         specifier: ^4.2.1
         version: 4.2.1
@@ -1449,7 +1449,7 @@ importers:
         version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@rsdoctor/rspack-plugin':
         specifier: ~1.6.1
-        version: 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       typescript:
         specifier: 5.1.6 - 6.0.x
         version: 6.0.3
@@ -1462,7 +1462,7 @@ importers:
         version: 7.58.12(@types/node@24.13.3)
       '@rsdoctor/core':
         specifier: ~1.5.6
-        version: 1.5.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 1.5.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -1510,7 +1510,7 @@ importers:
         version: 12.1.1(typescript@6.0.3)
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
 
   packages/rspeedy/create-rspeedy:
     dependencies:
@@ -1532,7 +1532,7 @@ importers:
         version: link:../core
       '@rsbuild/plugin-type-check':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)
+        version: 1.5.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -1593,8 +1593,8 @@ importers:
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -1618,7 +1618,7 @@ importers:
         version: 12.1.1(typescript@6.0.3)
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
 
   packages/rspeedy/plugin-debug-metadata:
     dependencies:
@@ -1793,7 +1793,7 @@ importers:
         version: 12.1.1(typescript@6.0.3)
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
 
   packages/rspeedy/plugin-react-alias:
     devDependencies:
@@ -1813,8 +1813,8 @@ importers:
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -1850,7 +1850,7 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 2.0.1
-        version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@rsbuild/plugin-sass':
         specifier: 2.0.1
         version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))
@@ -1965,7 +1965,7 @@ importers:
         version: 4.0.0
       '@rsbuild/plugin-babel':
         specifier: 2.0.1
-        version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2249,7 +2249,7 @@ importers:
         version: 2.1.7(core-js@3.49.0)
       '@rsdoctor/rspack-plugin':
         specifier: ~1.6.1
-        version: 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -2270,8 +2270,8 @@ importers:
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2322,8 +2322,8 @@ importers:
         specifier: workspace:*
         version: link:../test-tools
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2341,14 +2341,14 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
       css-loader:
         specifier: ^7.1.4
-        version: 7.1.4(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 7.1.4(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
 
   packages/webpack/css-extract-webpack-plugin:
     devDependencies:
@@ -2365,17 +2365,17 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
       css-loader:
         specifier: ^7.1.4
-        version: 7.1.4(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 7.1.4(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       sass-loader:
         specifier: ^16.0.8
-        version: 16.0.8(@rspack/core@2.1.5(@swc/helpers@0.5.23))(sass-embedded@1.100.0)(sass@1.100.0)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 16.0.8(@rspack/core@2.1.7(@swc/helpers@0.5.23))(sass-embedded@1.100.0)(sass@1.100.0)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
 
   packages/webpack/externals-loading-webpack-plugin:
     devDependencies:
@@ -2383,8 +2383,8 @@ importers:
         specifier: workspace:*
         version: link:../test-tools
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2416,8 +2416,8 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rspack/lite-tapable':
         specifier: 1.1.2
         version: 1.1.2
@@ -2459,8 +2459,8 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rspack/lite-tapable':
         specifier: 1.1.2
         version: 1.1.2
@@ -2469,7 +2469,7 @@ importers:
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
       css-loader:
         specifier: ^7.1.4
-        version: 7.1.4(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 7.1.4(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.30(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
@@ -2487,8 +2487,8 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2533,8 +2533,8 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2546,7 +2546,7 @@ importers:
         version: 1.0.4
       css-loader:
         specifier: ^7.1.4
-        version: 7.1.4(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 7.1.4(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       webpack:
         specifier: ^5.99.9
         version: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
@@ -2554,11 +2554,11 @@ importers:
   packages/webpack/test-tools:
     devDependencies:
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rspack/test-tools':
         specifier: catalog:rspack
-        version: 2.1.3(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)(supports-color@10.2.2)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+        version: 2.1.3(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)(supports-color@10.2.2)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2590,8 +2590,8 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
 
   packages/webpack/webpack-runtime-globals:
     devDependencies:
@@ -2599,8 +2599,8 @@ importers:
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
       '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2609,7 +2609,7 @@ importers:
     dependencies:
       '@rstack-dev/doc-ui':
         specifier: 1.14.7
-        version: 1.14.7(@rspress/core@2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
+        version: 1.14.7(@rspress/core@2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -2688,16 +2688,16 @@ importers:
         version: 2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))
       '@rsbuild/plugin-type-check':
         specifier: 1.5.0
-        version: 1.5.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)
+        version: 1.5.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.4
         version: 1.2.4(@rsbuild/core@2.1.7(core-js@3.49.0))
       '@rspress/core':
         specifier: 2.0.18
-        version: 2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+        version: 2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       '@rspress/plugin-client-redirects':
         specifier: 2.0.18
-        version: 2.0.18(@rspress/core@2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
+        version: 2.0.18(@rspress/core@2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
       '@shikijs/transformers':
         specifier: 4.3.1
         version: 4.3.1
@@ -5469,7 +5469,7 @@ packages:
   '@rsdoctor/rspack-plugin@1.6.1':
     resolution: {integrity: sha512-P9/8wAF4rBEujzB42Afz9zLUR+DoaIDlsyO9Hk2Zzg4e6A+6PlZjma06zhEDbPgcAIJ3PyeX/xgH+5pcc9HjUQ==}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
     peerDependenciesMeta:
       '@rspack/core':
         optional: true
@@ -5483,7 +5483,7 @@ packages:
   '@rsdoctor/types@1.5.6':
     resolution: {integrity: sha512-ozLXrRSlUgIICjCs0xL2Nyp7S3JA6zXjrepKqQkcgFdeK70r76a4qYdQQp+bf09P/87uO8O1GOHYk6/R+qbmWw==}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       webpack: 5.x
     peerDependenciesMeta:
       '@rspack/core':
@@ -5494,7 +5494,7 @@ packages:
   '@rsdoctor/types@1.6.1':
     resolution: {integrity: sha512-E01VGaDGvXGig3rqQC+YRRPbGQ6tBLi9XkYCl579Hq01iYHeuVYLl1bfnODAt8SkdDYGJDMFuUWj/01A0vVy7g==}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       webpack: 5.x
     peerDependenciesMeta:
       '@rspack/core':
@@ -5521,76 +5521,76 @@ packages:
       typescript:
         optional: true
 
-  '@rspack/binding-darwin-arm64@2.1.5':
-    resolution: {integrity: sha512-XLAN6YSU36qkciJtV9DY9z57pdHOjKy/f1HyoqpZenRg8p46jnXPziV45lfrTZpG+FF6g/jtTUc4dKbeyoWqPw==}
+  '@rspack/binding-darwin-arm64@2.1.7':
+    resolution: {integrity: sha512-DwxzrXRctueP/3Pyom9JHcIsRShuEAlHb+mrE5OPT+4cdHI1UnJpbzEvEDLTo4IKJhDb3vjXdHLtjqtL0SYbeA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rspack/binding-darwin-x64@2.1.5':
-    resolution: {integrity: sha512-KLW7PV86jyCOyqJSqrkZdvYUWYCFX/Q4LsGmVc8tyDA8jBYLMHJDewC/lNf9ot3rU2SoLDZKhDUh7q7dX0FRmg==}
+  '@rspack/binding-darwin-x64@2.1.7':
+    resolution: {integrity: sha512-kPbrYvR/XUHfAMgRVq3QnC71DW/qjwsPj+3hEUuEnRmlploPNy9u8Szf1IHKSVUSrVZBTgDyMoZQdxYLfhResw==}
     cpu: [x64]
     os: [darwin]
 
-  '@rspack/binding-linux-arm64-gnu@2.1.5':
-    resolution: {integrity: sha512-KOooAC8L+Ljx5sY7ZuMeaXCQ310FNWaPWXcYQJpFPApF3qyLeSfuOftUGwxcxeo5U0mS5OY3zxp7/5CaHWKYjg==}
+  '@rspack/binding-linux-arm64-gnu@2.1.7':
+    resolution: {integrity: sha512-VFB+YXM3kZ6IIuLV64H3vgnwqvQIIaqfR/aeGwuxYvwcZsrgblSBmXMeDULdgDjqP8Yr0VaFMBBiD9OtG5KdFw==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@rspack/binding-linux-arm64-musl@2.1.5':
-    resolution: {integrity: sha512-0GFc07gT71+uRbHtejDecBfSL0fs7dQAwCtXYieXboACauL7UvS3Hwr6v8A91aGtAcvLotnCaIa3CWWYwtYlYQ==}
+  '@rspack/binding-linux-arm64-musl@2.1.7':
+    resolution: {integrity: sha512-Mzbxyg0aJ+ITj526Iuz0enEDYY6WxhFIwEKXqwjQh+Vpd5v/+aPzPo83sSQVX/3puBV1sbmviTURbh6N9e1fvA==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@rspack/binding-linux-riscv64-gnu@2.1.5':
-    resolution: {integrity: sha512-isQQDp3fBzPSZpLVFzPqVXIVA4I9b9mKs58TfUgOzDP/1g1582YSV3iFopgFogvEliihXDuuXvM6aAkP+w8Z+Q==}
+  '@rspack/binding-linux-riscv64-gnu@2.1.7':
+    resolution: {integrity: sha512-mpazwgT/Pse1720mvEJsoXfPkJ+enj0xUqpbe/wL6aedwjGT+9jJNB8HTJXE4XBX0UO7umGqcJMeKA6YsD2CDA==}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@rspack/binding-linux-riscv64-musl@2.1.5':
-    resolution: {integrity: sha512-/SP6VknY4kH60BYplI2FDNAJCo4U4DUszLxhKsgVlgA5ImgHC8Ew2AsKgidk7ceiYV9OcKzYuWYe9tVpysBYVA==}
+  '@rspack/binding-linux-riscv64-musl@2.1.7':
+    resolution: {integrity: sha512-oU/l3soPRsDEWn7KZic+npyTMM2N1kRdHjoJ+L5IUBXs8bjdTXPLoyTbTdIOza5ZSoT4+UeEiEryj4BB0tQE5w==}
     cpu: [riscv64]
     os: [linux]
     libc: [musl]
 
-  '@rspack/binding-linux-x64-gnu@2.1.5':
-    resolution: {integrity: sha512-/GJmS+buA4pilT10gs5mfAhAZxSHXpDD8veZ3QpYvNUuoU9gvempAq9TgjbyNN/vc5pf76GdXPXKFMiehudYSA==}
+  '@rspack/binding-linux-x64-gnu@2.1.7':
+    resolution: {integrity: sha512-7Gtpl3h3jtnOpk1mYQE8mRndXAO2ibI8mnAbs7klevdKey+ZHneWMoMi2yOMQhhI/ifWEFxDzyGJ8bdxo0XTsA==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@rspack/binding-linux-x64-musl@2.1.5':
-    resolution: {integrity: sha512-iwS3t75nZ2TnUjB05KtvpvjpdkOy/nLxbaOnwjbdnNZZXpUaMadLbllGAWayHPGCMsL2yKBEhVEESZpR7tK3SA==}
+  '@rspack/binding-linux-x64-musl@2.1.7':
+    resolution: {integrity: sha512-w+whI2Uy+DYkGN+MVkzMFWweL7B/s1gMqX+nvTE1vhOy3hGV0VyA9H6lqWjSD3I+eGkpYhN9Pr244cYnLpZOUQ==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@rspack/binding-wasm32-wasi@2.1.5':
-    resolution: {integrity: sha512-jOhW69t1H/jcRaSMB5U8jVzWP18j0YQIlo0nT8W+KvNVScJeyOze4FFc+5RIS7VmuT8/jid7hUyydZOfm6UgqA==}
+  '@rspack/binding-wasm32-wasi@2.1.7':
+    resolution: {integrity: sha512-cDVgvzRdTgxaeM+a5Lx0+7/VAvunvwO0wNtQ3ATQGOtFCW5b7cUzhNPcytH5ZSJTnFWuxinlGwtar5yfcnkdZQ==}
     cpu: [wasm32]
 
-  '@rspack/binding-win32-arm64-msvc@2.1.5':
-    resolution: {integrity: sha512-OLfMXmtFBcrWr9BRGKXJYrWgYR0JSaoAWr3EVFDjKGi/YR5aUwQSGc3AJPBph9g0YsdSqRuUhtQGtCk84DeeEA==}
+  '@rspack/binding-win32-arm64-msvc@2.1.7':
+    resolution: {integrity: sha512-JDd85+iYwUvaG9Zrt5X7oIxRZRiTW+76FwkRakoXNy/5VAWQW32Jq4ESjSVz6l6mh0KnZxPq3TLMugacCPnLjw==}
     cpu: [arm64]
     os: [win32]
 
-  '@rspack/binding-win32-ia32-msvc@2.1.5':
-    resolution: {integrity: sha512-p4OSmnj21+AY8vpIADveLEBXfXJRXonOTYim2VLVWV4TbXfhYNMLiX3qESHCdNnn6lVJM0q6zxxzEUfTyAKydw==}
+  '@rspack/binding-win32-ia32-msvc@2.1.7':
+    resolution: {integrity: sha512-y9PKEs6v9BLHV0i/4eaIRtxpATvSgcf/VYQkMT8mp+qWlPjUwDQNwU2ueWVGpff6INO+YAa7zobzziNFRgO7Lg==}
     cpu: [ia32]
     os: [win32]
 
-  '@rspack/binding-win32-x64-msvc@2.1.5':
-    resolution: {integrity: sha512-YCkLLDGMkHsw5CpcsFtFhzCu+JZEsNrcH9O1GpWMkyxR2ku2Fq1i2wEHYSm26HyW+PJ3+Fv347MPWMFZIz9q2g==}
+  '@rspack/binding-win32-x64-msvc@2.1.7':
+    resolution: {integrity: sha512-BjkOzcPY/K8YlRRvyywz0mDWk89MMxqAMhDmgBXCWorh1IjgKTsWDJ2lCGIM8M9CZXUG3khom8AfrOGwRT2I+g==}
     cpu: [x64]
     os: [win32]
 
-  '@rspack/binding@2.1.5':
-    resolution: {integrity: sha512-lF3ZLeeyV0AN3BL0m2jAmNZD5pP9IHsQ8gUXN7mo0g4xsW6nf6hsN7o9CnEHECz5uUZb+EoWsuWzAAmnA9Ip8Q==}
+  '@rspack/binding@2.1.7':
+    resolution: {integrity: sha512-wYqi8TY30hsIzLry503o/Uqu7y9Ec7pEwN5TVmB7Pb3xHrR2eHsQPzdpF/GkCLUjQSgD2Es3CDVV1mr6zO/78g==}
 
-  '@rspack/core@2.1.5':
-    resolution: {integrity: sha512-YHjL7xVXycAWsjJtF39cRZ2u+ddiNFxY+FcNgEBe6Y8OaLeUfMfjba3gK+B1Oj32UcKD6BmXGsPfu9p+OII/Yw==}
+  '@rspack/core@2.1.7':
+    resolution: {integrity: sha512-d5Ju3zXzGgbqQWvlMlLUtek2eFPIzsFe2QOF4nwTAknxo/4OZ64t+kPT9nM6fr3aZX93VK0R3v02/kZYIRrV9Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@module-federation/runtime-tools': ^0.24.1 || ^2.0.0
@@ -5607,7 +5607,7 @@ packages:
   '@rspack/plugin-react-refresh@2.0.2':
     resolution: {integrity: sha512-dGNZiCxQxgAUI9sah7gd8u+O7OJZRCmqtEJNDOd8xW5RqcieC86F7p5qcShyw6onH5pKf57evpr2VjGbaFGkZg==}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       react-refresh: '>=0.10.0 <1.0.0'
     peerDependenciesMeta:
       '@rspack/core':
@@ -5673,7 +5673,7 @@ packages:
   '@rspack/test-tools@2.1.3':
     resolution: {integrity: sha512-Q6xcZs9TIkvvW/n2RbbLY9XWIDhY7ZcDtBo+NzqNCjt+33ZrgE5JFTdjUT/xa4gHGKS6Qez8HclWXHIuXX47+A==}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
 
   '@rspress/core@2.0.18':
     resolution: {integrity: sha512-DBpsr/6XAItQkZPL5FSjthLGuzdG9ks/7EOxkqaaXp93uAT54LO0PD5Dkoy6ydup1PnvkpHyiHpUyDcnHHTVhg==}
@@ -7010,7 +7010,7 @@ packages:
     engines: {node: ^18.20.0 || ^20.10.0 || >=22.0.0}
     peerDependencies:
       '@babel/core': ^7.12.0 || ^8.0.0-beta.1
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       webpack: '>=5.61.0'
     peerDependenciesMeta:
       '@rspack/core':
@@ -7429,7 +7429,7 @@ packages:
     resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       webpack: ^5.27.0
     peerDependenciesMeta:
       '@rspack/core':
@@ -9144,7 +9144,7 @@ packages:
     resolution: {integrity: sha512-F0+ErFFDj3Pt+nVrCN6VlEGEzocv9s7x/aR9v2riI+WM83UAfTYBDBjGPJnT55lBLR6JSI4fmWblt+aA2JN6/w==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       less: ^3.5.0 || ^4.0.0
       webpack: ^5.0.0
     peerDependenciesMeta:
@@ -11047,7 +11047,7 @@ packages:
     resolution: {integrity: sha512-hcov4ZwZJIGbEuyNr9EmiTmZueyrxSToE6GOzoZnq5JM7ecRO7ttyvilPn+VmRsqiP16+VYZzVnGZj/hzZgKBA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
       sass: ^1.3.0
       sass-embedded: '*'
@@ -11695,7 +11695,7 @@ packages:
   ts-checker-rspack-plugin@1.5.2:
     resolution: {integrity: sha512-YtdNbLnJ9fU6itfQky0K9Lebb/N0TUSbSVUByyoGt27em3hiTCVnfW2MzxFUHpdMv5+7xPmoS8YBwdDyHfEaGQ==}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       '@typescript/native-preview': ^7.0.0-0
       typescript: '>=3.8.0'
     peerDependenciesMeta:
@@ -11806,7 +11806,7 @@ packages:
     resolution: {integrity: sha512-QejxXofRkakQJwmUukpXyhtLi7M37ZIA5CkwcHWqTdjL2rFMB8WroNSGPdMaWxfFd3+DwI6yO9aQ5S6VYdYxNA==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@rspack/core': 2.1.5
+      '@rspack/core': 2.1.7
       typescript: '*'
       typia: '*'
 
@@ -15502,21 +15502,21 @@ snapshots:
 
   '@rsbuild/core@2.1.7(core-js@3.49.0)':
     dependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       '@swc/helpers': 0.5.23
     optionalDependencies:
       core-js: 3.49.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
-  '@rsbuild/plugin-babel@2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsbuild/plugin-babel@2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@babel/core': 7.29.7(supports-color@10.2.2)
       '@babel/plugin-proposal-decorators': 7.29.7(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2)
       '@babel/plugin-transform-class-properties': 7.29.7(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2)
       '@types/babel__core': 7.20.5
-      babel-loader: 10.1.1(@babel/core@7.29.7(supports-color@10.2.2))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      babel-loader: 10.1.1(@babel/core@7.29.7(supports-color@10.2.2))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       reduce-configs: 1.1.2
     optionalDependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
@@ -15557,11 +15557,11 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
 
-  '@rsbuild/plugin-less@2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsbuild/plugin-less@2.0.1(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       deepmerge: 4.3.1
       less: 4.8.0(supports-color@10.2.2)
-      less-loader: 12.3.3(@rspack/core@2.1.5(@swc/helpers@0.5.23))(less@4.8.0(supports-color@10.2.2))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      less-loader: 12.3.3(@rspack/core@2.1.7(@swc/helpers@0.5.23))(less@4.8.0(supports-color@10.2.2))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       reduce-configs: 2.0.1
     optionalDependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
@@ -15570,9 +15570,9 @@ snapshots:
       - supports-color
       - webpack
 
-  '@rsbuild/plugin-react@2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))':
+  '@rsbuild/plugin-react@2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.1.5(@swc/helpers@0.5.23))(react-refresh@0.18.0)
+      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.1.7(@swc/helpers@0.5.23))(react-refresh@0.18.0)
       react-refresh: 0.18.0
     optionalDependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
@@ -15597,12 +15597,12 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
 
-  '@rsbuild/plugin-type-check@1.5.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)':
+  '@rsbuild/plugin-type-check@1.5.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)':
     dependencies:
       deepmerge: 4.3.1
       json5: 2.2.3
       reduce-configs: 1.1.2
-      ts-checker-rspack-plugin: 1.5.2(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)
+      ts-checker-rspack-plugin: 1.5.2(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3)
     optionalDependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
       '@typescript/native-preview': 7.0.0-dev.20260707.2
@@ -15619,13 +15619,13 @@ snapshots:
 
   '@rsdoctor/client@1.6.1': {}
 
-  '@rsdoctor/core@1.5.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/core@1.5.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@rsbuild/plugin-check-syntax': 1.6.1(@rsbuild/core@2.1.7(core-js@3.49.0))
-      '@rsdoctor/graph': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/graph': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@rspack/resolver': 0.2.8(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
       browserslist-load-config: 1.0.3
       es-toolkit: 1.49.0
@@ -15643,13 +15643,13 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/core@1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/core@1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@rsbuild/plugin-check-syntax': 1.6.1(@rsbuild/core@2.1.7(core-js@3.49.0))
-      '@rsdoctor/graph': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/sdk': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/graph': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/sdk': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@rspack/resolver': 0.2.8(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
       browserslist-load-config: 1.0.3
       es-toolkit: 1.49.0
@@ -15667,10 +15667,10 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/graph@1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/graph@1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       es-toolkit: 1.49.0
       path-browserify: 1.0.1
       source-map: 0.7.6
@@ -15678,10 +15678,10 @@ snapshots:
       - '@rspack/core'
       - webpack
 
-  '@rsdoctor/graph@1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/graph@1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
-      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       es-toolkit: 1.49.0
       path-browserify: 1.0.1
       source-map: 0.7.6
@@ -15689,15 +15689,15 @@ snapshots:
       - '@rspack/core'
       - webpack
 
-  '@rsdoctor/rspack-plugin@1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/rspack-plugin@1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
-      '@rsdoctor/core': 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/graph': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/sdk': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/core': 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/graph': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/sdk': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -15707,12 +15707,12 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/sdk@1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/sdk@1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@rsdoctor/client': 1.5.6
-      '@rsdoctor/graph': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/graph': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       launch-editor: 2.13.2
       safer-buffer: 2.1.2
       socket.io: 4.8.1(supports-color@10.2.2)
@@ -15724,12 +15724,12 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/sdk@1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/sdk@1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@rsdoctor/client': 1.6.1
-      '@rsdoctor/graph': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
-      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/graph': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/utils': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       launch-editor: 2.13.2
       safer-buffer: 2.1.2
       socket.io: 4.8.1(supports-color@10.2.2)
@@ -15741,30 +15741,30 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/types@1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/types@1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@types/connect': 3.4.38
       '@types/estree': 1.0.5
       '@types/tapable': 2.3.0
       source-map: 0.7.6
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
 
-  '@rsdoctor/types@1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/types@1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@types/connect': 3.4.38
       '@types/estree': 1.0.5
       '@types/tapable': 2.3.0
       source-map: 0.7.6
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
 
-  '@rsdoctor/utils@1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/utils@1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@babel/code-frame': 7.26.2
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@types/estree': 1.0.5
       acorn: 8.17.0
       acorn-import-attributes: 1.9.5(acorn@8.17.0)
@@ -15782,10 +15782,10 @@ snapshots:
       - '@rspack/core'
       - webpack
 
-  '@rsdoctor/utils@1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rsdoctor/utils@1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@babel/code-frame': 7.26.2
-      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
+      '@rsdoctor/types': 1.6.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))
       '@types/estree': 1.0.5
       acorn: 8.17.0
       acorn-import-attributes: 1.9.5(acorn@8.17.0)
@@ -15825,74 +15825,74 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rspack/binding-darwin-arm64@2.1.5':
+  '@rspack/binding-darwin-arm64@2.1.7':
     optional: true
 
-  '@rspack/binding-darwin-x64@2.1.5':
+  '@rspack/binding-darwin-x64@2.1.7':
     optional: true
 
-  '@rspack/binding-linux-arm64-gnu@2.1.5':
+  '@rspack/binding-linux-arm64-gnu@2.1.7':
     optional: true
 
-  '@rspack/binding-linux-arm64-musl@2.1.5':
+  '@rspack/binding-linux-arm64-musl@2.1.7':
     optional: true
 
-  '@rspack/binding-linux-riscv64-gnu@2.1.5':
+  '@rspack/binding-linux-riscv64-gnu@2.1.7':
     optional: true
 
-  '@rspack/binding-linux-riscv64-musl@2.1.5':
+  '@rspack/binding-linux-riscv64-musl@2.1.7':
     optional: true
 
-  '@rspack/binding-linux-x64-gnu@2.1.5':
+  '@rspack/binding-linux-x64-gnu@2.1.7':
     optional: true
 
-  '@rspack/binding-linux-x64-musl@2.1.5':
+  '@rspack/binding-linux-x64-musl@2.1.7':
     optional: true
 
-  '@rspack/binding-wasm32-wasi@2.1.5':
+  '@rspack/binding-wasm32-wasi@2.1.7':
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
       '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
     optional: true
 
-  '@rspack/binding-win32-arm64-msvc@2.1.5':
+  '@rspack/binding-win32-arm64-msvc@2.1.7':
     optional: true
 
-  '@rspack/binding-win32-ia32-msvc@2.1.5':
+  '@rspack/binding-win32-ia32-msvc@2.1.7':
     optional: true
 
-  '@rspack/binding-win32-x64-msvc@2.1.5':
+  '@rspack/binding-win32-x64-msvc@2.1.7':
     optional: true
 
-  '@rspack/binding@2.1.5':
+  '@rspack/binding@2.1.7':
     optionalDependencies:
-      '@rspack/binding-darwin-arm64': 2.1.5
-      '@rspack/binding-darwin-x64': 2.1.5
-      '@rspack/binding-linux-arm64-gnu': 2.1.5
-      '@rspack/binding-linux-arm64-musl': 2.1.5
-      '@rspack/binding-linux-riscv64-gnu': 2.1.5
-      '@rspack/binding-linux-riscv64-musl': 2.1.5
-      '@rspack/binding-linux-x64-gnu': 2.1.5
-      '@rspack/binding-linux-x64-musl': 2.1.5
-      '@rspack/binding-wasm32-wasi': 2.1.5
-      '@rspack/binding-win32-arm64-msvc': 2.1.5
-      '@rspack/binding-win32-ia32-msvc': 2.1.5
-      '@rspack/binding-win32-x64-msvc': 2.1.5
+      '@rspack/binding-darwin-arm64': 2.1.7
+      '@rspack/binding-darwin-x64': 2.1.7
+      '@rspack/binding-linux-arm64-gnu': 2.1.7
+      '@rspack/binding-linux-arm64-musl': 2.1.7
+      '@rspack/binding-linux-riscv64-gnu': 2.1.7
+      '@rspack/binding-linux-riscv64-musl': 2.1.7
+      '@rspack/binding-linux-x64-gnu': 2.1.7
+      '@rspack/binding-linux-x64-musl': 2.1.7
+      '@rspack/binding-wasm32-wasi': 2.1.7
+      '@rspack/binding-win32-arm64-msvc': 2.1.7
+      '@rspack/binding-win32-ia32-msvc': 2.1.7
+      '@rspack/binding-win32-x64-msvc': 2.1.7
 
-  '@rspack/core@2.1.5(@swc/helpers@0.5.23)':
+  '@rspack/core@2.1.7(@swc/helpers@0.5.23)':
     dependencies:
-      '@rspack/binding': 2.1.5
+      '@rspack/binding': 2.1.7
     optionalDependencies:
       '@swc/helpers': 0.5.23
 
   '@rspack/lite-tapable@1.1.2': {}
 
-  '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.5(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
+  '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.7(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
     dependencies:
       react-refresh: 0.18.0
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
 
   '@rspack/resolver-binding-darwin-arm64@0.2.8':
     optional: true
@@ -15945,13 +15945,13 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  '@rspack/test-tools@2.1.3(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)(supports-color@10.2.2)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
+  '@rspack/test-tools@2.1.3(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)(supports-color@10.2.2)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21))':
     dependencies:
       '@babel/generator': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/traverse': 7.29.7(supports-color@10.2.2)
       '@babel/types': 7.29.7
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       chalk: 4.1.2
       cross-env: 10.1.0
       filenamify: 4.3.0
@@ -15989,12 +15989,12 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rspress/core@2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)':
+  '@rspress/core@2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)':
     dependencies:
       '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
       '@mdx-js/react': 3.1.1(@types/react@19.2.17)(react@19.2.8)
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
-      '@rsbuild/plugin-react': 2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.5(@swc/helpers@0.5.23))
+      '@rsbuild/plugin-react': 2.1.0(@rsbuild/core@2.1.7(core-js@3.49.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))
       '@rspress/shared': 2.0.18(core-js@3.49.0)
       '@shikijs/rehype': 4.3.1
       '@types/unist': 3.0.3
@@ -16039,9 +16039,9 @@ snapshots:
       - micromark-util-types
       - supports-color
 
-  '@rspress/plugin-client-redirects@2.0.18(@rspress/core@2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
+  '@rspress/plugin-client-redirects@2.0.18(@rspress/core@2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
     dependencies:
-      '@rspress/core': 2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      '@rspress/core': 2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
   '@rspress/shared@2.0.18(core-js@3.49.0)':
     dependencies:
@@ -16052,9 +16052,9 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rstack-dev/doc-ui@1.14.7(@rspress/core@2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
+  '@rstack-dev/doc-ui@1.14.7(@rspress/core@2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
     optionalDependencies:
-      '@rspress/core': 2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      '@rspress/core': 2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
   '@rstest/adapter-rsbuild@0.11.3(@rsbuild/core@2.1.7(core-js@3.49.0))(@rstest/core@0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2)))':
     dependencies:
@@ -17388,12 +17388,12 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  babel-loader@10.1.1(@babel/core@7.29.7(supports-color@10.2.2))(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
+  babel-loader@10.1.1(@babel/core@7.29.7(supports-color@10.2.2))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
     dependencies:
       '@babel/core': 7.29.7(supports-color@10.2.2)
       find-up: 5.0.0
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
 
   babel-plugin-react-compiler@1.0.0:
@@ -17771,7 +17771,7 @@ snapshots:
     dependencies:
       hyphenate-style-name: 1.1.0
 
-  css-loader@7.1.4(@rspack/core@2.1.5(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
+  css-loader@7.1.4(@rspack/core@2.1.7(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.21)
       postcss: 8.5.21
@@ -17782,7 +17782,7 @@ snapshots:
       postcss-value-parser: 4.2.0
       semver: 7.8.5
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
 
   css-minimizer-webpack-plugin@8.0.0(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
@@ -19763,11 +19763,11 @@ snapshots:
       picocolors: 1.1.1
       shell-quote: 1.8.3
 
-  less-loader@12.3.3(@rspack/core@2.1.5(@swc/helpers@0.5.23))(less@4.8.0(supports-color@10.2.2))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
+  less-loader@12.3.3(@rspack/core@2.1.7(@swc/helpers@0.5.23))(less@4.8.0(supports-color@10.2.2))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
     dependencies:
       less: 4.8.0(supports-color@10.2.2)
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
 
   less@4.8.0(supports-color@10.2.2):
@@ -21940,11 +21940,11 @@ snapshots:
       sass-embedded-win32-arm64: 1.100.0
       sass-embedded-win32-x64: 1.100.0
 
-  sass-loader@16.0.8(@rspack/core@2.1.5(@swc/helpers@0.5.23))(sass-embedded@1.100.0)(sass@1.100.0)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
+  sass-loader@16.0.8(@rspack/core@2.1.7(@swc/helpers@0.5.23))(sass-embedded@1.100.0)(sass@1.100.0)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)):
     dependencies:
       neo-async: 2.6.2
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       sass: 1.100.0
       sass-embedded: 1.100.0
       webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.21))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.33.0)(postcss@8.5.21)
@@ -22609,7 +22609,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  ts-checker-rspack-plugin@1.5.2(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3):
+  ts-checker-rspack-plugin@1.5.2(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(tslib@2.8.1)(typescript@6.0.3):
     dependencies:
       '@rspack/lite-tapable': 1.1.2
       chokidar: 3.6.0
@@ -22617,7 +22617,7 @@ snapshots:
       picocolors: 1.1.1
       typescript: 6.0.3
     optionalDependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       '@typescript/native-preview': 7.0.0-dev.20260707.2
     transitivePeerDependencies:
       - tslib
@@ -22762,9 +22762,9 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
-  typia-rspack-plugin@3.0.1(@rspack/core@2.1.5(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3)):
+  typia-rspack-plugin@3.0.1(@rspack/core@2.1.7(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3)):
     dependencies:
-      '@rspack/core': 2.1.5(@swc/helpers@0.5.23)
+      '@rspack/core': 2.1.7(@swc/helpers@0.5.23)
       typescript: 6.0.3
       typia: 12.1.1(typescript@6.0.3)
 

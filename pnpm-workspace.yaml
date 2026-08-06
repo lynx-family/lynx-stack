@@ -127,8 +127,8 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.1.5"
-    "@rspack/core": "2.1.5"
+    "@rspack/cli": "2.1.7"
+    "@rspack/core": "2.1.7"
     "@rspack/dev-server": "2.1.0"
     "@rspack/test-tools": "2.1.3"
 
