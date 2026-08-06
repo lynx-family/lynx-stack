@@ -190,7 +190,7 @@ impl LynxElementData {
       .closure_identifier
       .entry(event_type)
       .or_default();
-    if !closures.iter().any(|existing| *existing == closure) {
+    if !closures.contains(&closure) {
       closures.push(closure);
     }
   }
