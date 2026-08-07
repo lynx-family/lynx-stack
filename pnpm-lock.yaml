@@ -1514,9 +1514,9 @@ importers:
 
   packages/rspeedy/create-rspeedy:
     dependencies:
-      create-rstack:
-        specifier: 2.1.3
-        version: 2.1.3
+      '@rstackjs/create-toolkit':
+        specifier: 2.1.4
+        version: 2.1.4
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:^
@@ -5697,6 +5697,10 @@ packages:
       '@rspress/core':
         optional: true
 
+  '@rstackjs/create-toolkit@2.1.4':
+    resolution: {integrity: sha512-kwPhfMdgWN7z/Op5UKMszhmZy7+hzqXeiQPli4uycYYTLxCVUGLlEW3etoGoZlrM2t5zLqXZQAgL60PTUR/ocw==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+
   '@rstest/adapter-rsbuild@0.11.3':
     resolution: {integrity: sha512-kVopE2qcDcKTZs+lNWk0pybj4t6p9jSi45sMJ3+iZhR+Utckt0dsKJktZ+pQsVDVJ7QoKEBG5UuSIQKKAOPMIw==}
     peerDependencies:
@@ -7395,10 +7399,6 @@ packages:
   cors@2.8.6:
     resolution: {integrity: sha512-tJtZBBHA6vjIAaF6EnIaq6laBBP9aq/Y3ouVJjEfoHbRBcHBAHYcMh/w8LDrk2PvIMMq8gmopa5D4V8RmbrxGw==}
     engines: {node: '>= 0.10'}
-
-  create-rstack@2.1.3:
-    resolution: {integrity: sha512-3n8JzuzbMYger7fnhIb8DDYs7b4lnNgLJm6kKve+qCKeqpCsTZaiZBQ3cYy7/FjWNtccbJ4XhfA/WNvzETD3vw==}
-    engines: {node: ^20.19.0 || >=22.12.0}
 
   crelt@1.0.6:
     resolution: {integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==}
@@ -16056,6 +16056,8 @@ snapshots:
     optionalDependencies:
       '@rspress/core': 2.0.18(@rspack/core@2.1.7(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
+  '@rstackjs/create-toolkit@2.1.4': {}
+
   '@rstest/adapter-rsbuild@0.11.3(@rsbuild/core@2.1.7(core-js@3.49.0))(@rstest/core@0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2)))':
     dependencies:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
@@ -17745,8 +17747,6 @@ snapshots:
     dependencies:
       object-assign: 4.1.1
       vary: 1.1.2
-
-  create-rstack@2.1.3: {}
 
   crelt@1.0.6: {}
 

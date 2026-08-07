@@ -7,8 +7,13 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { Argv } from 'create-rstack'
-import { checkCancel, copyFolder, create, select } from 'create-rstack'
+import type { Argv } from '@rstackjs/create-toolkit'
+import {
+  checkCancel,
+  copyFolder,
+  create,
+  select,
+} from '@rstackjs/create-toolkit'
 
 type LANG = 'js' | 'ts'
 
