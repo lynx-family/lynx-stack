@@ -990,6 +990,22 @@ describe('DEV_ONLY_addSnapshot', () => {
     `);
   });
 
+  it('DEV_ONLY_SetSnapshotEntryName is a no-op under FetchBundle', () => {
+    const uniqID = 'entry-name-fetcher-0';
+    snapshotCreatorMap[uniqID] = () => {};
+    const before = snapshotCreatorMap[uniqID];
+
+    vi.stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle');
+    snapshotPatchApply([102, uniqID, 'https://example.com/lazy-bundle.js']);
+    expect(snapshotCreatorMap[uniqID]).toBe(before);
+
+    // The QueryComponent protocol still rebinds the entry into the creator.
+    vi.stubGlobal('__LAZY_BUNDLE_FETCHER__', 'QueryComponent');
+    snapshotPatchApply([102, uniqID, 'https://example.com/lazy-bundle.js']);
+    expect(snapshotCreatorMap[uniqID]).not.toBe(before);
+    vi.unstubAllGlobals();
+  });
+
   it('with update', () => {
     const uniqID1 = 'with-update-0';
     // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`

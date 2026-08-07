@@ -532,10 +532,9 @@ where
     let template_uid = template_identity.template_id.clone();
 
     // External bundles have no `globDynamicComponentEntry` in scope; use the
-    // `__Card__` entry-name literal.
-    let entry_template_uid = if matches!(self.cfg.is_external_bundle, Some(true))
-      && !matches!(self.cfg.is_dynamic_component, Some(true))
-    {
+    // `__Card__` entry-name literal. This covers dynamic components too: the
+    // FetchBundle runtime never consumes a template's entry scope.
+    let entry_template_uid = if matches!(self.cfg.is_external_bundle, Some(true)) {
       quote!("`__Card__:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
     } else {
       quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))

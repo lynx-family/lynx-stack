@@ -5,9 +5,13 @@
 ```ts
 
 // @public
+export function deriveLynxHostId(uniqueName: string | undefined, runtime: string | Iterable<string> | undefined): string;
+
+// @public
 export const RuntimeGlobals: {
     readonly lynxAsyncChunkIds: "__webpack_require__.lynx_aci";
     readonly lynxAsyncChunkMode: "__webpack_require__.lynx_acm";
+    readonly lynxHostId: "__webpack_require__.lynx_hid";
     readonly lynxChunkEntries: "lynx.__chunk_entries__";
     readonly lynxProcessEvalResult: "globalThis.processEvalResult";
     readonly lynxProcessEvalResultByHost: "globalThis.processEvalResultByHost";

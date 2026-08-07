@@ -6,6 +6,10 @@
 // emitted bundle, where the test can grep for the resolved literal.
 globalThis.__lynx_fetcher_probe__ = __LAZY_BUNDLE_FETCHER__;
 
+// A dynamic import so the runtime chunk carries the process-eval-result
+// registration, whose host key the tests assert on.
+globalThis.__lynx_lazy_probe__ = () => import('./lazy.jsx');
+
 export default function App() {
   return null;
 }

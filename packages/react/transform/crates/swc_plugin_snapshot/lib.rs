@@ -1547,10 +1547,11 @@ where
     };
 
     // External bundles have no `globDynamicComponentEntry` in scope; use the
-    // `__Card__` entry-name literal.
-    let entry_name: Expr = if matches!(self.cfg.is_external_bundle, Some(true))
-      && !matches!(self.cfg.is_dynamic_component, Some(true))
-    {
+    // `__Card__` entry-name literal. This covers dynamic components too: a
+    // snapshot uid already embeds the module's filename and content hashes,
+    // so it needs no per-load entry prefix to stay unique across bundles,
+    // and the FetchBundle runtime never consumes a snapshot's entryName.
+    let entry_name: Expr = if matches!(self.cfg.is_external_bundle, Some(true)) {
       Expr::Lit(Lit::Str("__Card__".into()))
     } else {
       Expr::Ident("globDynamicComponentEntry".into())
@@ -1623,7 +1624,13 @@ where
     };
 
     let mut entry_snapshot_uid = quote!("$snapshot_uid" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
-    if matches!(self.cfg.is_dynamic_component, Some(true)) {
+    if matches!(self.cfg.is_dynamic_component, Some(true))
+      && !matches!(self.cfg.is_external_bundle, Some(true))
+    {
+      // The QueryComponent protocol scopes a dynamic component's snapshot
+      // uids by its load-time entry. Under FetchBundle (`is_external_bundle`)
+      // the uid stays bare, like a page's: its filename and content hashes
+      // already make it unique across bundles.
       entry_snapshot_uid = quote!("`${globDynamicComponentEntry}:${$snapshot_uid}`" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
     }
 

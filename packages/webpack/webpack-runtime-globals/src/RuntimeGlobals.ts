@@ -21,6 +21,15 @@ export const RuntimeGlobals = {
   lynxAsyncChunkMode: '__webpack_require__.lynx_acm',
 
   /**
+   * The compile-time host id of this runtime chunk's entry
+   * (`uniqueName#entryName`). Chunk loading passes it as the `host` of a
+   * nested lazy-bundle import so the main-thread prepare routes the chunk's
+   * eval result to `processEvalResultByHost[host]`, which the host's runtime
+   * registered under the same literal.
+   */
+  lynxHostId: '__webpack_require__.lynx_hid',
+
+  /**
    * A map from `chunk.id` to entryName of the chunk.
    */
   lynxChunkEntries: 'lynx.__chunk_entries__',

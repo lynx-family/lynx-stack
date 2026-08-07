@@ -37,11 +37,9 @@ export default function() {
                 // `async`.
                 $RuntimeGlobals_lynxAsyncChunkMode$
                   && $RuntimeGlobals_lynxAsyncChunkMode$[chunkId],
-                // The loading host's own entry, so the MT prepare routes this
+                // The compile-time host id, so the MT prepare routes this
                 // chunk's eval result to the host that owns its modules.
-                typeof globDynamicComponentEntry !== 'undefined'
-                  ? globDynamicComponentEntry
-                  : undefined,
+                $RuntimeGlobals_lynxHostId$,
               ).then((exports) => {
                 installChunk(exports);
                 return exports;

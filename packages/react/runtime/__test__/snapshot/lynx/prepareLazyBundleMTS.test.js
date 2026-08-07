@@ -27,9 +27,7 @@ describe('prepareLazyBundleMTS handler', () => {
 
     thenMock = vi.fn();
     fetchBundle = vi.fn(() => ({ then: thenMock }));
-    // The main-thread bundle is wrapped as `(globDynamicComponentEntry) => exports`;
-    // `loadScript` returns that function and the handler invokes it with the url.
-    loadScript = vi.fn(() => () => ({ chunk: 'x' }));
+    loadScript = vi.fn(() => ({ chunk: 'x' }));
     loadStyleSheet = vi.fn();
     adoptStyleSheet = vi.fn();
     processEvalResult = vi.fn();
@@ -38,7 +36,7 @@ describe('prepareLazyBundleMTS handler', () => {
       .stubGlobal('lynx', { fetchBundle, loadScript })
       .stubGlobal('__LoadStyleSheet', loadStyleSheet)
       .stubGlobal('__AdoptStyleSheet', adoptStyleSheet)
-      // Handlers are keyed by the loading host's entry, not a single global.
+      // Handlers are keyed by the loading host's compile-time host id.
       .stubGlobal('processEvalResultByHost', { [HOST]: processEvalResult });
 
     ({ injectPrepareLazyBundleMTS } = await import(
@@ -56,18 +54,14 @@ describe('prepareLazyBundleMTS handler', () => {
     return globalThis.rLynxPrepareLazyBundleMTS({ url, host });
   }
 
-  test('happy path: loadScript(main-thread) → evaluate(url) → host handler → CSS adopt', () => {
+  test('happy path: loadScript(main-thread) → host handler → CSS adopt', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
-    const evaluate = vi.fn(() => ({ chunk: 'x' }));
-    loadScript.mockReturnValueOnce(evaluate);
     loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
 
     invoke('foo');
 
     expect(fetchBundle).toHaveBeenCalledWith('foo', {});
     expect(loadScript).toHaveBeenCalledWith('main-thread', { bundleName: 'u' });
-    // The bundle is evaluated with its own url as `globDynamicComponentEntry`.
-    expect(evaluate).toHaveBeenCalledWith('foo');
     expect(processEvalResult).toHaveBeenCalledWith(expect.any(Function), 'foo');
     // The factory passed to the handler returns the loaded chunk.
     const factory = processEvalResult.mock.calls[0][0];
