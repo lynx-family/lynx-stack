@@ -99,30 +99,33 @@ export function selectMissingMTSDefines(
 export function renderMTSDefines(
   defines: readonly MTSDefine[],
 ): string {
-  const body = defines
+  return defines
     .map(({ kind, id, code }) => `// ${kind} ${id}\n{\n${code}\n}`)
     .join('\n');
-
-  return `var __initMTSDefines = function (ReactLynx) {
-  var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;
-  var require = function () { return ReactLynx; };
-${body}
-};
-`;
 }
 
 /**
  * The source of the module injected into a main-thread entry to register the
  * definitions its bundle dropped. It is a regular module (added through
- * `compilation.addInclude` as a \`data:\` URI), so importing the runtime here
- * keeps exactly what the definitions need alive — a bundle with nothing
- * missing gets no module and pays nothing.
+ * `compilation.addEntry` as a \`data:\` URI), so a bundle with nothing missing
+ * gets no module and pays nothing. The definitions reference the runtime
+ * through direct member accesses on the namespace import, which the bundler
+ * narrows to the members they use. The \`require\` fallback of a development
+ * creator would escape the namespace and defeat that narrowing, so it is only
+ * emitted for definitions that call it.
  */
 export function renderMTSDefinesModule(
   defines: readonly MTSDefine[],
 ): string {
-  return `import * as ReactLynx from '@lynx-js/react/internal';
-${renderMTSDefines(defines)}__initMTSDefines(ReactLynx);
+  const prelude = [`import * as ReactLynx from '@lynx-js/react/internal';`];
+  if (defines.some(({ code }) => /\bloadWorkletRuntime\b/.test(code))) {
+    prelude.push(`var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;`);
+  }
+  if (defines.some(({ code }) => /\brequire\(/.test(code))) {
+    prelude.push(`var require = function () { return ReactLynx; };`);
+  }
+  return `${prelude.join('\n')}
+${renderMTSDefines(defines)}
 `;
 }
 

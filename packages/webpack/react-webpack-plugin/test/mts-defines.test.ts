@@ -178,14 +178,35 @@ describe('collectLayerMTSDefines', () => {
 });
 
 describe('renderMTSDefinesModule', () => {
-  const code = renderMTSDefinesModule([snapshot('a', 'registerA;')]);
+  it('references the runtime through namespace member accesses', () => {
+    const code = renderMTSDefinesModule([
+      snapshot('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);'),
+    ]);
 
-  it('imports the runtime the definitions register with', () => {
     expect(code).toContain(
       'import * as ReactLynx from \'@lynx-js/react/internal\';',
     );
-    expect(code).toContain('registerA;');
-    expect(code).toContain('__initMTSDefines(ReactLynx);');
+    expect(code).toContain('ReactLynx.createSnapshot(ReactLynx.__pageId);');
+    expect(code).not.toContain('var require');
+    expect(code).not.toContain('loadWorkletRuntime');
+  });
+
+  it('binds the worklet runtime loader only for definitions that call it', () => {
+    const code = renderMTSDefinesModule([
+      { kind: 'worklet', id: 'w', code: 'loadWorkletRuntime();' },
+    ]);
+
+    expect(code).toContain(
+      'var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;',
+    );
+  });
+
+  it('emits the `require` fallback only for definitions that call it', () => {
+    const code = renderMTSDefinesModule([
+      snapshot('a', 'require("@lynx-js/react/internal").createSnapshot;'),
+    ]);
+
+    expect(code).toContain('var require = function () { return ReactLynx; };');
   });
 });
 
@@ -196,7 +217,6 @@ describe('renderMTSDefines', () => {
       { kind: 'worklet', id: 'b', code: 'const __workletRuntimeLoaded = 1;' },
     ]);
 
-    expect(code).toContain('var __initMTSDefines = function (');
     expect(code.match(/\{\nconst __workletRuntimeLoaded/g)).toHaveLength(2);
   });
 
@@ -264,7 +284,6 @@ describe('missing definitions injection', () => {
       'utf-8',
     );
 
-    expect(content).toContain('var __initMTSDefines = function (');
     expect(content).toContain('registerBackgroundOnly;');
   });
 
@@ -275,6 +294,6 @@ describe('missing definitions injection', () => {
       'utf-8',
     );
 
-    expect(content).not.toContain('__initMTSDefines');
+    expect(content).not.toContain('ReactLynx');
   });
 });
