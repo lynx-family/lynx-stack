@@ -1,5 +1,11 @@
 # @lynx-js/tailwind-preset
 
+## 0.5.1
+
+### Patch Changes
+
+- Add `focused`, `complete`, `filled`, and `dragging` to the built-in `uiVariants` states, and clarify that only the `ui` prefix is enabled by default. ([#3358](https://github.com/lynx-family/lynx-stack/pull/3358))
+
 ## 0.5.0
 
 ### Minor Changes

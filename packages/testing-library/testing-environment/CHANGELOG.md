@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.3.2
+
+### Patch Changes
+
+- Model the engine's real `ContextProxy` routing: each thread now owns its own `getCoreContext()`/`getJSContext()` proxy pair, and an event whose target equals the dispatching proxy's origin is delivered locally instead of crossing threads (matching `context_proxy.cc`). Previously both contexts shared one event bus, so wrong-direction dispatches (e.g. `lynx.getCoreContext().dispatchEvent(...)` from the main thread) still reached the other thread in tests while silently failing on real devices. ([#3351](https://github.com/lynx-family/lynx-stack/pull/3351))
+
 ## 0.3.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.16.3
+
+### Patch Changes
+
+- Replace the renamed `create-rstack` dependency with `@rstackjs/create-toolkit`. ([#3400](https://github.com/lynx-family/lynx-stack/pull/3400))
+
 ## 0.16.2
 
 ## 0.16.1

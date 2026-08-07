@@ -1,5 +1,18 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.15.0
+
+### Minor Changes
+
+- Flatten lazy bundle names into a single path segment, and shorten a name longer than 100 characters to its last directories plus a digest. ([#3362](https://github.com/lynx-family/lynx-stack/pull/3362))
+
+### Patch Changes
+
+- Replace every `[name]` in a custom `lazyBundleFilename`, not just the first one. ([#3361](https://github.com/lynx-family/lynx-stack/pull/3361))
+
+- Updated dependencies [[`fd1e300`](https://github.com/lynx-family/lynx-stack/commit/fd1e300fb6f94dc4336a4fd1999c244a2e64f3a3), [`5fbabb8`](https://github.com/lynx-family/lynx-stack/commit/5fbabb8fb06fd9a46d20348ea7ec8b1a9e6e1c85), [`cc5c714`](https://github.com/lynx-family/lynx-stack/commit/cc5c71453f12a3feb3f78b6067a049ef52b4fcd5)]:
+  - @lynx-js/web-core@0.24.0
+
 ## 0.14.1
 
 ### Patch Changes
