@@ -577,6 +577,71 @@ describe('generateHref', () => {
     });
   });
 
+  /**
+   * Native Windows paths are the one input class whose emitted href genuinely
+   * changed, and the differential suite above cannot catch it: that oracle is
+   * pinned to `path.posix` by design, so it agrees with the implementation on
+   * every platform. These cases therefore assert the new values *literally*,
+   * against a `path.win32` oracle that reproduces what the old implementation
+   * emitted when the build ran on Windows.
+   *
+   * The divergence is accepted, not a regression to fix: `\` is a legal
+   * character in a POSIX path, so a browser-safe helper cannot treat it as a
+   * separator without inventing platform detection. It is called out in the
+   * changeset, and it is why the change ships as a minor.
+   */
+  describe('native Windows paths (documented divergence)', () => {
+    const winOracle = (
+      projectRoot: string,
+      filename: string,
+      origin: string,
+    ) => {
+      const P = path.win32;
+      const abs = P.isAbsolute(filename)
+        ? filename
+        : P.join(projectRoot, filename);
+      const full = origin.startsWith('/')
+        ? P.join(projectRoot, origin)
+        : origin.startsWith('@')
+        ? origin
+        : P.resolve(abs, '..', origin);
+      let rel = P.relative(projectRoot, full);
+      if (full.startsWith('@')) return full.replaceAll(path.win32.sep, '/');
+      if (!rel.startsWith('.')) rel = P.join(P.sep, rel);
+      return rel.replaceAll(path.win32.sep, '/');
+    };
+
+    test.each([
+      ['./a.css', '/pages/a.css', '/a.css'],
+      ['../shared/b.css', '/shared/b.css', '../shared/b.css'],
+    ])(
+      'a backslash filename with %s changes from %s to %s',
+      (origin, onWindowsBefore, now) => {
+        // What the old implementation emitted on a Windows build host...
+        expect(winOracle('C:\\proj', 'pages\\index.css', origin)).toBe(
+          onWindowsBefore,
+        );
+        // ...versus what every platform emits now.
+        expect(generateHref('C:\\proj', 'pages\\index.css', origin)).toBe(now);
+      },
+    );
+
+    test('a drive letter is not a root under POSIX semantics', () => {
+      // `C:\x.css` is one relative path segment, not an absolute path, so it is
+      // resolved against `filename`'s directory rather than replacing it.
+      expect(generateHref('/', './index.css', 'C:\\x.css')).toBe('/C:/x.css');
+    });
+
+    test('POSIX callers are unaffected on every platform', () => {
+      // The shape every in-repo caller uses - `parse`'s defaults. Note `..` at
+      // the root is clamped, so this stays inside the project.
+      expect(generateHref('/', './index.css', './a.css')).toBe('/a.css');
+      expect(generateHref('/', './index.css', '../shared/b.css')).toBe(
+        '/shared/b.css',
+      );
+    });
+  });
+
   describe('integration through parse', () => {
     // `generateHref` has exactly one in-repo caller: `parse`, for
     // `ImportRule.href`. Pin that wiring so a signature-compatible but
