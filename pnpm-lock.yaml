@@ -7,8 +7,8 @@ settings:
 catalogs:
   adb:
     '@yume-chan/adb':
-      specifier: ^2.6.0
-      version: 2.6.0
+      specifier: ^2.6.2
+      version: 2.6.2
     '@yume-chan/adb-server-node-tcp':
       specifier: ^2.5.2
       version: 2.5.2
@@ -1986,7 +1986,7 @@ importers:
         version: 0.9.5
       '@yume-chan/adb':
         specifier: catalog:adb
-        version: 2.6.0
+        version: 2.6.2
       '@yume-chan/adb-server-node-tcp':
         specifier: catalog:adb
         version: 2.5.2
@@ -6797,8 +6797,8 @@ packages:
   '@yume-chan/adb-server-node-tcp@2.5.2':
     resolution: {integrity: sha512-ga9icFBRUk1n6lO+ymlj83qE+90kMLV8sQA3w9mZAisfdxxEEIq1cvXitFQJvDgL0NuFQruVI4JoZA/wrgpKOw==}
 
-  '@yume-chan/adb@2.6.0':
-    resolution: {integrity: sha512-1bM4/YwLUr7UHkvC3pe5fIPNNIgOQ97nUIvC4ooPZwRKG9pyHG39EihivZVmu3pm28XwHSGh5PC3sQi4ycoUXA==}
+  '@yume-chan/adb@2.6.2':
+    resolution: {integrity: sha512-CWxM8A9jAoHWBRG6w8/c+Mu42kHZDd1Nb3G0Ou/lOC2OWMoY/+FQbEA89ma8e/rzLJBfoZRhPfSkqb55I9vM0w==}
 
   '@yume-chan/async@4.1.3':
     resolution: {integrity: sha512-0vzhNJMkWUPyjKzUK4rqHEeCU6YQtF78RsB1kFRB6Y2BLupmEQNxcSb0mjKabPL9jZpCCiLa5KL8oTOJClUVaw==}
@@ -17168,12 +17168,12 @@ snapshots:
 
   '@yume-chan/adb-server-node-tcp@2.5.2':
     dependencies:
-      '@yume-chan/adb': 2.6.0
+      '@yume-chan/adb': 2.6.2
       '@yume-chan/async': 4.1.3
       '@yume-chan/stream-extra': 2.6.1
       '@yume-chan/struct': 2.3.2
 
-  '@yume-chan/adb@2.6.0':
+  '@yume-chan/adb@2.6.2':
     dependencies:
       '@yume-chan/async': 4.1.3
       '@yume-chan/event': 2.0.0
