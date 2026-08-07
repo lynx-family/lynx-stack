@@ -112,6 +112,11 @@ const config: UserConfigExport = defineConfig({
         'src/element-template/**/*.d.ts',
         'src/element-template/protocol/types.ts',
       ],
+      // This run only instruments `src/element-template`, so writing it to the
+      // default directory overwrites the report the snapshot run just left
+      // there and hides every other `src` file from the upload. Keep the two
+      // side by side instead — the collector picks up both.
+      reportsDirectory: path.join(__dirname, '../../coverage/element-template'),
       thresholds: {
         lines: 100,
         functions: 100,

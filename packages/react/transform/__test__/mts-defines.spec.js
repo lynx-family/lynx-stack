@@ -191,13 +191,97 @@ function f() {
     expect(result.code).toContain('new Foo()');
   });
 
-  it('fails the build while collecting, where the main thread has no binding for it', async () => {
+  it('rewrites references in a collected define to registry lookups', async () => {
     const result = await transformReactLynx(
       sharedSource,
       options('JS', { collectMTSDefines: true }),
     );
 
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors[0].text).toMatch(/runtime: 'shared'/);
+    expect(result.errors).toHaveLength(0);
+    expect(result.sharedImports).toHaveLength(1);
+    const [{ id, request }] = result.sharedImports;
+    expect(request).toBe('./foo.js');
+
+    const worklet = result.mtsDefines.find(({ kind }) => kind === 'worklet');
+    expect(worklet.code).toContain(
+      `var _$sharedModule = getSharedModule("${id}");`,
+    );
+    expect(worklet.code).toContain('new _$sharedModule.Foo()');
+    expect(worklet.code).not.toContain('this["_c"]');
+  });
+
+  it('caches each shared module once per worklet and maps every import form', async () => {
+    const result = await transformReactLynx(
+      `
+import Curve, * as NS from './physics.js' with { runtime: 'shared' };
+import { spring, damping as d } from './physics.js' with { runtime: 'shared' };
+
+function f(e) {
+  'main thread';
+  return Curve + NS.gravity + spring(e) + d + { spring };
+}
+`,
+      options('JS', { collectMTSDefines: true }),
+    );
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.sharedImports).toHaveLength(1);
+    const [{ id }] = result.sharedImports;
+
+    const worklet = result.mtsDefines.find(({ kind }) => kind === 'worklet');
+    const lookups = worklet.code.match(/getSharedModule\(/g);
+    expect(lookups).toHaveLength(1);
+    expect(worklet.code).toContain(`getSharedModule("${id}")`);
+    expect(worklet.code).toContain('_$sharedModule.default');
+    expect(worklet.code).toContain('_$sharedModule.gravity');
+    expect(worklet.code).toContain('_$sharedModule.spring(e)');
+    expect(worklet.code).toContain('_$sharedModule.damping');
+    expect(worklet.code).toContain('spring: _$sharedModule.spring');
+  });
+
+  it('reports only the shared imports a collected define references', async () => {
+    const result = await transformReactLynx(
+      `
+import { used } from './used.js' with { runtime: 'shared' };
+import { unused } from './unused.js' with { runtime: 'shared' };
+
+export function App() {
+  function onTap() {
+    'main thread';
+    used();
+  }
+  unused();
+  return <view main-thread:bindtap={onTap} />;
+}
+`,
+      options('JS', { collectMTSDefines: true }),
+    );
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.sharedImports).toHaveLength(1);
+    expect(result.sharedImports[0].request).toBe('./used.js');
+  });
+
+  it('keeps the emitted background code unchanged', async () => {
+    const withCollect = await transformReactLynx(
+      sharedSource,
+      options('JS', { collectMTSDefines: true }),
+    );
+    const withoutCollect = await transformReactLynx(sharedSource, options('JS'));
+
+    expect(withCollect.code).toBe(withoutCollect.code);
+  });
+
+  it('derives the same registry id for the same importer and request', async () => {
+    const first = await transformReactLynx(
+      sharedSource,
+      options('JS', { collectMTSDefines: true }),
+    );
+    const second = await transformReactLynx(
+      sharedSource,
+      options('JS', { collectMTSDefines: true }),
+    );
+
+    expect(first.sharedImports).toStrictEqual(second.sharedImports);
   });
 });

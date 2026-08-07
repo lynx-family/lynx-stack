@@ -1586,9 +1586,13 @@ test.describe('reactlynx3 tests', () => {
       await page.evaluate(() => {
         document.querySelector('lynx-view')!.remove();
       });
-      await wait(50);
-      expect(message).toContain('fin');
-      expect(currentWorkerCount - page.workers().length).toStrictEqual(1);
+      // Disposal has to travel from the element removal through worker
+      // teardown and the background's unmount before the cleanup logs, so wait
+      // for the effects rather than for a fixed 50ms that a loaded runner
+      // routinely overshoots.
+      await expect.poll(() => message).toContain('fin');
+      await expect.poll(() => currentWorkerCount - page.workers().length)
+        .toStrictEqual(1);
     });
 
     test('api-error', async ({ page }, { title }) => {
@@ -5555,6 +5559,58 @@ test.describe('reactlynx3 tests', () => {
       async ({ page }, { title }) => {
         await goto(page, title);
         await diffScreenShot(page, title, 'index');
+      },
+    );
+  });
+
+  test.describe('mts-rendering-disabled', () => {
+    test(
+      'mts-rendering-disabled-shared-module',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        const target = page.locator('#target');
+        const observer = page.locator('#observer');
+
+        // Under the mode the elements arrive with the background's hydrate
+        // patch, which also wires the worklet handlers. Waiting on the initial
+        // style rather than a fixed delay keeps a cold load from racing the tap.
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        );
+
+        // The main thread compiles no business code under the mode, so the
+        // worklet reaches the shared module through the runtime registry. Tapping
+        // runs `next()` on it: pink -> green.
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+
+        // A second worklet reading `current()` sees the same live instance.
+        await observer.click();
+        await expect(observer).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+
+        // The instance stays live across invocations: green -> blue.
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+        await observer.click();
+        await expect(observer).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      },
+    );
+
+    test(
+      'mts-rendering-disabled-shared-isolation',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        const target = page.locator('#target');
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        );
+
+        // The background bumped its own instance three times on mount. The
+        // main thread holds an independent instance, so its first bump reads 1.
+        await target.click();
+        await expect(target).toHaveAttribute('data-count', '1');
       },
     );
   });
