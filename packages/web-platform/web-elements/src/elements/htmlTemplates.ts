@@ -62,6 +62,14 @@ export const templateScrollView = `<style>
     part="bot-fade-mask"
   ></div>`;
 export const templateXAudioTT = `<audio id="audio"></audio>`;
+export const templateXVideo = `<style>
+  #video {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+<video id="video" part="video" playsinline webkit-playsinline></video>`;
 const XSSDetector = /<\s*script/;
 export const templateXImage = (attributes: { src?: string }) => {
   const { src } = attributes;

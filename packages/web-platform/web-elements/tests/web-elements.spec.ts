@@ -4838,4 +4838,343 @@ test.describe('web-elements test suite', () => {
       ).toBe(0.5);
     });
   });
+
+  test.describe('x-video', () => {
+    test('attribute-basic', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      // Wait for microtask-batched attribute reactives to flush onto the
+      // inner <video> element.
+      await wait(50);
+
+      const state = await page.evaluate(() => {
+        const inner = document.querySelector('x-video')?.shadowRoot
+          ?.querySelector('video') as HTMLVideoElement | null;
+        if (!inner) return null;
+        return {
+          src: inner.getAttribute('src'),
+          loop: inner.hasAttribute('loop'),
+          muted: inner.hasAttribute('muted') || inner.muted,
+          volume: inner.volume,
+          playbackRate: inner.playbackRate,
+          objectFit: inner.style.objectFit,
+        };
+      });
+      expect(state).toEqual({
+        src: 'https://example.com/video.mp4',
+        loop: true,
+        muted: true,
+        volume: 0.5,
+        playbackRate: 1.5,
+        objectFit: 'cover',
+      });
+    });
+
+    test('method-seek', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+
+      await page.locator('#trigger').click();
+      const result = await page.evaluate(() =>
+        (window as unknown as { __seekResult: unknown }).__seekResult
+      );
+      expect(result).toEqual({ success: true });
+      expect(
+        await page.evaluate(() =>
+          document.querySelector('x-video')?.shadowRoot
+            ?.querySelector('video')?.currentTime
+        ),
+      ).toBe(1.5);
+    });
+
+    test('attribute-mode', async ({ page }, { titlePath }) => {
+      // `mode` is a UIMethod execution mode on Lynx native platforms; on web
+      // it should be tolerated (not crash, methods still work) even though it
+      // has no functional effect.
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      await wait(50);
+      expect(
+        await page.evaluate(() =>
+          document.querySelector('x-video')?.getAttribute('mode')
+        ),
+      ).toBe('direct');
+      expect(
+        await page.evaluate(() =>
+          document.querySelector('x-video')?.getAttribute('timeupdate-interval')
+        ),
+      ).toBe('0.5');
+    });
+
+    test.describe('events-all', () => {
+      const goEventsAll = async (page: Page) => {
+        await page.goto('/tests/fixtures/x-video/events-all.html', {
+          waitUntil: 'load',
+        });
+        await page.waitForFunction(() =>
+          (window as unknown as { __ready: boolean }).__ready === true
+        );
+      };
+
+      const drainEvents = (page: Page) =>
+        page.evaluate(() => {
+          const w = window as unknown as { __events: unknown[] };
+          const events = [...w.__events];
+          w.__events.length = 0;
+          return events;
+        });
+
+      test('method play returns success and dispatches `playing`', async ({ page }) => {
+        await goEventsAll(page);
+        const result = await page.evaluate(() => {
+          const w = window as unknown as {
+            __call: (n: string) => unknown;
+            __dispatch: (t: string) => void;
+          };
+          const r = w.__call('play');
+          w.__dispatch('playing');
+          return r;
+        });
+        expect(result).toEqual({ success: true });
+        const events = await drainEvents(page);
+        expect(events).toEqual([{ type: 'playing', detail: {} }]);
+      });
+
+      test('method pause returns success and dispatches `paused`', async ({ page }) => {
+        await goEventsAll(page);
+        const result = await page.evaluate(() => {
+          const w = window as unknown as {
+            __call: (n: string) => unknown;
+            __dispatch: (t: string) => void;
+          };
+          const r = w.__call('pause');
+          w.__dispatch('pause');
+          return r;
+        });
+        expect(result).toEqual({ success: true });
+        const events = await drainEvents(page);
+        expect(events).toEqual([{ type: 'paused', detail: {} }]);
+      });
+
+      test(
+        'method stop returns success, dispatches `stopped`, suppresses `paused`',
+        async ({ page }) => {
+          await goEventsAll(page);
+          const result = await page.evaluate(() => {
+            const w = window as unknown as {
+              __call: (n: string) => unknown;
+              __dispatch: (t: string) => void;
+              __setCurrentTime: (t: number) => void;
+              __inner: HTMLVideoElement;
+              __paused: boolean;
+            };
+            // Start "playing" so stop() will actually pause and suppress the
+            // synthetic pause event.
+            w.__paused = false;
+            w.__setCurrentTime(3);
+            const r = w.__call('stop');
+            // Simulate the inner pause event that stop() would have triggered
+            // on the real media element.
+            w.__dispatch('pause');
+            return { r, currentTime: w.__inner.currentTime };
+          });
+          expect(result.r).toEqual({ success: true });
+          expect(result.currentTime).toBe(0);
+          const events = await drainEvents(page);
+          expect(events).toEqual([{ type: 'stopped', detail: {} }]);
+        },
+      );
+
+      test('method seek with valid position returns success', async ({ page }) => {
+        await goEventsAll(page);
+        const result = await page.evaluate(() => {
+          const w = window as unknown as {
+            __call: (n: string, ...args: unknown[]) => unknown;
+            __inner: HTMLVideoElement;
+          };
+          const r = w.__call('seek', { position: 2.5 });
+          return { r, currentTime: w.__inner.currentTime };
+        });
+        expect(result.r).toEqual({ success: true });
+        expect(result.currentTime).toBe(2.5);
+      });
+
+      test('method seek with invalid position returns error', async ({ page }) => {
+        await goEventsAll(page);
+        const r1 = await page.evaluate(() => {
+          const w = window as unknown as {
+            __call: (n: string, ...args: unknown[]) => unknown;
+          };
+          return w.__call('seek', { position: -1 });
+        });
+        expect(r1).toMatchObject({
+          success: false,
+          errorCode: 1,
+          msg: 'invalid position',
+          errorMsg: 'invalid position',
+        });
+
+        const r2 = await page.evaluate(() => {
+          const w = window as unknown as {
+            __call: (n: string, ...args: unknown[]) => unknown;
+          };
+          return w.__call('seek', {});
+        });
+        expect(r2).toMatchObject({ success: false, errorCode: 1 });
+      });
+
+      test('event firstframe carries duration (only once)', async ({ page }) => {
+        await goEventsAll(page);
+        const events = await page.evaluate(() => {
+          const w = window as unknown as {
+            __dispatch: (t: string) => void;
+            __duration: number;
+            __events: unknown[];
+          };
+          w.__duration = 12.5;
+          w.__dispatch('loadeddata');
+          w.__dispatch('loadeddata');
+          return w.__events;
+        });
+        expect(events).toEqual([
+          { type: 'firstframe', detail: { duration: 12.5 } },
+        ]);
+      });
+
+      test('event timeupdate is throttled by `timeupdate-interval`', async ({ page }) => {
+        await goEventsAll(page);
+        // events-all.html sets timeupdate-interval=0.1, so two dispatches
+        // 150ms apart yield two events; two dispatches back-to-back yield one.
+        const burst = await page.evaluate(() => {
+          const w = window as unknown as {
+            __dispatch: (t: string) => void;
+            __setCurrentTime: (n: number) => void;
+            __events: unknown[];
+          };
+          w.__events.length = 0;
+          w.__setCurrentTime(1);
+          w.__dispatch('timeupdate');
+          w.__setCurrentTime(1.05);
+          w.__dispatch('timeupdate');
+          return w.__events.length;
+        });
+        expect(burst).toBe(1);
+
+        await page.waitForTimeout(150);
+        const second = await page.evaluate(() => {
+          const w = window as unknown as {
+            __dispatch: (t: string) => void;
+            __setCurrentTime: (n: number) => void;
+            __events: { detail: { current: number; duration: number } }[];
+          };
+          w.__setCurrentTime(2.5);
+          w.__dispatch('timeupdate');
+          return w.__events;
+        });
+        expect(second.length).toBe(2);
+        const last = second[1]!;
+        expect(last.detail.current).toBe(2.5);
+        expect(last.detail.duration).toBe(10);
+      });
+
+      test('event ended fires for terminal end', async ({ page }) => {
+        await goEventsAll(page);
+        const events = await page.evaluate(() => {
+          const w = window as unknown as {
+            __dispatch: (t: string) => void;
+            __events: unknown[];
+          };
+          w.__events.length = 0;
+          w.__dispatch('ended');
+          return w.__events;
+        });
+        expect(events).toEqual([{ type: 'ended', detail: {} }]);
+      });
+
+      test(
+        'event looped fires only when `loop` is set and seek wraps from end',
+        async ({ page }) => {
+          await goEventsAll(page);
+          // Without `loop`, a seeked event shouldn't produce `looped`.
+          const withoutLoop = await page.evaluate(() => {
+            const w = window as unknown as {
+              __dispatch: (t: string) => void;
+              __setCurrentTime: (n: number) => void;
+              __events: unknown[];
+            };
+            w.__events.length = 0;
+            w.__setCurrentTime(9.9);
+            w.__dispatch('timeupdate');
+            w.__events.length = 0;
+            w.__setCurrentTime(0);
+            w.__dispatch('seeked');
+            return [...w.__events];
+          });
+          expect(withoutLoop).toEqual([]);
+
+          // With `loop`, a seek-to-zero after near-end produces `looped`.
+          const withLoop = await page.evaluate(() => {
+            const w = window as unknown as {
+              __xVideo: HTMLElement;
+              __dispatch: (t: string) => void;
+              __setCurrentTime: (n: number) => void;
+              __events: unknown[];
+            };
+            w.__xVideo.setAttribute('loop', '');
+            w.__events.length = 0;
+            // Prime "last time" to near end via a timeupdate.
+            w.__setCurrentTime(9.95);
+            w.__dispatch('timeupdate');
+            w.__events.length = 0;
+            w.__setCurrentTime(0);
+            w.__dispatch('seeked');
+            return [...w.__events];
+          });
+          expect(withLoop).toEqual([{ type: 'looped', detail: {} }]);
+        },
+      );
+
+      test('event error carries errorCode and errorMsg', async ({ page }) => {
+        await goEventsAll(page);
+        const events = await page.evaluate(() => {
+          const w = window as unknown as {
+            __dispatch: (t: string) => void;
+            __error: { code: number; message: string } | null;
+            __events: unknown[];
+          };
+          w.__error = {
+            code: 3,
+            message: 'decode failure',
+          };
+          w.__events.length = 0;
+          w.__dispatch('error');
+          return w.__events;
+        });
+        expect(events).toEqual([{
+          type: 'error',
+          detail: { errorCode: 3, errorMsg: 'decode failure' },
+        }]);
+      });
+
+      test('event buffering carries buffered end position', async ({ page }) => {
+        await goEventsAll(page);
+        const events = await page.evaluate(() => {
+          const w = window as unknown as {
+            __dispatch: (t: string) => void;
+            __bufferedEnd: number;
+            __events: unknown[];
+          };
+          w.__bufferedEnd = 7.25;
+          w.__events.length = 0;
+          w.__dispatch('progress');
+          w.__dispatch('waiting');
+          return w.__events;
+        });
+        expect(events).toEqual([
+          { type: 'buffering', detail: { buffering: 7.25 } },
+          { type: 'buffering', detail: { buffering: 7.25 } },
+        ]);
+      });
+    });
+  });
 });

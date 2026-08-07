@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>x-video method-seek</title>
+    <link href="/main.css" rel="stylesheet" />
+    <style>
+    x-text {
+      width: 200rpx;
+      height: 60rpx;
+      background-color: red;
+      color: #fff;
+      margin-top: 30rpx;
+    }
+    </style>
+    <script type="module">
+    window.__seekResult = null;
+      document.addEventListener('click', () => {
+        window.__seekResult = document
+          .querySelector('x-video')
+          .seek({ position: 1.5 });
+      });
+    </script>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page column">
+      <x-video
+        id="video"
+        src="data:video/mp4;base64,AAAA"
+      ></x-video>
+      <x-text id="trigger">seek</x-text>
+    </x-view>
+  </body>
+</html>

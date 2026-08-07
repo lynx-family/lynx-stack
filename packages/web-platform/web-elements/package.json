@@ -39,6 +39,11 @@
       "types": "./dist/elements/XAudioTT/index.d.ts",
       "default": "./dist/elements/XAudioTT/index.js"
     },
+    "./XVideo": {
+      "@lynx-js/source-field": "./src/elements/XVideo/index.ts",
+      "types": "./dist/elements/XVideo/index.d.ts",
+      "default": "./dist/elements/XVideo/index.js"
+    },
     "./XCanvas": {
       "@lynx-js/source-field": "./src/elements/XCanvas/index.ts",
       "types": "./dist/elements/XCanvas/index.d.ts",
