@@ -9,6 +9,7 @@ packages:
   - packages/mcp-servers/*
   - packages/repl
   - packages/react
+  - packages/react-signals
   - packages/react/refresh
   - packages/react/runtime
   - packages/react/testing-library
