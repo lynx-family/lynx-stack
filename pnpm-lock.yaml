@@ -949,8 +949,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@lynx-js/luna-styles':
-        specifier: 0.2.0
-        version: 0.2.0
+        specifier: 0.2.1
+        version: 0.2.1
       '@lynx-js/lynx-core':
         specifier: 0.1.4
         version: 0.1.4
@@ -4223,8 +4223,8 @@ packages:
   '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c':
     resolution: {integrity: sha512-h2pRrt5oLK9LT1NkjyprtzJij/AdZGvv3CN6B5edL4chixqvITbxoCSdYy667Hl6+uKOBuxmCNZoDddgRfcLnw==}
 
-  '@lynx-js/luna-styles@0.2.0':
-    resolution: {integrity: sha512-TMeXda7uZ9OAT/LsV/u+OA0j6IntVCxvA7/b59EopauIZb7sztFjNssHyKgSog0SdTifG5U5MDrWGTuI04AOzw==}
+  '@lynx-js/luna-styles@0.2.1':
+    resolution: {integrity: sha512-m5vFRVn3RpFqPN8JAhUSYAmXOf/ZPaOkVrk26XlKjhvICWKXebbQ/WDSW6psq9UgdhPTjNw16tzdjIoJU7F8jg==}
 
   '@lynx-js/lynx-core@0.1.4':
     resolution: {integrity: sha512-JxpAoDhpR8dJ6PFR2KOsFQyWt6SKiU+Bp701/miy5exqZHd+SlCd3UCfMtJy3nRlz3gy1O1xsObK7+x+jArdAQ==}
@@ -14029,7 +14029,7 @@ snapshots:
 
   '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c': {}
 
-  '@lynx-js/luna-styles@0.2.0': {}
+  '@lynx-js/luna-styles@0.2.1': {}
 
   '@lynx-js/lynx-core@0.1.4': {}
 

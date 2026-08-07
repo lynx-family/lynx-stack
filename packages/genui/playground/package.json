@@ -16,7 +16,7 @@
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",
     "@lynx-js/genui": "workspace:*",
-    "@lynx-js/luna-styles": "0.2.0",
+    "@lynx-js/luna-styles": "0.2.1",
     "@lynx-js/lynx-core": "0.1.4",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
