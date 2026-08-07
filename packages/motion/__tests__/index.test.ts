@@ -19,6 +19,8 @@ describe('Main package exports', () => {
     expect(module.clamp).toBeDefined();
     expect(module.transformValue).toBeDefined();
     expect(module.styleEffect).toBeDefined();
+    expect(module.motion).toBeDefined();
+    expect(module.motion.view).toBeDefined();
   });
 
   test('should export hooks', async () => {

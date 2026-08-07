@@ -4,6 +4,7 @@ import Basic from './Basic/index.js';
 import BasicPercent from './BasicPercent/index.js';
 import BasicSelector from './BasicSelector/index.js';
 import ColorInterception from './ColorInterception/index.js';
+import Declarative from './Declarative/Example.js';
 import iOSSlider from './iOSSlider/index.js';
 import Mini from './Mini/index.js';
 import MotionValue from './MotionValue/index.js';
@@ -50,6 +51,10 @@ const CASES: CaseItem[] = [
   {
     name: 'MotionValue',
     comp: MotionValue,
+  },
+  {
+    name: 'Declarative',
+    comp: Declarative,
   },
   {
     name: 'iOSSlider',

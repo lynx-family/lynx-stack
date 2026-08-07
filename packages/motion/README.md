@@ -10,6 +10,33 @@ npm install @lynx-js/motion
 
 ## Usage
 
+### Declarative animation
+
+Use the built-in Motion components to animate Lynx elements from props. Motion
+applies `initial` during the first render and animates whenever `animate`
+changes.
+
+```tsx
+import { motion, useMotionValue } from '@lynx-js/motion';
+
+export function Card({ selected }: { selected: boolean }) {
+  const scale = useMotionValue(1);
+
+  return (
+    <motion.view
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: selected ? 100 : 0 }}
+      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+      style={{ scale }}
+    />
+  );
+}
+```
+
+`motion.view`, `motion.text`, and `motion.image` are included. Use
+`motion.create(Component)` for components that forward `style`, host props, and
+`main-thread:ref` to a Lynx element.
+
 ### Basic Animation
 
 Currently, `@lynx-js/motion` supports imperative animations using the `animate` function on the main thread.
