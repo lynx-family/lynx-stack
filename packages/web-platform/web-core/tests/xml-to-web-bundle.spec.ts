@@ -213,6 +213,12 @@ describe('XML markup document to web bundle', () => {
       config,
     );
     expect(css).toContain('color:red');
+    // The stylesheet has to land under css id 0, the card's own sheet. Any other
+    // id makes the decoder scope every selector with `:where([l-css-id="N"])`,
+    // which never matches the card's elements - the rules would decode fine and
+    // still apply to nothing.
+    expect(css).not.toContain('l-css-id');
+    expect(css).toContain('.a:not([l-e-name])');
   });
 
   test('omits the sections an XML document cannot fill', () => {
@@ -226,6 +232,48 @@ describe('XML markup document to web bundle', () => {
       readJSONSection(sections.get(TemplateSectionLabel.CustomSections)!),
     ).toStrictEqual({});
     expect(sections.has(TemplateSectionLabel.ElementTemplates)).toBe(false);
+  });
+
+  /**
+   * Proves the framing assertions above are load-bearing.
+   *
+   * `readBundle` is the whole basis for claiming the bytes are a valid bundle, so
+   * if it accepted a corrupted one the round-trip tests would be vacuous. These
+   * corrupt a known-good bundle in the three ways the decoder itself rejects.
+   */
+  describe('the bundle reader rejects what the decoder rejects', () => {
+    function goodBundle() {
+      return build(xml({ style: '.a{color:red}' })).buffer;
+    }
+
+    test('rejects a wrong magic header', () => {
+      const buffer = goodBundle();
+      // The decoder throws `Invalid Magic Header` on exactly this.
+      buffer[0] = buffer[0]! ^ 0xff;
+      expect(() => readBundle(buffer)).toThrow();
+    });
+
+    test('rejects a version the decoder would refuse', () => {
+      const buffer = goodBundle();
+      new DataView(buffer.buffer, buffer.byteOffset).setUint32(8, 2, true);
+      expect(() => readBundle(buffer)).toThrow();
+    });
+
+    test('rejects a truncated bundle', () => {
+      const buffer = goodBundle();
+      // Losing the tail makes the last section's declared length overrun, which
+      // is the `Unexpected EOF reading section content` case.
+      expect(() => readBundle(buffer.subarray(0, buffer.byteLength - 4)))
+        .toThrow();
+    });
+
+    test('rejects a bundle with a lying section length', () => {
+      const buffer = goodBundle();
+      const view = new DataView(buffer.buffer, buffer.byteOffset);
+      // The first section's length, at magic(8) + version(4) + label(4).
+      view.setUint32(16, view.getUint32(16, true) + 1, true);
+      expect(() => readBundle(buffer)).toThrow();
+    });
   });
 
   test('reports a malformed document instead of throwing', () => {
