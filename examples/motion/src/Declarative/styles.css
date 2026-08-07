@@ -1,0 +1,26 @@
+.declarative-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  overflow: hidden;
+}
+
+.declarative-box {
+  width: 120px;
+  height: 120px;
+  border-radius: 24px;
+  background-color: #8df0cc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.declarative-button {
+  border-radius: 16px;
+  padding: 12px 20px;
+  background-color: #222;
+  color: white;
+}
