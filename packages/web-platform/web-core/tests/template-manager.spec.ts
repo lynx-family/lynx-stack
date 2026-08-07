@@ -751,7 +751,7 @@ describe('Template Manager', () => {
       expect(templateManager.getBundle(url)?.styleSheet).toBeDefined();
     });
 
-    test('rejects an unparseable markup card instead of hanging', async () => {
+    test('rejects an unparsable markup card instead of hanging', async () => {
       const url = 'http://example.com/card-broken.xml';
       serveText('<lynx>never closed');
 
