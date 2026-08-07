@@ -19,10 +19,9 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 });
 
 import { loadStyleFromJSON } from './cssLoader.js';
+import { createLepusCodeBlob } from './createLepusCodeBlob.js';
+import { getCSSScopeEntry } from './getCSSScopeEntry.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
-
-const MTS_CODE_WRAPPER_PREFIX =
-  '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
 
 const HEARTBREAK_INTERVAL_MS = 1000;
 let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
@@ -127,6 +126,24 @@ function scheduleHeartbreak() {
     postHeartbreak();
   }, HEARTBREAK_INTERVAL_MS);
   unrefTimer(heartbreakTimer);
+}
+
+function mergeConfigWithRuntimeFallback(
+  config: Partial<PageConfig>,
+  overrideConfig?: Partial<PageConfig>,
+): Partial<PageConfig> {
+  if (!overrideConfig) {
+    return config;
+  }
+
+  const merged = { ...config, ...overrideConfig };
+  if (config.isExternalBundle !== undefined) {
+    merged.isExternalBundle = config.isExternalBundle;
+    if (config.isLazy !== undefined) {
+      merged.isLazy = config.isLazy;
+    }
+  }
+  return merged;
 }
 
 self.onmessage = async (
@@ -270,9 +287,10 @@ async function handleStream(
 
     switch (label) {
       case TemplateSectionLabel.Configurations: {
-        config = overrideConfig
-          ? { ...decodeJSONMap<string>(content), ...overrideConfig }
-          : decodeJSONMap<string>(content);
+        config = mergeConfigWithRuntimeFallback(
+          decodeJSONMap<string>(content),
+          overrideConfig,
+        );
         postMessage(
           { type: 'section', label, url, data: config } as MainMessage,
         );
@@ -282,7 +300,7 @@ async function handleStream(
         await wasmModuleLoadedPromise;
         const buffer = wasmInstance.decode_style_info(
           content,
-          config['isLazy'] === 'true' ? url : undefined,
+          getCSSScopeEntry(config, url),
           config['enableCSSSelector'] === 'true',
           transformVW,
           transformVH,
@@ -305,29 +323,15 @@ async function handleStream(
       case TemplateSectionLabel.LepusCode: {
         const codeMap = decodeBinaryMap(content);
         const isLazy = config['isLazy'] === 'true';
-        // An external bundle's mts chunk is CommonJS-style (it writes to
-        // `exports`), so give it a `module.exports`/`exports` env. A card's own
-        // lepus chunk is either side-effecting (non-lazy) or an expression
-        // assigned to `module.exports` (lazy component root).
-        const prefix = config['isExternalBundle'] === 'true'
-          ? 'var exports=(module.exports={}); '
-          : isLazy
-          ? 'module.exports='
-          : '';
+        const isExternalBundle = config['isExternalBundle'] === 'true';
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const blob = new Blob([
-            MTS_CODE_WRAPPER_PREFIX,
-            prefix,
-            code as unknown as BlobPart,
-            ' \n })()\n//# sourceURL=',
-            url,
-            '/',
-            key,
-            '\n',
-          ], {
-            type: 'text/javascript; charset=utf-8',
-          });
+          const blob = createLepusCodeBlob(
+            code,
+            `${url}/${key}`,
+            isLazy,
+            isExternalBundle,
+          );
           blobMap[key] = URL.createObjectURL(blob);
         }
         postMessage(
@@ -367,7 +371,7 @@ async function handleStream(
           blobMap[key] = URL.createObjectURL(blob);
         }
         postMessage(
-          { type: 'section', label, url, data: blobMap } as MainMessage,
+          { type: 'section', label, url, data: blobMap, config } as MainMessage,
         );
         break;
       }
@@ -400,9 +404,7 @@ async function handleJSON(
     config.isLazy = (appType === 'card') ? 'false' : 'true';
   }
 
-  if (overrideConfig) {
-    config = { ...config, ...overrideConfig };
-  }
+  config = mergeConfigWithRuntimeFallback(config, overrideConfig);
   config = Object.fromEntries(
     Object.entries(config).map(([key, value]) => [key, value.toString()]),
   );
@@ -422,7 +424,7 @@ async function handleJSON(
       transformVW,
       transformVH,
       transformREM,
-      config['isLazy'] === 'true' ? url : undefined,
+      getCSSScopeEntry(config, url),
     );
     postMessage(
       {
@@ -445,13 +447,12 @@ async function handleJSON(
     const blobMap: Record<string, string> = {};
     for (const [key, code] of Object.entries(json.lepusCode)) {
       if (typeof code !== 'string') continue;
-      const prefix = `${MTS_CODE_WRAPPER_PREFIX}${
-        isLazy ? 'module.exports=' : ''
-      } `;
-      const suffix = ` \n })()\n//# sourceURL=${url}/${key}\n`;
-      const blob = new Blob([prefix, code, suffix], {
-        type: 'text/javascript; charset=utf-8',
-      });
+      const blob = createLepusCodeBlob(
+        code,
+        `${url}/${key}`,
+        isLazy,
+        config['isExternalBundle'] === 'true',
+      );
       blobMap[key] = URL.createObjectURL(blob);
     }
     postMessage({
@@ -478,6 +479,7 @@ async function handleJSON(
       label: TemplateSectionLabel.Manifest,
       url,
       data: blobMap,
+      config,
     } as MainMessage);
   }
 
