@@ -564,6 +564,123 @@ describe('XML markup document to web bundle', () => {
         { name: '@container', reason: 'unsupported' },
       ]);
     });
+
+    test('says so on the console, which is the only place a build looks', () => {
+      // The design's whole justification for dropping rather than failing is
+      // that the loss is *reported*. `discarded` alone does not achieve that:
+      // the common caller is a build script that never reads the return value,
+      // so the console message is the actual delivery mechanism and has to be
+      // asserted rather than assumed.
+      const source = xml({
+        style: '@media screen{.a{color:red}}'
+          + '@property --x{syntax:"<length>";inherits:false}'
+          + '@import url("theme.css");',
+      });
+
+      const warnings: string[] = [];
+      const originalWarn = console.warn;
+      console.warn = (...args: unknown[]) => {
+        warnings.push(args.map(String).join(' '));
+      };
+      let discarded;
+      try {
+        discarded = build(source).discarded;
+      } finally {
+        console.warn = originalWarn;
+      }
+
+      // One line per distinct at-rule, and each names its own reason - a single
+      // generic "some CSS was dropped" would not tell an author what to change.
+      expect(discarded).toStrictEqual([
+        { name: '@media', reason: 'unrepresentable' },
+        { name: '@property', reason: 'unsupported' },
+        { name: '@import', reason: 'unresolvable' },
+      ]);
+      expect(warnings).toHaveLength(3);
+      expect(warnings.every((line) => line.startsWith('[lynx-web] '))).toBe(
+        true,
+      );
+      expect(warnings.find((line) => line.includes('@media'))).toContain(
+        'no representation in the Lynx style format',
+      );
+      expect(warnings.find((line) => line.includes('@property'))).toContain(
+        'not recognised by the Lynx CSS parser',
+      );
+      expect(warnings.find((line) => line.includes('@import'))).toContain(
+        'owns a single stylesheet',
+      );
+    });
+
+    test('stays silent when the card uses nothing unsupported', () => {
+      // The counterpart to the test above: a warning that fires for a clean
+      // card would train authors to ignore it.
+      const warnings: string[] = [];
+      const originalWarn = console.warn;
+      console.warn = (...args: unknown[]) => {
+        warnings.push(args.map(String).join(' '));
+      };
+      try {
+        build(xml({ style: '.a{color:red}@keyframes k{from{opacity:0}}' }));
+      } finally {
+        console.warn = originalWarn;
+      }
+      expect(warnings).toStrictEqual([]);
+    });
+  });
+
+  describe('the conversion\'s own output contract', () => {
+    test('tells an empty stylesheet apart from an absent one', () => {
+      // `<style></style>` is not the same document as no `<style>` at all, and
+      // the difference has to survive into `styleInfo`: the card's css id must
+      // exist with no rules rather than not exist. Testing for truthiness
+      // instead of `undefined` anywhere on this path would collapse the two.
+      const empty = xmlToTasmJSON(xml({ style: '' }));
+      const absent = xmlToTasmJSON(xml());
+      if (!empty.success || !absent.success) {
+        throw new Error('unreachable');
+      }
+      expect(empty.tasmJSON.styleInfo).toStrictEqual({ '0': [] });
+      expect(absent.tasmJSON.styleInfo).toStrictEqual({});
+
+      // Both still frame into a bundle the reader accepts.
+      for (const source of [xml({ style: '' }), xml()]) {
+        expect(() => readBundle(build(source).buffer)).not.toThrow();
+      }
+    });
+
+    test('hands out a fresh pageConfig for every document', () => {
+      // `markupPageConfig` is module state. Handing out the object itself would
+      // let one card's caller mutate the config every later card is built with,
+      // which is a corruption no test of a single build would notice.
+      const first = xmlToTasmJSON(xml());
+      if (!first.success) {
+        throw new Error('unreachable');
+      }
+      expect(first.tasmJSON.pageConfig['defaultDisplayLinear']).toBe('false');
+      first.tasmJSON.pageConfig['defaultDisplayLinear'] = 'true';
+
+      const second = xmlToTasmJSON(xml());
+      if (!second.success) {
+        throw new Error('unreachable');
+      }
+      expect(second.tasmJSON.pageConfig['defaultDisplayLinear']).toBe('false');
+    });
+
+    test('passes the parser\'s own message through unchanged', () => {
+      // The conversion must not restate the failure in its own words, or the
+      // offset and wording stop matching the reference implementation.
+      const source = '<lynx version="5.4.2"><view></view></lynx>';
+      const result = xmlToTasmJSON(source);
+      expect(result.success).toBe(false);
+      if (result.success) {
+        throw new Error('unreachable');
+      }
+      expect(result.message).toBe(
+        `invalid TemplateBundle XML at offset ${
+          source.indexOf('<view>')
+        }: unsupported top-level tag '<view>'`,
+      );
+    });
   });
 
   describe('the real world fixture', () => {
