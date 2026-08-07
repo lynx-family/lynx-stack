@@ -36,6 +36,16 @@ const sources: Record<string, string> = {
   keyframes:
     '@keyframes spin{from{transform:rotate(0);--v:1}to{transform:rotate(360deg)}}',
   fontFace: '@font-face{font-family:X;src:url(a.woff2)}',
+  // A css var inside `@font-face` and inside `@keyframes`. Without these two,
+  // the `restoreCSSVarValue` call in those branches is indistinguishable from a
+  // bare `decl.value`: no other fixture carries a var there, so a mutation that
+  // drops the restoration survives the entire set. Measured, not assumed -
+  // replacing `restoreCSSVarValue(decl)` with `decl.value` in the `FontFaceRule`
+  // branch passed all 9 original fixtures and is caught only once `fontFaceVar`
+  // is present.
+  fontFaceVar:
+    '@font-face{font-family:X;src:url(a.woff2);font-weight:{{--fw}}}',
+  keyframesVar: '@keyframes k{from{color:{{--c}}}to{color:blue}}',
   lynxProps: '.a{display:linear;linear-direction:column;flex:1}',
   // Group at-rules: `RuleType` has no variant for them, so the encode path has
   // always dropped them. Pinned so that the drop stays intentional.
@@ -66,6 +76,10 @@ describe('encode style path', () => {
         'b9e454bb3bd6536d942bba30535e66d9aa31937bec7c3c737e95d4213228b434',
       fontFace:
         'fea9aa27bae5623785ea94421aefb66bd702100a8776afe613244c5236dda896',
+      fontFaceVar:
+        'b9affb67c4444921a59aabc8f6ce3ff93311f38b899bc28b0d2ed3c1d2377bd3',
+      keyframesVar:
+        '5fb65a1a9a913d2d9b78df8c297207b3c7385e7eeb4d3266171c4272fa72c00c',
       lynxProps:
         'a4a5369454a5272dd176930dafbdd559822b274f984bca1e99db59b6afe86a57',
       groupAtRules:
