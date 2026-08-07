@@ -2130,8 +2130,8 @@ importers:
         specifier: ^24.13.3
         version: 24.13.3
       binaryen:
-        specifier: ^125.0.0
-        version: 125.0.0
+        specifier: ^131.0.0
+        version: 131.0.0
       eslint-plugin-compat:
         specifier: ^6.2.1
         version: 6.2.1(eslint@9.39.5(jiti@2.6.1)(supports-color@10.2.2))
@@ -7071,8 +7071,8 @@ packages:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
 
-  binaryen@125.0.0:
-    resolution: {integrity: sha512-X7CUM9ZnwL/Ow++JH5AJKiemc82J7JyeryuPvXQdXBLcL/rqrC5KMUB1mHiORSolietH9sotvaOZlr6HSwPAlw==}
+  binaryen@131.0.0:
+    resolution: {integrity: sha512-anblNezmBjfWGfOMvZq1j5MwhVnMs+gezqbDz4FBFwx6twDwOsQSed+E8i4UKmLYXb3r+f3HWmz7Lx5sx5qOyQ==}
     hasBin: true
 
   bl@4.1.0:
@@ -17455,7 +17455,7 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
-  binaryen@125.0.0: {}
+  binaryen@131.0.0: {}
 
   bl@4.1.0:
     dependencies:
