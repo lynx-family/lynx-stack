@@ -34,10 +34,6 @@ export async function applyDefaultPlugins(
       ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
     ),
 
-    import('./dev.plugin.js').then(({ pluginDev }) =>
-      pluginDev(config.dev, config.server)
-    ),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
     ),

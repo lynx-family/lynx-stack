@@ -72,6 +72,8 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "assetPrefix": undefined,
+          "client": undefined,
           "hmr": true,
           "lazyCompilation": false,
           "liveReload": true,
@@ -777,7 +779,7 @@ describe('Config - toRsBuildConfig', () => {
   describe('Server', () => {
     test('transform default server.host', () => {
       const rsbuildConfig = toRsbuildConfig({})
-      expect(rsbuildConfig.server?.host).toBe('0.0.0.0')
+      expect(rsbuildConfig.server?.host).toBeUndefined()
     })
 
     test('transform server.host', () => {
