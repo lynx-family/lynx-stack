@@ -33,7 +33,7 @@ import {
   diagnoseDiscardedAtRules,
   encodeLynxXML,
   xmlToTasmJSON,
-} from '../ts/encode/xmlToTasmJSON.js';
+} from '../ts/encode/index.js';
 
 const MagicHeader0 = 0x41524453;
 const MagicHeader1 = 0x464F5257;
