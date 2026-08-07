@@ -11,5 +11,7 @@
 !lepus/*
 !lib/**
 !lib/*
+!mts-rendering-disabled/*
+!mts-rendering-disabled/**
 !worklet-runtime/*
 !worklet-runtime/**

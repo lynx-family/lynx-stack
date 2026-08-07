@@ -29,6 +29,7 @@ export interface ReactLoaderOptions {
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
+    experimental_enableMTSRendering?: boolean | undefined;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions | undefined;
     experimental_useElementTemplate?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
@@ -49,6 +50,7 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
+    experimental_enableMTSRendering?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
@@ -58,6 +60,7 @@ export interface ReactWebpackPluginOptions {
     globalPropsMode?: 'reactive' | 'event';
     lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
+    mainThreadEntries?: Record<string, string>;
     profile?: boolean | undefined;
     workletRuntimePath: string;
 }

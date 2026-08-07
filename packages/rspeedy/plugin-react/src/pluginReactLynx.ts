@@ -273,6 +273,14 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
+   * Whether business code is compiled for the main thread and rendered there.
+   *
+   * @defaultValue `true`
+   * @experimental
+   */
+  experimental_enableMTSRendering?: boolean
+
+  /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
    *
    * @defaultValue `true`
@@ -403,6 +411,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
+    experimental_enableMTSRendering: true,
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
@@ -425,6 +434,15 @@ export function pluginReactLynx(
     targetSdkVersion: engineVersion,
     engineVersion,
   })
+
+  if (
+    resolvedOptions.experimental_enableMTSRendering === false
+    && resolvedOptions.experimental_useElementTemplate
+  ) {
+    throw new Error(
+      '`experimental_enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
+    )
+  }
 
   return [
     pluginReactAlias({
