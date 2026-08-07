@@ -15,7 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.90",
     "@aws-sdk/client-s3": "^3.1093.0",
-    "@hono/node-server": "^2.0.11",
+    "@hono/node-server": "^2.1.0",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@mastra/core": "1.52.0",
