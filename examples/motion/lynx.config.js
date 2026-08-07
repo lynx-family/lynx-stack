@@ -11,9 +11,11 @@ export default defineConfig({
   },
   source: {
     entry: {
+      declarative: './src/Declarative/index.tsx',
       main: './src/index.tsx',
       mini: './src/Mini/index.tsx',
     },
+    preEntry: './src/polyfill.ts',
   },
   plugins: [
     pluginReactLynx(),
