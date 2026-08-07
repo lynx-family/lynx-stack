@@ -42,6 +42,18 @@ export const EngineMessageEventType = /*#__PURE__*/ {
 
 export const uniqueIdSymbol = /*#__PURE__*/ Symbol('uniqueId');
 
+/**
+ * The wrapper every main-thread script chunk is evaluated inside.
+ *
+ * Shared rather than duplicated because two loaders build these blobs now - the
+ * decode worker, for bundle and JSON artifacts, and the markup path on the main
+ * thread. A difference between the two would surface as a main-thread script
+ * seeing a different global environment depending only on how its card was
+ * authored, which is exactly the kind of divergence that is hard to trace back.
+ */
+export const MTS_CODE_WRAPPER_PREFIX =
+  '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
+
 export const systemInfoBase = /*#__PURE__*/ {
   platform: 'web',
   lynxSdkVersion: '3.0',

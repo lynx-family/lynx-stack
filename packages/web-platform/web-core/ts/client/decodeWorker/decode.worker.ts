@@ -2,6 +2,7 @@ import {
   TemplateSectionLabel,
   MagicHeader0,
   MagicHeader1,
+  MTS_CODE_WRAPPER_PREFIX,
 } from '../../constants.js';
 import type {
   HeartbreakMessage,
@@ -20,9 +21,6 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
-
-const MTS_CODE_WRAPPER_PREFIX =
-  '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
 
 const HEARTBREAK_INTERVAL_MS = 1000;
 let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
