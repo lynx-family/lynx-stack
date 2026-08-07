@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -32,6 +33,28 @@ afterEach(() => {
 });
 
 describe('create-lynx-library', () => {
+  it('ships native template version sources as runtime dependencies', () => {
+    const packageJson = JSON.parse(
+      fs.readFileSync(
+        path.join(
+          path.dirname(fileURLToPath(import.meta.url)),
+          '..',
+          'package.json',
+        ),
+        'utf8',
+      ),
+    ) as PackageJson;
+
+    expect(packageJson.dependencies?.['@lynx-js/autolink-codegen']).toBe(
+      'workspace:^',
+    );
+    expect(packageJson.dependencies?.['@lynx-js/weak-node-api']).toBe(
+      '^0.0.9',
+    );
+    expect(packageJson.devDependencies?.['@lynx-js/weak-node-api'])
+      .toBeUndefined();
+  });
+
   it('parses non-interactive library feature flags', () => {
     expect(parseLibraryFeatures('native-module,element,service')).toEqual([
       'native-module',
@@ -514,12 +537,12 @@ describe('create-lynx-library', () => {
       'lynx_primjs_napi_adapter',
     );
     expect(read(dir, 'ios/napi-library.podspec')).toContain(
-      's.dependency \'LynxWeakNodeAPI\'',
+      's.dependency \'LynxWeakNodeAPI/core\'',
     );
     expect(read(dir, 'ios/napi-library.podspec')).toContain(
       '${PODS_ROOT}/LynxWeakNodeAPI/packages/weak-node-api/headers',
     );
-    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+    expect(read(dir, 'ios/napi-library.podspec')).not.toContain(
       '${PODS_ROOT}/PrimJS/src/napi',
     );
     expect(read(dir, 'ios/napi-library.podspec')).toContain(
@@ -527,6 +550,9 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'ios/napi-library.podspec')).toContain(
       'LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+      'LYNX_LIBRARY_MANUAL_NAPI_REGISTRATION=1',
     );
     expect(read(dir, 'ios/napi-library.podspec')).not.toContain(
       'USE_WEAK_SUFFIX_NAPI',
@@ -690,6 +716,9 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1',
+    );
+    expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toMatch(
+      /"\$\{LYNX_WEAK_NODE_API_HEADERS_DIR\}"\s+"\$\{LYNX_EXTENSION_HEADERS_DIR\}\/include"/,
     );
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET',
