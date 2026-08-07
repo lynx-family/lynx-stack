@@ -37,7 +37,8 @@
   },
   "dependencies": {
     "@clack/prompts": "1.7.0",
-    "@lynx-js/autolink-codegen": "workspace:^"
+    "@lynx-js/autolink-codegen": "workspace:^",
+    "@lynx-js/weak-node-api": "^0.0.9"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:^",
