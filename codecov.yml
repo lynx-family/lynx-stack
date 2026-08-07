@@ -26,13 +26,16 @@ coverage:
 
 ignore:
   - ".github/**"
+  - "benchmark/**"
   - "codecov.yml"
   - "packages/lynx/engine-bridge/tools/runtime_build.rs"
   - "packages/genui/**"
+  - "packages/preact-runtime/**"
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
   - "**/rstest.config.ts"
   - "**/__test__/**/fixtures/**"
+  - "**/vitest.config.ts"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"
