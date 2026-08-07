@@ -2,40 +2,19 @@ import * as CSS from '@lynx-js/css-serializer';
 import {
   RawStyleInfo,
   Rule,
-  Selector,
   RulePrelude,
+  Selector,
   // @ts-ignore
 } from '../../binary/encode/encode.js';
 // @ts-ignore
 export * from '../../binary/encode/encode.js';
-
-function restoreCSSVarPlaceholders(
-  value: string,
-  defaultValueMap?: Record<string, string>,
-): string {
-  return value.replaceAll(/\{\{(--[^}]+)\}\}/g, (_, varName: string) => {
-    const fallback = defaultValueMap?.[varName];
-    return fallback
-      ? `var(${varName}, ${
-        restoreCSSVarPlaceholders(fallback, defaultValueMap)
-      })`
-      : `var(${varName})`;
-  });
-}
-
-function restoreCSSVarValue(decl: CSS.Declaration): string {
-  const isCSSVarDecl = 'type' in decl && decl.type === 'css_var';
-
-  return restoreCSSVarPlaceholders(
-    decl.value,
-    isCSSVarDecl ? decl.defaultValueMap : undefined,
-  );
-}
+import { pushStyleNodes } from '../common/css/buildRawStyleInfo.js';
 
 export function encodeCSS(
   cssMap: Record<string, CSS.LynxStyleNode[]>,
 ): Uint8Array {
   const rawStyleInfo = new RawStyleInfo();
+  const wasm = { Rule, RulePrelude, Selector };
 
   for (const [cssId, nodes] of Object.entries(cssMap)) {
     const parsedCssId = Number(cssId);
@@ -45,127 +24,16 @@ export function encodeCSS(
       );
     }
 
-    for (const node of nodes) {
-      if (node.type === 'ImportRule') {
-        const href = node.href.startsWith('/') ? node.href.slice(1) : node.href;
-        const importCssId = Number(href);
-        if (isNaN(importCssId)) {
-          throw new Error(
-            `Invalid importCssId: ${node.href}. importCssId should be a valid number string.`,
-          );
-        } else {
-          rawStyleInfo.append_import(parsedCssId, importCssId);
-        }
-      } else if (node.type === 'KeyframesRule') {
-        const rule = new Rule('KeyframesRule');
-
-        const keyframeNamePrelude = new RulePrelude();
-        const keyFrameNameSelector = new Selector();
-        const keyFrameName = node.name.value;
-        keyFrameNameSelector.push_one_selector_section(
-          'UnknownText',
-          keyFrameName,
+    pushStyleNodes(rawStyleInfo, wasm, parsedCssId, nodes, {
+      // `@media` / `@supports` / `@layer` have no counterpart in the binary
+      // format and have always been skipped here.
+      onGroupAtRule: () => {},
+      onNonNumericImport: (node) => {
+        throw new Error(
+          `Invalid importCssId: ${node.href}. importCssId should be a valid number string.`,
         );
-        keyframeNamePrelude.push_selector(keyFrameNameSelector);
-        rule.set_prelude(keyframeNamePrelude);
-
-        for (const keyframesStyle of node.styles) {
-          const keyFrameChildrenRule = new Rule('StyleRule');
-          const prelude = new RulePrelude();
-
-          const selector = new Selector();
-          selector.push_one_selector_section(
-            'UnknownText',
-            keyframesStyle.keyText.value,
-          );
-          prelude.push_selector(selector);
-
-          keyFrameChildrenRule.set_prelude(prelude);
-
-          for (
-            const [key, value] of Object.entries(keyframesStyle.variables ?? {})
-          ) {
-            keyFrameChildrenRule.push_declaration(key, value);
-          }
-
-          for (const decl of keyframesStyle.style) {
-            keyFrameChildrenRule.push_declaration(
-              decl.name,
-              restoreCSSVarValue(decl),
-            );
-          }
-          rule.push_rule_children(keyFrameChildrenRule);
-        }
-        rawStyleInfo.push_rule(parsedCssId, rule);
-      } else if (node.type === 'FontFaceRule') {
-        const rule = new Rule('FontFaceRule');
-        for (const decl of node.style) {
-          rule.push_declaration(decl.name, restoreCSSVarValue(decl));
-        }
-        rawStyleInfo.push_rule(parsedCssId, rule);
-      } else if (node.type === 'StyleRule') {
-        const rule = new Rule('StyleRule');
-
-        const prelude = new RulePrelude();
-
-        // Parse selectors
-        const ast = CSS.csstree.parse(
-          `${node.selectorText.value}{ --mocked-declaration:1;}`,
-        ) as CSS.csstree.StyleSheet;
-
-        const selectorList = (ast.children.first as CSS.csstree.Rule)
-          .prelude as CSS.csstree.SelectorList;
-
-        for (
-          const selectorNode of selectorList.children
-            .toArray() as CSS.csstree.Selector[]
-        ) {
-          const selector = new Selector();
-          for (const child of selectorNode.children.toArray()) {
-            if (child.type === 'AttributeSelector') {
-              selector.push_one_selector_section(
-                child.type,
-                CSS.csstree.generate(child),
-              );
-              continue;
-            }
-            if (child.type === 'PseudoClassSelector') {
-              selector.push_one_selector_section(
-                child.type,
-                CSS.csstree.generate(child).slice(1),
-              );
-              continue;
-            }
-            // @ts-expect-error
-            if (!child.name) {
-              throw new Error(
-                `Selector section of type ${child.type} is missing a name/value.`,
-              );
-            }
-            selector.push_one_selector_section(
-              child.type,
-              // @ts-expect-error
-              child.name as string,
-            );
-          }
-          prelude.push_selector(selector);
-        }
-
-        rule.set_prelude(prelude);
-
-        // Declarations
-        for (const decl of node.style) {
-          rule.push_declaration(decl.name, restoreCSSVarValue(decl));
-        }
-
-        // Variables
-        for (const [name, value] of Object.entries(node.variables)) {
-          rule.push_declaration(name, value);
-        }
-
-        rawStyleInfo.push_rule(parsedCssId, rule);
-      }
-    }
+      },
+    });
   }
 
   return rawStyleInfo.encode();
