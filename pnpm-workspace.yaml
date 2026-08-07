@@ -47,10 +47,11 @@ minimumReleaseAgeExclude:
   - "@lynx-js/*"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"
-  # First-party Rspack/Rsbuild toolchain — trusted, upgraded deliberately.
+  # First-party Rstack toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
   - "@rstest/*"
+  - "@rstackjs/create-toolkit"
   # Renovate security update: turbo@2.9.14
   - turbo@2.9.14
   # Renovate security update: dompurify@3.4.0
