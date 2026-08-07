@@ -116,6 +116,10 @@ export function createElementAPI(
   if (styleInfo) {
     const resource = new StyleSheetResource(styleInfo, undefined);
     wasmContext.push_style_sheet(resource);
+    // `push_style_sheet` takes the resource by reference and clones it into the
+    // context's own map, so the wasm allocation behind this handle is ours to
+    // release. Without this it leaks for the lifetime of the wasm instance.
+    resource.free();
   }
 
   let pageElementId: number | undefined;
