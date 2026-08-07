@@ -39,8 +39,8 @@ markup card's `<style>`:
   `@namespace` are not recognised by the Lynx CSS parser and are dropped the same
   way, along with anything inside them.
 - `@import url("...")` does not resolve. A markup card owns a single stylesheet and
-  has nothing to link to, so it is dropped rather than aborting the build. The
-  numeric form a build step emits is unaffected.
+  has nothing to link to, so it is dropped rather than aborting the build. `@import`
+  itself is supported - the numeric form a build step emits is unaffected.
 - `@font-face` and `@keyframes` **nested inside** one of the above are dropped with
   their enclosing block, even though both are supported at the top level.
 

@@ -458,7 +458,7 @@ describe('XML markup document to web bundle', () => {
       const { buffer, discarded } = build(source);
       // Reported, so the author is not left wondering where the import went.
       expect(discarded).toStrictEqual([
-        { name: '@import', reason: 'unrepresentable' },
+        { name: '@import', reason: 'unresolvable' },
       ]);
       const { sections } = readBundle(buffer);
       const config = readJSONSection(

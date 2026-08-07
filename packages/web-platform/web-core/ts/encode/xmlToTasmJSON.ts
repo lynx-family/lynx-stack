@@ -105,8 +105,10 @@ export interface DiscardedAtRule {
    * `unrepresentable` - Lynx's style format has no rule kind for it.
    * `unsupported` - the CSS parser has no case for it, so it never even reached
    * this module. Its contents are gone with it.
+   * `unresolvable` - the construct exists in the format but this document cannot
+   * express it, which currently means only `@import` with a URL.
    */
-  reason: 'unrepresentable' | 'unsupported';
+  reason: 'unrepresentable' | 'unsupported' | 'unresolvable';
 }
 
 /**
@@ -259,7 +261,7 @@ export function xmlToTasmJSON(source: string): XMLToTasmJSONResult {
       // Only detectable from the parsed node: whether an `@import` is
       // representable depends on its resolved href, which the source scan in
       // `diagnoseDiscardedAtRules` deliberately does not try to reproduce.
-      discarded.push({ name: '@import', reason: 'unrepresentable' });
+      discarded.push({ name: '@import', reason: 'unresolvable' });
     }
   }
 
@@ -312,8 +314,10 @@ export function encodeLynxXML(
   for (const { name, reason } of result.discarded) {
     console.warn(
       reason === 'unrepresentable'
-        ? `[lynx-web] ${name} has no representation in the Lynx style format and was dropped from the bundle. It is not supported on any Lynx platform.`
-        : `[lynx-web] ${name} is not supported by the Lynx CSS parser and was dropped from the bundle, along with any rules inside it.`,
+        ? `[lynx-web] ${name} has no representation in the Lynx style format and was dropped from the bundle, along with the rules inside it. It is not supported on any Lynx platform.`
+        : reason === 'unsupported'
+        ? `[lynx-web] ${name} is not recognised by the Lynx CSS parser and was dropped from the bundle, along with the rules inside it.`
+        : `[lynx-web] ${name} with a URL cannot be resolved for a markup card, which owns a single stylesheet, and was dropped from the bundle.`,
     );
   }
 
