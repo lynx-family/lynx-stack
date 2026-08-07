@@ -4,7 +4,7 @@
   },
   "devDependencies": {
     "@rstest/core": "0.11.5",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "jsdom": "^27.4.0"
   }
 }
