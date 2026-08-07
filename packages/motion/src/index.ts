@@ -18,5 +18,18 @@ export {
 
 export { useMotionValueRef } from './hooks/useMotionValueRef.js';
 export { useMotionValue } from './hooks/useMotionValue.js';
+export { motion } from './declarative/motion.js';
 
 export type { MotionValue } from 'motion-dom';
+export type {
+  MotionComponentProps,
+  MotionFactory,
+  MotionImageProps,
+  MotionProps,
+  MotionStyle,
+  MotionStyleValue,
+  MotionTarget,
+  MotionTextProps,
+  MotionTransition,
+  MotionViewProps,
+} from './declarative/types.js';
