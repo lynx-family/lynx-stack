@@ -33,6 +33,9 @@ ignore:
   - "rstest.config.ts"
   - "**/rstest.config.ts"
   - "**/__test__/**/fixtures/**"
+  # Expected output of the Rust `swc` transform tests, regenerated with
+  # `UPDATE=1 cargo test`. They are `.js` files but never executed.
+  - "**/__swc_snapshots__/**"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"

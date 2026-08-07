@@ -79,6 +79,11 @@ impl ExtractingIdentsCollector {
     self.idents_to_extract.take()
   }
 
+  /// The identifiers captured into the worklet closure, without consuming them.
+  pub fn idents(&self) -> &[Ident] {
+    &self.idents_to_extract
+  }
+
   pub fn take_this_expr(&mut self) -> Box<Expr> {
     self.this_expr_to_extract.take()
   }
