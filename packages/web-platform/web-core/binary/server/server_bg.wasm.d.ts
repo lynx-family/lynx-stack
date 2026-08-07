@@ -45,6 +45,7 @@ export const rule_set_prelude: (a: number, b: number) => void;
 export const ruleprelude_new: () => number;
 export const ruleprelude_push_selector: (a: number, b: number) => void;
 export const selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+export const stylesheetresource_fromRawStyleInfo: (a: number, b: any, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number];
 export const stylesheetresource_new: (a: any, b: any) => [number, number, number];
 export const selector_new: () => number;
 export const __wbindgen_malloc: (a: number, b: number) => number;

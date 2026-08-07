@@ -160,6 +160,40 @@ export class Selector {
 export class StyleSheetResource {
     free(): void;
     [Symbol.dispose](): void;
+    /**
+     * Builds a resource straight from a [`RawStyleInfo`], with no rkyv step.
+     *
+     * The bundle path pays for two rkyv passes over the style data: the decode
+     * worker serialises the [`DecodedStyleData`] it just produced
+     * (`encode_legacy_json_generated_raw_style_info`) only so that the bytes can
+     * cross into the main thread, which immediately deserialises them again in
+     * [`StyleSheetResource::new`]. Neither pass carries information - they exist
+     * solely because the two halves live in different wasm instances.
+     *
+     * A caller already running on the main thread, in the same instance that will
+     * own the resource, has no such boundary to cross. It can hand the
+     * `RawStyleInfo` over directly and skip both passes. That is what this entry
+     * is for: the buildless markup path builds its `RawStyleInfo` on the main
+     * thread and never produces bundle bytes at all.
+     *
+     * Equivalence with the bundle path is structural rather than asserted: both
+     * run the same [`StyleInfoDecoder`] over the same input and then the same
+     * [`Self::from_decoded_style_data`]. The only difference is whether the
+     * `DecodedStyleData` in between is round-tripped through rkyv or handed over
+     * in memory.
+     *
+     * Deliberately a new entry point rather than a change to
+     * `encode_legacy_json_generated_raw_style_info`, which every ReactLynx card's
+     * JSON artifact goes through and whose behaviour must not move.
+     */
+    static fromRawStyleInfo(raw_style_info: RawStyleInfo, _document: any, config_enable_css_selector: boolean, entry_name: string | null | undefined, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): StyleSheetResource;
+    /**
+     * Builds a resource from an rkyv-encoded [`DecodedStyleData`].
+     *
+     * This is the bundle path's entry point: the decode worker produces those
+     * bytes and they cross `postMessage` to get here, because a wasm object
+     * cannot be structured-cloned.
+     */
     constructor(buffer: Uint8Array, _document: any);
 }
 
@@ -248,6 +282,7 @@ export interface InitOutput {
     readonly set_inline_styles_in_key_value_vec: (a: any, b: number, c: number, d: number, e: number, f: number) => void;
     readonly set_inline_styles_in_str: (a: any, b: number, c: number, d: number, e: number, f: number) => number;
     readonly set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
+    readonly stylesheetresource_fromRawStyleInfo: (a: number, b: any, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number];
     readonly stylesheetresource_new: (a: any, b: any) => [number, number, number];
     readonly selector_new: () => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
