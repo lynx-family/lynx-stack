@@ -663,4 +663,107 @@ describe('Template Manager', () => {
     expect(instance1.onPageConfigReady).toHaveBeenCalled();
     expect(instance2.onPageConfigReady).toHaveBeenCalled();
   });
+  /**
+   * The markup path, end to end through the worker sniff.
+   *
+   * Nothing is decoded in the worker for a markup card: it recognises the source
+   * and hands it back, and the main thread converts it in a lazily loaded chunk.
+   * The point of testing it here rather than only against `buildMarkupTemplate`
+   * is the completion handshake - the worker withholds `done` and the main thread
+   * has to resolve the load itself, so a mistake there hangs `fetchBundle`
+   * forever rather than failing an assertion.
+   */
+  describe('markup cards', () => {
+    const markupSource = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<!DOCTYPE lynx>',
+      '<lynx version="5.4.2">',
+      '<style><![CDATA[.a{color:red;display:linear}]]></style>',
+      '<script main-thread="true"><![CDATA[globalThis.__mts = 1;]]></script>',
+      '<script background="true"><![CDATA[globalThis.__bts = 1;]]></script>',
+      '</lynx>',
+    ].join('\n');
+
+    function serveText(text: string) {
+      const bytes = new TextEncoder().encode(text);
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(bytes);
+          controller.close();
+        },
+      });
+      (globalThis.fetch as any).mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        body: stream,
+      });
+    }
+
+    test('loads a markup card and resolves the load', async () => {
+      const url = 'http://example.com/card.xml';
+      serveText(markupSource);
+
+      await templateManager.fetchBundle(
+        url,
+        Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
+        false,
+      );
+
+      const bundle = templateManager.getBundle(url);
+      expect(bundle).toBeDefined();
+      // The engine hard-codes a markup bundle's config, so these are the values
+      // a native XML bundle would carry too.
+      expect(bundle!.config).toMatchObject({
+        cardType: 'react',
+        isLazy: 'false',
+        enableCSSSelector: 'true',
+      });
+      expect(bundle!.styleSheet).toBeDefined();
+      expect(Object.keys(bundle!.lepusCode ?? {})).toStrictEqual(['root']);
+      expect(Object.keys(bundle!.backgroundCode ?? {})).toStrictEqual([
+        '/app-service.js',
+      ]);
+
+      // Same callbacks, same order, as a bundle card.
+      expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalled();
+      expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(url);
+      expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
+        url,
+        false,
+      );
+      expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(url);
+    });
+
+    test('tolerates a BOM and leading blank lines', async () => {
+      const url = 'http://example.com/card-bom.xml';
+      serveText('\ufeff\n  ' + markupSource);
+
+      await templateManager.fetchBundle(
+        url,
+        Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
+        false,
+      );
+      expect(templateManager.getBundle(url)?.styleSheet).toBeDefined();
+    });
+
+    test('rejects an unparseable markup card instead of hanging', async () => {
+      const url = 'http://example.com/card-broken.xml';
+      serveText('<lynx>never closed');
+
+      await expect(
+        templateManager.fetchBundle(
+          url,
+          Promise.resolve(mockLynxViewInstance),
+          false,
+          false,
+          false,
+        ),
+      ).rejects.toThrow();
+    });
+  });
 });
