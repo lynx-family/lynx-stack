@@ -17,5 +17,6 @@ export {
 } from './animation/index.js';
 
 export { useMotionValueRef } from './hooks/useMotionValueRef.js';
+export { useMotionValue } from './hooks/useMotionValue.js';
 
 export type { MotionValue } from 'motion-dom';

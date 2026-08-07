@@ -4,19 +4,19 @@
 
 import { isMtsEnabled } from '../functionality.js';
 
-export type workletRefInitValuePatch = [id: number, value: unknown][];
+export type workletRefInitValuePatch = ([id: number, value: unknown] | [id: number, value: unknown, type: string])[];
 
 let initValuePatch: workletRefInitValuePatch = [];
 
 /**
  * @internal
  */
-export function addWorkletRefInitValue(id: number, value: unknown): void {
+export function addWorkletRefInitValue(id: number, value: unknown, type?: string): void {
   if (!isMtsEnabled()) {
     return;
   }
 
-  initValuePatch.push([id, value]);
+  initValuePatch.push(type === undefined ? [id, value] : [id, value, type]);
 }
 
 /**
