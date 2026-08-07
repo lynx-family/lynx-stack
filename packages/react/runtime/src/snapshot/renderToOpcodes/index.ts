@@ -36,6 +36,13 @@ const EMPTY_ARR = [];
 const isArray = /* @__PURE__ */ Array.isArray;
 const assign = /* @__PURE__ */ Object.assign;
 
+// No options-hook consumer does anything for element (string-typed) vnodes in
+// production without devtools, so their dispatch can be skipped entirely.
+/* v8 ignore start */
+const ELEMENT_VNODE_HOOKS = (typeof __DEV__ !== 'undefined' && __DEV__)
+  || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__);
+/* v8 ignore stop */
+
 // Global state for the current render pass
 let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
 
@@ -202,8 +209,10 @@ function _renderToString(
   // if (vnode.constructor !== undefined) return;
 
   vnode[PARENT] = parent;
-  if (beforeDiff) beforeDiff(vnode);
-  if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
+  if (ELEMENT_VNODE_HOOKS || typeof vnode.type === 'function') {
+    if (beforeDiff) beforeDiff(vnode);
+    if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
+  }
 
   let type = vnode.type,
     props = vnode.props,
@@ -410,9 +419,13 @@ function _renderToString(
     );
   }
 
-  if (afterDiff) afterDiff(vnode);
+  if (ELEMENT_VNODE_HOOKS) {
+    if (afterDiff) afterDiff(vnode);
+  }
   vnode[PARENT] = undefined;
-  if (ummountHook) ummountHook(vnode);
+  if (ELEMENT_VNODE_HOOKS) {
+    if (ummountHook) ummountHook(vnode);
+  }
 
   if (__ENABLE_SSR__) {
     opcodes.push(__OpEnd);
