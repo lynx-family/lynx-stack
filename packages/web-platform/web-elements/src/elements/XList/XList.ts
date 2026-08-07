@@ -40,7 +40,7 @@ export class XList extends HTMLElement {
   }
 
   override get scrollLeft() {
-    return this.#getListContainer().scrollTop;
+    return this.#getListContainer().scrollLeft;
   }
 
   override set scrollLeft(val: number) {
@@ -64,7 +64,7 @@ export class XList extends HTMLElement {
   }
 
   get __scrollLeft() {
-    return super.scrollTop;
+    return super.scrollLeft;
   }
 
   scrollToPosition(
@@ -129,17 +129,17 @@ export class XList extends HTMLElement {
     const scrollContainer = this.#getListContainer();
     const deltaTime = timestamp - this.#autoScrollOptions.lastTimestamp;
     const tickDistance = (deltaTime / 1000) * this.#autoScrollOptions.rate;
+    const isScrollVertical = (this.getAttribute('scroll-orientation')
+      || 'vertical') === 'vertical';
 
     scrollContainer.scrollBy({
-      left: tickDistance,
-      top: tickDistance,
+      left: isScrollVertical ? 0 : tickDistance,
+      top: isScrollVertical ? tickDistance : 0,
       // smooth might cause lag when scrolling.
       behavior: 'auto',
     });
 
     this.#autoScrollOptions.lastTimestamp = timestamp;
-    const isScrollVertical = (this.getAttribute('scroll-orientation')
-      || 'vertical') === 'vertical';
     const isContainerScrollable = isScrollVertical
       ? scrollContainer.scrollTop + scrollContainer.clientHeight
         >= scrollContainer.scrollHeight
