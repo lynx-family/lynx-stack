@@ -4,3 +4,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 export { encode, type TasmJSONInfo } from './webEncoder.js';
+export {
+  diagnoseDiscardedAtRules,
+  type DiscardedAtRule,
+  encodeLynxXML,
+  xmlToTasmJSON,
+  type XMLToTasmJSONResult,
+} from './xmlToTasmJSON.js';
