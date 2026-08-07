@@ -140,4 +140,11 @@ describe('element PAPI', () => {
     expect(__GetComputedStyleByKey(view, 'font-size')).toBe('16px');
     expect(__GetComputedStyleByKey(view, 'fontSize')).toBe('');
   });
+
+  it('__GetAttributeNames should work', () => {
+    const view = __CreateView(0);
+    __SetAttribute(view, 'test', 'test-value');
+
+    expect(__GetAttributeNames(view)).toContain('test');
+  });
 });
