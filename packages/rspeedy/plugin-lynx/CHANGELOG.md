@@ -1,5 +1,11 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.0.2
+
+### Patch Changes
+
+- Move `pluginOutput` and `pluginMinify` into `pluginLynx()`. ([#3391](https://github.com/lynx-family/lynx-stack/pull/3391))
+
 ## 0.0.1
 
 ### Patch Changes
