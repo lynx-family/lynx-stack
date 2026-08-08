@@ -17,7 +17,7 @@
     "build": "tsc6"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.25.2",
+    "@modelcontextprotocol/sdk": "1.28.0",
     "commander": "^13.1.0",
     "debug": "^4.4.3",
     "empathic": "^2.0.1",
