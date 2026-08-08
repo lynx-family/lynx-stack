@@ -1,5 +1,12 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.6.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-core@0.24.1
+
 ## 0.6.3
 
 ### Patch Changes

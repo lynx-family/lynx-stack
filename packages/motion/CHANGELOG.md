@@ -1,5 +1,19 @@
 # @lynx-js/motion
 
+## 0.0.6
+
+### Patch Changes
+
+- Update `motion` from `12.43.0` to `13.0.0` ([#3422](https://github.com/lynx-family/lynx-stack/pull/3422))
+
+- Update `motion` from `12.42.2` to `12.43.0` ([#3379](https://github.com/lynx-family/lynx-stack/pull/3379))
+
+- Update `motion-utils` from `12.39.0` to `13.0.0` ([#3425](https://github.com/lynx-family/lynx-stack/pull/3425))
+
+- Update `motion-dom` from `12.42.2` to `12.43.0` ([#3380](https://github.com/lynx-family/lynx-stack/pull/3380))
+
+- Update `motion-dom` from `12.43.0` to `13.0.0` ([#3424](https://github.com/lynx-family/lynx-stack/pull/3424))
+
 ## 0.0.5
 
 ### Patch Changes

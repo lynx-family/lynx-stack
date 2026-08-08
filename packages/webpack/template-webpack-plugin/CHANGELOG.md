@@ -1,5 +1,14 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.15.1
+
+### Patch Changes
+
+- Update `@rspack/lite-tapable` from `1.1.2` to `1.1.5` ([#3375](https://github.com/lynx-family/lynx-stack/pull/3375))
+
+- Updated dependencies []:
+  - @lynx-js/web-core@0.24.1
+
 ## 0.15.0
 
 ### Minor Changes

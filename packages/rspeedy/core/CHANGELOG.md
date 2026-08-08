@@ -1,5 +1,14 @@
 # @lynx-js/rspeedy
 
+## 0.16.4
+
+### Patch Changes
+
+- Update `@rsbuild/core` from `2.1.7` to `2.1.10` ([#3267](https://github.com/lynx-family/lynx-stack/pull/3267))
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.24.1
+
 ## 0.16.3
 
 ### Patch Changes
