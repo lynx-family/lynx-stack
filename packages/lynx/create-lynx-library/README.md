@@ -97,7 +97,9 @@ The generated files have the following responsibilities:
   implementation through its generated CocoaPods wrapper. Codegen creates this
   CMake file once and preserves later edits. You normally only edit it when
   adding extra C++ source files, include directories, compile definitions, or
-  native dependencies.
+  native dependencies. The shared target resolves its Node-API headers from
+  `@lynx-js/weak-node-api` on every platform. Android and iOS keep the standard
+  `napi_*` symbol names, while Lynxtron enables the weak suffix remapping.
 - `ios/generated/<Module>NapiWrapper.cc` is an iOS CocoaPods compile entry that
   is generated when iOS is selected and includes the shared implementation from
   inside the iOS pod source root. Do not put business logic in this wrapper;
@@ -117,16 +119,22 @@ For Android, the generated library project can build the addon from source via
 its `externalNativeBuild` configuration. The project resolves
 `org.lynxsdk.lynx:primjs` with the Gradle property `lynx.primjs.version`,
 defaulting to `4.+`, extracts its native libraries, and links the addon against
-`libnapi_adapter.so` and `libnapi.so`. Host apps that need a pinned PrimJS
-runtime should set `lynx.primjs.version` from the root build so the addon and
-host resolve the same AAR. Packages that distribute prebuilt artifacts can also
-place `lib<Module>.so` files under `android/src/main/jniLibs/<abi>/`; the
-Android autolink plugin copies those prebuilt libraries when present.
+`libnapi_adapter.so` and `libnapi.so`. `libnapi_adapter.so` contains the
+non-suffixed weak-node-api implementation and injects a PrimJS-backed host table,
+so shared source continues to call the standard Node-API functions. Host apps
+that need a pinned PrimJS runtime should set `lynx.primjs.version` from the root
+build so the addon and host resolve the same AAR. Packages that distribute
+prebuilt artifacts can also place `lib<Module>.so` files under
+`android/src/main/jniLibs/<abi>/`; the Android autolink plugin copies those
+prebuilt libraries when present.
 
 For iOS, the generated podspec compiles the generated wrapper and uses
 `ios/addon_use.h` for the registration-symbol reference. The iOS autolink step
-adds the addon pod and a generated registry pod automatically. The podspec file
-is generated as `ios/<pod-name>.podspec`, matching its CocoaPods `s.name`.
+adds the addon pod and a generated registry pod automatically. The addon compiles
+against the standard headers and implementation from `LynxWeakNodeAPI/core`;
+the generated registry owns the one-time PrimJS bridge initialization before it
+uses any addon registration. The podspec file is generated as
+`ios/<pod-name>.podspec`, matching its CocoaPods `s.name`.
 
 In Android/iOS BTS code, import the package root to install the generated shim,
 then keep the existing call shape:
