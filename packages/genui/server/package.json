@@ -19,7 +19,7 @@
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@mastra/core": "1.56.0",
-    "@openuidev/lang-core": "^0.2.10",
+    "@openuidev/lang-core": "^0.2.11",
     "hono": "4.13.0",
     "zod": "^4.4.3"
   },
