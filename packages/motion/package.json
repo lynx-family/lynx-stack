@@ -49,7 +49,7 @@
   "dependencies": {
     "motion": "12.43.0",
     "motion-dom": "13.0.0",
-    "motion-utils": "12.39.0"
+    "motion-utils": "13.0.0"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
