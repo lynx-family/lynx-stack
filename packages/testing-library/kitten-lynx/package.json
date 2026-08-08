@@ -43,17 +43,17 @@
     "@yume-chan/adb-server-node-tcp": "catalog:adb"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260716151326-abdb87c",
+    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "4.0.0",
+    "@lynx-js/types": "4.1.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "execa": "^10.0.1",
     "jpeg-js": "^0.4.4",
     "rsbuild-plugin-publint": "1.0.0",
     "typescript": "^6.0.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.7"
   }
 }

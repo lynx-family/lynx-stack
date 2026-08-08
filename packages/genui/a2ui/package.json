@@ -166,9 +166,9 @@
   },
   "devDependencies": {
     "@lynx-js/genui-cli": "workspace:*",
-    "@lynx-js/lynx-ui": "^3.133.0",
+    "@lynx-js/lynx-ui": "^3.135.4",
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "4.0.0",
+    "@lynx-js/types": "4.1.0",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^19.2.18",
     "preact": "catalog:lynxjs"
