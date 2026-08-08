@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
-    "@preact/signals": "^2.9.4",
+    "@preact/signals": "^2.11.0",
     "benchx_cli": "workspace:*",
     "empathic": "^2.0.1",
     "event-target-polyfill": "^0.0.4",
