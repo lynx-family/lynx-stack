@@ -58,6 +58,7 @@ export interface ReactWebpackPluginOptions {
     globalPropsMode?: 'reactive' | 'event';
     lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
+    mainThreadEntries?: Record<string, string>;
     profile?: boolean | undefined;
     workletRuntimePath: string;
 }

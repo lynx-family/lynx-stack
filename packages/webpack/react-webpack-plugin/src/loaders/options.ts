@@ -258,6 +258,7 @@ export function getMainThreadTransformOptions(
 
   return {
     ...commonOptions,
+    collectMTSDefines: true,
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,
@@ -350,6 +351,7 @@ export function getBackgroundTransformOptions(
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
   return {
     ...commonOptions,
+    collectMTSDefines: true,
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

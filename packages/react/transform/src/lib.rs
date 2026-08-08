@@ -28,7 +28,7 @@ use swc_core::{
     errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     pass::Optional,
     sync::Lrc,
-    FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
+    FileName, FilePathMapping, Mark, SourceMap, DUMMY_SP, GLOBALS,
   },
   ecma::{
     ast::*,
@@ -41,6 +41,7 @@ use swc_core::{
         hygiene::{hygiene_with_config, Config},
         resolver,
       },
+      compat,
       optimization::{simplifier, simplify},
       react, typescript,
     },
@@ -74,6 +75,7 @@ pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugins_shared::mts_defines::MtsDefinesCollector;
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -245,6 +247,9 @@ pub struct TransformNodiffOptions {
     Option<Either<bool, TransformBuiltinAttributeNamesOptions>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
+  /// @internal
+  #[napi(js_name = "collectMTSDefines")]
+  pub collect_mts_defines: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -273,6 +278,7 @@ impl Default for TransformNodiffOptions {
       dynamic_import: Some(Either::B(Default::default())),
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
+      collect_mts_defines: None,
       input_source_map: None,
     }
   }
@@ -288,6 +294,18 @@ pub struct UiSourceMapRecord {
   pub snapshot_id: Option<String>,
 }
 
+/// @internal
+#[napi(object)]
+pub struct MTSDefine {
+  /// @internal
+  #[napi(ts_type = "'snapshot' | 'worklet'")]
+  pub kind: String,
+  /// @internal
+  pub id: String,
+  /// @internal
+  pub code: String,
+}
+
 #[napi(object)]
 pub struct TransformNodiffOutput {
   pub code: String,
@@ -301,6 +319,77 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
+  /// @internal
+  #[napi(js_name = "mtsDefines")]
+  pub mts_defines: Option<Vec<MTSDefine>>,
+}
+
+fn lower_to_main_thread_syntax(
+  unresolved_mark: Mark,
+  top_level_mark: Mark,
+  comments: &SingleThreadedComments,
+) -> impl Pass + use<'_> {
+  (
+    compat::es2022(Default::default(), unresolved_mark),
+    compat::es2020::optional_chaining(Default::default(), unresolved_mark),
+    compat::es2020::nullish_coalescing(Default::default()),
+    compat::es2021::logical_assignments(),
+    compat::es2015::block_scoping(unresolved_mark),
+    helpers::inject_helpers(unresolved_mark),
+    hygiene_with_config(Config {
+      top_level_mark,
+      ..Default::default()
+    }),
+    fixer(Some(comments)),
+  )
+}
+
+fn print_main_thread_define(
+  c: &Compiler,
+  items: Vec<ModuleItem>,
+  unresolved_mark: Mark,
+  top_level_mark: Mark,
+  comments: &SingleThreadedComments,
+) -> Result<String, String> {
+  let module = match Program::Module(Module {
+    span: DUMMY_SP,
+    body: items,
+    shebang: None,
+  })
+  .apply(&mut lower_to_main_thread_syntax(
+    unresolved_mark,
+    top_level_mark,
+    comments,
+  )) {
+    Program::Module(m) => m,
+    _ => return Err("lowering produced a non-module program".into()),
+  };
+
+  c.print(
+    &Program::Module(module),
+    PrintArgs {
+      output: None,
+      source_root: "".into(),
+      source_file_name: None,
+      source_map_url: None,
+      source_map_ignore_list: None,
+      output_path: None,
+      inline_sources_content: true,
+      source_map: SourceMapsConfig::Bool(false),
+      source_map_names: &Default::default(),
+      orig: None,
+      comments: Some(comments),
+      emit_source_map_columns: false,
+      emit_source_map_scopes: false,
+      preamble: "",
+      codegen_config: codegen::Config::default()
+        .with_target(EsVersion::latest())
+        .with_minify(false)
+        .with_ascii_only(false),
+    },
+  )
+  .map(|r| r.code)
+  .map_err(|err| err.to_string())
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -397,10 +486,11 @@ fn transform_react_lynx_inner(
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
-          errors: errors.read().unwrap().clone(),
+          errors: vec![],
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
+          mts_defines: None,
         };
       }
     };
@@ -565,6 +655,11 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
+    let mts_defs_collector: Option<MtsDefinesCollector> = options
+      .collect_mts_defines
+      .unwrap_or(false)
+      .then(|| Rc::new(RefCell::new(vec![])));
+
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
         snapshot_plugin_config.clone(),
@@ -576,6 +671,12 @@ fn transform_react_lynx_inner(
 
       let transformer = if enable_ui_source_map {
         transformer.with_ui_source_map_records(snapshot_ui_source_map_records.clone())
+      } else {
+        transformer
+      };
+
+      let transformer = if let Some(collector) = &mts_defs_collector {
+        transformer.with_mts_defs_collector(collector.clone())
       } else {
         transformer
       };
@@ -716,17 +817,26 @@ fn transform_react_lynx_inner(
     };
 
     let worklet_plugin = match options.worklet {
-      Either::A(config) => Optional::new(
-        visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
-        config,
-      ),
-      Either::B(config) => Optional::new(
-        visit_mut_pass(
+      Either::A(config) => {
+        let visitor = WorkletVisitor::default().with_content_hash(content_hash);
+        let visitor = if let Some(collector) = &mts_defs_collector {
+          visitor.with_mts_defs_collector(collector.clone())
+        } else {
+          visitor
+        };
+        Optional::new(visit_mut_pass(visitor), config)
+      }
+      Either::B(config) => {
+        let visitor =
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
-            .with_content_hash(content_hash),
-        ),
-        true,
-      ),
+            .with_content_hash(content_hash);
+        let visitor = if let Some(collector) = &mts_defs_collector {
+          visitor.with_mts_defs_collector(collector.clone())
+        } else {
+          visitor
+        };
+        Optional::new(visit_mut_pass(visitor), true)
+      }
     };
 
     let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
@@ -845,10 +955,47 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
+        let mut mts_define_errors: Vec<esbuild::PartialMessage> = vec![];
+        let mts_defines = mts_defs_collector.as_ref().map(|collector| {
+          helpers::HELPERS.set(&helpers::Helpers::new(false), || {
+            collector
+              .borrow()
+              .iter()
+              .map(|define| MTSDefine {
+                kind: define.kind.as_str().into(),
+                id: define.id.clone(),
+                code: match print_main_thread_define(
+                  &c,
+                  define.items.clone(),
+                  unresolved_mark,
+                  top_level_mark,
+                  &comments,
+                ) {
+                  Ok(code) => code,
+                  Err(err) => {
+                    mts_define_errors.push(esbuild::PartialMessage {
+                      id: None,
+                      plugin_name: Some(options.plugin_name.clone()),
+                      text: Some(format!(
+                        "failed to print the collected main-thread definition `{}`: {}",
+                        define.id, err
+                      )),
+                      location: None,
+                      notes: None,
+                      detail: None,
+                    });
+                    "".into()
+                  }
+                },
+              })
+              .collect::<Vec<_>>()
+          })
+        });
+
         TransformNodiffOutput {
           code: result.code,
           map: result.map,
-          errors: vec![],
+          errors: mts_define_errors,
           warnings: vec![],
           ui_source_map_records: if use_element_template_plugin {
             vec![]
@@ -856,6 +1003,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          mts_defines,
         }
       }
       Err(_) => {
@@ -863,7 +1011,7 @@ fn transform_react_lynx_inner(
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
-          errors: errors.read().unwrap().clone(),
+          errors: vec![],
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: if use_element_template_plugin {
             vec![]
@@ -871,20 +1019,25 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          mts_defines: None,
         };
       }
     }
   });
 
+  let mut transform_errors = errors.read().unwrap().clone();
+  transform_errors.extend(result.errors);
+
   let r = TransformNodiffOutput {
     code: result.code,
     map: result.map,
-    errors: errors.read().unwrap().clone(),
+    errors: transform_errors,
     warnings: warnings.read().unwrap().clone(),
     ui_source_map_records: result.ui_source_map_records,
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
+    mts_defines: result.mts_defines,
   };
 
   r
