@@ -724,6 +724,31 @@ test.describe('reactlynx3 tests', () => {
         await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
       },
     );
+    test(
+      'basic-mts-flush-element-tree',
+      async ({ page }, { title }) => {
+        // A `main-thread:bind*` handler that calls `__FlushElementTree()`
+        // inline. The flush re-enters the wasm main-thread context the
+        // dispatcher is still holding; when that is rejected the throw unwinds
+        // through the dispatcher, surfacing as an uncaught page error and
+        // skipping every handler ordered after it.
+        // https://github.com/lynx-family/lynx-stack/issues/3395
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+
+        await goto(page, title);
+        await wait(100);
+        const child = page.locator('#child');
+        const parent = page.locator('#parent');
+        await child.click();
+
+        // the flushing handler itself
+        await expect(child).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
+        // and the bubble handler ordered after it
+        await expect(parent).toHaveCSS('background-color', 'rgb(0, 0, 255)'); // blue
+        expect(pageErrors).toStrictEqual([]);
+      },
+    );
     test('basic-mts-mainthread-nested-ref', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
