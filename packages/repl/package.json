@@ -32,7 +32,7 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-react": "2.1.0",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/css-tree": "^2.3.11",
+    "@types/css-tree": "^3.2.0",
     "@types/react": "npm:@types/react@^19.2.18",
     "@types/react-dom": "^19.2.4",
     "css-tree": "^3.2.1",
