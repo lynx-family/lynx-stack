@@ -1546,8 +1546,8 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
       '@lynx-js/tasm':
-        specifier: 0.0.49
-        version: 0.0.49
+        specifier: 0.0.51
+        version: 0.0.51
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -2505,8 +2505,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.49
-        version: 0.0.49
+        specifier: 0.0.51
+        version: 0.0.51
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -4416,8 +4416,8 @@ packages:
     peerDependencies:
       '@lynx-js/react': workspace:*
 
-  '@lynx-js/tasm@0.0.49':
-    resolution: {integrity: sha512-sI+xmLXaMvXWFN5n47kYNHFEMIEpkrz/bVvU2GwvhB26lXfYPdSNedE3bh85vfW/vAmYsB/TbKwtiNhXgN3LDw==}
+  '@lynx-js/tasm@0.0.51':
+    resolution: {integrity: sha512-hQOMOqsmiL5nSgw0QuGkJwYgEDp90LCvTQykhbcGiqQaM0tetFmt24uqhQi/+Jq4EZepQj4eclflHbJACKOTJA==}
     hasBin: true
 
   '@lynx-js/trace-processor@0.0.1':
@@ -14683,7 +14683,7 @@ snapshots:
       - react
       - react-dom
 
-  '@lynx-js/tasm@0.0.49': {}
+  '@lynx-js/tasm@0.0.51': {}
 
   '@lynx-js/trace-processor@0.0.1':
     dependencies:
