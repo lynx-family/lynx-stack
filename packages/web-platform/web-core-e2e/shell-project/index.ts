@@ -141,6 +141,7 @@ const searchParams = new URLSearchParams(document.location.search);
 const casename = searchParams.get('casename');
 const casename2 = searchParams.get('casename2');
 const resourceName = searchParams.get('resourceName');
+const xmlName = searchParams.get('xmlName');
 const hasdir = searchParams.get('hasdir') === 'true';
 const isSSR = document.location.pathname.includes('ssr');
 
@@ -198,7 +199,7 @@ if (casename) {
     lynxView2.setAttribute('url', lynxTemplateUrl2);
     lynxView2.setAttribute('lynx-group-id', '2');
   }
-} else {
+} else if (!resourceName && !xmlName) {
   console.error('cannot find casename');
 }
 if (resourceName) {
@@ -206,4 +207,22 @@ if (resourceName) {
     document.querySelector('lynx-view') as LynxViewElement | undefined,
   );
   lynxView.setAttribute('url', `/resources/${resourceName}`);
+}
+if (xmlName) {
+  // Lynx XML markup ("vanilla") cards are served straight out of
+  // `web-core/tests/fixtures` (see `rsbuild.config.ts` `publicDir`), so the e2e
+  // suite exercises the very same bytes the unit tests parse.
+  const lynxView = lynxViewTests(
+    document.querySelector('lynx-view') as LynxViewElement | undefined,
+  );
+  // A markup card's CSS is tokenized, so the `transform-*` attributes do reach
+  // it. They stay off by default - a card written against browser units expects
+  // `rem` / `vw` to keep their native meaning - and a test opts in explicitly
+  // through the query string to assert the rewriting.
+  for (const attribute of ['transform-vw', 'transform-vh', 'transform-rem']) {
+    if (searchParams.get(attribute) === 'true') {
+      lynxView.setAttribute(attribute, 'true');
+    }
+  }
+  lynxView.setAttribute('url', `/${xmlName}`);
 }

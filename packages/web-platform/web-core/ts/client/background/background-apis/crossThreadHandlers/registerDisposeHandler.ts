@@ -44,6 +44,14 @@ export function registerDisposeHandler(
  * failing on its own.
  */
 function isMissingLifetimeHookError(error: unknown): boolean {
-  return error instanceof TypeError
-    && error.message.includes('callDestroyLifetimeFun');
+  if (!(error instanceof TypeError)) {
+    return false;
+  }
+  // Match the "not callable" shape engines produce for a missing member, rather
+  // than the mere mention of the name: a framework callback that itself throws
+  // a `TypeError` naming the hook must still be reported, not swallowed.
+  // Covers V8 ("... is not a function"), SpiderMonkey ("... is not a function")
+  // and JavaScriptCore ("... is not a function. (In '...')").
+  return /callDestroyLifetimeFun[\s\S]*?\bis not a function\b/
+    .test(error.message);
 }

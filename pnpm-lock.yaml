@@ -2101,6 +2101,9 @@ importers:
       '@lynx-js/web-worker-rpc':
         specifier: workspace:*
         version: link:../web-worker-rpc
+      css-tree:
+        specifier: ^3.2.1
+        version: 3.2.1
       wasm-feature-detect:
         specifier: ^1.8.0
         version: 1.8.0
@@ -2126,6 +2129,9 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
+      '@types/css-tree':
+        specifier: ^2.3.11
+        version: 2.3.11
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3

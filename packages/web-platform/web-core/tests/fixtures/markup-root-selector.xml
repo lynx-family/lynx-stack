@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE lynx>
+<lynx version="5.4.2">
+<style><![CDATA[
+  /*
+    This card pins down selector rewriting and at-rule preservation.
+
+    A markup card's CSS is tokenized on the way in, so `:root` is rewritten to
+    the card's own root element. Both declarations below therefore reach the
+    card even though it renders inside a shadow root, where a literal `:root`
+    would match nothing:
+
+      - `background-color` applies to the card's root element;
+      - `--root-accent` is in scope for the card, so the `var()` in `.probe`
+        resolves against it.
+
+    `.control` is the same construct declared on the root element's own class.
+    Both resolving is what proves the rewrite happened rather than the card
+    having simply avoided `:root`.
+
+    `.preserved` sits inside an `@media` block. Conditional group rules have no
+    representation in the binary style format, so they are kept verbatim and
+    honoured by the browser instead of being tokenized - and must not be
+    dropped. The query is written to always match so the declaration is
+    observable.
+  */
+  :root {
+    --root-accent: #2f6d54;
+    background-color: #2f6d54;
+  }
+
+  .page {
+    --page-accent: #4c8665;
+  }
+
+  .probe {
+    width: 100%;
+    height: 20px;
+    background-color: var(--root-accent);
+  }
+
+  .control {
+    width: 100%;
+    height: 20px;
+    background-color: var(--page-accent);
+  }
+
+  @media (min-width: 1px) {
+    .preserved {
+      width: 100%;
+      height: 20px;
+      background-color: #123f35;
+    }
+  }
+]]></style>
+
+<script main-thread="true"><![CDATA[
+  const page = __CreatePage('0', 0);
+  const pageId = __GetElementUniqueID(page);
+  const engine = lynx.getEngine();
+  let rendered = false;
+
+  __SetClasses(page, 'page');
+
+  Object.assign(globalThis, {
+    processData(data) {
+      return data;
+    },
+  });
+
+  function onRenderPage() {
+    if (rendered) {
+      return;
+    }
+    rendered = true;
+    ['probe', 'control', 'preserved'].forEach((className) => {
+      const node = __CreateView(pageId);
+      __SetClasses(node, className);
+      __AppendElement(page, node);
+    });
+  }
+
+  engine.addEventListener('__RenderPage', onRenderPage);
+]]></script>
+
+<script background="true"><![CDATA[
+  lynx.getCoreContext();
+]]></script>
+</lynx>
