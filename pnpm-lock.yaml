@@ -1982,8 +1982,8 @@ importers:
   packages/testing-library/kitten-lynx:
     dependencies:
       '@lynx-js/devtool-connector':
-        specifier: 0.9.5
-        version: 0.9.5
+        specifier: 0.13.2
+        version: 0.13.2
       '@yume-chan/adb':
         specifier: catalog:adb
         version: 2.6.2
@@ -4204,8 +4204,8 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@lynx-js/devtool-connector@0.9.5':
-    resolution: {integrity: sha512-lgKFQ11UuH71KpNHVRxtHwPsmp8PkmsS2ZIkfzYKH08rWT7Trfv7BrejQUbFQTVblIwyZvETugWSkNZsKdc9dQ==}
+  '@lynx-js/devtool-connector@0.13.2':
+    resolution: {integrity: sha512-7NXFJFogGJAOQmIk4x95Ef9b9JbBJK5J5xviDF5OWmOeW+ZiSfCAALUMwRUlU9nXPMeH/rdtT3Kis0QtV4WDfA==}
     engines: {node: '>=18.19'}
 
   '@lynx-js/gesture-runtime@2.1.1':
@@ -14022,8 +14022,11 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@lynx-js/devtool-connector@0.9.5':
+  '@lynx-js/devtool-connector@0.13.2':
     dependencies:
+      jpeg-js: 0.4.4
+      obug: 2.1.4
+      semver: 7.8.5
       ws: 8.21.1
     transitivePeerDependencies:
       - bufferutil
