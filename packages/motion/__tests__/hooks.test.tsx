@@ -5,12 +5,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
-import { act, render } from '@lynx-js/react/testing-library';
+import { act, fireEvent, render } from '@lynx-js/react/testing-library';
 
 import {
   useMotionValueRef,
   useMotionValueRefEvent,
 } from '../src/mini/index.js';
+import { useMotionValue } from '../src/index.js';
 import { noop } from '../src/utils/noop.js';
 
 describe('Hooks', () => {
@@ -96,6 +97,53 @@ describe('Hooks', () => {
 
       expect(numberRef).toHaveBeenCalled();
       expect(stringRef).toHaveBeenCalled();
+    });
+  });
+
+  describe('useMotionValue', () => {
+    test('creates a typed main-thread value handle', () => {
+      let value: unknown;
+      const App = () => {
+        value = useMotionValue(42);
+        return <view />;
+      };
+
+      render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      expect(
+        (value as { toJSON(): { _initValue: number; _type: string } }).toJSON(),
+      ).toMatchObject({
+        _initValue: 42,
+        _type: '@lynx-js/motion/MotionValue',
+      });
+    });
+
+    test('hydrates to a real MotionValue in a main-thread function', () => {
+      const App = () => {
+        const value = useMotionValue(42);
+        const handleTap = () => {
+          'main thread';
+          value.set(43);
+          (globalThis as { __motionValueResult?: number }).__motionValueResult =
+            value.get();
+        };
+        return <view main-thread:bindtap={handleTap} />;
+      };
+      const { container } = render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      fireEvent.tap(container.firstChild);
+
+      expect(
+        (globalThis as { __motionValueResult?: number }).__motionValueResult,
+      ).toBe(43);
+      delete (globalThis as { __motionValueResult?: number })
+        .__motionValueResult;
     });
   });
 

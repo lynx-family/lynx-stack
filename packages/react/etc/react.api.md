@@ -145,6 +145,12 @@ export class MainThreadRef<T> extends WorkletRef<T> {
 }
 
 // @public
+export abstract class MainThreadValue<T> {
+    protected constructor(initValue: T, type: string);
+    static register<T>(type: string, factory: (initValue: T) => object): void;
+}
+
+// @public
 export function markFirstScreenSyncReady(): void;
 
 export { memo }
