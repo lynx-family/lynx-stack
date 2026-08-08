@@ -3,15 +3,24 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Turns a single file Lynx XML markup document into the input
- * {@link encode} takes, so that a hand-written card can be built into an
- * ordinary `.web.bundle` instead of needing a load-time bypass.
+ * Turns a single file Lynx XML markup document into a {@link TasmJSONInfo}, the
+ * shape the bundle encoder takes, so that a hand-written card needs no
+ * markup-specific handling further down.
  *
- * The whole point of going through {@link encode} is that the bundle a markup
- * card produces is indistinguishable from the bundle a ReactLynx build produces:
- * same magic header, same sections, same rkyv-encoded `StyleInfo`, and therefore
- * the same decoder on the other side. Nothing downstream has to know the card
- * was hand-written.
+ * This module is deliberately free of any wasm build. It began life in
+ * `ts/encode/`, next to the encoder, and moved here once the browser needed the
+ * same conversion: a markup card loaded at runtime is converted on the main
+ * thread, where `binary/encode`'s `node:fs` glue cannot be loaded at all. The
+ * only thing it still borrows from `ts/encode/` is the `TasmJSONInfo` type, as a
+ * type import, which is erased.
+ *
+ * Two callers now share it, and they differ only in what they do with the
+ * result:
+ *
+ * - `ts/encode/encodeLynxXML.ts` hands it to `encode` and gets a `.web.bundle`,
+ *   byte-identical in structure to what a ReactLynx build emits;
+ * - the markup load path hands the `styleInfo` straight to `buildRawStyleInfo`
+ *   and builds a decoded template in place, never producing bundle bytes.
  *
  * ## Unsupported at-rules are discarded, deliberately
  *
@@ -30,18 +39,22 @@
  *
  * Because none of it is an error, the only failure mode would be silence: an
  * author writes `@property --x` and gets a card that renders wrong with nothing
- * to go on. So every discarded at-rule is reported through
- * {@link diagnoseDiscardedAtRules}, once per kind. This module runs inside the
- * build (`@lynx-js/web-core/encode` is Node-only - it loads the `binary/encode`
- * wasm through `node:fs` glue), so the report is a build-time diagnostic and
- * never reaches a production browser runtime; that is why it is unconditional
- * rather than gated on a dev flag, of which this package has none.
+ * to go on. So every discarded at-rule is *returned* through
+ * {@link diagnoseDiscardedAtRules} and {@link XMLToTasmJSONResult}. Reporting is
+ * left to the caller on purpose, because the two callers must report
+ * differently: a build script warns unconditionally, while the browser path has
+ * to gate its warning on a dev build so that a production runtime stays silent.
  */
 
 import * as CSS from '@lynx-js/css-serializer';
 
-import { parseLynxXML } from '../common/xml/parseLynxXML.js';
-import { encode, type TasmJSONInfo } from './webEncoder.js';
+import { parseLynxXML } from './parseLynxXML.js';
+// Type only, and load bearing that it stays that way: a value import from
+// `ts/encode/webEncoder.js` would reach `encodeCSS` and through it the
+// `binary/encode` wasm glue, which calls `node:fs` and cannot be bundled for a
+// browser. A type import is erased at compile time, so no part of the encode
+// path survives into the markup chunk.
+import type { TasmJSONInfo } from '../../encode/webEncoder.js';
 
 /**
  * The `manifest` key a card's background chunk is expected to live under. The
@@ -287,43 +300,5 @@ export function xmlToTasmJSON(source: string): XMLToTasmJSONResult {
       elementTemplates: {},
     },
     discarded,
-  };
-}
-
-/**
- * Builds a `.web.bundle` from a Lynx XML markup document.
- *
- * The bytes are an ordinary modern bundle - see the note at the top of the file
- * - so the existing decoder consumes them with no markup-specific handling.
- *
- * Discarded at-rules are reported on the console as well as returned, because
- * the common caller is a build script that would otherwise drop the information
- * on the floor.
- */
-export function encodeLynxXML(
-  source: string,
-): { success: true; buffer: Uint8Array; discarded: DiscardedAtRule[] } | {
-  success: false;
-  message: string;
-} {
-  const result = xmlToTasmJSON(source);
-  if (!result.success) {
-    return result;
-  }
-
-  for (const { name, reason } of result.discarded) {
-    console.warn(
-      reason === 'unrepresentable'
-        ? `[lynx-web] ${name} has no representation in the Lynx style format and was dropped from the bundle, along with the rules inside it. It is not supported on any Lynx platform.`
-        : reason === 'unsupported'
-        ? `[lynx-web] ${name} is not recognised by the Lynx CSS parser and was dropped from the bundle, along with the rules inside it.`
-        : `[lynx-web] ${name} with a URL cannot be resolved for a markup card, which owns a single stylesheet, and was dropped from the bundle.`,
-    );
-  }
-
-  return {
-    success: true,
-    buffer: encode(result.tasmJSON),
-    discarded: result.discarded,
   };
 }

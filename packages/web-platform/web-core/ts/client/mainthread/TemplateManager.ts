@@ -9,6 +9,7 @@ import type { LynxViewInstance } from './LynxViewInstance.js';
 import type {
   MainMessage,
   LoadTemplateMessage,
+  MarkupMessage,
   SectionMessage,
   InitMessage,
 } from '../decodeWorker/types.js';
@@ -22,6 +23,26 @@ const wasm = import(
   /* webpackPreload: true */
   '../wasm.js'
 );
+
+/**
+ * The markup (buildless Lynx XML) conversion, loaded only when a markup card
+ * actually arrives.
+ *
+ * It reaches `@lynx-js/css-serializer` and the `css-tree` it re-exports, a couple
+ * of hundred kilobytes most cards never need, so this stays a lazy `import()` with
+ * no eager hints - the deliberate opposite of the wasm import above. Importing
+ * `buildMarkupTemplate` statically from anywhere in `ts/client/` would pull the
+ * CSS parser into the eager chunk and undo this.
+ */
+const loadMarkupBuilder = () =>
+  import(
+    /* webpackChunkName: "web-core-markup-template" */
+    /* webpackMode: "lazy" */
+    /* webpackFetchPriority: "low" */
+    /* webpackPrefetch: false */
+    /* webpackPreload: false */
+    './markup/buildMarkupTemplate.js'
+  );
 
 export class TemplateManager {
   readonly #bundles: Map<string, DecodedTemplate> = new Map();
@@ -196,6 +217,9 @@ export class TemplateManager {
          */
         this.#handleSection(msg, lynxViewInstancePromise);
         break;
+      case 'markup':
+        this.#handleMarkup(msg, lynxViewInstancePromise);
+        break;
       case 'error':
         console.error(`Error decoding bundle ${url}:`, msg.error);
         this.#cleanup(url);
@@ -273,6 +297,77 @@ export class TemplateManager {
       }
       default:
         throw new Error(`Unknown section label: ${label}`);
+    }
+  }
+
+  /**
+   * Converts a markup card and completes its load.
+   *
+   * Unlike a bundle or JSON artifact, nothing was decoded in the worker, so this
+   * both builds the template and announces completion - the worker deliberately
+   * withholds its `done` for a markup card, because the template does not exist
+   * until the lazy chunk has loaded and run.
+   *
+   * The instance callbacks fire in the same order the section path fires them, so
+   * a markup card and a built card look identical from `LynxViewInstance`'s side.
+   */
+  async #handleMarkup(
+    msg: MarkupMessage,
+    instancePromise: Promise<LynxViewInstance>,
+  ) {
+    const { url, source, transformVW, transformVH, transformREM } = msg;
+    try {
+      const [instance, { wasmInstance }, { buildMarkupTemplate }] =
+        await Promise
+          .all([
+            instancePromise,
+            wasm,
+            loadMarkupBuilder(),
+          ]);
+      instance.backgroundThread.markTiming('decode_start');
+
+      const built = buildMarkupTemplate(
+        source,
+        url,
+        wasmInstance as never,
+        document,
+        {
+          transformVW,
+          transformVH,
+          transformREM,
+          overrideConfig: msg.overrideConfig,
+        },
+      );
+      if (!built.success) {
+        throw new Error(built.message);
+      }
+
+      const bundle = this.#loadingBundles.get(url);
+      if (bundle) {
+        Object.assign(bundle, built.template);
+      }
+
+      const config = (built.template.config ?? {}) as PageConfig;
+      instance.onPageConfigReady(config);
+      instance.onStyleInfoReady(url);
+      instance.onMTSScriptsLoaded(url, config.isLazy === 'true');
+      instance.onBTSScriptsLoaded(url);
+
+      this.#cleanup(url);
+      if (bundle) {
+        this.#bundles.set(url, bundle);
+        this.#loadingBundles.delete(url);
+      }
+      this.#resolvePromise(url);
+      this.#loadingPromises.delete(url);
+      instance.backgroundThread.markTiming('decode_end');
+      instance.backgroundThread.markTiming('load_template_start');
+    } catch (error) {
+      console.error(`Error loading markup card ${url}:`, error);
+      this.#cleanup(url);
+      this.#removeBundle(url);
+      this.#rejectPromise(url, error);
+      this.#loadingPromises.delete(url);
     }
   }
 

@@ -60,6 +60,7 @@ export const selector_push_one_selector_section: (a: number, b: number, c: numbe
 export const set_inline_styles_in_key_value_vec: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const set_inline_styles_in_str: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
 export const set_inline_styles_number_key: (a: number, b: number, c: number, d: number) => void;
+export const stylesheetresource_fromRawStyleInfo: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
 export const stylesheetresource_new: (a: number, b: number, c: number) => void;
 export const selector_new: () => number;
 export const __wbindgen_export: (a: number, b: number) => number;

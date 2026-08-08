@@ -2,6 +2,7 @@ import {
   TemplateSectionLabel,
   MagicHeader0,
   MagicHeader1,
+  MTS_CODE_WRAPPER_PREFIX,
 } from '../../constants.js';
 import type {
   HeartbreakMessage,
@@ -20,9 +21,6 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
-
-const MTS_CODE_WRAPPER_PREFIX =
-  '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
 
 const HEARTBREAK_INTERVAL_MS = 1000;
 let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
@@ -161,7 +159,7 @@ self.onmessage = async (
         throw new Error(`Failed to fetch template: ${response.statusText}`);
       }
       const reader = response.body.getReader();
-      await handleStream(
+      const handedOff = await handleStream(
         url,
         reader,
         transformVW,
@@ -169,7 +167,12 @@ self.onmessage = async (
         transformREM,
         overrideConfig,
       );
-      postMessage({ type: 'done', url } as MainMessage);
+      // A markup card is finished by the main thread, which owns the conversion,
+      // so it announces its own completion. Posting `done` here would resolve the
+      // load before the template exists.
+      if (!handedOff) {
+        postMessage({ type: 'done', url } as MainMessage);
+      }
     } catch (error) {
       postMessage(
         { type: 'error', url, error: (error as Error).message } as MainMessage,
@@ -177,6 +180,38 @@ self.onmessage = async (
     }
   }
 };
+/**
+ * Whether the bytes begin a Lynx XML markup document.
+ *
+ * More tolerant than the JSON sniff above, deliberately: a markup card is a file
+ * an author writes and hands to a server, so a UTF-8 BOM or a leading blank line
+ * is common and outside their control, whereas a JSON or binary artifact is
+ * always machine written.
+ */
+function startsMarkup(bytes: Uint8Array): boolean {
+  let index = 0;
+  // UTF-8 BOM.
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    index = 3;
+  }
+  while (index < bytes.length) {
+    const byte = bytes[index]!;
+    // space, tab, LF, CR
+    if (byte === 0x20 || byte === 0x09 || byte === 0x0a || byte === 0x0d) {
+      index++;
+      continue;
+    }
+    return byte === 0x3c; // '<'
+  }
+  return false;
+}
+
+/**
+ * Reads an artifact and dispatches it.
+ *
+ * Returns `true` when the artifact was handed to the main thread instead of being
+ * decoded here, in which case the caller must not announce completion.
+ */
 async function handleStream(
   url: string,
   reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -184,7 +219,7 @@ async function handleStream(
   transformVH: boolean,
   transformREM: boolean,
   overrideConfig?: Partial<PageConfig>,
-) {
+): Promise<boolean> {
   const streamReader = new StreamReader(reader);
   let config: Partial<PageConfig> = {};
 
@@ -208,7 +243,29 @@ async function handleStream(
       transformREM,
       overrideConfig,
     );
-    return;
+    return false;
+  }
+
+  // Check if a Lynx XML markup document.
+  if (startsMarkup(headerBytes)) {
+    const rest = await streamReader.readRest();
+    // Concatenated before decoding, not decoded in two halves: an 8 byte split
+    // can fall inside a multi-byte sequence, and a markup document carries
+    // author-written text where that is likely rather than theoretical.
+    const all = new Uint8Array(headerBytes.length + rest.length);
+    all.set(headerBytes);
+    all.set(rest, headerBytes.length);
+    postMessage({
+      type: 'markup',
+      url,
+      // `TextDecoder` strips a leading UTF-8 BOM for us.
+      source: new TextDecoder().decode(all),
+      transformVW,
+      transformVH,
+      transformREM,
+      overrideConfig,
+    } as MainMessage);
+    return true;
   }
 
   const view = new DataView(
@@ -375,6 +432,7 @@ async function handleStream(
         throw new Error(`Unknown section label: ${label}`);
     }
   }
+  return false;
 }
 
 async function handleJSON(
