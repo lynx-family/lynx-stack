@@ -3037,17 +3037,17 @@ describe('Config', () => {
       ).toMatchInlineSnapshot(`
         [
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
+            "<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
         ]
@@ -3067,7 +3067,7 @@ describe('Config', () => {
       ).toMatchInlineSnapshot(`
         [
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/workerLoader.mjs",
+            "<PNPM_INNER>/@rsbuild/core/dist/workerLoader.mjs",
           ],
           [
             "builtin:swc-loader",
