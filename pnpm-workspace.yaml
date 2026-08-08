@@ -172,6 +172,9 @@ strictDepBuilds: true
 
 allowBuilds:
   "@biomejs/biome": false
+  # 0.2.11 added an installation-telemetry postinstall (random install id, salted
+  # project id, versions, OS/CI metadata). The package works without it.
+  "@openuidev/lang-core": false
   "@parcel/watcher": false
   "@swc/core": false
   core-js: false

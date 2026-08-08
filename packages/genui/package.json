@@ -127,7 +127,7 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.10.6",
-    "@openuidev/lang-core": "^0.2.10",
+    "@openuidev/lang-core": "^0.2.11",
     "@preact/signals": "^2.11.0",
     "typedoc": "^0.28.20",
     "zod": "^3.25.76 || ^4.0.0"

@@ -788,8 +788,8 @@ importers:
         specifier: '>=3.133.0'
         version: 3.135.4(@lynx-js/react@packages+react)(@lynx-js/types@4.1.0)(@types/react@18.3.28)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@openuidev/lang-core':
-        specifier: ^0.2.10
-        version: 0.2.10(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        specifier: ^0.2.11
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       '@preact/signals':
         specifier: ^2.11.0
         version: 2.11.0(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
@@ -921,8 +921,8 @@ importers:
   packages/genui/openui:
     dependencies:
       '@openuidev/lang-core':
-        specifier: ^0.2.10
-        version: 0.2.10(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        specifier: ^0.2.11
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       zod:
         specifier: ^3.25.76 || ^4.0.0
         version: 4.4.3
@@ -964,8 +964,8 @@ importers:
         specifier: workspace:*
         version: link:../../web-platform/web-elements
       '@openuidev/lang-core':
-        specifier: ^0.2.10
-        version: 0.2.10(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        specifier: ^0.2.11
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       '@radix-ui/react-select':
         specifier: ^2.3.7
         version: 2.3.7(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1049,8 +1049,8 @@ importers:
         specifier: 1.56.0
         version: 1.56.0(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod@4.4.3)
       '@openuidev/lang-core':
-        specifier: ^0.2.10
-        version: 0.2.10(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        specifier: ^0.2.11
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       hono:
         specifier: 4.13.0
         version: 4.13.0
@@ -4547,8 +4547,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@openuidev/lang-core@0.2.10':
-    resolution: {integrity: sha512-GeLoP4S+1e7IHAz2a4Fl9+Q+boiyTXpXtdUPI+PN3ml+834q35TCQasm/+s6NW+79FRmyiR8F5xJtoLsH0kGjQ==}
+  '@openuidev/lang-core@0.2.11':
+    resolution: {integrity: sha512-30tTX7bnTLMQMs1kPhIv/tVY8hlW5xtimf6fBBS16ctidceuMZNWEe0VTpuz3lEmdyThp2lc7vy+lSfTqIIwlg==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '>=1.0.0'
       zod: ^3.25.0 || ^4.0.0
@@ -14951,7 +14951,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@openuidev/lang-core@0.2.10(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)':
+  '@openuidev/lang-core@0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
