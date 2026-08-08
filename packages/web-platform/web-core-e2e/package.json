@@ -34,6 +34,6 @@
     "@rstest/core": "catalog:rstest",
     "nyc": "^18.0.0",
     "prettier": "^3.9.6",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.10"
   }
 }
