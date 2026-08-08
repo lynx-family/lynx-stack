@@ -16,6 +16,7 @@ import {
   saveConversationMessages,
   setActiveConversationId,
 } from '../storage/conversationRepo.js';
+import { applyA2UIMessagesToSnapshot } from '../storage/conversationSnapshot.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
   ConversationMeta,
@@ -92,15 +93,6 @@ function cloneDataModel(
   }
 }
 
-function cloneDataValue(value: unknown): unknown {
-  if (value === null || typeof value !== 'object') return value;
-  try {
-    return JSON.parse(JSON.stringify(value)) as unknown;
-  } catch {
-    return value;
-  }
-}
-
 function clonePreviewPerformanceMetrics(
   value: PreviewPerformanceMetrics | null | undefined,
 ): PreviewPerformanceMetrics | undefined {
@@ -132,79 +124,6 @@ function truncateConversationHistory(
   }
 
   return kept;
-}
-
-function applyDataModel(
-  model: Record<string, unknown>,
-  path: string,
-  value: unknown,
-): void {
-  if (!path || path === '/' || path === '') {
-    for (const key of Object.keys(model)) {
-      delete model[key];
-    }
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, cloneDataValue(value) as Record<string, unknown>);
-    }
-    return;
-  }
-
-  const parts = path.replace(/^\//u, '').split('/').filter(Boolean);
-  let cursor = model;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!key) continue;
-    if (typeof cursor[key] !== 'object' || cursor[key] === null) {
-      cursor[key] = {};
-    }
-    cursor = cursor[key] as Record<string, unknown>;
-  }
-
-  const last = parts[parts.length - 1];
-  if (!last) return;
-  if (value === undefined) {
-    delete cursor[last];
-  } else {
-    cursor[last] = cloneDataValue(value);
-  }
-}
-
-function applyA2UIMessagesToSnapshot(
-  dataModel: Record<string, unknown>,
-  surfaceIds: Set<string>,
-  messages: unknown[],
-): void {
-  for (const message of messages) {
-    if (!message || typeof message !== 'object') continue;
-    const record = message as {
-      createSurface?: { surfaceId?: unknown };
-      deleteSurface?: { surfaceId?: unknown };
-      updateDataModel?: { path?: unknown; value?: unknown };
-    };
-    if (
-      record.createSurface
-      && typeof record.createSurface.surfaceId === 'string'
-    ) {
-      surfaceIds.add(record.createSurface.surfaceId);
-      continue;
-    }
-    if (
-      record.deleteSurface
-      && typeof record.deleteSurface.surfaceId === 'string'
-    ) {
-      surfaceIds.delete(record.deleteSurface.surfaceId);
-      continue;
-    }
-    if (record.updateDataModel) {
-      applyDataModel(
-        dataModel,
-        typeof record.updateDataModel.path === 'string'
-          ? record.updateDataModel.path
-          : '/',
-        record.updateDataModel.value,
-      );
-    }
-  }
 }
 
 function titleFromMessage(content: string): string {
