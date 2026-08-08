@@ -51,7 +51,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
-    "@types/css-tree": "^2.3.11",
+    "@types/css-tree": "^3.2.0",
     "@types/object.groupby": "^1.0.4",
     "css-loader": "^7.1.4",
     "webpack": "^5.109.2"

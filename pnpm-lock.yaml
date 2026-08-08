@@ -1394,8 +1394,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       '@types/css-tree':
-        specifier: ^2.3.11
-        version: 2.3.11
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/react':
         specifier: npm:@types/react@^19.2.18
         version: 19.2.18
@@ -2056,8 +2056,8 @@ importers:
         version: 3.2.1
     devDependencies:
       '@types/css-tree':
-        specifier: ^2.3.11
-        version: 2.3.11
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -2539,8 +2539,8 @@ importers:
         specifier: catalog:rstest
         version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
       '@types/css-tree':
-        specifier: ^2.3.11
-        version: 2.3.11
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/object.groupby':
         specifier: ^1.0.4
         version: 1.0.4
@@ -6153,8 +6153,8 @@ packages:
   '@types/cors@2.8.17':
     resolution: {integrity: sha512-8CGDvrBj1zgo2qE+oS3pOCyYNqCPryMWY2bGfwA0dcfopWGgxs+78df0Rs3rc9THP4JkOhLsAa+15VdpAqkcUA==}
 
-  '@types/css-tree@2.3.11':
-    resolution: {integrity: sha512-aEokibJOI77uIlqoBOkVbaQGC9zII0A+JH1kcTNKW2CwyYWD8KM6qdo+4c77wD3wZOQfJuNWAr9M4hdk+YhDIg==}
+  '@types/css-tree@3.2.0':
+    resolution: {integrity: sha512-J5KXmk6BFIepOT7280FdFyNs4c5fh0Uee0otjKEvzchrRs38Ii9qminqc4ds0L19X8Zd/rT+brR9jkBthygjWw==}
 
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
@@ -16499,7 +16499,7 @@ snapshots:
     dependencies:
       '@types/node': 24.13.3
 
-  '@types/css-tree@2.3.11': {}
+  '@types/css-tree@3.2.0': {}
 
   '@types/debug@4.1.13':
     dependencies:
