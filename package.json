@@ -35,7 +35,7 @@
     "@rstest/core": "catalog:rstest",
     "@rstest/coverage-istanbul": "catalog:rstest",
     "@svitejs/changesets-changelog-github-compact": "^1.2.0",
-    "@tsconfig/node22": "^22.0.5",
+    "@tsconfig/node24": "^24.0.0",
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.13.3",
     "@typescript/native": "npm:typescript@7.0.2",
