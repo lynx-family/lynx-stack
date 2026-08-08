@@ -5,6 +5,6 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.0",
     "jsdom": "^27.4.0",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.10"
   }
 }
