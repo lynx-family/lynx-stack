@@ -90,6 +90,9 @@
         "nyc",
         "tiny-invariant",
         "wasm-feature-detect",
+        "@lynx-js/lynx-core",
+        "@preact/signals",
+        "@rspack/lite-tapable",
       ],
       "groupName": null,
     },
@@ -100,6 +103,7 @@
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rspack",
       ],
       "matchPackageNames": [
         "/@rspack/*/",
@@ -113,6 +117,7 @@
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rsbuild",
       ],
       "matchPackageNames": [
         "/@rsbuild/*/",
@@ -131,6 +136,7 @@
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rstest",
       ],
       "matchPackageNames": [
         "/@rstest/*/",
