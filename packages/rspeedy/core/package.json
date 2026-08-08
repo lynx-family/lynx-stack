@@ -70,7 +70,7 @@
     "@rstest/core": "catalog:rstest",
     "@swc/core": "^1.15.30",
     "chokidar": "^5.0.0",
-    "commander": "^13.1.0",
+    "commander": "^15.0.0",
     "eventemitter3": "^5.0.4",
     "exit-hook": "^5.1.0",
     "expect-type": "^1.2.1",
