@@ -1566,7 +1566,7 @@ importers:
         version: 7.58.12(@types/node@24.13.3)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@7.0.2)
+        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2122,7 +2122,7 @@ importers:
         version: 1.0.6(@rsbuild/core@2.1.10(core-js@3.49.0))
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@7.0.2)
+        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2179,7 +2179,7 @@ importers:
         version: 2.1.10(core-js@3.49.0)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@7.0.2)
+        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -15804,17 +15804,6 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rslib/core@1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@7.0.2)':
-    dependencies:
-      '@rsbuild/core': 2.1.10(core-js@3.49.0)
-      rsbuild-plugin-dts: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(@rsbuild/core@2.1.10(core-js@3.49.0))(typescript@7.0.2)
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.58.12(@types/node@24.13.3)
-      typescript: 7.0.2
-    transitivePeerDependencies:
-      - '@module-federation/runtime-tools'
-      - core-js
-
   '@rspack/binding-darwin-arm64@2.1.7':
     optional: true
 
@@ -21781,14 +21770,6 @@ snapshots:
     optionalDependencies:
       '@microsoft/api-extractor': 7.58.12(@types/node@24.13.3)
       typescript: 6.0.3
-
-  rsbuild-plugin-dts@1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(@rsbuild/core@2.1.10(core-js@3.49.0))(typescript@7.0.2):
-    dependencies:
-      '@ast-grep/napi': 0.37.0
-      '@rsbuild/core': 2.1.10(core-js@3.49.0)
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.58.12(@types/node@24.13.3)
-      typescript: 7.0.2
 
   rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@2.1.10(core-js@3.49.0))(i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.13.3)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(typescript@6.0.3))(rollup@4.62.2):
     dependencies:
