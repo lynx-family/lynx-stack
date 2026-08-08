@@ -1,5 +1,13 @@
 # @lynx-js/web-elements
 
+## 0.12.8
+
+### Patch Changes
+
+- Update `dompurify` from `^3.4.12` to `^3.4.13` ([#3417](https://github.com/lynx-family/lynx-stack/pull/3417))
+
+- Update `markdown-it` from `^14.3.0` to `^15.0.0` ([#3423](https://github.com/lynx-family/lynx-stack/pull/3423))
+
 ## 0.12.7
 
 ### Patch Changes

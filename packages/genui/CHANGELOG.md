@@ -1,5 +1,17 @@
 # @lynx-js/genui
 
+## 0.2.2
+
+### Patch Changes
+
+- Update `@a2ui/web_core` from `0.10.5` to `0.10.6` ([#3416](https://github.com/lynx-family/lynx-stack/pull/3416))
+
+- Update `@preact/signals` from `^2.9.4` to `^2.11.0` ([#3230](https://github.com/lynx-family/lynx-stack/pull/3230))
+
+- Update `@openuidev/lang-core` from `^0.2.9` to `^0.2.10` ([#3279](https://github.com/lynx-family/lynx-stack/pull/3279))
+
+- Update `@openuidev/lang-core` from `^0.2.10` to `^0.2.11` ([#3419](https://github.com/lynx-family/lynx-stack/pull/3419))
+
 ## 0.2.1
 
 ### Patch Changes
