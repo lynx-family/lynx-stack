@@ -41,17 +41,32 @@
  * `path.resolve` and `path.relative` fall back to `process.cwd()` when handed a
  * relative path. With a relative `projectRoot` the *old* implementation therefore
  * produced different hrefs depending on the directory the build ran from, e.g.
- * `generateHref('proj', './index.css', '../../../../x.css')` returned
- * `'../../../x.css'` from a 1-deep cwd and `'../../../../x.css'` from a 4-deep one.
- * That is unspecifiable, so the differential matrix restricts itself to inputs
- * whose result is cwd independent (`projectRoot` absolute).
+ * `generateHref('proj', 'index.css', '../../x.css')` returns `'../../x.css'` from
+ * a deep directory but `'../x.css'` from the filesystem root, where the walk up
+ * clamps. That is unspecifiable, so the differential matrix restricts itself to
+ * inputs whose result is cwd independent (`projectRoot` absolute).
  *
  * In practice `projectRoot` is absolute: `parse` defaults it to `'/'`.
+ *
+ * ## Tests that depend on the working directory
+ *
+ * They go through `withCwd`, which runs a body from a directory it creates under
+ * `os.tmpdir()`. No test writes an absolute path of its own: `'/tmp'` is not a
+ * directory on Windows, and seven tests here once failed on the
+ * `Vitest (Windows)` runner because of it. `cwd-sensitive assertions go through
+ * withCwd` enforces that.
+ *
+ * The same class of bug reaches the `path.win32` oracle, which takes its drive
+ * from `process.cwd()` and so is not a function of its arguments alone; see
+ * `winOracle is only an oracle where it is drive-stable`.
  */
 
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { describe, expect, test } from 'vitest';
+import { afterAll, describe, expect, test } from 'vitest';
 
 import { generateHref, getFullPath } from '../src/generateHref.js';
 import { parse } from '../src/index.js';
@@ -125,7 +140,65 @@ function keepsLeadingDoubleSlash(projectRoot: string, origin: string): boolean {
   return origin.startsWith('//') && oraclePath.normalize(projectRoot) === '/';
 }
 
+/**
+ * ## Running assertions from a different working directory
+ *
+ * Several tests below have to observe how a href changes with `process.cwd()`.
+ * They must not name a directory themselves: changing directory to `'/tmp'` or
+ * `'/usr/share'` throws `ENOENT` on Windows, because a POSIX absolute path there
+ * resolves against the current drive (`C:\tmp`) and that directory does not
+ * exist. Seven tests in this file used to fail on the `Vitest (Windows)` runner
+ * for exactly that reason.
+ *
+ * So the directories are created rather than named, under `os.tmpdir()`, which
+ * is `C:\Users\...\Temp` on Windows and `/tmp` here. `withCwd` is the only place
+ * that calls `process.chdir`, and `cwd-sensitive assertions go through withCwd`
+ * further down enforces that - keeping a hardcoded POSIX path from creeping back
+ * in.
+ */
+const probeShallow = fs.mkdtempSync(
+  path.join(fs.realpathSync(os.tmpdir()), 'lynx-generatehref-'),
+);
+
+/** Three levels below `probeShallow`, so the two differ in depth. */
+const probeDeep = path.join(probeShallow, 'nested', 'deeper', 'deepest');
+fs.mkdirSync(probeDeep, { recursive: true });
+
+/**
+ * The filesystem root: `/` here, `C:\` on Windows. Derived rather than written
+ * out, so it stays a legal `chdir` target on both. It is the one cwd shallow
+ * enough to make a `..` walk clamp, which is what makes a relative `projectRoot`
+ * observably cwd-dependent at all.
+ */
+const probeRoot = path.parse(probeShallow).root;
+
+/** Every probe directory, shallowest first. */
+const cwdProbes = [probeRoot, probeShallow, probeDeep];
+
+/**
+ * Runs `body` from `dir`, then restores the previous working directory.
+ *
+ * `body` receives the cwd as `pathe` sees it - `process.cwd()` with backslashes
+ * rewritten, which is precisely `pathe`'s own `cwd()` helper. Tests derive their
+ * expected values from that string instead of hardcoding one, because the shape
+ * is platform-specific: a Windows cwd keeps its drive letter (`C:/tmp/x`), and a
+ * href that leaks the cwd therefore looks different there.
+ */
+function withCwd<T>(dir: string, body: (patheCwd: string) => T): T {
+  const before = process.cwd();
+  process.chdir(dir);
+  try {
+    return body(process.cwd().replaceAll('\\', '/'));
+  } finally {
+    process.chdir(before);
+  }
+}
+
 describe('generateHref', () => {
+  afterAll(() => {
+    fs.rmSync(probeShallow, { recursive: true, force: true });
+  });
+
   /**
    * The matrix below deliberately contains **no backslashes**. `pathe` treats
    * `\` as a separator, `path.posix` treats it as an ordinary character, so any
@@ -605,19 +678,18 @@ describe('generateHref', () => {
       // consulting the `path.posix` oracle: the backslash rows are pinned
       // *because* they diverge from that oracle, so the oracle can no longer
       // stand in for "cwd independent".
-      const original = process.cwd();
-      try {
-        for (const dir of ['/', '/tmp', '/usr/share']) {
-          process.chdir(dir);
+      //
+      // Every row has an absolute `projectRoot`, which is what makes this hold -
+      // `'//'` deliberately has no row, see the comment in the table.
+      for (const dir of cwdProbes) {
+        withCwd(dir, (cwd) => {
           for (const { projectRoot, filename, origin, href } of cases) {
             expect(
               generateHref(projectRoot, filename, origin),
-              `cwd=${dir} generateHref(${projectRoot}, ${filename}, ${origin})`,
+              `cwd=${cwd} generateHref(${projectRoot}, ${filename}, ${origin})`,
             ).toBe(href);
           }
-        }
-      } finally {
-        process.chdir(original);
+        });
       }
     });
 
@@ -717,30 +789,62 @@ describe('generateHref', () => {
      *   one absolute value that is not, see below.
      */
     test('an absolute projectRoot is cwd-independent', () => {
-      const cwd = process.cwd();
-      try {
-        process.chdir('/');
-        const atRoot = generateHref('/proj', 'index.css', '../../x.css');
-        process.chdir('/tmp');
-        const atTmp = generateHref('/proj', 'index.css', '../../x.css');
-        expect(atRoot).toBe(atTmp);
-        expect(atRoot).toBe('../x.css');
-      } finally {
-        process.chdir(cwd);
+      const hrefs = cwdProbes.map((dir) =>
+        withCwd(dir, () => generateHref('/proj', 'index.css', '../../x.css'))
+      );
+
+      // Same answer from all three probes, which differ in depth.
+      expect(new Set(hrefs).size).toBe(1);
+      // And that answer is this exact string, on every platform.
+      for (const href of hrefs) {
+        expect(href).toBe('../x.css');
       }
     });
 
     test('a relative projectRoot resolves against cwd, as node:path does', () => {
-      const cwd = process.cwd();
-      try {
-        process.chdir('/');
-        expect(generateHref('proj', 'index.css', './a.css')).toBe('/a.css');
-        expect(generateHref('proj', 'index.css', '../../x.css')).toBe(
-          '../x.css',
-        );
-      } finally {
-        process.chdir(cwd);
+      // `./a.css` stays put: `relative()` resolves both of its arguments against
+      // the same cwd, so the cwd cancels out.
+      for (const dir of cwdProbes) {
+        withCwd(dir, (cwd) => {
+          expect(generateHref('proj', 'index.css', './a.css'), `cwd=${cwd}`)
+            .toBe('/a.css');
+        });
       }
+
+      // `../../x.css` does not: the walk up is clamped at the filesystem root, so
+      // a cwd shallow enough to clamp gives a different answer from a deep one.
+      // That clamping is the *only* source of cwd dependence here, which is why
+      // this needs the root probe and not just two temp directories.
+      const atRoot = withCwd(probeRoot, (cwd) => ({
+        cwd,
+        href: generateHref('proj', 'index.css', '../../x.css'),
+      }));
+      const atDeep = withCwd(probeDeep, (cwd) => ({
+        cwd,
+        href: generateHref('proj', 'index.css', '../../x.css'),
+      }));
+
+      // The point of the test: the href really does move with the cwd.
+      expect(atRoot.href).not.toBe(atDeep.href);
+
+      // Pinned by value at both ends rather than left as an inequality. Any cwd
+      // deep enough not to clamp gives this, on every platform.
+      expect(atDeep.href).toBe('../../x.css');
+
+      // At the root the two platforms genuinely differ, so the expectation is
+      // derived from the cwd `pathe` reported rather than hardcoded:
+      //
+      // - a POSIX root is `'/'`, and the walk clamps cleanly to `'../x.css'`.
+      // - a Windows root is `'C:/'`, whose drive counts as a segment. `relative()`
+      //   is handed a trailing-slash root and emits a **malformed doubled slash**
+      //   -`'../..//x.css'`. That is worse than "the depth changes with the cwd":
+      //   the href is not a well-formed path at all. It is unreachable in this
+      //   tree - `parse` defaults `projectRoot` to `'/'` - and is recorded here
+      //   rather than fixed, because fixing it means hand-rolling the resolution
+      //   this module exists to delete.
+      expect(atRoot.href).toBe(
+        /^[A-Za-z]:/.test(atRoot.cwd) ? '../..//x.css' : '../x.css',
+      );
     });
   });
 
@@ -770,41 +874,54 @@ describe('generateHref', () => {
    */
   describe('projectRoot \'//\' is not supported', () => {
     test('leaks process.cwd() into the href', () => {
-      const cwd = process.cwd();
-      try {
-        // Pinned per-directory rather than asserted to be "unstable": an
-        // inequality assertion would also pass if the two values differed for
-        // some unrelated reason. These say *what* leaks.
-        process.chdir('/tmp');
-        expect(generateHref('//', './index.css', './a.css')).toBe('/tmp/a.css');
-        process.chdir('/usr/share');
-        expect(generateHref('//', './index.css', './a.css')).toBe(
-          '/usr/share/a.css',
-        );
+      // Pinned per-directory rather than asserted to be "unstable": an
+      // inequality assertion would also pass if the two values differed for
+      // some unrelated reason. These say *what* leaks.
+      //
+      // The expectation is derived from the cwd instead of written out, because
+      // the leaked string is the cwd itself and its shape is platform-specific.
+      const atShallow = withCwd(probeShallow, (cwd) => ({
+        cwd,
+        href: generateHref('//', './index.css', './a.css'),
+      }));
+      const atDeep = withCwd(probeDeep, (cwd) => ({
+        cwd,
+        href: generateHref('//', './index.css', './a.css'),
+      }));
 
-        // The control: a single-slash root is cwd independent, so the leak is
-        // specific to `'//'` and not an artefact of the chdir harness.
-        process.chdir('/tmp');
-        const atTmp = generateHref('/', './index.css', './a.css');
-        process.chdir('/usr/share');
-        expect(generateHref('/', './index.css', './a.css')).toBe(atTmp);
-        expect(atTmp).toBe('/a.css');
-      } finally {
-        process.chdir(cwd);
+      for (const { cwd, href } of [atShallow, atDeep]) {
+        // The working directory appears verbatim in the href. On Windows it
+        // carries its drive letter (`C:/Users/.../Temp/x`), which `relative()`
+        // cannot express as a path under `//`, so it prefixes a `..` as well.
+        const escapesRoot = /^[A-Za-z]:/.test(cwd) ? '../' : '';
+        expect(href).toBe(`${escapesRoot}${cwd}/a.css`);
+      }
+
+      // Two different directories therefore give two different hrefs - the
+      // defect is a real instability, not just an odd constant.
+      expect(atShallow.href).not.toBe(atDeep.href);
+
+      // The control: a single-slash root is cwd independent, so the leak is
+      // specific to `'//'` and not an artefact of the chdir harness.
+      for (const dir of [probeShallow, probeDeep]) {
+        withCwd(dir, (cwd) => {
+          expect(generateHref('/', './index.css', './a.css'), `cwd=${cwd}`)
+            .toBe('/a.css');
+        });
       }
     });
 
     test('the leak needs a dot-prefixed filename', () => {
-      const cwd = process.cwd();
-      try {
-        // `join('//', 'index.css')` is `'//index.css'`, which `isAbsolute`
-        // accepts, so `resolve` never reaches its `cwd()` fallback.
-        process.chdir('/tmp');
-        const atTmp = generateHref('//', 'index.css', './a.css');
-        process.chdir('/usr/share');
-        expect(generateHref('//', 'index.css', './a.css')).toBe(atTmp);
-      } finally {
-        process.chdir(cwd);
+      // `join('//', 'index.css')` is `'//index.css'`, which `isAbsolute`
+      // accepts, so `resolve` never reaches its `cwd()` fallback.
+      //
+      // Pinned by value at each directory rather than as "the two agree", so the
+      // test states the expected href instead of only its stability.
+      for (const dir of [probeShallow, probeDeep]) {
+        withCwd(dir, (cwd) => {
+          expect(generateHref('//', 'index.css', './a.css'), `cwd=${cwd}`)
+            .toBe('/a.css');
+        });
       }
     });
   });
@@ -827,7 +944,12 @@ describe('generateHref', () => {
    * drive-letter root, and a drive-letter `@import`.
    */
   describe('native Windows paths', () => {
-    /** What the old implementation emitted when the build ran on Windows. */
+    /**
+     * What the old implementation emitted when the build ran on Windows.
+     *
+     * Only trustworthy where it is *drive-stable* - see
+     * `winOracle is only an oracle where it is drive-stable`.
+     */
     const winOracle = (
       projectRoot: string,
       filename: string,
@@ -847,6 +969,86 @@ describe('generateHref', () => {
       if (!rel.startsWith('.')) rel = P.join(P.sep, rel);
       return rel.replaceAll(path.win32.sep, '/');
     };
+
+    /** Runs `body` with `process.cwd()` reporting a Windows path. */
+    function withFakeCwd<T>(windowsCwd: string, body: () => T): T {
+      const real = process.cwd;
+      process.cwd = () => windowsCwd;
+      try {
+        return body();
+      } finally {
+        process.cwd = real;
+      }
+    }
+
+    /**
+     * `path.win32.resolve` takes the *device* it resolves against from
+     * `process.cwd()`. `winOracle` is therefore only a function of its arguments
+     * for inputs that already name a drive; for anything else the answer moves
+     * with whichever drive the runner happens to be on, and there is no single
+     * "what Windows used to emit" value to assert.
+     *
+     * That is easy to miss, because on Linux `process.cwd()` has no drive at all
+     * and `path.win32` quietly takes a "no device" branch - so a drive-sensitive
+     * input still looks like a stable oracle here while disagreeing with CI. Two
+     * assertions in this block did exactly that and failed on the
+     * `Vitest (Windows)` runner.
+     *
+     * This test keeps that from happening again: it pins which inputs are
+     * drive-sensitive (so they are documented rather than silently dropped) and
+     * asserts that every input the block *does* compare against `winOracle` is
+     * drive-stable.
+     */
+    test('winOracle is only an oracle where it is drive-stable', () => {
+      const drives = [
+        'C:\\',
+        'C:\\Users\\runneradmin\\proj',
+        'D:\\',
+        'D:\\a\\b',
+        'E:\\x',
+      ];
+      const under = (projectRoot: string, filename: string, origin: string) =>
+        new Set(
+          drives.map((drive) =>
+            withFakeCwd(drive, () => winOracle(projectRoot, filename, origin))
+          ),
+        );
+
+      // Drive-sensitive, and so deliberately not asserted anywhere. A Windows
+      // host on C: rooted these differently from one on D:, which is why the
+      // values below cannot be reduced to a single expectation.
+      expect(under('/', './index.css', 'C:\\x.css')).toStrictEqual(
+        new Set(['/x.css', '/C:/x.css']),
+      );
+      expect(under('C:\\proj', '\\abs\\index.css', './a.css')).toStrictEqual(
+        new Set(['../abs/a.css', '/D:/abs/a.css', '/E:/abs/a.css']),
+      );
+
+      // Everything this block compares against `winOracle` has one answer on
+      // every drive. If a new assertion is added for a drive-sensitive input,
+      // adding it here turns this red instead of only the Windows runner.
+      const stable: [string, string, string][] = [
+        ['C:\\proj', 'pages\\index.css', './a.css'],
+        ['C:\\proj', 'pages\\index.css', '../shared/b.css'],
+        ['C:\\proj', 'pages\\index.css', 'a\\b.css'],
+        ['\\proj', 'pages\\index.css', './a.css'],
+        ['\\\\srv\\share', 'pages\\index.css', './a.css'],
+        ['C:\\proj', 'pages\\index.css', '/a.css'],
+        ['C:\\proj', 'pages\\index.css', '@p/a.css'],
+        // Stable across drives. It does change if the cwd is itself a UNC path
+        // on the same share, which is why `drives` above lists drive letters: a
+        // UNC working directory is not a shape any runner or caller uses.
+        ['/', './index.css', '\\\\srv\\share\\x.css'],
+        ['/', './index.css', '\\a.css'],
+        ['D:\\a\\b', 'C:\\proj\\pages\\index.css', './a.css'],
+      ];
+      for (const [projectRoot, filename, origin] of stable) {
+        expect(
+          under(projectRoot, filename, origin).size,
+          `winOracle(${projectRoot}, ${filename}, ${origin})`,
+        ).toBe(1);
+      }
+    });
 
     /**
      * The common case: a relative `filename` under a Windows-shaped
@@ -925,11 +1127,13 @@ describe('generateHref', () => {
         expect(generateHref('/', './index.css', 'C:\\x.css')).toBe(
           '../C:/x.css',
         );
-        // Both oracles rooted it instead.
-        expect(winOracle('/', './index.css', 'C:\\x.css')).toBe('/C:/x.css');
+        // The `path.posix` oracle rooted it instead.
         expect(generateHrefOracle('/', './index.css', 'C:\\x.css')).toBe(
           '/C:/x.css',
         );
+        // `winOracle` is deliberately *not* consulted here - it has no single
+        // answer for this input. See `winOracle is only an oracle where it is
+        // drive-stable` above.
       });
 
       test('a UNC @import loses its doubled leading slash', () => {
@@ -961,9 +1165,9 @@ describe('generateHref', () => {
         expect(generateHref('C:\\proj', '\\abs\\index.css', './a.css')).toBe(
           '../..//abs/a.css',
         );
-        expect(winOracle('C:\\proj', '\\abs\\index.css', './a.css')).toBe(
-          '/abs/a.css',
-        );
+        // `winOracle` is deliberately *not* consulted here either - this input is
+        // drive-sensitive too. See `winOracle is only an oracle where it is
+        // drive-stable` above.
       });
 
       test('a cross-drive filename stays relative instead of being rooted', () => {
@@ -983,6 +1187,30 @@ describe('generateHref', () => {
         '/shared/b.css',
       );
     });
+  });
+
+  /**
+   * Structural guard for the portability fix above.
+   *
+   * A written-out POSIX directory is not a portable target for a working
+   * directory change: on Windows it resolves against the current drive, so
+   * `'/tmp'` becomes `C:\tmp` and throws `ENOENT`. Seven tests here failed that
+   * way. `withCwd` exists so no individual test has to name a directory, and this
+   * keeps it that way - it must stay the only place that changes directory, and
+   * no caller may pass a string literal.
+   *
+   * Checked by reading this file rather than by convention, because the failure
+   * mode is invisible on Linux: a new test with a written-out path passes here and
+   * only breaks on the Windows runner.
+   */
+  test('cwd-sensitive assertions go through withCwd', () => {
+    const source = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8');
+
+    // Exactly the two calls inside `withCwd` - one out, one back.
+    expect(source.match(/process\.chdir\(/g)).toHaveLength(2);
+
+    // And neither is handed a literal path; both take a created directory.
+    expect(source).not.toMatch(/process\.chdir\(\s*['"`]/);
   });
 
   describe('integration through parse', () => {
