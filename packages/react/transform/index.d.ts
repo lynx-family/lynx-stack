@@ -740,8 +740,6 @@ export interface TransformNodiffOptions {
   experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions
   /** @internal */
   inject?: boolean | InjectVisitorConfig
-  /** @internal */
-  collectMTSDefines?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
@@ -753,14 +751,14 @@ export interface TransformNodiffOutput {
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
-  mtsDefines?: Array<MTSDefine>
+  definesForMainThread?: Array<MainThreadDefine>
 }
 /**
  * @internal
- * A snapshot or worklet definition the main thread needs, collected while the
- * background compiles the module.
+ * A snapshot or worklet definition the main thread needs, collected while
+ * compiling the module for either thread.
  */
-export interface MTSDefine {
+export interface MainThreadDefine {
   /** @internal */
   kind: 'snapshot' | 'worklet'
   /**

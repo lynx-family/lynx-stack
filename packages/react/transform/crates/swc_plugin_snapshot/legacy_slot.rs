@@ -31,7 +31,7 @@ use swc_plugins_shared::{
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
-  mts_defines::{collect_mts_define, MtsDefineKind},
+  main_thread_defines::{collect_main_thread_define, MainThreadDefineKind},
   target::TransformTarget,
   utils::calc_hash_number,
 };
@@ -1234,7 +1234,7 @@ where
     }))
   };
 
-  let collecting = t.mts_defs_collector.is_some();
+  let collecting = t.main_thread_defs_collector.is_some();
 
   let mut dynamic_part_extractor = DynamicPartExtractor::new(
     creator_runtime_expr.clone(),
@@ -1528,9 +1528,9 @@ where
   ));
 
   if let Some(snapshot_create_call_mt) = snapshot_create_call_mt {
-    collect_mts_define(
-      &t.mts_defs_collector,
-      MtsDefineKind::Snapshot,
+    collect_main_thread_define(
+      &t.main_thread_defs_collector,
+      MainThreadDefineKind::Snapshot,
       snapshot_uid,
       vec![
         entry_snapshot_uid_def.clone(),

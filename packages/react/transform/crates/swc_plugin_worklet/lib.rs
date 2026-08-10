@@ -22,7 +22,7 @@ use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
-  mts_defines::{collect_mts_define, MtsDefineKind, MtsDefinesCollector},
+  main_thread_defines::{collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector},
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -68,7 +68,7 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
-  mts_defs_collector: Option<MtsDefinesCollector>,
+  main_thread_defs_collector: Option<MainThreadDefinesCollector>,
 }
 
 impl Default for WorkletVisitor {
@@ -110,8 +110,8 @@ impl VisitMut for WorkletVisitor {
             || collector.has_extracted_js_fns());
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_main_thread = self.main_thread_defs_collector.is_some();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let m = n.as_method().unwrap().clone();
         let original_function = m.function.clone();
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
@@ -130,7 +130,7 @@ impl VisitMut for WorkletVisitor {
             true,
             &mut self.named_imports,
             self.worklet_runtime_loaded_ident.clone(),
-            collect_mts,
+            collect_main_thread,
           );
 
         // For JS worklets, the ctx object is later converted to a function by `transformWorklet(..)`
@@ -246,8 +246,8 @@ impl VisitMut for WorkletVisitor {
           || collector.has_extracted_js_fns();
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_main_thread = self.main_thread_defs_collector.is_some();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -264,7 +264,7 @@ impl VisitMut for WorkletVisitor {
             true,
             &mut self.named_imports,
             self.worklet_runtime_loaded_ident.clone(),
-            collect_mts,
+            collect_main_thread,
           );
 
         if should_use_getter {
@@ -339,8 +339,8 @@ impl VisitMut for WorkletVisitor {
     n.visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let collect_mts = self.mts_defs_collector.is_some();
-    let collected_hash = collect_mts.then(|| hash.clone());
+    let collect_main_thread = self.main_thread_defs_collector.is_some();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
     let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -352,7 +352,7 @@ impl VisitMut for WorkletVisitor {
       false,
       &mut self.named_imports,
       self.worklet_runtime_loaded_ident.clone(),
-      collect_mts,
+      collect_main_thread,
     );
 
     *n = VarDecl {
@@ -394,8 +394,8 @@ impl VisitMut for WorkletVisitor {
         n.visit_mut_with(&mut collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_main_thread = self.main_thread_defs_collector.is_some();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -431,7 +431,7 @@ impl VisitMut for WorkletVisitor {
             false,
             &mut self.named_imports,
             self.worklet_runtime_loaded_ident.clone(),
-            collect_mts,
+            collect_main_thread,
           );
 
         *n = *worklet_object_expr;
@@ -458,8 +458,8 @@ impl VisitMut for WorkletVisitor {
         n.visit_mut_with(&mut collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_main_thread = self.main_thread_defs_collector.is_some();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -472,7 +472,7 @@ impl VisitMut for WorkletVisitor {
             false,
             &mut self.named_imports,
             self.worklet_runtime_loaded_ident.clone(),
-            collect_mts,
+            collect_main_thread,
           );
 
         *n = *worklet_object_expr;
@@ -539,8 +539,8 @@ impl VisitMut for WorkletVisitor {
       .visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let collect_mts = self.mts_defs_collector.is_some();
-    let collected_hash = collect_mts.then(|| hash.clone());
+    let collect_main_thread = self.main_thread_defs_collector.is_some();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
     let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -558,7 +558,7 @@ impl VisitMut for WorkletVisitor {
       false,
       &mut self.named_imports,
       self.worklet_runtime_loaded_ident.clone(),
-      collect_mts,
+      collect_main_thread,
     );
 
     *n = ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
@@ -761,12 +761,12 @@ impl WorkletVisitor {
       shared_identifiers: FxHashSet::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
-      mts_defs_collector: None,
+      main_thread_defs_collector: None,
     }
   }
 
-  pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {
-    self.mts_defs_collector = Some(collector);
+  pub fn with_main_thread_defs_collector(mut self, collector: MainThreadDefinesCollector) -> Self {
+    self.main_thread_defs_collector = Some(collector);
     self
   }
 
@@ -778,9 +778,9 @@ impl WorkletVisitor {
       "const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt,
       loaded = self.worklet_runtime_loaded_ident.clone(),
     );
-    collect_mts_define(
-      &self.mts_defs_collector,
-      MtsDefineKind::Worklet,
+    collect_main_thread_define(
+      &self.main_thread_defs_collector,
+      MainThreadDefineKind::Worklet,
       hash,
       vec![ModuleItem::Stmt(guard), ModuleItem::Stmt(stmt)],
     );
