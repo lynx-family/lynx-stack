@@ -45,17 +45,20 @@ describe('startHotDevServer', () => {
     status.mockReturnValue('idle');
   });
 
-  it('should reload when an update cannot be applied', async () => {
-    check.mockRejectedValue(new Error('Module build failed'));
-    // `apply` moves the session to a terminal state
-    status.mockReturnValueOnce('idle').mockReturnValue('abort');
+  // `apply` moves the session to a terminal state
+  it.each(['abort', 'fail'])(
+    'should reload when an update cannot be applied (%s)',
+    async (terminalStatus) => {
+      check.mockRejectedValue(new Error('Module build failed'));
+      status.mockReturnValueOnce('idle').mockReturnValue(terminalStatus);
 
-    start();
-    onHotUpdate('next-hash');
-    await vi.waitFor(() => {
-      expect(reloadPage).toBeCalledTimes(1);
-    });
-  });
+      start();
+      onHotUpdate('next-hash');
+      await vi.waitFor(() => {
+        expect(reloadPage).toBeCalledTimes(1);
+      });
+    },
+  );
 
   it('should reload when the update is gone from the server', async () => {
     check.mockResolvedValue(null);
