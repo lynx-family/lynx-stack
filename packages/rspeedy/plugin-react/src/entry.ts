@@ -62,7 +62,7 @@ export function applyEntry(
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
-    const entryPairs: Array<{ mainThread: string; background: string }> = []
+    const entryPairs: Array<{ mainThread: string, background: string }> = []
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -160,7 +160,10 @@ export function applyEntry(
 
         mainThreadChunks.push(mainThreadName)
 
-        entryPairs.push({ mainThread: mainThreadEntry, background: backgroundEntry })
+        entryPairs.push({
+          mainThread: mainThreadEntry,
+          background: backgroundEntry,
+        })
 
         chain
           .entry(mainThreadEntry)

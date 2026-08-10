@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export const DEFINES_FOR_MAIN_THREAD_BUILD_INFO = 'lynx:defines-for-main-thread';
+export const DEFINES_FOR_MAIN_THREAD_BUILD_INFO =
+  'lynx:defines-for-main-thread';
 
 export interface MainThreadDefine {
   kind: 'snapshot' | 'worklet';

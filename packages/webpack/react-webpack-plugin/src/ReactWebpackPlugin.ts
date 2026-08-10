@@ -437,9 +437,11 @@ class ReactWebpackPlugin {
                 } to collect the main-thread definitions from.`,
               );
             }
-            const visited = new Set<NonNullable<
-              ReturnType<typeof moduleGraph.getModule>
-            >>();
+            const visited = new Set<
+              NonNullable<
+                ReturnType<typeof moduleGraph.getModule>
+              >
+            >();
             const queue = [
               ...entry.dependencies,
               ...entry.includeDependencies,
@@ -453,7 +455,9 @@ class ReactWebpackPlugin {
                 continue;
               }
               visited.add(module);
-              for (const connection of moduleGraph.getOutgoingConnections(module)) {
+              for (
+                const connection of moduleGraph.getOutgoingConnections(module)
+              ) {
                 const next = connection.module;
                 if (next && !visited.has(next)) {
                   queue.push(next);

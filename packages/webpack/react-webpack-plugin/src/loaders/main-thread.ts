@@ -110,7 +110,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
       delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
     }
     if (result.definesForMainThread) {
-      buildInfo[DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = result.definesForMainThread;
+      buildInfo[DEFINES_FOR_MAIN_THREAD_BUILD_INFO] =
+        result.definesForMainThread;
     }
   }
 

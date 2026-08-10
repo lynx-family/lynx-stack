@@ -221,7 +221,8 @@ describe('missing definitions injection', () => {
                 const [resource, defines] of Object.entries(definesByResource)
               ) {
                 if (module.identifier().includes(resource)) {
-                  module.buildInfo![DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = defines;
+                  module.buildInfo![DEFINES_FOR_MAIN_THREAD_BUILD_INFO] =
+                    defines;
                 }
               }
             });

@@ -202,7 +202,6 @@ describe('definesForMainThread', () => {
       "
     `);
   });
-
 });
 
 function legacy(target, extra = {}) {
@@ -264,7 +263,6 @@ describe('legacy slot codegen', () => {
 
     expect(fromBackground.definesForMainThread).toStrictEqual(fromMainThread.definesForMainThread);
   });
-
 });
 
 describe('shared runtime imports', () => {
