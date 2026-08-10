@@ -161,7 +161,7 @@ function depLine({ name, to }) {
 }
 
 function describe(deps) {
-  return [...new Set(deps.map(depLine))].sort().join('\n');
+  return [...new Set(deps.map((d) => depLine(d)))].sort().join('\n');
 }
 
 // `analyze()` reports one entry per version transition, so the same dependency
@@ -175,7 +175,7 @@ function depNames(deps) {
 function slugify(deps) {
   return depNames(deps)
     .map((name) =>
-      name.replace(/^@/, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(
+      name.replace(/^@/, '').replace(/[^a-z0-9]+/gi, '-').replace(
         /^-+|-+$/g,
         '',
       )
