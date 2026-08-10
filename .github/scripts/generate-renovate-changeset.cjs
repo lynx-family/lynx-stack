@@ -164,9 +164,17 @@ function describe(deps) {
   return [...new Set(deps.map(depLine))].sort().join('\n');
 }
 
+// `analyze()` reports one entry per version transition, so the same dependency
+// appears twice when two packages start from different versions. Everything
+// keyed by the dependency set has to work off the distinct names, or the file
+// is named `motion_motion` and the next run does not recognise it as its own.
+function depNames(deps) {
+  return [...new Set(deps.map((d) => d.name))].sort();
+}
+
 function slugify(deps) {
-  return deps
-    .map(({ name }) =>
+  return depNames(deps)
+    .map((name) =>
       name.replace(/^@/, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(
         /^-+|-+$/g,
         '',
@@ -183,7 +191,7 @@ function slugify(deps) {
 function changesetPath(deps, disambiguate = false) {
   const slug = slugify(deps);
   const digest = createHash('sha1')
-    .update(deps.map((d) => d.name).join('\0'))
+    .update(depNames(deps).join('\0'))
     .digest('hex')
     .slice(0, 8);
   // Group updates can name a lot of dependencies; keep the file name bounded
@@ -202,8 +210,9 @@ function tracksSameDeps(content, deps) {
   const removed = [...content.matchAll(/Removed dependency `([^`]+)`/g)]
     .map((m) => m[1]);
   const existing = new Set([...found, ...removed]);
-  return existing.size === deps.length
-    && deps.every((d) => existing.has(d.name));
+  const expected = depNames(deps);
+  return existing.size === expected.length
+    && expected.every((name) => existing.has(name));
 }
 
 function render(names, deps) {
