@@ -50,6 +50,8 @@ export interface MotionProps {
   initial?: MotionTarget | false;
   /** Values animated whenever this target changes. */
   animate?: MotionTarget;
+  /** Values animated while the element is being pressed. */
+  whileTap?: MotionTarget;
   /** Options used when animating to `animate`. */
   transition?: MotionTransition;
   /** Static styles and live MotionValue bindings. */

@@ -31,9 +31,9 @@ describe('ElementCompt (unit tests)', () => {
           height: '50px',
           left: '10px',
           top: '20px',
-          backgroundColor: 'red',
+          'background-color': 'red',
           color: 'blue',
-          fontSize: '16px',
+          'font-size': '16px',
           margin: '5px',
           padding: '10px',
           display: 'block',
@@ -73,6 +73,17 @@ describe('ElementCompt (unit tests)', () => {
     expect(mockSetStyleProperty).toHaveBeenCalledWith('opacity', '0.5');
   });
 
+  test('style proxy converts camel-case properties for the Lynx API', () => {
+    const compt = new ElementCompt(mockElement);
+
+    compt.style.backgroundColor = 'red';
+
+    expect(mockSetStyleProperty).toHaveBeenCalledWith(
+      'background-color',
+      'red',
+    );
+  });
+
   test('style proxy set with transform=none should use scale(1,1)', () => {
     const compt = new ElementCompt(mockElement);
 
@@ -109,7 +120,7 @@ describe('ElementCompt (unit tests)', () => {
     expect(compt.backgroundColor).toBe('red');
     compt.backgroundColor = 'blue';
     expect(mockSetStyleProperty).toHaveBeenCalledWith(
-      'backgroundColor',
+      'background-color',
       'blue',
     );
   });
@@ -127,7 +138,7 @@ describe('ElementCompt (unit tests)', () => {
 
     expect(compt.fontSize).toBe('16px');
     compt.fontSize = '24px';
-    expect(mockSetStyleProperty).toHaveBeenCalledWith('fontSize', '24px');
+    expect(mockSetStyleProperty).toHaveBeenCalledWith('font-size', '24px');
   });
 
   test('width getter/setter', () => {
