@@ -190,4 +190,41 @@ describe('declarative Motion', () => {
     expect(getByTestId('box').getAttribute('style')).toContain('scale(1.5)');
     delete (globalThis as { __motionValueResult?: number }).__motionValueResult;
   });
+
+  test('animates while pressed and restores the resting style', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        style={{ backgroundColor: '#ffffff' }}
+        whileTap={{ scale: 1.15, backgroundColor: '#ffcc00' }}
+        transition={{ duration: 0.01 }}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'scale(1.15',
+    );
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'rgb(255, 204, 0)',
+    );
+
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+
+    expect(getByTestId('button').getAttribute('style')).toContain('scale(1');
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'rgb(255, 255, 255)',
+    );
+  });
 });
