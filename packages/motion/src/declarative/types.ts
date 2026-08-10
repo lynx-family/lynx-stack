@@ -68,12 +68,18 @@ export interface MotionProps {
   animate?: MotionDefinition;
   /** Values animated while the element is being pressed. */
   whileTap?: MotionDefinition;
+  /** Values animated while a mouse-capable client hovers the element. */
+  whileHover?: MotionDefinition;
   /** Called when a press starts. */
   onTapStart?: (event: unknown, info: MotionTapInfo) => void;
   /** Called when a press ends successfully. */
   onTap?: (event: unknown, info: MotionTapInfo) => void;
   /** Called when a press is cancelled. */
   onTapCancel?: (event: unknown, info: MotionTapInfo) => void;
+  /** Called when hover starts on a mouse-capable client. */
+  onHoverStart?: (event: unknown) => void;
+  /** Called when hover ends on a mouse-capable client. */
+  onHoverEnd?: (event: unknown) => void;
   /** Named targets referenced by declarative definition props. */
   variants?: MotionVariants;
   /** Value passed to function variants. */
