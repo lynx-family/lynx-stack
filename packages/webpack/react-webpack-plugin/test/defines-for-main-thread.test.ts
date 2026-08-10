@@ -281,6 +281,82 @@ describe('missing definitions injection', () => {
     expect(content).not.toContain('ReactLynx');
   });
 
+  it('runs the definitions ahead of the entry without stealing its exports', async () => {
+    const outputPath = mkdtempSync(
+      path.join(tmpdir(), 'defines-for-main-thread-'),
+    );
+    const compiler = rspack({
+      context: __dirname,
+      mode: 'none',
+      entry: {
+        'main__main-thread': {
+          import: './fixtures/entry-exports.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      experiments: { layers: true },
+      resolve: {
+        alias: {
+          '@lynx-js/react/internal': path.join(
+            __dirname,
+            'fixtures/internal-stub.js',
+          ),
+        },
+      },
+      output: {
+        path: outputPath,
+        filename: '[name].cjs',
+        library: { type: 'commonjs2' },
+      },
+      plugins: [
+        new ReactWebpackPlugin({
+          mainThreadChunks: ['main__main-thread.cjs'],
+          entryPairs: [{ mainThread: 'main__main-thread', background: 'main' }],
+          workletRuntimePath: require.resolve(
+            '@lynx-js/react/worklet-dev-runtime',
+          ),
+        }),
+        (compiler: import('@rspack/core').Compiler) => {
+          compiler.hooks.thisCompilation.tap('test', (compilation) => {
+            compilation.hooks.succeedModule.tap('test', (module) => {
+              if (
+                module.layer === LAYERS.BACKGROUND
+                && module.identifier().includes('empty.js')
+              ) {
+                module.buildInfo![DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = [
+                  snapshot(
+                    'bg-only',
+                    'globalThis.__definesForMainThreadRan = true;',
+                  ),
+                ];
+              }
+            });
+          });
+        },
+      ],
+    });
+    await new Promise<void>((resolve, reject) => {
+      compiler.run((err, stats) => {
+        if (err || stats?.hasErrors()) {
+          reject(err ?? new Error(stats!.toString()));
+          return;
+        }
+        resolve();
+      });
+    });
+
+    const exported = require(
+      path.join(outputPath, 'main__main-thread.cjs'),
+    ) as { marker?: string };
+    expect(exported.marker).toBe('ENTRY_EXPORTS');
+    expect((globalThis as Record<string, unknown>).__definesForMainThreadRan)
+      .toBe(true);
+    expect((globalThis as Record<string, unknown>).__entrySawDefines).toBe(
+      true,
+    );
+  });
+
   it('keeps the definitions of each entry apart', async () => {
     const outputPath = await compile(
       {

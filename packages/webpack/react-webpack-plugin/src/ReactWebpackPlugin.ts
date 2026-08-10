@@ -487,16 +487,25 @@ class ReactWebpackPlugin {
                 request,
                 renderDefinesForMainThreadModule(missing),
               );
-              await new Promise<void>((resolve, reject) => {
-                // `addInclude` puts the module in the chunk without running it;
-                // `addEntry` also appends it to the entry startup sequence.
-                compilation.addEntry(
-                  compiler.context,
-                  EntryPlugin.createDependency(request),
-                  { name: mainThread, layer: LAYERS.MAIN_THREAD },
-                  (err) => err ? reject(err) : resolve(),
-                );
-              });
+              const addEntry = (entryRequest: string) =>
+                new Promise<void>((resolve, reject) => {
+                  compilation.addEntry(
+                    compiler.context,
+                    EntryPlugin.createDependency(entryRequest),
+                    { name: mainThread, layer: LAYERS.MAIN_THREAD },
+                    (err) => err ? reject(err) : resolve(),
+                  );
+                });
+              // The last entry dependency's exports become the entry's
+              // exports, so re-append the original entry request after the
+              // definitions: the startup sequence deduplicates it into the
+              // last slot and the entry keeps its own exports.
+              const originalRequest = compilation.entries.get(mainThread)!
+                .dependencies.at(-1)?.request;
+              await addEntry(request);
+              if (originalRequest) {
+                await addEntry(originalRequest);
+              }
             }),
           );
         },
