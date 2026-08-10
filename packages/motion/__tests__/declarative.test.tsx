@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { useState } from '@lynx-js/react';
 import type { IntrinsicElements } from '@lynx-js/types';
@@ -213,12 +213,18 @@ describe('declarative Motion', () => {
   });
 
   test('animates while pressed and restores the resting style', async () => {
+    const onTapStart = vi.fn();
+    const onTap = vi.fn();
+    const externalTouchStart = vi.fn();
     const { getByTestId } = render(
       <motion.view
         data-testid='button'
         style={{ backgroundColor: '#ffffff' }}
         whileTap={{ scale: 1.15, backgroundColor: '#ffcc00' }}
         transition={{ duration: 0.01 }}
+        onTapStart={onTapStart}
+        onTap={onTap}
+        bindtouchstart={externalTouchStart}
       />,
       { enableMainThread: true, enableBackgroundThread: true },
     );
@@ -237,6 +243,8 @@ describe('declarative Motion', () => {
     expect(getByTestId('button').getAttribute('style')).toContain(
       'rgb(255, 204, 0)',
     );
+    expect(onTapStart).toHaveBeenCalledOnce();
+    expect(externalTouchStart).toHaveBeenCalledOnce();
 
     fireEvent.touchend(getByTestId('button'));
     await act(async () => {
@@ -247,5 +255,6 @@ describe('declarative Motion', () => {
     expect(getByTestId('button').getAttribute('style')).toContain(
       'rgb(255, 255, 255)',
     );
+    expect(onTap).toHaveBeenCalledOnce();
   });
 });
