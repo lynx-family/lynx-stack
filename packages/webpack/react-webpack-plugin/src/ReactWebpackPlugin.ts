@@ -16,14 +16,14 @@ import type {
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
-import { LAYERS } from './layer.js';
-import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
-import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 import {
   collectDefinesForMainThread,
   renderDefinesForMainThreadModule,
   selectMissingDefinesForMainThread,
 } from './DefinesForMainThread.js';
+import { LAYERS } from './layer.js';
+import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
+import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
 
@@ -471,7 +471,7 @@ class ReactWebpackPlugin {
           };
 
           await Promise.all(
-            entryPairs.map(({ mainThread, background }) => {
+            entryPairs.map(async ({ mainThread, background }) => {
               const missing = selectMissingDefinesForMainThread(
                 reachableDefines(background),
                 reachableDefines(mainThread),
@@ -487,7 +487,7 @@ class ReactWebpackPlugin {
                 request,
                 renderDefinesForMainThreadModule(missing),
               );
-              return new Promise<void>((resolve, reject) => {
+              await new Promise<void>((resolve, reject) => {
                 // `addInclude` puts the module in the chunk without running it;
                 // `addEntry` also appends it to the entry startup sequence.
                 compilation.addEntry(

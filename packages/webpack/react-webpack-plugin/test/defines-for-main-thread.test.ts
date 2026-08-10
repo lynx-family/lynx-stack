@@ -11,7 +11,6 @@ import { fileURLToPath } from 'node:url';
 import { rspack } from '@rspack/core';
 import { describe, expect, it } from '@rstest/core';
 
-import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 import {
   DEFINES_FOR_MAIN_THREAD_BUILD_INFO,
   collectDefinesForMainThread,
@@ -20,6 +19,7 @@ import {
   selectMissingDefinesForMainThread,
 } from '../src/DefinesForMainThread.js';
 import type { MainThreadDefine } from '../src/DefinesForMainThread.js';
+import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 
 function snapshot(id: string, code = `/* ${id} */`): MainThreadDefine {
   return { kind: 'snapshot', id, code };
