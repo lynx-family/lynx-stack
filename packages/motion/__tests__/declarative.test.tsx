@@ -19,6 +19,7 @@ import {
 
 describe('declarative Motion', () => {
   beforeEach(() => {
+    globalThis.SystemInfo = { platform: 'web' } as typeof SystemInfo;
     globalThis.NodeList ??= class NodeList {} as typeof NodeList;
     globalThis.SVGElement ??= class SVGElement {} as typeof SVGElement;
     globalThis.Element = ElementCompt as unknown as typeof Element;
