@@ -23,6 +23,7 @@ export { motion } from './declarative/motion.js';
 export type { MotionValue } from 'motion-dom';
 export type {
   MotionComponentProps,
+  MotionDefinition,
   MotionFactory,
   MotionImageProps,
   MotionProps,
@@ -31,5 +32,6 @@ export type {
   MotionTarget,
   MotionTextProps,
   MotionTransition,
+  MotionVariants,
   MotionViewProps,
 } from './declarative/types.js';

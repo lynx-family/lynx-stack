@@ -30,6 +30,8 @@ import {
   motionDefinitionKey,
   resolveInitialStyle,
   resolveInitialValues,
+  resolveMotionDefinition,
+  splitMotionTarget,
 } from './style.js';
 import type {
   MotionComponentProps,
@@ -64,6 +66,8 @@ function useMotionHostProps<Props extends MotionProps>(
     style,
     transition,
     whileTap,
+    variants,
+    custom,
     'main-thread:ref': _externalMainThreadRef,
     ...hostProps
   } = props as Props & { 'main-thread:ref'?: unknown };
@@ -79,22 +83,51 @@ function useMotionHostProps<Props extends MotionProps>(
   >({});
   const styleCleanupRef = useMainThreadRef<(() => void) | null>(null);
 
-  const animationKey = motionDefinitionKey({ animate, transition, whileTap });
+  const resolvedInitial = resolveMotionDefinition(initial, variants, custom);
+  const resolvedAnimateDefinition = resolveMotionDefinition(
+    animate,
+    variants,
+    custom,
+  );
+  const resolvedTapDefinition = resolveMotionDefinition(
+    whileTap,
+    variants,
+    custom,
+  );
+  const resolvedInitialTarget = resolvedInitial === false
+    ? false
+    : splitMotionTarget(resolvedInitial, undefined).target;
+  const resolvedAnimate = splitMotionTarget(
+    resolvedAnimateDefinition,
+    transition,
+  );
+  const resolvedTap = splitMotionTarget(resolvedTapDefinition, transition);
+  const animationKey = motionDefinitionKey({
+    animate: resolvedAnimate,
+    whileTap: resolvedTap,
+  });
   const styleKey = motionDefinitionKey(style);
   const initialStyle = useMemo(
-    () => resolveInitialStyle(style, initial),
-    [initial, style],
+    () => resolveInitialStyle(style, resolvedInitialTarget),
+    [resolvedInitialTarget, style],
   );
   const initialValues = useMemo(
-    () => resolveInitialValues(style, initial),
-    [initial, style],
+    () => resolveInitialValues(style, resolvedInitialTarget),
+    [resolvedInitialTarget, style],
   );
-  const workletTransition = useMemo(
+  const workletAnimateTransition = useMemo(
     () =>
-      transition?.repeat === Number.POSITIVE_INFINITY
-        ? { ...transition, repeat: -1 }
-        : transition,
-    [transition],
+      resolvedAnimate.transition?.repeat === Number.POSITIVE_INFINITY
+        ? { ...resolvedAnimate.transition, repeat: -1 }
+        : resolvedAnimate.transition,
+    [resolvedAnimate.transition],
+  );
+  const workletTapTransition = useMemo(
+    () =>
+      resolvedTap.transition?.repeat === Number.POSITIVE_INFINITY
+        ? { ...resolvedTap.transition, repeat: -1 }
+        : resolvedTap.transition,
+    [resolvedTap.transition],
   );
   const motionValues = useMemo(
     () => collectMotionValues(style),
@@ -102,7 +135,11 @@ function useMotionHostProps<Props extends MotionProps>(
   );
 
   useEffect(() => {
-    if (!animate && !whileTap && Object.keys(motionValues).length === 0) {
+    if (
+      !resolvedAnimate.target
+      && !resolvedTap.target
+      && Object.keys(motionValues).length === 0
+    ) {
       return;
     }
     // Worklet hydration replaces MainThreadValue handles in captured objects.
@@ -225,9 +262,9 @@ function useMotionHostProps<Props extends MotionProps>(
     }
 
     void runOnMainThread(updateMotionStyles)(
-      animate,
-      whileTap,
-      workletTransition,
+      resolvedAnimate.target,
+      resolvedTap.target,
+      workletAnimateTransition,
       initialValues,
     );
 
@@ -254,7 +291,7 @@ function useMotionHostProps<Props extends MotionProps>(
 
   function startTapAnimation(event: MainThread.TouchEvent) {
     'main thread';
-    if (!whileTap) {
+    if (!resolvedTap.target) {
       return;
     }
     for (const animation of animationRef.current) {
@@ -267,13 +304,13 @@ function useMotionHostProps<Props extends MotionProps>(
     tapAnimationRef.current = [];
 
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletTransition?.repeat === -1
-      ? { ...workletTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletTransition;
+    const resolvedTransition = workletTapTransition?.repeat === -1
+      ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
+      : workletTapTransition;
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
     if (isLynxForWeb) {
-      const targetValues = whileTap as Record<string, unknown>;
+      const targetValues = resolvedTap.target as Record<string, unknown>;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
@@ -290,13 +327,13 @@ function useMotionHostProps<Props extends MotionProps>(
     ) => Element;
     const element = new ElementConstructor(event.currentTarget);
     tapAnimationRef.current.push(
-      animateMotionTarget(element, whileTap, resolvedTransition),
+      animateMotionTarget(element, resolvedTap.target, resolvedTransition),
     );
   }
 
   function endTapAnimation(event: MainThread.TouchEvent) {
     'main thread';
-    if (!whileTap) {
+    if (!resolvedTap.target) {
       return;
     }
     for (const animation of tapAnimationRef.current) {
@@ -304,12 +341,14 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     tapAnimationRef.current = [];
 
-    const targetValues = whileTap as Record<string, unknown>;
-    const animateValues = animate as Record<string, unknown> | undefined;
+    const targetValues = resolvedTap.target as Record<string, unknown>;
+    const animateValues = resolvedAnimate.target as
+      | Record<string, unknown>
+      | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletTransition?.repeat === -1
-      ? { ...workletTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletTransition;
+    const resolvedTransition = workletTapTransition?.repeat === -1
+      ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
+      : workletTapTransition;
     const restingValues: Record<string, unknown> = {};
     for (const key in targetValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];
@@ -355,7 +394,7 @@ function useMotionHostProps<Props extends MotionProps>(
     ...hostProps,
     style: initialStyle,
     'main-thread:ref': elementRef,
-    ...(whileTap
+    ...(resolvedTap.target
       ? {
         'main-thread:bindtouchstart': startTapAnimation,
         'main-thread:bindtouchend': endTapAnimation,

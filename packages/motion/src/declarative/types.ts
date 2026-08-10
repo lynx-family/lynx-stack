@@ -38,20 +38,35 @@ export type MotionStyle =
     rotateZ?: MotionStyleValue;
   };
 
-/** Animatable style target for a declarative Motion component. */
-export type MotionTarget = DOMKeyframesDefinition;
-
 /** Transition options passed to Motion's animation engine. */
 export type MotionTransition = AnimationOptions;
+
+/** Animatable style target for a declarative Motion component. */
+export type MotionTarget = DOMKeyframesDefinition & {
+  transition?: MotionTransition;
+};
+
+/** A named declarative target or a list of targets merged left-to-right. */
+export type MotionDefinition = MotionTarget | string | string[];
+
+/** A named target table. Function variants are resolved on the background thread. */
+export type MotionVariants = Record<
+  string,
+  MotionTarget | ((custom: unknown) => MotionTarget)
+>;
 
 /** Motion-specific props shared by all declarative Motion components. */
 export interface MotionProps {
   /** Values rendered before the first animation starts. */
-  initial?: MotionTarget | false;
+  initial?: MotionDefinition | false;
   /** Values animated whenever this target changes. */
-  animate?: MotionTarget;
+  animate?: MotionDefinition;
   /** Values animated while the element is being pressed. */
-  whileTap?: MotionTarget;
+  whileTap?: MotionDefinition;
+  /** Named targets referenced by declarative definition props. */
+  variants?: MotionVariants;
+  /** Value passed to function variants. */
+  custom?: unknown;
   /** Options used when animating to `animate`. */
   transition?: MotionTransition;
   /** Static styles and live MotionValue bindings. */
