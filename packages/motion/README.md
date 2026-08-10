@@ -1,6 +1,9 @@
 # @lynx-js/motion
 
-A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings declarative animations and gesture handling to the Lynx ecosystem.
+A Motion animation-engine adapter for Lynx with imperative APIs and an
+incremental declarative component layer. It reuses upstream
+[`motion`](https://motion.dev/) and `motion-dom` primitives, but it is not a
+complete `motion/react` renderer.
 
 ## Installation
 
@@ -36,6 +39,31 @@ export function Card({ selected }: { selected: boolean }) {
 `motion.view`, `motion.text`, and `motion.image` are included. Use
 `motion.create(Component)` for components that forward `style`, host props, and
 `main-thread:ref` to a Lynx element.
+
+#### Declarative compatibility
+
+The declarative layer currently supports:
+
+- object targets and string/array/function `variants` for `initial` and
+  `animate`, including `custom` and target-local `transition`
+- transform aliases, keyframes, repeat/reverse, colors, and live `MotionValue`
+  styles backed by the upstream Motion engine
+- `whileTap` with `onTapStart`, `onTap`, and `onTapCancel`
+- `whileHover` with `onHoverStart` and `onHoverEnd` on mouse-capable clients
+- `onAnimationStart` and `onAnimationComplete` for the base `animate` target
+
+It does **not** yet provide the complete `motion/react` declarative contract.
+In particular, focus/in-view/drag states, gesture animation lifecycle
+callbacks, animation controls, propagated/orchestrated variants, layout and
+shared-layout animations, `exit`, and `AnimatePresence` are not supported.
+Internal main-thread refs, handlers, and gestures also cannot yet be safely
+composed with every consumer-owned equivalent.
+
+This boundary is architectural: the animation generators, MotionValues,
+transitions, interpolation, and style effects come from upstream Motion. The
+React DOM visual-element tree, DOM gesture/layout observers, presence tree, and
+React-specific orchestration cannot run unchanged on ReactLynx and require Lynx
+host/runtime integrations.
 
 ### Basic Animation
 
@@ -117,7 +145,7 @@ import { animate, createMotionValue } from '@lynx-js/motion/mini';
 | **Animation Targets** | Numbers, Strings (colors, units), Objects, Arrays | **Numbers only** (mostly) |
 | **Keyframes**         | Full support                                      | Limited support           |
 | **Layout Animations** | Supported                                         | Not supported             |
-| **Gesture Handlers**  | Full suite (drag, pan, hover, etc.)               | Not included              |
+| **Gesture Handlers**  | Declarative tap + hover subset                    | Not included              |
 
 > **Note**: `MotionValue` in Mini primarily works with numbers.
 
