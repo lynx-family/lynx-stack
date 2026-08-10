@@ -458,13 +458,8 @@ function useMotionHostProps<Props extends MotionProps>(
     if (!resolvedTap.target) {
       return;
     }
-    // Native Lynx and Lynx for Web dispatch both the main-thread and
-    // background touch bindings. The testing event bridge currently dispatches
-    // only the main-thread binding and leaves currentTarget unset, so forward
-    // the composed background callback in that incomplete bridge.
-    if (!event.currentTarget && bindTouchStart) {
-      void runOnBackground(bindTouchStart)(event);
-    }
+    const isLynxForWeb = typeof SystemInfo !== 'undefined'
+      && String(SystemInfo.platform) === 'web';
     tapActiveRef.current = true;
     for (const animation of animationRef.current) {
       animation.stop();
@@ -478,8 +473,6 @@ function useMotionHostProps<Props extends MotionProps>(
     const resolvedTransition = workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
       : workletTapTransition;
-    const isLynxForWeb = typeof SystemInfo !== 'undefined'
-      && String(SystemInfo.platform) === 'web';
     if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
       for (const key in targetValues) {
@@ -507,16 +500,8 @@ function useMotionHostProps<Props extends MotionProps>(
     if (!resolvedTap.target) {
       return;
     }
-    const isCancelled = String(
-      (event as unknown as { type?: unknown }).type,
-    ).toLowerCase().includes('cancel');
-    if (!event.currentTarget) {
-      if (isCancelled && bindTouchCancel) {
-        void runOnBackground(bindTouchCancel)(event);
-      } else if (!isCancelled && bindTouchEnd) {
-        void runOnBackground(bindTouchEnd)(event);
-      }
-    }
+    const isLynxForWeb = typeof SystemInfo !== 'undefined'
+      && String(SystemInfo.platform) === 'web';
     tapActiveRef.current = false;
     for (const animation of tapAnimationRef.current) {
       animation.stop();
@@ -555,8 +540,6 @@ function useMotionHostProps<Props extends MotionProps>(
         restingValues[key] = restingValue;
       }
     }
-    const isLynxForWeb = typeof SystemInfo !== 'undefined'
-      && String(SystemInfo.platform) === 'web';
     if (isLynxForWeb || !event.currentTarget) {
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
