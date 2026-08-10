@@ -22,6 +22,7 @@ import {
   useEffect,
   useMainThreadRef,
   useMemo,
+  useRef,
 } from '@lynx-js/react';
 import type { IntrinsicElements, MainThread } from '@lynx-js/types';
 
@@ -84,20 +85,27 @@ function useMotionHostProps<Props extends MotionProps>(
     style,
     transition,
     whileTap,
+    whileHover,
     variants,
     custom,
     onTapStart,
     onTap,
     onTapCancel,
+    onHoverStart,
+    onHoverEnd,
     bindtouchstart: externalTouchStart,
     bindtouchend: externalTouchEnd,
     bindtouchcancel: externalTouchCancel,
+    bindlayoutchange: externalLayoutChange,
+    'global-bindmousemove': externalGlobalMouseMove,
     'main-thread:ref': _externalMainThreadRef,
     ...hostProps
   } = props as Props & {
     bindtouchstart?: BackgroundTouchHandler;
     bindtouchend?: BackgroundTouchHandler;
     bindtouchcancel?: BackgroundTouchHandler;
+    bindlayoutchange?: BackgroundTouchHandler;
+    'global-bindmousemove'?: BackgroundTouchHandler;
     'main-thread:ref'?: unknown;
   };
   const elementRef = useMainThreadRef<MainThread.Element | null>(null);
@@ -107,6 +115,12 @@ function useMotionHostProps<Props extends MotionProps>(
   const tapAnimationRef = useMainThreadRef<
     AnimationPlaybackControlsWithThen[]
   >([]);
+  const hoverActiveRef = useMainThreadRef(false);
+  const tapActiveRef = useMainThreadRef(false);
+  const hoverLayoutRef = useRef<
+    { left: number; right: number; top: number; bottom: number } | null
+  >(null);
+  const hoverActiveBackgroundRef = useRef(false);
   const generatedValuesRef = useMainThreadRef<
     Record<string, MotionValue<string | number>>
   >({});
@@ -123,6 +137,11 @@ function useMotionHostProps<Props extends MotionProps>(
     variants,
     custom,
   );
+  const resolvedHoverDefinition = resolveMotionDefinition(
+    whileHover,
+    variants,
+    custom,
+  );
   const resolvedInitialTarget = resolvedInitial === false
     ? false
     : splitMotionTarget(resolvedInitial, undefined).target;
@@ -131,9 +150,14 @@ function useMotionHostProps<Props extends MotionProps>(
     transition,
   );
   const resolvedTap = splitMotionTarget(resolvedTapDefinition, transition);
+  const resolvedHover = splitMotionTarget(
+    resolvedHoverDefinition,
+    transition,
+  );
   const animationKey = motionDefinitionKey({
     animate: resolvedAnimate,
     whileTap: resolvedTap,
+    whileHover: resolvedHover,
   });
   const styleKey = motionDefinitionKey(style);
   const initialStyle = useMemo(
@@ -158,6 +182,13 @@ function useMotionHostProps<Props extends MotionProps>(
         : resolvedTap.transition,
     [resolvedTap.transition],
   );
+  const workletHoverTransition = useMemo(
+    () =>
+      resolvedHover.transition?.repeat === Number.POSITIVE_INFINITY
+        ? { ...resolvedHover.transition, repeat: -1 }
+        : resolvedHover.transition,
+    [resolvedHover.transition],
+  );
   const motionValues = useMemo(
     () => collectMotionValues(style),
     [styleKey],
@@ -181,11 +212,72 @@ function useMotionHostProps<Props extends MotionProps>(
       onTapCancel?.(event, tapInfo(event));
     }
     : undefined;
+  const hasHoverInteraction = [
+    resolvedHover.target,
+    onHoverStart,
+    onHoverEnd,
+  ].some(Boolean);
+  const bindLayoutChange = hasHoverInteraction || externalLayoutChange
+    ? (event: unknown) => {
+      externalLayoutChange?.(event);
+      if (!hasHoverInteraction) {
+        return;
+      }
+      const detail = (event as {
+        detail?: Record<string, unknown>;
+      }).detail;
+      if (
+        typeof detail?.['left'] === 'number'
+        && typeof detail['right'] === 'number'
+        && typeof detail['top'] === 'number'
+        && typeof detail['bottom'] === 'number'
+      ) {
+        hoverLayoutRef.current = {
+          left: detail['left'],
+          right: detail['right'],
+          top: detail['top'],
+          bottom: detail['bottom'],
+        };
+      }
+    }
+    : undefined;
+  const bindGlobalMouseMove = hasHoverInteraction || externalGlobalMouseMove
+    ? (event: unknown) => {
+      externalGlobalMouseMove?.(event);
+      const layout = hoverLayoutRef.current;
+      if (!hasHoverInteraction || !layout) {
+        return;
+      }
+      const mouseEvent = event as { x?: unknown; y?: unknown };
+      const isInside = typeof mouseEvent.x === 'number'
+        && typeof mouseEvent.y === 'number'
+        && mouseEvent.x >= layout.left
+        && mouseEvent.x <= layout.right
+        && mouseEvent.y >= layout.top
+        && mouseEvent.y <= layout.bottom;
+      if (isInside === hoverActiveBackgroundRef.current) {
+        return;
+      }
+      hoverActiveBackgroundRef.current = isInside;
+      if (isInside) {
+        onHoverStart?.(event);
+        if (resolvedHover.target) {
+          void runOnMainThread(startHoverAnimation)();
+        }
+      } else {
+        onHoverEnd?.(event);
+        if (resolvedHover.target) {
+          void runOnMainThread(endHoverAnimation)();
+        }
+      }
+    }
+    : undefined;
 
   useEffect(() => {
     if (
       !resolvedAnimate.target
       && !resolvedTap.target
+      && !resolvedHover.target
       && Object.keys(motionValues).length === 0
     ) {
       return;
@@ -198,6 +290,7 @@ function useMotionHostProps<Props extends MotionProps>(
     function updateMotionStyles(
       target: MotionTarget | undefined,
       interactionTarget: MotionTarget | undefined,
+      hoverTarget: MotionTarget | undefined,
       options: MotionTransition | undefined,
       startingValues: Record<string, unknown>,
     ) {
@@ -223,7 +316,7 @@ function useMotionHostProps<Props extends MotionProps>(
         ? { ...options, repeat: Number.POSITIVE_INFINITY }
         : options;
       const values = { ...motionValueBindings };
-      const targets = [target, interactionTarget];
+      const targets = [target, interactionTarget, hoverTarget];
       for (const definition of targets) {
         if (!definition) {
           continue;
@@ -312,6 +405,7 @@ function useMotionHostProps<Props extends MotionProps>(
     void runOnMainThread(updateMotionStyles)(
       resolvedAnimate.target,
       resolvedTap.target,
+      resolvedHover.target,
       workletAnimateTransition,
       initialValues,
     );
@@ -342,6 +436,7 @@ function useMotionHostProps<Props extends MotionProps>(
     if (!resolvedTap.target) {
       return;
     }
+    tapActiveRef.current = true;
     for (const animation of animationRef.current) {
       animation.stop();
     }
@@ -384,19 +479,26 @@ function useMotionHostProps<Props extends MotionProps>(
     if (!resolvedTap.target) {
       return;
     }
+    tapActiveRef.current = false;
     for (const animation of tapAnimationRef.current) {
       animation.stop();
     }
     tapAnimationRef.current = [];
 
     const targetValues = resolvedTap.target as Record<string, unknown>;
-    const animateValues = resolvedAnimate.target as
+    const restingTarget = hoverActiveRef.current && resolvedHover.target
+      ? resolvedHover.target
+      : resolvedAnimate.target;
+    const animateValues = restingTarget as
       | Record<string, unknown>
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletTapTransition?.repeat === -1
-      ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
+    const restingTransition = hoverActiveRef.current && resolvedHover.target
+      ? workletHoverTransition
       : workletTapTransition;
+    const resolvedTransition = restingTransition?.repeat === -1
+      ? { ...restingTransition, repeat: Number.POSITIVE_INFINITY }
+      : restingTransition;
     const restingValues: Record<string, unknown> = {};
     for (const key in targetValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];
@@ -438,6 +540,117 @@ function useMotionHostProps<Props extends MotionProps>(
     );
   }
 
+  function startHoverAnimation() {
+    'main thread';
+    if (!resolvedHover.target || !elementRef.current) {
+      return;
+    }
+    hoverActiveRef.current = true;
+    if (tapActiveRef.current) {
+      return;
+    }
+    for (const animation of animationRef.current) {
+      animation.stop();
+    }
+    animationRef.current = [];
+    for (const animation of tapAnimationRef.current) {
+      animation.stop();
+    }
+    tapAnimationRef.current = [];
+
+    const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    const resolvedTransition = workletHoverTransition?.repeat === -1
+      ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
+      : workletHoverTransition;
+    const isLynxForWeb = typeof SystemInfo !== 'undefined'
+      && String(SystemInfo.platform) === 'web';
+    if (isLynxForWeb) {
+      const targetValues = resolvedHover.target as Record<string, unknown>;
+      for (const key in targetValues) {
+        const value = generatedValuesRef.current[key] ?? motionValues[key];
+        const targetValue = targetValues[key];
+        if (value && targetValue !== undefined) {
+          tapAnimationRef.current.push(
+            animateMotionTarget(value, targetValue, resolvedTransition),
+          );
+        }
+      }
+      return;
+    }
+    const ElementConstructor = globalThis.Element as unknown as new(
+      element: MainThread.Element,
+    ) => Element;
+    const element = new ElementConstructor(elementRef.current);
+    tapAnimationRef.current.push(
+      animateMotionTarget(
+        element,
+        resolvedHover.target,
+        resolvedTransition,
+      ),
+    );
+  }
+
+  function endHoverAnimation() {
+    'main thread';
+    if (!resolvedHover.target || !elementRef.current) {
+      return;
+    }
+    hoverActiveRef.current = false;
+    if (tapActiveRef.current) {
+      return;
+    }
+    for (const animation of tapAnimationRef.current) {
+      animation.stop();
+    }
+    tapAnimationRef.current = [];
+
+    const hoverValues = resolvedHover.target as Record<string, unknown>;
+    const animateValues = resolvedAnimate.target as
+      | Record<string, unknown>
+      | undefined;
+    const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    const resolvedTransition = workletHoverTransition?.repeat === -1
+      ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
+      : workletHoverTransition;
+    const restingValues: Record<string, unknown> = {};
+    for (const key in hoverValues) {
+      let restingValue = animateValues?.[key] ?? initialValues[key];
+      if (Array.isArray(restingValue)) {
+        const keyframes = restingValue as unknown[];
+        for (let index = keyframes.length - 1; index >= 0; index--) {
+          if (keyframes[index] !== null && keyframes[index] !== undefined) {
+            restingValue = keyframes[index];
+            break;
+          }
+        }
+      }
+      if (restingValue === undefined) {
+        restingValue = key.startsWith('scale') || key === 'opacity' ? 1 : 0;
+      }
+      restingValues[key] = restingValue;
+    }
+    const isLynxForWeb = typeof SystemInfo !== 'undefined'
+      && String(SystemInfo.platform) === 'web';
+    if (isLynxForWeb) {
+      for (const key in restingValues) {
+        const value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (value) {
+          tapAnimationRef.current.push(
+            animateMotionTarget(value, restingValues[key], resolvedTransition),
+          );
+        }
+      }
+      return;
+    }
+    const ElementConstructor = globalThis.Element as unknown as new(
+      element: MainThread.Element,
+    ) => Element;
+    const element = new ElementConstructor(elementRef.current);
+    tapAnimationRef.current.push(
+      animateMotionTarget(element, restingValues, resolvedTransition),
+    );
+  }
+
   return {
     ...hostProps,
     style: initialStyle,
@@ -445,6 +658,10 @@ function useMotionHostProps<Props extends MotionProps>(
     ...(bindTouchStart ? { bindtouchstart: bindTouchStart } : {}),
     ...(bindTouchEnd ? { bindtouchend: bindTouchEnd } : {}),
     ...(bindTouchCancel ? { bindtouchcancel: bindTouchCancel } : {}),
+    ...(bindLayoutChange ? { bindlayoutchange: bindLayoutChange } : {}),
+    ...(bindGlobalMouseMove
+      ? { 'global-bindmousemove': bindGlobalMouseMove }
+      : {}),
     ...(resolvedTap.target
       ? {
         'main-thread:bindtouchstart': startTapAnimation,
