@@ -216,7 +216,10 @@ describe('declarative Motion', () => {
   test('animates while pressed and restores the resting style', async () => {
     const onTapStart = vi.fn();
     const onTap = vi.fn();
+    const onTapCancel = vi.fn();
     const externalTouchStart = vi.fn();
+    const externalTouchEnd = vi.fn();
+    const externalTouchCancel = vi.fn();
     const { getByTestId } = render(
       <motion.view
         data-testid='button'
@@ -225,7 +228,10 @@ describe('declarative Motion', () => {
         transition={{ duration: 0.01 }}
         onTapStart={onTapStart}
         onTap={onTap}
+        onTapCancel={onTapCancel}
         bindtouchstart={externalTouchStart}
+        bindtouchend={externalTouchEnd}
+        bindtouchcancel={externalTouchCancel}
       />,
       { enableMainThread: true, enableBackgroundThread: true },
     );
@@ -257,5 +263,20 @@ describe('declarative Motion', () => {
       'rgb(255, 255, 255)',
     );
     expect(onTap).toHaveBeenCalledOnce();
+    expect(externalTouchEnd).toHaveBeenCalledOnce();
+
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    fireEvent.touchcancel(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+
+    expect(getByTestId('button').getAttribute('style')).toContain('scale(1');
+    expect(onTap).toHaveBeenCalledOnce();
+    expect(onTapCancel).toHaveBeenCalledOnce();
+    expect(externalTouchCancel).toHaveBeenCalledOnce();
   });
 });
