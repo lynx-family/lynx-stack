@@ -29,6 +29,7 @@ export type {
   MotionProps,
   MotionStyle,
   MotionStyleValue,
+  MotionTapInfo,
   MotionTarget,
   MotionTextProps,
   MotionTransition,

@@ -57,6 +57,24 @@ type AnimateMotionTarget = (
   options: MotionTransition | undefined,
 ) => AnimationPlaybackControlsWithThen;
 
+type BackgroundTouchHandler = (event: unknown) => void;
+
+function tapInfo(event: unknown) {
+  const touchEvent = event as {
+    detail?: { x?: unknown; y?: unknown };
+    touches?: Array<{ clientX?: unknown; clientY?: unknown }>;
+  };
+  const touch = touchEvent.touches?.[0];
+  const x = touchEvent.detail?.x ?? touch?.clientX;
+  const y = touchEvent.detail?.y ?? touch?.clientY;
+  return {
+    point: {
+      x: typeof x === 'number' ? x : 0,
+      y: typeof y === 'number' ? y : 0,
+    },
+  };
+}
+
 function useMotionHostProps<Props extends MotionProps>(
   props: Props,
 ): PreparedHostProps {
@@ -68,9 +86,20 @@ function useMotionHostProps<Props extends MotionProps>(
     whileTap,
     variants,
     custom,
+    onTapStart,
+    onTap,
+    onTapCancel,
+    bindtouchstart: externalTouchStart,
+    bindtouchend: externalTouchEnd,
+    bindtouchcancel: externalTouchCancel,
     'main-thread:ref': _externalMainThreadRef,
     ...hostProps
-  } = props as Props & { 'main-thread:ref'?: unknown };
+  } = props as Props & {
+    bindtouchstart?: BackgroundTouchHandler;
+    bindtouchend?: BackgroundTouchHandler;
+    bindtouchcancel?: BackgroundTouchHandler;
+    'main-thread:ref'?: unknown;
+  };
   const elementRef = useMainThreadRef<MainThread.Element | null>(null);
   const animationRef = useMainThreadRef<
     AnimationPlaybackControlsWithThen[]
@@ -133,6 +162,25 @@ function useMotionHostProps<Props extends MotionProps>(
     () => collectMotionValues(style),
     [styleKey],
   );
+
+  const bindTouchStart = onTapStart || externalTouchStart
+    ? (event: unknown) => {
+      externalTouchStart?.(event);
+      onTapStart?.(event, tapInfo(event));
+    }
+    : undefined;
+  const bindTouchEnd = onTap || externalTouchEnd
+    ? (event: unknown) => {
+      externalTouchEnd?.(event);
+      onTap?.(event, tapInfo(event));
+    }
+    : undefined;
+  const bindTouchCancel = onTapCancel || externalTouchCancel
+    ? (event: unknown) => {
+      externalTouchCancel?.(event);
+      onTapCancel?.(event, tapInfo(event));
+    }
+    : undefined;
 
   useEffect(() => {
     if (
@@ -394,6 +442,9 @@ function useMotionHostProps<Props extends MotionProps>(
     ...hostProps,
     style: initialStyle,
     'main-thread:ref': elementRef,
+    ...(bindTouchStart ? { bindtouchstart: bindTouchStart } : {}),
+    ...(bindTouchEnd ? { bindtouchend: bindTouchEnd } : {}),
+    ...(bindTouchCancel ? { bindtouchcancel: bindTouchCancel } : {}),
     ...(resolvedTap.target
       ? {
         'main-thread:bindtouchstart': startTapAnimation,

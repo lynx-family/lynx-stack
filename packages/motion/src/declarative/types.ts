@@ -55,6 +55,11 @@ export type MotionVariants = Record<
   MotionTarget | ((custom: unknown) => MotionTarget)
 >;
 
+/** Pointer coordinates reported to declarative tap callbacks. */
+export interface MotionTapInfo {
+  point: { x: number; y: number };
+}
+
 /** Motion-specific props shared by all declarative Motion components. */
 export interface MotionProps {
   /** Values rendered before the first animation starts. */
@@ -63,6 +68,12 @@ export interface MotionProps {
   animate?: MotionDefinition;
   /** Values animated while the element is being pressed. */
   whileTap?: MotionDefinition;
+  /** Called when a press starts. */
+  onTapStart?: (event: unknown, info: MotionTapInfo) => void;
+  /** Called when a press ends successfully. */
+  onTap?: (event: unknown, info: MotionTapInfo) => void;
+  /** Called when a press is cancelled. */
+  onTapCancel?: (event: unknown, info: MotionTapInfo) => void;
   /** Named targets referenced by declarative definition props. */
   variants?: MotionVariants;
   /** Value passed to function variants. */
