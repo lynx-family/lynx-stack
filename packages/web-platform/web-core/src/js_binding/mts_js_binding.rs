@@ -21,6 +21,18 @@ extern "C" {
     current_target_dataset: &wasm_bindgen::JsValue,
   );
 
+  /// Invokes a callback registered through `__AddEventListener`.
+  #[wasm_bindgen(method, js_name = "runElementClosure")]
+  pub fn run_element_closure(
+    this: &RustMainthreadContextBinding,
+    closure: &wasm_bindgen::JsValue,
+    event_object: &wasm_bindgen::JsValue,
+    target_element_unique_id: usize,
+    target_dataset: &wasm_bindgen::JsValue,
+    current_target_element_unique_id: usize,
+    current_target_dataset: &wasm_bindgen::JsValue,
+  );
+
   #[wasm_bindgen(method, js_name = "publishEvent")]
   pub fn publish_event(
     this: &RustMainthreadContextBinding,

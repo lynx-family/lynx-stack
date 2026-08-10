@@ -14,7 +14,7 @@ get_filename_component(
 
 set(LYNX_LIBRARY_PLATFORM "android")
 set(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX OFF CACHE BOOL "Use weak suffix NAPI symbols")
-set(LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE ON CACHE BOOL "Register NAPI modules through napi_module_register_xx" FORCE)
+set(LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE ON CACHE BOOL "Register NAPI modules through standard napi_module_register" FORCE)
 set(LYNX_SHARED_BUILD_ELEMENTS OFF CACHE BOOL "Do not build element sources for Android addon" FORCE)
 
 if(NOT LYNX_PRIMJS_JNI_DIR)

@@ -17,13 +17,13 @@
     "build": "tsc6"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.25.2",
-    "commander": "^13.1.0",
+    "@modelcontextprotocol/sdk": "1.28.0",
+    "commander": "^15.0.0",
     "debug": "^4.4.3",
     "empathic": "^2.0.1",
     "mdast-util-from-markdown": "^2.0.3",
     "mdast-util-to-markdown": "^2.1.2",
-    "undici": "^6.27.0"
+    "undici": "^8.10.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.13",

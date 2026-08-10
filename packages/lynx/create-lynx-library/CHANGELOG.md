@@ -1,5 +1,11 @@
 # create-lynx-library
 
+## 0.5.1
+
+### Patch Changes
+
+- Use the workspace versions of `@lynx-js/react` and `@lynx-js/react-rsbuild-plugin` in generated example projects. ([#3384](https://github.com/lynx-family/lynx-stack/pull/3384))
+
 ## 0.5.0
 
 ### Minor Changes

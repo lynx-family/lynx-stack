@@ -54,6 +54,7 @@ describe('app route hash', () => {
 
   test('uses the standalone bench root as the canonical runner route', () => {
     expect(buildRouteHash('a2ui', 'bench')).toBe('#/bench');
+    expect(buildRouteHash('openui', 'bench')).toBe('#/bench');
 
     expect(parseRouteHash('#/bench')).toMatchObject({
       protocol: { name: 'a2ui' },

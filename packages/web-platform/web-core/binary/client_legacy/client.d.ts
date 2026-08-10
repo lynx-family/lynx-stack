@@ -18,6 +18,15 @@ export class EventInfo {
 export class MainThreadWasmContext {
     free(): void;
     [Symbol.dispose](): void;
+    /**
+     * Registers or removes a callback bound through `__AddEventListener`.
+     *
+     * `closure` of `None` removes: a specific callback when `remove_target` is
+     * given, otherwise every callback for this event name and type. Unlike the
+     * cross-thread and worklet slots, which hold a single handler each, this one
+     * holds a list, so clearing has to know *which* callback to drop.
+     */
+    add_closure_event(unique_id: number, event_type: string, event_name: string, closure?: any | null, remove_target?: any | null): void;
     add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
     add_dataset(unique_id: number, key: any, value: any): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
@@ -198,6 +207,7 @@ export interface InitOutput {
     readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly get_font_face_content: (a: number, b: number) => void;
     readonly get_style_content: (a: number, b: number) => void;
+    readonly mainthreadwasmcontext_add_closure_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
