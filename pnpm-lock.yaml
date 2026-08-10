@@ -709,7 +709,7 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
-  examples/react-snapshot-merge:
+  examples/react-merge-defines:
     dependencies:
       '@lynx-js/react':
         specifier: workspace:*

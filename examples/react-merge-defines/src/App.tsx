@@ -9,9 +9,9 @@ export function App() {
       <text className='Title'>Definitions merged across threads</text>
       <text className='Description'>
         The main thread renders only the skeleton. The feed below exists solely
-        in the background build; its snapshot definitions are merged into the
-        main thread by id, so applying the first-screen patch no longer throws
-        "Snapshot not found".
+        in the background build; its snapshot and worklet definitions are merged
+        into the main thread by id, so applying the first-screen patch no longer
+        throws "Snapshot not found".
       </text>
       {__MAIN_THREAD__ ? <Skeleton /> : <Feed />}
     </view>
