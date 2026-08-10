@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 
-import path from 'path-browserify';
+import path from 'pathe';
 
 /**
  * `@import` href resolution, without `node:path`.
@@ -12,43 +12,38 @@ import path from 'path-browserify';
  * This module used to `import path from 'node:path'`. Because `parse` imports
  * `generateHref`, that single import made the whole package impossible to bundle
  * for a browser, and the package exposes no subpath exports to import around it.
- * `path-browserify` is a drop-in that works in both a browser bundle and in
- * Node, so the four functions this file needs - `join`, `resolve`, `relative`
- * and `isAbsolute` - keep their `path.posix` behaviour without pulling in a Node
- * builtin.
+ * `pathe` provides the four functions this file needs - `join`, `resolve`,
+ * `relative` and `isAbsolute` - and works in both a browser bundle and Node.
  *
- * ## Why POSIX semantics
+ * ## What is unchanged, and what is not
  *
- * `node:path`'s default export is `path.posix` on every non-Windows platform, so
- * POSIX is what the ReactLynx build has actually been doing, and
- * `path-browserify` is Node's own POSIX implementation ported verbatim. That
- * means, deliberately:
+ * For a path that contains no backslash, `pathe` is byte-identical to
+ * `path.posix`, which is what `node:path`'s default export already was on every
+ * non-Windows platform. Since `parse` defaults `projectRoot` to `'/'` and every
+ * in-repo caller passes POSIX paths, href resolution is unchanged in this tree.
+ * `test/generateHref.test.ts` proves that against `node:path` itself over a
+ * generated matrix.
  *
- * - `\` is an ordinary filename character, not a separator. Only the final
- *   {@link normalizeSlashes} pass rewrites it, so `'\a.css'` still resolves to
- *   `'//a.css'` rather than `'/a.css'`, exactly as before.
- * - A drive letter is not a root. `'C:\x.css'` is a *relative* path whose first
- *   segment happens to be `'C:'`, so it resolves under `projectRoot`.
- * - A UNC path is just a name containing backslashes; `'\\srv\share'` gets no
- *   special treatment.
+ * A path that *does* contain a backslash is where `pathe` differs, because it
+ * treats `\` as a separator by design:
  *
- * On Windows the old code picked up `path.win32` and could differ - e.g.
- * `generateHref('C:\\proj', 'pages\\index.css', './a.css')` was `'/pages/a.css'`
- * under win32 but `'/a.css'` here. Pinning POSIX makes the output platform
- * independent, which is what a browser bundle needs and what a
- * cross-machine-reproducible build wants anyway.
+ * - `'\a.css'` is an absolute path, not a filename starting with a backslash.
+ * - `'C:\x.css'` has a drive letter, so `C:` is a path segment rather than part
+ *   of a filename.
+ * - `'\\srv\share'` is a UNC-shaped path.
  *
- * ## The one behaviour that is not preserved: a relative `projectRoot`
+ * That is neither `path.posix` (which treats `\` as an ordinary character) nor
+ * exactly `path.win32` (which differs again on UNC and on a leading `\`). The
+ * behaviour these inputs get is pinned in `test/generateHref.test.ts` rather
+ * than described here, so it cannot drift silently.
  *
- * Node's `path.resolve` and `path.relative` fall back to `process.cwd()` for
- * relative inputs, so with a relative `projectRoot` the old output depended on
- * the directory the build ran from. `path-browserify` has no `cwd` to fall back
- * to and
- * treats a relative path as rooted instead, so those inputs now differ - and are
- * now deterministic. `parse` defaults `projectRoot` to `'/'`, and every in-repo
- * caller passes an absolute one, so nothing in the tree observes this. For every
- * absolute `projectRoot` the output is byte-identical; `test/generateHref.test.ts`
- * checks that against `node:path` itself over a generated matrix.
+ * ## A relative `projectRoot`
+ *
+ * `pathe` has no `process.cwd()` to fall back to, so a relative `projectRoot` is
+ * treated as rooted. `node:path` resolved it against the working directory,
+ * which made the old output depend on where the build ran from. Nothing in this
+ * tree observes the difference: `parse` defaults `projectRoot` to `'/'`, and
+ * every in-repo caller passes an absolute one.
  */
 
 export function getFullPath(
