@@ -549,31 +549,53 @@ describe('generateHref', () => {
     });
   });
 
-  describe('cwd-dependent inputs (documented divergence)', () => {
+  describe('a relative projectRoot stays cwd-dependent', () => {
     /**
-     * A relative `projectRoot` made the old implementation's output depend on
-     * `process.cwd()`, because `path.resolve`/`path.relative` fall back to it.
-     * The pure-JS helper has no `cwd` to fall back to and instead treats a
-     * relative `projectRoot` as if it were rooted, so these inputs diverge.
+     * `path-browserify` is Node's POSIX implementation ported verbatim, which
+     * means `resolve` still consults `process.cwd()` for a relative input. So a
+     * relative `projectRoot` behaves exactly as it did before this change - i.e.
+     * the output depends on the directory the build ran from.
      *
-     * This is the *only* known divergence. It is accepted rather than emulated:
-     * emulating it would mean either reading `process.cwd()` (which reintroduces
-     * the Node dependency this change exists to remove) or hardcoding a cwd
-     * (which is wrong for every caller but one). `parse` defaults `projectRoot`
-     * to `'/'` and no in-repo caller passes a relative one.
+     * That is deliberately *not* fixed here. Fixing it would mean either
+     * hand-rolling the resolution again (the code this change exists to delete)
+     * or hardcoding a cwd, which is wrong for every caller. It is also
+     * unobservable in practice: `parse` defaults `projectRoot` to `'/'` and every
+     * in-repo caller passes an absolute one.
+     *
+     * Two consequences a caller should know about:
+     *
+     * - In a browser bundle there is no `process.cwd()`, so `path-browserify`
+     *   falls back to treating the path as rooted. A relative `projectRoot`
+     *   therefore resolves differently in a browser than in Node.
+     * - Only an *absolute* `projectRoot` is guaranteed stable, and the
+     *   differential suite above proves that case is byte-identical to
+     *   `node:path`.
      */
-    test('a relative projectRoot is treated as rooted', () => {
-      expect(generateHref('proj', 'index.css', './a.css')).toBe('/a.css');
-      expect(generateHref('proj', 'index.css', '../../x.css')).toBe('../x.css');
+    test('an absolute projectRoot is cwd-independent', () => {
+      const cwd = process.cwd();
+      try {
+        process.chdir('/');
+        const atRoot = generateHref('/proj', 'index.css', '../../x.css');
+        process.chdir('/tmp');
+        const atTmp = generateHref('/proj', 'index.css', '../../x.css');
+        expect(atRoot).toBe(atTmp);
+        expect(atRoot).toBe('../x.css');
+      } finally {
+        process.chdir(cwd);
+      }
     });
 
-    test('and that is deterministic, unlike the node:path behaviour it replaces', () => {
-      // Same input, twice, from the same cwd - the point is that the pure-JS
-      // result is a pure function of its arguments. The oracle's result for
-      // this input is a function of `process.cwd()` too, so it is not asserted.
-      const once = generateHref('proj', 'index.css', '../../x.css');
-      const twice = generateHref('proj', 'index.css', '../../x.css');
-      expect(once).toBe(twice);
+    test('a relative projectRoot resolves against cwd, as node:path does', () => {
+      const cwd = process.cwd();
+      try {
+        process.chdir('/');
+        expect(generateHref('proj', 'index.css', './a.css')).toBe('/a.css');
+        expect(generateHref('proj', 'index.css', '../../x.css')).toBe(
+          '../x.css',
+        );
+      } finally {
+        process.chdir(cwd);
+      }
     });
   });
 

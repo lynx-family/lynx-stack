@@ -4,21 +4,25 @@
 // LICENSE file in the root directory of this source tree.
 */
 
+import path from 'path-browserify';
+
 /**
  * `@import` href resolution, without `node:path`.
  *
  * This module used to `import path from 'node:path'`. Because `parse` imports
  * `generateHref`, that single import made the whole package impossible to bundle
  * for a browser, and the package exposes no subpath exports to import around it.
- * The helpers below are therefore a minimal, dependency-free reimplementation of
- * the four `path` functions this file used: `join`, `resolve`, `relative` and
- * `isAbsolute`.
+ * `path-browserify` is a drop-in that works in both a browser bundle and in
+ * Node, so the four functions this file needs - `join`, `resolve`, `relative`
+ * and `isAbsolute` - keep their `path.posix` behaviour without pulling in a Node
+ * builtin.
  *
  * ## Why POSIX semantics
  *
  * `node:path`'s default export is `path.posix` on every non-Windows platform, so
- * POSIX is what the ReactLynx build has actually been doing. These helpers
- * reproduce `path.posix` exactly, which means, deliberately:
+ * POSIX is what the ReactLynx build has actually been doing, and
+ * `path-browserify` is Node's own POSIX implementation ported verbatim. That
+ * means, deliberately:
  *
  * - `\` is an ordinary filename character, not a separator. Only the final
  *   {@link normalizeSlashes} pass rewrites it, so `'\a.css'` still resolves to
@@ -30,148 +34,22 @@
  *
  * On Windows the old code picked up `path.win32` and could differ - e.g.
  * `generateHref('C:\\proj', 'pages\\index.css', './a.css')` was `'/pages/a.css'`
- * under win32 but `'/a.css'` under posix. Pinning POSIX makes the output
- * platform independent, which is what a browser bundle needs and what a
+ * under win32 but `'/a.css'` here. Pinning POSIX makes the output platform
+ * independent, which is what a browser bundle needs and what a
  * cross-machine-reproducible build wants anyway.
  *
  * ## The one behaviour that is not preserved: a relative `projectRoot`
  *
- * `path.resolve` and `path.relative` fall back to `process.cwd()` for relative
- * inputs, so with a relative `projectRoot` the old output depended on the
- * directory the build ran from. {@link posixResolve} has no `cwd` and treats a
- * relative path as rooted instead, so those inputs now differ - and are now
- * deterministic. `parse` defaults `projectRoot` to `'/'`, and every in-repo
+ * Node's `path.resolve` and `path.relative` fall back to `process.cwd()` for
+ * relative inputs, so with a relative `projectRoot` the old output depended on
+ * the directory the build ran from. `path-browserify` has no `cwd` to fall back
+ * to and
+ * treats a relative path as rooted instead, so those inputs now differ - and are
+ * now deterministic. `parse` defaults `projectRoot` to `'/'`, and every in-repo
  * caller passes an absolute one, so nothing in the tree observes this. For every
  * absolute `projectRoot` the output is byte-identical; `test/generateHref.test.ts`
  * checks that against `node:path` itself over a generated matrix.
  */
-
-/**
- * Collapses `.` and `..` segments, mirroring the internal helper `node:path`
- * uses for both `normalize` and `resolve`.
- *
- * @param pathname - a `/`-separated path
- * @param allowAboveRoot - keep leading `..` that would escape the root, which is
- *   correct for relative paths and wrong for absolute ones
- */
-function normalizeSegments(pathname: string, allowAboveRoot: boolean): string {
-  const out: string[] = [];
-  let aboveRoot = 0;
-
-  for (const segment of pathname.split('/')) {
-    // Empty segments come from repeated or trailing separators.
-    if (segment.length === 0 || segment === '.') {
-      continue;
-    }
-    if (segment === '..') {
-      if (out.length > 0) {
-        out.pop();
-      } else if (allowAboveRoot) {
-        aboveRoot += 1;
-      }
-      // An absolute path cannot escape its root, so `..` is dropped there.
-      continue;
-    }
-    out.push(segment);
-  }
-
-  const body = out.join('/');
-  if (aboveRoot === 0) {
-    return body;
-  }
-  const prefix = '../'.repeat(aboveRoot);
-  return body.length === 0 ? prefix.slice(0, -1) : prefix + body;
-}
-
-/** Equivalent to `path.posix.isAbsolute`. */
-function posixIsAbsolute(pathname: string): boolean {
-  return pathname.startsWith('/');
-}
-
-/** Equivalent to `path.posix.normalize`, including its trailing-slash handling. */
-function posixNormalize(pathname: string): string {
-  if (pathname.length === 0) {
-    return '.';
-  }
-  const isAbsolute = posixIsAbsolute(pathname);
-  const hasTrailingSlash = pathname.endsWith('/');
-  const normalized = normalizeSegments(pathname, !isAbsolute);
-
-  if (normalized.length === 0) {
-    if (isAbsolute) {
-      return '/';
-    }
-    return hasTrailingSlash ? './' : '.';
-  }
-
-  const withTrailingSlash = hasTrailingSlash ? `${normalized}/` : normalized;
-  return isAbsolute ? `/${withTrailingSlash}` : withTrailingSlash;
-}
-
-/** Equivalent to `path.posix.join`. */
-function posixJoin(...paths: string[]): string {
-  let joined = '';
-  for (const segment of paths) {
-    // `join` ignores empty arguments entirely.
-    if (segment.length === 0) {
-      continue;
-    }
-    joined = joined.length === 0 ? segment : `${joined}/${segment}`;
-  }
-  return joined.length === 0 ? '.' : posixNormalize(joined);
-}
-
-/**
- * Equivalent to `path.posix.resolve`, except that it roots at `/` instead of
- * `process.cwd()` when the arguments never produce an absolute path. See the
- * module comment.
- */
-function posixResolve(...paths: string[]): string {
-  let resolved = '';
-  let isAbsolute = false;
-
-  // Right to left, stopping at the first absolute segment, as `resolve` does.
-  for (let i = paths.length - 1; i >= 0 && !isAbsolute; i--) {
-    const segment = paths[i] ?? '';
-    if (segment.length === 0) {
-      continue;
-    }
-    resolved = `${segment}/${resolved}`;
-    isAbsolute = posixIsAbsolute(segment);
-  }
-
-  return `/${normalizeSegments(isAbsolute ? resolved : `/${resolved}`, false)}`;
-}
-
-/**
- * Equivalent to `path.posix.relative`, with {@link posixResolve}'s rooting rule
- * for relative inputs.
- */
-function posixRelative(from: string, to: string): string {
-  if (from === to) {
-    return '';
-  }
-  const fromResolved = posixResolve(from);
-  const toResolved = posixResolve(to);
-  if (fromResolved === toResolved) {
-    return '';
-  }
-
-  const fromSegments = fromResolved.split('/').filter((s) => s.length > 0);
-  const toSegments = toResolved.split('/').filter((s) => s.length > 0);
-
-  let common = 0;
-  while (
-    common < fromSegments.length
-    && common < toSegments.length
-    && fromSegments[common] === toSegments[common]
-  ) {
-    common += 1;
-  }
-
-  const up: string[] = new Array(fromSegments.length - common).fill('..');
-  return [...up, ...toSegments.slice(common)].join('/');
-}
 
 export function getFullPath(
   projectRoot: string,
@@ -180,11 +58,11 @@ export function getFullPath(
 ): string {
   let fullPath = '';
   if (importStmt.startsWith('/')) {
-    fullPath = posixJoin(projectRoot, importStmt);
+    fullPath = path.join(projectRoot, importStmt);
   } else if (importStmt.startsWith('@')) {
     fullPath = importStmt;
   } else {
-    fullPath = posixResolve(filename, '..', importStmt);
+    fullPath = path.resolve(filename, '..', importStmt);
   }
 
   return fullPath;
@@ -195,17 +73,17 @@ export function generateHref(
   filename: string,
   origin: string,
 ): string {
-  filename = posixIsAbsolute(filename)
+  filename = path.isAbsolute(filename)
     ? filename
-    : posixJoin(projectRoot, filename);
+    : path.join(projectRoot, filename);
   const fullPath = getFullPath(projectRoot, filename, origin);
 
-  let projectPath = posixRelative(projectRoot, fullPath);
+  let projectPath = path.relative(projectRoot, fullPath);
 
   if (fullPath.startsWith('@')) {
     return normalizeSlashes(fullPath);
   } else if (!projectPath.startsWith('.')) {
-    projectPath = posixJoin(POSIX_SEP, projectPath);
+    projectPath = path.join(POSIX_SEP, projectPath);
   }
 
   return normalizeSlashes(projectPath);

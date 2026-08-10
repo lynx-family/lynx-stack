@@ -2054,6 +2054,9 @@ importers:
       css-tree:
         specifier: ^3.2.1
         version: 3.2.1
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@types/css-tree':
         specifier: ^2.3.11
@@ -2061,6 +2064,9 @@ importers:
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
+      '@types/path-browserify':
+        specifier: ^1.0.3
+        version: 1.0.3
 
   packages/tools/debug-metadata:
     devDependencies:
@@ -6240,6 +6246,9 @@ packages:
 
   '@types/object.pick@1.3.4':
     resolution: {integrity: sha512-5PjwB0uP2XDp3nt5u5NJAG2DORHIRClPzWT/TTZhJ2Ekwe8M5bA9tvPdi9NO/n2uvu2/ictat8kgqvLfcIE1SA==}
+
+  '@types/path-browserify@1.0.3':
+    resolution: {integrity: sha512-ZmHivEbNCBtAfcrFeBCiTjdIc2dey0l7oCGNGpSuRTy8jP6UVND7oUowlvDujBy8r2Hoa8bfFUOCiPWfmtkfxw==}
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
@@ -16623,6 +16632,8 @@ snapshots:
   '@types/object.groupby@1.0.4': {}
 
   '@types/object.pick@1.3.4': {}
+
+  '@types/path-browserify@1.0.3': {}
 
   '@types/prop-types@15.7.13': {}
 
