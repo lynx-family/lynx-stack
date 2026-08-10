@@ -18,6 +18,7 @@ import { motionValue, styleEffect } from 'motion-dom' with {
 import type { ComponentType, FunctionComponent } from '@lynx-js/react';
 import {
   createElement,
+  runOnBackground,
   runOnMainThread,
   useEffect,
   useMainThreadRef,
@@ -93,6 +94,8 @@ function useMotionHostProps<Props extends MotionProps>(
     onTapCancel,
     onHoverStart,
     onHoverEnd,
+    onAnimationStart,
+    onAnimationComplete,
     bindtouchstart: externalTouchStart,
     bindtouchend: externalTouchEnd,
     bindtouchcancel: externalTouchCancel,
@@ -117,6 +120,7 @@ function useMotionHostProps<Props extends MotionProps>(
   >([]);
   const hoverActiveRef = useMainThreadRef(false);
   const tapActiveRef = useMainThreadRef(false);
+  const animationGenerationRef = useMainThreadRef(0);
   const hoverLayoutRef = useRef<
     { left: number; right: number; top: number; bottom: number } | null
   >(null);
@@ -304,6 +308,8 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       tapAnimationRef.current = [];
+      const animationGeneration = animationGenerationRef.current + 1;
+      animationGenerationRef.current = animationGeneration;
       styleCleanupRef.current?.();
       styleCleanupRef.current = null;
 
@@ -400,6 +406,21 @@ function useMotionHostProps<Props extends MotionProps>(
           }
         }
       }
+
+      const activeAnimations = [...animationRef.current];
+      if (activeAnimations.length > 0 && animate !== undefined) {
+        if (onAnimationStart) {
+          void runOnBackground(onAnimationStart)(animate);
+        }
+        void Promise.all(activeAnimations).then(() => {
+          if (
+            animationGenerationRef.current === animationGeneration
+            && onAnimationComplete
+          ) {
+            void runOnBackground(onAnimationComplete)(animate);
+          }
+        });
+      }
     }
 
     void runOnMainThread(updateMotionStyles)(
@@ -412,6 +433,7 @@ function useMotionHostProps<Props extends MotionProps>(
 
     function stopMotionStyles() {
       'main thread';
+      animationGenerationRef.current += 1;
       for (const animation of animationRef.current) {
         animation.stop();
       }
@@ -445,7 +467,6 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
-
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
@@ -484,7 +505,6 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
-
     const targetValues = resolvedTap.target as Record<string, unknown>;
     const restingTarget = hoverActiveRef.current && resolvedHover.target
       ? resolvedHover.target
@@ -557,7 +577,6 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
-
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
@@ -603,7 +622,6 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
-
     const hoverValues = resolvedHover.target as Record<string, unknown>;
     const animateValues = resolvedAnimate.target as
       | Record<string, unknown>
