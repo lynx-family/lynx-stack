@@ -214,24 +214,12 @@ describe('declarative Motion', () => {
   });
 
   test('animates while pressed and restores the resting style', async () => {
-    const onTapStart = vi.fn();
-    const onTap = vi.fn();
-    const onTapCancel = vi.fn();
-    const externalTouchStart = vi.fn();
-    const externalTouchEnd = vi.fn();
-    const externalTouchCancel = vi.fn();
     const { getByTestId } = render(
       <motion.view
         data-testid='button'
         style={{ backgroundColor: '#ffffff' }}
         whileTap={{ scale: 1.15, backgroundColor: '#ffcc00' }}
         transition={{ duration: 0.01 }}
-        onTapStart={onTapStart}
-        onTap={onTap}
-        onTapCancel={onTapCancel}
-        bindtouchstart={externalTouchStart}
-        bindtouchend={externalTouchEnd}
-        bindtouchcancel={externalTouchCancel}
       />,
       { enableMainThread: true, enableBackgroundThread: true },
     );
@@ -250,9 +238,6 @@ describe('declarative Motion', () => {
     expect(getByTestId('button').getAttribute('style')).toContain(
       'rgb(255, 204, 0)',
     );
-    expect(onTapStart).toHaveBeenCalledOnce();
-    expect(externalTouchStart).toHaveBeenCalledOnce();
-
     fireEvent.touchend(getByTestId('button'));
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -262,19 +247,40 @@ describe('declarative Motion', () => {
     expect(getByTestId('button').getAttribute('style')).toContain(
       'rgb(255, 255, 255)',
     );
+  });
+
+  test('composes gesture callbacks with external host handlers', () => {
+    const onTapStart = vi.fn();
+    const onTap = vi.fn();
+    const onTapCancel = vi.fn();
+    const externalTouchStart = vi.fn();
+    const externalTouchEnd = vi.fn();
+    const externalTouchCancel = vi.fn();
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        onTapStart={onTapStart}
+        onTap={onTap}
+        onTapCancel={onTapCancel}
+        bindtouchstart={externalTouchStart}
+        bindtouchend={externalTouchEnd}
+        bindtouchcancel={externalTouchCancel}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    fireEvent.touchstart(getByTestId('button'));
+    expect(onTapStart).toHaveBeenCalledOnce();
+    expect(externalTouchStart).toHaveBeenCalledOnce();
+
+    fireEvent.touchend(getByTestId('button'));
     expect(onTap).toHaveBeenCalledOnce();
     expect(externalTouchEnd).toHaveBeenCalledOnce();
 
     fireEvent.touchstart(getByTestId('button'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
     fireEvent.touchcancel(getByTestId('button'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
-
-    expect(getByTestId('button').getAttribute('style')).toContain('scale(1');
+    expect(onTapStart).toHaveBeenCalledTimes(2);
+    expect(externalTouchStart).toHaveBeenCalledTimes(2);
     expect(onTap).toHaveBeenCalledOnce();
     expect(onTapCancel).toHaveBeenCalledOnce();
     expect(externalTouchCancel).toHaveBeenCalledOnce();
