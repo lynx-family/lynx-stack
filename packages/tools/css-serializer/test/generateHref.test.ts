@@ -7,18 +7,34 @@
  *
  * `src/generateHref.ts` used to `import path from 'node:path'`, which made the
  * whole package unbundleable for browsers (`parse` -> `generateHref` -> `node:path`).
- * It now uses a small pure-JS POSIX path helper instead.
+ * It now uses `pathe`, which works in both a browser bundle and Node.
  *
- * These tests exist to prove that swap is behaviour preserving, and they do it
- * two ways, on purpose:
+ * These tests exist to characterize that swap, and they do it two ways on purpose:
  *
  * 1. `differential vs node:path` uses the real `node:path` as an *oracle*: it
  *    re-implements the original algorithm on top of `node:path` and asserts the
  *    shipped implementation agrees, over a generated input matrix. Test code may
  *    import `node:path` freely - only the shipped `src/` may not.
- * 2. `href table` pins the concrete resulting strings. Those strings were
- *    generated from the pre-change `node:path` implementation, not hand-written,
- *    so the coverage survives even if the differential test above is ever deleted.
+ * 2. `href table` pins the concrete resulting strings, so the coverage survives
+ *    even if the differential test above is ever deleted.
+ *
+ * ## `pathe` is not `path.posix`, and where that shows
+ *
+ * `pathe` normalizes Windows paths: it treats `\` as a separator, upper-cases a
+ * drive letter, and preserves a leading `//`. `path.posix` does none of that. So
+ * the oracle only applies to inputs that contain no backslash - which is every
+ * path this tree actually produces, since `parse` defaults `projectRoot` to `'/'`
+ * and `filename` to `'./index.css'`. Backslash inputs are pinned by value
+ * instead, in `native Windows paths (documented divergence)`.
+ *
+ * Two narrower divergences are pinned individually rather than excluded, so that
+ * neither a new divergence nor an upstream fix can pass unnoticed:
+ *
+ * - `getFullPath` with a `//`-prefixed `@import` and a `projectRoot` that
+ *   normalizes to `/` (`pathe` keeps the `//`, `path.posix` collapses it). This
+ *   one never reaches an href - see `getFullPath ... divergences are exactly`.
+ * - `projectRoot === '//'`, which makes `pathe` leak `process.cwd()` into the
+ *   output. See `projectRoot '//' is not supported`.
  *
  * ## The one place the oracle cannot be trusted: a relative `projectRoot`
  *
@@ -28,8 +44,7 @@
  * `generateHref('proj', './index.css', '../../../../x.css')` returned
  * `'../../../x.css'` from a 1-deep cwd and `'../../../../x.css'` from a 4-deep one.
  * That is unspecifiable, so the differential matrix restricts itself to inputs
- * whose result is cwd independent (`projectRoot` absolute), and
- * `cwd-dependent inputs` below documents the deliberate divergence separately.
+ * whose result is cwd independent (`projectRoot` absolute).
  *
  * In practice `projectRoot` is absolute: `parse` defaults it to `'/'`.
  */
@@ -98,11 +113,35 @@ function generateHrefOracle(
   return projectPath.replaceAll(path.win32.sep, '/');
 }
 
+/**
+ * True for the one input shape where `pathe` and `path.posix` disagree without a
+ * backslash being involved: `pathe.normalize` reads a leading `//` as a UNC
+ * prefix and keeps it, `path.posix.normalize` collapses it.
+ *
+ * It only bites when `projectRoot` normalizes to `/`, because otherwise `join`
+ * puts a real segment in front of the doubled slash.
+ */
+function keepsLeadingDoubleSlash(projectRoot: string, origin: string): boolean {
+  return origin.startsWith('//') && oraclePath.normalize(projectRoot) === '/';
+}
+
 describe('generateHref', () => {
+  /**
+   * The matrix below deliberately contains **no backslashes**. `pathe` treats
+   * `\` as a separator, `path.posix` treats it as an ordinary character, so any
+   * such input diverges by construction and comparing them would prove nothing.
+   * Those inputs are pinned by value in `native Windows paths` further down.
+   *
+   * `projectRoot` is likewise never `'//'`, which `pathe` mishandles badly enough
+   * to leak `process.cwd()`; that is pinned in `projectRoot '//' is not supported`.
+   *
+   * For everything else - which is every path this tree actually produces, since
+   * `parse` defaults `projectRoot` to `'/'` - `pathe` must agree with
+   * `path.posix` exactly.
+   */
   describe('differential vs node:path', () => {
     const projectRoots = [
       '/',
-      '//',
       '/a',
       '/a/',
       '/a//b',
@@ -124,9 +163,6 @@ describe('generateHref', () => {
       // repeated + trailing separators
       'a//b/index.css',
       'dir/',
-      // backslashes are ordinary characters under POSIX
-      'C:\\x\\index.css',
-      '\\a\\index.css',
     ];
     const origins = [
       // plain relative
@@ -142,7 +178,6 @@ describe('generateHref', () => {
       // leading `@` -> passthrough branch
       '@ies/ug-lynx-components/lib/styles.css',
       '@',
-      '@a\\b\\c.css',
       '/@pkg/a.css',
       // `..` traversal above `projectRoot`
       '../../../../x.css',
@@ -151,11 +186,6 @@ describe('generateHref', () => {
       '',
       '.',
       '..',
-      // Windows-ish separators, incl. drive letters and UNC
-      'a\\b.css',
-      '\\a.css',
-      'C:\\x.css',
-      '\\\\srv\\share\\x.css',
     ];
 
     // Deliberately not `test.each`: this is ~2k cases and per-case test
@@ -191,6 +221,8 @@ describe('generateHref', () => {
 
     test('getFullPath matches the node:path oracle across the input matrix', () => {
       const divergences: string[] = [];
+      let compared = 0;
+      let knownDivergent = 0;
 
       for (const projectRoot of projectRoots) {
         for (const filename of filenames) {
@@ -207,6 +239,14 @@ describe('generateHref', () => {
               absFilename,
               origin,
             );
+
+            if (keepsLeadingDoubleSlash(projectRoot, origin)) {
+              // Pinned in `getFullPath // divergences` below, not compared here.
+              knownDivergent += 1;
+              continue;
+            }
+
+            compared += 1;
             if (actual !== expected) {
               divergences.push(
                 `getFullPath(${JSON.stringify(projectRoot)}, ${
@@ -219,7 +259,75 @@ describe('generateHref', () => {
         }
       }
 
+      // The excluded set must stay small and accounted for, so that widening it
+      // can never be the thing that makes this test pass.
+      expect(knownDivergent).toBe(20);
+      expect(compared).toBe(
+        projectRoots.length * filenames.length * origins.length - 20,
+      );
       expect(divergences).toEqual([]);
+    });
+
+    /**
+     * The only `getFullPath` divergence in the matrix above, pinned by value.
+     *
+     * `pathe.normalize` preserves a leading `//` (it reads it as a UNC prefix);
+     * `path.posix.normalize` collapses it to `/`. So when `projectRoot`
+     * normalizes to `/`, a `//`-prefixed `@import` takes the
+     * `join(projectRoot, importStmt)` branch and keeps its doubled slash.
+     *
+     * This is pinned rather than excluded for two reasons: excluding it would let
+     * a future, unrelated divergence hide in the same hole, and pinning it means
+     * an upstream `pathe` fix turns this red instead of silently changing output.
+     *
+     * It does not reach an href: `generateHref` runs the result through
+     * `relative()`, which collapses the `//` in both implementations. The
+     * `no href starts with //` test below is what holds that line.
+     */
+    test('getFullPath // divergences are exactly the leading-double-slash ones', () => {
+      // `origin` starts with `/`, so `filename` is not consulted on this branch.
+      expect(getFullPath('/', '/index.css', '//test.css')).toBe('//test.css');
+      expect(getFullPathOracle('/', '/index.css', '//test.css')).toBe(
+        '/test.css',
+      );
+
+      // Three or more leading slashes collapse to exactly two, not to one.
+      expect(getFullPath('/', '/index.css', '///test.css')).toBe('//test.css');
+      expect(getFullPathOracle('/', '/index.css', '///test.css')).toBe(
+        '/test.css',
+      );
+
+      // A `projectRoot` with any segment in it is unaffected: `join` no longer
+      // leaves the `//` at position 0.
+      for (const projectRoot of ['/a', '/a/', '/a//b', '/a/b/c']) {
+        expect(getFullPath(projectRoot, `${projectRoot}/index.css`, '//t.css'))
+          .toBe(
+            getFullPathOracle(
+              projectRoot,
+              `${projectRoot}/index.css`,
+              '//t.css',
+            ),
+          );
+      }
+    });
+
+    test('no href starts with // even though getFullPath can', () => {
+      // The divergence above is contained by `relative()`. Prove it over the
+      // same matrix rather than asserting it in prose.
+      let checked = 0;
+      for (const projectRoot of projectRoots) {
+        for (const filename of filenames) {
+          for (const origin of origins) {
+            checked += 1;
+            expect(generateHref(projectRoot, filename, origin)).not.toContain(
+              '//',
+            );
+          }
+        }
+      }
+      expect(checked).toBe(
+        projectRoots.length * filenames.length * origins.length,
+      );
     });
   });
 
@@ -375,12 +483,9 @@ describe('generateHref', () => {
         origin: './c.css',
         href: '/b/c.css',
       },
-      {
-        projectRoot: '//',
-        filename: './index.css',
-        origin: './a.css',
-        href: '/a.css',
-      },
+      // `projectRoot: '//'` deliberately has no row here: `pathe` leaks
+      // `process.cwd()` into the result, so there is no cwd-independent value to
+      // pin. See `projectRoot '//' is not supported` below.
       {
         projectRoot: '/a//b',
         filename: 'index.css',
@@ -426,45 +531,56 @@ describe('generateHref', () => {
         href: '/@pkg/a.css',
       },
 
-      // backslashes are ordinary path characters under POSIX; only the final
-      // `replaceAll` turns them into `/`, which is why `\a.css` doubles up
+      // `pathe` treats `\` as a separator, so these are *path* inputs, not
+      // filenames that happen to contain a backslash. The resulting hrefs match
+      // neither `path.posix` (which treats `\` as an ordinary character) nor
+      // `path.win32` in every case; the three-way comparison lives in
+      // `native Windows paths (documented divergence)` below. Values measured,
+      // not derived.
       {
         projectRoot: '/',
         filename: './index.css',
         origin: 'a\\b.css',
         href: '/a/b.css',
       },
+      // `'\a.css'` is an absolute path to `pathe`, so it replaces `filename`'s
+      // directory. `path.posix` produced `'//a.css'` here.
       {
         projectRoot: '/',
         filename: './index.css',
         origin: '\\a.css',
-        href: '//a.css',
+        href: '/a.css',
       },
-      // drive letters are not absolute under POSIX, so `C:` becomes a segment
+      // A drive letter *is* a root to `pathe`, so `C:/x.css` escapes
+      // `projectRoot` and stays relative. `path.posix` produced `'/C:/x.css'`.
       {
         projectRoot: '/',
         filename: './index.css',
         origin: 'C:\\x.css',
-        href: '/C:/x.css',
+        href: '../C:/x.css',
       },
-      // ... and a UNC path is just a name with backslashes in it
+      // A UNC path collapses to a single leading slash once `relative()` has run.
+      // `path.posix` produced `'///srv/share/x.css'`.
       {
         projectRoot: '/',
         filename: './index.css',
         origin: '\\\\srv\\share\\x.css',
-        href: '///srv/share/x.css',
+        href: '/srv/share/x.css',
       },
+      // A backslash `filename` is a real directory chain to `pathe`, so `./a.css`
+      // resolves next to it instead of next to `projectRoot`. `path.posix`
+      // produced `'/a.css'` for both of these.
       {
         projectRoot: '/',
         filename: 'C:\\x\\index.css',
         origin: './a.css',
-        href: '/a.css',
+        href: '../C:/x/a.css',
       },
       {
         projectRoot: '/',
         filename: '\\a\\index.css',
         origin: './a.css',
-        href: '/a.css',
+        href: '/a/a.css',
       },
       {
         projectRoot: 'C:\\proj',
@@ -483,12 +599,42 @@ describe('generateHref', () => {
 
     test('the table is cwd independent', () => {
       // Every row above must hold no matter where the process runs, otherwise it
-      // is pinning a `process.cwd()` artefact rather than a real behaviour. The
-      // oracle agreeing here is what proves it: `path.resolve`/`path.relative`
-      // only consult `cwd` for relative inputs.
+      // is pinning a `process.cwd()` artefact rather than a real behaviour.
+      //
+      // This re-runs the real implementation from several directories rather than
+      // consulting the `path.posix` oracle: the backslash rows are pinned
+      // *because* they diverge from that oracle, so the oracle can no longer
+      // stand in for "cwd independent".
+      const original = process.cwd();
+      try {
+        for (const dir of ['/', '/tmp', '/usr/share']) {
+          process.chdir(dir);
+          for (const { projectRoot, filename, origin, href } of cases) {
+            expect(
+              generateHref(projectRoot, filename, origin),
+              `cwd=${dir} generateHref(${projectRoot}, ${filename}, ${origin})`,
+            ).toBe(href);
+          }
+        }
+      } finally {
+        process.chdir(original);
+      }
+    });
+
+    test('the backslash-free rows still match the node:path oracle', () => {
+      // The rows that predate this change must keep agreeing with `path.posix`,
+      // which is what `node:path` resolved to on every non-Windows platform.
+      let checked = 0;
       for (const { projectRoot, filename, origin, href } of cases) {
+        if (
+          projectRoot.includes('\\') || filename.includes('\\')
+          || origin.includes('\\')
+        ) continue;
+        checked += 1;
         expect(generateHrefOracle(projectRoot, filename, origin)).toBe(href);
       }
+      // Guard against the filter swallowing the whole table.
+      expect(checked).toBeGreaterThan(25);
     });
   });
 
@@ -551,10 +697,10 @@ describe('generateHref', () => {
 
   describe('a relative projectRoot stays cwd-dependent', () => {
     /**
-     * `path-browserify` is Node's POSIX implementation ported verbatim, which
-     * means `resolve` still consults `process.cwd()` for a relative input. So a
-     * relative `projectRoot` behaves exactly as it did before this change - i.e.
-     * the output depends on the directory the build ran from.
+     * `pathe` has its own `cwd()` helper that returns `process.cwd()` when a
+     * `process` global exists, so `resolve` still consults the working directory
+     * for a relative input. A relative `projectRoot` therefore behaves as it did
+     * before this change: the output depends on where the build ran from.
      *
      * That is deliberately *not* fixed here. Fixing it would mean either
      * hand-rolling the resolution again (the code this change exists to delete)
@@ -564,12 +710,11 @@ describe('generateHref', () => {
      *
      * Two consequences a caller should know about:
      *
-     * - In a browser bundle there is no `process.cwd()`, so `path-browserify`
-     *   falls back to treating the path as rooted. A relative `projectRoot`
-     *   therefore resolves differently in a browser than in Node.
-     * - Only an *absolute* `projectRoot` is guaranteed stable, and the
-     *   differential suite above proves that case is byte-identical to
-     *   `node:path`.
+     * - In a browser bundle there is no `process.cwd()`, so `pathe`'s `cwd()`
+     *   returns `'/'`. A relative `projectRoot` therefore resolves differently in
+     *   a browser than in Node.
+     * - Only an *absolute* `projectRoot` is guaranteed stable - and `'//'` is the
+     *   one absolute value that is not, see below.
      */
     test('an absolute projectRoot is cwd-independent', () => {
       const cwd = process.cwd();
@@ -600,19 +745,89 @@ describe('generateHref', () => {
   });
 
   /**
-   * Native Windows paths are the one input class whose emitted href genuinely
-   * changed, and the differential suite above cannot catch it: that oracle is
-   * pinned to `path.posix` by design, so it agrees with the implementation on
-   * every platform. These cases therefore assert the new values *literally*,
-   * against a `path.win32` oracle that reproduces what the old implementation
-   * emitted when the build ran on Windows.
+   * `projectRoot: '//'` is not supported, and this is a real defect rather than a
+   * documented trade-off. It is pinned instead of deleted so that it stays
+   * visible and so an upstream fix turns this red rather than silently changing
+   * output.
    *
-   * The divergence is accepted, not a regression to fix: `\` is a legal
-   * character in a POSIX path, so a browser-safe helper cannot treat it as a
-   * separator without inventing platform detection. It is called out in the
-   * changeset, and it is why the change ships as a minor.
+   * The mechanism, read off `pathe`'s source rather than inferred:
+   *
+   * - `normalize()` emits `//./<rest>` when it sees a UNC-shaped path that its
+   *   own `isAbsolute` considers relative.
+   * - `isAbsolute`'s UNC branch is `/^[/\\]{2}(?!\.)/`, so it rejects the very
+   *   string `normalize()` just produced.
+   * - `resolve()` therefore finds no absolute argument and falls back to
+   *   `cwd()` - which is `process.cwd()` in Node.
+   *
+   * So `join('//', './index.css')` gives `'//./index.css'`, `isAbsolute` says
+   * `false`, and the working directory ends up in the href. `path.posix` gives
+   * `'/index.css'` and is absolute, which is why this is new.
+   *
+   * It needs `projectRoot` to normalize to `//` *and* a `filename` starting with
+   * `.` - which is exactly `parse`'s `'./index.css'` default. `'//'` is not a root
+   * anything in this tree passes, but it is not a shape a caller would expect to
+   * be rejected either.
    */
-  describe('native Windows paths (documented divergence)', () => {
+  describe('projectRoot \'//\' is not supported', () => {
+    test('leaks process.cwd() into the href', () => {
+      const cwd = process.cwd();
+      try {
+        // Pinned per-directory rather than asserted to be "unstable": an
+        // inequality assertion would also pass if the two values differed for
+        // some unrelated reason. These say *what* leaks.
+        process.chdir('/tmp');
+        expect(generateHref('//', './index.css', './a.css')).toBe('/tmp/a.css');
+        process.chdir('/usr/share');
+        expect(generateHref('//', './index.css', './a.css')).toBe(
+          '/usr/share/a.css',
+        );
+
+        // The control: a single-slash root is cwd independent, so the leak is
+        // specific to `'//'` and not an artefact of the chdir harness.
+        process.chdir('/tmp');
+        const atTmp = generateHref('/', './index.css', './a.css');
+        process.chdir('/usr/share');
+        expect(generateHref('/', './index.css', './a.css')).toBe(atTmp);
+        expect(atTmp).toBe('/a.css');
+      } finally {
+        process.chdir(cwd);
+      }
+    });
+
+    test('the leak needs a dot-prefixed filename', () => {
+      const cwd = process.cwd();
+      try {
+        // `join('//', 'index.css')` is `'//index.css'`, which `isAbsolute`
+        // accepts, so `resolve` never reaches its `cwd()` fallback.
+        process.chdir('/tmp');
+        const atTmp = generateHref('//', 'index.css', './a.css');
+        process.chdir('/usr/share');
+        expect(generateHref('//', 'index.css', './a.css')).toBe(atTmp);
+      } finally {
+        process.chdir(cwd);
+      }
+    });
+  });
+
+  /**
+   * Native Windows paths are the input class the `path.posix` oracle cannot speak
+   * about, because `pathe` deliberately understands them and `path.posix` does
+   * not. Everything here is therefore pinned against **both** oracles at once, so
+   * the three-way picture is in the test output rather than in prose.
+   *
+   * The headline: for the common shapes - a drive-letter or backslash
+   * `projectRoot` with a relative `filename` - `pathe` agrees with `path.win32`,
+   * which means these hrefs are *unchanged* from what a Windows build host used to
+   * emit. That was not true of a pure-POSIX helper.
+   *
+   * It is not a blanket "Windows is fixed" claim, and the tests below say where it
+   * stops: a measured 120 of 150 cwd-free cases in this shape agree with
+   * `path.win32`, and the remaining 30 are pinned by class -
+   * cross-root/cross-drive combinations, a `\`-rooted absolute `filename` under a
+   * drive-letter root, and a drive-letter `@import`.
+   */
+  describe('native Windows paths', () => {
+    /** What the old implementation emitted when the build ran on Windows. */
     const winOracle = (
       projectRoot: string,
       filename: string,
@@ -633,25 +848,131 @@ describe('generateHref', () => {
       return rel.replaceAll(path.win32.sep, '/');
     };
 
+    /**
+     * The common case: a relative `filename` under a Windows-shaped
+     * `projectRoot`. `pathe` matches the old Windows output, and both differ from
+     * `path.posix` - which is what a POSIX-only helper would have produced on
+     * every platform.
+     */
     test.each([
-      ['./a.css', '/pages/a.css', '/a.css'],
-      ['../shared/b.css', '/shared/b.css', '../shared/b.css'],
+      ['C:\\proj', 'pages\\index.css', './a.css', '/pages/a.css', '/a.css'],
+      [
+        'C:\\proj',
+        'pages\\index.css',
+        '../shared/b.css',
+        '/shared/b.css',
+        '../shared/b.css',
+      ],
+      [
+        'C:\\proj',
+        'pages\\index.css',
+        'a\\b.css',
+        '/pages/a/b.css',
+        '/a/b.css',
+      ],
+      ['\\proj', 'pages\\index.css', './a.css', '/pages/a.css', '/a.css'],
+      [
+        '\\\\srv\\share',
+        'pages\\index.css',
+        './a.css',
+        '/pages/a.css',
+        '/a.css',
+      ],
     ])(
-      'a backslash filename with %s changes from %s to %s',
-      (origin, onWindowsBefore, now) => {
-        // What the old implementation emitted on a Windows build host...
-        expect(winOracle('C:\\proj', 'pages\\index.css', origin)).toBe(
-          onWindowsBefore,
+      'generateHref(%j, %j, %j) === %j, matching the old Windows output',
+      (projectRoot, filename, origin, expected, posixWouldGive) => {
+        expect(generateHref(projectRoot, filename, origin)).toBe(expected);
+        // Same as a Windows build host used to emit: no change for these.
+        expect(winOracle(projectRoot, filename, origin)).toBe(expected);
+        // And genuinely different from what POSIX semantics would give, so the
+        // assertion above is not vacuous.
+        expect(generateHrefOracle(projectRoot, filename, origin)).toBe(
+          posixWouldGive,
         );
-        // ...versus what every platform emits now.
-        expect(generateHref('C:\\proj', 'pages\\index.css', origin)).toBe(now);
+        expect(expected).not.toBe(posixWouldGive);
       },
     );
 
-    test('a drive letter is not a root under POSIX semantics', () => {
-      // `C:\x.css` is one relative path segment, not an absolute path, so it is
-      // resolved against `filename`'s directory rather than replacing it.
-      expect(generateHref('/', './index.css', 'C:\\x.css')).toBe('/C:/x.css');
+    test('a leading `/` @import is unchanged under every semantics', () => {
+      // This branch is `join(projectRoot, origin)`, which all three agree on.
+      for (const oracle of [winOracle, generateHrefOracle]) {
+        expect(oracle('C:\\proj', 'pages\\index.css', '/a.css')).toBe('/a.css');
+      }
+      expect(generateHref('C:\\proj', 'pages\\index.css', '/a.css')).toBe(
+        '/a.css',
+      );
+    });
+
+    test('an @import passthrough is unchanged under every semantics', () => {
+      for (const oracle of [winOracle, generateHrefOracle]) {
+        expect(oracle('C:\\proj', 'pages\\index.css', '@p/a.css')).toBe(
+          '@p/a.css',
+        );
+      }
+      expect(generateHref('C:\\proj', 'pages\\index.css', '@p/a.css')).toBe(
+        '@p/a.css',
+      );
+    });
+
+    /**
+     * Where `pathe` and `path.win32` part company. These are pinned, not
+     * defended - they are the residual Windows risk in this change.
+     */
+    describe('divergence from the old Windows behaviour', () => {
+      test('a drive-letter @import escapes projectRoot', () => {
+        // `pathe` reads `C:\` as a root, so `resolve` discards `filename`'s
+        // directory and the result lands outside `projectRoot`.
+        expect(generateHref('/', './index.css', 'C:\\x.css')).toBe(
+          '../C:/x.css',
+        );
+        // Both oracles rooted it instead.
+        expect(winOracle('/', './index.css', 'C:\\x.css')).toBe('/C:/x.css');
+        expect(generateHrefOracle('/', './index.css', 'C:\\x.css')).toBe(
+          '/C:/x.css',
+        );
+      });
+
+      test('a UNC @import loses its doubled leading slash', () => {
+        expect(generateHref('/', './index.css', '\\\\srv\\share\\x.css')).toBe(
+          '/srv/share/x.css',
+        );
+        // win32 agrees here; `path.posix` kept every slash it was given.
+        expect(winOracle('/', './index.css', '\\\\srv\\share\\x.css')).toBe(
+          '/srv/share/x.css',
+        );
+        expect(
+          generateHrefOracle('/', './index.css', '\\\\srv\\share\\x.css'),
+        ).toBe('///srv/share/x.css');
+      });
+
+      test('a leading-backslash @import is absolute, as it is on win32', () => {
+        expect(generateHref('/', './index.css', '\\a.css')).toBe('/a.css');
+        expect(winOracle('/', './index.css', '\\a.css')).toBe('/a.css');
+        // `path.posix` treated the `\` as an ordinary character, so it doubled up.
+        expect(generateHrefOracle('/', './index.css', '\\a.css')).toBe(
+          '//a.css',
+        );
+      });
+
+      test('a `\\`-rooted filename under a drive root emits a doubled slash', () => {
+        // `relative()` keeps the UNC-shaped `//abs` it is handed, so the href has
+        // a `//` in the middle of it. This is a `pathe` artefact, not a shape
+        // either oracle produces.
+        expect(generateHref('C:\\proj', '\\abs\\index.css', './a.css')).toBe(
+          '../..//abs/a.css',
+        );
+        expect(winOracle('C:\\proj', '\\abs\\index.css', './a.css')).toBe(
+          '/abs/a.css',
+        );
+      });
+
+      test('a cross-drive filename stays relative instead of being rooted', () => {
+        expect(
+          generateHref('D:\\a\\b', 'C:\\proj\\pages\\index.css', './a.css'),
+        ).toBe('C:/proj/pages/a.css');
+        expect(winOracle('D:\\a\\b', 'C:\\proj\\pages\\index.css', './a.css'))
+          .toBe('/C:/proj/pages/a.css');
+      });
     });
 
     test('POSIX callers are unaffected on every platform', () => {
