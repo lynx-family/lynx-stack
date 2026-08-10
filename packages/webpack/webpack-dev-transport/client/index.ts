@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { createSocketURL } from './createSocketURL.js';
 import { log, logEnabledFeatures } from './log.js';
+import { logBuildErrors } from './logBuildErrors.js';
+import type { BuildErrors } from './logBuildErrors.js';
 import { parseURL } from './parseURL.js';
 import reloadApp from './reloadApp.js';
 import socket from './socket.js';
@@ -132,9 +134,8 @@ const onSocketMessage = {
     reloadApp({ liveReload: true, hot: false, progress: false }, status);
   },
 
-  errors(_errors: Error[]) {
-    log.error('Errors while compiling. Reload prevented.');
-    // TODO: format errors
+  errors(errors: BuildErrors) {
+    logBuildErrors(errors);
   },
   error(error: Error) {
     log.error(error.toString());
