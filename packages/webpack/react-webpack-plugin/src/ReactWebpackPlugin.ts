@@ -4,6 +4,7 @@
 
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
+import * as path from 'node:path';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
@@ -19,10 +20,10 @@ import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 import {
-  collectLayerMTSDefines,
-  renderMTSDefinesModuleURI,
-  selectMissingMTSDefines,
-} from './MTSDefines.js';
+  collectDefinesForMainThread,
+  renderDefinesForMainThreadModule,
+  selectMissingDefinesForMainThread,
+} from './DefinesForMainThread.js';
 
 const require = createRequire(import.meta.url);
 
@@ -205,9 +206,10 @@ interface ReactWebpackPluginOptions {
   mainThreadChunks?: string[] | undefined;
 
   /**
-   * The background entry name of each main-thread entry.
+   * The main-thread and background entry pairs to merge the main-thread
+   * definitions across.
    */
-  mainThreadEntries?: Record<string, string>;
+  entryPairs?: Array<{ mainThread: string; background: string }>;
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
@@ -333,7 +335,7 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
-      mainThreadEntries: {},
+      entryPairs: [],
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
@@ -415,40 +417,83 @@ class ReactWebpackPlugin {
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
 
-    const mainThreadEntries = Object.entries(options.mainThreadEntries ?? {});
-    if (mainThreadEntries.length > 0) {
-      const { EntryPlugin } = compiler.webpack;
+    const entryPairs = options.entryPairs ?? [];
+    if (entryPairs.length > 0) {
+      const { EntryPlugin, experiments } = compiler.webpack;
+      const virtualModules = new experiments.VirtualModulesPlugin({});
+      virtualModules.apply(compiler);
+
       compiler.hooks.finishMake.tapPromise(
         this.constructor.name,
         async (compilation) => {
-          const backgroundDefines = collectLayerMTSDefines(
-            compilation.modules,
-            LAYERS.BACKGROUND,
-          );
-          if (backgroundDefines.length === 0) {
-            return;
-          }
-          const missing = selectMissingMTSDefines(
-            backgroundDefines,
-            collectLayerMTSDefines(compilation.modules, LAYERS.MAIN_THREAD),
-          );
-          if (missing.length === 0) {
-            return;
-          }
-          const request = renderMTSDefinesModuleURI(missing);
+          const { moduleGraph } = compilation;
+
+          const reachableDefines = (entryName: string) => {
+            const entry = compilation.entries.get(entryName);
+            if (!entry) {
+              throw new Error(
+                `No entry named ${
+                  JSON.stringify(entryName)
+                } to collect the main-thread definitions from.`,
+              );
+            }
+            const visited = new Set<NonNullable<
+              ReturnType<typeof moduleGraph.getModule>
+            >>();
+            const queue = [
+              ...entry.dependencies,
+              ...entry.includeDependencies,
+            ].flatMap((dependency) => {
+              const module = moduleGraph.getModule(dependency);
+              return module ? [module] : [];
+            });
+            while (queue.length > 0) {
+              const module = queue.pop()!;
+              if (visited.has(module)) {
+                continue;
+              }
+              visited.add(module);
+              for (const connection of moduleGraph.getOutgoingConnections(module)) {
+                const next = connection.module;
+                if (next && !visited.has(next)) {
+                  queue.push(next);
+                }
+              }
+            }
+            return collectDefinesForMainThread(
+              visited,
+              (module) => module.identifier(),
+            );
+          };
+
           await Promise.all(
-            mainThreadEntries.map(([mainThreadEntry]) =>
-              new Promise<void>((resolve, reject) => {
+            entryPairs.map(({ mainThread, background }) => {
+              const missing = selectMissingDefinesForMainThread(
+                reachableDefines(background),
+                reachableDefines(mainThread),
+              );
+              if (missing.length === 0) {
+                return;
+              }
+              const request = path.join(
+                compiler.context,
+                `__lynx-react-defines-for-main-thread.${mainThread}.js`,
+              );
+              virtualModules.writeModule(
+                request,
+                renderDefinesForMainThreadModule(missing),
+              );
+              return new Promise<void>((resolve, reject) => {
                 // `addInclude` puts the module in the chunk without running it;
                 // `addEntry` also appends it to the entry startup sequence.
                 compilation.addEntry(
                   compiler.context,
                   EntryPlugin.createDependency(request),
-                  { name: mainThreadEntry, layer: LAYERS.MAIN_THREAD },
+                  { name: mainThread, layer: LAYERS.MAIN_THREAD },
                   (err) => err ? reject(err) : resolve(),
                 );
-              })
-            ),
+              });
+            }),
           );
         },
       );

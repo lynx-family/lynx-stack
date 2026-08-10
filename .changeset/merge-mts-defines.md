@@ -1,6 +1,6 @@
 ---
 "@lynx-js/react": patch
-"@lynx-js/react-webpack-plugin": patch
+"@lynx-js/react-webpack-plugin": minor
 "@lynx-js/react-rsbuild-plugin": patch
 ---
 

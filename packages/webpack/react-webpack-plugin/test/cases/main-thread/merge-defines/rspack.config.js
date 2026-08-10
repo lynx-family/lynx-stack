@@ -4,6 +4,6 @@ import { createConfig } from '../../../create-react-config.js';
 export default {
   context: import.meta.dirname,
   ...createConfig(undefined, {
-    mainThreadEntries: { 'main__main-thread': 'main__background' },
+    entryPairs: [{ mainThread: 'main__main-thread', background: 'main__background' }],
   }),
 };

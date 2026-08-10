@@ -7,7 +7,7 @@ import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
 
-import { MTS_DEFINES_BUILD_INFO } from '../MTSDefines.js';
+import { DEFINES_FOR_MAIN_THREAD_BUILD_INFO } from '../DefinesForMainThread.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -109,8 +109,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     } else {
       delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
     }
-    if (result.mtsDefines) {
-      buildInfo[MTS_DEFINES_BUILD_INFO] = result.mtsDefines;
+    if (result.definesForMainThread) {
+      buildInfo[DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = result.definesForMainThread;
     }
   }
 

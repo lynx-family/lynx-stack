@@ -13,42 +13,33 @@ import { describe, expect, it } from '@rstest/core';
 
 import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 import {
-  MTS_DEFINES_BUILD_INFO,
-  collectLayerMTSDefines,
-  collectMTSDefines,
-  renderMTSDefines,
-  renderMTSDefinesModule,
-  selectMissingMTSDefines,
-} from '../src/MTSDefines.js';
-import type { MTSDefine } from '../src/MTSDefines.js';
+  DEFINES_FOR_MAIN_THREAD_BUILD_INFO,
+  collectDefinesForMainThread,
+  renderDefinesForMainThread,
+  renderDefinesForMainThreadModule,
+  selectMissingDefinesForMainThread,
+} from '../src/DefinesForMainThread.js';
+import type { MainThreadDefine } from '../src/DefinesForMainThread.js';
 
-function snapshot(id: string, code = `/* ${id} */`): MTSDefine {
+function snapshot(id: string, code = `/* ${id} */`): MainThreadDefine {
   return { kind: 'snapshot', id, code };
 }
 
 interface TestModule {
   id: string;
-  defines?: MTSDefine[];
+  defines?: MainThreadDefine[];
   modules?: TestModule[];
 }
 
-interface TestChunk {
-  modules: TestModule[];
-}
-
-function collect(chunks: TestChunk[]): MTSDefine[] {
-  return collectMTSDefines<TestChunk, TestModule>(
-    chunks,
-    (chunk) => chunk.modules,
-    (module) => module.id,
-  );
+function collect(modules: TestModule[]): MainThreadDefine[] {
+  return collectDefinesForMainThread(modules, (module) => module.id);
 }
 
 function asModule(module: TestModule): TestModule {
   return {
     ...module,
     ...(module.defines === undefined ? {} : {
-      buildInfo: { [MTS_DEFINES_BUILD_INFO]: module.defines },
+      buildInfo: { [DEFINES_FOR_MAIN_THREAD_BUILD_INFO]: module.defines },
     }),
     ...(module.modules
       ? { modules: module.modules.map((nested) => asModule(nested)) }
@@ -56,88 +47,77 @@ function asModule(module: TestModule): TestModule {
   } as TestModule;
 }
 
-describe('collectMTSDefines', () => {
-  it('collects the definitions of a chunk in module order', () => {
-    const defines = collect([{
-      modules: [
-        asModule({ id: 'a', defines: [snapshot('A')] }),
-        asModule({ id: 'b' }),
-        asModule({ id: 'c', defines: [snapshot('C')] }),
-      ],
-    }]);
+describe('collectDefinesForMainThread', () => {
+  it('collects the definitions in module order', () => {
+    const defines = collect([
+      asModule({ id: 'a', defines: [snapshot('A')] }),
+      asModule({ id: 'b' }),
+      asModule({ id: 'c', defines: [snapshot('C')] }),
+    ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['A', 'C']);
   });
 
-  it('collects a module only once when it is in several chunks', () => {
+  it('collects a module only once', () => {
     const shared = asModule({ id: 'shared', defines: [snapshot('S')] });
     const defines = collect([
-      { modules: [shared] },
-      {
-        modules: [shared, asModule({ id: 'other', defines: [snapshot('O')] })],
-      },
+      shared,
+      shared,
+      asModule({ id: 'other', defines: [snapshot('O')] }),
     ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['S', 'O']);
   });
 
   it('registers a definition reached through several modules once', () => {
-    const defines = collect([{
-      modules: [
-        asModule({ id: 'a', defines: [snapshot('shared'), snapshot('a')] }),
-        asModule({ id: 'b', defines: [snapshot('shared')] }),
-      ],
-    }]);
+    const defines = collect([
+      asModule({ id: 'a', defines: [snapshot('shared'), snapshot('a')] }),
+      asModule({ id: 'b', defines: [snapshot('shared')] }),
+    ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['shared', 'a']);
   });
 
   it('fails the build when an id no longer identifies its content', () => {
     expect(() =>
-      collect([{
-        modules: [
-          asModule({ id: 'a', defines: [snapshot('x', 'one')] }),
-          asModule({ id: 'b', defines: [snapshot('x', 'another')] }),
-        ],
-      }])
+      collect([
+        asModule({ id: 'a', defines: [snapshot('x', 'one')] }),
+        asModule({ id: 'b', defines: [snapshot('x', 'another')] }),
+      ])
     ).toThrowError(/share the id x/);
   });
 
   it('keeps definitions of different kinds that share an id', () => {
-    const defines = collect([{
-      modules: [
-        asModule({
-          id: 'a',
-          defines: [snapshot('x'), { kind: 'worklet', id: 'x', code: 'w' }],
-        }),
-      ],
-    }]);
+    const defines = collect([
+      asModule({
+        id: 'a',
+        defines: [snapshot('x'), { kind: 'worklet', id: 'x', code: 'w' }],
+      }),
+    ]);
 
     expect(defines).toHaveLength(2);
   });
 
   it('collects nothing when no module has definitions', () => {
-    expect(collect([{ modules: [asModule({ id: 'a' })] }])).toEqual([]);
+    expect(collect([asModule({ id: 'a' })])).toEqual([]);
   });
 
   it('collects the definitions of concatenated inner modules', () => {
-    const defines = collect([{
-      modules: [
-        asModule({
-          id: 'concatenated',
-          defines: [snapshot('OUTER')],
-          modules: [{ id: 'inner', defines: [snapshot('INNER')] }],
-        }),
-      ],
-    }]);
+    const defines = collect([
+      asModule({
+        id: 'concatenated',
+        defines: [snapshot('OUTER')],
+        modules: [{ id: 'inner', defines: [snapshot('INNER')] }],
+      }),
+    ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['OUTER', 'INNER']);
   });
 });
 
-describe('selectMissingMTSDefines', () => {
+describe('selectMissingDefinesForMainThread', () => {
   it('keeps only the definitions the main thread lacks', () => {
-    const missing = selectMissingMTSDefines(
+    const missing = selectMissingDefinesForMainThread(
       [snapshot('a'), snapshot('b')],
       [snapshot('b'), snapshot('c')],
     );
@@ -146,7 +126,7 @@ describe('selectMissingMTSDefines', () => {
   });
 
   it('does not let a worklet id satisfy a snapshot id', () => {
-    const missing = selectMissingMTSDefines(
+    const missing = selectMissingDefinesForMainThread(
       [snapshot('x')],
       [{ kind: 'worklet', id: 'x', code: 'w' }],
     );
@@ -155,31 +135,9 @@ describe('selectMissingMTSDefines', () => {
   });
 });
 
-function layerModule(
-  layer: string,
-  module: TestModule,
-): { identifier(): string; layer: string } {
-  return {
-    ...asModule(module),
-    layer,
-    identifier: () => module.id,
-  };
-}
-
-describe('collectLayerMTSDefines', () => {
-  it('collects only the definitions of the given layer', () => {
-    const defines = collectLayerMTSDefines([
-      layerModule('background', { id: 'a', defines: [snapshot('BG')] }),
-      layerModule('main-thread', { id: 'b', defines: [snapshot('MT')] }),
-    ], 'background');
-
-    expect(defines.map(({ id }) => id)).toEqual(['BG']);
-  });
-});
-
-describe('renderMTSDefinesModule', () => {
+describe('renderDefinesForMainThreadModule', () => {
   it('references the runtime through namespace member accesses', () => {
-    const code = renderMTSDefinesModule([
+    const code = renderDefinesForMainThreadModule([
       snapshot('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);'),
     ]);
 
@@ -192,7 +150,7 @@ describe('renderMTSDefinesModule', () => {
   });
 
   it('binds the worklet runtime loader only for definitions that call it', () => {
-    const code = renderMTSDefinesModule([
+    const code = renderDefinesForMainThreadModule([
       { kind: 'worklet', id: 'w', code: 'loadWorkletRuntime();' },
     ]);
 
@@ -202,7 +160,7 @@ describe('renderMTSDefinesModule', () => {
   });
 
   it('emits the `require` fallback only for definitions that call it', () => {
-    const code = renderMTSDefinesModule([
+    const code = renderDefinesForMainThreadModule([
       snapshot('a', 'require("@lynx-js/react/internal").createSnapshot;'),
     ]);
 
@@ -210,9 +168,9 @@ describe('renderMTSDefinesModule', () => {
   });
 });
 
-describe('renderMTSDefines', () => {
+describe('renderDefinesForMainThread', () => {
   it('gives each definition its own block scope', () => {
-    const code = renderMTSDefines([
+    const code = renderDefinesForMainThread([
       { kind: 'worklet', id: 'a', code: 'const __workletRuntimeLoaded = 1;' },
       { kind: 'worklet', id: 'b', code: 'const __workletRuntimeLoaded = 1;' },
     ]);
@@ -221,7 +179,7 @@ describe('renderMTSDefines', () => {
   });
 
   it('reaches for no bundler internal', () => {
-    expect(renderMTSDefines([])).not.toContain('__webpack_require__');
+    expect(renderDefinesForMainThread([])).not.toContain('__webpack_require__');
   });
 });
 
@@ -229,26 +187,26 @@ describe('missing definitions injection', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const require = createRequire(import.meta.url);
 
-  function compile(defines: MTSDefine[]) {
+  function compile(
+    definesByResource: Record<string, MainThreadDefine[]>,
+    entries: Record<string, { import: string; layer: string }>,
+    entryPairs: Array<{ mainThread: string; background: string }>,
+  ) {
     const compiler = rspack({
       context: __dirname,
       mode: 'none',
-      entry: {
-        'main__main-thread': {
-          import: './fixtures/empty.js',
-          layer: LAYERS.MAIN_THREAD,
-        },
-        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
-      },
+      entry: entries,
       experiments: { layers: true },
       output: {
-        path: mkdtempSync(path.join(tmpdir(), 'mts-defines-')),
+        path: mkdtempSync(path.join(tmpdir(), 'defines-for-main-thread-')),
         filename: '[name].js',
       },
       plugins: [
         new ReactWebpackPlugin({
-          mainThreadChunks: ['main__main-thread.js'],
-          mainThreadEntries: { 'main__main-thread': 'main' },
+          mainThreadChunks: entryPairs.map(({ mainThread }) =>
+            `${mainThread}.js`
+          ),
+          entryPairs,
           workletRuntimePath: require.resolve(
             '@lynx-js/react/worklet-dev-runtime',
           ),
@@ -256,8 +214,15 @@ describe('missing definitions injection', () => {
         (compiler: import('@rspack/core').Compiler) => {
           compiler.hooks.thisCompilation.tap('test', (compilation) => {
             compilation.hooks.succeedModule.tap('test', (module) => {
-              if (module.layer === LAYERS.BACKGROUND) {
-                module.buildInfo![MTS_DEFINES_BUILD_INFO] = defines;
+              if (module.layer !== LAYERS.BACKGROUND) {
+                return;
+              }
+              for (
+                const [resource, defines] of Object.entries(definesByResource)
+              ) {
+                if (module.identifier().includes(resource)) {
+                  module.buildInfo![DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = defines;
+                }
               }
             });
           });
@@ -276,9 +241,17 @@ describe('missing definitions injection', () => {
   }
 
   it('renders the background definitions into the main-thread chunk', async () => {
-    const outputPath = await compile([
-      snapshot('bg-only', 'registerBackgroundOnly;'),
-    ]);
+    const outputPath = await compile(
+      { 'empty.js': [snapshot('bg-only', 'registerBackgroundOnly;')] },
+      {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+    );
     const content = await fs.readFile(
       path.join(outputPath, 'main__main-thread.js'),
       'utf-8',
@@ -288,12 +261,61 @@ describe('missing definitions injection', () => {
   });
 
   it('renders nothing when the background has no extra definitions', async () => {
-    const outputPath = await compile([]);
+    const outputPath = await compile(
+      {},
+      {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+    );
     const content = await fs.readFile(
       path.join(outputPath, 'main__main-thread.js'),
       'utf-8',
     );
 
     expect(content).not.toContain('ReactLynx');
+  });
+
+  it('keeps the definitions of each entry apart', async () => {
+    const outputPath = await compile(
+      {
+        'empty.js': [snapshot('a-only', 'registerEntryA;')],
+        'empty2.js': [snapshot('b-only', 'registerEntryB;')],
+      },
+      {
+        'a__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        a: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+        'b__main-thread': {
+          import: './fixtures/empty2.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        b: { import: './fixtures/empty2.js', layer: LAYERS.BACKGROUND },
+      },
+      [
+        { mainThread: 'a__main-thread', background: 'a' },
+        { mainThread: 'b__main-thread', background: 'b' },
+      ],
+    );
+
+    const a = await fs.readFile(
+      path.join(outputPath, 'a__main-thread.js'),
+      'utf-8',
+    );
+    const b = await fs.readFile(
+      path.join(outputPath, 'b__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(a).toContain('registerEntryA;');
+    expect(a).not.toContain('registerEntryB;');
+    expect(b).toContain('registerEntryB;');
+    expect(b).not.toContain('registerEntryA;');
   });
 });
