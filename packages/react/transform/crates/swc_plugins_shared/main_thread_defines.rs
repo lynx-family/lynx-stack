@@ -34,6 +34,8 @@ pub fn collect_main_thread_define(
   items: Vec<ModuleItem>,
 ) {
   if let Some(collector) = collector {
-    collector.borrow_mut().push(MainThreadDefine { kind, id, items });
+    collector
+      .borrow_mut()
+      .push(MainThreadDefine { kind, id, items });
   }
 }

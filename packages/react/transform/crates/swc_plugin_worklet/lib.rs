@@ -22,7 +22,9 @@ use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
-  main_thread_defines::{collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector},
+  main_thread_defines::{
+    collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
 };

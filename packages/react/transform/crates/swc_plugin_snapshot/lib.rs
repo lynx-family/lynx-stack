@@ -35,7 +35,9 @@ use swc_plugins_shared::{
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
-  main_thread_defines::{collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector},
+  main_thread_defines::{
+    collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
   utils::{calc_hash, calc_hash_number},
