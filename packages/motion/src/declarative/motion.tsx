@@ -458,6 +458,13 @@ function useMotionHostProps<Props extends MotionProps>(
     if (!resolvedTap.target) {
       return;
     }
+    // Native Lynx and Lynx for Web dispatch both the main-thread and
+    // background touch bindings. The testing event bridge currently dispatches
+    // only the main-thread binding and leaves currentTarget unset, so forward
+    // the composed background callback in that incomplete bridge.
+    if (!event.currentTarget && bindTouchStart) {
+      void runOnBackground(bindTouchStart)(event);
+    }
     tapActiveRef.current = true;
     for (const animation of animationRef.current) {
       animation.stop();
@@ -499,6 +506,15 @@ function useMotionHostProps<Props extends MotionProps>(
     'main thread';
     if (!resolvedTap.target) {
       return;
+    }
+    const isCancelled = String(
+      (event as unknown as { type?: unknown }).type,
+    ).toLowerCase().includes('cancel');
+    const incompleteBridgeHandler = isCancelled
+      ? bindTouchCancel
+      : bindTouchEnd;
+    if (!event.currentTarget && incompleteBridgeHandler) {
+      void runOnBackground(incompleteBridgeHandler)(event);
     }
     tapActiveRef.current = false;
     for (const animation of tapAnimationRef.current) {
