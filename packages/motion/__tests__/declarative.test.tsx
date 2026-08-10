@@ -13,6 +13,8 @@ import { ElementCompt } from '../src/polyfill/element.js';
 import {
   collectMotionValues,
   resolveInitialStyle,
+  resolveMotionDefinition,
+  splitMotionTarget,
 } from '../src/declarative/style.js';
 
 describe('declarative Motion', () => {
@@ -57,6 +59,25 @@ describe('declarative Motion', () => {
       transform: 'scale(1.25)',
     });
     expect(collectMotionValues({ scale } as never)).toEqual({ scale });
+  });
+
+  test('resolves named and function variants with target transitions', () => {
+    const definition = resolveMotionDefinition(
+      ['base', 'active'],
+      {
+        base: { opacity: 0.5, x: 0 },
+        active: custom => ({
+          x: Number(custom),
+          transition: { duration: 0.2 },
+        }),
+      },
+      80,
+    );
+
+    expect(splitMotionTarget(definition, { duration: 1 })).toEqual({
+      target: { opacity: 0.5, x: 80 },
+      transition: { duration: 0.2 },
+    });
   });
 
   test('renders initial styles without forwarding Motion props', () => {
