@@ -80,6 +80,10 @@ export interface MotionProps {
   onHoverStart?: (event: unknown) => void;
   /** Called when hover ends on a mouse-capable client. */
   onHoverEnd?: (event: unknown) => void;
+  /** Called when a declarative target starts animating. */
+  onAnimationStart?: (definition: MotionDefinition) => void;
+  /** Called after a declarative target finishes animating. */
+  onAnimationComplete?: (definition: MotionDefinition) => void;
   /** Named targets referenced by declarative definition props. */
   variants?: MotionVariants;
   /** Value passed to function variants. */
