@@ -37,13 +37,18 @@ import path from 'pathe';
  * behaviour these inputs get is pinned in `test/generateHref.test.ts` rather
  * than described here, so it cannot drift silently.
  *
- * ## A relative `projectRoot`
+ * ## `process.cwd()` still participates
  *
- * `pathe` has no `process.cwd()` to fall back to, so a relative `projectRoot` is
- * treated as rooted. `node:path` resolved it against the working directory,
- * which made the old output depend on where the build ran from. Nothing in this
- * tree observes the difference: `parse` defaults `projectRoot` to `'/'`, and
- * every in-repo caller passes an absolute one.
+ * `pathe`'s `resolve` falls back to `process.cwd()` for a relative input, exactly
+ * as `node:path` did, so a relative `projectRoot` still makes the output depend
+ * on where the build ran from. Nothing in this tree observes it: `parse` defaults
+ * `projectRoot` to `'/'` and every in-repo caller passes an absolute one.
+ *
+ * A handful of *absolute* roots also reach that fallback, because `pathe`
+ * normalises them into a UNC shape that its own `isAbsolute` then rejects:
+ * `'//'`, `'//.'`, `'//./x'` and `'\'`, when combined with a `.`-prefixed
+ * filename. Those are pinned in `test/generateHref.test.ts`; they are not shapes
+ * a caller passes, and a browser bundle has no `process.cwd()` at all.
  */
 
 export function getFullPath(
