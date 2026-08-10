@@ -473,7 +473,7 @@ function useMotionHostProps<Props extends MotionProps>(
       : workletTapTransition;
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
-    if (isLynxForWeb) {
+    if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
@@ -540,7 +540,7 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
-    if (isLynxForWeb) {
+    if (isLynxForWeb || !event.currentTarget) {
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
