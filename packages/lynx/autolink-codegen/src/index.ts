@@ -1625,13 +1625,11 @@ add_library(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} OBJECT
 
 target_include_directories(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
   "\${CMAKE_CURRENT_SOURCE_DIR}/../.."
+  "\${LYNX_WEAK_NODE_API_HEADERS_DIR}"
   "\${LYNX_EXTENSION_HEADERS_DIR}/include"
 )
 
 if(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
-  target_include_directories(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
-    "\${LYNX_WEAK_NODE_API_HEADERS_DIR}"
-  )
   target_compile_definitions(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
     USE_WEAK_SUFFIX_NAPI=1
   )
@@ -1677,24 +1675,21 @@ function generateNapiNativeModuleImplementation(
 #endif
 
 #ifdef LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE
-typedef struct lynx_autolink_napi_module {
-  int nm_version;
-  const char* nm_filename;
-  napi_addon_register_func nm_register_func;
-  const char* nm_modname;
-  struct lynx_autolink_napi_module* nm_link;
-} lynx_autolink_napi_module;
-
-extern "C" void napi_module_register_xx(lynx_autolink_napi_module* mod);
-
 #undef NAPI_MODULE
+#ifdef LYNX_LIBRARY_MANUAL_NAPI_REGISTRATION
+#define LYNX_LIBRARY_NAPI_REGISTRATION_ATTRIBUTE
+#else
+#define LYNX_LIBRARY_NAPI_REGISTRATION_ATTRIBUTE __attribute__((constructor))
+#endif
 #define NAPI_MODULE(modname, regfunc)                                      \\
   EXTERN_C_START                                                           \\
-  static lynx_autolink_napi_module _module_##modname = {                   \\
-      NAPI_MODULE_VERSION, __FILE__, regfunc, #modname, nullptr};          \\
-  void _napi_register_xx_##modname(void) __attribute__((constructor));      \\
+  static napi_module _module_##modname = {                                 \\
+      NAPI_MODULE_VERSION, 0, __FILE__, regfunc, #modname, nullptr,        \\
+      {nullptr, nullptr, nullptr, nullptr}};                                \\
+  void _napi_register_xx_##modname(void)                                   \\
+      LYNX_LIBRARY_NAPI_REGISTRATION_ATTRIBUTE;                             \\
   void _napi_register_xx_##modname(void) {                                 \\
-    napi_module_register_xx(&_module_##modname);                           \\
+    napi_module_register(&_module_##modname);                              \\
   }                                                                        \\
   EXTERN_C_END
 #endif
