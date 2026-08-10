@@ -152,17 +152,72 @@ function analyze() {
   };
 }
 
-function depLine({ name, from, to }) {
-  if (from === undefined) return `\`${name}\` to \`${to}\``;
-  if (to === undefined) return `\`${name}\` removed (was \`${from}\`)`;
-  return `\`${name}\` from \`${from}\` to \`${to}\``;
+// Mirrors `createChangesetBody` in lynx-community/changeset-bot: state only the
+// version landed on, never the one left behind. A dependency that moves twice
+// before a release then has no intermediate state to reconcile.
+function depLine({ name, to }) {
+  if (to === undefined) return `Removed dependency \`${name}\`.`;
+  return `Updated dependency \`${name}\` to \`${to}\`.`;
 }
 
 function describe(deps) {
-  if (deps.length === 1) return `Update ${depLine(deps[0])}`;
-  return `Update dependencies:\n\n${
-    deps.map((d) => `- ${depLine(d)}`).join('\n')
-  }`;
+  return [...new Set(deps.map((d) => depLine(d)))].sort().join('\n');
+}
+
+// `analyze()` reports one entry per version transition, so the same dependency
+// appears twice when two packages start from different versions. Everything
+// keyed by the dependency set has to work off the distinct names, or the file
+// is named `motion_motion` and the next run does not recognise it as its own.
+function depNames(deps) {
+  return [...new Set(deps.map((d) => d.name))].sort();
+}
+
+function slugify(deps) {
+  return depNames(deps)
+    .map((name) =>
+      name.replace(/^@/, '').replace(/[^a-z0-9]+/gi, '-').replace(
+        /^-+|-+$/g,
+        '',
+      )
+    )
+    .join('_');
+}
+
+// One changeset per set of dependencies, so a later bump of the same
+// dependency rewrites the file the previous bump wrote instead of stacking a
+// second entry into the same release. Keyed by the dependency names rather
+// than by the branch slug, which carries the major (`renovate/motion-12.x` vs
+// `renovate/motion-13.x`) and so still splits across a major bump.
+function changesetPath(deps, disambiguate = false) {
+  const slug = slugify(deps);
+  const digest = createHash('sha1')
+    .update(depNames(deps).join('\0'))
+    .digest('hex')
+    .slice(0, 8);
+  // Group updates can name a lot of dependencies; keep the file name bounded
+  // while staying stable for the same set.
+  const key = disambiguate || slug.length > 64
+    ? `${slug.slice(0, 55)}-${digest}`
+    : slug;
+  return join('.changeset', `renovate-${key}.md`);
+}
+
+// True when the changeset already at this path is an earlier run of this same
+// update rather than a different set that happens to slugify the same way
+// (`@a/b` and `a.b` both give `a-b`); overwriting that would drop its entry.
+function tracksSameDeps(content, deps) {
+  const found = [...content.matchAll(/`([^`]+)` to `/g)].map((m) => m[1]);
+  const removed = [...content.matchAll(/Removed dependency `([^`]+)`/g)]
+    .map((m) => m[1]);
+  const existing = new Set([...found, ...removed]);
+  const expected = depNames(deps);
+  return existing.size === expected.length
+    && expected.every((name) => existing.has(name));
+}
+
+function render(names, deps) {
+  const frontmatter = names.map((n) => `"${n}": patch`).join('\n');
+  return `---\n${frontmatter}\n---\n\n${describe(deps)}\n`;
 }
 
 function main() {
@@ -174,30 +229,26 @@ function main() {
     return;
   }
 
-  const frontmatter = names.map((n) => `"${n}": patch`).join('\n');
-  const content = `---\n${frontmatter}\n---\n\n${describe(deps)}\n`;
+  let file = changesetPath(deps);
+  if (existsSync(file) && !tracksSameDeps(readFileSync(file, 'utf8'), deps)) {
+    file = changesetPath(deps, true);
+  }
 
-  // Name the file by the full content digest so re-running the same update is
-  // idempotent (identical file), while a different update to the same packages
-  // (e.g. a newer version) gets its own file instead of colliding.
-  const hash = createHash('sha1').update(content).digest('hex').slice(0, 8);
-  const file = join('.changeset', `renovate-${hash}.md`);
-  if (existsSync(file)) {
-    // Identical content -> idempotent no-op. Different content at the same path
-    // is a true sha1 collision; fail loudly rather than ship the wrong bump.
-    if (readFileSync(file, 'utf8') !== content) {
-      throw new Error(`Changeset digest collision at ${file}`);
-    }
-    process.stdout.write(`Changeset ${file} already exists; nothing to do.\n`);
+  const content = render(names, deps);
+  if (existsSync(file) && readFileSync(file, 'utf8') === content) {
+    process.stdout.write(`Changeset ${file} already up to date.\n`);
     return;
   }
 
+  const existed = existsSync(file);
   writeFileSync(file, content);
-  process.stdout.write(`Wrote ${file} bumping: ${names.join(', ')}\n`);
+  process.stdout.write(
+    `${existed ? 'Updated' : 'Wrote'} ${file} bumping: ${names.join(', ')}\n`,
+  );
 }
 
 if (require.main === module) {
   main();
 }
 
-module.exports = { analyze };
+module.exports = { analyze, changesetPath, render };
