@@ -510,11 +510,12 @@ function useMotionHostProps<Props extends MotionProps>(
     const isCancelled = String(
       (event as unknown as { type?: unknown }).type,
     ).toLowerCase().includes('cancel');
-    const incompleteBridgeHandler = isCancelled
-      ? bindTouchCancel
-      : bindTouchEnd;
-    if (!event.currentTarget && incompleteBridgeHandler) {
-      void runOnBackground(incompleteBridgeHandler)(event);
+    if (!event.currentTarget) {
+      if (isCancelled && bindTouchCancel) {
+        void runOnBackground(bindTouchCancel)(event);
+      } else if (!isCancelled && bindTouchEnd) {
+        void runOnBackground(bindTouchEnd)(event);
+      }
     }
     tapActiveRef.current = false;
     for (const animation of tapAnimationRef.current) {
