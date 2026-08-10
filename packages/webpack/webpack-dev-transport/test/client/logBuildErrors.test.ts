@@ -40,6 +40,12 @@ describe('logBuildErrors', () => {
     expect(logError).toBeCalledWith('× Module build failed');
   });
 
+  it('should strip a reset sequence with no parameters', () => {
+    logBuildErrors({ text: ['\u001B[mplain'] });
+
+    expect(logError).toBeCalledWith('plain');
+  });
+
   it('should truncate when there are too many errors', () => {
     logBuildErrors({ text: ['1', '2', '3', '4', '5', '6', '7'] });
 

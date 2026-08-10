@@ -16,7 +16,7 @@ const MAX_LOGGED_ERRORS = 5;
 // The `text` sent by the dev-server keeps the colors it uses in the terminal.
 // Lynx consoles do not resolve them, so they would show up as escape sequences.
 // eslint-disable-next-line no-control-regex
-const SGR_PATTERN = /\u001B\[[0-9;]+m/g;
+const SGR_PATTERN = /\u001B\[[0-9;]*m/g;
 
 function toMessages(errors: BuildErrors): string[] {
   const messages = Array.isArray(errors)
