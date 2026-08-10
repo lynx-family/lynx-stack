@@ -6,7 +6,14 @@ import type { MotionValue } from 'motion-dom';
 
 import type { CSSProperties } from '@lynx-js/types';
 
-import type { MotionStyle, MotionStyleValue, MotionTarget } from './types.js';
+import type {
+  MotionDefinition,
+  MotionStyle,
+  MotionStyleValue,
+  MotionTarget,
+  MotionTransition,
+  MotionVariants,
+} from './types.js';
 
 interface MainThreadValueHandle {
   readonly __MAIN_THREAD_VALUE__: true;
@@ -171,4 +178,48 @@ export function collectMotionValues(
 
 export function motionDefinitionKey(value: unknown): string {
   return JSON.stringify(value) ?? '';
+}
+
+export function resolveMotionDefinition(
+  definition: MotionDefinition | false | undefined,
+  variants: MotionVariants | undefined,
+  custom: unknown,
+): MotionTarget | false | undefined {
+  if (definition === false || definition === undefined) {
+    return definition;
+  }
+  if (typeof definition !== 'string' && !Array.isArray(definition)) {
+    return definition;
+  }
+
+  const labels = Array.isArray(definition) ? definition : [definition];
+  const resolved: MotionTarget = {};
+  for (const label of labels) {
+    const variant = variants?.[label];
+    if (!variant) {
+      continue;
+    }
+    Object.assign(
+      resolved,
+      typeof variant === 'function' ? variant(custom) : variant,
+    );
+  }
+  return resolved;
+}
+
+export function splitMotionTarget(
+  definition: MotionTarget | false | undefined,
+  fallbackTransition: MotionTransition | undefined,
+): {
+  target: MotionTarget | undefined;
+  transition: MotionTransition | undefined;
+} {
+  if (!definition) {
+    return { target: undefined, transition: fallbackTransition };
+  }
+  const { transition, ...target } = definition;
+  return {
+    target: target as MotionTarget,
+    transition: transition ?? fallbackTransition,
+  };
 }
