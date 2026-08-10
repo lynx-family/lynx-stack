@@ -299,11 +299,12 @@ export function pluginDev(
                   paths: [rsbuildPath],
                 })
               )
+              // The upstream `@rspack/core/hot/dev-server` recovers from a failed
+              // `apply` with `window.location.reload()`, which Lynx does not
+              // have. This replacement reloads through the DevTool instead.
               .set(
                 '@rspack/core/hot/dev-server',
-                require.resolve('@rspack/core/hot/dev-server', {
-                  paths: [rsbuildPath],
-                })
+                require.resolve('@lynx-js/webpack-dev-transport/hotDevServer')
               )
             .end()
           .end()
