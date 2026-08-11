@@ -345,6 +345,12 @@ export class SnapshotInstance {
     return child.parentNode === this;
   }
 
+  // Preact 11's `removeNode` calls `node.remove()` instead of
+  // `parentNode.removeChild(node)`.
+  remove(): void {
+    this.parentNode?.removeChild(this);
+  }
+
   get childNodes(): SnapshotInstance[] {
     const nodes: SnapshotInstance[] = [];
     let node = this.__firstChild;

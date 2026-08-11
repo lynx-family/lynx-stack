@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT, SnapshotInstance } from '@lynx-js/react/internal';
+import { CHILDREN, COMPONENT, DIFF, DOM, FLAGS, INDEX, PARENT, SnapshotInstance } from '@lynx-js/react/internal';
 
 function createVNode(type, props, _key) {
   if (typeof type === 'string') {
@@ -13,7 +13,6 @@ function createVNode(type, props, _key) {
     r[PARENT] = null;
     r[DIFF] = 0;
     r[DOM] = null;
-    r[DIRTY] = undefined;
     r[COMPONENT] = null;
     // r.__v = --vnodeId;
     r[INDEX] = -1;
@@ -52,7 +51,6 @@ function createVNode(type, props, _key) {
       [PARENT]: null,
       [DIFF]: 0,
       [DOM]: null,
-      [DIRTY]: void 0,
       [COMPONENT]: null,
       constructor: void 0,
       // __v: --vnodeId,

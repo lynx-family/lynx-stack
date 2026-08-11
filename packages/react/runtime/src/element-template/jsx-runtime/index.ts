@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from '../../shared/render-constants.js';
+import { CHILDREN, COMPONENT, DIFF, DOM, FLAGS, INDEX, PARENT } from '../../shared/render-constants.js';
 
 type ComponentLike = ((...args: unknown[]) => unknown) & {
   defaultProps?: Record<string, unknown>;
@@ -15,7 +15,6 @@ interface ElementTemplateVNode {
   __: null;
   __b: number;
   __e: null;
-  __d: undefined;
   __c: null;
   constructor: undefined;
   __i: number;
@@ -37,7 +36,6 @@ function createVNode(
       [PARENT]: null,
       [DIFF]: 0,
       [DOM]: null,
-      [DIRTY]: void 0,
       [COMPONENT]: null,
       constructor: void 0,
       [INDEX]: -1,
@@ -73,7 +71,6 @@ function createVNode(
       [PARENT]: null,
       [DIFF]: 0,
       [DOM]: null,
-      [DIRTY]: void 0,
       [COMPONENT]: null,
       constructor: void 0,
       [INDEX]: -1,

@@ -63,6 +63,12 @@ export class BackgroundElementTemplateInstance {
     return this.parent;
   }
 
+  // Preact 11's `removeNode` calls `node.remove()` instead of
+  // `parentNode.removeChild(node)`.
+  remove(): void {
+    this.parentNode?.removeChild(this);
+  }
+
   get childNodes(): BackgroundElementTemplateInstance[] {
     const nodes: BackgroundElementTemplateInstance[] = [];
     let child = this.firstChild;
