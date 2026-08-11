@@ -446,7 +446,6 @@ class ReactWebpackPlugin {
           const traverse = (roots: Module[]) => {
             const visited = new Set<Module>();
             const asyncBoundaries = new Map<string, Module>();
-            let sawDefinesMetadata = false;
             const queue = [...roots];
             while (queue.length > 0) {
               const module = queue.pop()!;
@@ -454,15 +453,6 @@ class ReactWebpackPlugin {
                 continue;
               }
               visited.add(module);
-              const buildInfo =
-                (module as { buildInfo?: Record<string, unknown> }).buildInfo;
-              if (
-                buildInfo
-                && (DEFINES_FOR_SNAPSHOT_BUILD_INFO in buildInfo
-                  || DEFINES_FOR_WORKLET_BUILD_INFO in buildInfo)
-              ) {
-                sawDefinesMetadata = true;
-              }
               for (
                 const connection of moduleGraph.getOutgoingConnections(module)
               ) {
@@ -496,7 +486,6 @@ class ReactWebpackPlugin {
                 ),
               },
               asyncBoundaries,
-              sawDefinesMetadata,
             };
           };
 
@@ -534,19 +523,9 @@ class ReactWebpackPlugin {
             inheritedPresent: { snapshot: string[]; worklet: string[] },
             request: string,
             inject: (request: string) => Promise<void>,
-            requireMetadataFor?: string,
           ): Promise<void> => {
             const background = traverse(backgroundRoots);
             const mainThread = traverse(mainThreadRoots);
-            if (requireMetadataFor && !background.sawDefinesMetadata) {
-              // An absent field must not read as an empty definition list:
-              // a transform that predates the merge emits neither key.
-              throw new Error(
-                `The background compilation of entry ${
-                  JSON.stringify(requireMetadataFor)
-                } produced no definition metadata. The installed @lynx-js/react transform predates the definition merge; upgrade @lynx-js/react so both compilations emit it.`,
-              );
-            }
             const present = {
               snapshot: [
                 ...inheritedPresent.snapshot,
@@ -651,7 +630,6 @@ class ReactWebpackPlugin {
                     await addEntry(originalRequest);
                   }
                 },
-                background,
               );
             }),
           );
