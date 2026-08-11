@@ -15,7 +15,7 @@ const reporters: RstestConfig['reporters'] = process.env.GITHUB_ACTIONS
 
 export default defineConfig({
   coverage: {
-    reporters: ['json', 'text'],
+    reporters: ['lcov', 'text'],
     // `web-elements`' built output cannot be instrumented: doing so aborts
     // coverage reporting for the entire run.
     //
