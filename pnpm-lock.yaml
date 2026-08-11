@@ -19,10 +19,6 @@ catalogs:
     typescript:
       specifier: 6.0.3
       version: 6.0.3
-  lynxjs:
-    preact:
-      specifier: npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c
-      version: 10.29.1-20260519060144-e6da44c
   rsbuild:
     '@rsbuild/core':
       specifier: 2.1.10
@@ -48,6 +44,7 @@ catalogs:
 
 overrides:
   '@lynx-js/react': workspace:*
+  preact: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
   '@rspack/core': 2.1.7
   '@rsbuild/core>@rspack/core': 2.1.7
   '@rsdoctor/rspack-plugin>@rspack/core': 2.1.7
@@ -1198,8 +1195,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
     devDependencies:
       '@lynx-js/types':
         specifier: 4.1.0
@@ -1215,10 +1212,13 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^2.9.4
-        version: 2.11.0(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
+        version: 2.11.0(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
+      preact:
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -1226,9 +1226,6 @@ importers:
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
-      preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/react-umd:
     devDependencies:
@@ -1255,13 +1252,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.10
-        version: 1.5.10(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
+        version: 1.5.10(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
       preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
 
   packages/react/runtime:
     devDependencies:
@@ -1317,8 +1314,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)
       preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
 
   packages/react/transform:
     devDependencies:
@@ -4255,9 +4252,6 @@ packages:
       '@lynx-js/react': workspace:*
       '@lynx-js/types': '*'
 
-  '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c':
-    resolution: {integrity: sha512-h2pRrt5oLK9LT1NkjyprtzJij/AdZGvv3CN6B5edL4chixqvITbxoCSdYy667Hl6+uKOBuxmCNZoDddgRfcLnw==}
-
   '@lynx-js/luna-styles@0.2.1':
     resolution: {integrity: sha512-m5vFRVn3RpFqPN8JAhUSYAmXOf/ZPaOkVrk26XlKjhvICWKXebbQ/WDSW6psq9UgdhPTjNw16tzdjIoJU7F8jg==}
 
@@ -4692,11 +4686,13 @@ packages:
 
   '@preact/signals@2.11.0':
     resolution: {integrity: sha512-mmrZ8I/Wef+tmSsQSjZySLRlnvuYAVfSZEy1+HrFvSwBtQf8/zSM+bV7odllUXIhKzUkBjsNk+TLZ20nt7p6Gg==}
+    version: 2.11.0
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
   '@prefresh/core@1.5.10':
     resolution: {integrity: sha512-7yPTFbG56sutaFu8krp3B4a200KOFUvrtlllKWRuLjsYXo9UUucHOZRcer+gtgMkFTpv6ob8TGcTwA32bSwa1w==}
+    version: 1.5.10
     peerDependencies:
       preact: ^10.0.0 || ^11.0.0-0
 
@@ -10483,6 +10479,15 @@ packages:
       rxjs:
         optional: true
 
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce:
+    resolution: {integrity: sha512-Rk8/n81IXLwATdP3hhBmm29TC6Xg9X2FsYUdkNgmdesXC0DEUv2IksNLOWgkH6Eb/XbYOFu6NbWrXWbaqat9Jw==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce}
+    version: 11.0.0-rc.0
+    peerDependencies:
+      preact-render-to-string: '>=5'
+    peerDependenciesMeta:
+      preact-render-to-string:
+        optional: true
+
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
@@ -14111,8 +14116,6 @@ snapshots:
       '@lynx-js/react': link:packages/react
       '@lynx-js/types': 4.1.0
 
-  '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c': {}
-
   '@lynx-js/luna-styles@0.2.1': {}
 
   '@lynx-js/lynx-core@0.1.4': {}
@@ -15067,14 +15070,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.0(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)':
+  '@preact/signals@2.11.0(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
+      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
 
-  '@prefresh/core@1.5.10(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)':
+  '@prefresh/core@1.5.10(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)':
     dependencies:
-      preact: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
+      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
 
   '@prefresh/utils@1.2.1': {}
 
@@ -21318,6 +21321,8 @@ snapshots:
       '@posthog/core': 1.45.0
     optionalDependencies:
       rxjs: 7.8.2
+
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce: {}
 
   prelude-ls@1.2.1: {}
 
