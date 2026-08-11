@@ -715,6 +715,12 @@ describe('Element APIs', () => {
     expect(rootDom.querySelector('[test="test-value"]')).not.toBeNull();
   });
 
+  test('__GetAttributeNames', () => {
+    let node1 = mtsGlobalThis.__CreateText(0);
+    mtsGlobalThis.__SetAttribute(node1, 'test', 'test-value');
+    expect(mtsGlobalThis.__GetAttributeNames(node1)).toContain('test');
+  });
+
   test('__GetAttributeByName', () => {
     const page = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__SetAttribute(page, 'test-attr', 'val');
