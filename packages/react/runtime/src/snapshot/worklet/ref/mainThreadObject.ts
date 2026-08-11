@@ -2,15 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  WorkletEvents,
-  loadWorkletRuntime,
-  registerMainThreadObjectType,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import { loadWorkletRuntime, registerMainThreadObjectType } from '@lynx-js/react/worklet-runtime/bindings';
 import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { addWorkletRefInitValue } from './workletRefPool.js';
-import { allocateWorkletValueId } from './workletValueId.js';
+import { createWorkletValueHandleState } from './workletValueHandle.js';
 import { useMemo } from '../../../core/hooks/react.js';
 
 /** @internal */
@@ -64,28 +59,17 @@ export abstract class MainThreadObjectHandle<O extends object> {
       assertSerializableMainThreadObjectPayload(initialValue, type);
     }
 
-    this._wvid = allocateWorkletValueId();
-    this._initValue = initialValue;
-    this._type = type;
-    this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
+    const state = createWorkletValueHandleState(initialValue, {
+      kind: 'typed-object',
+      type,
+      protocolVersion: MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
+    });
+    this._wvid = state.id;
+    this._initValue = state.initialValue;
+    this._type = state.type;
+    this._mtoVersion = state.protocolVersion!;
+    this._lifecycleObserver = state.lifecycleObserver;
     mainThreadObjectHandles.add(this);
-
-    if (__JS__) {
-      addWorkletRefInitValue(
-        this._wvid,
-        initialValue,
-        type,
-        MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
-      );
-
-      const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: { id },
-        });
-      });
-    }
   }
 
   /** @internal */

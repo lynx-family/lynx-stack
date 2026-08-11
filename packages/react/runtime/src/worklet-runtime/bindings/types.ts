@@ -17,9 +17,13 @@ export interface WorkletRefImpl<T> {
   current?: T;
 }
 
-export interface WorkletRef<T> {
-  _wvid: WorkletRefId;
+/** The fixed target shape realized for an ordinary MainThreadRef handle. @internal */
+export interface MutableCell<T> {
   current: T;
+}
+
+export interface WorkletRef<T> extends MutableCell<T> {
+  _wvid: WorkletRefId;
 
   [key: string]: unknown;
 }

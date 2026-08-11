@@ -52,14 +52,14 @@ function initWorkletRef(): RefImpl {
      * to free up memory.
      */
     _firstScreenWorkletRefMap: {},
-    updateWorkletRef,
+    updateWorkletRef: bindMainThreadRefElement,
     updateWorkletRefInitValueChanges,
     registerMainThreadObjectType,
     clearFirstScreenWorkletRefMap,
   });
 }
 
-const createWorkletRef = <T>(
+const createMutableCell = <T>(
   id: WorkletRefId,
   value: T,
 ): WorkletRef<T> => {
@@ -90,10 +90,11 @@ function registerMainThreadObjectType(
   mainThreadObjectDefinitions.set(type, { create, dispose });
 }
 
-function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
+/** Realize either the fixed MutableCell target or a registered typed object. */
+function realizeWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
   const type = refImpl._type;
   if (!type || type === 'main-thread') {
-    return createWorkletRef(refImpl._wvid, refImpl._initValue);
+    return createMutableCell(refImpl._wvid, refImpl._initValue);
   }
 
   assertMainThreadObjectProtocolVersion(type, refImpl._mtoVersion);
@@ -143,7 +144,7 @@ const getFromWorkletRefMap = <T>(
     // 2. In `main-thread:ref`
     value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
     if (!value) {
-      value = impl!._firstScreenWorkletRefMap[id] = createWorkletValue(refImpl);
+      value = impl!._firstScreenWorkletRefMap[id] = realizeWorkletValue(refImpl);
     }
   } else {
     value = impl!._workletRefMap[id] as WorkletRef<T>;
@@ -188,10 +189,12 @@ function disposeMainThreadObject(value: unknown): void {
  * @param handle handle of the worklet value.
  * @param element the element node.
  */
-function updateWorkletRef(
+function bindMainThreadRefElement(
   handle: WorkletRefImpl<Element | null>,
   element: ElementNode | null,
 ): void {
+  // React's renderer owns this binding. The stable cell is shared handle
+  // infrastructure; the native-backed Element wrapper is not factory-created.
   getFromWorkletRefMap(handle).current = element
     ? new Element(element)
     : null;
@@ -203,7 +206,7 @@ function updateWorkletRefInitValueChanges(
   profile('updateWorkletRefInitValueChanges', () => {
     patch.forEach(([id, value, type, protocolVersion]) => {
       if (!impl!._workletRefMap[id]) {
-        impl!._workletRefMap[id] = createWorkletValue({
+        impl!._workletRefMap[id] = realizeWorkletValue({
           _wvid: id,
           _initValue: value,
           _type: type,
@@ -226,7 +229,8 @@ function clearFirstScreenWorkletRefMap(): void {
 
 export {
   type RefImpl,
-  createWorkletRef,
+  createMutableCell,
+  createMutableCell as createWorkletRef,
   initWorkletRef,
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,

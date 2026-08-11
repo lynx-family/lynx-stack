@@ -48,7 +48,7 @@ function hydrateCtxImpl(
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
     if (key === '_wvid') {
-      hydrateMainThreadRef(
+      hydrateWorkletValueHandle(
         ctxObj[key] as WorkletRefId,
         firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
       );
@@ -68,14 +68,14 @@ function hydrateCtxImpl(
 }
 
 /**
- * Hydrates a WorkletRef on the main thread.
- * This is used to update the WorkletRef's background initial value based on changes
- * that occurred in the first-screen Worklet context before hydration.
+ * Hydrates a shared worklet value handle on the main thread.
+ * This preserves a used first-screen MutableCell or typed object when the
+ * positive background ID replaces its temporary first-screen ID.
  *
- * @param refId The ID of the WorkletRef to hydrate.
- * @param value The new value for the WorkletRef.
+ * @param refId The background ID of the handle to hydrate.
+ * @param value The realized first-screen target.
  */
-function hydrateMainThreadRef(
+function hydrateWorkletValueHandle(
   refId: WorkletRefId,
   value: object,
 ) {

@@ -3,10 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  bindMainThreadRefElement,
   onWorkletCtxUpdate,
   retainWorkletCtx,
   runWorkletCtx,
-  updateWorkletRef as update,
 } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -22,7 +22,7 @@ export function applyRefQueue(): void {
     const worklet = queue[i] as Worklet | WorkletRefImpl<Element>;
     const element = queue[i + 1] as Element;
     if ('_wvid' in worklet) {
-      update(worklet as WorkletRefImpl<Element>, element);
+      bindMainThreadRefElement(worklet as WorkletRefImpl<Element>, element);
     } else if ('_wkltId' in worklet) {
       worklet._unmount = runWorkletCtx(worklet, [{ elementRefptr: element }]) as () => void;
     }
@@ -35,7 +35,7 @@ function addToRefQueue(worklet: Worklet | WorkletRefImpl<Element>, element: Elem
 
 export function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
   if ('_wvid' in value) {
-    update(value as WorkletRefImpl<Element>, null);
+    bindMainThreadRefElement(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {
     if (typeof value._unmount == 'function') {
       (value._unmount as () => void)();

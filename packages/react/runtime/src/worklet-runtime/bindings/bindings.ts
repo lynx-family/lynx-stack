@@ -15,13 +15,20 @@ function runWorkletCtx(worklet: Worklet, params: ClosureValueType[]): unknown {
 }
 
 /**
- * Save an element to a `WorkletRef`.
+ * Bind an Element to a MainThreadRef's stable MutableCell.
  *
- * @param workletRef - The `WorkletRef` to be updated.
- * @param element - The element.
+ * This is a renderer-owned mount/rebind/unmount operation. It deliberately
+ * updates the existing cell instead of realizing Element through a factory.
+ *
+ * @param workletRef - The MainThreadRef handle whose cell is updated.
+ * @param element - The mounted element, or null during unmount.
  * @internal
  */
-function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementNode | null): void {
+function bindMainThreadRefElement(
+  workletRef: WorkletRefImpl<Element>,
+  element: ElementNode | null,
+): void {
+  // Keep the RefImpl method name for native/runtime wire compatibility.
   globalThis.lynxWorkletImpl?._refImpl.updateWorkletRef(workletRef, element);
 }
 
@@ -96,7 +103,8 @@ function runRunOnMainThreadTask(task: Worklet, params: ClosureValueType[], resol
 
 export {
   runWorkletCtx,
-  updateWorkletRef,
+  bindMainThreadRefElement,
+  bindMainThreadRefElement as updateWorkletRef,
   updateWorkletRefInitValueChanges,
   registerMainThreadObjectType,
   registerWorklet,

@@ -176,6 +176,29 @@ describe('WorkletRef', () => {
     expect(() => removeValueFromWorkletRefMap(99)).not.toThrow();
   });
 
+  it('keeps one mutable cell while the renderer binds, rebinds, and unbinds Element', () => {
+    updateWorkletRefInitValueChanges([[1, null]]);
+    const cell = getFromWorkletRefMap({ _wvid: 1 });
+
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef(
+      { _wvid: 1 },
+      'first-element',
+    );
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(cell);
+    expect(cell.current.element).toBe('first-element');
+
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef(
+      { _wvid: 1 },
+      'second-element',
+    );
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(cell);
+    expect(cell.current.element).toBe('second-element');
+
+    globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({ _wvid: 1 }, null);
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(cell);
+    expect(cell.current).toBeNull();
+  });
+
   it('should create, get and update at first screen', () => {
     getFromWorkletRefMap({ _wvid: -1 }).current = 'ref1';
     getFromWorkletRefMap({ _wvid: -2 }).current = 'ref2';
@@ -263,6 +286,7 @@ describe('WorkletRef', () => {
       ref2.current;
     });
     globalThis.runWorklet(firstScreenWorklet, []);
+    const firstScreenRef1 = firstScreenWorklet._c.ref1;
     updateWorkletRefInitValueChanges([
       [1, 'background-thread-init-1'],
       [2, 'background-thread-init-2'],
@@ -278,6 +302,7 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe(
       'main-thread-set-1',
     );
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenRef1);
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe(
       'main-thread-init-2',
     );

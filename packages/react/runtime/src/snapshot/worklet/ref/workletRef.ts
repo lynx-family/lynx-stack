@@ -3,11 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import type { RefObject } from 'react';
 
-import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
-import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
+import type { MutableCell, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { addWorkletRefInitValue } from './workletRefPool.js';
-import { allocateWorkletValueId, clearWorkletValueIdsForTesting } from './workletValueId.js';
+import { createWorkletValueHandleState } from './workletValueHandle.js';
+import { clearWorkletValueIdsForTesting } from './workletValueId.js';
 import { useMemo } from '../../../core/hooks/react.js';
 
 export function clearWorkletRefLastIdForTesting(): void {
@@ -15,6 +14,8 @@ export function clearWorkletRefLastIdForTesting(): void {
 }
 
 abstract class WorkletRef<T> {
+  /** The realized target is always one stable mutable cell. @internal */
+  declare private readonly _mutableCellTarget: MutableCell<T>;
   /**
    * @internal
    */
@@ -35,13 +36,14 @@ abstract class WorkletRef<T> {
   /**
    * @internal
    */
-  protected constructor(initValue: T, type: string) {
-    this._initValue = initValue;
-    this._type = type;
-    this._wvid = allocateWorkletValueId();
-    if (__JS__) {
-      addWorkletRefInitValue(this._wvid, initValue);
-    }
+  protected constructor(initValue: T) {
+    const state = createWorkletValueHandleState(initValue, {
+      kind: 'mutable-cell',
+    });
+    this._initValue = state.initialValue;
+    this._type = state.type;
+    this._wvid = state.id;
+    this._lifecycleObserver = state.lifecycleObserver;
   }
 
   get current(): T {
@@ -83,18 +85,7 @@ abstract class WorkletRef<T> {
  */
 export class MainThreadRef<T> extends WorkletRef<T> {
   constructor(initValue: T) {
-    super(initValue, 'main-thread');
-    if (__JS__) {
-      const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: {
-            id,
-          },
-        });
-      });
-    }
+    super(initValue);
   }
 }
 
