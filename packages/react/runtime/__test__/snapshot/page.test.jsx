@@ -402,6 +402,7 @@ describe('support <page /> element attributes', () => {
     {
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
       globalThis[rLynxChange[0]](rLynxChange[1]);
+      rLynxChange[2]();
     }
 
     expect(__root.__element_root).toMatchInlineSnapshot(`
