@@ -189,7 +189,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 - **`Resource`**——一个 `pending → success → error` 状态机，每个 surface root
   和每个 component 实例各一个。它的 snapshot 引用在每次状态转换时都会改变，
   这样 `useSyncExternalStore` 永远不会在 `pending → error` 更新上「bail out」。
-- **`SignalStore`**——一个 `@preact/signals` 封装，作为每个 surface 的 data
+- **`SignalStore`**——一个 `@lynx-js/react-signals` 封装，作为每个 surface 的 data
   model，用 JSON-pointer 风格的 path 寻址。
 - **React layer**（`@lynx-js/genui/a2ui/react`）——`<A2UI>` 加上
   `NodeRenderer` 和那些把 surface 状态变成 ReactLynx 树的 hooks（`useAction`、

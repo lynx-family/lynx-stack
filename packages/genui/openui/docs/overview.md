@@ -14,7 +14,7 @@ library.
 The package provides:
 
 - `<OpenUiRenderer>` for raw or pre-parsed OpenUI input;
-- `createOpenUiLibrary()` and 26 trusted component implementations;
+- `createOpenUiLibrary()` and 26 trusted default component implementations;
 - incremental parsing for model streams;
 - reactive `$variables`, expression evaluation, and form state;
 - `Query()`, `Mutation()`, and multi-step `Action([...])` execution;
@@ -266,12 +266,14 @@ reported through `onError`.
 
 ## Exports
 
-| Import                                   | What you get                                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `@lynx-js/genui/openui`                  | Renderer, Library helpers, parser/runtime exports, hooks, built-in components, and public types. |
-| `@lynx-js/genui/openui/catalog`          | Tree-shake-friendly re-exports of the built-in component definitions.                            |
-| `@lynx-js/genui/openui/prompt`           | Headless prompt Library, prompt builder, default prompt, and prompt-specific types.              |
-| `@lynx-js/genui/openui/styles/theme.css` | Optional light/dark CSS custom-property tokens.                                                  |
+| Import                                      | What you get                                                                                        |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `@lynx-js/genui/openui`                     | Renderer, parser/runtime, hooks, public types, and a Library factory backed by the default catalog. |
+| `@lynx-js/genui/openui/explicit`            | The runtime surface and a catalog-free Library factory for explicitly selected definitions.         |
+| `@lynx-js/genui/openui/catalog`             | Aggregate re-exports of all built-in component definitions.                                         |
+| `@lynx-js/genui/openui/catalog/<Component>` | One built-in definition and its component-level dependencies, for example `catalog/Stack`.          |
+| `@lynx-js/genui/openui/prompt`              | Headless prompt Library, prompt builder, default prompt, and prompt-specific types.                 |
+| `@lynx-js/genui/openui/styles/theme.css`    | Optional light/dark CSS custom-property tokens.                                                     |
 
 Component styles, the core renderer stylesheet, and the Material Icons font are
 implementation details imported by the relevant modules. Do not import private

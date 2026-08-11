@@ -1,13 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { batch, signal } from '@preact/signals';
-import type { Signal } from '@preact/signals';
+import { batch, signal } from '@lynx-js/react-signals';
+import type { Signal } from '@lynx-js/react-signals';
 
 import type { MessageProcessor } from './MessageProcessor.js';
 
 /**
- * Path-keyed store of Preact signals backing a surface's data model.
+ * Path-keyed store of ReactLynx signals backing a surface's data model.
  */
 export class SignalStore {
   private signals = new Map<string, Signal<unknown>>();
@@ -22,7 +22,11 @@ export class SignalStore {
   }
 
   update(path: string, value: unknown): void {
-    const s = this.getSignal(path);
+    const s = this.signals.get(path);
+    if (!s) {
+      this.signals.set(path, signal(value));
+      return;
+    }
     if (s.value !== value) {
       s.value = value;
     }

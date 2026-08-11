@@ -14,7 +14,7 @@ describe('Plugins - Resolve', () => {
     expect(config.resolve).toMatchInlineSnapshot(`
       {
         "alias": {
-          "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
+          "@swc/helpers": "<PNPM_INNER>/@swc/helpers",
         },
         "aliasFields": [
           "browser",
@@ -77,7 +77,7 @@ describe('Plugins - Resolve', () => {
     const config = await rsbuild.unwrapConfig()
     expect(config.resolve?.alias).toMatchInlineSnapshot(`
       {
-        "@swc/helpers": "<ROOT>/node_modules/<PNPM_INNER>/@swc/helpers",
+        "@swc/helpers": "<PNPM_INNER>/@swc/helpers",
         "bar$": "bar.jsx",
         "foo": "path/to/foo",
         "ignored": false,

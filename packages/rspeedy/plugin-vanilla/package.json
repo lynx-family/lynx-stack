@@ -1,0 +1,63 @@
+{
+  "name": "@lynx-js/vanilla-rsbuild-plugin",
+  "version": "0.0.0",
+  "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
+  "keywords": [
+    "rsbuild",
+    "Lynx",
+    "Vanilla Lynx",
+    "Element PAPI"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/plugin-vanilla"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Lynx Authors"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "rstest",
+    "test:type": "tsc6 --noEmit"
+  },
+  "dependencies": {
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/test-tools": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/core": "catalog:rstest"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  }
+}

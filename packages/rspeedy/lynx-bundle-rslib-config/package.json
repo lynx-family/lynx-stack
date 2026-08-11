@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/lynx-bundle-rslib-config",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "The rsbuild config for building Lynx bundle",
   "keywords": [
     "Rsbuild",
@@ -50,7 +50,7 @@
     "@rstest/core": "catalog:rstest"
   },
   "peerDependencies": {
-    "@rslib/core": ">=0.22.0"
+    "@rslib/core": "^1.0.0-beta.1"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

@@ -23,10 +23,11 @@
     "test": "vitest"
   },
   "dependencies": {
-    "css-tree": "^3.2.1"
+    "css-tree": "^3.2.1",
+    "pathe": "^2.0.3"
   },
   "devDependencies": {
-    "@types/css-tree": "^2.3.11",
+    "@types/css-tree": "^3.2.0",
     "@types/node": "^24.13.3"
   }
 }

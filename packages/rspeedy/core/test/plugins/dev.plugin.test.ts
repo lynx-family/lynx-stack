@@ -223,7 +223,7 @@ describe('Plugins - Dev', () => {
     )
     expect(config.resolve?.alias).toHaveProperty(
       '@rspack/core/hot/dev-server',
-      expect.stringContaining('hot/dev-server.js'.replaceAll('/', path.sep)),
+      expect.stringContaining('hotDevServer.js'),
     )
     expect(config.resolve?.alias).toHaveProperty(
       '@lynx-js/webpack-dev-transport/client',

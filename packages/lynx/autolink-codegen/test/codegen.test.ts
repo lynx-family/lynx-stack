@@ -393,6 +393,18 @@ export declare class StorageNapiModule {
         ?.overwrite,
     ).toBe(false);
     expect(
+      files.find((file) => file.path === 'shared/nativeModule/CMakeLists.txt')
+        ?.content,
+    ).toMatch(
+      /"\$\{LYNX_WEAK_NODE_API_HEADERS_DIR\}"\s+"\$\{LYNX_EXTENSION_HEADERS_DIR\}\/include"/,
+    );
+    expect(
+      files.find((file) => file.path === 'shared/nativeModule/CMakeLists.txt')
+        ?.content,
+    ).not.toMatch(
+      /if\(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX\)\s+target_include_directories/,
+    );
+    expect(
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
       )?.content,
@@ -406,9 +418,7 @@ export declare class StorageNapiModule {
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
       )?.content,
-    ).toMatch(
-      /#define NAPI_MODULE\(modname, regfunc\)[^\n]*\\\n\s+EXTERN_C_START[^\n]*\\\n/,
-    );
+    ).toContain('static napi_module _module_##modname');
     expect(
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
@@ -428,7 +438,12 @@ export declare class StorageNapiModule {
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
       )?.content,
-    ).toContain('void _napi_register_xx_##modname(void)');
+    ).toContain('napi_module_register(&_module_##modname)');
+    expect(
+      files.find((file) =>
+        file.path === 'shared/nativeModule/StorageNapiModule.cc'
+      )?.content,
+    ).not.toContain('napi_module_register_xx');
     expect(
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'

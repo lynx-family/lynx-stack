@@ -1,5 +1,13 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.2.2
+
+### Patch Changes
+
+- Use a real exported config key (`alignMouseEventWithW3C`) in the usage ([#3385](https://github.com/lynx-family/lynx-stack/pull/3385))
+  examples, and drop the hard-coded link to the development-version config
+  reference.
+
 ## 0.2.1
 
 ### Patch Changes

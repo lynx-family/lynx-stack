@@ -1,5 +1,107 @@
 # @lynx-js/web-core
 
+## 0.24.0
+
+### Minor Changes
+
+- Add the `__AddEventListener` and `__RemoveEventListener` element PAPIs. ([#3388](https://github.com/lynx-family/lynx-stack/pull/3388))
+
+  These bind a main-thread _function_ as an event listener, as opposed to
+  `__AddEvent`, which binds a handler _name_ for cross-thread dispatch or a
+  worklet object for main-thread dispatch. Cards that build their UI directly from
+  the Element PAPIs need the callback form.
+
+  Callbacks are filed in the element's own handler table, the same one
+  `__AddEvent` writes to, so they take part in the engine's event dispatch rather
+  than in a second one: capture ordering, `catch` stopping propagation and
+  global-bind all behave as they do for handler names, and the two forms can stop
+  each other.
+
+  `capture`, `once` and `passive` are honored, `closure_type` and `bind_type`
+  select the binding semantics, and a `kClient` binding with a string handler is
+  filed as a cross-thread handler. `signal` is accepted for parity with the engine
+  PAPI, which also reads it as a boolean, and is otherwise ignored; remove a
+  listener with `__RemoveEventListener`. Several callbacks may be registered for
+  one element and event, as with `addEventListener`.
+
+- Add `lynx.getEngine()`, the main-thread Engine context proxy. ([#3389](https://github.com/lynx-family/lynx-stack/pull/3389))
+
+  This is the web counterpart of the engine's `kEngine` context proxy. A card
+  subscribes to it to receive the engine lifecycle events `__RenderPage`,
+  `__UpdatePage`, `__DestroyLifetime` and `__UpdateGlobalProps`, which is how a
+  card built directly from the Element PAPIs drives its own first paint, updates
+  and cleanup.
+
+  Listeners receive a plain `{ type, data }` object rather than a DOM event,
+  matching what the engine hands scripts. For `__RenderPage` and `__UpdatePage`,
+  `data` holds the call's positional arguments as an array.
+
+  Existing bundles are unaffected. Each of these events keeps the engine's own
+  fallback rule: if the card registered a listener the event is dispatched,
+  otherwise the corresponding `globalThis.renderPage` / `updatePage` call happens
+  exactly as before. Server-side rendering always reports no listener, so it stays
+  on the direct path.
+
+  Card teardown no longer requires a framework lifetime hook. A card that runs its
+  own background script never installs `tt.callDestroyLifetimeFun`, and the
+  resulting error previously propagated far enough to skip `destroyCard`, leaving
+  the card registered after its view was gone. The hook is now optional, while a
+  hook that exists and fails is still reported.
+
+- Build a single file Lynx XML markup document into a `.web.bundle`. ([#3402](https://github.com/lynx-family/lynx-stack/pull/3402))
+
+  `@lynx-js/web-core/encode` gains `encodeLynxXML(source)` and `xmlToTasmJSON(source)`,
+  which turn a hand-written Lynx XML document - a versioned `<lynx>` root wrapping an
+  optional `<style>`, a required `<script main-thread>` and an optional
+  `<script background>` - into the same bundle bytes a ReactLynx build produces: same
+  magic header, same section sequence, same rkyv-encoded `StyleInfo`. Nothing
+  downstream has to know the card was hand-written, and no new decode path is
+  introduced.
+
+  Because the stylesheet is tokenized into the bundle rather than passed through as
+  text, a markup card gets the engine's full style pipeline:
+
+  - the `transform-vw` / `transform-vh` / `transform-rem` attributes apply, so those
+    units resolve against the `lynx-view` box. They remain off by default, in which
+    case the units keep their native browser meaning.
+  - Lynx-specific property rewriting runs, so `display: linear` and the `linear-*`
+    properties are translated instead of being discarded by the browser as invalid.
+  - `:root` is rewritten to the card's own root element. A card renders inside a
+    shadow root, where a literal `:root` matches nothing.
+
+  A parse failure is returned rather than thrown, formatted like the engine's
+  reference parser and located by offset.
+
+  **At-rules that Lynx does not support are dropped from the bundle.** This is
+  intended, not a limitation of the web implementation: Lynx's binary style format
+  has exactly three rule kinds - style, `@font-face` and `@keyframes` - so a
+  conditional group has no representation on any Lynx platform. Concretely, in a
+  markup card's `<style>`:
+
+  - `@media`, `@supports` and `@layer` do not apply. The rules inside them are
+    dropped with them; they are not promoted to the top level, so a card renders as
+    though those blocks had not been written.
+  - `@container`, `@property`, `@scope`, `@starting-style`, `@page`, `@charset` and
+    `@namespace` are not recognised by the Lynx CSS parser and are dropped the same
+    way, along with anything inside them.
+  - `@import url("...")` does not resolve. A markup card owns a single stylesheet and
+    has nothing to link to, so it is dropped rather than aborting the build. `@import`
+    itself is supported - the numeric form a build step emits is unaffected.
+  - `@font-face` and `@keyframes` **nested inside** one of the above are dropped with
+    their enclosing block, even though both are supported at the top level.
+
+  Every one of these is reported on the console during the build, once per at-rule,
+  naming the at-rule and why it could not be carried - so the cause is visible rather
+  than showing up later as a rendering difference with nothing to go on.
+
+  The existing encode path is untouched: `encodeCSS` and `encode` are byte for byte
+  unchanged, and a ReactLynx build produces exactly the bundle it produced before.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.24.0
+
 ## 0.23.1
 
 ### Patch Changes

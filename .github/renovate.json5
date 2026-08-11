@@ -62,6 +62,20 @@
       "allowedVersions": "<4",
     },
     {
+      // >=1.29 adds a `types` condition to the `./*` subpath export that does
+      // not strip the `.js` extension:
+      //
+      //   "./*": { "types": "./dist/esm/*.d.ts", "import": "./dist/esm/*", ... }
+      //
+      // so `@modelcontextprotocol/sdk/server/mcp.js` resolves its types to
+      // `dist/esm/server/mcp.js.d.ts`, which the package does not ship. The
+      // TypeScript resolver prefers the `types` condition, so `eslint` fails
+      // `import/no-unresolved` on `packages/mcp-servers/docs-mcp-server`
+      // (#3210, and again in #3213). Lift this once upstream ships a fix.
+      "matchPackageNames": ["@modelcontextprotocol/sdk"],
+      "allowedVersions": "<1.29",
+    },
+    {
       // Batch low-risk updates: all devDependencies minor/patch bumps share one
       // rolling PR instead of one PR each. Kept near the top on purpose -- the
       // specific groups below (Rspack, types, linting, ...) match later and win,
@@ -90,6 +104,9 @@
         "nyc",
         "tiny-invariant",
         "wasm-feature-detect",
+        "@lynx-js/lynx-core",
+        "@preact/signals",
+        "@rspack/lite-tapable",
       ],
       "groupName": null,
     },
@@ -100,6 +117,7 @@
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rspack",
       ],
       "matchPackageNames": [
         "/@rspack/*/",
@@ -113,6 +131,7 @@
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rsbuild",
       ],
       "matchPackageNames": [
         "/@rsbuild/*/",
@@ -131,6 +150,7 @@
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rstest",
       ],
       "matchPackageNames": [
         "/@rstest/*/",

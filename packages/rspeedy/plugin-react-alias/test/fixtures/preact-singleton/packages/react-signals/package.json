@@ -1,0 +1,9 @@
+{
+  "name": "@lynx-js/react-signals",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./lepus": "./index.js"
+  }
+}
