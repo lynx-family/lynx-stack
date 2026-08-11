@@ -4,8 +4,6 @@
 
 import { TosClient } from '@volcengine/tos-sdk';
 
-const DEFAULT_TOS_BUCKET = 'genui';
-const DEFAULT_TOS_REGION = 'cn-beijing';
 const DEFAULT_A2UI_STORAGE_PREFIX = 'a2ui';
 const DEFAULT_OPENUI_STORAGE_PREFIX = 'openui';
 
@@ -50,10 +48,10 @@ export function resolveTosStorageConfig(
 ): TosStorageConfig | undefined {
   const accessKeyId = readNonEmpty(environment, 'TOS_ACCESS_KEY');
   const accessKeySecret = readNonEmpty(environment, 'TOS_SECRET_KEY');
-  if (!accessKeyId || !accessKeySecret) return undefined;
+  const bucket = readNonEmpty(environment, 'TOS_BUCKET');
+  const region = readNonEmpty(environment, 'TOS_REGION');
+  if (!accessKeyId || !accessKeySecret || !bucket || !region) return undefined;
 
-  const bucket = readNonEmpty(environment, 'TOS_BUCKET') ?? DEFAULT_TOS_BUCKET;
-  const region = readNonEmpty(environment, 'TOS_REGION') ?? DEFAULT_TOS_REGION;
   const endpointUrl = parseTosEndpoint(
     readNonEmpty(environment, 'TOS_ENDPOINT')
       ?? `tos-${region}.volces.com`,

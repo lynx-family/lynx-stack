@@ -50,9 +50,10 @@ TOS_REGION=cn-beijing \
 pnpm dev
 ```
 
-`TOS_BUCKET` defaults to `genui`, `TOS_REGION` defaults to `cn-beijing`, and
-`TOS_STORAGE_PREFIX` defaults to `a2ui`. `TOS_OPENUI_STORAGE_PREFIX` defaults
-to `openui`. The native TOS endpoint defaults to
+`TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, and `TOS_REGION` are required;
+payload publishing stays disabled when any of them is missing.
+`TOS_STORAGE_PREFIX` defaults to `a2ui`, and `TOS_OPENUI_STORAGE_PREFIX`
+defaults to `openui`. The native TOS endpoint defaults to
 `tos-${TOS_REGION}.volces.com`; set `TOS_ENDPOINT` to a host (an optional
 `http://` or `https://` scheme is accepted) when the bucket uses a different
 endpoint. An optional `TOS_SECURITY_TOKEN` enables temporary STS credentials.

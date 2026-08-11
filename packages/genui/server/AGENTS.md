@@ -58,7 +58,8 @@ back to a deterministic Picsum URL.
 The hosting runtime must provide these variables before starting the server.
 
 To publish short, shareable A2UI and OpenUI preview URLs, configure the
-public-read Volcengine TOS bucket and server-only write credentials:
+public-read Volcengine TOS bucket and server-only write credentials. All four
+variables are required; do not add fallback bucket or region values:
 
 ```bash
 export TOS_ACCESS_KEY="..."

@@ -45,13 +45,13 @@ append the endpoint override to the playground URL:
 
 ### Server environment
 
-| Variable                                         | Purpose                                          | Default             |
-| ------------------------------------------------ | ------------------------------------------------ | ------------------- |
-| `GENUI_MODEL_CONFIG_JSON`                        | Map of model names to provider configurations    | —                   |
-| `UI_JUDGE_SERVER_URL`                            | Rust UI Judge sidecar for Bench scoring          | disabled            |
-| `UI_JUDGE_BUNDLE_URL`                            | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
-| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET` | Short, shareable preview URLs via Volcengine TOS | in-memory dev store |
-| `PEXELS_API_KEY`                                 | Stock-image search in generated UIs              | —                   |
+| Variable                                                       | Purpose                                          | Default             |
+| -------------------------------------------------------------- | ------------------------------------------------ | ------------------- |
+| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations    | —                   |
+| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring          | disabled            |
+| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
+| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS | disabled            |
+| `PEXELS_API_KEY`                                               | Stock-image search in generated UIs              | —                   |
 
 The Create tab loads its model selector from the server's `GET /models`
 endpoint. Provider credentials, upstream model ids, and upstream API URLs

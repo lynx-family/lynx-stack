@@ -11,16 +11,27 @@ import {
 } from '../app/a2ui/payload-publisher.js';
 
 describe('Volcengine TOS payload publishing', () => {
-  test('requires server-side write credentials', () => {
+  test('requires server-side credentials, bucket and region', () => {
     expect(resolveTosStorageConfig({})).toBeUndefined();
     expect(resolveTosStorageConfig({
       TOS_ACCESS_KEY: 'ak',
     })).toBeUndefined();
+    expect(resolveTosStorageConfig({
+      TOS_ACCESS_KEY: 'ak',
+      TOS_SECRET_KEY: 'sk',
+    })).toBeUndefined();
+    expect(resolveTosStorageConfig({
+      TOS_ACCESS_KEY: 'ak',
+      TOS_BUCKET: 'genui',
+      TOS_SECRET_KEY: 'sk',
+    })).toBeUndefined();
   });
 
-  test('uses the standard public-read bucket URL defaults', () => {
+  test('derives the standard endpoint from the configured region', () => {
     const config = resolveTosStorageConfig({
       TOS_ACCESS_KEY: 'ak',
+      TOS_BUCKET: 'genui',
+      TOS_REGION: 'cn-beijing',
       TOS_SECRET_KEY: 'sk',
     });
 
