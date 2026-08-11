@@ -1,23 +1,23 @@
-import { workletCapture as __workletCapture } from "@lynx-js/react";
-var workletCapture = __workletCapture;
+import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject;
 let onTapLepus = {
     _c: {
-        aaaa: workletCapture(aaaa, {
+        aaaa: captureMainThreadObject(aaaa, {
             bbbb: aaaa.bbbb
         }),
-        cccc: workletCapture(cccc, {
+        cccc: captureMainThreadObject(cccc, {
             dddd: cccc.dddd
         }),
-        hhhh: workletCapture(hhhh, {
+        hhhh: captureMainThreadObject(hhhh, {
             iiii: hhhh.iiii
         }),
         llll,
-        oooo: workletCapture(oooo, {
+        oooo: captureMainThreadObject(oooo, {
             pppp: oooo.pppp,
             qqqq: oooo.qqqq
         }),
         rrrr,
-        uuuu: workletCapture(uuuu, {
+        uuuu: captureMainThreadObject(uuuu, {
             "__??__": uuuu["__??__"]
         })
     },
