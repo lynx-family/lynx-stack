@@ -8,9 +8,6 @@ const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 const enableFetchBundle = !!process.env['LAZY_BUNDLE_FETCHBUNDLE'];
 
 function detectLanHost() {
-  if (process.env['LYNX_LAZY_BUNDLE_HOST']) {
-    return process.env['LYNX_LAZY_BUNDLE_HOST'];
-  }
   for (const ifaces of Object.values(os.networkInterfaces())) {
     for (const iface of ifaces ?? []) {
       if (iface.family === 'IPv4' && !iface.internal) {

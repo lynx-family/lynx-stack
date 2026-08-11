@@ -2,4 +2,3 @@
 channel = "1.97.1"
 targets = ["wasm32-unknown-unknown", "wasm32-wasip1"]
 profile = "default"
-components = ["rust-analyzer"]
