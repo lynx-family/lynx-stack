@@ -106,6 +106,9 @@ describe('useLynxGlobalEventListener', () => {
     expect(ee.listeners('eventName').length).toMatchInlineSnapshot(`1`);
 
     render(null, scratch);
+    // Preact 11 defers passive-effect cleanups of unmounted components to the
+    // after-paint flush instead of running them synchronously on unmount.
+    await new Promise(resolve => setTimeout(resolve, 150));
     expect(ee.listeners('eventName').length).toMatchInlineSnapshot(`0`);
   });
 

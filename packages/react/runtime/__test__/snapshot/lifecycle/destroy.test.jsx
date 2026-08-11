@@ -36,9 +36,24 @@ describe('Destroy', () => {
     render(h(Comp), __root);
     await Promise.resolve().then(() => {});
 
-    expect(() => lynx.getApp().callDestroyLifetimeFun()).toThrow('???');
+    // Preact 11 defers passive-effect cleanups of unmounted components to the
+    // after-paint flush: the cleanup's throw no longer propagates out of
+    // `callDestroyLifetimeFun` but is routed to `options._catchError`
+    // asynchronously.
+    const { options } = await import('preact');
+    const { CATCH_ERROR } = await import('../../../src/shared/render-constants');
+    const caught = [];
+    const prevCatchError = options[CATCH_ERROR];
+    options[CATCH_ERROR] = (e) => {
+      caught.push(e);
+    };
 
-    await Promise.resolve().then(() => {});
+    expect(() => lynx.getApp().callDestroyLifetimeFun()).not.toThrow();
+
+    await new Promise(resolve => setTimeout(resolve, 150));
+    options[CATCH_ERROR] = prevCatchError;
+
+    expect(caught).toEqual(['???']);
     expect(callback).toHaveBeenCalledTimes(1);
     expect(removeEventListener).toHaveBeenCalledTimes(addEventListener.mock.calls.length);
   });
