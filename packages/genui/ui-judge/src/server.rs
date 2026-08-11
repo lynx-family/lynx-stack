@@ -280,9 +280,6 @@ impl HeadlessExecutor {
     self.healthy.load(Ordering::Acquire)
   }
 
-  // `try_send` hands the whole `CaptureJob` back in its `Err` variant so the
-  // caller can retry, so the large payload is inherent to the channel API. It
-  // is destructured into an `ApiError` a few lines below and never returned.
   #[allow(clippy::result_large_err)]
   async fn capture(
     &self,
