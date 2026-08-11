@@ -107,13 +107,9 @@ function flushPendingSnapshotPatch(): void {
     patchList: [{ id: commitTaskId, snapshotPatch }],
   };
   const obj = commitPatchUpdate(patchList, {});
-  lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-    const commitTask = globalCommitTaskMap.get(commitTaskId);
-    if (commitTask) {
-      commitTask();
-      globalCommitTaskMap.delete(commitTaskId);
-    }
-  });
+  // Unlike a real commit, this flush registers no commit task, so the ack
+  // has nothing to run.
+  lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {});
 }
 
 /**
@@ -125,7 +121,7 @@ function replaceCommitHook(): void {
       cb();
       flushPendingSnapshotPatch();
     };
-    /* v8 ignore next */
+    /* v8 ignore next 2 */
     if (old) old(run);
     else lynxQueueMicrotask(run);
   });
