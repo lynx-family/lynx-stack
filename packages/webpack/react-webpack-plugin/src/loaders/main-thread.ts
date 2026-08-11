@@ -11,6 +11,10 @@ import {
   DEFINES_FOR_SNAPSHOT_BUILD_INFO,
   DEFINES_FOR_WORKLET_BUILD_INFO,
 } from '../Defines.js';
+import {
+  definesImportKey,
+  definesImportRegistry,
+} from './defines-import-registry.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -120,13 +124,22 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     }
   }
 
+  const definesImport = definesImportRegistry.get(
+    definesImportKey(
+      (currentModule as { layer?: string | null } | undefined)?.layer,
+      this.resourcePath,
+    ),
+  );
+
   this.callback(
     null,
-    result.code + (
-      this.hot
-        // TODO: temporary fix LEPUS error `$RefreshReg$ is not defined`
-        // should make react-refresh transform in `react-transform`.
-        ? `\
+    result.code
+      + (definesImport ? `\nimport ${JSON.stringify(definesImport)};` : '')
+      + (
+        this.hot
+          // TODO: temporary fix LEPUS error `$RefreshReg$ is not defined`
+          // should make react-refresh transform in `react-transform`.
+          ? `\
   // noop fns to prevent runtime errors during initialization
   if (typeof globalThis !== "undefined") {
     globalThis.$RefreshReg$ = function () {};
@@ -137,8 +150,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     };
   }
 `
-        : ''
-    ),
+          : ''
+      ),
     result.map,
   );
 };

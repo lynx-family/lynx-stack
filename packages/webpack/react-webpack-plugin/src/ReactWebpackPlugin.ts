@@ -24,6 +24,10 @@ import {
   selectMissingDefines,
 } from './Defines.js';
 import { LAYERS } from './layer.js';
+import {
+  definesImportKey,
+  definesImportRegistry,
+} from './loaders/defines-import-registry.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
@@ -429,28 +433,20 @@ class ReactWebpackPlugin {
         this.constructor.name,
         async (compilation) => {
           const { moduleGraph } = compilation;
+          type Module = NonNullable<ReturnType<typeof moduleGraph.getModule>>;
+          type ModuleWithMeta = Module & {
+            resource?: string;
+            layer?: string | null;
+          };
+          definesImportRegistry.clear();
 
-          const reachableDefines = (entryName: string) => {
-            const entry = compilation.entries.get(entryName);
-            if (!entry) {
-              throw new Error(
-                `No entry named ${
-                  JSON.stringify(entryName)
-                } to collect the definitions from.`,
-              );
-            }
-            const visited = new Set<
-              NonNullable<
-                ReturnType<typeof moduleGraph.getModule>
-              >
-            >();
-            const queue = [
-              ...entry.dependencies,
-              ...entry.includeDependencies,
-            ].flatMap((dependency) => {
-              const module = moduleGraph.getModule(dependency);
-              return module ? [module] : [];
-            });
+          // Traverse the synchronous closure of the given roots; async
+          // `import()` boundaries are returned separately, keyed by the
+          // imported module's resource so both layers pair up.
+          const traverse = (roots: Module[]) => {
+            const visited = new Set<Module>();
+            const asyncBoundaries = new Map<string, Module>();
+            const queue = [...roots];
             while (queue.length > 0) {
               const module = queue.pop()!;
               if (visited.has(module)) {
@@ -461,67 +457,170 @@ class ReactWebpackPlugin {
                 const connection of moduleGraph.getOutgoingConnections(module)
               ) {
                 const next = connection.module;
-                if (next && !visited.has(next)) {
+                if (!next) {
+                  continue;
+                }
+                if (connection.dependency?.type?.startsWith('import()')) {
+                  const resource = (next as ModuleWithMeta).resource;
+                  if (resource) {
+                    asyncBoundaries.set(resource, next);
+                  }
+                  continue;
+                }
+                if (!visited.has(next)) {
                   queue.push(next);
                 }
               }
             }
             return {
-              snapshot: collectDefines(
-                visited,
-                DEFINES_FOR_SNAPSHOT_BUILD_INFO,
-                (module) => module.identifier(),
-              ),
-              worklet: collectDefines(
-                visited,
-                DEFINES_FOR_WORKLET_BUILD_INFO,
-                (module) => module.identifier(),
-              ),
+              defines: {
+                snapshot: collectDefines(
+                  visited,
+                  DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+                  (module) => module.identifier(),
+                ),
+                worklet: collectDefines(
+                  visited,
+                  DEFINES_FOR_WORKLET_BUILD_INFO,
+                  (module) => module.identifier(),
+                ),
+              },
+              asyncBoundaries,
             };
           };
 
-          await Promise.all(
-            entryPairs.map(async ({ mainThread, background }) => {
-              const candidates = reachableDefines(background);
-              const present = reachableDefines(mainThread);
-              const missingSnapshot = selectMissingDefines(
-                candidates.snapshot,
-                present.snapshot,
+          const rebuildModule = (module: Module) =>
+            new Promise<void>((resolve, reject) => {
+              compilation.rebuildModule(
+                module,
+                (err) => err ? reject(err) : resolve(),
               );
-              const missingWorklet = selectMissingDefines(
-                candidates.worklet,
-                present.worklet,
+            });
+
+          const entryRoots = (entryName: string) => {
+            const entry = compilation.entries.get(entryName);
+            if (!entry) {
+              throw new Error(
+                `No entry named ${
+                  JSON.stringify(entryName)
+                } to collect the definitions from.`,
               );
-              if (missingSnapshot.length === 0 && missingWorklet.length === 0) {
-                return;
-              }
-              const request = path.join(
-                compiler.context,
-                `__lynx-react-defines.${mainThread}.js`,
-              );
+            }
+            return [...entry.dependencies, ...entry.includeDependencies]
+              .flatMap((dependency) => {
+                const module = moduleGraph.getModule(dependency);
+                return module ? [module] : [];
+              });
+          };
+
+          // Recursively diff a background/main-thread scope pair. The root
+          // scope injects through an extra entry; an async scope injects by
+          // appending an import to the main-thread boundary module, so the
+          // definitions land in the lazy chunk that owns them.
+          const processScope = async (
+            backgroundRoots: Module[],
+            mainThreadRoots: Module[],
+            inheritedPresent: { snapshot: string[]; worklet: string[] },
+            request: string,
+            inject: (request: string) => Promise<void>,
+          ): Promise<void> => {
+            const background = traverse(backgroundRoots);
+            const mainThread = traverse(mainThreadRoots);
+            const present = {
+              snapshot: [
+                ...inheritedPresent.snapshot,
+                ...mainThread.defines.snapshot.map(({ id }) => id),
+              ],
+              worklet: [
+                ...inheritedPresent.worklet,
+                ...mainThread.defines.worklet.map(({ id }) => id),
+              ],
+            };
+            const missingSnapshot = selectMissingDefines(
+              background.defines.snapshot,
+              present.snapshot.map((id) => ({ id, code: '' })),
+            );
+            const missingWorklet = selectMissingDefines(
+              background.defines.worklet,
+              present.worklet.map((id) => ({ id, code: '' })),
+            );
+            if (missingSnapshot.length > 0 || missingWorklet.length > 0) {
               virtualModules.writeModule(
                 request,
                 renderDefinesModule(missingSnapshot, missingWorklet),
               );
-              const addEntry = (entryRequest: string) =>
-                new Promise<void>((resolve, reject) => {
-                  compilation.addEntry(
-                    compiler.context,
-                    EntryPlugin.createDependency(entryRequest),
-                    { name: mainThread, layer: LAYERS.MAIN_THREAD },
-                    (err) => err ? reject(err) : resolve(),
-                  );
-                });
-              // The last entry dependency's exports become the entry's
-              // exports, so re-append the original entry request after the
-              // definitions: the startup sequence deduplicates it into the
-              // last slot and the entry keeps its own exports.
-              const originalRequest = compilation.entries.get(mainThread)!
-                .dependencies.at(-1)?.request;
-              await addEntry(request);
-              if (originalRequest) {
-                await addEntry(originalRequest);
+              await inject(request);
+            }
+            for (
+              const [resource, backgroundBoundary] of background.asyncBoundaries
+            ) {
+              const mainThreadBoundary = mainThread.asyncBoundaries.get(
+                resource,
+              );
+              if (!mainThreadBoundary) {
+                // The main thread never loads this chunk; injecting its
+                // definitions elsewhere would run them under the wrong
+                // dynamic-component entry.
+                continue;
               }
+              await processScope(
+                [backgroundBoundary],
+                [mainThreadBoundary],
+                present,
+                `${request.slice(0, -3)}.${
+                  path.basename(resource).replaceAll(/[^\w-]/g, '_')
+                }.js`,
+                async (boundaryRequest) => {
+                  definesImportRegistry.set(
+                    definesImportKey(
+                      (mainThreadBoundary as ModuleWithMeta).layer,
+                      resource,
+                    ),
+                    boundaryRequest,
+                  );
+                  await rebuildModule(mainThreadBoundary);
+                },
+              );
+            }
+          };
+
+          await Promise.all(
+            entryPairs.map(async ({ mainThread, background }) => {
+              await processScope(
+                entryRoots(background),
+                entryRoots(mainThread),
+                { snapshot: [], worklet: [] },
+                path.join(
+                  compiler.context,
+                  `__lynx-react-defines.${mainThread}.js`,
+                ),
+                async (request) => {
+                  const addEntry = (entryRequest: string) =>
+                    new Promise<void>((resolve, reject) => {
+                      compilation.addEntry(
+                        compiler.context,
+                        EntryPlugin.createDependency(entryRequest),
+                        { name: mainThread, layer: LAYERS.MAIN_THREAD },
+                        (err) => err ? reject(err) : resolve(),
+                      );
+                    });
+                  // The startup sequence deduplicates a repeated dependency
+                  // into its last occurrence, so re-appending every original
+                  // request after the definitions runs the definitions first,
+                  // keeps the original startup order, and leaves the entry's
+                  // exports on the last dependency.
+                  const originalRequests = compilation.entries.get(mainThread)!
+                    .dependencies.flatMap((dependency) =>
+                      typeof dependency.request === 'string'
+                        ? [dependency.request]
+                        : []
+                    );
+                  await addEntry(request);
+                  for (const originalRequest of originalRequests) {
+                    await addEntry(originalRequest);
+                  }
+                },
+              );
             }),
           );
         },

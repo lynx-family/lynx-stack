@@ -303,7 +303,7 @@ describe('missing definitions injection', () => {
     expect(content).not.toContain('ReactLynx');
   });
 
-  it('runs the definitions ahead of the entry without stealing its exports', async () => {
+  async function compileWithExports(imports: string[]): Promise<string> {
     const outputPath = mkdtempSync(
       path.join(tmpdir(), 'defines-exports-'),
     );
@@ -312,7 +312,7 @@ describe('missing definitions injection', () => {
       mode: 'none',
       entry: {
         'main__main-thread': {
-          import: './fixtures/entry-exports.js',
+          import: imports,
           layer: LAYERS.MAIN_THREAD,
         },
         main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
@@ -367,16 +367,65 @@ describe('missing definitions injection', () => {
         resolve();
       });
     });
+    return path.join(outputPath, 'main__main-thread.cjs');
+  }
 
+  it('runs the definitions ahead of the entry without stealing its exports', async () => {
+    delete (globalThis as Record<string, unknown>).__definesRan;
     const exported = require(
-      path.join(outputPath, 'main__main-thread.cjs'),
+      await compileWithExports(['./fixtures/entry-exports.js']),
     ) as { marker?: string };
+
     expect(exported.marker).toBe('ENTRY_EXPORTS');
     expect((globalThis as Record<string, unknown>).__definesRan)
       .toBe(true);
     expect((globalThis as Record<string, unknown>).__entrySawDefines).toBe(
       true,
     );
+  });
+
+  it('runs the definitions ahead of every import of a multi-import entry', async () => {
+    delete (globalThis as Record<string, unknown>).__definesRan;
+    const exported = require(
+      await compileWithExports([
+        './fixtures/entry-bootstrap.js',
+        './fixtures/entry-exports.js',
+      ]),
+    ) as { marker?: string; bootstrap?: boolean };
+
+    expect(exported.marker).toBe('ENTRY_EXPORTS');
+    expect(exported.bootstrap).toBeUndefined();
+    expect((globalThis as Record<string, unknown>).__bootstrapSawDefines).toBe(
+      true,
+    );
+    expect((globalThis as Record<string, unknown>).__entrySawDefines).toBe(
+      true,
+    );
+  });
+
+  it('leaves the definitions of an async-only module out of the entry injection', async () => {
+    const outputPath = await compile(
+      {
+        'empty2.js': { snapshot: [define('async-only', 'registerAsyncOnly;')] },
+      },
+      {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: {
+          import: './fixtures/lazy-importer.js',
+          layer: LAYERS.BACKGROUND,
+        },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+    );
+    const content = await fs.readFile(
+      path.join(outputPath, 'main__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(content).not.toContain('registerAsyncOnly;');
   });
 
   it('keeps the definitions of each entry apart', async () => {
