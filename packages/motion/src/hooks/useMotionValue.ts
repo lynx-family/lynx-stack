@@ -4,17 +4,23 @@
 
 import type { MotionValue } from 'motion-dom';
 
-import { MainThreadValue, useMemo } from '@lynx-js/react';
+import {
+  defineMainThreadObjectType,
+  useMainThreadObject,
+} from '@lynx-js/react';
 
 import { motionValue } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 
 const MOTION_VALUE_TYPE = '@lynx-js/motion/MotionValue';
-
-class MotionValueHandle<T> extends MainThreadValue<T> {
-  constructor(initialValue: T) {
-    super(initialValue, MOTION_VALUE_TYPE);
-  }
-}
+const MotionValueType = defineMainThreadObjectType<
+  unknown,
+  MotionValue<unknown>
+>({
+  type: MOTION_VALUE_TYPE,
+  create: motionValue,
+  dispose: value => value.stop(),
+});
+const motionValueHandleInitialValues = new WeakMap<object, unknown>();
 
 /**
  * Create a Motion value that is retained on the main thread and can be used
@@ -24,8 +30,26 @@ class MotionValueHandle<T> extends MainThreadValue<T> {
  * @public
  */
 export function useMotionValue<T>(initialValue: T): MotionValue<T> {
-  return useMemo(() => {
-    MainThreadValue.register(MOTION_VALUE_TYPE, motionValue);
-    return new MotionValueHandle(initialValue) as unknown as MotionValue<T>;
-  }, []);
+  const value = useMainThreadObject(
+    MotionValueType,
+    initialValue,
+  ) as MotionValue<T>;
+  motionValueHandleInitialValues.set(value, initialValue);
+  return value;
+}
+
+/** @internal */
+export function isMotionValueHandle(
+  value: unknown,
+): value is MotionValue<unknown> {
+  return typeof value === 'object'
+    && value !== null
+    && motionValueHandleInitialValues.has(value);
+}
+
+/** @internal */
+export function getMotionValueHandleInitialValue(
+  value: MotionValue<unknown>,
+): unknown {
+  return motionValueHandleInitialValues.get(value);
 }

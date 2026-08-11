@@ -14,11 +14,10 @@ import type {
   MotionTransition,
   MotionVariants,
 } from './types.js';
-
-interface MainThreadValueHandle {
-  readonly __MAIN_THREAD_VALUE__: true;
-  toJSON(): { _initValue: unknown; _wvid: number; _type?: string };
-}
+import {
+  getMotionValueHandleInitialValue,
+  isMotionValueHandle,
+} from '../hooks/useMotionValue.js';
 
 const transformAliases: Record<string, string> = {
   x: 'translateX',
@@ -48,18 +47,9 @@ const transformKeys = new Set([
   'skewY',
 ]);
 
-function isMainThreadValueHandle(
-  value: unknown,
-): value is MainThreadValueHandle {
-  return value !== null
-    && typeof value === 'object'
-    && (value as { __MAIN_THREAD_VALUE__?: unknown }).__MAIN_THREAD_VALUE__
-      === true;
-}
-
 function resolveStyleValue(value: unknown): unknown {
-  if (isMainThreadValueHandle(value)) {
-    return value.toJSON()._initValue;
+  if (isMotionValueHandle(value)) {
+    return getMotionValueHandleInitialValue(value);
   }
   if (Array.isArray(value)) {
     return value.find(item => item !== null && item !== undefined);
@@ -169,8 +159,8 @@ export function collectMotionValues(
   const values: Record<string, MotionValue<string | number>> = {};
   for (const key in style) {
     const value = style[key as keyof MotionStyle] as MotionStyleValue;
-    if (isMainThreadValueHandle(value)) {
-      values[key] = value as unknown as MotionValue<string | number>;
+    if (isMotionValueHandle(value)) {
+      values[key] = value as MotionValue<string | number>;
     }
   }
   return values;
