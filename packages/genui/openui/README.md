@@ -113,9 +113,15 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   `@OpenUrl(...)`. State steps and tool steps execute inside the runtime first.
 - `onError` returns structured parser, runtime, render, and tool errors suitable
   for an Agent correction loop.
-- `createOpenUiLibrary()` includes 26 built-in components. Additional
+- By default, `createOpenUiLibrary()` includes 26 built-in components. Additional
   definitions are appended, and a later component with the same name replaces
   the built-in implementation.
+- `includeDefaultComponents: false` limits the Library vocabulary to
+  caller-provided definitions. The flag does not remove the default catalog
+  from the main entry's static dependencies. When omitted built-ins must stay
+  outside that graph, import `createOpenUiLibrary` from
+  `@lynx-js/genui/openui/explicit` and each retained built-in from its component
+  subpath, such as `@lynx-js/genui/openui/catalog/Stack`.
 
 ## More docs
 

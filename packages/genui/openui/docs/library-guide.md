@@ -38,8 +38,10 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 
 ## Built-in components
 
-`createOpenUiLibrary()` includes the following components. Their definitions
-are also exported from `@lynx-js/genui/openui/catalog`.
+By default, `createOpenUiLibrary()` includes the following components. Their
+definitions are exported from the aggregate `@lynx-js/genui/openui/catalog`
+entry and from individual subpaths such as
+`@lynx-js/genui/openui/catalog/Stack`.
 
 ### Layout
 
@@ -187,6 +189,38 @@ Caller-provided components and groups are appended after the defaults. If a
 custom component uses the same name as a built-in, the later custom definition
 wins in the `components` map. Treat that as an intentional override and keep
 the prompt-side schema identical.
+
+## Choose components explicitly
+
+Set `includeDefaultComponents` to `false` when the Library should contain only
+caller-provided definitions. Import each built-in that remains part of the
+Library from the catalog and pass it through `components`:
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+
+export const library = createOpenUiLibrary({
+  includeDefaultComponents: false,
+  components: [Stack, TextContent],
+  componentGroups: [
+    { name: 'Selected', components: ['Stack', 'TextContent'] },
+  ],
+});
+```
+
+Disabling the defaults omits both the 26 built-in component definitions and
+their groups. The root still defaults to `Stack`, and Library creation fails if
+the selected components do not contain the root. Import and pass `Stack`, as in
+the example, or set `root` to another caller-provided component. Keep the Agent
+prompt and client Library restricted to the same component names.
+
+`includeDefaultComponents` controls the Library vocabulary. When the factory is
+imported from the main `openui` entry, that entry still statically references the
+default catalog. Use `openui/explicit` and individual component subpaths, as
+above, when unselected catalog modules must stay outside the static dependency
+graph.
 
 ## Render nested component values
 
