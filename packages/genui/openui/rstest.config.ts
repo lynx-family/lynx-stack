@@ -11,14 +11,16 @@ export default defineConfig({
       return {
         ...config,
         name: 'genui/openui',
-        include: ['test/**/*.test.tsx'],
+        include: ['test/**/*.test.{ts,tsx}'],
         tools: {
+          ...config.tools,
           swc: {
             jsc: {
               transform: {
                 react: {
                   importSource: '@lynx-js/react',
                   runtime: 'automatic',
+                  throwIfNamespace: false,
                 },
               },
             },

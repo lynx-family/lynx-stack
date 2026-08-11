@@ -19,9 +19,117 @@
       "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
     },
+    "./explicit": {
+      "types": "./dist/core/explicit.d.ts",
+      "default": "./dist/core/explicit.js"
+    },
     "./catalog": {
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
+    },
+    "./catalog/AudioPlayer": {
+      "types": "./dist/catalog/AudioPlayer/index.d.ts",
+      "default": "./dist/catalog/AudioPlayer/index.jsx"
+    },
+    "./catalog/Button": {
+      "types": "./dist/catalog/Button/index.d.ts",
+      "default": "./dist/catalog/Button/index.jsx"
+    },
+    "./catalog/Buttons": {
+      "types": "./dist/catalog/Button/index.d.ts",
+      "default": "./dist/catalog/Button/index.jsx"
+    },
+    "./catalog/Card": {
+      "types": "./dist/catalog/Card/index.d.ts",
+      "default": "./dist/catalog/Card/index.jsx"
+    },
+    "./catalog/CardHeader": {
+      "types": "./dist/catalog/CardHeader/index.d.ts",
+      "default": "./dist/catalog/CardHeader/index.jsx"
+    },
+    "./catalog/CheckBox": {
+      "types": "./dist/catalog/CheckBox/index.d.ts",
+      "default": "./dist/catalog/CheckBox/index.jsx"
+    },
+    "./catalog/ChoicePicker": {
+      "types": "./dist/catalog/ChoicePicker/index.d.ts",
+      "default": "./dist/catalog/ChoicePicker/index.jsx"
+    },
+    "./catalog/Column": {
+      "types": "./dist/catalog/Column/index.d.ts",
+      "default": "./dist/catalog/Column/index.jsx"
+    },
+    "./catalog/DateTimeInput": {
+      "types": "./dist/catalog/DateTimeInput/index.d.ts",
+      "default": "./dist/catalog/DateTimeInput/index.jsx"
+    },
+    "./catalog/Divider": {
+      "types": "./dist/catalog/Divider/index.d.ts",
+      "default": "./dist/catalog/Divider/index.jsx"
+    },
+    "./catalog/Icon": {
+      "types": "./dist/catalog/Icon/index.d.ts",
+      "default": "./dist/catalog/Icon/index.jsx"
+    },
+    "./catalog/Image": {
+      "types": "./dist/catalog/Image/index.d.ts",
+      "default": "./dist/catalog/Image/index.jsx"
+    },
+    "./catalog/List": {
+      "types": "./dist/catalog/List/index.d.ts",
+      "default": "./dist/catalog/List/index.jsx"
+    },
+    "./catalog/Loading": {
+      "types": "./dist/catalog/Loading/index.d.ts",
+      "default": "./dist/catalog/Loading/index.jsx"
+    },
+    "./catalog/Modal": {
+      "types": "./dist/catalog/Modal/index.d.ts",
+      "default": "./dist/catalog/Modal/index.jsx"
+    },
+    "./catalog/RadioGroup": {
+      "types": "./dist/catalog/RadioGroup/index.d.ts",
+      "default": "./dist/catalog/RadioGroup/index.jsx"
+    },
+    "./catalog/Row": {
+      "types": "./dist/catalog/Row/index.d.ts",
+      "default": "./dist/catalog/Row/index.jsx"
+    },
+    "./catalog/Separator": {
+      "types": "./dist/catalog/Separator/index.d.ts",
+      "default": "./dist/catalog/Separator/index.jsx"
+    },
+    "./catalog/Slider": {
+      "types": "./dist/catalog/Slider/index.d.ts",
+      "default": "./dist/catalog/Slider/index.jsx"
+    },
+    "./catalog/Stack": {
+      "types": "./dist/catalog/Stack/index.d.ts",
+      "default": "./dist/catalog/Stack/index.jsx"
+    },
+    "./catalog/Tabs": {
+      "types": "./dist/catalog/Tabs/index.d.ts",
+      "default": "./dist/catalog/Tabs/index.jsx"
+    },
+    "./catalog/Tag": {
+      "types": "./dist/catalog/Tag/index.d.ts",
+      "default": "./dist/catalog/Tag/index.jsx"
+    },
+    "./catalog/Text": {
+      "types": "./dist/catalog/Text/index.d.ts",
+      "default": "./dist/catalog/Text/index.jsx"
+    },
+    "./catalog/TextContent": {
+      "types": "./dist/catalog/TextContent/index.d.ts",
+      "default": "./dist/catalog/TextContent/index.jsx"
+    },
+    "./catalog/TextField": {
+      "types": "./dist/catalog/TextField/index.d.ts",
+      "default": "./dist/catalog/TextField/index.jsx"
+    },
+    "./catalog/Video": {
+      "types": "./dist/catalog/Video/index.d.ts",
+      "default": "./dist/catalog/Video/index.jsx"
     },
     "./openui-prompt": {
       "types": "./dist/openui-prompt/index.d.ts",

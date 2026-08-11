@@ -12,7 +12,7 @@ renderer 和内置移动端组件 Library 组合在一起。
 这个包提供：
 
 - 处理原始或预解析 OpenUI 输入的 `<OpenUiRenderer>`；
-- `createOpenUiLibrary()` 和 26 个可信组件实现；
+- `createOpenUiLibrary()` 和 26 个可信的默认组件实现；
 - 面向模型流式输出的增量解析；
 - 响应式 `$variables`、表达式求值和表单状态；
 - `Query()`、`Mutation()` 和多步骤 `Action([...])` 执行；
@@ -276,12 +276,14 @@ orders = Query("list_orders", { status: "open" }, { rows: [] })
 
 ## Exports
 
-| 导入                                     | 你得到什么                                                                       |
-| ---------------------------------------- | -------------------------------------------------------------------------------- |
-| `@lynx-js/genui/openui`                  | Renderer、Library helpers、parser/runtime exports、hooks、内置组件和公共 types。 |
-| `@lynx-js/genui/openui/catalog`          | 内置组件 definitions 的 tree-shake-friendly 再导出。                             |
-| `@lynx-js/genui/openui/prompt`           | Headless prompt Library、prompt builder、默认 prompt 和 prompt-specific types。  |
-| `@lynx-js/genui/openui/styles/theme.css` | 可选的 light/dark CSS custom-property tokens。                                   |
+| 导入                                        | 你得到什么                                                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `@lynx-js/genui/openui`                     | Renderer、parser/runtime、hooks、公共 types，以及由默认 catalog 支持的 Library factory。 |
+| `@lynx-js/genui/openui/explicit`            | Runtime surface，以及用于显式选择 definitions 的无 catalog Library factory。             |
+| `@lynx-js/genui/openui/catalog`             | 所有内置 component definitions 的聚合再导出。                                            |
+| `@lynx-js/genui/openui/catalog/<Component>` | 单个内置 definition 及其组件级依赖，例如 `catalog/Stack`。                               |
+| `@lynx-js/genui/openui/prompt`              | Headless prompt Library、prompt builder、默认 prompt 和 prompt-specific types。          |
+| `@lynx-js/genui/openui/styles/theme.css`    | 可选的 light/dark CSS custom-property tokens。                                           |
 
 组件样式、core renderer stylesheet 和 Material Icons font 都是由对应模块自动引入的
 实现细节。不要导入 `styles/catalog` 或 `dist/core` 下的私有文件。
