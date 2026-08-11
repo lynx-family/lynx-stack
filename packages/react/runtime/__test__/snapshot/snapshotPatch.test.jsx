@@ -1037,6 +1037,27 @@ describe('DEV_ONLY_addSnapshot', () => {
     ).not.toThrow();
   });
 
+  it('with a creator whose rewrite is not evaluatable', () => {
+    const uniqID1 = 'first-screen-lazy-2';
+    const holder = {
+      globDynamicComponentEntry() {
+        return 1;
+      },
+    };
+    snapshotCreatorMap[uniqID1] = holder.globDynamicComponentEntry;
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() =>
+      snapshotPatchApply([
+        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+        uniqID1,
+        'https://example.com/lazy-bundle.js',
+      ])
+    ).not.toThrow();
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
   it('with update', () => {
     const uniqID1 = 'with-update-0';
     // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`
