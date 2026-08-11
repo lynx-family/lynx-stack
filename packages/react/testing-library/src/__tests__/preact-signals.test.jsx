@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import '@testing-library/jest-dom';
 
-import { batch, computed, signal, useComputed, useSignal } from '@preact/signals';
+import { batch, computed, signal, useComputed, useSignal } from '@lynx-js/react-signals';
 import { expect, it, vi } from 'vitest';
 
 import { act, fireEvent, render } from '../index.jsx';

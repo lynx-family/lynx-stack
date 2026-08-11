@@ -127,8 +127,8 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.10.6",
+    "@lynx-js/react-signals": "workspace:*",
     "@openuidev/lang-core": "^0.2.11",
-    "@preact/signals": "^2.11.0",
     "typedoc": "^0.28.20",
     "zod": "^3.25.76 || ^4.0.0"
   },
@@ -142,8 +142,7 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
-    "@lynx-js/rspeedy": "workspace:^",
-    "preact": "catalog:lynxjs"
+    "@lynx-js/rspeedy": "workspace:^"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",
