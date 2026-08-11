@@ -1,5 +1,5 @@
 ---
-"@lynx-js/react": minor
+"@lynx-js/react": patch
 ---
 
 Migrate the bundled Preact fork to Preact 11 (`11.0.0-rc.0` based

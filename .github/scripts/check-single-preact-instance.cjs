@@ -6,7 +6,11 @@
 const { readFileSync } = require('node:fs');
 
 const lockfile = readFileSync('pnpm-lock.yaml', 'utf8');
-const found = lockfile.match(/^ {2}'?preact@[^:]*:/gm) ?? [];
+// pkg.pr.new builds of lynx-family/internal-preact are the vendored fork too
+// (temporary Preact 11 exploration; see the override in pnpm-workspace.yaml).
+const found = (lockfile.match(/^ {2}'?preact@[^\n]*/gm) ?? []).filter(
+  (line) => !line.includes('pkg.pr.new/lynx-family/internal-preact/'),
+);
 
 if (found.length > 0) {
   console.error(
