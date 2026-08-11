@@ -18,7 +18,12 @@ import { snapshotDestroyList } from './list.js';
 import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
-import { setSnapshotCreatorMap, snapshotCreatorMap, snapshotCreatorRuntime } from './snapshotCreatorMap.js';
+import {
+  devOnlySentSnapshots,
+  setSnapshotCreatorMap,
+  snapshotCreatorMap,
+  snapshotCreatorRuntime,
+} from './snapshotCreatorMap.js';
 import type { SnapshotCreator } from './snapshotCreatorMap.js';
 import { snapshotInstanceManager } from './snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from './types.js';
@@ -108,6 +113,15 @@ if (__DEV__ && __JS__) {
             // This allows the updates to be applied to main thread.
             value.toString(),
           );
+          // The main thread now holds *our* creator, so a later
+          // `DEV_ONLY_SetSnapshotEntryName` may rewrite its placeholder.
+          devOnlySentSnapshots!.add(prop);
+        } else {
+          // No `DEV_ONLY_AddSnapshot` was sent this time, so the main thread keeps
+          // the creator compiled into its own chunk. Clear any stale token,
+          // otherwise a re-registration (HMR) would leave one armed from a previous
+          // round and emit an orphan `DEV_ONLY_SetSnapshotEntryName`.
+          devOnlySentSnapshots!.delete(prop);
         }
         target[prop] = value;
         return true;

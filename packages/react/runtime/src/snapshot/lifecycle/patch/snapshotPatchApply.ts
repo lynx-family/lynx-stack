@@ -126,9 +126,23 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
 
           // HMR-related
           // Update the evaluated snapshot entryName from JS.
-          snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
-            snapshotCreatorMap[uniqID]!.toString().replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
-          );
+          //
+          // Only a creator that was serialized over from the background thread via
+          // `DEV_ONLY_AddSnapshot` still carries the `globDynamicComponentEntry`
+          // placeholder and round-trips through its own `toString()`. Guard on that
+          // invariant directly, and never let a DEV-only HMR nicety abort the patch
+          // loop — doing so leaves the rest of the patch unapplied and cascades into
+          // `snapshotPatchApply failed: ctx not found`.
+          const source = snapshotCreatorMap[uniqID]?.toString();
+          if (source?.includes('globDynamicComponentEntry')) {
+            try {
+              snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
+                source.replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
+              );
+            } catch (e) {
+              console.warn(`[ReactLynx] failed to rewrite snapshot entryName for ${uniqID}`, e);
+            }
+          }
         }
         break;
       }
