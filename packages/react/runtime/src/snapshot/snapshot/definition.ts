@@ -143,11 +143,6 @@ export function createSnapshot(
     __DEV__ && __JS__ && __globalSnapshotPatch && entryName && entryName !== DEFAULT_ENTRY_NAME
     // `uniqID` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
     && !uniqID.includes(':')
-    // Rewriting the entryName only makes sense when the main thread's creator is
-    // the one we serialized over. A lazy bundle loaded during first-screen direct
-    // render never sends `DEV_ONLY_AddSnapshot`; there the main thread uses the
-    // creator compiled into its own chunk, where `globDynamicComponentEntry` is
-    // already bound by that chunk's scope and must not be rewritten.
     && devOnlySentSnapshots!.has(uniqID)
   ) {
     __globalSnapshotPatch.push(
@@ -155,9 +150,6 @@ export function createSnapshot(
       uniqID,
       entryName,
     );
-    // One-shot: once the main thread applies this op the placeholder is gone, so
-    // the creator must not be rewritten again. A later re-registration (HMR)
-    // re-arms it through the Proxy in `snapshot.ts`.
     devOnlySentSnapshots!.delete(uniqID);
   }
 
