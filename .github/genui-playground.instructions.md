@@ -58,7 +58,7 @@ When an action response is merged with the current preview messages, clear any p
 
 ### Shared Imports
 
-When importing shared playground conversations, validate the `importConv` URL before fetching it. Accept only current-origin documents or the GenUI Volcengine TOS conversation-object path, with the legacy GenUI Supabase path retained for existing links, then validate the shared document protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
+Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
 
 ## Component Catalog Architecture
 

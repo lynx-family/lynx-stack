@@ -31,6 +31,8 @@ The A2UI server keeps AI-generated preview URLs short by uploading final
 validated `messages` to Volcengine TOS before emitting the `done` SSE event.
 The playground still receives the full `messages` for immediate rendering, and
 uses `done.preview.messagesUrl` for Web Preview and Native Preview links.
+The playground also uses `PUT /a2ui/payload` and `PUT /openui/payload` when it
+needs to publish directly, then treats the returned URLs as opaque values.
 
 The bucket is public-read, but uploads are always authenticated by the GenUI
 server. Give a dedicated IAM user only `tos:PutObject` access to the preview

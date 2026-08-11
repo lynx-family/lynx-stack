@@ -14,53 +14,42 @@ describe('resolveTrustedConversationImportUrl', () => {
     ).toBe('http://localhost:3001/__a2ui/abc/messages');
   });
 
-  test('allows GenUI Volcengine TOS conversation documents', () => {
+  test('treats the HTTPS URL returned by the GenUI server as opaque', () => {
     expect(
       resolveTrustedConversationImportUrl(
-        'https://genui.tos-cn-beijing.volces.com/a2ui/abc/messages.json',
+        'https://storage.example.com/custom/path/conversation.json',
         pageOrigin,
       ),
     ).toBe(
-      'https://genui.tos-cn-beijing.volces.com/a2ui/abc/messages.json',
+      'https://storage.example.com/custom/path/conversation.json',
     );
   });
 
-  test('allows legacy Supabase Storage conversation documents', () => {
+  test('rejects insecure cross-origin import URLs', () => {
     expect(
       resolveTrustedConversationImportUrl(
-        'https://project.supabase.co/storage/v1/object/public/genui/a2ui/abc/messages.json',
-        pageOrigin,
-      ),
-    ).toBe(
-      'https://project.supabase.co/storage/v1/object/public/genui/a2ui/abc/messages.json',
-    );
-  });
-
-  test('rejects arbitrary cross-origin import URLs', () => {
-    expect(
-      resolveTrustedConversationImportUrl(
-        'https://example.com/messages.json',
-        pageOrigin,
-      ),
-    ).toBe(null);
-    expect(
-      resolveTrustedConversationImportUrl(
-        'http://127.0.0.1:8000/secrets.json',
+        'http://storage.example.com/conversation.json',
         pageOrigin,
       ),
     ).toBe(null);
   });
 
-  test('rejects unrelated object storage paths', () => {
+  test('rejects URLs with embedded credentials or unsafe protocols', () => {
     expect(
       resolveTrustedConversationImportUrl(
-        'https://project.supabase.co/storage/v1/object/public/other/a2ui/abc/messages.json',
+        'https://user:password@storage.example.com/conversation.json',
         pageOrigin,
       ),
     ).toBe(null);
     expect(
       resolveTrustedConversationImportUrl(
-        'https://other.tos-cn-beijing.volces.com/openui/abc/messages.json',
+        'http://user:password@localhost:3001/conversation.json',
+        pageOrigin,
+      ),
+    ).toBe(null);
+    expect(
+      resolveTrustedConversationImportUrl(
+        'javascript:alert(1)',
         pageOrigin,
       ),
     ).toBe(null);

@@ -62,9 +62,10 @@ enabled only when that sidecar is ready. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
 startup and model environment.
 
-Conversation **share** links and Web / Native Preview reuse the Volcengine TOS
-payload-publishing path — see [`examples/README.md`](./examples/README.md) for
-the bucket setup and local toggles.
+Conversation **share** links and Web / Native Preview upload through the GenUI
+server and consume the public URL returned by it. The playground does not
+depend on the storage provider — see [`examples/README.md`](./examples/README.md)
+for the server-side bucket setup and local toggles.
 
 ## Scripts
 

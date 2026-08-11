@@ -7,18 +7,12 @@ import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 
 /** Query param that carries the URL of a shared conversation document. */
 export const IMPORT_CONVERSATION_PARAM = 'importConv';
-const SUPABASE_STORAGE_HOST_SUFFIX = '.supabase.co';
-const SUPABASE_CONVERSATION_PATH_PATTERN =
-  /^\/storage\/v1\/object\/public\/genui\/a2ui\/[^/]+\/messages\.json$/u;
-const TOS_CONVERSATION_HOST_PATTERN =
-  /^[a-z\d][a-z\d-]{1,61}[a-z\d]\.tos-[a-z\d-]+\.volces\.com$/u;
-const TOS_CONVERSATION_PATH_PATTERN = /^\/a2ui\/[^/]+\/messages\.json$/u;
 
 /**
- * Upload a serialized conversation to the GenUI server (Volcengine TOS) and
- * return the durable public URL of the stored document. Reuses the generic
- * A2UI payload upload path — the server stores the JSON body verbatim, so the
- * conversation document is persisted as-is.
+ * Upload a serialized conversation through the GenUI server and return the
+ * durable public URL selected by the server. Reuses the generic A2UI payload
+ * upload path — the server stores the JSON body verbatim, so the conversation
+ * document is persisted as-is.
  */
 export async function publishConversation(
   doc: SharedConversationDoc,
@@ -56,24 +50,12 @@ function currentPageOrigin(): string {
     : window.location.origin;
 }
 
-function isTrustedSupabaseConversationUrl(endpoint: URL): boolean {
-  return endpoint.protocol === 'https:'
-    && endpoint.hostname.endsWith(SUPABASE_STORAGE_HOST_SUFFIX)
-    && SUPABASE_CONVERSATION_PATH_PATTERN.test(endpoint.pathname);
-}
-
-function isTrustedTosConversationUrl(endpoint: URL): boolean {
-  return endpoint.protocol === 'https:'
-    && TOS_CONVERSATION_HOST_PATTERN.test(endpoint.hostname)
-    && TOS_CONVERSATION_PATH_PATTERN.test(endpoint.pathname);
-}
-
 /**
  * Resolve and validate a shared-conversation document URL before fetching it.
- * Conversation shares are published either on the current playground origin
- * (local/dev payload store) or as public Volcengine TOS objects created by the
- * GenUI payload publisher. Legacy Supabase URLs remain readable so existing
- * share links keep working after the storage migration.
+ * Treat the cross-origin URL returned by the GenUI server as opaque so the
+ * browser does not depend on its storage provider. Cross-origin imports require
+ * HTTPS; the caller fetches without credentials and validates the document
+ * schema and protocol before importing it.
  */
 export function resolveTrustedConversationImportUrl(
   raw: string,
@@ -82,6 +64,7 @@ export function resolveTrustedConversationImportUrl(
   try {
     const endpoint = new URL(raw, pageOrigin);
     const origin = new URL(pageOrigin);
+    if (endpoint.username || endpoint.password) return null;
     if (
       endpoint.origin === origin.origin
       && (endpoint.protocol === 'http:' || endpoint.protocol === 'https:')
@@ -89,8 +72,7 @@ export function resolveTrustedConversationImportUrl(
       return endpoint.toString();
     }
     if (
-      isTrustedTosConversationUrl(endpoint)
-      || isTrustedSupabaseConversationUrl(endpoint)
+      endpoint.protocol === 'https:'
     ) {
       return endpoint.toString();
     }

@@ -14,6 +14,8 @@ Configure GenUI providers only through `GENUI_MODEL_CONFIG_JSON` as an object ke
 
 Publish A2UI and OpenUI preview payloads to Volcengine TOS with the native server-side SDK. Keep TOS AK/SK or temporary STS credentials on the server, grant that identity only `tos:PutObject` for the configured prefixes, and do not set a public object ACL during upload. The bucket policy owns public reads; return an unsigned public bucket URL to preview clients.
 
+Expose playground payload uploads through `PUT /a2ui/payload` and `PUT /openui/payload`, returning the uploaded public URL in the response. Keep storage-provider endpoints and credentials out of playground code. Preserve POST support while older clients may still use it.
+
 Use `app/common/sse.ts` for standard SSE frames and response headers. Pass event IDs or additional headers through its options instead of cloning the SSE framing and header literals in individual functions.
 
 Build `genui-server` as an executable ESM Hono server through `rslib.config.ts`. Each protocol `route.ts` default-exports a Hono sub-application, `src/app.ts` composes the route tree and common HTTP fallbacks, and `src/index.ts` starts `@hono/node-server` and owns graceful process shutdown. Do not export endpoint request functions or add a custom router or Node/FaaS transport adapter. Keep business handlers based on standard Web `Request` and `Response` internally.
