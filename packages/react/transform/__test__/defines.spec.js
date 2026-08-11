@@ -61,7 +61,7 @@ export function App() {
 }
 `;
 
-describe('definesForMainThread', () => {
+describe('collected defines', () => {
   it('collects the definitions the main thread needs while compiling the background', async () => {
     const result = await transformReactLynx(
       source,
@@ -98,19 +98,7 @@ describe('definesForMainThread', () => {
           });
       }
       ",
-        "definesForMainThread": [
-          {
-            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
-          const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
-          let { label } = this["_c"];
-          'main thread';
-          console.info(label, e);
-      });
-      ",
-            "id": "d3dd:test:1",
-            "kind": "worklet",
-          },
+        "definesForSnapshot": [
           {
             "code": "const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
       ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
@@ -133,7 +121,19 @@ describe('definesForMainThread', () => {
           ], undefined, globDynamicComponentEntry, null, true);
       ",
             "id": "__snapshot_a94a8_test_1",
-            "kind": "snapshot",
+          },
+        ],
+        "definesForWorklet": [
+          {
+            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+          const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
+          let { label } = this["_c"];
+          'main thread';
+          console.info(label, e);
+      });
+      ",
+            "id": "d3dd:test:1",
           },
         ],
         "errors": [],
@@ -142,15 +142,13 @@ describe('definesForMainThread', () => {
       }
     `);
 
-    expect(result.definesForMainThread).toHaveLength(2);
-    const [worklet, snapshot] = result.definesForMainThread;
-
-    expect(worklet.kind).toBe('worklet');
+    expect(result.definesForWorklet).toHaveLength(1);
+    expect(result.definesForSnapshot).toHaveLength(1);
+    const [worklet] = result.definesForWorklet;
+    const [snapshot] = result.definesForSnapshot;
     expect(worklet.code).toContain('registerWorkletInternal');
     expect(worklet.code).toContain('loadWorkletRuntime');
     expect(worklet.code).toContain('this["_c"]');
-
-    expect(snapshot.kind).toBe('snapshot');
     expect(snapshot.id).toMatch(/^__snapshot_/);
     expect(snapshot.code).toContain('ReactLynx.createSnapshot');
     expect(snapshot.code).toContain('__CreateView');
@@ -167,19 +165,21 @@ describe('definesForMainThread', () => {
       options('LEPUS'),
     );
 
-    expect(fromBackground.definesForMainThread).toStrictEqual(
-      fromMainThread.definesForMainThread,
+    expect(fromBackground.definesForSnapshot).toStrictEqual(
+      fromMainThread.definesForSnapshot,
+    );
+    expect(fromBackground.definesForWorklet).toStrictEqual(
+      fromMainThread.definesForWorklet,
     );
   });
 
   it('hygienes each definition on its own', async () => {
-    const { definesForMainThread } = await transformReactLynx(
+    const { definesForSnapshot } = await transformReactLynx(
       source,
       options('JS'),
     );
 
-    const snapshot = definesForMainThread.find(({ kind }) => kind === 'snapshot');
-    expect(snapshot.code).toMatchInlineSnapshot(`
+    expect(definesForSnapshot[0].code).toMatchInlineSnapshot(`
       "const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
       ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
               const pageId = ReactLynx.__pageId;
@@ -213,24 +213,16 @@ function legacy(target, extra = {}) {
 
 describe('legacy slot codegen', () => {
   it('collects the definitions its frozen codegen emits', async () => {
-    const { definesForMainThread } = await transformReactLynx(source, legacy('JS'));
+    const { definesForSnapshot, definesForWorklet } = await transformReactLynx(
+      source,
+      legacy('JS'),
+    );
 
-    expect(definesForMainThread).toMatchInlineSnapshot(`
-      [
-        {
-          "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
-          const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
-          let { label } = this["_c"];
-          'main thread';
-          console.info(label, e);
-      });
-      ",
-          "id": "d3dd:test:1",
-          "kind": "worklet",
-        },
-        {
-          "code": "const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
+    expect({ definesForSnapshot, definesForWorklet }).toMatchInlineSnapshot(`
+      {
+        "definesForSnapshot": [
+          {
+            "code": "const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
       ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
               const pageId = ReactLynx.__pageId;
               const el = __CreateView(pageId);
@@ -250,10 +242,23 @@ describe('legacy slot codegen', () => {
               ]
           ], undefined, globDynamicComponentEntry, null, true);
       ",
-          "id": "__snapshot_a94a8_test_1",
-          "kind": "snapshot",
-        },
-      ]
+            "id": "__snapshot_a94a8_test_1",
+          },
+        ],
+        "definesForWorklet": [
+          {
+            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+          const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
+          let { label } = this["_c"];
+          'main thread';
+          console.info(label, e);
+      });
+      ",
+            "id": "d3dd:test:1",
+          },
+        ],
+      }
     `);
   });
 
@@ -261,7 +266,12 @@ describe('legacy slot codegen', () => {
     const fromBackground = await transformReactLynx(source, legacy('JS'));
     const fromMainThread = await transformReactLynx(source, legacy('LEPUS'));
 
-    expect(fromBackground.definesForMainThread).toStrictEqual(fromMainThread.definesForMainThread);
+    expect(fromBackground.definesForSnapshot).toStrictEqual(
+      fromMainThread.definesForSnapshot,
+    );
+    expect(fromBackground.definesForWorklet).toStrictEqual(
+      fromMainThread.definesForWorklet,
+    );
   });
 });
 
@@ -301,6 +311,7 @@ function f() {
     );
 
     expect(result.errors).toHaveLength(0);
-    expect(result.definesForMainThread).toEqual([]);
+    expect(result.definesForSnapshot).toEqual([]);
+    expect(result.definesForWorklet).toEqual([]);
   });
 });

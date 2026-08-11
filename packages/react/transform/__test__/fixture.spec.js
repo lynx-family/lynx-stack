@@ -466,7 +466,8 @@ describe('jsx', () => {
           "main-thread:foo": foo
       });
       ",
-        "definesForMainThread": [],
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [],
@@ -537,7 +538,7 @@ describe('jsx', () => {
           })
       });
       ",
-        "definesForMainThread": [
+        "definesForSnapshot": [
           {
             "code": "const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
       ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
@@ -551,7 +552,6 @@ describe('jsx', () => {
           ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null, true);
       ",
             "id": "__snapshot_da39a_04d8c_2",
-            "kind": "snapshot",
           },
           {
             "code": "const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
@@ -569,9 +569,9 @@ describe('jsx', () => {
           ], undefined, globDynamicComponentEntry, null, true);
       ",
             "id": "__snapshot_da39a_04d8c_1",
-            "kind": "snapshot",
           },
         ],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [],
@@ -717,7 +717,8 @@ Component, View
         "code": "import { Component } from "@lynx-js/react/legacy-react-runtime";
       Component, View;
       ",
-        "definesForMainThread": [],
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [

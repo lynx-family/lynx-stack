@@ -17,10 +17,12 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import {
-  collectDefinesForMainThread,
-  renderDefinesForMainThreadModule,
-  selectMissingDefinesForMainThread,
-} from './DefinesForMainThread.js';
+  DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+  DEFINES_FOR_WORKLET_BUILD_INFO,
+  collectDefines,
+  renderDefinesModule,
+  selectMissingDefines,
+} from './Defines.js';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
@@ -434,7 +436,7 @@ class ReactWebpackPlugin {
               throw new Error(
                 `No entry named ${
                   JSON.stringify(entryName)
-                } to collect the main-thread definitions from.`,
+                } to collect the definitions from.`,
               );
             }
             const visited = new Set<
@@ -464,28 +466,42 @@ class ReactWebpackPlugin {
                 }
               }
             }
-            return collectDefinesForMainThread(
-              visited,
-              (module) => module.identifier(),
-            );
+            return {
+              snapshot: collectDefines(
+                visited,
+                DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+                (module) => module.identifier(),
+              ),
+              worklet: collectDefines(
+                visited,
+                DEFINES_FOR_WORKLET_BUILD_INFO,
+                (module) => module.identifier(),
+              ),
+            };
           };
 
           await Promise.all(
             entryPairs.map(async ({ mainThread, background }) => {
-              const missing = selectMissingDefinesForMainThread(
-                reachableDefines(background),
-                reachableDefines(mainThread),
+              const candidates = reachableDefines(background);
+              const present = reachableDefines(mainThread);
+              const missingSnapshot = selectMissingDefines(
+                candidates.snapshot,
+                present.snapshot,
               );
-              if (missing.length === 0) {
+              const missingWorklet = selectMissingDefines(
+                candidates.worklet,
+                present.worklet,
+              );
+              if (missingSnapshot.length === 0 && missingWorklet.length === 0) {
                 return;
               }
               const request = path.join(
                 compiler.context,
-                `__lynx-react-defines-for-main-thread.${mainThread}.js`,
+                `__lynx-react-defines.${mainThread}.js`,
               );
               virtualModules.writeModule(
                 request,
-                renderDefinesForMainThreadModule(missing),
+                renderDefinesModule(missingSnapshot, missingWorklet),
               );
               const addEntry = (entryRequest: string) =>
                 new Promise<void>((resolve, reject) => {

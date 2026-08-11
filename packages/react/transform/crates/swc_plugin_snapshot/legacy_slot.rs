@@ -26,12 +26,12 @@ use swc_core::{
 
 use swc_plugins_shared::{
   css::get_string_inline_style_from_literal,
+  defines::{collect_define, DefineKind},
   jsx_helpers::{
     jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr, jsx_has_dynamic_key,
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
-  main_thread_defines::{collect_main_thread_define, MainThreadDefineKind},
   target::TransformTarget,
   utils::calc_hash_number,
 };
@@ -1234,7 +1234,7 @@ where
     }))
   };
 
-  let collecting = t.main_thread_defs_collector.is_some();
+  let collecting = t.defines_collector.is_some();
 
   let mut dynamic_part_extractor = DynamicPartExtractor::new(
     creator_runtime_expr.clone(),
@@ -1528,9 +1528,9 @@ where
   ));
 
   if let Some(snapshot_create_call_mt) = snapshot_create_call_mt {
-    collect_main_thread_define(
-      &t.main_thread_defs_collector,
-      MainThreadDefineKind::Snapshot,
+    collect_define(
+      &t.defines_collector,
+      DefineKind::Snapshot,
       snapshot_uid,
       vec![
         entry_snapshot_uid_def.clone(),

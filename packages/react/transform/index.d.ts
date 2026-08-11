@@ -751,16 +751,16 @@ export interface TransformNodiffOutput {
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
-  definesForMainThread?: Array<MainThreadDefine>
+  definesForSnapshot?: Array<Define>
+  /** @internal */
+  definesForWorklet?: Array<Define>
 }
 /**
  * @internal
- * A snapshot or worklet definition the main thread needs, collected while
- * compiling the module for either thread.
+ * A snapshot or worklet definition collected from the module. The same
+ * definition is emitted regardless of the compile target.
  */
-export interface MainThreadDefine {
-  /** @internal */
-  kind: 'snapshot' | 'worklet'
+export interface Define {
   /**
    * @internal
    * The snapshot uid or the worklet hash. Definitions that share an id are

@@ -12,34 +12,39 @@ import { rspack } from '@rspack/core';
 import { describe, expect, it } from '@rstest/core';
 
 import {
-  DEFINES_FOR_MAIN_THREAD_BUILD_INFO,
-  collectDefinesForMainThread,
-  renderDefinesForMainThread,
-  renderDefinesForMainThreadModule,
-  selectMissingDefinesForMainThread,
-} from '../src/DefinesForMainThread.js';
-import type { MainThreadDefine } from '../src/DefinesForMainThread.js';
+  DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+  DEFINES_FOR_WORKLET_BUILD_INFO,
+  collectDefines,
+  renderDefines,
+  renderDefinesModule,
+  selectMissingDefines,
+} from '../src/Defines.js';
+import type { Define } from '../src/Defines.js';
 import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 
-function snapshot(id: string, code = `/* ${id} */`): MainThreadDefine {
-  return { kind: 'snapshot', id, code };
+function define(id: string, code = `/* ${id} */`): Define {
+  return { id, code };
 }
 
 interface TestModule {
   id: string;
-  defines?: MainThreadDefine[];
+  defines?: Define[];
   modules?: TestModule[];
 }
 
-function collect(modules: TestModule[]): MainThreadDefine[] {
-  return collectDefinesForMainThread(modules, (module) => module.id);
+function collect(modules: TestModule[]): Define[] {
+  return collectDefines(
+    modules,
+    DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+    (module) => module.id,
+  );
 }
 
 function asModule(module: TestModule): TestModule {
   return {
     ...module,
     ...(module.defines === undefined ? {} : {
-      buildInfo: { [DEFINES_FOR_MAIN_THREAD_BUILD_INFO]: module.defines },
+      buildInfo: { [DEFINES_FOR_SNAPSHOT_BUILD_INFO]: module.defines },
     }),
     ...(module.modules
       ? { modules: module.modules.map((nested) => asModule(nested)) }
@@ -47,23 +52,23 @@ function asModule(module: TestModule): TestModule {
   } as TestModule;
 }
 
-describe('collectDefinesForMainThread', () => {
+describe('collectDefines', () => {
   it('collects the definitions in module order', () => {
     const defines = collect([
-      asModule({ id: 'a', defines: [snapshot('A')] }),
+      asModule({ id: 'a', defines: [define('A')] }),
       asModule({ id: 'b' }),
-      asModule({ id: 'c', defines: [snapshot('C')] }),
+      asModule({ id: 'c', defines: [define('C')] }),
     ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['A', 'C']);
   });
 
   it('collects a module only once', () => {
-    const shared = asModule({ id: 'shared', defines: [snapshot('S')] });
+    const shared = asModule({ id: 'shared', defines: [define('S')] });
     const defines = collect([
       shared,
       shared,
-      asModule({ id: 'other', defines: [snapshot('O')] }),
+      asModule({ id: 'other', defines: [define('O')] }),
     ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['S', 'O']);
@@ -71,8 +76,8 @@ describe('collectDefinesForMainThread', () => {
 
   it('registers a definition reached through several modules once', () => {
     const defines = collect([
-      asModule({ id: 'a', defines: [snapshot('shared'), snapshot('a')] }),
-      asModule({ id: 'b', defines: [snapshot('shared')] }),
+      asModule({ id: 'a', defines: [define('shared'), define('a')] }),
+      asModule({ id: 'b', defines: [define('shared')] }),
     ]);
 
     expect(defines.map(({ id }) => id)).toEqual(['shared', 'a']);
@@ -81,21 +86,28 @@ describe('collectDefinesForMainThread', () => {
   it('fails the build when an id no longer identifies its content', () => {
     expect(() =>
       collect([
-        asModule({ id: 'a', defines: [snapshot('x', 'one')] }),
-        asModule({ id: 'b', defines: [snapshot('x', 'another')] }),
+        asModule({ id: 'a', defines: [define('x', 'one')] }),
+        asModule({ id: 'b', defines: [define('x', 'another')] }),
       ])
     ).toThrowError(/share the id x/);
   });
 
-  it('keeps definitions of different kinds that share an id', () => {
-    const defines = collect([
-      asModule({
-        id: 'a',
-        defines: [snapshot('x'), { kind: 'worklet', id: 'x', code: 'w' }],
-      }),
-    ]);
+  it('reads only the requested kind', () => {
+    const defines = collectDefines(
+      [
+        {
+          id: 'a',
+          buildInfo: {
+            [DEFINES_FOR_SNAPSHOT_BUILD_INFO]: [define('snapshot-only')],
+            [DEFINES_FOR_WORKLET_BUILD_INFO]: [define('worklet-only')],
+          },
+        },
+      ],
+      DEFINES_FOR_WORKLET_BUILD_INFO,
+      (module) => module.id,
+    );
 
-    expect(defines).toHaveLength(2);
+    expect(defines.map(({ id }) => id)).toEqual(['worklet-only']);
   });
 
   it('collects nothing when no module has definitions', () => {
@@ -106,8 +118,8 @@ describe('collectDefinesForMainThread', () => {
     const defines = collect([
       asModule({
         id: 'concatenated',
-        defines: [snapshot('OUTER')],
-        modules: [{ id: 'inner', defines: [snapshot('INNER')] }],
+        defines: [define('OUTER')],
+        modules: [{ id: 'inner', defines: [define('INNER')] }],
       }),
     ]);
 
@@ -115,31 +127,23 @@ describe('collectDefinesForMainThread', () => {
   });
 });
 
-describe('selectMissingDefinesForMainThread', () => {
-  it('keeps only the definitions the main thread lacks', () => {
-    const missing = selectMissingDefinesForMainThread(
-      [snapshot('a'), snapshot('b')],
-      [snapshot('b'), snapshot('c')],
+describe('selectMissingDefines', () => {
+  it('keeps only the definitions the other side lacks', () => {
+    const missing = selectMissingDefines(
+      [define('a'), define('b')],
+      [define('b'), define('c')],
     );
 
     expect(missing.map(({ id }) => id)).toEqual(['a']);
   });
-
-  it('does not let a worklet id satisfy a snapshot id', () => {
-    const missing = selectMissingDefinesForMainThread(
-      [snapshot('x')],
-      [{ kind: 'worklet', id: 'x', code: 'w' }],
-    );
-
-    expect(missing.map(({ id }) => id)).toEqual(['x']);
-  });
 });
 
-describe('renderDefinesForMainThreadModule', () => {
+describe('renderDefinesModule', () => {
   it('references the runtime through namespace member accesses', () => {
-    const code = renderDefinesForMainThreadModule([
-      snapshot('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);'),
-    ]);
+    const code = renderDefinesModule(
+      [define('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);')],
+      [],
+    );
 
     expect(code).toContain(
       'import * as ReactLynx from \'@lynx-js/react/internal\';',
@@ -149,9 +153,9 @@ describe('renderDefinesForMainThreadModule', () => {
     expect(code).not.toContain('loadWorkletRuntime');
   });
 
-  it('binds the worklet runtime loader only for definitions that call it', () => {
-    const code = renderDefinesForMainThreadModule([
-      { kind: 'worklet', id: 'w', code: 'loadWorkletRuntime();' },
+  it('binds the worklet runtime loader only for worklet definitions', () => {
+    const code = renderDefinesModule([], [
+      define('w', 'loadWorkletRuntime();'),
     ]);
 
     expect(code).toContain(
@@ -160,26 +164,27 @@ describe('renderDefinesForMainThreadModule', () => {
   });
 
   it('emits the `require` fallback only for definitions that call it', () => {
-    const code = renderDefinesForMainThreadModule([
-      snapshot('a', 'require("@lynx-js/react/internal").createSnapshot;'),
-    ]);
+    const code = renderDefinesModule(
+      [define('a', 'require("@lynx-js/react/internal").createSnapshot;')],
+      [],
+    );
 
     expect(code).toContain('var require = function () { return ReactLynx; };');
   });
 });
 
-describe('renderDefinesForMainThread', () => {
+describe('renderDefines', () => {
   it('gives each definition its own block scope', () => {
-    const code = renderDefinesForMainThread([
-      { kind: 'worklet', id: 'a', code: 'const __workletRuntimeLoaded = 1;' },
-      { kind: 'worklet', id: 'b', code: 'const __workletRuntimeLoaded = 1;' },
+    const code = renderDefines([
+      define('a', 'const __workletRuntimeLoaded = 1;'),
+      define('b', 'const __workletRuntimeLoaded = 1;'),
     ]);
 
     expect(code.match(/\{\nconst __workletRuntimeLoaded/g)).toHaveLength(2);
   });
 
   it('reaches for no bundler internal', () => {
-    expect(renderDefinesForMainThread([])).not.toContain('__webpack_require__');
+    expect(renderDefines([])).not.toContain('__webpack_require__');
   });
 });
 
@@ -188,7 +193,10 @@ describe('missing definitions injection', () => {
   const require = createRequire(import.meta.url);
 
   function compile(
-    definesByResource: Record<string, MainThreadDefine[]>,
+    definesByResource: Record<
+      string,
+      { snapshot?: Define[]; worklet?: Define[] }
+    >,
     entries: Record<string, { import: string; layer: string }>,
     entryPairs: Array<{ mainThread: string; background: string }>,
   ) {
@@ -198,7 +206,7 @@ describe('missing definitions injection', () => {
       entry: entries,
       experiments: { layers: true },
       output: {
-        path: mkdtempSync(path.join(tmpdir(), 'defines-for-main-thread-')),
+        path: mkdtempSync(path.join(tmpdir(), 'defines-')),
         filename: '[name].js',
       },
       plugins: [
@@ -221,8 +229,16 @@ describe('missing definitions injection', () => {
                 const [resource, defines] of Object.entries(definesByResource)
               ) {
                 if (module.identifier().includes(resource)) {
-                  module.buildInfo![DEFINES_FOR_MAIN_THREAD_BUILD_INFO] =
-                    defines;
+                  if (defines.snapshot) {
+                    module
+                      .buildInfo![DEFINES_FOR_SNAPSHOT_BUILD_INFO] =
+                        defines.snapshot;
+                  }
+                  if (defines.worklet) {
+                    module
+                      .buildInfo![DEFINES_FOR_WORKLET_BUILD_INFO] =
+                        defines.worklet;
+                  }
                 }
               }
             });
@@ -243,7 +259,12 @@ describe('missing definitions injection', () => {
 
   it('renders the background definitions into the main-thread chunk', async () => {
     const outputPath = await compile(
-      { 'empty.js': [snapshot('bg-only', 'registerBackgroundOnly;')] },
+      {
+        'empty.js': {
+          snapshot: [define('bg-only', 'registerBackgroundOnly;')],
+          worklet: [define('bg-worklet', 'registerBackgroundWorklet;')],
+        },
+      },
       {
         'main__main-thread': {
           import: './fixtures/empty.js',
@@ -259,6 +280,7 @@ describe('missing definitions injection', () => {
     );
 
     expect(content).toContain('registerBackgroundOnly;');
+    expect(content).toContain('registerBackgroundWorklet;');
   });
 
   it('renders nothing when the background has no extra definitions', async () => {
@@ -283,7 +305,7 @@ describe('missing definitions injection', () => {
 
   it('runs the definitions ahead of the entry without stealing its exports', async () => {
     const outputPath = mkdtempSync(
-      path.join(tmpdir(), 'defines-for-main-thread-'),
+      path.join(tmpdir(), 'defines-exports-'),
     );
     const compiler = rspack({
       context: __dirname,
@@ -324,10 +346,10 @@ describe('missing definitions injection', () => {
                 module.layer === LAYERS.BACKGROUND
                 && module.identifier().includes('empty.js')
               ) {
-                module.buildInfo![DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = [
-                  snapshot(
+                module.buildInfo![DEFINES_FOR_SNAPSHOT_BUILD_INFO] = [
+                  define(
                     'bg-only',
-                    'globalThis.__definesForMainThreadRan = true;',
+                    'globalThis.__definesRan = true;',
                   ),
                 ];
               }
@@ -350,7 +372,7 @@ describe('missing definitions injection', () => {
       path.join(outputPath, 'main__main-thread.cjs'),
     ) as { marker?: string };
     expect(exported.marker).toBe('ENTRY_EXPORTS');
-    expect((globalThis as Record<string, unknown>).__definesForMainThreadRan)
+    expect((globalThis as Record<string, unknown>).__definesRan)
       .toBe(true);
     expect((globalThis as Record<string, unknown>).__entrySawDefines).toBe(
       true,
@@ -360,8 +382,8 @@ describe('missing definitions injection', () => {
   it('keeps the definitions of each entry apart', async () => {
     const outputPath = await compile(
       {
-        'empty.js': [snapshot('a-only', 'registerEntryA;')],
-        'empty2.js': [snapshot('b-only', 'registerEntryB;')],
+        'empty.js': { snapshot: [define('a-only', 'registerEntryA;')] },
+        'empty2.js': { snapshot: [define('b-only', 'registerEntryB;')] },
       },
       {
         'a__main-thread': {

@@ -74,7 +74,7 @@ pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::main_thread_defines::MainThreadDefinesCollector;
+use swc_plugins_shared::defines::{DefineKind, DefinesCollector};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -291,10 +291,7 @@ pub struct UiSourceMapRecord {
 
 /// @internal
 #[napi(object)]
-pub struct MainThreadDefine {
-  /// @internal
-  #[napi(ts_type = "'snapshot' | 'worklet'")]
-  pub kind: String,
+pub struct Define {
   /// @internal
   pub id: String,
   /// @internal
@@ -315,11 +312,14 @@ pub struct TransformNodiffOutput {
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
   /// @internal
-  #[napi(js_name = "definesForMainThread")]
-  pub defines_for_main_thread: Option<Vec<MainThreadDefine>>,
+  #[napi(js_name = "definesForSnapshot")]
+  pub defines_for_snapshot: Option<Vec<Define>>,
+  /// @internal
+  #[napi(js_name = "definesForWorklet")]
+  pub defines_for_worklet: Option<Vec<Define>>,
 }
 
-fn print_main_thread_define(
+fn print_define(
   c: &Compiler,
   items: Vec<ModuleItem>,
   top_level_mark: Mark,
@@ -466,7 +466,8 @@ fn transform_react_lynx_inner(
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
-          defines_for_main_thread: None,
+          defines_for_snapshot: None,
+          defines_for_worklet: None,
         };
       }
     };
@@ -631,7 +632,7 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
-    let main_thread_defs_collector: MainThreadDefinesCollector = Rc::new(RefCell::new(vec![]));
+    let defines_collector: DefinesCollector = Rc::new(RefCell::new(vec![]));
 
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
@@ -649,7 +650,7 @@ fn transform_react_lynx_inner(
       };
 
       let transformer =
-        transformer.with_main_thread_defs_collector(main_thread_defs_collector.clone());
+        transformer.with_defines_collector(defines_collector.clone());
 
       Optional::new(visit_mut_pass(transformer), true)
     } else {
@@ -790,7 +791,7 @@ fn transform_react_lynx_inner(
       Either::A(config) => {
         let visitor = WorkletVisitor::default().with_content_hash(content_hash);
         let visitor =
-          visitor.with_main_thread_defs_collector(main_thread_defs_collector.clone());
+          visitor.with_defines_collector(defines_collector.clone());
         Optional::new(visit_mut_pass(visitor), config)
       }
       Either::B(config) => {
@@ -798,7 +799,7 @@ fn transform_react_lynx_inner(
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
             .with_content_hash(content_hash);
         let visitor =
-          visitor.with_main_thread_defs_collector(main_thread_defs_collector.clone());
+          visitor.with_defines_collector(defines_collector.clone());
         Optional::new(visit_mut_pass(visitor), true)
       }
     };
@@ -919,46 +920,42 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
-        let mut main_thread_define_errors: Vec<esbuild::PartialMessage> = vec![];
-        let defines_for_main_thread = Some({
-          helpers::HELPERS.set(&helpers::Helpers::new(false), || {
-            main_thread_defs_collector
-              .borrow()
-              .iter()
-              .map(|define| MainThreadDefine {
-                kind: define.kind.as_str().into(),
-                id: define.id.clone(),
-                code: match print_main_thread_define(
-                  &c,
-                  define.items.clone(),
-                  top_level_mark,
-                  &comments,
-                ) {
-                  Ok(code) => code,
-                  Err(err) => {
-                    main_thread_define_errors.push(esbuild::PartialMessage {
-                      id: None,
-                      plugin_name: Some(options.plugin_name.clone()),
-                      text: Some(format!(
-                        "failed to print the collected main-thread definition `{}`: {}",
-                        define.id, err
-                      )),
-                      location: None,
-                      notes: None,
-                      detail: None,
-                    });
-                    "".into()
-                  }
-                },
-              })
-              .collect::<Vec<_>>()
-          })
+        let mut define_errors: Vec<esbuild::PartialMessage> = vec![];
+        let mut defines_for_snapshot: Vec<Define> = vec![];
+        let mut defines_for_worklet: Vec<Define> = vec![];
+        helpers::HELPERS.set(&helpers::Helpers::new(false), || {
+          for define in defines_collector.borrow().iter() {
+            let printed = Define {
+              id: define.id.clone(),
+              code: match print_define(&c, define.items.clone(), top_level_mark, &comments) {
+                Ok(code) => code,
+                Err(err) => {
+                  define_errors.push(esbuild::PartialMessage {
+                    id: None,
+                    plugin_name: Some(options.plugin_name.clone()),
+                    text: Some(format!(
+                      "failed to print the collected definition `{}`: {}",
+                      define.id, err
+                    )),
+                    location: None,
+                    notes: None,
+                    detail: None,
+                  });
+                  "".into()
+                }
+              },
+            };
+            match define.kind {
+              DefineKind::Snapshot => defines_for_snapshot.push(printed),
+              DefineKind::Worklet => defines_for_worklet.push(printed),
+            }
+          }
         });
 
         TransformNodiffOutput {
           code: result.code,
           map: result.map,
-          errors: main_thread_define_errors,
+          errors: define_errors,
           warnings: vec![],
           ui_source_map_records: if use_element_template_plugin {
             vec![]
@@ -966,7 +963,8 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
-          defines_for_main_thread,
+          defines_for_snapshot: Some(defines_for_snapshot),
+          defines_for_worklet: Some(defines_for_worklet),
         }
       }
       Err(_) => {
@@ -982,7 +980,8 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
-          defines_for_main_thread: None,
+          defines_for_snapshot: None,
+          defines_for_worklet: None,
         };
       }
     }
@@ -1000,7 +999,8 @@ fn transform_react_lynx_inner(
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
-    defines_for_main_thread: result.defines_for_main_thread,
+    defines_for_snapshot: result.defines_for_snapshot,
+    defines_for_worklet: result.defines_for_worklet,
   };
 
   r

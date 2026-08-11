@@ -5,7 +5,10 @@ import { createRequire } from 'node:module';
 
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
-import { DEFINES_FOR_MAIN_THREAD_BUILD_INFO } from '../DefinesForMainThread.js';
+import {
+  DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+  DEFINES_FOR_WORKLET_BUILD_INFO,
+} from '../Defines.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -91,8 +94,13 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   const buildInfo = (this as typeof this & {
     _module?: { buildInfo?: Record<string, unknown> };
   })._module?.buildInfo;
-  if (buildInfo && result.definesForMainThread) {
-    buildInfo[DEFINES_FOR_MAIN_THREAD_BUILD_INFO] = result.definesForMainThread;
+  if (buildInfo) {
+    if (result.definesForSnapshot) {
+      buildInfo[DEFINES_FOR_SNAPSHOT_BUILD_INFO] = result.definesForSnapshot;
+    }
+    if (result.definesForWorklet) {
+      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet;
+    }
   }
 
   this.callback(null, result.code, result.map);

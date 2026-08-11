@@ -1,8 +1,8 @@
 pub mod css;
+pub mod defines;
 pub mod engine_version;
 pub mod jsx_helpers;
 pub mod lynx_event;
-pub mod main_thread_defines;
 pub mod target;
 #[cfg(feature = "napi")]
 pub mod target_napi;
