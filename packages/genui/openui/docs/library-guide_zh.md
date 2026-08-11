@@ -183,6 +183,42 @@ notice = Banner("Payment received", "success")
 同名，后加入的自定义 definition 会覆盖 `components` map 中的默认值。这应当被
 视为一次有意 override，并且 prompt 侧 schema 必须与它保持一致。
 
+## 构建仅包含 Stack 的自定义 Library
+
+如果应用只允许 `Stack` 和调用方提供的组件，请在 bundler resolver 中加入
+`lynx-openui-stack-only` condition。例如，包括 Lynx Speedy 在内、提供
+`conditionNames` 的 resolver 可以配置为：
+
+```js
+export default {
+  resolve: {
+    conditionNames: [
+      'lynx-openui-stack-only',
+      'import',
+      'require',
+      'node',
+    ],
+  },
+};
+```
+
+原生 esbuild 使用的配置名是 `conditions`：
+
+```js
+export default {
+  conditions: ['lynx-openui-stack-only'],
+};
+```
+
+请保留 bundler 原本使用的其他自定义 conditions；具体配置名由 bundler 决定。
+应用源码无需变化：`createOpenUiLibrary({ components, componentGroups })` 仍会追加
+调用方 definitions，但选中的内置 preset 只包含 `Stack`。完整 catalog 不会被解析，
+因此其中的组件 modules、styles 和 optional peer dependencies 都不会进入 bundle。
+
+这个 condition 对整个 build 生效，而不是只影响某一个调用点。如果同一 bundle
+中的其他页面依赖默认的 26 组件 Library，请勿启用。Agent prompt、服务端 schema、
+缓存 templates 和客户端 Library 必须使用一致的 Stack 加自定义组件词表。
+
 ## 渲染嵌套 component values
 
 如果自定义 prop 接受 child components，请使用 component render contract 中的

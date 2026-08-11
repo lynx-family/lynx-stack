@@ -12,6 +12,13 @@
     "**/*.css"
   ],
   "type": "module",
+  "imports": {
+    "#openui-default-components": {
+      "types": "./openui/dist/core/defaultComponents.d.ts",
+      "lynx-openui-stack-only": "./openui/dist/core/defaultComponents.stack.js",
+      "default": "./openui/dist/core/defaultComponents.js"
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

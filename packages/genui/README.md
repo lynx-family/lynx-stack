@@ -111,6 +111,11 @@ import '@lynx-js/genui/openui/styles/theme.css';
 
 The renderer and component styles are imported by their modules.
 
+Custom OpenUI libraries that only use `Stack` can select the build-wide
+`lynx-openui-stack-only` resolver condition without changing their imports or
+`createOpenUiLibrary({ components })` calls. See the
+[OpenUI library guide](./openui/docs/library-guide.md#build-a-stack-only-custom-library).
+
 See [`openui/README.md`](./openui/README.md) for streaming and custom library
 examples.
 

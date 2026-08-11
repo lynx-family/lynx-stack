@@ -108,8 +108,11 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   steps 和工具 steps 会先在 runtime 内执行。
 - `onError` 会返回结构化的 parser、runtime、render 和 tool errors，适合接入
   Agent correction loop。
-- `createOpenUiLibrary()` 内置 26 个组件。额外 definitions 会追加在默认组件后；
+- 默认情况下，`createOpenUiLibrary()` 内置 26 个组件。额外 definitions 会追加在默认组件后；
   如果名称相同，后加入的组件会替换默认实现。
+- 只需要 `Stack` 和自定义组件的 build，可以启用 build-wide
+  `lynx-openui-stack-only` condition。详见
+  [Library 指南](./docs/library-guide_zh.md#构建仅包含-stack-的自定义-library)。
 
 ## 更多文档
 

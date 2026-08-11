@@ -188,6 +188,45 @@ custom component uses the same name as a built-in, the later custom definition
 wins in the `components` map. Treat that as an intentional override and keep
 the prompt-side schema identical.
 
+## Build a Stack-only custom Library
+
+If an application only allows `Stack` plus caller-provided components, add the
+`lynx-openui-stack-only` condition to the bundler resolver. For example,
+resolvers that expose `conditionNames`, including Lynx Speedy, can use:
+
+```js
+export default {
+  resolve: {
+    conditionNames: [
+      'lynx-openui-stack-only',
+      'import',
+      'require',
+      'node',
+    ],
+  },
+};
+```
+
+Native esbuild calls the option `conditions` instead:
+
+```js
+export default {
+  conditions: ['lynx-openui-stack-only'],
+};
+```
+
+Preserve any other custom conditions that the bundler normally uses; the
+resolver option name is bundler-specific. The application source does not
+change: `createOpenUiLibrary({ components, componentGroups })` still appends
+the caller definitions, but the selected built-in preset contains only
+`Stack`. Because the full catalog is not resolved, its component modules,
+styles, and optional peer dependencies do not enter the bundle.
+
+This condition applies to the entire build, not to one call site. Do not enable
+it if another page in the same bundle relies on the default 26-component
+Library. The Agent prompt, server-side schema, cached templates, and client
+Library must all use the same Stack-plus-custom vocabulary.
+
 ## Render nested component values
 
 If a custom prop accepts child components, use `renderNode` from the component

@@ -113,9 +113,12 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   `@OpenUrl(...)`. State steps and tool steps execute inside the runtime first.
 - `onError` returns structured parser, runtime, render, and tool errors suitable
   for an Agent correction loop.
-- `createOpenUiLibrary()` includes 26 built-in components. Additional
+- By default, `createOpenUiLibrary()` includes 26 built-in components. Additional
   definitions are appended, and a later component with the same name replaces
   the built-in implementation.
+- A build that only needs `Stack` plus custom components can opt into the
+  build-wide `lynx-openui-stack-only` condition. See the
+  [library guide](./docs/library-guide.md#build-a-stack-only-custom-library).
 
 ## More docs
 

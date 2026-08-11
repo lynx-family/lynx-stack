@@ -12,6 +12,13 @@
     "**/*.css"
   ],
   "type": "module",
+  "imports": {
+    "#openui-default-components": {
+      "types": "./src/core/defaultComponents.ts",
+      "lynx-openui-stack-only": "./dist/core/defaultComponents.stack.js",
+      "default": "./dist/core/defaultComponents.js"
+    }
+  },
   "exports": {
     "./styles/theme.css": "./styles/theme.css",
     "./styles/material-icons.css": "./styles/material-icons.css",
@@ -37,7 +44,8 @@
   ],
   "scripts": {
     "build": "tsc6 -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
-    "build:api": "tsc6 -p tsconfig.build.json"
+    "build:api": "tsc6 -p tsconfig.build.json",
+    "test": "rstest"
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.2.11",
@@ -47,6 +55,8 @@
     "@lynx-js/lynx-ui": "^3.135.4",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "@types/react": "^19.2.18"
   },
   "peerDependencies": {
