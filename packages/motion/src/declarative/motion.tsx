@@ -129,6 +129,7 @@ function useMotionHostProps<Props extends MotionProps>(
     Record<string, MotionValue<string | number>>
   >({});
   const styleCleanupRef = useMainThreadRef<(() => void) | null>(null);
+  const hasMountedAnimationRef = useRef(false);
 
   const resolvedInitial = resolveMotionDefinition(initial, variants, custom);
   const resolvedAnimateDefinition = resolveMotionDefinition(
@@ -165,12 +166,22 @@ function useMotionHostProps<Props extends MotionProps>(
   });
   const styleKey = motionDefinitionKey(style);
   const initialStyle = useMemo(
-    () => resolveInitialStyle(style, resolvedInitialTarget),
-    [resolvedInitialTarget, style],
+    () =>
+      resolveInitialStyle(
+        style,
+        resolvedInitialTarget,
+        resolvedAnimate.target,
+      ),
+    [resolvedAnimate.target, resolvedInitialTarget, style],
   );
   const initialValues = useMemo(
-    () => resolveInitialValues(style, resolvedInitialTarget),
-    [resolvedInitialTarget, style],
+    () =>
+      resolveInitialValues(
+        style,
+        resolvedInitialTarget,
+        resolvedAnimate.target,
+      ),
+    [resolvedAnimate.target, resolvedInitialTarget, style],
   );
   const workletAnimateTransition = useMemo(
     () =>
@@ -290,6 +301,9 @@ function useMotionHostProps<Props extends MotionProps>(
     // Capture a fresh record so Lynx for Web doesn't mutate the memoized source
     // that a later React render will reuse.
     const motionValueBindings = { ...motionValues };
+    const shouldAnimateTarget = resolvedInitialTarget !== false
+      || hasMountedAnimationRef.current;
+    hasMountedAnimationRef.current = true;
 
     function updateMotionStyles(
       target: MotionTarget | undefined,
@@ -297,6 +311,7 @@ function useMotionHostProps<Props extends MotionProps>(
       hoverTarget: MotionTarget | undefined,
       options: MotionTransition | undefined,
       startingValues: Record<string, unknown>,
+      shouldAnimate: boolean,
     ) {
       'main thread';
 
@@ -390,7 +405,7 @@ function useMotionHostProps<Props extends MotionProps>(
         styleCleanupRef.current = styleEffect(element, values);
       }
 
-      if (target) {
+      if (target && shouldAnimate) {
         const targetValues = target as Record<string, unknown>;
         for (const key in targetValues) {
           const value = values[key];
@@ -429,6 +444,7 @@ function useMotionHostProps<Props extends MotionProps>(
       resolvedHover.target,
       workletAnimateTransition,
       initialValues,
+      shouldAnimateTarget,
     );
 
     function stopMotionStyles() {
