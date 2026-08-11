@@ -108,8 +108,13 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   steps 和工具 steps 会先在 runtime 内执行。
 - `onError` 会返回结构化的 parser、runtime、render 和 tool errors，适合接入
   Agent correction loop。
-- `createOpenUiLibrary()` 内置 26 个组件。额外 definitions 会追加在默认组件后；
+- 默认情况下，`createOpenUiLibrary()` 内置 26 个组件。额外 definitions 会追加在默认组件后；
   如果名称相同，后加入的组件会替换默认实现。
+- `includeDefaultComponents: false` 会把 Library vocabulary 限制为调用方提供的
+  definitions，但这个 flag 不会移除主入口对默认 catalog 的静态依赖。如果未选择的
+  内置组件不应进入依赖图，请从 `@lynx-js/genui/openui/explicit` 导入
+  `createOpenUiLibrary`，并通过逐组件子路径导入保留的内置组件，例如
+  `@lynx-js/genui/openui/catalog/Stack`。
 
 ## 更多文档
 

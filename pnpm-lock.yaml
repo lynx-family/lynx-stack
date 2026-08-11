@@ -942,6 +942,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
