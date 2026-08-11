@@ -81,6 +81,10 @@ describe('React - alias', () => {
       ),
     )
 
+    expect(config.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react-signals$',
+    )
+
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/internal$',
       expect.stringContaining(
@@ -347,6 +351,10 @@ describe('React - alias', () => {
         ),
       ),
     )
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react-signals$',
+      '@lynx-js/react-signals/lepus',
+    )
   })
 
   test('layered hooks alias for background', async () => {
@@ -388,6 +396,9 @@ describe('React - alias', () => {
           path.sep,
         ),
       ),
+    )
+    expect(backgroundRule.resolve.alias).not.toHaveProperty(
+      '@lynx-js/react-signals$',
     )
     const preactHooks = backgroundRule.resolve.alias['preact/hooks']
     expect(

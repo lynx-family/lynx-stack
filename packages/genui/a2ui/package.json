@@ -162,7 +162,7 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.10.6",
-    "@preact/signals": "^2.11.0"
+    "@lynx-js/react-signals": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/genui-cli": "workspace:*",
@@ -170,8 +170,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rstest/core": "catalog:rstest",
-    "@types/react": "^19.2.18",
-    "preact": "catalog:lynxjs"
+    "@types/react": "^19.2.18"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

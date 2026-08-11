@@ -111,6 +111,25 @@ import '@lynx-js/genui/openui/styles/theme.css';
 
 The renderer and component styles are imported by their modules.
 
+To opt out of the default component set, use the explicit entry and import every
+built-in definition the Library still needs from its component subpath:
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+
+const library = createOpenUiLibrary({
+  includeDefaultComponents: false,
+  components: [Stack, TextContent],
+});
+```
+
+The flag controls which definitions and groups belong to the Library. The main
+`openui` entry still has a static dependency on the default catalog; use
+`openui/explicit` with individual catalog subpaths when omitted built-ins must
+stay outside the static dependency graph.
+
 See [`openui/README.md`](./openui/README.md) for streaming and custom library
 examples.
 

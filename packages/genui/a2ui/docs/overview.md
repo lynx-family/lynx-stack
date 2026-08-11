@@ -222,7 +222,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
   surface root and per component instance. Its snapshot reference changes
   on every transition so `useSyncExternalStore` never bails out of a
   `pending → error` update.
-- **`SignalStore`** — a `@preact/signals` wrapper used as the per-surface
+- **`SignalStore`** — an `@lynx-js/react-signals` wrapper used as the per-surface
   data model, addressed with JSON-pointer-style paths.
 - **React layer** (`@lynx-js/genui/a2ui/react`) — `<A2UI>` plus
   `NodeRenderer` and the hooks (`useAction`, `useDataBinding`,

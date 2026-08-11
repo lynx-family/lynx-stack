@@ -77,7 +77,7 @@ impl Serialize for CanonicalTemplateValue<'_> {
       }
       Value::Object(map) => {
         let mut entries = map.iter().collect::<Vec<_>>();
-        entries.sort_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key));
+        entries.sort_by_key(|(left_key, _)| *left_key);
         let mut canonical = serializer.serialize_map(Some(entries.len()))?;
         for (key, value) in entries {
           canonical.serialize_entry(key, &CanonicalTemplateValue(value))?;
