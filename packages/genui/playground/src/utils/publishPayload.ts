@@ -44,7 +44,7 @@ export function getOpenUIPayloadEndpoint(): string {
 }
 
 /**
- * Upload an A2UI payload to the GenUI server (Supabase Storage) and return the
+ * Upload an A2UI payload to the GenUI server (Volcengine TOS) and return the
  * durable public URLs. The returned `messagesUrl` can be fed to
  * `buildRenderUrl()` to produce a shareable `render.html` link.
  */

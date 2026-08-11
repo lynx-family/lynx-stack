@@ -14,7 +14,18 @@ describe('resolveTrustedConversationImportUrl', () => {
     ).toBe('http://localhost:3001/__a2ui/abc/messages');
   });
 
-  test('allows GenUI Supabase Storage conversation documents', () => {
+  test('allows GenUI Volcengine TOS conversation documents', () => {
+    expect(
+      resolveTrustedConversationImportUrl(
+        'https://genui.tos-cn-beijing.volces.com/a2ui/abc/messages.json',
+        pageOrigin,
+      ),
+    ).toBe(
+      'https://genui.tos-cn-beijing.volces.com/a2ui/abc/messages.json',
+    );
+  });
+
+  test('allows legacy Supabase Storage conversation documents', () => {
     expect(
       resolveTrustedConversationImportUrl(
         'https://project.supabase.co/storage/v1/object/public/genui/a2ui/abc/messages.json',
@@ -40,10 +51,16 @@ describe('resolveTrustedConversationImportUrl', () => {
     ).toBe(null);
   });
 
-  test('rejects unrelated Supabase Storage paths', () => {
+  test('rejects unrelated object storage paths', () => {
     expect(
       resolveTrustedConversationImportUrl(
         'https://project.supabase.co/storage/v1/object/public/other/a2ui/abc/messages.json',
+        pageOrigin,
+      ),
+    ).toBe(null);
+    expect(
+      resolveTrustedConversationImportUrl(
+        'https://other.tos-cn-beijing.volces.com/openui/abc/messages.json',
         pageOrigin,
       ),
     ).toBe(null);

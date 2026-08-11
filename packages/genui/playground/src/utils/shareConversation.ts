@@ -10,9 +10,12 @@ export const IMPORT_CONVERSATION_PARAM = 'importConv';
 const SUPABASE_STORAGE_HOST_SUFFIX = '.supabase.co';
 const SUPABASE_CONVERSATION_PATH_PATTERN =
   /^\/storage\/v1\/object\/public\/genui\/a2ui\/[^/]+\/messages\.json$/u;
+const TOS_CONVERSATION_HOST_PATTERN =
+  /^[a-z\d][a-z\d-]{1,61}[a-z\d]\.tos-[a-z\d-]+\.volces\.com$/u;
+const TOS_CONVERSATION_PATH_PATTERN = /^\/a2ui\/[^/]+\/messages\.json$/u;
 
 /**
- * Upload a serialized conversation to the GenUI server (Supabase Storage) and
+ * Upload a serialized conversation to the GenUI server (Volcengine TOS) and
  * return the durable public URL of the stored document. Reuses the generic
  * A2UI payload upload path — the server stores the JSON body verbatim, so the
  * conversation document is persisted as-is.
@@ -59,11 +62,18 @@ function isTrustedSupabaseConversationUrl(endpoint: URL): boolean {
     && SUPABASE_CONVERSATION_PATH_PATTERN.test(endpoint.pathname);
 }
 
+function isTrustedTosConversationUrl(endpoint: URL): boolean {
+  return endpoint.protocol === 'https:'
+    && TOS_CONVERSATION_HOST_PATTERN.test(endpoint.hostname)
+    && TOS_CONVERSATION_PATH_PATTERN.test(endpoint.pathname);
+}
+
 /**
  * Resolve and validate a shared-conversation document URL before fetching it.
  * Conversation shares are published either on the current playground origin
- * (local/dev payload store) or as public Supabase Storage objects created by
- * the GenUI payload publisher.
+ * (local/dev payload store) or as public Volcengine TOS objects created by the
+ * GenUI payload publisher. Legacy Supabase URLs remain readable so existing
+ * share links keep working after the storage migration.
  */
 export function resolveTrustedConversationImportUrl(
   raw: string,
@@ -78,7 +88,10 @@ export function resolveTrustedConversationImportUrl(
     ) {
       return endpoint.toString();
     }
-    if (isTrustedSupabaseConversationUrl(endpoint)) {
+    if (
+      isTrustedTosConversationUrl(endpoint)
+      || isTrustedSupabaseConversationUrl(endpoint)
+    ) {
       return endpoint.toString();
     }
   } catch {

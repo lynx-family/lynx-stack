@@ -57,6 +57,22 @@ back to a deterministic Picsum URL.
 
 The hosting runtime must provide these variables before starting the server.
 
+To publish short, shareable A2UI and OpenUI preview URLs, configure the
+public-read Volcengine TOS bucket and server-only write credentials:
+
+```bash
+export TOS_ACCESS_KEY="..."
+export TOS_SECRET_KEY="..."
+export TOS_BUCKET="genui"
+export TOS_REGION="cn-beijing"
+```
+
+Use a dedicated IAM identity with `tos:PutObject` access only to the configured
+`a2ui` and `openui` prefixes. The server signs writes with these credentials;
+the browser reads the resulting public object URL without credentials. Optional
+overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
+`TOS_OPENUI_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
+
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:
 

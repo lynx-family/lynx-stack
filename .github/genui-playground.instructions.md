@@ -58,7 +58,7 @@ When an action response is merged with the current preview messages, clear any p
 
 ### Shared Imports
 
-When importing shared playground conversations, validate the `importConv` URL before fetching it. Accept only current-origin documents or the GenUI Supabase Storage conversation-object path, then validate the shared document protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
+When importing shared playground conversations, validate the `importConv` URL before fetching it. Accept only current-origin documents or the GenUI Volcengine TOS conversation-object path, with the legacy GenUI Supabase path retained for existing links, then validate the shared document protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
 
 ## Component Catalog Architecture
 

@@ -46,8 +46,7 @@ describe('OpenUI render URLs', () => {
 
   test('keeps rawTextUrl render URLs short', () => {
     const url = buildOpenUIRenderUrl({
-      rawTextUrl:
-        'https://example.supabase.co/storage/v1/object/public/genui/openui/id/raw.txt',
+      rawTextUrl: 'https://genui.tos-cn-beijing.volces.com/openui/id/raw.txt',
     }, 'https://lynx-stack.dev/genui/');
 
     expect(canInlineOpenUIRenderUrl(url)).toBe(true);
