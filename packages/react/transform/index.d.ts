@@ -772,6 +772,13 @@ export interface Define {
    * A self-contained statement list registering the definition.
    */
   code: string
+  /**
+   * @internal
+   * Set when the definition cannot run inside an injected module, e.g. a
+   * worklet closing over a shared-runtime import. The build must fail when
+   * the main thread lacks such a definition.
+   */
+  unmergeable?: boolean
 }
 /** @internal */
 export interface ElementTemplateAsset {

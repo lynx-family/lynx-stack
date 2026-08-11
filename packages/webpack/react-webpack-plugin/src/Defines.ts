@@ -8,6 +8,7 @@ export const DEFINES_FOR_WORKLET_BUILD_INFO = 'lynx:defines-for-worklet';
 export interface Define {
   id: string;
   code: string;
+  unmergeable?: boolean;
 }
 
 interface ModuleWithDefines {

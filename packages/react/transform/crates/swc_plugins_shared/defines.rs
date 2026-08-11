@@ -14,6 +14,7 @@ pub struct Define {
   pub kind: DefineKind,
   pub id: String,
   pub items: Vec<ModuleItem>,
+  pub unmergeable: bool,
 }
 
 pub type DefinesCollector = Rc<RefCell<Vec<Define>>>;
@@ -25,6 +26,26 @@ pub fn collect_define(
   items: Vec<ModuleItem>,
 ) {
   if let Some(collector) = collector {
-    collector.borrow_mut().push(Define { kind, id, items });
+    collector.borrow_mut().push(Define {
+      kind,
+      id,
+      items,
+      unmergeable: false,
+    });
+  }
+}
+
+pub fn collect_unmergeable_define(
+  collector: &Option<DefinesCollector>,
+  kind: DefineKind,
+  id: String,
+) {
+  if let Some(collector) = collector {
+    collector.borrow_mut().push(Define {
+      kind,
+      id,
+      items: vec![],
+      unmergeable: true,
+    });
   }
 }

@@ -22,7 +22,7 @@ use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
-  defines::{collect_define, DefineKind, DefinesCollector},
+  defines::{collect_define, collect_unmergeable_define, DefineKind, DefinesCollector},
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -190,8 +190,9 @@ impl VisitMut for WorkletVisitor {
           .into();
         }
         self.collect_worklet_define(
-          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          collected_hash,
           main_thread_stmt,
+          collector.saw_shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -305,8 +306,9 @@ impl VisitMut for WorkletVisitor {
         }
 
         self.collect_worklet_define(
-          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          collected_hash,
           main_thread_stmt,
+          collector.saw_shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -369,8 +371,9 @@ impl VisitMut for WorkletVisitor {
     }
     .into();
     self.collect_worklet_define(
-      collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+      collected_hash,
       main_thread_stmt,
+      collector.saw_shared_identifiers(),
     );
     self
       .stmts_to_insert_at_top_level
@@ -436,8 +439,9 @@ impl VisitMut for WorkletVisitor {
 
         *n = *worklet_object_expr;
         self.collect_worklet_define(
-          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          collected_hash,
           main_thread_stmt,
+          collector.saw_shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -477,8 +481,9 @@ impl VisitMut for WorkletVisitor {
 
         *n = *worklet_object_expr;
         self.collect_worklet_define(
-          collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+          collected_hash,
           main_thread_stmt,
+          collector.saw_shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -566,8 +571,9 @@ impl VisitMut for WorkletVisitor {
       expr: worklet_object_expr,
     });
     self.collect_worklet_define(
-      collected_hash.filter(|_| !collector.saw_shared_identifiers()),
+      collected_hash,
       main_thread_stmt,
+      collector.saw_shared_identifiers(),
     );
     self
       .stmts_to_insert_at_top_level
@@ -770,10 +776,21 @@ impl WorkletVisitor {
     self
   }
 
-  fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
+  fn collect_worklet_define(
+    &mut self,
+    hash: Option<String>,
+    stmt: Option<Stmt>,
+    closes_over_shared_import: bool,
+  ) {
     let (Some(hash), Some(stmt)) = (hash, stmt) else {
       return;
     };
+    if closes_over_shared_import {
+      // The statement embeds the user's function body, which still references
+      // the shared-import bindings; it cannot run inside the injected module.
+      collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash);
+      return;
+    }
     let guard = quote!(
       "const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt,
       loaded = self.worklet_runtime_loaded_ident.clone(),

@@ -296,6 +296,8 @@ pub struct Define {
   pub id: String,
   /// @internal
   pub code: String,
+  /// @internal
+  pub unmergeable: Option<bool>,
 }
 
 #[napi(object)]
@@ -927,6 +929,7 @@ fn transform_react_lynx_inner(
           for define in defines_collector.borrow().iter() {
             let printed = Define {
               id: define.id.clone(),
+              unmergeable: define.unmergeable.then_some(true),
               code: match print_define(&c, define.items.clone(), top_level_mark, &comments) {
                 Ok(code) => code,
                 Err(err) => {

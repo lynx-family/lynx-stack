@@ -544,6 +544,16 @@ class ReactWebpackPlugin {
               background.defines.worklet,
               present.worklet.map((id) => ({ id, code: '' })),
             );
+            const unmergeable = missingWorklet.filter(
+              (define) => define.unmergeable,
+            );
+            if (unmergeable.length > 0) {
+              throw new Error(
+                `The main thread lacks the worklet definition(s) ${
+                  unmergeable.map(({ id }) => id).join(', ')
+                } and they cannot be merged: they close over shared-runtime imports. Make the owning module reachable from the main thread, or avoid closing over a shared import inside the worklet.`,
+              );
+            }
             if (missingSnapshot.length > 0 || missingWorklet.length > 0) {
               virtualModules.writeModule(
                 request,

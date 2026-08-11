@@ -199,6 +199,7 @@ describe('missing definitions injection', () => {
     >,
     entries: Record<string, { import: string; layer: string }>,
     entryPairs: Array<{ mainThread: string; background: string }>,
+    options?: { mainThreadDefines?: boolean },
   ) {
     const compiler = rspack({
       context: __dirname,
@@ -222,7 +223,10 @@ describe('missing definitions injection', () => {
         (compiler: import('@rspack/core').Compiler) => {
           compiler.hooks.thisCompilation.tap('test', (compilation) => {
             compilation.hooks.succeedModule.tap('test', (module) => {
-              if (module.layer !== LAYERS.BACKGROUND) {
+              if (
+                module.layer !== LAYERS.BACKGROUND
+                && !options?.mainThreadDefines
+              ) {
                 return;
               }
               for (
@@ -401,6 +405,50 @@ describe('missing definitions injection', () => {
     expect((globalThis as Record<string, unknown>).__entrySawDefines).toBe(
       true,
     );
+  });
+
+  it('fails the build when the main thread lacks an unmergeable worklet', async () => {
+    await expect(compile(
+      {
+        'empty.js': {
+          worklet: [{ id: 'shared-worklet', code: '', unmergeable: true }],
+        },
+      },
+      {
+        'main__main-thread': {
+          import: './fixtures/empty2.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+    )).rejects.toThrowError(/cannot be merged/);
+  });
+
+  it('accepts an unmergeable worklet the main thread already has', async () => {
+    const definesByResource = {
+      'empty.js': {
+        worklet: [{ id: 'shared-worklet', code: '', unmergeable: true }],
+      },
+    };
+    const outputPath = await compile(
+      definesByResource,
+      {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+      { mainThreadDefines: true },
+    );
+    const content = await fs.readFile(
+      path.join(outputPath, 'main__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(content).not.toContain('ReactLynx');
   });
 
   it('leaves the definitions of an async-only module out of the entry injection', async () => {

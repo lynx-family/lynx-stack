@@ -304,7 +304,7 @@ function f() {
     `);
   });
 
-  it('skips collecting a worklet that closes over a shared binding', async () => {
+  it('marks a worklet that closes over a shared binding as unmergeable', async () => {
     const result = await transformReactLynx(
       sharedSource,
       options('JS'),
@@ -312,6 +312,10 @@ function f() {
 
     expect(result.errors).toHaveLength(0);
     expect(result.definesForSnapshot).toEqual([]);
-    expect(result.definesForWorklet).toEqual([]);
+    expect(result.definesForWorklet).toHaveLength(1);
+    const [worklet] = result.definesForWorklet;
+    expect(worklet.id).toBeTruthy();
+    expect(worklet.code).toBe('');
+    expect(worklet.unmergeable).toBe(true);
   });
 });
