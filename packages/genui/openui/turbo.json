@@ -8,7 +8,9 @@
       ],
       "inputs": [
         "src/**",
+        "scripts/**",
         "styles/**",
+        "../a2ui/styles/material-icons.css",
         "tsconfig.json",
         "tsconfig.build.json",
         "package.json"

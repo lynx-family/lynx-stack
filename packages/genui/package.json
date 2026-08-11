@@ -122,7 +122,7 @@
     "mcp-apps/dist"
   ],
   "scripts": {
-    "build": "pnpm run clean && tsc6 --project tsconfig.build.json",
+    "build": "pnpm --dir openui check:material-icons && pnpm run clean && tsc6 --project tsconfig.build.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
   },
   "dependencies": {

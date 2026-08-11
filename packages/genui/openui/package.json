@@ -36,8 +36,10 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc6 -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
-    "build:api": "tsc6 -p tsconfig.build.json"
+    "build": "node scripts/subsetMaterialIcons.js --check && tsc6 -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
+    "build:api": "tsc6 -p tsconfig.build.json",
+    "check:material-icons": "node scripts/subsetMaterialIcons.js --check",
+    "generate:material-icons": "node scripts/subsetMaterialIcons.js"
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.2.11",
