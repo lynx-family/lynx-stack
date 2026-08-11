@@ -289,7 +289,7 @@ describe('missing definitions injection', () => {
 
   it('renders nothing when the background has no extra definitions', async () => {
     const outputPath = await compile(
-      {},
+      { 'empty.js': { snapshot: [] } },
       {
         'main__main-thread': {
           import: './fixtures/empty.js',
@@ -407,6 +407,20 @@ describe('missing definitions injection', () => {
     );
   });
 
+  it('fails the build when the background emits no definition metadata', async () => {
+    await expect(compile(
+      {},
+      {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+    )).rejects.toThrowError(/produced no definition metadata/);
+  });
+
   it('fails the build when the main thread lacks an unmergeable worklet', async () => {
     await expect(compile(
       {
@@ -455,6 +469,7 @@ describe('missing definitions injection', () => {
     const outputPath = await compile(
       {
         'empty2.js': { snapshot: [define('async-only', 'registerAsyncOnly;')] },
+        'lazy-importer.js': { snapshot: [] },
       },
       {
         'main__main-thread': {
