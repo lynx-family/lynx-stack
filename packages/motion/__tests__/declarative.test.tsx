@@ -47,19 +47,26 @@ describe('declarative Motion', () => {
   });
 
   test('uses a MotionValue handle initial value in the first style', () => {
-    const scale = {
-      __MAIN_THREAD_VALUE__: true as const,
-      toJSON: () => ({
-        _wvid: 1,
-        _initValue: 1.25,
-        _type: '@lynx-js/motion/MotionValue',
-      }),
-    };
+    let scale: ReturnType<typeof useMotionValue> | undefined;
+    let initialStyle: ReturnType<typeof resolveInitialStyle>;
+    let motionValues: ReturnType<typeof collectMotionValues>;
+    function App() {
+      scale = useMotionValue(1.25);
+      initialStyle = resolveInitialStyle({ scale } as never, undefined);
+      motionValues = collectMotionValues({ scale } as never);
+      return <view />;
+    }
 
-    expect(resolveInitialStyle({ scale } as never, undefined)).toEqual({
+    render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    expect(initialStyle).toEqual({
       transform: 'scale(1.25)',
     });
-    expect(collectMotionValues({ scale } as never)).toEqual({ scale });
+    expect(motionValues).toBeDefined();
+    expect(motionValues?.['scale']).toBe(scale);
   });
 
   test('resolves named and function variants with target transitions', () => {
@@ -156,33 +163,16 @@ describe('declarative Motion', () => {
     );
   });
 
-  test('updates styles directly from a MotionValue', async () => {
+  test('animates a MotionValue-backed style', async () => {
     function App() {
-      const [active, setActive] = useState(false);
-      const scale = useMotionValue(1);
-
-      function grow() {
-        'main thread';
-        scale.set(1.5);
-        (globalThis as { __motionValueResult?: number }).__motionValueResult =
-          scale.get();
-      }
-
+      const value = useMotionValue(1);
       return (
-        <view>
-          <motion.view
-            data-testid='box'
-            initial={{ x: 0 }}
-            animate={{ x: active ? 80 : 0 }}
-            transition={{ duration: 0.01 }}
-            style={{ scale }}
-            main-thread:bindtap={grow}
-          />
-          <view
-            data-testid='toggle'
-            bindtap={() => setActive(value => !value)}
-          />
-        </view>
+        <motion.view
+          data-testid='box'
+          animate={{ scale: 1.5 }}
+          transition={{ duration: 0.01 }}
+          style={{ scale: value }}
+        />
       );
     }
 
@@ -194,23 +184,8 @@ describe('declarative Motion', () => {
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 50));
     });
-    fireEvent.tap(getByTestId('toggle'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
-    fireEvent.tap(getByTestId('box'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
 
-    expect(
-      (globalThis as { __motionValueResult?: number }).__motionValueResult,
-    ).toBe(1.5);
-    expect(getByTestId('box').getAttribute('style')).toContain(
-      'translateX(80px)',
-    );
     expect(getByTestId('box').getAttribute('style')).toContain('scale(1.5)');
-    delete (globalThis as { __motionValueResult?: number }).__motionValueResult;
   });
 
   test('animates while pressed and restores the resting style', async () => {

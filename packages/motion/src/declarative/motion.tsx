@@ -286,7 +286,7 @@ function useMotionHostProps<Props extends MotionProps>(
     ) {
       return;
     }
-    // Worklet hydration replaces MainThreadValue handles in captured objects.
+    // Worklet hydration replaces MainThreadObject handles in captured objects.
     // Capture a fresh record so Lynx for Web doesn't mutate the memoized source
     // that a later React render will reuse.
     const motionValueBindings = { ...motionValues };

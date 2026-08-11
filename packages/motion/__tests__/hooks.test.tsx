@@ -121,29 +121,51 @@ describe('Hooks', () => {
       });
     });
 
-    test('hydrates to a real MotionValue in a main-thread function', () => {
+    test('preserves one realized MotionValue across handlers', () => {
       const App = () => {
         const value = useMotionValue(42);
-        const handleTap = () => {
+        const remember = () => {
           'main thread';
+          (globalThis as { __motionValueIdentity?: unknown })
+            .__motionValueIdentity = value;
           value.set(43);
-          (globalThis as { __motionValueResult?: number }).__motionValueResult =
-            value.get();
         };
-        return <view main-thread:bindtap={handleTap} />;
+        const compare = () => {
+          'main thread';
+          const state = globalThis as {
+            __motionValueIdentity?: unknown;
+            __motionValueIdentityMatches?: boolean;
+            __motionValueResult?: number;
+          };
+          state.__motionValueIdentityMatches = state.__motionValueIdentity
+            === value;
+          state.__motionValueResult = value.get();
+        };
+        return (
+          <view>
+            <view data-testid='remember' main-thread:bindtap={remember} />
+            <view data-testid='compare' main-thread:bindtap={compare} />
+          </view>
+        );
       };
-      const { container } = render(<App />, {
+      const { getByTestId } = render(<App />, {
         enableMainThread: true,
         enableBackgroundThread: true,
       });
 
-      fireEvent.tap(container.firstChild);
+      fireEvent.tap(getByTestId('remember'));
+      fireEvent.tap(getByTestId('compare'));
 
-      expect(
-        (globalThis as { __motionValueResult?: number }).__motionValueResult,
-      ).toBe(43);
-      delete (globalThis as { __motionValueResult?: number })
-        .__motionValueResult;
+      const state = globalThis as {
+        __motionValueIdentity?: unknown;
+        __motionValueIdentityMatches?: boolean;
+        __motionValueResult?: number;
+      };
+      expect(state.__motionValueIdentityMatches).toBe(true);
+      expect(state.__motionValueResult).toBe(43);
+      delete state.__motionValueIdentity;
+      delete state.__motionValueIdentityMatches;
+      delete state.__motionValueResult;
     });
   });
 
