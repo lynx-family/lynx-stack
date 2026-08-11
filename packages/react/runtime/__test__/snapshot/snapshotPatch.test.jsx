@@ -1058,6 +1058,16 @@ describe('DEV_ONLY_addSnapshot', () => {
     warn.mockRestore();
   });
 
+  it('with a creator that is missing', () => {
+    expect(() =>
+      snapshotPatchApply([
+        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+        'first-screen-lazy-missing',
+        'https://example.com/lazy-bundle.js',
+      ])
+    ).not.toThrow();
+  });
+
   it('with update', () => {
     const uniqID1 = 'with-update-0';
     // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`

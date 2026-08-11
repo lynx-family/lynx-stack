@@ -30,4 +30,4 @@ export function setSnapshotCreatorRuntime(runtime: SnapshotCreatorRuntime): void
   snapshotCreatorRuntime = runtime;
 }
 
-export const devOnlySentSnapshots: Set<string> | undefined = (__DEV__ && __JS__) ? new Set() : undefined;
+export const devOnlySentSnapshots: Set<string> = new Set();

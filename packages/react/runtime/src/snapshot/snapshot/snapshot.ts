@@ -113,9 +113,9 @@ if (__DEV__ && __JS__) {
             // This allows the updates to be applied to main thread.
             value.toString(),
           );
-          devOnlySentSnapshots!.add(prop);
+          devOnlySentSnapshots.add(prop);
         } else {
-          devOnlySentSnapshots!.delete(prop);
+          devOnlySentSnapshots.delete(prop);
         }
         target[prop] = value;
         return true;
