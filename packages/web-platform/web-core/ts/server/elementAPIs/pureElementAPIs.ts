@@ -8,6 +8,7 @@ import { uniqueIdSymbol } from '../../constants.js';
 import type {
   AddConfigPAPI,
   AddDatasetPAPI,
+  AddEventListenerPAPI,
   AddEventPAPI,
   Cloneable,
   ElementIsEqualPAPI,
@@ -29,6 +30,7 @@ import type {
   MarkTemplateElementPAPI,
   NextElementPAPI,
   RemoveElementPAPI,
+  RemoveEventListenerPAPI,
   ReplaceElementPAPI,
   ReplaceElementsPAPI,
   SetConfigPAPI,
@@ -75,6 +77,12 @@ export const __GetChildren: GetChildrenPAPI = (_element: HTMLElement) => {
 export const __AddEvent: AddEventPAPI = () => {
   // Silent return for SSR compatibility
 };
+
+// SSR only produces the initial markup and no interaction happens server-side,
+// so element event listeners are silently dropped, as `__AddEvent` is.
+export const __AddEventListener: AddEventListenerPAPI = () => {};
+
+export const __RemoveEventListener: RemoveEventListenerPAPI = () => {};
 
 export const __GetEvent: GetEventPAPI = () => {
   throw new Error('__GetEvent is not implemented in SSR');

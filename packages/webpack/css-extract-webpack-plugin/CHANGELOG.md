@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.10.1
+
+### Patch Changes
+
+- Allow the next minor of `@lynx-js/template-webpack-plugin` as a peer dependency. ([#3362](https://github.com/lynx-family/lynx-stack/pull/3362))
+
 ## 0.10.0
 
 ### Minor Changes

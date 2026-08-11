@@ -980,10 +980,10 @@ function iosNapiAddonPodspec(context: TemplateContext): string {
   return `
   s.source_files = 'src/**/*.{h,m,mm}', 'generated/**/*.{cc,h,mm}', 'addon_use.h'
   s.public_header_files = 'addon_use.h'
-  s.dependency 'LynxWeakNodeAPI'
+  s.dependency 'LynxWeakNodeAPI/core'
   s.pod_target_xcconfig = {
-    'HEADER_SEARCH_PATHS' => '$(inherited) "\${PODS_ROOT}/LynxWeakNodeAPI/packages/weak-node-api/headers" "\${PODS_ROOT}/PrimJS/src/napi" "\${PODS_ROOT}/PrimJS/src/napi/js_native_api"',
-    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1'
+    'HEADER_SEARCH_PATHS' => '$(inherited) "\${PODS_ROOT}/LynxWeakNodeAPI/packages/weak-node-api/headers"',
+    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) LYNX_LIBRARY_MANUAL_NAPI_REGISTRATION=1 LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1'
   }`;
 }
 

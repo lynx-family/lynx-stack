@@ -15,7 +15,7 @@
  * export default defineConfig({
  *   plugins: [
  *     pluginLynxConfig({
- *       enableCheckExposureOptimize: false,
+ *       alignMouseEventWithW3C: true,
  *     }),
  *   ],
  * })

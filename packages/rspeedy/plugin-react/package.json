@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-rsbuild-plugin",
-  "version": "0.18.2",
+  "version": "0.18.3",
   "description": "A rsbuild plugin for ReactLynx",
   "keywords": [
     "rsbuild",
@@ -61,7 +61,7 @@
     "@rstest/core": "catalog:rstest",
     "rsbuild-plugin-arethetypeswrong": "0.3.1",
     "rsbuild-plugin-publint": "1.0.0",
-    "source-map": "^0.7.6",
+    "source-map": "^0.8.0",
     "tailwindcss": "^3.4.19",
     "type-fest": "^5.8.0",
     "typia": "12.1.1",

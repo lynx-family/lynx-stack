@@ -49,6 +49,7 @@ import type {
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
+import { createElementEventListenerAPIs } from './createElementEventListenerAPIs.js';
 import { requestIdleCallbackImpl } from '../utils/requestIdleCallback.js';
 
 const {
@@ -165,7 +166,11 @@ export function createElementAPI(
       }
     }
   };
+  const { __AddEventListener, __RemoveEventListener } =
+    createElementEventListenerAPIs(mtsBinding);
   return {
+    __AddEventListener,
+    __RemoveEventListener,
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.create_element_common(

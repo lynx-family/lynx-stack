@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.123.3
+
+### Patch Changes
+
+- Type `createPortal` as returning `ReactNode` instead of Preact's `VNode<any> | null`, matching the rest of the public surface, and document its behavioral contract. ([#3348](https://github.com/lynx-family/lynx-stack/pull/3348))
+
 ## 0.123.2
 
 ### Patch Changes

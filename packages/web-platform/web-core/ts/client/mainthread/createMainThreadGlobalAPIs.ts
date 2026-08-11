@@ -32,6 +32,9 @@ function createMainThreadLynx(
     getJSContext() {
       return lynxViewInstance.backgroundThread.jsContext;
     },
+    getEngine() {
+      return lynxViewInstance.engineContext;
+    },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrameBrowserImpl(cb);
     },
