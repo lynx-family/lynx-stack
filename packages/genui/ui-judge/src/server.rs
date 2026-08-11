@@ -283,6 +283,7 @@ impl HeadlessExecutor {
     self.healthy.load(Ordering::Acquire)
   }
 
+  #[allow(clippy::result_large_err)]
   async fn capture(
     &self,
     request: JudgePageRequest,

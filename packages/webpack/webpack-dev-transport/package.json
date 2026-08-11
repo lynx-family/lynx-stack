@@ -23,6 +23,11 @@
       "node": "./lib/client/index.js",
       "import": "./lib/client/index.js"
     },
+    "./hotDevServer": {
+      "types": "./lib/client/hotDevServer.d.ts",
+      "node": "./lib/client/hotDevServer.js",
+      "import": "./lib/client/hotDevServer.js"
+    },
     "./reloadApp": {
       "types": "./lib/client/reloadApp.d.ts",
       "node": "./lib/client/reloadApp.js",
@@ -39,6 +44,9 @@
     "*": {
       "client": [
         "lib/client/index.d.ts"
+      ],
+      "hotDevServer": [
+        "lib/client/hotDevServer.d.ts"
       ],
       "reloadApp": [
         "lib/client/reloadApp.d.ts"

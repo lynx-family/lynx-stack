@@ -336,13 +336,11 @@ impl VisitMut for ExtractingIdentsCollector {
           n.prop.visit_mut_with(self);
         }
       }
-      MemberProp::Ident(ident) => {
-        if !self.member_expr_path.is_empty() {
-          self.add_if_needed(
-            Expr::Ident(ident.clone().into()).into(),
-            &Expr::Member(n.clone()).into(),
-          );
-        }
+      MemberProp::Ident(ident) if !self.member_expr_path.is_empty() => {
+        self.add_if_needed(
+          Expr::Ident(ident.clone().into()).into(),
+          &Expr::Member(n.clone()).into(),
+        );
       }
       _ => {}
     }

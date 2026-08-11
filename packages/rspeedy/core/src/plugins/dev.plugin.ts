@@ -261,6 +261,12 @@ export function pluginDev(
         const rspeedyDir = path.dirname(
           require.resolve('@lynx-js/rspeedy/package.json'),
         )
+        // The upstream `@rspack/core/hot/dev-server` recovers from a failed
+        // `apply` with `window.location.reload()`, which Lynx does not have.
+        // This replacement reloads through the DevTool instead.
+        const hotDevServerPath = require.resolve(
+          '@lynx-js/webpack-dev-transport/hotDevServer',
+        )
         const hostname = environment.config.dev?.client?.host ?? ''
 
         const searchParams = new URLSearchParams({
@@ -299,12 +305,7 @@ export function pluginDev(
                   paths: [rsbuildPath],
                 })
               )
-              .set(
-                '@rspack/core/hot/dev-server',
-                require.resolve('@rspack/core/hot/dev-server', {
-                  paths: [rsbuildPath],
-                })
-              )
+              .set('@rspack/core/hot/dev-server', hotDevServerPath)
             .end()
           .end()
           .plugin('lynx.hmr.provide.dev_server_client')
