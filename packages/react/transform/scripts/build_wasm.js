@@ -15,10 +15,15 @@ const dist = path.resolve(root, 'dist');
 
 // mkdir -p dist
 await fs.mkdir('dist', { recursive: true });
+// `--allow-undefined` lets wasm-ld turn the `napi_*` symbols into imports
+// supplied by the JS host. rustc passed it by default for
+// wasm32-unknown-unknown until 1.93; without it the link fails with
+// `undefined symbol: napi_typeof`.
 execSync(`cargo build --release --target wasm32-unknown-unknown --features noop`, {
   env: {
     ...process.env,
-    RUSTFLAGS: '-C link-arg=--export-table -C link-arg=-s --cfg getrandom_backend="custom"',
+    RUSTFLAGS:
+      '-C link-arg=--export-table -C link-arg=-s -C link-arg=--allow-undefined --cfg getrandom_backend="custom"',
   },
   stdio: 'inherit',
 });
