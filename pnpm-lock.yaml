@@ -774,6 +774,21 @@ importers:
         specifier: ^3.4.19
         version: 3.4.19
 
+  examples/vanilla:
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/type-element-api':
+        specifier: 0.0.9
+        version: 0.0.9
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@lynx-js/vanilla-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-vanilla
+
   packages/background-only: {}
 
   packages/genui:
@@ -1840,6 +1855,28 @@ importers:
       semver:
         specifier: ^7.8.5
         version: 7.8.5
+
+  packages/rspeedy/plugin-vanilla:
+    dependencies:
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../../webpack/test-tools
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.10(core-js@3.50.0)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
 
   packages/rspeedy/upgrade-rspeedy:
     devDependencies:
