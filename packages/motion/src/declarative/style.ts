@@ -44,11 +44,22 @@ const transformKeys = new Set([
   'skewY',
 ]);
 
-function resolveStyleValue(value: unknown): unknown {
+function resolveStyleValue(
+  value: unknown,
+  useFinalKeyframe = false,
+): unknown {
   if (motionValueType.isHandle(value)) {
     return motionValueType.getInitialPayload(value);
   }
   if (Array.isArray(value)) {
+    if (useFinalKeyframe) {
+      for (let index = value.length - 1; index >= 0; index--) {
+        if (value[index] !== null && value[index] !== undefined) {
+          return value[index];
+        }
+      }
+      return undefined;
+    }
     return value.find(item => item !== null && item !== undefined);
   }
   return value;
@@ -71,9 +82,10 @@ function appendResolvedValues(
   output: Record<string, unknown>,
   transforms: Record<string, string | number>,
   values: Record<string, unknown>,
+  useFinalKeyframe = false,
 ): void {
   for (const key in values) {
-    const value = resolveStyleValue(values[key]);
+    const value = resolveStyleValue(values[key], useFinalKeyframe);
     if (value === undefined || value === null) {
       continue;
     }
@@ -91,6 +103,7 @@ function appendResolvedValues(
 export function resolveInitialStyle(
   style: MotionStyle | string | undefined,
   initial: MotionTarget | false | undefined,
+  animate?: MotionTarget,
 ): CSSProperties | string | undefined {
   if (typeof style === 'string') {
     return style;
@@ -103,7 +116,14 @@ export function resolveInitialStyle(
     transforms,
     (style ?? {}) as Record<string, unknown>,
   );
-  if (initial !== false) {
+  if (initial === false) {
+    appendResolvedValues(
+      output,
+      transforms,
+      (animate ?? {}) as Record<string, unknown>,
+      true,
+    );
+  } else {
     appendResolvedValues(
       output,
       transforms,
@@ -130,6 +150,7 @@ export function resolveInitialStyle(
 export function resolveInitialValues(
   style: MotionStyle | string | undefined,
   initial: MotionTarget | false | undefined,
+  animate?: MotionTarget,
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   if (style && typeof style !== 'string') {
@@ -137,7 +158,12 @@ export function resolveInitialValues(
       values[key] = resolveStyleValue(style[key as keyof MotionStyle]);
     }
   }
-  if (initial !== false && initial) {
+  if (initial === false && animate) {
+    const animateValues = animate as Record<string, unknown>;
+    for (const key in animateValues) {
+      values[key] = resolveStyleValue(animateValues[key], true);
+    }
+  } else if (initial) {
     const initialValues = initial as Record<string, unknown>;
     for (const key in initialValues) {
       values[key] = resolveStyleValue(initialValues[key]);

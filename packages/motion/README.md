@@ -46,6 +46,8 @@ The declarative layer currently supports:
 
 - object targets and string/array/function `variants` for `initial` and
   `animate`, including `custom` and target-local `transition`
+- `initial={false}` to render the final `animate` keyframe without a mount
+  animation while preserving later target updates
 - transform aliases, keyframes, repeat/reverse, colors, and live `MotionValue`
   styles backed by the upstream Motion engine
 - `whileTap` with `onTapStart`, `onTap`, and `onTapCancel`
