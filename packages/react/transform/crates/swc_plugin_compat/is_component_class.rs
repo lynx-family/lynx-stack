@@ -36,10 +36,10 @@ impl Visit for TransformVisitor {
               self.has_render_method = true;
             }
           }
-          ClassMember::ClassProp(prop) => {
-            if prop.key.is_ident() && prop.key.as_ident().unwrap().sym == *"render" {
-              self.has_render_method = true;
-            }
+          ClassMember::ClassProp(prop)
+            if prop.key.is_ident() && prop.key.as_ident().unwrap().sym == *"render" =>
+          {
+            self.has_render_method = true;
           }
           _ => {}
         }
