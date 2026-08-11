@@ -199,9 +199,11 @@ Important runtime behavior:
 - **Reactive state.** `$variables` and form values live in one external Store.
   `onStateUpdate` can persist its snapshots; `$`-prefixed values in
   `initialState` hydrate reactive declarations.
-- **Queries and mutations.** Queries execute when their statements are complete
-  and re-run when referenced state changes. Mutations are registered but run
-  only when an action calls `@Run(mutationRef)`.
+- **Queries and mutations.** Query defaults and prefetched
+  `initialQueryResults` participate in the first synchronous render after their
+  statements are complete. A configured tool provider revalidates Queries
+  after commit and whenever referenced state changes. Mutations are registered
+  but run only when an action calls `@Run(mutationRef)`.
 - **Sequential actions.** `@Run`, `@Set`, `@Reset`, `@ToAssistant`, and
   `@OpenUrl` execute in order. A failed mutation stops the remaining steps.
 - **Soft component failure.** An element whose component name is not registered
@@ -224,23 +226,48 @@ Important runtime behavior:
 
 Use the raw response form for all new integrations.
 
-| Prop            | Type                                       | Required | Purpose                                                                  |
-| --------------- | ------------------------------------------ | -------- | ------------------------------------------------------------------------ |
-| `response`      | `string \| null`                           | yes      | Accumulated raw OpenUI Lang text. Enables the v0.5 runtime.              |
-| `library`       | `Library`                                  | yes      | Component schemas and trusted ReactLynx implementations.                 |
-| `isStreaming`   | `boolean`                                  | no       | Marks partial model output and disables unstable interactions/tool work. |
-| `onAction`      | `(event: ActionEvent) => void`             | no       | Receives assistant and URL actions that the host must handle.            |
-| `onStateUpdate` | `(state: Record<string, unknown>) => void` | no       | Receives reactive/form state snapshots for persistence.                  |
-| `initialState`  | `Record<string, unknown>`                  | no       | Hydrates `$variables` and form state.                                    |
-| `onParseResult` | `(result: ParseResult \| null) => void`    | no       | Exposes the latest raw AST and parser metadata.                          |
-| `toolProvider`  | function map, MCP-like client, or `null`   | no       | Executes tools referenced by Query/Mutation statements.                  |
-| `queryLoader`   | `ReactNode`                                | no       | Replaces the default indicator while Queries are in flight.              |
-| `onError`       | `(errors: OpenUIError[]) => void`          | no       | Receives deduplicated structured errors after streaming.                 |
+| Prop                  | Type                                       | Required | Purpose                                                                  |
+| --------------------- | ------------------------------------------ | -------- | ------------------------------------------------------------------------ |
+| `response`            | `string \| null`                           | yes      | Accumulated raw OpenUI Lang text. Enables the v0.5 runtime.              |
+| `library`             | `Library`                                  | yes      | Component schemas and trusted ReactLynx implementations.                 |
+| `isStreaming`         | `boolean`                                  | no       | Marks partial model output and disables unstable interactions/tool work. |
+| `onAction`            | `(event: ActionEvent) => void`             | no       | Receives assistant and URL actions that the host must handle.            |
+| `onStateUpdate`       | `(state: Record<string, unknown>) => void` | no       | Receives reactive/form state snapshots for persistence.                  |
+| `initialState`        | `Record<string, unknown>`                  | no       | Hydrates `$variables` and form state.                                    |
+| `initialQueryResults` | `Record<string, unknown>`                  | no       | Supplies prefetched Query results for the first synchronous render.      |
+| `onParseResult`       | `(result: ParseResult \| null) => void`    | no       | Exposes the latest raw AST and parser metadata.                          |
+| `toolProvider`        | function map, MCP-like client, or `null`   | no       | Executes tools referenced by Query/Mutation statements.                  |
+| `queryLoader`         | `ReactNode`                                | no       | Replaces the default indicator while Queries are in flight.              |
+| `onError`             | `(errors: OpenUIError[]) => void`          | no       | Receives deduplicated structured errors after streaming.                 |
 
 `<OpenUiRenderer result={parseResult} library={library}>` remains available for
 legacy/static callers. It can render a pre-parsed element tree and forward
 simple actions, but it does not create the v0.5 QueryManager or fully execute
 `@Run`, `@Set`, and `@Reset`. Do not use it for a new v0.5 integration.
+
+### Prefetched Query results
+
+Use `initialQueryResults` when Query data is already available before the
+ReactLynx first screen. Each key is the Query assignment name (statement ID),
+so Queries that call the same tool with different arguments remain distinct:
+
+```text
+orders = Query("list_orders", { status: "open" }, { rows: [] })
+```
+
+```tsx
+<OpenUiRenderer
+  response={response}
+  library={library}
+  initialQueryResults={{ orders: prefetchedOrders }}
+/>;
+```
+
+The prefetched value, including `null`, `false`, or `0`, takes precedence over
+the Query default during the first synchronous render. If `toolProvider` is
+present, the runtime starts its normal Query execution after commit and
+replaces the fallback when that request settles. Omit the provider when the
+prefetched result is an immutable snapshot that should not be revalidated.
 
 ## Tool providers
 

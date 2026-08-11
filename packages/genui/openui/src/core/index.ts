@@ -65,6 +65,7 @@ export {
 } from './hooks/index.js';
 export type {
   FormValidationContextValue,
+  InitialQueryResults,
   OpenUIState,
   UseOpenUIStateOptions,
 } from './hooks/index.js';

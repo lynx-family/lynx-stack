@@ -9,6 +9,6 @@
     "jsxImportSource": "@lynx-js/react",
     "noEmit": true,
   },
-  "include": ["src"],
+  "include": ["src", "test", "rstest.config.ts"],
   "references": [],
 }
