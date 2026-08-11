@@ -2014,6 +2014,68 @@ export function getCurrentDelta(event) {
     expect(code).not.toContain('_wkltId');
   });
 
+  describe('cross-module main thread functions', () => {
+    // The caller worklet reads the captured `'main thread'` function back off
+    // `this._c`, so once the main-thread passes shake away the background-only
+    // code around it there is nothing left referencing the import. Without the
+    // side-effect import the defining module never reaches the main-thread
+    // bundle and `lynxWorkletImpl._workletMap[id]` is `undefined` at hydration.
+    const source = `\
+import { runOnMainThread, useEffect } from '@lynx-js/react';
+import { spin } from './spin.js';
+import { unrelated } from './unrelated.js';
+
+export function App(el) {
+  useEffect(() => {
+    runOnMainThread(() => {
+      "main thread";
+      spin(el, 45);
+    })();
+  }, []);
+  return unrelated;
+}
+`;
+
+    it('should keep the defining module reachable on the main thread', async () => {
+      const { code } = await transformReactLynx(source, {
+        ...lepusWorkletOptions,
+        shake: {
+          pkgName: ['@lynx-js/react'],
+          retainProp: [],
+          removeCall: ['useEffect'],
+          removeCallParams: [],
+        },
+      });
+
+      expect(code).toContain(`import './spin.js';`);
+      // `useEffect` is shaken away, so the worklet body is the only thing left
+      // mentioning `spin` — and it reads it off `this._c`, not off the import.
+      expect(code).not.toContain('useEffect');
+      expect(code).toContain(`let { spin, el } = this["_c"];`);
+      expect(code).toContain('registerWorkletInternal("main-thread"');
+      // Only modules a worklet captures from are re-imported for side effects.
+      expect(code).not.toContain(`import './unrelated.js';`);
+    });
+
+    it('should not add side-effect imports on the background thread', async () => {
+      const { code } = await transformReactLynx(source, {
+        ...lepusWorkletOptions,
+        defineDCE: { define: { __LEPUS__: 'false', __JS__: 'true' } },
+        shake: false,
+        worklet: {
+          target: 'JS',
+          filename: '',
+          runtimePkg: '@lynx-js/react',
+        },
+      });
+
+      // The background bundle still references the import through `_c`.
+      expect(code).toContain(`import { spin } from './spin.js';`);
+      expect(code.match(/from '\.\/spin\.js'/g)).toHaveLength(1);
+      expect(code).not.toContain(`import './spin.js';`);
+    });
+  });
+
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
     it('member expression', async () => {
       const { code } = await transformReactLynx(
