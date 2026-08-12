@@ -6,6 +6,7 @@ import type {
   AnimationOptions,
   DOMKeyframesDefinition,
   MotionValue,
+  ResolvedValues,
 } from 'motion-dom';
 
 import type { ComponentType, FunctionComponent } from '@lynx-js/react';
@@ -46,6 +47,7 @@ export type MotionTransition = AnimationOptions;
 /** Animatable style target for a declarative Motion component. */
 export type MotionTarget = DOMKeyframesDefinition & {
   transition?: MotionTransition;
+  transitionEnd?: ResolvedValues;
 };
 
 /** A named declarative target or a list of targets merged left-to-right. */
