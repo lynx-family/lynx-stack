@@ -581,7 +581,7 @@ function useMotionHostProps<Props extends MotionProps>(
     tapAnimationRef.current = [];
     const animationGeneration = tapAnimationGenerationRef.current + 1;
     tapAnimationGenerationRef.current = animationGeneration;
-    const completionPromises: Promise<void>[] = [];
+    const animatedValues: MotionValue<string | number>[] = [];
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
@@ -605,7 +605,18 @@ function useMotionHostProps<Props extends MotionProps>(
           if (value.animation) {
             Object.defineProperty(value, 'animation', { enumerable: false });
           }
-          completionPromises.push(completion);
+          animatedValues.push(value);
+          void completion.then(() => {
+            if (tapAnimationGenerationRef.current !== animationGeneration) {
+              return;
+            }
+            if (
+              !animatedValues.some(value => value.isAnimating())
+              && onAnimationComplete
+            ) {
+              void runOnBackground(onAnimationComplete)(whileTap!);
+            }
+          });
           if (!isLynxForWeb && value.animation) {
             tapAnimationRef.current.push(value.animation);
           }
@@ -622,18 +633,20 @@ function useMotionHostProps<Props extends MotionProps>(
         resolvedTransition,
       );
       tapAnimationRef.current.push(animation);
-      completionPromises.push(Promise.resolve(animation).then(() => undefined));
-    }
-    if (completionPromises.length > 0 && onAnimationStart) {
-      void runOnBackground(onAnimationStart)(whileTap!);
-    }
-    if (completionPromises.length > 0 && onAnimationComplete) {
-      void Promise.all(completionPromises).then(() => {
+      void animation.then(() => {
         if (tapAnimationGenerationRef.current !== animationGeneration) {
           return;
         }
-        void runOnBackground(onAnimationComplete)(whileTap!);
+        if (onAnimationComplete) {
+          void runOnBackground(onAnimationComplete)(whileTap!);
+        }
       });
+    }
+    if (
+      (animatedValues.length > 0 || tapAnimationRef.current.length > 0)
+      && onAnimationStart
+    ) {
+      void runOnBackground(onAnimationStart)(whileTap!);
     }
   }
 
@@ -651,7 +664,7 @@ function useMotionHostProps<Props extends MotionProps>(
     tapAnimationRef.current = [];
     const animationGeneration = tapAnimationGenerationRef.current + 1;
     tapAnimationGenerationRef.current = animationGeneration;
-    const completionPromises: Promise<void>[] = [];
+    const animatedValues: MotionValue<string | number>[] = [];
     const targetValues = resolvedTap.target as Record<string, unknown>;
     const restingTarget = hoverActiveRef.current && resolvedHover.target
       ? resolvedHover.target
@@ -704,7 +717,18 @@ function useMotionHostProps<Props extends MotionProps>(
           if (value.animation) {
             Object.defineProperty(value, 'animation', { enumerable: false });
           }
-          completionPromises.push(completion);
+          animatedValues.push(value);
+          void completion.then(() => {
+            if (tapAnimationGenerationRef.current !== animationGeneration) {
+              return;
+            }
+            if (
+              !animatedValues.some(value => value.isAnimating())
+              && onAnimationComplete
+            ) {
+              void runOnBackground(onAnimationComplete)(restingDefinition);
+            }
+          });
           if (!isLynxForWeb && value.animation) {
             tapAnimationRef.current.push(value.animation);
           }
@@ -721,18 +745,20 @@ function useMotionHostProps<Props extends MotionProps>(
         resolvedTransition,
       );
       tapAnimationRef.current.push(animation);
-      completionPromises.push(Promise.resolve(animation).then(() => undefined));
-    }
-    if (completionPromises.length > 0 && onAnimationStart) {
-      void runOnBackground(onAnimationStart)(restingDefinition);
-    }
-    if (completionPromises.length > 0 && onAnimationComplete) {
-      void Promise.all(completionPromises).then(() => {
+      void animation.then(() => {
         if (tapAnimationGenerationRef.current !== animationGeneration) {
           return;
         }
-        void runOnBackground(onAnimationComplete)(restingDefinition);
+        if (onAnimationComplete) {
+          void runOnBackground(onAnimationComplete)(restingDefinition);
+        }
       });
+    }
+    if (
+      (animatedValues.length > 0 || tapAnimationRef.current.length > 0)
+      && onAnimationStart
+    ) {
+      void runOnBackground(onAnimationStart)(restingDefinition);
     }
   }
 
