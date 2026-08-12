@@ -444,19 +444,20 @@ function useMotionHostProps<Props extends MotionProps>(
         styleCleanupRef.current = styleEffect(motionElement, values);
       }
 
+      const completionPromises: Promise<void>[] = [];
       if (shouldAnimate) {
         for (const key in animationTargetValues) {
           const value = values[key];
           const targetValue = animationTargetValues[key];
           if (value && targetValue !== undefined) {
-            void value.start(
+            completionPromises.push(value.start(
               createMotionValueAnimation(
                 key,
                 value,
                 targetValue as never,
                 resolvedOptions as never,
               ),
-            );
+            ));
             if (value.animation) {
               animationRef.current.push(value.animation);
             }
@@ -465,11 +466,13 @@ function useMotionHostProps<Props extends MotionProps>(
       }
 
       const activeAnimations = [...animationRef.current];
-      if (activeAnimations.length > 0 && animate !== undefined) {
-        if (onAnimationStart) {
-          void runOnBackground(onAnimationStart)(animate);
-        }
-        void Promise.all(activeAnimations).then(() => {
+      if (
+        activeAnimations.length > 0 && animate !== undefined && onAnimationStart
+      ) {
+        void runOnBackground(onAnimationStart)(animate);
+      }
+      if (completionPromises.length > 0 && animate !== undefined) {
+        void Promise.all(completionPromises).then(() => {
           if (animationGenerationRef.current !== animationGeneration) {
             return;
           }
