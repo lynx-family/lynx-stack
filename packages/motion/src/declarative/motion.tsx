@@ -598,7 +598,7 @@ function useMotionHostProps<Props extends MotionProps>(
     // rerender triggered from lifecycle callbacks.
     if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
-      let animationCount = 0;
+      let pendingAnimationCount = 0;
       function reportTapAnimationComplete(definition: MotionDefinition) {
         if (tapAnimationGenerationRef.current !== animationGeneration) {
           return;
@@ -615,12 +615,12 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value && targetValues[key] !== undefined) {
-          animationCount += 1;
+          pendingAnimationCount += 1;
         }
       }
       tapAnimationCompletionRef.current = {
         generation: animationGeneration,
-        pending: animationCount,
+        pending: pendingAnimationCount,
       };
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
@@ -734,7 +734,7 @@ function useMotionHostProps<Props extends MotionProps>(
       ? whileHover
       : animate ?? (restingValues as MotionTarget);
     if (isLynxForWeb || !event.currentTarget) {
-      let animationCount = 0;
+      let pendingAnimationCount = 0;
       function reportTapAnimationComplete() {
         if (tapAnimationGenerationRef.current !== animationGeneration) {
           return;
@@ -751,12 +751,12 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          animationCount += 1;
+          pendingAnimationCount += 1;
         }
       }
       tapAnimationCompletionRef.current = {
         generation: animationGeneration,
-        pending: animationCount,
+        pending: pendingAnimationCount,
       };
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
