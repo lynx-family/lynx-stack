@@ -21,6 +21,7 @@ interface RefImpl {
     create: MainThreadObjectFactory,
     dispose: MainThreadObjectDisposer | undefined,
     protocolVersion: number,
+    hydrate?: MainThreadObjectHydrator,
   ): void;
   clearFirstScreenWorkletRefMap(): void;
 }
@@ -30,9 +31,11 @@ const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 
 type MainThreadObjectFactory = (initialValue: unknown) => object;
 type MainThreadObjectDisposer = (object: object) => void;
+type MainThreadObjectHydrator = (object: object, firstScreenObject: object) => void;
 interface MainThreadObjectDefinition {
   create: MainThreadObjectFactory;
   dispose: MainThreadObjectDisposer | undefined;
+  hydrate: MainThreadObjectHydrator | undefined;
 }
 
 const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
@@ -76,18 +79,23 @@ function registerMainThreadObjectType(
   create: MainThreadObjectFactory,
   dispose: MainThreadObjectDisposer | undefined,
   protocolVersion: number,
+  hydrate?: MainThreadObjectHydrator,
 ): void {
   assertMainThreadObjectProtocolVersion(type, protocolVersion);
   const registered = mainThreadObjectDefinitions.get(type);
   if (registered) {
-    if (registered.create !== create || registered.dispose !== dispose) {
+    if (
+      registered.create !== create
+      || registered.dispose !== dispose
+      || registered.hydrate !== hydrate
+    ) {
       throw new Error(
-        `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create and dispose functions.`,
+        `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create, dispose, and hydrate functions.`,
       );
     }
     return;
   }
-  mainThreadObjectDefinitions.set(type, { create, dispose });
+  mainThreadObjectDefinitions.set(type, { create, dispose, hydrate });
 }
 
 function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
@@ -163,10 +171,30 @@ function removeValueFromWorkletRefMap(id: WorkletRefId): void {
 
 function hydrateWorkletValue(id: WorkletRefId, value: WorkletRef<unknown>): void {
   const previous = impl!._workletRefMap[id];
+  const previousDefinition = getMainThreadObjectDefinition(previous);
+  const valueDefinition = getMainThreadObjectDefinition(value);
+  if (
+    previous
+    && previousDefinition
+    && previousDefinition === valueDefinition
+    && previousDefinition.hydrate
+  ) {
+    previousDefinition.hydrate(previous, value);
+    disposeMainThreadObject(value);
+    return;
+  }
   if (previous !== value) {
     disposeMainThreadObject(previous);
   }
   impl!._workletRefMap[id] = value;
+}
+
+function getMainThreadObjectDefinition(
+  value: unknown,
+): MainThreadObjectDefinition | undefined {
+  return typeof value === 'object' && value !== null
+    ? realizedMainThreadObjectDefinitions.get(value)
+    : undefined;
 }
 
 function disposeMainThreadObject(value: unknown): void {

@@ -48,6 +48,7 @@ function registerMainThreadObjectType(
   create: (initialValue: unknown) => object,
   dispose: ((object: object) => void) | undefined,
   protocolVersion: number,
+  hydrate?: (object: object, firstScreenObject: object) => void,
 ): void {
   const refImpl = globalThis.lynxWorkletImpl?._refImpl;
   if (!refImpl || typeof refImpl.registerMainThreadObjectType !== 'function') {
@@ -55,7 +56,7 @@ function registerMainThreadObjectType(
       'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
     );
   }
-  refImpl.registerMainThreadObjectType(type, create, dispose, protocolVersion);
+  refImpl.registerMainThreadObjectType(type, create, dispose, protocolVersion, hydrate);
 }
 
 /**

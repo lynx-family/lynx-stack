@@ -19,6 +19,7 @@ const MotionValueType = defineMainThreadObjectType<
   type: MOTION_VALUE_TYPE,
   create: motionValue,
   dispose: value => value.stop(),
+  hydrate: (value, firstScreenValue) => value.set(firstScreenValue.get()),
 });
 const motionValueHandleInitialValues = new WeakMap<object, unknown>();
 

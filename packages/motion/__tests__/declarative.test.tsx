@@ -508,6 +508,39 @@ describe('declarative Motion', () => {
     expect(getByTestId('box').getAttribute('style')).toContain('scale(1.5)');
   });
 
+  test('updates a MotionValue-backed style from a main-thread event', async () => {
+    function App() {
+      const x = useMotionValue(-36);
+      function move() {
+        'main thread';
+        x.set(36);
+      }
+      return (
+        <motion.view
+          data-testid='box'
+          main-thread:bindtap={move}
+          style={{ x }}
+        />
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(-36px)',
+    );
+    fireEvent.tap(getByTestId('box'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(36px)',
+    );
+  });
+
   test('animates while pressed and restores the resting style', async () => {
     const { getByTestId } = render(
       <motion.view

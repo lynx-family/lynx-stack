@@ -31,6 +31,8 @@ export interface MainThreadObjectType<I, O extends object> {
   readonly create: (initialValue: I) => O;
   /** Dispose a realized object after its handle is released. */
   readonly dispose?: (object: O) => void;
+  /** Merge first-screen state into the canonical background-created object. */
+  readonly hydrate?: (object: O, firstScreenObject: O) => void;
 }
 
 /**
@@ -124,6 +126,9 @@ export function defineMainThreadObjectType<I, O extends object>(
   if (definition.dispose !== undefined && typeof definition.dispose !== 'function') {
     throw new Error(`MainThreadObject type "${definition.type}" has an invalid dispose function.`);
   }
+  if (definition.hydrate !== undefined && typeof definition.hydrate !== 'function') {
+    throw new Error(`MainThreadObject type "${definition.type}" has an invalid hydrate function.`);
+  }
 
   return Object.freeze({ ...definition });
 }
@@ -168,6 +173,7 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
     objectType.create as (initialValue: unknown) => object,
     objectType.dispose as ((object: object) => void) | undefined,
     MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
+    objectType.hydrate as ((object: object, firstScreenObject: object) => void) | undefined,
   );
 }
 
