@@ -1,5 +1,5 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
 let onTapLepus = {
     _c: {
         aaaa,
@@ -10,19 +10,19 @@ let onTapLepus = {
     _wkltId: "a123:test:1",
     ...{
         aaaa: this.aaaa,
-        bbbb: {
+        bbbb: captureMainThreadObject(this.bbbb) ?? {
             cccc: {
                 dddd: this.bbbb.cccc.dddd
             }
         },
         eeee: this.eeee,
         ffff: this.ffff,
-        hhhh: {
+        hhhh: captureMainThreadObject(this.hhhh) ?? {
             'iiii': this.hhhh['iiii'],
             kkkk: this.hhhh.kkkk
         },
         llll: this.llll,
-        mmmm: {
+        mmmm: captureMainThreadObject(this.mmmm) ?? {
             nnnn: {
                 'oooo': this.mmmm.nnnn['oooo']
             }

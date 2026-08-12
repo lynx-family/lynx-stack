@@ -8,9 +8,9 @@ let X = {
         y4,
         y8,
         y5,
-        y6: captureMainThreadObject(y6, {
+        y6: captureMainThreadObject(y6) ?? {
             m: y6.m
-        }),
+        },
         y7
     },
     _wkltId: "a77b:test:1"
