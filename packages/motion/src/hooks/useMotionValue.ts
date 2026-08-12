@@ -17,10 +17,9 @@ const MOTION_VALUE_TYPE = '@lynx-js/motion/MotionValue';
 function setMotionValue(
   handle: MotionValue<unknown>,
   value: unknown,
-  render?: boolean,
 ) {
   'main thread';
-  handle.set(value, render);
+  handle.set(value);
 }
 
 const MotionValueType = defineMainThreadObjectType<
@@ -31,8 +30,8 @@ const MotionValueType = defineMainThreadObjectType<
   create: motionValue,
   dispose: value => value.stop(),
   backgroundMethods: handle => ({
-    set(value: unknown, render?: boolean) {
-      void runOnMainThread(setMotionValue)(handle, value, render);
+    set(value: unknown) {
+      void runOnMainThread(setMotionValue)(handle, value);
     },
   }),
 });
