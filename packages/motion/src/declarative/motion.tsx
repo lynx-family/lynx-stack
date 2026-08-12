@@ -41,6 +41,7 @@ import {
 } from './style.js';
 import type {
   MotionComponentProps,
+  MotionDefinition,
   MotionFactory,
   MotionImageProps,
   MotionProps,
@@ -136,6 +137,7 @@ function useMotionHostProps<Props extends MotionProps>(
   const styleCleanupRef = useMainThreadRef<(() => void) | null>(null);
   const hasMountedAnimationRef = useRef(false);
   const hadAnimateTargetRef = useRef(false);
+  const backgroundAnimationGenerationRef = useRef(0);
 
   const resolvedInitial = resolveMotionDefinition(initial, variants, custom);
   const resolvedAnimateDefinition = resolveMotionDefinition(
@@ -295,6 +297,9 @@ function useMotionHostProps<Props extends MotionProps>(
     : undefined;
 
   useEffect(() => {
+    const backgroundAnimationGeneration =
+      backgroundAnimationGenerationRef.current + 1;
+    backgroundAnimationGenerationRef.current = backgroundAnimationGeneration;
     const hadAnimateTarget = hadAnimateTargetRef.current;
     hadAnimateTargetRef.current = Boolean(
       resolvedAnimate.target
@@ -316,6 +321,18 @@ function useMotionHostProps<Props extends MotionProps>(
     const shouldAnimateTarget = resolvedInitialTarget !== false
       || hasMountedAnimationRef.current;
     hasMountedAnimationRef.current = true;
+
+    function completeAnimationOnBackground(
+      expectedGeneration: number,
+      definition: MotionDefinition,
+    ) {
+      if (
+        backgroundAnimationGenerationRef.current === expectedGeneration
+        && onAnimationComplete
+      ) {
+        onAnimationComplete(definition);
+      }
+    }
 
     function updateMotionStyles(
       target: MotionTarget | undefined,
@@ -494,7 +511,10 @@ function useMotionHostProps<Props extends MotionProps>(
             styleCleanupRef.current = styleEffect(motionElement, values);
           }
           if (onAnimationComplete) {
-            void runOnBackground(onAnimationComplete)(animate);
+            void runOnBackground(completeAnimationOnBackground)(
+              backgroundAnimationGeneration,
+              animate,
+            );
           }
         });
       }
@@ -526,6 +546,7 @@ function useMotionHostProps<Props extends MotionProps>(
     }
 
     return () => {
+      backgroundAnimationGenerationRef.current += 1;
       void runOnMainThread(stopMotionStyles)();
     };
     // Serialized targets and value IDs avoid restarting unchanged inline
