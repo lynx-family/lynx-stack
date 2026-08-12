@@ -47,6 +47,20 @@ describe('declarative Motion', () => {
     });
   });
 
+  test('resolves initial transform origin aliases with upstream defaults', () => {
+    expect(
+      resolveInitialStyle(
+        undefined,
+        { originX: 0.2, originY: '60%', originZ: 10 },
+      ),
+    ).toEqual({
+      transformOrigin: '20% 60% 10px',
+    });
+    expect(resolveInitialStyle(undefined, { originX: 0 })).toEqual({
+      transformOrigin: '0% 50% 0',
+    });
+  });
+
   test('uses the final animate state when initial is false', () => {
     expect(
       resolveInitialStyle(
@@ -428,6 +442,40 @@ describe('declarative Motion', () => {
       await new Promise(resolve => setTimeout(resolve, 30));
     });
     expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.8');
+  });
+
+  test('animates transform origin aliases', async () => {
+    function App() {
+      const [active, setActive] = useState(false);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={{ originX: 0, originY: 0 }}
+            animate={active
+              ? { originX: 1, originY: 1 }
+              : { originX: 0, originY: 0 }}
+            transition={{ type: false }}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(true)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'transform-origin: 0% 0%',
+    );
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'transform-origin: 100% 100%',
+    );
   });
 
   test('restores a value removed from animate to its initial value', async () => {
