@@ -548,6 +548,7 @@ function useMotionHostProps<Props extends MotionProps>(
     tapAnimationRef.current = [];
     const animationGeneration = tapAnimationGenerationRef.current + 1;
     tapAnimationGenerationRef.current = animationGeneration;
+    // Bind on MTS before Motion's scheduler invokes completion asynchronously.
     const reportAnimationComplete = onAnimationComplete
       ? runOnBackground(onAnimationComplete)
       : undefined;
@@ -652,6 +653,7 @@ function useMotionHostProps<Props extends MotionProps>(
     tapAnimationRef.current = [];
     const animationGeneration = tapAnimationGenerationRef.current + 1;
     tapAnimationGenerationRef.current = animationGeneration;
+    // Bind on MTS before Motion's scheduler invokes completion asynchronously.
     const reportAnimationComplete = onAnimationComplete
       ? runOnBackground(onAnimationComplete)
       : undefined;
