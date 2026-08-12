@@ -57,6 +57,11 @@ export class ElementCompt {
         return true;
       },
       get: (_target, prop) => {
+        if (prop === 'setProperty') {
+          return (property: string, value: string) => {
+            styleObject.setProperty(property, value);
+          };
+        }
         if (typeof prop === 'string' && prop !== 'setProperty') {
           return this.getStyleProperty(prop);
         }

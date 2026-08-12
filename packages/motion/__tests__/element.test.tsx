@@ -84,6 +84,17 @@ describe('ElementCompt (unit tests)', () => {
     );
   });
 
+  test('style proxy setProperty preserves CSS custom property names', () => {
+    const compt = new ElementCompt(mockElement);
+
+    compt.style.setProperty('--motion-color', '#000');
+
+    expect(mockSetStyleProperty).toHaveBeenCalledWith(
+      '--motion-color',
+      '#000',
+    );
+  });
+
   test('style proxy set with transform=none should use scale(1,1)', () => {
     const compt = new ElementCompt(mockElement);
 
