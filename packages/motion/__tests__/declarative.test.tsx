@@ -624,6 +624,36 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('restores every value after interrupting a tap animation', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        style={{ scale: 1, backgroundColor: '#ffffff' }}
+        whileTap={{ scale: 1.15, backgroundColor: '#ffcc00' }}
+        transition={{ duration: 0.2 }}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    });
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'scale(1',
+    );
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'rgb(255, 255, 255)',
+    );
+  });
+
   test('composes gesture callbacks with external host handlers', () => {
     const onTapStart = vi.fn();
     const onTap = vi.fn();
