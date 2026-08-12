@@ -24,6 +24,8 @@
     "bench:017-use-signal-local-attribute-update": "benchx_cli run dist/017-use-signal-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:018-use-state-full-attribute-update": "benchx_cli run dist/018-use-state-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:019-use-signal-full-attribute-update": "benchx_cli run dist/019-use-signal-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:021-motion-values-500": "benchx_cli run dist/021-motion-values-500.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:022-motion-values-1000": "benchx_cli run dist/022-motion-values-1000.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -46,9 +48,12 @@
     "perfetto:017-use-signal-local-attribute-update": "benchx_cli -o dist/017-use-signal-local-attribute-update.ptrace run dist/017-use-signal-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:018-use-state-full-attribute-update": "benchx_cli -o dist/018-use-state-full-attribute-update.ptrace run dist/018-use-state-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:019-use-signal-full-attribute-update": "benchx_cli -o dist/019-use-signal-full-attribute-update.ptrace run dist/019-use-signal-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:021-motion-values-500": "benchx_cli -o dist/021-motion-values-500.ptrace run dist/021-motion-values-500.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:022-motion-values-1000": "benchx_cli -o dist/022-motion-values-1000.ptrace run dist/022-motion-values-1000.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {
+    "@lynx-js/motion": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",
     "benchx_cli": "workspace:*",

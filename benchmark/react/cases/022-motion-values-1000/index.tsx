@@ -1,0 +1,17 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { root } from '@lynx-js/react';
+
+import { MainThreadObjectWorkload } from '../../src/MainThreadObjectWorkload.js';
+import { RunBenchmarkUntilHydrate } from '../../src/RunBenchmarkUntil.js';
+
+runAfterLoadScript(() => {
+  root.render(
+    <>
+      <MainThreadObjectWorkload count={1000} />
+      <RunBenchmarkUntilHydrate />
+    </>,
+  );
+});

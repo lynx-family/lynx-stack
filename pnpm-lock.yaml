@@ -192,6 +192,9 @@ importers:
 
   benchmark/react:
     dependencies:
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
