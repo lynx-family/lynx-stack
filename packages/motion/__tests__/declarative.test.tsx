@@ -195,6 +195,48 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('routes value-specific transitions by animated property', async () => {
+    function App() {
+      const [active, setActive] = useState(false);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={{ opacity: 0, x: 0 }}
+            animate={{ opacity: active ? 1 : 0, x: active ? 40 : 0 }}
+            transition={{
+              opacity: { duration: 0.01, ease: 'linear' },
+              x: { delay: 0.08, duration: 0.01, ease: 'linear' },
+            }}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(true)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 40));
+    });
+
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+    expect(getByTestId('box').getAttribute('style')).not.toContain(
+      'translateX(40px)',
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(40px)',
+    );
+  });
+
   test('skips the mount animation when initial is false', async () => {
     const onMountAnimationStart = vi.fn();
     const onMountAnimationComplete = vi.fn();

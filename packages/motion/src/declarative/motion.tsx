@@ -11,7 +11,11 @@ import type {
   AnimationPlaybackControlsWithThen,
   MotionValue,
 } from 'motion-dom';
-import { motionValue, styleEffect } from 'motion-dom' with {
+import {
+  animateMotionValue as createMotionValueAnimation,
+  motionValue,
+  styleEffect,
+} from 'motion-dom' with {
   runtime: 'shared',
 };
 
@@ -332,7 +336,6 @@ function useMotionHostProps<Props extends MotionProps>(
         return;
       }
 
-      const animateMotionValue = animateValue as unknown as AnimateMotionTarget;
       const resolvedOptions = options?.repeat === -1
         ? { ...options, repeat: Number.POSITIVE_INFINITY }
         : options;
@@ -411,13 +414,17 @@ function useMotionHostProps<Props extends MotionProps>(
           const value = values[key];
           const targetValue = targetValues[key];
           if (value && targetValue !== undefined) {
-            animationRef.current.push(
-              animateMotionValue(
+            void value.start(
+              createMotionValueAnimation(
+                key,
                 value,
-                targetValue,
-                resolvedOptions,
+                targetValue as never,
+                resolvedOptions as never,
               ),
             );
+            if (value.animation) {
+              animationRef.current.push(value.animation);
+            }
           }
         }
       }
@@ -495,9 +502,17 @@ function useMotionHostProps<Props extends MotionProps>(
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, targetValue, resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              targetValue as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
@@ -560,9 +575,17 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, restingValues[key], resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              restingValues[key] as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
@@ -605,9 +628,17 @@ function useMotionHostProps<Props extends MotionProps>(
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, targetValue, resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              targetValue as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
@@ -669,9 +700,17 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, restingValues[key], resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              restingValues[key] as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
