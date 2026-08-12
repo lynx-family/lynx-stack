@@ -38,13 +38,19 @@ interface MainThreadObjectDefinition {
 }
 
 const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
-let realizedMainThreadObjectDefinitions = new WeakMap<object, MainThreadObjectDefinition>();
-let hydratedWorkletValues = new WeakSet<object>();
+type WorkletValueMetadata =
+  | { readonly kind: 'mutable-cell' }
+  | {
+    readonly kind: 'typed-object';
+    readonly type: string;
+    readonly protocolVersion: number;
+    readonly definition: MainThreadObjectDefinition;
+  };
+let realizedWorkletValueMetadata = new WeakMap<object, WorkletValueMetadata>();
 
 function initWorkletRef(): RefImpl {
   mainThreadObjectDefinitions.clear();
-  realizedMainThreadObjectDefinitions = new WeakMap();
-  hydratedWorkletValues = new WeakSet();
+  realizedWorkletValueMetadata = new WeakMap();
   return (impl = {
     _workletRefMap: {},
     /**
@@ -69,7 +75,7 @@ const createWorkletRef = <T>(
     current: value,
     _wvid: id,
   };
-  hydratedWorkletValues.add(ref);
+  realizedWorkletValueMetadata.set(ref, { kind: 'mutable-cell' });
   return ref;
 };
 
@@ -149,7 +155,7 @@ function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
   const definition = mainThreadObjectDefinitions.get(type);
   if (!definition) {
     throw new Error(
-      `MainThreadObject type is not registered: "${type}". Define and register the type during main-thread render before capturing its handle.`,
+      `MainThreadObject type is not registered: "${type}". Define the type in a module evaluated on the main thread before initializing its handle.`,
     );
   }
 
@@ -157,8 +163,12 @@ function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
   if (typeof value !== 'object' || value === null) {
     throw new Error(`MainThreadObject type "${type}" created a non-object value.`);
   }
-  realizedMainThreadObjectDefinitions.set(value, definition);
-  hydratedWorkletValues.add(value);
+  realizedWorkletValueMetadata.set(value, {
+    kind: 'typed-object',
+    type,
+    protocolVersion: refImpl._mtoVersion!,
+    definition,
+  });
   return value as WorkletRef<T>;
 }
 
@@ -173,7 +183,7 @@ function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: nu
 }
 
 function isHydratedWorkletValue(value: unknown): value is object {
-  return typeof value === 'object' && value !== null && hydratedWorkletValues.has(value);
+  return typeof value === 'object' && value !== null && realizedWorkletValueMetadata.has(value);
 }
 
 const getFromWorkletRefMap = <T>(
@@ -210,25 +220,66 @@ function removeValueFromWorkletRefMap(id: WorkletRefId): void {
   delete impl!._workletRefMap[id];
 }
 
-function hydrateWorkletValue(id: WorkletRefId, value: WorkletRef<unknown>): void {
-  const previous = impl!._workletRefMap[id];
+function hydrateWorkletValue(
+  handle: WorkletRefImpl<unknown>,
+  value: WorkletRef<unknown>,
+): void {
+  assertCompatibleWorkletValue(handle, value, 'hydration');
+  const previous = impl!._workletRefMap[handle._wvid];
   if (previous !== value) {
     disposeMainThreadObject(previous);
   }
-  impl!._workletRefMap[id] = value;
+  impl!._workletRefMap[handle._wvid] = value;
+}
+
+function assertCompatibleWorkletValue(
+  handle: WorkletRefImpl<unknown>,
+  value: object,
+  operation: 'hydration' | 'initialization patch',
+): void {
+  const actual = realizedWorkletValueMetadata.get(value);
+  if (!actual) {
+    throw new Error(
+      `Cannot apply MainThreadObject ${operation} for handle ${handle._wvid}: the existing target has no worklet-value metadata.`,
+    );
+  }
+
+  const expectedType = handle._type;
+  const expectedKind = !expectedType || expectedType === 'main-thread'
+    ? 'mutable-cell'
+    : 'typed-object';
+  if (actual.kind !== expectedKind) {
+    throw new Error(
+      `Worklet value kind mismatch during ${operation} for handle ${handle._wvid}: background handle expects ${expectedKind}, but the main-thread target is ${actual.kind}.`,
+    );
+  }
+  if (actual.kind === 'mutable-cell') {
+    return;
+  }
+
+  assertMainThreadObjectProtocolVersion(expectedType!, handle._mtoVersion);
+  if (
+    actual.type !== expectedType
+    || actual.protocolVersion !== handle._mtoVersion
+  ) {
+    throw new Error(
+      `MainThreadObject type mismatch during ${operation} for handle ${handle._wvid}: background handle expects type "${expectedType}" with protocol ${
+        String(handle._mtoVersion)
+      }, but the main-thread target is type "${actual.type}" with protocol ${actual.protocolVersion}.`,
+    );
+  }
 }
 
 function disposeMainThreadObject(value: unknown): void {
   if (typeof value !== 'object' || value === null) {
     return;
   }
-  const definition = realizedMainThreadObjectDefinitions.get(value);
-  if (!definition) {
+  const metadata = realizedWorkletValueMetadata.get(value);
+  if (metadata?.kind !== 'typed-object') {
     return;
   }
-  realizedMainThreadObjectDefinitions.delete(value);
-  hydratedWorkletValues.delete(value);
-  getMainThreadObjectDisposer(definition)?.(value);
+  realizedWorkletValueMetadata.delete(value);
+  getMainThreadObjectDisposer(metadata.definition)?.(value);
 }
 
 /**
@@ -251,13 +302,17 @@ function updateWorkletRefInitValueChanges(
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
     patch.forEach(([id, value, type, protocolVersion]) => {
-      if (!impl!._workletRefMap[id]) {
-        impl!._workletRefMap[id] = createWorkletValue({
-          _wvid: id,
-          _initValue: value,
-          _type: type,
-          _mtoVersion: protocolVersion,
-        } as WorkletRefImpl<unknown>);
+      const handle = {
+        _wvid: id,
+        _initValue: value,
+        _type: type,
+        _mtoVersion: protocolVersion,
+      } as WorkletRefImpl<unknown>;
+      const existing = impl!._workletRefMap[id];
+      if (existing) {
+        assertCompatibleWorkletValue(handle, existing, 'initialization patch');
+      } else {
+        impl!._workletRefMap[id] = createWorkletValue(handle);
       }
     });
   });
