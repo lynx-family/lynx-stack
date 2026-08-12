@@ -81,6 +81,47 @@ describe('transform builtin attribute names', () => {
     expect(result.code).toContain('accessibility-label');
     expect(result.code).toContain('...spread');
   });
+
+  it('should allow builtin event conversion to run without compat event conversion', async () => {
+    const result = await transformReactLynx(
+      'const node = <view onClick={() => {}} onCatchTap={() => {}} onReady={() => {}} />;',
+      {
+        mode: 'test',
+        pluginName: '',
+        filename: 'test.jsx',
+        sourcemap: false,
+        cssScope: false,
+        snapshot: false,
+        jsx: true,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: {
+          target: 'MIXED',
+          componentsPkg: ['@lynx-js/react-components'],
+          oldRuntimePkg: ['@lynx-js/react-runtime'],
+          newRuntimePkg: '@lynx-js/react',
+          additionalComponentAttributes: [],
+          addComponentElement: false,
+          simplifyCtorLikeReactLynx2: false,
+          transformLegacyEventAttributeNames: false,
+          disableDeprecatedWarning: false,
+        },
+        worklet: false,
+        refresh: false,
+        experimental_transformBuiltinAttributeNames: true,
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('bindtap');
+    expect(result.code).toContain('catchtap');
+    expect(result.code).toContain('bindready');
+    expect(result.code).not.toContain('bindcatchtap');
+    expect(result.code).not.toContain('onClick');
+    expect(result.code).not.toContain('onCatchTap');
+    expect(result.code).not.toContain('onReady');
+  });
 });
 
 describe('shake', () => {

@@ -107,8 +107,11 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
 - While a model is streaming, pass the accumulated response together with
   `isStreaming`. The incremental parser keeps completed statements renderable,
   and built-in interactions stay disabled until the stream finishes.
-- `Query()` executes after a complete response and re-runs when reactive
-  arguments change. `Mutation()` only runs through `@Run(...)` in an action.
+- Query defaults and `initialQueryResults` are available during the first
+  synchronous render after a response completes. Prefetched results are keyed
+  by Query assignment name, not tool name. If you also pass a `toolProvider`,
+  the Query revalidates after commit and whenever reactive arguments change.
+  `Mutation()` only runs through `@Run(...)` in an action.
 - `onAction` receives host actions such as `@ToAssistant(...)` and
   `@OpenUrl(...)`. State steps and tool steps execute inside the runtime first.
 - `onError` returns structured parser, runtime, render, and tool errors suitable

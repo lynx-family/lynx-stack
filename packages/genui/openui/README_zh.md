@@ -102,7 +102,9 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   mutation 或响应式状态运行时。
 - 模型流式输出期间，把累计 response 和 `isStreaming` 一起传入。增量 parser
   会持续保留已完成且可渲染的 statements；内置交互在流结束前保持禁用。
-- `Query()` 会在完整 response 到达后执行，并在响应式参数变化时重新执行。
+- 完整 response 到达后，Query defaults 和 `initialQueryResults` 会进入第一次同步
+  渲染。预取结果必须用 Query assignment name（而不是 tool name）作为 key。如果同时
+  传入 `toolProvider`，Query 会在 commit 后重新校验，并在响应式参数变化时重新执行。
   `Mutation()` 只会通过 action 中的 `@Run(...)` 触发。
 - `onAction` 接收 `@ToAssistant(...)`、`@OpenUrl(...)` 等宿主 actions；状态
   steps 和工具 steps 会先在 runtime 内执行。

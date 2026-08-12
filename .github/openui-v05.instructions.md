@@ -6,6 +6,8 @@ When maintaining `packages/genui/openui`, treat OpenUI v0.5 rendering as driven 
 
 When changing exported OpenUI runtime APIs, refresh both API reports with `pnpm turbo api-extractor --filter @lynx-js/genui-openui -- --local` and `pnpm turbo api-extractor --filter @lynx-js/genui -- --local`, because `@lynx-js/genui` re-exports the OpenUI surface.
 
+When adding a public OpenUI runtime API that belongs to both the default and `openui/explicit` entry points, export it from `packages/genui/openui/src/core/runtimeExports.ts`; keep `index.ts` and `explicit.ts` focused on their entry-specific `createOpenUiLibrary` exports and re-export the shared runtime surface from `runtimeExports.ts`.
+
 When adding OpenUI v0.5 cases to `packages/genui/playground`, keep raw protocol examples limited to components supported by `packages/genui/openui/src/catalog` unless the same change extends the catalog. Query and Mutation examples need matching mock tools in `packages/genui/playground/lynx-src/openui/App.tsx` so `/render.html` previews exercise the runtime path instead of staying on default or unresolved values.
 
 When exposing OpenUI prompt generation for server-side agents, keep prompt-only component libraries headless: mirror the ReactLynx component names and Zod schemas but use null renderers so Node routes can build system prompts without importing ReactLynx or Lynx UI runtime modules.

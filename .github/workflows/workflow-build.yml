@@ -190,5 +190,13 @@ jobs:
         if: steps.changeset.outputs.skip == 'false'
         env:
           PACKAGE_DIRS: ${{ steps.changeset.outputs.package-dirs }}
-        # zizmor: ignore[trusted-publishing] pkg.pr.new authenticates via its own GitHub App, not the npm trusted-publishing flow this heuristic suggests.
-        run: pnpm dlx pkg-pr-new publish --compact --pnpm $PACKAGE_DIRS
+        # zizmor: ignore[use-trusted-publishing] pkg.pr.new authenticates via its own GitHub App, not the npm trusted-publishing flow this heuristic suggests.
+        run: |
+          read -ra package_dirs <<< "$PACKAGE_DIRS"
+          pnpm exec pkg-pr-new publish \
+            --compact \
+            --pnpm \
+            --commentWithSha \
+            --packageManager=pnpm \
+            --no-template \
+            "${package_dirs[@]}"
