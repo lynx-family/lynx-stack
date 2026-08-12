@@ -2,14 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type {
-  ClosureValueType,
-  JsFnHandle,
-  Worklet,
-  WorkletRef,
-  WorkletRefId,
-  WorkletRefImpl,
-} from './bindings/index.js';
+import type { ClosureValueType, JsFnHandle, Worklet, WorkletRef, WorkletRefImpl } from './bindings/index.js';
 import { profile } from './utils/profile.js';
 import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
@@ -48,8 +41,8 @@ function hydrateCtxImpl(
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
     if (key === '_wvid') {
-      hydrateMainThreadRef(
-        ctxObj[key] as WorkletRefId,
+      hydrateWorkletValueHandle(
+        ctxObj as unknown as WorkletRefImpl<unknown>,
         firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
       );
     } else if (key === '_jsFn') {
@@ -68,22 +61,22 @@ function hydrateCtxImpl(
 }
 
 /**
- * Hydrates a WorkletRef on the main thread.
- * This is used to update the WorkletRef's background initial value based on changes
- * that occurred in the first-screen Worklet context before hydration.
+ * Hydrates a worklet value handle on the main thread.
+ * This maps the positive-ID background handle to the compatible target realized
+ * from the first-screen main-thread handle.
  *
- * @param refId The ID of the WorkletRef to hydrate.
- * @param value The new value for the WorkletRef.
+ * @param handle The positive-ID background handle to hydrate.
+ * @param value The realized first-screen target.
  */
-function hydrateMainThreadRef(
-  refId: WorkletRefId,
+function hydrateWorkletValueHandle(
+  handle: WorkletRefImpl<unknown>,
   value: object,
 ) {
   if (!isHydratedWorkletValue(value)) {
     // The ref has not been accessed yet.
     return;
   }
-  hydrateWorkletValue(refId, value as WorkletRef<unknown>);
+  hydrateWorkletValue(handle, value as WorkletRef<unknown>);
 }
 
 /**
