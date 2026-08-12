@@ -607,6 +607,65 @@ describe('declarative Motion', () => {
     expect(getByTestId('button').getAttribute('style')).toContain('opacity: 1');
   });
 
+  test('applies a transitionEnd-only tap definition', async () => {
+    const lifecycle: string[] = [];
+    const onAnimationStart = vi.fn((value: MotionTarget) => {
+      lifecycle.push(`start:${String(value.transitionEnd !== undefined)}`);
+    });
+    const onAnimationComplete = vi.fn((value: MotionTarget) => {
+      lifecycle.push(`complete:${String(value.transitionEnd !== undefined)}`);
+    });
+    const definition = { transitionEnd: { opacity: 0.4 } };
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        style={{ opacity: 1 }}
+        whileTap={definition}
+        transition={{ type: false }}
+        onAnimationStart={onAnimationStart}
+        onAnimationComplete={onAnimationComplete}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await Promise.resolve();
+      await new Promise(resolve => setTimeout(resolve, 80));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'opacity: 0.4',
+    );
+    expect(lifecycle).toEqual(['start:true', 'complete:true']);
+    expect(onAnimationStart).toHaveBeenCalledWith(definition);
+    expect(onAnimationComplete).toHaveBeenCalledWith(definition);
+
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain('opacity: 1');
+  });
+
+  test('does not apply a stale transitionEnd-only tap after release', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        style={{ opacity: 1 }}
+        whileTap={{ transitionEnd: { opacity: 0.4 } }}
+        transition={{ type: false }}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    fireEvent.touchstart(getByTestId('button'));
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('uses the initial transition when a tap restores its base value', async () => {
     const { getByTestId } = render(
       <motion.view
