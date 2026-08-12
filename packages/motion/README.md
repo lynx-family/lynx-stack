@@ -47,6 +47,7 @@ The declarative layer currently supports:
 - object targets and string/array/function `variants` for `initial` and
   `animate`, including `custom`, target-local `transition`, and parent label
   inheritance for base targets when a child does not define its own label;
+  `inherit={false}` prevents labels propagating through a variant boundary;
   numeric `delayChildren` also propagates through inherited labels
 - `initial={false}` to render the final `animate` keyframe without a mount
   animation while preserving later target updates
