@@ -14,7 +14,8 @@ import type { CSSProperties, IntrinsicElements } from '@lynx-js/types';
 export type MotionStyleValue =
   | string
   | number
-  | MotionValue<string | number>
+  | MotionValue<string>
+  | MotionValue<number>
   | null
   | undefined;
 
@@ -23,7 +24,8 @@ export type MotionStyle =
   & {
     [Key in keyof CSSProperties]?:
       | CSSProperties[Key]
-      | MotionValue<string | number>;
+      | MotionValue<string>
+      | MotionValue<number>;
   }
   & {
     x?: MotionStyleValue;
