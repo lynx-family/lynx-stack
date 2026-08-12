@@ -127,6 +127,69 @@ describe('declarative Motion', () => {
     });
   });
 
+  test('propagates a parent variant label to children', async () => {
+    function App() {
+      const [active, setActive] = useState(false);
+      return (
+        <view>
+          <motion.view animate={active ? 'visible' : 'hidden'}>
+            <motion.view
+              data-testid='child'
+              variants={{
+                hidden: { opacity: 0, x: -20 },
+                visible: { opacity: 1, x: 40 },
+              }}
+              transition={{ type: false }}
+            />
+          </motion.view>
+          <view data-testid='toggle' bindtap={() => setActive(true)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'translateX(-20px)',
+    );
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'translateX(40px)',
+    );
+  });
+
+  test('an explicit child animate prop overrides a propagated label', async () => {
+    const { getByTestId } = render(
+      <motion.view animate='visible'>
+        <motion.view
+          data-testid='child'
+          animate='hidden'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+  });
+
   test('separates transitionEnd from animated values', () => {
     expect(
       splitMotionTarget(
