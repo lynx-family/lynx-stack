@@ -336,9 +336,9 @@ function useMotionHostProps<Props extends MotionProps>(
         return;
       }
 
-      const resolvedOptions = options?.repeat === -1
+      const resolvedOptions = (options?.repeat === -1
         ? { ...options, repeat: Number.POSITIVE_INFINITY }
-        : options;
+        : options) ?? {};
       const values = { ...motionValueBindings };
       const targets = [target, interactionTarget, hoverTarget];
       for (const definition of targets) {
@@ -493,9 +493,9 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     tapAnimationRef.current = [];
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletTapTransition?.repeat === -1
+    const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletTapTransition;
+      : workletTapTransition) ?? {};
     if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
       for (const key in targetValues) {
@@ -549,9 +549,9 @@ function useMotionHostProps<Props extends MotionProps>(
     const restingTransition = hoverActiveRef.current && resolvedHover.target
       ? workletHoverTransition
       : workletTapTransition;
-    const resolvedTransition = restingTransition?.repeat === -1
+    const resolvedTransition = (restingTransition?.repeat === -1
       ? { ...restingTransition, repeat: Number.POSITIVE_INFINITY }
-      : restingTransition;
+      : restingTransition) ?? {};
     const restingValues: Record<string, unknown> = {};
     for (const key in targetValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];
@@ -617,9 +617,9 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     tapAnimationRef.current = [];
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletHoverTransition?.repeat === -1
+    const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletHoverTransition;
+      : workletHoverTransition) ?? {};
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
     if (isLynxForWeb) {
@@ -674,9 +674,9 @@ function useMotionHostProps<Props extends MotionProps>(
       | Record<string, unknown>
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletHoverTransition?.repeat === -1
+    const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletHoverTransition;
+      : workletHoverTransition) ?? {};
     const restingValues: Record<string, unknown> = {};
     for (const key in hoverValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];
