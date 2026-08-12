@@ -570,7 +570,9 @@ describe('declarative Motion', () => {
       await new Promise(resolve => setTimeout(resolve, 50));
     });
 
-    expect(getByTestId('button').getAttribute('style')).toContain('scale(1');
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'transform: scale(1, 1);',
+    );
     expect(getByTestId('button').getAttribute('style')).toContain(
       'rgb(255, 255, 255)',
     );
@@ -602,7 +604,7 @@ describe('declarative Motion', () => {
       await new Promise(resolve => setTimeout(resolve, 300));
     });
     expect(getByTestId('button').getAttribute('style')).toContain(
-      'scale(1',
+      'transform: scale(1, 1);',
     );
     expect(getByTestId('button').getAttribute('style')).toContain(
       'rgb(255, 255, 255)',
