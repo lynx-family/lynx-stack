@@ -162,9 +162,12 @@ function useMotionHostProps<Props extends MotionProps>(
     variants,
     custom,
   );
+  const resolvedInitialMotion = resolvedInitial === false
+    ? undefined
+    : splitMotionTarget(resolvedInitial, transition);
   const resolvedInitialTarget = resolvedInitial === false
     ? false
-    : splitMotionTarget(resolvedInitial, undefined).target;
+    : resolvedInitialMotion?.target;
   const resolvedAnimate = splitMotionTarget(
     resolvedAnimateDefinition,
     transition,
@@ -204,6 +207,13 @@ function useMotionHostProps<Props extends MotionProps>(
         ? { ...resolvedAnimate.transition, repeat: -1 }
         : resolvedAnimate.transition,
     [resolvedAnimate.transition],
+  );
+  const workletInitialTransition = useMemo(
+    () =>
+      resolvedInitialMotion?.transition?.repeat === Number.POSITIVE_INFINITY
+        ? { ...resolvedInitialMotion.transition, repeat: -1 }
+        : resolvedInitialMotion?.transition,
+    [resolvedInitialMotion?.transition],
   );
   const workletTapTransition = useMemo(
     () =>
@@ -727,7 +737,9 @@ function useMotionHostProps<Props extends MotionProps>(
     let startedAnimationCount = 0;
     const restingTransition = hoverActiveRef.current && resolvedHover.target
       ? workletHoverTransition
-      : workletTapTransition;
+      : (resolvedAnimate.target
+        ? workletAnimateTransition
+        : workletInitialTransition);
     const resolvedTransition = (restingTransition?.repeat === -1
       ? { ...restingTransition, repeat: Number.POSITIVE_INFINITY }
       : restingTransition) ?? {};
@@ -1009,9 +1021,12 @@ function useMotionHostProps<Props extends MotionProps>(
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     let startedAnimationCount = 0;
-    const resolvedTransition = (workletHoverTransition?.repeat === -1
-      ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletHoverTransition) ?? {};
+    const restingTransition = resolvedAnimate.target
+      ? workletAnimateTransition
+      : workletInitialTransition;
+    const resolvedTransition = (restingTransition?.repeat === -1
+      ? { ...restingTransition, repeat: Number.POSITIVE_INFINITY }
+      : restingTransition) ?? {};
     const restingValues: Record<string, unknown> = {};
     for (const key in hoverValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];

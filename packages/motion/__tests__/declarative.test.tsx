@@ -607,6 +607,31 @@ describe('declarative Motion', () => {
     expect(getByTestId('button').getAttribute('style')).toContain('opacity: 1');
   });
 
+  test('uses the initial transition when a tap restores its base value', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        initial={{ opacity: 1, transition: { type: false } }}
+        whileTap={{ opacity: 0.5, transition: { duration: 1 } }}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('button').getAttribute('style')).not.toContain(
+      'opacity: 1',
+    );
+
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('restores every value after interrupting a tap animation', async () => {
     const { getByTestId } = render(
       <motion.view
