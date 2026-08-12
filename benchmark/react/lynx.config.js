@@ -99,10 +99,12 @@ export default defineConfig({
         './cases/020-many-main-thread-refs/index.tsx',
       ],
       '021-motion-values-500': [
+        './src/motionPolyfill.ts',
         './src/patchProfile.ts',
         './cases/021-motion-values-500/index.tsx',
       ],
       '022-motion-values-1000': [
+        './src/motionPolyfill.ts',
         './src/patchProfile.ts',
         './cases/022-motion-values-1000/index.tsx',
       ],
