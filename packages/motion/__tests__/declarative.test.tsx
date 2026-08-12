@@ -9,6 +9,7 @@ import type { IntrinsicElements } from '@lynx-js/types';
 import { act, fireEvent, render } from '@lynx-js/react/testing-library';
 
 import { motion, useMotionValue } from '../src/index.js';
+import type { MotionStyle, MotionTarget } from '../src/declarative/types.js';
 import { ElementCompt } from '../src/polyfill/element.js';
 import {
   collectMotionValues,
@@ -57,6 +58,15 @@ describe('declarative Motion', () => {
       width: '100px',
       opacity: 1,
       transform: 'translateX(24px)',
+    });
+  });
+
+  test('preserves typed CSS custom properties in initial styles', () => {
+    const style: MotionStyle = { '--motion-color': '#fff' };
+    const target: MotionTarget = { '--motion-color': '#000' };
+
+    expect(resolveInitialStyle(style, target)).toEqual({
+      '--motion-color': '#000',
     });
   });
 
