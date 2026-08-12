@@ -411,6 +411,62 @@ describe('MainThreadObject', () => {
     );
   });
 
+  it('keeps unbridged production handles as plain serializable objects', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      const type = defineMainThreadObjectType({
+        type: '@test/production-counter',
+        create: value => ({ value }),
+      });
+      let counter;
+      const App = () => {
+        counter = useMainThreadObject(type, 42);
+        return <view />;
+      };
+
+      globalThis.globDynamicComponentEntry = '__Card__';
+      globalEnvManager.switchToBackground();
+      render(<App />, __root);
+
+      expect(counter.get).toBeUndefined();
+      counter.value = 43;
+      expect(counter.value).toBe(43);
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
+  });
+
+  it('keeps non-bridged properties permissive on bridged production handles', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      const set = vi.fn();
+      const type = defineMainThreadObjectType({
+        type: '@test/production-background-counter',
+        create: value => ({ value, set }),
+        backgroundMethods: () => ({ set }),
+      });
+      let counter;
+      const App = () => {
+        counter = useMainThreadObject(type, 42);
+        return <view />;
+      };
+
+      globalThis.globDynamicComponentEntry = '__Card__';
+      globalEnvManager.switchToBackground();
+      render(<App />, __root);
+
+      counter.set(43);
+      expect(set).toHaveBeenCalledWith(43);
+      expect(counter.get).toBeUndefined();
+      counter.value = 44;
+      expect(counter.value).toBe(44);
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
+  });
+
   it('uses a plain serializable handle in the main-thread runtime', () => {
     const type = defineMainThreadObjectType({
       type: '@test/main-thread-counter',
