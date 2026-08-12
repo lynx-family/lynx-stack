@@ -594,6 +594,9 @@ describe('declarative Motion', () => {
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 10));
     });
+    expect(getByTestId('button').getAttribute('style')).not.toContain(
+      'rgb(255, 255, 255)',
+    );
     fireEvent.touchend(getByTestId('button'));
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 300));
