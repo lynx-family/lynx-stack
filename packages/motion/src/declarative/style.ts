@@ -81,6 +81,16 @@ function formatTransformValue(key: string, value: string | number): string {
   return `${value}px`;
 }
 
+function formatTransformOriginValue(
+  key: 'originX' | 'originY' | 'originZ',
+  value: string | number,
+): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return key === 'originZ' ? `${value}px` : `${value * 100}%`;
+}
+
 function appendResolvedValues(
   output: Record<string, unknown>,
   transforms: Record<string, string | number>,
@@ -114,24 +124,30 @@ export function resolveInitialStyle(
 
   const output: Record<string, unknown> = {};
   const transforms: Record<string, string | number> = {};
-  appendResolvedValues(
-    output,
-    transforms,
-    (style ?? {}) as Record<string, unknown>,
-  );
+  const transformOrigin: Partial<
+    Record<'originX' | 'originY' | 'originZ', string | number>
+  > = {};
+  const appendInitialValues = (
+    values: Record<string, unknown>,
+    useFinalKeyframe = false,
+  ) => {
+    const { originX, originY, originZ, ...rest } = values;
+    appendResolvedValues(output, transforms, rest, useFinalKeyframe);
+    for (const [key, value] of Object.entries({ originX, originY, originZ })) {
+      const resolvedValue = resolveStyleValue(value, useFinalKeyframe);
+      if (
+        typeof resolvedValue === 'string'
+        || typeof resolvedValue === 'number'
+      ) {
+        transformOrigin[key as keyof typeof transformOrigin] = resolvedValue;
+      }
+    }
+  };
+  appendInitialValues((style ?? {}) as Record<string, unknown>);
   if (initial === false) {
-    appendResolvedValues(
-      output,
-      transforms,
-      (animate ?? {}) as Record<string, unknown>,
-      true,
-    );
+    appendInitialValues((animate ?? {}) as Record<string, unknown>, true);
   } else {
-    appendResolvedValues(
-      output,
-      transforms,
-      (initial ?? {}) as Record<string, unknown>,
-    );
+    appendInitialValues((initial ?? {}) as Record<string, unknown>);
   }
 
   const generatedTransform = Object.entries(transforms)
@@ -145,6 +161,16 @@ export function resolveInitialStyle(
     output['transform'] = typeof existingTransform === 'string'
       ? `${existingTransform} ${generatedTransform}`
       : generatedTransform;
+  }
+  if (Object.keys(transformOrigin).length > 0) {
+    const originX = transformOrigin.originX ?? '50%';
+    const originY = transformOrigin.originY ?? '50%';
+    const originZ = transformOrigin.originZ ?? '0';
+    output['transformOrigin'] = [
+      formatTransformOriginValue('originX', originX),
+      formatTransformOriginValue('originY', originY),
+      formatTransformOriginValue('originZ', originZ),
+    ].join(' ');
   }
 
   return Object.keys(output).length > 0 ? output as CSSProperties : undefined;
