@@ -360,6 +360,72 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('applies a transitionEnd-only animate update', async () => {
+    function App() {
+      const [active, setActive] = useState(false);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            style={{ opacity: 1 }}
+            animate={active ? { transitionEnd: { opacity: 0.4 } } : {}}
+            transition={{ type: false }}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(true)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.4');
+  });
+
+  test('does not apply a stale transitionEnd-only animate update', async () => {
+    function App() {
+      const [step, setStep] = useState(0);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            animate={step === 0
+              ? { opacity: 1 }
+              : step === 1
+              ? { transitionEnd: { opacity: 0.4 } }
+              : { opacity: 0.8 }}
+            transition={{ type: false }}
+          />
+          <view
+            data-testid='toggle'
+            bindtap={() => {
+              setStep(1);
+              setStep(2);
+            }}
+          />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.8');
+  });
+
   test('does not complete an animation after unmount', async () => {
     const onAnimationComplete = vi.fn();
     function App() {

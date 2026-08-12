@@ -374,15 +374,21 @@ function useMotionHostProps<Props extends MotionProps>(
         : options) ?? {};
       const values = { ...motionValueBindings };
       const targetValues = (target ?? {}) as Record<string, unknown>;
+      const ownedTargetValues = {
+        ...targetValues,
+        ...transitionEnd,
+      };
       const animationTargetValues: Record<string, unknown> = {};
       for (const key in animateTargetKeysRef.current) {
-        if (!(key in targetValues) && startingValues[key] !== undefined) {
+        if (!(key in ownedTargetValues) && startingValues[key] !== undefined) {
           animationTargetValues[key] = startingValues[key];
         }
       }
       animateTargetKeysRef.current = {};
-      for (const key in targetValues) {
+      for (const key in ownedTargetValues) {
         animateTargetKeysRef.current[key] = true;
+      }
+      for (const key in targetValues) {
         animationTargetValues[key] = targetValues[key];
       }
       const targets = [
@@ -458,6 +464,30 @@ function useMotionHostProps<Props extends MotionProps>(
         styleCleanupRef.current = styleEffect(motionElement, values);
       }
 
+      function applyAnimateTransitionEnd() {
+        let addedValue = false;
+        for (const key in transitionEnd) {
+          const finalValue = transitionEnd[key];
+          let value = values[key];
+          if (!value && finalValue !== undefined) {
+            value = motionValue(finalValue as string | number);
+            generatedValuesRef.current[key] = value;
+            values[key] = value;
+            addedValue = true;
+          } else if (value && finalValue !== undefined) {
+            value.set(finalValue as never);
+          }
+        }
+        if (addedValue && elementRef.current) {
+          const ElementConstructor = globalThis.Element as unknown as new(
+            element: MainThread.Element,
+          ) => Element;
+          motionElement ??= new ElementConstructor(elementRef.current);
+          styleCleanupRef.current?.();
+          styleCleanupRef.current = styleEffect(motionElement, values);
+        }
+      }
+
       const completionPromises: Promise<void>[] = [];
       if (shouldAnimate) {
         for (const key in animationTargetValues) {
@@ -486,28 +516,35 @@ function useMotionHostProps<Props extends MotionProps>(
       ) {
         void runOnBackground(onAnimationStart)(animate);
       }
-      if (completionPromises.length > 0 && animate !== undefined) {
+      const hasTransitionEnd = Boolean(
+        transitionEnd && Object.keys(transitionEnd).length > 0,
+      );
+      if (
+        completionPromises.length === 0
+        && animate !== undefined
+        && hasTransitionEnd
+      ) {
+        if (onAnimationStart) {
+          void runOnBackground(onAnimationStart)(animate);
+        }
+        const reportAnimationComplete = onAnimationComplete
+          ? runOnBackground(onAnimationComplete)
+          : undefined;
+        if (reportAnimationComplete) {
+          void reportAnimationComplete(animate);
+        }
+        requestAnimationFrame(() => {
+          if (animationGenerationRef.current !== animationGeneration) {
+            return;
+          }
+          applyAnimateTransitionEnd();
+        });
+      } else if (completionPromises.length > 0 && animate !== undefined) {
         void Promise.all(completionPromises).then(() => {
           if (animationGenerationRef.current !== animationGeneration) {
             return;
           }
-          let addedValue = false;
-          for (const key in transitionEnd) {
-            const finalValue = transitionEnd[key];
-            let value = values[key];
-            if (!value && finalValue !== undefined) {
-              value = motionValue(finalValue as string | number);
-              generatedValuesRef.current[key] = value;
-              values[key] = value;
-              addedValue = true;
-            } else if (value && finalValue !== undefined) {
-              value.set(finalValue as never);
-            }
-          }
-          if (addedValue && motionElement) {
-            styleCleanupRef.current?.();
-            styleCleanupRef.current = styleEffect(motionElement, values);
-          }
+          applyAnimateTransitionEnd();
           if (onAnimationComplete) {
             void runOnBackground(onAnimationComplete)(animate);
           }
