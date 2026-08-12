@@ -167,6 +167,9 @@ function getCommonOptions(
 
         simplifyCtorLikeReactLynx2: compat?.simplifyCtorLikeReactLynx2 ?? false,
 
+        transformLegacyEventAttributeNames:
+          compat?.transformLegacyEventAttributeNames ?? true,
+
         // NOTE: never pass '' (empty string) as default value
         ...(typeof compat?.removeComponentAttrRegex === 'string' && {
           removeComponentAttrRegex: compat?.removeComponentAttrRegex,
