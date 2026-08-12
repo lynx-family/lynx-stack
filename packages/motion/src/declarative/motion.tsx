@@ -60,6 +60,7 @@ import type {
 interface MotionVariantContextValue {
   initial?: MotionDefinition | false;
   animate?: MotionDefinition;
+  delay?: number;
 }
 
 const MotionVariantContext = createContext<MotionVariantContextValue>({});
@@ -72,24 +73,44 @@ function isVariantLabel(
 
 function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   context: MotionVariantContextValue;
+  delay: number;
   props: Props;
+  resolvedAnimateDefinition: MotionTarget | false | undefined;
 } {
   const parent = useContext(MotionVariantContext);
   const initial = props.initial === undefined && isVariantLabel(parent.initial)
     ? parent.initial
     : props.initial;
-  const animate = props.animate === undefined && isVariantLabel(parent.animate)
+  const inheritsAnimate = props.animate === undefined
+    && isVariantLabel(parent.animate);
+  const animate = inheritsAnimate
     ? parent.animate
     : props.animate;
+  const resolvedAnimateDefinition = resolveMotionDefinition(
+    animate,
+    props.variants,
+    props.custom,
+  );
+  const resolvedAnimate = splitMotionTarget(
+    resolvedAnimateDefinition,
+    props.transition,
+  );
+  const inheritedDelay = inheritsAnimate ? parent.delay ?? 0 : 0;
+  const delayChildren = resolvedAnimate.transition?.delayChildren;
+  const childDelay = inheritedDelay
+    + (typeof delayChildren === 'number' ? delayChildren : 0);
   const context = useMemo<MotionVariantContextValue>(() => ({
     ...(isVariantLabel(initial) ? { initial } : {}),
     ...(isVariantLabel(animate) ? { animate } : {}),
-  }), [animate, initial]);
+    ...(childDelay ? { delay: childDelay } : {}),
+  }), [animate, childDelay, initial]);
   return {
     context,
+    delay: inheritedDelay,
     props: initial === props.initial && animate === props.animate
       ? props
       : { ...props, initial, animate },
+    resolvedAnimateDefinition,
   };
 }
 
@@ -137,6 +158,8 @@ function tapInfo(event: unknown) {
 
 function useMotionHostProps<Props extends MotionProps>(
   props: Props,
+  inheritedDelay = 0,
+  inheritedResolvedAnimate?: MotionTarget | false,
 ): PreparedHostProps {
   const {
     animate,
@@ -200,11 +223,8 @@ function useMotionHostProps<Props extends MotionProps>(
   const hadAnimateTargetRef = useRef(false);
 
   const resolvedInitial = resolveMotionDefinition(initial, variants, custom);
-  const resolvedAnimateDefinition = resolveMotionDefinition(
-    animate,
-    variants,
-    custom,
-  );
+  const resolvedAnimateDefinition = inheritedResolvedAnimate
+    ?? resolveMotionDefinition(animate, variants, custom);
   const resolvedTapDefinition = resolveMotionDefinition(
     whileTap,
     variants,
@@ -262,10 +282,18 @@ function useMotionHostProps<Props extends MotionProps>(
   );
   const workletAnimateTransition = useMemo(
     () =>
-      resolvedAnimate.transition?.repeat === Number.POSITIVE_INFINITY
-        ? { ...resolvedAnimate.transition, repeat: -1 }
-        : resolvedAnimate.transition,
-    [resolvedAnimate.transition],
+      inheritedDelay && resolvedAnimate.transition?.delay === undefined
+        ? {
+          ...resolvedAnimate.transition,
+          delay: inheritedDelay,
+          ...(resolvedAnimate.transition?.repeat === Number.POSITIVE_INFINITY
+            ? { repeat: -1 }
+            : {}),
+        }
+        : (resolvedAnimate.transition?.repeat === Number.POSITIVE_INFINITY
+          ? { ...resolvedAnimate.transition, repeat: -1 }
+          : resolvedAnimate.transition),
+    [inheritedDelay, resolvedAnimate.transition],
   );
   const workletInitialTransition = useMemo(
     () =>
@@ -1298,7 +1326,11 @@ function useMotionHostProps<Props extends MotionProps>(
 
 const MotionView: FunctionComponent<MotionViewProps> = (props) => {
   const inherited = useInheritedMotionProps(props);
-  const hostProps = useMotionHostProps(inherited.props);
+  const hostProps = useMotionHostProps(
+    inherited.props,
+    inherited.delay,
+    inherited.resolvedAnimateDefinition,
+  );
   const { children, ...elementProps } = hostProps;
   if (!shouldProvideVariantContext(props, inherited.context, children)) {
     return createElement('view', hostProps as IntrinsicElements['view']);
@@ -1315,7 +1347,11 @@ const MotionView: FunctionComponent<MotionViewProps> = (props) => {
 
 const MotionText: FunctionComponent<MotionTextProps> = (props) => {
   const inherited = useInheritedMotionProps(props);
-  const hostProps = useMotionHostProps(inherited.props);
+  const hostProps = useMotionHostProps(
+    inherited.props,
+    inherited.delay,
+    inherited.resolvedAnimateDefinition,
+  );
   const { children, ...elementProps } = hostProps;
   if (!shouldProvideVariantContext(props, inherited.context, children)) {
     return createElement('text', hostProps as IntrinsicElements['text']);
@@ -1332,7 +1368,11 @@ const MotionText: FunctionComponent<MotionTextProps> = (props) => {
 
 const MotionImage: FunctionComponent<MotionImageProps> = (props) => {
   const inherited = useInheritedMotionProps(props);
-  const hostProps = useMotionHostProps(inherited.props);
+  const hostProps = useMotionHostProps(
+    inherited.props,
+    inherited.delay,
+    inherited.resolvedAnimateDefinition,
+  );
   const { children, ...elementProps } = hostProps;
   if (!shouldProvideVariantContext(props, inherited.context, children)) {
     return createElement('image', hostProps as IntrinsicElements['image']);
@@ -1354,7 +1394,11 @@ function createMotionComponent<Props extends { style?: unknown }>(
     props,
   ) => {
     const inherited = useInheritedMotionProps(props);
-    const hostProps = useMotionHostProps(inherited.props);
+    const hostProps = useMotionHostProps(
+      inherited.props,
+      inherited.delay,
+      inherited.resolvedAnimateDefinition,
+    );
     const { children, ...componentProps } = hostProps;
     if (!shouldProvideVariantContext(props, inherited.context, children)) {
       return createElement(Component, hostProps as unknown as Props);

@@ -190,6 +190,103 @@ describe('declarative Motion', () => {
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
   });
 
+  test('propagates numeric delayChildren to a variant child', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: {},
+          visible: { transition: { delayChildren: 0.08 } },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 90));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
+  test('accumulates numeric delayChildren through variant descendants', async () => {
+    const delayedVariant = {
+      hidden: {},
+      visible: { transition: { delayChildren: 0.06 } },
+    };
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={delayedVariant}
+      >
+        <motion.view variants={delayedVariant}>
+          <motion.view
+            data-testid='child'
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1 },
+            }}
+            transition={{ type: false }}
+          />
+        </motion.view>
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
+  test('explicit child animate starts a new delayChildren root', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        animate='visible'
+        variants={{
+          visible: { transition: { delayChildren: 0.2 } },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          initial='hidden'
+          animate='visible'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('separates transitionEnd from animated values', () => {
     expect(
       splitMotionTarget(

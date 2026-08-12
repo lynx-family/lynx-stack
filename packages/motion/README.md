@@ -46,7 +46,8 @@ The declarative layer currently supports:
 
 - object targets and string/array/function `variants` for `initial` and
   `animate`, including `custom`, target-local `transition`, and parent label
-  inheritance for base targets when a child does not define its own label
+  inheritance for base targets when a child does not define its own label;
+  numeric `delayChildren` also propagates through inherited labels
 - `initial={false}` to render the final `animate` keyframe without a mount
   animation while preserving later target updates
 - transform aliases, keyframes, repeat/reverse, colors, and live `MotionValue`
@@ -59,8 +60,8 @@ The declarative layer currently supports:
 
 It does **not** yet provide the complete `motion/react` declarative contract.
 In particular, focus/in-view/drag states and their animation lifecycle
-callbacks, animation controls, gesture propagation and variant orchestration
-(`when`, `delayChildren`, and `staggerChildren`), layout and
+callbacks, animation controls, gesture propagation and remaining variant
+orchestration (`when`, dynamic `delayChildren`, and `staggerChildren`), layout and
 shared-layout animations, `exit`, and `AnimatePresence` are not supported.
 Internal main-thread refs, handlers, and gestures also cannot yet be safely
 composed with every consumer-owned equivalent.
