@@ -213,6 +213,42 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('switches display to none only after an opacity exit completes', async () => {
+    function App() {
+      const [hidden, setHidden] = useState(false);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={{ display: 'block', opacity: 1 }}
+            animate={hidden
+              ? { display: 'none', opacity: 0 }
+              : { display: 'block', opacity: 1 }}
+            transition={{ duration: 0.08, ease: 'linear' }}
+          />
+          <view data-testid='toggle' bindtap={() => setHidden(true)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'display: block',
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('display: none');
+  });
+
   test('routes value-specific transitions by animated property', async () => {
     function App() {
       const [active, setActive] = useState(false);
