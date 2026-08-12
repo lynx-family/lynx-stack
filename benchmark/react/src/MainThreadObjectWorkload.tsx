@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { motion, useMotionValue } from '@lynx-js/motion';
+import { useMotionValue } from '@lynx-js/motion';
 
 function Item({ index }: { index: number }) {
   const x = useMotionValue(index);
@@ -12,9 +12,9 @@ function Item({ index }: { index: number }) {
   };
 
   return (
-    <motion.view
+    <view
       main-thread:bindtap={increment}
-      style={{ height: '1px', width: '1px', x }}
+      style={{ height: '1px', width: '1px' }}
     />
   );
 }
