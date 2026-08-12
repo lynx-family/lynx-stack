@@ -11,6 +11,12 @@ use swc_plugins_shared::target::TransformTarget;
 
 pub struct StmtGen {}
 
+#[derive(Clone, Copy)]
+enum CaptureRoot {
+  Ident,
+  ThisMember,
+}
+
 struct RegisterWorkletParams<'a> {
   mode: TransformMode,
   target: TransformTarget,
@@ -40,7 +46,13 @@ impl StmtGen {
   ) -> (Box<Expr>, Stmt) {
     let hash = Expr::Lit(hash.into());
     let mut extracted_value = ident_collector.take_values();
-    if StmtGen::wrap_main_thread_object_candidates(&mut extracted_value) {
+    let mut extracted_this_expr = ident_collector.take_this_expr();
+    if StmtGen::wrap_main_thread_object_candidates(&mut extracted_value, CaptureRoot::Ident)
+      | StmtGen::wrap_main_thread_object_candidates(
+        &mut extracted_this_expr,
+        CaptureRoot::ThisMember,
+      )
+    {
       named_imports.insert("captureMainThreadObject".into());
     }
     let extracted_idents = ident_collector.take_idents();
@@ -54,7 +66,7 @@ impl StmtGen {
           target
         },
         extracted_value,
-        ident_collector.take_this_expr(),
+        extracted_this_expr,
         extracted_js_fns.clone(),
         hash.clone(),
         named_imports,
@@ -176,7 +188,10 @@ impl StmtGen {
     .into()
   }
 
-  fn wrap_main_thread_object_candidates(extracted_value: &mut Box<Expr>) -> bool {
+  fn wrap_main_thread_object_candidates(
+    extracted_value: &mut Box<Expr>,
+    capture_root: CaptureRoot,
+  ) -> bool {
     let mut wrapped = false;
     let Some(object) = extracted_value.as_mut_object() else {
       return false;
@@ -192,17 +207,28 @@ impl StmtGen {
       if !key_value.value.is_object() {
         continue;
       }
-      let Some(source) = StmtGen::find_root_ident(&key_value.value) else {
+      let source = match capture_root {
+        CaptureRoot::Ident => StmtGen::find_root_ident(&key_value.value).map(Expr::Ident),
+        CaptureRoot::ThisMember => StmtGen::find_root_this_member(&key_value.value),
+      };
+      let Some(source) = source else {
         continue;
       };
 
       let fallback = key_value.value.clone();
-      key_value.value = CallExpr {
+      let captured = CallExpr {
         ctxt: Default::default(),
         span: DUMMY_SP,
-        args: vec![Expr::Ident(source).into(), fallback.into()],
+        args: vec![source.into()],
         callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
         type_args: None,
+      }
+      .into();
+      key_value.value = BinExpr {
+        span: DUMMY_SP,
+        op: BinaryOp::NullishCoalescing,
+        left: captured,
+        right: fallback,
       }
       .into();
       wrapped = true;
@@ -220,6 +246,21 @@ impl StmtGen {
         match prop.as_ref() {
           Prop::Shorthand(ident) => Some(ident.clone()),
           Prop::KeyValue(key_value) => StmtGen::find_root_ident(&key_value.value),
+          _ => None,
+        }
+      }),
+      _ => None,
+    }
+  }
+
+  fn find_root_this_member(expr: &Expr) -> Option<Expr> {
+    match expr {
+      Expr::Member(member) if member.obj.is_this() => Some(Expr::Member(member.clone())),
+      Expr::Member(member) => StmtGen::find_root_this_member(&member.obj),
+      Expr::Object(object) => object.props.iter().find_map(|prop| {
+        let prop = prop.as_prop()?;
+        match prop.as_ref() {
+          Prop::KeyValue(key_value) => StmtGen::find_root_this_member(&key_value.value),
           _ => None,
         }
       }),

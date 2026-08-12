@@ -160,6 +160,7 @@ describe('Lazy Exports', () => {
 
     const fallback = {};
     expect(ReactInternalExports.captureMainThreadObject({}, fallback)).toBe(fallback);
+    expect(ReactInternalExports.captureMainThreadObject({})).toBeUndefined();
   });
 
   test('registers a MainThreadObject type while evaluating a lazy MTS module', () => {
