@@ -468,6 +468,8 @@ describe('WorkletRef', () => {
 
     globalThis.lynxWorkletImpl._refImpl._workletRefMap[99] = null;
     expect(() => removeValueFromWorkletRefMap(99)).not.toThrow();
+    globalThis.lynxWorkletImpl._refImpl._workletRefMap[98] = {};
+    expect(() => removeValueFromWorkletRefMap(98)).not.toThrow();
   });
 
   it('should create, get and update at first screen', () => {
