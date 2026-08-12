@@ -148,6 +148,7 @@ export abstract class MainThreadObjectHandle<O extends object> {
 export interface MainThreadObjectType<I, O extends object> {
     readonly create: (initialValue: I) => O;
     readonly dispose?: (object: O) => void;
+    readonly hydrate?: (object: O, firstScreenObject: O) => void;
     readonly type: string;
 }
 
