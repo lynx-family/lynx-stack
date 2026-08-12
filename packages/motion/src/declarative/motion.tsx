@@ -125,6 +125,7 @@ function useMotionHostProps<Props extends MotionProps>(
   const hoverActiveRef = useMainThreadRef(false);
   const tapActiveRef = useMainThreadRef(false);
   const animationGenerationRef = useMainThreadRef(0);
+  const animateTargetKeysRef = useMainThreadRef<Record<string, true>>({});
   const hoverLayoutRef = useRef<
     { left: number; right: number; top: number; bottom: number } | null
   >(null);
@@ -134,6 +135,7 @@ function useMotionHostProps<Props extends MotionProps>(
   >({});
   const styleCleanupRef = useMainThreadRef<(() => void) | null>(null);
   const hasMountedAnimationRef = useRef(false);
+  const hadAnimateTargetRef = useRef(false);
 
   const resolvedInitial = resolveMotionDefinition(initial, variants, custom);
   const resolvedAnimateDefinition = resolveMotionDefinition(
@@ -293,11 +295,17 @@ function useMotionHostProps<Props extends MotionProps>(
     : undefined;
 
   useEffect(() => {
+    const hadAnimateTarget = hadAnimateTargetRef.current;
+    hadAnimateTargetRef.current = Boolean(
+      resolvedAnimate.target
+        && Object.keys(resolvedAnimate.target).length > 0,
+    );
     if (
       !resolvedAnimate.target
       && !resolvedTap.target
       && !resolvedHover.target
       && Object.keys(motionValues).length === 0
+      && !hadAnimateTarget
     ) {
       return;
     }
@@ -340,7 +348,23 @@ function useMotionHostProps<Props extends MotionProps>(
         ? { ...options, repeat: Number.POSITIVE_INFINITY }
         : options) ?? {};
       const values = { ...motionValueBindings };
-      const targets = [target, interactionTarget, hoverTarget];
+      const targetValues = (target ?? {}) as Record<string, unknown>;
+      const animationTargetValues: Record<string, unknown> = {};
+      for (const key in animateTargetKeysRef.current) {
+        if (!(key in targetValues) && startingValues[key] !== undefined) {
+          animationTargetValues[key] = startingValues[key];
+        }
+      }
+      animateTargetKeysRef.current = {};
+      for (const key in targetValues) {
+        animateTargetKeysRef.current[key] = true;
+        animationTargetValues[key] = targetValues[key];
+      }
+      const targets = [
+        animationTargetValues,
+        interactionTarget,
+        hoverTarget,
+      ];
       for (const definition of targets) {
         if (!definition) {
           continue;
@@ -408,11 +432,10 @@ function useMotionHostProps<Props extends MotionProps>(
         styleCleanupRef.current = styleEffect(element, values);
       }
 
-      if (target && shouldAnimate) {
-        const targetValues = target as Record<string, unknown>;
-        for (const key in targetValues) {
+      if (shouldAnimate) {
+        for (const key in animationTargetValues) {
           const value = values[key];
-          const targetValue = targetValues[key];
+          const targetValue = animationTargetValues[key];
           if (value && targetValue !== undefined) {
             void value.start(
               createMotionValueAnimation(
