@@ -69,6 +69,24 @@ describe('declarative Motion', () => {
     expect(motionValues?.['scale']).toBe(scale);
   });
 
+  test('preserves a MotionValue handle initial value across renders', () => {
+    let initialStyle: ReturnType<typeof resolveInitialStyle>;
+    function App({ initialValue }: { initialValue: number }) {
+      const scale = useMotionValue(initialValue);
+      initialStyle = resolveInitialStyle({ scale } as never, undefined);
+      return <view />;
+    }
+
+    const { rerender } = render(<App initialValue={1.25} />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    expect(initialStyle!).toEqual({ transform: 'scale(1.25)' });
+
+    rerender(<App initialValue={2} />);
+    expect(initialStyle!).toEqual({ transform: 'scale(1.25)' });
+  });
+
   test('resolves named and function variants with target transitions', () => {
     const definition = resolveMotionDefinition(
       ['base', 'active'],

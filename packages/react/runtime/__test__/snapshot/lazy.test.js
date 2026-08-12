@@ -145,10 +145,16 @@ describe('Lazy Exports', () => {
       create: value => ({ value }),
     };
 
-    expect(ReactExports.defineMainThreadObjectType(definition)).toEqual(definition);
-    expect(ReactCompatExports.defineMainThreadObjectType(definition)).toEqual(definition);
-    expect(() => ReactExports.useMainThreadObject(definition, 1)).toThrow();
-    expect(() => ReactCompatExports.useMainThreadObject(definition, 1)).toThrow();
+    const reactType = ReactExports.defineMainThreadObjectType(definition);
+    const compatType = ReactCompatExports.defineMainThreadObjectType(definition);
+    expect(reactType).toMatchObject(definition);
+    expect(reactType.isHandle).toBeTypeOf('function');
+    expect(reactType.getInitialPayload).toBeTypeOf('function');
+    expect(compatType).toMatchObject(definition);
+    expect(compatType.isHandle).toBeTypeOf('function');
+    expect(compatType.getInitialPayload).toBeTypeOf('function');
+    expect(() => ReactExports.useMainThreadObject(reactType, 1)).toThrow();
+    expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow();
 
     const fallback = {};
     expect(ReactInternalExports.captureMainThreadObject({}, fallback)).toBe(fallback);

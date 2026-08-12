@@ -17,6 +17,10 @@ import { useMemo } from '../../../core/hooks/react.js';
 export const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 
 const mainThreadObjectHandles = new WeakSet<object>();
+const mainThreadObjectHandleMetadata = new WeakMap<
+  object,
+  { readonly initialValue: unknown; readonly type: string }
+>();
 
 /**
  * Describes how a serializable initialization payload becomes a stable object
@@ -24,13 +28,30 @@ const mainThreadObjectHandles = new WeakSet<object>();
  *
  * @public
  */
-export interface MainThreadObjectType<I, O extends object> {
+export interface MainThreadObjectTypeDefinition<I, O extends object> {
   /** A globally unique and stable type key. */
   readonly type: string;
   /** Create the realized main-thread object. */
   readonly create: (initialValue: I) => O;
   /** Dispose a realized object after its handle is released. */
   readonly dispose?: (object: O) => void;
+}
+
+/**
+ * A main-thread object definition with type-scoped source-handle inspection.
+ *
+ * Handle inspection is intended for library adapters that need the
+ * initialization payload while producing background-rendered output. It does
+ * not expose the handle wire representation or the realized main-thread
+ * object.
+ *
+ * @public
+ */
+export interface MainThreadObjectType<I, O extends object> extends MainThreadObjectTypeDefinition<I, O> {
+  /** Return whether a value is a source-runtime handle of this exact type. */
+  readonly isHandle: (value: unknown) => value is O;
+  /** Read this type's initialization payload from one of its source handles. */
+  readonly getInitialPayload: (value: O) => I;
 }
 
 /**
@@ -69,6 +90,7 @@ export abstract class MainThreadObjectHandle<O extends object> {
     this._type = type;
     this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
     mainThreadObjectHandles.add(this);
+    mainThreadObjectHandleMetadata.set(this, { initialValue, type });
 
     if (__JS__) {
       addWorkletRefInitValue(
@@ -113,7 +135,7 @@ class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHa
  * @public
  */
 export function defineMainThreadObjectType<I, O extends object>(
-  definition: MainThreadObjectType<I, O>,
+  definition: MainThreadObjectTypeDefinition<I, O>,
 ): MainThreadObjectType<I, O> {
   if (typeof definition.type !== 'string' || definition.type.length === 0) {
     throw new Error('MainThreadObject type must be a non-empty string.');
@@ -125,7 +147,22 @@ export function defineMainThreadObjectType<I, O extends object>(
     throw new Error(`MainThreadObject type "${definition.type}" has an invalid dispose function.`);
   }
 
-  return Object.freeze({ ...definition });
+  const type = definition.type;
+  return Object.freeze({
+    ...definition,
+    isHandle(value: unknown): value is O {
+      return getMainThreadObjectHandleMetadata(value)?.type === type;
+    },
+    getInitialPayload(value: O): I {
+      const metadata = getMainThreadObjectHandleMetadata(value);
+      if (metadata?.type !== type) {
+        throw new Error(
+          `Value is not a MainThreadObject handle for type "${type}".`,
+        );
+      }
+      return metadata.initialValue as I;
+    },
+  });
 }
 
 /**
@@ -154,7 +191,7 @@ export function useMainThreadObject<I, O extends object>(
 
 /** @internal */
 export function registerMainThreadObjectDefinition<I, O extends object>(
-  objectType: MainThreadObjectType<I, O>,
+  objectType: MainThreadObjectTypeDefinition<I, O>,
 ): void {
   if (__JS__) {
     return;
@@ -174,6 +211,14 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
 /** @internal */
 export function isMainThreadObjectHandle(value: unknown): value is MainThreadObjectHandle<object> {
   return typeof value === 'object' && value !== null && mainThreadObjectHandles.has(value);
+}
+
+function getMainThreadObjectHandleMetadata(
+  value: unknown,
+): { readonly initialValue: unknown; readonly type: string } | undefined {
+  return typeof value === 'object' && value !== null
+    ? mainThreadObjectHandleMetadata.get(value)
+    : undefined;
 }
 
 function guardBackgroundMainThreadObjectAccess<O extends object>(
@@ -210,6 +255,10 @@ function guardBackgroundMainThreadObjectAccess<O extends object>(
     },
   });
   mainThreadObjectHandles.add(guardedHandle);
+  const metadata = mainThreadObjectHandleMetadata.get(handle);
+  if (metadata) {
+    mainThreadObjectHandleMetadata.set(guardedHandle, metadata);
+  }
   return guardedHandle;
 }
 

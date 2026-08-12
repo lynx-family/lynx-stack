@@ -88,7 +88,7 @@ export interface DataProcessors {
 }
 
 // @public
-export function defineMainThreadObjectType<I, O extends object>(definition: MainThreadObjectType<I, O>): MainThreadObjectType<I, O>;
+export function defineMainThreadObjectType<I, O extends object>(definition: MainThreadObjectTypeDefinition<I, O>): MainThreadObjectType<I, O>;
 
 export { forwardRef }
 
@@ -145,7 +145,13 @@ export abstract class MainThreadObjectHandle<O extends object> {
 }
 
 // @public
-export interface MainThreadObjectType<I, O extends object> {
+export interface MainThreadObjectType<I, O extends object> extends MainThreadObjectTypeDefinition<I, O> {
+    readonly getInitialPayload: (value: O) => I;
+    readonly isHandle: (value: unknown) => value is O;
+}
+
+// @public
+export interface MainThreadObjectTypeDefinition<I, O extends object> {
     readonly create: (initialValue: I) => O;
     readonly dispose?: (object: O) => void;
     readonly type: string;

@@ -355,10 +355,11 @@ describe('MainThreadObject', () => {
   });
 
   it('creates a typed handle through the library-author hook', () => {
-    const type = defineMainThreadObjectType({
+    const definition = {
       type: '@test/counter',
       create: value => ({ value }),
-    });
+    };
+    const type = defineMainThreadObjectType(definition);
     let counter;
     const App = () => {
       counter = useMainThreadObject(type, 42);
@@ -374,6 +375,22 @@ describe('MainThreadObject', () => {
       _type: '@test/counter',
       _mtoVersion: 1,
     });
+    definition.type = '@test/mutated-counter';
+    expect(type.type).toBe('@test/counter');
+    expect(type.isHandle(counter)).toBe(true);
+    expect(type.getInitialPayload(counter)).toBe(42);
+
+    const otherType = defineMainThreadObjectType({
+      type: '@test/other-counter',
+      create: value => ({ value }),
+    });
+    expect(otherType.isHandle(counter)).toBe(false);
+    expect(otherType.isHandle({ value: 42 })).toBe(false);
+    expect(otherType.isHandle(null)).toBe(false);
+    expect(otherType.isHandle(42)).toBe(false);
+    expect(() => otherType.getInitialPayload(counter)).toThrow(
+      'Value is not a MainThreadObject handle for type "@test/other-counter".',
+    );
     expect(() => counter.get()).toThrow(
       'MainThreadObject handle for "@test/counter" cannot access "get" in the background runtime. Use the object only inside a main-thread function.',
     );
