@@ -430,6 +430,99 @@ describe('declarative Motion', () => {
     expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.8');
   });
 
+  test('restores a value removed from animate to its initial value', async () => {
+    function App() {
+      const [active, setActive] = useState(true);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={{ opacity: 0 }}
+            animate={active ? { opacity: 1 } : {}}
+            transition={{ type: false }}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(false)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0');
+  });
+
+  test('uses the current initial value when a value leaves animate', async () => {
+    function App() {
+      const [active, setActive] = useState(true);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={{ opacity: active ? 0 : 0.5 }}
+            animate={active ? { opacity: 1 } : {}}
+            transition={{ type: false }}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(false)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.5');
+  });
+
+  test('keeps the current value when it leaves both animate and initial', async () => {
+    function App() {
+      const [active, setActive] = useState(true);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={active ? { opacity: 0 } : {}}
+            animate={active ? { opacity: 1 } : {}}
+            transition={{ type: false }}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(false)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('does not complete an animation after unmount', async () => {
     const onAnimationComplete = vi.fn();
     function App() {
