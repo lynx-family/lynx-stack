@@ -890,6 +890,106 @@ describe('Plugins - Dev', () => {
     })
   })
 
+  test('server.printUrls with per-environment entries', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: {
+          rootMain: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8080,
+      },
+      environments: {
+        lynx: {
+          source: {
+            entry: {
+              lynxMain: path.resolve(
+                __dirname,
+                './fixtures/hello-world/index.js',
+              ),
+            },
+          },
+        },
+        web: {
+          source: {
+            entry: {
+              webMain: path.resolve(
+                __dirname,
+                './fixtures/hello-world/index.js',
+              ),
+            },
+          },
+        },
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8080/lynxMain.lynx.bundle',
+    })
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8080/webMain.web.bundle',
+    })
+
+    expect(printedUrls).not.toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8080/lynxMain.web.bundle',
+    })
+
+    expect(printedUrls).not.toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8080/webMain.lynx.bundle',
+    })
+
+    const urls: (string | { url: string, label?: string })[] = printedUrls ?? []
+    const printedFor = (url: string) =>
+      urls.filter(printed => typeof printed === 'object' && printed.url === url)
+
+    expect(printedFor('http://example.com:8080/rootMain.lynx.bundle'))
+      .toStrictEqual([{
+        'label': 'Lynx',
+        'url': 'http://example.com:8080/rootMain.lynx.bundle',
+      }])
+
+    expect(printedFor('http://example.com:8080/rootMain.web.bundle'))
+      .toStrictEqual([{
+        'label': 'Web',
+        'url': 'http://example.com:8080/rootMain.web.bundle',
+      }])
+  })
+
   test('onAfterStartDevServer routes contains bundle entries', async () => {
     const rsbuild = await createStubRspeedy({
       source: {
