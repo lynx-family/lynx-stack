@@ -41,6 +41,7 @@ import {
 } from './style.js';
 import type {
   MotionComponentProps,
+  MotionDefinition,
   MotionFactory,
   MotionImageProps,
   MotionProps,
@@ -125,6 +126,7 @@ function useMotionHostProps<Props extends MotionProps>(
   const hoverActiveRef = useMainThreadRef(false);
   const tapActiveRef = useMainThreadRef(false);
   const animationGenerationRef = useMainThreadRef(0);
+  const tapAnimationGenerationRef = useMainThreadRef(0);
   const animateTargetKeysRef = useMainThreadRef<Record<string, true>>({});
   const hoverLayoutRef = useRef<
     { left: number; right: number; top: number; bottom: number } | null
@@ -336,6 +338,7 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       tapAnimationRef.current = [];
+      tapAnimationGenerationRef.current += 1;
       const animationGeneration = animationGenerationRef.current + 1;
       animationGenerationRef.current = animationGeneration;
       styleCleanupRef.current?.();
@@ -511,6 +514,7 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       tapAnimationRef.current = [];
+      tapAnimationGenerationRef.current += 1;
       styleCleanupRef.current?.();
       styleCleanupRef.current = null;
     }
@@ -538,17 +542,22 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
+    const animationGeneration = tapAnimationGenerationRef.current + 1;
+    tapAnimationGenerationRef.current = animationGeneration;
+    const completionPromises: Promise<void>[] = [];
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
       : workletTapTransition) ?? {};
+    // Keep animation handles out of the MTS snapshot captured by a ReactLynx
+    // rerender triggered from lifecycle callbacks.
     if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          void value.start(
+          const completion = value.start(
             createMotionValueAnimation(
               key,
               value,
@@ -557,19 +566,38 @@ function useMotionHostProps<Props extends MotionProps>(
             ),
           );
           if (value.animation) {
+            Object.defineProperty(value, 'animation', { enumerable: false });
+          }
+          completionPromises.push(completion);
+          if (!isLynxForWeb && value.animation) {
             tapAnimationRef.current.push(value.animation);
           }
         }
       }
-      return;
+    } else {
+      const ElementConstructor = globalThis.Element as unknown as new(
+        element: MainThread.Element,
+      ) => Element;
+      const element = new ElementConstructor(event.currentTarget);
+      const animation = animateMotionTarget(
+        element,
+        resolvedTap.target,
+        resolvedTransition,
+      );
+      tapAnimationRef.current.push(animation);
+      completionPromises.push(Promise.resolve(animation).then(() => undefined));
     }
-    const ElementConstructor = globalThis.Element as unknown as new(
-      element: MainThread.Element,
-    ) => Element;
-    const element = new ElementConstructor(event.currentTarget);
-    tapAnimationRef.current.push(
-      animateMotionTarget(element, resolvedTap.target, resolvedTransition),
-    );
+    if (completionPromises.length > 0 && onAnimationStart) {
+      void runOnBackground(onAnimationStart)(whileTap!);
+    }
+    if (completionPromises.length > 0 && onAnimationComplete) {
+      void Promise.all(completionPromises).then(() => {
+        if (tapAnimationGenerationRef.current !== animationGeneration) {
+          return;
+        }
+        void runOnBackground(onAnimationComplete)(whileTap!);
+      });
+    }
   }
 
   function endTapAnimation(event: MainThread.TouchEvent) {
@@ -584,6 +612,9 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
+    const animationGeneration = tapAnimationGenerationRef.current + 1;
+    tapAnimationGenerationRef.current = animationGeneration;
+    const completionPromises: Promise<void>[] = [];
     const targetValues = resolvedTap.target as Record<string, unknown>;
     const restingTarget = hoverActiveRef.current && resolvedHover.target
       ? resolvedHover.target
@@ -617,11 +648,15 @@ function useMotionHostProps<Props extends MotionProps>(
         restingValues[key] = restingValue;
       }
     }
+    const restingDefinition: MotionDefinition = hoverActiveRef.current
+        && whileHover !== undefined
+      ? whileHover
+      : animate ?? (restingValues as MotionTarget);
     if (isLynxForWeb || !event.currentTarget) {
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          void value.start(
+          const completion = value.start(
             createMotionValueAnimation(
               key,
               value,
@@ -630,19 +665,38 @@ function useMotionHostProps<Props extends MotionProps>(
             ),
           );
           if (value.animation) {
+            Object.defineProperty(value, 'animation', { enumerable: false });
+          }
+          completionPromises.push(completion);
+          if (!isLynxForWeb && value.animation) {
             tapAnimationRef.current.push(value.animation);
           }
         }
       }
-      return;
+    } else {
+      const ElementConstructor = globalThis.Element as unknown as new(
+        element: MainThread.Element,
+      ) => Element;
+      const element = new ElementConstructor(event.currentTarget);
+      const animation = animateMotionTarget(
+        element,
+        restingValues,
+        resolvedTransition,
+      );
+      tapAnimationRef.current.push(animation);
+      completionPromises.push(Promise.resolve(animation).then(() => undefined));
     }
-    const ElementConstructor = globalThis.Element as unknown as new(
-      element: MainThread.Element,
-    ) => Element;
-    const element = new ElementConstructor(event.currentTarget);
-    tapAnimationRef.current.push(
-      animateMotionTarget(element, restingValues, resolvedTransition),
-    );
+    if (completionPromises.length > 0 && onAnimationStart) {
+      void runOnBackground(onAnimationStart)(restingDefinition);
+    }
+    if (completionPromises.length > 0 && onAnimationComplete) {
+      void Promise.all(completionPromises).then(() => {
+        if (tapAnimationGenerationRef.current !== animationGeneration) {
+          return;
+        }
+        void runOnBackground(onAnimationComplete)(restingDefinition);
+      });
+    }
   }
 
   function startHoverAnimation() {
