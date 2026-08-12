@@ -841,6 +841,7 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
+    tapAnimationGenerationRef.current += 1;
     for (const animation of animationRef.current) {
       animation.stop();
     }
@@ -902,6 +903,7 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
+    tapAnimationGenerationRef.current += 1;
     for (const animation of tapAnimationRef.current) {
       animation.stop();
     }
