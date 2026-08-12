@@ -229,13 +229,19 @@ export function splitMotionTarget(
 ): {
   target: MotionTarget | undefined;
   transition: MotionTransition | undefined;
+  transitionEnd: Record<string, unknown> | undefined;
 } {
   if (!definition) {
-    return { target: undefined, transition: fallbackTransition };
+    return {
+      target: undefined,
+      transition: fallbackTransition,
+      transitionEnd: undefined,
+    };
   }
-  const { transition, ...target } = definition;
+  const { transition, transitionEnd, ...target } = definition;
   return {
     target: target as MotionTarget,
     transition: transition ?? fallbackTransition,
+    transitionEnd,
   };
 }
