@@ -393,6 +393,28 @@ describe('declarative Motion', () => {
     expect(onAnimationComplete).not.toHaveBeenCalled();
   });
 
+  test('completes an animation while mounted', async () => {
+    const onAnimationComplete = vi.fn();
+    render(
+      <motion.view
+        initial={{ x: 0 }}
+        animate={{ x: 40 }}
+        transition={{ duration: 0.01 }}
+        onAnimationComplete={onAnimationComplete}
+      />,
+      {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    expect(onAnimationComplete).toHaveBeenCalledOnce();
+    expect(onAnimationComplete).toHaveBeenCalledWith({ x: 40 });
+  });
+
   test('restores a static style when its animate value is removed', async () => {
     function App() {
       const [ownsOpacity, setOwnsOpacity] = useState(true);
