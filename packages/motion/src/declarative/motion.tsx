@@ -569,6 +569,34 @@ function useMotionHostProps<Props extends MotionProps>(
     const reportAnimationComplete = onAnimationComplete
       ? runOnBackground(onAnimationComplete)
       : undefined;
+    function applyTapTransitionEnd() {
+      const transitionEnd = resolvedTap.transitionEnd;
+      if (!transitionEnd) {
+        return;
+      }
+      let addedValue = false;
+      for (const key in transitionEnd) {
+        const finalValue = transitionEnd[key];
+        let value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (!value && finalValue !== undefined) {
+          value = motionValue(finalValue as string | number);
+          generatedValuesRef.current[key] = value;
+          addedValue = true;
+        } else if (value && finalValue !== undefined) {
+          value.set(finalValue as never);
+        }
+      }
+      if (addedValue && elementRef.current) {
+        const ElementConstructor = globalThis.Element as unknown as new(
+          element: MainThread.Element,
+        ) => Element;
+        styleCleanupRef.current?.();
+        styleCleanupRef.current = styleEffect(
+          new ElementConstructor(elementRef.current),
+          { ...motionValues, ...generatedValuesRef.current },
+        );
+      }
+    }
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     let startedAnimationCount = 0;
     const resolvedTransition = (workletTapTransition?.repeat === -1
@@ -588,9 +616,11 @@ function useMotionHostProps<Props extends MotionProps>(
           interactionAnimationCompletionRef.current.generation
             === animationGeneration
           && interactionAnimationCompletionRef.current.pending === 0
-          && reportAnimationComplete
         ) {
-          void reportAnimationComplete(definition);
+          applyTapTransitionEnd();
+          if (reportAnimationComplete) {
+            void reportAnimationComplete(definition);
+          }
         }
       }
       for (const key in targetValues) {
@@ -643,9 +673,11 @@ function useMotionHostProps<Props extends MotionProps>(
           onComplete: () => {
             if (
               interactionAnimationGenerationRef.current === animationGeneration
-              && reportAnimationComplete
             ) {
-              void reportAnimationComplete(whileTap!);
+              applyTapTransitionEnd();
+              if (reportAnimationComplete) {
+                void reportAnimationComplete(whileTap!);
+              }
             }
           },
         },
@@ -681,7 +713,10 @@ function useMotionHostProps<Props extends MotionProps>(
     const reportAnimationComplete = onAnimationComplete
       ? runOnBackground(onAnimationComplete)
       : undefined;
-    const targetValues = resolvedTap.target as Record<string, unknown>;
+    const targetValues = {
+      ...resolvedTap.target,
+      ...resolvedTap.transitionEnd,
+    } as Record<string, unknown>;
     const restingTarget = hoverActiveRef.current && resolvedHover.target
       ? resolvedHover.target
       : resolvedAnimate.target;
@@ -825,6 +860,34 @@ function useMotionHostProps<Props extends MotionProps>(
     const reportAnimationComplete = onAnimationComplete
       ? runOnBackground(onAnimationComplete)
       : undefined;
+    function applyHoverTransitionEnd() {
+      const transitionEnd = resolvedHover.transitionEnd;
+      if (!transitionEnd) {
+        return;
+      }
+      let addedValue = false;
+      for (const key in transitionEnd) {
+        const finalValue = transitionEnd[key];
+        let value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (!value && finalValue !== undefined) {
+          value = motionValue(finalValue as string | number);
+          generatedValuesRef.current[key] = value;
+          addedValue = true;
+        } else if (value && finalValue !== undefined) {
+          value.set(finalValue as never);
+        }
+      }
+      if (addedValue && elementRef.current) {
+        const ElementConstructor = globalThis.Element as unknown as new(
+          element: MainThread.Element,
+        ) => Element;
+        styleCleanupRef.current?.();
+        styleCleanupRef.current = styleEffect(
+          new ElementConstructor(elementRef.current),
+          { ...motionValues, ...generatedValuesRef.current },
+        );
+      }
+    }
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     let startedAnimationCount = 0;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
@@ -846,9 +909,11 @@ function useMotionHostProps<Props extends MotionProps>(
           interactionAnimationCompletionRef.current.generation
             === animationGeneration
           && interactionAnimationCompletionRef.current.pending === 0
-          && reportAnimationComplete
         ) {
-          void reportAnimationComplete(whileHover!);
+          applyHoverTransitionEnd();
+          if (reportAnimationComplete) {
+            void reportAnimationComplete(whileHover!);
+          }
         }
       }
       for (const key in targetValues) {
@@ -897,9 +962,11 @@ function useMotionHostProps<Props extends MotionProps>(
           onComplete: () => {
             if (
               interactionAnimationGenerationRef.current === animationGeneration
-              && reportAnimationComplete
             ) {
-              void reportAnimationComplete(whileHover!);
+              applyHoverTransitionEnd();
+              if (reportAnimationComplete) {
+                void reportAnimationComplete(whileHover!);
+              }
             }
           },
         },
@@ -933,7 +1000,10 @@ function useMotionHostProps<Props extends MotionProps>(
     const reportAnimationComplete = onAnimationComplete
       ? runOnBackground(onAnimationComplete)
       : undefined;
-    const hoverValues = resolvedHover.target as Record<string, unknown>;
+    const hoverValues = {
+      ...resolvedHover.target,
+      ...resolvedHover.transitionEnd,
+    } as Record<string, unknown>;
     const animateValues = resolvedAnimate.target as
       | Record<string, unknown>
       | undefined;

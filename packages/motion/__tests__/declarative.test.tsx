@@ -578,6 +578,35 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('applies and restores a tap transitionEnd value', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        style={{ opacity: 1 }}
+        whileTap={{
+          opacity: 0.5,
+          transitionEnd: { opacity: 0.75 },
+        }}
+        transition={{ duration: 0.01 }}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'opacity: 0.75',
+    );
+
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('restores every value after interrupting a tap animation', async () => {
     const { getByTestId } = render(
       <motion.view
