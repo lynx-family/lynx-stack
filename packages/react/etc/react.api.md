@@ -146,6 +146,7 @@ export abstract class MainThreadObjectHandle<O extends object> {
 
 // @public
 export interface MainThreadObjectType<I, O extends object> {
+    readonly backgroundMethods?: (handle: O) => Partial<O>;
     readonly create: (initialValue: I) => O;
     readonly dispose?: (object: O) => void;
     readonly type: string;

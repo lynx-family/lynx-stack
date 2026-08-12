@@ -6,12 +6,22 @@ import type { MotionValue } from 'motion-dom';
 
 import {
   defineMainThreadObjectType,
+  runOnMainThread,
   useMainThreadObject,
 } from '@lynx-js/react';
 
 import { motionValue } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 
 const MOTION_VALUE_TYPE = '@lynx-js/motion/MotionValue';
+
+function setMotionValue(
+  handle: MotionValue<unknown>,
+  value: unknown,
+) {
+  'main thread';
+  handle.set(value);
+}
+
 const MotionValueType = defineMainThreadObjectType<
   unknown,
   MotionValue<unknown>
@@ -19,12 +29,18 @@ const MotionValueType = defineMainThreadObjectType<
   type: MOTION_VALUE_TYPE,
   create: motionValue,
   dispose: value => value.stop(),
+  backgroundMethods: handle => ({
+    set(value: unknown) {
+      void runOnMainThread(setMotionValue)(handle, value);
+    },
+  }),
 });
 const motionValueHandleInitialValues = new WeakMap<object, unknown>();
 
 /**
  * Create a Motion value that is retained on the main thread and can be used
- * directly inside main thread functions.
+ * directly inside main thread functions. `set()` may also be called from the
+ * background runtime and is dispatched asynchronously to the main thread.
  *
  * @param initialValue - Initial value of the Motion value.
  * @public

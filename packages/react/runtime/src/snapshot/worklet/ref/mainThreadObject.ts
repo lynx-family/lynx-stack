@@ -31,6 +31,8 @@ export interface MainThreadObjectType<I, O extends object> {
   readonly create: (initialValue: I) => O;
   /** Dispose a realized object after its handle is released. */
   readonly dispose?: (object: O) => void;
+  /** Methods that may asynchronously bridge calls from the background runtime. */
+  readonly backgroundMethods?: (handle: O) => Partial<O>;
 }
 
 /**
@@ -124,6 +126,14 @@ export function defineMainThreadObjectType<I, O extends object>(
   if (definition.dispose !== undefined && typeof definition.dispose !== 'function') {
     throw new Error(`MainThreadObject type "${definition.type}" has an invalid dispose function.`);
   }
+  if (
+    definition.backgroundMethods !== undefined
+    && typeof definition.backgroundMethods !== 'function'
+  ) {
+    throw new Error(
+      `MainThreadObject type "${definition.type}" has invalid background methods.`,
+    );
+  }
 
   return Object.freeze({ ...definition });
 }
@@ -148,7 +158,7 @@ export function useMainThreadObject<I, O extends object>(
   registerMainThreadObjectDefinition(objectType);
   return useMemo(() => {
     const handle = new MainThreadObjectHandleImpl<I, O>(initialValue, objectType.type);
-    return guardBackgroundMainThreadObjectAccess(handle, objectType.type) as unknown as O;
+    return guardBackgroundMainThreadObjectAccess(handle, objectType) as unknown as O;
   }, []);
 }
 
@@ -176,24 +186,36 @@ export function isMainThreadObjectHandle(value: unknown): value is MainThreadObj
   return typeof value === 'object' && value !== null && mainThreadObjectHandles.has(value);
 }
 
-function guardBackgroundMainThreadObjectAccess<O extends object>(
+function guardBackgroundMainThreadObjectAccess<I, O extends object>(
   handle: MainThreadObjectHandle<O>,
-  type: string,
+  objectType: MainThreadObjectType<I, O>,
 ): MainThreadObjectHandle<O> {
-  if (!__DEV__ || !__JS__) {
+  if (!__JS__) {
     return handle;
   }
 
-  // This development-only guard never forwards a call to the main thread. It
-  // only turns an otherwise opaque "method is not a function" failure into a
-  // diagnostic. Production handles remain plain serializable objects.
+  // Libraries can expose a narrow set of explicitly bridged methods. All other
+  // development accesses retain the diagnostic guard, while production handles
+  // without bridges remain plain serializable objects.
+  const backgroundMethods = objectType.backgroundMethods?.(
+    handle as unknown as O,
+  );
+  if (!__DEV__ && backgroundMethods === undefined) {
+    return handle;
+  }
   const guardedHandle = new Proxy(handle, {
     get(target, property, receiver): unknown {
       if (property in target) {
         return Reflect.get(target, property, receiver) as unknown;
       }
+      if (backgroundMethods && property in backgroundMethods) {
+        return Reflect.get(backgroundMethods, property);
+      }
+      if (!__DEV__) {
+        return undefined;
+      }
       throw new Error(
-        `MainThreadObject handle for "${type}" cannot access "${
+        `MainThreadObject handle for "${objectType.type}" cannot access "${
           String(property)
         }" in the background runtime. Use the object only inside a main-thread function.`,
       );
@@ -202,8 +224,11 @@ function guardBackgroundMainThreadObjectAccess<O extends object>(
       if (property in target) {
         return Reflect.set(target, property, value, receiver);
       }
+      if (!__DEV__) {
+        return Reflect.set(target, property, value, receiver);
+      }
       throw new Error(
-        `MainThreadObject handle for "${type}" cannot set "${
+        `MainThreadObject handle for "${objectType.type}" cannot set "${
           String(property)
         }" in the background runtime. Use the object only inside a main-thread function.`,
       );
