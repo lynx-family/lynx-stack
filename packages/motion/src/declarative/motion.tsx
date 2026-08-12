@@ -131,6 +131,7 @@ function useMotionHostProps<Props extends MotionProps>(
     generation: number;
     pending: number;
   }>({ generation: 0, pending: 0 });
+  const tapAnimationValueKeysRef = useMainThreadRef<Record<string, true>>({});
   const animateTargetKeysRef = useMainThreadRef<Record<string, true>>({});
   const hoverLayoutRef = useRef<
     { left: number; right: number; top: number; bottom: number } | null
@@ -365,6 +366,10 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       tapAnimationRef.current = [];
+      for (const key in tapAnimationValueKeysRef.current) {
+        (generatedValuesRef.current[key] ?? motionValueBindings[key])?.stop();
+      }
+      tapAnimationValueKeysRef.current = {};
       tapAnimationGenerationRef.current += 1;
       const animationGeneration = animationGenerationRef.current + 1;
       animationGenerationRef.current = animationGeneration;
@@ -495,9 +500,10 @@ function useMotionHostProps<Props extends MotionProps>(
         }
       }
 
-      const activeAnimations = [...animationRef.current];
       if (
-        activeAnimations.length > 0 && animate !== undefined && onAnimationStart
+        completionPromises.length > 0
+        && animate !== undefined
+        && onAnimationStart
       ) {
         void runOnBackground(onAnimationStart)(animate);
       }
@@ -554,6 +560,10 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       tapAnimationRef.current = [];
+      for (const key in tapAnimationValueKeysRef.current) {
+        (generatedValuesRef.current[key] ?? motionValueBindings[key])?.stop();
+      }
+      tapAnimationValueKeysRef.current = {};
       tapAnimationGenerationRef.current += 1;
       styleCleanupRef.current?.();
       styleCleanupRef.current = null;
@@ -583,6 +593,10 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
+    for (const key in tapAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    tapAnimationValueKeysRef.current = {};
     const animationGeneration = tapAnimationGenerationRef.current + 1;
     tapAnimationGenerationRef.current = animationGeneration;
     // Bind while the tap-start worklet is still executing on MTS; Motion calls
@@ -591,6 +605,7 @@ function useMotionHostProps<Props extends MotionProps>(
       ? runOnBackground(onAnimationComplete)
       : undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    let startedAnimationCount = 0;
     const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
       : workletTapTransition) ?? {};
@@ -622,6 +637,7 @@ function useMotionHostProps<Props extends MotionProps>(
         generation: animationGeneration,
         pending: pendingAnimationCount,
       };
+      startedAnimationCount = pendingAnimationCount;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
@@ -641,7 +657,9 @@ function useMotionHostProps<Props extends MotionProps>(
           if (value.animation) {
             Object.defineProperty(value, 'animation', { enumerable: false });
           }
-          if (!isLynxForWeb && value.animation) {
+          if (isLynxForWeb) {
+            tapAnimationValueKeysRef.current[key] = true;
+          } else if (value.animation) {
             tapAnimationRef.current.push(value.animation);
           }
         }
@@ -667,12 +685,9 @@ function useMotionHostProps<Props extends MotionProps>(
         },
       );
       tapAnimationRef.current.push(animation);
+      startedAnimationCount = 1;
     }
-    if (
-      (Object.keys(resolvedTap.target).length > 0
-        || tapAnimationRef.current.length > 0)
-      && onAnimationStart
-    ) {
+    if (startedAnimationCount > 0 && onAnimationStart) {
       void runOnBackground(onAnimationStart)(whileTap!);
     }
   }
@@ -689,6 +704,10 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
+    for (const key in tapAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    tapAnimationValueKeysRef.current = {};
     const animationGeneration = tapAnimationGenerationRef.current + 1;
     tapAnimationGenerationRef.current = animationGeneration;
     // Bind while the tap-end worklet is still executing on MTS; restoration
@@ -704,6 +723,7 @@ function useMotionHostProps<Props extends MotionProps>(
       | Record<string, unknown>
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    let startedAnimationCount = 0;
     const restingTransition = hoverActiveRef.current && resolvedHover.target
       ? workletHoverTransition
       : workletTapTransition;
@@ -758,6 +778,7 @@ function useMotionHostProps<Props extends MotionProps>(
         generation: animationGeneration,
         pending: pendingAnimationCount,
       };
+      startedAnimationCount = pendingAnimationCount;
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
@@ -776,7 +797,9 @@ function useMotionHostProps<Props extends MotionProps>(
           if (value.animation) {
             Object.defineProperty(value, 'animation', { enumerable: false });
           }
-          if (!isLynxForWeb && value.animation) {
+          if (isLynxForWeb) {
+            tapAnimationValueKeysRef.current[key] = true;
+          } else if (value.animation) {
             tapAnimationRef.current.push(value.animation);
           }
         }
@@ -802,12 +825,9 @@ function useMotionHostProps<Props extends MotionProps>(
         },
       );
       tapAnimationRef.current.push(animation);
+      startedAnimationCount = 1;
     }
-    if (
-      (Object.keys(restingValues).length > 0
-        || tapAnimationRef.current.length > 0)
-      && onAnimationStart
-    ) {
+    if (startedAnimationCount > 0 && onAnimationStart) {
       void runOnBackground(onAnimationStart)(restingDefinition);
     }
   }
@@ -829,6 +849,10 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
+    for (const key in tapAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    tapAnimationValueKeysRef.current = {};
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
@@ -882,6 +906,10 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     tapAnimationRef.current = [];
+    for (const key in tapAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    tapAnimationValueKeysRef.current = {};
     const hoverValues = resolvedHover.target as Record<string, unknown>;
     const animateValues = resolvedAnimate.target as
       | Record<string, unknown>
