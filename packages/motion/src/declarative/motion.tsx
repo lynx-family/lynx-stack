@@ -19,11 +19,17 @@ import {
   runtime: 'shared',
 };
 
-import type { ComponentType, FunctionComponent } from '@lynx-js/react';
+import type {
+  ComponentType,
+  FunctionComponent,
+  ReactNode,
+} from '@lynx-js/react';
 import {
+  createContext,
   createElement,
   runOnBackground,
   runOnMainThread,
+  useContext,
   useEffect,
   useMainThreadRef,
   useMemo,
@@ -50,6 +56,53 @@ import type {
   MotionTransition,
   MotionViewProps,
 } from './types.js';
+
+interface MotionVariantContextValue {
+  initial?: MotionDefinition | false;
+  animate?: MotionDefinition;
+}
+
+const MotionVariantContext = createContext<MotionVariantContextValue>({});
+
+function isVariantLabel(
+  definition: MotionDefinition | false | undefined,
+): definition is string | string[] {
+  return typeof definition === 'string' || Array.isArray(definition);
+}
+
+function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
+  context: MotionVariantContextValue;
+  props: Props;
+} {
+  const parent = useContext(MotionVariantContext);
+  const initial = props.initial === undefined && isVariantLabel(parent.initial)
+    ? parent.initial
+    : props.initial;
+  const animate = props.animate === undefined && isVariantLabel(parent.animate)
+    ? parent.animate
+    : props.animate;
+  const context = useMemo<MotionVariantContextValue>(() => ({
+    ...(isVariantLabel(initial) ? { initial } : {}),
+    ...(isVariantLabel(animate) ? { animate } : {}),
+  }), [animate, initial]);
+  return {
+    context,
+    props: initial === props.initial && animate === props.animate
+      ? props
+      : { ...props, initial, animate },
+  };
+}
+
+function shouldProvideVariantContext(
+  props: MotionProps,
+  context: MotionVariantContextValue,
+  children: unknown,
+): boolean {
+  return children !== undefined
+    && props.whileTap === undefined
+    && props.whileHover === undefined
+    && (isVariantLabel(context.initial) || isVariantLabel(context.animate));
+}
 
 type PreparedHostProps = Record<string, unknown> & {
   style?: MotionProps['style'];
@@ -1244,18 +1297,54 @@ function useMotionHostProps<Props extends MotionProps>(
 }
 
 const MotionView: FunctionComponent<MotionViewProps> = (props) => {
-  const hostProps = useMotionHostProps(props);
-  return createElement('view', hostProps as IntrinsicElements['view']);
+  const inherited = useInheritedMotionProps(props);
+  const hostProps = useMotionHostProps(inherited.props);
+  const { children, ...elementProps } = hostProps;
+  if (!shouldProvideVariantContext(props, inherited.context, children)) {
+    return createElement('view', hostProps as IntrinsicElements['view']);
+  }
+  return createElement(
+    'view',
+    elementProps as IntrinsicElements['view'],
+    createElement(MotionVariantContext.Provider, {
+      value: inherited.context,
+      children: children as ReactNode,
+    }),
+  );
 };
 
 const MotionText: FunctionComponent<MotionTextProps> = (props) => {
-  const hostProps = useMotionHostProps(props);
-  return createElement('text', hostProps as IntrinsicElements['text']);
+  const inherited = useInheritedMotionProps(props);
+  const hostProps = useMotionHostProps(inherited.props);
+  const { children, ...elementProps } = hostProps;
+  if (!shouldProvideVariantContext(props, inherited.context, children)) {
+    return createElement('text', hostProps as IntrinsicElements['text']);
+  }
+  return createElement(
+    'text',
+    elementProps as IntrinsicElements['text'],
+    createElement(MotionVariantContext.Provider, {
+      value: inherited.context,
+      children: children as ReactNode,
+    }),
+  );
 };
 
 const MotionImage: FunctionComponent<MotionImageProps> = (props) => {
-  const hostProps = useMotionHostProps(props);
-  return createElement('image', hostProps as IntrinsicElements['image']);
+  const inherited = useInheritedMotionProps(props);
+  const hostProps = useMotionHostProps(inherited.props);
+  const { children, ...elementProps } = hostProps;
+  if (!shouldProvideVariantContext(props, inherited.context, children)) {
+    return createElement('image', hostProps as IntrinsicElements['image']);
+  }
+  return createElement(
+    'image',
+    elementProps as IntrinsicElements['image'],
+    createElement(MotionVariantContext.Provider, {
+      value: inherited.context,
+      children: children as ReactNode,
+    }),
+  );
 };
 
 function createMotionComponent<Props extends { style?: unknown }>(
@@ -1264,8 +1353,20 @@ function createMotionComponent<Props extends { style?: unknown }>(
   const MotionComponent: FunctionComponent<MotionComponentProps<Props>> = (
     props,
   ) => {
-    const hostProps = useMotionHostProps(props);
-    return createElement(Component, hostProps as Props);
+    const inherited = useInheritedMotionProps(props);
+    const hostProps = useMotionHostProps(inherited.props);
+    const { children, ...componentProps } = hostProps;
+    if (!shouldProvideVariantContext(props, inherited.context, children)) {
+      return createElement(Component, hostProps as unknown as Props);
+    }
+    return createElement(
+      Component,
+      componentProps as unknown as Props,
+      createElement(MotionVariantContext.Provider, {
+        value: inherited.context,
+        children: children as ReactNode,
+      }),
+    );
   };
   return MotionComponent;
 }
