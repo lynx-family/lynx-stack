@@ -95,10 +95,12 @@ export default defineConfig({
         './cases/019-use-signal-full-attribute-update/index.tsx',
       ],
       '021-motion-values-500': [
+        './src/motionPolyfill.ts',
         './src/patchProfile.ts',
         './cases/021-motion-values-500/index.tsx',
       ],
       '022-motion-values-1000': [
+        './src/motionPolyfill.ts',
         './src/patchProfile.ts',
         './cases/022-motion-values-1000/index.tsx',
       ],
