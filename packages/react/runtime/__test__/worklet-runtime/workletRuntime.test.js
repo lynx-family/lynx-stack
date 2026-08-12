@@ -275,6 +275,81 @@ describe('Worklet', () => {
     expect(value).toBe(5);
   });
 
+  it('treats MainThreadObject descriptors as atomic user payloads', () => {
+    initWorklet();
+
+    const initialValue = {
+      workletRefLike: { _wvid: 999 },
+      workletLike: { _wkltId: 'payload-worklet' },
+      jsFunctionLike: { _jsFnId: 999 },
+      elementLike: { elementRefptr: 'payload-element' },
+    };
+    let deepValue = initialValue;
+    for (let index = 0; index < 1000; index++) {
+      deepValue.next = {};
+      deepValue = deepValue.next;
+    }
+
+    const create = vi.fn(value => ({ initialValue: value }));
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/atomic-payload',
+      create,
+      undefined,
+      1,
+    );
+    globalThis.registerWorklet('main-thread', 'atomic-payload', function(value) {
+      return value;
+    });
+
+    const value = globalThis.runWorklet({ _wkltId: 'atomic-payload' }, [{
+      _wvid: -1,
+      _initValue: initialValue,
+      _type: '@test/atomic-payload',
+      _mtoVersion: 1,
+    }]);
+
+    expect(create).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledWith(initialValue);
+    expect(value.initialValue).toBe(initialValue);
+    expect(initialValue.workletRefLike).toEqual({ _wvid: 999 });
+    expect(initialValue.workletLike).toEqual({ _wkltId: 'payload-worklet' });
+    expect(initialValue.jsFunctionLike).toEqual({ _jsFnId: 999 });
+    expect(initialValue.elementLike).toEqual({ elementRefptr: 'payload-element' });
+  });
+
+  it('reuses one realized MainThreadObject for repeated parameter descriptors', () => {
+    initWorklet();
+
+    const create = vi.fn(value => ({ value }));
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/repeated-parameter',
+      create,
+      undefined,
+      1,
+    );
+    globalThis.registerWorklet('main-thread', 'repeated-parameter', function(value) {
+      return value;
+    });
+    const descriptor = {
+      _wvid: -2,
+      _initValue: 42,
+      _type: '@test/repeated-parameter',
+      _mtoVersion: 1,
+    };
+
+    const first = globalThis.runWorklet(
+      { _wkltId: 'repeated-parameter' },
+      [descriptor],
+    );
+    const second = globalThis.runWorklet(
+      { _wkltId: 'repeated-parameter' },
+      [descriptor],
+    );
+
+    expect(second).toBe(first);
+    expect(create).toHaveBeenCalledOnce();
+  });
+
   it('should support various types of parameters', async () => {
     initWorklet();
 
