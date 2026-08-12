@@ -63,6 +63,7 @@ interface MotionVariantContextValue {
   delay?: number;
 }
 
+const emptyMotionVariantContext: MotionVariantContextValue = {};
 const MotionVariantContext = createContext<MotionVariantContextValue>({});
 
 function isVariantLabel(
@@ -78,10 +79,13 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   resolvedAnimateDefinition: MotionTarget | false | undefined;
 } {
   const parent = useContext(MotionVariantContext);
-  const initial = props.initial === undefined && isVariantLabel(parent.initial)
+  const initial = props.inherit !== false
+      && props.initial === undefined
+      && isVariantLabel(parent.initial)
     ? parent.initial
     : props.initial;
-  const inheritsAnimate = props.animate === undefined
+  const inheritsAnimate = props.inherit !== false
+    && props.animate === undefined
     && isVariantLabel(parent.animate);
   const animate = inheritsAnimate
     ? parent.animate
@@ -122,7 +126,16 @@ function shouldProvideVariantContext(
   return children !== undefined
     && props.whileTap === undefined
     && props.whileHover === undefined
-    && (isVariantLabel(context.initial) || isVariantLabel(context.animate));
+    && (props.inherit === false
+      || isVariantLabel(context.initial)
+      || isVariantLabel(context.animate));
+}
+
+function variantContextValue(
+  props: MotionProps,
+  context: MotionVariantContextValue,
+): MotionVariantContextValue {
+  return props.inherit === false ? emptyMotionVariantContext : context;
 }
 
 type PreparedHostProps = Record<string, unknown> & {
@@ -164,6 +177,7 @@ function useMotionHostProps<Props extends MotionProps>(
   const {
     animate,
     initial,
+    inherit: _inherit,
     style,
     transition,
     whileTap,
@@ -1339,7 +1353,7 @@ const MotionView: FunctionComponent<MotionViewProps> = (props) => {
     'view',
     elementProps as IntrinsicElements['view'],
     createElement(MotionVariantContext.Provider, {
-      value: inherited.context,
+      value: variantContextValue(props, inherited.context),
       children: children as ReactNode,
     }),
   );
@@ -1360,7 +1374,7 @@ const MotionText: FunctionComponent<MotionTextProps> = (props) => {
     'text',
     elementProps as IntrinsicElements['text'],
     createElement(MotionVariantContext.Provider, {
-      value: inherited.context,
+      value: variantContextValue(props, inherited.context),
       children: children as ReactNode,
     }),
   );
@@ -1381,7 +1395,7 @@ const MotionImage: FunctionComponent<MotionImageProps> = (props) => {
     'image',
     elementProps as IntrinsicElements['image'],
     createElement(MotionVariantContext.Provider, {
-      value: inherited.context,
+      value: variantContextValue(props, inherited.context),
       children: children as ReactNode,
     }),
   );
@@ -1407,7 +1421,7 @@ function createMotionComponent<Props extends { style?: unknown }>(
       Component,
       componentProps as unknown as Props,
       createElement(MotionVariantContext.Provider, {
-        value: inherited.context,
+        value: variantContextValue(props, inherited.context),
         children: children as ReactNode,
       }),
     );
