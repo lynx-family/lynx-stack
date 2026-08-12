@@ -609,12 +609,31 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     let startedAnimationCount = 0;
+    let completeTapWithoutAnimation: (() => void) | undefined;
     const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
       : workletTapTransition) ?? {};
     // Keep animation handles out of the MTS snapshot captured by a ReactLynx
     // rerender triggered from lifecycle callbacks.
-    if (isLynxForWeb || !event.currentTarget) {
+    if (
+      Object.keys(resolvedTap.target).length === 0
+      && resolvedTap.transitionEnd
+      && Object.keys(resolvedTap.transitionEnd).length > 0
+    ) {
+      startedAnimationCount = 1;
+      completeTapWithoutAnimation = () => {
+        if (reportAnimationComplete) {
+          void reportAnimationComplete(whileTap!);
+        }
+        requestAnimationFrame(() => {
+          if (
+            interactionAnimationGenerationRef.current === animationGeneration
+          ) {
+            applyTapTransitionEnd();
+          }
+        });
+      };
+    } else if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
       let pendingAnimationCount = 0;
       function reportTapAnimationComplete(definition: MotionDefinition) {
@@ -697,6 +716,9 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     if (startedAnimationCount > 0 && onAnimationStart) {
       void runOnBackground(onAnimationStart)(whileTap!);
+    }
+    if (completeTapWithoutAnimation) {
+      completeTapWithoutAnimation();
     }
   }
 
@@ -902,12 +924,31 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     let startedAnimationCount = 0;
+    let completeHoverWithoutAnimation: (() => void) | undefined;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
       : workletHoverTransition) ?? {};
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
-    if (isLynxForWeb) {
+    if (
+      Object.keys(resolvedHover.target).length === 0
+      && resolvedHover.transitionEnd
+      && Object.keys(resolvedHover.transitionEnd).length > 0
+    ) {
+      startedAnimationCount = 1;
+      completeHoverWithoutAnimation = () => {
+        if (reportAnimationComplete) {
+          void reportAnimationComplete(whileHover!);
+        }
+        requestAnimationFrame(() => {
+          if (
+            interactionAnimationGenerationRef.current === animationGeneration
+          ) {
+            applyHoverTransitionEnd();
+          }
+        });
+      };
+    } else if (isLynxForWeb) {
       const targetValues = resolvedHover.target as Record<string, unknown>;
       let pendingAnimationCount = 0;
       function reportHoverAnimationComplete() {
@@ -987,6 +1028,9 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     if (startedAnimationCount > 0 && onAnimationStart) {
       void runOnBackground(onAnimationStart)(whileHover!);
+    }
+    if (completeHoverWithoutAnimation) {
+      completeHoverWithoutAnimation();
     }
   }
 
