@@ -71,6 +71,8 @@ export interface MotionProps {
   initial?: MotionDefinition | false;
   /** Values animated whenever this target changes. */
   animate?: MotionDefinition;
+  /** Whether parent variant labels propagate through this component. */
+  inherit?: boolean;
   /** Values animated while the element is being pressed. */
   whileTap?: MotionDefinition;
   /** Values animated while a mouse-capable client hovers the element. */

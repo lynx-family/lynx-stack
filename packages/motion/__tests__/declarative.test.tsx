@@ -190,6 +190,34 @@ describe('declarative Motion', () => {
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
   });
 
+  test('inherit false prevents parent variant labels reaching descendants', async () => {
+    const { getByTestId } = render(
+      <motion.view initial='hidden'>
+        <motion.view inherit={false} variants={{}}>
+          <motion.view
+            data-testid='child'
+            style={{ opacity: 0.5, x: 10 }}
+            variants={{ hidden: { opacity: 0, x: -20 } }}
+            transition={{ type: false }}
+          />
+        </motion.view>
+      </motion.view>,
+      {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      },
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'opacity: 0.5',
+    );
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'translateX(10px)',
+    );
+  });
+
   test('propagates numeric delayChildren to a variant child', async () => {
     const { getByTestId } = render(
       <motion.view
