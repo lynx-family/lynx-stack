@@ -52,6 +52,7 @@ The declarative layer currently supports:
   styles backed by the upstream Motion engine
 - `whileTap` with `onTapStart`, `onTap`, and `onTapCancel`
 - `whileHover` with `onHoverStart` and `onHoverEnd` on mouse-capable clients
+- target-local `transitionEnd` for base, tap, and hover animations
 - `onAnimationStart` and `onAnimationComplete` for base `animate`, `whileTap`,
   and `whileHover` targets and their restorations
 
