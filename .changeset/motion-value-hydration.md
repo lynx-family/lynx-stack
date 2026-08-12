@@ -3,4 +3,4 @@
 "@lynx-js/motion": patch
 ---
 
-Preserve live MotionValue subscriptions when first-screen main-thread objects hydrate into their canonical background identities.
+Allow explicitly selected main-thread object methods to bridge background calls, and support background `MotionValue.set()` without exposing synchronous methods across runtimes.

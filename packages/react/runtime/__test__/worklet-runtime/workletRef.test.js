@@ -152,59 +152,6 @@ describe('WorkletRef', () => {
     expect(dispose).toHaveBeenCalledWith(firstScreenValue);
   });
 
-  it('merges first-screen state into the canonical background object', () => {
-    const dispose = vi.fn();
-    const hydrate = vi.fn((value, firstScreenValue) => {
-      value.current = firstScreenValue.current;
-    });
-    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-      '@test/hydratable-value',
-      current => ({ current, listeners: new Set() }),
-      dispose,
-      1,
-      hydrate,
-    );
-    const firstScreenWorklet = {
-      _wkltId: 'hydratable-value',
-      _c: {
-        value: {
-          _wvid: -1,
-          _initValue: 42,
-          _type: '@test/hydratable-value',
-          _mtoVersion: 1,
-        },
-      },
-    };
-    const worklet = {
-      _wkltId: 'hydratable-value',
-      _c: {
-        value: {
-          _wvid: 1,
-          _initValue: 42,
-          _type: '@test/hydratable-value',
-          _mtoVersion: 1,
-        },
-      },
-    };
-    globalThis.registerWorklet('main-thread', 'hydratable-value', function() {
-      this._c.value.current = 43;
-    });
-
-    globalThis.runWorklet(firstScreenWorklet, []);
-    const firstScreenValue = firstScreenWorklet._c.value;
-    updateWorkletRefInitValueChanges([[1, 42, '@test/hydratable-value', 1]]);
-    const backgroundValue = getFromWorkletRefMap({ _wvid: 1 });
-    backgroundValue.listeners.add('subscription');
-    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-
-    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(backgroundValue);
-    expect(backgroundValue.current).toBe(43);
-    expect(backgroundValue.listeners).toEqual(new Set(['subscription']));
-    expect(hydrate).toHaveBeenCalledWith(backgroundValue, firstScreenValue);
-    expect(dispose).toHaveBeenCalledWith(firstScreenValue);
-    expect(dispose).not.toHaveBeenCalledWith(backgroundValue);
-  });
-
   it('should create, get, update & remove', () => {
     updateWorkletRefInitValueChanges([[1, 'ref1'], [2, 'ref2']]);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('ref1');

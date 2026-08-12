@@ -508,17 +508,16 @@ describe('declarative Motion', () => {
     expect(getByTestId('box').getAttribute('style')).toContain('scale(1.5)');
   });
 
-  test('updates a MotionValue-backed style from a main-thread event', async () => {
+  test('updates a MotionValue-backed style from a background event', async () => {
     function App() {
       const x = useMotionValue(-36);
       function move() {
-        'main thread';
         x.set(36);
       }
       return (
         <motion.view
           data-testid='box'
-          main-thread:bindtap={move}
+          bindtap={move}
           style={{ x }}
         />
       );
