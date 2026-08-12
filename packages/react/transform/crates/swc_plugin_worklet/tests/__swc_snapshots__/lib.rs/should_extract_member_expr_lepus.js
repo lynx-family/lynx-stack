@@ -2,24 +2,24 @@ import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntim
 var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
 let onTapLepus = {
     _c: {
-        aaaa: captureMainThreadObject(aaaa, {
+        aaaa: captureMainThreadObject(aaaa) ?? {
             bbbb: aaaa.bbbb
-        }),
-        cccc: captureMainThreadObject(cccc, {
+        },
+        cccc: captureMainThreadObject(cccc) ?? {
             dddd: cccc.dddd
-        }),
-        hhhh: captureMainThreadObject(hhhh, {
+        },
+        hhhh: captureMainThreadObject(hhhh) ?? {
             iiii: hhhh.iiii
-        }),
+        },
         llll,
-        oooo: captureMainThreadObject(oooo, {
+        oooo: captureMainThreadObject(oooo) ?? {
             pppp: oooo.pppp,
             qqqq: oooo.qqqq
-        }),
+        },
         rrrr,
-        uuuu: captureMainThreadObject(uuuu, {
+        uuuu: captureMainThreadObject(uuuu) ?? {
             "__??__": uuuu["__??__"]
-        })
+        }
     },
     _wkltId: "a123:test:1"
 };

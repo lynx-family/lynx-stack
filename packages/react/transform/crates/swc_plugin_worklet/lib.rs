@@ -1037,6 +1037,100 @@ function X(event) {
 
   test!(
     module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_preserve_main_thread_objects_in_class_js,
+    r#"
+class App extends Component {
+  value: MotionValue<number>;
+  ref: MainThreadRef<number>;
+  static value: MotionValue<number>;
+
+  onTap() {
+    "main thread";
+    this.value.get();
+    this.value.set(1);
+    this.value?.get();
+    this.value["get"]();
+    return this.ref.current;
+  }
+
+  onMove = () => {
+    "main thread";
+    return this.value.get();
+  };
+
+  static onStatic() {
+    "main thread";
+    return this.value.get();
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_preserve_main_thread_objects_in_class_lepus,
+    r#"
+class App extends Component {
+  value: MotionValue<number>;
+  ref: MainThreadRef<number>;
+  static value: MotionValue<number>;
+
+  onTap() {
+    "main thread";
+    this.value.get();
+    this.value.set(1);
+    this.value?.get();
+    this.value["get"]();
+    return this.ref.current;
+  }
+
+  onMove = () => {
+    "main thread";
+    return this.value.get();
+  };
+
+  static onStatic() {
+    "main thread";
+    return this.value.get();
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
