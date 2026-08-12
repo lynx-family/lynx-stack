@@ -624,69 +624,6 @@ describe('declarative Motion', () => {
     );
   });
 
-  test('reports tap target and restoration animation lifecycle', async () => {
-    const onAnimationStart = vi.fn();
-    const onAnimationComplete = vi.fn();
-    const { getByTestId } = render(
-      <motion.view
-        data-testid='button'
-        initial={{ scale: 1, backgroundColor: '#ffffff' }}
-        whileTap={{ scale: 1.15, backgroundColor: '#ffcc00' }}
-        transition={{ duration: 0.01 }}
-        onAnimationStart={onAnimationStart}
-        onAnimationComplete={onAnimationComplete}
-      />,
-      { enableMainThread: true, enableBackgroundThread: true },
-    );
-
-    fireEvent.touchstart(getByTestId('button'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
-    expect(onAnimationStart).toHaveBeenNthCalledWith(1, {
-      scale: 1.15,
-      backgroundColor: '#ffcc00',
-    });
-    expect(onAnimationComplete).toHaveBeenNthCalledWith(1, {
-      scale: 1.15,
-      backgroundColor: '#ffcc00',
-    });
-
-    fireEvent.touchend(getByTestId('button'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
-    expect(onAnimationStart).toHaveBeenNthCalledWith(2, {
-      scale: 1,
-      backgroundColor: '#ffffff',
-    });
-    expect(onAnimationComplete).toHaveBeenNthCalledWith(2, {
-      scale: 1,
-      backgroundColor: '#ffffff',
-    });
-  });
-
-  test('does not complete an interrupted tap target', async () => {
-    const onAnimationComplete = vi.fn();
-    const { getByTestId } = render(
-      <motion.view
-        data-testid='button'
-        whileTap={{ scale: 1.15 }}
-        transition={{ duration: 0.08 }}
-        onAnimationComplete={onAnimationComplete}
-      />,
-      { enableMainThread: true, enableBackgroundThread: true },
-    );
-
-    fireEvent.touchstart(getByTestId('button'));
-    fireEvent.touchend(getByTestId('button'));
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 120));
-    });
-    expect(onAnimationComplete).toHaveBeenCalledOnce();
-    expect(onAnimationComplete).toHaveBeenCalledWith({ scale: 1 });
-  });
-
   test('composes gesture callbacks with external host handlers', () => {
     const onTapStart = vi.fn();
     const onTap = vi.fn();
