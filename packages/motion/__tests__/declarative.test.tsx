@@ -360,6 +360,76 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('applies a transitionEnd-only animate update', async () => {
+    const lifecycle: string[] = [];
+    function App() {
+      const [active, setActive] = useState(false);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            style={{ opacity: 1 }}
+            animate={active ? { transitionEnd: { opacity: 0.4 } } : {}}
+            transition={{ type: false }}
+            onAnimationStart={() => lifecycle.push('start')}
+            onAnimationComplete={() => lifecycle.push('complete')}
+          />
+          <view data-testid='toggle' bindtap={() => setActive(true)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.4');
+    expect(lifecycle).toEqual(['start', 'complete']);
+  });
+
+  test('does not apply a stale transitionEnd-only animate update', async () => {
+    function App() {
+      const [step, setStep] = useState(0);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            animate={step === 0
+              ? { opacity: 1 }
+              : step === 1
+              ? { transitionEnd: { opacity: 0.4 } }
+              : { opacity: 0.8 }}
+            transition={{ type: false }}
+          />
+          <view
+            data-testid='toggle'
+            bindtap={() => {
+              setStep(1);
+              setStep(2);
+            }}
+          />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.8');
+  });
+
   test('does not complete an animation after unmount', async () => {
     const onAnimationComplete = vi.fn();
     function App() {
@@ -481,6 +551,38 @@ describe('declarative Motion', () => {
       'translateX(48px)',
     );
     expect(onUpdateAnimationStart).toHaveBeenCalledOnce();
+  });
+
+  test('uses transitionEnd without lifecycle when initial is false', async () => {
+    const onAnimationStart = vi.fn();
+    const onAnimationComplete = vi.fn();
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='box'
+        initial={false}
+        animate={{
+          x: 20,
+          y: 20,
+          transitionEnd: { x: 10, z: 20 },
+        }}
+        transition={{ type: false }}
+        onAnimationStart={onAnimationStart}
+        onAnimationComplete={onAnimationComplete}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(10px)',
+    );
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateY(20px)',
+    );
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateZ(20px)',
+    );
+    expect(onAnimationStart).not.toHaveBeenCalled();
+    expect(onAnimationComplete).not.toHaveBeenCalled();
   });
 
   test('animates a MotionValue-backed style', async () => {
