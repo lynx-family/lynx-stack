@@ -572,9 +572,6 @@ describe('declarative Motion', () => {
       { enableMainThread: true, enableBackgroundThread: true },
     );
 
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 30));
-    });
     expect(getByTestId('box').getAttribute('style')).toContain(
       'translateX(10px)',
     );

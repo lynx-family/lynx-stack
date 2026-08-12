@@ -177,6 +177,12 @@ function useMotionHostProps<Props extends MotionProps>(
     resolvedHoverDefinition,
     transition,
   );
+  const initialFalseAnimateTarget = resolvedInitial === false
+    ? {
+      ...resolvedAnimate.target,
+      ...resolvedAnimate.transitionEnd,
+    }
+    : resolvedAnimate.target;
   const animationKey = motionDefinitionKey({
     animate: resolvedAnimate,
     whileTap: resolvedTap,
@@ -188,18 +194,18 @@ function useMotionHostProps<Props extends MotionProps>(
       resolveInitialStyle(
         style,
         resolvedInitialTarget,
-        resolvedAnimate.target,
+        initialFalseAnimateTarget,
       ),
-    [resolvedAnimate.target, resolvedInitialTarget, style],
+    [initialFalseAnimateTarget, resolvedInitialTarget, style],
   );
   const initialValues = useMemo(
     () =>
       resolveInitialValues(
         style,
         resolvedInitialTarget,
-        resolvedAnimate.target,
+        initialFalseAnimateTarget,
       ),
-    [resolvedAnimate.target, resolvedInitialTarget, style],
+    [initialFalseAnimateTarget, resolvedInitialTarget, style],
   );
   const workletAnimateTransition = useMemo(
     () =>
