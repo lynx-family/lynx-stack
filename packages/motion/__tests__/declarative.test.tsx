@@ -549,6 +549,41 @@ describe('declarative Motion', () => {
     expect(onUpdateAnimationStart).toHaveBeenCalledOnce();
   });
 
+  test('uses transitionEnd without lifecycle when initial is false', async () => {
+    const onAnimationStart = vi.fn();
+    const onAnimationComplete = vi.fn();
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='box'
+        initial={false}
+        animate={{
+          x: 20,
+          y: 20,
+          transitionEnd: { x: 10, z: 20 },
+        }}
+        transition={{ type: false }}
+        onAnimationStart={onAnimationStart}
+        onAnimationComplete={onAnimationComplete}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(10px)',
+    );
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateY(20px)',
+    );
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateZ(20px)',
+    );
+    expect(onAnimationStart).not.toHaveBeenCalled();
+    expect(onAnimationComplete).not.toHaveBeenCalled();
+  });
+
   test('animates a MotionValue-backed style', async () => {
     function App() {
       const value = useMotionValue(1);

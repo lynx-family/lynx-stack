@@ -524,10 +524,10 @@ function useMotionHostProps<Props extends MotionProps>(
         && animate !== undefined
         && hasTransitionEnd
       ) {
-        if (onAnimationStart) {
+        if (shouldAnimate && onAnimationStart) {
           void runOnBackground(onAnimationStart)(animate);
         }
-        const reportAnimationComplete = onAnimationComplete
+        const reportAnimationComplete = shouldAnimate && onAnimationComplete
           ? runOnBackground(onAnimationComplete)
           : undefined;
         if (reportAnimationComplete) {
