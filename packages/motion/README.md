@@ -52,10 +52,11 @@ The declarative layer currently supports:
   styles backed by the upstream Motion engine
 - `whileTap` with `onTapStart`, `onTap`, and `onTapCancel`
 - `whileHover` with `onHoverStart` and `onHoverEnd` on mouse-capable clients
-- `onAnimationStart` and `onAnimationComplete` for the base `animate` target
+- `onAnimationStart` and `onAnimationComplete` for base `animate`, `whileTap`,
+  and `whileHover` targets and their restorations
 
 It does **not** yet provide the complete `motion/react` declarative contract.
-In particular, focus/in-view/drag states, gesture animation lifecycle
+In particular, focus/in-view/drag states and their animation lifecycle
 callbacks, animation controls, propagated/orchestrated variants, layout and
 shared-layout animations, `exit`, and `AnimatePresence` are not supported.
 Internal main-thread refs, handlers, and gestures also cannot yet be safely
