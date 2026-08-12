@@ -57,6 +57,8 @@ export class ElementCompt {
         return true;
       },
       get: (_target, prop) => {
+        // motion-dom writes CSS custom properties through this Web API rather
+        // than assigning them as named properties on CSSStyleDeclaration.
         if (prop === 'setProperty') {
           return (property: string, value: string) => {
             styleObject.setProperty(property, value);
