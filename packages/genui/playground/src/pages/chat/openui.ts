@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
@@ -212,11 +211,7 @@ function createOpenUIRequest(
   host: ChatHost,
 ): ChatHttpRequest {
   const endpoint = getChatEndpoint('openui', host);
-  const providerOptions = filterProviderRequestOptionsForEndpoint(
-    toProviderRequestOptions(settings),
-    endpoint,
-    host,
-  );
+  const providerOptions = toProviderRequestOptions(settings);
   return {
     url: endpoint,
     method: 'POST' as const,

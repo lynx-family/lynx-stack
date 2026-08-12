@@ -26,6 +26,7 @@ import type {
   BenchScenarioRequest,
 } from './a2ui-bench-types';
 import type { ChatMessage } from './common/types';
+import { defaultModelName } from './common/model-config.js';
 import { createA2UIBenchAdapter } from './genui-bench/a2ui-adapter';
 import type {
   ProtocolBenchAdapter,
@@ -375,7 +376,7 @@ async function runA2UINativeOne(
       repeatIndex: item.repeatIndex,
       status: runOk ? 'complete' : 'failed',
       ok: runOk,
-      model: model ?? process.env.OPENAI_MODEL ?? 'server default',
+      model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens: result.usage.reduce<number>(
         (total, usage) => total + parseTotalTokens(usage),
@@ -442,7 +443,7 @@ async function runA2UINativeOne(
       repeatIndex: item.repeatIndex,
       status: 'failed',
       ok: false,
-      model: model ?? process.env.OPENAI_MODEL ?? 'server default',
+      model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens: 0,
       agentMs: Math.round(agentMs),
@@ -590,7 +591,7 @@ async function runProtocolAdapterOne(
       repeatIndex: item.repeatIndex,
       status: runOk ? 'complete' : 'failed',
       ok: runOk,
-      model: model ?? process.env.OPENAI_MODEL ?? 'server default',
+      model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens,
       agentMs: Math.round(agentMs),
@@ -662,7 +663,7 @@ async function runProtocolAdapterOne(
       repeatIndex: item.repeatIndex,
       status: 'failed',
       ok: false,
-      model: model ?? process.env.OPENAI_MODEL ?? 'server default',
+      model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens: 0,
       agentMs: Math.round(agentMs),
@@ -871,7 +872,7 @@ function buildReport(
     settings: request.settings,
     env: {
       model: request.provider.model
-        ?? process.env.OPENAI_MODEL
+        ?? defaultModelName()
         ?? 'server default',
     },
     capabilities: {

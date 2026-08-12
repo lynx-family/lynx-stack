@@ -10,6 +10,14 @@ import {
   WEATHER_RESOURCE_URI,
 } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
+import {
+  compactProviderLabel,
+  createDefaultProviderSettings,
+  getModelsEndpoint,
+  loadProviderSettings,
+  parseStoredProviderSettings,
+  toProviderRequestOptions,
+} from './shared.js';
 import { PRODUCT_API_NAME } from '../../../lynx-src/mcp-apps/product/api.js';
 import { WEATHER_API_NAME } from '../../../lynx-src/mcp-apps/weather/api.js';
 import { PROTOCOLS } from '../../utils/protocol.js';
@@ -22,6 +30,74 @@ const reduceOpenUIStream = OPENUI_CHAT_ADAPTER.stream.reduce.bind(
 );
 
 describe('chat protocol adapters', () => {
+  test('starts with an unloaded server-backed model list', () => {
+    const settings = createDefaultProviderSettings();
+    expect(settings).toEqual({
+      model: '',
+      models: [],
+      status: 'idle',
+    });
+    expect(compactProviderLabel(settings)).toBe('Loading models');
+    expect(toProviderRequestOptions(settings)).toEqual({});
+
+    expect(parseStoredProviderSettings(JSON.stringify({
+      preset: 'gpt-5.5',
+      baseURL: 'https://api.openai.com/v1',
+      model: 'gpt-5.5',
+    }))).toEqual(settings);
+  });
+
+  test('loads the model list and default model from the server', async () => {
+    const host = {
+      origin: 'http://localhost:3000',
+      hostname: 'localhost',
+      protocol: 'http:',
+      search: '',
+      baseUrl: 'http://localhost:3000/',
+    };
+    const fetchModels = rs.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        defaultModel: 'Doubao Seed',
+        models: [
+          { id: 'Doubao Seed', label: 'Doubao Seed' },
+          { id: 'Doubao Pro', label: 'Doubao Pro' },
+        ],
+      }),
+    }));
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { fetch: fetchModels },
+    });
+
+    try {
+      const settings = await loadProviderSettings(
+        createDefaultProviderSettings(),
+        host,
+        new AbortController().signal,
+      );
+      expect(getModelsEndpoint(host)).toBe('http://localhost:3060/models');
+      expect(settings).toEqual({
+        model: 'Doubao Seed',
+        models: [
+          { id: 'Doubao Seed', label: 'Doubao Seed' },
+          { id: 'Doubao Pro', label: 'Doubao Pro' },
+        ],
+        status: 'ready',
+      });
+      expect(compactProviderLabel(settings)).toBe('Doubao Seed');
+      expect(toProviderRequestOptions(settings)).toEqual({
+        model: 'Doubao Seed',
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
+
   test('reduces an A2UI stream without duplicating incremental messages', () => {
     let state = A2UI_CHAT_ADAPTER.stream.initial();
 
@@ -291,10 +367,9 @@ describe('chat protocol adapters', () => {
         prompt: 'Weather in Hangzhou',
         conversation: { history: [], dataModel: {} },
         settings: {
-          preset: 'gpt-5.5',
-          apiKey: '',
-          baseURL: 'https://api.openai.com/v1',
           model: 'gpt-5.5',
+          models: [{ id: 'gpt-5.5', label: 'gpt5.5' }],
+          status: 'ready',
         },
         host,
         signal,

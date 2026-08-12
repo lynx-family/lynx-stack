@@ -5,27 +5,37 @@
 import { Hono } from 'hono';
 
 import { isOfficialOpenAIBaseURL } from '../../../agent/openai-utils';
+import { readModelConfig } from '../../../service/common/model-config.js';
 import { jsonWithCors } from '../../common/cors';
 
 function getA2UIHealth(req: Request) {
+  const result = readModelConfig();
+  if (!result.ok) {
+    return jsonWithCors(req, {
+      ok: false,
+      provider: 'openai',
+      hasKey: false,
+      error: result.error,
+    });
+  }
+
+  const { defaultModel, models } = result.config;
   const {
-    OPENAI_API_KEY,
-    OPENAI_API_STYLE,
-    OPENAI_BASE_URL,
-    OPENAI_MODEL,
-  } = process.env;
-  const hasKey = !!OPENAI_API_KEY;
-  const baseURL = OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
+    apiKey,
+    api: configuredApi,
+    baseURL,
+    model,
+  } = models[defaultModel]!;
   const isOfficial = isOfficialOpenAIBaseURL(baseURL);
-  const api = (OPENAI_API_STYLE as 'chat' | 'responses' | undefined)
-    ?? (isOfficial ? 'responses' : 'chat');
+  const api = configuredApi ?? (isOfficial ? 'responses' : 'chat');
 
   return jsonWithCors(req, {
-    ok: hasKey,
+    ok: true,
     provider: 'openai',
-    hasKey,
+    hasKey: Boolean(apiKey),
     baseURL,
-    model: OPENAI_MODEL ?? 'gpt-4o-mini',
+    modelName: defaultModel,
+    model,
     api,
   });
 }

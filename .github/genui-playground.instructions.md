@@ -26,6 +26,8 @@ When serving the playground's native Lynx bundles as static Android test fixture
 
 ## Chat Page Architecture
 
+Load Create-tab model choices from the GenUI server's `GET /models` endpoint. Keep provider credentials, upstream model ids, and upstream base URLs out of playground state, persistence, controls, and request bodies; persist only the selected server-approved model name.
+
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
 Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, and `pages/chat/mcp-apps.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.

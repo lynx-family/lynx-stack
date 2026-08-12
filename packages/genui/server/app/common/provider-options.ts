@@ -6,6 +6,7 @@ import type {
   ChatOptions,
   OpenAIReasoningEffort,
 } from '../../service/common/types';
+import { configuredModelName } from '../../service/common/model-config.js';
 
 export interface ProviderOptionsBody {
   resourceId?: string;
@@ -24,7 +25,7 @@ export function pickProviderOptions(body: ProviderOptionsBody): ChatOptions {
   const allowOverride = clientOverridesAllowed();
   return {
     resourceId: body.resourceId,
-    model: allowOverride ? body.model : undefined,
+    model: allowOverride ? body.model : configuredModelName(body.model),
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
     api: allowOverride ? body.api : undefined,

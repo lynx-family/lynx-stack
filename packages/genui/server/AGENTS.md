@@ -18,20 +18,32 @@ For multi-instance deployments, place a shared rate limiter (e.g. an API
 gateway or Redis-backed limiter) in front of this server when global rate
 limits are required.
 
-## Required Environment Variables
+## Required Model Configuration
 
-Before starting this server, explicitly provide these three environment
-variables:
+Before starting this server, provide the provider credentials, endpoint, and
+model list through one JSON environment variable:
 
 ```bash
-export OPENAI_API_KEY="..."
-export OPENAI_BASE_URL="..."
-export OPENAI_MODEL="..."
+export GENUI_MODEL_CONFIG_JSON='{
+  "GPT-5.4": {
+    "model": "gpt-5.4",
+    "apiKey": "...",
+    "baseURL": "https://api.openai.com/v1",
+    "api": "responses",
+    "default": true
+  }
+}'
 ```
 
-- `OPENAI_API_KEY` is required by the OpenAI provider.
-- `OPENAI_BASE_URL` selects the OpenAI-compatible API endpoint.
-- `OPENAI_MODEL` selects the model used by the A2UI agent.
+- Each top-level key is the public model name returned to the playground.
+- Each value requires `model`, `apiKey`, and `baseURL`, so models may use
+  independent upstream ids, credentials, and endpoints.
+- `api` is optional and accepts `chat` or `responses`.
+- `default: true` is optional. When omitted, the first entry is the default.
+- `reasoningEffort` is optional per model.
+
+`GET /models` exposes only the top-level names and default selection. It must
+never expose `model`, `apiKey`, or `baseURL` to the playground.
 
 Image components are resolved after A2UI validation. To enable query-matched
 stock images, provide a Pexels API key:
