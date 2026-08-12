@@ -361,6 +361,7 @@ describe('declarative Motion', () => {
   });
 
   test('applies a transitionEnd-only animate update', async () => {
+    const lifecycle: string[] = [];
     function App() {
       const [active, setActive] = useState(false);
       return (
@@ -370,6 +371,8 @@ describe('declarative Motion', () => {
             style={{ opacity: 1 }}
             animate={active ? { transitionEnd: { opacity: 0.4 } } : {}}
             transition={{ type: false }}
+            onAnimationStart={() => lifecycle.push('start')}
+            onAnimationComplete={() => lifecycle.push('complete')}
           />
           <view data-testid='toggle' bindtap={() => setActive(true)} />
         </view>
@@ -388,6 +391,7 @@ describe('declarative Motion', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
     });
     expect(getByTestId('box').getAttribute('style')).toContain('opacity: 0.4');
+    expect(lifecycle).toEqual(['start', 'complete']);
   });
 
   test('does not apply a stale transitionEnd-only animate update', async () => {
