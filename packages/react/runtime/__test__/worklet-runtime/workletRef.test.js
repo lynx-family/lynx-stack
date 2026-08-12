@@ -104,6 +104,7 @@ describe('WorkletRef', () => {
 
   it('rejects conflicting registrations for the same type key', () => {
     const create = value => ({ value });
+    const dispose = value => value.stop();
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       create,
@@ -128,6 +129,21 @@ describe('WorkletRef', () => {
     }).not.toThrow();
 
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/disposable-value',
+      create,
+      dispose,
+      1,
+    );
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+        '@test/disposable-value',
+        create,
+        value => value.close(),
+        1,
+      );
+    }).toThrow('Conflicting MainThreadObject registration for type "@test/disposable-value"');
+
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/worklet-value',
       { _wkltId: 'stable-create' },
       { _wkltId: 'stable-dispose' },
@@ -149,6 +165,31 @@ describe('WorkletRef', () => {
         1,
       );
     }).toThrow('Conflicting MainThreadObject registration for type "@test/worklet-value"');
+  });
+
+  it('allows equivalent registrations from separately evaluated modules', () => {
+    const createDefinition = () => value => ({ value });
+    const disposeDefinition = () => value => value.stop();
+    const createA = createDefinition();
+    const createB = createDefinition();
+    const disposeA = disposeDefinition();
+    const disposeB = disposeDefinition();
+
+    expect(createA).not.toBe(createB);
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/lazy-duplicate',
+      createA,
+      disposeA,
+      1,
+    );
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+        '@test/lazy-duplicate',
+        createB,
+        disposeB,
+        1,
+      );
+    }).not.toThrow();
   });
 
   it('rejects incompatible handle protocol versions', () => {
@@ -228,6 +269,181 @@ describe('WorkletRef', () => {
 
     removeValueFromWorkletRefMap(1);
     expect(dispose).toHaveBeenCalledWith(firstScreenValue);
+  });
+
+  it('rejects different typed-object keys at the same hydration path', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/main-type',
+      value => ({ value }),
+      undefined,
+      1,
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'macro-typed-value',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 1,
+          _type: '@test/main-type',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'macro-typed-value',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 2,
+          _type: '@test/background-type',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'macro-typed-value', function() {
+      return this._c.value.value;
+    });
+
+    expect(globalThis.runWorklet(firstScreenWorklet, [])).toBe(1);
+    expect(() => {
+      globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    }).toThrow(
+      'MainThreadObject type mismatch during hydration for handle 1: background handle expects type "@test/background-type" with protocol 1, but the main-thread target is type "@test/main-type" with protocol 1.',
+    );
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
+  });
+
+  it('rejects typed-object and mutable-cell kind mismatches during hydration', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/value',
+      value => ({ value }),
+      undefined,
+      1,
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'kind-mismatch',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 1,
+          _type: '@test/value',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'kind-mismatch',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 1,
+          _type: 'main-thread',
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'kind-mismatch', function() {
+      return this._c.value.value;
+    });
+
+    globalThis.runWorklet(firstScreenWorklet, []);
+    expect(() => {
+      globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    }).toThrow(
+      'Worklet value kind mismatch during hydration for handle 1: background handle expects mutable-cell, but the main-thread target is typed-object.',
+    );
+  });
+
+  it('rejects protocol mismatches for an already-realized hydration target', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/value',
+      value => ({ value }),
+      undefined,
+      1,
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'protocol-mismatch',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 1,
+          _type: '@test/value',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'protocol-mismatch',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 1,
+          _type: '@test/value',
+          _mtoVersion: 2,
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'protocol-mismatch', function() {
+      return this._c.value.value;
+    });
+
+    globalThis.runWorklet(firstScreenWorklet, []);
+    expect(() => {
+      globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    }).toThrow(
+      'MainThreadObject protocol mismatch for type "@test/value": runtime supports version 1, but the handle or bundle uses 2.',
+    );
+  });
+
+  it('validates an existing hydrated target when applying initialization patches', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/value',
+      value => ({ value }),
+      undefined,
+      1,
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'patch-validation',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 1,
+          _type: '@test/value',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'patch-validation',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 1,
+          _type: '@test/value',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'patch-validation', function() {
+      return this._c.value.value;
+    });
+
+    globalThis.runWorklet(firstScreenWorklet, []);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+    expect(() => {
+      updateWorkletRefInitValueChanges([[1, 1, '@test/value', 2]]);
+    }).toThrow(
+      'MainThreadObject protocol mismatch for type "@test/value": runtime supports version 1, but the handle or bundle uses 2.',
+    );
+  });
+
+  it('rejects an existing target without worklet-value metadata', () => {
+    globalThis.lynxWorkletImpl._refImpl._workletRefMap[1] = {};
+
+    expect(() => {
+      updateWorkletRefInitValueChanges([[1, 'value']]);
+    }).toThrow(
+      'Cannot apply MainThreadObject initialization patch for handle 1: the existing target has no worklet-value metadata.',
+    );
   });
 
   it('should create, get, update & remove', () => {
