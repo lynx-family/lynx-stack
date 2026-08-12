@@ -247,7 +247,7 @@ describe('declarative Motion', () => {
             initial={{ x: 0 }}
             animate={{
               x: step * 20,
-              transition: { duration: 0.01 },
+              transition: { type: false },
               transitionEnd: { x: step * 100 },
             }}
           />
