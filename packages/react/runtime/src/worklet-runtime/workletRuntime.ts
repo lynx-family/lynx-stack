@@ -168,6 +168,17 @@ const transformWorkletInner = (
       continue;
     }
 
+    // A MainThreadObject initialization payload is user data. Resolve the
+    // typed descriptor before walking it so payload properties that resemble
+    // worklet metadata remain untouched. Legacy MainThreadRef descriptors do
+    // not carry a protocol version and retain the existing recursive path.
+    if (isMainThreadObjectDescriptor(subObj)) {
+      obj[key] = getFromWorkletRefMap(
+        subObj as unknown as WorkletRefImpl<unknown>,
+      );
+      continue;
+    }
+
     if (/** isEventTarget */ 'elementRefptr' in subObj) {
       obj[key] = new Element(subObj['elementRefptr'] as ElementNode);
       continue;
@@ -211,6 +222,17 @@ const transformWorkletInner = (
     }
   }
 };
+
+function isMainThreadObjectDescriptor(
+  value: ClosureValueType,
+): boolean {
+  const descriptor = value as unknown as Partial<WorkletRefImpl<unknown>>;
+  return typeof value === 'object'
+    && value !== null
+    && typeof descriptor._wvid === 'number'
+    && typeof descriptor._type === 'string'
+    && typeof descriptor._mtoVersion === 'number';
+}
 
 function createWeakCtxRef(ctx: object): WeakRef<object> | undefined {
   try {
