@@ -81,7 +81,7 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   const parent = useContext(MotionVariantContext);
   const initial = props.inherit !== false
       && props.initial === undefined
-      && isVariantLabel(parent.initial)
+      && (parent.initial === false || isVariantLabel(parent.initial))
     ? parent.initial
     : props.initial;
   const inheritsAnimate = props.inherit !== false
@@ -104,7 +104,7 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   const childDelay = inheritedDelay
     + (typeof delayChildren === 'number' ? delayChildren : 0);
   const context = useMemo<MotionVariantContextValue>(() => ({
-    ...(isVariantLabel(initial) ? { initial } : {}),
+    ...(initial === false || isVariantLabel(initial) ? { initial } : {}),
     ...(isVariantLabel(animate) ? { animate } : {}),
     ...(childDelay ? { delay: childDelay } : {}),
   }), [animate, childDelay, initial]);

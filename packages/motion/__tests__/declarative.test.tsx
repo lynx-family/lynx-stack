@@ -218,6 +218,27 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('propagates initial false to an inherited variant child', async () => {
+    const { getByTestId } = render(
+      <motion.view initial={false} animate='visible'>
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0, x: -20 },
+            visible: { opacity: 1, x: 40 },
+          }}
+          transition={{ duration: 0.2 }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'translateX(40px)',
+    );
+  });
+
   test('propagates numeric delayChildren to a variant child', async () => {
     const { getByTestId } = render(
       <motion.view
