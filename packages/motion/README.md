@@ -48,6 +48,7 @@ The declarative layer currently supports:
   `animate`, including `custom`, target-local `transition`, and parent label
   inheritance for base targets when a child does not define its own label;
   `inherit={false}` prevents labels propagating through a variant boundary;
+  parent `initial={false}` also suppresses inherited child mount animations;
   numeric `delayChildren` also propagates through inherited labels
 - `initial={false}` to render the final `animate` keyframe without a mount
   animation while preserving later target updates
