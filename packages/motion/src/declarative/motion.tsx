@@ -13,6 +13,7 @@ import type {
 } from 'motion-dom';
 import {
   animateMotionValue as createMotionValueAnimation,
+  getValueTransition,
   motionValue,
   styleEffect,
 } from 'motion-dom' with {
@@ -72,6 +73,39 @@ function isVariantLabel(
   return typeof definition === 'string' || Array.isArray(definition);
 }
 
+function getExplicitTargetDuration(
+  target: MotionTarget | undefined,
+  transition: MotionTransition | undefined,
+): number {
+  if (!target || !transition) {
+    return 0;
+  }
+  let longestDuration = 0;
+  let targetCount = 0;
+  for (const key in target) {
+    targetCount += 1;
+    const valueTransition = getValueTransition(
+      transition,
+      key,
+    ) as MotionTransition;
+    if (
+      typeof valueTransition?.duration !== 'number'
+      || valueTransition.type === false
+      || valueTransition.repeat !== undefined
+    ) {
+      return 0;
+    }
+    longestDuration = Math.max(
+      longestDuration,
+      valueTransition.duration
+        + (typeof valueTransition.delay === 'number'
+          ? valueTransition.delay
+          : 0),
+    );
+  }
+  return targetCount > 0 ? longestDuration : 0;
+}
+
 function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   context: MotionVariantContextValue;
   delay: number;
@@ -102,18 +136,12 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   );
   const inheritedDelay = inheritsAnimate ? parent.delay ?? 0 : 0;
   const delayChildren = resolvedAnimate.transition?.delayChildren;
-  const animateTargetCount = resolvedAnimate.target
-    ? Object.keys(resolvedAnimate.target).length
-    : 0;
-  const animateDelay = resolvedAnimate.transition?.delay;
   const beforeChildrenDelay = resolvedAnimate.transition?.when
-        === 'beforeChildren'
-      && typeof resolvedAnimate.transition.duration === 'number'
-      && resolvedAnimate.transition.type !== false
-      && resolvedAnimate.transition.repeat === undefined
-      && animateTargetCount > 0
-    ? resolvedAnimate.transition.duration
-      + (typeof animateDelay === 'number' ? animateDelay : 0)
+      === 'beforeChildren'
+    ? getExplicitTargetDuration(
+      resolvedAnimate.target,
+      resolvedAnimate.transition,
+    )
     : 0;
   const childDelay = inheritedDelay
     + beforeChildrenDelay

@@ -50,8 +50,8 @@ The declarative layer currently supports:
   `inherit={false}` prevents labels propagating through a variant boundary;
   parent `initial={false}` also suppresses inherited child mount animations;
   numeric `delayChildren` also propagates through inherited labels;
-  `when: "beforeChildren"` waits for a parent's non-repeating,
-  explicit-duration target
+  `when: "beforeChildren"` waits for a parent's non-repeating target whose
+  animated values all have explicit durations
   before starting inherited children
 - `initial={false}` to render the final `animate` keyframe without a mount
   animation while preserving later target updates
