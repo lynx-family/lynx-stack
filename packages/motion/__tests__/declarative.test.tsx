@@ -507,6 +507,83 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('waits for the longest explicit value transition before children', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: { opacity: 0, x: 0 },
+          visible: {
+            opacity: 1,
+            x: 100,
+            transition: {
+              when: 'beforeChildren',
+              opacity: { duration: 0.02 },
+              x: { delay: 0.04, duration: 0.08 },
+            },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 70));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 90));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
+  test('does not claim beforeChildren when one value has automatic timing', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: { opacity: 0, x: 0 },
+          visible: {
+            opacity: 1,
+            x: 100,
+            transition: {
+              when: 'beforeChildren',
+              opacity: { duration: 1 },
+              x: { type: 'spring' },
+            },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('does not delay children for an empty beforeChildren parent target', async () => {
     const { getByTestId } = render(
       <motion.view
