@@ -191,7 +191,7 @@ function isHydratedWorkletValue(value: unknown): value is object {
 function isMutableCell(value: unknown): value is WorkletRef<unknown> {
   return typeof value === 'object' && value !== null
     && typeof (value as Partial<WorkletRef<unknown>>)._wvid === 'number'
-    && 'current' in value;
+    && Object.prototype.hasOwnProperty.call(value, 'current');
 }
 
 const getFromWorkletRefMap = <T>(

@@ -458,6 +458,18 @@ describe('MainThreadObject', () => {
     );
   });
 
+  it('rejects a forged main-thread object type token', () => {
+    globalEnvManager.switchToMainThread();
+    const App = () => {
+      useMainThreadObject({ type: '@test/forged' }, 42);
+      return <view />;
+    };
+
+    expect(() => render(<App />, __root)).toThrow(
+      'Invalid MainThreadObject type token for "@test/forged". Create it with defineMainThreadObjectType().',
+    );
+  });
+
   it('uses a plain serializable handle in the main-thread runtime', () => {
     globalEnvManager.switchToMainThread();
     const type = defineMainThreadObjectType({
