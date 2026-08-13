@@ -28,6 +28,7 @@ export type MotionStyle =
       | MotionValue<string>
       | MotionValue<number>;
   }
+  & Partial<Record<`--${string}`, MotionStyleValue>>
   & {
     x?: MotionStyleValue;
     y?: MotionStyleValue;
