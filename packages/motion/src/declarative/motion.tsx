@@ -11,7 +11,11 @@ import type {
   AnimationPlaybackControlsWithThen,
   MotionValue,
 } from 'motion-dom';
-import { motionValue, styleEffect } from 'motion-dom' with {
+import {
+  animateMotionValue as createMotionValueAnimation,
+  motionValue,
+  styleEffect,
+} from 'motion-dom' with {
   runtime: 'shared',
 };
 
@@ -332,10 +336,9 @@ function useMotionHostProps<Props extends MotionProps>(
         return;
       }
 
-      const animateMotionValue = animateValue as unknown as AnimateMotionTarget;
-      const resolvedOptions = options?.repeat === -1
+      const resolvedOptions = (options?.repeat === -1
         ? { ...options, repeat: Number.POSITIVE_INFINITY }
-        : options;
+        : options) ?? {};
       const values = { ...motionValueBindings };
       const targets = [target, interactionTarget, hoverTarget];
       for (const definition of targets) {
@@ -411,13 +414,17 @@ function useMotionHostProps<Props extends MotionProps>(
           const value = values[key];
           const targetValue = targetValues[key];
           if (value && targetValue !== undefined) {
-            animationRef.current.push(
-              animateMotionValue(
+            void value.start(
+              createMotionValueAnimation(
+                key,
                 value,
-                targetValue,
-                resolvedOptions,
+                targetValue as never,
+                resolvedOptions as never,
               ),
             );
+            if (value.animation) {
+              animationRef.current.push(value.animation);
+            }
           }
         }
       }
@@ -486,18 +493,26 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     tapAnimationRef.current = [];
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletTapTransition?.repeat === -1
+    const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletTapTransition;
+      : workletTapTransition) ?? {};
     if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, targetValue, resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              targetValue as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
@@ -534,9 +549,9 @@ function useMotionHostProps<Props extends MotionProps>(
     const restingTransition = hoverActiveRef.current && resolvedHover.target
       ? workletHoverTransition
       : workletTapTransition;
-    const resolvedTransition = restingTransition?.repeat === -1
+    const resolvedTransition = (restingTransition?.repeat === -1
       ? { ...restingTransition, repeat: Number.POSITIVE_INFINITY }
-      : restingTransition;
+      : restingTransition) ?? {};
     const restingValues: Record<string, unknown> = {};
     for (const key in targetValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];
@@ -560,9 +575,17 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, restingValues[key], resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              restingValues[key] as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
@@ -594,9 +617,9 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     tapAnimationRef.current = [];
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletHoverTransition?.repeat === -1
+    const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletHoverTransition;
+      : workletHoverTransition) ?? {};
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
     if (isLynxForWeb) {
@@ -605,9 +628,17 @@ function useMotionHostProps<Props extends MotionProps>(
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, targetValue, resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              targetValue as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
@@ -643,9 +674,9 @@ function useMotionHostProps<Props extends MotionProps>(
       | Record<string, unknown>
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
-    const resolvedTransition = workletHoverTransition?.repeat === -1
+    const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
-      : workletHoverTransition;
+      : workletHoverTransition) ?? {};
     const restingValues: Record<string, unknown> = {};
     for (const key in hoverValues) {
       let restingValue = animateValues?.[key] ?? initialValues[key];
@@ -669,9 +700,17 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          tapAnimationRef.current.push(
-            animateMotionTarget(value, restingValues[key], resolvedTransition),
+          void value.start(
+            createMotionValueAnimation(
+              key,
+              value,
+              restingValues[key] as never,
+              resolvedTransition as never,
+            ),
           );
+          if (value.animation) {
+            tapAnimationRef.current.push(value.animation);
+          }
         }
       }
       return;
