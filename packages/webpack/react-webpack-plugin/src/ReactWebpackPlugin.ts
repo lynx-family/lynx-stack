@@ -18,6 +18,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
+import {
+  collectMTSDefines,
+  createMTSDefinesRuntimeModule,
+  renderLazyMTSDefines,
+} from './MTSDefinesRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
 
@@ -234,6 +239,16 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_enableMTSRendering}
+   */
+  experimental_enableMTSRendering?: boolean;
+
+  /**
+   * The background entry name of each main-thread entry.
+   */
+  mainThreadEntries?: Record<string, string>;
+
+  /**
    * The builtin attribute-name transform configuration used by runtime spread
    * attributes.
    *
@@ -328,6 +343,8 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      experimental_enableMTSRendering: true,
+      mainThreadEntries: {},
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
     });
@@ -402,6 +419,9 @@ class ReactWebpackPlugin {
         options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.experimental_enableMTSRendering,
+      ),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -435,6 +455,44 @@ class ReactWebpackPlugin {
           new LynxProcessEvalResultRuntimeModule(),
         );
       });
+
+      if (options.experimental_enableMTSRendering === false) {
+        const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
+          compiler.webpack,
+        );
+
+        compilation.hooks.additionalTreeRuntimeRequirements.tap(
+          this.constructor.name,
+          (chunk, runtimeRequirements) => {
+            for (
+              const [mainThreadEntry, backgroundEntry] of Object.entries(
+                options.mainThreadEntries ?? {},
+              )
+            ) {
+              if (
+                compilation.entrypoints.get(mainThreadEntry)
+                  ?.getEntrypointChunk() !== chunk
+              ) {
+                continue;
+              }
+              runtimeRequirements.add(
+                compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
+              );
+              runtimeRequirements.add(
+                RuntimeGlobals.lynxProcessEvalResultByHost,
+              );
+              runtimeRequirements.add(
+                compiler.webpack.RuntimeGlobals.externalInstallChunk,
+              );
+              runtimeRequirements.add(compiler.webpack.RuntimeGlobals.require);
+              compilation.addRuntimeModule(
+                chunk,
+                new MTSDefinesRuntimeModule(backgroundEntry),
+              );
+            }
+          },
+        );
+      }
 
       compilation.hooks.processAssets.tap(
         {
@@ -471,6 +529,35 @@ class ReactWebpackPlugin {
         this.constructor.name,
         (args) => {
           const lepusCode = args.encodeData.lepusCode;
+
+          // A lazy bundle has no main-thread chunk of its own in this mode: its
+          // section is assembled from the definitions of the modules the
+          // background put in its async chunks.
+          if (
+            options.experimental_enableMTSRendering === false
+            && lepusCode.root === undefined
+            && args.chunkGroups.length > 0
+            && args.chunkGroups.every(cg => !cg.isInitial())
+          ) {
+            const { chunkGraph } = compilation;
+            const defines = collectMTSDefines(
+              args.chunkGroups.flatMap(cg => cg.chunks),
+              (chunk) => chunkGraph.getChunkModules(chunk),
+              (module) => module.identifier(),
+            );
+            if (defines.length > 0) {
+              const name = `${args.intermediate}/main-thread.js`;
+              lepusCode.root = {
+                name,
+                source: new RawSource(
+                  renderLazyMTSDefines(defines, `lynx:${name}`),
+                ),
+                info: { ['lynx:main-thread']: true },
+              };
+              lepusCode.filename = 'main-thread.js';
+            }
+          }
+
           if (
             lepusCode.root?.source.source().toString()?.includes(
               'registerWorkletInternal',

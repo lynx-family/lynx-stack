@@ -111,6 +111,11 @@ export interface ReactLoaderOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_enableMTSRendering}
+   */
+  experimental_enableMTSRendering?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -351,8 +356,11 @@ export function getBackgroundTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
+  const { experimental_enableMTSRendering } = this.getOptions();
   return {
     ...commonOptions,
+    ...(experimental_enableMTSRendering === false
+      && { collectMTSDefines: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

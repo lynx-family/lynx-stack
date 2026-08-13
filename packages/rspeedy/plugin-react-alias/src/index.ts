@@ -59,6 +59,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         ])
         api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
           resolve,
+          reactLynxDir,
         })
 
         Object.defineProperty(environment, S_PLUGIN_REACT_ALIAS, {
