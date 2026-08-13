@@ -321,6 +321,7 @@ function useMotionHostProps<Props extends MotionProps>(
       target: MotionTarget | undefined,
       interactionTarget: MotionTarget | undefined,
       hoverTarget: MotionTarget | undefined,
+      transitionEnd: Record<string, unknown> | undefined,
       options: MotionTransition | undefined,
       startingValues: Record<string, unknown>,
       shouldAnimate: boolean,
@@ -430,6 +431,7 @@ function useMotionHostProps<Props extends MotionProps>(
         }
       }
 
+      let motionElement: Element | undefined;
       if (Object.keys(values).length > 0) {
         // `mainThreadDependencies` installs ElementCompt as the main-thread
         // Element constructor. Construct it here instead of capturing another
@@ -438,23 +440,24 @@ function useMotionHostProps<Props extends MotionProps>(
         const ElementConstructor = globalThis.Element as unknown as new(
           element: MainThread.Element,
         ) => Element;
-        const element = new ElementConstructor(elementRef.current);
-        styleCleanupRef.current = styleEffect(element, values);
+        motionElement = new ElementConstructor(elementRef.current);
+        styleCleanupRef.current = styleEffect(motionElement, values);
       }
 
+      const completionPromises: Promise<void>[] = [];
       if (shouldAnimate) {
         for (const key in animationTargetValues) {
           const value = values[key];
           const targetValue = animationTargetValues[key];
           if (value && targetValue !== undefined) {
-            void value.start(
+            completionPromises.push(value.start(
               createMotionValueAnimation(
                 key,
                 value,
                 targetValue as never,
                 resolvedOptions as never,
               ),
-            );
+            ));
             if (value.animation) {
               animationRef.current.push(value.animation);
             }
@@ -463,15 +466,34 @@ function useMotionHostProps<Props extends MotionProps>(
       }
 
       const activeAnimations = [...animationRef.current];
-      if (activeAnimations.length > 0 && animate !== undefined) {
-        if (onAnimationStart) {
-          void runOnBackground(onAnimationStart)(animate);
-        }
-        void Promise.all(activeAnimations).then(() => {
-          if (
-            animationGenerationRef.current === animationGeneration
-            && onAnimationComplete
-          ) {
+      if (
+        activeAnimations.length > 0 && animate !== undefined && onAnimationStart
+      ) {
+        void runOnBackground(onAnimationStart)(animate);
+      }
+      if (completionPromises.length > 0 && animate !== undefined) {
+        void Promise.all(completionPromises).then(() => {
+          if (animationGenerationRef.current !== animationGeneration) {
+            return;
+          }
+          let addedValue = false;
+          for (const key in transitionEnd) {
+            const finalValue = transitionEnd[key];
+            let value = values[key];
+            if (!value && finalValue !== undefined) {
+              value = motionValue(finalValue as string | number);
+              generatedValuesRef.current[key] = value;
+              values[key] = value;
+              addedValue = true;
+            } else if (value && finalValue !== undefined) {
+              value.set(finalValue as never);
+            }
+          }
+          if (addedValue && motionElement) {
+            styleCleanupRef.current?.();
+            styleCleanupRef.current = styleEffect(motionElement, values);
+          }
+          if (onAnimationComplete) {
             void runOnBackground(onAnimationComplete)(animate);
           }
         });
@@ -482,6 +504,7 @@ function useMotionHostProps<Props extends MotionProps>(
       resolvedAnimate.target,
       resolvedTap.target,
       resolvedHover.target,
+      resolvedAnimate.transitionEnd,
       workletAnimateTransition,
       initialValues,
       shouldAnimateTarget,

@@ -117,6 +117,24 @@ describe('declarative Motion', () => {
     expect(splitMotionTarget(definition, { duration: 1 })).toEqual({
       target: { opacity: 0.5, x: 80 },
       transition: { duration: 0.2 },
+      transitionEnd: undefined,
+    });
+  });
+
+  test('separates transitionEnd from animated values', () => {
+    expect(
+      splitMotionTarget(
+        {
+          x: 20,
+          transition: { duration: 0.2 },
+          transitionEnd: { x: 100 },
+        },
+        undefined,
+      ),
+    ).toEqual({
+      target: { x: 20 },
+      transition: { duration: 0.2 },
+      transitionEnd: { x: 100 },
     });
   });
 
@@ -234,6 +252,45 @@ describe('declarative Motion', () => {
     });
     expect(getByTestId('box').getAttribute('style')).toContain(
       'translateX(40px)',
+    );
+  });
+
+  test('applies the latest transitionEnd after animation', async () => {
+    function App() {
+      const [step, setStep] = useState(0);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={{ x: 0 }}
+            animate={{
+              x: step * 20,
+              transition: { type: false },
+              transitionEnd: { x: step * 100 },
+            }}
+          />
+          <view
+            data-testid='toggle'
+            bindtap={() => {
+              setStep(1);
+              setStep(2);
+            }}
+          />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(200px)',
     );
   });
 
