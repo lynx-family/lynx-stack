@@ -440,9 +440,6 @@ class ReactWebpackPlugin {
           };
           definesImportRegistry.clear();
 
-          // Traverse the synchronous closure of the given roots; async
-          // `import()` boundaries are returned separately, keyed by the
-          // imported module's resource so both layers pair up.
           const traverse = (roots: Module[]) => {
             const visited = new Set<Module>();
             const asyncBoundaries = new Map<string, Module>();
@@ -513,10 +510,6 @@ class ReactWebpackPlugin {
               });
           };
 
-          // Recursively diff a background/main-thread scope pair. The root
-          // scope injects through an extra entry; an async scope injects by
-          // appending an import to the main-thread boundary module, so the
-          // definitions land in the lazy chunk that owns them.
           const processScope = async (
             backgroundRoots: Module[],
             mainThreadRoots: Module[],
@@ -568,18 +561,12 @@ class ReactWebpackPlugin {
                 resource,
               );
               if (!mainThreadBoundary) {
-                // The main thread never loads this chunk; injecting its
-                // definitions elsewhere would run them under the wrong
-                // dynamic-component entry.
                 continue;
               }
               await processScope(
                 [backgroundBoundary],
                 [mainThreadBoundary],
                 present,
-                // The boundary module's resource is unique, and the virtual
-                // module never touches the filesystem, so its path can simply
-                // extend the resource path.
                 `${resource}.__lynx-react-defines.js`,
                 async (boundaryRequest) => {
                   definesImportRegistry.set(
@@ -615,11 +602,6 @@ class ReactWebpackPlugin {
                         (err) => err ? reject(err) : resolve(),
                       );
                     });
-                  // The startup sequence deduplicates a repeated dependency
-                  // into its last occurrence, so re-appending every original
-                  // request after the definitions runs the definitions first,
-                  // keeps the original startup order, and leaves the entry's
-                  // exports on the last dependency.
                   const originalRequests = compilation.entries.get(mainThread)!
                     .dependencies.flatMap((dependency) =>
                       typeof dependency.request === 'string'

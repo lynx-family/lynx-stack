@@ -786,8 +786,6 @@ impl WorkletVisitor {
       return;
     };
     if closes_over_shared_import {
-      // The statement embeds the user's function body, which still references
-      // the shared-import bindings; it cannot run inside the injected module.
       collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash);
       return;
     }
