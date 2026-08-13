@@ -149,12 +149,10 @@ describe('Lazy Exports', () => {
     const compatType = ReactCompatExports.defineMainThreadObjectType(definition);
     expect(reactType).toMatchObject({ type: definition.type });
     expect(reactType).not.toHaveProperty('create');
-    expect(reactType.isHandle).toBeTypeOf('function');
-    expect(reactType.getInitialPayload).toBeTypeOf('function');
+    expect(reactType.downcast).toBeTypeOf('function');
     expect(compatType).toMatchObject({ type: definition.type });
     expect(compatType).not.toHaveProperty('create');
-    expect(compatType.isHandle).toBeTypeOf('function');
-    expect(compatType.getInitialPayload).toBeTypeOf('function');
+    expect(compatType.downcast).toBeTypeOf('function');
     expect(() => ReactExports.useMainThreadObject(reactType, 1)).toThrow();
     expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow();
 
