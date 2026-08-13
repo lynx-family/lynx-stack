@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getLegacyInjectedApp } from '../legacy/legacy-app.js';
 
 /* eslint-disable */
 
@@ -40,15 +41,15 @@ function reportRefDeprecationError(fnName: string, newFnName: string) {
 }
 
 function getReactAppInstance(): ReactAppInstance {
-  return lynxCoreInject.tt as unknown as ReactAppInstance;
+  return getLegacyInjectedApp() as unknown as ReactAppInstance;
 }
 
 function getLegacyNativeApp(): LegacyNativeApp {
-  return (lynxCoreInject.tt as any)._nativeApp;
+  return (getLegacyInjectedApp() as any)._nativeApp;
 }
 
 function getLegacyReactComponent(): LegacyReactComponent {
-  return (lynxCoreInject.tt as any)._reactLynx.ReactComponent.prototype;
+  return (getLegacyInjectedApp() as any)._reactLynx.ReactComponent.prototype;
 }
 
 function createLegacyComponentReceiver(

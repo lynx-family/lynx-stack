@@ -220,8 +220,7 @@ describe('loadLazyBundle', () => {
         .stubGlobal('__JS__', true)
         // Force the QueryComponent fetcher path (see main-thread block).
         .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'QueryComponent')
-        .stubGlobal('lynx', { QueryComponent })
-        .stubGlobal('lynxCoreInject', { tt: { getDynamicComponentExports } });
+        .stubGlobal('lynx', { QueryComponent, getDynamicComponentExports });
     });
 
     test('blocking QueryComponent', async () => {
@@ -542,7 +541,7 @@ describe('loadLazyBundle', () => {
       QueryComponent.mockImplementation((source, callback) => {
         callback({ code: 0, detail: { schema: source } });
       });
-      vi.stubGlobal('lynx', { getNativeLynx: () => ({ QueryComponent }) });
+      vi.stubGlobal('lynx', { getNativeLynx: () => ({ QueryComponent }), getDynamicComponentExports });
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');

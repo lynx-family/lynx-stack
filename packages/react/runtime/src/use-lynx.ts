@@ -18,5 +18,5 @@ import type { RootLynx } from './root-context.js';
  * @public
  */
 export function useLynx(): RootLynx {
-  return getCurrentRootContext().lynx ?? lynx;
+  return getCurrentRootContext().lynx ?? (lynx as unknown as RootLynx);
 }

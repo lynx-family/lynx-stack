@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { injectTt } from '../../src/snapshot/lynx/tt.js';
 import { Component, process } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -57,16 +58,26 @@ describe('root-cause: default singleton shares one container', () => {
   });
 });
 
+afterEach(() => {
+  // Roots bound on the ambient lynx overwrite the default context's
+  // handlers in the shared stub registry; restore them for the next test.
+  root.__experimentalBindRenderContext();
+  injectTt();
+});
+
 describe('bootstrap hook: classic root.render renders the bootstrapped page', () => {
   afterEach(() => {
     root.__experimentalBindRenderContext();
+    // Binding a root on the ambient lynx overwrote the default context's
+    // handlers in the (per-app) registry; restore them.
+    injectTt();
   });
 
   it('is a no-op on the main thread', () => {
     const prev = globalThis.__BACKGROUND__;
     globalThis.__BACKGROUND__ = false;
     try {
-      expect(root.__experimentalBindRenderContext({})).toBeUndefined();
+      expect(root.__experimentalBindRenderContext(lynx)).toBeUndefined();
     } finally {
       globalThis.__BACKGROUND__ = prev;
     }
@@ -76,7 +87,7 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    const pageA = root.__experimentalBindRenderContext({});
+    const pageA = root.__experimentalBindRenderContext(lynx);
     root.render(<A />);
 
     expect(textOf(pageA._container)).toEqual(['A']);
@@ -89,9 +100,9 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     const A = () => <text>{'A'}</text>;
     const B = () => <text>{'B'}</text>;
 
-    const pageA = root.__experimentalBindRenderContext({});
+    const pageA = root.__experimentalBindRenderContext(lynx);
     root.render(<A />);
-    const pageB = root.__experimentalBindRenderContext({});
+    const pageB = root.__experimentalBindRenderContext(lynx);
     root.render(<B />);
 
     expect(pageA._container).not.toBe(pageB._container);
@@ -103,7 +114,7 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    root.__experimentalBindRenderContext({});
+    root.__experimentalBindRenderContext(lynx);
     root.__experimentalBindRenderContext();
     root.render(<A />);
 
@@ -114,15 +125,17 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     globalEnvManager.switchToBackground();
 
     const callA = vi.fn((_name, _data, cb) => cb?.());
+    const handlersA = {};
     const lynxA = {
       ...lynx,
+      registerAppEventHandlers: (h) => Object.assign(handlersA, h),
       getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callA }),
     };
 
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      root.__experimentalBindRenderContext({ lynx: lynxA });
+      root.__experimentalBindRenderContext(lynxA);
       root.render(<text>{'A'}</text>);
       const handshakes = callA.mock.calls.filter(c => c[0] === 'rLynxFirstScreenSyncReady');
       expect(handshakes).toHaveLength(1);
@@ -244,8 +257,10 @@ describe('ReactLynxRoot: independent roots coexist', () => {
     globalEnvManager.switchToBackground();
 
     const callC = vi.fn((_name, _data, cb) => cb?.());
+    const handlersC = {};
     const lynxC = {
       ...lynx,
+      registerAppEventHandlers: (h) => Object.assign(handlersC, h),
       getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callC }),
     };
 
@@ -256,7 +271,7 @@ describe('ReactLynxRoot: independent roots coexist', () => {
       return <text>{n}</text>;
     }
 
-    const rootC = new ReactLynxRoot({ lynx: lynxC });
+    const rootC = new ReactLynxRoot(lynxC);
     rootC.render(<C />);
 
     switchRootContext(rootC._ctx);
@@ -278,15 +293,17 @@ describe('ReactLynxRoot: independent roots coexist', () => {
     globalEnvManager.switchToBackground();
 
     const callD = vi.fn((_name, _data, cb) => cb?.());
+    const handlersD = {};
     const lynxD = {
       ...lynx,
+      registerAppEventHandlers: (h) => Object.assign(handlersD, h),
       getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callD }),
     };
 
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      const rootD = new ReactLynxRoot({ lynx: lynxD });
+      const rootD = new ReactLynxRoot(lynxD);
       rootD.render(<text>{'D'}</text>);
       expect(callD.mock.calls.map(c => c[0])).toContain('rLynxFirstScreenSyncReady');
       expect(lynx.getNativeApp().callLepusMethod).not.toHaveBeenCalled();
@@ -362,17 +379,20 @@ describe('multi-page: two roots on separate native channels', () => {
     const defaultContainer = __root;
 
     // Card 2 = an independent root bound to its own native bridge objects.
-    const ttE = {};
+    // The root registers its handlers on this card's lynx; the "engine"
+    // (this test) invokes them the way lynx-core's App forwarding does.
     const callE = vi.fn((_name, _data, cb) => cb?.());
+    const handlersE = {};
     const lynxE = {
       ...lynx,
+      registerAppEventHandlers: (h) => Object.assign(handlersE, h),
       getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callE }),
     };
-    const rootE = new ReactLynxRoot({ lynx: lynxE, lynxCoreInject: { tt: ttE } });
-    expect(typeof ttE.OnLifecycleEvent).toBe('function');
+    const rootE = new ReactLynxRoot(lynxE);
+    expect(typeof handlersE.onLifecycleEvent).toBe('function');
     rootE.render(<App />);
     lynx.getNativeApp().callLepusMethod.mockClear();
-    ttE.OnLifecycleEvent(...firstScreen);
+    handlersE.onLifecycleEvent(...firstScreen);
 
     // Hydration patches went through each card's own channel.
     expect(callE.mock.calls.some(c => c[0] === 'rLynxChange')).toBe(true);
@@ -387,7 +407,7 @@ describe('multi-page: two roots on separate native channels', () => {
 
     // An event arriving on card 2's channel taps card 2's handler only.
     callE.mockClear();
-    ttE.publishEvent(`${idE}:0:`, {});
+    handlersE.publishEvent(`${idE}:0:`, {});
     await waitSchedule();
     expect(textOf(rootE._container)).toEqual([1]);
     expect(textOf(defaultContainer)).toEqual([0]);

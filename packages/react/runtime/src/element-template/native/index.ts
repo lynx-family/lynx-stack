@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { coreLynx } from '../../core/core-app-api.js';
 import '@lynx-js/react/hooks';
 import type { ComponentChild, ContainerNode, VNode } from 'preact';
 import { render } from 'preact';
@@ -68,12 +69,14 @@ function init(): void {
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
     resetEventStateForRuntime();
-    lynxCoreInject.tt.callDestroyLifetimeFun = callDestroyLifetimeFun;
-    lynxCoreInject.tt.publishEvent = publishEvent;
-    lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
-    lynxCoreInject.tt.updateGlobalProps = updateGlobalProps;
-    lynxCoreInject.tt.updateCardData = updateCardData;
-    lynxCoreInject.tt.onAppReload = reloadBackground;
+    coreLynx().registerAppEventHandlers({
+      onDestroyLifetime: callDestroyLifetimeFun,
+      publishEvent,
+      publicComponentEvent,
+      updateGlobalProps,
+      updateCardData,
+      onAppReload: reloadBackground,
+    });
     installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {

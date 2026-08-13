@@ -8,6 +8,8 @@
 // sync with `snapshot/lifecycle/constant.ts`'s
 // `LifecycleConstant.prepareLazyBundleMTS`, the lifecycle name the snapshot
 // backend registers the main-thread prepare handler under.
+import { coreLynx } from '../core-app-api.js';
+
 const SECTION_MAIN_THREAD = 'main-thread';
 const SECTION_BACKGROUND = 'background';
 const SECTION_CSS = 'CSS';
@@ -153,7 +155,7 @@ export const loadLazyBundle: <
         const { code, detail } = result;
         if (code === 0) {
           const { schema } = detail;
-          const exports = lynxCoreInject.tt.getDynamicComponentExports(schema);
+          const exports = coreLynx().getDynamicComponentExports!(schema);
           // `code === 0` means that the lazy bundle has been successfully parsed. However,
           // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
           if (exports) {

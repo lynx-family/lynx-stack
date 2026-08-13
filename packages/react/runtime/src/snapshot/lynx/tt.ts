@@ -12,7 +12,8 @@ import {
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
 import { contextLynx, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../root-context.js';
-import type { RootContext, RootTT } from '../../root-context.js';
+import type { RootContext } from '../../root-context.js';
+import { coreLynx } from '../../core/core-app-api.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -47,35 +48,35 @@ function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) 
 }
 
 function injectTt(): void {
-  injectTtInto(lynxCoreInject.tt, defaultRootContext);
+  registerAppHandlers(defaultRootContext);
 }
 
-function injectTtInto(tt: RootTT, ctx: RootContext): void {
-  // Lifecycle and globalProps arrive from the engine as CoreContext message
-  // events, but lynx-core registers its own listener for them at App
-  // creation and forwards to `tt.OnLifecycleEvent` / `tt.updateGlobalProps`.
-  // Overriding those properties is the only hook that can never miss the
-  // first-screen event: with the runtime split into an async chunk, this
-  // code runs after the engine has already dispatched `__OnLifecycleEvent`,
-  // and the context proxy keeps no listener-missed backlog. Subscribing
-  // directly becomes viable once the engine buffers events until a listener
-  // registers (or gates dispatch on HasEventListener).
-  tt.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
-  tt.publishEvent = bindContext(ctx, delayedPublishEvent);
-  tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
-  tt.callDestroyLifetimeFun = bindContext(ctx, () => {
-    if (ctx === defaultRootContext) {
-      removeCtxNotFoundEventListener();
-    }
-    destroyWorklet();
-    destroyBackground();
+/**
+ * Registers this root's app-level callbacks through
+ * `lynx.registerAppEventHandlers` — the sanctioned surface replacing the
+ * historical mutation of the injected `tt`. lynx-core keeps receiving the
+ * engine's calls on the App object (its own internal listeners register at
+ * App creation, so nothing is missed even when this runtime lives in an
+ * async shared chunk) and forwards them to the handlers registered here.
+ */
+function registerAppHandlers(ctx: RootContext): void {
+  const pageLynx = coreLynx(ctx.lynx);
+  ctx.publishEventHandler = bindContext(ctx, delayedPublishEvent);
+  pageLynx.registerAppEventHandlers({
+    onLifecycleEvent: bindContext(ctx, onLifecycleEvent) as (args: unknown) => void,
+    publishEvent: (handlerName, data) => ctx.publishEventHandler!(handlerName, data),
+    publicComponentEvent: bindContext(ctx, delayedPublicComponentEvent),
+    onDestroyLifetime: bindContext(ctx, () => {
+      if (ctx === defaultRootContext) {
+        removeCtxNotFoundEventListener();
+      }
+      destroyWorklet();
+      destroyBackground();
+    }),
+    updateGlobalProps: bindContext(ctx, updateGlobalProps),
+    updateCardData: bindContext(ctx, updateCardData),
+    onAppReload: bindContext(ctx, reloadBackground),
   });
-  tt.updateGlobalProps = bindContext(ctx, updateGlobalProps);
-  tt.updateCardData = bindContext(ctx, updateCardData);
-  tt.onAppReload = bindContext(ctx, reloadBackground);
-  tt.processCardConfig = () => {
-    // used to updateTheme, no longer rely on this function
-  };
 }
 
 function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
@@ -179,10 +180,14 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
 
       {
+        // Hydration done: swap this root from the delaying handlers to the
+        // live ones. `publishEvent` stays routed through the context field,
+        // so in-flight references keep hitting the current handler.
         const ctx = ctxBeforeProcess;
-        const tt = ctx.tt ?? lynxCoreInject.tt;
-        tt.publishEvent = bindContext(ctx, publishEvent);
-        tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
+        ctx.publishEventHandler = bindContext(ctx, publishEvent);
+        coreLynx(ctx.lynx).registerAppEventHandlers({
+          publicComponentEvent: bindContext(ctx, publicComponentEvent),
+        });
       }
 
       // console.debug("********** After hydration:");
@@ -220,7 +225,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     }
     case LifecycleConstant.publishEvent: {
       const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
-      lynxCoreInject.tt.publishEvent(handlerName, d);
+      getCurrentRootContext().publishEventHandler?.(handlerName, d);
       break;
     }
   }
@@ -242,7 +247,7 @@ function flushDelayedLifecycleEvents(): void {
 }
 
 function publishEvent(handlerName: string, data: EventDataType) {
-  lynxCoreInject.tt.callBeforePublishEvent?.(data);
+  coreLynx(contextLynx()).callBeforePublishEvent?.(data);
   let snapshotId: number | undefined;
   const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
@@ -312,4 +317,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { injectTt, injectTtInto, flushDelayedLifecycleEvents };
+export { injectTt, registerAppHandlers, flushDelayedLifecycleEvents };

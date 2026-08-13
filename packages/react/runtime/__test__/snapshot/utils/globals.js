@@ -153,12 +153,29 @@ function injectGlobals() {
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
   globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
+  // Emulates lynx-core's app: the runtime registers handlers through
+  // `lynx.registerAppEventHandlers`, and the "engine" (tests) invokes the
+  // same-named methods on `lynxCoreInject.tt`, which forward to them —
+  // exactly the App-object forwarding the real core performs.
+  const appEventHandlers = {};
   globalThis.lynxCoreInject = {};
   globalThis.lynxCoreInject.tt = {
     GlobalEventEmitter: getJSModule('GlobalEventEmitter'),
+    _params: { initData: {}, updateData: {} },
+    OnLifecycleEvent: (...args) => appEventHandlers.onLifecycleEvent?.(...args),
+    publishEvent: (...args) => appEventHandlers.publishEvent?.(...args),
+    publicComponentEvent: (...args) => appEventHandlers.publicComponentEvent?.(...args),
+    updateGlobalProps: (...args) => appEventHandlers.updateGlobalProps?.(...args),
+    updateCardData: (...args) => appEventHandlers.updateCardData?.(...args),
+    onAppReload: (...args) => appEventHandlers.onAppReload?.(...args),
+    callDestroyLifetimeFun: (...args) => appEventHandlers.onDestroyLifetime?.(...args),
   };
   globalThis.lynx = {
     queueMicrotask: Promise.prototype.then.bind(Promise.resolve()),
+    registerAppEventHandlers: (handlers) => Object.assign(appEventHandlers, handlers),
+    getInitDataParams: () => globalThis.lynxCoreInject.tt._params,
+    getDynamicComponentExports: (url) => globalThis.lynxCoreInject.tt.getDynamicComponentExports?.(url),
+    callBeforePublishEvent: (data) => globalThis.lynxCoreInject.tt.callBeforePublishEvent?.(data),
     getNativeApp: () => app,
     getNative: () => native,
     performance,

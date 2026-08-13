@@ -65,7 +65,8 @@ export function updateGlobalProps(
     }
   }
 
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
+  lynx.getJSModule<{ emit: (name: string, args: unknown[]) => void }>('GlobalEventEmitter')
+    .emit('onGlobalPropsChanged', [lynx.__globalProps]);
 }
 
 function warnGlobalPropsMode(): void {

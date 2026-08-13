@@ -7,11 +7,11 @@ import type { ReactNode } from 'react';
 import { setBoundRoot } from './bound-root.js';
 import { root } from './lynx-api.js';
 import { RootContext, getCurrentRootContext, switchRootContext } from './root-context.js';
-import type { RootLynx, RootTT } from './root-context.js';
+import type { RootLynx } from './root-context.js';
 import { __root, setRoot } from './root.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { installContextSwitchHook } from './snapshot/lifecycle/contextSwitchHook.js';
-import { flushDelayedLifecycleEvents, injectTtInto } from './snapshot/lynx/tt.js';
+import { flushDelayedLifecycleEvents, registerAppHandlers } from './snapshot/lynx/tt.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import type { SnapshotInstance } from './snapshot/snapshot/snapshot.js';
 
@@ -19,13 +19,6 @@ type RootContainer = (SnapshotInstance | BackgroundSnapshotInstance) & {
   __jsx?: ReactNode;
 };
 
-/**
- * @internal
- */
-export interface BindRenderContextOptions {
-  lynx?: RootLynx;
-  lynxCoreInject?: { tt: RootTT };
-}
 
 /**
  * @internal
@@ -34,11 +27,10 @@ export class ReactLynxRoot {
   _container: RootContainer;
   _ctx: RootContext;
 
-  constructor(options?: BindRenderContextOptions) {
+  constructor(pageLynx?: RootLynx) {
     installContextSwitchHook();
     this._ctx = new RootContext();
-    this._ctx.lynx = options?.lynx;
-    this._ctx.tt = options?.lynxCoreInject?.tt;
+    this._ctx.lynx = pageLynx;
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       this._container = __root as RootContainer;
     } else {
@@ -50,9 +42,7 @@ export class ReactLynxRoot {
       } finally {
         switchRootContext(prev);
       }
-      if (this._ctx.tt) {
-        injectTtInto(this._ctx.tt, this._ctx);
-      }
+      registerAppHandlers(this._ctx);
     }
   }
 
@@ -97,18 +87,18 @@ export class ReactLynxRoot {
 }
 
 /**
- * Create a root bound to one page's `lynx` / `lynxCoreInject`.
+ * Create a root bound to one page's `lynx`.
  *
  * When the ReactLynx runtime lives in a chunk shared by several cards of a
  * shared-context LynxGroup, the module-level `lynx` is whichever card
- * evaluated the chunk first. Each page entry instead passes its own
- * environment here, so lifecycle events, element commits, and `useLynx()`
- * all resolve to the page that rendered, not the first one:
+ * evaluated the chunk first. Each page entry instead passes its own `lynx`
+ * here, so lifecycle events, element commits, and `useLynx()` all resolve
+ * to the page that rendered, not the first one:
  *
  * ```ts
  * import { createRoot } from '@lynx-js/react'
  *
- * const root = createRoot({ lynx, lynxCoreInject })
+ * const root = createRoot(lynx)
  * root.render(<App />)
  * ```
  *
@@ -117,9 +107,9 @@ export class ReactLynxRoot {
  *
  * @public
  */
-export function createRoot(options?: BindRenderContextOptions): ReactLynxRoot | undefined {
+export function createRoot(pageLynx?: RootLynx): ReactLynxRoot | undefined {
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-    const boundRoot = options ? new ReactLynxRoot(options) : undefined;
+    const boundRoot = pageLynx ? new ReactLynxRoot(pageLynx) : undefined;
     setBoundRoot(boundRoot);
     return boundRoot;
   }
@@ -130,7 +120,7 @@ export function createRoot(options?: BindRenderContextOptions): ReactLynxRoot | 
  * @internal
  */
 export interface RootWithBindRenderContext {
-  __experimentalBindRenderContext?: (options?: BindRenderContextOptions) => ReactLynxRoot | undefined;
+  __experimentalBindRenderContext?: (pageLynx?: RootLynx) => ReactLynxRoot | undefined;
 }
 
 if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {

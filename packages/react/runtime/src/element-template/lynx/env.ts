@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { coreLynx } from '../../core/core-app-api.js';
 import { createProcessData } from '../../core/lynx-data-processors.js';
 import type { DataProcessorDefinition } from '../../lynx-api.js';
 
@@ -10,14 +11,9 @@ export function setupLynxEnv(): void {
     let updateData: Record<string, unknown> = {};
 
     try {
-      const params = (lynxCoreInject as {
-        tt?: { _params?: { initData?: Record<string, unknown>; updateData?: Record<string, unknown> } };
-      })
-        ?.tt?._params;
-      if (params) {
-        initData = params.initData ?? {};
-        updateData = params.updateData ?? {};
-      }
+      const params = coreLynx().getInitDataParams!();
+      initData = (params.initData as Record<string, unknown>) ?? {};
+      updateData = (params.updateData as Record<string, unknown>) ?? {};
     } catch {}
 
     lynx.__initData = { ...initData, ...updateData };

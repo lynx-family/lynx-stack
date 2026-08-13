@@ -25,23 +25,28 @@ export interface RootContextProxy {
 /**
  * @public
  */
+export interface AppEventHandlers {
+  onLifecycleEvent?: (args: any) => void;
+  publishEvent?: (handlerName: string, data?: any) => void;
+  publicComponentEvent?: (componentId: string, handlerName: string, data: any) => void;
+  updateGlobalProps?: (newData: object) => void;
+  updateCardData?: (...args: any[]) => void;
+  onAppReload?: (...args: any[]) => void;
+  onDestroyLifetime?: () => void;
+}
+
 export interface RootLynx {
   getNativeApp(): RootNativeApp;
   getCoreContext?(): RootContextProxy;
-}
-
-/**
- * @public
- */
-export interface RootTT {
-  OnLifecycleEvent?: (...args: any[]) => void;
-  publishEvent?: (handlerName: string, data: any) => void;
-  publicComponentEvent?: (componentId: string, handlerName: string, data: any) => void;
-  callDestroyLifetimeFun?: () => void;
-  updateGlobalProps?: (newData: any) => void;
-  updateCardData?: (...args: any[]) => void;
-  onAppReload?: (...args: any[]) => void;
-  processCardConfig?: (...args: any[]) => void;
+  /**
+   * Registers app-level callbacks with lynx-core. Replaces the historical
+   * mutation of the injected `tt`: the engine keeps invoking the app
+   * object, which forwards to these handlers.
+   */
+  registerAppEventHandlers(handlers: AppEventHandlers): void;
+  getInitDataParams?(): { initData?: object; updateData?: object };
+  getDynamicComponentExports?(componentUrl: string): unknown;
+  callBeforePublishEvent?(eventData?: unknown): void;
 }
 
 /**
@@ -49,7 +54,8 @@ export interface RootTT {
  */
 export class RootContext {
   lynx: RootLynx | undefined;
-  tt: RootTT | undefined;
+  /** The currently-active publishEvent handler (delayed before hydration). */
+  publishEventHandler: ((handlerName: string, data?: any) => void) | undefined;
 
   root: unknown;
   snapshotPatch: SnapshotPatch | undefined;
@@ -77,7 +83,7 @@ let boundLynx: RootLynx | undefined;
  * @internal
  */
 export function contextLynx(): RootLynx {
-  return boundLynx ?? lynx;
+  return boundLynx ?? (lynx as unknown as RootLynx);
 }
 
 /**
