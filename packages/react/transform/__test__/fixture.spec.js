@@ -2128,15 +2128,15 @@ export function getCurrentDelta(event) {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import { loadWorkletRuntime as __loadWorkletRuntime, workletCapture as __workletCapture } from "@lynx-js/react";
+          var loadWorkletRuntime = __loadWorkletRuntime, workletCapture = __workletCapture;
           export let getCurrentDelta = {
               _c: {
-                  foo: {
+                  foo: workletCapture(foo, {
                       bar: {
                           baz: foo.bar.baz
                       }
-                  }
+                  })
               },
               _wkltId: "da39:75a1b:1"
           };
@@ -2153,13 +2153,15 @@ export function getCurrentDelta(event) {
         expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
-          "export let getCurrentDelta = {
+          "import { workletCapture as __workletCapture } from "@lynx-js/react";
+          var workletCapture = __workletCapture;
+          export let getCurrentDelta = {
               _c: {
-                  foo: {
+                  foo: workletCapture(foo, {
                       bar: {
                           baz: foo.bar.baz
                       }
-                  }
+                  })
               },
               _wkltId: "da39:75a1b:1"
           };
@@ -2169,15 +2171,15 @@ export function getCurrentDelta(event) {
         expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import { loadWorkletRuntime as __loadWorkletRuntime, workletCapture as __workletCapture } from "@lynx-js/react";
+          var loadWorkletRuntime = __loadWorkletRuntime, workletCapture = __workletCapture;
           export let getCurrentDelta = {
               _c: {
-                  foo: {
+                  foo: workletCapture(foo, {
                       bar: {
                           baz: foo.bar.baz
                       }
-                  }
+                  })
               },
               _wkltId: "da39:75a1b:1"
           };
@@ -2229,23 +2231,23 @@ export function foo(event) {
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import { loadWorkletRuntime as __loadWorkletRuntime, workletCapture as __workletCapture } from "@lynx-js/react";
+      var loadWorkletRuntime = __loadWorkletRuntime, workletCapture = __workletCapture;
       export let foo = {
           _c: {
-              bar: {
+              bar: workletCapture(bar, {
                   baz: {
                       'qux': bar.baz['qux']
                   },
                   qux: {
                       'baz': bar.qux['baz']
                   }
-              },
-              qux: {
+              }),
+              qux: workletCapture(qux, {
                   bar: {
                       baz: qux.bar.baz
                   }
-              }
+              })
           },
           _wkltId: "da39:64631:1"
       };

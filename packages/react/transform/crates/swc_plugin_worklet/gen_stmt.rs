@@ -41,7 +41,10 @@ impl StmtGen {
     collect_main_thread: bool,
   ) -> (Box<Expr>, Stmt, Option<Stmt>) {
     let hash = Expr::Lit(hash.into());
-    let extracted_value = ident_collector.take_values();
+    let mut extracted_value = ident_collector.take_values();
+    if StmtGen::wrap_main_thread_value_candidates(&mut extracted_value) {
+      named_imports.insert("workletCapture".into());
+    }
     let extracted_idents = ident_collector.take_idents();
     let extracted_js_fns = ident_collector.take_js_fns();
 
@@ -191,6 +194,57 @@ impl StmtGen {
       props,
     }
     .into()
+  }
+
+  fn wrap_main_thread_value_candidates(extracted_value: &mut Box<Expr>) -> bool {
+    let mut wrapped = false;
+    let Some(object) = extracted_value.as_mut_object() else {
+      return false;
+    };
+
+    for prop in &mut object.props {
+      let Some(prop) = prop.as_mut_prop() else {
+        continue;
+      };
+      let Prop::KeyValue(key_value) = prop.as_mut() else {
+        continue;
+      };
+      if !key_value.value.is_object() {
+        continue;
+      }
+      let Some(source) = StmtGen::find_root_ident(&key_value.value) else {
+        continue;
+      };
+
+      let fallback = key_value.value.clone();
+      key_value.value = CallExpr {
+        ctxt: Default::default(),
+        span: DUMMY_SP,
+        args: vec![Expr::Ident(source).into(), fallback.into()],
+        callee: Callee::Expr(quote_expr!("workletCapture")),
+        type_args: None,
+      }
+      .into();
+      wrapped = true;
+    }
+
+    wrapped
+  }
+
+  fn find_root_ident(expr: &Expr) -> Option<Ident> {
+    match expr {
+      Expr::Ident(ident) => Some(ident.clone()),
+      Expr::Member(member) => StmtGen::find_root_ident(&member.obj),
+      Expr::Object(object) => object.props.iter().find_map(|prop| {
+        let prop = prop.as_prop()?;
+        match prop.as_ref() {
+          Prop::Shorthand(ident) => Some(ident.clone()),
+          Prop::KeyValue(key_value) => StmtGen::find_root_ident(&key_value.value),
+          _ => None,
+        }
+      }),
+      _ => None,
+    }
   }
 
   /*

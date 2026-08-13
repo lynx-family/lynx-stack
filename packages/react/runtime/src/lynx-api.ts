@@ -561,3 +561,4 @@ export { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListe
 export { runOnBackground } from './core/background-function/run-on-background.js';
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
 export { MainThreadRef, useMainThreadRef } from './core/main-thread-ref.js';
+export { MainThreadValue } from './snapshot/worklet/ref/mainThreadValue.js';

@@ -11,6 +11,7 @@ import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/up
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
+import { workletCapture } from '../../../src/snapshot/worklet/capture';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
 import {
   MainThreadRef,
@@ -19,6 +20,7 @@ import {
   useMainThreadRef,
 } from '../../../src/core/main-thread-ref';
 import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value';
+import { MainThreadValue } from '../../../src/snapshot/worklet/ref/mainThreadValue';
 import { globalEnvManager } from '../utils/envManager';
 import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
 
@@ -36,6 +38,7 @@ beforeAll(() => {
     _refImpl: {
       updateWorkletRef: vi.fn(),
       updateWorkletRefInitValueChanges: vi.fn(),
+      registerMainThreadValueType: vi.fn(),
       clearFirstScreenWorkletRefMap: vi.fn(),
     },
     _runOnBackgroundDelayImpl: {
@@ -300,5 +303,57 @@ describe('WorkletRef in js', () => {
       globalThis[rLynxChange[1][0]](rLynxChange[1][1]);
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
     }
+  });
+});
+
+class TestMainThreadValue extends MainThreadValue {
+  constructor(value) {
+    super(value, '@test/main-thread-value');
+  }
+}
+
+describe('MainThreadValue', () => {
+  it('serializes an opaque typed handle and releases it with the shared id lifecycle', () => {
+    globalEnvManager.switchToBackground();
+    const dispatchEvent = vi.fn();
+    lynx.getCoreContext = () => ({ dispatchEvent });
+    const value = new TestMainThreadValue(42);
+
+    expect(JSON.stringify(value)).toBe(
+      '{"_wvid":1,"_initValue":42,"_type":"@test/main-thread-value"}',
+    );
+
+    lynx.getNativeApp().createJSObjectDestructionObserver.mock.calls[0][0]();
+    expect(dispatchEvent).toHaveBeenCalledWith({
+      type: 'Lynx.Worklet.releaseWorkletRef',
+      data: { id: 1 },
+    });
+  });
+
+  it('preserves opaque handles without changing ordinary member captures', () => {
+    globalEnvManager.switchToBackground();
+    const value = new TestMainThreadValue(42);
+    const fallback = { get: undefined };
+
+    expect(workletCapture(value, fallback)).toBe(value);
+    expect(workletCapture({ value: 42 }, fallback)).toBe(fallback);
+  });
+
+  it('registers the main-thread factory only in the main-thread runtime', () => {
+    const factory = value => ({ value });
+    const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadValueType;
+
+    globalEnvManager.switchToBackground();
+    MainThreadValue.register('@test/main-thread-value', factory);
+    expect(register).not.toHaveBeenCalled();
+
+    globalEnvManager.switchToMainThread();
+    MainThreadValue.register('@test/main-thread-value', factory);
+    expect(register).toHaveBeenCalledWith('@test/main-thread-value', factory);
+
+    globalThis.globDynamicComponentEntry = 'lazy-entry';
+    MainThreadValue.register('@test/lazy-main-thread-value', factory);
+    expect(register).toHaveBeenCalledWith('@test/lazy-main-thread-value', factory);
+    delete globalThis.globDynamicComponentEntry;
   });
 });
