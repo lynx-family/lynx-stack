@@ -12,9 +12,9 @@ import {
   DEFINES_FOR_WORKLET_BUILD_INFO,
 } from '../Defines.js';
 import {
-  definesImportKey,
-  definesImportRegistry,
-} from './defines-import-registry.js';
+  boundaryKey,
+  definesImportByBoundary,
+} from './defines-import-by-boundary.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -124,8 +124,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     }
   }
 
-  const definesImport = definesImportRegistry.get(
-    definesImportKey(
+  const definesImport = definesImportByBoundary.get(
+    boundaryKey(
       (currentModule as { layer?: string | null } | undefined)?.layer,
       this.resourcePath,
     ),

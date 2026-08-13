@@ -15,9 +15,9 @@ import {
 } from './Defines.js';
 import { LAYERS } from './layer.js';
 import {
-  definesImportKey,
-  definesImportRegistry,
-} from './loaders/defines-import-registry.js';
+  boundaryKey,
+  definesImportByBoundary,
+} from './loaders/defines-import-by-boundary.js';
 
 export interface EntryPair {
   mainThread: string;
@@ -42,7 +42,7 @@ export function applyDefinesInjection(
         resource?: string;
         layer?: string | null;
       };
-      definesImportRegistry.clear();
+      definesImportByBoundary.clear();
 
       const traverse = (roots: Module[]) => {
         const visited = new Set<Module>();
@@ -173,8 +173,8 @@ export function applyDefinesInjection(
             present,
             `${resource}.__lynx-react-defines.js`,
             async (boundaryRequest) => {
-              definesImportRegistry.set(
-                definesImportKey(
+              definesImportByBoundary.set(
+                boundaryKey(
                   (mainThreadBoundary as ModuleWithMeta).layer,
                   resource,
                 ),
