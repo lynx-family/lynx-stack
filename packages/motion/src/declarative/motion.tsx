@@ -351,8 +351,18 @@ function useMotionHostProps<Props extends MotionProps>(
       const targetValues = (target ?? {}) as Record<string, unknown>;
       const animationTargetValues: Record<string, unknown> = {};
       for (const key in animateTargetKeysRef.current) {
-        if (!(key in targetValues) && startingValues[key] !== undefined) {
-          animationTargetValues[key] = startingValues[key];
+        if (!(key in targetValues)) {
+          if (startingValues[key] === undefined) {
+            const retainedValue = generatedValuesRef.current[key];
+            if (retainedValue) {
+              retainedValue.stop();
+              const retainedSnapshot = motionValue(retainedValue.get());
+              generatedValuesRef.current[key] = retainedSnapshot;
+              values[key] = retainedSnapshot;
+            }
+          } else {
+            animationTargetValues[key] = startingValues[key];
+          }
         }
       }
       animateTargetKeysRef.current = {};
