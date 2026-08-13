@@ -152,7 +152,7 @@ describe('declarative Motion', () => {
       enableBackgroundThread: true,
     });
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise(resolve => setTimeout(resolve, 100));
     });
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
     expect(getByTestId('child').getAttribute('style')).toContain(
@@ -237,6 +237,31 @@ describe('declarative Motion', () => {
     expect(getByTestId('child').getAttribute('style')).toContain(
       'translateX(40px)',
     );
+  });
+
+  test('does not propagate initial false to an explicit child animate prop', async () => {
+    const onAnimationStart = vi.fn();
+    const { getByTestId } = render(
+      <motion.view initial={false} animate='visible'>
+        <motion.view
+          data-testid='child'
+          style={{ opacity: 1 }}
+          animate={{ opacity: 0.4 }}
+          transition={{ duration: 0.01 }}
+          onAnimationStart={onAnimationStart}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'opacity: 0.4',
+    );
+    expect(onAnimationStart).toHaveBeenCalledOnce();
   });
 
   test('propagates numeric delayChildren to a variant child', async () => {
