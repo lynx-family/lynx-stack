@@ -41,6 +41,61 @@ describe('WorkletRef', () => {
     removeValueFromWorkletRefMap(7);
   });
 
+  it('lazily resolves and caches Main Thread Function lifecycle descriptors', () => {
+    const create = vi.fn(value => ({ value }));
+    const dispose = vi.fn();
+    const createDescriptor = { _wkltId: 'create-test-value' };
+    const disposeDescriptor = { _wkltId: 'dispose-test-value' };
+    const resolveWorklet = vi.spyOn(
+      globalThis.lynxWorkletImpl,
+      '_resolveWorklet',
+    );
+
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/lazy-lifecycle',
+      createDescriptor,
+      disposeDescriptor,
+      1,
+    );
+
+    // Type definition evaluation happens before the compiler-appended
+    // registerWorklet calls at the end of the MTS module.
+    globalThis.registerWorklet('main-thread', 'create-test-value', create);
+    globalThis.registerWorklet('main-thread', 'dispose-test-value', dispose);
+
+    updateWorkletRefInitValueChanges([
+      [71, 'first', '@test/lazy-lifecycle', 1],
+      [72, 'second', '@test/lazy-lifecycle', 1],
+    ]);
+    expect(getFromWorkletRefMap({ _wvid: 71 })).toMatchObject({ value: 'first' });
+    expect(getFromWorkletRefMap({ _wvid: 72 })).toMatchObject({ value: 'second' });
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(resolveWorklet).toHaveBeenCalledOnce();
+
+    removeValueFromWorkletRefMap(71);
+    removeValueFromWorkletRefMap(72);
+    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(resolveWorklet).toHaveBeenCalledTimes(2);
+  });
+
+  it('diagnoses a runtime without lifecycle worklet resolution', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/missing-resolver',
+      { _wkltId: 'missing-resolver' },
+      undefined,
+      1,
+    );
+    delete globalThis.lynxWorkletImpl._resolveWorklet;
+
+    expect(() => {
+      updateWorkletRefInitValueChanges([
+        [73, 'value', '@test/missing-resolver', 1],
+      ]);
+    }).toThrow(
+      'MainThreadObject lifecycle functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
+    );
+  });
+
   it('rejects an unregistered main-thread object type', () => {
     expect(() => {
       updateWorkletRefInitValueChanges([[8, 42, '@test/missing', 1]]);
@@ -58,7 +113,7 @@ describe('WorkletRef', () => {
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/value',
-        value => ({ value }),
+        value => ({ conflictingValue: value }),
         undefined,
         1,
       );
@@ -71,6 +126,29 @@ describe('WorkletRef', () => {
         1,
       );
     }).not.toThrow();
+
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/worklet-value',
+      { _wkltId: 'stable-create' },
+      { _wkltId: 'stable-dispose' },
+      1,
+    );
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+        '@test/worklet-value',
+        { _wkltId: 'stable-create' },
+        { _wkltId: 'stable-dispose' },
+        1,
+      );
+    }).not.toThrow();
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+        '@test/worklet-value',
+        { _wkltId: 'different-create' },
+        { _wkltId: 'stable-dispose' },
+        1,
+      );
+    }).toThrow('Conflicting MainThreadObject registration for type "@test/worklet-value"');
   });
 
   it('rejects incompatible handle protocol versions', () => {
