@@ -46,6 +46,20 @@ describe('declarative Motion', () => {
     });
   });
 
+  test('uses the final animate state when initial is false', () => {
+    expect(
+      resolveInitialStyle(
+        { width: '100px' },
+        false,
+        { opacity: [0, 1], x: [0, 24] },
+      ),
+    ).toEqual({
+      width: '100px',
+      opacity: 1,
+      transform: 'translateX(24px)',
+    });
+  });
+
   test('uses a MotionValue handle initial value in the first style', () => {
     let scale: ReturnType<typeof useMotionValue> | undefined;
     let initialStyle: ReturnType<typeof resolveInitialStyle>;
@@ -179,6 +193,58 @@ describe('declarative Motion', () => {
     expect(getByTestId('box').getAttribute('style')).toContain(
       'translateX(80px)',
     );
+  });
+
+  test('skips the mount animation when initial is false', async () => {
+    const onMountAnimationStart = vi.fn();
+    const onMountAnimationComplete = vi.fn();
+    const onUpdateAnimationStart = vi.fn();
+
+    function App() {
+      const [active, setActive] = useState(false);
+      return (
+        <view>
+          <motion.view
+            data-testid='box'
+            initial={false}
+            animate={{ opacity: 1, x: active ? 48 : [0, 24] }}
+            transition={{ duration: 0.01 }}
+            onAnimationStart={active
+              ? onUpdateAnimationStart
+              : onMountAnimationStart}
+            onAnimationComplete={active ? undefined : onMountAnimationComplete}
+          />
+          <view
+            data-testid='toggle'
+            bindtap={() => setActive(true)}
+          />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(24px)',
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    expect(onMountAnimationStart).not.toHaveBeenCalled();
+    expect(onMountAnimationComplete).not.toHaveBeenCalled();
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'translateX(48px)',
+    );
+    expect(onUpdateAnimationStart).toHaveBeenCalledOnce();
   });
 
   test('animates a MotionValue-backed style', async () => {
