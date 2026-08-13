@@ -12,15 +12,21 @@ import {
 import { motionValue } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 
 const MOTION_VALUE_TYPE = '@lynx-js/motion/MotionValue';
-const MotionValueType = defineMainThreadObjectType<
+/** @internal */
+export const motionValueType = defineMainThreadObjectType<
   unknown,
   MotionValue<unknown>
 >({
   type: MOTION_VALUE_TYPE,
-  create: motionValue,
-  dispose: value => value.stop(),
+  create(initialValue) {
+    'main thread';
+    return motionValue(initialValue);
+  },
+  dispose(value) {
+    'main thread';
+    value.stop();
+  },
 });
-const motionValueHandleInitialValues = new WeakMap<object, unknown>();
 
 /**
  * Create a Motion value that is retained on the main thread and can be used
@@ -30,26 +36,8 @@ const motionValueHandleInitialValues = new WeakMap<object, unknown>();
  * @public
  */
 export function useMotionValue<T>(initialValue: T): MotionValue<T> {
-  const value = useMainThreadObject(
-    MotionValueType,
+  return useMainThreadObject(
+    motionValueType,
     initialValue,
   ) as MotionValue<T>;
-  motionValueHandleInitialValues.set(value, initialValue);
-  return value;
-}
-
-/** @internal */
-export function isMotionValueHandle(
-  value: unknown,
-): value is MotionValue<unknown> {
-  return typeof value === 'object'
-    && value !== null
-    && motionValueHandleInitialValues.has(value);
-}
-
-/** @internal */
-export function getMotionValueHandleInitialValue(
-  value: MotionValue<unknown>,
-): unknown {
-  return motionValueHandleInitialValues.get(value);
 }

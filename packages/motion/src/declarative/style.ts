@@ -14,10 +14,7 @@ import type {
   MotionTransition,
   MotionVariants,
 } from './types.js';
-import {
-  getMotionValueHandleInitialValue,
-  isMotionValueHandle,
-} from '../hooks/useMotionValue.js';
+import { motionValueType } from '../hooks/useMotionValue.js';
 
 const transformAliases: Record<string, string> = {
   x: 'translateX',
@@ -48,8 +45,8 @@ const transformKeys = new Set([
 ]);
 
 function resolveStyleValue(value: unknown): unknown {
-  if (isMotionValueHandle(value)) {
-    return getMotionValueHandleInitialValue(value);
+  if (motionValueType.isHandle(value)) {
+    return motionValueType.getInitialPayload(value);
   }
   if (Array.isArray(value)) {
     return value.find(item => item !== null && item !== undefined);
@@ -159,7 +156,7 @@ export function collectMotionValues(
   const values: Record<string, MotionValue<string | number>> = {};
   for (const key in style) {
     const value = style[key as keyof MotionStyle] as MotionStyleValue;
-    if (isMotionValueHandle(value)) {
+    if (motionValueType.isHandle(value)) {
       values[key] = value as MotionValue<string | number>;
     }
   }

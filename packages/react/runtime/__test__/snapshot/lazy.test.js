@@ -145,13 +145,61 @@ describe('Lazy Exports', () => {
       create: value => ({ value }),
     };
 
-    expect(ReactExports.defineMainThreadObjectType(definition)).toEqual(definition);
-    expect(ReactCompatExports.defineMainThreadObjectType(definition)).toEqual(definition);
-    expect(() => ReactExports.useMainThreadObject(definition, 1)).toThrow();
-    expect(() => ReactCompatExports.useMainThreadObject(definition, 1)).toThrow();
+    const reactType = ReactExports.defineMainThreadObjectType(definition);
+    const compatType = ReactCompatExports.defineMainThreadObjectType(definition);
+    expect(reactType).toMatchObject({ type: definition.type });
+    expect(reactType).not.toHaveProperty('create');
+    expect(reactType.isHandle).toBeTypeOf('function');
+    expect(reactType.getInitialPayload).toBeTypeOf('function');
+    expect(compatType).toMatchObject({ type: definition.type });
+    expect(compatType).not.toHaveProperty('create');
+    expect(compatType.isHandle).toBeTypeOf('function');
+    expect(compatType.getInitialPayload).toBeTypeOf('function');
+    expect(() => ReactExports.useMainThreadObject(reactType, 1)).toThrow();
+    expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow();
 
     const fallback = {};
     expect(ReactInternalExports.captureMainThreadObject({}, fallback)).toBe(fallback);
+  });
+
+  test('registers a MainThreadObject type while evaluating a lazy MTS module', () => {
+    const originalJS = globalThis.__JS__;
+    const originalLepus = globalThis.__LEPUS__;
+    const originalMainThread = globalThis.__MAIN_THREAD__;
+    const originalBackground = globalThis.__BACKGROUND__;
+    const originalWorkletImpl = globalThis.lynxWorkletImpl;
+    const registerMainThreadObjectType = vi.fn();
+    const create = value => ({ value });
+
+    globalThis.__JS__ = false;
+    globalThis.__LEPUS__ = true;
+    globalThis.__MAIN_THREAD__ = true;
+    globalThis.__BACKGROUND__ = false;
+    globalThis.lynxWorkletImpl = {
+      _refImpl: {
+        registerMainThreadObjectType,
+      },
+    };
+
+    try {
+      ReactExports.defineMainThreadObjectType({
+        type: '@test/lazy-module-evaluation',
+        create,
+      });
+
+      expect(registerMainThreadObjectType).toHaveBeenCalledWith(
+        '@test/lazy-module-evaluation',
+        create,
+        undefined,
+        1,
+      );
+    } finally {
+      globalThis.__JS__ = originalJS;
+      globalThis.__LEPUS__ = originalLepus;
+      globalThis.__MAIN_THREAD__ = originalMainThread;
+      globalThis.__BACKGROUND__ = originalBackground;
+      globalThis.lynxWorkletImpl = originalWorkletImpl;
+    }
   });
 
   test('diagnoses MainThreadObject lazy bundle/runtime mismatches', async () => {
