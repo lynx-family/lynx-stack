@@ -77,9 +77,9 @@ export interface MainThreadObjectType<I, O extends object> {
  * background handle in a throwing guard solely to diagnose invalid access;
  * that guard never forwards operations between runtimes.
  *
- * @public
+ * @internal
  */
-export abstract class MainThreadObjectHandle<O extends object> {
+abstract class MainThreadObjectHandle<O extends object> {
   /** @internal */
   declare private readonly _mainThreadObjectTargetType: O;
   /** @internal */
