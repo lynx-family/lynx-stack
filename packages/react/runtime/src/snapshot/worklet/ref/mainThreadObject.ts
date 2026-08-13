@@ -25,6 +25,10 @@ const mainThreadObjectTypeDefinitions = new WeakMap<
   object,
   MainThreadObjectTypeDefinition<unknown, object>
 >();
+// The compiler passes an opaque build marker as an extra JavaScript argument.
+// Keeping it in a WeakMap makes marker liveness follow the returned type token
+// through bundler tree shaking without changing the public API or token shape.
+const mainThreadObjectTypeBuildMarkers = new WeakMap<object, unknown>();
 
 /**
  * Describes how a serializable initialization payload becomes a stable object
@@ -150,6 +154,10 @@ class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHa
  */
 export function defineMainThreadObjectType<I, O extends object>(
   definition: MainThreadObjectTypeDefinition<I, O>,
+): MainThreadObjectType<I, O>;
+export function defineMainThreadObjectType<I, O extends object>(
+  definition: MainThreadObjectTypeDefinition<I, O>,
+  ...[buildMarker]: [unknown?]
 ): MainThreadObjectType<I, O> {
   if (typeof definition.type !== 'string' || definition.type.length === 0) {
     throw new Error('MainThreadObject type must be a non-empty string.');
@@ -189,7 +197,9 @@ export function defineMainThreadObjectType<I, O extends object>(
     objectType,
     definition as unknown as MainThreadObjectTypeDefinition<unknown, object>,
   );
-  registerMainThreadObjectDefinition(definition);
+  if (buildMarker !== undefined) {
+    mainThreadObjectTypeBuildMarkers.set(objectType, buildMarker);
+  }
   return objectType;
 }
 
@@ -217,10 +227,10 @@ export function useMainThreadObject<I, O extends object>(
         `Invalid MainThreadObject type token for "${objectType.type}". Create it with defineMainThreadObjectType().`,
       );
     }
-    // A library module normally registers its type while the MTS bundle is
-    // evaluated. Register again at the first hook use so runtimes that retain
-    // the module but reset their per-page worklet registry remain correct.
-    // The registry treats an equivalent duplicate as an idempotent lookup.
+    // The build-generated MTS registration fragment normally registers the
+    // type before a background handle can arrive. Register again at the first
+    // hook use so direct MTS rendering and registry resets remain correct. The
+    // registry treats an equivalent duplicate as an idempotent lookup.
     registerMainThreadObjectDefinition(definition);
     const handle = new MainThreadObjectHandleImpl<I, O>(initialValue, objectType.type);
     return guardBackgroundMainThreadObjectAccess(handle, objectType.type) as unknown as O;

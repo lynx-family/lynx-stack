@@ -376,22 +376,20 @@ describe('MainThreadObject', () => {
     expect(() => counter._type = '@test/counter').not.toThrow();
   });
 
-  it('registers a type during main-thread module evaluation without rendering its hook', () => {
+  it('does not register a type as a module-evaluation side effect', () => {
     const create = value => ({ value });
     const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType;
 
     globalEnvManager.switchToMainThread();
-    const type = defineMainThreadObjectType({
-      type: '@test/lazy-module-value',
-      create,
-    });
-
-    expect(register).toHaveBeenCalledWith(
-      '@test/lazy-module-value',
-      create,
-      undefined,
-      1,
+    const type = defineMainThreadObjectType(
+      {
+        type: '@test/lazy-module-value',
+        create,
+      },
+      Object.freeze({}),
     );
+
+    expect(register).not.toHaveBeenCalled();
     expect(type).not.toHaveProperty('create');
   });
 

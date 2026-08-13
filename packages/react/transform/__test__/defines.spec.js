@@ -315,7 +315,108 @@ function f() {
     expect(result.definesForWorklet).toHaveLength(1);
     const [worklet] = result.definesForWorklet;
     expect(worklet.id).toBeTruthy();
-    expect(worklet.code).toBe('');
+    expect(worklet.code).toContain(
+      'import { Foo } from \'./foo.js\' with {',
+    );
+    expect(worklet.code).toContain('registerWorkletInternal');
     expect(worklet.unmergeable).toBe(true);
+  });
+});
+
+describe('MainThreadObject definition markers', () => {
+  const mainThreadObjectSource = `
+import { defineMainThreadObjectType } from '@lynx-js/react';
+import {
+  createSharedValue,
+  disposeSharedValue,
+  unrelatedSharedValue,
+} from './shared.js' with { runtime: 'shared' };
+
+export const valueType = defineMainThreadObjectType({
+  type: '@test/value',
+  create(initialValue) {
+    'main thread';
+    return createSharedValue(initialValue);
+  },
+  dispose(value) {
+    'main thread';
+    disposeSharedValue(value);
+  },
+});
+`;
+
+  it('connects a background type token to its lifecycle definitions', async () => {
+    const result = await transformReactLynx(
+      mainThreadObjectSource,
+      options('JS'),
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain(
+      '@lynx-js/react/internal/main-thread-object-definition?type=',
+    );
+    expect(result.code).toContain('/*#__PURE__*/ defineMainThreadObjectType');
+    expect(result.code).toMatch(
+      /defineMainThreadObjectType\([\s\S]*?, __mainThreadObjectDefinition\d+\)/,
+    );
+    expect(result.definesForWorklet).toHaveLength(2);
+    expect(result.definesForWorklet).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: expect.stringContaining(
+            'import { createSharedValue } from \'./shared.js\' with {',
+          ),
+          unmergeable: true,
+        }),
+        expect.objectContaining({
+          code: expect.stringContaining(
+            'import { disposeSharedValue } from \'./shared.js\' with {',
+          ),
+          unmergeable: true,
+        }),
+      ]),
+    );
+    for (const definition of result.definesForWorklet) {
+      expect(definition.code).not.toContain('unrelatedSharedValue');
+    }
+  });
+
+  it('connects a main-thread-only type token to the same lifecycle definitions', async () => {
+    const result = await transformReactLynx(
+      mainThreadObjectSource,
+      options('LEPUS'),
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain(
+      '@lynx-js/react/internal/main-thread-object-definition',
+    );
+    expect(result.code).toContain('/*#__PURE__*/ defineMainThreadObjectType');
+    expect(result.code).not.toContain('createSharedValue');
+    expect(result.code).not.toContain('disposeSharedValue');
+    expect(result.code).not.toContain('loadWorkletRuntime');
+    expect(result.code).not.toContain('registerWorkletInternal');
+  });
+
+  it('rejects a definition whose lifecycle cannot be statically registered', async () => {
+    const result = await transformReactLynx(
+      `
+import { defineMainThreadObjectType } from '@lynx-js/react';
+const definition = {
+  type: '@test/dynamic',
+  create(value) {
+    'main thread';
+    return { value };
+  },
+};
+export const dynamicType = defineMainThreadObjectType(definition);
+`,
+      options('JS'),
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe(
+      'defineMainThreadObjectType() must be assigned at module scope with a static type and inline create/dispose Main Thread Functions.',
+    );
   });
 });

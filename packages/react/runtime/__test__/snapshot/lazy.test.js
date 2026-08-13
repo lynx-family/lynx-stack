@@ -8,6 +8,7 @@ import * as ReactInternalExports from '../../lazy/internal.js';
 import * as ReactJSXRuntimeExports from '../../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../../lazy/legacy-react-runtime.js';
+import { mainThreadObjectDefinition } from '../../src/mainThreadObjectDefinition.js';
 import {
   RUNTIME_BACKEND_ELEMENT_TEMPLATE,
   RUNTIME_BACKEND_SNAPSHOT,
@@ -48,6 +49,11 @@ async function withRuntimeBackend(backend, callback) {
 }
 
 describe('Lazy Exports', () => {
+  test('exports an opaque MainThreadObject build marker', () => {
+    expect(mainThreadObjectDefinition).toEqual({});
+    expect(Object.isFrozen(mainThreadObjectDefinition)).toBe(true);
+  });
+
   test('export APIs from "react"', async () => {
     const realAPIs = Object.assign(
       {},
@@ -159,9 +165,10 @@ describe('Lazy Exports', () => {
     expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow();
 
     expect(ReactInternalExports.captureMainThreadObject({})).toBeUndefined();
+    expect(() => ReactInternalExports.registerMainThreadObjectDefinition(definition)).not.toThrow();
   });
 
-  test('registers a MainThreadObject type while evaluating a lazy MTS module', () => {
+  test('does not require MainThreadObject registration during module evaluation', () => {
     const originalJS = globalThis.__JS__;
     const originalLepus = globalThis.__LEPUS__;
     const originalMainThread = globalThis.__MAIN_THREAD__;
@@ -186,12 +193,7 @@ describe('Lazy Exports', () => {
         create,
       });
 
-      expect(registerMainThreadObjectType).toHaveBeenCalledWith(
-        '@test/lazy-module-evaluation',
-        create,
-        undefined,
-        1,
-      );
+      expect(registerMainThreadObjectType).not.toHaveBeenCalled();
     } finally {
       globalThis.__JS__ = originalJS;
       globalThis.__LEPUS__ = originalLepus;
@@ -218,6 +220,7 @@ describe('Lazy Exports', () => {
       value: {
         ...target[sExportsReactInternal],
         captureMainThreadObject: undefined,
+        registerMainThreadObjectDefinition: undefined,
       },
     });
     Object.defineProperty(target, sExportsReactCompat, {
@@ -249,6 +252,9 @@ describe('Lazy Exports', () => {
       );
       expect(() => incompatibleInternal.captureMainThreadObject({}, {})).toThrow(
         'This lazy bundle uses MainThreadObject capture support that is unavailable in the main ReactLynx runtime.',
+      );
+      expect(() => incompatibleInternal.registerMainThreadObjectDefinition({})).toThrow(
+        'This lazy bundle uses MainThreadObject static registration that is unavailable in the main ReactLynx runtime.',
       );
     } finally {
       restoreDescriptor(target, sExportsReact, reactDescriptor);

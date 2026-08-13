@@ -12,6 +12,7 @@ use rustc_hash::FxHashSet;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::vec;
+use swc_core::common::comments::{Comments, SingleThreadedComments};
 use swc_core::common::util::take::Take;
 use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
 use swc_core::ecma::ast::*;
@@ -66,9 +67,12 @@ pub struct WorkletVisitor {
   named_imports: HashSet<String>,
   hasher: WorkletHash,
   shared_identifiers: FxHashSet<Id>,
+  shared_imports: Vec<ImportDecl>,
+  main_thread_object_type_definers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
   defines_collector: Option<DefinesCollector>,
+  comments: Option<SingleThreadedComments>,
 }
 
 impl Default for WorkletVisitor {
@@ -101,7 +105,9 @@ impl VisitMut for WorkletVisitor {
     method.visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
+    let collect_main_thread = self.defines_collector.is_some();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
+    let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type,
       hash,
@@ -117,6 +123,7 @@ impl VisitMut for WorkletVisitor {
       false,
       &mut self.named_imports,
       self.worklet_runtime_loaded_ident.clone(),
+      collect_main_thread,
     );
 
     *n = Prop::KeyValue(KeyValueProp {
@@ -126,6 +133,11 @@ impl VisitMut for WorkletVisitor {
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.shared_identifiers(),
+    );
   }
 
   fn visit_mut_class_member(&mut self, n: &mut ClassMember) {
@@ -240,7 +252,7 @@ impl VisitMut for WorkletVisitor {
         self.collect_worklet_define(
           collected_hash,
           main_thread_stmt,
-          collector.saw_shared_identifiers(),
+          collector.shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -356,7 +368,7 @@ impl VisitMut for WorkletVisitor {
         self.collect_worklet_define(
           collected_hash,
           main_thread_stmt,
-          collector.saw_shared_identifiers(),
+          collector.shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -421,7 +433,7 @@ impl VisitMut for WorkletVisitor {
     self.collect_worklet_define(
       collected_hash,
       main_thread_stmt,
-      collector.saw_shared_identifiers(),
+      collector.shared_identifiers(),
     );
     self
       .stmts_to_insert_at_top_level
@@ -489,7 +501,7 @@ impl VisitMut for WorkletVisitor {
         self.collect_worklet_define(
           collected_hash,
           main_thread_stmt,
-          collector.saw_shared_identifiers(),
+          collector.shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -531,7 +543,7 @@ impl VisitMut for WorkletVisitor {
         self.collect_worklet_define(
           collected_hash,
           main_thread_stmt,
-          collector.saw_shared_identifiers(),
+          collector.shared_identifiers(),
         );
         self
           .stmts_to_insert_at_top_level
@@ -621,7 +633,7 @@ impl VisitMut for WorkletVisitor {
     self.collect_worklet_define(
       collected_hash,
       main_thread_stmt,
-      collector.saw_shared_identifiers(),
+      collector.shared_identifiers(),
     );
     self
       .stmts_to_insert_at_top_level
@@ -637,6 +649,7 @@ impl VisitMut for WorkletVisitor {
     for item in &n.body {
       if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
         if is_shared_runtime_import(import_decl) {
+          self.shared_imports.push(import_decl.clone());
           for specifier in &import_decl.specifiers {
             match specifier {
               ImportSpecifier::Named(named) => {
@@ -652,11 +665,40 @@ impl VisitMut for WorkletVisitor {
               _ => panic!("unknown node"),
             }
           }
+        } else if import_decl.src.value == "@lynx-js/react" {
+          for specifier in &import_decl.specifiers {
+            let ImportSpecifier::Named(named) = specifier else {
+              continue;
+            };
+            let imported = match named.imported.as_ref() {
+              Some(ModuleExportName::Ident(imported)) => imported,
+              _ => &named.local,
+            };
+            if imported.sym == "defineMainThreadObjectType" {
+              self
+                .main_thread_object_type_definers
+                .insert(named.local.to_id());
+            }
+          }
         }
       }
     }
 
     n.visit_mut_children_with(self);
+
+    let main_thread_object_worklet_ids = self.add_main_thread_object_definition_markers(n);
+    self.stmts_to_insert_at_top_level.retain(|stmt| {
+      worklet_registration_id(stmt)
+        .map(|id| !main_thread_object_worklet_ids.contains(id))
+        .unwrap_or(true)
+    });
+    if !self
+      .stmts_to_insert_at_top_level
+      .iter()
+      .any(|stmt| !stmt.is_empty())
+    {
+      self.named_imports.remove("loadWorkletRuntime");
+    }
 
     // Add global loadWorkletRuntime call if needed
     if self.named_imports.contains("loadWorkletRuntime") && !self.worklet_runtime_loaded {
@@ -752,6 +794,8 @@ impl VisitMut for WorkletVisitor {
 }
 
 const INVALID_RUNTIME_MSG: &str = "Invalid runtime value. Only 'shared' is supported.";
+const MAIN_THREAD_OBJECT_DEFINITION_REQUEST: &str =
+  "@lynx-js/react/internal/main-thread-object-definition";
 
 fn emit_invalid_runtime_error(span: Span) {
   HANDLER.with(|handler| {
@@ -813,9 +857,12 @@ impl WorkletVisitor {
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
       shared_identifiers: FxHashSet::default(),
+      shared_imports: vec![],
+      main_thread_object_type_definers: FxHashSet::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
       defines_collector: None,
+      comments: None,
     }
   }
 
@@ -824,29 +871,157 @@ impl WorkletVisitor {
     self
   }
 
+  pub fn with_comments(mut self, comments: SingleThreadedComments) -> Self {
+    self.comments = Some(comments);
+    self
+  }
+
+  fn imports_for_shared_identifiers(&self, identifiers: &[Id]) -> Vec<ModuleItem> {
+    if identifiers.is_empty() {
+      return vec![];
+    }
+    let identifiers: FxHashSet<_> = identifiers.iter().cloned().collect();
+    self
+      .shared_imports
+      .iter()
+      .filter_map(|import| {
+        let mut import = import.clone();
+        import.specifiers.retain(|specifier| {
+          let local = match specifier {
+            ImportSpecifier::Named(named) => &named.local,
+            ImportSpecifier::Default(default) => &default.local,
+            ImportSpecifier::Namespace(namespace) => &namespace.local,
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
+          };
+          identifiers.contains(&local.to_id())
+        });
+        (!import.specifiers.is_empty())
+          .then_some(ModuleItem::ModuleDecl(ModuleDecl::Import(import)))
+      })
+      .collect()
+  }
+
+  fn add_main_thread_object_definition_markers(
+    &mut self,
+    module: &mut Module,
+  ) -> FxHashSet<String> {
+    let mut worklet_ids = FxHashSet::default();
+    if self.main_thread_object_type_definers.is_empty() {
+      return worklet_ids;
+    }
+
+    let mut marker_imports = vec![];
+    let mut marker_index = 0_u32;
+    for item in &mut module.body {
+      let decl = match item {
+        ModuleItem::Stmt(Stmt::Decl(Decl::Var(decl)))
+        | ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
+          decl: Decl::Var(decl),
+          ..
+        })) => decl,
+        _ => continue,
+      };
+
+      for declarator in &mut decl.decls {
+        let Some(Expr::Call(call)) = declarator.init.as_deref_mut() else {
+          continue;
+        };
+        let Callee::Expr(callee) = &call.callee else {
+          continue;
+        };
+        let Expr::Ident(callee) = callee.as_ref() else {
+          continue;
+        };
+        if !self
+          .main_thread_object_type_definers
+          .contains(&callee.to_id())
+        {
+          continue;
+        }
+
+        let Some((object_type, create_id, dispose_id)) = parse_main_thread_object_definition(call)
+        else {
+          HANDLER.with(|handler| {
+            handler
+              .struct_span_err(
+                call.span,
+                "defineMainThreadObjectType() must be assigned at module scope with a static type and inline create/dispose Main Thread Functions.",
+              )
+              .emit();
+          });
+          continue;
+        };
+
+        if let Some(comments) = &self.comments {
+          comments.add_pure_comment(call.span.lo);
+        }
+        worklet_ids.insert(create_id.clone());
+        if let Some(dispose_id) = &dispose_id {
+          worklet_ids.insert(dispose_id.clone());
+        }
+
+        let local = private_ident!(format!("__mainThreadObjectDefinition{marker_index}"));
+        marker_index += 1;
+        call.args.push(ExprOrSpread {
+          spread: None,
+          expr: Box::new(Expr::Ident(local.clone())),
+        });
+        let request = format!(
+          "{MAIN_THREAD_OBJECT_DEFINITION_REQUEST}?type={}&create={}&dispose={}",
+          hex::encode(object_type.as_bytes()),
+          hex::encode(create_id.as_bytes()),
+          dispose_id
+            .as_ref()
+            .map(|id| hex::encode(id.as_bytes()))
+            .unwrap_or_default(),
+        );
+        marker_imports.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          phase: ImportPhase::Evaluation,
+          specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
+            span: DUMMY_SP,
+            local,
+            imported: Some(ModuleExportName::Ident(Ident::from(
+              "mainThreadObjectDefinition",
+            ))),
+            is_type_only: false,
+          })],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            value: request.into(),
+            raw: None,
+          }),
+          type_only: false,
+          with: None,
+        })));
+      }
+    }
+
+    module.body.splice(0..0, marker_imports);
+    worklet_ids
+  }
+
   fn collect_worklet_define(
     &mut self,
     hash: Option<String>,
     stmt: Option<Stmt>,
-    closes_over_shared_import: bool,
+    shared_identifiers: Vec<Id>,
   ) {
     let (Some(hash), Some(stmt)) = (hash, stmt) else {
       return;
     };
-    if closes_over_shared_import {
-      collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash);
-      return;
-    }
     let guard = quote!(
       "const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt,
       loaded = self.worklet_runtime_loaded_ident.clone(),
     );
-    collect_define(
-      &self.defines_collector,
-      DefineKind::Worklet,
-      hash,
-      vec![ModuleItem::Stmt(guard), ModuleItem::Stmt(stmt)],
-    );
+    let mut items = self.imports_for_shared_identifiers(&shared_identifiers);
+    items.extend([ModuleItem::Stmt(guard), ModuleItem::Stmt(stmt)]);
+    if !shared_identifiers.is_empty() {
+      collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash, items);
+      return;
+    }
+    collect_define(&self.defines_collector, DefineKind::Worklet, hash, items);
   }
 
   fn check_is_worklet_block(&self, n: &mut BlockStmt) -> Option<WorkletType> {
@@ -864,6 +1039,86 @@ impl WorkletVisitor {
     } else {
       None
     }
+  }
+}
+
+fn parse_main_thread_object_definition(
+  call: &CallExpr,
+) -> Option<(String, String, Option<String>)> {
+  let definition = call.args.first()?.expr.as_object()?;
+  let mut object_type = None;
+  let mut create_id = None;
+  let mut dispose_id = None;
+  for property in &definition.props {
+    let PropOrSpread::Prop(property) = property else {
+      continue;
+    };
+    let Prop::KeyValue(property) = property.as_ref() else {
+      continue;
+    };
+    let name = property.key.as_ident()?.sym.as_ref();
+    match name {
+      "type" => {
+        object_type = property
+          .value
+          .as_lit()
+          .and_then(Lit::as_str)
+          .map(|value| value.value.to_string_lossy().into_owned());
+      }
+      "create" => create_id = worklet_id(&property.value),
+      "dispose" => dispose_id = worklet_id(&property.value),
+      _ => {}
+    }
+  }
+  Some((object_type?, create_id?, dispose_id))
+}
+
+fn worklet_id(value: &Expr) -> Option<String> {
+  value.as_object()?.props.iter().find_map(|property| {
+    let PropOrSpread::Prop(property) = property else {
+      return None;
+    };
+    let Prop::KeyValue(property) = property.as_ref() else {
+      return None;
+    };
+    if property.key.as_ident()?.sym != "_wkltId" {
+      return None;
+    }
+    property
+      .value
+      .as_lit()
+      .and_then(Lit::as_str)
+      .map(|value| value.value.to_string_lossy().into_owned())
+  })
+}
+
+fn worklet_registration_id(statement: &Stmt) -> Option<&str> {
+  fn from_expression(expression: &Expr) -> Option<&str> {
+    match expression {
+      Expr::Call(call) => {
+        let Callee::Expr(callee) = &call.callee else {
+          return None;
+        };
+        if callee.as_ident()?.sym != "registerWorkletInternal" {
+          return None;
+        }
+        call
+          .args
+          .get(1)?
+          .expr
+          .as_lit()?
+          .as_str()
+          .and_then(|value| value.value.as_str())
+      }
+      Expr::Bin(binary) => from_expression(&binary.right),
+      Expr::Paren(parenthesized) => from_expression(&parenthesized.expr),
+      _ => None,
+    }
+  }
+
+  match statement {
+    Stmt::Expr(expression) => from_expression(&expression.expr),
+    _ => None,
   }
 }
 

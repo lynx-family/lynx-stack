@@ -39,12 +39,13 @@ pub fn collect_unmergeable_define(
   collector: &Option<DefinesCollector>,
   kind: DefineKind,
   id: String,
+  items: Vec<ModuleItem>,
 ) {
   if let Some(collector) = collector {
     collector.borrow_mut().push(Define {
       kind,
       id,
-      items: vec![],
+      items,
       unmergeable: true,
     });
   }

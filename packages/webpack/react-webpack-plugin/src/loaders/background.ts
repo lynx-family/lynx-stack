@@ -96,10 +96,15 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   })._module?.buildInfo;
   if (buildInfo) {
     if (result.definesForSnapshot) {
-      buildInfo[DEFINES_FOR_SNAPSHOT_BUILD_INFO] = result.definesForSnapshot;
+      buildInfo[DEFINES_FOR_SNAPSHOT_BUILD_INFO] = result.definesForSnapshot
+        .map(
+          define => ({ ...define, resource: this.resourcePath }),
+        );
     }
     if (result.definesForWorklet) {
-      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet;
+      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet.map(
+        define => ({ ...define, resource: this.resourcePath }),
+      );
     }
   }
 
