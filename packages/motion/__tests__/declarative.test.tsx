@@ -584,6 +584,47 @@ describe('declarative Motion', () => {
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
   });
 
+  test('waits for a finite repeating parent before starting children', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: { x: 0 },
+          visible: {
+            x: 100,
+            transition: {
+              duration: 0.04,
+              repeat: 1,
+              repeatDelay: 0.03,
+              when: 'beforeChildren',
+            },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 70));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('does not delay children for an empty beforeChildren parent target', async () => {
     const { getByTestId } = render(
       <motion.view
@@ -614,7 +655,7 @@ describe('declarative Motion', () => {
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
   });
 
-  test('does not claim repeating beforeChildren completion timing', async () => {
+  test('does not claim infinite beforeChildren completion timing', async () => {
     const { getByTestId } = render(
       <motion.view
         initial='hidden'
@@ -625,7 +666,7 @@ describe('declarative Motion', () => {
             x: 100,
             transition: {
               duration: 1,
-              repeat: 1,
+              repeat: Number.POSITIVE_INFINITY,
               when: 'beforeChildren',
             },
           },
