@@ -124,7 +124,7 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
   }
 
   /** The payload used to create the realized main-thread object. */
-  public get creationPayload(): I {
+  public get payload(): I {
     return this._initValue;
   }
 
