@@ -659,6 +659,48 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('reports tap target and restoration animation starts', async () => {
+    const onAnimationStart = vi.fn();
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        initial={{ scale: 1, backgroundColor: '#ffffff' }}
+        whileTap={{ scale: 1.15, backgroundColor: '#ffcc00' }}
+        transition={{ duration: 0.08 }}
+        onAnimationStart={onAnimationStart}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    fireEvent.touchstart(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 180));
+    });
+    expect(onAnimationStart).toHaveBeenNthCalledWith(1, {
+      scale: 1.15,
+      backgroundColor: '#ffcc00',
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'scale(1.15',
+    );
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'rgb(255, 204, 0)',
+    );
+
+    fireEvent.touchend(getByTestId('button'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 180));
+    });
+    expect(onAnimationStart).toHaveBeenNthCalledWith(2, {
+      scale: 1,
+      backgroundColor: '#ffffff',
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain('scale(1');
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'rgb(255, 255, 255)',
+    );
+  });
+
   test('composes gesture callbacks with external host handlers', () => {
     const onTapStart = vi.fn();
     const onTap = vi.fn();
