@@ -365,9 +365,7 @@ interface BenchHealth {
   ok: boolean;
   provider?: string;
   hasKey?: boolean;
-  baseURL?: string;
-  model?: string;
-  api?: 'chat' | 'responses';
+  modelName?: string;
 }
 
 type BenchHealthError =
@@ -4619,7 +4617,7 @@ export function BenchPage({
                         <div>
                           <span>Model</span>
                           <strong>
-                            {benchHealth?.model
+                            {benchHealth?.modelName
                               ?? benchText(
                                 locale,
                                 '服务端默认',

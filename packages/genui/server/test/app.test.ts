@@ -10,6 +10,7 @@ import {
 import { createAdaptorServer } from '@hono/node-server';
 import { describe, expect, test } from '@rstest/core';
 
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import app from '../src/app.js';
 
 describe('Hono application', () => {
@@ -25,6 +26,68 @@ describe('Hono application', () => {
     await expect(response.json()).resolves.toMatchObject({
       provider: 'openai',
     });
+  });
+
+  test('returns only public model metadata from discovery endpoints', async () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
+      'Doubao Seed': {
+        apiKey: 'seed-secret',
+        baseURL: 'https://seed.example.com/api/v3',
+        model: 'doubao-seed-upstream',
+        api: 'chat',
+        default: true,
+      },
+      'Doubao Pro': {
+        apiKey: 'pro-secret',
+        baseURL: 'https://pro.example.com/api/v3',
+        model: 'doubao-pro-upstream',
+      },
+    });
+    try {
+      const response = await app.request('/models', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+        'http://localhost:3000',
+      );
+      const payload: unknown = await response.json();
+      expect(payload).toEqual({
+        defaultModel: 'Doubao Seed',
+        models: [
+          { id: 'Doubao Seed', label: 'Doubao Seed' },
+          { id: 'Doubao Pro', label: 'Doubao Pro' },
+        ],
+      });
+      const serializedPayload = JSON.stringify(payload);
+      expect(serializedPayload).not.toContain('seed-secret');
+      expect(serializedPayload).not.toContain('seed.example.com');
+      expect(serializedPayload).not.toContain('doubao-seed-upstream');
+
+      const healthResponse = await app.request('/a2ui/health', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      expect(healthResponse.status).toBe(200);
+      const healthPayload: unknown = await healthResponse.json();
+      expect(healthPayload).toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+      });
+      const serializedHealth = JSON.stringify(healthPayload);
+      expect(serializedHealth).not.toContain('seed-secret');
+      expect(serializedHealth).not.toContain('seed.example.com');
+      expect(serializedHealth).not.toContain('doubao-seed-upstream');
+      expect(serializedHealth).not.toContain('"api"');
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
+      } else {
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+      }
+    }
   });
 
   test('allows IPv6 loopback origins during local development', async () => {

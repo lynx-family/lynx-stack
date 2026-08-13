@@ -681,6 +681,21 @@ export function ChatController<
   useEffect(() => () => abortOperations(), [abortOperations]);
 
   useEffect(() => {
+    const loadSettings = adapter.settings?.load;
+    if (!loadSettings) return;
+    const controller = new AbortController();
+    void loadSettings(settingsRef.current, host, controller.signal).then(
+      (next) => {
+        if (!controller.signal.aborted) setSettings(next);
+      },
+      () => {
+        // Abort-driven rejections are expected when the protocol changes.
+      },
+    );
+    return () => controller.abort();
+  }, [adapter.settings, host]);
+
+  useEffect(() => {
     const settingsAdapter = adapter.settings;
     if (!settingsAdapter) return;
     try {
@@ -1588,7 +1603,7 @@ export function ChatController<
                       type={control.kind}
                       placeholder={control.placeholder}
                       value={control.value}
-                      disabled={busy}
+                      disabled={busy || control.disabled}
                       onChange={(event) =>
                         updateSetting(control.id, event.target.value)}
                     />
@@ -1604,7 +1619,7 @@ export function ChatController<
                     className='chatProviderSelect'
                     aria-label={control.label}
                     value={control.value}
-                    disabled={busy}
+                    disabled={busy || control.disabled}
                     onChange={(event) =>
                       updateSetting(control.id, event.target.value)}
                   >

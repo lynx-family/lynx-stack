@@ -20,6 +20,10 @@ import {
   resolveStaticA2UIImageComponent,
 } from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
+import {
+  configuredApiStyle,
+  defaultModelName,
+} from '../../../../service/common/model-config.js';
 import type {
   ChatMessage,
   OpenAIReasoningEffort,
@@ -346,8 +350,8 @@ async function postA2UIActionStream(req: Request) {
             finishReason,
             hasUsage: usage !== undefined,
             catalogId: catalog.id,
-            model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
-            api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+            model: opts.model ?? defaultModelName() ?? 'default',
+            api: opts.api ?? configuredApiStyle(opts.model) ?? 'default',
             ...usageMetrics,
           });
           let repair:
@@ -494,8 +498,8 @@ async function postA2UIActionStream(req: Request) {
             repairAttempted: repair?.attempted ?? false,
             repairOk: repair?.ok,
             catalogId: catalog.id,
-            model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
-            api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+            model: opts.model ?? defaultModelName() ?? 'default',
+            api: opts.api ?? configuredApiStyle(opts.model) ?? 'default',
             ...usageMetrics,
             requestId,
           });

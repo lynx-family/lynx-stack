@@ -18,11 +18,13 @@ pnpm install
 ```
 
 The **Create** (chat) tab talks to the GenUI server for agent responses and
-preview publishing. Start it on port `3060` with at least an OpenAI key:
+preview publishing. Start it on port `3060` with one server-owned model
+configuration:
 
 ```bash
 # 2. Start the GenUI server → http://localhost:3060
-OPENAI_API_KEY=sk-... pnpm -C packages/genui/server dev
+GENUI_MODEL_CONFIG_JSON='{"GPT-5.4":{"model":"gpt-5.4","apiKey":"sk-...","baseURL":"https://api.openai.com/v1","api":"responses","default":true}}' \
+  pnpm -C packages/genui/server dev
 ```
 
 Then start the playground and open the URL it prints (defaults to
@@ -45,13 +47,15 @@ append the endpoint override to the playground URL:
 
 | Variable                                                                     | Purpose                                            | Default             |
 | ---------------------------------------------------------------------------- | -------------------------------------------------- | ------------------- |
-| `OPENAI_API_KEY`                                                             | Agent model access (required for the Create tab)   | —                   |
-| `OPENAI_MODEL`                                                               | Model id                                           | `gpt-4o-mini`       |
-| `OPENAI_BASE_URL`                                                            | Custom OpenAI-compatible endpoint                  | OpenAI              |
+| `GENUI_MODEL_CONFIG_JSON`                                                    | Map of model names to provider configurations      | —                   |
 | `UI_JUDGE_SERVER_URL`                                                        | Rust UI Judge sidecar for Bench scoring            | disabled            |
 | `UI_JUDGE_BUNDLE_URL`                                                        | `a2ui.lynx.js` bundle rendered by UI Judge         | hosted GenUI bundle |
 | `SUPABASE_URL`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | Short, shareable preview URLs via Supabase Storage | in-memory dev store |
 | `PEXELS_API_KEY`                                                             | Stock-image search in generated UIs                | —                   |
+
+The Create tab loads its model selector from the server's `GET /models`
+endpoint. Provider credentials, upstream model ids, and upstream API URLs
+remain server-only.
 
 Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
 enabled only when that sidecar is ready. See
