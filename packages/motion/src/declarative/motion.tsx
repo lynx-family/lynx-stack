@@ -41,6 +41,7 @@ import {
 } from './style.js';
 import type {
   MotionComponentProps,
+  MotionDefinition,
   MotionFactory,
   MotionImageProps,
   MotionProps,
@@ -136,6 +137,7 @@ function useMotionHostProps<Props extends MotionProps>(
   const styleCleanupRef = useMainThreadRef<(() => void) | null>(null);
   const hasMountedAnimationRef = useRef(false);
   const hadAnimateTargetRef = useRef(false);
+  const backgroundAnimationGenerationRef = useRef(0);
 
   const resolvedInitial = resolveMotionDefinition(initial, variants, custom);
   const resolvedAnimateDefinition = resolveMotionDefinition(
@@ -295,6 +297,9 @@ function useMotionHostProps<Props extends MotionProps>(
     : undefined;
 
   useEffect(() => {
+    const backgroundAnimationGeneration =
+      backgroundAnimationGenerationRef.current + 1;
+    backgroundAnimationGenerationRef.current = backgroundAnimationGeneration;
     const hadAnimateTarget = hadAnimateTargetRef.current;
     hadAnimateTargetRef.current = Boolean(
       resolvedAnimate.target
@@ -317,6 +322,18 @@ function useMotionHostProps<Props extends MotionProps>(
       || hasMountedAnimationRef.current;
     hasMountedAnimationRef.current = true;
 
+    function completeAnimationOnBackground(
+      expectedGeneration: number,
+      definition: MotionDefinition,
+    ) {
+      if (
+        backgroundAnimationGenerationRef.current === expectedGeneration
+        && onAnimationComplete
+      ) {
+        onAnimationComplete(definition);
+      }
+    }
+
     function updateMotionStyles(
       target: MotionTarget | undefined,
       interactionTarget: MotionTarget | undefined,
@@ -327,6 +344,13 @@ function useMotionHostProps<Props extends MotionProps>(
       shouldAnimate: boolean,
     ) {
       'main thread';
+
+      // Bind the background dispatcher while this function is synchronously
+      // executing on MTS. The animation promise can settle after the test or
+      // Web runtime has restored its background-thread execution context.
+      const reportAnimationComplete = onAnimationComplete
+        ? runOnBackground(completeAnimationOnBackground)
+        : undefined;
 
       for (const animation of animationRef.current) {
         animation.stop();
@@ -493,8 +517,11 @@ function useMotionHostProps<Props extends MotionProps>(
             styleCleanupRef.current?.();
             styleCleanupRef.current = styleEffect(motionElement, values);
           }
-          if (onAnimationComplete) {
-            void runOnBackground(onAnimationComplete)(animate);
+          if (reportAnimationComplete) {
+            void reportAnimationComplete(
+              backgroundAnimationGeneration,
+              animate,
+            );
           }
         });
       }
@@ -526,6 +553,7 @@ function useMotionHostProps<Props extends MotionProps>(
     }
 
     return () => {
+      backgroundAnimationGenerationRef.current += 1;
       void runOnMainThread(stopMotionStyles)();
     };
     // Serialized targets and value IDs avoid restarting unchanged inline

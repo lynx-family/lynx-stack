@@ -294,6 +294,39 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('does not complete an animation after unmount', async () => {
+    const onAnimationComplete = vi.fn();
+    function App() {
+      const [visible, setVisible] = useState(true);
+      return (
+        <view>
+          {visible
+            ? (
+              <motion.view
+                data-testid='box'
+                initial={{ x: 0 }}
+                animate={{ x: 40 }}
+                transition={{ duration: 0.08 }}
+                onAnimationComplete={onAnimationComplete}
+              />
+            )
+            : null}
+          <view data-testid='toggle' bindtap={() => setVisible(false)} />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 120));
+    });
+    expect(onAnimationComplete).not.toHaveBeenCalled();
+  });
+
   test('restores a static style when its animate value is removed', async () => {
     function App() {
       const [ownsOpacity, setOwnsOpacity] = useState(true);
