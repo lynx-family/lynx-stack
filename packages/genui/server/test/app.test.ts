@@ -123,6 +123,26 @@ describe('Hono application', () => {
     );
   });
 
+  test('accepts PUT requests on the payload upload endpoint', async () => {
+    const response = await app.request('/a2ui/payload', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: 'http://localhost:3000',
+      },
+      body: '{}',
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get('Access-Control-Allow-Methods')).toContain(
+      'PUT',
+    );
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: 'messages is required',
+    });
+  });
+
   test('returns method-not-allowed and not-found responses', async () => {
     const methodNotAllowed = await app.request('/a2ui/health', {
       method: 'POST',

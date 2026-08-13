@@ -28,7 +28,7 @@ use swc_core::{
     errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     pass::Optional,
     sync::Lrc,
-    FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
+    FileName, FilePathMapping, Mark, SourceMap, DUMMY_SP, GLOBALS,
   },
   ecma::{
     ast::*,
@@ -74,6 +74,7 @@ pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugins_shared::defines::{DefineKind, DefinesCollector};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -288,6 +289,17 @@ pub struct UiSourceMapRecord {
   pub snapshot_id: Option<String>,
 }
 
+/// @internal
+#[napi(object)]
+pub struct Define {
+  /// @internal
+  pub id: String,
+  /// @internal
+  pub code: String,
+  /// @internal
+  pub unmergeable: Option<bool>,
+}
+
 #[napi(object)]
 pub struct TransformNodiffOutput {
   pub code: String,
@@ -301,6 +313,61 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
+  /// @internal
+  #[napi(js_name = "definesForSnapshot")]
+  pub defines_for_snapshot: Option<Vec<Define>>,
+  /// @internal
+  #[napi(js_name = "definesForWorklet")]
+  pub defines_for_worklet: Option<Vec<Define>>,
+}
+
+fn print_define(
+  c: &Compiler,
+  items: Vec<ModuleItem>,
+  top_level_mark: Mark,
+  comments: &SingleThreadedComments,
+) -> Result<String, String> {
+  let module = match Program::Module(Module {
+    span: DUMMY_SP,
+    body: items,
+    shebang: None,
+  })
+  .apply(&mut (
+    hygiene_with_config(Config {
+      top_level_mark,
+      ..Default::default()
+    }),
+    fixer(Some(comments)),
+  )) {
+    Program::Module(m) => m,
+    _ => return Err("hygiene produced a non-module program".into()),
+  };
+
+  c.print(
+    &Program::Module(module),
+    PrintArgs {
+      output: None,
+      source_root: "".into(),
+      source_file_name: None,
+      source_map_url: None,
+      source_map_ignore_list: None,
+      output_path: None,
+      inline_sources_content: true,
+      source_map: SourceMapsConfig::Bool(false),
+      source_map_names: &Default::default(),
+      orig: None,
+      comments: Some(comments),
+      emit_source_map_columns: false,
+      emit_source_map_scopes: false,
+      preamble: "",
+      codegen_config: codegen::Config::default()
+        .with_target(EsVersion::latest())
+        .with_minify(false)
+        .with_ascii_only(false),
+    },
+  )
+  .map(|r| r.code)
+  .map_err(|err| err.to_string())
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -397,10 +464,12 @@ fn transform_react_lynx_inner(
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
-          errors: errors.read().unwrap().clone(),
+          errors: vec![],
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
+          defines_for_snapshot: None,
+          defines_for_worklet: None,
         };
       }
     };
@@ -565,6 +634,8 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
+    let defines_collector: DefinesCollector = Rc::new(RefCell::new(vec![]));
+
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
         snapshot_plugin_config.clone(),
@@ -579,6 +650,9 @@ fn transform_react_lynx_inner(
       } else {
         transformer
       };
+
+      let transformer =
+        transformer.with_defines_collector(defines_collector.clone());
 
       Optional::new(visit_mut_pass(transformer), true)
     } else {
@@ -716,17 +790,20 @@ fn transform_react_lynx_inner(
     };
 
     let worklet_plugin = match options.worklet {
-      Either::A(config) => Optional::new(
-        visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
-        config,
-      ),
-      Either::B(config) => Optional::new(
-        visit_mut_pass(
+      Either::A(config) => {
+        let visitor = WorkletVisitor::default().with_content_hash(content_hash);
+        let visitor =
+          visitor.with_defines_collector(defines_collector.clone());
+        Optional::new(visit_mut_pass(visitor), config)
+      }
+      Either::B(config) => {
+        let visitor =
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
-            .with_content_hash(content_hash),
-        ),
-        true,
-      ),
+            .with_content_hash(content_hash);
+        let visitor =
+          visitor.with_defines_collector(defines_collector.clone());
+        Optional::new(visit_mut_pass(visitor), true)
+      }
     };
 
     let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
@@ -845,10 +922,43 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
+        let mut define_errors: Vec<esbuild::PartialMessage> = vec![];
+        let mut defines_for_snapshot: Vec<Define> = vec![];
+        let mut defines_for_worklet: Vec<Define> = vec![];
+        helpers::HELPERS.set(&helpers::Helpers::new(false), || {
+          for define in defines_collector.borrow().iter() {
+            let printed = Define {
+              id: define.id.clone(),
+              unmergeable: define.unmergeable.then_some(true),
+              code: match print_define(&c, define.items.clone(), top_level_mark, &comments) {
+                Ok(code) => code,
+                Err(err) => {
+                  define_errors.push(esbuild::PartialMessage {
+                    id: None,
+                    plugin_name: Some(options.plugin_name.clone()),
+                    text: Some(format!(
+                      "failed to print the collected definition `{}`: {}",
+                      define.id, err
+                    )),
+                    location: None,
+                    notes: None,
+                    detail: None,
+                  });
+                  "".into()
+                }
+              },
+            };
+            match define.kind {
+              DefineKind::Snapshot => defines_for_snapshot.push(printed),
+              DefineKind::Worklet => defines_for_worklet.push(printed),
+            }
+          }
+        });
+
         TransformNodiffOutput {
           code: result.code,
           map: result.map,
-          errors: vec![],
+          errors: define_errors,
           warnings: vec![],
           ui_source_map_records: if use_element_template_plugin {
             vec![]
@@ -856,6 +966,8 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          defines_for_snapshot: Some(defines_for_snapshot),
+          defines_for_worklet: Some(defines_for_worklet),
         }
       }
       Err(_) => {
@@ -863,7 +975,7 @@ fn transform_react_lynx_inner(
         return TransformNodiffOutput {
           code: "".into(),
           map: None,
-          errors: errors.read().unwrap().clone(),
+          errors: vec![],
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: if use_element_template_plugin {
             vec![]
@@ -871,20 +983,27 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          defines_for_snapshot: None,
+          defines_for_worklet: None,
         };
       }
     }
   });
 
+  let mut transform_errors = errors.read().unwrap().clone();
+  transform_errors.extend(result.errors);
+
   let r = TransformNodiffOutput {
     code: result.code,
     map: result.map,
-    errors: errors.read().unwrap().clone(),
+    errors: transform_errors,
     warnings: warnings.read().unwrap().clone(),
     ui_source_map_records: result.ui_source_map_records,
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
+    defines_for_snapshot: result.defines_for_snapshot,
+    defines_for_worklet: result.defines_for_worklet,
   };
 
   r

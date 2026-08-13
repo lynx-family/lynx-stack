@@ -59,6 +59,8 @@ async function postOpenUIPayload(req: Request) {
 
 const route = new Hono();
 
+route.put('/', (context) => postOpenUIPayload(context.req.raw));
+// Keep POST working for clients deployed before the PUT upload contract.
 route.post('/', (context) => postOpenUIPayload(context.req.raw));
 
 export default route;
