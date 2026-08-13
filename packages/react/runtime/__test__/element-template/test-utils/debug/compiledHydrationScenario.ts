@@ -47,7 +47,7 @@ export async function runCompiledHydrationScenario(
 
   const hydrationData: SerializedEtNode[] = [];
   const onHydrate = vi.fn().mockImplementation((event: { data: ElementTemplateHydrateCommitContext }) => {
-    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

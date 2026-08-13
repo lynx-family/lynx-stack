@@ -117,7 +117,7 @@ function getSlotChildAt(
   index: number,
   host = getRenderedHost(),
 ): BackgroundElementTemplateInstance {
-  const child = host.elementSlots[SLOT_ID]?.[index];
+  const child = host.childSlots[SLOT_ID]?.[index];
   if (!child) {
     throw new Error(`Missing slot child at ${index}.\n${serializeBackgroundTree(host)}`);
   }
@@ -128,7 +128,7 @@ function collectRecursiveCreateCommandStream(
   instance: BackgroundElementTemplateInstance,
 ): ElementTemplateUpdateCommandStream {
   const commands: ElementTemplateUpdateCommandStream = [];
-  for (const slotChildren of instance.elementSlots) {
+  for (const slotChildren of instance.childSlots) {
     for (const child of slotChildren ?? []) {
       commands.push(...collectRecursiveCreateCommandStream(child));
     }
@@ -140,7 +140,7 @@ function collectRecursiveCreateCommandStream(
     nativeTemplate.templateKey,
     nativeTemplate.bundleUrl,
     instance.attributeSlots,
-    instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
+    instance.childSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );
   return commands;
 }
@@ -472,7 +472,7 @@ describe('Compiled direct event background updates', () => {
     });
 
     updateEvents = [];
-    lastMock!.mockSetAttributeOfElementTemplate.mockClear();
+    lastMock!.mockSetElementTemplateAttributeSlot.mockClear();
     envManager.switchToBackground();
     renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'second' });
 

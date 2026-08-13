@@ -12,7 +12,7 @@ export function hydratePageRootIntoContext(
   root: BackgroundPageRootInstance,
 ): boolean {
   const didHydrateChildren = hydrateRootChildrenIntoContext(
-    page.elementSlots?.[ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX] ?? [],
+    page.childSlots?.[ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX] ?? [],
     root,
   );
   if (!didHydrateChildren) {

@@ -851,7 +851,7 @@ fn should_skip_lynx_part_id_without_reserving_attr_slot() {
 }
 
 #[test]
-fn should_keep_element_slot_indices_stable_for_mixed_dynamic_children() {
+fn should_keep_child_slot_indices_stable_for_mixed_dynamic_children() {
   let template = first_user_template_json(
     r#"
       <view>
@@ -866,18 +866,18 @@ fn should_keep_element_slot_indices_stable_for_mixed_dynamic_children() {
   let children = template["children"].as_array().expect("children array");
   assert_eq!(children[0]["kind"], "element");
   assert_eq!(children[0]["type"], "text");
-  assert_eq!(children[1]["kind"], "elementSlot");
+  assert_eq!(children[1]["kind"], "childSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
   assert_eq!(children[1]["type"], "slot");
   assert_eq!(children[2]["kind"], "element");
   assert_eq!(children[2]["type"], "image");
-  assert_eq!(children[3]["kind"], "elementSlot");
+  assert_eq!(children[3]["kind"], "childSlot");
   assert_eq!(children[3]["elementSlotIndex"].as_f64(), Some(1.0));
   assert_eq!(children[3]["type"], "slot");
 }
 
 #[test]
-fn should_extract_dynamic_key_child_as_element_slot() {
+fn should_extract_dynamic_key_child_as_child_slot() {
   let templates = transform_to_templates(
     r#"
       <view>
@@ -896,7 +896,7 @@ fn should_extract_dynamic_key_child_as_element_slot() {
 
   let children = template["children"].as_array().expect("children array");
   assert_eq!(children.len(), 1);
-  assert_eq!(children[0]["kind"], "elementSlot");
+  assert_eq!(children[0]["kind"], "childSlot");
   assert_eq!(children[0]["elementSlotIndex"].as_f64(), Some(0.0));
   assert_eq!(children[0]["type"], "slot");
 }
@@ -925,6 +925,6 @@ fn should_preserve_user_wrapper_elements_as_template_nodes() {
   assert_eq!(wrapper_attrs[0]["kind"], "static");
   assert_eq!(wrapper_attrs[0]["value"], "user-wrapper");
 
-  assert_eq!(children[1]["kind"], "elementSlot");
+  assert_eq!(children[1]["kind"], "childSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
 }

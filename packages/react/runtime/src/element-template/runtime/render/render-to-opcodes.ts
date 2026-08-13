@@ -263,14 +263,14 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
   // ET host nodes are compiler-generated; `swc_plugin_element_template`
   // (lowering.rs) emits dynamic children as `$N` named props only — no
   // `children` prop is produced — so the renderer only consumes `$N`.
-  let elementSlots: unknown[] | undefined;
+  let childSlots: unknown[] | undefined;
   for (const name in props) {
     if (name.startsWith('$')) {
-      (elementSlots ??= [])[+name.slice(1)] = props[name];
+      (childSlots ??= [])[+name.slice(1)] = props[name];
     }
   }
-  if (elementSlots !== undefined) {
-    renderEtSlotArray(elementSlots, context, vnode, opcodes);
+  if (childSlots !== undefined) {
+    renderEtSlotArray(childSlots, context, vnode, opcodes);
   }
 
   cleanupVNode(vnode);

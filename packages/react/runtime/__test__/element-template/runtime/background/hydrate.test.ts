@@ -14,7 +14,9 @@ import { backgroundElementTemplateInstanceManager } from '../../../../src/elemen
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type {
-  SerializedElementTemplate,
+  SerializedEtNode,
+  SerializedCompiledNode,
+  SerializedTypedListNode,
   SerializedTypedNode,
 } from '../../../../src/element-template/protocol/types.js';
 import {
@@ -32,21 +34,21 @@ function createHydrationTemplate(
   options: {
     attributeSlots?: unknown[] | null;
     bundleUrl?: string;
-    elementSlots?: SerializedElementTemplate[][] | null;
+    childSlots?: SerializedEtNode[][] | null;
   } = {},
-): SerializedElementTemplate {
-  const serialized: SerializedElementTemplate = {
+): SerializedCompiledNode {
+  const serialized: SerializedCompiledNode = {
     templateKey,
     uid: handleId,
   };
   if ('attributeSlots' in options) {
-    serialized.attributeSlots = options.attributeSlots as SerializedElementTemplate['attributeSlots'];
+    serialized.attributeSlots = options.attributeSlots as SerializedCompiledNode['attributeSlots'];
   }
   if (options.bundleUrl !== undefined) {
     serialized.bundleUrl = options.bundleUrl;
   }
-  if ('elementSlots' in options) {
-    serialized.elementSlots = options.elementSlots as SerializedElementTemplate['elementSlots'];
+  if ('childSlots' in options) {
+    serialized.childSlots = options.childSlots as SerializedCompiledNode['childSlots'];
   }
   return serialized;
 }
@@ -57,9 +59,9 @@ function createHydrationChild(
   options: {
     attributeSlots?: unknown[] | null;
     bundleUrl?: string;
-    elementSlots?: SerializedElementTemplate[][] | null;
+    childSlots?: SerializedCompiledNode[][] | null;
   } = {},
-): SerializedElementTemplate {
+): SerializedCompiledNode {
   return createHydrationTemplate(handleId, templateKey, options);
 }
 
@@ -83,13 +85,13 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[createHydrationChild(child.instanceId, 'child')]],
+        childSlots: [[createHydrationChild(child.instanceId, 'child')]],
       }),
       root,
     );
 
     expect(stream).toEqual([]);
-    expect(root.elementSlots[0]).toEqual([child]);
+    expect(root.childSlots[0]).toEqual([child]);
   });
 
   it('binds hydration handles outside development without reporting dev invariant errors', () => {
@@ -273,7 +275,7 @@ describe('hydrate', () => {
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
         attributeSlots: ['main-root'],
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(existing.instanceId, 'item', {
             attributeSlots: ['main-existing'],
           }),
@@ -310,8 +312,87 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toEqual([existing, card]);
-    expect(card.elementSlots[0]).toEqual([rawText]);
+    expect(root.childSlots[0]).toEqual([existing, card]);
+    expect(card.childSlots[0]).toEqual([rawText]);
+  });
+
+  it('emits a background-only list subtree in order while hydrating ordinary siblings', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const existing = new BackgroundElementTemplateInstance('existing');
+    root.appendChild(existing);
+
+    const holder = new BackgroundElementTemplateInstance('holder');
+    const dependent = new BackgroundElementTemplateInstance('dependent');
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_list_item');
+    list.appendChild(item);
+    holder.appendChild(dependent);
+    holder.appendChild(list);
+    root.appendChild(holder);
+
+    const ordinary = new BackgroundElementTemplateInstance('ordinary');
+    root.appendChild(ordinary);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        childSlots: [[createHydrationChild(existing.instanceId, 'existing')]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      dependent.instanceId,
+      'dependent',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.createTemplate,
+      item.instanceId,
+      '_et_list_item',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.createTypedElement,
+      list.instanceId,
+      'list',
+      null,
+      null,
+      {
+        listChildren: [{
+          __etHandleRef: item.instanceId,
+          type: '_et_list_item',
+          platformInfo: {},
+          subtreeHandleIds: [],
+        }],
+      },
+      ElementTemplateUpdateOps.createTemplate,
+      holder.instanceId,
+      'holder',
+      null,
+      [],
+      [[dependent.instanceId, list.instanceId]],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      holder.instanceId,
+      0,
+      null,
+      ElementTemplateUpdateOps.createTemplate,
+      ordinary.instanceId,
+      'ordinary',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      ordinary.instanceId,
+      0,
+      null,
+    ]);
+    expect(root.childSlots[0]).toEqual([existing, holder, ordinary]);
+    expect(holder.childSlots[0]).toEqual([dependent, list]);
   });
 
   it('removes serialized children that are missing from the background slot', () => {
@@ -321,7 +402,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[createHydrationChild(stale.instanceId, 'stale')]],
+        childSlots: [[createHydrationChild(stale.instanceId, 'stale')]],
       }),
       root,
     );
@@ -333,17 +414,17 @@ describe('hydrate', () => {
       stale.instanceId,
       [stale.instanceId],
     ]);
-    expect(root.elementSlots[0]).toBeUndefined();
+    expect(root.childSlots[0]).toBeUndefined();
   });
 
   it('includes nested serialized subtree handles from sparse slots when hydrate removes a stale child', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
     const stale = createHydrationChild(101, 'stale', {
-      elementSlots: [
-        undefined as unknown as SerializedElementTemplate[],
+      childSlots: [
+        undefined as unknown as SerializedCompiledNode[],
         [createHydrationChild(102, 'nested', {
-          elementSlots: [[
+          childSlots: [[
             createHydrationChild(103, BUILTIN_RAW_TEXT_TEMPLATE_KEY, {
               attributeSlots: ['stale text'],
             }),
@@ -354,7 +435,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[stale]],
+        childSlots: [[stale]],
       }),
       root,
     );
@@ -366,7 +447,7 @@ describe('hydrate', () => {
       101,
       [101, 102, 103],
     ]);
-    expect(root.elementSlots[0]).toBeUndefined();
+    expect(root.childSlots[0]).toBeUndefined();
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(101)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(102)).toBeUndefined();
@@ -382,7 +463,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(stale.instanceId, 'stale'),
           createHydrationChild(keep.instanceId, 'keep'),
         ]],
@@ -397,7 +478,7 @@ describe('hydrate', () => {
       stale.instanceId,
       [stale.instanceId],
     ]);
-    expect(root.elementSlots[0]).toEqual([keep]);
+    expect(root.childSlots[0]).toEqual([keep]);
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([stale]);
   });
 
@@ -413,7 +494,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(a.instanceId, 'a'),
           createHydrationChild(b.instanceId, 'b'),
           createHydrationChild(c.instanceId, 'c'),
@@ -430,7 +511,7 @@ describe('hydrate', () => {
       c.instanceId,
       null,
     ]);
-    expect(root.elementSlots[0]).toEqual([b, a, c]);
+    expect(root.childSlots[0]).toEqual([b, a, c]);
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
@@ -445,7 +526,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [
+        childSlots: [
           [createHydrationChild(mainThreadId, 'moved', { attributeSlots: ['before'] })],
           [],
         ],
@@ -472,8 +553,8 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[1]).toEqual([moved]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[1]).toEqual([moved]);
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
@@ -491,10 +572,10 @@ describe('hydrate', () => {
 
       const stream = hydrate(
         createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[{
+          childSlots: [[{
             tag: 'scroll-view',
             attributes: null,
-            elementSlots: [],
+            childSlots: [],
             uid: -10,
           } as SerializedTypedNode]],
         }),
@@ -523,7 +604,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [
+        childSlots: [
           [
             createHydrationChild(-2, 'moved', { attributeSlots: ['before'] }),
             createHydrationChild(keep.instanceId, 'keep'),
@@ -553,8 +634,8 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toEqual([keep]);
-    expect(root.elementSlots[1]).toEqual([moved]);
+    expect(root.childSlots[0]).toEqual([keep]);
+    expect(root.childSlots[1]).toEqual([moved]);
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
@@ -569,7 +650,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [
+        childSlots: [
           [],
           [createHydrationChild(mainThreadId, 'moved', { attributeSlots: ['before'] })],
         ],
@@ -596,8 +677,8 @@ describe('hydrate', () => {
       mainThreadId,
       [mainThreadId],
     ]);
-    expect(root.elementSlots[0]).toEqual([moved]);
-    expect(root.elementSlots[1]).toBeUndefined();
+    expect(root.childSlots[0]).toEqual([moved]);
+    expect(root.childSlots[1]).toBeUndefined();
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
@@ -617,7 +698,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(-2, 'item'),
           createHydrationChild(-3, 'item'),
         ], []],
@@ -661,8 +742,8 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[1]).toEqual([first, second]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[1]).toEqual([first, second]);
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
@@ -703,8 +784,8 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toEqual([child]);
-    expect(child.elementSlots[0]).toEqual([rawText]);
+    expect(root.childSlots[0]).toEqual([child]);
+    expect(child.childSlots[0]).toEqual([rawText]);
   });
 
   it('diffs multiple dynamic children slots independently during hydrate', () => {
@@ -723,7 +804,7 @@ describe('hydrate', () => {
     const oldAId = -11;
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [
+        childSlots: [
           [createHydrationChild(oldAId, 'old-a')],
           [
             createHydrationChild(b0.instanceId, 'b0'),
@@ -759,11 +840,11 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toEqual([newA]);
-    expect(root.elementSlots[1]).toEqual([b1, b0]);
+    expect(root.childSlots[0]).toEqual([newA]);
+    expect(root.childSlots[1]).toEqual([b1, b0]);
   });
 
-  it('does not match same-type children across element slot indexes', () => {
+  it('does not match same-type children across child slot indexes', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
     const slot0Item = new BackgroundElementTemplateInstance('item', ['B']);
@@ -775,7 +856,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [
+        childSlots: [
           [createHydrationChild(slot0Item.instanceId, 'item', { attributeSlots: ['A'] })],
           [createHydrationChild(slot1Item.instanceId, 'item', { attributeSlots: ['B'] })],
         ],
@@ -793,8 +874,8 @@ describe('hydrate', () => {
       0,
       'A',
     ]);
-    expect(root.elementSlots[0]).toEqual([slot0Item]);
-    expect(root.elementSlots[1]).toEqual([slot1Item]);
+    expect(root.childSlots[0]).toEqual([slot0Item]);
+    expect(root.childSlots[1]).toEqual([slot1Item]);
   });
 
   it('matches same local template ids by bundleUrl during hydrate', () => {
@@ -807,7 +888,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(-11, '_et_same', {
             attributeSlots: ['A'],
             bundleUrl: 'entry-a',
@@ -829,7 +910,7 @@ describe('hydrate', () => {
       0,
       null,
     ]);
-    expect(root.elementSlots[0]).toEqual([entryB, entryA]);
+    expect(root.childSlots[0]).toEqual([entryB, entryA]);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(entryA);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(entryB);
     expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
@@ -843,7 +924,7 @@ describe('hydrate', () => {
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, '_et_root', {
         bundleUrl: '__Card__',
-        elementSlots: [[createHydrationChild(-2, '_et_child', { bundleUrl: '__Card__' })]],
+        childSlots: [[createHydrationChild(-2, '_et_child', { bundleUrl: '__Card__' })]],
       }),
       root,
     );
@@ -862,7 +943,7 @@ describe('hydrate', () => {
     const childHandleId = -2;
     hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[createHydrationChild(childHandleId, 'child', { attributeSlots: ['before'] })]],
+        childSlots: [[createHydrationChild(childHandleId, 'child', { attributeSlots: ['before'] })]],
       }),
       root,
     );
@@ -886,7 +967,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(-2, BUILTIN_RAW_TEXT_TEMPLATE_KEY, { attributeSlots: [true] }),
           createHydrationChild(-3, BUILTIN_RAW_TEXT_TEMPLATE_KEY, { attributeSlots: [{ bad: 'value' }] }),
         ]],
@@ -895,7 +976,7 @@ describe('hydrate', () => {
     );
 
     expect(root.firstChild).toBeNull();
-    expect(root.elementSlots[0]).toBeUndefined();
+    expect(root.childSlots[0]).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(stream).toEqual([
@@ -917,7 +998,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[createHydrationChild(-2, 'child', { attributeSlots: ['payload'] })]],
+        childSlots: [[createHydrationChild(-2, 'child', { attributeSlots: ['payload'] })]],
       }),
       root,
     );
@@ -942,7 +1023,7 @@ describe('hydrate', () => {
 
       const stream = hydrate(
         createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[createHydrationChild(0, 'child')]],
+          childSlots: [[createHydrationChild(0, 'child')]],
         }),
         root,
       );
@@ -966,8 +1047,8 @@ describe('hydrate', () => {
 
       const stream = hydrate(
         createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[createHydrationChild(-2, 'child', {
-            elementSlots: [[createHydrationChild(0, 'grandchild')]],
+          childSlots: [[createHydrationChild(-2, 'child', {
+            childSlots: [[createHydrationChild(0, 'grandchild')]],
           })]],
         }),
         root,
@@ -992,12 +1073,12 @@ describe('hydrate', () => {
 
       const stream = hydrate(
         createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[{
+          childSlots: [[{
             tag: 'list',
             attributes: null,
-            elementSlots: [],
+            childSlots: [],
             uid: -10,
-          } as SerializedTypedNode]],
+          } as SerializedTypedListNode]],
         }),
         root,
       );
@@ -1013,7 +1094,7 @@ describe('hydrate', () => {
     }
   });
 
-  it('fails serialized-only typed list removal when generic element slots are present', () => {
+  it('fails serialized-only typed list removal when generic child slots are present', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -1023,15 +1104,15 @@ describe('hydrate', () => {
 
       const stream = hydrate(
         createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[{
+          childSlots: [[{
             tag: 'list',
             attributes: null,
-            elementSlots: [[createHydrationChild(-11, '_et_list_item')]],
+            childSlots: [[createHydrationChild(-11, '_et_list_item')]],
             uid: -10,
             options: {
               listChildren: [],
             },
-          } as SerializedTypedNode]],
+          } as SerializedTypedListNode]],
         }),
         root,
       );
@@ -1039,7 +1120,7 @@ describe('hydrate', () => {
       expect(stream).toEqual([]);
       expect(reportError).toHaveBeenCalledTimes(1);
       expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'does not support elementSlots',
+        'does not support childSlots',
       );
     } finally {
       lynx.reportError = oldReportError;
@@ -1057,15 +1138,15 @@ describe('hydrate', () => {
 
       const stream = hydrate(
         createHydrationTemplate(root.instanceId, 'root', {
-          elementSlots: [[{
+          childSlots: [[{
             tag: 'list',
             attributes: null,
-            elementSlots: [],
+            childSlots: [],
             uid: -10,
             options: {
               listChildren: [createHydrationChild(0, '_et_list_item')],
             },
-          } as SerializedTypedNode]],
+          } as SerializedTypedListNode]],
         }),
         root,
       );
@@ -1084,7 +1165,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[
+        childSlots: [[
           createHydrationChild(-2, 'child'),
         ]],
       }),
@@ -1140,7 +1221,7 @@ describe('hydrate', () => {
       const stream = hydrate(
         createHydrationTemplate(-1, 'root', {
           attributeSlots: ['before-root'],
-          elementSlots: [[
+          childSlots: [[
             createHydrationChild(-1, 'child'),
           ]],
         }),
@@ -1166,7 +1247,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [undefined as unknown as SerializedElementTemplate[]],
+        childSlots: [undefined as unknown as SerializedCompiledNode[]],
       }),
       root,
     );
@@ -1210,7 +1291,7 @@ describe('hydrate', () => {
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
         attributeSlots: null,
-        elementSlots: null,
+        childSlots: null,
       }),
       root,
     );
@@ -1240,9 +1321,9 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [
-          undefined as unknown as SerializedElementTemplate[],
-          undefined as unknown as SerializedElementTemplate[],
+        childSlots: [
+          undefined as unknown as SerializedCompiledNode[],
+          undefined as unknown as SerializedCompiledNode[],
           [createHydrationChild(child.instanceId, 'child')],
         ],
       }),
@@ -1250,9 +1331,9 @@ describe('hydrate', () => {
     );
 
     expect(stream).toEqual([]);
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[1]).toBeUndefined();
-    expect(root.elementSlots[2]).toEqual([child]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[1]).toBeUndefined();
+    expect(root.childSlots[2]).toEqual([child]);
   });
 
   it('emits create recursively for inserted nested children', () => {
@@ -1265,7 +1346,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[]],
+        childSlots: [[]],
       }),
       root,
     );
@@ -1303,7 +1384,7 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[]],
+        childSlots: [[]],
       }),
       root,
     );
@@ -1360,11 +1441,11 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: null,
+        childSlots: null,
         uid: -10,
         options: {
           listChildren: [createHydrationChild(-11, '_et_item', {
-            elementSlots: [[
+            childSlots: [[
               createHydrationChild(-12, 'a'),
               createHydrationChild(-13, 'b'),
               createHydrationChild(-14, 'c'),
@@ -1427,12 +1508,12 @@ describe('hydrate', () => {
             updateAction: [],
           },
         },
-        elementSlots: null,
+        childSlots: null,
         uid: -10,
         options: {
           listChildren: [createHydrationChild(-11, '_et_list_item')],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1469,7 +1550,7 @@ describe('hydrate', () => {
           'component-at-indexes': null,
           'enqueue-component': null,
         },
-        elementSlots: null,
+        childSlots: null,
         uid: -10,
         options: {
           listChildren: [],
@@ -1513,12 +1594,12 @@ describe('hydrate', () => {
               updateAction: [],
             },
           },
-          elementSlots: null,
+          childSlots: null,
           uid: -10,
           options: {
             listChildren: [],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
@@ -1540,15 +1621,15 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[{
+        childSlots: [[{
           tag: 'list',
           attributes: { id: 'feed' },
-          elementSlots: null,
+          childSlots: null,
           uid: -10,
           options: {
             listChildren: [createHydrationChild(-11, '_et_list_item')],
           },
-        } as SerializedTypedNode]],
+        } as SerializedTypedListNode]],
       }),
       root,
     );
@@ -1576,12 +1657,12 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: [],
+        childSlots: [],
         uid: -10,
         options: {
           listChildren: [createHydrationChild(-11, '_et_item_a')],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1626,12 +1707,12 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: [],
+        childSlots: [],
         uid: -10,
         options: {
           listChildren: [createHydrationChild(-11, '_et_item_a')],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1682,7 +1763,7 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: [],
+        childSlots: [],
         uid: -10,
         options: {
           listChildren: [
@@ -1690,7 +1771,7 @@ describe('hydrate', () => {
             createHydrationChild(-12, '_et_item_b'),
           ],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1718,17 +1799,17 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          elementSlots: [],
+          childSlots: [],
           uid: -10,
           options: {
             listChildren: [{
               tag: 'scroll-view',
               attributes: null,
-              elementSlots: [],
+              childSlots: [],
               uid: -11,
             } as SerializedTypedNode],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
@@ -1756,7 +1837,7 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: [],
+        childSlots: [],
         uid: -10,
         options: {
           listChildren: [
@@ -1764,7 +1845,7 @@ describe('hydrate', () => {
             createHydrationChild(-12, '_et_item_b'),
           ],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1802,7 +1883,7 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: [],
+        childSlots: [],
         uid: -10,
         options: {
           listChildren: [
@@ -1811,7 +1892,7 @@ describe('hydrate', () => {
             createHydrationChild(-13, '_et_item_c'),
           ],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1870,12 +1951,12 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          elementSlots: [],
+          childSlots: [],
           uid: -10,
           options: {
             listChildren: [createHydrationChild(-11, '_et_old_item')],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
@@ -1918,12 +1999,12 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        elementSlots: [],
+        childSlots: [],
         uid: -10,
         options: {
           listChildren: [createHydrationChild(-11, '_et_item')],
         },
-      } satisfies SerializedTypedNode,
+      } satisfies SerializedTypedListNode,
       list,
     );
 
@@ -1953,12 +2034,12 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          elementSlots: [],
+          childSlots: [],
           uid: -10,
           options: {
             listChildren: [createHydrationChild(0, '_et_item')],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
@@ -1984,9 +2065,9 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          elementSlots: [],
+          childSlots: [],
           uid: -10,
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
@@ -2015,12 +2096,12 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          elementSlots: [],
+          childSlots: [],
           uid: 0,
           options: {
             listChildren: [],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
@@ -2034,7 +2115,7 @@ describe('hydrate', () => {
     }
   });
 
-  it('rejects typed list payloads with generic elementSlots before rebinding handles', () => {
+  it('rejects typed list payloads with generic childSlots before rebinding handles', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -2047,18 +2128,18 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          elementSlots: [[createHydrationChild(-11, '_et_list_item')]],
+          childSlots: [[createHydrationChild(-11, '_et_list_item')]],
           uid: -10,
           options: {
             listChildren: [],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
         list,
       );
 
       expect(stream).toEqual([]);
       expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'does not support elementSlots',
+        'does not support childSlots',
       );
       expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBe(list);
       expect(backgroundElementTemplateInstanceManager.get(-10)).toBeUndefined();
@@ -2074,15 +2155,15 @@ describe('hydrate', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[{
+        childSlots: [[{
           tag: 'list',
           attributes: null,
-          elementSlots: null,
+          childSlots: null,
           uid: -10,
           options: {
             listChildren: [createHydrationChild(-11, '_et_list_item')],
           },
-        } as SerializedTypedNode]],
+        } as SerializedTypedListNode]],
       }),
       root,
     );

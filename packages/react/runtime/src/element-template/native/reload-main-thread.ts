@@ -32,8 +32,8 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     // TODO: Replace this cleanup-only serialization with a direct page-children
     // or clear-slot PAPI once native exposes one.
     const page = __SerializeElementTemplate(__page) as SerializedPageRoot;
-    for (const root of page.elementSlots?.[ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX] ?? []) {
-      const rootRef = elementTemplateRegistry.get(root.uid as number)!;
+    for (const root of page.childSlots?.[ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX] ?? []) {
+      const rootRef = elementTemplateRegistry.get(root.uid)!;
       __RemoveNodeFromElementTemplate(__page, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX, rootRef);
       const removedHandleIds: number[] = [];
       collectSerializedSubtreeHandleIds(root, removedHandleIds);
@@ -51,7 +51,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     setRoot({ __jsx: oldRoot.__jsx });
     renderMainThread();
 
-    __FlushElementTree(__page, options);
+    __FlushElementTree(undefined, options);
   } finally {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
@@ -64,7 +64,7 @@ function collectSerializedSubtreeHandleIds(
   handleIds: number[],
 ): void {
   handleIds.push(node.uid as number);
-  for (const slot of node.elementSlots ?? []) {
+  for (const slot of node.childSlots ?? []) {
     for (const child of slot ?? []) {
       collectSerializedSubtreeHandleIds(child, handleIds);
     }
