@@ -5,10 +5,14 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { createLLMProvider } from '../agent/openai-provider.js';
+import { errorMessage } from '../app/common/errors.js';
 import { pickProviderOptions } from '../app/common/provider-options.js';
+import { redactBenchText } from '../service/a2ui-bench-redaction.js';
 import {
   GENUI_MODEL_CONFIG_ENV,
+  configuredModelName,
   parseModelConfig,
+  resolveModelConfig,
 } from '../service/common/model-config.js';
 
 const CONFIG = {
@@ -105,6 +109,54 @@ describe('GenUI model configuration', () => {
         delete process.env.A2UI_ALLOW_CLIENT_OVERRIDE;
       } else {
         process.env.A2UI_ALLOW_CLIENT_OVERRIDE = previousAllowOverride;
+      }
+    }
+  });
+
+  test('rejects inherited object property names as model selections', () => {
+    const parsed = parseModelConfig(JSON.stringify(CONFIG));
+    expect(Object.getPrototypeOf(parsed.models)).toBeNull();
+
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
+    try {
+      expect(configuredModelName('toString')).toBeUndefined();
+      expect(pickProviderOptions({ model: 'toString' }).model).toBeUndefined();
+      expect(resolveModelConfig('toString')).toEqual({
+        name: 'Doubao Seed',
+        config: CONFIG['Doubao Seed'],
+      });
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
+      } else {
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+      }
+    }
+  });
+
+  test('redacts private model configuration from client-visible errors', () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
+    try {
+      const privateMessage =
+        'Doubao Seed failed at https://seed.example.com/api/v3 '
+        + 'for doubao-seed-upstream with seed-secret and Bearer session-token';
+      const publicMessage =
+        'Doubao Seed failed at [REDACTED] for [REDACTED] with [REDACTED] '
+        + 'and Bearer [REDACTED]';
+      const upstreamError = new Error(privateMessage);
+      upstreamError.name = 'ProviderError seed-secret';
+      expect(errorMessage(upstreamError)).toEqual({
+        message: publicMessage,
+        name: 'ProviderError [REDACTED]',
+      });
+      expect(redactBenchText(privateMessage, {})).toBe(publicMessage);
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
+      } else {
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
       }
     }
   });

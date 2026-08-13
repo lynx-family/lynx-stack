@@ -28,7 +28,7 @@ describe('Hono application', () => {
     });
   });
 
-  test('returns the configured public model list without provider secrets', async () => {
+  test('returns only public model metadata from discovery endpoints', async () => {
     const previous = process.env[GENUI_MODEL_CONFIG_ENV];
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
       'Doubao Seed': {
@@ -64,6 +64,23 @@ describe('Hono application', () => {
       expect(serializedPayload).not.toContain('seed-secret');
       expect(serializedPayload).not.toContain('seed.example.com');
       expect(serializedPayload).not.toContain('doubao-seed-upstream');
+
+      const healthResponse = await app.request('/a2ui/health', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      expect(healthResponse.status).toBe(200);
+      const healthPayload: unknown = await healthResponse.json();
+      expect(healthPayload).toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+      });
+      const serializedHealth = JSON.stringify(healthPayload);
+      expect(serializedHealth).not.toContain('seed-secret');
+      expect(serializedHealth).not.toContain('seed.example.com');
+      expect(serializedHealth).not.toContain('doubao-seed-upstream');
+      expect(serializedHealth).not.toContain('"api"');
     } finally {
       if (previous === undefined) {
         delete process.env[GENUI_MODEL_CONFIG_ENV];

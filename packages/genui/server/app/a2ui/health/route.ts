@@ -4,7 +4,6 @@
 
 import { Hono } from 'hono';
 
-import { isOfficialOpenAIBaseURL } from '../../../agent/openai-utils';
 import { readModelConfig } from '../../../service/common/model-config.js';
 import { jsonWithCors } from '../../common/cors';
 
@@ -20,23 +19,13 @@ function getA2UIHealth(req: Request) {
   }
 
   const { defaultModel, models } = result.config;
-  const {
-    apiKey,
-    api: configuredApi,
-    baseURL,
-    model,
-  } = models[defaultModel]!;
-  const isOfficial = isOfficialOpenAIBaseURL(baseURL);
-  const api = configuredApi ?? (isOfficial ? 'responses' : 'chat');
+  const { apiKey } = models[defaultModel]!;
 
   return jsonWithCors(req, {
     ok: true,
     provider: 'openai',
     hasKey: Boolean(apiKey),
-    baseURL,
     modelName: defaultModel,
-    model,
-    api,
   });
 }
 

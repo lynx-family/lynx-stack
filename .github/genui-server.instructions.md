@@ -10,7 +10,7 @@ Keep shared agent-service contracts and helpers in `service/common`. `ChatMessag
 
 Keep public provider integrations vendor-neutral. Do not commit deployment-only gateway rewrites, private hostnames, environment-specific authentication conventions, or credentials; inject those only through the deployment environment.
 
-Configure GenUI providers only through `GENUI_MODEL_CONFIG_JSON` as an object keyed by public model name. Give every value its own upstream `model`, credentials, base URL, and optional API style, reasoning effort, and default marker. Keep `GET /models` limited to those public names and the default name; never expose upstream model ids, credentials, or base URLs. Resolve an ordinary client model selection through its configured name before creating the provider.
+Configure GenUI providers only through `GENUI_MODEL_CONFIG_JSON` as an object keyed by public model name. Give every value its own upstream `model`, credentials, base URL, and optional API style, reasoning effort, and default marker. Keep public responses, including `GET /models` and health endpoints, limited to public model names and readiness metadata; never expose upstream model ids, credentials, base URLs, or API styles. Redact those private configuration values from upstream errors before logging or returning them to clients. Resolve an ordinary client model selection through its configured name before creating the provider.
 
 Use `app/common/sse.ts` for standard SSE frames and response headers. Pass event IDs or additional headers through its options instead of cloning the SSE framing and header literals in individual functions.
 

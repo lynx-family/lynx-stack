@@ -98,6 +98,85 @@ describe('chat protocol adapters', () => {
     }
   });
 
+  test('surfaces a model-list HTTP error without retaining models', async () => {
+    const host = {
+      origin: 'http://localhost:3000',
+      hostname: 'localhost',
+      protocol: 'http:',
+      search: '',
+      baseUrl: 'http://localhost:3000/',
+    };
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        fetch: rs.fn(async () => ({
+          ok: false,
+          json: async () => ({ error: 'Model service unavailable' }),
+        })),
+      },
+    });
+
+    try {
+      await expect(loadProviderSettings(
+        createDefaultProviderSettings(),
+        host,
+        new AbortController().signal,
+      )).resolves.toEqual({
+        model: '',
+        models: [],
+        status: 'error',
+        error: 'Model service unavailable',
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
+
+  test('rejects an invalid model-list response without retaining models', async () => {
+    const host = {
+      origin: 'http://localhost:3000',
+      hostname: 'localhost',
+      protocol: 'http:',
+      search: '',
+      baseUrl: 'http://localhost:3000/',
+    };
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        fetch: rs.fn(async () => ({
+          ok: true,
+          json: async () => ({
+            defaultModel: 'Missing',
+            models: [{ id: 'Doubao Seed', label: 'Doubao Seed' }],
+          }),
+        })),
+      },
+    });
+
+    try {
+      await expect(loadProviderSettings(
+        createDefaultProviderSettings(),
+        host,
+        new AbortController().signal,
+      )).resolves.toEqual({
+        model: '',
+        models: [],
+        status: 'error',
+        error: 'The model list response is invalid',
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
+
   test('reduces an A2UI stream without duplicating incremental messages', () => {
     let state = A2UI_CHAT_ADAPTER.stream.initial();
 
