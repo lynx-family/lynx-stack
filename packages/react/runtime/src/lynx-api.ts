@@ -6,10 +6,12 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
+import { boundRoot } from './bound-root.js';
 import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
+import { defaultRootContext, switchRootContext } from './root-context.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
@@ -90,6 +92,11 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
+      if (boundRoot) {
+        boundRoot.render(jsx);
+        return;
+      }
+      switchRootContext(defaultRootContext);
       __root.__jsx = jsx;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::renderBackground');

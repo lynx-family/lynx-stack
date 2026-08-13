@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi } from 'vitest';
-import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
+import { getDelayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
 import { flushDelayedLifecycleEvents } from '../../src/snapshot/lynx/tt';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
@@ -15,7 +15,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('delayedLifecycleEvents', () => {
+describe('getDelayedLifecycleEvents()', () => {
   it('should flush', async () => {
     function Comp() {
       return <view />;
@@ -38,7 +38,7 @@ describe('delayedLifecycleEvents', () => {
       ]
     `);
     lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-    expect(delayedLifecycleEvents).toMatchInlineSnapshot(`
+    expect(getDelayedLifecycleEvents()).toMatchInlineSnapshot(`
       [
         [
           "rLynxFirstScreen",
@@ -54,6 +54,6 @@ describe('delayedLifecycleEvents', () => {
       __root,
     );
     flushDelayedLifecycleEvents();
-    expect(delayedLifecycleEvents).toMatchInlineSnapshot(`[]`);
+    expect(getDelayedLifecycleEvents()).toMatchInlineSnapshot(`[]`);
   });
 });

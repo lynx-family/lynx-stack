@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { BasicBG, ListBG, ListConditionalBG, ViewBG, setObj, setStr } from './reloadBG';
 import { BasicMT, ListConditionalMT, ListMT, ViewMT } from './reloadMT';
 import { root } from '../../../src/index';
-import { delayedEvents, delayedPublishEvent } from '../../../src/snapshot/lifecycle/event/delayEvents';
+import { delayedPublishEvent, getDelayedEvents } from '../../../src/snapshot/lifecycle/event/delayEvents';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { reloadBackground } from '../../../src/snapshot/lifecycle/reload';
@@ -1901,8 +1901,8 @@ describe('firstScreenSyncTiming - jsReady', () => {
 
   it('should clear cached events before reload when js not ready', async function() {
     delayedPublishEvent('bindEvent:tap', 'test');
-    expect(delayedEvents.length).toBe(1);
+    expect(getDelayedEvents().length).toBe(1);
     reloadBackground({});
-    expect(delayedEvents.length).toBe(0);
+    expect(getDelayedEvents().length).toBe(0);
   });
 });

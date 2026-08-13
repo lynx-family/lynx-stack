@@ -317,6 +317,8 @@ export function applyEntry(
         experimental_isLazyBundle,
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
+        experimental_multiRootRenderContext:
+          options.experimental_multiRootRenderContext,
         experimental_transformBuiltinAttributeNames,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(

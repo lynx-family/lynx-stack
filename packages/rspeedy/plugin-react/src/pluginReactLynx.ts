@@ -352,6 +352,12 @@ export interface PluginReactLynxOptions {
   experimental_useElementTemplate?: boolean
 
   /**
+   * @defaultValue `false`
+   * @alpha
+   */
+  experimental_multiRootRenderContext?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -417,6 +423,7 @@ export function pluginReactLynx(
     experimental_isLazyBundle: false,
     experimental_transformBuiltinAttributeNames: false,
     experimental_useElementTemplate: false,
+    experimental_multiRootRenderContext: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }

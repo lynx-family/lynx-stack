@@ -23,7 +23,7 @@ import {
 } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import {
-  delayedRunOnMainThreadData,
+  getDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
@@ -101,7 +101,7 @@ export function installElementTemplateHydrationListener(): void {
       }
 
       if (didHydrateMatchedInstances) {
-        const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
+        const hasDelayedRunOnMainThread = getDelayedRunOnMainThreadData().length > 0;
         const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
           ? takeDelayedRunOnMainThreadData()
           : undefined;

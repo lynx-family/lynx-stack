@@ -51,6 +51,8 @@ export interface ReactWebpackPluginOptions {
     enableSSR?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    // @alpha (undocumented)
+    experimental_multiRootRenderContext?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;

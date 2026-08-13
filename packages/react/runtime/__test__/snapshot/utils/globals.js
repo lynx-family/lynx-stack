@@ -149,6 +149,7 @@ function injectGlobals() {
   globalThis.__REF_FIRE_IMMEDIATELY__ = false;
   globalThis.__ENABLE_SSR__ = true;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  globalThis.__MULTI_ROOT_RENDER_CONTEXT__ = true;
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
   globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
