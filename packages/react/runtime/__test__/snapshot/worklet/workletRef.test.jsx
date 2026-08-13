@@ -420,6 +420,32 @@ describe('MainThreadObject', () => {
     expect(type).not.toHaveProperty('create');
   });
 
+  it('ensures registration on the first main-thread hook use', () => {
+    const create = value => ({ value });
+    const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType;
+
+    globalEnvManager.switchToBackground();
+    const type = defineMainThreadObjectType({
+      type: '@test/retained-module-value',
+      create,
+    });
+    expect(register).not.toHaveBeenCalled();
+
+    globalEnvManager.switchToMainThread();
+    const App = () => {
+      useMainThreadObject(type, 42);
+      return <view />;
+    };
+    render(<App />, __root);
+
+    expect(register).toHaveBeenCalledWith(
+      '@test/retained-module-value',
+      create,
+      undefined,
+      1,
+    );
+  });
+
   it('uses a plain serializable handle in the main-thread runtime', () => {
     globalEnvManager.switchToMainThread();
     const type = defineMainThreadObjectType({
