@@ -55,6 +55,6 @@ Every other absolute `projectRoot` is working-directory independent. A relative
 `projectRoot` resolves against `process.cwd()` in Node exactly as it did before,
 and against `/` in a browser bundle, where there is no `process.cwd()`.
 
-This ships as a `patch` despite the behaviour change above. The package is a
-`peerDependency` of `@lynx-js/web-core`, so a `minor` here cascades that package
-to `1.0.0`, which `.github/scripts/check-no-major-changeset.cjs` rejects.
+This ships as a `patch` because it fixes browser compatibility without changing
+the public API. Under Changesets v3, the out-of-range peer dependency update
+also gives `@lynx-js/web-core` a `patch` bump.

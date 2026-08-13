@@ -212,7 +212,10 @@ jobs:
         pnpm dlx @pnpm/registry-mock@4 prepare
         pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
-        pnpm changeset version --snapshot regression
+        pnpm changeset status --output "$RUNNER_TEMP/changeset-status.json"
+        if jq -e '.releases | length > 0' "$RUNNER_TEMP/changeset-status.json" > /dev/null; then
+          pnpm changeset version --snapshot regression
+        fi
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
         cd `mktemp -d`

@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@changesets/cli": "^2.31.1",
+    "@changesets/cli": "^3.0.0",
     "@codspeed/vitest-plugin": "^5.7.1",
     "@eslint/js": "^9.39.5",
     "@eslint/markdown": "^7.5.1",
@@ -68,6 +68,6 @@
   },
   "packageManager": "pnpm@11.20.0+sha512.9a6f330a95b66446ea088faf1521405a8a01f07fde7124cc9958dfed52d4bb436737e65b08f85f37b46fcba375092558ac51262b816844b22f63406ed166bfee",
   "engines": {
-    "node": "^22 || ^24"
+    "node": "^22.11 || ^24"
   }
 }
