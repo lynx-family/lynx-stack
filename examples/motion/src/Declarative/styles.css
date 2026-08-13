@@ -4,7 +4,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 48px;
+  gap: 24px;
   overflow: hidden;
 }
 
@@ -23,4 +23,48 @@
   padding: 12px 20px;
   background-color: #222;
   color: white;
+}
+
+.declarative-button-label {
+  color: #f8fafc;
+  font-size: 16px;
+}
+
+.gesture-probe {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gesture-card {
+  width: 320px;
+  height: 112px;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.gesture-card-title {
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.gesture-card-state {
+  color: #99f6e4;
+  font-size: 16px;
+}
+
+.gesture-metrics {
+  width: 320px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  color: #334155;
+  font-size: 16px;
 }

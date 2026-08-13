@@ -845,7 +845,8 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
-    interactionAnimationGenerationRef.current += 1;
+    const animationGeneration = interactionAnimationGenerationRef.current + 1;
+    interactionAnimationGenerationRef.current = animationGeneration;
     for (const animation of animationRef.current) {
       animation.stop();
     }
@@ -858,7 +859,11 @@ function useMotionHostProps<Props extends MotionProps>(
       (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
     }
     interactionAnimationValueKeysRef.current = {};
+    const reportAnimationComplete = onAnimationComplete
+      ? runOnBackground(onAnimationComplete)
+      : undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    let startedAnimationCount = 0;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
       : workletHoverTransition) ?? {};
@@ -866,36 +871,81 @@ function useMotionHostProps<Props extends MotionProps>(
       && String(SystemInfo.platform) === 'web';
     if (isLynxForWeb) {
       const targetValues = resolvedHover.target as Record<string, unknown>;
+      let pendingAnimationCount = 0;
+      function reportHoverAnimationComplete() {
+        if (
+          interactionAnimationGenerationRef.current !== animationGeneration
+        ) {
+          return;
+        }
+        interactionAnimationCompletionRef.current.pending -= 1;
+        if (
+          interactionAnimationCompletionRef.current.generation
+            === animationGeneration
+          && interactionAnimationCompletionRef.current.pending === 0
+          && reportAnimationComplete
+        ) {
+          void reportAnimationComplete(whileHover!);
+        }
+      }
+      for (const key in targetValues) {
+        const value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (value && targetValues[key] !== undefined) {
+          pendingAnimationCount += 1;
+        }
+      }
+      interactionAnimationCompletionRef.current = {
+        generation: animationGeneration,
+        pending: pendingAnimationCount,
+      };
+      startedAnimationCount = pendingAnimationCount;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          void value.start(
-            createMotionValueAnimation(
-              key,
-              value,
-              targetValue as never,
-              resolvedTransition as never,
-            ),
+          const startAnimation = createMotionValueAnimation(
+            key,
+            value,
+            targetValue as never,
+            resolvedTransition as never,
+          );
+          void value.start(complete =>
+            startAnimation(() => {
+              complete();
+              reportHoverAnimationComplete();
+            })
           );
           if (value.animation) {
-            interactionAnimationRef.current.push(value.animation);
+            Object.defineProperty(value, 'animation', { enumerable: false });
           }
+          interactionAnimationValueKeysRef.current[key] = true;
         }
       }
-      return;
-    }
-    const ElementConstructor = globalThis.Element as unknown as new(
-      element: MainThread.Element,
-    ) => Element;
-    const element = new ElementConstructor(elementRef.current);
-    interactionAnimationRef.current.push(
-      animateMotionTarget(
+    } else {
+      const ElementConstructor = globalThis.Element as unknown as new(
+        element: MainThread.Element,
+      ) => Element;
+      const element = new ElementConstructor(elementRef.current);
+      interactionAnimationRef.current.push(animateMotionTarget(
         element,
         resolvedHover.target,
-        resolvedTransition,
-      ),
-    );
+        {
+          ...resolvedTransition,
+          onComplete: () => {
+            if (
+              interactionAnimationGenerationRef.current === animationGeneration
+              && reportAnimationComplete
+            ) {
+              void reportAnimationComplete(whileHover!);
+            }
+          },
+        },
+      ));
+      startedAnimationCount = 1;
+    }
+    if (startedAnimationCount > 0 && onAnimationStart) {
+      void runOnBackground(onAnimationStart)(whileHover!);
+    }
   }
 
   function endHoverAnimation() {
@@ -907,7 +957,8 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
-    interactionAnimationGenerationRef.current += 1;
+    const animationGeneration = interactionAnimationGenerationRef.current + 1;
+    interactionAnimationGenerationRef.current = animationGeneration;
     for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
@@ -916,11 +967,15 @@ function useMotionHostProps<Props extends MotionProps>(
       (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
     }
     interactionAnimationValueKeysRef.current = {};
+    const reportAnimationComplete = onAnimationComplete
+      ? runOnBackground(onAnimationComplete)
+      : undefined;
     const hoverValues = resolvedHover.target as Record<string, unknown>;
     const animateValues = resolvedAnimate.target as
       | Record<string, unknown>
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    let startedAnimationCount = 0;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
       : workletHoverTransition) ?? {};
@@ -943,32 +998,83 @@ function useMotionHostProps<Props extends MotionProps>(
     }
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
+    const restingDefinition: MotionDefinition = animate
+      ?? (restingValues as MotionTarget);
     if (isLynxForWeb) {
+      let pendingAnimationCount = 0;
+      function reportHoverAnimationComplete() {
+        if (
+          interactionAnimationGenerationRef.current !== animationGeneration
+        ) {
+          return;
+        }
+        interactionAnimationCompletionRef.current.pending -= 1;
+        if (
+          interactionAnimationCompletionRef.current.generation
+            === animationGeneration
+          && interactionAnimationCompletionRef.current.pending === 0
+          && reportAnimationComplete
+        ) {
+          void reportAnimationComplete(restingDefinition);
+        }
+      }
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          void value.start(
-            createMotionValueAnimation(
-              key,
-              value,
-              restingValues[key] as never,
-              resolvedTransition as never,
-            ),
-          );
-          if (value.animation) {
-            interactionAnimationRef.current.push(value.animation);
-          }
+          pendingAnimationCount += 1;
         }
       }
-      return;
+      interactionAnimationCompletionRef.current = {
+        generation: animationGeneration,
+        pending: pendingAnimationCount,
+      };
+      startedAnimationCount = pendingAnimationCount;
+      for (const key in restingValues) {
+        const value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (value) {
+          const startAnimation = createMotionValueAnimation(
+            key,
+            value,
+            restingValues[key] as never,
+            resolvedTransition as never,
+          );
+          void value.start(complete =>
+            startAnimation(() => {
+              complete();
+              reportHoverAnimationComplete();
+            })
+          );
+          if (value.animation) {
+            Object.defineProperty(value, 'animation', { enumerable: false });
+          }
+          interactionAnimationValueKeysRef.current[key] = true;
+        }
+      }
+    } else {
+      const ElementConstructor = globalThis.Element as unknown as new(
+        element: MainThread.Element,
+      ) => Element;
+      const element = new ElementConstructor(elementRef.current);
+      interactionAnimationRef.current.push(animateMotionTarget(
+        element,
+        restingValues,
+        {
+          ...resolvedTransition,
+          onComplete: () => {
+            if (
+              interactionAnimationGenerationRef.current === animationGeneration
+              && reportAnimationComplete
+            ) {
+              void reportAnimationComplete(restingDefinition);
+            }
+          },
+        },
+      ));
+      startedAnimationCount = 1;
     }
-    const ElementConstructor = globalThis.Element as unknown as new(
-      element: MainThread.Element,
-    ) => Element;
-    const element = new ElementConstructor(elementRef.current);
-    interactionAnimationRef.current.push(
-      animateMotionTarget(element, restingValues, resolvedTransition),
-    );
+    if (startedAnimationCount > 0 && onAnimationStart) {
+      void runOnBackground(onAnimationStart)(restingDefinition);
+    }
   }
 
   return {
