@@ -13,6 +13,7 @@ export const {
   GlobalPropsConsumer,
   GlobalPropsProvider,
   MainThreadRef,
+  MainThreadValue,
   PureComponent,
   Suspense,
   cloneElement,

@@ -2,8 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefId, WorkletRefImpl } from './bindings/index.js';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  Worklet,
+  WorkletRef,
+  WorkletRefId,
+  WorkletRefImpl,
+} from './bindings/index.js';
 import { profile } from './utils/profile.js';
+import { isHydratedWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -69,13 +77,13 @@ function hydrateCtxImpl(
  */
 function hydrateMainThreadRef(
   refId: WorkletRefId,
-  value: WorkletRefImpl<unknown>,
+  value: object,
 ) {
-  if ('_initValue' in value) {
+  if (!isHydratedWorkletValue(value)) {
     // The ref has not been accessed yet.
     return;
   }
-  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value;
+  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value as WorkletRef<unknown>;
 }
 
 /**
