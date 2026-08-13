@@ -50,6 +50,7 @@ export const {
   updateGesture,
   updateListItemPlatformInfo,
   updateWorkletRef,
+  workletCapture,
   withInitDataInState,
   wrapWithLynxComponent,
 } = target[sExportsReactInternal];

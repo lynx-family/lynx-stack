@@ -26,6 +26,61 @@ afterEach(() => {
 });
 
 describe('WorkletRef', () => {
+  it('creates registered main-thread values from typed patches', () => {
+    const value = { get: () => 42 };
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadValueType(
+      '@test/value',
+      () => value,
+    );
+
+    updateWorkletRefInitValueChanges([[7, 42, '@test/value']]);
+
+    expect(getFromWorkletRefMap({ _wvid: 7 })).toBe(value);
+  });
+
+  it('rejects an unregistered main-thread value type', () => {
+    expect(() => {
+      updateWorkletRefInitValueChanges([[8, 42, '@test/missing']]);
+    }).toThrow('MainThreadValue type is not registered: @test/missing');
+  });
+
+  it('hydrates a used first-screen main-thread value into the background id', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadValueType(
+      '@test/value',
+      value => ({ get: () => value }),
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'typed-value',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 42,
+          _type: '@test/value',
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'typed-value',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 42,
+          _type: '@test/value',
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'typed-value', function() {
+      return this._c.value.get();
+    });
+
+    expect(globalThis.runWorklet(firstScreenWorklet, [])).toBe(42);
+    const firstScreenValue = firstScreenWorklet._c.value;
+    updateWorkletRefInitValueChanges([[1, 42, '@test/value']]);
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenValue);
+  });
+
   it('should create, get, update & remove', () => {
     updateWorkletRefInitValueChanges([[1, 'ref1'], [2, 'ref2']]);
     expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('ref1');
