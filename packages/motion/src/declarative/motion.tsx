@@ -120,18 +120,20 @@ function useMotionHostProps<Props extends MotionProps>(
   const animationRef = useMainThreadRef<
     AnimationPlaybackControlsWithThen[]
   >([]);
-  const tapAnimationRef = useMainThreadRef<
+  const interactionAnimationRef = useMainThreadRef<
     AnimationPlaybackControlsWithThen[]
   >([]);
   const hoverActiveRef = useMainThreadRef(false);
   const tapActiveRef = useMainThreadRef(false);
   const animationGenerationRef = useMainThreadRef(0);
-  const tapAnimationGenerationRef = useMainThreadRef(0);
-  const tapAnimationCompletionRef = useMainThreadRef<{
+  const interactionAnimationGenerationRef = useMainThreadRef(0);
+  const interactionAnimationCompletionRef = useMainThreadRef<{
     generation: number;
     pending: number;
   }>({ generation: 0, pending: 0 });
-  const tapAnimationValueKeysRef = useMainThreadRef<Record<string, true>>({});
+  const interactionAnimationValueKeysRef = useMainThreadRef<
+    Record<string, true>
+  >({});
   const animateTargetKeysRef = useMainThreadRef<Record<string, true>>({});
   const hoverLayoutRef = useRef<
     { left: number; right: number; top: number; bottom: number } | null
@@ -362,15 +364,15 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       animationRef.current = [];
-      for (const animation of tapAnimationRef.current) {
+      for (const animation of interactionAnimationRef.current) {
         animation.stop();
       }
-      tapAnimationRef.current = [];
-      for (const key in tapAnimationValueKeysRef.current) {
+      interactionAnimationRef.current = [];
+      for (const key in interactionAnimationValueKeysRef.current) {
         (generatedValuesRef.current[key] ?? motionValueBindings[key])?.stop();
       }
-      tapAnimationValueKeysRef.current = {};
-      tapAnimationGenerationRef.current += 1;
+      interactionAnimationValueKeysRef.current = {};
+      interactionAnimationGenerationRef.current += 1;
       const animationGeneration = animationGenerationRef.current + 1;
       animationGenerationRef.current = animationGeneration;
       styleCleanupRef.current?.();
@@ -556,15 +558,15 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       animationRef.current = [];
-      for (const animation of tapAnimationRef.current) {
+      for (const animation of interactionAnimationRef.current) {
         animation.stop();
       }
-      tapAnimationRef.current = [];
-      for (const key in tapAnimationValueKeysRef.current) {
+      interactionAnimationRef.current = [];
+      for (const key in interactionAnimationValueKeysRef.current) {
         (generatedValuesRef.current[key] ?? motionValueBindings[key])?.stop();
       }
-      tapAnimationValueKeysRef.current = {};
-      tapAnimationGenerationRef.current += 1;
+      interactionAnimationValueKeysRef.current = {};
+      interactionAnimationGenerationRef.current += 1;
       styleCleanupRef.current?.();
       styleCleanupRef.current = null;
     }
@@ -589,16 +591,16 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     animationRef.current = [];
-    for (const animation of tapAnimationRef.current) {
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
-    for (const key in tapAnimationValueKeysRef.current) {
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
       (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
     }
-    tapAnimationValueKeysRef.current = {};
-    const animationGeneration = tapAnimationGenerationRef.current + 1;
-    tapAnimationGenerationRef.current = animationGeneration;
+    interactionAnimationValueKeysRef.current = {};
+    const animationGeneration = interactionAnimationGenerationRef.current + 1;
+    interactionAnimationGenerationRef.current = animationGeneration;
     // Bind while the tap-start worklet is still executing on MTS; Motion calls
     // the returned dispatcher later from its animation scheduler.
     const reportAnimationComplete = onAnimationComplete
@@ -615,13 +617,14 @@ function useMotionHostProps<Props extends MotionProps>(
       const targetValues = resolvedTap.target as Record<string, unknown>;
       let pendingAnimationCount = 0;
       function reportTapAnimationComplete(definition: MotionDefinition) {
-        if (tapAnimationGenerationRef.current !== animationGeneration) {
+        if (interactionAnimationGenerationRef.current !== animationGeneration) {
           return;
         }
-        tapAnimationCompletionRef.current.pending -= 1;
+        interactionAnimationCompletionRef.current.pending -= 1;
         if (
-          tapAnimationCompletionRef.current.generation === animationGeneration
-          && tapAnimationCompletionRef.current.pending === 0
+          interactionAnimationCompletionRef.current.generation
+            === animationGeneration
+          && interactionAnimationCompletionRef.current.pending === 0
           && reportAnimationComplete
         ) {
           void reportAnimationComplete(definition);
@@ -633,7 +636,7 @@ function useMotionHostProps<Props extends MotionProps>(
           pendingAnimationCount += 1;
         }
       }
-      tapAnimationCompletionRef.current = {
+      interactionAnimationCompletionRef.current = {
         generation: animationGeneration,
         pending: pendingAnimationCount,
       };
@@ -658,9 +661,9 @@ function useMotionHostProps<Props extends MotionProps>(
             Object.defineProperty(value, 'animation', { enumerable: false });
           }
           if (isLynxForWeb) {
-            tapAnimationValueKeysRef.current[key] = true;
+            interactionAnimationValueKeysRef.current[key] = true;
           } else if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
@@ -676,7 +679,7 @@ function useMotionHostProps<Props extends MotionProps>(
           ...resolvedTransition,
           onComplete: () => {
             if (
-              tapAnimationGenerationRef.current === animationGeneration
+              interactionAnimationGenerationRef.current === animationGeneration
               && reportAnimationComplete
             ) {
               void reportAnimationComplete(whileTap!);
@@ -684,7 +687,7 @@ function useMotionHostProps<Props extends MotionProps>(
           },
         },
       );
-      tapAnimationRef.current.push(animation);
+      interactionAnimationRef.current.push(animation);
       startedAnimationCount = 1;
     }
     if (startedAnimationCount > 0 && onAnimationStart) {
@@ -700,16 +703,16 @@ function useMotionHostProps<Props extends MotionProps>(
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
     tapActiveRef.current = false;
-    for (const animation of tapAnimationRef.current) {
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
-    for (const key in tapAnimationValueKeysRef.current) {
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
       (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
     }
-    tapAnimationValueKeysRef.current = {};
-    const animationGeneration = tapAnimationGenerationRef.current + 1;
-    tapAnimationGenerationRef.current = animationGeneration;
+    interactionAnimationValueKeysRef.current = {};
+    const animationGeneration = interactionAnimationGenerationRef.current + 1;
+    interactionAnimationGenerationRef.current = animationGeneration;
     // Bind while the tap-end worklet is still executing on MTS; restoration
     // completion arrives later from Motion's animation scheduler.
     const reportAnimationComplete = onAnimationComplete
@@ -756,13 +759,14 @@ function useMotionHostProps<Props extends MotionProps>(
     if (isLynxForWeb || !event.currentTarget) {
       let pendingAnimationCount = 0;
       function reportTapAnimationComplete() {
-        if (tapAnimationGenerationRef.current !== animationGeneration) {
+        if (interactionAnimationGenerationRef.current !== animationGeneration) {
           return;
         }
-        tapAnimationCompletionRef.current.pending -= 1;
+        interactionAnimationCompletionRef.current.pending -= 1;
         if (
-          tapAnimationCompletionRef.current.generation === animationGeneration
-          && tapAnimationCompletionRef.current.pending === 0
+          interactionAnimationCompletionRef.current.generation
+            === animationGeneration
+          && interactionAnimationCompletionRef.current.pending === 0
           && reportAnimationComplete
         ) {
           void reportAnimationComplete(restingDefinition);
@@ -774,7 +778,7 @@ function useMotionHostProps<Props extends MotionProps>(
           pendingAnimationCount += 1;
         }
       }
-      tapAnimationCompletionRef.current = {
+      interactionAnimationCompletionRef.current = {
         generation: animationGeneration,
         pending: pendingAnimationCount,
       };
@@ -798,9 +802,9 @@ function useMotionHostProps<Props extends MotionProps>(
             Object.defineProperty(value, 'animation', { enumerable: false });
           }
           if (isLynxForWeb) {
-            tapAnimationValueKeysRef.current[key] = true;
+            interactionAnimationValueKeysRef.current[key] = true;
           } else if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
@@ -816,7 +820,7 @@ function useMotionHostProps<Props extends MotionProps>(
           ...resolvedTransition,
           onComplete: () => {
             if (
-              tapAnimationGenerationRef.current === animationGeneration
+              interactionAnimationGenerationRef.current === animationGeneration
               && reportAnimationComplete
             ) {
               void reportAnimationComplete(restingDefinition);
@@ -824,7 +828,7 @@ function useMotionHostProps<Props extends MotionProps>(
           },
         },
       );
-      tapAnimationRef.current.push(animation);
+      interactionAnimationRef.current.push(animation);
       startedAnimationCount = 1;
     }
     if (startedAnimationCount > 0 && onAnimationStart) {
@@ -841,19 +845,19 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
-    tapAnimationGenerationRef.current += 1;
+    interactionAnimationGenerationRef.current += 1;
     for (const animation of animationRef.current) {
       animation.stop();
     }
     animationRef.current = [];
-    for (const animation of tapAnimationRef.current) {
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
-    for (const key in tapAnimationValueKeysRef.current) {
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
       (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
     }
-    tapAnimationValueKeysRef.current = {};
+    interactionAnimationValueKeysRef.current = {};
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
@@ -875,7 +879,7 @@ function useMotionHostProps<Props extends MotionProps>(
             ),
           );
           if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
@@ -885,7 +889,7 @@ function useMotionHostProps<Props extends MotionProps>(
       element: MainThread.Element,
     ) => Element;
     const element = new ElementConstructor(elementRef.current);
-    tapAnimationRef.current.push(
+    interactionAnimationRef.current.push(
       animateMotionTarget(
         element,
         resolvedHover.target,
@@ -903,15 +907,15 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
-    tapAnimationGenerationRef.current += 1;
-    for (const animation of tapAnimationRef.current) {
+    interactionAnimationGenerationRef.current += 1;
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
-    for (const key in tapAnimationValueKeysRef.current) {
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
       (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
     }
-    tapAnimationValueKeysRef.current = {};
+    interactionAnimationValueKeysRef.current = {};
     const hoverValues = resolvedHover.target as Record<string, unknown>;
     const animateValues = resolvedAnimate.target as
       | Record<string, unknown>
@@ -952,7 +956,7 @@ function useMotionHostProps<Props extends MotionProps>(
             ),
           );
           if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
@@ -962,7 +966,7 @@ function useMotionHostProps<Props extends MotionProps>(
       element: MainThread.Element,
     ) => Element;
     const element = new ElementConstructor(elementRef.current);
-    tapAnimationRef.current.push(
+    interactionAnimationRef.current.push(
       animateMotionTarget(element, restingValues, resolvedTransition),
     );
   }
