@@ -45,13 +45,13 @@ append the endpoint override to the playground URL:
 
 ### Server environment
 
-| Variable                                                                     | Purpose                                            | Default             |
-| ---------------------------------------------------------------------------- | -------------------------------------------------- | ------------------- |
-| `GENUI_MODEL_CONFIG_JSON`                                                    | Map of model names to provider configurations      | —                   |
-| `UI_JUDGE_SERVER_URL`                                                        | Rust UI Judge sidecar for Bench scoring            | disabled            |
-| `UI_JUDGE_BUNDLE_URL`                                                        | `a2ui.lynx.js` bundle rendered by UI Judge         | hosted GenUI bundle |
-| `SUPABASE_URL`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | Short, shareable preview URLs via Supabase Storage | in-memory dev store |
-| `PEXELS_API_KEY`                                                             | Stock-image search in generated UIs                | —                   |
+| Variable                                                       | Purpose                                          | Default             |
+| -------------------------------------------------------------- | ------------------------------------------------ | ------------------- |
+| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations    | —                   |
+| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring          | disabled            |
+| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
+| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS | disabled            |
+| `PEXELS_API_KEY`                                               | Stock-image search in generated UIs              | —                   |
 
 The Create tab loads its model selector from the server's `GET /models`
 endpoint. Provider credentials, upstream model ids, and upstream API URLs
@@ -62,9 +62,10 @@ enabled only when that sidecar is ready. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
 startup and model environment.
 
-Conversation **share** links and Web / Native Preview reuse the Supabase Storage
-payload-publishing path — see [`examples/README.md`](./examples/README.md) for
-the bucket setup and local toggles.
+Conversation **share** links and Web / Native Preview upload through the GenUI
+server and consume the public URL returned by it. The playground does not
+depend on the storage provider — see [`examples/README.md`](./examples/README.md)
+for the server-side bucket setup and local toggles.
 
 ## Scripts
 
