@@ -79,14 +79,14 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   resolvedAnimateDefinition: MotionTarget | false | undefined;
 } {
   const parent = useContext(MotionVariantContext);
-  const initial = props.inherit !== false
+  const inheritsAnimate = props.inherit !== false
+    && props.animate === undefined
+    && isVariantLabel(parent.animate);
+  const initial = inheritsAnimate
       && props.initial === undefined
       && (parent.initial === false || isVariantLabel(parent.initial))
     ? parent.initial
     : props.initial;
-  const inheritsAnimate = props.inherit !== false
-    && props.animate === undefined
-    && isVariantLabel(parent.animate);
   const animate = inheritsAnimate
     ? parent.animate
     : props.animate;
