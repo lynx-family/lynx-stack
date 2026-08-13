@@ -397,6 +397,14 @@ impl VisitMut for ExtractingIdentsCollector {
     self.pop_scope();
   }
 
+  fn visit_mut_method_prop(&mut self, n: &mut MethodProp) {
+    self.push_fn_scope(collect_inner_scope_decls(n));
+    self.next_block_decls_collected = true;
+    n.visit_mut_children_with(self);
+    self.next_block_decls_collected = false;
+    self.pop_scope();
+  }
+
   fn visit_mut_class_method(&mut self, n: &mut ClassMethod) {
     self.push_fn_scope(collect_inner_scope_decls(n));
     self.next_block_decls_collected = true;
