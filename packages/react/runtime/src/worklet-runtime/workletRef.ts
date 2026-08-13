@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import type { Worklet, WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
 
@@ -18,8 +18,8 @@ interface RefImpl {
   ): void;
   registerMainThreadObjectType(
     type: string,
-    create: MainThreadObjectFactory,
-    dispose: MainThreadObjectDisposer | undefined,
+    create: MainThreadObjectFactory | Worklet,
+    dispose: MainThreadObjectDisposer | Worklet | undefined,
     protocolVersion: number,
   ): void;
   clearFirstScreenWorkletRefMap(): void;
@@ -31,8 +31,10 @@ const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 type MainThreadObjectFactory = (initialValue: unknown) => object;
 type MainThreadObjectDisposer = (object: object) => void;
 interface MainThreadObjectDefinition {
-  create: MainThreadObjectFactory;
-  dispose: MainThreadObjectDisposer | undefined;
+  create: MainThreadObjectFactory | Worklet;
+  dispose: MainThreadObjectDisposer | Worklet | undefined;
+  resolvedCreate?: MainThreadObjectFactory;
+  resolvedDispose?: MainThreadObjectDisposer;
 }
 
 const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
@@ -73,14 +75,19 @@ const createWorkletRef = <T>(
 
 function registerMainThreadObjectType(
   type: string,
-  create: MainThreadObjectFactory,
-  dispose: MainThreadObjectDisposer | undefined,
+  create: MainThreadObjectFactory | Worklet,
+  dispose: MainThreadObjectDisposer | Worklet | undefined,
   protocolVersion: number,
 ): void {
   assertMainThreadObjectProtocolVersion(type, protocolVersion);
   const registered = mainThreadObjectDefinitions.get(type);
   if (registered) {
-    if (registered.create !== create || registered.dispose !== dispose) {
+    if (
+      getLifecycleRegistrationIdentity(registered.create)
+        !== getLifecycleRegistrationIdentity(create)
+      || getLifecycleRegistrationIdentity(registered.dispose)
+        !== getLifecycleRegistrationIdentity(dispose)
+    ) {
       throw new Error(
         `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create and dispose functions.`,
       );
@@ -88,6 +95,48 @@ function registerMainThreadObjectType(
     return;
   }
   mainThreadObjectDefinitions.set(type, { create, dispose });
+}
+
+function getLifecycleRegistrationIdentity(
+  lifecycle: MainThreadObjectFactory | MainThreadObjectDisposer | Worklet | undefined,
+): string | undefined {
+  if (lifecycle === undefined) {
+    return undefined;
+  }
+  if (typeof lifecycle === 'function') {
+    return Function.prototype.toString.call(lifecycle);
+  }
+  return `worklet:${lifecycle._wkltId}`;
+}
+
+function resolveLifecycleFunction<T extends MainThreadObjectFactory | MainThreadObjectDisposer>(
+  lifecycle: T | Worklet,
+): T {
+  if (typeof lifecycle === 'function') {
+    return lifecycle;
+  }
+  const resolveWorklet = globalThis.lynxWorkletImpl?._resolveWorklet;
+  if (typeof resolveWorklet !== 'function') {
+    throw new Error(
+      'MainThreadObject lifecycle functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
+    );
+  }
+  return resolveWorklet(lifecycle) as T;
+}
+
+function getMainThreadObjectFactory(
+  definition: MainThreadObjectDefinition,
+): MainThreadObjectFactory {
+  return definition.resolvedCreate ??= resolveLifecycleFunction(definition.create);
+}
+
+function getMainThreadObjectDisposer(
+  definition: MainThreadObjectDefinition,
+): MainThreadObjectDisposer | undefined {
+  if (definition.dispose === undefined) {
+    return undefined;
+  }
+  return definition.resolvedDispose ??= resolveLifecycleFunction(definition.dispose);
 }
 
 function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
@@ -104,7 +153,7 @@ function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
     );
   }
 
-  const value = definition.create(refImpl._initValue);
+  const value = getMainThreadObjectFactory(definition)(refImpl._initValue);
   if (typeof value !== 'object' || value === null) {
     throw new Error(`MainThreadObject type "${type}" created a non-object value.`);
   }
@@ -179,7 +228,7 @@ function disposeMainThreadObject(value: unknown): void {
   }
   realizedMainThreadObjectDefinitions.delete(value);
   hydratedWorkletValues.delete(value);
-  definition.dispose?.(value);
+  getMainThreadObjectDisposer(definition)?.(value);
 }
 
 /**
