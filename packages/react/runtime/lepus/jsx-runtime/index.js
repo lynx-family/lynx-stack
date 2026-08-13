@@ -3,6 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT, SnapshotInstance } from '@lynx-js/react/internal';
 
+// Kept in sync with `REACT_ELEMENT_TYPE` in preact/compat, whose `isValidElement`
+// compares against it. Inlined rather than imported so the main thread does not
+// have to pull in compat.
+const REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+// A SnapshotInstance is the main thread's element, so it has to satisfy
+// `isValidElement` too. Assigning per instance would add a property after the
+// constructor has run, which costs a shape transition on a hot path, so put it
+// on the prototype instead. Writable, so that the `$$typeof: undefined` in
+// `renderToOpcodes` can still shadow it.
+Object.defineProperty(SnapshotInstance.prototype, '$$typeof', {
+  value: REACT_ELEMENT_TYPE,
+  writable: true,
+  configurable: true,
+});
+
 function createVNode(type, props, _key) {
   if (typeof type === 'string') {
     const r = new SnapshotInstance(type);
@@ -58,6 +74,7 @@ function createVNode(type, props, _key) {
       // __v: --vnodeId,
       [INDEX]: -1,
       [FLAGS]: 0,
+      $$typeof: REACT_ELEMENT_TYPE,
     };
   }
 }
