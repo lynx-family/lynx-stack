@@ -960,6 +960,27 @@ describe('declarative Motion', () => {
     expect(onAnimationComplete).not.toHaveBeenCalled();
   });
 
+  test('applies transitionEnd from an initial variant on the first frame', () => {
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='box'
+        initial='visible'
+        variants={{
+          visible: {
+            opacity: 1,
+            transitionEnd: { display: 'none' },
+          },
+        }}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    expect(getByTestId('box').getAttribute('style')).toContain('opacity: 1');
+    expect(getByTestId('box').getAttribute('style')).toContain(
+      'display: none',
+    );
+  });
+
   test('animates a MotionValue-backed style', async () => {
     function App() {
       const value = useMotionValue(1);

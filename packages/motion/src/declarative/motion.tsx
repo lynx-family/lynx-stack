@@ -254,7 +254,12 @@ function useMotionHostProps<Props extends MotionProps>(
     : splitMotionTarget(resolvedInitial, transition);
   const resolvedInitialTarget = resolvedInitial === false
     ? false
-    : resolvedInitialMotion?.target;
+    : (resolvedInitialMotion
+      ? {
+        ...resolvedInitialMotion.target,
+        ...resolvedInitialMotion.transitionEnd,
+      }
+      : undefined);
   const resolvedAnimate = splitMotionTarget(
     resolvedAnimateDefinition,
     transition,
