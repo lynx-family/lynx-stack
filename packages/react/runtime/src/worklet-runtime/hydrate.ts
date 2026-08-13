@@ -11,7 +11,7 @@ import type {
   WorkletRefImpl,
 } from './bindings/index.js';
 import { profile } from './utils/profile.js';
-import { isHydratedWorkletValue } from './workletRef.js';
+import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -83,7 +83,7 @@ function hydrateMainThreadRef(
     // The ref has not been accessed yet.
     return;
   }
-  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value as WorkletRef<unknown>;
+  hydrateWorkletValue(refId, value as WorkletRef<unknown>);
 }
 
 /**

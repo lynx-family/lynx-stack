@@ -30,19 +30,32 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
  *
  * @param patch - An array containing the index and new value of the worklet value.
  */
-function updateWorkletRefInitValueChanges(patch?: ([number, unknown] | [number, unknown, string])[]): void {
+function updateWorkletRefInitValueChanges(
+  patch?: ([number, unknown] | [number, unknown, string, number])[],
+): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }
 }
 
 /**
- * Register a factory for an opaque main-thread value type.
+ * Register a definition for an opaque main-thread object type.
  *
  * @internal
  */
-function registerMainThreadValueType(type: string, factory: (initValue: unknown) => object): void {
-  globalThis.lynxWorkletImpl?._refImpl.registerMainThreadValueType(type, factory);
+function registerMainThreadObjectType(
+  type: string,
+  create: (initialValue: unknown) => object,
+  dispose: ((object: object) => void) | undefined,
+  protocolVersion: number,
+): void {
+  const refImpl = globalThis.lynxWorkletImpl?._refImpl;
+  if (!refImpl || typeof refImpl.registerMainThreadObjectType !== 'function') {
+    throw new Error(
+      'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+    );
+  }
+  refImpl.registerMainThreadObjectType(type, create, dispose, protocolVersion);
 }
 
 /**
@@ -93,7 +106,7 @@ export {
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
   clearFirstScreenMainThreadRefs,
-  registerMainThreadValueType,
+  registerMainThreadObjectType,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

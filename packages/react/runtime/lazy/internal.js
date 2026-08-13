@@ -50,10 +50,23 @@ export const {
   updateGesture,
   updateListItemPlatformInfo,
   updateWorkletRef,
-  workletCapture,
   withInitDataInState,
   wrapWithLynxComponent,
 } = target[sExportsReactInternal];
+
+const captureMainThreadObjectImpl = target[sExportsReactInternal]
+  .captureMainThreadObject;
+
+export function captureMainThreadObject(source, fallback) {
+  if (typeof captureMainThreadObjectImpl !== 'function') {
+    throw new Error(
+      'This lazy bundle uses MainThreadObject capture support that is unavailable in the main ReactLynx runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+    );
+  }
+  return captureMainThreadObjectImpl(source, fallback);
+}
+
+export const workletCapture = captureMainThreadObject;
 
 /* v8 ignore start */
 if (__DEV__ && !snapshotCreatorMap) {

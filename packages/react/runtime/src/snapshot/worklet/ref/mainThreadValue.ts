@@ -2,15 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  WorkletEvents,
-  loadWorkletRuntime,
-  registerMainThreadValueType,
-} from '@lynx-js/react/worklet-runtime/bindings';
-import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
-
-import { addWorkletRefInitValue } from './workletRefPool.js';
-import { allocateWorkletValueId } from './workletValueId.js';
+import { MainThreadObjectHandle, registerMainThreadObjectDefinition } from './mainThreadObject.js';
 
 /**
  * An opaque handle for a value that is created and retained on the main thread.
@@ -24,36 +16,12 @@ import { allocateWorkletValueId } from './workletValueId.js';
  * should register their factory from the hook body rather than relying only on
  * module initialization.
  *
+ * @deprecated Use `defineMainThreadObjectType` and `useMainThreadObject`.
  * @public
  */
-export abstract class MainThreadValue<T> {
-  /** @internal */
-  readonly __MAIN_THREAD_VALUE__: true = true;
-  /** @internal */
-  protected _wvid: number;
-  /** @internal */
-  protected _initValue: T;
-  /** @internal */
-  protected _type: string;
-  /** @internal */
-  protected _lifecycleObserver?: unknown;
-
+export abstract class MainThreadValue<T> extends MainThreadObjectHandle<object> {
   protected constructor(initValue: T, type: string) {
-    this._wvid = allocateWorkletValueId();
-    this._initValue = initValue;
-    this._type = type;
-
-    if (__JS__) {
-      addWorkletRefInitValue(this._wvid, initValue, type);
-
-      const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: { id },
-        });
-      });
-    }
+    super(initValue, type);
   }
 
   /**
@@ -66,22 +34,9 @@ export abstract class MainThreadValue<T> {
    * @public
    */
   static register<T>(type: string, factory: (initValue: T) => object): void {
-    if (__JS__) {
-      return;
-    }
-
-    const schema = (globalThis as { globDynamicComponentEntry?: string })
-      .globDynamicComponentEntry;
-    loadWorkletRuntime(schema);
-    registerMainThreadValueType(type, factory as (initValue: unknown) => object);
-  }
-
-  /** @internal */
-  toJSON(): Pick<WorkletRefImpl<T>, '_wvid' | '_initValue' | '_type'> {
-    return {
-      _wvid: this._wvid,
-      _initValue: this._initValue,
-      _type: this._type,
-    };
+    registerMainThreadObjectDefinition({
+      type,
+      create: factory,
+    });
   }
 }
