@@ -44,9 +44,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async (chain, { isProd, environment, rspack }) => {
-        if (Object.hasOwn(environment, S_PLUGIN_REACT_ALIAS)) {
-          // This environment has already been processed
+      api.modifyBundlerChain(async (chain, { isProd, rspack }) => {
+        if (Object.hasOwn(chain, S_PLUGIN_REACT_ALIAS)) {
+          // This bundler chain has already been processed
           return
         }
         const resolve = createLazyResolver(
@@ -61,7 +61,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve,
         })
 
-        Object.defineProperty(environment, S_PLUGIN_REACT_ALIAS, {
+        Object.defineProperty(chain, S_PLUGIN_REACT_ALIAS, {
           value: true,
         })
         const [
