@@ -2,4 +2,4 @@
 "@lynx-js/motion": patch
 ---
 
-Migrate Motion values to the typed `MainThreadObject` primitive with Main Thread Function lifecycle callbacks, while preserving the public `useMotionValue` API and declarative style behavior.
+Add `useMotionValue`, backed by typed `MainThreadObject` handles with Main Thread Function lifecycle callbacks, and support those values in declarative styles.
