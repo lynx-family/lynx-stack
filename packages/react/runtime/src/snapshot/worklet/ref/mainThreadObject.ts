@@ -7,7 +7,7 @@ import {
   loadWorkletRuntime,
   registerMainThreadObjectType,
 } from '@lynx-js/react/worklet-runtime/bindings';
-import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { allocateWorkletValueId } from './workletValueId.js';
 import { useMemo } from '../../../core/hooks/react.js';
@@ -17,6 +17,10 @@ import { addMainThreadRefInitValue } from '../../../core/main-thread-ref-init-va
 export const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 
 const mainThreadObjectHandles = new WeakSet<object>();
+const mainThreadObjectHandleMetadata = new WeakMap<
+  object,
+  { readonly initialValue: unknown; readonly type: string }
+>();
 
 /**
  * Describes how a serializable initialization payload becomes a stable object
@@ -24,13 +28,40 @@ const mainThreadObjectHandles = new WeakSet<object>();
  *
  * @public
  */
+export interface MainThreadObjectTypeDefinition<I, O extends object> {
+  /** A globally unique and stable type key. */
+  readonly type: string;
+  /**
+   * Create the realized main-thread object.
+   *
+   * This must be a capture-free Main Thread Function. Imports used by the
+   * function must come from shared-runtime modules.
+   */
+  readonly create: (initialValue: I) => O;
+  /**
+   * Dispose a realized object after its handle is released.
+   *
+   * This must be a capture-free Main Thread Function when provided.
+   */
+  readonly dispose?: (object: O) => void;
+}
+
+/**
+ * An immutable MainThreadObject type token with source-handle inspection.
+ *
+ * The lifecycle functions belong to the input definition and are not exposed
+ * by the returned token. In the background runtime they compile to opaque
+ * Main Thread Function descriptors rather than bundling their implementation.
+ *
+ * @public
+ */
 export interface MainThreadObjectType<I, O extends object> {
   /** A globally unique and stable type key. */
   readonly type: string;
-  /** Create the realized main-thread object. */
-  readonly create: (initialValue: I) => O;
-  /** Dispose a realized object after its handle is released. */
-  readonly dispose?: (object: O) => void;
+  /** Return whether a value is a source-runtime handle of this exact type. */
+  readonly isHandle: (value: unknown) => value is O;
+  /** Read this type's initialization payload from one of its source handles. */
+  readonly getInitialPayload: (value: O) => I;
 }
 
 /**
@@ -69,6 +100,7 @@ export abstract class MainThreadObjectHandle<O extends object> {
     this._type = type;
     this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
     mainThreadObjectHandles.add(this);
+    mainThreadObjectHandleMetadata.set(this, { initialValue, type });
 
     if (__JS__) {
       addMainThreadRefInitValue(
@@ -113,19 +145,44 @@ class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHa
  * @public
  */
 export function defineMainThreadObjectType<I, O extends object>(
-  definition: MainThreadObjectType<I, O>,
+  definition: MainThreadObjectTypeDefinition<I, O>,
 ): MainThreadObjectType<I, O> {
   if (typeof definition.type !== 'string' || definition.type.length === 0) {
     throw new Error('MainThreadObject type must be a non-empty string.');
   }
-  if (typeof definition.create !== 'function') {
-    throw new Error(`MainThreadObject type "${definition.type}" must provide a create function.`);
+  if (!isMainThreadLifecycleFunction(definition.create)) {
+    throw new Error(
+      `MainThreadObject type "${definition.type}" must provide a create Main Thread Function.`,
+    );
   }
-  if (definition.dispose !== undefined && typeof definition.dispose !== 'function') {
-    throw new Error(`MainThreadObject type "${definition.type}" has an invalid dispose function.`);
+  if (definition.dispose !== undefined && !isMainThreadLifecycleFunction(definition.dispose)) {
+    throw new Error(
+      `MainThreadObject type "${definition.type}" has an invalid dispose Main Thread Function.`,
+    );
+  }
+  assertCaptureFreeLifecycleFunction(definition.type, 'create', definition.create);
+  if (definition.dispose !== undefined) {
+    assertCaptureFreeLifecycleFunction(definition.type, 'dispose', definition.dispose);
   }
 
-  return Object.freeze({ ...definition });
+  const type = definition.type;
+  const objectType = Object.freeze({
+    type,
+    isHandle(value: unknown): value is O {
+      return getMainThreadObjectHandleMetadata(value)?.type === type;
+    },
+    getInitialPayload(value: O): I {
+      const metadata = getMainThreadObjectHandleMetadata(value);
+      if (metadata?.type !== type) {
+        throw new Error(
+          `Value is not a MainThreadObject handle for type "${type}".`,
+        );
+      }
+      return metadata.initialValue as I;
+    },
+  });
+  registerMainThreadObjectDefinition(definition);
+  return objectType;
 }
 
 /**
@@ -145,7 +202,6 @@ export function useMainThreadObject<I, O extends object>(
   objectType: MainThreadObjectType<I, O>,
   initialValue: I,
 ): O {
-  registerMainThreadObjectDefinition(objectType);
   return useMemo(() => {
     const handle = new MainThreadObjectHandleImpl<I, O>(initialValue, objectType.type);
     return guardBackgroundMainThreadObjectAccess(handle, objectType.type) as unknown as O;
@@ -154,7 +210,7 @@ export function useMainThreadObject<I, O extends object>(
 
 /** @internal */
 export function registerMainThreadObjectDefinition<I, O extends object>(
-  objectType: MainThreadObjectType<I, O>,
+  definition: MainThreadObjectTypeDefinition<I, O>,
 ): void {
   if (__JS__) {
     return;
@@ -164,9 +220,9 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
     .globDynamicComponentEntry;
   loadWorkletRuntime(schema);
   registerMainThreadObjectType(
-    objectType.type,
-    objectType.create as (initialValue: unknown) => object,
-    objectType.dispose as ((object: object) => void) | undefined,
+    definition.type,
+    definition.create as ((initialValue: unknown) => object) | Worklet,
+    definition.dispose as (((object: object) => void) | Worklet | undefined),
     MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   );
 }
@@ -174,6 +230,37 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
 /** @internal */
 export function isMainThreadObjectHandle(value: unknown): value is MainThreadObjectHandle<object> {
   return typeof value === 'object' && value !== null && mainThreadObjectHandles.has(value);
+}
+
+function getMainThreadObjectHandleMetadata(
+  value: unknown,
+): { readonly initialValue: unknown; readonly type: string } | undefined {
+  return typeof value === 'object' && value !== null
+    ? mainThreadObjectHandleMetadata.get(value)
+    : undefined;
+}
+
+function isMainThreadLifecycleFunction(
+  value: unknown,
+): value is ((...args: never[]) => unknown) | Worklet {
+  return typeof value === 'function'
+    || (typeof value === 'object' && value !== null
+      && typeof (value as Partial<Worklet>)._wkltId === 'string');
+}
+
+function assertCaptureFreeLifecycleFunction(
+  type: string,
+  name: 'create' | 'dispose',
+  value: ((...args: never[]) => unknown) | Worklet,
+): void {
+  if (typeof value === 'function' || value._c === undefined) {
+    return;
+  }
+  if (Object.keys(value._c).length !== 0) {
+    throw new Error(
+      `MainThreadObject ${name} function for "${type}" must not capture values. Import dependencies from a shared-runtime module instead.`,
+    );
+  }
 }
 
 function guardBackgroundMainThreadObjectAccess<O extends object>(
@@ -210,6 +297,10 @@ function guardBackgroundMainThreadObjectAccess<O extends object>(
     },
   });
   mainThreadObjectHandles.add(guardedHandle);
+  const metadata = mainThreadObjectHandleMetadata.get(handle);
+  if (metadata) {
+    mainThreadObjectHandleMetadata.set(guardedHandle, metadata);
+  }
   return guardedHandle;
 }
 

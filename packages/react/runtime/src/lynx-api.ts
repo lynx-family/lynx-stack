@@ -567,4 +567,4 @@ export {
   defineMainThreadObjectType,
   useMainThreadObject,
 } from './snapshot/worklet/ref/mainThreadObject.js';
-export type { MainThreadObjectType } from './snapshot/worklet/ref/mainThreadObject.js';
+export type { MainThreadObjectType, MainThreadObjectTypeDefinition } from './snapshot/worklet/ref/mainThreadObject.js';
