@@ -45,8 +45,8 @@ function updateWorkletRefInitValueChanges(
  */
 function registerMainThreadObjectType(
   type: string,
-  create: (initialValue: unknown) => object,
-  dispose: ((object: object) => void) | undefined,
+  create: ((initialValue: unknown) => object) | Worklet,
+  dispose: ((object: object) => void) | Worklet | undefined,
   protocolVersion: number,
 ): void {
   const refImpl = globalThis.lynxWorkletImpl?._refImpl;

@@ -355,10 +355,11 @@ describe('MainThreadObject', () => {
   });
 
   it('creates a typed handle through the library-author hook', () => {
-    const type = defineMainThreadObjectType({
+    const definition = {
       type: '@test/counter',
       create: value => ({ value }),
-    });
+    };
+    const type = defineMainThreadObjectType(definition);
     let counter;
     const App = () => {
       counter = useMainThreadObject(type, 42);
@@ -374,6 +375,23 @@ describe('MainThreadObject', () => {
       _type: '@test/counter',
       _mtoVersion: 1,
     });
+    definition.type = '@test/mutated-counter';
+    expect(type.type).toBe('@test/counter');
+    expect(type).not.toHaveProperty('create');
+    expect(type).not.toHaveProperty('dispose');
+    expect(type.isHandle(counter)).toBe(true);
+    expect(type.getInitialPayload(counter)).toBe(42);
+
+    const otherType = defineMainThreadObjectType({
+      type: '@test/other-counter',
+      create: value => ({ value }),
+    });
+    expect(otherType.isHandle(counter)).toBe(false);
+    expect(otherType.isHandle(null)).toBe(false);
+    expect(otherType.isHandle(42)).toBe(false);
+    expect(() => otherType.getInitialPayload(counter)).toThrow(
+      'Value is not a MainThreadObject handle for type "@test/other-counter".',
+    );
     expect(() => counter.get()).toThrow(
       'MainThreadObject handle for "@test/counter" cannot access "get" in the background runtime. Use the object only inside a main-thread function.',
     );
@@ -383,7 +401,27 @@ describe('MainThreadObject', () => {
     expect(() => counter._type = '@test/counter').not.toThrow();
   });
 
+  it('registers a type during main-thread module evaluation without rendering its hook', () => {
+    const create = value => ({ value });
+    const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType;
+
+    globalEnvManager.switchToMainThread();
+    const type = defineMainThreadObjectType({
+      type: '@test/lazy-module-value',
+      create,
+    });
+
+    expect(register).toHaveBeenCalledWith(
+      '@test/lazy-module-value',
+      create,
+      undefined,
+      1,
+    );
+    expect(type).not.toHaveProperty('create');
+  });
+
   it('uses a plain serializable handle in the main-thread runtime', () => {
+    globalEnvManager.switchToMainThread();
     const type = defineMainThreadObjectType({
       type: '@test/main-thread-counter',
       create: value => ({ value }),
@@ -395,7 +433,6 @@ describe('MainThreadObject', () => {
     };
 
     globalThis.globDynamicComponentEntry = '__Card__';
-    globalEnvManager.switchToMainThread();
     render(<App />, __root);
 
     expect(JSON.parse(JSON.stringify(counter))).toMatchObject({
@@ -416,14 +453,42 @@ describe('MainThreadObject', () => {
       defineMainThreadObjectType({
         type: '@test/missing-create',
       })
-    ).toThrow('MainThreadObject type "@test/missing-create" must provide a create function.');
+    ).toThrow(
+      'MainThreadObject type "@test/missing-create" must provide a create Main Thread Function.',
+    );
     expect(() =>
       defineMainThreadObjectType({
         type: '@test/invalid-dispose',
         create: value => ({ value }),
         dispose: true,
       })
-    ).toThrow('MainThreadObject type "@test/invalid-dispose" has an invalid dispose function.');
+    ).toThrow(
+      'MainThreadObject type "@test/invalid-dispose" has an invalid dispose Main Thread Function.',
+    );
+
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/capturing-create',
+        create: {
+          _wkltId: 'capturing-create',
+          _c: { mutableValue: 1 },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/capturing-create" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/capturing-dispose',
+        create: value => ({ value }),
+        dispose: {
+          _wkltId: 'capturing-dispose',
+          _c: { mutableValue: 1 },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject dispose function for "@test/capturing-dispose" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
 
     const type = defineMainThreadObjectType({
       type: '@test/frozen',
@@ -452,16 +517,17 @@ describe('MainThreadObject', () => {
   });
 
   it('diagnoses an incompatible main-thread runtime', () => {
-    const type = defineMainThreadObjectType({
+    const definition = {
       type: '@test/incompatible-runtime',
       create: value => ({ value }),
-    });
+    };
+    defineMainThreadObjectType(definition);
     const refImpl = globalThis.lynxWorkletImpl._refImpl;
     const register = refImpl.registerMainThreadObjectType;
     delete refImpl.registerMainThreadObjectType;
     globalEnvManager.switchToMainThread();
 
-    expect(() => registerMainThreadObjectDefinition(type)).toThrow(
+    expect(() => registerMainThreadObjectDefinition(definition)).toThrow(
       'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
     );
 
