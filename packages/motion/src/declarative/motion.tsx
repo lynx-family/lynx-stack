@@ -120,12 +120,20 @@ function useMotionHostProps<Props extends MotionProps>(
   const animationRef = useMainThreadRef<
     AnimationPlaybackControlsWithThen[]
   >([]);
-  const tapAnimationRef = useMainThreadRef<
+  const interactionAnimationRef = useMainThreadRef<
     AnimationPlaybackControlsWithThen[]
   >([]);
   const hoverActiveRef = useMainThreadRef(false);
   const tapActiveRef = useMainThreadRef(false);
   const animationGenerationRef = useMainThreadRef(0);
+  const interactionAnimationGenerationRef = useMainThreadRef(0);
+  const interactionAnimationCompletionRef = useMainThreadRef<{
+    generation: number;
+    pending: number;
+  }>({ generation: 0, pending: 0 });
+  const interactionAnimationValueKeysRef = useMainThreadRef<
+    Record<string, true>
+  >({});
   const animateTargetKeysRef = useMainThreadRef<Record<string, true>>({});
   const hoverLayoutRef = useRef<
     { left: number; right: number; top: number; bottom: number } | null
@@ -356,10 +364,15 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       animationRef.current = [];
-      for (const animation of tapAnimationRef.current) {
+      for (const animation of interactionAnimationRef.current) {
         animation.stop();
       }
-      tapAnimationRef.current = [];
+      interactionAnimationRef.current = [];
+      for (const key in interactionAnimationValueKeysRef.current) {
+        (generatedValuesRef.current[key] ?? motionValueBindings[key])?.stop();
+      }
+      interactionAnimationValueKeysRef.current = {};
+      interactionAnimationGenerationRef.current += 1;
       const animationGeneration = animationGenerationRef.current + 1;
       animationGenerationRef.current = animationGeneration;
       styleCleanupRef.current?.();
@@ -489,9 +502,10 @@ function useMotionHostProps<Props extends MotionProps>(
         }
       }
 
-      const activeAnimations = [...animationRef.current];
       if (
-        activeAnimations.length > 0 && animate !== undefined && onAnimationStart
+        completionPromises.length > 0
+        && animate !== undefined
+        && onAnimationStart
       ) {
         void runOnBackground(onAnimationStart)(animate);
       }
@@ -544,10 +558,15 @@ function useMotionHostProps<Props extends MotionProps>(
         animation.stop();
       }
       animationRef.current = [];
-      for (const animation of tapAnimationRef.current) {
+      for (const animation of interactionAnimationRef.current) {
         animation.stop();
       }
-      tapAnimationRef.current = [];
+      interactionAnimationRef.current = [];
+      for (const key in interactionAnimationValueKeysRef.current) {
+        (generatedValuesRef.current[key] ?? motionValueBindings[key])?.stop();
+      }
+      interactionAnimationValueKeysRef.current = {};
+      interactionAnimationGenerationRef.current += 1;
       styleCleanupRef.current?.();
       styleCleanupRef.current = null;
     }
@@ -572,42 +591,108 @@ function useMotionHostProps<Props extends MotionProps>(
       animation.stop();
     }
     animationRef.current = [];
-    for (const animation of tapAnimationRef.current) {
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    interactionAnimationValueKeysRef.current = {};
+    const animationGeneration = interactionAnimationGenerationRef.current + 1;
+    interactionAnimationGenerationRef.current = animationGeneration;
+    // Bind while the tap-start worklet is still executing on MTS; Motion calls
+    // the returned dispatcher later from its animation scheduler.
+    const reportAnimationComplete = onAnimationComplete
+      ? runOnBackground(onAnimationComplete)
+      : undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    let startedAnimationCount = 0;
     const resolvedTransition = (workletTapTransition?.repeat === -1
       ? { ...workletTapTransition, repeat: Number.POSITIVE_INFINITY }
       : workletTapTransition) ?? {};
+    // Keep animation handles out of the MTS snapshot captured by a ReactLynx
+    // rerender triggered from lifecycle callbacks.
     if (isLynxForWeb || !event.currentTarget) {
       const targetValues = resolvedTap.target as Record<string, unknown>;
+      let pendingAnimationCount = 0;
+      function reportTapAnimationComplete(definition: MotionDefinition) {
+        if (interactionAnimationGenerationRef.current !== animationGeneration) {
+          return;
+        }
+        interactionAnimationCompletionRef.current.pending -= 1;
+        if (
+          interactionAnimationCompletionRef.current.generation
+            === animationGeneration
+          && interactionAnimationCompletionRef.current.pending === 0
+          && reportAnimationComplete
+        ) {
+          void reportAnimationComplete(definition);
+        }
+      }
+      for (const key in targetValues) {
+        const value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (value && targetValues[key] !== undefined) {
+          pendingAnimationCount += 1;
+        }
+      }
+      interactionAnimationCompletionRef.current = {
+        generation: animationGeneration,
+        pending: pendingAnimationCount,
+      };
+      startedAnimationCount = pendingAnimationCount;
       for (const key in targetValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         const targetValue = targetValues[key];
         if (value && targetValue !== undefined) {
-          void value.start(
-            createMotionValueAnimation(
-              key,
-              value,
-              targetValue as never,
-              resolvedTransition as never,
-            ),
+          const startAnimation = createMotionValueAnimation(
+            key,
+            value,
+            targetValue as never,
+            resolvedTransition as never,
+          );
+          void value.start(complete =>
+            startAnimation(() => {
+              complete();
+              reportTapAnimationComplete(whileTap!);
+            })
           );
           if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            Object.defineProperty(value, 'animation', { enumerable: false });
+          }
+          if (isLynxForWeb) {
+            interactionAnimationValueKeysRef.current[key] = true;
+          } else if (value.animation) {
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
-      return;
+    } else {
+      const ElementConstructor = globalThis.Element as unknown as new(
+        element: MainThread.Element,
+      ) => Element;
+      const element = new ElementConstructor(event.currentTarget);
+      const animation = animateMotionTarget(
+        element,
+        resolvedTap.target,
+        {
+          ...resolvedTransition,
+          onComplete: () => {
+            if (
+              interactionAnimationGenerationRef.current === animationGeneration
+              && reportAnimationComplete
+            ) {
+              void reportAnimationComplete(whileTap!);
+            }
+          },
+        },
+      );
+      interactionAnimationRef.current.push(animation);
+      startedAnimationCount = 1;
     }
-    const ElementConstructor = globalThis.Element as unknown as new(
-      element: MainThread.Element,
-    ) => Element;
-    const element = new ElementConstructor(event.currentTarget);
-    tapAnimationRef.current.push(
-      animateMotionTarget(element, resolvedTap.target, resolvedTransition),
-    );
+    if (startedAnimationCount > 0 && onAnimationStart) {
+      void runOnBackground(onAnimationStart)(whileTap!);
+    }
   }
 
   function endTapAnimation(event: MainThread.TouchEvent) {
@@ -618,10 +703,21 @@ function useMotionHostProps<Props extends MotionProps>(
     const isLynxForWeb = typeof SystemInfo !== 'undefined'
       && String(SystemInfo.platform) === 'web';
     tapActiveRef.current = false;
-    for (const animation of tapAnimationRef.current) {
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    interactionAnimationValueKeysRef.current = {};
+    const animationGeneration = interactionAnimationGenerationRef.current + 1;
+    interactionAnimationGenerationRef.current = animationGeneration;
+    // Bind while the tap-end worklet is still executing on MTS; restoration
+    // completion arrives later from Motion's animation scheduler.
+    const reportAnimationComplete = onAnimationComplete
+      ? runOnBackground(onAnimationComplete)
+      : undefined;
     const targetValues = resolvedTap.target as Record<string, unknown>;
     const restingTarget = hoverActiveRef.current && resolvedHover.target
       ? resolvedHover.target
@@ -630,6 +726,7 @@ function useMotionHostProps<Props extends MotionProps>(
       | Record<string, unknown>
       | undefined;
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
+    let startedAnimationCount = 0;
     const restingTransition = hoverActiveRef.current && resolvedHover.target
       ? workletHoverTransition
       : workletTapTransition;
@@ -655,32 +752,88 @@ function useMotionHostProps<Props extends MotionProps>(
         restingValues[key] = restingValue;
       }
     }
+    const restingDefinition: MotionDefinition = hoverActiveRef.current
+        && whileHover !== undefined
+      ? whileHover
+      : animate ?? (restingValues as MotionTarget);
     if (isLynxForWeb || !event.currentTarget) {
+      let pendingAnimationCount = 0;
+      function reportTapAnimationComplete() {
+        if (interactionAnimationGenerationRef.current !== animationGeneration) {
+          return;
+        }
+        interactionAnimationCompletionRef.current.pending -= 1;
+        if (
+          interactionAnimationCompletionRef.current.generation
+            === animationGeneration
+          && interactionAnimationCompletionRef.current.pending === 0
+          && reportAnimationComplete
+        ) {
+          void reportAnimationComplete(restingDefinition);
+        }
+      }
       for (const key in restingValues) {
         const value = generatedValuesRef.current[key] ?? motionValues[key];
         if (value) {
-          void value.start(
-            createMotionValueAnimation(
-              key,
-              value,
-              restingValues[key] as never,
-              resolvedTransition as never,
-            ),
+          pendingAnimationCount += 1;
+        }
+      }
+      interactionAnimationCompletionRef.current = {
+        generation: animationGeneration,
+        pending: pendingAnimationCount,
+      };
+      startedAnimationCount = pendingAnimationCount;
+      for (const key in restingValues) {
+        const value = generatedValuesRef.current[key] ?? motionValues[key];
+        if (value) {
+          const startAnimation = createMotionValueAnimation(
+            key,
+            value,
+            restingValues[key] as never,
+            resolvedTransition as never,
+          );
+          void value.start(complete =>
+            startAnimation(() => {
+              complete();
+              reportTapAnimationComplete();
+            })
           );
           if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            Object.defineProperty(value, 'animation', { enumerable: false });
+          }
+          if (isLynxForWeb) {
+            interactionAnimationValueKeysRef.current[key] = true;
+          } else if (value.animation) {
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
-      return;
+    } else {
+      const ElementConstructor = globalThis.Element as unknown as new(
+        element: MainThread.Element,
+      ) => Element;
+      const element = new ElementConstructor(event.currentTarget);
+      const animation = animateMotionTarget(
+        element,
+        restingValues,
+        {
+          ...resolvedTransition,
+          onComplete: () => {
+            if (
+              interactionAnimationGenerationRef.current === animationGeneration
+              && reportAnimationComplete
+            ) {
+              void reportAnimationComplete(restingDefinition);
+            }
+          },
+        },
+      );
+      interactionAnimationRef.current.push(animation);
+      startedAnimationCount = 1;
     }
-    const ElementConstructor = globalThis.Element as unknown as new(
-      element: MainThread.Element,
-    ) => Element;
-    const element = new ElementConstructor(event.currentTarget);
-    tapAnimationRef.current.push(
-      animateMotionTarget(element, restingValues, resolvedTransition),
-    );
+    if (startedAnimationCount > 0 && onAnimationStart) {
+      void runOnBackground(onAnimationStart)(restingDefinition);
+    }
   }
 
   function startHoverAnimation() {
@@ -692,14 +845,19 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
+    interactionAnimationGenerationRef.current += 1;
     for (const animation of animationRef.current) {
       animation.stop();
     }
     animationRef.current = [];
-    for (const animation of tapAnimationRef.current) {
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    interactionAnimationValueKeysRef.current = {};
     const animateMotionTarget = animateValue as unknown as AnimateMotionTarget;
     const resolvedTransition = (workletHoverTransition?.repeat === -1
       ? { ...workletHoverTransition, repeat: Number.POSITIVE_INFINITY }
@@ -721,7 +879,7 @@ function useMotionHostProps<Props extends MotionProps>(
             ),
           );
           if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
@@ -731,7 +889,7 @@ function useMotionHostProps<Props extends MotionProps>(
       element: MainThread.Element,
     ) => Element;
     const element = new ElementConstructor(elementRef.current);
-    tapAnimationRef.current.push(
+    interactionAnimationRef.current.push(
       animateMotionTarget(
         element,
         resolvedHover.target,
@@ -749,10 +907,15 @@ function useMotionHostProps<Props extends MotionProps>(
     if (tapActiveRef.current) {
       return;
     }
-    for (const animation of tapAnimationRef.current) {
+    interactionAnimationGenerationRef.current += 1;
+    for (const animation of interactionAnimationRef.current) {
       animation.stop();
     }
-    tapAnimationRef.current = [];
+    interactionAnimationRef.current = [];
+    for (const key in interactionAnimationValueKeysRef.current) {
+      (generatedValuesRef.current[key] ?? motionValues[key])?.stop();
+    }
+    interactionAnimationValueKeysRef.current = {};
     const hoverValues = resolvedHover.target as Record<string, unknown>;
     const animateValues = resolvedAnimate.target as
       | Record<string, unknown>
@@ -793,7 +956,7 @@ function useMotionHostProps<Props extends MotionProps>(
             ),
           );
           if (value.animation) {
-            tapAnimationRef.current.push(value.animation);
+            interactionAnimationRef.current.push(value.animation);
           }
         }
       }
@@ -803,7 +966,7 @@ function useMotionHostProps<Props extends MotionProps>(
       element: MainThread.Element,
     ) => Element;
     const element = new ElementConstructor(elementRef.current);
-    tapAnimationRef.current.push(
+    interactionAnimationRef.current.push(
       animateMotionTarget(element, restingValues, resolvedTransition),
     );
   }
