@@ -21,6 +21,10 @@ const mainThreadObjectHandleMetadata = new WeakMap<
   object,
   { readonly initialValue: unknown; readonly type: string }
 >();
+const mainThreadObjectTypeDefinitions = new WeakMap<
+  object,
+  MainThreadObjectTypeDefinition<unknown, object>
+>();
 
 /**
  * Describes how a serializable initialization payload becomes a stable object
@@ -181,6 +185,10 @@ export function defineMainThreadObjectType<I, O extends object>(
       return metadata.initialValue as I;
     },
   });
+  mainThreadObjectTypeDefinitions.set(
+    objectType,
+    definition as unknown as MainThreadObjectTypeDefinition<unknown, object>,
+  );
   registerMainThreadObjectDefinition(definition);
   return objectType;
 }
@@ -203,6 +211,17 @@ export function useMainThreadObject<I, O extends object>(
   initialValue: I,
 ): O {
   return useMemo(() => {
+    const definition = mainThreadObjectTypeDefinitions.get(objectType);
+    if (definition === undefined) {
+      throw new Error(
+        `Invalid MainThreadObject type token for "${objectType.type}". Create it with defineMainThreadObjectType().`,
+      );
+    }
+    // A library module normally registers its type while the MTS bundle is
+    // evaluated. Register again at the first hook use so runtimes that retain
+    // the module but reset their per-page worklet registry remain correct.
+    // The registry treats an equivalent duplicate as an idempotent lookup.
+    registerMainThreadObjectDefinition(definition);
     const handle = new MainThreadObjectHandleImpl<I, O>(initialValue, objectType.type);
     return guardBackgroundMainThreadObjectAccess(handle, objectType.type) as unknown as O;
   }, []);
