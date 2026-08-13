@@ -25,8 +25,8 @@ import type {
   BenchRunResult,
   BenchScenarioRequest,
 } from './a2ui-bench-types';
-import type { ChatMessage } from './common/types';
 import { defaultModelName } from './common/model-config.js';
+import type { ChatMessage } from './common/types';
 import { createA2UIBenchAdapter } from './genui-bench/a2ui-adapter';
 import type {
   ProtocolBenchAdapter,

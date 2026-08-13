@@ -52,7 +52,7 @@ describe('Hono application', () => {
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
         'http://localhost:3000',
       );
-      const payload = await response.json();
+      const payload: unknown = await response.json();
       expect(payload).toEqual({
         defaultModel: 'Doubao Seed',
         models: [

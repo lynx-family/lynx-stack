@@ -2,11 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { configuredModelName } from '../../service/common/model-config.js';
 import type {
   ChatOptions,
   OpenAIReasoningEffort,
 } from '../../service/common/types';
-import { configuredModelName } from '../../service/common/model-config.js';
 
 export interface ProviderOptionsBody {
   resourceId?: string;
