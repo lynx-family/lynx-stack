@@ -212,7 +212,7 @@ jobs:
         pnpm dlx @pnpm/registry-mock@4 prepare
         pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
-        pnpm changeset status --output "$RUNNER_TEMP/changeset-status.json"
+        pnpm changeset status --since=origin/main --output "$RUNNER_TEMP/changeset-status.json"
         if jq -e '.releases | length > 0' "$RUNNER_TEMP/changeset-status.json" > /dev/null; then
           pnpm changeset version --snapshot regression
         fi
