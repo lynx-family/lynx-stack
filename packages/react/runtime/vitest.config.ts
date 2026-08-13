@@ -174,8 +174,10 @@ export default defineConfig({
     },
     setupFiles: [
       path.join(__dirname, './__test__/snapshot/utils/globals.js'),
-      path.join(__dirname, './__test__/snapshot/utils/setup.js'),
+      // Must precede `setup.js`: importing the runtime injects listeners on
+      // `lynx.getCoreContext()`, which this file stubs.
       path.join(__dirname, './__test__/snapshot/utils/runtimeProxy.ts'),
+      path.join(__dirname, './__test__/snapshot/utils/setup.js'),
     ],
   },
 });
