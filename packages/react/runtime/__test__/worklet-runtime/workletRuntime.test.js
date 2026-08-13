@@ -55,6 +55,19 @@ describe('Worklet', () => {
     expect(second).toBeCalled();
   });
 
+  it('rejects invalid worklet descriptors during direct resolution', () => {
+    initWorklet();
+
+    expect(() => globalThis.lynxWorkletImpl._resolveWorklet({})).toThrow(
+      'Cannot resolve an invalid Main Thread Function.',
+    );
+    expect(() =>
+      globalThis.lynxWorkletImpl._resolveWorklet({
+        _lepusWorkletHash: 'legacy',
+      })
+    ).toThrow('Cannot resolve an invalid Main Thread Function.');
+  });
+
   it('worklet should be called with arguments', async () => {
     initWorklet();
 
