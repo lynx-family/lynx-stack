@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getFromWorkletRefMap,
+  isHydratedWorkletValue,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
 } from '../../src/worklet-runtime/workletRef';
@@ -444,6 +445,18 @@ describe('WorkletRef', () => {
     }).toThrow(
       'Cannot apply MainThreadObject initialization patch for handle 1: the existing target has no worklet-value metadata.',
     );
+  });
+
+  it('does not mistake a source MainThreadRef accessor for a mutable cell', () => {
+    const sourceHandle = Object.create({
+      get current() {
+        throw new Error('source accessor must not be read');
+      },
+    });
+    sourceHandle._wvid = -1;
+
+    expect(isHydratedWorkletValue(sourceHandle)).toBe(false);
+    expect(isHydratedWorkletValue({ _wvid: -1, current: null })).toBe(true);
   });
 
   it('should create, get, update & remove', () => {
