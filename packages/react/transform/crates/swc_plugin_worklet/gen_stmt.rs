@@ -40,8 +40,8 @@ impl StmtGen {
   ) -> (Box<Expr>, Stmt) {
     let hash = Expr::Lit(hash.into());
     let mut extracted_value = ident_collector.take_values();
-    if StmtGen::wrap_main_thread_value_candidates(&mut extracted_value) {
-      named_imports.insert("workletCapture".into());
+    if StmtGen::wrap_main_thread_object_candidates(&mut extracted_value) {
+      named_imports.insert("captureMainThreadObject".into());
     }
     let extracted_idents = ident_collector.take_idents();
     let extracted_js_fns = ident_collector.take_js_fns();
@@ -176,7 +176,7 @@ impl StmtGen {
     .into()
   }
 
-  fn wrap_main_thread_value_candidates(extracted_value: &mut Box<Expr>) -> bool {
+  fn wrap_main_thread_object_candidates(extracted_value: &mut Box<Expr>) -> bool {
     let mut wrapped = false;
     let Some(object) = extracted_value.as_mut_object() else {
       return false;
@@ -201,7 +201,7 @@ impl StmtGen {
         ctxt: Default::default(),
         span: DUMMY_SP,
         args: vec![Expr::Ident(source).into(), fallback.into()],
-        callee: Callee::Expr(quote_expr!("workletCapture")),
+        callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
         type_args: None,
       }
       .into();
