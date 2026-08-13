@@ -30,10 +30,19 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
  *
  * @param patch - An array containing the index and new value of the worklet value.
  */
-function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
+function updateWorkletRefInitValueChanges(patch?: ([number, unknown] | [number, unknown, string])[]): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }
+}
+
+/**
+ * Register a factory for an opaque main-thread value type.
+ *
+ * @internal
+ */
+function registerMainThreadValueType(type: string, factory: (initValue: unknown) => object): void {
+  globalThis.lynxWorkletImpl?._refImpl.registerMainThreadValueType(type, factory);
 }
 
 /**
@@ -76,6 +85,7 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
+  registerMainThreadValueType,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

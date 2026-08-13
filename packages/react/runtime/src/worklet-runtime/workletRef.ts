@@ -13,11 +13,15 @@ interface RefImpl {
     refImpl: WorkletRefImpl<Element | null>,
     element: ElementNode | null,
   ): void;
-  updateWorkletRefInitValueChanges(patch: [number, unknown][]): void;
+  updateWorkletRefInitValueChanges(patch: ([number, unknown] | [number, unknown, string])[]): void;
+  registerMainThreadValueType(type: string, factory: MainThreadValueFactory): void;
   clearFirstScreenWorkletRefMap(): void;
 }
 
 let impl: RefImpl | undefined;
+type MainThreadValueFactory = (initValue: unknown) => object;
+const mainThreadValueFactories = new Map<string, MainThreadValueFactory>();
+const hydratedWorkletValues = new WeakSet<object>();
 
 function initWorkletRef(): RefImpl {
   return (impl = {
@@ -31,6 +35,7 @@ function initWorkletRef(): RefImpl {
     _firstScreenWorkletRefMap: {},
     updateWorkletRef,
     updateWorkletRefInitValueChanges,
+    registerMainThreadValueType,
     clearFirstScreenWorkletRefMap,
   });
 }
@@ -39,11 +44,37 @@ const createWorkletRef = <T>(
   id: WorkletRefId,
   value: T,
 ): WorkletRef<T> => {
-  return {
+  const ref = {
     current: value,
     _wvid: id,
   };
+  hydratedWorkletValues.add(ref);
+  return ref;
 };
+
+function registerMainThreadValueType(type: string, factory: MainThreadValueFactory): void {
+  mainThreadValueFactories.set(type, factory);
+}
+
+function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
+  const type = refImpl._type;
+  if (!type || type === 'main-thread') {
+    return createWorkletRef(refImpl._wvid, refImpl._initValue);
+  }
+
+  const factory = mainThreadValueFactories.get(type);
+  if (!factory) {
+    throw new Error(`MainThreadValue type is not registered: ${type}`);
+  }
+
+  const value = factory(refImpl._initValue);
+  hydratedWorkletValues.add(value);
+  return value as WorkletRef<T>;
+}
+
+function isHydratedWorkletValue(value: unknown): value is object {
+  return typeof value === 'object' && value !== null && hydratedWorkletValues.has(value);
+}
 
 const getFromWorkletRefMap = <T>(
   refImpl: WorkletRefImpl<T>,
@@ -61,7 +92,7 @@ const getFromWorkletRefMap = <T>(
     // 2. In `main-thread:ref`
     value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
     if (!value) {
-      value = impl!._firstScreenWorkletRefMap[id] = createWorkletRef(id, refImpl._initValue);
+      value = impl!._firstScreenWorkletRefMap[id] = createWorkletValue(refImpl);
     }
   } else {
     value = impl!._workletRefMap[id] as WorkletRef<T>;
@@ -94,12 +125,16 @@ function updateWorkletRef(
 }
 
 function updateWorkletRefInitValueChanges(
-  patch: [WorkletRefId, unknown][],
+  patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string])[],
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
-    patch.forEach(([id, value]) => {
+    patch.forEach(([id, value, type]) => {
       if (!impl!._workletRefMap[id]) {
-        impl!._workletRefMap[id] = createWorkletRef(id, value);
+        impl!._workletRefMap[id] = createWorkletValue({
+          _wvid: id,
+          _initValue: value,
+          _type: type,
+        } as WorkletRefImpl<unknown>);
       }
     });
   });
@@ -116,4 +151,5 @@ export {
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
+  isHydratedWorkletValue,
 };
