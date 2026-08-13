@@ -102,7 +102,21 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   );
   const inheritedDelay = inheritsAnimate ? parent.delay ?? 0 : 0;
   const delayChildren = resolvedAnimate.transition?.delayChildren;
+  const animateTargetCount = resolvedAnimate.target
+    ? Object.keys(resolvedAnimate.target).length
+    : 0;
+  const animateDelay = resolvedAnimate.transition?.delay;
+  const beforeChildrenDelay = resolvedAnimate.transition?.when
+        === 'beforeChildren'
+      && typeof resolvedAnimate.transition.duration === 'number'
+      && resolvedAnimate.transition.type !== false
+      && resolvedAnimate.transition.repeat === undefined
+      && animateTargetCount > 0
+    ? resolvedAnimate.transition.duration
+      + (typeof animateDelay === 'number' ? animateDelay : 0)
+    : 0;
   const childDelay = inheritedDelay
+    + beforeChildrenDelay
     + (typeof delayChildren === 'number' ? delayChildren : 0);
   const context = useMemo<MotionVariantContextValue>(() => ({
     ...(initial === false || isVariantLabel(initial) ? { initial } : {}),

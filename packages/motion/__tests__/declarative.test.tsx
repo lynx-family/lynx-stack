@@ -438,6 +438,140 @@ describe('declarative Motion', () => {
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
   });
 
+  test('finishes a parent variant before starting children', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: { x: 0 },
+          visible: {
+            x: 100,
+            transition: { duration: 0.1, when: 'beforeChildren' },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ duration: 0.01 }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 40));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
+  test('keeps an inherited child at its style value while beforeChildren runs', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          visible: {
+            opacity: 1,
+            transition: { duration: 1, when: 'beforeChildren' },
+          },
+        }}
+      >
+        <motion.view>
+          <motion.view
+            data-testid='child'
+            style={{ opacity: 0.1 }}
+            variants={{
+              visible: { opacity: 1 },
+            }}
+          />
+        </motion.view>
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'opacity: 0.1',
+    );
+  });
+
+  test('does not delay children for an empty beforeChildren parent target', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: {},
+          visible: {
+            transition: { duration: 1, when: 'beforeChildren' },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
+  test('does not claim repeating beforeChildren completion timing', async () => {
+    const { getByTestId } = render(
+      <motion.view
+        initial='hidden'
+        animate='visible'
+        variants={{
+          hidden: { x: 0 },
+          visible: {
+            x: 100,
+            transition: {
+              duration: 1,
+              repeat: 1,
+              when: 'beforeChildren',
+            },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1 },
+          }}
+          transition={{ type: false }}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+  });
+
   test('explicit child animate starts a new delayChildren root', async () => {
     const { getByTestId } = render(
       <motion.view
