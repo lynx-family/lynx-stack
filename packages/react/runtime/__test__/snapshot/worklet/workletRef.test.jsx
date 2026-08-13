@@ -18,7 +18,6 @@ import {
   registerMainThreadObjectDefinition,
   useMainThreadObject,
 } from '../../../src/snapshot/worklet/ref/mainThreadObject';
-import { MainThreadValue } from '../../../src/snapshot/worklet/ref/mainThreadValue';
 import { MainThreadRef, useMainThreadRef } from '../../../src/snapshot/worklet/ref/workletRef';
 import { globalEnvManager } from '../utils/envManager';
 import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
@@ -287,10 +286,18 @@ describe('WorkletRef in js', () => {
   });
 });
 
-class TestMainThreadValue extends MainThreadValue {
-  constructor(value) {
-    super(value, '@test/main-thread-value');
-  }
+function renderTestMainThreadObject(initialValue) {
+  const type = defineMainThreadObjectType({
+    type: '@test/main-thread-object',
+    create: value => ({ value }),
+  });
+  let value;
+  const App = () => {
+    value = useMainThreadObject(type, initialValue);
+    return <view />;
+  };
+  render(<App />, __root);
+  return value;
 }
 
 describe('MainThreadObject', () => {
@@ -298,12 +305,12 @@ describe('MainThreadObject', () => {
     globalEnvManager.switchToBackground();
     const dispatchEvent = vi.fn();
     lynx.getCoreContext = () => ({ dispatchEvent });
-    const value = new TestMainThreadValue(42);
+    const value = renderTestMainThreadObject(42);
 
     expect(JSON.parse(JSON.stringify(value))).toEqual({
       _wvid: 1,
       _initValue: 42,
-      _type: '@test/main-thread-value',
+      _type: '@test/main-thread-object',
       _mtoVersion: 1,
     });
 
@@ -316,42 +323,10 @@ describe('MainThreadObject', () => {
 
   it('preserves opaque handles without changing ordinary member captures', () => {
     globalEnvManager.switchToBackground();
-    const value = new TestMainThreadValue(42);
-    const fallback = { get: undefined };
+    const value = renderTestMainThreadObject(42);
 
-    expect(captureMainThreadObject(value, fallback)).toBe(value);
-    expect(captureMainThreadObject({
-      __MAIN_THREAD_VALUE__: true,
-    }, fallback)).toBe(fallback);
-    expect(captureMainThreadObject({ value: 42 }, fallback)).toBe(fallback);
-  });
-
-  it('registers the main-thread factory only in the main-thread runtime', () => {
-    const factory = value => ({ value });
-    const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType;
-
-    globalEnvManager.switchToBackground();
-    MainThreadValue.register('@test/main-thread-value', factory);
-    expect(register).not.toHaveBeenCalled();
-
-    globalEnvManager.switchToMainThread();
-    MainThreadValue.register('@test/main-thread-value', factory);
-    expect(register).toHaveBeenCalledWith(
-      '@test/main-thread-value',
-      factory,
-      undefined,
-      1,
-    );
-
-    globalThis.globDynamicComponentEntry = 'lazy-entry';
-    MainThreadValue.register('@test/lazy-main-thread-value', factory);
-    expect(register).toHaveBeenCalledWith(
-      '@test/lazy-main-thread-value',
-      factory,
-      undefined,
-      1,
-    );
-    delete globalThis.globDynamicComponentEntry;
+    expect(captureMainThreadObject(value)).toBe(value);
+    expect(captureMainThreadObject({ value: 42 })).toBeUndefined();
   });
 
   it('creates a typed handle through the library-author hook', () => {
@@ -538,20 +513,20 @@ describe('MainThreadObject', () => {
   it('rejects non-serializable initialization payloads in development', () => {
     globalEnvManager.switchToBackground();
 
-    expect(() => new TestMainThreadValue({ nested: { callback() {} } }))
+    expect(() => renderTestMainThreadObject({ nested: { callback() {} } }))
       .toThrow(
-        'MainThreadObject initial value for "@test/main-thread-value" must be JSON-serializable; invalid value at $.nested.callback.',
+        'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.nested.callback.',
       );
 
     const cyclic = {};
     cyclic.self = cyclic;
-    expect(() => new TestMainThreadValue(cyclic)).toThrow(
-      'MainThreadObject initial value for "@test/main-thread-value" must be JSON-serializable; invalid value at $.self.',
+    expect(() => renderTestMainThreadObject(cyclic)).toThrow(
+      'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.self.',
     );
-    expect(() => new TestMainThreadValue(new Date())).toThrow(
-      'MainThreadObject initial value for "@test/main-thread-value" must be JSON-serializable; invalid value at $.',
+    expect(() => renderTestMainThreadObject(new Date())).toThrow(
+      'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.',
     );
-    expect(() => new TestMainThreadValue([1, { value: 2 }])).not.toThrow();
+    expect(() => renderTestMainThreadObject([1, { value: 2 }])).not.toThrow();
   });
 
   it('diagnoses an incompatible main-thread runtime', () => {
