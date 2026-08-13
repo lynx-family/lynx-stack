@@ -17,8 +17,17 @@ export interface RootNativeApp {
 /**
  * @public
  */
+export interface RootContextProxy {
+  addEventListener(type: string, listener: (event: { data: any }) => void): void;
+  removeEventListener(type: string, listener: (event: { data: any }) => void): void;
+}
+
+/**
+ * @public
+ */
 export interface RootLynx {
   getNativeApp(): RootNativeApp;
+  getCoreContext?(): RootContextProxy;
 }
 
 /**

@@ -97,6 +97,36 @@ export class ReactLynxRoot {
 }
 
 /**
+ * Create a root bound to one page's `lynx` / `lynxCoreInject`.
+ *
+ * When the ReactLynx runtime lives in a chunk shared by several cards of a
+ * shared-context LynxGroup, the module-level `lynx` is whichever card
+ * evaluated the chunk first. Each page entry instead passes its own
+ * environment here, so lifecycle events, element commits, and `useLynx()`
+ * all resolve to the page that rendered, not the first one:
+ *
+ * ```ts
+ * import { createRoot } from '@lynx-js/react'
+ *
+ * const root = createRoot({ lynx, lynxCoreInject })
+ * root.render(<App />)
+ * ```
+ *
+ * On the main thread this is a no-op passthrough — main-thread code is
+ * compiled per page and keeps using the default root.
+ *
+ * @public
+ */
+export function createRoot(options?: BindRenderContextOptions): ReactLynxRoot | undefined {
+  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+    const boundRoot = options ? new ReactLynxRoot(options) : undefined;
+    setBoundRoot(boundRoot);
+    return boundRoot;
+  }
+  return undefined;
+}
+
+/**
  * @internal
  */
 export interface RootWithBindRenderContext {
@@ -104,15 +134,5 @@ export interface RootWithBindRenderContext {
 }
 
 if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-  (root as RootWithBindRenderContext).__experimentalBindRenderContext = (
-    options?: BindRenderContextOptions,
-  ): ReactLynxRoot | undefined => {
-    if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-      const boundRoot = options ? new ReactLynxRoot(options) : undefined;
-      setBoundRoot(boundRoot);
-      return boundRoot;
-    } else {
-      return undefined;
-    }
-  };
+  (root as RootWithBindRenderContext).__experimentalBindRenderContext = createRoot;
 }

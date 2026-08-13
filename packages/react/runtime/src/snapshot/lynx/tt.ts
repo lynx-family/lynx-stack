@@ -46,22 +46,56 @@ function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) 
   };
 }
 
+/**
+ * Engine events the runtime subscribes to instead of patching `tt`.
+ *
+ * The engine dispatches both as `CoreContext -> JSContext` message events
+ * (`tasm_mediator.cc`, `bts_runtime.cc`); lynx-core only forwards them to
+ * `tt.OnLifecycleEvent` / `tt.updateGlobalProps`, whose base implementations
+ * are empty. Listening on each root's own `lynx.getCoreContext()` both
+ * removes that indirection and gives every card its own delivery channel —
+ * the engine dispatches on the card's context proxy, so events route to the
+ * right root without a global demultiplexer.
+ */
+const enum CoreContextEvent {
+  onLifecycleEvent = '__OnLifecycleEvent',
+  notifyGlobalPropsUpdated = '__NotifyGlobalPropsUpdated',
+}
+
 function injectTt(): void {
   injectTtInto(lynxCoreInject.tt, defaultRootContext);
 }
 
 function injectTtInto(tt: RootTT, ctx: RootContext): void {
-  tt.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
+  const coreContext = (ctx.lynx ?? lynx).getCoreContext?.();
+  const onLifecycleEventMessage = bindContext(ctx, (event: { data: [LifecycleConstant, unknown] }) => {
+    onLifecycleEvent(event.data);
+  });
+  const onGlobalPropsUpdatedMessage = bindContext(ctx, (event: { data: Record<string, any> }) => {
+    updateGlobalProps(event.data);
+  });
+  if (coreContext) {
+    coreContext.addEventListener(CoreContextEvent.onLifecycleEvent, onLifecycleEventMessage);
+    coreContext.addEventListener(CoreContextEvent.notifyGlobalPropsUpdated, onGlobalPropsUpdatedMessage);
+  } else {
+    // Engines without context proxies (or stub environments) still call
+    // through `tt`; keep the legacy assignments as a fallback.
+    tt.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
+    tt.updateGlobalProps = bindContext(ctx, updateGlobalProps);
+  }
   tt.publishEvent = bindContext(ctx, delayedPublishEvent);
   tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
   tt.callDestroyLifetimeFun = bindContext(ctx, () => {
+    if (coreContext) {
+      coreContext.removeEventListener(CoreContextEvent.onLifecycleEvent, onLifecycleEventMessage);
+      coreContext.removeEventListener(CoreContextEvent.notifyGlobalPropsUpdated, onGlobalPropsUpdatedMessage);
+    }
     if (ctx === defaultRootContext) {
       removeCtxNotFoundEventListener();
     }
     destroyWorklet();
     destroyBackground();
   });
-  tt.updateGlobalProps = bindContext(ctx, updateGlobalProps);
   tt.updateCardData = bindContext(ctx, updateCardData);
   tt.onAppReload = bindContext(ctx, reloadBackground);
   tt.processCardConfig = () => {

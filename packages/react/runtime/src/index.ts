@@ -94,3 +94,5 @@ export {
 };
 
 export * from './lynx-api.js';
+export { createRoot } from './multi-root-render-context.js';
+export { useLynx } from './use-lynx.js';

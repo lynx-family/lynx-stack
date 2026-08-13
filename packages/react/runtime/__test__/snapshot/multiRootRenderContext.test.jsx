@@ -362,17 +362,29 @@ describe('multi-page: two roots on separate native channels', () => {
     const defaultContainer = __root;
 
     // Card 2 = an independent root bound to its own native bridge objects.
+    // Its lynx carries its own CoreContext proxy — the runtime registers the
+    // lifecycle/globalProps listeners there instead of patching `tt`.
     const ttE = {};
     const callE = vi.fn((_name, _data, cb) => cb?.());
+    const listenersE = new Map();
+    const coreContextE = {
+      addEventListener: vi.fn((type, listener) => listenersE.set(type, listener)),
+      removeEventListener: vi.fn((type, listener) => {
+        if (listenersE.get(type) === listener) listenersE.delete(type);
+      }),
+      dispatchEvent: ({ type, data }) => listenersE.get(type)?.({ data }),
+    };
     const lynxE = {
       ...lynx,
+      getCoreContext: () => coreContextE,
       getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callE }),
     };
     const rootE = new ReactLynxRoot({ lynx: lynxE, lynxCoreInject: { tt: ttE } });
-    expect(typeof ttE.OnLifecycleEvent).toBe('function');
+    expect(coreContextE.addEventListener).toHaveBeenCalledWith('__OnLifecycleEvent', expect.any(Function));
+    expect(typeof ttE.publishEvent).toBe('function');
     rootE.render(<App />);
     lynx.getNativeApp().callLepusMethod.mockClear();
-    ttE.OnLifecycleEvent(...firstScreen);
+    coreContextE.dispatchEvent({ type: '__OnLifecycleEvent', data: firstScreen[0] });
 
     // Hydration patches went through each card's own channel.
     expect(callE.mock.calls.some(c => c[0] === 'rLynxChange')).toBe(true);

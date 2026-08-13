@@ -157,7 +157,7 @@ function replaceCommitHook(): void {
       const patchList: PatchList = {
         patchList: [patch],
       };
-      if (!snapshotPatch.length && !delayedRunOnMainThreadData.length) {
+      if (!snapshotPatch.length && !getDelayedRunOnMainThreadData().length) {
         flushOptions.emptyPatch = true;
       }
       if (!isEmptyObject(flushOptions)) {
