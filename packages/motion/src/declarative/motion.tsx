@@ -345,6 +345,13 @@ function useMotionHostProps<Props extends MotionProps>(
     ) {
       'main thread';
 
+      // Bind the background dispatcher while this function is synchronously
+      // executing on MTS. The animation promise can settle after the test or
+      // Web runtime has restored its background-thread execution context.
+      const reportAnimationComplete = onAnimationComplete
+        ? runOnBackground(completeAnimationOnBackground)
+        : undefined;
+
       for (const animation of animationRef.current) {
         animation.stop();
       }
@@ -510,8 +517,8 @@ function useMotionHostProps<Props extends MotionProps>(
             styleCleanupRef.current?.();
             styleCleanupRef.current = styleEffect(motionElement, values);
           }
-          if (onAnimationComplete) {
-            void runOnBackground(completeAnimationOnBackground)(
+          if (reportAnimationComplete) {
+            void reportAnimationComplete(
               backgroundAnimationGeneration,
               animate,
             );
