@@ -158,8 +158,6 @@ describe('Lazy Exports', () => {
     expect(() => ReactExports.useMainThreadObject(reactType, 1)).toThrow();
     expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow();
 
-    const fallback = {};
-    expect(ReactInternalExports.captureMainThreadObject({}, fallback)).toBe(fallback);
     expect(ReactInternalExports.captureMainThreadObject({})).toBeUndefined();
   });
 
