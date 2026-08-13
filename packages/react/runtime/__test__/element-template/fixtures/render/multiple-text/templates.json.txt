@@ -1,13 +1,13 @@
 [
   {
-    "templateId": "_et_dd10eca65d68",
+    "templateId": "_et_895419ad7379",
     "compiledTemplate": {
       "kind": "element",
       "type": "text",
       "attributesArray": [],
       "children": [
         {
-          "kind": "elementSlot",
+          "kind": "childSlot",
           "type": "slot",
           "elementSlotIndex": 0
         }
@@ -16,7 +16,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_6306a5a2decc",
+    "templateId": "_et_66e1ae2ed39b",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
@@ -34,7 +34,7 @@
           ],
           "children": [
             {
-              "kind": "elementSlot",
+              "kind": "childSlot",
               "type": "slot",
               "elementSlotIndex": 0
             }
@@ -52,7 +52,7 @@
           ],
           "children": [
             {
-              "kind": "elementSlot",
+              "kind": "childSlot",
               "type": "slot",
               "elementSlotIndex": 1
             }
@@ -75,7 +75,7 @@
               "attributesArray": [],
               "children": [
                 {
-                  "kind": "elementSlot",
+                  "kind": "childSlot",
                   "type": "slot",
                   "elementSlotIndex": 2
                 }
@@ -100,7 +100,7 @@
               "attributesArray": [],
               "children": [
                 {
-                  "kind": "elementSlot",
+                  "kind": "childSlot",
                   "type": "slot",
                   "elementSlotIndex": 3
                 }

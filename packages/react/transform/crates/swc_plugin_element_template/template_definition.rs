@@ -123,10 +123,10 @@ where
     )
   }
 
-  fn element_template_element_slot(&self, element_slot_index: i32) -> Expr {
+  fn element_template_child_slot(&self, child_slot_index: i32) -> Expr {
     quote!(
-      r#"{ kind: "elementSlot", type: "slot", elementSlotIndex: $element_slot_index }"# as Expr,
-      element_slot_index: Expr = i32_to_expr(&element_slot_index),
+      r#"{ kind: "childSlot", type: "slot", elementSlotIndex: $child_slot_index }"# as Expr,
+      child_slot_index: Expr = i32_to_expr(&child_slot_index),
     )
   }
 
@@ -167,7 +167,7 @@ where
     children: &[JSXElementChild],
     dynamic_attr_slots: &[TemplateAttributeSlot],
     dynamic_attr_slot_cursor: &mut usize,
-    element_slot_index: &mut i32,
+    child_slot_index: &mut i32,
   ) -> Vec<Expr> {
     let mut out: Vec<Expr> = vec![];
 
@@ -193,14 +193,14 @@ where
           el,
           dynamic_attr_slots,
           dynamic_attr_slot_cursor,
-          element_slot_index,
+          child_slot_index,
         )),
         JSXElementChild::JSXFragment(frag) => {
           out.extend(self.element_template_from_jsx_children(
             &frag.children,
             dynamic_attr_slots,
             dynamic_attr_slot_cursor,
-            element_slot_index,
+            child_slot_index,
           ));
         }
         JSXElementChild::JSXExprContainer(JSXExprContainer {
@@ -227,12 +227,12 @@ where
     n: &JSXElement,
     dynamic_attr_slots: &[TemplateAttributeSlot],
     dynamic_attr_slot_cursor: &mut usize,
-    element_slot_index: &mut i32,
+    child_slot_index: &mut i32,
   ) -> Expr {
     if is_slot_placeholder(n) {
       let idx =
         slot_placeholder_index(n).expect("ET slot placeholder should always carry a slot index");
-      return self.element_template_element_slot(idx);
+      return self.element_template_child_slot(idx);
     }
 
     let tag_expr = jsx_name(n.opening.name.clone());
@@ -361,7 +361,7 @@ where
         &n.children,
         dynamic_attr_slots,
         dynamic_attr_slot_cursor,
-        element_slot_index,
+        child_slot_index,
       )
     };
 

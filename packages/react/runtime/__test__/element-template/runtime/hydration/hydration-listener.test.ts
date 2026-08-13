@@ -39,10 +39,11 @@ import { ElementTemplateUpdateOps } from '../../../../src/element-template/proto
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import type {
   SerializableValue,
-  SerializedElementTemplate,
+  SerializedCompiledNode,
   SerializedEtNode,
   SerializedPageRoot,
   SerializedTypedNode,
+  SerializedTypedListNode,
 } from '../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import {
@@ -62,11 +63,11 @@ import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js'
 
 import '../../../../src/element-template/native/index.js';
 
-function createSerializedTemplate(handleId: number, templateKey: string): SerializedElementTemplate {
+function createSerializedTemplate(handleId: number, templateKey: string): SerializedCompiledNode {
   return {
     templateKey,
     attributeSlots: [],
-    elementSlots: [],
+    childSlots: [],
     uid: handleId,
   };
 }
@@ -94,7 +95,7 @@ function dispatchHydrate(
       page: {
         tag: 'page',
         attributes,
-        elementSlots: [instances],
+        childSlots: [instances],
         uid: 0,
       },
       reloadVersion,
@@ -141,7 +142,7 @@ describe('ElementTemplate hydration listener', () => {
     const oldId = after.instanceId;
 
     envManager.switchToMainThread();
-    const instances: SerializedElementTemplate[] = [
+    const instances: SerializedCompiledNode[] = [
       createSerializedTemplate(-1, '_et_test'),
       createSerializedTemplate(-2, '_et_test'),
     ];
@@ -415,12 +416,12 @@ describe('ElementTemplate hydration listener', () => {
         {
           tag: 'list',
           attributes: { id: 'feed' },
-          elementSlots: null,
+          childSlots: null,
           uid: -1,
           options: {
             listChildren: [createSerializedTemplate(-2, '_et_list_item')],
           },
-        } satisfies SerializedTypedNode,
+        } satisfies SerializedTypedListNode,
       ]);
 
       envManager.switchToBackground();
@@ -575,7 +576,7 @@ describe('ElementTemplate hydration listener', () => {
       dispatchHydrate([
         {
           ...createSerializedTemplate(host.instanceId, '_et_test'),
-          elementSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
+          childSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
         },
       ]);
 
@@ -639,7 +640,7 @@ describe('ElementTemplate hydration listener', () => {
         {
           ...createSerializedTemplate(-1, '_et_serialize_failure'),
           attributeSlots: ['before', '-1:1:', '-1-2'],
-        } satisfies SerializedElementTemplate,
+        } satisfies SerializedCompiledNode,
       ]);
 
       expect(() => envManager.switchToBackground()).not.toThrow();
@@ -682,7 +683,7 @@ describe('ElementTemplate hydration listener', () => {
     const oldId = after.instanceId;
 
     envManager.switchToMainThread();
-    const instances: SerializedElementTemplate[] = [createSerializedTemplate(-1, '_et_test')];
+    const instances: SerializedCompiledNode[] = [createSerializedTemplate(-1, '_et_test')];
     dispatchHydrate(instances);
 
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
@@ -706,7 +707,7 @@ describe('ElementTemplate hydration listener', () => {
     tt.callDestroyLifetimeFun?.();
 
     envManager.switchToMainThread();
-    const instances: SerializedElementTemplate[] = [createSerializedTemplate(-1, '_et_test')];
+    const instances: SerializedCompiledNode[] = [createSerializedTemplate(-1, '_et_test')];
     dispatchHydrate(instances);
 
     envManager.switchToBackground();
@@ -734,9 +735,9 @@ describe('ElementTemplate hydration listener', () => {
       {
         templateKey: '_et_event',
         attributeSlots: ['-1:0:'],
-        elementSlots: [],
+        childSlots: [],
         uid: -1,
-      } satisfies SerializedElementTemplate,
+      } satisfies SerializedCompiledNode,
     ]);
 
     envManager.switchToBackground();
@@ -769,9 +770,9 @@ describe('ElementTemplate hydration listener', () => {
         {
           templateKey: '_et_mismatch',
           attributeSlots: ['-1:0:'],
-          elementSlots: [],
+          childSlots: [],
           uid: -1,
-        } satisfies SerializedElementTemplate,
+        } satisfies SerializedCompiledNode,
       ]);
 
       envManager.switchToBackground();
@@ -799,9 +800,9 @@ describe('ElementTemplate hydration listener', () => {
       {
         templateKey: '_et_ref',
         attributeSlots: ['-1-0'],
-        elementSlots: [],
+        childSlots: [],
         uid: -1,
-      } satisfies SerializedElementTemplate,
+      } satisfies SerializedCompiledNode,
     ]);
 
     envManager.switchToBackground();
@@ -838,9 +839,9 @@ describe('ElementTemplate hydration listener', () => {
         {
           templateKey: '_et_ref',
           attributeSlots: ['-1-0'],
-          elementSlots: [],
+          childSlots: [],
           uid: -1,
-        } satisfies SerializedElementTemplate,
+        } satisfies SerializedCompiledNode,
       ]);
 
       envManager.switchToBackground();
@@ -883,9 +884,9 @@ describe('ElementTemplate hydration listener', () => {
         {
           templateKey: '_et_spread',
           attributeSlots: [{ ref: '-1-0' }],
-          elementSlots: [],
+          childSlots: [],
           uid: -1,
-        } satisfies SerializedElementTemplate,
+        } satisfies SerializedCompiledNode,
       ]);
 
       envManager.switchToBackground();
@@ -918,9 +919,9 @@ describe('ElementTemplate hydration listener', () => {
       {
         templateKey: '_et_spread',
         attributeSlots: [{ ref: '-1-0' }],
-        elementSlots: [],
+        childSlots: [],
         uid: -1,
-      } satisfies SerializedElementTemplate,
+      } satisfies SerializedCompiledNode,
     ]);
 
     envManager.switchToBackground();
@@ -966,9 +967,9 @@ describe('ElementTemplate hydration listener', () => {
         {
           templateKey: '_et_ref',
           attributeSlots: ['-1-0'],
-          elementSlots: [],
+          childSlots: [],
           uid: 0,
-        } satisfies SerializedElementTemplate,
+        } satisfies SerializedCompiledNode,
       ]);
 
       envManager.switchToBackground();
@@ -999,7 +1000,7 @@ describe('ElementTemplate hydration listener', () => {
     const profileEndCallCount = performance.profileEnd.mock.calls.length;
 
     envManager.switchToMainThread();
-    const instances: SerializedElementTemplate[] = [createSerializedTemplate(-1, '_et_test')];
+    const instances: SerializedCompiledNode[] = [createSerializedTemplate(-1, '_et_test')];
     dispatchHydrate(instances);
 
     envManager.switchToBackground();
@@ -1063,7 +1064,7 @@ describe('ElementTemplate hydration listener', () => {
       {
         ...createSerializedTemplate(-1, '_et_test'),
         attributeSlots: ['before'],
-      } satisfies SerializedElementTemplate,
+      } satisfies SerializedCompiledNode,
     ]);
 
     envManager.switchToBackground();
@@ -1095,9 +1096,9 @@ describe('ElementTemplate hydration listener', () => {
       {
         templateKey: '_et_test',
         attributeSlots: ['after'],
-        elementSlots: [],
+        childSlots: [],
         uid: -1,
-      } satisfies SerializedElementTemplate,
+      } satisfies SerializedCompiledNode,
     ]);
 
     envManager.switchToBackground();
@@ -1128,9 +1129,9 @@ describe('ElementTemplate hydration listener', () => {
       {
         templateKey: '_et_test',
         attributeSlots: ['after'],
-        elementSlots: [],
+        childSlots: [],
         uid: -1,
-      } satisfies SerializedElementTemplate,
+      } satisfies SerializedCompiledNode,
     ]);
 
     envManager.switchToBackground();

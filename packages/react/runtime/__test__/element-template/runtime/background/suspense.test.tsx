@@ -41,13 +41,13 @@ interface ParsedCreateTemplateOp {
   templateKey: string;
   bundleUrl: string | null | undefined;
   attributeSlots: SerializableValue[] | null | undefined;
-  elementSlots: number[][] | null | undefined;
+  childSlots: number[][] | null | undefined;
 }
 
 interface ParsedInsertNodeOp {
   op: 'insertNode';
   targetId: number;
-  elementSlotIndex: number;
+  childSlotIndex: number;
   childId: number;
   referenceId: number;
 }
@@ -55,7 +55,7 @@ interface ParsedInsertNodeOp {
 interface ParsedRemoveNodeOp {
   op: 'removeNode';
   targetId: number;
-  elementSlotIndex: number;
+  childSlotIndex: number;
   childId: number;
   removedSubtreeHandleIds: number[];
 }
@@ -172,7 +172,7 @@ function findMarkerElementByValue(
 }
 
 function getSlotChildren(host: BackgroundElementTemplateInstance): BackgroundElementTemplateInstance[] {
-  return host.elementSlots[0] ?? [];
+  return host.childSlots[0] ?? [];
 }
 
 function markTreeMaterializedByHydration(instance: BackgroundElementTemplateInstance): void {
@@ -202,7 +202,7 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
           templateKey: stream[i++] as string,
           bundleUrl: stream[i++] as string | null | undefined,
           attributeSlots: stream[i++] as SerializableValue[] | null | undefined,
-          elementSlots: stream[i++] as number[][] | null | undefined,
+          childSlots: stream[i++] as number[][] | null | undefined,
         });
         break;
       case ElementTemplateUpdateOps.setAttribute:
@@ -217,7 +217,7 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
         parsed.push({
           op: 'insertNode',
           targetId: stream[i++] as number,
-          elementSlotIndex: stream[i++] as number,
+          childSlotIndex: stream[i++] as number,
           childId: stream[i++] as number,
           referenceId: stream[i++] as number,
         });
@@ -226,7 +226,7 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
         parsed.push({
           op: 'removeNode',
           targetId: stream[i++] as number,
-          elementSlotIndex: stream[i++] as number,
+          childSlotIndex: stream[i++] as number,
           childId: stream[i++] as number,
           removedSubtreeHandleIds: stream[i++] as number[],
         });
@@ -349,7 +349,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     expect(ops).toContainEqual({
       op: 'insertNode',
       targetId: host.instanceId,
-      elementSlotIndex: 0,
+      childSlotIndex: 0,
       childId: loaded.instanceId,
       referenceId: after.instanceId,
     });

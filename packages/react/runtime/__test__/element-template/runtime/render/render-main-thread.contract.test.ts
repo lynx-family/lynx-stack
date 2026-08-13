@@ -45,7 +45,7 @@ describe('renderMainThread contract', () => {
             { kind: 'slot', key: 'id', attrSlotIndex: 0 },
           ],
           children: [
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 0 },
           ],
         },
       },
@@ -116,10 +116,10 @@ describe('renderMainThread contract', () => {
     expect(dispatched?.data.page).toMatchObject({
       tag: 'page',
       attributes: null,
-      uid: '0',
+      uid: 0,
     });
 
-    const [rootSerialized] = dispatched!.data.page.elementSlots?.[0] as Array<Record<string, unknown>>;
+    const [rootSerialized] = dispatched!.data.page.childSlots?.[0] as Array<Record<string, unknown>>;
     expect(rootSerialized).toMatchObject({
       templateKey: '_et_contract_root',
       attributeSlots: ['main', 'lazy-entry'],
@@ -132,7 +132,7 @@ describe('renderMainThread contract', () => {
       },
     });
 
-    const slotChildren = rootSerialized['elementSlots'] as unknown[][];
+    const slotChildren = rootSerialized['childSlots'] as unknown[][];
     expect(slotChildren[0]?.[0]).toMatchObject({
       templateKey: BUILTIN_RAW_TEXT_TEMPLATE_ID,
       attributeSlots: ['hello'],

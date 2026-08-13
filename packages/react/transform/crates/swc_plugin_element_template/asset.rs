@@ -49,7 +49,7 @@ where
       return;
     }
 
-    // Raw text can also appear as dynamic element-slot content. Emitting the
+    // Raw text can also appear as dynamic child-slot content. Emitting the
     // builtin template only when user ET templates exist keeps non-ET transforms
     // free of template metadata while giving runtime a stable key for text slots.
     if templates

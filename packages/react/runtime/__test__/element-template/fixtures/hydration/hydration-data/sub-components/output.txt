@@ -1,28 +1,28 @@
 Array [
   Object {
     "attributeSlots": Array [],
-    "elementSlots": Array [
+    "childSlots": Array [
       Array [
         Object {
           "attributeSlots": Array [],
-          "elementSlots": Array [
+          "childSlots": Array [
             Array [
               Object {
                 "attributeSlots": Array [
                   "inner",
                 ],
-                "elementSlots": Array [],
+                "childSlots": Array [],
                 "templateKey": "_et_builtin_raw_text",
                 "uid": -1,
               },
             ],
           ],
-          "templateKey": "_et_b860967477ae",
+          "templateKey": "_et_d6ad8f435463",
           "uid": -2,
         },
       ],
     ],
-    "templateKey": "_et_b26e8a4cc29d",
+    "templateKey": "_et_2b36363a6010",
     "uid": -3,
   },
 ]

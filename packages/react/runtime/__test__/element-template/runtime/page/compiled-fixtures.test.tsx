@@ -304,7 +304,7 @@ describe('Compiled authored ET page fixtures', () => {
       {
         op: 'removeNode',
         targetId: 0,
-        elementSlotIndex: 0,
+        childSlotIndex: 0,
         childId: -1,
         removedSubtreeHandleIds: [-1],
       },
@@ -314,12 +314,12 @@ describe('Compiled authored ET page fixtures', () => {
         templateKey: expect.any(String),
         bundleUrl: null,
         attributeSlots: [],
-        elementSlots: [],
+        childSlots: [],
       },
       {
         op: 'insertNode',
         targetId: 0,
-        elementSlotIndex: 0,
+        childSlotIndex: 0,
         childId: 3,
         referenceId: 0,
       },
@@ -345,7 +345,7 @@ describe('Compiled authored ET page fixtures', () => {
       {
         op: 'removeNode',
         targetId: 0,
-        elementSlotIndex: 0,
+        childSlotIndex: 0,
         childId: 3,
         removedSubtreeHandleIds: [3],
       },
@@ -366,12 +366,12 @@ describe('Compiled authored ET page fixtures', () => {
         templateKey: expect.any(String),
         bundleUrl: null,
         attributeSlots: [],
-        elementSlots: [],
+        childSlots: [],
       },
       {
         op: 'insertNode',
         targetId: 0,
-        elementSlotIndex: 0,
+        childSlotIndex: 0,
         childId: 4,
         referenceId: 0,
       },
@@ -455,11 +455,11 @@ describe('Compiled authored ET page fixtures', () => {
     envManager.switchToMainThread();
     const patchedPage = __SerializeElementTemplate(pageModule.__page) as {
       attributes?: { id?: string } | null;
-      elementSlots?: Array<Array<{ uid: number | string }> | null | undefined>;
+      childSlots?: Array<Array<{ uid: number }> | null | undefined>;
     };
     expect(patchedPage.attributes?.id).toBe('background-replacement');
-    expect(patchedPage.elementSlots?.[0]).toHaveLength(1);
-    const patchedRootUid = patchedPage.elementSlots?.[0]?.[0]?.uid;
+    expect(patchedPage.childSlots?.[0]).toHaveLength(1);
+    const patchedRootUid = patchedPage.childSlots?.[0]?.[0]?.uid;
     expect(patchedRootUid).toBeDefined();
     expect(serializeToJSX(pageModule.__page)).toContain('child');
 
@@ -475,28 +475,28 @@ describe('Compiled authored ET page fixtures', () => {
     expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
     const cleanupSnapshot = vi.mocked(__SerializeElementTemplate).mock.results[0]?.value as {
       attributes?: { id?: string } | null;
-      elementSlots?: Array<Array<{ uid: number | string }> | null | undefined>;
+      childSlots?: Array<Array<{ uid: number }> | null | undefined>;
     };
     expect(cleanupSnapshot.attributes?.id).toBe('background-replacement');
-    expect(cleanupSnapshot.elementSlots?.[0]?.map(root => root.uid)).toContain(patchedRootUid);
+    expect(cleanupSnapshot.childSlots?.[0]?.map(root => root.uid)).toContain(patchedRootUid);
     const reloadEnvelope = vi.mocked(__SerializeElementTemplate).mock.results[1]?.value as {
       attributes?: { id?: string } | null;
-      elementSlots?: Array<Array<{ uid: number | string }> | null | undefined>;
+      childSlots?: Array<Array<{ uid: number }> | null | undefined>;
     };
     expect(reloadEnvelope.attributes?.id).toBe('before-replacement');
-    expect(reloadEnvelope.elementSlots?.[0]).toHaveLength(1);
-    expect(reloadEnvelope.elementSlots?.[0]?.map(root => root.uid)).not.toContain(patchedRootUid);
+    expect(reloadEnvelope.childSlots?.[0]).toHaveLength(1);
+    expect(reloadEnvelope.childSlots?.[0]?.map(root => root.uid)).not.toContain(patchedRootUid);
     envManager.switchToBackground();
     expect(isElementTemplateHydrated()).toBe(true);
 
     envManager.switchToMainThread();
     const reloadedPage = __SerializeElementTemplate(pageModule.__page) as {
       attributes?: { id?: string } | null;
-      elementSlots?: Array<Array<{ uid: number | string }> | null | undefined>;
+      childSlots?: Array<Array<{ uid: number }> | null | undefined>;
     };
     expect(reloadedPage.attributes?.id).toBe('before-replacement');
-    expect(reloadedPage.elementSlots?.[0]).toHaveLength(1);
-    expect(reloadedPage.elementSlots?.[0]?.map(root => root.uid)).not.toContain(patchedRootUid);
+    expect(reloadedPage.childSlots?.[0]).toHaveLength(1);
+    expect(reloadedPage.childSlots?.[0]?.map(root => root.uid)).not.toContain(patchedRootUid);
     expect(serializeToJSX(pageModule.__page)).toContain('child');
     expect(updateEvents.at(-1)).toMatchObject({
       isHydration: true,

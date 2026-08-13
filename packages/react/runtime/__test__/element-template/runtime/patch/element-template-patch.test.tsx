@@ -30,6 +30,7 @@ import {
   markElementTemplateListDestroyed,
   registerElementTemplateListItem,
   registerElementTemplateListState,
+  removeElementTemplateListItem,
 } from '../../../../src/element-template/runtime/list/list.js';
 import {
   clearMainThreadDynamicAttrState,
@@ -66,6 +67,11 @@ interface PageWithChildren {
 type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
 type HydrateInstances = SerializedEtNode[];
 
+function createMockElementTemplateHandle(id: string, nativeId?: number): ElementTemplateHandle {
+  const handle = { __isNativeRef: true, id, __mockNativeId: nativeId };
+  return handle as unknown as ElementTemplateHandle;
+}
+
 function createRawTextOps(id: number, text: string) {
   return [
     ElementTemplateUpdateOps.createTemplate,
@@ -85,6 +91,14 @@ function resetReportedErrors(): void {
   const lynxObj = globalThis.lynx as unknown as LynxWithReportErrorMock;
   lynxObj.reportError.mockClear();
   (globalThis as unknown as { __LYNX_REPORT_ERROR_CALLS: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+}
+
+function createMaterializedListForFrontendTest(nativeId: number): FiberElement {
+  return {
+    __isNativeRef: true,
+    id: 'materialized-list',
+    __mockNativeId: nativeId,
+  } as unknown as FiberElement;
 }
 
 const MT_EVENT_TEMPLATE = '_et_mt_event';
@@ -127,9 +141,9 @@ describe('ElementTemplate patch stream (apply)', () => {
   let onHydrate: (event: HydrateEvent) => void;
   let mockCreateTypedElementTemplate: ReportErrorMock;
   let mockSetAttribute: ReportErrorMock;
-  let mockSetAttributeOfElementTemplate: ReportErrorMock;
-  let mockInsertNodeToElementTemplate: ReportErrorMock;
-  let mockRemoveNodeFromElementTemplate: ReportErrorMock;
+  let mockSetElementTemplateAttributeSlot: ReportErrorMock;
+  let mockInsertElementTemplateNodeIntoSlot: ReportErrorMock;
+  let mockRemoveElementTemplateNodeFromSlot: ReportErrorMock;
   let mockFlushElementTree: ReportErrorMock;
 
   beforeEach(() => {
@@ -137,9 +151,11 @@ describe('ElementTemplate patch stream (apply)', () => {
     // mocks are already installed by setup.js beforeEach
     mockCreateTypedElementTemplate = lastMock!.mockCreateTypedElementTemplate as unknown as ReportErrorMock;
     mockSetAttribute = lastMock!.mockSetAttribute as unknown as ReportErrorMock;
-    mockSetAttributeOfElementTemplate = lastMock!.mockSetAttributeOfElementTemplate as unknown as ReportErrorMock;
-    mockInsertNodeToElementTemplate = lastMock!.mockInsertNodeToElementTemplate as unknown as ReportErrorMock;
-    mockRemoveNodeFromElementTemplate = lastMock!.mockRemoveNodeFromElementTemplate as unknown as ReportErrorMock;
+    mockSetElementTemplateAttributeSlot = lastMock!.mockSetElementTemplateAttributeSlot as unknown as ReportErrorMock;
+    mockInsertElementTemplateNodeIntoSlot = lastMock!
+      .mockInsertElementTemplateNodeIntoSlot as unknown as ReportErrorMock;
+    mockRemoveElementTemplateNodeFromSlot = lastMock!
+      .mockRemoveElementTemplateNodeFromSlot as unknown as ReportErrorMock;
     mockFlushElementTree = lastMock!.mockFlushElementTree as unknown as ReportErrorMock;
     registerBuiltinRawTextTemplate();
     clearMainThreadDynamicAttrState();
@@ -150,7 +166,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.setUseElementTemplate(true);
 
     onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-      hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
+      hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
     });
     lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
   });
@@ -199,9 +215,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     const beforeJSX = serializeToJSX(__page);
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.insertNode,
-      before.uid as number,
+      before.uid,
       9999,
-      before.uid as number,
+      before.uid,
       9999,
     ]);
 
@@ -213,8 +229,8 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('resolves page target id 0 and uses the generic attr and root patch paths', () => {
     envManager.switchToMainThread();
-    const pageRef = { __isNativeRef: true, id: 'page' } as unknown as ElementRef;
-    const childRef = { __isNativeRef: true, id: 'root' } as unknown as ElementRef;
+    const pageRef = createMockElementTemplateHandle('page');
+    const childRef = createMockElementTemplateHandle('root');
     setupPage(pageRef);
     elementTemplateRegistry.set(10, childRef);
 
@@ -235,9 +251,9 @@ describe('ElementTemplate patch stream (apply)', () => {
       [10],
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toEqual([[pageRef, 0, { id: 'background' }, null]]);
-    expect(mockInsertNodeToElementTemplate.mock.calls).toEqual([[pageRef, 0, childRef, null]]);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[pageRef, 0, childRef]]);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[pageRef, 0, { id: 'background' }]]);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[pageRef, 0, childRef, null]]);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[pageRef, 0, childRef]]);
     expect(elementTemplateRegistry.has(10)).toBe(false);
   });
 
@@ -256,14 +272,14 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
     dispatchElementTemplateUpdate({ ops: stream, flushOptions: {} });
     envManager.switchToMainThread();
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls.length).toBeGreaterThan(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls.length).toBeGreaterThan(0);
     expect(mockFlushElementTree.mock.calls.length).toBeGreaterThan(0);
   });
 
@@ -271,12 +287,12 @@ describe('ElementTemplate patch stream (apply)', () => {
     const targetId = 101;
     const nativeRef = {};
     const ctx = { _wkltId: 'tap' };
-    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    elementTemplateRegistry.set(targetId, nativeRef as ElementTemplateHandle);
     registerMTEventHandle(targetId, 0);
 
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
@@ -286,7 +302,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     });
     envManager.switchToMainThread();
 
-    expect(mockSetAttributeOfElementTemplate).toHaveBeenCalledTimes(1);
+    expect(mockSetElementTemplateAttributeSlot).toHaveBeenCalledTimes(1);
     expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
     expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
       kind: 'mt-event',
@@ -304,12 +320,12 @@ describe('ElementTemplate patch stream (apply)', () => {
       _hydrateCtx: hydrateCtx,
       _refImpl: createMainThreadRefImplMock(),
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
 
     try {
       envManager.switchToMainThread();
       installElementTemplatePatchListener();
-      mockSetAttributeOfElementTemplate.mockClear();
+      mockSetElementTemplateAttributeSlot.mockClear();
 
       envManager.switchToBackground();
       dispatchElementTemplateUpdate({
@@ -319,7 +335,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
       envManager.switchToMainThread();
 
-      expect(mockSetAttributeOfElementTemplate).toHaveBeenCalledTimes(1);
+      expect(mockSetElementTemplateAttributeSlot).toHaveBeenCalledTimes(1);
       expect(hydrateCtx).not.toHaveBeenCalled();
       expect(getMainThreadDynamicAttrState(targetId, 0)).toBeUndefined();
     } finally {
@@ -414,7 +430,7 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('deletes main-thread dynamic attr state after a slot clear patch succeeds', () => {
     const targetId = 103;
     const nativeRef = {};
-    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    elementTemplateRegistry.set(targetId, nativeRef as ElementTemplateHandle);
     seedMTEventState(targetId, 0, { _wkltId: 'old' });
 
     envManager.switchToMainThread();
@@ -433,8 +449,8 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('deletes main-thread dynamic attr state for a removed subtree after patch succeeds', () => {
     const targetId = 104;
     const childId = 105;
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
-    elementTemplateRegistry.set(childId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
+    elementTemplateRegistry.set(childId, {} as ElementTemplateHandle);
     seedMTEventState(childId, 0, { _wkltId: 'child' });
 
     envManager.switchToMainThread();
@@ -461,7 +477,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       _hydrateCtx: hydrateCtx,
       _refImpl: createMainThreadRefImplMock(),
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
@@ -507,7 +523,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         runDelayedBackgroundFunctions,
       },
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
@@ -570,7 +586,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         callOrder.push('runOnMainThread');
       }),
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
@@ -726,7 +742,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         runDelayedBackgroundFunctions,
       },
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
@@ -753,7 +769,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     const targetId = 102;
     const nativeRef = {};
     const ctx = { _wkltId: 'tap' };
-    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    elementTemplateRegistry.set(targetId, nativeRef as ElementTemplateHandle);
     registerMTEventHandle(targetId, 0);
 
     envManager.switchToMainThread();
@@ -788,7 +804,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       _hydrateCtx: hydrateCtx,
       _refImpl: createMainThreadRefImplMock(),
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
@@ -827,7 +843,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       ...previousWorkletImpl,
       _hydrateCtx: hydrateCtx,
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
@@ -870,13 +886,13 @@ describe('ElementTemplate patch stream (apply)', () => {
       },
       _runRunOnMainThreadTask: runRunOnMainThreadTask,
     };
-    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    elementTemplateRegistry.set(targetId, nativeRef as ElementTemplateHandle);
     registerMTEventHandle(targetId, 0);
 
     try {
       envManager.switchToMainThread();
       installElementTemplatePatchListener();
-      mockSetAttributeOfElementTemplate.mockImplementationOnce(() => {
+      mockSetElementTemplateAttributeSlot.mockImplementationOnce(() => {
         throw new Error('setAttribute failed');
       });
 
@@ -1090,13 +1106,13 @@ describe('ElementTemplate patch stream (apply)', () => {
       _hydrateCtx: hydrateCtx,
       _refImpl: createMainThreadRefImplMock(),
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
     seedMTEventState(targetId, 0, oldCtx);
 
     try {
       envManager.switchToMainThread();
       installElementTemplatePatchListener();
-      mockSetAttributeOfElementTemplate.mockClear();
+      mockSetElementTemplateAttributeSlot.mockClear();
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
@@ -1116,7 +1132,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
       envManager.switchToMainThread();
 
-      expect(mockSetAttributeOfElementTemplate).toHaveBeenCalledTimes(1);
+      expect(mockSetElementTemplateAttributeSlot).toHaveBeenCalledTimes(1);
       expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
       expect(hydrateCtx).toHaveBeenCalledWith(nextCtx, oldCtx);
       expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).toEqual(nextCtx);
@@ -1142,14 +1158,14 @@ describe('ElementTemplate patch stream (apply)', () => {
       _hydrateCtx: hydrateCtx,
       _refImpl: createMainThreadRefImplMock(),
     };
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
-    elementTemplateRegistry.set(childId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
+    elementTemplateRegistry.set(childId, {} as ElementTemplateHandle);
     seedMTEventState(childId, 0, { _wkltId: 'removed' });
 
     try {
       envManager.switchToMainThread();
       installElementTemplatePatchListener();
-      mockRemoveNodeFromElementTemplate.mockClear();
+      mockRemoveElementTemplateNodeFromSlot.mockClear();
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
@@ -1170,7 +1186,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
       envManager.switchToMainThread();
 
-      expect(mockRemoveNodeFromElementTemplate).toHaveBeenCalledTimes(1);
+      expect(mockRemoveElementTemplateNodeFromSlot).toHaveBeenCalledTimes(1);
       expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
       expect(hydrateCtx).not.toHaveBeenCalled();
       expect(elementTemplateRegistry.get(childId)).toBeUndefined();
@@ -1188,13 +1204,13 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('cleans removed MTEvent state when flush throws after remove succeeds', () => {
     const targetId = 118;
     const childId = 119;
-    elementTemplateRegistry.set(targetId, {} as ElementRef);
-    elementTemplateRegistry.set(childId, {} as ElementRef);
+    elementTemplateRegistry.set(targetId, {} as ElementTemplateHandle);
+    elementTemplateRegistry.set(childId, {} as ElementTemplateHandle);
     seedMTEventState(childId, 0, { _wkltId: 'removed' });
 
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
     mockFlushElementTree.mockImplementationOnce(() => {
       throw new Error('flush failed');
     });
@@ -1209,7 +1225,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       envManager.switchToMainThread();
     }).toThrow('flush failed');
 
-    expect(mockRemoveNodeFromElementTemplate).toHaveBeenCalledTimes(1);
+    expect(mockRemoveElementTemplateNodeFromSlot).toHaveBeenCalledTimes(1);
     expect(elementTemplateRegistry.get(childId)).toBeUndefined();
     expect(getMainThreadDynamicAttrState(childId, 0)).toBeUndefined();
   });
@@ -1320,7 +1336,7 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('reports duplicate handleId on create', () => {
     envManager.switchToMainThread();
-    const existingRef = { __isNativeRef: true, id: 'existing' } as unknown as ElementRef;
+    const existingRef = createMockElementTemplateHandle('existing');
     elementTemplateRegistry.set(7, existingRef);
 
     applyElementTemplateUpdateCommands([
@@ -1356,7 +1372,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
-  it('reports invalid non-array elementSlots on create', () => {
+  it('reports invalid non-array childSlots on create', () => {
     envManager.switchToMainThread();
 
     applyElementTemplateUpdateCommands([
@@ -1370,12 +1386,12 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'elementSlots must be an array, null, or undefined',
+      'childSlots must be an array, null, or undefined',
     );
     resetReportedErrors();
   });
 
-  it('creates templates with nullable and sparse element slots', () => {
+  it('creates templates with nullable and sparse child slots', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     registerTemplates([
@@ -1386,17 +1402,17 @@ describe('ElementTemplate patch stream (apply)', () => {
           type: 'view',
           attributesArray: [],
           children: [
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 1 },
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 2 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 0 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 1 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 2 },
           ],
         },
       },
     ]);
 
-    const elementSlots: ElementTemplateHandleSlotsCommand = [];
-    elementSlots[1] = [31];
-    elementSlots[2] = null;
+    const childSlots: ElementTemplateHandleSlotsCommand = [];
+    childSlots[1] = [31];
+    childSlots[2] = null;
 
     const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
       mockClear: () => void;
@@ -1411,13 +1427,13 @@ describe('ElementTemplate patch stream (apply)', () => {
       '_et_sparse_slot_parent',
       null,
       [],
-      elementSlots,
+      childSlots,
     ]);
 
     const parentCall = createTemplateMock.mock.calls.find((call) => call[0] === '_et_sparse_slot_parent');
     expect(parentCall).toBeDefined();
     const childRef = elementTemplateRegistry.get(31);
-    const resolvedSlots = parentCall![3] as Array<ElementRef[] | null | undefined>;
+    const resolvedSlots = parentCall![3] as Array<ElementTemplateHandle[] | null | undefined>;
     expect(0 in resolvedSlots).toBe(false);
     expect(resolvedSlots[1]).toEqual([childRef]);
     expect(2 in resolvedSlots).toBe(false);
@@ -1443,7 +1459,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
 
-    const slotChildRef = { __isNativeRef: true, id: 'slot-child' } as unknown as ElementRef;
+    const slotChildRef = createMockElementTemplateHandle('slot-child');
     elementTemplateRegistry.set(11, slotChildRef);
     mockCreateTypedElementTemplate.mockClear();
 
@@ -1471,11 +1487,11 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(21)).toBe(true);
   });
 
-  it('creates exact typed lists with callbacks and logical children in options', () => {
+  it('creates a typed list with callbacks and logical children', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
 
-    const itemRef = { __isNativeRef: true, id: 'option-child', __mockNativeId: 101 } as unknown as ElementRef;
+    const itemRef = createMockElementTemplateHandle('option-child', 101);
     elementTemplateRegistry.set(12, itemRef);
     mockCreateTypedElementTemplate.mockClear();
 
@@ -1505,7 +1521,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       listChildren: [itemRef],
       estimatedHeight: 80,
     });
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toEqual([[
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[
       expect.anything(),
       0,
       {
@@ -1519,31 +1535,26 @@ describe('ElementTemplate patch stream (apply)', () => {
           updateAction: [],
         },
       },
-      null,
     ]]);
     expect(elementTemplateRegistry.has(28)).toBe(true);
     const listRef = elementTemplateRegistry.get(28)!;
-    const materializedListRef = {
-      __isNativeRef: true,
-      id: 'materialized-list',
-      __mockNativeId: 1001,
-    } as unknown as ElementRef;
+    const materializedListRef = createMaterializedListForFrontendTest(1001);
     const componentAtIndex = (mockCreateTypedElementTemplate.mock.calls[0]![1] as Record<string, unknown>)[
       'component-at-index'
     ] as ComponentAtIndexCallback;
 
-    mockInsertNodeToElementTemplate.mockClear();
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
     expect(componentAtIndex(materializedListRef, 7, 0, 88, false)).toBe(101);
-    expect(mockInsertNodeToElementTemplate.mock.calls).toEqual([[listRef, 0, itemRef, null]]);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[listRef, 0, itemRef, null]]);
   });
 
-  it('creates exact typed lists outside development using the internal listChildren contract', () => {
+  it('creates a typed list outside development', () => {
     const originalDev = globalThis.__DEV__;
     globalThis.__DEV__ = false;
     try {
       envManager.switchToMainThread();
       elementTemplateRegistry.clear();
-      const itemRef = { __isNativeRef: true, id: 'option-child' } as unknown as ElementRef;
+      const itemRef = createMockElementTemplateHandle('option-child');
       elementTemplateRegistry.set(12, itemRef);
       mockCreateTypedElementTemplate.mockClear();
 
@@ -1570,7 +1581,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     }
   });
 
-  it('creates exact typed lists with null visible element slots', () => {
+  it('creates a typed list with null child slots', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     mockCreateTypedElementTemplate.mockClear();
@@ -1610,16 +1621,16 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(32)).toBe(false);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'typed list create must keep logical children in options.listChildren',
+      'logical children in options.listChildren',
     );
     resetReportedErrors();
   });
 
-  it('rejects exact typed list create with visible element slots', () => {
+  it('rejects exact typed list create with visible child slots', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
-    const slotChildRef = { __isNativeRef: true, id: 'slot-child' } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item' } as unknown as ElementRef;
+    const slotChildRef = createMockElementTemplateHandle('slot-child');
+    const itemRef = createMockElementTemplateHandle('item');
     elementTemplateRegistry.set(11, slotChildRef);
     elementTemplateRegistry.set(12, itemRef);
     mockCreateTypedElementTemplate.mockClear();
@@ -1637,7 +1648,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(30)).toBe(false);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'typed list create must keep logical children in options.listChildren',
+      'logical children in options.listChildren',
     );
     resetReportedErrors();
   });
@@ -1681,7 +1692,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
-  it('reports invalid typed create elementSlots', () => {
+  it('reports invalid typed create childSlots', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     mockCreateTypedElementTemplate.mockClear();
@@ -1689,7 +1700,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTypedElement,
       28,
-      'list',
+      'typed-host',
       null,
       'bad-slots' as unknown as ElementTemplateUpdateCommandStream[number],
       null,
@@ -1699,14 +1710,14 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(28)).toBe(false);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'elementSlots must be an array, null, or undefined',
+      'childSlots must be an array, null, or undefined',
     );
     resetReportedErrors();
   });
 
   it('reports duplicate typed create handleId', () => {
     envManager.switchToMainThread();
-    const existingRef = { __isNativeRef: true, id: 'existing' } as unknown as ElementRef;
+    const existingRef = createMockElementTemplateHandle('existing');
     elementTemplateRegistry.set(26, existingRef);
     mockCreateTypedElementTemplate.mockClear();
 
@@ -1725,7 +1736,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
-  it('reports invalid non-array elementSlots on typed create', () => {
+  it('reports invalid non-array childSlots on typed create', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     mockCreateTypedElementTemplate.mockClear();
@@ -1742,12 +1753,12 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'elementSlots must be an array, null, or undefined',
+      'childSlots must be an array, null, or undefined',
     );
     resetReportedErrors();
   });
 
-  it('skips typed create when element slot handles are unresolved', () => {
+  it('skips typed create when child slot handles are unresolved', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     mockCreateTypedElementTemplate.mockClear();
@@ -1794,10 +1805,10 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('skips typed list item patches when the item handle is unresolved', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 41 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 41);
     elementTemplateRegistry.set(41, listRef);
     registerElementTemplateListState(41, createElementTemplateListState([]), false, listRef);
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.insertTypedListItem,
@@ -1809,8 +1820,9 @@ describe('ElementTemplate patch stream (apply)', () => {
       { __etHandleRef: 405, type: '_et_item', platformInfo: {} },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(reportError.mock.calls).toHaveLength(2);
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
       'typed list insert item handle 404 not found',
     );
@@ -1823,13 +1835,13 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('skips pending typed list flushes when the list handle is unresolved', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
-    const listRef = { __isNativeRef: true, id: 'typed-list' } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list');
     registerElementTemplateListState(91, createElementTemplateListState([]), true, listRef);
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
 
     applyElementTemplateUpdateCommands([]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('typed list handle 91 not found');
     resetReportedErrors();
@@ -1843,10 +1855,10 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('sets typed slot 0 attributes through the standard attr-slot PAPI', () => {
     envManager.switchToMainThread();
-    const targetRef = { __isNativeRef: true, id: 'typed-target' } as unknown as ElementRef;
+    const targetRef = createMockElementTemplateHandle('typed-target');
     elementTemplateRegistry.set(31, targetRef);
     mockSetAttribute.mockClear();
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
 
     const updateListInfo = {
       insertAction: [],
@@ -1860,18 +1872,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       { 'update-list-info': updateListInfo },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toEqual([[
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[
       targetRef,
       0,
       { 'update-list-info': updateListInfo },
-      null,
     ]]);
     expect(mockSetAttribute.mock.calls).toHaveLength(0);
   });
 
   it('keeps list callbacks when hydrated list attributes update through slot 0', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 95 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 95);
     elementTemplateRegistry.set(29, listRef);
     registerElementTemplateListState(29, createElementTemplateListState([], { id: 'old' }), false, listRef);
 
@@ -1882,7 +1893,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       { id: 'next' },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]).toEqual([
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
       listRef,
       0,
       {
@@ -1891,16 +1902,15 @@ describe('ElementTemplate patch stream (apply)', () => {
         'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
-      null,
     ]);
   });
 
   it('clears typed slot 0 attributes through the standard attr-slot PAPI', () => {
     envManager.switchToMainThread();
-    const targetRef = { __isNativeRef: true, id: 'typed-target' } as unknown as ElementRef;
+    const targetRef = createMockElementTemplateHandle('typed-target');
     elementTemplateRegistry.set(32, targetRef);
     mockSetAttribute.mockClear();
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.setAttribute,
@@ -1909,20 +1919,20 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toEqual([[
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[
       targetRef,
       0,
-      null,
       null,
     ]]);
     expect(mockSetAttribute.mock.calls).toHaveLength(0);
   });
 
-  it('applies incremental list insert before writing update-list-info', () => {
+  it('inserts before writing update-list-info', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 100 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 101 } as unknown as ElementRef;
-    const secondRef = { __isNativeRef: true, id: 'second', __mockNativeId: 102 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 100);
+    const materializedList = createMaterializedListForFrontendTest(100);
+    const firstRef = createMockElementTemplateHandle('first', 101);
+    const secondRef = createMockElementTemplateHandle('second', 102);
     elementTemplateRegistry.set(31, listRef);
     elementTemplateRegistry.set(32, firstRef);
     elementTemplateRegistry.set(33, secondRef);
@@ -1934,10 +1944,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     registerElementTemplateListState(31, state, false, listRef);
     const attrs = composeElementTemplateListAttributes({ id: 'feed' }, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    mockSetAttributeOfElementTemplate.mockImplementationOnce((...args: unknown[]) => {
-      expect(componentAtIndex(listRef, 7, 1, 99, false)).toBe(102);
-      expect(mockInsertNodeToElementTemplate.mock.calls[0]).toEqual([listRef, 0, secondRef, null]);
-      lastMock!.mockSetAttributeOfElementTemplate(...args);
+    mockSetElementTemplateAttributeSlot.mockImplementationOnce((...args: unknown[]) => {
+      expect(componentAtIndex(materializedList, 7, 1, 99, false)).toBe(102);
+      expect(mockInsertElementTemplateNodeIntoSlot.mock.calls[0]).toEqual([listRef, 0, secondRef, null]);
+      lastMock!.mockSetElementTemplateAttributeSlot(...args);
     });
 
     applyElementTemplateUpdateCommands([
@@ -1951,7 +1961,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       0,
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]).toEqual([
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
       listRef,
       0,
       {
@@ -1965,17 +1975,16 @@ describe('ElementTemplate patch stream (apply)', () => {
           updateAction: [],
         },
       },
-      null,
     ]);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.get(32)).toBe(firstRef);
   });
 
   it('preserves update-list-info when list attributes update after list mutation in the same stream', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 105 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 106 } as unknown as ElementRef;
-    const secondRef = { __isNativeRef: true, id: 'second', __mockNativeId: 107 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 105);
+    const firstRef = createMockElementTemplateHandle('first', 106);
+    const secondRef = createMockElementTemplateHandle('second', 107);
     elementTemplateRegistry.set(35, listRef);
     elementTemplateRegistry.set(36, firstRef);
     elementTemplateRegistry.set(37, secondRef);
@@ -2005,8 +2014,8 @@ describe('ElementTemplate patch stream (apply)', () => {
       { id: 'next' },
     ]);
 
-    const attrWrite = mockSetAttributeOfElementTemplate.mock.calls[0]![2] as Record<string, unknown>;
-    const finalWrite = mockSetAttributeOfElementTemplate.mock.calls[1]![2] as Record<string, unknown>;
+    const attrWrite = mockSetElementTemplateAttributeSlot.mock.calls[0]![2] as Record<string, unknown>;
+    const finalWrite = mockSetElementTemplateAttributeSlot.mock.calls[1]![2] as Record<string, unknown>;
     const updateListInfo = {
       insertAction: [{ position: 1, type: '_et_item_b', 'item-key': 'b' }],
       removeAction: [],
@@ -2030,9 +2039,9 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('coalesces multiple incremental list mutations into one Snapshot-shaped update-list-info write', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 200 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 200);
     const refs = [201, 202, 203, 204, 205].map(id =>
-      ({ __isNativeRef: true, id: `item-${id}`, __mockNativeId: id }) as unknown as ElementRef
+      ({ __isNativeRef: true, id: `item-${id}`, __mockNativeId: id }) as unknown as ElementTemplateHandle
     );
     elementTemplateRegistry.set(200, listRef);
     for (let index = 0; index < refs.length; index += 1) {
@@ -2070,8 +2079,8 @@ describe('ElementTemplate patch stream (apply)', () => {
       0,
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(1);
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]).toEqual([
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
       listRef,
       0,
       {
@@ -2088,18 +2097,17 @@ describe('ElementTemplate patch stream (apply)', () => {
           updateAction: [],
         },
       },
-      null,
     ]);
-    expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
   });
 
   it('coalesces platform info updates and indexes them after same-batch insertions', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 210 } as unknown as ElementRef;
-    const aRef = { __isNativeRef: true, id: 'a', __mockNativeId: 211 } as unknown as ElementRef;
-    const bRef = { __isNativeRef: true, id: 'b', __mockNativeId: 212 } as unknown as ElementRef;
-    const dRef = { __isNativeRef: true, id: 'd', __mockNativeId: 213 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 210);
+    const aRef = createMockElementTemplateHandle('a', 211);
+    const bRef = createMockElementTemplateHandle('b', 212);
+    const dRef = createMockElementTemplateHandle('d', 213);
     elementTemplateRegistry.set(210, listRef);
     elementTemplateRegistry.set(211, aRef);
     elementTemplateRegistry.set(212, bRef);
@@ -2127,8 +2135,8 @@ describe('ElementTemplate patch stream (apply)', () => {
       { __etHandleRef: 212, type: '_et_item_b', platformInfo: { 'item-key': 'b', 'estimated-height': 42 } },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(1);
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]![2]).toEqual(expect.objectContaining({
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
       'update-list-info': {
         insertAction: [{ position: 1, type: '_et_item_d', 'item-key': 'd' }],
         removeAction: [],
@@ -2142,8 +2150,8 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('skips no-op list item platform info updates', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 214 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'a', __mockNativeId: 2141 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 214);
+    const itemRef = createMockElementTemplateHandle('a', 2141);
     elementTemplateRegistry.set(214, listRef);
     elementTemplateRegistry.set(2141, itemRef);
     registerElementTemplateListItem(2141, itemRef, {
@@ -2158,14 +2166,14 @@ describe('ElementTemplate patch stream (apply)', () => {
       { __etHandleRef: 2141, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
   });
 
   it('folds moved item platform info into the incremental insert action', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 215 } as unknown as ElementRef;
-    const aRef = { __isNativeRef: true, id: 'a', __mockNativeId: 216 } as unknown as ElementRef;
-    const bRef = { __isNativeRef: true, id: 'b', __mockNativeId: 217 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 215);
+    const aRef = createMockElementTemplateHandle('a', 216);
+    const bRef = createMockElementTemplateHandle('b', 217);
     elementTemplateRegistry.set(215, listRef);
     elementTemplateRegistry.set(216, aRef);
     elementTemplateRegistry.set(217, bRef);
@@ -2193,8 +2201,8 @@ describe('ElementTemplate patch stream (apply)', () => {
       { __etHandleRef: 217, type: '_et_item_b', platformInfo: { 'item-key': 'b', 'full-span': true } },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(1);
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]![2]).toEqual(expect.objectContaining({
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
       'update-list-info': {
         insertAction: [{ position: 0, type: '_et_item_b', 'item-key': 'b', 'full-span': true }],
         removeAction: [1],
@@ -2205,11 +2213,11 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('places an insertion before a moved item at the moved item final position', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 218 } as unknown as ElementRef;
-    const aRef = { __isNativeRef: true, id: 'a', __mockNativeId: 2181 } as unknown as ElementRef;
-    const bRef = { __isNativeRef: true, id: 'b', __mockNativeId: 2182 } as unknown as ElementRef;
-    const cRef = { __isNativeRef: true, id: 'c', __mockNativeId: 2183 } as unknown as ElementRef;
-    const xRef = { __isNativeRef: true, id: 'x', __mockNativeId: 2184 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 218);
+    const aRef = createMockElementTemplateHandle('a', 2181);
+    const bRef = createMockElementTemplateHandle('b', 2182);
+    const cRef = createMockElementTemplateHandle('c', 2183);
+    const xRef = createMockElementTemplateHandle('x', 2184);
     elementTemplateRegistry.set(218, listRef);
     elementTemplateRegistry.set(2181, aRef);
     elementTemplateRegistry.set(2182, bRef);
@@ -2248,8 +2256,8 @@ describe('ElementTemplate patch stream (apply)', () => {
       2181,
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(1);
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]![2]).toEqual(expect.objectContaining({
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
       'update-list-info': {
         insertAction: [
           { position: 1, type: '_et_item_x', 'item-key': 'x' },
@@ -2263,9 +2271,9 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('flushes incremental list updates with the latest slot 0 attributes regardless of stream order', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 220 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 221 } as unknown as ElementRef;
-    const secondRef = { __isNativeRef: true, id: 'second', __mockNativeId: 222 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 220);
+    const firstRef = createMockElementTemplateHandle('first', 221);
+    const secondRef = createMockElementTemplateHandle('second', 222);
     elementTemplateRegistry.set(220, listRef);
     elementTemplateRegistry.set(221, firstRef);
     elementTemplateRegistry.set(222, secondRef);
@@ -2290,9 +2298,9 @@ describe('ElementTemplate patch stream (apply)', () => {
       { id: 'final' },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(3);
-    const latestAttrWrite = mockSetAttributeOfElementTemplate.mock.calls[1]![2] as Record<string, unknown>;
-    expect(mockSetAttributeOfElementTemplate.mock.calls[2]![2]).toEqual(expect.objectContaining({
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(3);
+    const latestAttrWrite = mockSetElementTemplateAttributeSlot.mock.calls[1]![2] as Record<string, unknown>;
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[2]![2]).toEqual(expect.objectContaining({
       id: 'final',
       'update-list-info': {
         insertAction: [{ position: 1, type: '_et_item_b', 'item-key': 'b' }],
@@ -2305,11 +2313,12 @@ describe('ElementTemplate patch stream (apply)', () => {
     }));
   });
 
-  it('moves already attached same-list items when native requests the moved index first', () => {
+  it('moves an attached item on native request', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 225 } as unknown as ElementRef;
-    const aRef = { __isNativeRef: true, id: 'a', __mockNativeId: 226 } as unknown as ElementRef;
-    const bRef = { __isNativeRef: true, id: 'b', __mockNativeId: 227 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 225);
+    const materializedList = createMaterializedListForFrontendTest(225);
+    const aRef = createMockElementTemplateHandle('a', 226);
+    const bRef = createMockElementTemplateHandle('b', 227);
     elementTemplateRegistry.set(225, listRef);
     elementTemplateRegistry.set(226, aRef);
     elementTemplateRegistry.set(227, bRef);
@@ -2326,10 +2335,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    expect(componentAtIndex(listRef, 7, 0, 88, false)).toBe(226);
-    expect(componentAtIndex(listRef, 7, 1, 89, false)).toBe(227);
-    mockInsertNodeToElementTemplate.mockClear();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(226);
+    expect(componentAtIndex(materializedList, 7, 1, 89, false)).toBe(227);
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeTypedListItem,
@@ -2341,25 +2350,26 @@ describe('ElementTemplate patch stream (apply)', () => {
       { __etHandleRef: 227, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
       226,
     ]);
-    mockInsertNodeToElementTemplate.mockClear();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    expect(componentAtIndex(listRef, 7, 0, 90, false)).toBe(227);
+    expect(componentAtIndex(materializedList, 7, 0, 90, false)).toBe(227);
 
-    expect(mockInsertNodeToElementTemplate.mock.calls).toEqual([[listRef, 0, bRef, aRef]]);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
-    enqueueComponent(listRef, 7, 227);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
-    enqueueComponent(listRef, 7, 227);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[listRef, 0, bRef]]);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[listRef, 0, bRef, aRef]]);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
+    enqueueComponent(materializedList, 7, 227);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
+    enqueueComponent(materializedList, 7, 227);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, bRef]]);
   });
 
-  it('places multiple attached same-list moves in final order on the first native request', () => {
+  it('places multiple attached moves', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 240 } as unknown as ElementRef;
-    const aRef = { __isNativeRef: true, id: 'a', __mockNativeId: 241 } as unknown as ElementRef;
-    const bRef = { __isNativeRef: true, id: 'b', __mockNativeId: 242 } as unknown as ElementRef;
-    const cRef = { __isNativeRef: true, id: 'c', __mockNativeId: 243 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 240);
+    const materializedList = createMaterializedListForFrontendTest(240);
+    const aRef = createMockElementTemplateHandle('a', 241);
+    const bRef = createMockElementTemplateHandle('b', 242);
+    const cRef = createMockElementTemplateHandle('c', 243);
     elementTemplateRegistry.set(240, listRef);
     elementTemplateRegistry.set(241, aRef);
     elementTemplateRegistry.set(242, bRef);
@@ -2381,11 +2391,11 @@ describe('ElementTemplate patch stream (apply)', () => {
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    expect(componentAtIndex(listRef, 7, 0, 80, false)).toBe(241);
-    expect(componentAtIndex(listRef, 7, 1, 81, false)).toBe(242);
-    expect(componentAtIndex(listRef, 7, 2, 82, false)).toBe(243);
-    mockInsertNodeToElementTemplate.mockClear();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    expect(componentAtIndex(materializedList, 7, 0, 80, false)).toBe(241);
+    expect(componentAtIndex(materializedList, 7, 1, 81, false)).toBe(242);
+    expect(componentAtIndex(materializedList, 7, 2, 82, false)).toBe(243);
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeTypedListItem,
@@ -2405,26 +2415,27 @@ describe('ElementTemplate patch stream (apply)', () => {
       { __etHandleRef: 241, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
       0,
     ]);
-    mockInsertNodeToElementTemplate.mockClear();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    expect(componentAtIndex(listRef, 7, 0, 90, false)).toBe(243);
+    expect(componentAtIndex(materializedList, 7, 0, 90, false)).toBe(243);
 
-    expect(mockInsertNodeToElementTemplate.mock.calls).toEqual([
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([
       [listRef, 0, aRef, null],
       [listRef, 0, cRef, bRef],
     ]);
-    enqueueComponent(listRef, 7, 243);
-    enqueueComponent(listRef, 7, 241);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
-    expect(componentAtIndex(listRef, 7, 1, 91, false)).toBe(242);
+    enqueueComponent(materializedList, 7, 243);
+    enqueueComponent(materializedList, 7, 241);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
+    expect(componentAtIndex(materializedList, 7, 1, 91, false)).toBe(242);
   });
 
-  it('preserves moved list item registry while lifetime removal releases removed item', () => {
+  it('preserves moved item registry during removal', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 230 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 231 } as unknown as ElementRef;
-    const secondRef = { __isNativeRef: true, id: 'second', __mockNativeId: 232 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 230);
+    const materializedList = createMaterializedListForFrontendTest(230);
+    const firstRef = createMockElementTemplateHandle('first', 231);
+    const secondRef = createMockElementTemplateHandle('second', 232);
     elementTemplateRegistry.set(230, listRef);
     elementTemplateRegistry.set(231, firstRef);
     elementTemplateRegistry.set(232, secondRef);
@@ -2441,9 +2452,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    expect(componentAtIndex(listRef, 7, 1, 88, false)).toBe(232);
-    mockInsertNodeToElementTemplate.mockClear();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    expect(componentAtIndex(materializedList, 7, 1, 88, false)).toBe(232);
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeTypedListItem,
@@ -2459,25 +2470,26 @@ describe('ElementTemplate patch stream (apply)', () => {
       231,
       [231],
     ]);
-    enqueueComponent(listRef, 7, 232);
-    enqueueComponent(listRef, 7, 231);
+    enqueueComponent(materializedList, 7, 232);
+    enqueueComponent(materializedList, 7, 231);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]![2]).toEqual(expect.objectContaining({
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
       'update-list-info': {
         insertAction: [{ position: 0, type: '_et_item_b', 'item-key': 'b' }],
         removeAction: [0, 1],
         updateAction: [],
       },
     }));
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[listRef, 0, secondRef]]);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, secondRef]]);
     expect(elementTemplateRegistry.get(231)).toBeUndefined();
     expect(elementTemplateRegistry.get(232)).toBe(secondRef);
   });
 
-  it('keeps removed item callback lookup until native enqueue detaches it', () => {
+  it('retains callback lookup until native enqueue', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 110 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 111 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 110);
+    const materializedList = createMaterializedListForFrontendTest(110);
+    const firstRef = createMockElementTemplateHandle('first', 111);
     elementTemplateRegistry.set(41, listRef);
     elementTemplateRegistry.set(42, firstRef);
     registerElementTemplateListItem(42, firstRef, {
@@ -2489,14 +2501,14 @@ describe('ElementTemplate patch stream (apply)', () => {
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
 
-    expect(componentAtIndex(listRef, 7, 0, 88, false)).toBe(111);
-    mockRemoveNodeFromElementTemplate.mockClear();
+    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(111);
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
     let enqueueComponent: EnqueueComponentCallback | undefined;
-    mockSetAttributeOfElementTemplate.mockImplementationOnce((...args: unknown[]) => {
+    mockSetElementTemplateAttributeSlot.mockImplementationOnce((...args: unknown[]) => {
       const attrs = args[2] as Record<string, unknown>;
       enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-      enqueueComponent(listRef, 7, 111);
-      lastMock!.mockSetAttributeOfElementTemplate(...args);
+      enqueueComponent(materializedList, 7, 111);
+      lastMock!.mockSetElementTemplateAttributeSlot(...args);
     });
 
     applyElementTemplateUpdateCommands([
@@ -2506,16 +2518,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       [42],
     ]);
 
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[listRef, 0, firstRef]]);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, firstRef]]);
     expect(elementTemplateRegistry.get(42)).toBeUndefined();
-    enqueueComponent!(listRef, 7, 111);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(1);
+    enqueueComponent!(materializedList, 7, 111);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(1);
   });
 
-  it('uses attached state rather than callback lookup presence to detach items', () => {
+  it('detaches by attached state', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 140 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 141 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 140);
+    const materializedList = createMaterializedListForFrontendTest(140);
+    const itemRef = createMockElementTemplateHandle('item', 141);
     elementTemplateRegistry.set(140, listRef);
     elementTemplateRegistry.set(141, itemRef);
     registerElementTemplateListItem(141, itemRef, {
@@ -2528,22 +2541,34 @@ describe('ElementTemplate patch stream (apply)', () => {
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
 
-    expect(componentAtIndex(listRef, 7, 0, 88, false)).toBe(141);
+    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(141);
     state.items[0]!.attached = false;
-    mockRemoveNodeFromElementTemplate.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    enqueueComponent(listRef, 7, 141);
-    enqueueComponent(listRef, 7, 141);
+    enqueueComponent(materializedList, 7, 141);
+    enqueueComponent(materializedList, 7, 141);
 
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
   });
 
   it('releases removed list item subtrees after the final update-list-info write', () => {
     envManager.switchToMainThread();
-    const outerListRef = { __isNativeRef: true, id: 'outer-list', __mockNativeId: 300 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 301 } as unknown as ElementRef;
-    const nestedListRef = { __isNativeRef: true, id: 'nested-list', __mockNativeId: 302 } as unknown as ElementRef;
-    const nestedItemRef = { __isNativeRef: true, id: 'nested-item', __mockNativeId: 303 } as unknown as ElementRef;
+    const outerListRef = {
+      __isNativeRef: true,
+      id: 'outer-list',
+      __mockNativeId: 300,
+    } as unknown as ElementTemplateHandle;
+    const itemRef = createMockElementTemplateHandle('item', 301);
+    const nestedListRef = {
+      __isNativeRef: true,
+      id: 'nested-list',
+      __mockNativeId: 302,
+    } as unknown as ElementTemplateHandle;
+    const nestedItemRef = {
+      __isNativeRef: true,
+      id: 'nested-item',
+      __mockNativeId: 303,
+    } as unknown as ElementTemplateHandle;
     elementTemplateRegistry.set(300, outerListRef);
     elementTemplateRegistry.set(301, itemRef);
     elementTemplateRegistry.set(302, nestedListRef);
@@ -2569,21 +2594,29 @@ describe('ElementTemplate patch stream (apply)', () => {
       [301, 302, 303],
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]![0]).toBe(outerListRef);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![0]).toBe(outerListRef);
     expect(elementTemplateRegistry.get(301)).toBeUndefined();
     expect(elementTemplateRegistry.get(302)).toBeUndefined();
     expect(elementTemplateRegistry.get(303)).toBeUndefined();
-    expect(nestedComponentAtIndex(nestedListRef, 8, 0, 91, false)).toBe(-1);
-    expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
+    expect(nestedComponentAtIndex(createMaterializedListForFrontendTest(302), 8, 0, 91, false)).toBe(-1);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
   });
 
   it('drains pending item cleanup when the list holder is removed in the same patch', () => {
     envManager.switchToMainThread();
-    const parentRef = { __isNativeRef: true, id: 'parent', __mockNativeId: 299 } as unknown as ElementRef;
-    const listRef = { __isNativeRef: true, id: 'list', __mockNativeId: 300 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 301 } as unknown as ElementRef;
-    const nestedListRef = { __isNativeRef: true, id: 'nested-list', __mockNativeId: 302 } as unknown as ElementRef;
-    const nestedItemRef = { __isNativeRef: true, id: 'nested-item', __mockNativeId: 303 } as unknown as ElementRef;
+    const parentRef = createMockElementTemplateHandle('parent', 299);
+    const listRef = createMockElementTemplateHandle('list', 300);
+    const itemRef = createMockElementTemplateHandle('item', 301);
+    const nestedListRef = {
+      __isNativeRef: true,
+      id: 'nested-list',
+      __mockNativeId: 302,
+    } as unknown as ElementTemplateHandle;
+    const nestedItemRef = {
+      __isNativeRef: true,
+      id: 'nested-item',
+      __mockNativeId: 303,
+    } as unknown as ElementTemplateHandle;
     elementTemplateRegistry.set(299, parentRef);
     elementTemplateRegistry.set(300, listRef);
     elementTemplateRegistry.set(301, itemRef);
@@ -2615,20 +2648,20 @@ describe('ElementTemplate patch stream (apply)', () => {
       [300],
     ]);
 
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[parentRef, 0, listRef]]);
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[parentRef, 0, listRef]]);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.get(300)).toBeUndefined();
     expect(elementTemplateRegistry.get(301)).toBeUndefined();
     expect(elementTemplateRegistry.get(302)).toBeUndefined();
     expect(elementTemplateRegistry.get(303)).toBeUndefined();
-    expect(nestedComponentAtIndex(nestedListRef, 8, 0, 91, false)).toBe(-1);
+    expect(nestedComponentAtIndex(createMaterializedListForFrontendTest(302), 8, 0, 91, false)).toBe(-1);
   });
 
   it('emits Snapshot-shaped update-list-info for incremental reorder with platform info changes', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 115 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 116 } as unknown as ElementRef;
-    const secondRef = { __isNativeRef: true, id: 'second', __mockNativeId: 117 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 115);
+    const firstRef = createMockElementTemplateHandle('first', 116);
+    const secondRef = createMockElementTemplateHandle('second', 117);
     elementTemplateRegistry.set(51, listRef);
     elementTemplateRegistry.set(52, firstRef);
     elementTemplateRegistry.set(53, secondRef);
@@ -2665,7 +2698,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]).toEqual([
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
       listRef,
       0,
       {
@@ -2678,14 +2711,13 @@ describe('ElementTemplate patch stream (apply)', () => {
           updateAction: [],
         },
       },
-      null,
     ]);
   });
 
   it('emits Snapshot-shaped update-list-info for standalone platform info updates', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 145 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 146 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 145);
+    const itemRef = createMockElementTemplateHandle('item', 146);
     elementTemplateRegistry.set(81, listRef);
     elementTemplateRegistry.set(82, itemRef);
     registerElementTemplateListItem(82, itemRef, {
@@ -2705,7 +2737,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       },
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]).toEqual([
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
       listRef,
       0,
       {
@@ -2725,15 +2757,15 @@ describe('ElementTemplate patch stream (apply)', () => {
           }],
         },
       },
-      null,
     ]);
   });
 
-  it('moves attached list items without attaching unrelated detached siblings', () => {
+  it('moves attached items without detached siblings', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 135 } as unknown as ElementRef;
-    const firstRef = { __isNativeRef: true, id: 'first', __mockNativeId: 136 } as unknown as ElementRef;
-    const secondRef = { __isNativeRef: true, id: 'second', __mockNativeId: 137 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 135);
+    const materializedList = createMaterializedListForFrontendTest(135);
+    const firstRef = createMockElementTemplateHandle('first', 136);
+    const secondRef = createMockElementTemplateHandle('second', 137);
     elementTemplateRegistry.set(71, listRef);
     elementTemplateRegistry.set(72, firstRef);
     elementTemplateRegistry.set(73, secondRef);
@@ -2750,8 +2782,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
 
-    expect(componentAtIndex(listRef, 7, 0, 91, false)).toBe(136);
-    mockInsertNodeToElementTemplate.mockClear();
+    expect(componentAtIndex(materializedList, 7, 0, 91, false)).toBe(136);
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
     mockFlushElementTree.mockClear();
 
     applyElementTemplateUpdateCommands([
@@ -2768,17 +2800,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       },
       0,
     ]);
-    mockInsertNodeToElementTemplate.mockClear();
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
 
-    expect(componentAtIndex(listRef, 7, 1, 92, false)).toBe(136);
-    expect(mockInsertNodeToElementTemplate.mock.calls).toEqual([[listRef, 0, firstRef, null]]);
+    expect(componentAtIndex(materializedList, 7, 1, 92, false)).toBe(136);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[listRef, 0, firstRef, null]]);
   });
 
   it('treats same-key list item replacement with a new ref as remove and insert', () => {
     envManager.switchToMainThread();
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 125 } as unknown as ElementRef;
-    const oldRef = { __isNativeRef: true, id: 'old', __mockNativeId: 126 } as unknown as ElementRef;
-    const nextRef = { __isNativeRef: true, id: 'next', __mockNativeId: 127 } as unknown as ElementRef;
+    const listRef = createMockElementTemplateHandle('typed-list', 125);
+    const oldRef = createMockElementTemplateHandle('old', 126);
+    const nextRef = createMockElementTemplateHandle('next', 127);
     elementTemplateRegistry.set(61, listRef);
     elementTemplateRegistry.set(62, oldRef);
     elementTemplateRegistry.set(63, nextRef);
@@ -2804,7 +2836,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       0,
     ]);
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls[0]![2]).toEqual(expect.objectContaining({
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
       'update-list-info': {
         insertAction: [{ position: 0, type: '_et_item', 'item-key': 'same' }],
         removeAction: [0],
@@ -2816,8 +2848,8 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('keeps destroyed typed list callbacks Snapshot-safe', () => {
     envManager.switchToMainThread();
-    const listRef = 120 as unknown as ElementRef;
-    const itemRef = 121 as unknown as ElementRef;
+    const listRef = 120 as unknown as ElementTemplateHandle;
+    const itemRef = 121 as unknown as ElementTemplateHandle;
     registerElementTemplateListItem(121, itemRef, {
       templateKey: '_et_item',
       platformInfo: { 'item-key': 'a' },
@@ -2828,15 +2860,16 @@ describe('ElementTemplate patch stream (apply)', () => {
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
+    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
 
     markElementTemplateListDestroyed(120);
 
-    expect(componentAtIndex(listRef, 7, 0, 99, false)).toBe(-1);
-    componentAtIndexes(listRef, 7, [0], [99], false, true);
-    enqueueComponent(listRef, 7, 121);
+    expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
+    componentAtIndexes(materializedList, 7, [0], [99], false, true);
+    enqueueComponent(materializedList, 7, 121);
 
-    expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(mockFlushElementTree.mock.calls).toHaveLength(0);
   });
 
@@ -2844,7 +2877,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     mockSetAttribute.mockClear();
-    mockSetAttributeOfElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.setAttribute,
@@ -2854,7 +2887,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     ]);
 
     expect(mockSetAttribute.mock.calls).toHaveLength(0);
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 404 not found');
     resetReportedErrors();
@@ -2876,14 +2909,14 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('reports missing child handle on removeNode', () => {
     envManager.switchToMainThread();
-    const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
-    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    const targetRef = createMockElementTemplateHandle('target');
+    const descendantRef = createMockElementTemplateHandle('descendant');
     elementTemplateRegistry.set(1, targetRef);
     elementTemplateRegistry.set(12, descendantRef);
 
     applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 1, 0, 999, [12]]);
 
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.has(12)).toBe(true);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('child handle 999 not found');
@@ -2892,14 +2925,14 @@ describe('ElementTemplate patch stream (apply)', () => {
 
   it('reports missing target handle on removeNode without deleting subtree registry entries', () => {
     envManager.switchToMainThread();
-    const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
-    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    const childRef = createMockElementTemplateHandle('child');
+    const descendantRef = createMockElementTemplateHandle('descendant');
     elementTemplateRegistry.set(11, childRef);
     elementTemplateRegistry.set(12, descendantRef);
 
     applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.removeNode, 999, 0, 11, [11, 12]]);
 
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.has(11)).toBe(true);
     expect(elementTemplateRegistry.has(12)).toBe(true);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
@@ -2911,10 +2944,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
 
-    const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
-    const beforeRef = { __isNativeRef: true, id: 'before' } as unknown as ElementRef;
-    const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
-    const descendantRef = { __isNativeRef: true, id: 'descendant' } as unknown as ElementRef;
+    const targetRef = createMockElementTemplateHandle('target');
+    const beforeRef = createMockElementTemplateHandle('before');
+    const childRef = createMockElementTemplateHandle('child');
+    const descendantRef = createMockElementTemplateHandle('descendant');
     elementTemplateRegistry.set(1, targetRef);
     elementTemplateRegistry.set(10, beforeRef);
     elementTemplateRegistry.set(11, childRef);
@@ -2935,11 +2968,11 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     applyElementTemplateUpdateCommands(stream);
 
-    expect(mockInsertNodeToElementTemplate.mock.calls[0]?.[0]).toBe(targetRef);
-    expect(mockInsertNodeToElementTemplate.mock.calls[0]?.[2]).toBe(childRef);
-    expect(mockInsertNodeToElementTemplate.mock.calls[0]?.[3]).toBe(beforeRef);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls[0]?.[0]).toBe(targetRef);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls[0]?.[2]).toBe(childRef);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls[0]?.[0]).toBe(targetRef);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls[0]?.[2]).toBe(childRef);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls[0]?.[3]).toBe(beforeRef);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls[0]?.[0]).toBe(targetRef);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls[0]?.[2]).toBe(childRef);
     expect(elementTemplateRegistry.has(1)).toBe(true);
     expect(elementTemplateRegistry.has(10)).toBe(true);
     expect(elementTemplateRegistry.has(11)).toBe(false);
@@ -2950,10 +2983,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
 
-    const targetRef = { __isNativeRef: true, id: 'target' } as unknown as ElementRef;
-    const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
-    const listRef = { __isNativeRef: true, id: 'typed-list', __mockNativeId: 132 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 131 } as unknown as ElementRef;
+    const targetRef = createMockElementTemplateHandle('target');
+    const childRef = createMockElementTemplateHandle('child');
+    const listRef = createMockElementTemplateHandle('typed-list', 132);
+    const itemRef = createMockElementTemplateHandle('item', 131);
     elementTemplateRegistry.set(70, targetRef);
     elementTemplateRegistry.set(71, childRef);
     elementTemplateRegistry.set(72, listRef);
@@ -2968,27 +3001,30 @@ describe('ElementTemplate patch stream (apply)', () => {
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
+    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
+
+    removeElementTemplateListItem(72, 73, [73]);
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeNode,
       70,
       0,
       71,
-      [71, 72, 73],
+      [71, 72],
     ]);
 
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[targetRef, 0, childRef]]);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[targetRef, 0, childRef]]);
     expect(elementTemplateRegistry.has(71)).toBe(false);
     expect(elementTemplateRegistry.has(72)).toBe(false);
     expect(elementTemplateRegistry.has(73)).toBe(false);
-    mockRemoveNodeFromElementTemplate.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    expect(componentAtIndex(listRef, 7, 0, 99, false)).toBe(-1);
-    componentAtIndexes(listRef, 7, [0], [99], false, true);
-    enqueueComponent(listRef, 7, 131);
+    expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
+    componentAtIndexes(materializedList, 7, [0], [99], false, true);
+    enqueueComponent(materializedList, 7, 131);
 
-    expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(mockFlushElementTree.mock.calls).toHaveLength(0);
   });
 
@@ -3083,7 +3119,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
-  it('resolves elementSlots defensively for invalid payload members', () => {
+  it('resolves childSlots defensively for invalid payload members', () => {
     envManager.switchToMainThread();
     registerTemplates([
       {
@@ -3092,12 +3128,12 @@ describe('ElementTemplate patch stream (apply)', () => {
           kind: 'element',
           type: 'view',
           attributesArray: [],
-          children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
+          children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
         },
       },
     ]);
 
-    const childRef = { __isNativeRef: true, id: 'child' } as unknown as ElementRef;
+    const childRef = createMockElementTemplateHandle('child');
     elementTemplateRegistry.set(11, childRef);
     const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
       mockClear: () => void;
@@ -3123,9 +3159,9 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('still flushes update payloads with empty ops so flushOptions can reach native', () => {
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
-    mockSetAttributeOfElementTemplate.mockClear();
-    mockInsertNodeToElementTemplate.mockClear();
-    mockRemoveNodeFromElementTemplate.mockClear();
+    mockSetElementTemplateAttributeSlot.mockClear();
+    mockInsertElementTemplateNodeIntoSlot.mockClear();
+    mockRemoveElementTemplateNodeFromSlot.mockClear();
     mockFlushElementTree.mockClear();
     lynx.performance._markTiming.mockClear();
 
@@ -3136,9 +3172,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     });
     envManager.switchToMainThread();
 
-    expect(mockSetAttributeOfElementTemplate.mock.calls).toHaveLength(0);
-    expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
-    expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
     expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
     expect(lynx.performance._markTiming.mock.calls).toEqual([]);

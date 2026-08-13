@@ -137,7 +137,7 @@ describe('ElementTemplate reloadMainThread', () => {
     vi.mocked(__SerializeElementTemplate).mockReturnValue({
       tag: 'page',
       attributes: null,
-      elementSlots: [[]],
+      childSlots: [[]],
       uid: 0,
     } as ReturnType<typeof __SerializeElementTemplate>);
     globalThis.lynx = {
@@ -154,7 +154,7 @@ describe('ElementTemplate reloadMainThread', () => {
     vi.unstubAllGlobals();
   });
 
-  it('rebuilds main-thread ET state and flushes the current page', () => {
+  it('rebuilds main-thread ET state and flushes at the root', () => {
     const jsx = { type: 'App' };
     const oldRoot = { __jsx: jsx, stale: true };
     mockedState.root = oldRoot;
@@ -164,31 +164,31 @@ describe('ElementTemplate reloadMainThread', () => {
     const options = { reloadTemplate: true, pipelineOptions: { pipelineID: 'reload-1' } };
     const page = { type: 'page', id: '0', children: [] };
     mockedState.page = page;
-    const oldRootRef = { type: 'old-ref' } as unknown as ElementRef;
+    const oldRootRef = { type: 'old-ref' } as unknown as ElementTemplateHandle;
     const oldSerializedRoot = {
       templateKey: '_et_old',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: -1,
     };
     const oldSerializedPage = {
       tag: 'page',
       attributes: { id: 'background' },
-      elementSlots: [[oldSerializedRoot]],
+      childSlots: [[oldSerializedRoot]],
       uid: 0,
     };
     const opcodes = [0, 'opcode'];
-    const rootRef = { type: 'ref-a' } as unknown as ElementRef;
+    const rootRef = { type: 'ref-a' } as unknown as ElementTemplateHandle;
     const serializedRoot = {
       templateKey: '_et_reload',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: -1,
     };
     const serializedPage = {
       tag: 'page',
       attributes: null,
-      elementSlots: [[serializedRoot]],
+      childSlots: [[serializedRoot]],
       uid: 0,
     };
     const dispatchEvent = vi.fn();
@@ -243,7 +243,7 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(vi.mocked(setupPage)).not.toHaveBeenCalled();
     expect(elementTemplateRegistry.get).toHaveBeenCalledWith(-1);
     expect(__RemoveNodeFromElementTemplate).toHaveBeenCalledWith(page, 0, oldRootRef);
-    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(page, 0, null, null);
+    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(page, 0, null);
     expect(vi.mocked(setRoot)).toHaveBeenCalledTimes(1);
     expect(__root).not.toBe(oldRoot);
     expect(__root.__jsx).toBe(jsx);
@@ -270,7 +270,7 @@ describe('ElementTemplate reloadMainThread', () => {
         reloadVersion: expect.any(Number),
       },
     });
-    expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
+    expect(__FlushElementTree).toHaveBeenCalledWith(undefined, options);
   });
 
   it('rebuilds when the physical page has no root slot', () => {
@@ -281,13 +281,13 @@ describe('ElementTemplate reloadMainThread', () => {
       .mockReturnValueOnce({
         tag: 'page',
         attributes: null,
-        elementSlots: null,
+        childSlots: null,
         uid: 0,
       } as ReturnType<typeof __SerializeElementTemplate>)
       .mockReturnValueOnce({
         tag: 'page',
         attributes: null,
-        elementSlots: [[]],
+        childSlots: [[]],
         uid: 0,
       } as ReturnType<typeof __SerializeElementTemplate>);
 
@@ -327,7 +327,7 @@ describe('ElementTemplate reloadMainThread', () => {
     mockedState.root = oldRoot;
     mockedState.page = { type: 'page', id: '0', children: [] };
     const ctx = { _wkltId: 'new' };
-    const rootRef = { type: 'ref-a' } as unknown as ElementRef;
+    const rootRef = { type: 'ref-a' } as unknown as ElementTemplateHandle;
     vi.mocked(mockRender).mockReturnValue(['opcode']);
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
       __etAttrPlanMap._et_reload = [0, adaptMTEventAttrSlot];
