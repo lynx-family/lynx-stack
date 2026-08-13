@@ -169,6 +169,53 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('restores child style when an inherited variant removes a value', async () => {
+    function App() {
+      const [phase, setPhase] = useState(0);
+      const label = phase === 0 ? 'a' : phase === 1 ? 'b' : 'c';
+      return (
+        <view>
+          <motion.view initial='a' animate={label}>
+            <motion.view
+              data-testid='child'
+              style={{ opacity: 0 }}
+              variants={{
+                a: { opacity: 0.5 },
+                b: { opacity: 1 },
+                c: {},
+              }}
+              transition={{ type: false }}
+            />
+          </motion.view>
+          <view
+            data-testid='toggle'
+            bindtap={() => setPhase(value => value + 1)}
+          />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'opacity: 0.5',
+    );
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+  });
+
   test('an explicit child animate prop overrides a propagated label', async () => {
     const { getByTestId } = render(
       <motion.view animate='visible'>

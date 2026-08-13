@@ -75,6 +75,7 @@ function isVariantLabel(
 function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   context: MotionVariantContextValue;
   delay: number;
+  inheritsAnimate: boolean;
   props: Props;
   resolvedAnimateDefinition: MotionTarget | false | undefined;
 } {
@@ -111,6 +112,7 @@ function useInheritedMotionProps<Props extends MotionProps>(props: Props): {
   return {
     context,
     delay: inheritedDelay,
+    inheritsAnimate,
     props: initial === props.initial && animate === props.animate
       ? props
       : { ...props, initial, animate },
@@ -173,6 +175,7 @@ function useMotionHostProps<Props extends MotionProps>(
   props: Props,
   inheritedDelay = 0,
   inheritedResolvedAnimate?: MotionTarget | false,
+  inheritsAnimate = false,
 ): PreparedHostProps {
   const {
     animate,
@@ -298,6 +301,13 @@ function useMotionHostProps<Props extends MotionProps>(
         initialFalseAnimateTarget,
       ),
     [initialFalseAnimateTarget, resolvedInitialTarget, style],
+  );
+  const removedAnimateFallbackValues = useMemo(
+    () =>
+      inheritsAnimate
+        ? resolveInitialValues(style, undefined)
+        : initialValues,
+    [inheritsAnimate, initialValues, style],
   );
   const workletAnimateTransition = useMemo(
     () =>
@@ -449,6 +459,7 @@ function useMotionHostProps<Props extends MotionProps>(
       transitionEnd: Record<string, unknown> | undefined,
       options: MotionTransition | undefined,
       startingValues: Record<string, unknown>,
+      removedTargetFallbackValues: Record<string, unknown>,
       shouldAnimate: boolean,
     ) {
       'main thread';
@@ -487,7 +498,7 @@ function useMotionHostProps<Props extends MotionProps>(
       const animationTargetValues: Record<string, unknown> = {};
       for (const key in animateTargetKeysRef.current) {
         if (!(key in ownedTargetValues)) {
-          if (startingValues[key] === undefined) {
+          if (removedTargetFallbackValues[key] === undefined) {
             const retainedValue = generatedValuesRef.current[key];
             if (retainedValue) {
               retainedValue.stop();
@@ -496,7 +507,7 @@ function useMotionHostProps<Props extends MotionProps>(
               values[key] = retainedSnapshot;
             }
           } else {
-            animationTargetValues[key] = startingValues[key];
+            animationTargetValues[key] = removedTargetFallbackValues[key];
           }
         }
       }
@@ -675,6 +686,7 @@ function useMotionHostProps<Props extends MotionProps>(
       resolvedAnimate.transitionEnd,
       workletAnimateTransition,
       initialValues,
+      removedAnimateFallbackValues,
       shouldAnimateTarget,
     );
 
@@ -1349,6 +1361,7 @@ const MotionView: FunctionComponent<MotionViewProps> = (props) => {
     inherited.props,
     inherited.delay,
     inherited.resolvedAnimateDefinition,
+    inherited.inheritsAnimate,
   );
   const { children, ...elementProps } = hostProps;
   if (!shouldProvideVariantContext(props, inherited.context, children)) {
@@ -1370,6 +1383,7 @@ const MotionText: FunctionComponent<MotionTextProps> = (props) => {
     inherited.props,
     inherited.delay,
     inherited.resolvedAnimateDefinition,
+    inherited.inheritsAnimate,
   );
   const { children, ...elementProps } = hostProps;
   if (!shouldProvideVariantContext(props, inherited.context, children)) {
@@ -1391,6 +1405,7 @@ const MotionImage: FunctionComponent<MotionImageProps> = (props) => {
     inherited.props,
     inherited.delay,
     inherited.resolvedAnimateDefinition,
+    inherited.inheritsAnimate,
   );
   const { children, ...elementProps } = hostProps;
   if (!shouldProvideVariantContext(props, inherited.context, children)) {
@@ -1417,6 +1432,7 @@ function createMotionComponent<Props extends { style?: unknown }>(
       inherited.props,
       inherited.delay,
       inherited.resolvedAnimateDefinition,
+      inherited.inheritsAnimate,
     );
     const { children, ...componentProps } = hostProps;
     if (!shouldProvideVariantContext(props, inherited.context, children)) {
