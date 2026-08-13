@@ -18,8 +18,14 @@ export const motionValueType = defineMainThreadObjectType<
   MotionValue<unknown>
 >({
   type: MOTION_VALUE_TYPE,
-  create: motionValue,
-  dispose: value => value.stop(),
+  create(initialValue) {
+    'main thread';
+    return motionValue(initialValue);
+  },
+  dispose(value) {
+    'main thread';
+    value.stop();
+  },
 });
 
 /**
