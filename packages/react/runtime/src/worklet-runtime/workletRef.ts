@@ -13,17 +13,36 @@ interface RefImpl {
     refImpl: WorkletRefImpl<Element | null>,
     element: ElementNode | null,
   ): void;
-  updateWorkletRefInitValueChanges(patch: ([number, unknown] | [number, unknown, string])[]): void;
-  registerMainThreadValueType(type: string, factory: MainThreadValueFactory): void;
+  updateWorkletRefInitValueChanges(
+    patch: ([number, unknown] | [number, unknown, string, number])[],
+  ): void;
+  registerMainThreadObjectType(
+    type: string,
+    create: MainThreadObjectFactory,
+    dispose: MainThreadObjectDisposer | undefined,
+    protocolVersion: number,
+  ): void;
   clearFirstScreenWorkletRefMap(): void;
 }
 
 let impl: RefImpl | undefined;
-type MainThreadValueFactory = (initValue: unknown) => object;
-const mainThreadValueFactories = new Map<string, MainThreadValueFactory>();
-const hydratedWorkletValues = new WeakSet<object>();
+const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
+
+type MainThreadObjectFactory = (initialValue: unknown) => object;
+type MainThreadObjectDisposer = (object: object) => void;
+interface MainThreadObjectDefinition {
+  create: MainThreadObjectFactory;
+  dispose: MainThreadObjectDisposer | undefined;
+}
+
+const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
+let realizedMainThreadObjectDefinitions = new WeakMap<object, MainThreadObjectDefinition>();
+let hydratedWorkletValues = new WeakSet<object>();
 
 function initWorkletRef(): RefImpl {
+  mainThreadObjectDefinitions.clear();
+  realizedMainThreadObjectDefinitions = new WeakMap();
+  hydratedWorkletValues = new WeakSet();
   return (impl = {
     _workletRefMap: {},
     /**
@@ -35,7 +54,7 @@ function initWorkletRef(): RefImpl {
     _firstScreenWorkletRefMap: {},
     updateWorkletRef,
     updateWorkletRefInitValueChanges,
-    registerMainThreadValueType,
+    registerMainThreadObjectType,
     clearFirstScreenWorkletRefMap,
   });
 }
@@ -52,8 +71,23 @@ const createWorkletRef = <T>(
   return ref;
 };
 
-function registerMainThreadValueType(type: string, factory: MainThreadValueFactory): void {
-  mainThreadValueFactories.set(type, factory);
+function registerMainThreadObjectType(
+  type: string,
+  create: MainThreadObjectFactory,
+  dispose: MainThreadObjectDisposer | undefined,
+  protocolVersion: number,
+): void {
+  assertMainThreadObjectProtocolVersion(type, protocolVersion);
+  const registered = mainThreadObjectDefinitions.get(type);
+  if (registered) {
+    if (registered.create !== create || registered.dispose !== dispose) {
+      throw new Error(
+        `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create and dispose functions.`,
+      );
+    }
+    return;
+  }
+  mainThreadObjectDefinitions.set(type, { create, dispose });
 }
 
 function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
@@ -62,14 +96,31 @@ function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
     return createWorkletRef(refImpl._wvid, refImpl._initValue);
   }
 
-  const factory = mainThreadValueFactories.get(type);
-  if (!factory) {
-    throw new Error(`MainThreadValue type is not registered: ${type}`);
+  assertMainThreadObjectProtocolVersion(type, refImpl._mtoVersion);
+  const definition = mainThreadObjectDefinitions.get(type);
+  if (!definition) {
+    throw new Error(
+      `MainThreadObject type is not registered: "${type}". Define and register the type during main-thread render before capturing its handle.`,
+    );
   }
 
-  const value = factory(refImpl._initValue);
+  const value = definition.create(refImpl._initValue);
+  if (typeof value !== 'object' || value === null) {
+    throw new Error(`MainThreadObject type "${type}" created a non-object value.`);
+  }
+  realizedMainThreadObjectDefinitions.set(value, definition);
   hydratedWorkletValues.add(value);
   return value as WorkletRef<T>;
+}
+
+function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: number | undefined): void {
+  if (protocolVersion !== MAIN_THREAD_OBJECT_PROTOCOL_VERSION) {
+    throw new Error(
+      `MainThreadObject protocol mismatch for type "${type}": runtime supports version ${MAIN_THREAD_OBJECT_PROTOCOL_VERSION}, but the handle or bundle uses ${
+        String(protocolVersion)
+      }. Rebuild the main template and lazy bundle with compatible @lynx-js/react versions.`,
+    );
+  }
 }
 
 function isHydratedWorkletValue(value: unknown): value is object {
@@ -106,7 +157,29 @@ const getFromWorkletRefMap = <T>(
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
+  disposeMainThreadObject(impl!._workletRefMap[id]);
   delete impl!._workletRefMap[id];
+}
+
+function hydrateWorkletValue(id: WorkletRefId, value: WorkletRef<unknown>): void {
+  const previous = impl!._workletRefMap[id];
+  if (previous !== value) {
+    disposeMainThreadObject(previous);
+  }
+  impl!._workletRefMap[id] = value;
+}
+
+function disposeMainThreadObject(value: unknown): void {
+  if (typeof value !== 'object' || value === null) {
+    return;
+  }
+  const definition = realizedMainThreadObjectDefinitions.get(value);
+  if (!definition) {
+    return;
+  }
+  realizedMainThreadObjectDefinitions.delete(value);
+  hydratedWorkletValues.delete(value);
+  definition.dispose?.(value);
 }
 
 /**
@@ -125,15 +198,16 @@ function updateWorkletRef(
 }
 
 function updateWorkletRefInitValueChanges(
-  patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string])[],
+  patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string, number])[],
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
-    patch.forEach(([id, value, type]) => {
+    patch.forEach(([id, value, type, protocolVersion]) => {
       if (!impl!._workletRefMap[id]) {
         impl!._workletRefMap[id] = createWorkletValue({
           _wvid: id,
           _initValue: value,
           _type: type,
+          _mtoVersion: protocolVersion,
         } as WorkletRefImpl<unknown>);
       }
     });
@@ -141,6 +215,12 @@ function updateWorkletRefInitValueChanges(
 }
 
 function clearFirstScreenWorkletRefMap(): void {
+  const retainedValues = new Set(Object.values(impl!._workletRefMap));
+  Object.values(impl!._firstScreenWorkletRefMap).forEach((value) => {
+    if (!retainedValues.has(value)) {
+      disposeMainThreadObject(value);
+    }
+  });
   impl!._firstScreenWorkletRefMap = {};
 }
 
@@ -150,6 +230,7 @@ export {
   initWorkletRef,
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
+  hydrateWorkletValue,
   updateWorkletRefInitValueChanges,
   isHydratedWorkletValue,
 };

@@ -1,12 +1,12 @@
-import { workletCapture as __workletCapture } from "@lynx-js/react";
-var workletCapture = __workletCapture;
+import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject;
 let Y = {
     _c: {
         y1,
         y2,
         y3,
         y4,
-        y5: workletCapture(y5, {
+        y5: captureMainThreadObject(y5, {
             r: y5.r
         })
     },
