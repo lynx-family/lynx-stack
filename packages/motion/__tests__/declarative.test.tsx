@@ -344,6 +344,38 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('initial false skips a beforeChildren mount delay', async () => {
+    const onAnimationStart = vi.fn();
+    const { getByTestId } = render(
+      <motion.view
+        initial={false}
+        animate='visible'
+        variants={{
+          visible: {
+            x: 100,
+            transition: { duration: 1, when: 'beforeChildren' },
+          },
+        }}
+      >
+        <motion.view
+          data-testid='child'
+          variants={{ visible: { opacity: 0.9 } }}
+          transition={{ duration: 1 }}
+          onAnimationStart={onAnimationStart}
+        />
+      </motion.view>,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'opacity: 0.9',
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(onAnimationStart).not.toHaveBeenCalled();
+  });
+
   test('does not propagate initial false to an explicit child animate prop', async () => {
     const onAnimationStart = vi.fn();
     const { getByTestId } = render(
