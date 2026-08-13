@@ -91,13 +91,20 @@ function getExplicitTargetDuration(
     if (
       typeof valueTransition?.duration !== 'number'
       || valueTransition.type === false
-      || valueTransition.repeat !== undefined
     ) {
       return 0;
     }
+    const repeat = valueTransition.repeat ?? 0;
+    if (!Number.isFinite(repeat) || repeat < 0) {
+      return 0;
+    }
+    const repeatDelay = typeof valueTransition.repeatDelay === 'number'
+      ? valueTransition.repeatDelay
+      : 0;
     longestDuration = Math.max(
       longestDuration,
-      valueTransition.duration
+      valueTransition.duration * (repeat + 1)
+        + repeatDelay * repeat
         + (typeof valueTransition.delay === 'number'
           ? valueTransition.delay
           : 0),

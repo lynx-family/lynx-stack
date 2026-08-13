@@ -50,8 +50,8 @@ The declarative layer currently supports:
   `inherit={false}` prevents labels propagating through a variant boundary;
   parent `initial={false}` also suppresses inherited child mount animations;
   numeric `delayChildren` also propagates through inherited labels;
-  `when: "beforeChildren"` waits for a parent's non-repeating target whose
-  animated values all have explicit durations
+  `when: "beforeChildren"` waits for a parent's finite target whose animated
+  values all have explicit durations
   before starting inherited children
 - `initial={false}` to render the final `animate` keyframe without a mount
   animation while preserving later target updates
@@ -66,7 +66,7 @@ The declarative layer currently supports:
 It does **not** yet provide the complete `motion/react` declarative contract.
 In particular, focus/in-view/drag states and their animation lifecycle
 callbacks, animation controls, gesture propagation and remaining variant
-orchestration (`when: "afterChildren"`, automatic-duration or repeating
+orchestration (`when: "afterChildren"`, automatic-duration or infinite
 `when: "beforeChildren"`, dynamic `delayChildren`, and `staggerChildren`),
 layout and shared-layout animations, `exit`, and `AnimatePresence` are not
 supported.
