@@ -77,7 +77,10 @@ describe('chat protocol adapters', () => {
         host,
         new AbortController().signal,
       );
-      expect(getModelsEndpoint(host)).toBe('http://localhost:3060/models');
+      const modelsEndpoint = getModelsEndpoint(host);
+      expect(modelsEndpoint).toBe('http://localhost:3060/models');
+      expect(fetchModels).toHaveBeenCalledTimes(1);
+      expect(fetchModels.mock.calls[0]?.[0]).toBe(modelsEndpoint);
       expect(settings).toEqual({
         model: 'Doubao Seed',
         models: [
@@ -461,6 +464,7 @@ describe('chat protocol adapters', () => {
       expect(chatRequest).toMatchObject({
         url: 'https://genui-server.vercel.app/mcp-apps/stream',
         body: {
+          model: 'gpt-5.5',
           registry: {
             protocolVersion: '2025-11-25',
             appProtocolVersion: '2026-01-26',
