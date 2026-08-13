@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { getLegacyInjectedApp } from '../legacy/legacy-app.js';
 
 /* eslint-disable */
 
@@ -9,6 +8,7 @@ import { Component } from 'preact';
 
 import { globalCommitContext } from './commit-context.js';
 import { PerfSpecificKey, markTimingLegacy } from './performance.js';
+import { getLegacyInjectedApp } from '../legacy/legacy-app.js';
 import { NEXT_STATE } from '../shared/render-constants.js';
 
 interface ReactAppInstance {
@@ -70,9 +70,13 @@ function installComponentCompat(): void {
   }
 
   const __Component = Component as any;
-  const reactAppInstance = getReactAppInstance();
 
-  __Component.prototype._reactAppInstance = reactAppInstance;
+  // Resolved lazily: the legacy injected app only exists under RL2 bundles,
+  // and this install runs at module evaluation time.
+  Object.defineProperty(__Component.prototype, '_reactAppInstance', {
+    configurable: true,
+    get: getReactAppInstance,
+  });
 
   __Component.prototype.getNodeRef = function(a: string, b?: boolean) {
     reportRefDeprecationError('getNodeRef', 'lynx.createSelectorQuery');
@@ -129,7 +133,10 @@ function installComponentCompat(): void {
     return lynx.getElementById(id);
   };
 
-  __Component.prototype.GlobalEventEmitter = reactAppInstance.GlobalEventEmitter;
+  Object.defineProperty(__Component.prototype, 'GlobalEventEmitter', {
+    configurable: true,
+    get: () => getReactAppInstance()?.GlobalEventEmitter,
+  });
 
   __Component.prototype.createSelectorQuery = function() {
     reportRefDeprecationError('createSelectorQuery on component instance', 'lynx.createSelectorQuery');

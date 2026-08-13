@@ -8,6 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { installComponentCompat } from '../../src/core/component';
 import { useState } from '../../src/index';
+import { useLynx } from '../../src/use-lynx';
 import { root } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { defaultRootContext, switchRootContext } from '../../src/root-context';
@@ -424,5 +425,34 @@ describe('multi-page: two roots on separate native channels', () => {
     expect(
       lynx.getNativeApp().callLepusMethod.mock.calls.filter(c => c[0] === 'rLynxChange'),
     ).toHaveLength(1);
+  });
+});
+
+describe('useLynx: per-root lynx resolution', () => {
+  it('returns the lynx the root was created with, and the global otherwise', () => {
+    globalEnvManager.switchToBackground();
+
+    const handlersF = {};
+    const lynxF = {
+      ...lynx,
+      registerAppEventHandlers: (h) => Object.assign(handlersF, h),
+    };
+
+    let seenF;
+    function F() {
+      seenF = useLynx();
+      return <text>{'F'}</text>;
+    }
+    new ReactLynxRoot(lynxF).render(<F />);
+    expect(seenF).toBe(lynxF);
+
+    // A root created without a page lynx falls back to the ambient global.
+    let seenBare;
+    function Bare() {
+      seenBare = useLynx();
+      return <text>{'bare'}</text>;
+    }
+    new ReactLynxRoot().render(<Bare />);
+    expect(seenBare).toBe(lynx);
   });
 });

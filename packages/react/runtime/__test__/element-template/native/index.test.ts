@@ -195,12 +195,18 @@ describe('element-template native index wiring', () => {
     expect(initProfileHook).toHaveBeenCalledTimes(1);
     expect(setupLynxEnv).toHaveBeenCalledTimes(1);
     expect(resetEventStateForRuntime).toHaveBeenCalledTimes(1);
-    expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
-    expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
-    expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);
-    expect(globalThis.lynxCoreInject.tt.updateGlobalProps).toEqual(expect.any(Function));
-    expect(globalThis.lynxCoreInject.tt.updateCardData).toBe(updateCardData);
-    expect(globalThis.lynxCoreInject.tt.onAppReload).toBe(reloadBackground);
+    // Handlers register through `lynx.registerAppEventHandlers`; the tt
+    // stub forwards its same-named methods to them like the real core.
+    globalThis.lynxCoreInject.tt.callDestroyLifetimeFun();
+    expect(callDestroyLifetimeFun).toHaveBeenCalledTimes(1);
+    globalThis.lynxCoreInject.tt.publishEvent('handler', { data: 1 });
+    expect(publishEvent).toHaveBeenCalledWith('handler', { data: 1 });
+    globalThis.lynxCoreInject.tt.publicComponentEvent('c', 'h', { data: 2 });
+    expect(publicComponentEvent).toHaveBeenCalledWith('c', 'h', { data: 2 });
+    globalThis.lynxCoreInject.tt.updateCardData({ value: 3 });
+    expect(updateCardData).toHaveBeenCalledWith({ value: 3 });
+    globalThis.lynxCoreInject.tt.onAppReload({ value: 4 });
+    expect(reloadBackground).toHaveBeenCalledWith({ value: 4 });
 
     globalThis.lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
     expect(updateGlobalProps).toHaveBeenCalledWith(

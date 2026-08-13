@@ -23,10 +23,31 @@ export function injectGlobals() {
   globalThis.SystemInfo = {
     lynxSdkVersion: '4.0',
   };
+  // Emulates lynx-core's app: the runtime registers handlers through
+  // `lynx.registerAppEventHandlers`, and the "engine" (tests) invokes the
+  // same-named methods on `lynxCoreInject.tt`, which forward to them —
+  // exactly the App-object forwarding the real core performs.
+  const appEventHandlers = {};
   globalThis.lynxCoreInject = {};
-  globalThis.lynxCoreInject.tt = {};
+  globalThis.lynxCoreInject.tt = {
+    _params: { initData: {}, updateData: {} },
+    OnLifecycleEvent: (...args) => appEventHandlers.onLifecycleEvent?.(...args),
+    publishEvent: (...args) => appEventHandlers.publishEvent?.(...args),
+    publicComponentEvent: (...args) => appEventHandlers.publicComponentEvent?.(...args),
+    updateGlobalProps: (...args) => appEventHandlers.updateGlobalProps?.(...args),
+    updateCardData: (...args) => appEventHandlers.updateCardData?.(...args),
+    onAppReload: (...args) => appEventHandlers.onAppReload?.(...args),
+    callDestroyLifetimeFun: (...args) => appEventHandlers.onDestroyLifetime?.(...args),
+  };
 
   installPerformanceGlobals();
+
+  Object.assign(globalThis.lynx, {
+    registerAppEventHandlers: (handlers) => Object.assign(appEventHandlers, handlers),
+    getInitDataParams: () => globalThis.lynxCoreInject.tt._params,
+    getDynamicComponentExports: (url) => globalThis.lynxCoreInject.tt.getDynamicComponentExports?.(url),
+    callBeforePublishEvent: (data) => globalThis.lynxCoreInject.tt.callBeforePublishEvent?.(data),
+  });
 
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
