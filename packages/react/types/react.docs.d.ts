@@ -124,6 +124,23 @@ export { createElement } from '../runtime/lib/index.js';
 export { cloneElement } from '../runtime/lib/index.js';
 
 /**
+ * Creates a root bound to one page's `lynx` for rendering in a shared
+ * JS context, where the module-level `lynx` belongs to whichever card
+ * evaluated the framework chunk first.
+ *
+ * @public
+ */
+export { createRoot } from '../runtime/lib/index.js';
+
+/**
+ * Returns the `lynx` object of the page the calling component belongs to,
+ * falling back to the global `lynx` for single-card apps.
+ *
+ * @public
+ */
+export { useLynx } from '../runtime/lib/index.js';
+
+/**
  * RL-defined Lynx APIs
  */
 export * from '../runtime/lib/lynx-api.js';

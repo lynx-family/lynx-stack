@@ -19,11 +19,21 @@ type RootContainer = (SnapshotInstance | BackgroundSnapshotInstance) & {
   __jsx?: ReactNode;
 };
 
+/**
+ * A root created by {@link createRoot}: renders and unmounts one page's
+ * tree in its own context.
+ *
+ * @public
+ */
+export interface PageRoot {
+  render(jsx: ReactNode): void;
+  unmount(): void;
+}
 
 /**
  * @internal
  */
-export class ReactLynxRoot {
+export class ReactLynxRoot implements PageRoot {
   _container: RootContainer;
   _ctx: RootContext;
 
@@ -107,7 +117,7 @@ export class ReactLynxRoot {
  *
  * @public
  */
-export function createRoot(pageLynx?: RootLynx): ReactLynxRoot | undefined {
+export function createRoot(pageLynx?: RootLynx): PageRoot | undefined {
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     const boundRoot = pageLynx ? new ReactLynxRoot(pageLynx) : undefined;
     setBoundRoot(boundRoot);
@@ -120,7 +130,7 @@ export function createRoot(pageLynx?: RootLynx): ReactLynxRoot | undefined {
  * @internal
  */
 export interface RootWithBindRenderContext {
-  __experimentalBindRenderContext?: (pageLynx?: RootLynx) => ReactLynxRoot | undefined;
+  __experimentalBindRenderContext?: (pageLynx?: RootLynx) => PageRoot | undefined;
 }
 
 if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
