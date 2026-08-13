@@ -44,6 +44,27 @@ export function MyComponent() {
 }
 ```
 
+### Motion values
+
+`useMotionValue` creates an opaque background-thread handle that becomes a real
+Motion `MotionValue` when captured by a main-thread function. Its methods must
+only be called from the main thread.
+
+```tsx
+import { useMotionValue } from '@lynx-js/motion';
+
+export function Counter() {
+  const count = useMotionValue(0);
+
+  function increment() {
+    'main thread';
+    count.set(count.get() + 1);
+  }
+
+  return <view main-thread:bindtap={increment} />;
+}
+```
+
 For more comprehensive examples, please refer to the [examples/motion](https://github.com/lynx-family/lynx-stack/tree/main/examples/motion) directory in this repository.
 
 ## Motion Mini (`@lynx-js/motion/mini`)

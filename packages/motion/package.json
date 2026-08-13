@@ -47,13 +47,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "motion": "13.0.0",
-    "motion-dom": "13.0.0",
-    "motion-utils": "13.0.0"
+    "motion": "12.42.2",
+    "motion-dom": "12.42.2",
+    "motion-utils": "12.39.0"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.0.0",
     "rsbuild-plugin-publint": "1.0.0"
   },
   "peerDependencies": {
