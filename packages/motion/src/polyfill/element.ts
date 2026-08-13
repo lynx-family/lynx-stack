@@ -8,6 +8,10 @@ interface StyleObject {
   setProperty(property: string, value: string): void;
 }
 
+function toCssPropertyName(name: string): string {
+  return name.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`);
+}
+
 export class ElementCompt {
   private element: MainThread.Element;
 
@@ -20,9 +24,12 @@ export class ElementCompt {
 
     return new Proxy(styleObject, {
       get: (_target, prop) => {
-        // @ts-expect-error Expected
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return __GetComputedStyleByKey(this.element.element, prop as string);
+        const rawElement = (this.element as unknown as { element: never })
+          .element;
+        return __GetComputedStyleByKey(
+          rawElement,
+          toCssPropertyName(prop as string),
+        );
       },
     });
   }
@@ -34,7 +41,7 @@ export class ElementCompt {
       if (property === 'transform' && value === 'none') {
         return this.element.setStyleProperty('transform', 'scale(1, 1)');
       }
-      this.element.setStyleProperty(property, value);
+      this.element.setStyleProperty(toCssPropertyName(property), value);
     };
     return new Proxy(styleObject, {
       set: (target, prop, value) => {
@@ -43,7 +50,7 @@ export class ElementCompt {
             this.element.setStyleProperty('transform', 'scale(1, 1)');
             return true;
           }
-          this.element.setStyleProperty(prop, String(value));
+          this.element.setStyleProperty(toCssPropertyName(prop), String(value));
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           target[prop] = value;
         }
@@ -64,9 +71,11 @@ export class ElementCompt {
 
   // Individual style property getters and setters
   private getStyleProperty(name: string): string {
-    // @ts-expect-error Expected
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return __GetComputedStyleByKey(this.element.element, name);
+    const rawElement = (this.element as unknown as { element: never }).element;
+    return __GetComputedStyleByKey(
+      rawElement,
+      toCssPropertyName(name),
+    );
   }
 
   // Common style properties
@@ -74,7 +83,7 @@ export class ElementCompt {
     return this.getStyleProperty('backgroundColor');
   }
   set backgroundColor(value: string) {
-    this.element.setStyleProperty('backgroundColor', value);
+    this.element.setStyleProperty('background-color', value);
   }
 
   get color(): string {
@@ -88,7 +97,7 @@ export class ElementCompt {
     return this.getStyleProperty('fontSize');
   }
   set fontSize(value: string) {
-    this.element.setStyleProperty('fontSize', value);
+    this.element.setStyleProperty('font-size', value);
   }
 
   get width(): string {

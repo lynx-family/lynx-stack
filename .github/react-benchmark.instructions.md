@@ -26,4 +26,7 @@ When benchmarking MainThreadObject, keep the ordinary `MainThreadRef` workload i
 
 Resolve the repository root for benchmark transforms with a `.git` lookup that accepts either a directory or a worktree gitfile. A directory-only lookup leaves `__REPO_FILEPATH__` unreplaced in worktree-built bundles and makes native benchmark execution fail before rendering.
 
+Keep declarative `motion.*` lifecycle benchmarks separate: post-commit `runOnMainThread` can race the existing asynchronous `MainThreadRef` initialization path, so combining it with the object benchmark confounds two independent runtime questions.
+
+The headless `benchx_cli` MTS environment may not expose the browser `queueMicrotask` global or the newer `lynx.queueMicrotask` API. Prepend a benchmark-scoped compatibility module to Motion entries that prefers `lynx.queueMicrotask` and otherwise schedules with `setTimeout`; do not change Motion or ReactLynx production behavior solely for the benchmark runner.
 When `benchmark/react/lynx.config.js` enables builtin attribute-name transformation, declare the React-style aliases used by the benchmark explicitly in `benchmark/react/types/index.d.ts` and reference their original Lynx prop types with indexed access. Key-remapped mapped types provide type checking but not reliable completion documentation or definition navigation.

@@ -1,6 +1,9 @@
 # @lynx-js/motion
 
-A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings declarative animations and gesture handling to the Lynx ecosystem.
+A Motion animation-engine adapter for Lynx with imperative APIs and an
+incremental declarative component layer. It reuses upstream
+[`motion`](https://motion.dev/) and `motion-dom` primitives, but it is not a
+complete `motion/react` renderer.
 
 ## Installation
 
@@ -9,6 +12,58 @@ npm install @lynx-js/motion
 ```
 
 ## Usage
+
+### Declarative animation
+
+Use the built-in Motion components to animate Lynx elements from props. Motion
+applies `initial` during the first render and animates whenever `animate`
+changes.
+
+```tsx
+import { motion, useMotionValue } from '@lynx-js/motion';
+
+export function Card({ selected }: { selected: boolean }) {
+  const scale = useMotionValue(1);
+
+  return (
+    <motion.view
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: selected ? 100 : 0 }}
+      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+      style={{ scale }}
+    />
+  );
+}
+```
+
+`motion.view`, `motion.text`, and `motion.image` are included. Use
+`motion.create(Component)` for components that forward `style`, host props, and
+`main-thread:ref` to a Lynx element.
+
+#### Declarative compatibility
+
+The declarative layer currently supports:
+
+- object targets and string/array/function `variants` for `initial` and
+  `animate`, including `custom` and target-local `transition`
+- transform aliases, keyframes, repeat/reverse, colors, and live `MotionValue`
+  styles backed by the upstream Motion engine
+- `whileTap` with `onTapStart`, `onTap`, and `onTapCancel`
+- `whileHover` with `onHoverStart` and `onHoverEnd` on mouse-capable clients
+- `onAnimationStart` and `onAnimationComplete` for the base `animate` target
+
+It does **not** yet provide the complete `motion/react` declarative contract.
+In particular, focus/in-view/drag states, gesture animation lifecycle
+callbacks, animation controls, propagated/orchestrated variants, layout and
+shared-layout animations, `exit`, and `AnimatePresence` are not supported.
+Internal main-thread refs, handlers, and gestures also cannot yet be safely
+composed with every consumer-owned equivalent.
+
+This boundary is architectural: the animation generators, MotionValues,
+transitions, interpolation, and style effects come from upstream Motion. The
+React DOM visual-element tree, DOM gesture/layout observers, presence tree, and
+React-specific orchestration cannot run unchanged on ReactLynx and require Lynx
+host/runtime integrations.
 
 ### Basic Animation
 
@@ -44,6 +99,27 @@ export function MyComponent() {
 }
 ```
 
+### Motion values
+
+`useMotionValue` creates an opaque background-thread handle that becomes a real
+Motion `MotionValue` when captured by a main-thread function. Its methods must
+only be called from the main thread.
+
+```tsx
+import { useMotionValue } from '@lynx-js/motion';
+
+export function Counter() {
+  const count = useMotionValue(0);
+
+  function increment() {
+    'main thread';
+    count.set(count.get() + 1);
+  }
+
+  return <view main-thread:bindtap={increment} />;
+}
+```
+
 For more comprehensive examples, please refer to the [examples/motion](https://github.com/lynx-family/lynx-stack/tree/main/examples/motion) directory in this repository.
 
 ## Motion Mini (`@lynx-js/motion/mini`)
@@ -69,7 +145,7 @@ import { animate, createMotionValue } from '@lynx-js/motion/mini';
 | **Animation Targets** | Numbers, Strings (colors, units), Objects, Arrays | **Numbers only** (mostly) |
 | **Keyframes**         | Full support                                      | Limited support           |
 | **Layout Animations** | Supported                                         | Not supported             |
-| **Gesture Handlers**  | Full suite (drag, pan, hover, etc.)               | Not included              |
+| **Gesture Handlers**  | Declarative tap + hover subset                    | Not included              |
 
 > **Note**: `MotionValue` in Mini primarily works with numbers.
 
