@@ -701,6 +701,63 @@ describe('declarative Motion', () => {
     );
   });
 
+  test('reports hover entry and restoration starts for every value', async () => {
+    const onAnimationStart = vi.fn();
+    const { getByTestId } = render(
+      <motion.view
+        data-testid='button'
+        animate={{ scale: 1, backgroundColor: '#ffffff' }}
+        whileHover={{ scale: 1.1, backgroundColor: '#ffcc00' }}
+        transition={{ duration: 0.08 }}
+        onAnimationStart={onAnimationStart}
+      />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    onAnimationStart.mockClear();
+
+    fireEvent.layoutchange(getByTestId('button'), {
+      detail: { left: 0, right: 100, top: 0, bottom: 100 },
+    });
+    fireEvent.mousemove(getByTestId('button'), {
+      eventType: 'global-bindEvent',
+      x: 50,
+      y: 50,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 180));
+    });
+
+    expect(onAnimationStart).toHaveBeenCalledTimes(1);
+    expect(onAnimationStart).toHaveBeenLastCalledWith({
+      scale: 1.1,
+      backgroundColor: '#ffcc00',
+    });
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'transform: scale(1.1);',
+    );
+    expect(getByTestId('button').getAttribute('style')).toContain(
+      'rgb(255, 204, 0)',
+    );
+    fireEvent.mousemove(getByTestId('button'), {
+      eventType: 'global-bindEvent',
+      x: 150,
+      y: 150,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 180));
+    });
+
+    expect(onAnimationStart).toHaveBeenCalledTimes(2);
+    expect(onAnimationStart).toHaveBeenLastCalledWith({
+      scale: 1,
+      backgroundColor: '#ffffff',
+    });
+  });
+
   test('composes gesture callbacks with external host handlers', () => {
     const onTapStart = vi.fn();
     const onTap = vi.fn();
