@@ -18,6 +18,7 @@ import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
+    _resolveWorklet: resolveWorklet,
     _refImpl: initWorkletRef(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
@@ -103,6 +104,13 @@ function runWorkletImpl(ctx: Worklet, params: ClosureValueType[], options?: RunW
 
 function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
+}
+
+function resolveWorklet(ctx: Worklet): (...args: unknown[]) => unknown {
+  if (!validateWorklet(ctx) || '_lepusWorkletHash' in ctx) {
+    throw new Error('Cannot resolve an invalid Main Thread Function.');
+  }
+  return transformWorklet(ctx, true);
 }
 
 const workletCache = /*#__PURE__*/ new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
