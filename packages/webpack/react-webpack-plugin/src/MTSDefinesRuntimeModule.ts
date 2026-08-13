@@ -4,11 +4,41 @@
 import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 
 export const MTS_DEFINES_BUILD_INFO = 'lynx:mts-defines';
+export const MTS_SHARED_IMPORTS_BUILD_INFO = 'lynx:mts-shared-imports';
 
 export interface MTSDefine {
   kind: 'snapshot' | 'worklet';
   id: string;
   code: string;
+}
+
+/**
+ * A `runtime: 'shared'` import referenced by a collected main-thread
+ * definition, as reported by the transform through `buildInfo`.
+ */
+export interface MTSSharedImport {
+  id: string;
+  request: string;
+}
+
+/**
+ * The virtual wrapper compiled into the main-thread layer for one shared
+ * module. Importing the whole namespace forces the bundler to provide every
+ * export unmangled — nothing else in the layer imports the module, and the
+ * assembled definitions that consume it are invisible to export analysis.
+ * The wrapper registers the namespace under the id the definitions look up,
+ * through the same global-symbol channel the runtime handle already uses,
+ * since a virtual module has no location to resolve a runtime import from.
+ */
+export function sharedModuleWrapper(id: string, resource: string): string {
+  const source = [
+    `import * as ns from ${JSON.stringify(resource)};`,
+    `var registry = Symbol.for('__REACT_LYNX_SHARED_MODULES__');`,
+    `(globalThis[registry] = globalThis[registry] || new Map()).set(${
+      JSON.stringify(id)
+    }, ns);`,
+  ].join('\n');
+  return `data:text/javascript,${encodeURIComponent(source)}`;
 }
 
 interface ModuleWithMTSDefines {
@@ -83,6 +113,7 @@ export function renderMTSDefines(
   return `var __initMTSDefines = function (ReactLynx) {
   ${RUNTIME_HANDLE} = ReactLynx;
   var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;
+  var getSharedModule = ReactLynx.getSharedModule;
   var require = function () { return ReactLynx; };
 ${body}
 };

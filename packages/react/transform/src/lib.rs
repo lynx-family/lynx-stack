@@ -75,7 +75,7 @@ pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::mts_defines::MtsDefinesCollector;
+use swc_plugins_shared::mts_defines::{MtsDefinesCollector, MtsSharedImportsCollector};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -306,6 +306,21 @@ pub struct MTSDefine {
   pub code: String,
 }
 
+/// A `runtime: 'shared'` import referenced by a collected main-thread
+/// definition. The bundler resolves `request` against the transformed module,
+/// compiles it into the main-thread layer, and registers its namespace under
+/// `id` so the definition can look it up through the runtime's shared-module
+/// registry.
+///
+/// @internal
+#[napi(object)]
+pub struct SharedImport {
+  /// @internal
+  pub id: String,
+  /// @internal
+  pub request: String,
+}
+
 #[napi(object)]
 pub struct TransformNodiffOutput {
   pub code: String,
@@ -322,6 +337,9 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "mtsDefines")]
   pub mts_defines: Option<Vec<MTSDefine>>,
+  /// @internal
+  #[napi(js_name = "sharedImports")]
+  pub shared_imports: Option<Vec<SharedImport>>,
 }
 
 fn lower_to_main_thread_syntax(
@@ -491,6 +509,7 @@ fn transform_react_lynx_inner(
           ui_source_map_records: vec![],
           element_templates: None,
           mts_defines: None,
+          shared_imports: None,
         };
       }
     };
@@ -659,6 +678,10 @@ fn transform_react_lynx_inner(
       .collect_mts_defines
       .unwrap_or(false)
       .then(|| Rc::new(RefCell::new(vec![])));
+    let shared_imports_collector: Option<MtsSharedImportsCollector> = options
+      .collect_mts_defines
+      .unwrap_or(false)
+      .then(|| Rc::new(RefCell::new(vec![])));
 
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
@@ -824,6 +847,11 @@ fn transform_react_lynx_inner(
         } else {
           visitor
         };
+        let visitor = if let Some(collector) = &shared_imports_collector {
+          visitor.with_shared_imports_collector(collector.clone())
+        } else {
+          visitor
+        };
         Optional::new(visit_mut_pass(visitor), config)
       }
       Either::B(config) => {
@@ -832,6 +860,11 @@ fn transform_react_lynx_inner(
             .with_content_hash(content_hash);
         let visitor = if let Some(collector) = &mts_defs_collector {
           visitor.with_mts_defs_collector(collector.clone())
+        } else {
+          visitor
+        };
+        let visitor = if let Some(collector) = &shared_imports_collector {
+          visitor.with_shared_imports_collector(collector.clone())
         } else {
           visitor
         };
@@ -991,6 +1024,16 @@ fn transform_react_lynx_inner(
               .collect::<Vec<_>>()
           })
         });
+        let shared_imports = shared_imports_collector.as_ref().map(|collector| {
+          collector
+            .borrow()
+            .iter()
+            .map(|shared| SharedImport {
+              id: shared.id.clone(),
+              request: shared.request.clone(),
+            })
+            .collect::<Vec<_>>()
+        });
 
         TransformNodiffOutput {
           code: result.code,
@@ -1004,6 +1047,7 @@ fn transform_react_lynx_inner(
           },
           element_templates,
           mts_defines,
+          shared_imports,
         }
       }
       Err(_) => {
@@ -1020,6 +1064,7 @@ fn transform_react_lynx_inner(
           },
           element_templates,
           mts_defines: None,
+          shared_imports: None,
         };
       }
     }
@@ -1035,6 +1080,7 @@ fn transform_react_lynx_inner(
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
     mts_defines: result.mts_defines,
+    shared_imports: result.shared_imports,
   };
 
   r

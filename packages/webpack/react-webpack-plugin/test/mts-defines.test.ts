@@ -8,6 +8,7 @@ import {
   collectMTSDefines,
   renderLazyMTSDefines,
   renderMTSDefines,
+  sharedModuleWrapper,
 } from '../src/MTSDefinesRuntimeModule.js';
 import type { MTSDefine } from '../src/MTSDefinesRuntimeModule.js';
 
@@ -143,6 +144,38 @@ describe('renderMTSDefines', () => {
     expect(renderMTSDefines([])).toContain(
       'globalThis[Symbol.for(\'__REACT_LYNX_MTS_DEFINES_RUNTIME__\')] = ReactLynx;',
     );
+  });
+
+  it('binds the shared-module lookup the definitions dereference', () => {
+    expect(renderMTSDefines([])).toContain(
+      'var getSharedModule = ReactLynx.getSharedModule;',
+    );
+  });
+});
+
+describe('sharedModuleWrapper', () => {
+  const wrapper = sharedModuleWrapper(
+    'a1b2c3d4e5f60718',
+    '/project/src/physics.ts',
+  );
+
+  it('is a self-contained virtual module request', () => {
+    expect(wrapper).toMatch(/^data:text\/javascript,/);
+  });
+
+  it('imports the whole namespace, keeping every export provided', () => {
+    const source = decodeURIComponent(
+      wrapper.slice('data:text/javascript,'.length),
+    );
+    expect(source).toContain('import * as ns from "/project/src/physics.ts";');
+  });
+
+  it('registers under the id through the global registry channel', () => {
+    const source = decodeURIComponent(
+      wrapper.slice('data:text/javascript,'.length),
+    );
+    expect(source).toContain(`Symbol.for('__REACT_LYNX_SHARED_MODULES__')`);
+    expect(source).toContain(`.set("a1b2c3d4e5f60718", ns);`);
   });
 });
 

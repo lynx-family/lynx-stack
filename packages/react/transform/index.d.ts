@@ -765,6 +765,22 @@ export interface TransformNodiffOutput {
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
   mtsDefines?: Array<MTSDefine>
+  /** @internal */
+  sharedImports?: Array<SharedImport>
+}
+/**
+ * @internal
+ * A `runtime: 'shared'` import referenced by a collected main-thread
+ * definition. The bundler resolves `request` against the transformed module,
+ * compiles it into the main-thread layer, and registers its namespace under
+ * `id` so the definition can look it up through the runtime's shared-module
+ * registry.
+ */
+export interface SharedImport {
+  /** @internal */
+  id: string
+  /** @internal */
+  request: string
 }
 /**
  * @internal

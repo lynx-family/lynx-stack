@@ -35,6 +35,7 @@ const PROVIDED_MEMBERS = {
   __DynamicPartChildren_0: 'object',
   __DynamicPartListChildren: 'number',
   loadWorkletRuntime: 'function',
+  getSharedModule: 'function',
 };
 
 describe('main-thread defines entry', () => {

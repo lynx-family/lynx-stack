@@ -64,6 +64,9 @@ const simplifiedRuntime = {
   get loadWorkletRuntime() {
     return ReactLynx.loadWorkletRuntime;
   },
+  get getSharedModule() {
+    return ReactLynx.getSharedModule;
+  },
 };
 
 if (typeof __initMTSDefines !== 'undefined') {

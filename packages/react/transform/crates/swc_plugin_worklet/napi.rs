@@ -5,7 +5,8 @@ use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
 
 use crate::{WorkletVisitor as CoreVisitor, WorkletVisitorConfig as CoreConfig};
 use swc_plugins_shared::{
-  mts_defines::MtsDefinesCollector, target_napi::TransformTarget,
+  mts_defines::{MtsDefinesCollector, MtsSharedImportsCollector},
+  target_napi::TransformTarget,
   transform_mode_napi::TransformMode,
 };
 
@@ -106,6 +107,11 @@ impl WorkletVisitor {
 
   pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {
     self.inner.mts_defs_collector = Some(collector);
+    self
+  }
+
+  pub fn with_shared_imports_collector(mut self, collector: MtsSharedImportsCollector) -> Self {
+    self.inner.shared_imports_collector = Some(collector);
     self
   }
 
