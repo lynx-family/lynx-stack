@@ -141,10 +141,6 @@ export interface Lynx {
 }
 
 // @public
-export abstract class MainThreadObjectHandle<O extends object> {
-}
-
-// @public
 export interface MainThreadObjectType<I, O extends object> {
     readonly getInitialPayload: (value: O) => I;
     readonly isHandle: (value: unknown) => value is O;
@@ -166,12 +162,6 @@ export class MainThreadRef<T> {
     // (undocumented)
     get current(): T;
     set current(_: T);
-}
-
-// @public @deprecated
-export abstract class MainThreadValue<T> extends MainThreadObjectHandle<object> {
-    protected constructor(initValue: T, type: string);
-    static register<T>(type: string, factory: (initValue: T) => object): void;
 }
 
 // @public

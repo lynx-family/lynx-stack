@@ -7,19 +7,11 @@ import { isMainThreadObjectHandle } from './ref/mainThreadObject.js';
 /**
  * Preserve opaque main-thread object handles when the worklet transform narrows a
  * captured member expression. Ordinary objects keep the transform's compact
- * fallback shape. New transformed output omits the fallback so it can evaluate
- * that shape lazily with `captureMainThreadObject(source) ?? fallback`. The
- * two-argument overload remains compatible with already-built output.
+ * fallback shape. The transform evaluates that shape lazily with
+ * `captureMainThreadObject(source) ?? fallback`.
  *
  * @internal
  */
-export function captureMainThreadObject<T>(source: T): T | undefined;
-/** @internal */
-export function captureMainThreadObject<T, F>(source: T, fallback: F): T | F;
-/** @internal */
-export function captureMainThreadObject<T, F>(source: T, fallback?: F): T | F | undefined {
-  return isMainThreadObjectHandle(source) ? source : fallback;
+export function captureMainThreadObject<T>(source: T): T | undefined {
+  return isMainThreadObjectHandle(source) ? source : undefined;
 }
-
-/** @deprecated Compatibility alias for transformed output from `MainThreadValue`. */
-export const workletCapture: typeof captureMainThreadObject = captureMainThreadObject;
