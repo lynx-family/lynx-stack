@@ -460,6 +460,7 @@ function useMotionHostProps<Props extends MotionProps>(
       options: MotionTransition | undefined,
       startingValues: Record<string, unknown>,
       removedTargetFallbackValues: Record<string, unknown>,
+      restoreRemovedTargetIdentity: boolean,
       shouldAnimate: boolean,
     ) {
       'main thread';
@@ -499,6 +500,25 @@ function useMotionHostProps<Props extends MotionProps>(
       for (const key in animateTargetKeysRef.current) {
         if (!(key in ownedTargetValues)) {
           if (removedTargetFallbackValues[key] === undefined) {
+            if (
+              restoreRemovedTargetIdentity
+              && (key === 'opacity'
+                || key === 'x'
+                || key === 'y'
+                || key === 'z'
+                || key === 'translateX'
+                || key === 'translateY'
+                || key === 'translateZ'
+                || key.startsWith('scale')
+                || key.startsWith('rotate')
+                || key.startsWith('skew'))
+            ) {
+              animationTargetValues[key] = key === 'opacity'
+                  || key.startsWith('scale')
+                ? 1
+                : 0;
+              continue;
+            }
             const retainedValue = generatedValuesRef.current[key];
             if (retainedValue) {
               retainedValue.stop();
@@ -687,6 +707,7 @@ function useMotionHostProps<Props extends MotionProps>(
       workletAnimateTransition,
       initialValues,
       removedAnimateFallbackValues,
+      inheritsAnimate,
       shouldAnimateTarget,
     );
 

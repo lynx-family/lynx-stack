@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { useState } from '@lynx-js/react';
+import { memo, useState } from '@lynx-js/react';
 import type { IntrinsicElements } from '@lynx-js/types';
 import { act, fireEvent, render } from '@lynx-js/react/testing-library';
 
@@ -214,6 +214,64 @@ describe('declarative Motion', () => {
       await new Promise(resolve => setTimeout(resolve, 30));
     });
     expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+  });
+
+  test('restores an inherited value when a memoized child does not render with its parent', async () => {
+    const Child = memo(() => (
+      <motion.view
+        data-testid='child'
+        variants={{
+          visible: { x: 100, opacity: 1 },
+          hidden: { opacity: 0 },
+        }}
+        transition={{ type: false }}
+      />
+    ));
+
+    function App() {
+      const [visible, setVisible] = useState(false);
+      return (
+        <view>
+          <motion.view
+            initial={{ x: 0 }}
+            animate={visible ? 'visible' : 'hidden'}
+          >
+            <Child />
+          </motion.view>
+          <view
+            data-testid='toggle'
+            bindtap={() => setVisible(value => !value)}
+          />
+        </view>
+      );
+    }
+
+    const { getByTestId } = render(<App />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 1');
+    expect(getByTestId('child').getAttribute('style')).toContain(
+      'translateX(100px)',
+    );
+
+    fireEvent.tap(getByTestId('toggle'));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    });
+    expect(getByTestId('child').getAttribute('style')).toContain('opacity: 0');
+    expect(getByTestId('child').getAttribute('style')).not.toContain(
+      'translateX(100px)',
+    );
   });
 
   test('an explicit child animate prop overrides a propagated label', async () => {
