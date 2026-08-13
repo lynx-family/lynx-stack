@@ -49,6 +49,10 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
+    entryPairs?: Array<{
+        mainThread: string;
+        background: string;
+    }>;
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;

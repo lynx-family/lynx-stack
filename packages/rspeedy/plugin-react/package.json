@@ -68,7 +68,7 @@
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.123.0"
+    "@lynx-js/react": "^0.124.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/react": {
