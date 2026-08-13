@@ -577,9 +577,10 @@ class ReactWebpackPlugin {
                 [backgroundBoundary],
                 [mainThreadBoundary],
                 present,
-                `${request.slice(0, -3)}.${
-                  path.basename(resource).replaceAll(/[^\w-]/g, '_')
-                }.js`,
+                // The boundary module's resource is unique, and the virtual
+                // module never touches the filesystem, so its path can simply
+                // extend the resource path.
+                `${resource}.__lynx-react-defines.js`,
                 async (boundaryRequest) => {
                   definesImportRegistry.set(
                     definesImportKey(
