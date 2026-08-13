@@ -87,6 +87,9 @@ export interface DataProcessors {
     };
 }
 
+// @public
+export function defineMainThreadObjectType<I, O extends object>(definition: MainThreadObjectType<I, O>): MainThreadObjectType<I, O>;
+
 export { forwardRef }
 
 export { Fragment }
@@ -138,6 +141,17 @@ export interface Lynx {
 }
 
 // @public
+export abstract class MainThreadObjectHandle<O extends object> {
+}
+
+// @public
+export interface MainThreadObjectType<I, O extends object> {
+    readonly create: (initialValue: I) => O;
+    readonly dispose?: (object: O) => void;
+    readonly type: string;
+}
+
+// @public
 export class MainThreadRef<T> {
     constructor(initValue: T);
     // (undocumented)
@@ -145,8 +159,8 @@ export class MainThreadRef<T> {
     set current(_: T);
 }
 
-// @public
-export abstract class MainThreadValue<T> {
+// @public @deprecated
+export abstract class MainThreadValue<T> extends MainThreadObjectHandle<object> {
     protected constructor(initValue: T, type: string);
     static register<T>(type: string, factory: (initValue: T) => object): void;
 }
@@ -213,6 +227,9 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
+
+// @public
+export function useMainThreadObject<I, O extends object>(objectType: MainThreadObjectType<I, O>, initialValue: I): O;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

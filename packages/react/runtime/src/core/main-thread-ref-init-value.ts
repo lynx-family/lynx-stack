@@ -6,7 +6,12 @@ import { isMtsEnabled } from './mts-capability.js';
 
 export type MainThreadRefInitValuePatch = (
   | [id: number, value: unknown]
-  | [id: number, value: unknown, type: string]
+  | [
+    id: number,
+    value: unknown,
+    type: string,
+    mainThreadObjectProtocolVersion: number,
+  ]
 )[];
 
 let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
@@ -18,13 +23,16 @@ export function addMainThreadRefInitValue(
   id: number,
   value: unknown,
   type?: string,
+  mainThreadObjectProtocolVersion?: number,
 ): void {
   if (!isMtsEnabled()) {
     return;
   }
 
   mainThreadRefInitValuePatch.push(
-    type === undefined ? [id, value] : [id, value, type],
+    type === undefined
+      ? [id, value]
+      : [id, value, type, mainThreadObjectProtocolVersion!],
   );
 }
 
