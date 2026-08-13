@@ -19,7 +19,7 @@ import { getElementTemplateNativeRef } from '../template/registry.js';
 
 // ET reload reuses the native page, so the main-thread render path owns the
 // root refs it appended and can remove only those roots before rebuilding.
-let mainThreadRootRefs: ElementRef[] = [];
+let mainThreadRootRefs: ElementTemplateHandle[] = [];
 
 function resetMainThreadRootRefs(): void {
   mainThreadRootRefs = [];
@@ -83,7 +83,7 @@ function flushInitialListUpdates(): void {
     const result = results[index]!;
     const listRef = getElementTemplateNativeRef(result.uid);
     if (listRef) {
-      __SetAttributeOfElementTemplate(listRef, 0, result.attributes, null);
+      __SetAttributeOfElementTemplate(listRef, 0, result.attributes);
     }
   }
 }

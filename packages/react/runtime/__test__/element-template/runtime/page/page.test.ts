@@ -13,8 +13,8 @@ describe('ElementTemplate page root helpers', () => {
   });
 
   it('creates typed page and updates its root slot', async () => {
-    const page = { type: 'page' } as unknown as ElementRef;
-    const rootRef = { type: 'root' } as unknown as ElementRef;
+    const page = { type: 'page' } as unknown as ElementTemplateHandle;
+    const rootRef = { type: 'root' } as unknown as ElementTemplateHandle;
     vi.mocked(__CreateTypedElementTemplate).mockReturnValue(page);
 
     const {
@@ -25,7 +25,7 @@ describe('ElementTemplate page root helpers', () => {
     } = await import('../../../../src/element-template/runtime/page/page.js');
 
     expect(createElementTemplatePage()).toBe(page);
-    expect(__CreateTypedElementTemplate).toHaveBeenCalledWith('page', null, null, '0', null);
+    expect(__CreateTypedElementTemplate).toHaveBeenCalledWith('page', null, null, 0, null);
 
     setupPage(page);
     insertRootIntoPage(rootRef);

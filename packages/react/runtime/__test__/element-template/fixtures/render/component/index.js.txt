@@ -1,10 +1,10 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_d24f9e2c7533 = `${globDynamicComponentEntry}:${"_et_d24f9e2c7533"}`;
+const _et_f6567016e14b = `${globDynamicComponentEntry}:${"_et_f6567016e14b"}`;
 export function App() {
     const x = null;
     const y = 2;
     const z = 3;
-    return /*#__PURE__*/ _jsx(_et_d24f9e2c7533, {
+    return /*#__PURE__*/ _jsx(_et_f6567016e14b, {
         $0: x,
         $1: y,
         $2: z

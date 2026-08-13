@@ -56,7 +56,7 @@ function getRenderedHost(): BackgroundElementTemplateInstance {
 }
 
 function getSlotChildren(host = getRenderedHost()): BackgroundElementTemplateInstance[] {
-  return host.elementSlots[SLOT_ID] ?? [];
+  return host.childSlots[SLOT_ID] ?? [];
 }
 
 function getSlotChildAt(
@@ -74,7 +74,7 @@ function collectRecursiveCreateCommandStream(
   instance: BackgroundElementTemplateInstance,
 ): ElementTemplateUpdateCommandStream {
   const commands: ElementTemplateUpdateCommandStream = [];
-  for (const slotChildren of instance.elementSlots) {
+  for (const slotChildren of instance.childSlots) {
     for (const child of slotChildren ?? []) {
       commands.push(...collectRecursiveCreateCommandStream(child));
     }
@@ -86,7 +86,7 @@ function collectRecursiveCreateCommandStream(
     nativeTemplate.templateKey,
     nativeTemplate.bundleUrl,
     instance.attributeSlots,
-    instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
+    instance.childSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );
   return commands;
 }

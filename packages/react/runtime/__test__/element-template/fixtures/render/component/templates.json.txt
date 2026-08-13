@@ -1,13 +1,13 @@
 [
   {
-    "templateId": "_et_d24f9e2c7533",
+    "templateId": "_et_f6567016e14b",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
       "attributesArray": [],
       "children": [
         {
-          "kind": "elementSlot",
+          "kind": "childSlot",
           "type": "slot",
           "elementSlotIndex": 0
         },
@@ -24,7 +24,7 @@
           "children": []
         },
         {
-          "kind": "elementSlot",
+          "kind": "childSlot",
           "type": "slot",
           "elementSlotIndex": 1
         },
@@ -41,7 +41,7 @@
           "children": []
         },
         {
-          "kind": "elementSlot",
+          "kind": "childSlot",
           "type": "slot",
           "elementSlotIndex": 2
         }

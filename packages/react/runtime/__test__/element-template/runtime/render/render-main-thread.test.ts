@@ -26,7 +26,7 @@ import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplat
 describe('renderMainThread', () => {
   beforeEach(() => {
     setRoot({ __jsx: { type: 'test-root' } });
-    setupPage({ type: 'page', children: [] } as unknown as ElementRef);
+    setupPage({ type: 'page', children: [] } as unknown as ElementTemplateHandle);
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
     const dispatchEvent = vi.fn();
@@ -65,19 +65,19 @@ describe('renderMainThread', () => {
 
   it('should render opcodes into the current page and dispatch hydrate data', () => {
     const opcodes = [0, 'opcode'];
-    const rootRefA = { type: 'ref-a' } as unknown as ElementRef;
-    const rootRefB = { type: 'ref-b' } as unknown as ElementRef;
+    const rootRefA = { type: 'ref-a' } as unknown as ElementTemplateHandle;
+    const rootRefB = { type: 'ref-b' } as unknown as ElementTemplateHandle;
     const dispatchEvent = vi.fn();
     const serializedA = {
       templateKey: '_et_a',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: -1,
     };
     const serializedB = {
       templateKey: '_et_b',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: -2,
     };
     vi.mocked(mockRender).mockReturnValue(opcodes);
@@ -88,7 +88,7 @@ describe('renderMainThread', () => {
       .getJSContext = vi.fn(() => ({
         dispatchEvent,
       }));
-    vi.mocked(__SerializeElementTemplate).mockImplementation((ref: ElementRef) => {
+    vi.mocked(__SerializeElementTemplate).mockImplementation((ref: ElementTemplateHandle) => {
       if (ref === rootRefA) {
         return serializedA as unknown as ReturnType<typeof __SerializeElementTemplate>;
       }
@@ -129,12 +129,12 @@ describe('renderMainThread', () => {
   });
 
   it('flushes initial list metadata after page insertion and before serialize', () => {
-    const rootRef = { type: 'root-ref' } as unknown as ElementRef;
-    const listRef = { type: 'list-ref' } as unknown as ElementRef;
+    const rootRef = { type: 'root-ref' } as unknown as ElementTemplateHandle;
+    const listRef = { type: 'list-ref' } as unknown as ElementTemplateHandle;
     const serialized = {
       templateKey: '_et_root',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: -1,
     };
     vi.mocked(mockRender).mockReturnValue([]);
@@ -168,7 +168,6 @@ describe('renderMainThread', () => {
           updateAction: [],
         },
       },
-      null,
     );
     expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]!,

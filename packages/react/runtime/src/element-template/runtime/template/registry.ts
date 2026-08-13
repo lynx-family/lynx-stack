@@ -11,10 +11,10 @@ import { __page } from '../page/page.js';
 //
 // Other IDs (e.g. positive IDs coming from background-created nodes) fall back to a Map.
 
-const negativeRefs: Array<ElementRef | undefined> = [];
-const otherRefs: Map<number, ElementRef> = /*#__PURE__*/ new Map();
+const negativeRefs: Array<ElementTemplateHandle | undefined> = [];
+const otherRefs: Map<number, ElementTemplateHandle> = /*#__PURE__*/ new Map();
 
-export function setElementTemplateNativeRef(id: number, nativeRef: ElementRef): void {
+export function setElementTemplateNativeRef(id: number, nativeRef: ElementTemplateHandle): void {
   if (id < 0) {
     negativeRefs[-id - 1] = nativeRef;
     return;
@@ -22,14 +22,14 @@ export function setElementTemplateNativeRef(id: number, nativeRef: ElementRef): 
   otherRefs.set(id, nativeRef);
 }
 
-export function getElementTemplateNativeRef(id: number): ElementRef | undefined {
+export function getElementTemplateNativeRef(id: number): ElementTemplateHandle | undefined {
   if (id < 0) {
     return negativeRefs[-id - 1];
   }
   return otherRefs.get(id);
 }
 
-export function getElementTemplateTargetNativeRef(id: number): ElementRef | undefined {
+export function getElementTemplateTargetNativeRef(id: number): ElementTemplateHandle | undefined {
   return id === 0 ? __page : getElementTemplateNativeRef(id);
 }
 
@@ -50,12 +50,12 @@ export function clearElementTemplateNativeRefRegistry(): void {
   otherRefs.clear();
 }
 
-// Legacy-compatible facade used across runtime/tests.
+// Internal facade used across runtime/tests.
 // Note: unlike Map, .set returns void (call sites don't rely on the return value).
 export interface ElementTemplateRegistryFacade {
-  set: (id: number, nativeRef: ElementRef) => void;
-  get: (id: number) => ElementRef | undefined;
-  getTarget: (id: number) => ElementRef | undefined;
+  set: (id: number, nativeRef: ElementTemplateHandle) => void;
+  get: (id: number) => ElementTemplateHandle | undefined;
+  getTarget: (id: number) => ElementTemplateHandle | undefined;
   has: (id: number) => boolean;
   delete: (id: number) => void;
   clear: () => void;

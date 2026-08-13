@@ -3,10 +3,10 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_beb3a71c96f6 = `${globDynamicComponentEntry}:${\"_et_beb3a71c96f6\"}`;\n<_et_beb3a71c96f6 $0={dynamicPart}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_9cf18739ee28 = `${globDynamicComponentEntry}:${\"_et_9cf18739ee28\"}`;\n<_et_9cf18739ee28 $0={dynamicPart}/>;\n",
   "templates": [
     {
-      "template_id": "_et_beb3a71c96f6",
+      "template_id": "_et_9cf18739ee28",
       "template": {
         "kind": "element",
         "type": "view",
@@ -25,7 +25,7 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "children": []
           },
           {
-            "kind": "elementSlot",
+            "kind": "childSlot",
             "type": "slot",
             "elementSlotIndex": 0.0
           },

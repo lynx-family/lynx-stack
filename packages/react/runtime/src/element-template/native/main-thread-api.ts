@@ -4,7 +4,7 @@
 
 import { reloadMainThread } from './reload-main-thread.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
-import { __page, createElementTemplatePage, setupPage } from '../runtime/page/page.js';
+import { createElementTemplatePage, setupPage } from '../runtime/page/page.js';
 import { renderMainThread, resetMainThreadRootRefs } from '../runtime/render/render-main-thread.js';
 
 function injectCalledByNative(): void {
@@ -39,12 +39,12 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   }
 
   applyUpdatePageData(data, options);
-  __FlushElementTree(__page, options ?? {});
+  __FlushElementTree(undefined, options ?? {});
 }
 
 function updateGlobalProps(_data: unknown, options?: UpdatePageOption): void {
   if (options) {
-    __FlushElementTree(__page, options);
+    __FlushElementTree(undefined, options);
   } else {
     __FlushElementTree();
   }

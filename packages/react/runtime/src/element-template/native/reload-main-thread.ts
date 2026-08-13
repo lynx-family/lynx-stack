@@ -6,7 +6,6 @@ import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
-import { __page } from '../runtime/page/page.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 import { removeMainThreadRootRefs, renderMainThread } from '../runtime/render/render-main-thread.js';
 import { resetTemplateId } from '../runtime/template/handle.js';
@@ -34,7 +33,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     setRoot({ __jsx: oldRoot.__jsx });
     renderMainThread();
 
-    __FlushElementTree(__page, options);
+    __FlushElementTree(undefined, options);
   } finally {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();

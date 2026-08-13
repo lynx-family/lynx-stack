@@ -14,7 +14,7 @@ import { BackgroundElementTemplateInstance } from '../../../src/element-template
 import { backgroundElementTemplateInstanceManager } from '../../../src/element-template/background/manager.js';
 import { ElementTemplateLifecycleConstant } from '../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../src/element-template/protocol/opcodes.js';
-import type { SerializedElementTemplate } from '../../../src/element-template/protocol/types.js';
+import type { SerializedCompiledNode } from '../../../src/element-template/protocol/types.js';
 import { callDestroyLifetimeFun } from '../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { __root } from '../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
@@ -72,9 +72,9 @@ describe('callDestroyLifetimeFun', () => {
           {
             templateKey: '_et_test',
             attributeSlots: [],
-            elementSlots: [],
+            childSlots: [],
             uid: -1,
-          } satisfies SerializedElementTemplate,
+          } satisfies SerializedCompiledNode,
         ],
         reloadVersion: getReloadVersion(),
       },
