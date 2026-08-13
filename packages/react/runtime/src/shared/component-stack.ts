@@ -125,12 +125,13 @@ export function getOwnerStack(vnode: PatchedVNode): string {
  * debug messages for `this.setState` where the `vnode` is `undefined`.
  */
 export function setupComponentStack(): void {
+  /* eslint-disable @typescript-eslint/unbound-method */
   const oldDiff = options[DIFF];
   const oldDiffed = options[DIFFED];
   const oldRoot = options[ROOT];
-  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldVNode = options.vnode;
   const oldRender = options[RENDER];
+  /* eslint-enable @typescript-eslint/unbound-method */
 
   options[DIFFED] = vnode => {
     if (isPossibleOwner(vnode)) {
