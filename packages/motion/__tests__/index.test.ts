@@ -26,5 +26,6 @@ describe('Main package exports', () => {
 
     expect(module.useMotionValueRefEvent).toBeDefined();
     expect(module.useMotionValueRef).toBeDefined();
+    expect(module.useMotionValue).toBeDefined();
   });
 });
