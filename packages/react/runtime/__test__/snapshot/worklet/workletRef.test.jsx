@@ -316,7 +316,7 @@ describe('MainThreadObject', () => {
 
     const handle = type.downcast(value);
     expect(handle).toBe(value);
-    expect(handle.creationPayload).toBeUndefined();
+    expect(handle.payload).toBeUndefined();
     expect(type.downcast(undefined)).toBeUndefined();
   });
 
@@ -375,7 +375,7 @@ describe('MainThreadObject', () => {
     expect(type).not.toHaveProperty('dispose');
     const handle = type.downcast(counter);
     expect(handle).toBe(counter);
-    expect(handle.creationPayload).toBe(42);
+    expect(handle.payload).toBe(42);
 
     const otherType = defineMainThreadObjectType({
       type: '@test/other-counter',
