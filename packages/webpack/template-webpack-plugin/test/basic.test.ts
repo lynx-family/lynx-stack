@@ -82,7 +82,7 @@ globalThis.renderPage = function() {
 
     try {
       const stats = await runWebpack({
-        context: dirname(new URL(import.meta.url).pathname),
+        context: dirname(fileURLToPath(import.meta.url)),
         mode: 'development',
         devtool: false,
         entry: './fixtures/assetless-remote.js',
