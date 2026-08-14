@@ -1,5 +1,14 @@
 # @lynx-js/testing-environment
 
+## 0.3.3
+
+### Patch Changes
+
+- Support the `__GetAttributeNames` element PAPI. ([#3291](https://github.com/lynx-family/lynx-stack/pull/3291))
+
+  `ElementNode.getAttributeNames()` of the ReactLynx worklet runtime calls it, so a
+  main-thread script reaching that API threw `ReferenceError` on web.
+
 ## 0.3.2
 
 ### Patch Changes
