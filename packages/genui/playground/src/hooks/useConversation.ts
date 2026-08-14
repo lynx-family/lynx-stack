@@ -25,6 +25,7 @@ import type {
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../storage/types.js';
+import { applyDataModel, cloneDataModel } from '../utils/dataModel.js';
 
 export interface ModelChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -82,25 +83,6 @@ export interface UseConversationReturn {
 const MAX_CONVERSATION_TURNS = 20;
 const MAX_CONVERSATION_CHARS = 16_000;
 
-function cloneDataModel(
-  value: Record<string, unknown>,
-): Record<string, unknown> {
-  try {
-    return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-}
-
-function cloneDataValue(value: unknown): unknown {
-  if (value === null || typeof value !== 'object') return value;
-  try {
-    return JSON.parse(JSON.stringify(value)) as unknown;
-  } catch {
-    return value;
-  }
-}
-
 function clonePreviewPerformanceMetrics(
   value: PreviewPerformanceMetrics | null | undefined,
 ): PreviewPerformanceMetrics | undefined {
@@ -132,41 +114,6 @@ function truncateConversationHistory(
   }
 
   return kept;
-}
-
-function applyDataModel(
-  model: Record<string, unknown>,
-  path: string,
-  value: unknown,
-): void {
-  if (!path || path === '/' || path === '') {
-    for (const key of Object.keys(model)) {
-      delete model[key];
-    }
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, cloneDataValue(value) as Record<string, unknown>);
-    }
-    return;
-  }
-
-  const parts = path.replace(/^\//u, '').split('/').filter(Boolean);
-  let cursor = model;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!key) continue;
-    if (typeof cursor[key] !== 'object' || cursor[key] === null) {
-      cursor[key] = {};
-    }
-    cursor = cursor[key] as Record<string, unknown>;
-  }
-
-  const last = parts[parts.length - 1];
-  if (!last) return;
-  if (value === undefined) {
-    delete cursor[last];
-  } else {
-    cursor[last] = cloneDataValue(value);
-  }
 }
 
 function applyA2UIMessagesToSnapshot(

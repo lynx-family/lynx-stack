@@ -21,6 +21,11 @@ import { mcpAppDemo } from './mock/basic/mcp-app.js';
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
+  isTrustedPreviewMessage,
+  resolveDemoMessagesUrl,
+  resolveTrustedPreviewBundleUrl,
+} from './utils/previewSecurity.js';
+import {
   RENDER_INIT_DATA_QUERY_PARAM,
   RENDER_METRIC_ID_QUERY_PARAM,
 } from './utils/renderUrl.js';
@@ -103,6 +108,11 @@ interface ReplayMessagesMessage {
 
 const TTI_IDLE_WINDOW_MS = 500;
 const TTI_READY_FALLBACK_MS = 1200;
+
+function postToParent(message: unknown): void {
+  if (!window.parent || window.parent === window) return;
+  window.parent.postMessage(message, window.location.origin);
+}
 
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
@@ -382,7 +392,7 @@ function Render() {
       metric,
       value: Math.max(0, Math.round(value)),
     };
-    window.parent.postMessage(message, '*');
+    postToParent(message);
   }, [previewMetricId]);
 
   const clearTtiTimer = useCallback(() => {
@@ -433,7 +443,7 @@ function Render() {
 
   const postRenderReady = useCallback(() => {
     if (!window.parent || window.parent === window) return;
-    window.parent.postMessage({ type: 'A2UI_RENDER_READY' }, '*');
+    postToParent({ type: 'A2UI_RENDER_READY' });
     scheduleFcpFallbackMetric();
     if (initDataRef.current?.protocol !== 'a2ui') {
       scheduleFmpMetric();
@@ -571,7 +581,12 @@ function Render() {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await window.fetch(`./demos/${demo}.json`);
+        const demoMessagesUrl = resolveDemoMessagesUrl(
+          demo,
+          window.location.href,
+        );
+        if (!demoMessagesUrl) return;
+        const res = await window.fetch(demoMessagesUrl);
         if (!res.ok || cancelled) return;
         const messages = (await res.json()) as unknown;
         if (!cancelled) {
@@ -641,33 +656,18 @@ function Render() {
             clearTtiTimer();
           }
         }
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(
-            {
-              type: 'A2UI_PLAYBACK_SYNC',
-              data,
-            },
-            '*',
-          );
-        }
+        postToParent({
+          type: 'A2UI_PLAYBACK_SYNC',
+          data,
+        });
         return;
       }
       if (name === 'A2UI_USER_ACTION') {
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(
-            { type: 'A2UI_USER_ACTION', action: data },
-            '*',
-          );
-        }
+        postToParent({ type: 'A2UI_USER_ACTION', action: data });
         return;
       }
       if (name === 'OPENUI_USER_ACTION') {
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(
-            { type: 'OPENUI_USER_ACTION', action: data },
-            '*',
-          );
-        }
+        postToParent({ type: 'OPENUI_USER_ACTION', action: data });
         return;
       }
     };
@@ -684,6 +684,35 @@ function Render() {
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
+      if (!isTrustedPreviewMessage(e, window.location.origin)) return;
+
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
+      ) {
+        postToParent(e.data);
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as OpenUIUserActionMessage).type === 'OPENUI_USER_ACTION'
+      ) {
+        postToParent(e.data);
+        return;
+      }
+
+      if (
+        !isTrustedPreviewMessage(
+          e,
+          window.location.origin,
+          window.parent,
+        )
+      ) {
+        return;
+      }
+
       if (
         e.data
         && typeof e.data === 'object'
@@ -693,26 +722,6 @@ function Render() {
         lynxView?.sendGlobalEvent?.('A2UI_PLAYBACK_PROGRESS', [
           (e.data as PlaybackProgressMessage).data,
         ]);
-        return;
-      }
-      if (
-        e.data
-        && typeof e.data === 'object'
-        && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
-      ) {
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(e.data, '*');
-        }
-        return;
-      }
-      if (
-        e.data
-        && typeof e.data === 'object'
-        && (e.data as OpenUIUserActionMessage).type === 'OPENUI_USER_ACTION'
-      ) {
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(e.data, '*');
-        }
         return;
       }
       if (
@@ -844,12 +853,17 @@ function Render() {
     };
   }, []);
 
+  const bundleUrl = resolveTrustedPreviewBundleUrl(
+    initData?.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+    window.location.href,
+  ) ?? new URL(DEFAULT_A2UI_DEMO_URL, window.location.href).toString();
+
   return createElement('lynx-view', {
     ref: lynxViewRef,
     className: 'renderLynx',
     style: { height: '100%' },
     'thread-strategy': 'multi-thread',
-    url: initData?.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+    url: bundleUrl,
   });
 }
 

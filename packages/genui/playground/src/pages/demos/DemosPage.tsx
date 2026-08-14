@@ -284,14 +284,17 @@ function DemosPageContent<
           status,
         },
       },
-      '*',
+      window.location.origin,
     );
   }, []);
 
   const sendPlaybackControl = useCallback((action: 'pause' | 'resume') => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
-    win.postMessage({ type: 'A2UI_PLAYBACK_CONTROL', action }, '*');
+    win.postMessage(
+      { type: 'A2UI_PLAYBACK_CONTROL', action },
+      window.location.origin,
+    );
   }, []);
 
   const handlePlay = useCallback(() => {
