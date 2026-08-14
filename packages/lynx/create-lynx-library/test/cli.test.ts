@@ -45,6 +45,8 @@ describe('create-lynx-library CLI', () => {
         'harmony',
         '--platform',
         'lynxtron',
+        '--native-module-backend',
+        'node-api',
         '--package-name',
         '@example/demo-library',
         '--android-package',
@@ -61,6 +63,7 @@ describe('create-lynx-library CLI', () => {
       dir: 'demo-library',
       features: ['native-module', 'element', 'service'],
       platforms: ['android', 'ios', 'harmony', 'lynxtron'],
+      nativeModuleBackend: 'node-api',
       packageName: '@example/demo-library',
       androidPackage: 'com.example.demo',
       moduleName: 'DemoModule',
@@ -83,6 +86,9 @@ describe('create-lynx-library CLI', () => {
     );
     expect(() => parseArgs(['--platforms', 'web'])).toThrow(
       /Unsupported Native platform/,
+    );
+    expect(() => parseArgs(['--native-module-backend', 'invalid'])).toThrow(
+      /Unsupported native module backend/,
     );
   });
 
@@ -236,8 +242,11 @@ describe('create-lynx-library CLI', () => {
 
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
-        '  - Native Module\n  - NAPI Native Module\n  - Element\n  - Service',
+        '  - Native Module\n  - Element\n  - Service',
       ),
+    );
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining('Native Module backend:\n  - Platform'),
     );
     expect(
       read(
@@ -283,6 +292,7 @@ describe('create-lynx-library CLI', () => {
       prompts: {
         text: textPrompt as CliPrompts['text'],
         multiselect: multiselectPrompt as CliPrompts['multiselect'],
+        select: vi.fn().mockResolvedValue('platform') as CliPrompts['select'],
       },
     });
 
@@ -300,7 +310,6 @@ describe('create-lynx-library CLI', () => {
       expect.objectContaining({
         initialValues: [
           'native-module',
-          'napi-native-module',
           'element',
           'service',
         ],
@@ -318,10 +327,6 @@ describe('create-lynx-library CLI', () => {
           expect.objectContaining({
             label: 'Native Module',
             value: 'native-module',
-          }),
-          expect.objectContaining({
-            label: 'NAPI Native Module',
-            value: 'napi-native-module',
           }),
           expect.objectContaining({ label: 'Element', value: 'element' }),
           expect.objectContaining({ label: 'Service', value: 'service' }),
@@ -353,6 +358,14 @@ describe('create-lynx-library CLI', () => {
     expect(read(dir, 'ios/src/InteractiveLibraryService.h')).toContain(
       '@protocol InteractiveLibraryServiceProtocol',
     );
+    const selectPrompt = vi.mocked(runtime.prompts?.select);
+    const backendOptions = selectPrompt?.mock.calls[0]?.[0] as
+      | { initialValue?: unknown; message?: string }
+      | undefined;
+    expect(backendOptions?.initialValue).toBe('platform');
+    expect(backendOptions?.message).toContain(
+      'Lynxtron always uses Node-API',
+    );
   });
 
   it('rejects empty interactive feature answers', async () => {
@@ -364,6 +377,7 @@ describe('create-lynx-library CLI', () => {
         multiselect: vi.fn().mockResolvedValue([]) as CliPrompts[
           'multiselect'
         ],
+        select: vi.fn().mockResolvedValue('platform') as CliPrompts['select'],
       },
     });
 
@@ -381,6 +395,7 @@ describe('create-lynx-library CLI', () => {
         multiselect: vi.fn()
           .mockResolvedValueOnce(['native-module'])
           .mockResolvedValueOnce([]) as CliPrompts['multiselect'],
+        select: vi.fn().mockResolvedValue('platform') as CliPrompts['select'],
       },
     });
 

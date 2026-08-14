@@ -1,0 +1,34 @@
+#include <napi/native_api.h>
+
+namespace {
+
+napi_value Initialize(napi_env env, napi_callback_info info) {
+  (void)info;
+  napi_value undefined_value = nullptr;
+  napi_get_undefined(env, &undefined_value);
+  return undefined_value;
+}
+
+napi_value Init(napi_env env, napi_value exports) {
+  napi_value initialize = nullptr;
+  napi_create_function(
+      env, "initialize", NAPI_AUTO_LENGTH, Initialize, nullptr, &initialize);
+  napi_set_named_property(env, exports, "initialize", initialize);
+  return exports;
+}
+
+}  // namespace
+
+static napi_module g_harmony_module = {
+    .nm_version = 1,
+    .nm_flags = 0,
+    .nm_filename = nullptr,
+    .nm_register_func = Init,
+    .nm_modname = "__NODE_API_ADDON_NAME__",
+    .nm_priv = nullptr,
+    .reserved = {nullptr},
+};
+
+extern "C" __attribute__((constructor)) void RegisterHarmonyModule(void) {
+  napi_module_register(&g_harmony_module);
+}

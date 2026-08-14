@@ -63,10 +63,12 @@ describe('create-lynx-library', () => {
     ]);
     expect(parseLibraryFeatures('ALL')).toEqual([
       'native-module',
-      'napi-native-module',
       'element',
       'service',
     ]);
+    expect(() => parseLibraryFeatures('napi-native-module')).toThrow(
+      /native-module-backend node-api/,
+    );
     expect(() => parseLibraryFeatures('web')).toThrow(
       /Unsupported library feature/,
     );
@@ -113,7 +115,7 @@ describe('create-lynx-library', () => {
         'package.json',
         'lynx.lib.json',
         'types/index.d.ts',
-        'types/platform-native-module.d.ts',
+        'types/native-module.d.ts',
         'src/index.ts',
         'shared/CMakeLists.txt',
         'lynxtron/CMakeLists.txt',
@@ -123,6 +125,7 @@ describe('create-lynx-library', () => {
         'shared/elements/ButtonElement.h',
         'shared/elements/ButtonElement.cc',
         'shared/elements/ButtonElementRegistration.cc',
+        'shared/nativeModule/CMakeLists.txt',
         'android/src/main/java/com/example/button/ButtonModule.java',
         'android/src/main/java/com/example/button/ButtonElement.java',
         'android/src/main/java/com/example/button/ButtonService.java',
@@ -196,17 +199,19 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'example/src/index.tsx')).toContain(
       'import { App } from \'./App\';',
     );
-    expect(read(dir, 'README.md')).not.toContain(
-      '## NAPI Native Module',
-    );
     expect(read(dir, 'README.md')).toContain(
-      'Platform native module typings live in `types/platform-native-module.d.ts`',
+      'Native Module typings live in `types/native-module.d.ts`',
     );
     expect(read(dir, 'README.md')).not.toContain(
-      'NAPI native module typings live in `types/napi-native-module.d.ts`',
+      'types/napi-native-module.d.ts',
+    );
+    expect(packageJson.dependencies?.['@lynx-js/lynx-library-headers'])
+      .toBe('*');
+    expect(packageJson.dependencies?.['@lynx-js/weak-node-api']).toBe(
+      '^0.0.9',
     );
     expect(packageJson.devDependencies['@lynx-js/lynx-library-headers'])
-      .toBe('*');
+      .toBeUndefined();
     expect(read(dir, 'package.json')).toContain(
       '"build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"',
     );
@@ -255,6 +260,12 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       '${LYNX_LIBRARY_PACKAGE_ROOT}/shared',
     );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toMatch(
+      /add_library\(\s+LynxButtonAddon\s+MODULE/,
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).not.toMatch(
+      /add_library\(\s+LynxButtonAddon\s+SHARED/,
+    );
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
     );
@@ -292,12 +303,12 @@ describe('create-lynx-library', () => {
       's.dependency \'LynxServiceAPI\'',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
-      'export * from \'./platform-native-module\';',
+      'export * from \'./native-module\';',
     );
-    expect(read(dir, 'types/platform-native-module.d.ts')).toContain(
+    expect(read(dir, 'types/native-module.d.ts')).toContain(
       '/** @lynxmodule */',
     );
-    expect(read(dir, 'types/platform-native-module.d.ts')).toContain(
+    expect(read(dir, 'types/native-module.d.ts')).toContain(
       'setValue(key: string, value: string): void;',
     );
     expect(
@@ -402,11 +413,14 @@ describe('create-lynx-library', () => {
     expect(files.map((file) => file.path)).toContain(
       'android/src/main/java/com/example/storage/StorageModule.java',
     );
-    expect(files.map((file) => file.path)).not.toContain(
+    expect(files.map((file) => file.path)).toContain(
       'shared/CMakeLists.txt',
     );
-    expect(files.map((file) => file.path)).not.toContain(
+    expect(files.map((file) => file.path)).toContain(
       'lynxtron/CMakeLists.txt',
+    );
+    expect(files.map((file) => file.path)).toContain(
+      'shared/nativeModule/CMakeLists.txt',
     );
     expect(files.map((file) => file.path)).not.toContain(
       'android/src/main/java/com/example/storage/StorageElement.java',
@@ -422,11 +436,212 @@ describe('create-lynx-library', () => {
     );
   });
 
-  it('creates NAPI Native Module projects with split typings', () => {
+  it('uses platform modules on mobile and Node-API on Lynxtron', () => {
+    const dir = createTempDir('platform-backend');
+    const files = createLynxLibrary({
+      dir,
+      features: ['native-module'],
+      nativeModuleBackend: 'platform',
+      platforms: ['android', 'ios', 'harmony', 'lynxtron'],
+      packageName: 'platform-library',
+      androidPackage: 'com.example.platform',
+      moduleName: 'PlatformModule',
+    });
+    const filePaths = files.map((file) => file.path);
+    const manifest = readJson<Manifest>(dir, 'lynx.lib.json');
+
+    expect(filePaths).toEqual(expect.arrayContaining([
+      'types/native-module.d.ts',
+      'android/src/main/java/com/example/platform/PlatformModule.java',
+      'ios/src/PlatformModule.h',
+      'harmony/src/main/ets/PlatformModule.ets',
+      'shared/nativeModule/CMakeLists.txt',
+      'lynxtron/CMakeLists.txt',
+    ]));
+    expect(manifest.platforms.android?.nodeApiAddons).toBeUndefined();
+    expect(manifest.platforms.ios?.nodeApiAddons).toBeUndefined();
+    expect(manifest.platforms.harmony?.nodeApiAddons).toBeUndefined();
+    expect(manifest.platforms.lynxtron).toEqual({ path: 'dist' });
+  });
+
+  it('uses the shared Node-API module on every selected target', () => {
+    const dir = createTempDir('node-api-backend');
+    const files = createLynxLibrary({
+      dir,
+      features: ['native-module'],
+      nativeModuleBackend: 'node-api',
+      platforms: ['android', 'ios', 'harmony', 'lynxtron'],
+      packageName: 'node-api-library',
+      androidPackage: 'com.example.nodeapi',
+      moduleName: 'SharedModule',
+    });
+    const filePaths = files.map((file) => file.path);
+    const manifest = readJson<Manifest>(dir, 'lynx.lib.json');
+
+    expect(filePaths).toEqual(expect.arrayContaining([
+      'types/native-module.d.ts',
+      'android/CMakeLists.txt',
+      'ios/addon_use.h',
+      'harmony/src/main/cpp/CMakeLists.txt',
+      'harmony/src/main/cpp/harmony_entry.cc',
+      'harmony/src/main/cpp/types/libSharedModule/index.d.ts',
+      'harmony/src/main/cpp/types/libSharedModule/oh-package.json5',
+      'shared/nativeModule/CMakeLists.txt',
+      'lynxtron/CMakeLists.txt',
+    ]));
+    expect(filePaths).not.toContain(
+      'android/src/main/java/com/example/nodeapi/SharedModule.java',
+    );
+    expect(filePaths).not.toContain('ios/src/SharedModule.h');
+    expect(filePaths).not.toContain('harmony/src/main/ets/SharedModule.ets');
+    expect(manifest.platforms.android?.nodeApiAddons).toEqual([
+      {
+        name: 'SharedModule',
+        libraryName: 'SharedModule',
+        required: true,
+      },
+    ]);
+    expect(manifest.platforms.android?.providerClassName).toBeNull();
+    expect(manifest.platforms.ios?.nodeApiAddons).toEqual([
+      {
+        name: 'SharedModule',
+        podName: 'node-api-library',
+        podspecPath: 'ios/node-api-library.podspec',
+        addonUseHeader: 'addon_use.h',
+      },
+    ]);
+    expect(manifest.platforms.harmony).toEqual({
+      packageDir: 'harmony',
+      providerExportName: null,
+      nodeApiAddons: [
+        {
+          name: 'SharedModule',
+          libraryName: 'SharedModule',
+          initializerExportName: 'initializeNodeApiAddon',
+          required: true,
+        },
+      ],
+    });
+    expect(read(dir, 'harmony/Index.ets')).toContain(
+      'export function initializeNodeApiAddon(): void',
+    );
+    expect(read(dir, 'harmony/Index.ets')).not.toContain(
+      'LynxLibraryProviderImpl',
+    );
+    expect(filePaths).not.toContain(
+      'harmony/src/main/ets/LynxLibraryProviderImpl.ets',
+    );
+    expect(read(dir, 'harmony/oh-package.json5')).toContain(
+      '"@lynx/primjs": "*"',
+    );
+    expect(read(dir, 'harmony/oh-package.json5')).not.toContain(
+      '"@lynx/lynx"',
+    );
+    expect(read(dir, 'harmony/oh-package.json5')).toContain(
+      '"libSharedModule.so": "file:./src/main/cpp/types/libSharedModule"',
+    );
+    expect(read(dir, 'harmony/build-profile.json5')).toContain(
+      '"path": "./src/main/cpp/CMakeLists.txt"',
+    );
+
+    const harmonyCmake = read(
+      dir,
+      'harmony/src/main/cpp/CMakeLists.txt',
+    );
+    expect(harmonyCmake).toContain(
+      '"${CMAKE_CURRENT_SOURCE_DIR}/../../../.."',
+    );
+    expect(harmonyCmake).toContain(
+      '"${LYNX_LIBRARY_PACKAGE_ROOT}/harmony/oh_modules/@lynx/primjs"',
+    );
+    expect(harmonyCmake).toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX ON',
+    );
+    expect(harmonyCmake).toContain(
+      '${LYNX_SHARED_TARGETS}',
+    );
+    expect(harmonyCmake).toContain('libace_napi.z.so');
+
+    const harmonyEntry = read(
+      dir,
+      'harmony/src/main/cpp/harmony_entry.cc',
+    );
+    expect(harmonyEntry).toContain('#include <napi/native_api.h>');
+    expect(harmonyEntry).toContain(
+      'napi_module_register(&g_harmony_module)',
+    );
+    expect(harmonyEntry).not.toContain('USE_WEAK_SUFFIX_NAPI');
+    expect(harmonyEntry).not.toContain('weak_napi_defines.h');
+    expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1',
+    );
+  });
+
+  it('keeps the Harmony provider export for mixed Node-API libraries', () => {
+    const dir = createTempDir('harmony-node-api-provider');
+
+    createLynxLibrary({
+      dir,
+      features: ['native-module', 'service'],
+      nativeModuleBackend: 'node-api',
+      platforms: ['harmony'],
+      packageName: '@example/harmony-node-api-provider',
+      moduleName: 'HarmonySharedModule',
+      serviceName: 'HarmonySharedService',
+    });
+
+    expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms.harmony)
+      .toEqual({
+        packageDir: 'harmony',
+        nodeApiAddons: [
+          {
+            name: 'HarmonySharedModule',
+            libraryName: 'HarmonySharedModule',
+            initializerExportName: 'initializeNodeApiAddon',
+            required: true,
+          },
+        ],
+      });
+    const harmonyIndex = read(dir, 'harmony/Index.ets');
+    expect(harmonyIndex).toContain(
+      'export { LynxLibraryProviderImpl }',
+    );
+    expect(harmonyIndex).toContain(
+      'export function initializeNodeApiAddon(): void',
+    );
+    expect(harmonyIndex.indexOf(
+      'import nativeModule from \'libHarmonySharedModule.so\';',
+    )).toBeLessThan(harmonyIndex.indexOf(
+      'export { LynxLibraryProviderImpl }',
+    ));
+  });
+
+  it('keeps mobile providers for mixed Node-API libraries', () => {
+    const dir = createTempDir('mixed-node-api-providers');
+
+    createLynxLibrary({
+      dir,
+      features: ['native-module', 'element', 'service'],
+      nativeModuleBackend: 'node-api',
+      platforms: ['android', 'harmony'],
+      packageName: '@example/mixed-node-api-providers',
+      androidPackage: 'com.example.mixed',
+      moduleName: 'MixedSharedModule',
+      elementName: 'x-mixed',
+      serviceName: 'MixedService',
+    });
+
+    const manifest = readJson<Manifest>(dir, 'lynx.lib.json');
+    expect(manifest.platforms.android?.providerClassName).toBeUndefined();
+    expect(manifest.platforms.harmony?.providerExportName).toBeUndefined();
+  });
+
+  it('creates Node-API Native Module projects from unified typings', () => {
     const dir = createTempDir('napi-module');
     const files = createLynxLibrary({
       dir,
-      features: ['napi-native-module'],
+      features: ['native-module'],
+      nativeModuleBackend: 'node-api',
       packageName: 'napi-library',
       moduleName: 'StorageModule',
     });
@@ -437,14 +652,14 @@ describe('create-lynx-library', () => {
     expect(filePaths).toContain('android/CMakeLists.txt');
     expect(filePaths).toContain('ios/addon_use.h');
     expect(filePaths).toContain('lynxtron/CMakeLists.txt');
-    expect(filePaths).toContain('types/napi-native-module.d.ts');
+    expect(filePaths).toContain('types/native-module.d.ts');
     expect(filePaths).not.toContain(
       'android/src/main/java/com/example/storage/StorageModule.java',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
-      'export * from \'./napi-native-module\';',
+      'export * from \'./native-module\';',
     );
-    expect(read(dir, 'types/napi-native-module.d.ts')).toContain(
+    expect(read(dir, 'types/native-module.d.ts')).toContain(
       'export declare class StorageModule',
     );
     expect(read(dir, 'src/index.ts')).toContain(
@@ -475,7 +690,7 @@ describe('create-lynx-library', () => {
       'Codegen creates `shared/nativeModule/StorageModule.cc` once',
     );
     expect(read(dir, 'README.md')).toContain(
-      'TypeScript shim is only for the selected mobile runtimes',
+      'Import the package root on every selected platform',
     );
     expect(read(dir, 'shared/.npmignore')).toContain('third_party/');
     fs.mkdirSync(path.join(dir, 'shared/third_party'), { recursive: true });
@@ -489,7 +704,10 @@ describe('create-lynx-library', () => {
     expect(packedPaths).toContain('dist/macos/arm64/addon.node');
     expect(packedPaths).not.toContain('shared/third_party/cache.txt');
     expect(read(dir, 'android/build.gradle.kts')).toContain(
-      'providers.gradleProperty("lynx.primjs.version").orElse("4.+").get()',
+      'rootProject.findProperty("lynx.primjs.version")?.toString() ?: "4.+"',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      'providers.gradleProperty("lynx.primjs.version")',
     );
     expect(read(dir, 'android/build.gradle.kts')).toContain(
       'org.lynxsdk.lynx:primjs:$lynxPrimjsVersion',
@@ -587,8 +805,7 @@ describe('create-lynx-library', () => {
       {
         name: 'StorageModule',
         libraryName: 'StorageModule',
-        jniLibsDir: 'android/src/main/jniLibs',
-        required: false,
+        required: true,
       },
     ]);
     expect(
@@ -599,7 +816,6 @@ describe('create-lynx-library', () => {
         podName: 'napi-library',
         podspecPath: 'ios/napi-library.podspec',
         addonUseHeader: 'addon_use.h',
-        required: true,
       },
     ]);
   });
@@ -608,7 +824,8 @@ describe('create-lynx-library', () => {
     const dir = createTempDir('lynxtron');
     const files = createLynxLibrary({
       dir,
-      features: ['napi-native-module', 'element'],
+      features: ['native-module', 'element'],
+      nativeModuleBackend: 'platform',
       platforms: ['lynxtron'],
       packageName: '@example/lynxtron-library',
       moduleName: 'LynxtronModule',
@@ -741,7 +958,7 @@ describe('create-lynx-library', () => {
       `require('@example/lynxtron-library/lynxtron')`,
     );
     expect(read(dir, 'README.md')).toContain(
-      'Lynxtron BTS code does not import the package root',
+      'Import the package root in Lynxtron BTS',
     );
     expect(read(dir, 'README.md')).not.toContain(
       'On Android and iOS, import the package root',
@@ -793,19 +1010,15 @@ describe('create-lynx-library', () => {
 
     createLynxLibrary({
       dir,
-      features: ['napi-native-module'],
+      features: ['native-module'],
+      nativeModuleBackend: 'node-api',
       platforms: ['android'],
       packageName: 'android-napi-library',
       androidPackage: 'com.example.androidnapi',
       moduleName: 'AndroidNapiModule',
     });
 
-    expect(read(dir, 'README.md')).toContain(
-      'On Android, import the package root in BTS',
-    );
-    expect(read(dir, 'README.md')).not.toContain(
-      'On Android and iOS',
-    );
+    expect(read(dir, 'README.md')).toContain('Import the package root');
     expect(read(dir, 'README.md')).not.toContain(
       '## Lynxtron Library Target',
     );
@@ -884,6 +1097,9 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'harmony/Index.ets')).toContain(
       'export { HarmonyService } from \'./src/main/ets/HarmonyService\';',
+    );
+    expect(read(dir, 'harmony/oh-package.json5')).toContain(
+      '"@lynx/lynx": "*"',
     );
     expect(read(dir, 'harmony/src/main/ets/HarmonyModule.ets')).toContain(
       'extends HarmonyModuleSpec',
@@ -1074,8 +1290,16 @@ function readJson<T>(root: string, file: string): T {
 
 interface Manifest {
   platforms: Record<string, unknown> & {
-    android?: { nodeApiAddons?: unknown[] };
+    android?: {
+      nodeApiAddons?: unknown[];
+      providerClassName?: string | null;
+    };
     ios?: { nodeApiAddons?: unknown[] };
+    harmony?: {
+      nodeApiAddons?: unknown[];
+      providerExportName?: string | null;
+    };
+    lynxtron?: Record<string, unknown>;
   };
 }
 

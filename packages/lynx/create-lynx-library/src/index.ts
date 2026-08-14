@@ -6,17 +6,15 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export type LibraryFeature =
-  | 'native-module'
-  | 'napi-native-module'
-  | 'element'
-  | 'service';
+export type LibraryFeature = 'native-module' | 'element' | 'service';
 export type LibraryPlatform = 'android' | 'ios' | 'harmony' | 'lynxtron';
+export type NativeModuleBackend = 'platform' | 'node-api';
 
 export interface CreateLynxLibraryOptions {
   dir: string;
   features: LibraryFeature[];
   platforms?: LibraryPlatform[];
+  nativeModuleBackend?: NativeModuleBackend;
   packageName?: string;
   androidPackage?: string;
   moduleName?: string;
@@ -49,6 +47,7 @@ interface TemplateContext {
   dependencyVersions: Record<string, string>;
   features: Set<LibraryFeature>;
   platforms: Set<LibraryPlatform>;
+  nativeModuleBackend: NativeModuleBackend;
 }
 
 interface PackageJson {
@@ -60,7 +59,6 @@ interface PackageJson {
 
 export const LIBRARY_FEATURES: readonly LibraryFeature[] = [
   'native-module',
-  'napi-native-module',
   'element',
   'service',
 ] as const;
@@ -76,6 +74,11 @@ export const DEFAULT_LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
   'harmony',
   'lynxtron',
 ] as const;
+export const NATIVE_MODULE_BACKENDS: readonly NativeModuleBackend[] = [
+  'platform',
+  'node-api',
+] as const;
+export const DEFAULT_NATIVE_MODULE_BACKEND: NativeModuleBackend = 'platform';
 
 const PACKAGE_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -126,6 +129,22 @@ export function createLynxLibrary(
     }
   }
 
+  const nativeModuleBackend = options.nativeModuleBackend
+    ?? DEFAULT_NATIVE_MODULE_BACKEND;
+  if (!isNativeModuleBackend(nativeModuleBackend)) {
+    throw new Error(
+      `Unsupported native module backend: ${String(nativeModuleBackend)}`,
+    );
+  }
+  if (
+    options.nativeModuleBackend !== undefined
+    && !features.has('native-module')
+  ) {
+    throw new Error(
+      'nativeModuleBackend requires the "native-module" feature',
+    );
+  }
+
   const platforms = new Set(options.platforms ?? DEFAULT_LIBRARY_PLATFORMS);
 
   if (platforms.size === 0) {
@@ -138,7 +157,12 @@ export function createLynxLibrary(
     }
   }
 
-  const context = createContext(options, features, platforms);
+  const context = createContext(
+    options,
+    features,
+    platforms,
+    nativeModuleBackend,
+  );
   const files = createFiles(context);
 
   for (const file of files) {
@@ -168,6 +192,11 @@ export function parseLibraryFeatures(source: string): LibraryFeature[] {
   }
 
   return features.map((feature) => {
+    if (feature === 'napi-native-module') {
+      throw new Error(
+        '"napi-native-module" was replaced by "--features native-module --native-module-backend node-api"',
+      );
+    }
     if (!isLibraryFeature(feature)) {
       throw new Error(
         `Unsupported library feature "${feature}". Expected one of: ${
@@ -180,6 +209,25 @@ export function parseLibraryFeatures(source: string): LibraryFeature[] {
 
     return feature;
   });
+}
+
+/**
+ * Parses the implementation backend used by the Native Module feature.
+ */
+export function parseNativeModuleBackend(
+  source: string,
+): NativeModuleBackend {
+  const backend = source.trim().toLowerCase();
+
+  if (!isNativeModuleBackend(backend)) {
+    throw new Error(
+      `Unsupported native module backend "${source}". Expected one of: ${
+        NATIVE_MODULE_BACKENDS.join(', ')
+      }`,
+    );
+  }
+
+  return backend;
 }
 
 /**
@@ -223,6 +271,7 @@ function createContext(
   options: CreateLynxLibraryOptions,
   features: Set<LibraryFeature>,
   platforms: Set<LibraryPlatform>,
+  nativeModuleBackend: NativeModuleBackend,
 ): TemplateContext {
   const directoryName = path.basename(path.resolve(options.dir));
   const packageName = options.packageName
@@ -230,9 +279,6 @@ function createContext(
   const baseName = packageName.split('/').at(-1) ?? packageName;
   const prefix = toPascalCase(baseName);
   const moduleName = options.moduleName ?? `${prefix}Module`;
-  const napiModuleName = features.has('native-module')
-    ? `${moduleName}Napi`
-    : moduleName;
   const elementName = options.elementName ?? `x-${toKebabCase(prefix)}`;
   const serviceName = options.serviceName ?? `${prefix}Service`;
   const elementPrefix = toPascalCase(elementName.replace(/^x-/, ''));
@@ -241,13 +287,13 @@ function createContext(
 
   return {
     addonBinaryName: toKebabCase(baseName) || 'lynx-library',
-    nodeApiAddonName: napiModuleName,
+    nodeApiAddonName: moduleName,
     addonTargetName: `${toCIdentifier(prefix, 'LynxLibrary')}Addon`,
     packageName,
     androidPackage,
     androidPackagePath: androidPackage.replaceAll('.', '/'),
     moduleName,
-    napiModuleName,
+    napiModuleName: moduleName,
     elementName,
     elementClassName: `${elementPrefix}Element`,
     elementSymbolName: toCIdentifier(`${elementPrefix}Element`, 'LynxElement'),
@@ -259,6 +305,7 @@ function createContext(
       ?? readDefaultDependencyVersions(),
     features,
     platforms,
+    nativeModuleBackend,
   };
 }
 
@@ -272,11 +319,11 @@ function createFiles(context: TemplateContext): CreatedFile[] {
     groups.push('template-shared');
   }
 
-  if (context.features.has('native-module')) {
+  if (hasPlatformNativeModule(context)) {
     groups.push('template-native-module');
   }
 
-  if (context.features.has('napi-native-module')) {
+  if (hasNodeApiNativeModule(context)) {
     groups.push('template-napi-native-module');
   }
 
@@ -306,7 +353,7 @@ function createFilesFromTemplateGroup(
   return listTemplateFiles(root).flatMap((absolutePath) => {
     const relativePath = toPosixPath(path.relative(root, absolutePath));
 
-    if (!shouldCreateTemplateFile(relativePath, context)) {
+    if (!shouldCreateTemplateFile(relativePath, group, context)) {
       return [];
     }
 
@@ -335,8 +382,40 @@ function createFilesFromTemplateGroup(
  */
 function shouldCreateTemplateFile(
   relativePath: string,
+  group: string,
   context: TemplateContext,
 ): boolean {
+  if (group === 'template-native-module') {
+    if (relativePath.startsWith('android/')) {
+      return usesPlatformNativeModule(context, 'android');
+    }
+    if (relativePath.startsWith('ios/')) {
+      return usesPlatformNativeModule(context, 'ios');
+    }
+    if (relativePath.startsWith('harmony/')) {
+      return usesPlatformNativeModule(context, 'harmony');
+    }
+  }
+
+  if (group === 'template-napi-native-module') {
+    if (relativePath.startsWith('android/')) {
+      return usesNodeApiNativeModule(context, 'android');
+    }
+    if (relativePath.startsWith('ios/')) {
+      return usesNodeApiNativeModule(context, 'ios');
+    }
+    if (relativePath.startsWith('harmony/')) {
+      return usesNodeApiNativeModule(context, 'harmony');
+    }
+  }
+
+  if (
+    relativePath
+      === 'harmony/src/main/ets/LynxLibraryProviderImpl.ets.tmpl'
+  ) {
+    return hasHarmonyProvider(context);
+  }
+
   if (relativePath.startsWith('android/')) {
     return context.platforms.has('android');
   }
@@ -349,12 +428,15 @@ function shouldCreateTemplateFile(
     return context.platforms.has('harmony');
   }
 
-  if (relativePath === 'types/platform-native-module.d.ts.tmpl') {
+  if (relativePath === 'types/native-module.d.ts.tmpl') {
     return context.features.has('native-module');
   }
 
-  if (relativePath === 'types/napi-native-module.d.ts.tmpl') {
-    return context.features.has('napi-native-module');
+  if (
+    relativePath === 'types/platform-native-module.d.ts.tmpl'
+    || relativePath === 'types/napi-native-module.d.ts.tmpl'
+  ) {
+    return false;
   }
 
   if (relativePath.startsWith('lynxtron/')) {
@@ -574,7 +656,12 @@ function createTemplateReplacements(
     ANDROID_PLATFORM_DEPENDENCIES: androidPlatformDependencies(context),
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
     IOS_NAPI_ADDON_PODSPEC: iosNapiAddonPodspec(context),
+    HARMONY_DEPENDENCIES: harmonyDependencies(context),
     HARMONY_INDEX_EXPORTS: harmonyIndexExports(context),
+    HARMONY_NATIVE_IMPORTS: harmonyNativeImports(context),
+    HARMONY_NATIVE_INITIALIZER: harmonyNativeInitializer(context),
+    HARMONY_NATIVE_LIBRARY_NAME: context.nodeApiAddonName,
+    HARMONY_NATIVE_BUILD_OPTION: harmonyNativeBuildOption(context),
     HARMONY_MODULE_NAME: context.harmonyModuleName,
     HARMONY_PACKAGE_NAME: context.harmonyPackageName,
     HARMONY_PROVIDER_IMPORTS: harmonyProviderImports(context),
@@ -597,8 +684,7 @@ function createTemplateReplacements(
     SERVICE_PROTOCOL_NAME: context.serviceProtocolName,
     SELF_RENDER_README: selfRenderReadme(context),
     SOURCE_INDEX: sourceIndex(context),
-    NAPI_NATIVE_MODULE_TYPES: napiNativeModuleTypes(context),
-    PLATFORM_NATIVE_MODULE_TYPES: platformNativeModuleTypes(context),
+    NATIVE_MODULE_TYPES: nativeModuleTypes(context),
     TYPES_INDEX: typesIndex(context),
     TYPE_DECLARATION_README: typeDeclarationReadme(context),
   };
@@ -649,8 +735,55 @@ function resolveInside(targetDir: string, filePath: string): string {
   return absolutePath;
 }
 
+function hasNativeModule(context: TemplateContext): boolean {
+  return context.features.has('native-module');
+}
+
+function usesPlatformNativeModule(
+  context: TemplateContext,
+  platform: Exclude<LibraryPlatform, 'lynxtron'>,
+): boolean {
+  return hasNativeModule(context)
+    && context.nativeModuleBackend === 'platform'
+    && context.platforms.has(platform);
+}
+
+function usesNodeApiNativeModule(
+  context: TemplateContext,
+  platform: LibraryPlatform,
+): boolean {
+  return hasNativeModule(context)
+    && context.platforms.has(platform)
+    && (
+      context.nativeModuleBackend === 'node-api'
+      || platform === 'lynxtron'
+    );
+}
+
+function hasPlatformNativeModule(context: TemplateContext): boolean {
+  return usesPlatformNativeModule(context, 'android')
+    || usesPlatformNativeModule(context, 'ios')
+    || usesPlatformNativeModule(context, 'harmony');
+}
+
+function hasNodeApiNativeModule(context: TemplateContext): boolean {
+  return usesNodeApiNativeModule(context, 'android')
+    || usesNodeApiNativeModule(context, 'ios')
+    || usesNodeApiNativeModule(context, 'harmony')
+    || usesNodeApiNativeModule(context, 'lynxtron');
+}
+
+function hasHarmonyProvider(context: TemplateContext): boolean {
+  return context.platforms.has('harmony')
+    && (
+      usesPlatformNativeModule(context, 'harmony')
+      || context.features.has('element')
+      || context.features.has('service')
+    );
+}
+
 function hasSharedSources(context: TemplateContext): boolean {
-  return context.features.has('napi-native-module')
+  return hasNodeApiNativeModule(context)
     || (
       context.platforms.has('lynxtron')
       && context.features.has('element')
@@ -659,7 +792,7 @@ function hasSharedSources(context: TemplateContext): boolean {
 
 function hasLynxtronTarget(context: TemplateContext): boolean {
   return context.platforms.has('lynxtron')
-    && (context.features.has('napi-native-module') || context.features.has(
+    && (hasNativeModule(context) || context.features.has(
       'element',
     ));
 }
@@ -696,7 +829,7 @@ function packageSelfRenderDevDependency(context: TemplateContext): string {
 
   const dependencies: string[] = [];
 
-  if (!context.features.has('napi-native-module')) {
+  if (!hasNodeApiNativeModule(context)) {
     const headersVersion =
       context.dependencyVersions[LYNX_EXTENSION_HEADERS_PACKAGE]
         ?? LYNX_EXTENSION_HEADERS_VERSION;
@@ -717,7 +850,7 @@ ${dependencies.join(',\n')}`;
 }
 
 function packageRuntimeDependencies(context: TemplateContext): string {
-  if (!context.features.has('napi-native-module')) {
+  if (!hasNodeApiNativeModule(context)) {
     return '';
   }
 
@@ -745,12 +878,6 @@ function sourceIndex(context: TemplateContext): string {
     );
   }
 
-  if (context.features.has('napi-native-module')) {
-    exportLines.push(
-      `export { ${context.napiModuleName} } from '../generated/${context.napiModuleName}';`,
-    );
-  }
-
   if (exportLines.length === 0) {
     return `// Lynx library package entry.
 `;
@@ -766,11 +893,7 @@ function typesIndex(context: TemplateContext): string {
   const exportLines: string[] = [];
 
   if (context.features.has('native-module')) {
-    exportLines.push(`export * from './platform-native-module';`);
-  }
-
-  if (context.features.has('napi-native-module')) {
-    exportLines.push(`export * from './napi-native-module';`);
+    exportLines.push(`export * from './native-module';`);
   }
 
   if (exportLines.length === 0) {
@@ -782,24 +905,11 @@ function typesIndex(context: TemplateContext): string {
 }
 
 /**
- * Generates the initial platform native module type declarations.
+ * Generates the initial native module type declarations.
  */
-function platformNativeModuleTypes(context: TemplateContext): string {
+function nativeModuleTypes(context: TemplateContext): string {
   return `/** @lynxmodule */
 export declare class ${context.moduleName} {
-  setValue(key: string, value: string): void;
-  getValue(key: string): string | null;
-  clear(): void;
-}
-`;
-}
-
-/**
- * Generates the initial NAPI native module type declarations.
- */
-function napiNativeModuleTypes(context: TemplateContext): string {
-  return `/** @lynxmodule */
-export declare class ${context.napiModuleName} {
   setValue(key: string, value: string): void;
   getValue(key: string): string | null;
   clear(): void;
@@ -815,10 +925,6 @@ function exampleImport(context: TemplateContext): string {
 
   if (context.features.has('native-module')) {
     modules.push(context.moduleName);
-  }
-
-  if (context.features.has('napi-native-module')) {
-    modules.push(context.napiModuleName);
   }
 
   if (modules.length === 0) {
@@ -844,14 +950,6 @@ function exampleModuleButton(context: TemplateContext): string {
     );
   }
 
-  if (context.features.has('napi-native-module')) {
-    buttons.push(
-      `<text bindtap={() => ${context.napiModuleName}.setValue('key', 'value')}>
-        NAPI native module
-      </text>`,
-    );
-  }
-
   return buttons.join('\n      ');
 }
 
@@ -872,10 +970,7 @@ function iosServiceApiDependency(context: TemplateContext): string {
 }
 
 function androidNapiExternalNativeBuild(context: TemplateContext): string {
-  if (
-    !context.platforms.has('android')
-    || !context.features.has('napi-native-module')
-  ) {
+  if (!usesNodeApiNativeModule(context, 'android')) {
     return '';
   }
 
@@ -890,15 +985,16 @@ function androidNapiExternalNativeBuild(context: TemplateContext): string {
 }
 
 function hasAndroidNapiNativeModule(context: TemplateContext): boolean {
-  return context.platforms.has('android')
-    && context.features.has('napi-native-module');
+  return usesNodeApiNativeModule(context, 'android');
 }
 
 function androidPlatformDependencies(context: TemplateContext): string {
   if (
     !context.platforms.has('android')
-    || ![...context.features].some((feature) =>
-      feature !== 'napi-native-module'
+    || (
+      !usesPlatformNativeModule(context, 'android')
+      && !context.features.has('element')
+      && !context.features.has('service')
     )
   ) {
     return '';
@@ -914,7 +1010,8 @@ function androidNapiBuildSetup(context: TemplateContext): string {
     return '';
   }
 
-  return `val lynxPrimjsVersion = providers.gradleProperty("lynx.primjs.version").orElse("4.+").get()
+  return `val lynxPrimjsVersion =
+  rootProject.findProperty("lynx.primjs.version")?.toString() ?: "4.+"
 val primjsNativeAar by configurations.creating
 val primjsNativeAarFiles = primjsNativeAar.incoming.artifactView {}.files
 val extractPrimjsNativeLibraries by tasks.registering(Sync::class) {
@@ -971,9 +1068,7 @@ tasks.configureEach {
 }
 
 function iosNapiAddonPodspec(context: TemplateContext): string {
-  if (
-    !context.platforms.has('ios') || !context.features.has('napi-native-module')
-  ) {
+  if (!usesNodeApiNativeModule(context, 'ios')) {
     return '';
   }
 
@@ -994,57 +1089,39 @@ function elementModuleName(context: TemplateContext): string {
 }
 
 function typeDeclarationReadme(context: TemplateContext): string {
-  const declarations = [
-    ...(context.features.has('native-module')
-      ? [
-        'Platform native module typings live in `types/platform-native-module.d.ts`.',
-      ]
-      : []),
-    ...(context.features.has('napi-native-module')
-      ? [
-        'NAPI native module typings live in `types/napi-native-module.d.ts` and use a minimal shared C++ N-API callback stub.',
-      ]
-      : []),
-  ];
-
-  if (declarations.length === 0) {
+  if (!hasNativeModule(context)) {
     return 'This feature selection does not include native module typings.';
   }
 
   return `Generated JS specs are written to \`generated/\`.
 
-${declarations.join('\n\n')}`;
+Native Module typings live in \`types/native-module.d.ts\`. The selected
+\`${context.nativeModuleBackend}\` backend controls whether mobile targets use
+platform implementations or the shared C++ Node-API implementation. Lynxtron
+always uses the shared Node-API implementation.`;
 }
 
 function napiNativeModuleReadme(context: TemplateContext): string {
-  if (!context.features.has('napi-native-module')) {
+  if (!hasNodeApiNativeModule(context)) {
     return '';
   }
 
-  const mobilePlatforms = [
-    ...(context.platforms.has('android') ? ['Android'] : []),
-    ...(context.platforms.has('ios') ? ['iOS'] : []),
-  ];
-  const mobileShimReadme = mobilePlatforms.length > 0
-    ? `
-
-On ${formatList(mobilePlatforms)}, import the package root in BTS to install the
-generated \`NativeModules.${context.napiModuleName}\` shim. The generated
-TypeScript shim is only for the selected mobile runtimes; Lynxtron does not
-import it.
-`
-    : '';
-
   return `
 
-## NAPI Native Module
+## Node-API Native Module Backend
 
 Codegen creates \`shared/nativeModule/${context.napiModuleName}.cc\` once and
 preserves it on later runs. After changing the typings, rerun codegen to refresh
 generated facade and registration files, then manually keep the user-owned C++
 callbacks and exports in sync. If the module class is renamed, also rename or
 remove the old C++ file and update the addon name in \`lynx.lib.json\`; codegen
-does not delete stale user-owned files or rewrite the manifest.${mobileShimReadme}
+does not delete stale user-owned files or rewrite the manifest.
+
+Import the package root on every selected platform before calling:
+
+\`\`\`ts
+NativeModules.${context.moduleName}.<method>(...);
+\`\`\`
 ${androidNapiReadme(context)}
 `;
 }
@@ -1065,7 +1142,7 @@ used by other Lynx dependencies.
 function harmonyProviderImports(context: TemplateContext): string {
   const imports: string[] = [];
 
-  if (context.features.has('native-module')) {
+  if (usesPlatformNativeModule(context, 'harmony')) {
     imports.push(
       `import { ${context.moduleName} } from './${context.moduleName}';`,
     );
@@ -1107,7 +1184,7 @@ function harmonyProviderRegistrations(context: TemplateContext): string {
       }, new Behavior(${context.elementClassName}));`,
     );
   }
-  if (context.features.has('native-module')) {
+  if (usesPlatformNativeModule(context, 'harmony')) {
     registrations.push(
       `    registry.registerModule(${
         JSON.stringify(context.moduleName)
@@ -1124,11 +1201,15 @@ function harmonyProviderRegistrations(context: TemplateContext): string {
 }
 
 function harmonyIndexExports(context: TemplateContext): string {
-  const exportStatements = [
-    `export { LynxLibraryProviderImpl } from './src/main/ets/LynxLibraryProviderImpl';`,
-  ];
+  const exportStatements: string[] = [];
 
-  if (context.features.has('native-module')) {
+  if (hasHarmonyProvider(context)) {
+    exportStatements.push(
+      `export { LynxLibraryProviderImpl } from './src/main/ets/LynxLibraryProviderImpl';`,
+    );
+  }
+
+  if (usesPlatformNativeModule(context, 'harmony')) {
     exportStatements.push(
       `export { ${context.moduleName} } from './src/main/ets/${context.moduleName}';`,
     );
@@ -1150,16 +1231,67 @@ function harmonyIndexExports(context: TemplateContext): string {
   return `${exportStatements.join('\n')}\n`;
 }
 
+function harmonyDependencies(context: TemplateContext): string {
+  const dependencies: string[] = [];
+  if (hasHarmonyProvider(context)) {
+    dependencies.push('"@lynx/lynx": "*"');
+  }
+  if (usesNodeApiNativeModule(context, 'harmony')) {
+    dependencies.push(
+      '"@lynx/primjs": "*"',
+      `"lib${context.nodeApiAddonName}.so": "file:./src/main/cpp/types/lib${context.nodeApiAddonName}"`,
+    );
+  }
+  return dependencies.join(',\n    ');
+}
+
+function harmonyNativeBuildOption(context: TemplateContext): string {
+  if (!usesNodeApiNativeModule(context, 'harmony')) {
+    return '';
+  }
+
+  return `,
+    "externalNativeOptions": {
+      "path": "./src/main/cpp/CMakeLists.txt",
+      "arguments": "",
+      "cppFlags": ""
+    }`;
+}
+
+function harmonyNativeImports(context: TemplateContext): string {
+  if (!usesNodeApiNativeModule(context, 'harmony')) {
+    return '';
+  }
+
+  return `import nativeModule from 'lib${context.nodeApiAddonName}.so';`;
+}
+
+function harmonyNativeInitializer(context: TemplateContext): string {
+  if (!usesNodeApiNativeModule(context, 'harmony')) {
+    return '';
+  }
+
+  return `let nodeApiInitialized = false;
+
+export function initializeNodeApiAddon(): void {
+  if (nodeApiInitialized) {
+    return;
+  }
+  nativeModule.initialize();
+  nodeApiInitialized = true;
+}`;
+}
+
 function selfRenderReadme(context: TemplateContext): string {
   if (!hasLynxtronTarget(context)) {
     return '';
   }
 
-  const napiBtsUsage = context.features.has('napi-native-module')
+  const napiBtsUsage = hasNativeModule(context)
     ? `
 
-Lynxtron BTS code does not import the package root or the generated mobile shim.
-It calls the registered runtime module directly:
+Import the package root in Lynxtron BTS before calling the registered runtime
+module:
 
 \`\`\`ts
 NativeModules.${context.napiModuleName}.<method>(...);
@@ -1170,7 +1302,7 @@ NativeModules.${context.napiModuleName}.<method>(...);
   return `
 ## Lynxtron Library Target
 
-This package contains shared C++ sources for any selected NAPI Native Module or
+This package contains shared C++ sources for any selected Node-API Native Module or
 Element features. Build the current OS/architecture Lynxtron library with:
 
 \`\`\`bash
@@ -1223,7 +1355,9 @@ function platformManifestEntries(context: TemplateContext): string {
   if (context.platforms.has('android')) {
     entries.push(`    "android": {
       "packageName": ${JSON.stringify(context.androidPackage)},
-      "sourceDir": "android"${androidNodeApiAddonsManifest(context)}
+      "sourceDir": "android"${androidProviderManifest(context)}${
+      androidNodeApiAddonsManifest(context)
+    }
     }`);
   }
 
@@ -1238,7 +1372,9 @@ function platformManifestEntries(context: TemplateContext): string {
 
   if (context.platforms.has('harmony')) {
     entries.push(`    "harmony": {
-      "packageDir": "harmony"
+      "packageDir": "harmony"${harmonyProviderManifest(context)}${
+      harmonyNodeApiAddonsManifest(context)
+    }
     }`);
   }
 
@@ -1257,8 +1393,21 @@ function platformManifestEntries(context: TemplateContext): string {
   return entries.join(',\n');
 }
 
+function androidProviderManifest(context: TemplateContext): string {
+  if (
+    usesPlatformNativeModule(context, 'android')
+    || context.features.has('element')
+    || context.features.has('service')
+  ) {
+    return '';
+  }
+
+  return `,
+      "providerClassName": null`;
+}
+
 function androidNodeApiAddonsManifest(context: TemplateContext): string {
-  if (!context.features.has('napi-native-module')) {
+  if (!usesNodeApiNativeModule(context, 'android')) {
     return '';
   }
 
@@ -1267,8 +1416,7 @@ function androidNodeApiAddonsManifest(context: TemplateContext): string {
         {
           "name": ${JSON.stringify(context.nodeApiAddonName)},
           "libraryName": ${JSON.stringify(context.nodeApiAddonName)},
-          "jniLibsDir": "android/src/main/jniLibs",
-          "required": false
+          "required": true
         }
       ]`;
 }
@@ -1277,7 +1425,7 @@ function iosNodeApiAddonsManifest(
   context: TemplateContext,
   podspecPath: string,
 ): string {
-  if (!context.features.has('napi-native-module')) {
+  if (!usesNodeApiNativeModule(context, 'ios')) {
     return '';
   }
 
@@ -1287,7 +1435,31 @@ function iosNodeApiAddonsManifest(
           "name": ${JSON.stringify(context.nodeApiAddonName)},
           "podName": ${JSON.stringify(podspecName(context.packageName))},
           "podspecPath": ${JSON.stringify(podspecPath)},
-          "addonUseHeader": "addon_use.h",
+          "addonUseHeader": "addon_use.h"
+        }
+      ]`;
+}
+
+function harmonyProviderManifest(context: TemplateContext): string {
+  if (hasHarmonyProvider(context)) {
+    return '';
+  }
+
+  return `,
+      "providerExportName": null`;
+}
+
+function harmonyNodeApiAddonsManifest(context: TemplateContext): string {
+  if (!usesNodeApiNativeModule(context, 'harmony')) {
+    return '';
+  }
+
+  return `,
+      "nodeApiAddons": [
+        {
+          "name": ${JSON.stringify(context.nodeApiAddonName)},
+          "libraryName": ${JSON.stringify(context.nodeApiAddonName)},
+          "initializerExportName": "initializeNodeApiAddon",
           "required": true
         }
       ]`;
@@ -1397,6 +1569,13 @@ function podspecName(packageName: string): string {
  */
 function isLibraryFeature(type: string): type is LibraryFeature {
   return (LIBRARY_FEATURES as readonly string[]).includes(type);
+}
+
+/**
+ * Checks whether a string is a supported Native Module backend.
+ */
+function isNativeModuleBackend(type: string): type is NativeModuleBackend {
+  return (NATIVE_MODULE_BACKENDS as readonly string[]).includes(type);
 }
 
 /**

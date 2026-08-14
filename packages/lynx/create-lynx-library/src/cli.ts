@@ -8,26 +8,31 @@ import { stdin as input, stdout as output } from 'node:process';
 import type { Readable, Writable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 
-import { cancel, isCancel, multiselect, text } from '@clack/prompts';
+import { cancel, isCancel, multiselect, select, text } from '@clack/prompts';
 
 import type {
   CreateLynxLibraryOptions,
   LibraryFeature,
   LibraryPlatform,
+  NativeModuleBackend,
 } from './index.js';
 import {
   DEFAULT_LIBRARY_PLATFORMS,
+  DEFAULT_NATIVE_MODULE_BACKEND,
   LIBRARY_FEATURES,
   LIBRARY_PLATFORMS,
+  NATIVE_MODULE_BACKENDS,
   createLynxLibrary,
   parseLibraryFeatures,
   parseLibraryPlatforms,
+  parseNativeModuleBackend,
 } from './index.js';
 
 export interface CliOptions {
   dir?: string;
   features?: LibraryFeature[];
   platforms?: LibraryPlatform[];
+  nativeModuleBackend?: NativeModuleBackend;
   packageName?: string;
   androidPackage?: string;
   moduleName?: string;
@@ -39,6 +44,7 @@ export interface CliOptions {
 export interface CliPrompts {
   text: typeof text;
   multiselect: typeof multiselect;
+  select: typeof select;
 }
 
 export interface CliRuntime {
@@ -65,19 +71,28 @@ class CliCancelError extends Error {
 const DEFAULT_PROMPTS: CliPrompts = {
   text,
   multiselect,
+  select,
 };
 const DEFAULT_PROJECT_NAME = 'lynx-library';
 const LIBRARY_FEATURE_LABELS: Record<LibraryFeature, string> = {
   'native-module': 'Native Module',
-  'napi-native-module': 'NAPI Native Module',
   element: 'Element',
   service: 'Service',
 };
 const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
-  'native-module': 'JS bridge APIs for Android, iOS, and HarmonyOS targets',
-  'napi-native-module': 'shared C++ N-API native module generated from typings',
+  'native-module': 'Native module with a platform or shared Node-API backend',
   element: 'native UI element for Android, iOS, HarmonyOS, and shared C++',
   service: 'native service implementation registered globally',
+};
+const NATIVE_MODULE_BACKEND_LABELS: Record<NativeModuleBackend, string> = {
+  platform: 'Platform',
+  'node-api': 'Node-API',
+};
+const NATIVE_MODULE_BACKEND_HINTS: Record<NativeModuleBackend, string> = {
+  platform:
+    'Android/iOS/Harmony use platform code; Lynxtron still uses Node-API',
+  'node-api':
+    'Android/iOS/Harmony/Lynxtron share one C++ Node-API implementation',
 };
 const LIBRARY_PLATFORM_LABELS: Record<LibraryPlatform, string> = {
   android: 'Android',
@@ -130,6 +145,14 @@ export function parseArgs(argv: string[]): CliOptions {
         ...(options.platforms ?? []),
         ...parseLibraryPlatforms(readValue(argv, index, arg)),
       ];
+      index += 1;
+      continue;
+    }
+
+    if (arg === '--native-module-backend') {
+      options.nativeModuleBackend = parseNativeModuleBackend(
+        readValue(argv, index, arg),
+      );
       index += 1;
       continue;
     }
@@ -202,6 +225,8 @@ Options:
   --feature, --features <list> Comma-separated list or "all".
   --platform, --platforms <list>
                               Comma-separated Native platforms or "all".
+  --native-module-backend <backend>
+                              Native Module backend: platform or node-api.
   --package-name <name>        npm package name.
   --android-package <name>     Android package name for lynx.lib.json.
   --module-name <name>         Native module class name.
@@ -210,10 +235,13 @@ Options:
   --help, -h                   Show this help message.
 
 Library features:
-  native-module                JS bridge APIs for Android, iOS, and HarmonyOS platform targets.
-  napi-native-module           Shared C++ N-API native module generated from typings.
+  native-module                Native module with a platform or Node-API backend.
   element                      Native UI element for Android, iOS, HarmonyOS, and shared C++ targets.
   service                      Native service implementation registered globally.
+
+Native Module backends:
+  platform                     Android/iOS/Harmony use platform code; Lynxtron still uses Node-API.
+  node-api                     Android/iOS/Harmony/Lynxtron share one C++ Node-API implementation.
 
 Native platforms:
   android                      Android native source directory and manifest entry.
@@ -223,7 +251,8 @@ Native platforms:
 
 Examples:
   create-lynx-library
-  create-lynx-library lynx-button --features native-module,napi-native-module,element,service --platforms android,ios,harmony,lynxtron
+  create-lynx-library lynx-button --features native-module,element,service --native-module-backend platform --platforms android,ios,harmony,lynxtron
+  create-lynx-library lynx-storage --features native-module --native-module-backend node-api --platforms android,ios,harmony,lynxtron
   create-lynx-library lynx-kit --features all --platforms all
 `);
 }
@@ -240,7 +269,11 @@ async function fillInteractiveOptions(
     || next.features === undefined
     || next.features.length === 0
     || next.platforms === undefined
-    || next.platforms.length === 0;
+    || next.platforms.length === 0
+    || (
+      next.features?.includes('native-module') === true
+      && next.nativeModuleBackend === undefined
+    );
 
   if (!needsPrompt) {
     return next;
@@ -323,6 +356,26 @@ async function fillInteractiveOptions(
     );
   }
 
+  if (
+    next.features.includes('native-module')
+    && next.nativeModuleBackend === undefined
+  ) {
+    next.nativeModuleBackend = checkCancel<NativeModuleBackend>(
+      await prompts.select<NativeModuleBackend>({
+        input: runtime.input,
+        output: runtime.output,
+        message: 'Select Native Module backend (Lynxtron always uses Node-API)',
+        options: NATIVE_MODULE_BACKENDS.map((backend) => ({
+          value: backend,
+          label: NATIVE_MODULE_BACKEND_LABELS[backend],
+          hint: NATIVE_MODULE_BACKEND_HINTS[backend],
+        })),
+        initialValue: DEFAULT_NATIVE_MODULE_BACKEND,
+      }),
+      runtime,
+    );
+  }
+
   return next;
 }
 
@@ -362,6 +415,9 @@ export async function main(
   if (options.platforms !== undefined) {
     createOptions.platforms = options.platforms;
   }
+  if (options.nativeModuleBackend !== undefined) {
+    createOptions.nativeModuleBackend = options.nativeModuleBackend;
+  }
   if (options.packageName !== undefined) {
     createOptions.packageName = options.packageName;
   }
@@ -386,6 +442,8 @@ export async function main(
     packageManager: detectPackageManager(),
     features: options.features,
     platforms: options.platforms ?? [...DEFAULT_LIBRARY_PLATFORMS],
+    nativeModuleBackend: options.nativeModuleBackend
+      ?? DEFAULT_NATIVE_MODULE_BACKEND,
   }));
 }
 
@@ -445,12 +503,14 @@ function formatSuccessMessage({
   packageManager,
   features,
   platforms,
+  nativeModuleBackend,
 }: {
   dir: string;
   filesCount: number;
   packageManager: PackageManager;
   features: LibraryFeature[];
   platforms: LibraryPlatform[];
+  nativeModuleBackend: NativeModuleBackend;
 }): string {
   // Display library features in the canonical order from LIBRARY_FEATURES.
   const selectedFeatures = LIBRARY_FEATURES.filter((feature) =>
@@ -470,18 +530,22 @@ function formatSuccessMessage({
     `2. ${packageManager} install`,
   ];
 
-  if (
-    selectedFeatures.includes('native-module')
-    || selectedFeatures.includes('napi-native-module')
-  ) {
+  if (selectedFeatures.includes('native-module')) {
     nextSteps.push(`3. ${packageManager} run codegen`);
   }
+
+  const nativeModuleBackendSummary = selectedFeatures.includes('native-module')
+    ? `
+Native Module backend:
+  - ${NATIVE_MODULE_BACKEND_LABELS[nativeModuleBackend]}
+`
+    : '';
 
   return `Created ${filesCount} files in ${dir}
 
 Library features:
 ${featureSummary}
-
+${nativeModuleBackendSummary}
 Native platforms:
 ${platformSummary}
 
