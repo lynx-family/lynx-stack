@@ -26,6 +26,8 @@ When serving the playground's native Lynx bundles as static Android test fixture
 
 ## Chat Page Architecture
 
+Load Create-tab model choices from the GenUI server's `GET /models` endpoint. Keep provider credentials, upstream model ids, and upstream base URLs out of playground state, persistence, controls, and request bodies; persist only the selected server-approved model name.
+
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
 Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, and `pages/chat/mcp-apps.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.
@@ -56,7 +58,7 @@ When an action response is merged with the current preview messages, clear any p
 
 ### Shared Imports
 
-When importing shared playground conversations, validate the `importConv` URL before fetching it. Accept only current-origin documents or the GenUI Supabase Storage conversation-object path, then validate the shared document protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
+Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
 
 ## Component Catalog Architecture
 

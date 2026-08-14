@@ -184,4 +184,7 @@ allowBuilds:
   dprint: true
   esbuild: true
   sharp: true
+  # The published package already includes its generated JS implementation.
+  # Its postinstall only rebuilds that file when it is absent.
+  tos-crc64-js: false
   unrs-resolver: false

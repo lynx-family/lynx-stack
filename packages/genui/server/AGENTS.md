@@ -18,20 +18,32 @@ For multi-instance deployments, place a shared rate limiter (e.g. an API
 gateway or Redis-backed limiter) in front of this server when global rate
 limits are required.
 
-## Required Environment Variables
+## Required Model Configuration
 
-Before starting this server, explicitly provide these three environment
-variables:
+Before starting this server, provide the provider credentials, endpoint, and
+model list through one JSON environment variable:
 
 ```bash
-export OPENAI_API_KEY="..."
-export OPENAI_BASE_URL="..."
-export OPENAI_MODEL="..."
+export GENUI_MODEL_CONFIG_JSON='{
+  "GPT-5.4": {
+    "model": "gpt-5.4",
+    "apiKey": "...",
+    "baseURL": "https://api.openai.com/v1",
+    "api": "responses",
+    "default": true
+  }
+}'
 ```
 
-- `OPENAI_API_KEY` is required by the OpenAI provider.
-- `OPENAI_BASE_URL` selects the OpenAI-compatible API endpoint.
-- `OPENAI_MODEL` selects the model used by the A2UI agent.
+- Each top-level key is the public model name returned to the playground.
+- Each value requires `model`, `apiKey`, and `baseURL`, so models may use
+  independent upstream ids, credentials, and endpoints.
+- `api` is optional and accepts `chat` or `responses`.
+- `default: true` is optional. When omitted, the first entry is the default.
+- `reasoningEffort` is optional per model.
+
+`GET /models` exposes only the top-level names and default selection. It must
+never expose `model`, `apiKey`, or `baseURL` to the playground.
 
 Image components are resolved after A2UI validation. To enable query-matched
 stock images, provide a Pexels API key:
@@ -44,6 +56,23 @@ When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
 back to a deterministic Picsum URL.
 
 The hosting runtime must provide these variables before starting the server.
+
+To publish short, shareable A2UI and OpenUI preview URLs, configure the
+public-read Volcengine TOS bucket and server-only write credentials. All four
+variables are required; do not add fallback bucket or region values:
+
+```bash
+export TOS_ACCESS_KEY="..."
+export TOS_SECRET_KEY="..."
+export TOS_BUCKET="genui"
+export TOS_REGION="cn-beijing"
+```
+
+Use a dedicated IAM identity with `tos:PutObject` access only to the configured
+`a2ui` and `openui` prefixes. The server signs writes with these credentials;
+the browser reads the resulting public object URL without credentials. Optional
+overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
+`TOS_OPENUI_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:

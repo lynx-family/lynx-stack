@@ -44,8 +44,8 @@ export function getOpenUIPayloadEndpoint(): string {
 }
 
 /**
- * Upload an A2UI payload to the GenUI server (Supabase Storage) and return the
- * durable public URLs. The returned `messagesUrl` can be fed to
+ * Upload an A2UI payload through the GenUI server and return the durable public
+ * URLs selected by the server. The returned `messagesUrl` can be fed to
  * `buildRenderUrl()` to produce a shareable `render.html` link.
  */
 export async function publishA2UIPayload(
@@ -53,7 +53,7 @@ export async function publishA2UIPayload(
   actionMocks?: Record<string, unknown>,
 ): Promise<PublishedPayload> {
   const res = await window.fetch(getA2UIPayloadEndpoint(), {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, actionMocks }),
   });
@@ -87,7 +87,7 @@ export async function publishOpenUIPayload(
   rawText: string,
 ): Promise<PublishedOpenUIPayload> {
   const res = await window.fetch(getOpenUIPayloadEndpoint(), {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rawText }),
   });

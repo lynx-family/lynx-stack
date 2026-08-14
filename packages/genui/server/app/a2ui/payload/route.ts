@@ -63,6 +63,8 @@ async function postA2UIPayload(req: Request) {
 
 const route = new Hono();
 
+route.put('/', (context) => postA2UIPayload(context.req.raw));
+// Keep POST working for clients deployed before the PUT upload contract.
 route.post('/', (context) => postA2UIPayload(context.req.raw));
 
 export default route;

@@ -507,6 +507,8 @@ describe('jsx', () => {
           "main-thread:foo": foo
       });
       ",
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [],
@@ -577,6 +579,40 @@ describe('jsx', () => {
           })
       });
       ",
+        "definesForSnapshot": [
+          {
+            "code": "const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("list-item", pageId);
+              return [
+                  el
+              ];
+          }, [
+              (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+          ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null, true);
+      ",
+            "id": "__snapshot_da39a_04d8c_2",
+          },
+          {
+            "code": "const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
+              const pageId = ReactLynx.__pageId;
+              const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+              return [
+                  el
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartListSlotV2,
+                  0
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
+      ",
+            "id": "__snapshot_da39a_04d8c_1",
+          },
+        ],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [],
@@ -722,6 +758,8 @@ Component, View
         "code": "import { Component } from "@lynx-js/react/legacy-react-runtime";
       Component, View;
       ",
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [

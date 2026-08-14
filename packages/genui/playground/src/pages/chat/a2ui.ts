@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
   getA2UIActionEndpoint,
   getChatEndpoint,
   parseTokenUsage,
@@ -477,11 +476,7 @@ export const A2UI_CHAT_ADAPTER = {
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
     const url = getChatEndpoint('a2ui', host);
-    const provider = filterProviderRequestOptionsForEndpoint(
-      toProviderRequestOptions(settings),
-      url,
-      host,
-    );
+    const provider = toProviderRequestOptions(settings);
     return {
       url,
       method: 'POST',
@@ -641,11 +636,7 @@ export const A2UI_CHAT_ADAPTER = {
     request({ action, conversation, settings, host }) {
       const chatEndpoint = getChatEndpoint('a2ui', host);
       const url = getA2UIActionEndpoint(chatEndpoint);
-      const provider = filterProviderRequestOptionsForEndpoint(
-        toProviderRequestOptions(settings),
-        url,
-        host,
-      );
+      const provider = toProviderRequestOptions(settings);
       return {
         url,
         method: 'POST',

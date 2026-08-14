@@ -15,8 +15,10 @@ import a2uiHealthRoute from '../app/a2ui/health/route.js';
 import a2uiPayloadRoute from '../app/a2ui/payload/route.js';
 import a2uiStreamRoute from '../app/a2ui/stream/route.js';
 import { corsPreflight, jsonWithCors } from '../app/common/cors.js';
+import { errorMessage } from '../app/common/errors.js';
 import mcpAppsMetadataRoute from '../app/mcp-apps/metadata/route.js';
 import mcpAppsStreamRoute from '../app/mcp-apps/stream/route.js';
+import modelsRoute from '../app/models/route.js';
 import openuiPayloadRoute from '../app/openui/payload/route.js';
 import openuiStreamRoute from '../app/openui/stream/route.js';
 
@@ -34,6 +36,7 @@ app.route('/a2ui/payload', a2uiPayloadRoute);
 app.route('/a2ui/stream', a2uiStreamRoute);
 app.route('/mcp-apps/metadata', mcpAppsMetadataRoute);
 app.route('/mcp-apps/stream', mcpAppsStreamRoute);
+app.route('/models', modelsRoute);
 app.route('/openui/payload', openuiPayloadRoute);
 app.route('/openui/stream', openuiStreamRoute);
 
@@ -75,7 +78,7 @@ app.onError((error, context) => {
     );
   }
 
-  console.error(error);
+  console.error(errorMessage(error));
   return jsonWithCors(
     context.req.raw,
     { ok: false, error: 'internal server error' },
