@@ -20,6 +20,8 @@ Use `app/common/sse.ts` for standard SSE frames and response headers. Pass event
 
 Build `genui-server` as an executable ESM Hono server through `rslib.config.ts`. Each protocol `route.ts` default-exports a Hono sub-application, `src/app.ts` composes the route tree and common HTTP fallbacks, and `src/index.ts` starts `@hono/node-server` and owns graceful process shutdown. Do not export endpoint request functions or add a custom router or Node/FaaS transport adapter. Keep business handlers based on standard Web `Request` and `Response` internally.
 
+Keep Rslib's ESM `__dirname` shim enabled while bundling runtime dependencies with `autoExternal: false`. The Volcengine TOS SDK transitively loads `tos-crc64-js`, whose CommonJS initialization reads `__dirname`; leaving that identifier unshimmed makes the executable ESM bundle fail during startup.
+
 Read the server port from `LYNX_USE_PORT`, defaulting to `3000`; do not use `PORT` as a compatibility fallback.
 
 Read the bind address from `LYNX_USE_HOST`, defaulting to the IPv6 unspecified address `::` so Node accepts both IPv6 and IPv4 connections through its dual-stack listener; do not use `HOST` as a compatibility fallback. Format IPv6 addresses with brackets when logging HTTP URLs.
