@@ -40,11 +40,13 @@ export type NativeModuleTypeName =
   | 'function'
   | 'promise'
   | 'buffer'
+  | 'named-object'
   | 'value';
 
 export interface NativeModuleType {
   name: NativeModuleTypeName;
   nullable: boolean;
+  referenceName?: string;
 }
 
 interface NativeModuleTypeWithSource extends NativeModuleType {
@@ -59,6 +61,7 @@ interface NativeModuleSourceLocation {
 export interface NativeModuleParam {
   name: string;
   type: NativeModuleType;
+  optional?: boolean;
   source?: NativeModuleSourceLocation;
 }
 
@@ -72,7 +75,24 @@ export interface NativeModuleMethod {
 export interface NativeModuleSpec {
   name: string;
   methods: NativeModuleMethod[];
+  interfaces?: NativeModuleObjectSpec[];
   source?: NativeModuleSourceLocation;
+}
+
+export interface NativeModuleObjectProperty {
+  name: string;
+  type: NativeModuleType;
+  optional?: boolean;
+}
+
+export interface NativeModuleObjectSpec {
+  name: string;
+  properties: NativeModuleObjectProperty[];
+}
+
+interface NativeModuleObjectDeclaration {
+  name: string;
+  body: string;
 }
 
 interface LynxLibJson {
@@ -80,21 +100,35 @@ interface LynxLibJson {
     android?: {
       packageName: string;
       sourceDir: string;
+      nodeApi: boolean;
     };
     ios?: {
       sourceDir: string;
+      nodeApi: boolean;
     };
     harmony?: {
       packageDir: string;
+      nodeApi: boolean;
     };
     lynxtron?: Record<string, unknown>;
   };
 }
 
+interface NativeModulePlan {
+  module: NativeModuleSpec;
+  nodeApi: boolean;
+  platform: boolean;
+  forceNodeApiBackend: boolean;
+  forcePlatformBackend: boolean;
+}
+
 const MODULE_HEADER_PATTERN =
   /\/\*\*[\s\S]*?@lynxmodule[\s\S]*?\*\/\s*export\s+declare\s+class\s+([A-Za-z_$][\w$]*)\s*\{/g;
+const INTERFACE_HEADER_PATTERN =
+  /export\s+interface\s+([A-Za-z_$][\w$]*)\s*\{/g;
 const IDENTIFIER_PATTERN = /^[A-Z_$][\w$]*$/i;
 const JAVA_PACKAGE_NAME_PATTERN = /^[A-Z_]\w*(?:\.[A-Z_]\w*)*$/i;
+const NATIVE_MODULE_TYPES_FILE = 'native-module.d.ts';
 const PLATFORM_NATIVE_MODULE_TYPES_FILE = 'platform-native-module.d.ts';
 const NAPI_NATIVE_MODULE_TYPES_FILE = 'napi-native-module.d.ts';
 const NAPI_CPP_WRAPPER_TYPES: Partial<Record<NativeModuleTypeName, string>> = {
@@ -115,6 +149,7 @@ const NAPI_CPP_WRAPPER_TYPES: Partial<Record<NativeModuleTypeName, string>> = {
   int8array: 'Napi::Int8Array',
   number: 'Napi::Number',
   object: 'Napi::Object',
+  'named-object': 'Napi::Object',
   promise: 'Napi::Promise',
   string: 'Napi::String',
   symbol: 'Napi::Symbol',
@@ -133,6 +168,13 @@ export function parseNativeModules(
   filename = '<inline>',
 ): NativeModuleSpec[] {
   const sourceFilename = normalizeSourcePath(filename);
+  const interfaceDeclarations = findObjectInterfaceDeclarations(
+    source,
+    sourceFilename,
+  );
+  const interfaceNames = new Set(
+    interfaceDeclarations.map((declaration) => declaration.name),
+  );
   const modules: NativeModuleSpec[] = [];
   const seen = new Set<string>();
 
@@ -151,9 +193,39 @@ export function parseNativeModules(
     }
     seen.add(moduleName);
 
+    const methods = parseMethods(
+      body,
+      sourceFilename,
+      moduleName,
+      bodyStartLine,
+      interfaceNames,
+    );
+    const referencedInterfaceNames = new Set<string>();
+    for (const method of methods) {
+      for (
+        const type of [
+          method.returnType,
+          ...method.params.map((param) => param.type),
+        ]
+      ) {
+        addReferencedInterfaceNames(
+          type,
+          interfaceNames,
+          referencedInterfaceNames,
+        );
+      }
+    }
+    const interfaces = parseObjectInterfaces(
+      interfaceDeclarations,
+      sourceFilename,
+      referencedInterfaceNames,
+      interfaceNames,
+    );
+
     modules.push({
       name: moduleName,
-      methods: parseMethods(body, sourceFilename, moduleName, bodyStartLine),
+      methods,
+      ...(interfaces.length > 0 ? { interfaces } : {}),
       source: { file: sourceFilename, line },
     });
   }
@@ -211,6 +283,173 @@ function findNativeModuleDeclarations(
   }
 
   return declarations;
+}
+
+function findObjectInterfaceDeclarations(
+  source: string,
+  filename: string,
+): NativeModuleObjectDeclaration[] {
+  const declarations: NativeModuleObjectDeclaration[] = [];
+  const pattern = new RegExp(INTERFACE_HEADER_PATTERN);
+  const scanSource = stripTypeScriptComments(source);
+  let match = pattern.exec(scanSource);
+
+  while (match !== null) {
+    const name = match[1];
+    const matchedHeader = match[0];
+    if (name === undefined) {
+      match = pattern.exec(scanSource);
+      continue;
+    }
+
+    const openBraceIndex = match.index + matchedHeader.length - 1;
+    const closeBraceIndex = findMatchingBrace(scanSource, openBraceIndex);
+    if (closeBraceIndex === -1) {
+      throw new Error(
+        `Invalid interface declaration in ${filename}: ${name} is missing a closing brace`,
+      );
+    }
+
+    declarations.push({
+      name,
+      body: scanSource.slice(openBraceIndex + 1, closeBraceIndex),
+    });
+    pattern.lastIndex = closeBraceIndex + 1;
+    match = pattern.exec(scanSource);
+  }
+
+  return declarations;
+}
+
+function parseObjectInterfaces(
+  declarations: NativeModuleObjectDeclaration[],
+  filename: string,
+  referencedNames: ReadonlySet<string>,
+  interfaceNames: ReadonlySet<string>,
+): NativeModuleObjectSpec[] {
+  const interfaces = new Map<string, NativeModuleObjectSpec>();
+  const pendingNames = [...referencedNames];
+
+  while (pendingNames.length > 0) {
+    const name = pendingNames.shift();
+    if (name === undefined || interfaces.has(name)) {
+      continue;
+    }
+
+    const matches = declarations.filter((declaration) =>
+      declaration.name === name
+    );
+    if (matches.length > 1) {
+      throw new Error(`Duplicate interface "${name}" in ${filename}`);
+    }
+    const declaration = matches[0];
+    if (declaration === undefined) {
+      continue;
+    }
+
+    const properties = parseObjectProperties(
+      declaration.body,
+      filename,
+      name,
+      interfaceNames,
+    );
+    interfaces.set(name, { name, properties });
+    for (const property of properties) {
+      const propertyReferences = new Set<string>();
+      addReferencedInterfaceNames(
+        property.type,
+        interfaceNames,
+        propertyReferences,
+      );
+      for (const referenceName of propertyReferences) {
+        if (!interfaces.has(referenceName)) {
+          pendingNames.push(referenceName);
+        }
+      }
+    }
+  }
+
+  return declarations.flatMap((declaration) => {
+    const object = interfaces.get(declaration.name);
+    return object === undefined ? [] : [object];
+  });
+}
+
+function addReferencedInterfaceNames(
+  type: NativeModuleType,
+  interfaceNames: ReadonlySet<string>,
+  referencedNames: Set<string>,
+): void {
+  if (type.name === 'named-object' && type.referenceName !== undefined) {
+    referencedNames.add(type.referenceName);
+  }
+
+  const source = (type as NativeModuleTypeWithSource).source;
+  if (source === undefined) {
+    return;
+  }
+
+  for (const token of source.match(/[a-z_$][\w$]*/gi) ?? []) {
+    if (interfaceNames.has(token)) {
+      referencedNames.add(token);
+    }
+  }
+}
+
+function parseObjectProperties(
+  body: string,
+  filename: string,
+  interfaceName: string,
+  interfaceNames: ReadonlySet<string>,
+): NativeModuleObjectProperty[] {
+  const source = stripTypeScriptComments(body);
+  const declarations = source.split(/[;\n]/).map((entry) => entry.trim())
+    .filter(Boolean);
+  const properties: NativeModuleObjectProperty[] = [];
+  const seen = new Set<string>();
+
+  for (const declaration of declarations) {
+    const colon = declaration.indexOf(':');
+    if (colon <= 0 || colon === declaration.length - 1) {
+      throw new Error(
+        `Invalid property declaration in ${filename}: ${interfaceName}.${declaration}`,
+      );
+    }
+    const rawName = declaration.slice(0, colon).trim();
+    const optional = rawName.endsWith('?');
+    const name = optional ? rawName.slice(0, -1).trim() : rawName;
+    const typeSource = declaration.slice(colon + 1).trim();
+    if (!IDENTIFIER_PATTERN.test(name) || typeSource.length === 0) {
+      throw new Error(
+        `Invalid property declaration in ${filename}: ${interfaceName}.${declaration}`,
+      );
+    }
+    if (seen.has(name)) {
+      throw new Error(
+        `Duplicate property "${interfaceName}.${name}" in ${filename}`,
+      );
+    }
+    seen.add(name);
+
+    const type = parseType(
+      typeSource,
+      filename,
+      `${interfaceName}.${name}`,
+      interfaceNames,
+    );
+    if (type.name === 'void') {
+      throw new Error(
+        `Unsupported property type "void" for ${interfaceName}.${name} in ${filename}`,
+      );
+    }
+    properties.push({
+      name,
+      type,
+      ...(optional ? { optional: true } : {}),
+    });
+  }
+
+  return properties;
 }
 
 function lineNumberAt(source: string, index: number): number {
@@ -311,26 +550,42 @@ function findMatchingBrace(source: string, openBraceIndex: number): number {
 export function generate(options: CodegenOptions = {}): GeneratedFile[] {
   const root = path.resolve(options.root ?? process.cwd());
   const manifest = readManifest(root);
-  const { napiModules, platformModules } = readNativeModuleSpecs(root);
-  if (napiModules.length > 1) {
+  const plans = readNativeModuleSpecs(root, manifest);
+  const nodeApiPlans = plans.filter((plan) => plan.nodeApi);
+  if (nodeApiPlans.length > 1) {
     throw new Error(
-      'Only one NAPI native module declaration is supported per Lynx library',
+      'Only one Node-API native module declaration is supported per Lynx library',
     );
   }
   const seenModules = new Set<string>();
   const files: GeneratedFile[] = [];
 
-  for (const module of platformModules) {
+  for (const plan of plans) {
+    const { module } = plan;
     if (seenModules.has(module.name)) {
       throw new Error(`Duplicate native module "${module.name}" across types`);
     }
     seenModules.add(module.name);
+    if (plan.platform) {
+      validatePlatformModuleSpec(module);
+    }
 
     files.push({
       path: path.posix.join('generated', `${module.name}.ts`),
-      content: generateJsFacade(module),
+      content: generateUnifiedJsFacade(
+        module,
+        plan.nodeApi,
+        plan.nodeApi && !plan.platform,
+      ),
     });
-    if (manifest.platforms.android !== undefined) {
+    if (
+      plan.platform
+      && manifest.platforms.android !== undefined
+      && (
+        plan.forcePlatformBackend
+        || !manifest.platforms.android.nodeApi
+      )
+    ) {
       files.push({
         path: path.posix.join(
           manifest.platforms.android.sourceDir,
@@ -348,7 +603,14 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
       });
     }
 
-    if (manifest.platforms.ios !== undefined) {
+    if (
+      plan.platform
+      && manifest.platforms.ios !== undefined
+      && (
+        plan.forcePlatformBackend
+        || !manifest.platforms.ios.nodeApi
+      )
+    ) {
       files.push({
         path: path.posix.join(
           manifest.platforms.ios.sourceDir,
@@ -369,7 +631,14 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
       });
     }
 
-    if (manifest.platforms.harmony !== undefined) {
+    if (
+      plan.platform
+      && manifest.platforms.harmony !== undefined
+      && (
+        plan.forcePlatformBackend
+        || !manifest.platforms.harmony.nodeApi
+      )
+    ) {
       files.push({
         path: path.posix.join(
           manifest.platforms.harmony.packageDir,
@@ -384,19 +653,24 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
     }
   }
 
-  if (napiModules.length > 0) {
+  if (nodeApiPlans.length > 0) {
+    const nodeApiModules = nodeApiPlans.map((plan) => plan.module);
+    const emitIosNodeApi = manifest.platforms.ios !== undefined
+      && (
+        nodeApiPlans.some((plan) => plan.forceNodeApiBackend)
+        || manifest.platforms.ios.nodeApi
+      );
     files.push({
       path: path.posix.join('shared', 'nativeModule', 'CMakeLists.txt'),
       content: generateNapiNativeModuleCMake(),
-      overwrite: false,
     });
-    if (manifest.platforms.ios !== undefined) {
+    if (emitIosNodeApi && manifest.platforms.ios !== undefined) {
       files.push({
         path: path.posix.join(
           manifest.platforms.ios.sourceDir,
           'addon_use.h',
         ),
-        content: generateNapiAddonUseHeader(napiModules),
+        content: generateNapiAddonUseHeader(nodeApiModules),
       });
     }
     if (manifest.platforms.lynxtron !== undefined) {
@@ -405,23 +679,26 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
           'lynxtron',
           'generated_napi_registration.cc',
         ),
-        content: generateNapiLynxtronRegistration(napiModules),
+        content: generateNapiLynxtronRegistration(nodeApiModules),
       });
     }
-  }
-
-  for (const module of napiModules) {
-    if (seenModules.has(module.name)) {
-      throw new Error(`Duplicate native module "${module.name}" across types`);
+    for (const module of nodeApiModules) {
+      files.push(...generateNapiNativeModuleFiles(module));
+      files.push({
+        path: path.posix.join(
+          'shared',
+          'nativeModule',
+          'generated',
+          `${module.name}Registration.cc`,
+        ),
+        content: generateNapiNativeModuleRegistration(module),
+      });
     }
-    seenModules.add(module.name);
-
-    files.push({
-      path: path.posix.join('generated', `${module.name}.ts`),
-      content: generateNapiJsFacade(module),
-    });
-    files.push(...generateNapiNativeModuleFiles(module));
-    if (manifest.platforms.ios !== undefined) {
+    if (emitIosNodeApi && manifest.platforms.ios !== undefined) {
+      const module = nodeApiModules[0];
+      if (module === undefined) {
+        throw new Error('Missing Node-API native module declaration');
+      }
       const wrapperPath = path.posix.join(
         manifest.platforms.ios.sourceDir,
         'generated',
@@ -435,6 +712,24 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
   }
 
   return files;
+}
+
+function validatePlatformModuleSpec(module: NativeModuleSpec): void {
+  for (const method of module.methods) {
+    if (method.params.some((param) => param.optional)) {
+      throw new Error(
+        `Optional parameters require the Node-API backend: ${module.name}.${method.name}`,
+      );
+    }
+    if (
+      method.returnType.name === 'named-object'
+      || method.params.some((param) => param.type.name === 'named-object')
+    ) {
+      throw new Error(
+        `Named object interfaces require the Node-API backend: ${module.name}.${method.name}`,
+      );
+    }
+  }
 }
 
 /**
@@ -472,6 +767,7 @@ function parseMethods(
   filename: string,
   moduleName: string,
   bodyStartLine: number,
+  interfaceNames: ReadonlySet<string>,
 ): NativeModuleMethod[] {
   const methods: NativeModuleMethod[] = [];
   const seen = new Set<string>();
@@ -524,11 +820,13 @@ function parseMethods(
         moduleName,
         methodName,
         declaration,
+        interfaceNames,
       ),
       returnType: parseType(
         returnSource.trim(),
         filename,
         `${moduleName}.${methodName} return`,
+        interfaceNames,
       ),
       source: { file: filename, line: declaration.line },
     });
@@ -731,6 +1029,7 @@ function parseParams(
   moduleName: string,
   methodName: string,
   declaration: MethodDeclaration,
+  interfaceNames: ReadonlySet<string>,
 ): NativeModuleParam[] {
   const trimmed = source.trim();
 
@@ -742,6 +1041,7 @@ function parseParams(
     paramSource.trim().length > 0
   );
 
+  let sawOptional = false;
   return params.map((paramSource): NativeModuleParam => {
     const normalizedParam = paramSource.trim();
     const colon = normalizedParam.indexOf(':');
@@ -762,17 +1062,18 @@ function parseParams(
         `Invalid parameter name "${rawName}" in ${filename}: ${moduleName}.${methodName}`,
       );
     }
-
-    if (optional) {
+    if (!optional && sawOptional) {
       throw new Error(
-        `Optional parameter "${moduleName}.${methodName}.${name}" is not supported by Lynx library codegen v1`,
+        `Required parameter "${moduleName}.${methodName}.${name}" cannot follow an optional parameter in ${filename}`,
       );
     }
+    sawOptional ||= optional;
 
     const type = parseType(
       typeSource,
       filename,
       `${moduleName}.${methodName}.${name}`,
+      interfaceNames,
     );
 
     if (type.name === 'void') {
@@ -784,6 +1085,7 @@ function parseParams(
     return {
       name,
       type,
+      ...(optional ? { optional: true } : {}),
       source: {
         file: filename,
         line: findParameterLine(declaration, name),
@@ -942,6 +1244,7 @@ function parseType(
   source: string,
   filename: string,
   context: string,
+  interfaceNames: ReadonlySet<string> = new Set(),
 ): NativeModuleType {
   const parts = source.split('|').map((part) => part.trim()).filter(Boolean);
   const nullable = parts.includes('null');
@@ -957,6 +1260,14 @@ function parseType(
   }
 
   const name = normalizeNativeModuleType(nonNullTypeSource);
+
+  if (name === undefined && interfaceNames.has(nonNullTypeSource)) {
+    return withTypeSource({
+      name: 'named-object',
+      nullable,
+      referenceName: nonNullTypeSource,
+    }, nonNullTypeSource);
+  }
 
   if (name === undefined) {
     throw unsupportedType(source, filename, context);
@@ -1072,46 +1383,80 @@ function unsupportedType(
 /**
  * Reads platform and NAPI native module specs declared under the package `types` directory.
  */
-function readNativeModuleSpecs(root: string): {
-  napiModules: NativeModuleSpec[];
-  platformModules: NativeModuleSpec[];
-} {
+function readNativeModuleSpecs(
+  root: string,
+  manifest: LynxLibJson,
+): NativeModulePlan[] {
   const typesDir = path.join(root, 'types');
 
   if (!fs.existsSync(typesDir)) {
-    return { napiModules: [], platformModules: [] };
+    return [];
   }
 
+  const nativeTypesFile = path.join(typesDir, NATIVE_MODULE_TYPES_FILE);
   const platformTypesFile = path.join(
     typesDir,
     PLATFORM_NATIVE_MODULE_TYPES_FILE,
   );
   const napiTypesFile = path.join(typesDir, NAPI_NATIVE_MODULE_TYPES_FILE);
-  const napiModules = fs.existsSync(napiTypesFile)
-    ? readNativeModuleSpecFile(napiTypesFile, root)
-    : [];
-  const platformModules = fs.existsSync(platformTypesFile)
-    ? readNativeModuleSpecFile(platformTypesFile, root)
-    : readLegacyNativeModuleSpecs(typesDir, root, napiTypesFile);
 
-  return { napiModules, platformModules };
+  if (fs.existsSync(nativeTypesFile)) {
+    return readNativeModuleSpecFile(nativeTypesFile, root).map((module) => ({
+      module,
+      nodeApi: hasAnyNodeApiBackend(manifest),
+      platform: hasAnyPlatformBackend(manifest),
+      forceNodeApiBackend: false,
+      forcePlatformBackend: false,
+    }));
+  }
+
+  const plans: NativeModulePlan[] = [];
+  if (fs.existsSync(platformTypesFile)) {
+    plans.push(
+      ...readNativeModuleSpecFile(platformTypesFile, root).map((module) => ({
+        module,
+        nodeApi: false,
+        platform: true,
+        forceNodeApiBackend: false,
+        forcePlatformBackend: true,
+      })),
+    );
+  }
+  if (fs.existsSync(napiTypesFile)) {
+    plans.push(
+      ...readNativeModuleSpecFile(napiTypesFile, root).map((module) => ({
+        module,
+        nodeApi: true,
+        platform: false,
+        forceNodeApiBackend: true,
+        forcePlatformBackend: false,
+      })),
+    );
+  }
+  if (plans.length > 0) {
+    return plans;
+  }
+
+  return readLegacyNativeModuleSpecs(typesDir, root).map((module) => ({
+    module,
+    nodeApi: false,
+    platform: true,
+    forceNodeApiBackend: false,
+    forcePlatformBackend: true,
+  }));
 }
 
 /**
- * Reads pre-split native module specs while excluding the NAPI split file.
+ * Reads pre-split native module specs.
  */
 function readLegacyNativeModuleSpecs(
   typesDir: string,
   root: string,
-  napiTypesFile: string,
 ): NativeModuleSpec[] {
   const modules: NativeModuleSpec[] = [];
 
   for (const file of walkFiles(typesDir)) {
-    if (
-      !file.endsWith('.d.ts')
-      || path.resolve(file) === path.resolve(napiTypesFile)
-    ) {
+    if (!file.endsWith('.d.ts')) {
       continue;
     }
 
@@ -1119,6 +1464,26 @@ function readLegacyNativeModuleSpecs(
   }
 
   return modules;
+}
+
+function hasAnyNodeApiBackend(manifest: LynxLibJson): boolean {
+  return manifest.platforms.android?.nodeApi === true
+    || manifest.platforms.ios?.nodeApi === true
+    || manifest.platforms.harmony?.nodeApi === true
+    || manifest.platforms.lynxtron !== undefined;
+}
+
+function hasAnyPlatformBackend(manifest: LynxLibJson): boolean {
+  return (
+    manifest.platforms.android !== undefined
+    && !manifest.platforms.android.nodeApi
+  ) || (
+    manifest.platforms.ios !== undefined
+    && !manifest.platforms.ios.nodeApi
+  ) || (
+    manifest.platforms.harmony !== undefined
+    && !manifest.platforms.harmony.nodeApi
+  );
 }
 
 /**
@@ -1204,6 +1569,11 @@ function readManifest(root: string): LynxLibJson {
         manifestPath,
         'platforms.android.sourceDir',
       ) ?? 'android',
+      nodeApi: hasNodeApiAddons(
+        android,
+        manifestPath,
+        'platforms.android.nodeApiAddons',
+      ),
     };
   }
 
@@ -1215,6 +1585,11 @@ function readManifest(root: string): LynxLibJson {
         manifestPath,
         'platforms.ios.sourceDir',
       ) ?? 'ios',
+      nodeApi: hasNodeApiAddons(
+        ios,
+        manifestPath,
+        'platforms.ios.nodeApiAddons',
+      ),
     };
   }
 
@@ -1226,6 +1601,11 @@ function readManifest(root: string): LynxLibJson {
         manifestPath,
         'platforms.harmony.packageDir',
       ) ?? 'harmony',
+      nodeApi: hasNodeApiAddons(
+        harmony,
+        manifestPath,
+        'platforms.harmony.nodeApiAddons',
+      ),
     };
   }
 
@@ -1236,6 +1616,21 @@ function readManifest(root: string): LynxLibJson {
   return {
     platforms: normalizedPlatforms,
   };
+}
+
+function hasNodeApiAddons(
+  platform: Record<string, unknown>,
+  manifestPath: string,
+  field: string,
+): boolean {
+  const addons = platform['nodeApiAddons'];
+  if (addons === undefined) {
+    return false;
+  }
+  if (!Array.isArray(addons)) {
+    throw new Error(`${manifestPath} must define "${field}" as an array`);
+  }
+  return addons.length > 0;
 }
 
 /**
@@ -1330,59 +1725,54 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Generates the TypeScript facade for one native module.
+ * Generates the TypeScript facade shared by platform and Node-API backends.
  */
-function generateJsFacade(module: NativeModuleSpec): string {
+function generateUnifiedJsFacade(
+  module: NativeModuleSpec,
+  supportsNodeApi: boolean,
+  installNodeApiShim: boolean,
+): string {
   const methods = module.methods.map((method) =>
     `  ${method.name}(${
-      method.params.map((param) => `${param.name}: ${toTsType(param.type)}`)
+      method.params.map((param) =>
+        `${param.name}${param.optional ? '?' : ''}: ${toTsType(param.type)}`
+      )
         .join(
           ', ',
         )
     }): ${toTsType(method.returnType)};`
   ).join('\n');
-
-  return `// Generated by @lynx-js/autolink-codegen. Do not edit.
-
-declare const NativeModules: {
-  ${module.name}: {
-${methods}
-  };
-};
-
-export const ${module.name}: typeof NativeModules.${module.name} = NativeModules.${module.name};
-export default ${module.name};
-`;
-}
-
-/**
- * Generates the TypeScript facade for one Node-API addon module.
- */
-function generateNapiJsFacade(module: NativeModuleSpec): string {
-  const methods = module.methods.map((method) =>
-    `  ${method.name}(${
-      method.params.map((param) => `${param.name}: ${toTsType(param.type)}`)
-        .join(
-          ', ',
-        )
-    }): ${toTsType(method.returnType)};`
-  ).join('\n');
+  const interfaces = (module.interfaces ?? []).map((object) =>
+    `export interface ${object.name} {
+${
+      object.properties.map((property) =>
+        `  ${property.name}${property.optional ? '?' : ''}: ${
+          toTsType(property.type)
+        };`
+      ).join('\n')
+    }
+}`
+  ).join('\n\n');
 
   return `// Generated by @lynx-js/autolink-codegen. Do not edit.
 
 const ADDON_NAME = ${JSON.stringify(module.name)};
 
-export interface ${module.name}Spec {
+${
+    interfaces.length > 0
+      ? `${interfaces}\n\n`
+      : ''
+  }export interface ${module.name}Spec {
 ${methods}
 }
 
 type AddonExports = Record<string, unknown>;
 
-declare let NativeModules: Record<string, unknown> | undefined;
+declare let NativeModules: Record<string, unknown>;
 
 declare global {
   interface LynxNapiLoader {
-    load(moduleName: string): AddonExports;
+    load(moduleName: string): AddonExports | null | undefined;
   }
 
   // eslint-disable-next-line no-var
@@ -1390,6 +1780,10 @@ declare global {
 
   function getNapiLoader(): LynxNapiLoader | undefined;
 }
+
+declare const lynx: {
+  getModuleLoader?(): LynxNapiLoader | undefined;
+};
 
 function getNativeModules(): Record<string, unknown> | undefined {
   const globalObject = globalThis as typeof globalThis & {
@@ -1400,18 +1794,196 @@ function getNativeModules(): Record<string, unknown> | undefined {
     : globalObject.NativeModules;
 }
 
-export function require${module.name}(): ${module.name}Spec {
-  const loader = globalThis.getNapiLoader?.() ?? globalThis.__lynxNapiLoader;
-
-  if (loader?.load !== undefined) {
-    const addon = loader.load(ADDON_NAME);
-
-    if (addon !== undefined) {
-      return addon as ${module.name}Spec;
+${
+    installNodeApiShim
+      ? `function setNativeModules(nativeModules: Record<string, unknown>): void {
+  if (typeof NativeModules !== 'undefined') {
+    try {
+      NativeModules = nativeModules;
+    } catch {
+      throw new Error(
+        'The NativeModules host binding must be writable to install a Node-API shim',
+      );
     }
+    return;
   }
+  const globalObject = globalThis as typeof globalThis & {
+    NativeModules?: Record<string, unknown>;
+  };
+  globalObject.NativeModules = nativeModules;
+}
 
-  throw new Error(\`global.__lynxNapiLoader.load is unavailable for Node-API addon "\${ADDON_NAME}".\`);
+`
+      : ''
+  }${
+    supportsNodeApi
+      ? `type AddonLoadResult =
+  | { addon: AddonExports | undefined }
+  | { error: unknown };
+
+let cachedAddon: AddonExports | undefined;
+
+function loadNodeApiAddon(): AddonExports | undefined {
+  if (cachedAddon !== undefined) {
+    return cachedAddon;
+  }
+  const loader = globalThis.getNapiLoader?.()
+    ?? globalThis.__lynxNapiLoader
+    ?? (typeof lynx !== 'undefined' ? lynx.getModuleLoader?.() : undefined);
+  if (loader?.load === undefined) {
+    return undefined;
+  }
+  const addon = loader.load(ADDON_NAME);
+  if (addon === undefined || addon === null) {
+    return undefined;
+  }
+  cachedAddon = addon;
+  return cachedAddon;
+}
+
+function tryLoadNodeApiAddon(): AddonLoadResult {
+  try {
+    return { addon: loadNodeApiAddon() };
+  } catch (error) {
+    return { error };
+  }
+}
+
+`
+      : ''
+  }${
+    installNodeApiShim
+      ? `let nativeModulesBeforeShim: Record<string, unknown> | undefined;
+let nodeApiShimInstalled = false;
+
+function getShimmedNativeModule(property: PropertyKey): unknown {
+  if (property === ADDON_NAME) {
+    const existingModule = nativeModulesBeforeShim === undefined
+      ? undefined
+      : Reflect.get(nativeModulesBeforeShim, property);
+    if (existingModule !== undefined && existingModule !== null) {
+      return existingModule;
+    }
+    const loadResult = tryLoadNodeApiAddon();
+    if ('addon' in loadResult && loadResult.addon !== undefined) {
+      return loadResult.addon;
+    }
+    if ('error' in loadResult) {
+      throw loadResult.error;
+    }
+    return existingModule;
+  }
+  return nativeModulesBeforeShim === undefined
+    ? undefined
+    : Reflect.get(nativeModulesBeforeShim, property);
+}
+
+`
+      : ''
+  }export function install${module.name}Shim(): void {
+${
+    installNodeApiShim
+      ? `  if (nodeApiShimInstalled) {
+    return;
+  }
+  nodeApiShimInstalled = true;
+  nativeModulesBeforeShim = getNativeModules();
+  setNativeModules(new Proxy({}, {
+    get(_target, property) {
+      return getShimmedNativeModule(property);
+    },
+    has(_target, property) {
+      if (property === ADDON_NAME) {
+        return true;
+      }
+      return nativeModulesBeforeShim === undefined
+        ? false
+        : Reflect.has(nativeModulesBeforeShim, property);
+    },
+    ownKeys() {
+      const keys = nativeModulesBeforeShim === undefined
+        ? []
+        : Reflect.ownKeys(nativeModulesBeforeShim);
+      return keys.includes(ADDON_NAME) ? keys : [...keys, ADDON_NAME];
+    },
+    getOwnPropertyDescriptor(_target, property) {
+      const existingDescriptor = nativeModulesBeforeShim === undefined
+        ? undefined
+        : Reflect.getOwnPropertyDescriptor(nativeModulesBeforeShim, property);
+      if (property !== ADDON_NAME) {
+        return existingDescriptor === undefined
+          ? undefined
+          : { ...existingDescriptor, configurable: true };
+      }
+      if (existingDescriptor !== undefined) {
+        return { ...existingDescriptor, configurable: true };
+      }
+      return {
+        configurable: true,
+        enumerable: true,
+        writable: false,
+        value: undefined,
+      };
+    },
+    set(_target, property, value) {
+      if (nativeModulesBeforeShim === undefined) {
+        nativeModulesBeforeShim = {};
+      }
+      return Reflect.set(nativeModulesBeforeShim, property, value);
+    },
+    defineProperty(_target, property, attributes) {
+      if (nativeModulesBeforeShim === undefined) {
+        nativeModulesBeforeShim = {};
+      }
+      return Reflect.defineProperty(
+        nativeModulesBeforeShim,
+        property,
+        attributes,
+      );
+    },
+    deleteProperty(_target, property) {
+      return nativeModulesBeforeShim === undefined
+        ? true
+        : Reflect.deleteProperty(nativeModulesBeforeShim, property);
+    },
+  }));
+`
+      : ''
+  }
+}
+
+export function require${module.name}(): ${module.name}Spec {
+  const nativeModules = ${
+    installNodeApiShim ? 'nativeModulesBeforeShim' : 'getNativeModules()'
+  };
+  const existingModule = nativeModules?.[ADDON_NAME];
+  if (existingModule !== undefined && existingModule !== null) {
+    return existingModule as ${module.name}Spec;
+  }${
+    installNodeApiShim
+      ? `
+
+  const loadResult = tryLoadNodeApiAddon();
+  if ('addon' in loadResult && loadResult.addon !== undefined) {
+    return loadResult.addon as ${module.name}Spec;
+  }
+  if ('error' in loadResult) {
+    throw loadResult.error;
+  }
+`
+      : ''
+  }${
+    supportsNodeApi && !installNodeApiShim
+      ? `
+
+  const addon = loadNodeApiAddon();
+  if (addon !== undefined) {
+    return addon as ${module.name}Spec;
+  }
+`
+      : ''
+  }
+  throw new Error(\`Native module "\${ADDON_NAME}" is unavailable.\`);
 }
 
 export const ${module.name} = new Proxy({}, {
@@ -1419,56 +1991,6 @@ export const ${module.name} = new Proxy({}, {
     return require${module.name}()[property as keyof ${module.name}Spec];
   },
 }) as ${module.name}Spec;
-
-function defineNativeModuleShim(nativeModules: Record<string, unknown>): void {
-  try {
-    Object.defineProperty(nativeModules, ADDON_NAME, {
-      configurable: true,
-      enumerable: true,
-      value: ${module.name},
-    });
-  } catch {
-    // The NativeModules proxy installed below still provides the shim.
-  }
-}
-
-function createNativeModulesProxy(
-  nativeModules: Record<string, unknown>,
-): Record<string, unknown> {
-  return new Proxy(nativeModules, {
-    get(target, property, receiver) {
-      if (property === ADDON_NAME) {
-        return ${module.name};
-      }
-
-      return Reflect.get(target, property, receiver);
-    },
-  });
-}
-
-function installNativeModulesProxy(nativeModules: Record<string, unknown>): void {
-  const proxiedNativeModules = createNativeModulesProxy(nativeModules);
-  const globalObject = globalThis as typeof globalThis & {
-    NativeModules?: Record<string, unknown>;
-  };
-
-  if (globalObject.NativeModules === nativeModules) {
-    globalObject.NativeModules = proxiedNativeModules;
-  }
-
-  if (typeof NativeModules !== 'undefined' && NativeModules === nativeModules) {
-    NativeModules = proxiedNativeModules;
-  }
-}
-
-export function install${module.name}Shim(): void {
-  const nativeModules = getNativeModules();
-
-  if (nativeModules !== undefined) {
-    installNativeModulesProxy(nativeModules);
-    defineNativeModuleShim(nativeModules);
-  }
-}
 
 install${module.name}Shim();
 
@@ -1510,9 +2032,20 @@ function generateNapiIosWrapper(
     path.posix.dirname(wrapperPath),
     implementationPath,
   );
+  const registrationPath = path.posix.join(
+    'shared',
+    'nativeModule',
+    'generated',
+    `${module.name}Registration.cc`,
+  );
+  const registrationIncludePath = path.posix.relative(
+    path.posix.dirname(wrapperPath),
+    registrationPath,
+  );
 
   return `// Generated by @lynx-js/autolink-codegen. Do not edit.
 #include "${includePath}"
+#include "${registrationIncludePath}"
 `;
 }
 
@@ -1520,8 +2053,9 @@ function generateNapiIosWrapper(
  * Generates the iOS registration references that keep every NAPI module alive.
  */
 function generateNapiAddonUseHeader(modules: NativeModuleSpec[]): string {
-  const registrations = modules.map((module) => `NAPI_USE(${module.name})`)
-    .join('\n');
+  const registrations = modules.map((module) =>
+    `NAPI_USE(${toCppIdentifier(module.name, 'LynxNapiModule')})`
+  ).join('\n');
 
   return `// Generated by @lynx-js/autolink-codegen. Do not edit.
 #pragma once
@@ -1635,6 +2169,24 @@ if(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
   )
 endif()
 
+if(LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE)
+  target_compile_definitions(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
+    LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1
+  )
+endif()
+
+if(LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS)
+  target_compile_definitions(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
+    \${LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS}
+  )
+endif()
+
+if(LYNX_SHARED_PLATFORM_LINK_LIBRARIES)
+  target_link_libraries(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
+    \${LYNX_SHARED_PLATFORM_LINK_LIBRARIES}
+  )
+endif()
+
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(
     LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET
@@ -1672,26 +2224,6 @@ function generateNapiNativeModuleImplementation(
 
 #ifdef USE_WEAK_SUFFIX_NAPI
 #include "weak_napi_defines.h"
-#endif
-
-#ifdef LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE
-#undef NAPI_MODULE
-#ifdef LYNX_LIBRARY_MANUAL_NAPI_REGISTRATION
-#define LYNX_LIBRARY_NAPI_REGISTRATION_ATTRIBUTE
-#else
-#define LYNX_LIBRARY_NAPI_REGISTRATION_ATTRIBUTE __attribute__((constructor))
-#endif
-#define NAPI_MODULE(modname, regfunc)                                      \\
-  EXTERN_C_START                                                           \\
-  static napi_module _module_##modname = {                                 \\
-      NAPI_MODULE_VERSION, 0, __FILE__, regfunc, #modname, nullptr,        \\
-      {nullptr, nullptr, nullptr, nullptr}};                                \\
-  void _napi_register_xx_##modname(void)                                   \\
-      LYNX_LIBRARY_NAPI_REGISTRATION_ATTRIBUTE;                             \\
-  void _napi_register_xx_##modname(void) {                                 \\
-    napi_module_register(&_module_##modname);                              \\
-  }                                                                        \\
-  EXTERN_C_END
 #endif
 
 namespace {
@@ -1738,11 +2270,68 @@ extern "C" napi_value ${lynxCreatorSymbol}(
   return ${createSymbol}(env, exports);
 }
 
-#ifdef LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE
-NAPI_MODULE(${module.name}, ${createSymbol})
+#ifdef USE_WEAK_SUFFIX_NAPI
+#include "weak_napi_undefs.h"
+#endif
+`;
+}
+
+/**
+ * Generates platform registration around the stable user-owned creator.
+ */
+function generateNapiNativeModuleRegistration(
+  module: NativeModuleSpec,
+): string {
+  const identifier = toCppIdentifier(module.name, 'LynxNapiModule');
+  const creatorSymbol = `LynxAutolinkCreate${identifier}`;
+  const registerSymbol = `LynxAutolinkRegister${identifier}`;
+
+  return `// Generated by @lynx-js/autolink-codegen. Do not edit.
+#include "napi.h"
+
+#if defined(USE_WEAK_SUFFIX_NAPI)
+#include "weak_napi_defines.h"
 #endif
 
-#ifdef USE_WEAK_SUFFIX_NAPI
+extern "C" napi_value ${creatorSymbol}(
+    napi_env env,
+    napi_value exports,
+    const char* module_name,
+    void* opaque);
+
+#if defined(LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE)
+namespace {
+
+napi_value ${registerSymbol}(napi_env env, napi_value exports) {
+  return ${creatorSymbol}(
+      env, exports, ${JSON.stringify(module.name)}, nullptr);
+}
+
+napi_module g_module = {
+    NAPI_MODULE_VERSION,
+    0,
+    __FILE__,
+    ${registerSymbol},
+    ${JSON.stringify(module.name)},
+    nullptr,
+    {nullptr, nullptr, nullptr, nullptr}};
+
+}  // namespace
+
+#if defined(LYNX_LIBRARY_MANUAL_NAPI_REGISTRATION)
+#define LYNX_NAPI_REGISTRATION_ATTRIBUTE
+#else
+#define LYNX_NAPI_REGISTRATION_ATTRIBUTE __attribute__((constructor))
+#endif
+
+extern "C" void _napi_register_xx_${identifier}(void)
+    LYNX_NAPI_REGISTRATION_ATTRIBUTE;
+extern "C" void _napi_register_xx_${identifier}(void) {
+  napi_module_register(&g_module);
+}
+#endif
+
+#if defined(USE_WEAK_SUFFIX_NAPI)
 #include "weak_napi_undefs.h"
 #endif
 `;
@@ -1765,22 +2354,36 @@ ${methodComment}
 }`;
   }
 
+  const requiredParamCount = (() => {
+    const firstOptional = method.params.findIndex((param) => param.optional);
+    return firstOptional === -1 ? method.params.length : firstOptional;
+  })();
   const args = method.params.map((param, index) => {
     const name = toNapiArgumentIdentifier(param, index);
+    if (param.optional) {
+      return `${formatNapiParamComment(param)}
+  Napi::Value ${name} = info.Length() > ${index}
+      ? info[${index}].As<Napi::Value>()
+      : env.Undefined();
+  (void)${name};`;
+    }
     return `${formatNapiParamComment(param)}
   ${toNapiCppValueType(param.type)} ${name} = info[${index}].${
       toNapiCppValueCast(param.type)
     };
   (void)${name};`;
   }).join('\n');
+  const arityGuard = requiredParamCount > 0
+    ? `  if (info.Length() < ${requiredParamCount}) {
+    return env.Undefined();
+  }
+`
+    : '';
 
   return `Napi::Value ${callbackName}(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 ${methodComment}
-  if (info.Length() < ${method.params.length}) {
-    return env.Undefined();
-  }
-${args}
+${arityGuard}${args}
   return ${defaultNapiReturnExpression(method.returnType)};
 }`;
 }
@@ -1889,6 +2492,7 @@ function defaultNapiReturnExpression(type: NativeModuleType): string {
     case 'arraybuffer':
       return 'Napi::ArrayBuffer::New(env, 0)';
     case 'object':
+    case 'named-object':
       return 'Napi::Object::New(env)';
     case 'promise':
       return 'Napi::Promise::Deferred::New(env).Promise()';
@@ -2088,6 +2692,8 @@ function toTsType(type: NativeModuleType): string {
       case 'boolean':
       case 'object':
         return type.name;
+      case 'named-object':
+        return type.referenceName ?? 'object';
       case 'bigint':
         return 'bigint';
       case 'date':
@@ -2166,6 +2772,7 @@ function toJavaType(type: NativeModuleType): string {
     case 'biguint64array':
     case 'dataview':
     case 'object':
+    case 'named-object':
     case 'function':
     case 'promise':
     case 'buffer':
@@ -2205,6 +2812,7 @@ function toObjCReturnType(type: NativeModuleType): string {
     case 'biguint64array':
     case 'dataview':
     case 'object':
+    case 'named-object':
     case 'function':
     case 'promise':
     case 'buffer':
@@ -2244,6 +2852,7 @@ function toObjCParamType(type: NativeModuleType): string {
     case 'biguint64array':
     case 'dataview':
     case 'object':
+    case 'named-object':
     case 'function':
     case 'promise':
     case 'buffer':
