@@ -229,4 +229,34 @@ describe('Element PAPIs called from inside a main-thread event handler', () => {
     expect(called).toBe(true);
     expect(error).toBe(undefined);
   });
+  test('a flush from a worklet handler does not abort the rest of the dispatch', () => {
+    // Same guarantee as the `__AddEventListener` case above, but with the
+    // flushing handler on the `runWorklet` path. Kept from #3438 so the worklet
+    // dispatcher keeps its own bubbling-order regression.
+    const parent = mts.__CreateView(0);
+    const child = mts.__CreateView(0);
+    mts.__AppendElement(parent, child);
+    rootDom.appendChild(parent);
+
+    const order: string[] = [];
+    mtsBinding.lynxViewInstance.mainThreadGlobalThis.runWorklet = (handler) => {
+      const id = (handler as { _wkltId: string })._wkltId;
+      order.push(id);
+      if (id === 'child') {
+        mts.__FlushElementTree(child, undefined);
+      }
+    };
+    mts.__AddEvent(child, 'bindEvent', 'tap', {
+      type: 'worklet',
+      value: { _wkltId: 'child' },
+    });
+    mts.__AddEvent(parent, 'bindEvent', 'tap', {
+      type: 'worklet',
+      value: { _wkltId: 'parent' },
+    });
+
+    clickOn(child);
+
+    expect(order).toStrictEqual(['child', 'parent']);
+  });
 });
