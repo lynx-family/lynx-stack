@@ -7,10 +7,13 @@ import type {
   ChatSseEvent,
   ChatTokenUsage,
 } from './type.js';
+import {
+  GENUI_SERVER_URL,
+  buildGenuiServerUrl,
+} from '../../config/genuiServer.js';
 import type { ProtocolName } from '../../utils/protocol.js';
 import { isDevHost } from '../../utils/publishPayload.js';
 
-export const ONLINE_GENUI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 export const LOCAL_GENUI_SERVER_PORT = '3060';
 
 export const CHAT_PROVIDER_SETTINGS_STORAGE_KEY =
@@ -323,7 +326,7 @@ export function resolveTrustedChatEndpoint(
   try {
     const endpoint = new URL(raw, host.origin);
     if (endpoint.origin === host.origin) return endpoint.toString();
-    if (endpoint.origin === ONLINE_GENUI_SERVER_ORIGIN) {
+    if (endpoint.origin === GENUI_SERVER_URL) {
       return endpoint.toString();
     }
 
@@ -347,10 +350,7 @@ export function getChatEndpoint(
     const trustedEndpoint = resolveTrustedChatEndpoint(fromQuery, host);
     if (trustedEndpoint) return trustedEndpoint;
   }
-  if (host.protocol === 'http:' && isDevHost(host.hostname)) {
-    return `http://${host.hostname}:${LOCAL_GENUI_SERVER_PORT}/${protocol}/stream`;
-  }
-  return `${ONLINE_GENUI_SERVER_ORIGIN}/${protocol}/stream`;
+  return buildGenuiServerUrl(`${protocol}/stream`);
 }
 
 export function getA2UIActionEndpoint(chatEndpoint: string): string {
