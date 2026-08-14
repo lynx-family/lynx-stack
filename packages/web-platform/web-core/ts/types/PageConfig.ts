@@ -11,10 +11,10 @@ export interface PageConfig {
   appType?: string;
   cardType: string;
   /**
-   * Internal flag set (via `fetchBundle`'s override config) for an external
-   * bundle loaded with `lynx.fetchBundle`. It tells the decode worker to wrap
-   * the bundle's mts (`lepusCode`) chunks with a CommonJS `module`/`exports`
-   * env. Not part of a real bundle's encoded config.
+   * Internal flag encoded by external bundle producers, with a runtime fallback
+   * for older bundles loaded via `lynx.fetchBundle`. It tells the decode worker
+   * to wrap the bundle's mts (`lepusCode`) chunks with a CommonJS
+   * `module`/`exports` env.
    */
   isExternalBundle?: 'true' | 'false';
 }

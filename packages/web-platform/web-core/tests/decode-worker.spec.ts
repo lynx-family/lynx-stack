@@ -1,0 +1,67 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { expect, test } from '@rstest/core';
+
+import { createLepusCodeBlob } from '../ts/client/decodeWorker/createLepusCodeBlob.js';
+import { getCSSScopeEntry } from '../ts/client/decodeWorker/getCSSScopeEntry.js';
+
+test('FetchBundle CSS remains unscoped while lazy code stays callable', () => {
+  expect(
+    getCSSScopeEntry(
+      { isLazy: 'true', enableRemoveCSSScope: 'true' },
+      'https://example.com/lazy.bundle',
+    ),
+  ).toBeUndefined();
+  expect(
+    getCSSScopeEntry(
+      { isLazy: 'true', enableRemoveCSSScope: 'false' },
+      'https://example.com/scoped.bundle',
+    ),
+  ).toBe('https://example.com/scoped.bundle');
+});
+
+test('empty lazy main-thread chunks remain valid JavaScript', async () => {
+  const blob = createLepusCodeBlob(
+    new Uint8Array(),
+    'https://example.com/empty.bundle/root',
+    true,
+    false,
+  );
+  const execute = new Function('module', await blob.text());
+  const module = { exports: undefined };
+
+  expect(() => execute(module)).not.toThrow();
+  expect(module.exports).toBeUndefined();
+});
+
+test('external main-thread chunks receive CommonJS bindings', async () => {
+  const blob = createLepusCodeBlob(
+    'exports.value = "external";',
+    'https://example.com/external.bundle/root',
+    false,
+    true,
+  );
+  const execute = new Function('module', await blob.text());
+  const module = { exports: undefined };
+
+  execute(module);
+
+  expect(module.exports).toEqual({ value: 'external' });
+});
+
+test('external main-thread chunks can install a local window facade', async () => {
+  const blob = createLepusCodeBlob(
+    'window = { value: "shim" }; exports.value = window.value;',
+    'https://example.com/external.bundle/root',
+    false,
+    true,
+  );
+  const execute = new Function('module', await blob.text());
+  const module = { exports: undefined };
+
+  execute(module);
+
+  expect(module.exports).toEqual({ value: 'shim' });
+});

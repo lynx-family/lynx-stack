@@ -9,6 +9,21 @@ const existingScript = document.querySelector('script[nonce]') as
   | HTMLScriptElement
   | null;
 const nonce = existingScript?.nonce || existingScript?.getAttribute('nonce');
+
+function setExecutionSourceURL(
+  script: HTMLScriptElement,
+  sourceURL?: string,
+): void {
+  if (sourceURL === undefined) {
+    return;
+  }
+  // The script still loads from its blob URL attribute, while bundled runtimes
+  // observe the original bundle URL through `document.currentScript.src`.
+  Object.defineProperty(script, 'src', {
+    configurable: true,
+    value: new URL(sourceURL, globalThis.location.href).href,
+  });
+}
 /**
  * Creates a isolated JavaScript context for executing mts code.
  * This context has its own global variables and functions.
@@ -34,14 +49,13 @@ export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   parent.appendChild(iframe);
   await iframeReadyPromise;
   const iframeWindow = iframe.contentWindow! as unknown as typeof globalThis;
-  const loadScript: (url: string) => Promise<unknown> = async (url) => {
+  const loadScript: JSRealm['loadScript'] = (url, sourceURL) => {
     const script = iframe.contentDocument!.createElement('script');
     script.fetchPriority = 'high';
     script.defer = true;
     script.async = false;
     script.nonce = nonce || '';
-    iframe.contentDocument!.head.appendChild(script);
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       script.onload = () => {
         const ret = iframeWindow?.module?.exports;
         iframeWindow.module = { exports: undefined };
@@ -50,16 +64,19 @@ export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
       script.onerror = (err) =>
         reject(new Error(`Failed to load script: ${url}`, { cause: err }));
       iframeWindow.module = { exports: undefined };
-      script.src = url;
+      script.setAttribute('src', url);
+      setExecutionSourceURL(script, sourceURL);
+      iframe.contentDocument!.head.appendChild(script);
     });
   };
-  const loadScriptSync: (url: string) => unknown = (url) => {
+  const loadScriptSync: JSRealm['loadScriptSync'] = (url, sourceURL) => {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url, false); // Synchronous request
     xhr.send(null);
     if (xhr.status === 200) {
       const script = iframe.contentDocument!.createElement('script');
       script.textContent = xhr.responseText;
+      setExecutionSourceURL(script, sourceURL);
       iframeWindow.module = { exports: undefined };
       iframe.contentDocument!.head.appendChild(script);
       const ret = iframeWindow?.module?.exports;
