@@ -249,27 +249,11 @@ jobs:
       - name: publish canary packages
         run: |
           pnpm --recursive publish --no-git-checks --access public
-  website-config:
-    if: github.repository == 'lynx-family/lynx-stack'
-    environment: github-pages
-    permissions: {}
-    runs-on: ubuntu-26.04
-    outputs:
-      genui_server_url: ${{ steps.config.outputs.genui_server_url }}
-    steps:
-      - name: Load GenUI server URL
-        id: config
-        env:
-          GENUI_SERVER_URL: ${{ vars.GENUI_SERVER_URL }}
-        run: |
-          printf 'genui_server_url=%s\n' "$GENUI_SERVER_URL" >> "$GITHUB_OUTPUT"
   website-build:
-    needs: [build-all, website-config]
+    needs: build-all
     if: github.repository == 'lynx-family/lynx-stack'
     uses: ./.github/workflows/workflow-website.yml
     permissions: {}
-    with:
-      genui_server_url: ${{ needs.website-config.outputs.genui_server_url }}
   website-deploy:
     timeout-minutes: 10
     needs: website-build

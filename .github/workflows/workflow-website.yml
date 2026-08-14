@@ -2,11 +2,6 @@ name: Website
 
 on:
   workflow_call:
-    inputs:
-      genui_server_url:
-        description: GenUI server origin embedded in the hosted playground
-        required: false
-        type: string
 
 env:
   CI: 1
@@ -55,7 +50,7 @@ jobs:
           pnpm --filter genui-playground build:lynx
       - name: Build GenUI Playground
         env:
-          GENUI_SERVER_URL: ${{ inputs.genui_server_url }}
+          GENUI_SERVER_URL: ${{ vars.GENUI_SERVER_URL }}
         run: |
           BASE_PATH='${{ steps.pages.outputs.base_path }}'
           export ASSET_PREFIX="${BASE_PATH%/}/genui/"
