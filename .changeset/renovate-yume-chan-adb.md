@@ -3,3 +3,5 @@
 ---
 
 Updated dependency `@yume-chan/adb` to `^2.6.2`.
+
+pr: #3319
