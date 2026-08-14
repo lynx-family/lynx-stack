@@ -42,7 +42,7 @@ describe('payload publishing', () => {
         });
 
       expect(fetchPayload.mock.calls[0]?.[0]).toBe(
-        'https://genui-server.vercel.app/a2ui/payload',
+        'http://localhost:3060/a2ui/payload',
       );
       expect(fetchPayload.mock.calls[0]?.[1]).toMatchObject({ method: 'PUT' });
       expect(JSON.parse(String(fetchPayload.mock.calls[0]?.[1]?.body))).toEqual(
@@ -52,7 +52,7 @@ describe('payload publishing', () => {
         },
       );
       expect(fetchPayload.mock.calls[1]?.[0]).toBe(
-        'https://genui-server.vercel.app/openui/payload',
+        'http://localhost:3060/openui/payload',
       );
       expect(fetchPayload.mock.calls[1]?.[1]).toMatchObject({ method: 'PUT' });
       expect(JSON.parse(String(fetchPayload.mock.calls[1]?.[1]?.body))).toEqual(
