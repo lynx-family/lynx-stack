@@ -58,6 +58,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "pkg-pr-new": "0.0.87",
+    "semver": "^7.7.4",
     "sort-package-json": "^3.7.1",
     "ts-patch": "^4.0.1",
     "turbo": "^2.10.8",

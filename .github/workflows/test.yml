@@ -73,8 +73,12 @@ jobs:
         run: pnpm turbo api-extractor
       - name: Changeset Check
         run: pnpm changeset status --since=origin/main --output .changeset-status.json
+      - name: Changeset Script Tests
+        run: node --test .github/scripts/*.test.cjs
       - name: Major Bump Check
         run: node .github/scripts/check-no-major-changeset.cjs .changeset-status.json
+      - name: Peer Dependency Range Check
+        run: node .github/scripts/check-peer-dependency-ranges.cjs .changeset-status.json
       - name: Changeset Heading Check
         run: node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json
       - name: Dependency Changeset Check
