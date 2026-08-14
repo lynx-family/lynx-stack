@@ -370,6 +370,8 @@ interface BenchHealth {
   provider?: string;
   hasKey?: boolean;
   modelName?: string;
+  imageGenerationReady?: boolean;
+  error?: string;
 }
 
 type BenchHealthError =
@@ -1044,6 +1046,16 @@ function getBenchHealthKeyLabel(
   }
   if (healthError) return benchText(locale, '状态未知', 'Unknown');
   return benchText(locale, '检查中…', 'Checking…');
+}
+
+function getBenchImageHealthLabel(
+  health: BenchHealth | null,
+  locale: BenchLocale = 'zh-CN',
+): string {
+  if (!health) return benchText(locale, '检查中…', 'Checking…');
+  return health.imageGenerationReady
+    ? benchText(locale, '已配置', 'Configured')
+    : benchText(locale, '未配置', 'Not configured');
 }
 
 function getBenchHealthErrorText(
@@ -2542,7 +2554,19 @@ export function BenchPage({
           });
           return;
         }
-        setBenchHealth(await response.json() as BenchHealth);
+        const health = await response.json() as BenchHealth;
+        setBenchHealth(health);
+        if (!health.ok) {
+          setBenchHealthError({
+            kind: 'raw',
+            message: health.error
+              ?? benchText(
+                locale,
+                '服务端默认配置尚未就绪',
+                'The server defaults are not ready',
+              ),
+          });
+        }
       } catch (error) {
         setBenchHealthError({
           kind: 'raw',
@@ -2550,7 +2574,7 @@ export function BenchPage({
         });
       }
     })();
-  }, []);
+  }, [locale]);
 
   const startBench = useCallback((confirmedServerDefaults = false) => {
     if (benchRunBlockers.length > 0 || runCount === 0) {
@@ -4627,6 +4651,12 @@ export function BenchPage({
                               )}
                           </strong>
                         </div>
+                        <div>
+                          <span>Image generation</span>
+                          <strong>
+                            {getBenchImageHealthLabel(benchHealth, locale)}
+                          </strong>
+                        </div>
                       </div>
                       {benchHealthError
                         ? (
@@ -4669,7 +4699,7 @@ export function BenchPage({
                       variant='primary'
                       size='md'
                       iconBefore={Play}
-                      disabled={benchHealth?.hasKey === false}
+                      disabled={benchHealth?.ok !== true}
                       onClick={() => {
                         setBenchRunNoticeOpen(false);
                         startBench(true);

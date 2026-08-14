@@ -7,6 +7,8 @@ import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../../agent/a2ui-validator';
+import type { ArkImageGenerationRunScope } from '../../agent/ark-image-generation-tool.js';
+import { createArkImageGenerationRunScope } from '../../agent/ark-image-generation-tool.js';
 import { getA2UIAgentService } from '../a2ui-agent';
 import type { A2UIChatOptions } from '../a2ui-agent';
 import { resolveBenchCatalog } from '../a2ui-bench-catalog';
@@ -33,6 +35,7 @@ export type A2UIBenchGenerateRaw = (
   messages: ChatMessage[],
   options: A2UIChatOptions,
   signal?: AbortSignal,
+  imageGenerationScope?: ArkImageGenerationRunScope,
 ) => Promise<{ text: string; usage: unknown; finishReason: unknown }>;
 
 export type A2UIBenchRetrySleep = (
@@ -227,12 +230,13 @@ export function createA2UIBenchAdapter(
   options: A2UIBenchAdapterOptions = {},
 ): ProtocolBenchAdapter {
   const generateRaw = options.generateRaw
-    ?? ((messages, chatOptions, signal) =>
+    ?? ((messages, chatOptions, signal, imageGenerationScope) =>
       getA2UIAgentService().generateRaw(
         messages,
         chatOptions,
         undefined,
         signal,
+        imageGenerationScope,
       ));
   const retryDelayMs = normalizedRetryDelayMs(options.retryDelayMs);
   const sleep = options.sleep ?? defaultRetrySleep;
@@ -256,6 +260,7 @@ export function createA2UIBenchAdapter(
       let finalErrors: string[] = [];
       let finalMessages: unknown[] | undefined;
       const maxAttempts = normalizedAttemptLimit(input.maxAttempts);
+      const imageGenerationScope = createArkImageGenerationRunScope();
 
       for (let index = 1; index <= maxAttempts; index++) {
         if (signal?.aborted) {
@@ -278,6 +283,7 @@ export function createA2UIBenchAdapter(
               inheritReasoningEffort: false,
             },
             signal,
+            imageGenerationScope,
           );
           const durationMs = Math.max(
             0,

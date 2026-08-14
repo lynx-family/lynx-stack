@@ -104,7 +104,14 @@ async function postA2UIAction(req: Request) {
       {
         requireCreateSurface: false,
         existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+        existingDataModelBySurface: body.surfaceId
+          ? {
+            [body.surfaceId]: validatedConversation.conversation?.dataModel
+              ?? {},
+          }
+          : {},
       },
+      req.signal,
     );
     return jsonWithCors(req, validated);
   } catch (err: unknown) {
