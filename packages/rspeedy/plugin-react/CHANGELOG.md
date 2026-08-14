@@ -1,5 +1,22 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.19.0
+
+### Minor Changes
+
+- Register the snapshot and worklet definitions collected from the background build on the main thread, so a definition the main-thread bundle dropped no longer fails with `Snapshot not found`. ([#3393](https://github.com/lynx-family/lynx-stack/pull/3393))
+
+### Patch Changes
+
+- Add `compat.transformLegacyEventAttributeNames` to disable legacy event attribute-name conversion independently from other compatibility transforms. ([#3475](https://github.com/lynx-family/lynx-stack/pull/3475))
+- Updated dependencies [[`21528f1`](https://github.com/lynx-family/lynx-stack/commit/21528f12c347564c40bc0c15de3df7db5ce85afe), [`f391460`](https://github.com/lynx-family/lynx-stack/commit/f391460d176eb84cb30faa0ca1644be388ce216a), [`c58b6f9`](https://github.com/lynx-family/lynx-stack/commit/c58b6f91cf7084d2585f42e00db3dd699c27ed61), [`6cc9624`](https://github.com/lynx-family/lynx-stack/commit/6cc9624fb54dc7f73b6e68e49e2322b8136d3418), [`328f712`](https://github.com/lynx-family/lynx-stack/commit/328f7125d1881cf438e58aa749f1e554a756b652), [`c58b6f9`](https://github.com/lynx-family/lynx-stack/commit/c58b6f91cf7084d2585f42e00db3dd699c27ed61)]:
+  - @lynx-js/react-webpack-plugin@0.11.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.19.0
+  - @lynx-js/template-webpack-plugin@0.15.1
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.10.1
+
 ## 0.18.3
 
 ### Patch Changes

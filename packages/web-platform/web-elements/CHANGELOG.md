@@ -1,5 +1,15 @@
 # @lynx-js/web-elements
 
+## 0.12.8
+
+### Patch Changes
+
+- Keep XList scroll offsets and automatic scrolling aligned with its configured orientation. ([#3357](https://github.com/lynx-family/lynx-stack/pull/3357))
+
+- Updated dependency `dompurify` to `^3.4.13`. ([#3417](https://github.com/lynx-family/lynx-stack/pull/3417))
+
+- Updated dependency `markdown-it` to `^15.0.0`. ([#3423](https://github.com/lynx-family/lynx-stack/pull/3423))
+
 ## 0.12.7
 
 ### Patch Changes
