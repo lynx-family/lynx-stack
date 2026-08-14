@@ -81,6 +81,47 @@ describe('transform builtin attribute names', () => {
     expect(result.code).toContain('accessibility-label');
     expect(result.code).toContain('...spread');
   });
+
+  it('should allow builtin event conversion to run without compat event conversion', async () => {
+    const result = await transformReactLynx(
+      'const node = <view onClick={() => {}} onCatchTap={() => {}} onReady={() => {}} />;',
+      {
+        mode: 'test',
+        pluginName: '',
+        filename: 'test.jsx',
+        sourcemap: false,
+        cssScope: false,
+        snapshot: false,
+        jsx: true,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: {
+          target: 'MIXED',
+          componentsPkg: ['@lynx-js/react-components'],
+          oldRuntimePkg: ['@lynx-js/react-runtime'],
+          newRuntimePkg: '@lynx-js/react',
+          additionalComponentAttributes: [],
+          addComponentElement: false,
+          simplifyCtorLikeReactLynx2: false,
+          transformLegacyEventAttributeNames: false,
+          disableDeprecatedWarning: false,
+        },
+        worklet: false,
+        refresh: false,
+        experimental_transformBuiltinAttributeNames: true,
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('bindtap');
+    expect(result.code).toContain('catchtap');
+    expect(result.code).toContain('bindready');
+    expect(result.code).not.toContain('bindcatchtap');
+    expect(result.code).not.toContain('onClick');
+    expect(result.code).not.toContain('onCatchTap');
+    expect(result.code).not.toContain('onReady');
+  });
 });
 
 describe('shake', () => {
@@ -466,6 +507,8 @@ describe('jsx', () => {
           "main-thread:foo": foo
       });
       ",
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [],
@@ -536,6 +579,40 @@ describe('jsx', () => {
           })
       });
       ",
+        "definesForSnapshot": [
+          {
+            "code": "const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("list-item", pageId);
+              return [
+                  el
+              ];
+          }, [
+              (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+          ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null, true);
+      ",
+            "id": "__snapshot_da39a_04d8c_2",
+          },
+          {
+            "code": "const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
+              const pageId = ReactLynx.__pageId;
+              const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+              return [
+                  el
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartListSlotV2,
+                  0
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
+      ",
+            "id": "__snapshot_da39a_04d8c_1",
+          },
+        ],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [],
@@ -681,6 +758,8 @@ Component, View
         "code": "import { Component } from "@lynx-js/react/legacy-react-runtime";
       Component, View;
       ",
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
         "uiSourceMapRecords": [],
         "warnings": [

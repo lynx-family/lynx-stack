@@ -4,6 +4,7 @@
 
 import { createHash } from 'node:crypto';
 
+import { readModelConfig } from './model-config.js';
 import type { ChatOptions, OpenAIReasoningEffort } from './types';
 
 const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
@@ -133,9 +134,13 @@ export function resolveReasoningEffort(
 ): OpenAIReasoningEffort | undefined {
   const explicit = parseReasoningEffort(opts.reasoningEffort);
   if (explicit !== undefined) return explicit;
-  return opts.inheritReasoningEffort === false
-    ? undefined
-    : parseReasoningEffort(process.env.OPENAI_REASONING_EFFORT);
+  if (opts.inheritReasoningEffort === false) return undefined;
+  const config = readModelConfig();
+  if (!config.ok) return undefined;
+  const modelName = opts.model && config.config.models[opts.model]
+    ? opts.model
+    : config.config.defaultModel;
+  return config.config.models[modelName]!.reasoningEffort;
 }
 
 export function buildResourceRunOptions(

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { BenchProviderConfig } from './a2ui-bench-types';
+import { redactModelConfigSecrets } from './common/model-config.js';
 
 const PRIVATE_FIELD_NAMES = new Set([
   'apikey',
@@ -40,7 +41,7 @@ export function redactBenchText(
   ) {
     redacted = redacted.replaceAll(secret, '[REDACTED]');
   }
-  return redacted
+  return redactModelConfigSecrets(redacted)
     .replace(/\bBearer\s+[^\s,;"']+/giu, 'Bearer [REDACTED]')
     .replace(
       /([?&](?:access_token|api[_-]?key|key|token)=)[^&#\s"'<>]*/giu,

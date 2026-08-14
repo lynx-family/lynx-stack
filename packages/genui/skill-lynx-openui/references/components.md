@@ -11,11 +11,17 @@
 - [Inputs](#inputs)
 - [Unsupported Components](#unsupported-unless-extended-by-the-host)
 
-Use the built-in component signatures exactly. Arguments are positional and
-`?` marks a schema-optional argument. Omit an optional argument only when every
-later argument is also omitted. If an optional argument precedes a required
-one, supply it so later positions do not shift. The signatures include exact
-argument types and allowed enum values.
+Treat this file as the schema reference for the default built-in catalog. Use
+the signatures exactly when those components exist in the active Library. If
+the host supplies an explicitly reduced catalog, treat only its selected names
+as available; an omitted built-in remains unavailable even though it is listed
+below. Use the host's explicit root override when present; otherwise use the
+Library's default `Stack` root.
+
+Arguments are positional and `?` marks a schema-optional argument. Omit an
+optional argument only when every later argument is also omitted. If an optional
+argument precedes a required one, supply it so later positions do not shift. The
+signatures include exact argument types and allowed enum values.
 
 ## Shared Types
 
@@ -102,10 +108,14 @@ Current Lynx runtime boundaries:
   action prop. Do not use it as a live `Query` filter.
 - `DateTimeInput` currently displays a date/time value; do not promise editable
   date picking.
-- Put mutations on explicit submit or confirmation buttons, not change actions.
+- Trigger mutations only from explicit submit or confirmation actions on
+  active-catalog components, not change actions. With the default catalog, use
+  buttons.
 
 ## Unsupported Unless Extended By The Host
 
-Do not emit `Form`, `Input`, `Select`, `SelectItem`, `FormControl`, tables,
-charts, or any other name absent from the signatures above unless the caller
-provides its exact custom schema.
+Do not emit any component absent from the active catalog. With the default
+catalog, this excludes `Form`, `Input`, `Select`, `SelectItem`, `FormControl`,
+tables, charts, and every other name absent from the signatures above unless the
+caller provides its exact custom schema. With a reduced catalog, listed but
+unselected built-ins are also unsupported.

@@ -15,6 +15,7 @@ import type {
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
+import { applyDefinesInjection } from './DefinesInjection.js';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
@@ -200,6 +201,12 @@ interface ReactWebpackPluginOptions {
   mainThreadChunks?: string[] | undefined;
 
   /**
+   * The main-thread and background entry pairs to merge the main-thread
+   * definitions across.
+   */
+  entryPairs?: Array<{ mainThread: string; background: string }>;
+
+  /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
    *
@@ -323,6 +330,7 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
+      entryPairs: [],
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
@@ -403,6 +411,11 @@ class ReactWebpackPlugin {
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
+
+    const entryPairs = options.entryPairs ?? [];
+    if (entryPairs.length > 0) {
+      applyDefinesInjection(compiler, entryPairs, this.constructor.name);
+    }
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();

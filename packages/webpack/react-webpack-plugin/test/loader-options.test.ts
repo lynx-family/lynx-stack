@@ -32,6 +32,24 @@ function createLoaderContext(options: Record<string, unknown>) {
 }
 
 describe('loader options', () => {
+  it('normalizes the legacy event attribute-name transform option', () => {
+    for (
+      const [compat, expected] of [
+        [{}, true],
+        [{ transformLegacyEventAttributeNames: false }, false],
+      ] as const
+    ) {
+      const context = createLoaderContext({ compat });
+
+      expect(
+        getMainThreadTransformOptions.call(context, undefined).compat,
+      ).toHaveProperty('transformLegacyEventAttributeNames', expected);
+      expect(
+        getBackgroundTransformOptions.call(context, undefined).compat,
+      ).toHaveProperty('transformLegacyEventAttributeNames', expected);
+    }
+  });
+
   it('passes camelCase attribute conversion as a transform option', () => {
     const context = createLoaderContext({
       experimental_transformBuiltinAttributeNames:

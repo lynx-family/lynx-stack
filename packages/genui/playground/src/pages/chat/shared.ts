@@ -18,38 +18,30 @@ export const CHAT_PROVIDER_SETTINGS_STORAGE_KEY =
 export const LEGACY_A2UI_PROVIDER_SETTINGS_STORAGE_KEY =
   'a2ui-playground-provider-settings';
 
-export const PROVIDER_PRESETS = [
-  { id: 'gpt-5.4', label: 'gpt5.4', model: 'gpt-5.4' },
-  { id: 'gpt-5.5', label: 'gpt5.5', model: 'gpt-5.5' },
-  { id: 'custom', label: 'Custom API key', model: '' },
-] as const;
-
-export type ProviderPresetId = (typeof PROVIDER_PRESETS)[number]['id'];
+export interface ProviderModel {
+  id: string;
+  label: string;
+}
 
 export interface ProviderSettings {
-  preset: ProviderPresetId;
-  apiKey: string;
-  baseURL: string;
   model: string;
+  models: readonly ProviderModel[];
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  error?: string;
 }
 
 export interface ProviderRequestOptions {
-  apiKey?: string;
-  baseURL?: string;
   model?: string;
 }
 
 export interface PersistedProviderSettings {
-  baseURL: string;
   model: string;
-  preset?: ProviderPresetId;
 }
 
 const DEFAULT_PROVIDER_SETTINGS: Readonly<ProviderSettings> = {
-  preset: 'gpt-5.5',
-  apiKey: '',
-  baseURL: 'https://api.openai.com/v1',
-  model: 'gpt-5.5',
+  model: '',
+  models: [],
+  status: 'idle',
 };
 
 export const EMPTY_CHAT_TOKEN_USAGE: Readonly<ChatTokenUsage> = {
@@ -59,13 +51,7 @@ export const EMPTY_CHAT_TOKEN_USAGE: Readonly<ChatTokenUsage> = {
 };
 
 export function createDefaultProviderSettings(): ProviderSettings {
-  return { ...DEFAULT_PROVIDER_SETTINGS };
-}
-
-export function isProviderPresetId(
-  value: unknown,
-): value is ProviderPresetId {
-  return PROVIDER_PRESETS.some((item) => item.id === value);
+  return { ...DEFAULT_PROVIDER_SETTINGS, models: [] };
 }
 
 export function parseProviderSettings(value: unknown): ProviderSettings {
@@ -73,18 +59,15 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
     return createDefaultProviderSettings();
   }
 
-  const record = value as Partial<Record<keyof ProviderSettings, unknown>>;
+  const record = value as Record<string, unknown>;
+  const isLegacyDefault = record.preset === 'gpt-5.5'
+    && record.baseURL === 'https://api.openai.com/v1'
+    && record.model === 'gpt-5.5';
   return {
-    preset: isProviderPresetId(record.preset)
-      ? record.preset
-      : DEFAULT_PROVIDER_SETTINGS.preset,
-    apiKey: '',
-    baseURL: typeof record.baseURL === 'string'
-      ? record.baseURL
-      : DEFAULT_PROVIDER_SETTINGS.baseURL,
-    model: typeof record.model === 'string'
+    ...createDefaultProviderSettings(),
+    model: !isLegacyDefault && typeof record.model === 'string'
       ? record.model
-      : DEFAULT_PROVIDER_SETTINGS.model,
+      : '',
   };
 }
 
@@ -104,38 +87,94 @@ export function parseStoredProviderSettings(
 export function serializeProviderSettings(
   settings: ProviderSettings,
 ): PersistedProviderSettings {
-  return {
-    baseURL: settings.baseURL,
-    model: settings.model,
-    preset: settings.preset,
-  };
+  return { model: settings.model };
 }
 
 export function compactProviderLabel(settings: ProviderSettings): string {
-  if (settings.preset === 'custom') {
-    const customModel = settings.model.trim();
-    return customModel.length > 0 ? customModel : 'Custom model';
-  }
-  const preset = PROVIDER_PRESETS.find((item) => item.id === settings.preset);
-  return preset?.model ?? 'Server default';
+  return settings.models.find((item) => item.id === settings.model)?.label
+    ?? (settings.status === 'error' ? 'Models unavailable' : 'Loading models');
 }
 
 export function toProviderRequestOptions(
   settings: ProviderSettings,
 ): ProviderRequestOptions {
-  if (settings.preset !== 'custom') {
-    const preset = PROVIDER_PRESETS.find((item) => item.id === settings.preset);
-    return preset?.model ? { model: preset.model } : {};
-  }
-
-  const apiKey = settings.apiKey.trim();
-  const baseURL = settings.baseURL.trim();
   const model = settings.model.trim();
-  return {
-    ...(apiKey ? { apiKey } : {}),
-    ...(baseURL ? { baseURL } : {}),
-    ...(model ? { model } : {}),
-  };
+  return model ? { model } : {};
+}
+
+function parseModelsResponse(value: unknown): {
+  defaultModel: string;
+  models: ProviderModel[];
+} {
+  if (!value || typeof value !== 'object') {
+    throw new Error('The model list response is invalid');
+  }
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.defaultModel !== 'string' || !Array.isArray(record.models)
+  ) {
+    throw new Error('The model list response is invalid');
+  }
+  const models = record.models.flatMap((item): ProviderModel[] => {
+    if (!item || typeof item !== 'object') return [];
+    const model = item as Record<string, unknown>;
+    return typeof model.id === 'string' && typeof model.label === 'string'
+      ? [{ id: model.id, label: model.label }]
+      : [];
+  });
+  if (
+    models.length !== record.models.length
+    || !models.some((item) => item.id === record.defaultModel)
+  ) {
+    throw new Error('The model list response is invalid');
+  }
+  return { defaultModel: record.defaultModel, models };
+}
+
+export function getModelsEndpoint(host: ChatHost): string {
+  const endpoint = new URL(getChatEndpoint('a2ui', host));
+  endpoint.pathname = '/models';
+  endpoint.search = '';
+  endpoint.hash = '';
+  return endpoint.toString();
+}
+
+export async function loadProviderSettings(
+  settings: ProviderSettings,
+  host: ChatHost,
+  signal: AbortSignal,
+): Promise<ProviderSettings> {
+  try {
+    const response = await window.fetch(getModelsEndpoint(host), {
+      headers: { Accept: 'application/json' },
+      signal,
+    });
+    const payload: unknown = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = payload && typeof payload === 'object'
+        ? (payload as Record<string, unknown>).error
+        : undefined;
+      throw new Error(
+        typeof error === 'string' ? error : 'Failed to load model list',
+      );
+    }
+    const { defaultModel, models } = parseModelsResponse(payload);
+    return {
+      model: models.some((item) => item.id === settings.model)
+        ? settings.model
+        : defaultModel,
+      models,
+      status: 'ready',
+    };
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return {
+      ...settings,
+      models: [],
+      status: 'error',
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
@@ -146,51 +185,32 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
   initial: createDefaultProviderSettings,
   parseStored: parseStoredProviderSettings,
   serialize: serializeProviderSettings,
+  load: loadProviderSettings,
   controls(settings) {
-    const controls = [
-      {
-        id: 'preset',
-        label: 'Provider preset',
-        value: settings.preset,
-        kind: 'select' as const,
-        options: PROVIDER_PRESETS.map((preset) => ({
-          value: preset.id,
-          label: preset.label,
-        })),
-      },
-    ];
-    if (settings.preset !== 'custom') return controls;
     return [
-      ...controls,
-      {
-        id: 'baseURL',
-        label: 'Provider base URL',
-        value: settings.baseURL,
-        kind: 'text' as const,
-        placeholder: 'Base URL',
-      },
       {
         id: 'model',
-        label: 'Provider model',
+        label: 'Model',
         value: settings.model,
-        kind: 'text' as const,
-        placeholder: 'Model',
-      },
-      {
-        id: 'apiKey',
-        label: 'Provider API key',
-        value: settings.apiKey,
-        kind: 'password' as const,
-        placeholder: 'API key for local endpoint',
+        kind: 'select' as const,
+        disabled: settings.status !== 'ready',
+        options: settings.models.length > 0
+          ? settings.models.map((model) => ({
+            value: model.id,
+            label: model.label,
+          }))
+          : [{
+            value: '',
+            label: settings.status === 'error'
+              ? (settings.error ?? 'Models unavailable')
+              : 'Loading models...',
+          }],
       },
     ];
   },
   update(settings, id, next) {
-    if (id === 'preset' && isProviderPresetId(next)) {
-      return { ...settings, preset: next };
-    }
-    if (id === 'apiKey' || id === 'baseURL' || id === 'model') {
-      return { ...settings, [id]: next };
+    if (id === 'model' && settings.models.some((item) => item.id === next)) {
+      return { ...settings, model: next };
     }
     return settings;
   },
@@ -335,30 +355,6 @@ export function getChatEndpoint(
 
 export function getA2UIActionEndpoint(chatEndpoint: string): string {
   return chatEndpoint.replace(/\/a2ui\/stream$/u, '/a2ui/action/stream');
-}
-
-export function canForwardApiKeyToEndpoint(
-  raw: string,
-  host: Pick<ChatHost, 'origin'>,
-): boolean {
-  try {
-    const endpoint = new URL(raw, host.origin);
-    return endpoint.protocol === 'http:'
-      && endpoint.port === LOCAL_GENUI_SERVER_PORT
-      && isDevHost(endpoint.hostname);
-  } catch {
-    return false;
-  }
-}
-
-export function filterProviderRequestOptionsForEndpoint(
-  options: ProviderRequestOptions,
-  endpoint: string,
-  host: Pick<ChatHost, 'origin'>,
-): ProviderRequestOptions {
-  if (canForwardApiKeyToEndpoint(endpoint, host)) return options;
-  const { apiKey: _apiKey, ...safeOptions } = options;
-  return safeOptions;
 }
 
 export function targetOriginForUrl(

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { configuredModelName } from '../../service/common/model-config.js';
 import type {
   ChatOptions,
   OpenAIReasoningEffort,
@@ -24,7 +25,7 @@ export function pickProviderOptions(body: ProviderOptionsBody): ChatOptions {
   const allowOverride = clientOverridesAllowed();
   return {
     resourceId: body.resourceId,
-    model: allowOverride ? body.model : undefined,
+    model: allowOverride ? body.model : configuredModelName(body.model),
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
     api: allowOverride ? body.api : undefined,

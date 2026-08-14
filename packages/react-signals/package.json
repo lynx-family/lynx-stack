@@ -45,7 +45,7 @@
     "preact": "catalog:lynxjs"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.123.0",
+    "@lynx-js/react": "^0.123.0 || ^0.124.0",
     "preact": "*"
   },
   "engines": {

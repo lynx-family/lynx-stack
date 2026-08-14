@@ -23,7 +23,6 @@ import type {
 
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
@@ -570,11 +569,7 @@ export const MCP_APPS_CHAT_ADAPTER = {
   async createRequest({ prompt, conversation, settings, host, signal }) {
     const url = getChatEndpoint('mcp-apps', host);
     const registration = await fetchRegistration(url, signal);
-    const provider = filterProviderRequestOptionsForEndpoint(
-      toProviderRequestOptions(settings),
-      url,
-      host,
-    );
+    const provider = toProviderRequestOptions(settings);
     return {
       url,
       method: 'POST',

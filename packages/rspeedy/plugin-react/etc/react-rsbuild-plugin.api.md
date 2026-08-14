@@ -33,6 +33,7 @@ export interface CompatVisitorConfig {
     simplifyCtorLikeReactLynx2: boolean
     // @internal (undocumented)
     target: 'LEPUS' | 'JS' | 'MIXED'
+    transformLegacyEventAttributeNames?: boolean
 }
 
 // @public

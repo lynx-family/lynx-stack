@@ -25,40 +25,53 @@ agent.start(); // streams initial messages into the buffer
 agent.onAction(action); // pushes the canned response to a user action
 ```
 
-## Supabase Storage payload publishing
+## Volcengine TOS payload publishing
 
 The A2UI server keeps AI-generated preview URLs short by uploading final
-validated `messages` to Supabase Storage before emitting the `done` SSE event.
+validated `messages` to Volcengine TOS before emitting the `done` SSE event.
 The playground still receives the full `messages` for immediate rendering, and
 uses `done.preview.messagesUrl` for Web Preview and Native Preview links.
+The playground also uses `PUT /a2ui/payload` and `PUT /openui/payload` when it
+needs to publish directly, then treats the returned URLs as opaque values.
 
-To test this locally, create a public bucket for preview payloads and start the
-server with Supabase S3 credentials:
+The bucket is public-read, but uploads are always authenticated by the GenUI
+server. Give a dedicated IAM user only `tos:PutObject` access to the preview
+object prefixes, keep its AK/SK in the server environment, and do not expose
+those credentials to the playground or another browser client.
+
+To test this locally, create the public-read bucket and start the server with
+the write credentials:
 
 ```bash
-SUPABASE_URL=https://koaijebcyqjpnvxajqhe.supabase.co \
-SUPABASE_S3_ACCESS_KEY_ID=<s3-access-key-id> \
-SUPABASE_S3_SECRET_ACCESS_KEY=<s3-secret-access-key> \
-SUPABASE_STORAGE_BUCKET=genui \
+TOS_ACCESS_KEY=<access-key-id> \
+TOS_SECRET_KEY=<secret-access-key> \
+TOS_BUCKET=genui \
+TOS_REGION=cn-beijing \
 pnpm dev
 ```
 
-`SUPABASE_STORAGE_BUCKET` defaults to `genui`, and
-`SUPABASE_STORAGE_PREFIX` defaults to `a2ui`.
-`SUPABASE_STORAGE_REGION` defaults to `us-east-1`. The server writes through
-Supabase's S3-compatible Storage endpoint:
+`TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, and `TOS_REGION` are required;
+payload publishing stays disabled when any of them is missing.
+`TOS_STORAGE_PREFIX` defaults to `a2ui`, and `TOS_OPENUI_STORAGE_PREFIX`
+defaults to `openui`. The native TOS endpoint defaults to
+`tos-${TOS_REGION}.volces.com`; set `TOS_ENDPOINT` to a host (an optional
+`http://` or `https://` scheme is accepted) when the bucket uses a different
+endpoint. An optional `TOS_SECURITY_TOKEN` enables temporary STS credentials.
+
+The server writes objects such as:
 
 ```text
 a2ui/<id>/messages.json
 ```
 
-Those objects must be in a public bucket and CORS-readable by the preview
-runtime.
+The upload request is signed with the server-only credential and does not set a
+public object ACL. Public reads come from the bucket policy. The bucket must
+also be CORS-readable by the preview runtime.
 
 In local playground development, generated preview links use the playground
 dev server's in-memory payload store by default. Set
 `A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH=0` when you want local development to
-exercise the server-side Supabase upload path instead. Production builds do
+exercise the server-side TOS upload path instead. Production builds do
 not enable the dev-server payload store.
 
 ## Multi-turn chat shell pattern

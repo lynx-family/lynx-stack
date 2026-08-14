@@ -123,6 +123,7 @@ export interface ChatSettingControl {
   label: string;
   value: string;
   kind: 'select' | 'text' | 'password';
+  disabled?: boolean;
   placeholder?: string;
   options?: readonly ChatSettingOption[];
 }
@@ -132,6 +133,11 @@ export interface ChatSettingsAdapter<TSettings> {
   initial: () => TSettings;
   parseStored: (raw: unknown) => TSettings;
   serialize: (value: TSettings) => unknown;
+  load?: (
+    value: TSettings,
+    host: ChatHost,
+    signal: AbortSignal,
+  ) => Promise<TSettings>;
   controls: (value: TSettings) => readonly ChatSettingControl[];
   update: (value: TSettings, id: string, next: string) => TSettings;
   badge: (value: TSettings) => string;
