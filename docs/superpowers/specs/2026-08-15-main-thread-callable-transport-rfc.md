@@ -225,3 +225,11 @@ Beneath both, the implementation substrate is shared and should eventually be ex
 4. Should the realized wrapper identity survive release-and-recreate of the same slot (currently: no; a new id means a new wrapper)?
 5. Directive inference: should the compiler treat functions in designated prop positions (e.g. a library-declared `transition` shape) as implicit main-thread functions so upstream-Motion example code runs unchanged? (See Convergence — the user-facing half of the terminal state.)
 6. Should the family converge on a single type-directed `useMainThread(value)` transport, with ref/object/event as value kinds rather than separate hooks? (See Convergence — the library-author half.)
+
+## Follow-ups (landed on this branch)
+
+The "shared slot mechanism" anticipated under Convergence has been made concrete: the family's other write policies are implemented over the same pool, each with its own RFC issue, in commit `4d11046b4`:
+
+- **#3540 — `useMainThreadInstance(create, dispose?)`**: create-once main-thread objects (the distributed instance idiom) with deterministic dispose inheriting the release-after-patch rule; the transport-collapsed form of MainThreadObject's minimum contract (#3446), with the type registry replaced by two workletized closures. v1 finding: identity is not preserved across first-screen hydration (dispose runs at hydration; a fresh instance is created under a positive id).
+- **#3541 — `useMainThreadEffect(fn, deps?)`**: the distributed `useLayoutEffect` — ctx installed pre-patch, run flushed post-patch via `rLynxRunCallableCtx`, cleanup before next run and on release, release cancels a same-commit run, first run rides the hydration commit. The design boundary is explicit: post-patch is a callback API; pre-patch is not (that restriction *is* the event primitive).
+- **#3542 — the slot substrate**: the rights matrix (slot rebinding rights × target mutability × deref × BG-readability) under which Ref/Event/Instance/Effect are the inhabited points of one product space; the per-commit ordering theorem `ctx updates < patch < effect runs < releases`; and LIFO teardown within a release flush (destructor order), so the teardown of a slot may use anything declared before it.
