@@ -199,7 +199,17 @@ export function pluginDev(
           config.server?.printUrls === undefined
           || config.server?.printUrls === true
         ) {
-          const environmentNames = Object.keys(config.environments ?? {})
+          const entriesByEnvironment = Object.entries(
+            config.environments ?? {},
+          ).map(([environmentName, environmentConfig]) =>
+            [
+              environmentName,
+              Object.keys({
+                ...config.source?.entry,
+                ...environmentConfig.source?.entry,
+              }),
+            ] as const
+          )
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (param) => {
@@ -213,8 +223,8 @@ export function pluginDev(
                     ? assetPrefix
                     : `http://${hostname}:<port>/`
                 ).replaceAll('<port>', String(param.port))
-                for (const entry of Object.keys(config.source?.entry ?? {})) {
-                  for (const environmentName of environmentNames) {
+                for (const [environmentName, entries] of entriesByEnvironment) {
+                  for (const entry of entries) {
                     const pathname = resolveName(entry, environmentName)
                     finalUrls.push({
                       label: environmentName,
