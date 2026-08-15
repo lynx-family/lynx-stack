@@ -26,7 +26,7 @@ export interface WorkletRef<T> {
 export type MainThreadCallableId = number;
 
 /**
- * The serialized form of a `MainThreadCallable` handle. Capturing it in a main
+ * The serialized form of a `MainThreadEvent` handle. Capturing it in a main
  * thread function resolves it to the realized main-thread function.
  */
 export interface MainThreadCallableImpl {

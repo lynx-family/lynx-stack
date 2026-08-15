@@ -44,7 +44,7 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
 }
 
 /**
- * Install the latest ctx for each `MainThreadCallable` in the patch.
+ * Install the latest ctx for each `MainThreadEvent` in the patch.
  * A `null` ctx releases the callable.
  *
  * @param patch - An array containing the id and new ctx of the callable.

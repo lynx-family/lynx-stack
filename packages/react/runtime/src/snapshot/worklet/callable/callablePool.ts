@@ -9,7 +9,7 @@ import { isMtsEnabled } from '../functionality.js';
 const ctxPatch: Map<number, Worklet | null> = new Map();
 
 /**
- * Stage the latest ctx of a `MainThreadCallable` (or `null` to release it) for
+ * Stage the latest ctx of a `MainThreadEvent` (or `null` to release it) for
  * the next flush to the main thread. The last write per id wins within a flush.
  *
  * @internal
