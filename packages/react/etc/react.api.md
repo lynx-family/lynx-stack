@@ -137,6 +137,12 @@ export interface Lynx {
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
 }
 
+// @public
+export class MainThreadCallable<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
+    constructor(fn: F);
+    release(): void;
+}
+
 // Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts
 //
 // @public
@@ -206,6 +212,12 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
+
+// @public
+export function useMainThreadCallable<F extends (...args: any[]) => any>(fn: F | null | undefined): MainThreadCallable<F> | null;
+
+// @public
+export function useMainThreadCallables<T>(value: T): T;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

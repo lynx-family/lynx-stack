@@ -21,6 +21,7 @@ import { injectLepusMethods } from './snapshot/lynx/injectLepusMethods.js';
 import { initTimingAPI } from './snapshot/lynx/performance.js';
 import { injectPrepareLazyBundleMTS } from './snapshot/lynx/prepareLazyBundleMTS.js';
 import { injectTt } from './snapshot/lynx/tt.js';
+import { injectUpdateMTCallableCtx } from './snapshot/worklet/callable/updateCallableCtx.js';
 import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
 import { lynxQueueMicrotask } from './utils.js';
 
@@ -38,6 +39,7 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
   injectUpdateMTRefInitValue();
+  injectUpdateMTCallableCtx();
   if (
     typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
     && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle'

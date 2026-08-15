@@ -23,6 +23,22 @@ export interface WorkletRef<T> {
   [key: string]: unknown;
 }
 
+export type MainThreadCallableId = number;
+
+/**
+ * The serialized form of a `MainThreadCallable` handle. Capturing it in a main
+ * thread function resolves it to the realized main-thread function.
+ */
+export interface MainThreadCallableImpl {
+  _wcid: MainThreadCallableId;
+}
+
+/**
+ * A patch of callable ctx updates sent from the background thread.
+ * A `null` ctx releases the callable.
+ */
+export type MainThreadCallableCtxPatch = [id: MainThreadCallableId, ctx: Worklet | null][];
+
 interface ClosureValueType_ extends Record<string, ClosureValueType> {}
 
 export type ClosureValueType =

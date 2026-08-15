@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, MainThreadCallableImpl, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
+import { getFromCallableMap, initCallable } from './callable.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
@@ -19,6 +20,7 @@ function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
     _refImpl: initWorkletRef(),
+    _callableImpl: initCallable(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
@@ -173,6 +175,13 @@ const transformWorkletInner = (
     if (isWorkletRef) {
       obj[key] = getFromWorkletRefMap(
         subObj as unknown as WorkletRefImpl<unknown>,
+      );
+      continue;
+    }
+    const isMainThreadCallable = '_wcid' in (subObj as object);
+    if (isMainThreadCallable) {
+      obj[key] = getFromCallableMap(
+        subObj as unknown as MainThreadCallableImpl,
       );
       continue;
     }

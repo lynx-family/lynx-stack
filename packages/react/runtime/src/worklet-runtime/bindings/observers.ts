@@ -55,6 +55,7 @@ export function clearDelayedRunOnBackgroundFunctions(): void {
 export function onHydrationFinished(): void {
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
   globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
+  globalThis.lynxWorkletImpl?._callableImpl?.clearFirstScreenCallableCtxMap();
   // For old version dynamic component compatibility.
   globalThis.lynxWorkletImpl?._eventDelayImpl.clearDelayedWorklets();
 }

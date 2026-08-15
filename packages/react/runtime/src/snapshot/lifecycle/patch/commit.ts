@@ -42,6 +42,7 @@ import { hook, isEmptyObject } from '../../../utils.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
+import { sendMTCallableCtxToMainThread } from '../../worklet/callable/updateCallableCtx.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
@@ -130,6 +131,7 @@ function replaceCommitHook(): void {
       });
 
       sendMTRefInitValueToMainThread();
+      sendMTCallableCtxToMainThread();
 
       // Collect patches for this update
       const snapshotPatch = takeGlobalSnapshotPatch();
