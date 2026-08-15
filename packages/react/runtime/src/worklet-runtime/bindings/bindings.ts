@@ -7,6 +7,7 @@ import type {
   JsFnHandle,
   MainThreadCallableCtxPatch,
   MainThreadCallableId,
+  MainThreadCallableRunPatch,
   Worklet,
   WorkletRefImpl,
 } from './types.js';
@@ -53,6 +54,17 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
 function updateMainThreadCallableCtxChanges(patch?: MainThreadCallableCtxPatch): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._callableImpl?.updateCallableCtxChanges(patch);
+  }
+}
+
+/**
+ * Run the callable ctxs scheduled by `useMainThreadEffect` for this commit.
+ *
+ * @internal
+ */
+function runMainThreadCallableCtxs(ids?: MainThreadCallableRunPatch): void {
+  if (ids) {
+    globalThis.lynxWorkletImpl?._callableImpl?.runCallableCtxs(ids);
   }
 }
 
@@ -106,6 +118,7 @@ export {
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
   updateMainThreadCallableCtxChanges,
+  runMainThreadCallableCtxs,
   registerFirstScreenCallableCtx,
   registerWorklet,
   delayRunOnBackground,

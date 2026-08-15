@@ -143,6 +143,12 @@ export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unkno
     release(): void;
 }
 
+// @public
+export class MainThreadInstance<O = unknown> {
+    constructor(create: () => O, dispose?: (obj: O) => void);
+    release(): void;
+}
+
 // Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts
 //
 // @public
@@ -214,10 +220,16 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
 
 // @public
+export function useMainThreadEffect(fn: (() => void | (() => void)) | null | undefined, deps?: readonly unknown[]): void;
+
+// @public
 export function useMainThreadEvent<F extends (...args: any[]) => any>(fn: F | null | undefined): MainThreadEvent<F> | null;
 
 // @public
 export function useMainThreadEvents<T>(value: T): T;
+
+// @public
+export function useMainThreadInstance<O>(create: (() => O) | null | undefined, dispose?: ((obj: O) => void) | null): MainThreadInstance<O> | null;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

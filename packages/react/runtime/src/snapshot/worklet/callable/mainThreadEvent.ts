@@ -20,11 +20,34 @@ export function clearMainThreadEventLastIdForTesting(): void {
   lastIdBG = lastIdMT = 0;
 }
 
-function isMainThreadFunction(value: unknown): value is Worklet {
+/**
+ * Allocate a background-thread callable id. `MainThreadEvent`,
+ * `MainThreadInstance` and `useMainThreadEffect` slots share one id space:
+ * they live in the same main-thread pool.
+ *
+ * @internal
+ */
+export function allocateCallableIdBG(): number {
+  return ++lastIdBG;
+}
+
+/**
+ * Allocate a first-screen (main-thread) callable id. First-screen ids are
+ * negative and resolved from the first-screen ctx map until hydration.
+ *
+ * @internal
+ */
+export function allocateCallableIdMT(): number {
+  return --lastIdMT;
+}
+
+/** @internal */
+export function isMainThreadFunction(value: unknown): value is Worklet {
   return typeof value === 'object' && value !== null && '_wkltId' in value;
 }
 
-function reportInvalidMainThreadEvent(hookName: string, value: unknown): void {
+/** @internal */
+export function reportInvalidMainThreadFunction(hookName: string, value: unknown): void {
   /* v8 ignore next 3 */
   if (!__DEV__) {
     return;
@@ -77,7 +100,7 @@ export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unkno
 
   constructor(fn: F) {
     if (__JS__) {
-      this._wcid = ++lastIdBG;
+      this._wcid = allocateCallableIdBG();
       this._update(fn);
 
       const id = this._wcid;
@@ -88,7 +111,7 @@ export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unkno
         });
       });
     } else {
-      this._wcid = --lastIdMT;
+      this._wcid = allocateCallableIdMT();
       const schema = (globalThis as { globDynamicComponentEntry?: string })
         .globDynamicComponentEntry;
       loadWorkletRuntime(schema);
@@ -210,7 +233,7 @@ export function useMainThreadEvent<F extends (...args: any[]) => any>(
 
   let mainThreadFn: F | null = fn ?? null;
   if (mainThreadFn !== null && !isMainThreadFunction(mainThreadFn)) {
-    reportInvalidMainThreadEvent('useMainThreadEvent', mainThreadFn);
+    reportInvalidMainThreadFunction('useMainThreadEvent', mainThreadFn);
     mainThreadFn = null;
   }
 
@@ -249,7 +272,7 @@ function transportNestedEvents(
   }
   if (typeof value !== 'object' || value === null) {
     if (typeof value === 'function') {
-      reportInvalidMainThreadEvent('useMainThreadEvents', value);
+      reportInvalidMainThreadFunction('useMainThreadEvents', value);
     }
     return value;
   }

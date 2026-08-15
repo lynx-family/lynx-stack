@@ -5,12 +5,13 @@ import { Element } from './api/element.js';
 import type {
   ClosureValueType,
   MainThreadCallableImpl,
+  MainThreadInstanceImpl,
   RunWorkletOptions,
   Worklet,
   WorkletRefImpl,
 } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
-import { getFromCallableMap, initCallable } from './callable.js';
+import { getFromCallableMap, getFromInstanceMap, initCallable } from './callable.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
@@ -216,6 +217,13 @@ const transformWorkletInner = (
       obj[key] = getFromCallableMap(
         subObj as unknown as MainThreadCallableImpl,
       );
+      continue;
+    }
+    const isMainThreadInstance = '_wiid' in (subObj as object);
+    if (isMainThreadInstance) {
+      obj[key] = getFromInstanceMap(
+        subObj as unknown as MainThreadInstanceImpl,
+      ) as ClosureValueType;
       continue;
     }
   }

@@ -566,3 +566,8 @@ export {
   useMainThreadEvent,
   useMainThreadEvents,
 } from './snapshot/worklet/callable/mainThreadEvent.js';
+export {
+  MainThreadInstance,
+  useMainThreadInstance,
+} from './snapshot/worklet/callable/mainThreadInstance.js';
+export { useMainThreadEffect } from './snapshot/worklet/callable/mainThreadEffect.js';

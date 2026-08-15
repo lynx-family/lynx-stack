@@ -211,6 +211,181 @@ describe('main-thread callable transport', () => {
     globalThis.runWorklet = runWorklet;
   });
 
+  it('should realize an instance once and keep its identity stable', () => {
+    initWorklet();
+
+    const create = vi.fn(function() {
+      return { current: this._c.init };
+    });
+    globalThis.registerWorklet('main-thread', 'create', create);
+    updateCallableCtxChanges([[1, { _wkltId: 'create', _c: { init: 7 } }]]);
+
+    let retained;
+    globalThis.registerWorklet('main-thread', 'consumer', function() {
+      retained = this._c.instance;
+    });
+    const capture = () =>
+      globalThis.runWorklet({
+        _wkltId: 'consumer',
+        _c: { instance: { _wiid: 1 } },
+      });
+
+    capture();
+    expect(retained).toEqual({ current: 7 });
+    expect(create).toBeCalledTimes(1);
+
+    const first = retained;
+    capture();
+    expect(retained).toBe(first);
+    expect(create).toBeCalledTimes(1);
+  });
+
+  it('should run dispose with the realized object on release', () => {
+    initWorklet();
+
+    globalThis.registerWorklet('main-thread', 'create', function() {
+      return { stopped: false };
+    });
+    const dispose = vi.fn((obj) => {
+      obj.stopped = true;
+    });
+    globalThis.registerWorklet('main-thread', 'dispose', dispose);
+    updateCallableCtxChanges([[1, {
+      _wkltId: 'create',
+      _instDispose: { _wkltId: 'dispose' },
+    }]]);
+
+    let retained;
+    globalThis.registerWorklet('main-thread', 'consumer', function() {
+      retained = this._c.instance;
+    });
+    globalThis.runWorklet({
+      _wkltId: 'consumer',
+      _c: { instance: { _wiid: 1 } },
+    });
+    expect(retained.stopped).toBe(false);
+
+    updateCallableCtxChanges([[1, null]]);
+    expect(dispose).toBeCalledTimes(1);
+    expect(retained.stopped).toBe(true);
+
+    // Double release does not run dispose again.
+    updateCallableCtxChanges([[1, null]]);
+    expect(dispose).toBeCalledTimes(1);
+  });
+
+  it('should not run dispose when the instance was never realized', () => {
+    initWorklet();
+
+    const dispose = vi.fn();
+    globalThis.registerWorklet('main-thread', 'create', () => ({}));
+    globalThis.registerWorklet('main-thread', 'dispose', dispose);
+    updateCallableCtxChanges([[1, {
+      _wkltId: 'create',
+      _instDispose: { _wkltId: 'dispose' },
+    }]]);
+
+    updateCallableCtxChanges([[1, null]]);
+    expect(dispose).not.toBeCalled();
+  });
+
+  it('should throw when realizing a released instance', () => {
+    initWorklet();
+
+    globalThis.registerWorklet('main-thread', 'consumer', function() {
+      return this._c.instance;
+    });
+    expect(() =>
+      globalThis.runWorklet({
+        _wkltId: 'consumer',
+        _c: { instance: { _wiid: 1 } },
+      })
+    ).toThrowError(
+      'MainThreadInstance: instance 1 is not registered. It may have been released on unmount.',
+    );
+  });
+
+  it('should run effect ctxs with a cleanup cycle', () => {
+    initWorklet();
+
+    const log = [];
+    globalThis.registerWorklet('main-thread', 'effect', function() {
+      const run = this._c.run;
+      log.push(['effect', run]);
+      return () => {
+        log.push(['cleanup', run]);
+      };
+    });
+
+    updateCallableCtxChanges([[1, { _wkltId: 'effect', _c: { run: 1 } }]]);
+    globalThis.lynxWorkletImpl._callableImpl.runCallableCtxs([1]);
+    expect(log).toEqual([['effect', 1]]);
+
+    // The cleanup of the previous run runs before the next run.
+    updateCallableCtxChanges([[1, { _wkltId: 'effect', _c: { run: 2 } }]]);
+    globalThis.lynxWorkletImpl._callableImpl.runCallableCtxs([1]);
+    expect(log).toEqual([['effect', 1], ['cleanup', 1], ['effect', 2]]);
+
+    // The release runs the pending cleanup.
+    updateCallableCtxChanges([[1, null]]);
+    expect(log).toEqual([['effect', 1], ['cleanup', 1], ['effect', 2], ['cleanup', 2]]);
+  });
+
+  it('should not store a cleanup when the effect returns nothing', () => {
+    initWorklet();
+
+    const effect = vi.fn();
+    globalThis.registerWorklet('main-thread', 'effect', effect);
+    updateCallableCtxChanges([[1, { _wkltId: 'effect' }]]);
+    globalThis.lynxWorkletImpl._callableImpl.runCallableCtxs([1]);
+    expect(effect).toBeCalledTimes(1);
+    updateCallableCtxChanges([[1, null]]);
+  });
+
+  it('should skip run requests for unregistered ids', () => {
+    initWorklet();
+
+    expect(() => globalThis.lynxWorkletImpl._callableImpl.runCallableCtxs([99])).not.toThrow();
+  });
+
+  it('should dispose first-screen instances when the first-screen map is cleared', () => {
+    initWorklet();
+
+    globalThis.registerWorklet('main-thread', 'create', function() {
+      return { name: this._c.name };
+    });
+    const dispose = vi.fn();
+    globalThis.registerWorklet('main-thread', 'dispose', dispose);
+    globalThis.lynxWorkletImpl._callableImpl.registerFirstScreenCallableCtx(-1, {
+      _wkltId: 'create',
+      _c: { name: 'fs' },
+      _instDispose: { _wkltId: 'dispose' },
+    });
+
+    let retained;
+    globalThis.registerWorklet('main-thread', 'consumer', function() {
+      retained = this._c.instance;
+    });
+    globalThis.runWorklet({
+      _wkltId: 'consumer',
+      _c: { instance: { _wiid: -1 } },
+    });
+    expect(retained).toEqual({ name: 'fs' });
+
+    // Hydration clears the first-screen map: the first-screen instance is
+    // disposed and not carried over — its identity is not preserved.
+    globalThis.lynxWorkletImpl._callableImpl.clearFirstScreenCallableCtxMap();
+    expect(dispose).toBeCalledWith({ name: 'fs' });
+    expect(() =>
+      globalThis.runWorklet({
+        _wkltId: 'consumer',
+        _c: { instance: { _wiid: -1 } },
+      })
+    ).toThrowError(
+      'MainThreadInstance: instance -1 is not registered. It may have been released on unmount.',
+    );
+  });
+
   it('should retain installed ctxs for the js function lifecycle manager', () => {
     initWorklet();
 

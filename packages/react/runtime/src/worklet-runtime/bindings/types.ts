@@ -34,10 +34,25 @@ export interface MainThreadCallableImpl {
 }
 
 /**
+ * The serialized form of a `MainThreadInstance` handle. Capturing it in a main
+ * thread function realizes it to the instance object created by its
+ * main-thread `create` function (once, cached for the handle's lifetime).
+ */
+export interface MainThreadInstanceImpl {
+  _wiid: MainThreadCallableId;
+}
+
+/**
  * A patch of callable ctx updates sent from the background thread.
  * A `null` ctx releases the callable.
  */
 export type MainThreadCallableCtxPatch = [id: MainThreadCallableId, ctx: Worklet | null][];
+
+/**
+ * Ids of callable ctxs that `useMainThreadEffect` scheduled to run after the
+ * commit's patch is applied.
+ */
+export type MainThreadCallableRunPatch = MainThreadCallableId[];
 
 interface ClosureValueType_ extends Record<string, ClosureValueType> {}
 
