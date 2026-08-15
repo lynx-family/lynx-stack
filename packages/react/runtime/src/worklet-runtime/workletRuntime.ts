@@ -184,13 +184,6 @@ const transformWorkletInner = (
       );
       continue;
     }
-    const isMainThreadCallable = '_wcid' in (subObj as object);
-    if (isMainThreadCallable) {
-      obj[key] = getFromCallableMap(
-        subObj as unknown as MainThreadCallableImpl,
-      );
-      continue;
-    }
     const isWorklet = '_wkltId' in subObj;
     if (isWorklet) {
       const isRootWorklet = subObj === ctx;
@@ -213,6 +206,15 @@ const transformWorkletInner = (
       lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
         (ctx as Worklet)._execId!,
         subObj,
+      );
+      continue;
+    }
+    // Checked after the common discriminants so hot paths (worklet ctxs,
+    // refs, background functions) do not pay for the callable lookup.
+    const isMainThreadCallable = '_wcid' in (subObj as object);
+    if (isMainThreadCallable) {
+      obj[key] = getFromCallableMap(
+        subObj as unknown as MainThreadCallableImpl,
       );
       continue;
     }
