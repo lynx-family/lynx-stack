@@ -44,9 +44,13 @@ describe('main-thread callable transport', () => {
           'main thread';
           globalThis.easeInvocations = [];
           globalThis.animatedValues = [];
-          animate((v: number) => {
-            globalThis.animatedValues.push(v);
-          }, 100, { ...options, from: 0 });
+          animate(
+            (v: number) => {
+              globalThis.animatedValues.push(v);
+            },
+            100,
+            { ...options, from: 0 },
+          );
         })(transition);
       }, []);
       return <view />;
@@ -87,10 +91,14 @@ describe('main-thread callable transport', () => {
         void runOnMainThread((template: typeof transformTemplate) => {
           'main thread';
           globalThis.templateFrames = [];
-          animate((x: number) => {
-            const generated = `translateX(${x}px)`;
-            globalThis.templateFrames.push(template!({ x }, generated));
-          }, 30, { duration: 0.1, ease: (t: number) => t, from: 0 });
+          animate(
+            (x: number) => {
+              const generated = `translateX(${x}px)`;
+              globalThis.templateFrames.push(template!({ x }, generated));
+            },
+            30,
+            { duration: 0.1, ease: (t: number) => t, from: 0 },
+          );
         })(transformTemplate);
       }, []);
       return <view />;

@@ -2,7 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, MainThreadCallableImpl, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type {
+  ClosureValueType,
+  MainThreadCallableImpl,
+  RunWorkletOptions,
+  Worklet,
+  WorkletRefImpl,
+} from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
 import { getFromCallableMap, initCallable } from './callable.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';

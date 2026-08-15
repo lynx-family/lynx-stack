@@ -27,11 +27,17 @@ Two Motion conformance gaps are hard-blocked on this capability (both are adapte
      transition={{
        duration: 0.8,
        ease: [
-         (progress) => { 'main thread'; return progress },
-         (progress) => { 'main thread'; return progress * progress },
+         (progress) => {
+           'main thread';
+           return progress;
+         },
+         (progress) => {
+           'main thread';
+           return progress * progress;
+         },
        ],
      }}
-   />
+   />;
    ```
 
    The declarative adapter resolves transitions on the background thread and forwards them to the main-thread animation engine. Scalars, arrays and objects arrive; the nested functions do not arrive as callable main-thread functions. Easing must be invoked **synchronously per frame**, so `runOnBackground`-style RPC is not an option.
@@ -45,32 +51,32 @@ Two Motion conformance gaps are hard-blocked on this capability (both are adapte
        'main thread';
        return `translateY(${x}) ${generated}`;
      }}
-   />
+   />;
    ```
 
    The callback must be callable from the main-thread style update path, receive fresh captured values after rerenders, and be released on unmount.
 
 ### Why every existing mechanism falls short
 
-| Mechanism | Why it is not enough |
-| --- | --- |
-| Package-owned callable registry (`packages/motion/src/utils/registeredFunction.ts`, used by `mini/core/easings.ts`) | Registers a **fixed set of package functions at bundle init** under string handles. Consumer closures, captured values, per-instance identity, and unmount release are all unsupported. This is the workaround the Motion mini easings use today, and it caps the API surface at a hardcoded easing list. |
-| Nested worklet capture (`transformWorkletInner` already binds nested `_wkltId` descriptors) | Works only for a ctx that travels whole through one serialization. A long-lived main-thread consumer (an animation loop, a style effect) retains the ctx **from the render that delivered it**; later rerenders never refresh its captured values. There is no unmount release, and nested/cross-module descriptors have hydrated as non-callable plain objects on Lynx for Web. |
-| Plain (non-directive) functions in captures | `JSON.stringify` silently drops function-valued properties from `_c`; the main thread sees `undefined` with no diagnostic. The DEV report in `workletEvent.ts` only covers the top-level prop position. |
-| `runOnBackground` handles (`_jsFn`) | Asynchronous by design. Easing and transform composition are synchronous per-frame calls. |
-| `MainThreadObject` (#3446 / #3477) | Payload is a **one-shot initialization** realized into one stable object. A callable needs the opposite: per-render re-capture behind a stable identity. |
-| `MainThreadRef` | A mutable cell whose contents are written **by main-thread code**. Here the source of truth (the closure and its captures) lives on the background thread and must be pushed down. |
+| Mechanism                                                                                                           | Why it is not enough                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package-owned callable registry (`packages/motion/src/utils/registeredFunction.ts`, used by `mini/core/easings.ts`) | Registers a **fixed set of package functions at bundle init** under string handles. Consumer closures, captured values, per-instance identity, and unmount release are all unsupported. This is the workaround the Motion mini easings use today, and it caps the API surface at a hardcoded easing list.                                                                        |
+| Nested worklet capture (`transformWorkletInner` already binds nested `_wkltId` descriptors)                         | Works only for a ctx that travels whole through one serialization. A long-lived main-thread consumer (an animation loop, a style effect) retains the ctx **from the render that delivered it**; later rerenders never refresh its captured values. There is no unmount release, and nested/cross-module descriptors have hydrated as non-callable plain objects on Lynx for Web. |
+| Plain (non-directive) functions in captures                                                                         | `JSON.stringify` silently drops function-valued properties from `_c`; the main thread sees `undefined` with no diagnostic. The DEV report in `workletEvent.ts` only covers the top-level prop position.                                                                                                                                                                          |
+| `runOnBackground` handles (`_jsFn`)                                                                                 | Asynchronous by design. Easing and transform composition are synchronous per-frame calls.                                                                                                                                                                                                                                                                                        |
+| `MainThreadObject` (#3446 / #3477)                                                                                  | Payload is a **one-shot initialization** realized into one stable object. A callable needs the opposite: per-render re-capture behind a stable identity.                                                                                                                                                                                                                         |
+| `MainThreadRef`                                                                                                     | A mutable cell whose contents are written **by main-thread code**. Here the source of truth (the closure and its captures) lives on the background thread and must be pushed down.                                                                                                                                                                                               |
 
 ### Position in the MainThreadObject algebra
 
 #3446 separates representation, ownership, and stability. `MainThreadCallable` fills the row that was missing:
 
-| Example | Representation | Lifecycle authority | Binding |
-| --- | --- | --- | --- |
-| MotionValue (MainThreadObject) | pure JS object | factory / handle runtime | stable object, one-shot payload |
-| MutableCell (MainThreadRef) | pure JS cell | worklet runtime | mutable contents, MTS-written |
-| MainThread.Element | native-backed wrapper | renderer / native tree | stable wrapper |
-| **MainThreadCallable** | **pure JS function** | **React runtime (hook)** | **stable identity, BTS-rebindable implementation** |
+| Example                        | Representation        | Lifecycle authority      | Binding                                            |
+| ------------------------------ | --------------------- | ------------------------ | -------------------------------------------------- |
+| MotionValue (MainThreadObject) | pure JS object        | factory / handle runtime | stable object, one-shot payload                    |
+| MutableCell (MainThreadRef)    | pure JS cell          | worklet runtime          | mutable contents, MTS-written                      |
+| MainThread.Element             | native-backed wrapper | renderer / native tree   | stable wrapper                                     |
+| **MainThreadCallable**         | **pure JS function**  | **React runtime (hook)** | **stable identity, BTS-rebindable implementation** |
 
 A callable is conceptually "a MainThreadObject whose realized object is a function", but its defining property is the **rebinding**: the realized function's identity is stable while the worklet ctx behind it is replaced on every committed render. That is `MainThreadBinding` semantics applied to code instead of data, with the binding written from the background thread.
 
@@ -104,7 +110,7 @@ function useMainThreadCallable<F extends (...args: any[]) => any>(
 ): MainThreadCallable<F> | null;
 
 /** Deep transport: every main-thread function nested in `value` becomes a handle. */
-function useMainThreadCallables<T>(value: T): T;  // handles hydrate back to functions on the main thread
+function useMainThreadCallables<T>(value: T): T; // handles hydrate back to functions on the main thread
 ```
 
 - `fn` and nested functions must be main-thread functions (`'main thread'` directive). In DEV, a plain function produces a diagnostic naming the offending path (mirroring `reportInvalidWorkletValue`); in production it is passed through untouched.
