@@ -104,7 +104,7 @@ function useMainThreadCallable<F extends (...args: any[]) => any>(
 ): MainThreadCallable<F> | null;
 
 /** Deep transport: every main-thread function nested in `value` becomes a handle. */
-function useMainThreadCallables<T>(value: T): MainThreadCallableTree<T>;
+function useMainThreadCallables<T>(value: T): T;  // handles hydrate back to functions on the main thread
 ```
 
 - `fn` and nested functions must be main-thread functions (`'main thread'` directive). In DEV, a plain function produces a diagnostic naming the offending path (mirroring `reportInvalidWorkletValue`); in production it is passed through untouched.
@@ -129,7 +129,7 @@ const transformTemplate = useMainThreadCallable(props.transformTemplate);
 render:   hook allocates id (once) ── stages [id, ctx] into the callable patch pool
 commit:   pool flushed with the ref-init-value flush (callLepusMethod) → MTS registry updated
 rerender: fresh ctx (fresh captures) staged; last write per id wins within a commit
-unmount:  effect cleanup stages [id, null]; flushed in the same ordered channel
+unmount:  effect cleanup stages [id, null]; flushed after the commit's patch update
 GC:       destruction observer dispatches releaseMainThreadCallable (fallback for
           handles that never reached a cleanup, mirroring MainThreadRef)
 ```
