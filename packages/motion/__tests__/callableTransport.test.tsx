@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import {
   runOnMainThread,
   useEffect,
-  useMainThreadCallable,
-  useMainThreadCallables,
+  useMainThreadEvent,
+  useMainThreadEvents,
 } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 
@@ -30,7 +30,7 @@ describe('main-thread callable transport', () => {
   test('consumer easing nested in a transition object drives animate', async () => {
     const plateau = 0.5;
     const App = () => {
-      const transition = useMainThreadCallables({
+      const transition = useMainThreadEvents({
         duration: 0.1,
         ease: (progress: number) => {
           'main thread';
@@ -81,7 +81,7 @@ describe('main-thread callable transport', () => {
   // animation, receiving the latest values.
   test('transformTemplate composes around the generated transform each frame', async () => {
     const App = () => {
-      const transformTemplate = useMainThreadCallable(
+      const transformTemplate = useMainThreadEvent(
         (latest: { x: number }, generated: string) => {
           'main thread';
           return `translateY(${latest.x}px) ${generated}`;

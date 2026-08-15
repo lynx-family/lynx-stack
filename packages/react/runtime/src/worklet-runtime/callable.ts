@@ -55,7 +55,7 @@ function resolveCallableCtx(id: MainThreadCallableId): Worklet | undefined {
 }
 
 /**
- * Returns the realized main-thread function for a `MainThreadCallable` handle.
+ * Returns the realized main-thread function for a `MainThreadEvent` handle.
  * The returned function identity is stable per callable id; each call resolves
  * the latest ctx installed by the background thread.
  */
@@ -73,7 +73,7 @@ const getFromCallableMap = (
       /* v8 ignore next 5 -- the production fallback branch is not built in tests */
       if (__DEV__) {
         throw new Error(
-          'MainThreadCallable: callable ' + id + ' is not registered. It may have been released on unmount.',
+          'MainThreadEvent: event ' + id + ' is not registered. It may have been released on unmount.',
         );
       }
       /* v8 ignore next */

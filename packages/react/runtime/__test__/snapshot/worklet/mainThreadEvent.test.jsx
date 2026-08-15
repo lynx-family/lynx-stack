@@ -13,10 +13,10 @@ import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/up
 import { takeCallableReleasePatch } from '../../../src/snapshot/worklet/callable/callablePool';
 import { injectUpdateMTCallableCtx } from '../../../src/snapshot/worklet/callable/updateCallableCtx';
 import {
-  MainThreadCallable,
-  useMainThreadCallable,
-  useMainThreadCallables,
-} from '../../../src/snapshot/worklet/callable/mainThreadCallable';
+  MainThreadEvent,
+  useMainThreadEvent,
+  useMainThreadEvents,
+} from '../../../src/snapshot/worklet/callable/mainThreadEvent';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
 import { globalEnvManager } from '../utils/envManager';
@@ -63,16 +63,16 @@ function takeCallableLepusCalls() {
   return calls.filter(([name]) => name === 'rLynxChangeCallableCtx');
 }
 
-describe('MainThreadCallable in js', () => {
+describe('MainThreadEvent in js', () => {
   it('to json', () => {
     globalEnvManager.switchToBackground();
-    const callable = new MainThreadCallable({ _wkltId: '835d:test:1' });
+    const callable = new MainThreadEvent({ _wkltId: '835d:test:1' });
     expect(JSON.stringify(callable)).toMatchInlineSnapshot(`"{"_wcid":1}"`);
   });
 
   it('should release when main thread agrees', () => {
     globalEnvManager.switchToBackground();
-    const callable = new MainThreadCallable({ _wkltId: '835d:test:1' });
+    const callable = new MainThreadEvent({ _wkltId: '835d:test:1' });
     lynx.getNativeApp().createJSObjectDestructionObserver.mock.calls[0][0]();
     expect(lynx.getCoreContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
       [
@@ -91,7 +91,7 @@ describe('MainThreadCallable in js', () => {
   it('should send ctx to the main thread and update it on rerender', () => {
     let x = 1;
     const Comp = () => {
-      useMainThreadCallable({ _wkltId: '835d:test:1', _c: { x } });
+      useMainThreadEvent({ _wkltId: '835d:test:1', _c: { x } });
       return <view></view>;
     };
 
@@ -170,7 +170,7 @@ describe('MainThreadCallable in js', () => {
       return show ? <Child /> : <view></view>;
     };
     const Child = () => {
-      useMainThreadCallable({ _wkltId: '835d:test:1' });
+      useMainThreadEvent({ _wkltId: '835d:test:1' });
       return <view></view>;
     };
 
@@ -209,7 +209,7 @@ describe('MainThreadCallable in js', () => {
     const reportError = vi.spyOn(lynx, 'reportError');
     let result;
     const Comp = () => {
-      result = useMainThreadCallable(function myEasing() {});
+      result = useMainThreadEvent(function myEasing() {});
       return <view></view>;
     };
 
@@ -217,7 +217,7 @@ describe('MainThreadCallable in js', () => {
     render(<Comp />, __root);
     expect(result).toBe(null);
     expect(reportError.mock.calls[0][0].message).toMatchInlineSnapshot(
-      `"useMainThreadCallable: expected a main-thread function but received function myEasing. Did you forget to add a "main thread" directive?"`,
+      `"useMainThreadEvent: expected a main-thread function but received function myEasing. Did you forget to add a "main thread" directive?"`,
     );
   });
 
@@ -225,7 +225,7 @@ describe('MainThreadCallable in js', () => {
     const reportError = vi.spyOn(lynx, 'reportError');
     let result;
     const Comp = () => {
-      result = useMainThreadCallable(42);
+      result = useMainThreadEvent(42);
       return <view></view>;
     };
 
@@ -233,7 +233,7 @@ describe('MainThreadCallable in js', () => {
     render(<Comp />, __root);
     expect(result).toBe(null);
     expect(reportError.mock.calls[0][0].message).toContain(
-      'useMainThreadCallable: expected a main-thread function but received 42.',
+      'useMainThreadEvent: expected a main-thread function but received 42.',
     );
   });
 
@@ -242,21 +242,21 @@ describe('MainThreadCallable in js', () => {
     const anonymous = function() {};
     Object.defineProperty(anonymous, 'name', { value: '' });
     const Comp = () => {
-      useMainThreadCallable(anonymous);
+      useMainThreadEvent(anonymous);
       return <view></view>;
     };
 
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
     expect(reportError.mock.calls[0][0].message).toContain(
-      'useMainThreadCallable: expected a main-thread function but received function (anonymous).',
+      'useMainThreadEvent: expected a main-thread function but received function (anonymous).',
     );
   });
 
   it('should not stage a release when the sdk version is too low', () => {
     SystemInfo.lynxSdkVersion = '2.13';
     globalEnvManager.switchToBackground();
-    const callable = new MainThreadCallable({ _wkltId: '835d:test:1' });
+    const callable = new MainThreadEvent({ _wkltId: '835d:test:1' });
     callable.release();
     expect(takeCallableReleasePatch()).toEqual([]);
   });
@@ -264,7 +264,7 @@ describe('MainThreadCallable in js', () => {
   it('should not stage anything when the sdk version is too low', () => {
     SystemInfo.lynxSdkVersion = '2.13';
     const Comp = () => {
-      useMainThreadCallable({ _wkltId: '835d:test:1' });
+      useMainThreadEvent({ _wkltId: '835d:test:1' });
       return <view></view>;
     };
 
@@ -283,7 +283,7 @@ describe('MainThreadCallable in js', () => {
 
   it('should ignore updates after release and tolerate double release', () => {
     globalEnvManager.switchToBackground();
-    const callable = new MainThreadCallable({ _wkltId: '835d:test:1' });
+    const callable = new MainThreadEvent({ _wkltId: '835d:test:1' });
     callable.release();
     callable.release();
     callable._update({ _wkltId: '835d:test:1', _c: { x: 1 } });
@@ -302,7 +302,7 @@ describe('MainThreadCallable in js', () => {
     let fn = { _wkltId: '835d:test:1' };
     let result;
     const Comp = () => {
-      result = useMainThreadCallable(fn);
+      result = useMainThreadEvent(fn);
       return <view></view>;
     };
 
@@ -315,7 +315,7 @@ describe('MainThreadCallable in js', () => {
       globalEnvManager.switchToBackground();
       render(<Comp />, __root);
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
-      expect(result).toBeInstanceOf(MainThreadCallable);
+      expect(result).toBeInstanceOf(MainThreadEvent);
       expect(takeCallableLepusCalls().length).toBe(1);
     }
 
@@ -340,7 +340,7 @@ describe('MainThreadCallable in js', () => {
     {
       fn = { _wkltId: '835d:test:1' };
       render(<Comp />, __root);
-      expect(result).toBeInstanceOf(MainThreadCallable);
+      expect(result).toBeInstanceOf(MainThreadEvent);
       const callableCalls = takeCallableLepusCalls();
       expect(callableCalls.length).toBe(3);
       expect(callableCalls[2][1]).toMatchInlineSnapshot(`
@@ -357,7 +357,7 @@ describe('MainThreadCallable in js', () => {
       _jsFn: { _jsFn1: { _jsFnId: 1 } },
     });
     const Comp = () => {
-      useMainThreadCallable(fnWithJsFn());
+      useMainThreadEvent(fnWithJsFn());
       return <view></view>;
     };
 
@@ -382,7 +382,7 @@ describe('MainThreadCallable in js', () => {
 
   it('should not crash on unmount when fn was always null', async () => {
     const Child = () => {
-      useMainThreadCallable(null);
+      useMainThreadEvent(null);
       return <view></view>;
     };
     const Comp = ({ show }) => {
@@ -407,7 +407,7 @@ describe('MainThreadCallable in js', () => {
   it('should return null for null and undefined', () => {
     let results;
     const Comp = () => {
-      results = [useMainThreadCallable(null), useMainThreadCallable(undefined)];
+      results = [useMainThreadEvent(null), useMainThreadEvent(undefined)];
       return <view></view>;
     };
 
@@ -418,12 +418,12 @@ describe('MainThreadCallable in js', () => {
   });
 });
 
-describe('useMainThreadCallables in js', () => {
+describe('useMainThreadEvents in js', () => {
   it('should transport nested functions and keep slot identity across rerenders', () => {
     let duration = 0.8;
     let results = [];
     const Comp = () => {
-      const transition = useMainThreadCallables({
+      const transition = useMainThreadEvents({
         duration,
         ease: [
           { _wkltId: '835d:test:1', _c: { tag: 'first' } },
@@ -447,8 +447,8 @@ describe('useMainThreadCallables in js', () => {
 
     const transition = results.at(-1);
     expect(transition.duration).toBe(0.8);
-    expect(transition.ease[0]).toBeInstanceOf(MainThreadCallable);
-    expect(transition.ease[1]).toBeInstanceOf(MainThreadCallable);
+    expect(transition.ease[0]).toBeInstanceOf(MainThreadEvent);
+    expect(transition.ease[1]).toBeInstanceOf(MainThreadEvent);
     expect(JSON.stringify(transition)).toMatchInlineSnapshot(
       `"{"duration":0.8,"ease":[{"_wcid":1},{"_wcid":2}]}"`,
     );
@@ -477,7 +477,7 @@ describe('useMainThreadCallables in js', () => {
   it('should release slots that disappear and all slots on unmount', async () => {
     let withSecond = true;
     const Child = () => {
-      useMainThreadCallables({
+      useMainThreadEvents({
         ease: withSecond
           ? [{ _wkltId: '835d:test:1' }, { _wkltId: '835d:test:2' }]
           : [{ _wkltId: '835d:test:1' }],
@@ -530,9 +530,9 @@ describe('useMainThreadCallables in js', () => {
   it('should pass through existing handles and unchanged arrays', () => {
     let results = [];
     const Comp = () => {
-      const handle = useMainThreadCallable({ _wkltId: '835d:test:1' });
+      const handle = useMainThreadEvent({ _wkltId: '835d:test:1' });
       const value = { ease: [handle], tags: ['a', 'b'] };
-      results.push([value, useMainThreadCallables(value)]);
+      results.push([value, useMainThreadEvents(value)]);
       return <view></view>;
     };
 
@@ -540,7 +540,7 @@ describe('useMainThreadCallables in js', () => {
     render(<Comp />, __root);
     const [input, output] = results.at(-1);
     expect(output).toBe(input);
-    expect(output.ease[0]).toBeInstanceOf(MainThreadCallable);
+    expect(output.ease[0]).toBeInstanceOf(MainThreadEvent);
     expect(output.tags).toBe(input.tags);
   });
 
@@ -550,13 +550,13 @@ describe('useMainThreadCallables in js', () => {
       deep = { next: deep };
     }
     const Comp = () => {
-      useMainThreadCallables(deep);
+      useMainThreadEvents(deep);
       return <view></view>;
     };
 
     globalEnvManager.switchToBackground();
     expect(() => render(<Comp />, __root)).toThrowError(
-      'useMainThreadCallables: depth of value exceeds limit of 1000.',
+      'useMainThreadEvents: depth of value exceeds limit of 1000.',
     );
   });
 
@@ -564,7 +564,7 @@ describe('useMainThreadCallables in js', () => {
     let results = [];
     const Comp = () => {
       const value = { duration: 0.8, ease: 'easeOut' };
-      results.push([value, useMainThreadCallables(value)]);
+      results.push([value, useMainThreadEvents(value)]);
       return <view></view>;
     };
 
@@ -581,7 +581,7 @@ describe('useMainThreadCallables in js', () => {
     const opaque = new Opaque();
     let result;
     const Comp = () => {
-      result = useMainThreadCallables({
+      result = useMainThreadEvents({
         opaque,
         bad: function notAWorklet() {},
       });
@@ -593,7 +593,7 @@ describe('useMainThreadCallables in js', () => {
     expect(result.opaque).toBe(opaque);
     expect(typeof result.bad).toBe('function');
     expect(reportError.mock.calls[0][0].message).toContain(
-      'useMainThreadCallables: expected a main-thread function but received function notAWorklet.',
+      'useMainThreadEvents: expected a main-thread function but received function notAWorklet.',
     );
   });
 });

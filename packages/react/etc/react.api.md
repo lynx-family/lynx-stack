@@ -138,7 +138,7 @@ export interface Lynx {
 }
 
 // @public
-export class MainThreadCallable<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
+export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
     constructor(fn: F);
     release(): void;
 }
@@ -214,10 +214,10 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
 
 // @public
-export function useMainThreadCallable<F extends (...args: any[]) => any>(fn: F | null | undefined): MainThreadCallable<F> | null;
+export function useMainThreadEvent<F extends (...args: any[]) => any>(fn: F | null | undefined): MainThreadEvent<F> | null;
 
 // @public
-export function useMainThreadCallables<T>(value: T): T;
+export function useMainThreadEvents<T>(value: T): T;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

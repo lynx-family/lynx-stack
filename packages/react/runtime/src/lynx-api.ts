@@ -562,7 +562,7 @@ export { runOnBackground } from './core/background-function/run-on-background.js
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
 export { MainThreadRef, useMainThreadRef } from './snapshot/worklet/ref/workletRef.js';
 export {
-  MainThreadCallable,
-  useMainThreadCallable,
-  useMainThreadCallables,
-} from './snapshot/worklet/callable/mainThreadCallable.js';
+  MainThreadEvent,
+  useMainThreadEvent,
+  useMainThreadEvents,
+} from './snapshot/worklet/callable/mainThreadEvent.js';

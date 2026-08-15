@@ -16,7 +16,7 @@ import { onPostWorkletCtx } from '../ctx.js';
 let lastIdBG = 0;
 let lastIdMT = 0;
 
-export function clearMainThreadCallableLastIdForTesting(): void {
+export function clearMainThreadEventLastIdForTesting(): void {
   lastIdBG = lastIdMT = 0;
 }
 
@@ -24,7 +24,7 @@ function isMainThreadFunction(value: unknown): value is Worklet {
   return typeof value === 'object' && value !== null && '_wkltId' in value;
 }
 
-function reportInvalidMainThreadCallable(hookName: string, value: unknown): void {
+function reportInvalidMainThreadEvent(hookName: string, value: unknown): void {
   /* v8 ignore next 3 */
   if (!__DEV__) {
     return;
@@ -51,13 +51,19 @@ function reportInvalidMainThreadCallable(hookName: string, value: unknown): void
  * implementation always reflects the captured values of the latest committed
  * render.
  *
- * Handles are usually created through {@link useMainThreadCallable} or
- * {@link useMainThreadCallables}, which keep the transported captured values
+ * Handles are usually created through {@link useMainThreadEvent} or
+ * {@link useMainThreadEvents}, which keep the transported captured values
  * up to date on rerenders and release the callable on unmount.
+ *
+ * This is the main-thread counterpart of React's `useEvent`/`useEffectEvent`
+ * event functions: a stable identity whose body always observes the latest
+ * committed render, callable only outside of rendering — a constraint the
+ * thread boundary enforces structurally, since the callable form of the
+ * function only exists on the main thread.
  *
  * @public
  */
-export class MainThreadCallable<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
+export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
   /** @internal */
   declare private _phantomType?: F;
   /** @internal */
@@ -133,8 +139,8 @@ export class MainThreadCallable<F extends (...args: any[]) => any = (...args: un
    * function after release is a no-op returning `undefined` (and throws in
    * development builds).
    *
-   * This is called automatically on unmount by {@link useMainThreadCallable}
-   * and {@link useMainThreadCallables}.
+   * This is called automatically on unmount by {@link useMainThreadEvent}
+   * and {@link useMainThreadEvents}.
    *
    * @public
    */
@@ -156,9 +162,10 @@ export class MainThreadCallable<F extends (...args: any[]) => any = (...args: un
 
 /**
  * Register a consumer-authored main-thread function as a lifecycle-managed
- * main-thread callable.
+ * main-thread event function — the main-thread counterpart of React's
+ * `useEffectEvent`.
  *
- * The returned {@link MainThreadCallable} handle is serializable and may be
+ * The returned {@link MainThreadEvent} handle is serializable and may be
  * embedded in objects or arrays passed to main thread functions. Wherever a
  * main thread function receives the handle (as a captured value or as a
  * parameter, at any nesting depth), it resolves to a stable main-thread
@@ -179,10 +186,10 @@ export class MainThreadCallable<F extends (...args: any[]) => any = (...args: un
  * @example
  *
  * ```tsx
- * import { useMainThreadCallable } from '@lynx-js/react'
+ * import { useMainThreadEvent } from '@lynx-js/react'
  *
  * function MyMotionComponent(props) {
- *   const transformTemplate = useMainThreadCallable(props.transformTemplate)
+ *   const transformTemplate = useMainThreadEvent(props.transformTemplate)
  *
  *   function updateStyles() {
  *     'main thread'
@@ -196,21 +203,21 @@ export class MainThreadCallable<F extends (...args: any[]) => any = (...args: un
  *
  * @public
  */
-export function useMainThreadCallable<F extends (...args: any[]) => any>(
+export function useMainThreadEvent<F extends (...args: any[]) => any>(
   fn: F | null | undefined,
-): MainThreadCallable<F> | null {
-  const handleRef = useRef<MainThreadCallable<F> | null>(null);
+): MainThreadEvent<F> | null {
+  const handleRef = useRef<MainThreadEvent<F> | null>(null);
 
   let mainThreadFn: F | null = fn ?? null;
   if (mainThreadFn !== null && !isMainThreadFunction(mainThreadFn)) {
-    reportInvalidMainThreadCallable('useMainThreadCallable', mainThreadFn);
+    reportInvalidMainThreadEvent('useMainThreadEvent', mainThreadFn);
     mainThreadFn = null;
   }
 
   if (mainThreadFn === null) {
     handleRef.current?._clear();
   } else if (handleRef.current === null) {
-    handleRef.current = new MainThreadCallable(mainThreadFn);
+    handleRef.current = new MainThreadEvent(mainThreadFn);
   } else {
     handleRef.current._update(mainThreadFn);
   }
@@ -229,20 +236,20 @@ function isPlainObject(value: object): boolean {
   return proto === Object.prototype || proto === null;
 }
 
-function transportNestedCallables(
+function transportNestedEvents(
   value: unknown,
   path: string,
-  slots: Map<string, MainThreadCallable>,
+  slots: Map<string, MainThreadEvent>,
   seen: Set<string>,
   depth: number,
 ): unknown {
   const limit = 1000;
   if (depth >= limit) {
-    throw new Error('useMainThreadCallables: depth of value exceeds limit of ' + limit + '.');
+    throw new Error('useMainThreadEvents: depth of value exceeds limit of ' + limit + '.');
   }
   if (typeof value !== 'object' || value === null) {
     if (typeof value === 'function') {
-      reportInvalidMainThreadCallable('useMainThreadCallables', value);
+      reportInvalidMainThreadEvent('useMainThreadEvents', value);
     }
     return value;
   }
@@ -251,20 +258,20 @@ function transportNestedCallables(
     let handle = slots.get(path);
     const fn = value as unknown as (...args: unknown[]) => unknown;
     if (handle === undefined) {
-      handle = new MainThreadCallable(fn);
+      handle = new MainThreadEvent(fn);
       slots.set(path, handle);
     } else {
       handle._update(fn);
     }
     return handle;
   }
-  if (value instanceof MainThreadCallable) {
+  if (value instanceof MainThreadEvent) {
     return value;
   }
   if (Array.isArray(value)) {
     let changed = false;
     const result = value.map((item: unknown, index: number) => {
-      const transported = transportNestedCallables(item, path + '.' + index, slots, seen, depth + 1);
+      const transported = transportNestedEvents(item, path + '.' + index, slots, seen, depth + 1);
       changed ||= transported !== item;
       return transported;
     });
@@ -275,7 +282,7 @@ function transportNestedCallables(
     const result: Record<string, unknown> = {};
     for (const key in value) {
       const item = (value as Record<string, unknown>)[key];
-      const transported = transportNestedCallables(item, path + '.' + key, slots, seen, depth + 1);
+      const transported = transportNestedEvents(item, path + '.' + key, slots, seen, depth + 1);
       changed ||= transported !== item;
       result[key] = transported;
     }
@@ -291,7 +298,7 @@ function transportNestedCallables(
  * lifecycle-managed main-thread callable.
  *
  * `value` is walked structurally (plain objects and arrays). Each discovered
- * main-thread function is replaced by a {@link MainThreadCallable} handle
+ * main-thread function is replaced by a {@link MainThreadEvent} handle
  * keyed by its structural path, so the same slot keeps the same callable
  * identity across rerenders while its captured values are re-synchronized.
  * Slots that disappear from `value` are released, and all slots are released
@@ -311,12 +318,12 @@ function transportNestedCallables(
  * @example
  *
  * ```tsx
- * import { useMainThreadCallables, runOnMainThread } from '@lynx-js/react'
+ * import { useMainThreadEvents, runOnMainThread } from '@lynx-js/react'
  *
  * function MyMotionComponent(props) {
  *   // `props.transition` may contain nested easing functions, e.g.
  *   // { duration: 0.8, ease: [(p) => { 'main thread'; return p }, easeOut] }
- *   const transition = useMainThreadCallables(props.transition)
+ *   const transition = useMainThreadEvents(props.transition)
  *
  *   function applyAnimation(options) {
  *     'main thread'
@@ -332,13 +339,13 @@ function transportNestedCallables(
  *
  * @public
  */
-export function useMainThreadCallables<T>(value: T): T {
-  const slotsRef = useRef<Map<string, MainThreadCallable> | null>(null);
+export function useMainThreadEvents<T>(value: T): T {
+  const slotsRef = useRef<Map<string, MainThreadEvent> | null>(null);
   slotsRef.current ??= new Map();
   const slots = slotsRef.current;
 
   const seen = new Set<string>();
-  const result = transportNestedCallables(value, '', slots, seen, 0) as T;
+  const result = transportNestedEvents(value, '', slots, seen, 0) as T;
 
   for (const [path, handle] of slots) {
     if (!seen.has(path)) {

@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 
-import { useMainThreadCallable, useMainThreadCallables } from '@lynx-js/react';
+import { useMainThreadEvent, useMainThreadEvents } from '@lynx-js/react';
 
 import { fireEvent, render, waitSchedule } from '..';
 
@@ -9,7 +9,7 @@ it('easing function arrays nested in a transition object should arrive as callab
   // nested inside a transition object, must be invocable on the main thread.
   let offset = 1;
   const Comp = () => {
-    const transition = useMainThreadCallables({
+    const transition = useMainThreadEvents({
       duration: 0.8,
       ease: [
         (progress) => {
@@ -67,7 +67,7 @@ it('transformTemplate should be a lifecycle-managed main-thread callable', async
   // Mirrors Huxpro/motion#55: a consumer callback composes custom transform
   // text around the generated transform on the main thread.
   const Comp = ({ y }) => {
-    const transformTemplate = useMainThreadCallable(({ x }, generated) => {
+    const transformTemplate = useMainThreadEvent(({ x }, generated) => {
       'main thread';
       return `translateY(${y}px) ${generated}`.replace('_X_', String(x));
     });
@@ -105,7 +105,7 @@ it('a retained main-thread callable should stay stable while observing fresh cap
   // realized function once; later renders must update what it computes.
   let scale = 2;
   const Comp = () => {
-    const ease = useMainThreadCallable((progress) => {
+    const ease = useMainThreadEvent((progress) => {
       'main thread';
       return progress * scale;
     });
@@ -144,7 +144,7 @@ it('a retained main-thread callable should stay stable while observing fresh cap
 
 it('callables should be released on unmount', async () => {
   const Child = () => {
-    const ease = useMainThreadCallables({
+    const ease = useMainThreadEvents({
       ease: [(progress) => {
         'main thread';
         return progress;
@@ -188,7 +188,7 @@ it('callables should be released on unmount', async () => {
   // and throws in development.
   lynxTestingEnv.switchToMainThread();
   expect(() => globalThis.unmountEase(1)).toThrowError(
-    /MainThreadCallable: callable \d+ is not registered/,
+    /MainThreadEvent: event \d+ is not registered/,
   );
   lynxTestingEnv.switchToBackgroundThread();
   delete globalThis.unmountEase;

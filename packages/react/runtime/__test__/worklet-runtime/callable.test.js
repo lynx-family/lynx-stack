@@ -8,7 +8,7 @@ import { updateCallableCtxChanges } from '../../src/worklet-runtime/callable';
 import { initEventListeners } from '../../src/worklet-runtime/listeners';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
-describe('MainThreadCallable', () => {
+describe('main-thread callable transport', () => {
   beforeEach(() => {
     globalThis.SystemInfo = {
       lynxSdkVersion: '2.16',
@@ -127,7 +127,7 @@ describe('MainThreadCallable', () => {
     expect(retained()).toBe(1);
     updateCallableCtxChanges([[1, null]]);
     expect(() => retained()).toThrowError(
-      'MainThreadCallable: callable 1 is not registered. It may have been released on unmount.',
+      'MainThreadEvent: event 1 is not registered. It may have been released on unmount.',
     );
   });
 
@@ -159,7 +159,7 @@ describe('MainThreadCallable', () => {
     )[1];
     releaseListener({ data: { id: 1 } });
     expect(() => retained()).toThrowError(
-      'MainThreadCallable: callable 1 is not registered. It may have been released on unmount.',
+      'MainThreadEvent: event 1 is not registered. It may have been released on unmount.',
     );
   });
 
@@ -186,7 +186,7 @@ describe('MainThreadCallable', () => {
 
     globalThis.lynxWorkletImpl._callableImpl.clearFirstScreenCallableCtxMap();
     expect(() => retained()).toThrowError(
-      'MainThreadCallable: callable -1 is not registered. It may have been released on unmount.',
+      'MainThreadEvent: event -1 is not registered. It may have been released on unmount.',
     );
   });
 
