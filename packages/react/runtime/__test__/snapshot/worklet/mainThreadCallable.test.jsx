@@ -10,7 +10,7 @@ import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
-import { takeCallableCtxPatch } from '../../../src/snapshot/worklet/callable/callablePool';
+import { takeCallableReleasePatch } from '../../../src/snapshot/worklet/callable/callablePool';
 import { injectUpdateMTCallableCtx } from '../../../src/snapshot/worklet/callable/updateCallableCtx';
 import {
   MainThreadCallable,
@@ -196,6 +196,12 @@ describe('MainThreadCallable in js', () => {
           "data": "[[1,null]]",
         }
       `);
+      // The release must be flushed after the unmounting commit's patch so
+      // main-thread tasks of that commit can still call the callable.
+      const callNames = lynx.getNativeApp().callLepusMethod.mock.calls.map(([name]) => name);
+      expect(callNames.lastIndexOf('rLynxChangeCallableCtx')).toBeGreaterThan(
+        callNames.lastIndexOf('rLynxChange'),
+      );
     }
   });
 
@@ -252,7 +258,7 @@ describe('MainThreadCallable in js', () => {
     globalEnvManager.switchToBackground();
     const callable = new MainThreadCallable({ _wkltId: '835d:test:1' });
     callable.release();
-    expect(takeCallableCtxPatch()).toEqual([]);
+    expect(takeCallableReleasePatch()).toEqual([]);
   });
 
   it('should not stage anything when the sdk version is too low', () => {
@@ -282,7 +288,7 @@ describe('MainThreadCallable in js', () => {
     callable.release();
     callable._update({ _wkltId: '835d:test:1', _c: { x: 1 } });
     callable._clear();
-    expect(takeCallableCtxPatch()).toMatchInlineSnapshot(`
+    expect(takeCallableReleasePatch()).toMatchInlineSnapshot(`
       [
         [
           1,

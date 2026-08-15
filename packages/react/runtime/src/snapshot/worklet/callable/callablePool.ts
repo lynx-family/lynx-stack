@@ -23,9 +23,28 @@ export function addCallableCtxPatch(id: number, ctx: Worklet | null): void {
 }
 
 /**
+ * Take the staged ctx updates. Releases (`null` ctxs) are taken separately by
+ * {@link takeCallableReleasePatch} so they can be flushed after the commit's
+ * main-thread tasks: a task scheduled in the unmounting commit (e.g. stopping
+ * an animation) may still legitimately call the callable.
+ *
  * @internal
  */
-export function takeCallableCtxPatch(): MainThreadCallableCtxPatch {
+export function takeCallableCtxUpdatePatch(): MainThreadCallableCtxPatch {
+  const res: MainThreadCallableCtxPatch = [];
+  for (const [id, ctx] of ctxPatch) {
+    if (ctx !== null) {
+      res.push([id, ctx]);
+      ctxPatch.delete(id);
+    }
+  }
+  return res;
+}
+
+/**
+ * @internal
+ */
+export function takeCallableReleasePatch(): MainThreadCallableCtxPatch {
   const res: MainThreadCallableCtxPatch = Array.from(ctxPatch);
   ctxPatch.clear();
   return res;

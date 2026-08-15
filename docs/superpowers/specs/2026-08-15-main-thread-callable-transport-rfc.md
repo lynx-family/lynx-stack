@@ -134,7 +134,7 @@ GC:       destruction observer dispatches releaseMainThreadCallable (fallback fo
           handles that never reached a cleanup, mirroring MainThreadRef)
 ```
 
-- Updates and releases travel in **one ordered channel** (a new `LifecycleConstant.updateMTCallableCtx`, flushed exactly where `updateMTRefInitValue` is flushed today: `commit.ts` and `tt.ts`), so a release can never be overtaken by a stale update from the same thread.
+- Updates and releases travel in **one ordered channel** (a new `LifecycleConstant.updateMTCallableCtx`), but at different points of the commit: **updates flush before the commit's patch update** so main-thread tasks scheduled by the same commit observe fresh ctxs, while **releases flush after it** so those same tasks can still call the callable. This split is load-bearing: an unmounting Motion component stops its animations through a `runOnMainThread` task in the unmounting commit, and stopping an animation samples one final frame through the consumer easing — releasing before the patch would tear the easing out from under that final sample.
 - Every staged ctx passes through `onPostWorkletCtx` first, so nested `runOnBackground` handles get their `_execId` and background-function lifecycle exactly like event ctxs. The main-thread registry retains each installed ctx with the `JsFunctionLifecycleManager`, so replaced ctxs release their background exec contexts through the existing `FinalizationRegistry` batching.
 - Redundant pushes are skipped when the serialized ctx is unchanged **and** the ctx carries no `_jsFn` handles (background function identities are not observable in JSON, so ctxs with `_jsFn` always re-push).
 
@@ -172,7 +172,11 @@ Mirrors first-screen `MainThreadRef` behavior: a hook running during main-thread
 3. Motion-shaped verification in `packages/motion`:
    - an easing-array test where two consumer easings with captured values drive `mini`'s `animate` per segment (issue #37's acceptance shape);
    - a `transformTemplate` test producing `translateY(30px) translateX(30px)` from the main-thread style path (issue #55's acceptance string), across rerender (fresh captures) and unmount (release).
-4. Declarative adapter proof on the #3509 stack: forward `transition` through `useMainThreadCallables` and expose `transformTemplate` via `useMainThreadCallable`, running the conformance cases from Huxpro/motion#37 / #55.
+4. Declarative adapter proof on the #3509 stack: forward `transition` through `useMainThreadCallables` and expose `transformTemplate` via `useMainThreadCallable` (composing with upstream `buildTransform` / `transformValue` from `motion-dom`), running the conformance cases from Huxpro/motion#37 / #55:
+   - `transitions/easing-function-array`: both segment callbacks execute, and the element settles at `translateX(42px)`;
+   - `targets/transform-template`: the element renders `translateY(30px) translateX(30px)`.
+
+   Both pass on a branch merging this implementation with #3509 plus an ~50-line adapter wiring (three `useMainThreadCallables` wraps, one `useMainThreadCallable`, and a template-composed `transform` derived value in the style effect).
 
 ## Open questions
 

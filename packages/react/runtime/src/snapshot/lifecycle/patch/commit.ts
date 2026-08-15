@@ -42,7 +42,7 @@ import { hook, isEmptyObject } from '../../../utils.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
-import { sendMTCallableCtxToMainThread } from '../../worklet/callable/updateCallableCtx.js';
+import { sendMTCallableCtxToMainThread, sendMTCallableReleasesToMainThread } from '../../worklet/callable/updateCallableCtx.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
@@ -139,6 +139,7 @@ function replaceCommitHook(): void {
       const patchOptions = takeGlobalPatchOptions();
       if (!snapshotPatch) {
         // before hydration, skip patch
+        sendMTCallableReleasesToMainThread();
         applyQueuedRefs();
         originalPreactCommit?.(vnode, commitQueue);
         return;
@@ -173,6 +174,10 @@ function replaceCommitHook(): void {
           globalCommitTaskMap.delete(commitTaskId);
         }
       });
+
+      // Callable releases are flushed after the patch so this commit's
+      // main-thread tasks can still call the released callables.
+      sendMTCallableReleasesToMainThread();
 
       applyQueuedRefs();
       originalPreactCommit?.(vnode, commitQueue);
