@@ -32,8 +32,8 @@ import {
   hydrate,
 } from '../snapshot/backgroundSnapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot/types.js';
-import { destroyWorklet } from '../worklet/destroy.js';
 import { sendMTCallableCtxToMainThread, sendMTCallableReleasesToMainThread } from '../worklet/callable/updateCallableCtx.js';
+import { destroyWorklet } from '../worklet/destroy.js';
 import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 
 export { runWithForce };
