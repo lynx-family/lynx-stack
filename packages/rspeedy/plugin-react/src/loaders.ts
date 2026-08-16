@@ -4,6 +4,7 @@
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+import type { ReactLoaderOptions } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -58,6 +59,20 @@ function getLoaderOptions(
     directiveInference,
   } = options
 
+  let directiveInferenceOptions: Pick<
+    ReactLoaderOptions,
+    'directiveInference'
+  > = {}
+  if (directiveInference === false) {
+    directiveInferenceOptions = { directiveInference: false }
+  } else if (directiveInference.declarations !== undefined) {
+    directiveInferenceOptions = {
+      directiveInference: {
+        declarations: directiveInference.declarations,
+      },
+    }
+  }
+
   return {
     compat,
     enableRemoveCSSScope,
@@ -67,15 +82,7 @@ function getLoaderOptions(
     engineVersion,
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
-    ...(directiveInference === false
-      ? { directiveInference: false }
-      : directiveInference.declarations === undefined
-      ? {}
-      : {
-        directiveInference: {
-          declarations: directiveInference.declarations,
-        },
-      }),
+    ...directiveInferenceOptions,
     ...isMainThread
       ? {
         enableUiSourceMap,

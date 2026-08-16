@@ -99,6 +99,7 @@ pub struct DirectiveInferenceVisitor {
   modules: BTreeMap<String, DirectiveInferenceModule>,
   imports: FxHashMap<Id, ImportedBinding>,
   collector: Option<DirectiveInferenceCollector>,
+  file_start: u32,
   opted_out: bool,
   config_checked: bool,
 }
@@ -117,6 +118,7 @@ impl DirectiveInferenceVisitor {
       modules,
       imports: Default::default(),
       collector: None,
+      file_start: 0,
       opted_out: false,
       config_checked: false,
     }
@@ -124,6 +126,15 @@ impl DirectiveInferenceVisitor {
 
   pub fn with_collector(mut self, collector: DirectiveInferenceCollector) -> Self {
     self.collector = Some(collector);
+    self
+  }
+
+  /// Normalize recorded spans to file-local, zero-based offsets. Spans are
+  /// global `BytePos` values within the transform's source map; passing the
+  /// source file's `start_pos` here makes `DirectiveInferenceRecord.start`/
+  /// `end` sliceable offsets into the source text.
+  pub fn with_file_start(mut self, file_start: u32) -> Self {
+    self.file_start = file_start;
     self
   }
 
@@ -343,21 +354,22 @@ impl DirectiveInferenceVisitor {
 
     for (index, argument) in call.args.iter_mut().enumerate() {
       let index_key = index.to_string();
-      if let Some(rule) = resolved.declaration.args.get(&index_key).cloned() {
-        let path = format!("args.{index}");
-        if argument.spread.is_some() {
-          self.emit_indirect(argument.span(), resolved, &path, "spread argument");
-        } else {
-          self.apply_rule(&mut argument.expr, &rule, resolved, &path);
-        }
-      }
-      if let Some(rule) = resolved.declaration.args.get("*").cloned() {
-        let path = format!("args.{index}");
-        if argument.spread.is_some() {
-          self.emit_indirect(argument.span(), resolved, &path, "spread argument");
-        } else {
-          self.apply_rule(&mut argument.expr, &rule, resolved, &path);
-        }
+      // An indexed declaration wins over the `*` fallback, mirroring the
+      // JSX prop resolution semantics.
+      let Some(rule) = resolved
+        .declaration
+        .args
+        .get(&index_key)
+        .or_else(|| resolved.declaration.args.get("*"))
+        .cloned()
+      else {
+        continue;
+      };
+      let path = format!("args.{index}");
+      if argument.spread.is_some() {
+        self.emit_indirect(argument.span(), resolved, &path, "spread argument");
+      } else {
+        self.apply_rule(&mut argument.expr, &rule, resolved, &path);
       }
     }
   }
@@ -696,21 +708,19 @@ impl DirectiveInferenceVisitor {
         let span = arrow.span;
         if arrow.body.is_expr() {
           let expression = arrow.body.take().expr().unwrap();
-          arrow.body = Box::new(
-            BlockStmt {
-              span,
-              ctxt: Default::default(),
-              stmts: vec![
-                directive_statement(span),
-                ReturnStmt {
-                  span,
-                  arg: Some(expression),
-                }
-                .into(),
-              ],
-            }
-            .into(),
-          );
+          *arrow.body = BlockStmt {
+            span,
+            ctxt: Default::default(),
+            stmts: vec![
+              directive_statement(span),
+              ReturnStmt {
+                span,
+                arg: Some(expression),
+              }
+              .into(),
+            ],
+          }
+          .into();
           self.record(span, resolved, path);
           true
         } else {
@@ -760,8 +770,8 @@ impl DirectiveInferenceVisitor {
     };
     collector.borrow_mut().push(DirectiveInferenceRecord {
       filename: self.filename.clone(),
-      start: span.lo.0,
-      end: span.hi.0,
+      start: span.lo.0.saturating_sub(self.file_start),
+      end: span.hi.0.saturating_sub(self.file_start),
       package: resolved.module.package.clone(),
       package_version: resolved.module.package_version.clone(),
       manifest: resolved.module.manifest.clone(),
@@ -1073,7 +1083,8 @@ mod tests {
         module.visit_mut_with(&mut resolver(unresolved_mark, top_level_mark, true));
         module.visit_mut_with(
           &mut DirectiveInferenceVisitor::new(config(), "input.tsx".into())
-            .with_collector(collector.clone()),
+            .with_collector(collector.clone())
+            .with_file_start(file.start_pos.0),
         );
         module.visit_mut_with(&mut hygiene());
       });
@@ -1196,6 +1207,23 @@ mod tests {
     let second = transform(source);
     assert_eq!(first, second);
     assert!(first.1.windows(2).all(|pair| pair[0].start < pair[1].start));
+  }
+
+  #[test]
+  fn records_carry_file_local_offsets() {
+    let source = r#"
+      import { consume } from "fake-functions";
+      consume(() => 1);
+      consume(function named() { return 2 });
+    "#;
+    let (_, records) = transform(source);
+    assert_eq!(
+      records
+        .iter()
+        .map(|record| &source[record.start as usize..record.end as usize])
+        .collect::<Vec<_>>(),
+      vec!["() => 1", "function named() { return 2 }"]
+    );
   }
 
   #[test]

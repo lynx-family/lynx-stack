@@ -141,9 +141,9 @@ export interface MotionFactory {
   ): FunctionComponent<MotionComponentProps<Props>>;
 }
 
-type MainThreadComponent<Props> = {
+interface MainThreadComponent<Props> {
   readonly __props?: Props;
-};
+}
 
 /**
  * Source declaration for the generated package directive-inference manifest.

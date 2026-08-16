@@ -107,16 +107,20 @@ describe('native directive inference contract', () => {
   });
 
   it('uses the marker declaration and respects file opt-out', async () => {
-    const marked = await transformReactLynx(
-      `
+    const markedSource = `
         import { mark as tagged } from "fake-receiver";
         const callback = tagged((value) => value);
-      `,
-      options('JS'),
-    );
+      `;
+    const marked = await transformReactLynx(markedSource, options('JS'));
     expect(marked.errors).toEqual([]);
     expect(marked.directiveInferenceRecords).toHaveLength(1);
     expect(marked.directiveInferenceRecords[0]?.path).toBe('marker.0');
+    // Record offsets are file-local and zero-based: they slice the inferred
+    // function literal out of the input source.
+    const record = marked.directiveInferenceRecords[0];
+    expect(markedSource.slice(record.start, record.end)).toBe(
+      '(value) => value',
+    );
     expect(marked.definesForWorklet).toHaveLength(1);
 
     const optedOut = await transformReactLynx(

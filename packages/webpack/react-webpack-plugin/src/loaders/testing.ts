@@ -62,11 +62,13 @@ function testingLoader(
       darkMode: compat.darkMode ?? false,
     }
     : (compat ?? false);
+  // Partial loader contexts (e.g. programmatic testing callers) may not
+  // implement dependency tracking.
   const directiveInferenceConfig = resolveDirectiveInferenceConfig(
     content,
     this.resourcePath,
     directiveInference,
-    dependency => this.addDependency(dependency),
+    dependency => this.addDependency?.(dependency),
   );
   const result = transformReactLynxSync(
     content,

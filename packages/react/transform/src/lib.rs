@@ -488,6 +488,7 @@ fn transform_react_lynx_inner(
   let comments = SingleThreadedComments::default();
   let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
   let fm = cm.new_source_file(FileName::Real(options.filename.clone().into()).into(), code);
+  let directive_inference_file_start = fm.start_pos.0;
 
   let c = Compiler::new(cm.clone());
 
@@ -852,7 +853,8 @@ fn transform_react_lynx_inner(
         Ok(config) => Optional::new(
           visit_mut_pass(
             DirectiveInferenceVisitor::new(config, directive_inference_filename.clone())
-              .with_collector(directive_inference_records.clone()),
+              .with_collector(directive_inference_records.clone())
+              .with_file_start(directive_inference_file_start),
           ),
           true,
         ),
