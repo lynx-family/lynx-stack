@@ -44,14 +44,66 @@ describe('directive-inference package manifests', () => {
     ]);
   });
 
+  test('does not treat regex or JSX text as module declarations', () => {
+    expect(extractStaticModuleSources(
+      'export default /import fake from "regex-export-package"/u;',
+    )).toEqual([]);
+    expect(extractStaticModuleSources(
+      'throw /import fake from "regex-throw-package"/u;',
+    )).toEqual([]);
+    expect(extractStaticModuleSources(
+      'const node = <view>import fake from "jsx-text-package";</view>;',
+    )).toEqual([]);
+  });
+
+  test('supports static TSX imports, attributes, phases, and ASI', () => {
+    expect(extractStaticModuleSources(`
+      import type { Type } from "type-package"
+      import value from "attribute-package" with { type: "json" }
+      import asserted from "assertion-package" assert { type: "json" }
+      import source wasm from "source-phase-package"
+      import defer * as deferred from "defer-phase-package"
+      export { value as renamed } from "export-attribute-package"
+        with { type: "json" }
+      export * from "export-all-package"
+      @sealed
+      class Example {
+        @observe accessor value = <view>content</view>
+      }
+    `)).toEqual([
+      'assertion-package',
+      'attribute-package',
+      'defer-phase-package',
+      'export-all-package',
+      'export-attribute-package',
+      'source-phase-package',
+      'type-package',
+    ]);
+  });
+
+  test('conservatively discovers nothing from unrecoverable source', () => {
+    expect(extractStaticModuleSources(`
+      import first from "first-package";
+      const broken = ;
+      import second from "second-package";
+    `)).toEqual([]);
+  });
+
+  test('conservatively discovers nothing from recovered parse errors', () => {
+    expect(extractStaticModuleSources(`
+      import first from "first-package";
+      import first from "second-package";
+    `)).toEqual([]);
+  });
+
   test('extracts Unicode bindings and cooks module string escapes', () => {
     expect(extractStaticModuleSources(String.raw`
       import π from "unicode-binding";
-      import \u03c0 from "escaped-binding";
+      import \u03c1 from "escaped-binding";
       import { value as 变量 } from "named-unicode";
-      import * as \u{03c0} from "namespace-binding";
+      import * as \u{03c3} from "namespace-binding";
       import 𐐀 from "astral-binding";
-      import \u{10400} from "escaped-astral-binding";
+      import \u{10401} from "escaped-astral-binding";
       export { π as value } from "export-\u0070ackage";
       import escaped from "pk\u0067";
       import escapedHex from "\x70kg-hex";
@@ -221,6 +273,34 @@ continuation";
         exports: {
           consume: { args: { 0: true } },
           Panel: { props: { callback: true } },
+        },
+      }],
+    });
+  });
+
+  test('keeps explicit declarations when source parsing fails', () => {
+    expect(resolveDirectiveInferenceConfig(
+      'const broken = ;',
+      path.join(createProject(), 'src', 'App.tsx'),
+      {
+        declarations: {
+          protocolVersion: 1,
+          modules: [{
+            source: 'configured-package',
+            package: 'configured-package',
+            exports: {
+              consume: { args: { 0: true } },
+            },
+          }],
+        },
+      },
+    )).toEqual({
+      protocolVersion: 1,
+      modules: [{
+        source: 'configured-package',
+        package: 'configured-package',
+        exports: {
+          consume: { args: { 0: true } },
         },
       }],
     });
