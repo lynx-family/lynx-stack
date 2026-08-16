@@ -6,6 +6,8 @@ const envManager = new ElementTemplateEnvManager();
 
 describe('element-template native index wiring', () => {
   const originalNodeEnv = process.env['NODE_ENV'];
+  const originalProfileFlag = globalThis.__PROFILE__;
+  const originalIsProfileRecording = globalThis.lynx.performance.isProfileRecording;
 
   beforeEach(() => {
     vi.resetModules();
@@ -16,6 +18,8 @@ describe('element-template native index wiring', () => {
   afterEach(() => {
     process.env['NODE_ENV'] = originalNodeEnv;
     globalThis.__ALOG_ELEMENT_API__ = undefined;
+    globalThis.__PROFILE__ = originalProfileFlag;
+    globalThis.lynx.performance.isProfileRecording = originalIsProfileRecording;
     vi.resetModules();
     vi.doUnmock('../../../src/element-template/native/main-thread-api.js');
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
@@ -109,10 +113,17 @@ describe('element-template native index wiring', () => {
     expect(initTimingAPI).not.toHaveBeenCalled();
   });
 
-  it('installs background wiring only on background thread', async () => {
+  async function expectBackgroundWiring(
+    compileTimeProfile: boolean,
+    isProfileRecording: boolean,
+    expectedProfileHookCalls: number,
+  ): Promise<void> {
     envManager.resetEnv('background');
     process.env['NODE_ENV'] = 'production';
-    globalThis.lynx.performance.isProfileRecording = vi.fn(() => true);
+    globalThis.__PROFILE__ = compileTimeProfile;
+    globalThis.lynx.performance.isProfileRecording = vi.fn(
+      () => isProfileRecording,
+    );
 
     const injectCalledByNative = vi.fn();
     const installElementTemplatePatchListener = vi.fn();
@@ -192,7 +203,7 @@ describe('element-template native index wiring', () => {
     expect(installElementTemplateHydrationListener).toHaveBeenCalledTimes(1);
     expect(installElementTemplateCommitHook).toHaveBeenCalledTimes(1);
     expect(initTimingAPI).toHaveBeenCalledTimes(1);
-    expect(initProfileHook).toHaveBeenCalledTimes(1);
+    expect(initProfileHook).toHaveBeenCalledTimes(expectedProfileHookCalls);
     expect(setupLynxEnv).toHaveBeenCalledTimes(1);
     expect(resetEventStateForRuntime).toHaveBeenCalledTimes(1);
     expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
@@ -211,5 +222,21 @@ describe('element-template native index wiring', () => {
     expect(injectCalledByNative).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();
     expect(installOnMtsDestruction).not.toHaveBeenCalled();
-  });
+  }
+
+  it.each([
+    ['default Web', false, false, 0],
+    ['compile-time profiling', true, false, 1],
+    ['host recording', false, true, 1],
+  ])(
+    'installs background wiring for %s',
+    async (_activation, compileTimeProfile, isProfileRecording, expectedProfileHookCalls) => {
+      expect.hasAssertions();
+      await expectBackgroundWiring(
+        compileTimeProfile,
+        isProfileRecording,
+        expectedProfileHookCalls,
+      );
+    },
+  );
 });
