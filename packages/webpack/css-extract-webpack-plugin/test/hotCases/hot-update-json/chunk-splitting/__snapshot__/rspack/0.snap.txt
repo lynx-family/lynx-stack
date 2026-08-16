@@ -14,10 +14,10 @@
 - Bundle: main3/template.js
 - Bundle: main4.js
 - Bundle: main4/template.js
-- Manifest: index.css.hot-update.json, size: 2470
-- Manifest: main2.css.hot-update.json, size: 2470
-- Manifest: main3.css.hot-update.json, size: 2470
-- Manifest: main4.css.hot-update.json, size: 2470
+- Manifest: index.css.hot-update.json, size: 2502
+- Manifest: main2.css.hot-update.json, size: 2502
+- Manifest: main3.css.hot-update.json, size: 2502
+- Manifest: main4.css.hot-update.json, size: 2502
 
 ## Manifest
 
@@ -50,6 +50,7 @@
         "enableNativeList": true,
         "enableNewSticky": true,
         "flexBasisZeroPercent": true,
+        "enableGridLanes": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
@@ -213,6 +214,7 @@
         "enableNativeList": true,
         "enableNewSticky": true,
         "flexBasisZeroPercent": true,
+        "enableGridLanes": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
@@ -376,6 +378,7 @@
         "enableNativeList": true,
         "enableNewSticky": true,
         "flexBasisZeroPercent": true,
+        "enableGridLanes": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
@@ -539,6 +542,7 @@
         "enableNativeList": true,
         "enableNewSticky": true,
         "flexBasisZeroPercent": true,
+        "enableGridLanes": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,

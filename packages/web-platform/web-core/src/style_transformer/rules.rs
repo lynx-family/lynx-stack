@@ -344,6 +344,12 @@ mod tests {
   }
 
   #[test]
+  fn test_replace_rule_display_grid_lanes_passes_through() {
+    let result = get_replace_rule_value(&CSSPropertyEnum::Display.into(), "grid-lanes");
+    assert_eq!(result, None);
+  }
+
+  #[test]
   fn test_replace_rule_name_not_match() {
     let result = get_replace_rule_value(&CSSPropertyEnum::Height.into(), "linear");
     assert_eq!(result, None);

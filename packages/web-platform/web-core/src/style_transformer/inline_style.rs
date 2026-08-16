@@ -132,6 +132,13 @@ mod tests {
   }
 
   #[test]
+  fn test_display_grid_lanes_passes_through() {
+    let source = "display:grid-lanes;flow-tolerance:12px;";
+    let result = transform_inline_style_string(source, &TransformerConfig::default());
+    assert_eq!(result, source);
+  }
+
+  #[test]
   fn transform_color_normal() {
     let source = "color:blue;";
     let result = transform_inline_style_string(source, &TransformerConfig::default());

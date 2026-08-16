@@ -16,4 +16,21 @@ import { playwrightConfigCommon } from '@lynx-js/playwright-fixtures';
  */
 export default defineConfig({
   ...playwrightConfigCommon,
+  projects: playwrightConfigCommon.projects?.map(project =>
+    project.name === 'chromium'
+      ? {
+        ...project,
+        use: {
+          ...project.use,
+          launchOptions: {
+            ...project.use?.launchOptions,
+            args: [
+              ...(project.use?.launchOptions?.args ?? []),
+              '--enable-blink-features=CSSGridLanesLayout',
+            ],
+          },
+        },
+      }
+      : project
+  ),
 });
