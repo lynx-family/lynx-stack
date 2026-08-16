@@ -1814,6 +1814,9 @@ importers:
       '@lynx-js/debug-metadata':
         specifier: workspace:*
         version: link:../../tools/debug-metadata
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../motion
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react

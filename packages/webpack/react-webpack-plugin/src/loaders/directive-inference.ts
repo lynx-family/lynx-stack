@@ -54,6 +54,26 @@ interface ParsedStringLiteral {
   value?: string;
 }
 
+interface ParsedCharacter {
+  end: number;
+  value: string;
+}
+
+const IDENTIFIER_START_PATTERN = /^[$_\p{ID_Start}]$/u;
+const IDENTIFIER_CONTINUE_PATTERN = /^[$\u200C\u200D\p{ID_Continue}]$/u;
+const WHITESPACE_PATTERN = /^\s$/u;
+const SIMPLE_STRING_ESCAPES: Readonly<Record<string, string>> = {
+  '"': '"',
+  '\'': '\'',
+  '\\': '\\',
+  b: '\b',
+  f: '\f',
+  n: '\n',
+  r: '\r',
+  t: '\t',
+  v: '\v',
+};
+
 export function extractStaticModuleSources(source: string): string[] {
   const sources = new Set<string>();
   let braceDepth = 0;
@@ -62,6 +82,10 @@ export function extractStaticModuleSources(source: string): string[] {
   let index = 0;
 
   while (index < source.length) {
+    if (index === 0 && source.startsWith('#!')) {
+      index = skipLineComment(source, 2);
+      continue;
+    }
     const character = source[index]!;
     if (isWhitespace(character)) {
       index++;
@@ -90,8 +114,8 @@ export function extractStaticModuleSources(source: string): string[] {
       canStartRegularExpression = false;
       continue;
     }
-    if (isIdentifierStart(character)) {
-      const identifier = readIdentifier(source, index)!;
+    const identifier = readIdentifier(source, index);
+    if (identifier !== undefined) {
       if (braceDepth === 0 && bracketDepth === 0) {
         let declaration: ParsedModuleDeclaration | undefined;
         if (identifier.value === 'import') {
@@ -321,25 +345,89 @@ function readStringLiteral(
     return undefined;
   }
 
-  let escaped = false;
+  let valid = true;
+  let value = '';
   let index = start + 1;
   while (index < source.length) {
     const character = source[index]!;
     if (character === '\\') {
-      escaped = true;
-      index += 2;
+      const escape = readStringEscape(source, index);
+      if (escape.value === undefined) {
+        valid = false;
+      } else {
+        value += escape.value;
+      }
+      index = escape.end;
     } else if (character === quote) {
       return {
         end: index + 1,
-        ...(escaped ? {} : { value: source.slice(start + 1, index) }),
+        ...(valid ? { value } : {}),
       };
-    } else if (character === '\n' || character === '\r') {
+    } else if (
+      character === '\n'
+      || character === '\r'
+      || character === '\u2028'
+      || character === '\u2029'
+    ) {
       return { end: index };
     } else {
-      index++;
+      const codePoint = readCodePoint(source, index)!;
+      value += codePoint.value;
+      index = codePoint.end;
     }
   }
   return { end: source.length };
+}
+
+function readStringEscape(
+  source: string,
+  start: number,
+): ParsedStringLiteral {
+  const character = source[start + 1];
+  if (character === undefined) {
+    return { end: source.length };
+  }
+  if (character === '\n') {
+    return { end: start + 2, value: '' };
+  }
+  if (character === '\r') {
+    return {
+      end: source[start + 2] === '\n' ? start + 3 : start + 2,
+      value: '',
+    };
+  }
+  if (character === '\u2028' || character === '\u2029') {
+    return { end: start + 2, value: '' };
+  }
+
+  const simple = SIMPLE_STRING_ESCAPES[character];
+  if (simple !== undefined) {
+    return { end: start + 2, value: simple };
+  }
+  if (character === '0') {
+    return isDecimalDigit(source[start + 2] ?? '')
+      ? { end: start + 2 }
+      : { end: start + 2, value: '\0' };
+  }
+  if (character === 'x') {
+    const digits = source.slice(start + 2, start + 4);
+    return digits.length === 2
+        && [...digits].every(digit => isHexDigit(digit))
+      ? {
+        end: start + 4,
+        value: String.fromCharCode(Number.parseInt(digits, 16)),
+      }
+      : { end: start + 2 };
+  }
+  if (character === 'u') {
+    return readUnicodeEscape(source, start) ?? { end: start + 2 };
+  }
+  if (isDecimalDigit(character)) {
+    return { end: start + 2 };
+  }
+
+  const codePoint = readCodePoint(source, start + 1)!;
+  return { end: codePoint.end, value: codePoint.value };
 }
 
 function skipBalanced(
@@ -429,11 +517,12 @@ function skipRegularExpression(source: string, start: number): number {
       index++;
     } else if (character === '/' && !inCharacterClass) {
       index++;
-      while (
-        index < source.length
-        && isIdentifierContinue(source[index]!)
-      ) {
-        index++;
+      while (index < source.length) {
+        const flag = readIdentifierCharacter(source, index, false);
+        if (flag === undefined) {
+          break;
+        }
+        index = flag.end;
       }
       return index;
     } else if (character === '\n' || character === '\r') {
@@ -449,54 +538,125 @@ function readIdentifier(
   source: string,
   start: number,
 ): { end: number; value: string } | undefined {
-  if (!isIdentifierStart(source[start])) {
+  const first = readIdentifierCharacter(source, start, true);
+  if (first === undefined) {
     return undefined;
   }
-  let end = start + 1;
-  while (end < source.length && isIdentifierContinue(source[end]!)) {
-    end++;
+  let end = first.end;
+  let value = first.value;
+  while (end < source.length) {
+    const character = readIdentifierCharacter(source, end, false);
+    if (character === undefined) {
+      break;
+    }
+    value += character.value;
+    end = character.end;
   }
-  return { end, value: source.slice(start, end) };
+  return { end, value };
+}
+
+function readIdentifierCharacter(
+  source: string,
+  start: number,
+  first: boolean,
+): ParsedCharacter | undefined {
+  const character = source[start] === '\\'
+    ? readUnicodeEscape(source, start)
+    : readCodePoint(source, start);
+  if (character === undefined) {
+    return undefined;
+  }
+  const pattern = first
+    ? IDENTIFIER_START_PATTERN
+    : IDENTIFIER_CONTINUE_PATTERN;
+  return pattern.test(character.value) ? character : undefined;
+}
+
+function readUnicodeEscape(
+  source: string,
+  start: number,
+): ParsedCharacter | undefined {
+  if (source[start] !== '\\' || source[start + 1] !== 'u') {
+    return undefined;
+  }
+  if (source[start + 2] === '{') {
+    let close = start + 3;
+    while (close < source.length && isHexDigit(source[close]!)) {
+      close++;
+    }
+    if (source[close] !== '}') {
+      return undefined;
+    }
+    const digits = source.slice(start + 3, close);
+    if (
+      digits.length === 0
+      || ![...digits].every(digit => isHexDigit(digit))
+    ) {
+      return undefined;
+    }
+    const codePoint = Number.parseInt(digits, 16);
+    if (codePoint > 0x10_FFFF) {
+      return undefined;
+    }
+    return {
+      end: close + 1,
+      value: String.fromCodePoint(codePoint),
+    };
+  }
+
+  const digits = source.slice(start + 2, start + 6);
+  if (
+    digits.length !== 4
+    || ![...digits].every(digit => isHexDigit(digit))
+  ) {
+    return undefined;
+  }
+  return {
+    end: start + 6,
+    value: String.fromCharCode(Number.parseInt(digits, 16)),
+  };
+}
+
+function readCodePoint(
+  source: string,
+  start: number,
+): ParsedCharacter | undefined {
+  const codePoint = source.codePointAt(start);
+  if (codePoint === undefined) {
+    return undefined;
+  }
+  const value = String.fromCodePoint(codePoint);
+  return { end: start + value.length, value };
 }
 
 function skipNumber(source: string, start: number): number {
   let end = start + 1;
-  while (
-    end < source.length
-    && (
-      isIdentifierContinue(source[end]!)
-      || source[end] === '.'
-    )
-  ) {
-    end++;
+  while (end < source.length) {
+    if (source[end] === '.') {
+      end++;
+      continue;
+    }
+    const character = readIdentifierCharacter(source, end, false);
+    if (character === undefined) {
+      break;
+    }
+    end = character.end;
   }
   return end;
 }
 
 function isWhitespace(character: string): boolean {
-  return character === ' '
-    || character === '\t'
-    || character === '\n'
-    || character === '\r'
-    || character === '\f';
-}
-
-function isIdentifierStart(character: string | undefined): boolean {
-  return character !== undefined
-    && (
-      character === '$'
-      || character === '_'
-      || (character >= 'a' && character <= 'z')
-      || (character >= 'A' && character <= 'Z')
-    );
-}
-
-function isIdentifierContinue(character: string): boolean {
-  return isIdentifierStart(character) || isDecimalDigit(character);
+  return WHITESPACE_PATTERN.test(character);
 }
 
 function isDecimalDigit(character: string): boolean {
   return character >= '0' && character <= '9';
+}
+
+function isHexDigit(character: string): boolean {
+  return isDecimalDigit(character)
+    || (character >= 'a' && character <= 'f')
+    || (character >= 'A' && character <= 'F');
 }
 
 export function resolveDirectiveInferenceConfig(
@@ -676,7 +836,8 @@ function packageSubpath(request: string, packageName: string): string {
 
 function isPackageRequest(request: string): boolean {
   return !request.startsWith('.')
-    && !path.isAbsolute(request)
+    && !path.posix.isAbsolute(request)
+    && !path.win32.isAbsolute(request)
     && !request.includes(':');
 }
 

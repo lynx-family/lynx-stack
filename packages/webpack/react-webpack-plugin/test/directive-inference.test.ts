@@ -44,6 +44,60 @@ describe('directive-inference package manifests', () => {
     ]);
   });
 
+  test('extracts Unicode bindings and cooks module string escapes', () => {
+    expect(extractStaticModuleSources(String.raw`
+      import π from "unicode-binding";
+      import \u03c0 from "escaped-binding";
+      import { value as 变量 } from "named-unicode";
+      import * as \u{03c0} from "namespace-binding";
+      import 𐐀 from "astral-binding";
+      import \u{10400} from "escaped-astral-binding";
+      export { π as value } from "export-\u0070ackage";
+      import escaped from "pk\u0067";
+      import escapedHex from "\x70kg-hex";
+      import escapedBraced from "p\u{00000000000006b}g-braced";
+      import sideEffect from "line\
+continuation";
+    `)).toEqual([
+      'astral-binding',
+      'escaped-astral-binding',
+      'escaped-binding',
+      'export-package',
+      'linecontinuation',
+      'named-unicode',
+      'namespace-binding',
+      'pkg',
+      'pkg-braced',
+      'pkg-hex',
+      'unicode-binding',
+    ]);
+  });
+
+  test('ignores non-static and non-package module-like text', () => {
+    expect(extractStaticModuleSources(
+      String.raw`#!/usr/bin/env -S import value from "hashbang-package"
+      import("dynamic-package");
+      import.meta.resolve("meta-package");
+      const text = 'import value from "string-package"';
+      const template = ` + '`import value from "template-package"`'
+        + String.raw`;
+      const expression = /import value from "regex-package"/u;
+      // import value from "line-comment-package";
+      /* export { value } from "block-comment-package"; */
+      import local from "./local.js";
+      import absolute from "/absolute.js";
+      import windowsAbsolute from "C:\\absolute.js";
+      import uncAbsolute from "\\\\server\\share\\absolute.js";
+      import protocol from "node:path";
+      import cookedLocal from "\u002elocal.js";
+      import cookedAbsolute from "\u002fabsolute.js";
+      import cookedWindowsAbsolute from "C:\u005cabsolute.js";
+      import cookedUncAbsolute from "\u005c\u005cserver\u005cshare\u005cabsolute.js";
+      import cookedProtocol from "node\u003apath";
+    `,
+    )).toEqual([]);
+  });
+
   test('resolves inline and sidecar declarations with provenance', () => {
     const project = createProject();
     writePackage(project, 'inline-package', {
@@ -90,8 +144,8 @@ describe('directive-inference package manifests', () => {
 
     const dependencies: string[] = [];
     const config = resolveDirectiveInferenceConfig(
-      `
-        import { consume as renamed } from "inline-package";
+      String.raw`
+        import { consume as renamed } from "inline-\u0070ackage";
         import { Panel } from "@scope/sidecar/components";
       `,
       path.join(project, 'src', 'App.tsx'),
@@ -289,6 +343,69 @@ describe('directive-inference report', () => {
         collectDirectiveInferenceRecords(modules),
       )
     ).toThrow(/not deterministic across main-thread and background/);
+  });
+
+  test('visits a shared nested module once per inherited layer', () => {
+    const shared = {
+      buildInfo: {
+        [DIRECTIVE_INFERENCE_BUILD_INFO]: [],
+      },
+    };
+    const modules = [
+      {
+        layer: LAYERS.MAIN_THREAD,
+        modules: [
+          shared,
+          {
+            buildInfo: {
+              [DIRECTIVE_INFERENCE_BUILD_INFO]: [first],
+            },
+          },
+        ],
+      },
+      {
+        layer: LAYERS.BACKGROUND,
+        modules: [shared],
+      },
+    ];
+
+    expect(() =>
+      createDirectiveInferenceReport(
+        collectDirectiveInferenceRecords(modules),
+      )
+    ).toThrow(/not deterministic across main-thread and background/);
+  });
+
+  test('terminates cycles once per effective layer', () => {
+    interface TestModule {
+      layer?: string;
+      buildInfo?: Record<string, unknown>;
+      modules?: TestModule[];
+    }
+    const cyclic: TestModule = {
+      buildInfo: {
+        [DIRECTIVE_INFERENCE_BUILD_INFO]: [first],
+      },
+    };
+    cyclic.modules = [cyclic];
+
+    expect(
+      createDirectiveInferenceReport(
+        collectDirectiveInferenceRecords([
+          {
+            layer: LAYERS.MAIN_THREAD,
+            modules: [cyclic],
+          },
+          {
+            layer: LAYERS.BACKGROUND,
+            modules: [cyclic],
+          },
+        ]),
+      ),
+    ).toEqual({
+      protocolVersion: 1,
+      sites: [first],
+    });
   });
 });
 

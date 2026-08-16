@@ -29,18 +29,23 @@ export function collectDirectiveInferenceRecords(
   modules: Iterable<ModuleWithDirectiveInference>,
 ): LayeredRecord[] {
   const records: LayeredRecord[] = [];
-  const visited = new Set<ModuleWithDirectiveInference>();
+  const visited = new Map<ModuleWithDirectiveInference, Set<string>>();
 
   function collect(
     module: ModuleWithDirectiveInference,
     parentLayer: string | undefined,
   ): void {
-    if (visited.has(module)) {
+    const layer = module.layer ?? parentLayer ?? '';
+    const visitedLayers = visited.get(module);
+    if (visitedLayers?.has(layer)) {
       return;
     }
-    visited.add(module);
+    if (visitedLayers === undefined) {
+      visited.set(module, new Set([layer]));
+    } else {
+      visitedLayers.add(layer);
+    }
 
-    const layer = module.layer ?? parentLayer ?? '';
     const values = module.buildInfo?.[DIRECTIVE_INFERENCE_BUILD_INFO];
     if (Array.isArray(values)) {
       records.push({ layer });

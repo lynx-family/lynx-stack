@@ -18,7 +18,7 @@ rstest
 
 describe('directive inference builds', () => {
   for (const lazy of [false, true]) {
-    test(`${lazy ? 'lazy' : 'normal'} dual compilation emits one audited site`, async () => {
+    test(`${lazy ? 'lazy' : 'normal'} dual compilation discovers package manifests`, async () => {
       const { pluginReactLynx } = await import('../src/index.js')
       const output = await fs.mkdtemp(
         path.join(tmpdir(), `rspeedy-directive-inference-${lazy}-`),
@@ -58,16 +58,41 @@ describe('directive inference builds', () => {
           ),
         ) as {
           protocolVersion: number
-          sites: Array<Record<string, unknown>>
+          sites: Record<string, unknown>[]
         }
         expect(report).toEqual({
           protocolVersion: 1,
           sites: [
             expect.objectContaining({
               package: '@lynx-js/react',
+              packageVersion: '0.124.0',
               source: '@lynx-js/react',
               export: 'mainThread',
               path: 'marker.0',
+              manifest: 'directive-inference.json',
+            }),
+            expect.objectContaining({
+              package: '@lynx-js/motion',
+              packageVersion: '0.0.6',
+              source: '@lynx-js/motion',
+              export: 'motion.div',
+              path: 'props.transition.ease.0',
+              manifest: 'directive-inference.json',
+            }),
+            expect.objectContaining({
+              package: '@lynx-js/motion',
+              packageVersion: '0.0.6',
+              source: '@lynx-js/motion',
+              export: 'motion.div',
+              path: 'props.transition.ease.1',
+              manifest: 'directive-inference.json',
+            }),
+            expect.objectContaining({
+              package: '@lynx-js/motion',
+              packageVersion: '0.0.6',
+              source: '@lynx-js/motion',
+              export: 'motion.div',
+              path: 'props.transformTemplate',
               manifest: 'directive-inference.json',
             }),
           ],
