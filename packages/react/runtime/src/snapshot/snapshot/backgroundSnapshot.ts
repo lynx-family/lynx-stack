@@ -10,6 +10,14 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import {
+  getCompactSnapshotChildren,
+  getCompactSnapshotExtraProps,
+  getCompactSnapshotListItemPlatformInfo,
+  getCompactSnapshotSlotIndex,
+  getCompactSnapshotValues,
+} from './compactSnapshot.js';
+import type { CompactSnapshotInstance, CompactSnapshotSerialization } from './compactSnapshot.js';
 import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
@@ -22,7 +30,7 @@ import { snapshotCreatorMap } from './snapshot.js';
 import { snapshotCreatorRuntime } from './snapshotCreatorMap.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
-import type { SerializedSnapshotInstance } from './types.js';
+import type { SerializedSnapshotInstance, SnapshotType } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { globalPipelineOptions } from '../../core/performance.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
@@ -519,9 +527,44 @@ export class BackgroundSnapshotInstance {
   }
 }
 
-export function hydrate(
-  before: SerializedSnapshotInstance,
+interface SerializedSnapshotReader<Node> {
+  id(node: Node): number;
+  type(node: Node): SnapshotType;
+  values(node: Node): unknown[] | undefined;
+  listItemPlatformInfo(node: Node): unknown;
+  extraProps(node: Node): Record<string, unknown> | undefined;
+  children(node: Node): Node[];
+  slotIndex(node: Node): number;
+}
+
+const legacySnapshotReader: SerializedSnapshotReader<SerializedSnapshotInstance> = {
+  id: node => node.id,
+  type: node => node.type,
+  values: node => node.values,
+  listItemPlatformInfo: node => node.__listItemPlatformInfo,
+  extraProps: node => node.extraProps,
+  children: node => node.children ?? [],
+  slotIndex: node => node.slotIndex ?? 0,
+};
+
+function compactSnapshotReader(
+  typeDictionary: SnapshotType[],
+): SerializedSnapshotReader<CompactSnapshotInstance> {
+  return {
+    id: node => node[0],
+    type: node => typeDictionary[node[1]]!,
+    values: getCompactSnapshotValues,
+    listItemPlatformInfo: getCompactSnapshotListItemPlatformInfo,
+    extraProps: getCompactSnapshotExtraProps,
+    children: getCompactSnapshotChildren,
+    slotIndex: getCompactSnapshotSlotIndex,
+  };
+}
+
+function hydrateSnapshot<Node>(
+  before: Node,
   after: BackgroundSnapshotInstance,
+  reader: SerializedSnapshotReader<Node>,
 ): SnapshotPatch {
   const shouldProfile = typeof __PROFILE__ !== 'undefined' && __PROFILE__;
   if (shouldProfile) {
@@ -531,15 +574,17 @@ export function hydrate(
     initGlobalSnapshotPatch();
 
     const helper = (
-      before: SerializedSnapshotInstance,
+      before: Node,
       after: BackgroundSnapshotInstance,
     ) => {
-      hydrationMap.set(after.__id, before.id);
-      backgroundSnapshotInstanceManager.updateId(after.__id, before.id);
+      const beforeId = reader.id(before);
+      hydrationMap.set(after.__id, beforeId);
+      backgroundSnapshotInstanceManager.updateId(after.__id, beforeId);
+      const beforeValues = reader.values(before);
       // handle value by index
       after.__values?.forEach((value: unknown, index) => {
         // render with different root would cause different values length
-        const old: unknown = before.values?.[index];
+        const old: unknown = beforeValues?.[index];
 
         if (value) {
           if (typeof value === 'object') {
@@ -608,10 +653,11 @@ export function hydrate(
       });
 
       // handle extraProps as attributes and set by key
+      const beforeExtraProps = reader.extraProps(before);
       if (after.__extraProps) {
         for (const key in after.__extraProps) {
           const value = after.__extraProps[key];
-          const old = before.extraProps?.[key];
+          const old = beforeExtraProps?.[key];
           if (!isDirectOrDeepEqual(value, old)) {
             if (shouldProfile) {
               profileStart('ReactLynx::hydrate::setAttribute', {
@@ -647,7 +693,7 @@ export function hydrate(
 
       const { slot } = after.__snapshot_def;
 
-      const beforeChildNodes = before.children ?? [];
+      const beforeChildNodes = reader.children(before);
       const afterChildNodes = after.childNodes;
 
       if (!slot) {
@@ -656,18 +702,20 @@ export function hydrate(
 
       // Hoisted out of the loop: none of this depends on the slot entry.
       const diffChildren = (
-        filteredBeforeChildNodes: SerializedSnapshotInstance[],
+        filteredBeforeChildNodes: Node[],
         filteredAfterChildNodes: BackgroundSnapshotInstance[],
         isListHasItemKey: boolean,
       ) => {
         const diffResult = diffArrayLepus(
           filteredBeforeChildNodes,
           filteredAfterChildNodes,
-          (a, b) => a.type === b.type,
+          (a, b) => reader.type(a) === b.type,
           (a, b) => {
             helper(a, b);
           },
           isListHasItemKey,
+          node => reader.type(node),
+          node => reader.listItemPlatformInfo(node) as PlatformInfo | undefined,
         );
         diffArrayAction(
           filteredBeforeChildNodes,
@@ -683,29 +731,30 @@ export function hydrate(
               });
             }
             try {
-              reconstructInstanceTree([node], before.id, target?.id);
+              reconstructInstanceTree([node], beforeId, target && reader.id(target));
             } finally {
               if (shouldProfile) {
                 profileEnd();
               }
             }
-            return undefined as unknown as SerializedSnapshotInstance;
+            return undefined as unknown as Node;
           },
           node => {
+            const nodeId = reader.id(node);
             if (shouldProfile) {
               profileStart('ReactLynx::hydrate::removeChild', {
                 args: {
-                  id: String(node.id),
-                  snapshotType: String(node.type),
-                  source: getSnapshotVNodeSource(node.id) ?? '',
-                  parentId: String(before.id),
+                  id: String(nodeId),
+                  snapshotType: String(reader.type(node)),
+                  source: getSnapshotVNodeSource(nodeId) ?? '',
+                  parentId: String(beforeId),
                 },
               });
               try {
                 __globalSnapshotPatch!.push(
                   SnapshotOperation.RemoveChild,
-                  before.id,
-                  node.id,
+                  beforeId,
+                  nodeId,
                 );
               } finally {
                 profileEnd();
@@ -713,30 +762,32 @@ export function hydrate(
             } else {
               __globalSnapshotPatch!.push(
                 SnapshotOperation.RemoveChild,
-                before.id,
-                node.id,
+                beforeId,
+                nodeId,
               );
             }
           },
           (node, target) => {
+            const nodeId = reader.id(node);
+            const targetId = target && reader.id(target);
             // changedList.push([SnapshotOperation.RemoveChild, before.id, node.id]);
             if (shouldProfile) {
               profileStart('ReactLynx::hydrate::insertBefore', {
                 args: {
-                  id: String(node.id),
-                  snapshotType: String(node.type),
-                  source: getSnapshotVNodeSource(node.id) ?? '',
-                  parentId: String(before.id),
-                  targetId: String(target?.id ?? ''),
+                  id: String(nodeId),
+                  snapshotType: String(reader.type(node)),
+                  source: getSnapshotVNodeSource(nodeId) ?? '',
+                  parentId: String(beforeId),
+                  targetId: String(targetId ?? ''),
                 },
               });
               try {
                 __globalSnapshotPatch!.push(
                   SnapshotOperation.InsertBefore,
-                  before.id,
-                  node.id,
-                  target?.id,
-                  node.slotIndex ?? 0,
+                  beforeId,
+                  nodeId,
+                  targetId,
+                  reader.slotIndex(node),
                 );
               } finally {
                 profileEnd();
@@ -744,10 +795,10 @@ export function hydrate(
             } else {
               __globalSnapshotPatch!.push(
                 SnapshotOperation.InsertBefore,
-                before.id,
-                node.id,
-                target?.id,
-                node.slotIndex ?? 0,
+                beforeId,
+                nodeId,
+                targetId,
+                reader.slotIndex(node),
               );
             }
           },
@@ -769,7 +820,7 @@ export function hydrate(
             let filteredBeforeChildNodes = beforeChildNodes;
             let filteredAfterChildNodes = afterChildNodes;
             if (type === DynamicPartType.SlotV2) {
-              filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
+              filteredBeforeChildNodes = beforeChildNodes.filter(v => reader.slotIndex(v) === index);
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
             }
 
@@ -780,7 +831,7 @@ export function hydrate(
             if (length === filteredAfterChildNodes.length) {
               let samePairwise = true;
               for (let i = 0; i < length; i++) {
-                if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
+                if (reader.type(filteredBeforeChildNodes[i]!) !== filteredAfterChildNodes[i]!.type) {
                   samePairwise = false;
                   break;
                 }
@@ -801,7 +852,7 @@ export function hydrate(
             let filteredBeforeChildNodes = beforeChildNodes;
             let filteredAfterChildNodes = afterChildNodes;
             if (type === DynamicPartType.ListSlotV2) {
-              filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
+              filteredBeforeChildNodes = beforeChildNodes.filter(v => reader.slotIndex(v) === index);
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
             }
 
@@ -824,4 +875,18 @@ export function hydrate(
       profileEnd();
     }
   }
+}
+
+export function hydrate(
+  before: SerializedSnapshotInstance,
+  after: BackgroundSnapshotInstance,
+): SnapshotPatch {
+  return hydrateSnapshot(before, after, legacySnapshotReader);
+}
+
+export function hydrateCompact(
+  serialization: CompactSnapshotSerialization,
+  after: BackgroundSnapshotInstance,
+): SnapshotPatch {
+  return hydrateSnapshot(serialization[2], after, compactSnapshotReader(serialization[1]));
 }

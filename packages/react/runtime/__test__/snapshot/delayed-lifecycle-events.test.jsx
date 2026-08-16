@@ -31,7 +31,7 @@ describe('delayedLifecycleEvents', () => {
             "rLynxFirstScreen",
             {
               "firstScreenEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_1"}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_1"],[-1,0,8,[[-2,1,0]]]]",
             },
           ],
         ],
@@ -44,7 +44,7 @@ describe('delayedLifecycleEvents', () => {
           "rLynxFirstScreen",
           {
             "firstScreenEventIdSwap": {},
-            "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_1"}]}",
+            "root": "[1,["root","__snapshot_a94a8_test_1"],[-1,0,8,[[-2,1,0]]]]",
           },
         ],
       ]
