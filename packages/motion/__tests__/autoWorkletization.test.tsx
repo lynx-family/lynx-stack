@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { act, render } from '@lynx-js/react/testing-library';
+import { act, render, waitSchedule } from '@lynx-js/react/testing-library';
 import { motion } from '@lynx-js/motion';
 
 import { ElementCompt } from '../src/polyfill/element.js';
@@ -85,5 +85,48 @@ describe('zero-directive Motion conformance', () => {
     expect(getByTestId('box').getAttribute('style')).toBe(
       'transform: translateY(30px) translateX(30px);',
     );
+  });
+
+  test('keeps a zero-directive transformTemplate fresh and releases it', async () => {
+    const getCallableCtxCount = () => {
+      lynxTestingEnv.switchToMainThread();
+      const count = Object.keys(
+        globalThis.lynxWorkletImpl._callableImpl._callableCtxMap,
+      ).length;
+      lynxTestingEnv.switchToBackgroundThread();
+      return count;
+    };
+    const App = ({ offset }: { offset: number }) => (
+      <motion.div
+        data-testid='box'
+        initial={{ x: 10 }}
+        transformTemplate={({ x }, generated) =>
+          `translateY(${Number.parseFloat(String(x)) + offset}px) ${generated}`}
+      />
+    );
+
+    const { getByTestId, rerender, unmount } = render(
+      <App offset={5} />,
+      { enableMainThread: true, enableBackgroundThread: true },
+    );
+    await waitSchedule();
+
+    expect(getByTestId('box').getAttribute('style')).toBe(
+      'transform: translateY(15px) translateX(10px);',
+    );
+    expect(getCallableCtxCount()).toBe(1);
+
+    rerender(<App offset={25} />);
+    await waitSchedule();
+
+    expect(getByTestId('box').getAttribute('style')).toBe(
+      'transform: translateY(35px) translateX(10px);',
+    );
+    expect(getCallableCtxCount()).toBe(1);
+
+    unmount();
+    await waitSchedule();
+
+    expect(getCallableCtxCount()).toBe(0);
   });
 });

@@ -223,7 +223,7 @@ impl DirectiveInferenceVisitor {
       let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item else {
         continue;
       };
-      if import.type_only {
+      if import.type_only || import.phase == ImportPhase::Source {
         continue;
       }
       let source = import.src.value.to_string_lossy().into_owned();
@@ -965,9 +965,10 @@ fn directive_value(statement: &Stmt) -> Option<&str> {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::sync::{Arc, Mutex};
   use swc_core::{
     common::{
-      errors::{ColorConfig, Handler},
+      errors::{DiagnosticBuilder, Emitter as DiagnosticEmitter, Handler},
       sync::Lrc,
       FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
     },
@@ -1000,6 +1001,16 @@ mod tests {
             },
             "mark": { "marker": true }
           }
+        },
+        {
+          "source": "phase-functions",
+          "package": "phase-functions",
+          "packageVersion": "1.0.0",
+          "manifest": "phase-functions/package.json#protocol",
+          "exports": {
+            "default": { "args": { "0": true } },
+            "namespace.consume": { "args": { "0": true } }
+          }
         }
       ]
     }))
@@ -1007,12 +1018,44 @@ mod tests {
   }
 
   fn transform(source: &str) -> (String, Vec<DirectiveInferenceRecord>) {
+    let (output, records, diagnostics) = transform_with_diagnostics(source);
+    assert!(
+      diagnostics.is_empty(),
+      "unexpected transform diagnostics: {diagnostics:?}"
+    );
+    (output, records)
+  }
+
+  fn transform_with_diagnostics(
+    source: &str,
+  ) -> (String, Vec<DirectiveInferenceRecord>, Vec<String>) {
+    struct DiagnosticCollector {
+      messages: Arc<Mutex<Vec<String>>>,
+    }
+
+    impl DiagnosticEmitter for DiagnosticCollector {
+      fn emit(&mut self, diagnostic: &mut DiagnosticBuilder<'_>) {
+        self
+          .messages
+          .lock()
+          .unwrap()
+          .push(diagnostic.message().to_string());
+      }
+    }
+
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
     let file = cm.new_source_file(
       FileName::Custom("input.tsx".into()).into(),
       source.to_string(),
     );
-    let handler = Handler::with_tty_emitter(ColorConfig::Never, false, false, Some(cm.clone()));
+    let diagnostics = Arc::new(Mutex::new(vec![]));
+    let handler = Handler::with_emitter(
+      true,
+      false,
+      Box::new(DiagnosticCollector {
+        messages: diagnostics.clone(),
+      }),
+    );
     let mut parser = Parser::new(
       Syntax::Typescript(TsSyntax {
         tsx: true,
@@ -1046,9 +1089,11 @@ mod tests {
       };
       emitter.emit_module(&module).unwrap();
     }
+    let diagnostics = diagnostics.lock().unwrap().clone();
     (
       String::from_utf8(output).unwrap(),
       take_sorted_records(&collector),
+      diagnostics,
     )
   }
 
@@ -1151,5 +1196,30 @@ mod tests {
     let second = transform(source);
     assert_eq!(first, second);
     assert!(first.1.windows(2).all(|pair| pair[0].start < pair[1].start));
+  }
+
+  #[test]
+  fn respects_static_import_phases() {
+    let (source_output, source_records, source_diagnostics) = transform_with_diagnostics(
+      r#"
+        import source receiver from "phase-functions";
+        receiver(() => 1);
+      "#,
+    );
+    assert!(!source_output.contains("\"main thread\""));
+    assert!(source_records.is_empty());
+    assert!(source_diagnostics.is_empty());
+
+    let (defer_output, defer_records, defer_diagnostics) = transform_with_diagnostics(
+      r#"
+        import defer * as functions from "phase-functions";
+        functions.namespace.consume(() => 2);
+      "#,
+    );
+    assert_eq!(defer_output.matches("\"main thread\"").count(), 1);
+    assert_eq!(defer_records.len(), 1);
+    assert_eq!(defer_records[0].export, "namespace.consume");
+    assert_eq!(defer_records[0].path, "args.0");
+    assert!(defer_diagnostics.is_empty());
   }
 }
