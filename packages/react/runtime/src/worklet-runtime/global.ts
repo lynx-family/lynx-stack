@@ -12,6 +12,7 @@ import type { RefImpl } from './workletRef.js';
 declare global {
   var lynxWorkletImpl: {
     _workletMap: Record<string, (...args: unknown[]) => unknown>;
+    _resolveWorklet?: (worklet: Worklet) => (...args: unknown[]) => unknown;
     _jsFunctionLifecycleManager?: JsFunctionLifecycleManager;
     // for pre-0.99 compatibility
     _eventDelayImpl: EventDelayImpl;

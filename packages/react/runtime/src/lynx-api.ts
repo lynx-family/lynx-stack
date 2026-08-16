@@ -570,3 +570,5 @@ export {
 } from './snapshot/worklet/callable/mainThreadEvent.js';
 export { MainThreadInstance, useMainThreadInstance } from './snapshot/worklet/callable/mainThreadInstance.js';
 export { useMainThreadEffect } from './snapshot/worklet/callable/mainThreadEffect.js';
+export { defineMainThreadObjectType, useMainThreadObject } from './snapshot/worklet/ref/mainThreadObject.js';
+export type { MainThreadObjectType, MainThreadObjectTypeDefinition } from './snapshot/worklet/ref/mainThreadObject.js';

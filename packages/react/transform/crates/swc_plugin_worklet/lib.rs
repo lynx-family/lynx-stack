@@ -1046,6 +1046,100 @@ function X(event) {
 
   test!(
     module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_preserve_main_thread_objects_in_class_js,
+    r#"
+class App extends Component {
+  value: MotionValue<number>;
+  ref: MainThreadRef<number>;
+  static value: MotionValue<number>;
+
+  onTap() {
+    "main thread";
+    this.value.get();
+    this.value.set(1);
+    this.value?.get();
+    this.value["get"]();
+    return this.ref.current;
+  }
+
+  onMove = () => {
+    "main thread";
+    return this.value.get();
+  };
+
+  static onStatic() {
+    "main thread";
+    return this.value.get();
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_preserve_main_thread_objects_in_class_lepus,
+    r#"
+class App extends Component {
+  value: MotionValue<number>;
+  ref: MainThreadRef<number>;
+  static value: MotionValue<number>;
+
+  onTap() {
+    "main thread";
+    this.value.get();
+    this.value.set(1);
+    this.value?.get();
+    this.value["get"]();
+    return this.ref.current;
+  }
+
+  onMove = () => {
+    "main thread";
+    return this.value.get();
+  };
+
+  static onStatic() {
+    "main thread";
+    return this.value.get();
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
     Syntax::Es(EsSyntax {
       ..Default::default()
     }),
@@ -1101,7 +1195,7 @@ function X(event) {
       )),
       hygiene()
     ),
-    should_transform_object_methods_lepus,
+    should_transform_generic_object_methods_lepus,
     r#"
 const valueType = defineType({
   create(initialValue: number) {
@@ -1134,7 +1228,7 @@ const valueType = defineType({
       )),
       hygiene()
     ),
-    should_transform_object_methods_js,
+    should_transform_generic_object_methods_js,
     r#"
 const valueType = defineType({
   create(initialValue: number) {
@@ -1468,6 +1562,78 @@ let X = function (event) {
     "main thread";
     console.log(y1[y2 + 1]);
 }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_object_methods_lepus,
+    r#"
+import { createValue } from './shared.js' with { runtime: "shared" };
+
+const valueType = defineMainThreadObjectType({
+  type: '@test/value',
+  create(initialValue: number) {
+    "main thread";
+    return createValue(initialValue);
+  },
+  dispose(value) {
+    "main thread";
+    value.stop();
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_object_methods_js,
+    r#"
+import { createValue } from './shared.js' with { runtime: "shared" };
+
+const valueType = defineMainThreadObjectType({
+  type: '@test/value',
+  create(initialValue: number) {
+    "main thread";
+    return createValue(initialValue);
+  },
+  dispose(value) {
+    "main thread";
+    value.stop();
+  },
+});
     "#
   );
 

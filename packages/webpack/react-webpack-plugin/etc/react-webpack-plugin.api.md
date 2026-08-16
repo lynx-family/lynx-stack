@@ -13,14 +13,6 @@ import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
 import type { TransformBuiltinAttributeNamesOptions } from '@lynx-js/react/transform';
 
-// Warning: (ae-missing-release-tag) "DirectiveInferenceLoaderOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface DirectiveInferenceLoaderOptions {
-    // (undocumented)
-    declarations?: DirectiveInferenceConfig | undefined;
-}
-
 export { ExtractStrConfig }
 
 // Warning: (ae-missing-release-tag) "LAYERS" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -35,7 +27,9 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
-    directiveInference?: boolean | DirectiveInferenceLoaderOptions | undefined;
+    directiveInference?: boolean | {
+        declarations?: DirectiveInferenceConfig | undefined;
+    } | undefined;
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;

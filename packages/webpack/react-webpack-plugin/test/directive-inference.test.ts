@@ -9,15 +9,15 @@ import path from 'node:path';
 import { afterEach, describe, expect, test } from '@rstest/core';
 
 import {
+  DIRECTIVE_INFERENCE_BUILD_INFO,
   collectDirectiveInferenceRecords,
   createDirectiveInferenceReport,
-  DIRECTIVE_INFERENCE_BUILD_INFO,
 } from '../src/DirectiveInferenceReport.js';
+import { LAYERS } from '../src/layer.js';
 import {
   extractStaticModuleSources,
   resolveDirectiveInferenceConfig,
 } from '../src/loaders/directive-inference.js';
-import { LAYERS } from '../src/layer.js';
 
 const temporaryDirectories: string[] = [];
 
@@ -254,6 +254,33 @@ describe('directive-inference report', () => {
         buildInfo: {
           [DIRECTIVE_INFERENCE_BUILD_INFO]: [],
         },
+      },
+    ];
+
+    expect(() =>
+      createDirectiveInferenceReport(
+        collectDirectiveInferenceRecords(modules),
+      )
+    ).toThrow(/not deterministic across main-thread and background/);
+  });
+
+  test('inherits parent layers and rejects a nested one-layer mismatch', () => {
+    const modules = [
+      {
+        layer: LAYERS.MAIN_THREAD,
+        modules: [{
+          buildInfo: {
+            [DIRECTIVE_INFERENCE_BUILD_INFO]: [first],
+          },
+        }],
+      },
+      {
+        layer: LAYERS.BACKGROUND,
+        modules: [{
+          buildInfo: {
+            [DIRECTIVE_INFERENCE_BUILD_INFO]: [],
+          },
+        }],
       },
     ];
 

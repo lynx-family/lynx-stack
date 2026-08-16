@@ -195,6 +195,9 @@ importers:
 
   benchmark/react:
     dependencies:
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -1383,6 +1386,9 @@ importers:
       tiny-glob:
         specifier: 0.2.9
         version: 0.2.9
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   packages/react/transform/rspack-napi:
     dependencies:

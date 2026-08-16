@@ -34,11 +34,17 @@ export function generateDirectiveInferenceManifest(sourceText, filename = 'manif
     );
   }
 
-  const exports = {};
-  collectExports(root.members, [], exports, declarations, new Set());
+  const exportDeclarations = {};
+  collectExports(
+    root.members,
+    [],
+    exportDeclarations,
+    declarations,
+    new Set(),
+  );
   return {
     protocolVersion: DIRECTIVE_INFERENCE_PROTOCOL_VERSION,
-    exports: sortObject(exports),
+    exports: sortObject(exportDeclarations),
   };
 }
 
@@ -65,7 +71,13 @@ function collectTypeDeclarations(source) {
   return declarations;
 }
 
-function collectExports(members, prefix, exports, declarations, stack) {
+function collectExports(
+  members,
+  prefix,
+  exportDeclarations,
+  declarations,
+  stack,
+) {
   for (const member of members) {
     if (!ts.isPropertySignature(member) || member.type === undefined) {
       continue;
@@ -77,7 +89,7 @@ function collectExports(members, prefix, exports, declarations, stack) {
     const path = [...prefix, name];
     const wrapper = typeReferenceName(member.type);
     if (wrapper === MARKER_WRAPPER) {
-      exports[path.join('.')] = { marker: true };
+      exportDeclarations[path.join('.')] = { marker: true };
       continue;
     }
     if (wrapper === CALL_WRAPPER) {
@@ -92,7 +104,7 @@ function collectExports(members, prefix, exports, declarations, stack) {
           args[index] = rule;
         }
       });
-      exports[path.join('.')] = { args: sortObject(args) };
+      exportDeclarations[path.join('.')] = { args: sortObject(args) };
       continue;
     }
     if (wrapper === COMPONENT_WRAPPER) {
@@ -104,7 +116,7 @@ function collectExports(members, prefix, exports, declarations, stack) {
       if (props === undefined || props === true || typeof props === 'string') {
         throw new Error(`${path.join('.')} component props must be structural.`);
       }
-      exports[path.join('.')] = { props: sortObject(props) };
+      exportDeclarations[path.join('.')] = { props: sortObject(props) };
       continue;
     }
 
@@ -115,7 +127,13 @@ function collectExports(members, prefix, exports, declarations, stack) {
           + `${MARKER_WRAPPER}, or a structural namespace.`,
       );
     }
-    collectExports(nested, path, exports, declarations, stack);
+    collectExports(
+      nested,
+      path,
+      exportDeclarations,
+      declarations,
+      stack,
+    );
   }
 }
 

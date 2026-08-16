@@ -94,6 +94,20 @@ export default defineConfig({
       '019-use-signal-full-attribute-update': [
         './cases/019-use-signal-full-attribute-update/index.tsx',
       ],
+      '020-many-main-thread-refs': [
+        './src/patchProfile.ts',
+        './cases/020-many-main-thread-refs/index.tsx',
+      ],
+      '021-motion-values-500': [
+        './src/motionPolyfill.ts',
+        './src/patchProfile.ts',
+        './cases/021-motion-values-500/index.tsx',
+      ],
+      '022-motion-values-1000': [
+        './src/motionPolyfill.ts',
+        './src/patchProfile.ts',
+        './cases/022-motion-values-1000/index.tsx',
+      ],
     },
   },
   plugins: [

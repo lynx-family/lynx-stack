@@ -31,29 +31,33 @@ export function collectDirectiveInferenceRecords(
   const records: LayeredRecord[] = [];
   const visited = new Set<ModuleWithDirectiveInference>();
 
-  function collect(module: ModuleWithDirectiveInference): void {
+  function collect(
+    module: ModuleWithDirectiveInference,
+    parentLayer: string | undefined,
+  ): void {
     if (visited.has(module)) {
       return;
     }
     visited.add(module);
 
+    const layer = module.layer ?? parentLayer ?? '';
     const values = module.buildInfo?.[DIRECTIVE_INFERENCE_BUILD_INFO];
     if (Array.isArray(values)) {
-      records.push({ layer: module.layer ?? '' });
+      records.push({ layer });
       for (const record of values as DirectiveInferenceRecord[]) {
         records.push({
-          layer: module.layer ?? '',
+          layer,
           record,
         });
       }
     }
     for (const nested of module.modules ?? []) {
-      collect(nested);
+      collect(nested, layer);
     }
   }
 
   for (const module of modules) {
-    collect(module);
+    collect(module, undefined);
   }
   return records;
 }
@@ -63,7 +67,8 @@ export function createDirectiveInferenceReport(
 ): DirectiveInferenceReport {
   const byLayer = new Map<string, Map<string, DirectiveInferenceRecord>>();
   for (const { layer, record } of layeredRecords) {
-    const records = byLayer.get(layer) ?? new Map();
+    const records = byLayer.get(layer)
+      ?? new Map<string, DirectiveInferenceRecord>();
     byLayer.set(layer, records);
     if (record === undefined) {
       continue;
@@ -78,8 +83,10 @@ export function createDirectiveInferenceReport(
     records.set(key, record);
   }
 
-  const mainThread = byLayer.get(LAYERS.MAIN_THREAD) ?? new Map();
-  const background = byLayer.get(LAYERS.BACKGROUND) ?? new Map();
+  const mainThread = byLayer.get(LAYERS.MAIN_THREAD)
+    ?? new Map<string, DirectiveInferenceRecord>();
+  const background = byLayer.get(LAYERS.BACKGROUND)
+    ?? new Map<string, DirectiveInferenceRecord>();
   if (
     byLayer.has(LAYERS.MAIN_THREAD)
     && byLayer.has(LAYERS.BACKGROUND)

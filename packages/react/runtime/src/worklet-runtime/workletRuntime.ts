@@ -26,6 +26,7 @@ import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
+    _resolveWorklet: resolveWorklet,
     _refImpl: initWorkletRef(),
     _callableImpl: initCallable(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
@@ -114,6 +115,13 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
+function resolveWorklet(ctx: Worklet): (...args: unknown[]) => unknown {
+  if (!validateWorklet(ctx) || '_lepusWorkletHash' in ctx) {
+    throw new Error('Cannot resolve an invalid Main Thread Function.');
+  }
+  return transformWorklet(ctx, true);
+}
+
 const workletCache = /*#__PURE__*/ new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
 
 function transformWorklet(ctx: Worklet, isWorklet: true): (...args: unknown[]) => unknown;
@@ -166,6 +174,17 @@ const transformWorkletInner = (
   for (const key in obj) {
     const subObj: ClosureValueType = obj[key];
     if (typeof subObj !== 'object' || subObj === null) {
+      continue;
+    }
+
+    // A MainThreadObject initialization payload is user data. Resolve the
+    // typed descriptor before walking it so payload properties that resemble
+    // worklet metadata remain untouched. Legacy MainThreadRef descriptors do
+    // not carry a protocol version and retain the existing recursive path.
+    if (isMainThreadObjectDescriptor(subObj)) {
+      obj[key] = getFromWorkletRefMap(
+        subObj as unknown as WorkletRefImpl<unknown>,
+      );
       continue;
     }
 
@@ -228,6 +247,17 @@ const transformWorkletInner = (
     }
   }
 };
+
+function isMainThreadObjectDescriptor(
+  value: ClosureValueType,
+): boolean {
+  const descriptor = value as unknown as Partial<WorkletRefImpl<unknown>>;
+  return typeof value === 'object'
+    && value !== null
+    && typeof descriptor._wvid === 'number'
+    && typeof descriptor._type === 'string'
+    && typeof descriptor._mtoVersion === 'number';
+}
 
 function createWeakCtxRef(ctx: object): WeakRef<object> | undefined {
   try {
