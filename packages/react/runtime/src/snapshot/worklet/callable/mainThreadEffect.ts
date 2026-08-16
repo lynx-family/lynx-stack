@@ -4,13 +4,10 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { addCallableCtxPatch, addCallableRunPatch } from './callablePool.js';
-import {
-  allocateCallableIdBG,
-  isMainThreadFunction,
-  reportInvalidMainThreadFunction,
-} from './mainThreadEvent.js';
+import { allocateCallableIdBG, isMainThreadFunction, reportInvalidMainThreadFunction } from './mainThreadEvent.js';
 import { useEffect, useRef } from '../../../core/hooks/react.js';
 import { onPostWorkletCtx } from '../ctx.js';
+import type { MainThreadFn } from '../mainThread.js';
 
 interface EffectState {
   id: number;
@@ -74,7 +71,10 @@ function depsChanged(state: EffectState, deps: readonly unknown[] | undefined): 
  * @public
  */
 export function useMainThreadEffect(
-  fn: (() => void | (() => void)) | null | undefined,
+  fn:
+    | MainThreadFn<[], void | MainThreadFn<[], void>>
+    | null
+    | undefined,
   deps?: readonly unknown[],
 ): void {
   const stateRef = useRef<EffectState | null>(null);

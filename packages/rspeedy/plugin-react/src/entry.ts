@@ -56,6 +56,7 @@ export function applyEntry(
 
     experimental_isLazyBundle,
     experimental_transformBuiltinAttributeNames,
+    directiveInference,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
@@ -325,6 +326,7 @@ export function applyEntry(
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
         experimental_transformBuiltinAttributeNames,
+        directiveInference,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,

@@ -4627,6 +4627,7 @@ dependencies = [
  "once_cell",
  "rustc-hash",
  "serde",
+ "serde_json",
  "sha-1",
  "swc_core",
  "swc_plugins_shared",

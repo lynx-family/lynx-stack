@@ -9,6 +9,7 @@ import {
   DEFINES_FOR_SNAPSHOT_BUILD_INFO,
   DEFINES_FOR_WORKLET_BUILD_INFO,
 } from '../Defines.js';
+import { DIRECTIVE_INFERENCE_BUILD_INFO } from '../DirectiveInferenceReport.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -32,7 +33,7 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
 
   const result = transformReactLynxSync(
     content,
-    getBackgroundTransformOptions.call(this, swcInputSourceMap),
+    getBackgroundTransformOptions.call(this, content, swcInputSourceMap),
   );
 
   if (result.errors.length > 0) {
@@ -101,6 +102,8 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     if (result.definesForWorklet) {
       buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet;
     }
+    buildInfo[DIRECTIVE_INFERENCE_BUILD_INFO] = result.directiveInferenceRecords
+      ?? [];
   }
 
   this.callback(null, result.code, result.map);

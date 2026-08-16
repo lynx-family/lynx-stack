@@ -25,6 +25,7 @@ export const {
   forwardRef,
   isValidElement,
   lazy,
+  mainThread,
   markFirstScreenSyncReady,
   memo,
   root,

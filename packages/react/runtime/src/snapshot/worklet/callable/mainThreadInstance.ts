@@ -17,6 +17,7 @@ import {
 } from './mainThreadEvent.js';
 import { useEffect, useRef } from '../../../core/hooks/react.js';
 import { onPostWorkletCtx } from '../ctx.js';
+import type { MainThreadFn } from '../mainThread.js';
 
 /**
  * An opaque handle for an object created and owned by the main thread.
@@ -163,8 +164,8 @@ export class MainThreadInstance<O = unknown> {
  * @public
  */
 export function useMainThreadInstance<O>(
-  create: (() => O) | null | undefined,
-  dispose?: ((obj: O) => void) | null,
+  create: MainThreadFn<[], O> | null | undefined,
+  dispose?: MainThreadFn<[obj: O], void> | null,
 ): MainThreadInstance<O> | null {
   const handleRef = useRef<MainThreadInstance<O> | null>(null);
 

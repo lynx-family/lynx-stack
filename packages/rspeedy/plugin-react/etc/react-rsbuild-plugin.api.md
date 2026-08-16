@@ -70,6 +70,10 @@ export interface PluginReactLynxOptions {
     debugInfoOutside?: boolean;
     defaultDisplayLinear?: boolean;
     defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
+    directiveInference?: false | {
+        declarations?: DirectiveInferenceConfig;
+        report?: false | string;
+    };
     enableAccessibilityElement?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
@@ -112,5 +116,9 @@ export interface TransformBuiltinAttributeNamesOptions {
     preserve?: ReadonlyArray<string>
     rename?: Readonly<Record<string, string>>
 }
+
+// Warnings were encountered during analysis:
+//
+// lib/pluginReactLynx.d.ts:122:9 - (ae-forgotten-export) The symbol "DirectiveInferenceConfig" needs to be exported by the entry point index.d.ts
 
 ```

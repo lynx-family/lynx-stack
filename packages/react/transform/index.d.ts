@@ -678,6 +678,70 @@ export interface WorkletVisitorConfig {
   runtimePkg: string
 }
 /**
+ * A structural path declaration for generic main-thread directive inference.
+ *
+ * `true` designates one function literal. `'*'` designates direct function
+ * leaves of an object or array literal. `'**'` recursively designates function
+ * leaves. An object declares exact property or array-index paths; `'*'` is a
+ * wildcard key at that level.
+ *
+ * @experimental
+ */
+export type DirectiveInferenceRule = true | '*' | '**' | {
+  readonly [path: string]: DirectiveInferenceRule
+}
+/**
+ * Declares main-thread positions on one imported export.
+ *
+ * @experimental
+ */
+export interface DirectiveInferenceDeclaration {
+  /** Treat argument zero as a compile-time marker wrapper. */
+  marker?: boolean
+  /** Function positions keyed by zero-based argument index. */
+  args?: Readonly<Record<string, DirectiveInferenceRule>>
+  /** Function positions keyed by JSX property name. */
+  props?: Readonly<Record<string, DirectiveInferenceRule>>
+}
+/**
+ * Declarations for one exact module import source.
+ *
+ * @experimental
+ */
+export interface DirectiveInferenceModule {
+  source: string
+  package: string
+  packageVersion?: string
+  manifest?: string
+  exports: Readonly<Record<string, DirectiveInferenceDeclaration>>
+}
+/**
+ * Versioned, API-agnostic directive-inference protocol consumed by the
+ * transform.
+ *
+ * @experimental
+ */
+export interface DirectiveInferenceConfig {
+  protocolVersion: 1
+  modules: ReadonlyArray<DirectiveInferenceModule>
+}
+/**
+ * One inferred source site.
+ *
+ * @experimental
+ */
+export interface DirectiveInferenceRecord {
+  filename: string
+  start: number
+  end: number
+  package: string
+  packageVersion?: string
+  manifest?: string
+  source: string
+  export: string
+  path: string
+}
+/**
  * Serializable rules for transforming builtin element attribute names.
  *
  * Exact entries in `rename` take precedence over `preserve`, followed by the
@@ -734,6 +798,13 @@ export interface TransformNodiffOptions {
   defineDCE: boolean | DefineDceVisitorConfig
   directiveDCE: boolean | DirectiveDceVisitorConfig
   worklet: boolean | WorkletVisitorConfig
+  /**
+   * Generic declaration data used to infer main-thread directives from
+   * import-resolved call and JSX positions.
+   *
+   * @experimental
+   */
+  directiveInference?: DirectiveInferenceConfig
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /**
    * Transform attribute names on Lynx builtin elements.
@@ -765,6 +836,12 @@ export interface TransformNodiffOutput {
   definesForSnapshot?: Array<Define>
   /** @internal */
   definesForWorklet?: Array<Define>
+  /**
+   * Stable, source-ordered record of every inferred directive.
+   *
+   * @experimental
+   */
+  directiveInferenceRecords?: Array<DirectiveInferenceRecord>
 }
 /**
  * @internal

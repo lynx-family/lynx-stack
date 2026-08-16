@@ -55,6 +55,7 @@ function getLoaderOptions(
     experimental_transformBuiltinAttributeNames,
     experimental_isLazyBundle,
     experimental_useElementTemplate,
+    directiveInference,
   } = options
 
   return {
@@ -66,6 +67,15 @@ function getLoaderOptions(
     engineVersion,
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
+    ...(directiveInference === false
+      ? { directiveInference: false }
+      : directiveInference.declarations === undefined
+      ? {}
+      : {
+        directiveInference: {
+          declarations: directiveInference.declarations,
+        },
+      }),
     ...isMainThread
       ? {
         enableUiSourceMap,

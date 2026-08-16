@@ -252,6 +252,29 @@ export interface WorkletVisitorConfig {
   runtimePkg: string;
 }
 
+export type DirectiveInferenceRule = true | '*' | '**' | {
+  readonly [path: string]: DirectiveInferenceRule;
+};
+
+export interface DirectiveInferenceDeclaration {
+  marker?: boolean;
+  args?: Readonly<Record<string, DirectiveInferenceRule>>;
+  props?: Readonly<Record<string, DirectiveInferenceRule>>;
+}
+
+export interface DirectiveInferenceModule {
+  source: string;
+  package: string;
+  packageVersion?: string;
+  manifest?: string;
+  exports: Readonly<Record<string, DirectiveInferenceDeclaration>>;
+}
+
+export interface DirectiveInferenceConfig {
+  protocolVersion: 1;
+  modules: ReadonlyArray<DirectiveInferenceModule>;
+}
+
 export interface ReactLynxTransformOptions {
   /**
    * @internal
@@ -267,6 +290,7 @@ export interface ReactLynxTransformOptions {
   defineDCE: boolean | DefineDceVisitorConfig;
   directiveDCE: boolean | DirectiveDceVisitorConfig;
   worklet: boolean | WorkletVisitorConfig;
+  directiveInference?: DirectiveInferenceConfig;
   dynamicImport?: boolean | DynamicImportVisitorConfig;
   /** @internal */
   inject?: boolean | InjectVisitorConfig;

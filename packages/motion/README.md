@@ -10,6 +10,38 @@ npm install @lynx-js/motion
 
 ## Usage
 
+### Declarative Motion
+
+`motion.div` (a Lynx `view` alias), `motion.view`, `motion.text`, and
+`motion.image` accept declarative targets. Consumer easing functions and
+`transformTemplate` closures use ordinary Motion syntax—no main-thread
+directive is required:
+
+```tsx
+import { motion } from '@lynx-js/motion';
+
+export function Card() {
+  return (
+    <motion.div
+      initial={{ x: 0 }}
+      animate={{ x: [0, 50, 100] }}
+      transition={{
+        duration: 0.8,
+        ease: [(progress) => progress * progress, 'easeOut'],
+      }}
+      transformTemplate={({ x }, generated) =>
+        `translateY(-10px) ${generated}`}
+    />
+  );
+}
+```
+
+The package publishes a generated, versioned directive-inference manifest
+derived from its branded public types. Rspeedy resolves that manifest by import
+identity, compiles direct function literals through the existing main-thread
+directive transform, and emits `directive-inference.json` so inferred sites are
+auditable.
+
 ### Basic Animation
 
 Currently, `@lynx-js/motion` supports imperative animations using the `animate` function on the main thread.

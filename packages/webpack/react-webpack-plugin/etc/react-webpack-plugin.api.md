@@ -7,10 +7,19 @@
 import type { CompatVisitorConfig } from '@lynx-js/react/transform';
 import type { Compiler } from '@rspack/core';
 import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
+import type { DirectiveInferenceConfig } from '@lynx-js/react/transform';
 import { ExtractStrConfig } from '@lynx-js/react/transform';
 import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
 import type { TransformBuiltinAttributeNamesOptions } from '@lynx-js/react/transform';
+
+// Warning: (ae-missing-release-tag) "DirectiveInferenceLoaderOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface DirectiveInferenceLoaderOptions {
+    // (undocumented)
+    declarations?: DirectiveInferenceConfig | undefined;
+}
 
 export { ExtractStrConfig }
 
@@ -26,6 +35,7 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
+    directiveInference?: boolean | DirectiveInferenceLoaderOptions | undefined;
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
@@ -47,6 +57,10 @@ export class ReactWebpackPlugin {
 
 // @public
 export interface ReactWebpackPluginOptions {
+    directiveInference?: false | {
+        declarations?: DirectiveInferenceConfig;
+        report?: false | string;
+    };
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
     entryPairs?: Array<{

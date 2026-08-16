@@ -8,12 +8,15 @@ import type { LoaderContext } from '@rspack/core';
 import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
+  DirectiveInferenceConfig,
   ElementTemplateConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
   TransformBuiltinAttributeNamesOptions,
   TransformNodiffOptions,
 } from '@lynx-js/react/transform';
+
+import { resolveDirectiveInferenceConfig } from './directive-inference.js';
 
 const PLUGIN_NAME = 'react:webpack';
 export const JSX_IMPORT_SOURCE = {
@@ -111,6 +114,21 @@ export interface ReactLoaderOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean | undefined;
+
+  /**
+   * Discover generic main-thread declarations from imported package manifests.
+   *
+   * `false` disables discovery. An object may add explicit declarations,
+   * which are merged with package declarations by exact import source.
+   *
+   * @experimental
+   */
+  directiveInference?:
+    | boolean
+    | {
+      declarations?: DirectiveInferenceConfig | undefined;
+    }
+    | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -119,6 +137,7 @@ function normalizeSlashes(file: string) {
 
 function getCommonOptions(
   this: LoaderContext<ReactLoaderOptions>,
+  source: string,
   inputSourceMap: string | undefined,
 ) {
   const filename = normalizeSlashes(
@@ -135,9 +154,16 @@ function getCommonOptions(
     isExternalBundle,
     engineVersion,
     experimental_useElementTemplate,
+    directiveInference = true,
     defineDCE = { define: {} },
   } = this.getOptions();
   const useElementTemplate = experimental_useElementTemplate === true;
+  const directiveInferenceConfig = resolveDirectiveInferenceConfig(
+    source,
+    this.resourcePath,
+    directiveInference,
+    dependency => this.addDependency(dependency),
+  );
 
   const syntax = (/\.[mc]?tsx?$/.exec(this.resourcePath))
     ? 'typescript'
@@ -238,6 +264,9 @@ function getCommonOptions(
       runtimePkg: RUNTIME_PKG,
       target: 'MIXED',
     },
+    ...(directiveInferenceConfig === undefined
+      ? {}
+      : { directiveInference: directiveInferenceConfig }),
     directiveDCE: false,
     defineDCE,
     ...(experimental_transformBuiltinAttributeNames !== undefined && {
@@ -252,9 +281,10 @@ function getCommonOptions(
 
 export function getMainThreadTransformOptions(
   this: LoaderContext<ReactLoaderOptions>,
+  source: string,
   inputSourceMap: string | undefined,
 ): TransformNodiffOptions {
-  const commonOptions = getCommonOptions.call(this, inputSourceMap);
+  const commonOptions = getCommonOptions.call(this, source, inputSourceMap);
 
   const { shake } = this.getOptions();
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
@@ -347,9 +377,10 @@ export function getMainThreadTransformOptions(
 
 export function getBackgroundTransformOptions(
   this: LoaderContext<ReactLoaderOptions>,
+  source: string,
   inputSourceMap: string | undefined,
 ): TransformNodiffOptions {
-  const commonOptions = getCommonOptions.call(this, inputSourceMap);
+  const commonOptions = getCommonOptions.call(this, source, inputSourceMap);
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
   return {
     ...commonOptions,

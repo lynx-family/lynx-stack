@@ -5,11 +5,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from '@rstest/core';
+import type { LoaderContext } from '@rspack/core';
 
 import {
   getBackgroundTransformOptions,
   getMainThreadTransformOptions,
 } from '../src/loaders/options.js';
+import type { ReactLoaderOptions } from '../src/loaders/options.js';
 
 const transformBuiltinAttributeNames = {
   mode: 'dash-case',
@@ -23,12 +25,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function createLoaderContext(options: Record<string, unknown>) {
   return {
+    addDependency: () => {},
     getOptions: () => options,
     hot: false,
     resourcePath: path.resolve(__dirname, 'fixture.tsx'),
     rootContext: __dirname,
     sourceMap: false,
-  };
+  } as unknown as LoaderContext<ReactLoaderOptions>;
 }
 
 describe('loader options', () => {
@@ -42,10 +45,10 @@ describe('loader options', () => {
       const context = createLoaderContext({ compat });
 
       expect(
-        getMainThreadTransformOptions.call(context, undefined).compat,
+        getMainThreadTransformOptions.call(context, '', undefined).compat,
       ).toHaveProperty('transformLegacyEventAttributeNames', expected);
       expect(
-        getBackgroundTransformOptions.call(context, undefined).compat,
+        getBackgroundTransformOptions.call(context, '', undefined).compat,
       ).toHaveProperty('transformLegacyEventAttributeNames', expected);
     }
   });
@@ -57,11 +60,11 @@ describe('loader options', () => {
     });
 
     expect(
-      getMainThreadTransformOptions.call(context, undefined)
+      getMainThreadTransformOptions.call(context, '', undefined)
         .experimental_transformBuiltinAttributeNames,
     ).toBe(transformBuiltinAttributeNames);
     expect(
-      getBackgroundTransformOptions.call(context, undefined)
+      getBackgroundTransformOptions.call(context, '', undefined)
         .experimental_transformBuiltinAttributeNames,
     ).toBe(transformBuiltinAttributeNames);
   });
@@ -74,6 +77,7 @@ describe('loader options', () => {
 
     const backgroundOptions = getBackgroundTransformOptions.call(
       context,
+      '',
       undefined,
     );
 
@@ -95,10 +99,12 @@ describe('loader options', () => {
 
     const mainThreadOptions = getMainThreadTransformOptions.call(
       context,
+      '',
       undefined,
     );
     const backgroundOptions = getBackgroundTransformOptions.call(
       context,
+      '',
       undefined,
     );
 
@@ -110,11 +116,45 @@ describe('loader options', () => {
       layer: 'react__background',
       runtimePkg: '@lynx-js/react/internal',
     });
-    expect(mainThreadOptions.dynamicImport?.runtimePkg).not.toBe(
+    expect(
+      typeof mainThreadOptions.dynamicImport === 'object'
+        ? mainThreadOptions.dynamicImport.runtimePkg
+        : undefined,
+    ).not.toBe(
       '@lynx-js/react/element-template/internal',
     );
-    expect(backgroundOptions.dynamicImport?.runtimePkg).not.toBe(
+    expect(
+      typeof backgroundOptions.dynamicImport === 'object'
+        ? backgroundOptions.dynamicImport.runtimePkg
+        : undefined,
+    ).not.toBe(
       '@lynx-js/react/element-template/internal',
     );
+  });
+
+  it('passes identical explicit inference declarations to both layers', () => {
+    const declarations = {
+      protocolVersion: 1 as const,
+      modules: [{
+        source: 'fake-package',
+        package: 'fake-package',
+        exports: {
+          consume: { args: { 0: true as const } },
+        },
+      }],
+    };
+    const context = createLoaderContext({
+      directiveInference: { declarations },
+    });
+    const source = 'import { consume } from "fake-package";';
+
+    expect(
+      getMainThreadTransformOptions.call(context, source, undefined)
+        .directiveInference,
+    ).toEqual(declarations);
+    expect(
+      getBackgroundTransformOptions.call(context, source, undefined)
+        .directiveInference,
+    ).toEqual(declarations);
   });
 });

@@ -1,0 +1,29 @@
+{
+  "protocolVersion": 1,
+  "exports": {
+    "mainThread": {
+      "marker": true
+    },
+    "useMainThreadEffect": {
+      "args": {
+        "0": true
+      }
+    },
+    "useMainThreadEvent": {
+      "args": {
+        "0": true
+      }
+    },
+    "useMainThreadEvents": {
+      "args": {
+        "0": "**"
+      }
+    },
+    "useMainThreadInstance": {
+      "args": {
+        "0": true,
+        "1": true
+      }
+    }
+  }
+}

@@ -32,7 +32,10 @@ use swc_plugin_snapshot::{
   JSXTransformer as SnapshotJSXTransformer, JSXTransformerConfig as SnapshotJSXTransformerConfig,
 };
 use swc_plugin_text::TextVisitor;
-use swc_plugin_worklet::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugin_worklet::{
+  directive_inference::{DirectiveInferenceConfig, DirectiveInferenceVisitor},
+  WorkletVisitor, WorkletVisitorConfig,
+};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode::TransformMode,
@@ -71,6 +74,8 @@ pub struct ReactLynxTransformOptions {
 
   pub worklet: Either<bool, WorkletVisitorConfig>,
 
+  pub directive_inference: Option<DirectiveInferenceConfig>,
+
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
 
   /// @internal
@@ -90,6 +95,7 @@ impl Default for ReactLynxTransformOptions {
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
       worklet: Either::A(false),
+      directive_inference: None,
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
     }
@@ -297,6 +303,20 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     },
   );
 
+  let directive_inference_plugin = match options.directive_inference {
+    Some(config) => Optional::new(
+      visit_mut_pass(DirectiveInferenceVisitor::new(config, filename.clone())),
+      true,
+    ),
+    None => Optional::new(
+      visit_mut_pass(DirectiveInferenceVisitor::new(
+        DirectiveInferenceConfig::default(),
+        filename.clone(),
+      )),
+      false,
+    ),
+  };
+
   let worklet_plugin = match options.worklet {
     Either::A(config) => Optional::new(
       visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
@@ -346,7 +366,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
 
   let pass = (
     resolver(metadata.unresolved_mark, top_level_mark, true),
-    dynamic_import_plugin,
+    (directive_inference_plugin, dynamic_import_plugin),
     worklet_plugin,
     css_scope_plugin,
     (

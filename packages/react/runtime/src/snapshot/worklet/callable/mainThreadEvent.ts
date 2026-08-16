@@ -11,6 +11,7 @@ import type { MainThreadCallableImpl, Worklet } from '@lynx-js/react/worklet-run
 import { addCallableCtxPatch } from './callablePool.js';
 import { useEffect, useRef } from '../../../core/hooks/react.js';
 import { onPostWorkletCtx } from '../ctx.js';
+import type { MainThreadDeep, MainThreadFn } from '../mainThread.js';
 
 // Split into two variables for testing purposes
 let lastIdBG = 0;
@@ -227,7 +228,10 @@ export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unkno
  * @public
  */
 export function useMainThreadEvent<F extends (...args: any[]) => any>(
-  fn: F | null | undefined,
+  fn:
+    | (F & MainThreadFn<Parameters<F>, ReturnType<F>>)
+    | null
+    | undefined,
 ): MainThreadEvent<F> | null {
   const handleRef = useRef<MainThreadEvent<F> | null>(null);
 
@@ -362,7 +366,7 @@ function transportNestedEvents(
  *
  * @public
  */
-export function useMainThreadEvents<T>(value: T): T {
+export function useMainThreadEvents<T>(value: MainThreadDeep<T>): T {
   const slotsRef = useRef<Map<string, MainThreadEvent> | null>(null);
   slotsRef.current ??= new Map();
   const slots = slotsRef.current;

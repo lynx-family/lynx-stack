@@ -17,6 +17,7 @@ import { pluginReactAlias } from '@lynx-js/react-alias-rsbuild-plugin'
 import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
+  DirectiveInferenceConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
   TransformBuiltinAttributeNamesOptions,
@@ -157,6 +158,22 @@ export interface PluginReactLynxOptions {
   experimental_transformBuiltinAttributeNames?:
     | boolean
     | TransformBuiltinAttributeNamesOptions
+
+  /**
+   * Discover generic main-thread declarations from imported packages.
+   *
+   * `false` disables inference. An object can merge explicit declarations
+   * with package manifests and configure the emitted audit report filename.
+   *
+   * @defaultValue `{}`
+   * @experimental
+   */
+  directiveInference?:
+    | false
+    | {
+      declarations?: DirectiveInferenceConfig
+      report?: false | string
+    }
 
   /**
    * enableCSSInheritance enables the default inheritance properties.
@@ -417,6 +434,7 @@ export function pluginReactLynx(
     experimental_isLazyBundle: false,
     experimental_transformBuiltinAttributeNames: false,
     experimental_useElementTemplate: false,
+    directiveInference: {},
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }

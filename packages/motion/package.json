@@ -16,6 +16,8 @@
   },
   "license": "Apache-2.0",
   "sideEffects": [
+    "./dist/animation/index.js",
+    "./dist/declarative/mainThreadDependencies.js",
     "./dist/polyfill/shim.js",
     "./dist/mini/polyfill.js"
   ],
@@ -36,14 +38,19 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
+    "directive-inference.json",
     "README.md",
     "NOTICE",
     "LICENSE",
     "CHANGELOG.md"
   ],
+  "lynx": {
+    "directiveInference": "./directive-inference.json"
+  },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build && pnpm run generate:directive-inference",
     "dev": "rslib build --watch",
+    "generate:directive-inference": "node ../react/transform/scripts/generate_directive_inference_manifest.mjs --input ./dist/declarative/types.d.ts --output ./directive-inference.json",
     "test": "vitest run"
   },
   "dependencies": {

@@ -1,4 +1,5 @@
 mod decl_collect;
+pub mod directive_inference;
 mod extract_ident;
 mod gen_stmt;
 mod globals;
@@ -79,6 +80,62 @@ impl Default for WorkletVisitor {
 
 impl VisitMut for WorkletVisitor {
   noop_visit_mut_type!();
+
+  fn visit_mut_prop(&mut self, n: &mut Prop) {
+    let Prop::Method(method) = n else {
+      n.visit_mut_children_with(self);
+      return;
+    };
+    let Some(body) = method.function.body.as_mut() else {
+      n.visit_mut_children_with(self);
+      return;
+    };
+    let Some(worklet_type) = self.check_is_worklet_block(body) else {
+      n.visit_mut_children_with(self);
+      return;
+    };
+
+    let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
+      custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+      shared_identifiers: Some(self.shared_identifiers.clone()),
+    });
+    method.visit_mut_with(&mut collector);
+
+    let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+    let collect_main_thread = self.defines_collector.is_some();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
+    let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
+      self.mode,
+      worklet_type,
+      hash,
+      self.cfg.target,
+      method
+        .key
+        .clone()
+        .ident()
+        .unwrap_or(Ident::dummy().into())
+        .into(),
+      method.function.clone(),
+      &mut collector,
+      false,
+      &mut self.named_imports,
+      self.worklet_runtime_loaded_ident.clone(),
+      collect_main_thread,
+    );
+
+    *n = Prop::KeyValue(KeyValueProp {
+      key: method.key.clone(),
+      value: worklet_object_expr,
+    });
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.saw_shared_identifiers(),
+    );
+    self
+      .stmts_to_insert_at_top_level
+      .push(register_worklet_stmt);
+  }
 
   fn visit_mut_class_member(&mut self, n: &mut ClassMember) {
     match n {
@@ -1023,6 +1080,72 @@ function X(event) {
     y6.m = y7;
     function xxx() {}
 }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_object_methods_lepus,
+    r#"
+const valueType = defineType({
+  create(initialValue: number) {
+    "main thread";
+    return makeValue(initialValue);
+  },
+  dispose(value) {
+    "main thread";
+    value.stop();
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_object_methods_js,
+    r#"
+const valueType = defineType({
+  create(initialValue: number) {
+    "main thread";
+    return makeValue(initialValue);
+  },
+  dispose(value) {
+    "main thread";
+    value.stop();
+  },
+});
     "#
   );
 

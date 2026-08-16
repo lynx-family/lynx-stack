@@ -138,10 +138,23 @@ export interface Lynx {
 }
 
 // @public
+export function mainThread<Args extends readonly unknown[], Return>(fn: (...args: Args) => Return): MainThreadFn<Args, Return>;
+
+// @public
+export type MainThreadDeep<T> = T extends null | undefined ? T : T & {
+    readonly [mainThreadDeepBrand]?: true;
+};
+
+// @public
 export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
     constructor(fn: F);
     release(): void;
 }
+
+// @public
+export type MainThreadFn<Args extends readonly unknown[] = readonly unknown[], Return = unknown> = ((...args: Args) => Return) & {
+    readonly [mainThreadFunctionBrand]?: true;
+};
 
 // @public
 export class MainThreadInstance<O = unknown> {
@@ -220,16 +233,16 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
 
 // @public
-export function useMainThreadEffect(fn: (() => void | (() => void)) | null | undefined, deps?: readonly unknown[]): void;
+export function useMainThreadEffect(fn: MainThreadFn<[], void | MainThreadFn<[], void>> | null | undefined, deps?: readonly unknown[]): void;
 
 // @public
-export function useMainThreadEvent<F extends (...args: any[]) => any>(fn: F | null | undefined): MainThreadEvent<F> | null;
+export function useMainThreadEvent<F extends (...args: any[]) => any>(fn: (F & MainThreadFn<Parameters<F>, ReturnType<F>>) | null | undefined): MainThreadEvent<F> | null;
 
 // @public
-export function useMainThreadEvents<T>(value: T): T;
+export function useMainThreadEvents<T>(value: MainThreadDeep<T>): T;
 
 // @public
-export function useMainThreadInstance<O>(create: (() => O) | null | undefined, dispose?: ((obj: O) => void) | null): MainThreadInstance<O> | null;
+export function useMainThreadInstance<O>(create: MainThreadFn<[], O> | null | undefined, dispose?: MainThreadFn<[obj: O], void> | null): MainThreadInstance<O> | null;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;
