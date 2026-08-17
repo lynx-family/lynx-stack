@@ -3,12 +3,14 @@ import {
   beforeAll,
   beforeEach,
   describe,
+  afterEach,
   expect,
   rstest,
   test,
 } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
+import { __GetElementUniqueID } from '../ts/client/mainthread/elementAPIs/pureElementPAPIs.js';
 import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
@@ -38,6 +40,184 @@ describe('Element APIs', () => {
       true,
       true,
     );
+  });
+  afterEach(() => {
+    mtsBinding.disposeEventListeners();
+  });
+
+  const makePointerEvent = (
+    type: string,
+    {
+      pointerId = 1,
+      pointerType = 'mouse',
+      clientX = 20,
+      clientY = 30,
+      pressure = 0.5,
+    }: {
+      pointerId?: number;
+      pointerType?: string;
+      clientX?: number;
+      clientY?: number;
+      pressure?: number;
+    } = {},
+  ) => {
+    const event = new MouseEvent(type, {
+      bubbles: true,
+      composed: true,
+      clientX,
+      clientY,
+    });
+    Object.defineProperties(event, {
+      pointerId: { value: pointerId },
+      pointerType: { value: pointerType },
+      pressure: { value: pressure },
+      width: { value: 4 },
+      height: { value: 6 },
+    });
+    return event;
+  };
+
+  test('maps a mouse pointer stream to touch events without synthesizing tap', () => {
+    const commonEventHandler = rstest.fn();
+    mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
+      common_event_handler: commonEventHandler,
+    }) as any;
+    for (
+      const eventName of [
+        'touchstart',
+        'touchmove',
+        'touchend',
+        'touchcancel',
+        'tap',
+      ]
+    ) {
+      mtsBinding.addEventListener(eventName);
+    }
+
+    const target = mtsGlobalThis.__CreateView(0);
+    rootDom.appendChild(target);
+    target.dispatchEvent(makePointerEvent('pointerdown', { pointerId: 7 }));
+    document.dispatchEvent(makePointerEvent('pointermove', {
+      pointerId: 7,
+      clientX: 25,
+      clientY: 35,
+    }));
+    document.dispatchEvent(makePointerEvent('pointerup', {
+      pointerId: 7,
+      clientX: 25,
+      clientY: 35,
+      pressure: 0,
+    }));
+
+    expect(commonEventHandler.mock.calls.map(call => call[0].type)).toEqual([
+      'touchstart',
+      'touchmove',
+      'touchend',
+    ]);
+    const [start, move, end] = commonEventHandler.mock.calls.map(
+      call => call[0],
+    );
+    expect(start.touches).toEqual([expect.objectContaining({
+      identifier: 7,
+      pointerType: 'mouse',
+      clientX: 20,
+      clientY: 30,
+      x: 20,
+      y: 30,
+      force: 0.5,
+      radiusX: 2,
+      radiusY: 3,
+    })]);
+    expect(move.changedTouches).toEqual([expect.objectContaining({
+      identifier: 7,
+      clientX: 25,
+      clientY: 35,
+    })]);
+    expect(end.touches).toEqual([]);
+    expect(end.targetTouches).toEqual([]);
+    expect(end.changedTouches).toEqual([expect.objectContaining({
+      identifier: 7,
+    })]);
+    const targetUniqueId = __GetElementUniqueID(target);
+    expect(commonEventHandler.mock.calls.map(call => [...call[1]])).toEqual([
+      [targetUniqueId],
+      [targetUniqueId],
+      [targetUniqueId],
+    ]);
+
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(commonEventHandler.mock.calls.map(call => call[0].type)).toEqual([
+      'touchstart',
+      'touchmove',
+      'touchend',
+      'tap',
+    ]);
+  });
+
+  test('keeps the pointer-down target through pen cancellation', () => {
+    const commonEventHandler = rstest.fn();
+    mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
+      common_event_handler: commonEventHandler,
+    }) as any;
+    for (const eventName of ['touchstart', 'touchmove', 'touchcancel']) {
+      mtsBinding.addEventListener(eventName);
+    }
+
+    const target = mtsGlobalThis.__CreateView(0);
+    rootDom.appendChild(target);
+    target.dispatchEvent(makePointerEvent('pointerdown', {
+      pointerId: 12,
+      pointerType: 'pen',
+    }));
+    target.remove();
+    document.dispatchEvent(makePointerEvent('pointercancel', {
+      pointerId: 12,
+      pointerType: 'pen',
+      pressure: 0,
+    }));
+    document.dispatchEvent(makePointerEvent('pointermove', {
+      pointerId: 12,
+      pointerType: 'pen',
+    }));
+
+    expect(commonEventHandler.mock.calls.map(call => call[0].type)).toEqual([
+      'touchstart',
+      'touchcancel',
+    ]);
+    expect(commonEventHandler.mock.calls[1]![0].changedTouches).toEqual([
+      expect.objectContaining({
+        identifier: 12,
+        pointerType: 'pen',
+      }),
+    ]);
+    expect([...commonEventHandler.mock.calls[1]![1]]).toEqual([
+      __GetElementUniqueID(target),
+    ]);
+  });
+
+  test('ignores touch PointerEvents while accepting the DOM touch event', () => {
+    const commonEventHandler = rstest.fn();
+    mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
+      common_event_handler: commonEventHandler,
+    }) as any;
+    mtsBinding.addEventListener('touchstart');
+
+    const target = mtsGlobalThis.__CreateView(0);
+    rootDom.appendChild(target);
+    target.dispatchEvent(makePointerEvent('pointerdown', {
+      pointerId: 19,
+      pointerType: 'touch',
+    }));
+    expect(commonEventHandler).not.toHaveBeenCalled();
+
+    const touchstart = new Event('touchstart', { bubbles: true }) as any;
+    touchstart.touches = [{ identifier: 19, clientX: 20, clientY: 30 }];
+    touchstart.targetTouches = touchstart.touches;
+    touchstart.changedTouches = touchstart.touches;
+    target.dispatchEvent(touchstart);
+
+    expect(commonEventHandler).toHaveBeenCalledTimes(1);
+    expect(commonEventHandler.mock.calls[0]![0].type).toBe('touchstart');
   });
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {

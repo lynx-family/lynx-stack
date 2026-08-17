@@ -7,6 +7,7 @@ import type {
   RustMainthreadContextBinding,
   CloneableObject,
   MainThreadGlobalThis,
+  MinimalRawEventObject,
 } from '../../../types/index.js';
 import {
   LynxEventNameToW3cCommon,
@@ -28,12 +29,45 @@ export type WASMJSBindingInjectedHandler = {
 };
 
 const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
+const POINTER_DERIVED_TOUCH_EVENTS = new Set([
+  'touchstart',
+  'touchmove',
+  'touchend',
+  'touchcancel',
+]);
+
+type PointerTouch = {
+  identifier: number;
+  clientX: number;
+  clientY: number;
+  pageX: number;
+  pageY: number;
+  screenX: number;
+  screenY: number;
+  force: number;
+  radiusX: number;
+  radiusY: number;
+  rotationAngle: number;
+  pointerType: string;
+};
+
+type ActivePointerTouch = {
+  target: HTMLElement;
+  touch: PointerTouch;
+};
+
+type CommonDOMEvent = MinimalRawEventObject & {
+  bubbles: boolean;
+};
 
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
   #addedEventListeners: Set<string> = new Set();
   #documentEventListeners: Set<string> = new Set();
+  #pointerTouchEventNames: Set<string> = new Set();
+  #activePointerTouches: Map<number, ActivePointerTouch> = new Map();
+  #pointerTouchListenersAdded = false;
   toBeEnabledElement: Set<HTMLElement> = new Set();
   toBeDisabledElement: Set<HTMLElement> = new Set();
 
@@ -211,8 +245,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     }
   }
 
-  #commonEventHandler = (event: Event) => {
-    const target = event.target as HTMLElement;
+  #dispatchCommonEvent(event: CommonDOMEvent, target: HTMLElement) {
     let bubblePath: Uint32Array = new Uint32Array(32);
     let bubblePathLength = 0;
     bubblePath;
@@ -248,10 +281,123 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       eventObject.type,
       event.bubbles,
     );
+  }
+
+  #commonEventHandler = (event: Event) => {
+    this.#dispatchCommonEvent(event, event.target as HTMLElement);
   };
+
+  #toPointerTouch(event: PointerEvent): PointerTouch {
+    return {
+      identifier: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pageX: event.pageX,
+      pageY: event.pageY,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      force: event.pressure,
+      radiusX: event.width / 2,
+      radiusY: event.height / 2,
+      rotationAngle: 0,
+      pointerType: event.pointerType,
+    };
+  }
+
+  #dispatchPointerTouchEvent(
+    eventName: string,
+    pointerEvent: PointerEvent,
+    activePointer: ActivePointerTouch,
+    ended: boolean,
+  ) {
+    if (!this.#pointerTouchEventNames.has(eventName)) return;
+
+    const activeTouches = [...this.#activePointerTouches.values()]
+      .filter(({ touch }) =>
+        !ended || touch.identifier !== pointerEvent.pointerId
+      );
+    const event = {
+      type: eventName,
+      target: activePointer.target,
+      currentTarget: this.lynxViewInstance.rootDom,
+      isTrusted: pointerEvent.isTrusted,
+      timeStamp: pointerEvent.timeStamp,
+      bubbles: true,
+      touches: activeTouches.map(({ touch }) => touch),
+      targetTouches: activeTouches
+        .filter(({ target }) => target === activePointer.target)
+        .map(({ touch }) => touch),
+      changedTouches: [activePointer.touch],
+    } satisfies CommonDOMEvent;
+    this.#dispatchCommonEvent(event, activePointer.target);
+  }
+
+  #handlePointerDown = (event: PointerEvent) => {
+    // Browsers already emit DOM touch events for touch pointers. Bridging those
+    // pointer events as well would deliver every physical touch twice.
+    if (
+      event.pointerType === 'touch' || !(event.target instanceof HTMLElement)
+    ) {
+      return;
+    }
+    const activePointer = {
+      target: event.target,
+      touch: this.#toPointerTouch(event),
+    };
+    this.#activePointerTouches.set(event.pointerId, activePointer);
+    this.#dispatchPointerTouchEvent(
+      'touchstart',
+      event,
+      activePointer,
+      false,
+    );
+  };
+
+  #handlePointerContinuation = (event: PointerEvent) => {
+    const activePointer = this.#activePointerTouches.get(event.pointerId);
+    if (!activePointer) return;
+
+    activePointer.touch = this.#toPointerTouch(event);
+    const eventName = event.type === 'pointermove'
+      ? 'touchmove'
+      : event.type === 'pointerup'
+      ? 'touchend'
+      : 'touchcancel';
+    const ended = eventName === 'touchend' || eventName === 'touchcancel';
+    this.#dispatchPointerTouchEvent(
+      eventName,
+      event,
+      activePointer,
+      ended,
+    );
+    if (ended) {
+      this.#activePointerTouches.delete(event.pointerId);
+    }
+  };
+
+  #enablePointerTouchEvents(eventName: string) {
+    if (!POINTER_DERIVED_TOUCH_EVENTS.has(eventName)) return;
+    this.#pointerTouchEventNames.add(eventName);
+    if (this.#pointerTouchListenersAdded) return;
+
+    this.#pointerTouchListenersAdded = true;
+    this.lynxViewInstance.rootDom.addEventListener(
+      'pointerdown',
+      this.#handlePointerDown as EventListener,
+      { passive: true, capture: true },
+    );
+    for (const eventType of ['pointermove', 'pointerup', 'pointercancel']) {
+      document.addEventListener(
+        eventType,
+        this.#handlePointerContinuation as EventListener,
+        { passive: true, capture: true },
+      );
+    }
+  }
 
   addEventListener(eventName: string) {
     const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
+    this.#enablePointerTouchEvents(w3cEventName);
     if (this.#addedEventListeners.has(w3cEventName)) return;
     this.#addedEventListeners.add(w3cEventName);
     const isDocumentLevel = DOCUMENT_LEVEL_EVENTS.has(w3cEventName);
@@ -291,6 +437,23 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     }
     this.#addedEventListeners.clear();
     this.#documentEventListeners.clear();
+    if (this.#pointerTouchListenersAdded) {
+      this.lynxViewInstance.rootDom.removeEventListener(
+        'pointerdown',
+        this.#handlePointerDown as EventListener,
+        true,
+      );
+      for (const eventType of ['pointermove', 'pointerup', 'pointercancel']) {
+        document.removeEventListener(
+          eventType,
+          this.#handlePointerContinuation as EventListener,
+          true,
+        );
+      }
+    }
+    this.#pointerTouchListenersAdded = false;
+    this.#pointerTouchEventNames.clear();
+    this.#activePointerTouches.clear();
   }
 
   dispose() {

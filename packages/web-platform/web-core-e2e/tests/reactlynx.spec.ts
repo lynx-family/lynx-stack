@@ -714,6 +714,62 @@ test.describe('reactlynx3 tests', () => {
       },
     );
 
+    test('basic-pointer-touch-bridge', async ({ page }) => {
+      await goto(page, 'basic-pointer-touch-bridge');
+      const target = page.locator('#target');
+      await expect(target).toBeVisible();
+      const box = await target.boundingBox();
+      expect(box).not.toBeNull();
+      const x = box!.x + box!.width / 2;
+      const y = box!.y + box!.height / 2;
+
+      await page.mouse.move(x - 10, y);
+      await page.mouse.down();
+      await page.mouse.move(x + 10, y);
+      await page.mouse.up();
+
+      for (const realm of ['bts', 'mts']) {
+        await expect(page.locator(`#${realm}-start`)).toHaveText('1');
+        await expect(page.locator(`#${realm}-move`)).toHaveText('1');
+        await expect(page.locator(`#${realm}-end`)).toHaveText('1');
+        await expect(page.locator(`#${realm}-cancel`)).toHaveText('0');
+      }
+      await expect(page.locator('#tap')).toHaveText('1');
+    });
+
+    test(
+      'basic-pointer-touch-bridge-keeps-touch-single-delivery',
+      async ({ page, browserName, context }) => {
+        test.skip(browserName !== 'chromium', 'not support CDPsession');
+        await goto(page, 'basic-pointer-touch-bridge');
+        const box = await page.locator('#target').boundingBox();
+        expect(box).not.toBeNull();
+        const x = box!.x + box!.width / 2;
+        const y = box!.y + box!.height / 2;
+        const cdpSession = await context.newCDPSession(page);
+
+        await cdpSession.send('Input.dispatchTouchEvent', {
+          type: 'touchStart',
+          touchPoints: [{ x, y }],
+        });
+        await cdpSession.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x: x + 10, y }],
+        });
+        await cdpSession.send('Input.dispatchTouchEvent', {
+          type: 'touchEnd',
+          touchPoints: [{ x: x + 10, y }],
+        });
+
+        for (const realm of ['bts', 'mts']) {
+          await expect(page.locator(`#${realm}-start`)).toHaveText('1');
+          await expect(page.locator(`#${realm}-move`)).toHaveText('1');
+          await expect(page.locator(`#${realm}-end`)).toHaveText('1');
+          await expect(page.locator(`#${realm}-cancel`)).toHaveText('0');
+        }
+      },
+    );
+
     test(
       'basic-mts-bindtap-change-element-background',
       async ({ page }, { title }) => {
