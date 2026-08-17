@@ -59,6 +59,7 @@ async function postA2UIChat(req: Request) {
         messages,
         opts,
         validatedConversation.conversation,
+        req.signal,
       );
       return jsonWithCors(req, {
         ok: true,
@@ -73,6 +74,8 @@ async function postA2UIChat(req: Request) {
       messages,
       opts,
       validatedConversation.conversation,
+      undefined,
+      req.signal,
     );
     return jsonWithCors(req, {
       ...validatedResult,

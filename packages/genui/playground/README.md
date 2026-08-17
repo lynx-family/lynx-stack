@@ -24,6 +24,9 @@ configuration:
 ```bash
 # 2. Start the GenUI server → http://localhost:3060
 GENUI_MODEL_CONFIG_JSON='{"GPT-5.4":{"model":"gpt-5.4","apiKey":"sk-...","baseURL":"https://api.openai.com/v1","api":"responses","default":true}}' \
+  IMG_GEN_ARK_API_KEY='...' \
+  IMG_GEN_ARK_IMAGE_MODEL='doubao-seedream-...' \
+  IMG_GEN_ARK_IMAGE_BASE_URL='https://ark.cn-beijing.volces.com/api/v3' \
   LYNX_USE_PORT=3060 \
   pnpm -C packages/genui/server dev
 ```
@@ -71,14 +74,25 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | Variable                                                       | Purpose                                          | Default             |
 | -------------------------------------------------------------- | ------------------------------------------------ | ------------------- |
 | `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations    | —                   |
+| `IMG_GEN_ARK_API_KEY`                                          | Server-side Volcengine Ark image-generation key  | —                   |
+| `IMG_GEN_ARK_IMAGE_MODEL`                                      | Ark image-generation model/endpoint id           | —                   |
+| `IMG_GEN_ARK_IMAGE_BASE_URL`                                   | Ark image-generation HTTPS API base URL          | —                   |
+| `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)    | `120000`            |
 | `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring          | disabled            |
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS | disabled            |
-| `PEXELS_API_KEY`                                               | Stock-image search in generated UIs              | —                   |
 
 The Create tab loads its model selector from the server's `GET /models`
 endpoint. Provider credentials, upstream model ids, and upstream API URLs
-remain server-only.
+remain server-only. The configured text model must support tool/function calls:
+the A2UI agent invokes its `generate_image` tool and copies the generated Ark
+URL into the final `Image.url` value. One request may invoke the image tool at
+most four times across initial generation and validation repairs. Arbitrary
+image URLs invented by the text model are rejected. `IMG_GEN_ARK_API_KEY`,
+`IMG_GEN_ARK_IMAGE_MODEL`, and `IMG_GEN_ARK_IMAGE_BASE_URL` must all be
+configured explicitly. See the
+[Volcengine Ark image-generation API](https://www.volcengine.com/docs/82379/1541523?lang=zh)
+for model/endpoint setup.
 
 Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
 enabled only when that sidecar is ready. See
