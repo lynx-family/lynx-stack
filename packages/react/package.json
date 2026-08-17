@@ -220,9 +220,6 @@
     "README.md",
     "README.zh.md"
   ],
-  "lynx": {
-    "directiveInference": "./directive-inference.json"
-  },
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "pnpm run generate:directive-inference && rslib build",
@@ -244,5 +241,8 @@
     "@lynx-js/types": {
       "optional": true
     }
+  },
+  "lynx": {
+    "directiveInference": "./directive-inference.json"
   }
 }

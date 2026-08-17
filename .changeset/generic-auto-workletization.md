@@ -1,7 +1,9 @@
 ---
 "@lynx-js/motion": minor
 "@lynx-js/react": minor
+"@lynx-js/react-signals": patch
 "@lynx-js/react-rsbuild-plugin": minor
+"@lynx-js/react-refresh-webpack-plugin": patch
 "@lynx-js/react-webpack-plugin": minor
 ---
 

@@ -44,9 +44,6 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-  "lynx": {
-    "directiveInference": "./directive-inference.json"
-  },
   "scripts": {
     "build": "rslib build && pnpm run generate:directive-inference",
     "dev": "rslib build --watch",
@@ -71,5 +68,8 @@
     "@lynx-js/types": {
       "optional": true
     }
+  },
+  "lynx": {
+    "directiveInference": "./directive-inference.json"
   }
 }
