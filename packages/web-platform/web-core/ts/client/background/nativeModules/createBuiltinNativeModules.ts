@@ -1,16 +1,22 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createLynxClipboardModule } from './createLynxClipboardModule.js';
+import { createLynxStorageModule } from './createLynxStorageModule.js';
 import {
   BUILTIN_NATIVE_MODULE_NAMES,
+  LYNX_CLIPBOARD_MODULE_NAME,
   LYNX_STORAGE_MODULE_NAME,
-  type BuiltinNativeModuleName,
-  type BuiltinNativeModulesCall,
 } from '../../nativeModules/BuiltinNativeModules.js';
+import type {
+  BuiltinNativeModuleName,
+  BuiltinNativeModulesCall,
+} from '../../nativeModules/BuiltinNativeModules.js';
+import type { LynxClipboardModule } from '../../nativeModules/LynxClipboardModule.js';
 import type { LynxStorageModule } from '../../nativeModules/LynxStorageModule.js';
-import { createLynxStorageModule } from './createLynxStorageModule.js';
 
 export interface BuiltinNativeModules {
+  [LYNX_CLIPBOARD_MODULE_NAME]: LynxClipboardModule;
   [LYNX_STORAGE_MODULE_NAME]: LynxStorageModule;
 }
 
@@ -21,6 +27,7 @@ type BuiltinNativeModuleFactories = {
 };
 
 const builtinNativeModuleFactories = {
+  [LYNX_CLIPBOARD_MODULE_NAME]: createLynxClipboardModule,
   [LYNX_STORAGE_MODULE_NAME]: createLynxStorageModule,
 } satisfies BuiltinNativeModuleFactories;
 

@@ -3,9 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import type { Cloneable } from '../../types/index.js';
 
+export const LYNX_CLIPBOARD_MODULE_NAME = 'LynxClipboardModule';
 export const LYNX_STORAGE_MODULE_NAME = 'LynxStorageModule';
 
 export const BUILTIN_NATIVE_MODULE_NAMES = [
+  LYNX_CLIPBOARD_MODULE_NAME,
   LYNX_STORAGE_MODULE_NAME,
 ] as const;
 
