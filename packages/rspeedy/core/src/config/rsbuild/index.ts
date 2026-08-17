@@ -19,7 +19,7 @@ export function toRsbuildConfig(
     dev: {
       assetPrefix: config.dev?.assetPrefix,
 
-      // TODO: update the Rsbuild type to allow `dev.client.websocketTransport`
+      // TODO: move the Lynx-only `websocketTransport` to a Lynx-owned option.
       client: config.dev?.client as NonNullable<RsbuildConfig['dev']>['client'],
 
       hmr: config.dev?.hmr ?? true,
