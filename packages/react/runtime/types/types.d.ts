@@ -222,7 +222,7 @@ declare global {
     updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
     onAppReload: (updateData: Record<string, any>) => void;
     processCardConfig: () => void;
-    callBeforePublishEvent: (data: unknown) => void;
+    callBeforePublishEvent?: (data: unknown) => void;
     getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
     GlobalEventEmitter: EventEmitter;
   }
