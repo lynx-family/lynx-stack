@@ -70,6 +70,7 @@ function collectSnapshotPatchOps(patch) {
     ops.push(op);
     switch (op) {
       case SnapshotOperation.CreateElement:
+      case SnapshotOperation.CreateElementByTypeIndex:
         i += 2;
         break;
       case SnapshotOperation.InsertBefore:
@@ -761,7 +762,12 @@ describe('document - background', () => {
 
       const ops = collectSnapshotPatchOps(hydrate(before, after));
       expect(ops.filter(op => op === SnapshotOperation.RemoveChild)).toHaveLength(2);
-      expect(ops.filter(op => op === SnapshotOperation.CreateElement)).toHaveLength(2);
+      expect(
+        ops.filter(op =>
+          op === SnapshotOperation.CreateElement
+          || op === SnapshotOperation.CreateElementByTypeIndex
+        ),
+      ).toHaveLength(2);
       expect(ops.filter(op => op === SnapshotOperation.InsertBefore)).toHaveLength(2);
       expect(ops.filter(op => op === SnapshotOperation.SetAttribute)).toHaveLength(0);
     } finally {

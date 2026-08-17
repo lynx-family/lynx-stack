@@ -16,6 +16,7 @@ export const SnapshotOperation = {
   SetAttributes: 4,
   nodesRefInsertBefore: 5,
   nodesRefRemoveChild: 6,
+  CreateElementByTypeIndex: 7,
 
   DEV_ONLY_AddSnapshot: 100,
   DEV_ONLY_RegisterWorklet: 101,
@@ -57,6 +58,10 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
       'childId', /* number */
     ],
   },
+  [SnapshotOperation.CreateElementByTypeIndex]: {
+    name: 'CreateElementByTypeIndex',
+    params: ['typeIndex', /* number */ 'id' /* number */],
+  },
   [SnapshotOperation.DEV_ONLY_AddSnapshot]: {
     name: 'DEV_ONLY_AddSnapshot',
     params: [
@@ -77,11 +82,63 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
 export type SnapshotPatch = unknown[];
 
 export let __globalSnapshotPatch: SnapshotPatch | undefined;
+let globalSnapshotTypeIndexes:
+  | Map<string | null, number>
+  | undefined;
+let globalSnapshotFirstCreateType: string | null | undefined;
+let globalSnapshotSecondCreateType: string | null | undefined;
+let globalSnapshotCreateCount = 0;
+
+export function pushCreateElementOperation(
+  type: string | null,
+  id: number,
+): void {
+  if (!__globalSnapshotPatch) {
+    return;
+  }
+  if (globalSnapshotCreateCount === 0) {
+    globalSnapshotFirstCreateType = type;
+    globalSnapshotCreateCount = 1;
+    __globalSnapshotPatch.push(SnapshotOperation.CreateElement, type, id);
+    return;
+  }
+  if (globalSnapshotCreateCount === 1) {
+    globalSnapshotSecondCreateType = type;
+    globalSnapshotCreateCount = 2;
+    __globalSnapshotPatch.push(SnapshotOperation.CreateElement, type, id);
+    return;
+  }
+  if (!globalSnapshotTypeIndexes) {
+    globalSnapshotTypeIndexes = new Map();
+    globalSnapshotTypeIndexes.set(globalSnapshotFirstCreateType!, 0);
+    if (
+      globalSnapshotSecondCreateType !== globalSnapshotFirstCreateType
+    ) {
+      globalSnapshotTypeIndexes.set(globalSnapshotSecondCreateType!, 1);
+    }
+  }
+  const typeIndex = globalSnapshotTypeIndexes.get(type);
+  if (typeIndex === undefined) {
+    globalSnapshotTypeIndexes.set(type, globalSnapshotTypeIndexes.size);
+    __globalSnapshotPatch.push(SnapshotOperation.CreateElement, type, id);
+  } else {
+    __globalSnapshotPatch.push(
+      SnapshotOperation.CreateElementByTypeIndex,
+      typeIndex,
+      id,
+    );
+  }
+  globalSnapshotCreateCount++;
+}
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {
     const list = __globalSnapshotPatch;
     __globalSnapshotPatch = [];
+    globalSnapshotTypeIndexes = undefined;
+    globalSnapshotFirstCreateType = undefined;
+    globalSnapshotSecondCreateType = undefined;
+    globalSnapshotCreateCount = 0;
     return list;
   } else {
     return undefined;
@@ -90,8 +147,16 @@ export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
 
 export function initGlobalSnapshotPatch(): void {
   __globalSnapshotPatch = [];
+  globalSnapshotTypeIndexes = undefined;
+  globalSnapshotFirstCreateType = undefined;
+  globalSnapshotSecondCreateType = undefined;
+  globalSnapshotCreateCount = 0;
 }
 
 export function deinitGlobalSnapshotPatch(): void {
   __globalSnapshotPatch = undefined;
+  globalSnapshotTypeIndexes = undefined;
+  globalSnapshotFirstCreateType = undefined;
+  globalSnapshotSecondCreateType = undefined;
+  globalSnapshotCreateCount = 0;
 }
