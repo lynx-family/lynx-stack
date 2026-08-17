@@ -25,7 +25,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function createLoaderContext(options: Record<string, unknown>) {
   return {
-    addDependency: () => {},
+    addDependency: () => {
+      // No-op for this loader-options unit test.
+    },
     getOptions: () => options,
     hot: false,
     resourcePath: path.resolve(__dirname, 'fixture.tsx'),
