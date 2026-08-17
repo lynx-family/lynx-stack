@@ -564,7 +564,7 @@ describe('ElementTemplate hydration listener', () => {
     backgroundRoot.appendChild(after);
     const oldId = after.instanceId;
 
-    const tt = (globalThis as unknown as { lynxCoreInject: { tt: TTMock } }).lynxCoreInject.tt;
+    const tt = lynx.getApp() as unknown as TTMock;
     tt.callDestroyLifetimeFun?.();
 
     envManager.switchToMainThread();

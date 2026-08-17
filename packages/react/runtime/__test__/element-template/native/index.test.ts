@@ -195,14 +195,14 @@ describe('element-template native index wiring', () => {
     expect(initProfileHook).toHaveBeenCalledTimes(1);
     expect(setupLynxEnv).toHaveBeenCalledTimes(1);
     expect(resetEventStateForRuntime).toHaveBeenCalledTimes(1);
-    expect(globalThis.lynxCoreInject.tt.callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
-    expect(globalThis.lynxCoreInject.tt.publishEvent).toBe(publishEvent);
-    expect(globalThis.lynxCoreInject.tt.publicComponentEvent).toBe(publicComponentEvent);
-    expect(globalThis.lynxCoreInject.tt.updateGlobalProps).toEqual(expect.any(Function));
-    expect(globalThis.lynxCoreInject.tt.updateCardData).toBe(updateCardData);
-    expect(globalThis.lynxCoreInject.tt.onAppReload).toBe(reloadBackground);
+    expect(globalThis.lynx.getApp().callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
+    expect(globalThis.lynx.getApp().publishEvent).toBe(publishEvent);
+    expect(globalThis.lynx.getApp().publicComponentEvent).toBe(publicComponentEvent);
+    expect(globalThis.lynx.getApp().updateGlobalProps).toEqual(expect.any(Function));
+    expect(globalThis.lynx.getApp().updateCardData).toBe(updateCardData);
+    expect(globalThis.lynx.getApp().onAppReload).toBe(reloadBackground);
 
-    globalThis.lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+    globalThis.lynx.getApp().updateGlobalProps({ theme: 'light' });
     expect(updateGlobalProps).toHaveBeenCalledWith(
       { theme: 'light' },
       { forceRerender: expect.any(Function) },

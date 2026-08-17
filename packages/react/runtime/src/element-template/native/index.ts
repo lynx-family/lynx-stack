@@ -68,12 +68,12 @@ function init(): void {
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
     resetEventStateForRuntime();
-    lynxCoreInject.tt.callDestroyLifetimeFun = callDestroyLifetimeFun;
-    lynxCoreInject.tt.publishEvent = publishEvent;
-    lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
-    lynxCoreInject.tt.updateGlobalProps = updateGlobalProps;
-    lynxCoreInject.tt.updateCardData = updateCardData;
-    lynxCoreInject.tt.onAppReload = reloadBackground;
+    lynx.getApp().callDestroyLifetimeFun = callDestroyLifetimeFun;
+    lynx.getApp().publishEvent = publishEvent;
+    lynx.getApp().publicComponentEvent = publicComponentEvent;
+    lynx.getApp().updateGlobalProps = updateGlobalProps;
+    lynx.getApp().updateCardData = updateCardData;
+    lynx.getApp().onAppReload = reloadBackground;
     installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {

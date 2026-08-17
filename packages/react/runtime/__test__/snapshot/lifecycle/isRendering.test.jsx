@@ -105,7 +105,7 @@ describe('isRendering in background', () => {
     expect(isRendering.value).toBe(false);
 
     isRenderingValue = false;
-    lynxCoreInject.tt.onAppReload({ text: 'World' });
+    lynx.getApp().onAppReload({ text: 'World' });
     await waitSchedule();
     expect(isRenderingValue).toBe(true);
     expect(isRendering.value).toBe(false);

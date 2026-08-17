@@ -36,7 +36,7 @@ describe('Destroy', () => {
     render(h(Comp), __root);
     await Promise.resolve().then(() => {});
 
-    expect(() => lynxCoreInject.tt.callDestroyLifetimeFun()).toThrow('???');
+    expect(() => lynx.getApp().callDestroyLifetimeFun()).toThrow('???');
 
     await Promise.resolve().then(() => {});
     expect(callback).toHaveBeenCalledTimes(1);

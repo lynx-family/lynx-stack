@@ -208,25 +208,23 @@ declare global {
     [prop: string]: unknown;
   }
 
-  namespace lynxCoreInject {
-    const tt: {
-      _params: {
-        initData: Record<string, any>;
-        updateData: Record<string, any>;
-      };
-
-      OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
-      publishEvent: (handlerName: string, data: EventDataType) => void;
-      publicComponentEvent: (componentId: string, handlerName: string, data: EventDataType) => void;
-      callDestroyLifetimeFun: () => void;
-      updateGlobalProps: (newData: Record<string, unknown>) => void;
-      updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
-      onAppReload: (updateData: Record<string, any>) => void;
-      processCardConfig: () => void;
-      callBeforePublishEvent: (data: unknown) => void;
-      getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
-      GlobalEventEmitter: EventEmitter;
+  declare interface LynxApp {
+    _params: {
+      initData: Record<string, any>;
+      updateData: Record<string, any>;
     };
+
+    OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
+    publishEvent: (handlerName: string, data: EventDataType) => void;
+    publicComponentEvent: (componentId: string, handlerName: string, data: EventDataType) => void;
+    callDestroyLifetimeFun: () => void;
+    updateGlobalProps: (newData: Record<string, unknown>) => void;
+    updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
+    onAppReload: (updateData: Record<string, any>) => void;
+    processCardConfig: () => void;
+    callBeforePublishEvent: (data: unknown) => void;
+    getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
+    GlobalEventEmitter: EventEmitter;
   }
 
   declare interface PipelineOptions {
@@ -236,8 +234,6 @@ declare global {
     dsl: string;
     stage: string;
   }
-
-  declare let lynxCoreInject: any;
 
   interface ISystemInfo {
     osVersion: string;
@@ -304,6 +300,7 @@ declare module '@lynx-js/types/background' {
 
     getNativeApp(): NativeApp;
     getNativeLynx(): NativeLynx;
+    getApp(): LynxApp;
     reportError(e: Error): void;
     QueryComponent?(source: string, callback: (result: any) => void): void;
     loadLazyBundle?<T extends { default: React.ComponentType<any> }>(
