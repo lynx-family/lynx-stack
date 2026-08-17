@@ -467,6 +467,25 @@ test.describe('reactlynx3 tests', () => {
       await expect(await target.getAttribute('style')).toContain('pink');
     });
 
+    test('basic-lynx-reload-with-data', async ({ page }, { title }) => {
+      let callbackFired = false;
+      page.on('console', (message) => {
+        if (message.text() === 'reload callback fired') {
+          callbackFired = true;
+        }
+      });
+      await goto(page, title);
+      await wait(100);
+      const target = page.locator('#target');
+      await expect(await target.getAttribute('style')).toContain('pink');
+      await target.click();
+      await wait(200);
+      // The new value passed to `lynx.reload()` becomes the reloaded page's
+      // `initData`, and the callback only fires once that reload settles.
+      await expect(await target.getAttribute('style')).toContain('green');
+      await expect(callbackFired).toBe(true);
+    });
+
     test(
       'basic-wrapper-element-do-not-impact-layout',
       async ({ page }, { title }) => {

@@ -71,8 +71,10 @@ export function createBackgroundLynx(
         },
       ) => void,
     ) => nativeApp.queryComponent(source, callback),
-    reload: () => {
-      mainThreadRpc.invoke(reloadEndpoint, []);
+    reload: (value?: Cloneable, callback?: () => void) => {
+      mainThreadRpc.invoke(reloadEndpoint, [value]).then(() => {
+        callback?.();
+      });
     },
     fetchBundle(url: string) {
       return fetchExternalBundle(url);

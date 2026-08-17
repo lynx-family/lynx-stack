@@ -237,6 +237,6 @@ export const updateBTSChunkEndpoint = createRpcEndpoint<
 >('updateBTSChunkEndpoint', false, true);
 
 export const reloadEndpoint = createRpcEndpoint<
-  [],
+  [value: Cloneable | undefined],
   void
->('reload', false, false);
+>('reload', false, true);
