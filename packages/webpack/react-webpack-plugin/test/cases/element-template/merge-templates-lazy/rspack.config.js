@@ -37,6 +37,12 @@ export default {
      * @param {import('@rspack/core').Compiler} compiler
      */
     (compiler) => {
+      let encodedMainTemplate = false;
+
+      compiler.hooks.afterEmit.tap('element-template-lazy-scope-test', () => {
+        expect(encodedMainTemplate).toBe(true);
+      });
+
       compiler.hooks.thisCompilation.tap(
         'element-template-lazy-scope-test',
         (compilation) => {
@@ -48,6 +54,7 @@ export default {
               (chunkGroup) => chunkGroup.name === 'main__main-thread',
             );
             if (isMainTemplate) {
+              encodedMainTemplate = true;
               const templates = JSON.stringify(args.encodeData.elementTemplate);
 
               expect(templates).toContain('main-bundle-content');

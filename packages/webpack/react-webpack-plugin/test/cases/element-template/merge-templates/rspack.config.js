@@ -35,10 +35,19 @@ export default {
             compilation,
           );
           hooks.beforeEncode.tap('element-template-merge-test', (args) => {
-            const templates = JSON.stringify(args.encodeData.elementTemplate);
+            const elementTemplate = args.encodeData.elementTemplate ?? {};
+            const templates = JSON.stringify(elementTemplate);
 
             expect(templates).toContain('main-thread-shell');
             expect(templates).toContain('deferred-content');
+
+            // Both threads compile the shared `<view>` wrapper, and the
+            // content-hash id makes that one entry rather than two.
+            expect(
+              Object.keys(elementTemplate).filter((id) =>
+                id !== '_et_builtin_raw_text'
+              ),
+            ).toHaveLength(3);
 
             return args;
           });
