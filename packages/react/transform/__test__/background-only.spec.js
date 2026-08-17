@@ -182,7 +182,10 @@ describe('background-only element', () => {
       `
       export function App() {
         return (
-          <background-only fallback={<A />} fallback={<B />}>
+          <background-only
+            fallback={<text attr-x='first' />}
+            fallback={<text attr-x='second' />}
+          >
             <Feed />
           </background-only>
         );
@@ -196,6 +199,8 @@ describe('background-only element', () => {
         "<background-only> accepts only one \`fallback\` attribute",
       ]
     `);
+    expect(result.code).toContain('first');
+    expect(result.code).not.toContain('second');
   });
 
   it('reports an error for unknown attributes', async () => {
