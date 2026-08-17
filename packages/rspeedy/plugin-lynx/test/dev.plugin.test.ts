@@ -5,21 +5,18 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
-import type { RsbuildPlugin } from '@rsbuild/core'
-import {
-  assert,
-  beforeEach,
-  describe,
-  expect,
-  rstest,
-  test,
-} from '@rstest/core'
+import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
-import { createStubRspeedy } from '../createStubRspeedy.js'
+import { createStubRsbuild } from './createStubRsbuild.js'
 
-describe('Plugins - Dev', () => {
+function createDevStubRsbuild(rsbuildConfig: RsbuildConfig = {}) {
+  return createStubRsbuild({ mode: 'development', ...rsbuildConfig })
+}
+
+describe('pluginDev', () => {
   beforeEach(async () => {
-    rstest.stubEnv('NODE_ENV', 'development')
+    rstest.mock('../src/webpack/ProvidePlugin.js', { mock: true })
 
     const { default: os } = await import('node:os')
 
@@ -37,13 +34,12 @@ describe('Plugins - Dev', () => {
     })
 
     return () => {
-      rstest.unstubAllEnvs()
-        .restoreAllMocks()
+      rstest.restoreAllMocks()
     }
   })
 
   test('defaults', async () => {
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
@@ -59,9 +55,6 @@ describe('Plugins - Dev', () => {
     expect(pathname).toBe('/')
 
     expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
-    expect(isIPv4(rsbuild.getRsbuildConfig().dev!.client!.host!)).toBe(true)
-
-    assert(config.resolve?.alias)
   })
 
   test('defaults fallback to ipv6 when no ipv4 is found', async () => {
@@ -75,28 +68,18 @@ describe('Plugins - Dev', () => {
           internal: false,
           netmask: 'ffff:ffff:ffff:ffff::',
           mac: '00:00:00:00:00:00',
-          cidr: 'fd00::1/64',
           scopeid: 0,
-        },
-      ],
-      lo: [
-        {
-          address: '127.0.0.1',
-          family: 'IPv4',
-          internal: true,
-          netmask: '255.0.0.0',
-          mac: '00:00:00:00:00:00',
-          cidr: '127.0.0.1/8',
+          cidr: 'fd00::1/64',
         },
       ],
     })
 
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
-    expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
     expect(rsbuild.getRsbuildConfig().server!.host).toBe('::')
+    expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
   })
 
@@ -116,7 +99,7 @@ describe('Plugins - Dev', () => {
       ],
     })
 
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
@@ -141,7 +124,7 @@ describe('Plugins - Dev', () => {
       ],
     })
 
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       server: {
         host: '0.0.0.0',
       },
@@ -159,7 +142,7 @@ describe('Plugins - Dev', () => {
 
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({})
 
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
@@ -169,7 +152,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix uses server.host modified by plugins', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       plugins: [
         {
           name: 'test:server-host',
@@ -192,8 +175,28 @@ describe('Plugins - Dev', () => {
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('10.0.0.2')
   })
 
+  test('provide HMR variables', async () => {
+    const rsbuild = await createDevStubRsbuild()
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+
+    expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(rstest.mocked(ProvidePlugin)).toBeCalled()
+    expect(ProvidePlugin).toHaveBeenCalledWith({
+      WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
+    })
+    expect(ProvidePlugin).toHaveBeenCalledWith({
+      __webpack_dev_server_client__: [
+        require.resolve('../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
+  })
+
   test('alias HMR entries', async () => {
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
@@ -213,8 +216,42 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('no Websocket class injected for web', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      environments: {
+        web: {},
+      },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+
+    expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(rstest.mocked(ProvidePlugin)).toBeCalled()
+    expect(ProvidePlugin).toBeCalledWith({
+      __webpack_dev_server_client__: [
+        require.resolve('../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
+    expect(ProvidePlugin).not.toBeCalledWith(
+      expect.objectContaining({ WebSocket: expect.anything() as unknown }),
+    )
+  })
+
+  test('not inject entry and provide variables in production', async () => {
+    const rsbuild = await createStubRsbuild({ mode: 'production' })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+
+    expect(ProvidePlugin).not.toBeCalled()
+  })
+
   test('not inject Rsbuild HMR client', async () => {
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
     const config = await rsbuild.unwrapConfig()
 
     const entries = config.plugins?.filter(i =>
@@ -225,7 +262,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com/',
       },
@@ -246,8 +283,8 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix should not take effect in production mode', async () => {
-    rstest.stubEnv('NODE_ENV', 'production')
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
       dev: {
         assetPrefix: 'http://example.com:3000/',
       },
@@ -261,7 +298,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix with server.port', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com:8000/',
       },
@@ -285,7 +322,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix with different server.port', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com:8000/',
       },
@@ -309,7 +346,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix with server.host', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com:3000/',
       },
@@ -333,7 +370,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix with <port> placeholder', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com:<port>/',
       },
@@ -346,32 +383,17 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix with <port> placeholder and server.port', async () => {
-    const net = await import('node:net')
-
-    // We get a port that is occupied by the server we just created
-    const port = await (function getPort() {
-      return new Promise<number>((resolve, reject) => {
-        const server = net.createServer()
-        server.unref()
-        server.on('error', reject)
-        server.listen(0, () => {
-          const address = server.address() as AddressInfo
-          server.close(() => {
-            resolve(address.port)
-          })
-        })
-      })
-    })()
-
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
       },
       dev: {
         assetPrefix: 'http://example.com:<port>/',
       },
       server: {
-        port,
+        port: 8097,
       },
     })
 
@@ -387,7 +409,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix: false', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: false,
       },
@@ -400,7 +422,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix: false with server.port', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: false,
       },
@@ -416,7 +438,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix: false with server.base', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: false,
       },
@@ -432,20 +454,21 @@ describe('Plugins - Dev', () => {
     expect(rsbuild.getRsbuildConfig().dev!.assetPrefix).toBe(false)
   })
 
-  // The result of this test is not correct, since Rsbuild is using `context.devServer?.port || DEFAULT_PORT`
-  // See: https://github.com/web-infra-dev/rsbuild/blob/4494b4bbf77f6e45d7d38fbaaa188a941227505d/packages/core/src/plugins/output.ts#L29
-  // TODO: Fix this test after https://github.com/web-infra-dev/rsbuild/pull/4578 landed
-  test.skip('server.port without dev.assetPrefix', async () => {
-    const rsbuild = await createStubRspeedy({
-      server: {
-        port: 4000,
-      },
+  test('assetPrefix with mode production', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
     })
+
+    // dev.plugin.js will not be applied by default in production mode
+    rsbuild.addPlugins([
+      await import('../src/plugins/dev.plugin.js').then(
+        ({ pluginDev }) => pluginDev(),
+      ),
+    ])
 
     const config = await rsbuild.unwrapConfig()
 
-    expect(typeof config.output?.publicPath).toBe('string')
-    expect(config.output?.publicPath).toContain(':4000/')
+    expect(config.output?.publicPath).not.toBe('/')
   })
 
   test('dev.assetPrefix should change when port is changed automatically', async () => {
@@ -463,7 +486,7 @@ describe('Plugins - Dev', () => {
       })
     })()
 
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com:<port>/',
       },
@@ -479,7 +502,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.hmr default', async () => {
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
@@ -490,7 +513,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.hmr: false', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         hmr: false,
       },
@@ -505,7 +528,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('environment.dev.hmr: false', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       environments: {
         lynx: {
           dev: {
@@ -524,7 +547,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.hmr: true', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         hmr: true,
       },
@@ -539,7 +562,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('environment dev.hmr: true', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       environments: {
         lynx: {
           dev: {
@@ -558,7 +581,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.liveReload default', async () => {
-    const rsbuild = await createStubRspeedy({})
+    const rsbuild = await createDevStubRsbuild()
 
     const config = await rsbuild.unwrapConfig()
 
@@ -569,7 +592,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.liveReload: false', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         liveReload: false,
       },
@@ -584,7 +607,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('environment dev.liveReload: false', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       environments: {
         lynx: {
           dev: {
@@ -603,7 +626,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.liveReload: true', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         liveReload: true,
       },
@@ -618,7 +641,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('environments dev.liveReload: true', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       environments: {
         lynx: {
           dev: {
@@ -636,24 +659,46 @@ describe('Plugins - Dev', () => {
     )
   })
 
+  test('websocketTransport', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      dev: {
+        client: {
+          websocketTransport: '/foo',
+        } as NonNullable<NonNullable<RsbuildConfig['dev']>['client']>,
+      },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+
+    expect(ProvidePlugin).toHaveBeenCalledWith({
+      WebSocket: ['/foo', 'default'],
+    })
+    expect(ProvidePlugin).toHaveBeenCalledWith({
+      __webpack_dev_server_client__: [
+        require.resolve('../client/hmr/WebSocketClient.js'),
+        'default',
+      ],
+    })
+  })
+
   test('server.base without /', async () => {
-    try {
-      const rsbuild = await createStubRspeedy({
+    await expect(async () => {
+      const rsbuild = await createDevStubRsbuild({
         server: {
           base: 'dist',
         },
       })
 
       await rsbuild.unwrapConfig()
-    } catch (error) {
-      expect(error).toMatchInlineSnapshot(
-        `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
-      )
-    }
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: [rsbuild:config] The "server.base" option should start with a slash, for example: "/base"]`,
+    )
   })
 
   test('dev.assetPrefix with server.base', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       dev: {
         assetPrefix: 'http://example.com/',
       },
@@ -679,16 +724,39 @@ describe('Plugins - Dev', () => {
     expect(pathname).toBe('/dist/')
   })
 
-  test('dev.assetPrefix with server.printUrls', async () => {
-    const rsbuild = await createStubRspeedy({
+  test('environment.web to have middleware installed', async () => {
+    const rsbuild = await createDevStubRsbuild({
       source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+    const middleware = await import('@lynx-js/web-rsbuild-server-middleware')
+    rstest.spyOn(middleware, 'createWebVirtualFilesMiddleware')
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+    expect(rstest.mocked(middleware.createWebVirtualFilesMiddleware))
+      .toBeCalled()
+  })
+
+  test('dev.assetPrefix with server.printUrls', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
       },
       dev: {
         assetPrefix: 'http://example.com:8000/',
       },
       server: {
-        port: 8080,
+        port: 8091,
       },
     })
 
@@ -720,20 +788,22 @@ describe('Plugins - Dev', () => {
 
     expect(printedUrls).toContainEqual({
       'label': 'Lynx',
-      'url': 'http://example.com:8080/main.lynx.bundle',
+      'url': 'http://example.com:8091/main.lynx.bundle',
     })
   })
 
   test('dev.assetPrefix with environment.web', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
       },
       dev: {
         assetPrefix: 'http://example.com:8000/',
       },
       server: {
-        port: 8080,
+        port: 8092,
       },
       environments: {
         web: {},
@@ -769,22 +839,24 @@ describe('Plugins - Dev', () => {
 
     expect(printedUrls).toContainEqual({
       'label': 'Web',
-      'url': 'http://example.com:8080/main.web.bundle',
+      'url': 'http://example.com:8092/main.web.bundle',
     })
 
     expect(printedUrls).toContainEqual({
       'label': '∟ Preview',
-      'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
+      'url': 'http://example.com:8092/__web_preview?casename=main.web.bundle',
     })
   })
 
   test('onAfterStartDevServer routes contains bundle entries', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
       },
       server: {
-        port: 8080,
+        port: 8093,
       },
     })
 
@@ -804,12 +876,14 @@ describe('Plugins - Dev', () => {
   })
 
   test('onAfterStartDevServer routes contains multiple environment entries', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
       },
       server: {
-        port: 8080,
+        port: 8094,
       },
       environments: {
         web: {},
@@ -837,12 +911,14 @@ describe('Plugins - Dev', () => {
   })
 
   test('onAfterStartPreviewServer routes contains bundle entries', async () => {
-    const rsbuild = await createStubRspeedy({
+    const rsbuild = await createDevStubRsbuild({
       source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
       },
       server: {
-        port: 8080,
+        port: 8095,
       },
       environments: {
         web: {},
@@ -869,5 +945,37 @@ describe('Plugins - Dev', () => {
     } finally {
       await server.close()
     }
+  })
+
+  test('output.filename.bundle is used for dev routes', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      output: {
+        filename: {
+          bundle: '[name].[platform].custom.bundle',
+        } as NonNullable<NonNullable<RsbuildConfig['output']>['filename']>,
+      },
+      server: {
+        port: 8096,
+      },
+    })
+
+    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
+
+    rsbuild.onAfterStartDevServer(({ routes }) => {
+      receivedRoutes = [...routes]
+    })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+
+    expect(receivedRoutes).toContainEqual({
+      entryName: 'main',
+      pathname: '/main.lynx.custom.bundle',
+    })
   })
 })

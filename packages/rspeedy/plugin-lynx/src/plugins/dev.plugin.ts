@@ -13,10 +13,7 @@ import type {
 } from '@rsbuild/core'
 import color from 'picocolors'
 
-import type { Dev } from '../config/dev/index.js'
-import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
-import type { ExposedAPI } from '../index.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
@@ -25,10 +22,22 @@ const DEFAULT_IPV6_SERVER_HOST = '::'
 
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
 
-export function pluginDev(
-  options?: Dev,
-  server?: Server,
-): RsbuildPlugin {
+interface BundleFilenameContext {
+  lazyBundle: boolean
+  entryName?: string | undefined
+  platform: string
+}
+
+interface Filename {
+  bundle?: string | ((context: BundleFilenameContext) => string) | undefined
+  template?: string | undefined
+}
+
+interface Client {
+  websocketTransport?: string | undefined
+}
+
+export function pluginDev(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:dev',
     apply(config, { action }) {
@@ -38,20 +47,15 @@ export function pluginDev(
       // Resolve the main bundle filename template for a given entry/platform.
       // When `bundle` is a function, it is called with `lazyBundle: false`
       // since the dev URLs always point at the main bundle.
-      // Lazily initialized on first use (needs the exposed rspeedy API to be
-      // available which is guaranteed after plugin setup ordering).
+      // Lazily initialized on first use.
       let resolveBundleName: (entry: string, platform: string) => string
 
       function getResolveBundleName() {
         if (!resolveBundleName) {
-          // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
-          const rspeedyAPIs = api.useExposed<ExposedAPI>(
-            Symbol.for('rspeedy.api'),
-          )!
           const defaultFilename = '[name].[platform].bundle'
-          const { filename } = rspeedyAPIs.config.output ?? {}
+          const filename = api.getRsbuildConfig('original').output?.filename
           const bundle = typeof filename === 'object'
-            ? filename.bundle ?? filename.template
+            ? (filename as Filename).bundle ?? (filename as Filename).template
             : filename
           resolveBundleName = (entry: string, platform: string): string => {
             const resolved = typeof bundle === 'function'
@@ -115,16 +119,18 @@ export function pluginDev(
 
       api.modifyRsbuildConfig({
         handler: async (config, { mergeRsbuildConfig }) => {
+          const original = api.getRsbuildConfig('original')
+          const originalServer = original.server
           const { bindHost, hostname } = await resolveHostname(
             config.server?.host,
-            server?.host,
+            originalServer?.host,
           )
 
-          let assetPrefix = options?.assetPrefix
+          let assetPrefix = original.dev?.assetPrefix
 
           switch (typeof assetPrefix) {
             case 'string': {
-              if (server?.port !== undefined) {
+              if (originalServer?.port !== undefined) {
                 // We should change the port of `assetPrefix` when `server.port` is set.
 
                 const hasPortPlaceholder = assetPrefix.includes('<port>')
@@ -132,17 +138,17 @@ export function pluginDev(
                   // There is not `<port>` in `dev.assetPrefix`.
                   const assetPrefixURL = new URL(assetPrefix)
 
-                  if (assetPrefixURL.port !== String(server.port)) {
+                  if (assetPrefixURL.port !== String(originalServer.port)) {
                     logger.warn(
                       `Setting different port values in ${
                         color.cyan('server.port')
                       } and ${
                         color.cyan('dev.assetPrefix')
                       }. Using server.port(${
-                        color.cyan(server.port)
+                        color.cyan(originalServer.port)
                       }) to make HMR work.`,
                     )
-                    assetPrefixURL.port = String(server.port)
+                    assetPrefixURL.port = String(originalServer.port)
                     assetPrefix = assetPrefixURL.toString()
                   }
                 }
@@ -152,7 +158,7 @@ export function pluginDev(
             }
             case 'undefined':
             case 'boolean': {
-              if (options?.assetPrefix !== false) {
+              if (assetPrefix !== false) {
                 // assetPrefix === true || assetPrefix === undefined
                 assetPrefix = `http://${hostname}:<port>/`
               }
@@ -160,11 +166,11 @@ export function pluginDev(
             }
           }
 
-          if (server?.base && typeof assetPrefix === 'string') {
+          if (originalServer?.base && typeof assetPrefix === 'string') {
             if (assetPrefix.endsWith('/')) {
               assetPrefix = assetPrefix.slice(0, -1)
             }
-            assetPrefix = `${assetPrefix}${server.base}/`
+            assetPrefix = `${assetPrefix}${originalServer.base}/`
           }
 
           debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
@@ -259,8 +265,8 @@ export function pluginDev(
           return
         }
         const rsbuildPath = require.resolve('@rsbuild/core')
-        const rspeedyDir = path.dirname(
-          require.resolve('@lynx-js/rspeedy/package.json'),
+        const pluginDir = path.dirname(
+          require.resolve('@lynx-js/rsbuild-plugin/package.json'),
         )
         // The upstream `@rspack/core/hot/dev-server` recovers from a failed
         // `apply` with `window.location.reload()`, which Lynx does not have.
@@ -316,7 +322,7 @@ export function pluginDev(
                   require.resolve(
                     './client/hmr/WebSocketClient.js',
                     {
-                      paths: [rspeedyDir],
+                      paths: [pluginDir],
                     },
                   ),
                   'default'
@@ -325,10 +331,13 @@ export function pluginDev(
             ])
           .end()
         if (isLynx(environment)) {
+          const client = api.getRsbuildConfig('original').dev?.client as
+            | Client
+            | undefined
           chain.plugin('lynx.hmr.provide.websocket')
             .use(ProvidePlugin, [{
               WebSocket: [
-                options?.client?.websocketTransport
+                client?.websocketTransport
                   ?? require.resolve('@lynx-js/websocket'),
                 'default',
               ],
@@ -405,7 +414,7 @@ export async function findIp(
 
 async function resolveHostname(
   host: RsbuildServerHost | undefined,
-  originalHost: string | undefined,
+  originalHost: RsbuildServerHost | undefined,
 ): Promise<{ bindHost?: string, hostname: string }> {
   const hostname = formatHostname(host)
   if (originalHost !== undefined || hostname !== DEFAULT_IPV4_SERVER_HOST) {
