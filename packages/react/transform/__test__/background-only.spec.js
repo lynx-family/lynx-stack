@@ -179,6 +179,27 @@ describe('background-only element', () => {
     `);
   });
 
+  it('reports an error for a repeated fallback', async () => {
+    const result = await transformReactLynx(
+      `
+      export function App() {
+        return (
+          <background-only fallback={<A />} fallback={<B />}>
+            <Feed />
+          </background-only>
+        );
+      }
+      `,
+      options('LEPUS'),
+    );
+
+    expect(result.errors.map((error) => error.text)).toMatchInlineSnapshot(`
+      [
+        "<background-only> accepts only one \`fallback\` attribute",
+      ]
+    `);
+  });
+
   it('reports an error for unknown attributes', async () => {
     const result = await transformReactLynx(
       `

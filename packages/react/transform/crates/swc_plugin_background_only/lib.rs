@@ -21,6 +21,7 @@ fn is_background_only(el: &JSXElement) -> bool {
 
 fn take_fallback(el: &mut JSXElement) -> Option<Box<Expr>> {
   let mut fallback = None;
+  let mut seen_fallback = false;
   for attr in el.opening.attrs.drain(..) {
     match attr {
       JSXAttrOrSpread::SpreadElement(spread) => {
@@ -35,7 +36,22 @@ fn take_fallback(el: &mut JSXElement) -> Option<Box<Expr>> {
       }
       JSXAttrOrSpread::JSXAttr(attr) => {
         match &attr.name {
-          JSXAttrName::Ident(ident) if ident.sym.as_ref() == "fallback" => {}
+          JSXAttrName::Ident(ident) if ident.sym.as_ref() == "fallback" => {
+            // Taking the last one silently would pick a first screen the
+            // author did not write.
+            if seen_fallback {
+              HANDLER.with(|handler| {
+                handler
+                  .struct_span_err(
+                    attr.span,
+                    "<background-only> accepts only one `fallback` attribute",
+                  )
+                  .emit()
+              });
+              continue;
+            }
+            seen_fallback = true;
+          }
           _ => {
             HANDLER.with(|handler| {
               handler
