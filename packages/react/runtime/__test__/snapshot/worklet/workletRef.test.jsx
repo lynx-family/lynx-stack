@@ -325,22 +325,22 @@ function renderTestMainThreadObject(initialValue) {
 }
 
 describe('MainThreadObject', () => {
-  it('downcasts undefined creation payloads without confusing them with a failed match', () => {
+  it('downcasts null creation payloads without confusing them with a failed match', () => {
     globalEnvManager.switchToBackground();
     const type = defineMainThreadObjectType({
-      type: '@test/undefined-payload',
+      type: '@test/null-payload',
       create: value => ({ value }),
     });
     let value;
     const App = () => {
-      value = useMainThreadObject(type, undefined);
+      value = useMainThreadObject(type, null);
       return <view />;
     };
     render(<App />, __root);
 
     const handle = type.downcast(value);
     expect(handle).toBe(value);
-    expect(handle.payload).toBeUndefined();
+    expect(handle.payload).toBeNull();
     expect(type.downcast(undefined)).toBeUndefined();
   });
 
