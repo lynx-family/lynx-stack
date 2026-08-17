@@ -31,4 +31,11 @@ describe('GenUI server URL configuration', () => {
     expect(() => resolveGenuiServerUrl('file:///tmp/genui'))
       .toThrow('GENUI_SERVER_URL must be an HTTP(S) origin');
   });
+
+  test('rejects bare query and fragment delimiters', () => {
+    expect(() => resolveGenuiServerUrl('https://genui.example.com/?'))
+      .toThrow('GENUI_SERVER_URL must be an HTTP(S) origin');
+    expect(() => resolveGenuiServerUrl('https://genui.example.com/#'))
+      .toThrow('GENUI_SERVER_URL must be an HTTP(S) origin');
+  });
 });

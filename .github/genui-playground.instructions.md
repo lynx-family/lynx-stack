@@ -20,6 +20,12 @@ When automating A2UI preview benchmarks, wrap `render.html` in a parent iframe w
 
 Treat Bench reports as a protocol-neutral product area. Use `#/bench` as the canonical Runner route, keep `#/bench/runner` as a compatibility alias, and publish studies under phase routes such as `#/bench/phase-1`. This leaves later phases free to compare A2UI with other protocols. Keep legacy `#/a2ui/bench` hashes only as compatibility inputs. This route guidance does not apply to the A2UI server API paths under `/a2ui/bench/jobs`.
 
+### Preview Security Boundaries
+
+Treat `render.html` as an executable preview boundary. Load only same-origin HTTP(S) `.web.js` bundles, accept control messages only from its same-origin parent window, and send parent messages to an explicit origin instead of `*`. Validate demo ids as simple slugs before building `demos/<id>.json` fetch paths.
+
+When validating origin-only configuration values, reject raw `?` and `#` delimiters before constructing `URL`; the URL parser canonicalizes bare delimiters into empty `search` and `hash` values. When applying untrusted A2UI data-model updates or imported snapshots to JavaScript objects, discard `__proto__`, `constructor`, and `prototype` keys at every depth and reject paths containing those segments.
+
 ### Native Test Bundles
 
 When serving the playground's native Lynx bundles as static Android test fixtures, keep HMR/React refresh out of `a2ui.lynx.js` and `openui.lynx.js`. The Android Lynx runtime does not provide globals such as `__prefresh_utils__` or Node's `process`, so normalize `process.env.NODE_ENV` at build time and disable HMR for these bundles instead of relying on the caller's `NODE_ENV`.

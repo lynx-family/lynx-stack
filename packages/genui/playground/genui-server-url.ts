@@ -9,6 +9,15 @@ export function resolveGenuiServerUrl(raw: string | undefined): string {
   const value = configured === undefined || configured === ''
     ? DEFAULT_GENUI_SERVER_URL
     : configured;
+
+  // URL canonicalization drops bare delimiters (`http://host/?` becomes an
+  // empty search string, for example), so reject them before parsing.
+  if (value.includes('?') || value.includes('#')) {
+    throw new Error(
+      'GENUI_SERVER_URL must be an HTTP(S) origin without credentials, path, query, or fragment',
+    );
+  }
+
   let url: URL;
   try {
     url = new URL(value);
