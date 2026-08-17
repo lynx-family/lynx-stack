@@ -12,8 +12,8 @@ import {
   isTosStorageMethod,
   isTosStorageType,
   publishA2UIPayload,
-} from '../payload-publisher';
-import type { TosStorageLocation } from '../payload-publisher';
+} from '../payload-publisher.js';
+import type { TosStorageLocation } from '../payload-publisher.js';
 
 interface A2UIPayloadBody {
   messages?: unknown;
