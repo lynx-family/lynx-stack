@@ -11,7 +11,10 @@ import { defineConfig } from '@rsbuild/core';
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
+import { resolveGenuiServerUrl } from './genui-server-url.js';
+
 const PORT = Number(process.env.PORT ?? 3000);
+const GENUI_SERVER_URL = resolveGenuiServerUrl(process.env.GENUI_SERVER_URL);
 const PHASE_TWO_SCREENSHOT_DIRECTORY = fileURLToPath(
   new URL('./src/pages/bench/assets/phase-two/screenshots', import.meta.url),
 );
@@ -241,6 +244,7 @@ export default defineConfig({
       __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: JSON.stringify(
         CLIENT_PAYLOAD_STORE_ENABLED,
       ),
+      __GENUI_SERVER_URL__: JSON.stringify(GENUI_SERVER_URL),
     },
     entry: {
       index: './src/entry.tsx',

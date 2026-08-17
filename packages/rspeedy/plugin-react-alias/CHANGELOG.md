@@ -1,5 +1,13 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.19.0
+
+### Patch Changes
+
+- Apply ReactLynx aliases to every generated bundler chain so repeated Rsbuild config initialization, including Rstest, retains the plugin's resolve configuration. ([#3501](https://github.com/lynx-family/lynx-stack/pull/3501))
+
+- Add `@lynx-js/react-signals`, a thread-aware Preact Signals adapter that keeps Signals dependencies out of `@lynx-js/react`. Signal reactivity runs on the background thread, while main-thread rendering uses static signal values with inactive setters, subscriptions, and effects. ([#3346](https://github.com/lynx-family/lynx-stack/pull/3346))
+
 ## 0.18.3
 
 ## 0.18.2

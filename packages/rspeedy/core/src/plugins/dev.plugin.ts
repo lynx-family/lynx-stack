@@ -20,7 +20,8 @@ import type { ExposedAPI } from '../index.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
-const DEFAULT_SERVER_HOST = '0.0.0.0'
+const DEFAULT_IPV4_SERVER_HOST = '0.0.0.0'
+const DEFAULT_IPV6_SERVER_HOST = '::'
 
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
 
@@ -407,19 +408,22 @@ async function resolveHostname(
   originalHost: string | undefined,
 ): Promise<{ bindHost?: string, hostname: string }> {
   const hostname = formatHostname(host)
-  if (originalHost !== undefined || hostname !== DEFAULT_SERVER_HOST) {
+  if (originalHost !== undefined || hostname !== DEFAULT_IPV4_SERVER_HOST) {
     return { hostname }
   }
 
   const ipv4Hostname = await findIp('v4')
   if (ipv4Hostname) {
-    return { hostname: ipv4Hostname }
+    return {
+      bindHost: DEFAULT_IPV4_SERVER_HOST,
+      hostname: ipv4Hostname,
+    }
   }
 
   const ipv6Hostname = await findIp('v6')
   if (ipv6Hostname) {
     return {
-      bindHost: stripHostnameBrackets(ipv6Hostname),
+      bindHost: DEFAULT_IPV6_SERVER_HOST,
       hostname: ipv6Hostname,
     }
   }
@@ -430,7 +434,7 @@ async function resolveHostname(
 
 function formatHostname(host: RsbuildServerHost | undefined): string {
   if (host === true || host === undefined) {
-    return DEFAULT_SERVER_HOST
+    return DEFAULT_IPV4_SERVER_HOST
   }
   if (host === false) {
     return 'localhost'
@@ -439,13 +443,6 @@ function formatHostname(host: RsbuildServerHost | undefined): string {
     return `[${host}]`
   }
   return host
-}
-
-function stripHostnameBrackets(hostname: string): string {
-  if (hostname.startsWith('[') && hostname.endsWith(']')) {
-    return hostname.slice(1, -1)
-  }
-  return hostname
 }
 
 function getNetworkPriority(name: string, address: string): number {

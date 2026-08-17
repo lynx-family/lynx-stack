@@ -411,7 +411,7 @@ describe('React - alias', () => {
     ).toBe('preact/hooks/dist/hooks.mjs')
   })
 
-  test.skip('alias once', async () => {
+  test('applies aliases once per bundler chain', async () => {
     rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')
 
@@ -443,22 +443,28 @@ describe('React - alias', () => {
               return pluginReactAlias({ LAYERS }).setup(api)
             },
           } satisfies RsbuildPlugin,
-          {
-            name: 'test2',
-            setup(api) {
-              expect(api.useExposed(Symbol.for('@lynx-js/plugin-react-alias')))
-                .toBe(true)
-            },
-          } satisfies RsbuildPlugin,
         ],
       },
       cwd: path.dirname(fileURLToPath(import.meta.url)),
     })
 
-    await rsbuild.initConfigs()
+    const [firstConfig] = await rsbuild.initConfigs()
+    const [secondConfig] = await rsbuild.initConfigs()
 
-    expect(layerGetter).toBeCalledTimes(2)
-    expect.assertions(2)
+    for (const config of [firstConfig, secondConfig]) {
+      if (!config?.resolve?.alias) {
+        expect.fail('should have config.resolve.alias')
+      }
+
+      expect(config.resolve.alias).toHaveProperty(
+        '@lynx-js/react$',
+        expect.stringContaining(
+          '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+        ),
+      )
+    }
+
+    expect(layerGetter).toBeCalledTimes(4)
   })
 
   describe('with environments', () => {

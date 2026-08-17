@@ -1,5 +1,12 @@
 # @lynx-js/autolink-codegen
 
+## 0.4.1
+
+### Patch Changes
+
+- Build shared Node-API module sources against `@lynx-js/weak-node-api` on every ([#3403](https://github.com/lynx-family/lynx-stack/pull/3403))
+  platform while limiting weak suffix remapping to runtimes that require it.
+
 ## 0.4.0
 
 ### Minor Changes

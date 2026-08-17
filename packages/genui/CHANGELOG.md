@@ -1,5 +1,26 @@
 # @lynx-js/genui
 
+## 0.3.0
+
+### Minor Changes
+
+- Added an `includeDefaultComponents` option to `createOpenUiLibrary`. Set it to ([#3445](https://github.com/lynx-family/lynx-stack/pull/3445))
+  `false` to build a Library only from caller-provided definitions and component
+  groups. The new `openui/explicit` entry and per-component catalog subpaths let
+  applications keep unselected built-ins outside their static dependency graph.
+
+### Patch Changes
+
+- Render OpenUI Query defaults and prefetched results during the initial ([#3443](https://github.com/lynx-family/lynx-stack/pull/3443))
+  ReactLynx render.
+- Updated dependency `@a2ui/web_core` to `0.10.6`. ([#3416](https://github.com/lynx-family/lynx-stack/pull/3416))
+
+- Updated dependency `@openuidev/lang-core` to `^0.2.11`. ([#3419](https://github.com/lynx-family/lynx-stack/pull/3419))
+
+- Add `@lynx-js/react-signals`, a thread-aware Preact Signals adapter that keeps Signals dependencies out of `@lynx-js/react`. Signal reactivity runs on the background thread, while main-thread rendering uses static signal values with inactive setters, subscriptions, and effects. ([#3346](https://github.com/lynx-family/lynx-stack/pull/3346))
+- Updated dependencies [[`c58b6f9`](https://github.com/lynx-family/lynx-stack/commit/c58b6f91cf7084d2585f42e00db3dd699c27ed61), [`328f712`](https://github.com/lynx-family/lynx-stack/commit/328f7125d1881cf438e58aa749f1e554a756b652)]:
+  - @lynx-js/react-signals@0.0.1
+
 ## 0.2.1
 
 ### Patch Changes

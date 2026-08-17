@@ -5,6 +5,7 @@
 
 .Background {
   position: fixed;
+  z-index: -1;
   background: radial-gradient(
     71.43% 62.3% at 46.43% 36.43%,
     rgba(18, 229, 229, 0) 15%,

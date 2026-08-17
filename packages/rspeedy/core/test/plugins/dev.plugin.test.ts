@@ -59,6 +59,7 @@ describe('Plugins - Dev', () => {
     expect(isIPv4(hostname)).toBe(true)
     expect(pathname).toBe('/')
 
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
     expect(isIPv4(rsbuild.getRsbuildConfig().dev!.client!.host!)).toBe(true)
 
     assert(config.resolve?.alias)
@@ -96,7 +97,7 @@ describe('Plugins - Dev', () => {
     const config = await rsbuild.unwrapConfig()
 
     expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
-    expect(rsbuild.getRsbuildConfig().server!.host).toBe('fd00::1')
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('::')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
   })
 

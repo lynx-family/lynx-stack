@@ -57,6 +57,8 @@ minimumReleaseAgeExclude:
   - turbo@2.9.14
   # Renovate security update: dompurify@3.4.0
   - dompurify@3.4.0
+  # Changesets v3 packages were released as one coordinated set.
+  - "@changesets/*"
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
@@ -125,7 +127,7 @@ catalogs:
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0-beta.1"
+    "@rslib/core": "1.0.0-beta.3"
 
   # Rspack monorepo packages
   rspack:
@@ -182,4 +184,7 @@ allowBuilds:
   dprint: true
   esbuild: true
   sharp: true
+  # The published package already includes its generated JS implementation.
+  # Its postinstall only rebuilds that file when it is absent.
+  tos-crc64-js: false
   unrs-resolver: false

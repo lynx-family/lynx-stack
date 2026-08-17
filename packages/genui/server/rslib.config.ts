@@ -11,6 +11,11 @@ export default defineConfig({
       syntax: 'es2022',
       bundle: true,
       dts: false,
+      shims: {
+        esm: {
+          __dirname: true,
+        },
+      },
       source: {
         entry: {
           index: './src/index.ts',

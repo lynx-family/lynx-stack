@@ -18,11 +18,14 @@ pnpm install
 ```
 
 The **Create** (chat) tab talks to the GenUI server for agent responses and
-preview publishing. Start it on port `3060` with at least an OpenAI key:
+preview publishing. Start it on port `3060` with one server-owned model
+configuration:
 
 ```bash
 # 2. Start the GenUI server → http://localhost:3060
-OPENAI_API_KEY=sk-... pnpm -C packages/genui/server dev
+GENUI_MODEL_CONFIG_JSON='{"GPT-5.4":{"model":"gpt-5.4","apiKey":"sk-...","baseURL":"https://api.openai.com/v1","api":"responses","default":true}}' \
+  LYNX_USE_PORT=3060 \
+  pnpm -C packages/genui/server dev
 ```
 
 Then start the playground and open the URL it prints (defaults to
@@ -33,34 +36,59 @@ Then start the playground and open the URL it prints (defaults to
 pnpm -C packages/genui/playground dev
 ```
 
-On `localhost`, the Create tab automatically targets your local server on
-`:3060`. To use the **hosted** agent without running a server of your own,
-append the endpoint override to the playground URL:
+The playground targets `http://localhost:3060` by default. Set the build-time
+`GENUI_SERVER_URL` environment variable to use another GenUI server origin:
+
+```bash
+GENUI_SERVER_URL=https://genui.example.com \
+  pnpm -C packages/genui/playground dev
+```
+
+The configured origin is shared by Create, Bench, health checks, and preview
+payload publishing. It must be an `http` or `https` origin without credentials,
+a path, query parameters, or a fragment.
+
+Create and Bench also retain their URL query overrides for local diagnosis:
 
 ```text
-?a2uiEndpoint=https://genui-server.vercel.app/a2ui/stream
+?a2uiEndpoint=http://localhost:3060/a2ui/stream
+?openuiEndpoint=http://localhost:3060/openui/stream
+?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
+?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
 ```
+
+### Client environment
+
+| Variable                                 | Purpose                                     | Default                    |
+| ---------------------------------------- | ------------------------------------------- | -------------------------- |
+| `GENUI_SERVER_URL`                       | GenUI server origin used by all APIs        | `http://localhost:3060`    |
+| `PORT`                                   | Playground development server port          | `3000`                     |
+| `ASSET_PREFIX`                           | Hosted static asset prefix                  | —                          |
+| `A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH` | Set to `0` to disable the dev payload store | enabled outside production |
 
 ### Server environment
 
-| Variable                                                                     | Purpose                                            | Default             |
-| ---------------------------------------------------------------------------- | -------------------------------------------------- | ------------------- |
-| `OPENAI_API_KEY`                                                             | Agent model access (required for the Create tab)   | —                   |
-| `OPENAI_MODEL`                                                               | Model id                                           | `gpt-4o-mini`       |
-| `OPENAI_BASE_URL`                                                            | Custom OpenAI-compatible endpoint                  | OpenAI              |
-| `UI_JUDGE_SERVER_URL`                                                        | Rust UI Judge sidecar for Bench scoring            | disabled            |
-| `UI_JUDGE_BUNDLE_URL`                                                        | `a2ui.lynx.js` bundle rendered by UI Judge         | hosted GenUI bundle |
-| `SUPABASE_URL`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | Short, shareable preview URLs via Supabase Storage | in-memory dev store |
-| `PEXELS_API_KEY`                                                             | Stock-image search in generated UIs                | —                   |
+| Variable                                                       | Purpose                                          | Default             |
+| -------------------------------------------------------------- | ------------------------------------------------ | ------------------- |
+| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations    | —                   |
+| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring          | disabled            |
+| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
+| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS | disabled            |
+| `PEXELS_API_KEY`                                               | Stock-image search in generated UIs              | —                   |
+
+The Create tab loads its model selector from the server's `GET /models`
+endpoint. Provider credentials, upstream model ids, and upstream API URLs
+remain server-only.
 
 Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
 enabled only when that sidecar is ready. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
 startup and model environment.
 
-Conversation **share** links and Web / Native Preview reuse the Supabase Storage
-payload-publishing path — see [`examples/README.md`](./examples/README.md) for
-the bucket setup and local toggles.
+Conversation **share** links and Web / Native Preview upload through the GenUI
+server and consume the public URL returned by it. The playground does not
+depend on the storage provider — see [`examples/README.md`](./examples/README.md)
+for the server-side bucket setup and local toggles.
 
 ## Scripts
 
