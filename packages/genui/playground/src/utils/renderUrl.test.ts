@@ -4,11 +4,17 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { decodeBase64Url } from './base64url.js';
+import { PROTOCOLS } from './protocol.js';
 import {
+  A2UI_INLINE_RENDER_URL_MAX_LENGTH,
   OPENUI_INLINE_RENDER_URL_MAX_LENGTH,
+  buildA2UIRenderShellUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
+  buildRenderUrl,
+  canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
 } from './renderUrl.js';
 
@@ -30,6 +36,80 @@ describe('A2UI render payloads', () => {
       messages: [],
       messagesUrl: 'https://example.com/messages.json',
     })).toBe(true);
+  });
+
+  test('requires a non-blank external payload reference', () => {
+    expect(hasExternalA2UIRenderPayload({})).toBe(false);
+    expect(hasExternalA2UIRenderPayload({ demoId: '   ' })).toBe(false);
+    expect(hasExternalA2UIRenderPayload({ messagesUrl: '' })).toBe(false);
+    expect(hasExternalA2UIRenderPayload({ demoId: 'weather' })).toBe(true);
+    expect(hasExternalA2UIRenderPayload({
+      messagesUrl: 'https://example.com/messages.json',
+    })).toBe(true);
+  });
+
+  test('keeps live messages and action mocks out of the render shell URL', () => {
+    const url = new URL(buildA2UIRenderShellUrl({
+      protocol: PROTOCOLS.a2ui,
+      demoUrl: './a2ui.web.js',
+      theme: 'dark',
+      speed: 2,
+      liveAction: true,
+      playbackMode: true,
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(url.searchParams.get('protocol')).toBe('a2ui');
+    expect(url.searchParams.get('demoUrl')).toBe('./a2ui.web.js');
+    expect(url.searchParams.get('theme')).toBe('dark');
+    expect(url.searchParams.get('speed')).toBe('2');
+    expect(url.searchParams.get('liveAction')).toBe('1');
+    expect(url.searchParams.get('playbackMode')).toBe('1');
+    expect(url.searchParams.has('messages')).toBe(false);
+    expect(url.searchParams.has('messagesUrl')).toBe(false);
+    expect(url.searchParams.has('actionMocks')).toBe(false);
+    expect(url.searchParams.has('initData')).toBe(false);
+  });
+
+  test('marks oversized Chinese and image payload URLs as unsafe', () => {
+    const url = buildRenderUrl({
+      protocol: PROTOCOLS.a2ui,
+      demoUrl: './a2ui.web.js',
+      messages: [{
+        updateDataModel: {
+          path: '/weather',
+          value: {
+            description: '北京今天晴朗'.repeat(2_000),
+            imageUrl: `https://image.example.com/${'a'.repeat(1_000)}`,
+          },
+        },
+      }],
+    }, 'https://lynx-stack.dev/genui/');
+
+    expect(url.length).toBeGreaterThan(A2UI_INLINE_RENDER_URL_MAX_LENGTH);
+    expect(canInlineA2UIRenderUrl(url)).toBe(false);
+  });
+
+  test('keeps external A2UI payload URLs short without embedding messages', () => {
+    const url = new URL(buildRenderUrl({
+      protocol: PROTOCOLS.a2ui,
+      demoUrl: './a2ui.web.js',
+      messagesUrl: 'https://storage.example.com/a2ui/id/messages.json',
+      messages: [{ text: '北京'.repeat(4_000) }],
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(canInlineA2UIRenderUrl(url.toString())).toBe(true);
+    expect(url.searchParams.get('messagesUrl')).toBe(
+      'https://storage.example.com/a2ui/id/messages.json',
+    );
+    expect(url.searchParams.has('messages')).toBe(false);
+    const initData = url.searchParams.get('initData');
+    expect(initData).toBeTruthy();
+    if (!initData) return;
+    expect(JSON.parse(decodeBase64Url(initData))).toEqual({
+      protocol: 'a2ui',
+      demoUrl: './a2ui.web.js',
+      messagesUrl: 'https://storage.example.com/a2ui/id/messages.json',
+    });
   });
 });
 

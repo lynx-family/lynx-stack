@@ -652,6 +652,15 @@ function Render() {
         }
         return;
       }
+      if (name === 'A2UI_RUNTIME_READY') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            { type: 'A2UI_RENDER_READY', runtimeReady: true },
+            '*',
+          );
+        }
+        return;
+      }
       if (name === 'A2UI_USER_ACTION') {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(

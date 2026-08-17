@@ -6,6 +6,7 @@ import type { Protocol } from './protocol.js';
 
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
 export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
+export const A2UI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 
 export interface RenderInit {
@@ -59,6 +60,14 @@ export function hasShareableA2UIRenderPayload(
     : init.messages !== undefined;
 }
 
+export function hasExternalA2UIRenderPayload(
+  init: Pick<RenderInit, 'demoId' | 'messagesUrl'>,
+): boolean {
+  return [init.demoId, init.messagesUrl].some(
+    (value) => typeof value === 'string' && value.trim().length > 0,
+  );
+}
+
 function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   const initData: Record<string, unknown> = {
     protocol: init.protocol.name,
@@ -86,13 +95,60 @@ function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   return initData;
 }
 
-export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
+type A2UIRenderShellInit = Pick<
+  RenderInit,
+  | 'demoUrl'
+  | 'instant'
+  | 'liveAction'
+  | 'playbackMode'
+  | 'protocol'
+  | 'speed'
+  | 'theme'
+>;
+
+function buildA2UIRenderBaseUrl(
+  init: A2UIRenderShellInit,
+  baseUrl: string,
+): URL {
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', init.protocol.name);
   url.searchParams.set('demoUrl', init.demoUrl);
   if (init.theme) {
     url.searchParams.set('theme', init.theme);
   }
+
+  if (init.speed !== undefined && init.speed !== 1) {
+    url.searchParams.set('speed', String(init.speed));
+  }
+
+  if (init.instant) {
+    url.searchParams.set('instant', '1');
+  }
+
+  if (init.liveAction) {
+    url.searchParams.set('liveAction', '1');
+  }
+
+  if (init.playbackMode) {
+    url.searchParams.set('playbackMode', '1');
+  }
+
+  return url;
+}
+
+/**
+ * Build an A2UI render shell that receives its messages from the parent frame.
+ * Keeping the payload out of the navigation URL avoids request-line limits.
+ */
+export function buildA2UIRenderShellUrl(
+  init: A2UIRenderShellInit,
+  baseUrl: string,
+): string {
+  return buildA2UIRenderBaseUrl(init, baseUrl).toString();
+}
+
+export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
+  const url = buildA2UIRenderBaseUrl(init, baseUrl);
 
   if (init.demoId) {
     // Known demo: reference static JSON file by ID instead of inlining payload.
@@ -124,22 +180,6 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
         encodeBase64Url(JSON.stringify(init.actionMocks)),
       );
     }
-  }
-
-  if (init.speed !== undefined && init.speed !== 1) {
-    url.searchParams.set('speed', String(init.speed));
-  }
-
-  if (init.instant) {
-    url.searchParams.set('instant', '1');
-  }
-
-  if (init.liveAction) {
-    url.searchParams.set('liveAction', '1');
-  }
-
-  if (init.playbackMode) {
-    url.searchParams.set('playbackMode', '1');
   }
 
   return url.toString();
@@ -204,4 +244,8 @@ export function buildMcpAppsRenderUrl(
 
 export function canInlineOpenUIRenderUrl(url: string): boolean {
   return url.length <= OPENUI_INLINE_RENDER_URL_MAX_LENGTH;
+}
+
+export function canInlineA2UIRenderUrl(url: string): boolean {
+  return url.length <= A2UI_INLINE_RENDER_URL_MAX_LENGTH;
 }

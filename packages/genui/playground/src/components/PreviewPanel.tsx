@@ -29,10 +29,13 @@ import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
 import {
+  buildA2UIRenderShellUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
+  canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
 } from '../utils/renderUrl.js';
 
@@ -584,31 +587,34 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     if (previewSource.kind === 'a2ui') {
       const useClientPayloadStore = shouldUseClientPayloadStore();
-      const canSharePayload = hasShareableA2UIRenderPayload(previewSource)
+      const hasPayload = hasShareableA2UIRenderPayload(previewSource)
         || useClientPayloadStore;
-      if (!canSharePayload) {
+      if (!hasPayload) {
         setRenderUrl('');
         setRenderShareUrl('');
         setLynxDevUrl('');
         return;
       }
 
-      const url = buildRenderUrl(
-        {
-          protocol: previewSource.protocol,
-          demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-          messagesUrl: previewSource.messagesUrl,
-          messages: previewSource.messages,
-          actionMocksUrl: previewSource.actionMocksUrl,
-          actionMocks: previewSource.actionMocks,
-          theme: previewSource.theme,
-          demoId: previewSource.demoId,
-          speed,
-          liveAction: previewSource.liveAction,
-          playbackMode: previewSource.playbackMode,
-        },
-        baseUrl,
-      );
+      const renderInit = {
+        protocol: previewSource.protocol,
+        demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+        messagesUrl: previewSource.messagesUrl,
+        messages: previewSource.messages,
+        actionMocksUrl: previewSource.actionMocksUrl,
+        actionMocks: previewSource.actionMocks,
+        theme: previewSource.theme,
+        demoId: previewSource.demoId,
+        speed,
+        liveAction: previewSource.liveAction,
+        playbackMode: previewSource.playbackMode,
+      };
+      const isLivePreview = previewSource.liveAction === true;
+      const hasExternalPayload = hasExternalA2UIRenderPayload(previewSource);
+      const inlineUrl = buildRenderUrl(renderInit, baseUrl);
+      const url = isLivePreview
+        ? buildA2UIRenderShellUrl(renderInit, baseUrl)
+        : inlineUrl;
       // Shared URLs always render normally — playback is a local-only
       // visualization tool, not something a QR-scanner should land in.
       const shareUrl = buildRenderUrl(
@@ -625,61 +631,72 @@ export function PreviewPanel(props: PreviewPanelProps) {
         },
         shareBaseUrl,
       );
-      setRenderUrl(url);
-      setRenderShareUrl(canSharePayload ? shareUrl : '');
+      setRenderUrl(canInlineA2UIRenderUrl(url) ? url : '');
+      setRenderShareUrl(
+        (hasExternalPayload || !isLivePreview)
+          && canInlineA2UIRenderUrl(shareUrl)
+          ? shareUrl
+          : '',
+      );
 
-      if (!canSharePayload) {
-        setLynxDevUrl('');
-        return;
-      }
-
-      if (!rspeedyDevUrl) {
-        setLynxDevUrl('');
-        return;
-      }
-
-      const uInline = new URL(rspeedyDevUrl);
-      if (speed !== 1) {
-        uInline.searchParams.set('speed', String(speed));
-      }
-      uInline.searchParams.set('theme', previewSource.theme);
-      if (previewSource.demoId) {
-        const demosBase = shareBaseUrl.endsWith('/')
-          ? shareBaseUrl
-          : `${shareBaseUrl}/`;
-        uInline.searchParams.set(
-          'messagesUrl',
-          new URL(`demos/${previewSource.demoId}.json`, demosBase).toString(),
-        );
-      } else if (previewSource.messagesUrl) {
-        uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
-        uInline.searchParams.delete('messages');
-        if (previewSource.actionMocksUrl) {
-          uInline.searchParams.set(
-            'actionMocksUrl',
-            previewSource.actionMocksUrl,
-          );
-          uInline.searchParams.delete('actionMocks');
-        } else if (previewSource.actionMocks) {
-          uInline.searchParams.set(
-            'actionMocks',
-            JSON.stringify(previewSource.actionMocks),
-          );
-          uInline.searchParams.delete('actionMocksUrl');
+      if (rspeedyDevUrl) {
+        const uInline = new URL(rspeedyDevUrl);
+        if (speed !== 1) {
+          uInline.searchParams.set('speed', String(speed));
         }
+        uInline.searchParams.set('theme', previewSource.theme);
+        let hasNativePayload = false;
+        if (previewSource.demoId) {
+          const demosBase = shareBaseUrl.endsWith('/')
+            ? shareBaseUrl
+            : `${shareBaseUrl}/`;
+          uInline.searchParams.set(
+            'messagesUrl',
+            new URL(
+              `demos/${previewSource.demoId}.json`,
+              demosBase,
+            ).toString(),
+          );
+          hasNativePayload = true;
+        } else if (previewSource.messagesUrl) {
+          uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
+          uInline.searchParams.delete('messages');
+          if (previewSource.actionMocksUrl) {
+            uInline.searchParams.set(
+              'actionMocksUrl',
+              previewSource.actionMocksUrl,
+            );
+            uInline.searchParams.delete('actionMocks');
+          } else if (previewSource.actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+            uInline.searchParams.delete('actionMocksUrl');
+          }
+          hasNativePayload = true;
+        } else if (!isLivePreview) {
+          uInline.searchParams.set(
+            'messages',
+            JSON.stringify(previewSource.messages),
+          );
+          if (previewSource.actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+          }
+          hasNativePayload = true;
+        }
+        const nativeUrl = uInline.toString();
+        setLynxDevUrl(
+          hasNativePayload && canInlineA2UIRenderUrl(nativeUrl)
+            ? nativeUrl
+            : '',
+        );
       } else {
-        uInline.searchParams.set(
-          'messages',
-          JSON.stringify(previewSource.messages),
-        );
-        if (previewSource.actionMocks) {
-          uInline.searchParams.set(
-            'actionMocks',
-            JSON.stringify(previewSource.actionMocks),
-          );
-        }
+        setLynxDevUrl('');
       }
-      setLynxDevUrl(uInline.toString());
 
       if (
         previewSource.demoId
@@ -740,9 +757,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
             },
             shareBaseUrl,
           );
-          setRenderUrl(shortUrl);
-          setRenderShareUrl(shortShareUrl);
+          if (!isLivePreview && canInlineA2UIRenderUrl(shortUrl)) {
+            setRenderUrl(shortUrl);
+          }
+          setRenderShareUrl(
+            canInlineA2UIRenderUrl(shortShareUrl) ? shortShareUrl : '',
+          );
 
+          if (!rspeedyDevUrl) return;
           const u = new URL(rspeedyDevUrl);
           if (speed !== 1) {
             u.searchParams.set('speed', String(speed));
@@ -763,9 +785,12 @@ export function PreviewPanel(props: PreviewPanelProps) {
             u.searchParams.delete('actionMocksUrl');
             u.searchParams.delete('actionMocks');
           }
-          setLynxDevUrl(u.toString());
+          const nativeUrl = u.toString();
+          setLynxDevUrl(
+            canInlineA2UIRenderUrl(nativeUrl) ? nativeUrl : '',
+          );
         } catch {
-          // Keep the inline URLs above if the local dev payload store is unavailable.
+          // Keep the live shell or length-guarded inline URL selected above.
         }
       })();
       return;
@@ -932,6 +957,19 @@ export function PreviewPanel(props: PreviewPanelProps) {
           showQrCode,
         },
       });
+    } else if (
+      previewSource.kind === 'a2ui'
+      && previewSource.liveAction === true
+    ) {
+      cards.push({
+        key: 'webPreview',
+        item: {
+          title: 'Web Preview',
+          description:
+            'This live preview stays in the current browser. Sharing requires a short published preview payload URL.',
+          placeholder: 'Share link unavailable',
+        },
+      });
     }
     if (lynxDevUrl) {
       cards.push({
@@ -1032,31 +1070,35 @@ export function PreviewPanel(props: PreviewPanelProps) {
                       ? item.errorDescription
                       : item.description}
                   </div>
-                  <div className='previewQrUrlRow'>
-                    <div
-                      className='previewQrUrlText'
-                      title={item.urlTitle ?? item.url}
-                    >
-                      {item.urlTitle ?? item.url}
-                    </div>
-                    <button
-                      type='button'
-                      className='previewQrCopyBtn'
-                      aria-label={item.copyButtonTitle ?? 'Copy URL'}
-                      title={copied
-                        ? 'Copied'
-                        : (copyFailed
-                          ? 'Copy failed'
-                          : (item.copyButtonTitle ?? 'Copy URL'))}
-                      onClick={() => {
-                        if (item.url) {
-                          handleCopyUrl(key, item.url);
-                        }
-                      }}
-                    >
-                      {copied ? 'Copied' : (copyFailed ? 'Failed' : 'Copy')}
-                    </button>
-                  </div>
+                  {item.url
+                    ? (
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={item.urlTitle ?? item.url}
+                        >
+                          {item.urlTitle ?? item.url}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label={item.copyButtonTitle ?? 'Copy URL'}
+                          title={copied
+                            ? 'Copied'
+                            : (copyFailed
+                              ? 'Copy failed'
+                              : (item.copyButtonTitle ?? 'Copy URL'))}
+                          onClick={() => {
+                            if (item.url) handleCopyUrl(key, item.url);
+                          }}
+                        >
+                          {copied
+                            ? 'Copied'
+                            : (copyFailed ? 'Failed' : 'Copy')}
+                        </button>
+                      </div>
+                    )
+                    : null}
                 </div>
                 {item.url && item.showQrCode !== false
                   ? (

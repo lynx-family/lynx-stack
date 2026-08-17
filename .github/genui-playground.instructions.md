@@ -109,6 +109,8 @@ Gate host-specific OpenUI visual treatments behind an additional root class in t
 
 ### Large Preview Payloads
 
+For A2UI Create previews, keep the `render.html` navigation URL payload-free and deliver the current surface through `A2UI_REPLAY_MESSAGES` only after the Lynx A2UI runtime reports that its message store is ready; the outer render-frame listener alone is not sufficient readiness. Continue using `A2UI_LIVE_MESSAGES` only for later deltas. A live preview share or native URL must use `demoId` or a published `messagesUrl` and must never fall back to inline messages. Apply `A2UI_INLINE_RENDER_URL_MAX_LENGTH` to remaining non-live inline A2UI preview URLs so deployed request-line limits cannot produce HTTP 414 responses.
+
 When building OpenUI playground preview links, avoid inlining large OpenUI Lang source in `rawText` query parameters. URL-encoded Chinese or generated DSL can exceed common request-line limits on deployed hosts; publish large source text and pass `rawTextUrl` to `render.html` instead.
 
 ## LazyComponent Integration
