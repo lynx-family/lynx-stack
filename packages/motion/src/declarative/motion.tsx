@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+'use no main thread';
+
 // This must be evaluated before Motion's runtime modules. In QuickJS,
 // motion-dom reads queueMicrotask during module initialization.
 import './mainThreadDependencies.js';

@@ -685,6 +685,7 @@ export interface WorkletVisitorConfig {
  * leaves. An object declares exact property or array-index paths; `'*'` is a
  * wildcard key at that level.
  *
+ * @public
  * @experimental
  */
 export type DirectiveInferenceRule = true | '*' | '**' | {
@@ -693,6 +694,7 @@ export type DirectiveInferenceRule = true | '*' | '**' | {
 /**
  * Declares main-thread positions on one imported export.
  *
+ * @public
  * @experimental
  */
 export interface DirectiveInferenceDeclaration {
@@ -706,6 +708,7 @@ export interface DirectiveInferenceDeclaration {
 /**
  * Declarations for one exact module import source.
  *
+ * @public
  * @experimental
  */
 export interface DirectiveInferenceModule {
@@ -719,6 +722,7 @@ export interface DirectiveInferenceModule {
  * Versioned, API-agnostic directive-inference protocol consumed by the
  * transform.
  *
+ * @public
  * @experimental
  */
 export interface DirectiveInferenceConfig {
@@ -728,6 +732,7 @@ export interface DirectiveInferenceConfig {
 /**
  * One inferred source site.
  *
+ * @public
  * @experimental
  */
 export interface DirectiveInferenceRecord {

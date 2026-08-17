@@ -12,10 +12,7 @@ import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit'
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { takeCallableReleasePatch } from '../../../src/snapshot/worklet/callable/callablePool';
 import { injectUpdateMTCallableCtx } from '../../../src/snapshot/worklet/callable/updateCallableCtx';
-import {
-  MainThreadInstance,
-  useMainThreadInstance,
-} from '../../../src/snapshot/worklet/callable/mainThreadInstance';
+import { MainThreadInstance, useMainThreadInstance } from '../../../src/snapshot/worklet/callable/mainThreadInstance';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
 import { globalEnvManager } from '../utils/envManager';

@@ -49,7 +49,9 @@ describe('directive inference builds', () => {
           },
         })
 
-        await rsbuild.build()
+        const result = await rsbuild.build()
+        expect(result.stats?.hasWarnings()).toBe(false)
+        await result.close()
 
         const report = JSON.parse(
           await fs.readFile(

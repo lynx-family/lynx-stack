@@ -42,6 +42,40 @@ export interface DefineDceVisitorConfig {
 }
 
 // @public
+export interface DirectiveInferenceConfig {
+    // (undocumented)
+    modules: ReadonlyArray<DirectiveInferenceModule>
+    // (undocumented)
+    protocolVersion: 1
+}
+
+// @public
+export interface DirectiveInferenceDeclaration {
+    args?: Readonly<Record<string, DirectiveInferenceRule>>
+    marker?: boolean
+    props?: Readonly<Record<string, DirectiveInferenceRule>>
+}
+
+// @public
+export interface DirectiveInferenceModule {
+    // (undocumented)
+    exports: Readonly<Record<string, DirectiveInferenceDeclaration>>
+    // (undocumented)
+    manifest?: string
+    // (undocumented)
+    package: string
+    // (undocumented)
+    packageVersion?: string
+    // (undocumented)
+    source: string
+}
+
+// @public
+export type DirectiveInferenceRule = true | '*' | '**' | {
+    readonly [path: string]: DirectiveInferenceRule
+}
+
+// @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
     extractedStrArr?: Array<string>
@@ -116,9 +150,5 @@ export interface TransformBuiltinAttributeNamesOptions {
     preserve?: ReadonlyArray<string>
     rename?: Readonly<Record<string, string>>
 }
-
-// Warnings were encountered during analysis:
-//
-// lib/pluginReactLynx.d.ts:122:9 - (ae-forgotten-export) The symbol "DirectiveInferenceConfig" needs to be exported by the entry point index.d.ts
 
 ```

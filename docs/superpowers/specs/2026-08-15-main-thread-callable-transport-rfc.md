@@ -11,8 +11,8 @@ Introduce a generic, lifecycle-safe way to hand an **arbitrary consumer-authored
 
 The proposal has two layers with deliberately different names:
 
-- **Mechanism** (internal): the *callable transport* — a `_wcid`-branded handle, a main-thread registry of identity-stable wrapper functions, and an ordered per-commit ctx patch channel.
-- **Public API** (for library authors): *main-thread event functions* — `useMainThreadEvent(fn)` for a single function and `useMainThreadEvents(value)` for values with nested functions (e.g. a Motion `transition` object containing an easing function array), in the direct lineage of React's `useEvent`/`useEffectEvent` (see "Naming" below).
+- **Mechanism** (internal): the _callable transport_ — a `_wcid`-branded handle, a main-thread registry of identity-stable wrapper functions, and an ordered per-commit ctx patch channel.
+- **Public API** (for library authors): _main-thread event functions_ — `useMainThreadEvent(fn)` for a single function and `useMainThreadEvents(value)` for values with nested functions (e.g. a Motion `transition` object containing an easing function array), in the direct lineage of React's `useEvent`/`useEffectEvent` (see "Naming" below).
 
 This RFC follows the model laid out by the MainThreadObject RFC (#3446): it names the background representation an opaque handle, keeps wire fields internal, and separates identity, transport, and lifecycle. It does not depend on the MainThreadObject implementation (#3477) and composes with it.
 
@@ -61,47 +61,47 @@ Two Motion conformance gaps are hard-blocked on this capability (both are adapte
 
 ### Why every existing mechanism falls short
 
-| Mechanism | Why it is not enough |
-| --- | --- |
-| Package-owned callable registry (`packages/motion/src/utils/registeredFunction.ts`, used by `mini/core/easings.ts`) | Registers a **fixed set of package functions at bundle init** under string handles. Consumer closures, captured values, per-instance identity, and unmount release are all unsupported. This is the workaround the Motion mini easings use today, and it caps the API surface at a hardcoded easing list. |
-| Nested worklet capture (`transformWorkletInner` already binds nested `_wkltId` descriptors) | Works only for a ctx that travels whole through one serialization. A long-lived main-thread consumer (an animation loop, a style effect) retains the ctx **from the render that delivered it**; later rerenders never refresh its captured values. There is no unmount release, and nested/cross-module descriptors have hydrated as non-callable plain objects on Lynx for Web. |
-| Plain (non-directive) functions in captures | `JSON.stringify` silently drops function-valued properties from `_c`; the main thread sees `undefined` with no diagnostic. The DEV report in `workletEvent.ts` only covers the top-level prop position. |
-| `runOnBackground` handles (`_jsFn`) | Asynchronous by design. Easing and transform composition are synchronous per-frame calls. |
-| `MainThreadObject` (#3446 / #3477) | Payload is a **one-shot initialization** realized into one stable object. An event function needs the opposite: per-render re-capture behind a stable identity. |
-| `MainThreadRef` | A mutable cell whose contents are written **by main-thread code**. Here the source of truth (the closure and its captures) lives on the background thread and must be pushed down. |
+| Mechanism                                                                                                           | Why it is not enough                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package-owned callable registry (`packages/motion/src/utils/registeredFunction.ts`, used by `mini/core/easings.ts`) | Registers a **fixed set of package functions at bundle init** under string handles. Consumer closures, captured values, per-instance identity, and unmount release are all unsupported. This is the workaround the Motion mini easings use today, and it caps the API surface at a hardcoded easing list.                                                                        |
+| Nested worklet capture (`transformWorkletInner` already binds nested `_wkltId` descriptors)                         | Works only for a ctx that travels whole through one serialization. A long-lived main-thread consumer (an animation loop, a style effect) retains the ctx **from the render that delivered it**; later rerenders never refresh its captured values. There is no unmount release, and nested/cross-module descriptors have hydrated as non-callable plain objects on Lynx for Web. |
+| Plain (non-directive) functions in captures                                                                         | `JSON.stringify` silently drops function-valued properties from `_c`; the main thread sees `undefined` with no diagnostic. The DEV report in `workletEvent.ts` only covers the top-level prop position.                                                                                                                                                                          |
+| `runOnBackground` handles (`_jsFn`)                                                                                 | Asynchronous by design. Easing and transform composition are synchronous per-frame calls.                                                                                                                                                                                                                                                                                        |
+| `MainThreadObject` (#3446 / #3477)                                                                                  | Payload is a **one-shot initialization** realized into one stable object. An event function needs the opposite: per-render re-capture behind a stable identity.                                                                                                                                                                                                                  |
+| `MainThreadRef`                                                                                                     | A mutable cell whose contents are written **by main-thread code**. Here the source of truth (the closure and its captures) lives on the background thread and must be pushed down.                                                                                                                                                                                               |
 
 ### Position in the MainThreadObject algebra
 
 #3446 separates realization (payload → stable realized value) from binding (a stable slot whose target changes over time). `main-thread:ref` already decomposes into both: a renderer-written binding (`MutableCell`) over native-backed realized objects (`MainThread.Element`). Placing the event function in the same decomposition exposes the axes that were previously implicit:
 
-| Concept | Binding | Binding writer | Exposure | Target ownership |
-| --- | --- | --- | --- | --- |
-| MainThreadObject | none (one-shot) | — | handle → object | owned by the transport (`dispose`) |
-| `main-thread:ref` | yes | MTS renderer | exposed cell (`.current`) | borrowed (Elements belong to the renderer) |
-| **MainThreadEvent** | **yes** | **BTS commits** | **hidden (auto-deref function)** | **owned (replaced ctxs are released)** |
+| Concept             | Binding         | Binding writer  | Exposure                         | Target ownership                           |
+| ------------------- | --------------- | --------------- | -------------------------------- | ------------------------------------------ |
+| MainThreadObject    | none (one-shot) | —               | handle → object                  | owned by the transport (`dispose`)         |
+| `main-thread:ref`   | yes             | MTS renderer    | exposed cell (`.current`)        | borrowed (Elements belong to the renderer) |
+| **MainThreadEvent** | **yes**         | **BTS commits** | **hidden (auto-deref function)** | **owned (replaced ctxs are released)**     |
 
-An event function is a *binding whose successive targets are function realizations of fresh ctxs*, exposed behind a stable function identity: the wrapper is `Binding<Fn>` plus auto-dereference, because upstream consumers (Motion) expect a plain function, not a cell. The two properties that no existing primitive combines are the **binding writer** (the background thread, at commit cadence — `main-thread:ref` is written from the other side) and the **hidden exposure** (consumers cannot observe rebinds; calling always dereferences to the latest committed implementation).
+An event function is a _binding whose successive targets are function realizations of fresh ctxs_, exposed behind a stable function identity: the wrapper is `Binding<Fn>` plus auto-dereference, because upstream consumers (Motion) expect a plain function, not a cell. The two properties that no existing primitive combines are the **binding writer** (the background thread, at commit cadence — `main-thread:ref` is written from the other side) and the **hidden exposure** (consumers cannot observe rebinds; calling always dereferences to the latest committed implementation).
 
 ## Naming: the useEvent lineage
 
 `useMainThreadEvent` is the main-thread counterpart of React's `useEvent`/`useEffectEvent`, and the correspondence is an isomorphism, not an analogy. `useEffectEvent`'s three-line polyfill maps piecewise onto this design:
 
-| React (`useEffectEvent` polyfill) | Lynx (`useMainThreadEvent`) |
-| --- | --- |
-| a `useRef` cell holding the latest closure | the `_wcid` registry slot on the main thread (the cell moved across heaps) |
-| `useInsertionEffect(() => { ref.current = fn })` | the per-commit ctx patch (same commit timing, serialized) |
-| stable `(...a) => ref.current(...a)` wrapper | the registry-cached wrapper: `(...a) => runWorklet(registry[id], a)` |
+| React (`useEffectEvent` polyfill)                | Lynx (`useMainThreadEvent`)                                                |
+| ------------------------------------------------ | -------------------------------------------------------------------------- |
+| a `useRef` cell holding the latest closure       | the `_wcid` registry slot on the main thread (the cell moved across heaps) |
+| `useInsertionEffect(() => { ref.current = fn })` | the per-commit ctx patch (same commit timing, serialized)                  |
+| stable `(...a) => ref.current(...a)` wrapper     | the registry-cached wrapper: `(...a) => runWorklet(registry[id], a)`       |
 
 Every documented constraint transfers:
 
-- *stable identity, never a dependency* → the handle is stable; effects that ship it can use `[]` deps; change detection must use content, not identity (as the Motion adapter's `animationKey` already does);
-- *not callable during render* → structurally enforced: on the background thread the handle is inert (not a function at all), and the main thread has no user-facing render phase — every call site is post-commit by construction;
-- *reads the latest **committed** values* → here "committed" additionally means "committed and delivered";
-- *callable from an unmounting Effect's cleanup* → the transport flushes ctx **updates before** the commit's patch and **releases after** it, so an unmounting commit's main-thread tasks (e.g. Motion stopping an animation, which samples one final frame through the consumer easing) still resolve the function. This ordering was discovered independently through the declarative Motion conformance run — convergent evolution on the same semantic point.
+- _stable identity, never a dependency_ → the handle is stable; effects that ship it can use `[]` deps; change detection must use content, not identity (as the Motion adapter's `animationKey` already does);
+- _not callable during render_ → structurally enforced: on the background thread the handle is inert (not a function at all), and the main thread has no user-facing render phase — every call site is post-commit by construction;
+- _reads the latest **committed** values_ → here "committed" additionally means "committed and delivered";
+- _callable from an unmounting Effect's cleanup_ → the transport flushes ctx **updates before** the commit's patch and **releases after** it, so an unmounting commit's main-thread tasks (e.g. Motion stopping an animation, which samples one final frame through the consumer easing) still resolve the function. This ordering was discovered independently through the declarative Motion conformance run — convergent evolution on the same semantic point.
 
-React narrowed the original `useEvent` into `useEffectEvent` (only callable inside Effects, never passed to other components) because in a single heap those rules are the only way to police call sites and to prevent a never-changing identity from leaking into reactive data. Across the thread boundary both hazards vanish structurally: the callable form of the function only exists on the main thread, where there is no reactivity to confuse it with — passing it to a foreign consumer is not a hazard but the entire point. Under the reading that *the main thread is the external system that Effects synchronize with*, calling the event from main-thread code **is** calling it from within the Effect — the boundary React enforces by convention is physical here. Reanimated reached the same conclusion and ships its cross-runtime equivalent as `useEvent`.
+React narrowed the original `useEvent` into `useEffectEvent` (only callable inside Effects, never passed to other components) because in a single heap those rules are the only way to police call sites and to prevent a never-changing identity from leaking into reactive data. Across the thread boundary both hazards vanish structurally: the callable form of the function only exists on the main thread, where there is no reactivity to confuse it with — passing it to a foreign consumer is not a hazard but the entire point. Under the reading that _the main thread is the external system that Effects synchronize with_, calling the event from main-thread code **is** calling it from within the Effect — the boundary React enforces by convention is physical here. Reanimated reached the same conclusion and ships its cross-runtime equivalent as `useEvent`.
 
-Terminology in this document: the **mechanism** keeps the name *callable transport* (registry, `_wcid`, ctx patches); the **public API** adopts the event-function lineage.
+Terminology in this document: the **mechanism** keeps the name _callable transport_ (registry, `_wcid`, ctx patches); the **public API** adopts the event-function lineage.
 
 ## Proposed model
 
@@ -231,5 +231,5 @@ Beneath both, the implementation substrate is shared and should eventually be ex
 The "shared slot mechanism" anticipated under Convergence has been made concrete: the family's other write policies are implemented over the same pool, each with its own RFC issue, in commit `4d11046b4`:
 
 - **#3540 — `useMainThreadInstance(create, dispose?)`**: create-once main-thread objects (the distributed instance idiom) with deterministic dispose inheriting the release-after-patch rule; the transport-collapsed form of MainThreadObject's minimum contract (#3446), with the type registry replaced by two workletized closures. v1 finding: identity is not preserved across first-screen hydration (dispose runs at hydration; a fresh instance is created under a positive id).
-- **#3541 — `useMainThreadEffect(fn, deps?)`**: the distributed `useLayoutEffect` — ctx installed pre-patch, run flushed post-patch via `rLynxRunCallableCtx`, cleanup before next run and on release, release cancels a same-commit run, first run rides the hydration commit. The design boundary is explicit: post-patch is a callback API; pre-patch is not (that restriction *is* the event primitive).
+- **#3541 — `useMainThreadEffect(fn, deps?)`**: the distributed `useLayoutEffect` — ctx installed pre-patch, run flushed post-patch via `rLynxRunCallableCtx`, cleanup before next run and on release, release cancels a same-commit run, first run rides the hydration commit. The design boundary is explicit: post-patch is a callback API; pre-patch is not (that restriction _is_ the event primitive).
 - **#3542 — the slot substrate**: the rights matrix (slot rebinding rights × target mutability × deref × BG-readability) under which Ref/Event/Instance/Effect are the inhabited points of one product space; the per-commit ordering theorem `ctx updates < patch < effect runs < releases`; and LIFO teardown within a release flush (destructor order), so the teardown of a slot may use anything declared before it.

@@ -3,10 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { runMainThreadCallableCtxs, updateMainThreadCallableCtxChanges } from '@lynx-js/react/worklet-runtime/bindings';
-import type {
-  MainThreadCallableCtxPatch,
-  MainThreadCallableRunPatch,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import type { MainThreadCallableCtxPatch, MainThreadCallableRunPatch } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { takeCallableCtxUpdatePatch, takeCallableReleasePatch, takeCallableRunPatch } from './callablePool.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
