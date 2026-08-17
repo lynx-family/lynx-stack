@@ -46,7 +46,7 @@ export async function createStubRsbuild(
 
     async usingDevServer() {
       let done = false
-      rsbuild.onDevCompileDone({
+      rsbuild.onAfterDevCompile({
         handler: () => {
           done = true
         },

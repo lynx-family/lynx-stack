@@ -383,23 +383,6 @@ describe('pluginDev', () => {
   })
 
   test('dev.assetPrefix with <port> placeholder and server.port', async () => {
-    const net = await import('node:net')
-
-    // We get a port that is occupied by the server we just created
-    const port = await (function getPort() {
-      return new Promise<number>((resolve, reject) => {
-        const server = net.createServer()
-        server.unref()
-        server.on('error', reject)
-        server.listen(0, () => {
-          const address = server.address() as AddressInfo
-          server.close(() => {
-            resolve(address.port)
-          })
-        })
-      })
-    })()
-
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
@@ -410,7 +393,7 @@ describe('pluginDev', () => {
         assetPrefix: 'http://example.com:<port>/',
       },
       server: {
-        port,
+        port: 8097,
       },
     })
 
