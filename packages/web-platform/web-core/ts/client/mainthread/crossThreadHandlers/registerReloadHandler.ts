@@ -12,6 +12,8 @@ export function registerReloadHandler(
 ) {
   rpc.registerHandler(
     reloadEndpoint,
-    (value) => lynxViewInstance.parentDom.reload(value),
+    (value) => {
+      lynxViewInstance.parentDom.reload(value);
+    },
   );
 }

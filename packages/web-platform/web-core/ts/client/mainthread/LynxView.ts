@@ -390,15 +390,15 @@ export class LynxViewElement extends HTMLElement {
    * @public
    * @method
    * reload the current page
-   * @param value [optional] the new initial data to use for the reloaded page.
-   * When omitted, the current `initData` is kept.
+   * @param value [optional] the new initial data for the reloaded page. When
+   * omitted, the current `initData` is kept.
    */
   reload(value?: Cloneable) {
     if (value !== undefined) {
       this.#initData = value;
     }
     this.removeAttribute('ssr');
-    return this.#render();
+    this.#render();
   }
 
   /**
@@ -509,65 +509,58 @@ export class LynxViewElement extends HTMLElement {
         await this.#disposeInstance();
       }
       const mtsRealmPromise = createIFrameRealm(this.shadowRoot!);
-      // `reload()` awaits `#render()` to know when the reloaded page is ready
-      // (so it can resolve the `lynx.reload()` callback), so this needs to
-      // resolve once the deferred work below actually finishes rather than
-      // as soon as it's scheduled.
-      await new Promise<void>((resolve) => {
-        queueMicrotask(async () => {
-          if (this.injectStyleRules && this.injectStyleRules.length > 0) {
-            const styleSheet = new CSSStyleSheet();
-            for (const rule of this.injectStyleRules) {
-              styleSheet.insertRule(rule);
-            }
-            this.shadowRoot!.adoptedStyleSheets = this.shadowRoot!
-              .adoptedStyleSheets.concat(styleSheet);
+      queueMicrotask(async () => {
+        if (this.injectStyleRules && this.injectStyleRules.length > 0) {
+          const styleSheet = new CSSStyleSheet();
+          for (const rule of this.injectStyleRules) {
+            styleSheet.insertRule(rule);
           }
-          const mtsRealm = await mtsRealmPromise;
-          if (this.#url) {
-            const lynxViewInstance = import(
-              /* webpackChunkName: "web-core-main-chunk" */
-              /* webpackFetchPriority: "high" */
-              './LynxViewInstance.js'
-            ).then(({ LynxViewInstance }) => {
-              const isSSR = this.hasAttribute('ssr');
-              if (isSSR) {
-                this.removeAttribute('ssr');
-              }
+          this.shadowRoot!.adoptedStyleSheets = this.shadowRoot!
+            .adoptedStyleSheets.concat(styleSheet);
+        }
+        const mtsRealm = await mtsRealmPromise;
+        if (this.#url) {
+          const lynxViewInstance = import(
+            /* webpackChunkName: "web-core-main-chunk" */
+            /* webpackFetchPriority: "high" */
+            './LynxViewInstance.js'
+          ).then(({ LynxViewInstance }) => {
+            const isSSR = this.hasAttribute('ssr');
+            if (isSSR) {
+              this.removeAttribute('ssr');
+            }
 
-              return new LynxViewInstance(
-                this,
-                this.initData,
-                this.globalProps,
-                this.#url!,
-                this.shadowRoot!,
-                mtsRealm,
-                isSSR,
-                lynxGroupId,
-                this.nativeModulesMap,
-                this.napiModulesMap,
-                this.#initI18nResources,
-                this.transformVW,
-                this.transformVH,
-                this.transformREM,
-                this.browserConfig,
-              );
-            });
-            templateManager.fetchBundle(
-              this.#url,
-              lynxViewInstance,
+            return new LynxViewInstance(
+              this,
+              this.initData,
+              this.globalProps,
+              this.#url!,
+              this.shadowRoot!,
+              mtsRealm,
+              isSSR,
+              lynxGroupId,
+              this.nativeModulesMap,
+              this.napiModulesMap,
+              this.#initI18nResources,
               this.transformVW,
               this.transformVH,
               this.transformREM,
-              undefined, // overrideConfig
+              this.browserConfig,
             );
+          });
+          templateManager.fetchBundle(
+            this.#url,
+            lynxViewInstance,
+            this.transformVW,
+            this.transformVH,
+            this.transformREM,
+            undefined, // overrideConfig
+          );
 
-            const lynxGroupId = this.lynxGroupId;
-            this.#instance = await lynxViewInstance;
-            this.#rendering = false;
-          }
-          resolve();
-        });
+          const lynxGroupId = this.lynxGroupId;
+          this.#instance = await lynxViewInstance;
+          this.#rendering = false;
+        }
       });
     }
   }

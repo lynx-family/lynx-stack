@@ -8,9 +8,7 @@ function App() {
     <view
       id='target'
       bindTap={() => {
-        lynx.reload({ mockData: 'reloaded' }, () => {
-          console.log('reload callback fired');
-        });
+        lynx.reload({ mockData: 'reloaded' });
       }}
       style={{
         height: '100px',

@@ -9,14 +9,14 @@ import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 
 /**
- * `registerReloadHandler` is the main-thread side of `lynx.reload()`. It
- * forwards the optional new initial data to `LynxViewElement.reload()` and
- * hands the RPC layer that call's promise, so the background thread's
- * `lynx.reload(value, callback)` only invokes `callback` once the reloaded
- * page has actually finished rendering.
+ * `registerReloadHandler` is the main-thread side of `lynx.reload()`. The
+ * background thread has no DOM, so the optional new initial data has to be
+ * forwarded here, to the `<lynx-view>` element that owns `initData`.
  */
 describe('registerReloadHandler', () => {
-  test('forwards the reload value to the parent lynx-view and awaits it', async () => {
+  const createRpc = (
+    onRegister?: (endpoint: { name: string }) => void,
+  ): { rpc: Rpc; getHandler: () => (value: unknown) => unknown } => {
     let handler: (value: unknown) => unknown = () => {
       throw new Error('reload handler was never registered');
     };
@@ -25,54 +25,38 @@ describe('registerReloadHandler', () => {
         endpoint: { name: string },
         fn: (value: unknown) => unknown,
       ) => {
-        expect(endpoint.name).toBe(reloadEndpoint.name);
+        onRegister?.(endpoint);
         handler = fn;
       },
     } as unknown as Rpc;
+    return { rpc, getHandler: () => handler };
+  };
+
+  test('forwards the reload value to the parent lynx-view', () => {
+    let registeredEndpointName: string | undefined;
+    const { rpc, getHandler } = createRpc((endpoint) => {
+      registeredEndpointName = endpoint.name;
+    });
 
     const calls: unknown[] = [];
-    let resolveReload!: () => void;
     const lynxViewInstance = {
       parentDom: {
         reload: (value: unknown) => {
           calls.push(value);
-          return new Promise<void>((resolve) => {
-            resolveReload = resolve;
-          });
         },
       },
     } as unknown as LynxViewInstance;
 
     registerReloadHandler(rpc, lynxViewInstance);
+    expect(registeredEndpointName).toBe(reloadEndpoint.name);
 
-    let settled = false;
-    const returned = Promise.resolve(handler({ mockData: 'reloaded' })).then(
-      () => {
-        settled = true;
-      },
-    );
+    getHandler()({ mockData: 'reloaded' });
 
     expect(calls).toStrictEqual([{ mockData: 'reloaded' }]);
-    expect(settled).toBe(false);
-
-    resolveReload();
-    await returned;
-
-    expect(settled).toBe(true);
   });
 
   test('reloads with no new data when the background thread omits a value', () => {
-    let handler: (value: unknown) => unknown = () => {
-      throw new Error('reload handler was never registered');
-    };
-    const rpc = {
-      registerHandler: (
-        _endpoint: { name: string },
-        fn: (value: unknown) => unknown,
-      ) => {
-        handler = fn;
-      },
-    } as unknown as Rpc;
+    const { rpc, getHandler } = createRpc();
 
     const calls: unknown[] = [];
     const lynxViewInstance = {
@@ -84,8 +68,25 @@ describe('registerReloadHandler', () => {
     } as unknown as LynxViewInstance;
 
     registerReloadHandler(rpc, lynxViewInstance);
-    handler(undefined);
+    getHandler()(undefined);
 
     expect(calls).toStrictEqual([undefined]);
+  });
+
+  test('returns nothing so the RPC layer does not try to reply', () => {
+    // `reloadEndpoint` is declared without a return value: the reload disposes
+    // the calling background thread, so a reply would be posted to a closed
+    // port. Returning `parentDom.reload()`'s value here would make the handler
+    // look awaitable and hide that.
+    const { rpc, getHandler } = createRpc();
+    const lynxViewInstance = {
+      parentDom: {
+        reload: () => Promise.resolve('should not be forwarded'),
+      },
+    } as unknown as LynxViewInstance;
+
+    registerReloadHandler(rpc, lynxViewInstance);
+
+    expect(getHandler()({ mockData: 'reloaded' })).toBeUndefined();
   });
 });
