@@ -96,7 +96,7 @@ describe('background-only element', () => {
 
     expect(result.errors).toEqual([]);
     expect(result.code).toMatchInlineSnapshot(`
-      "import { jsx as _jsx, Fragment as _Fragment } from "@lynx-js/react/jsx-runtime";
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react/internal";
       import { Feed } from "./Feed.jsx";
       const __snapshot_a94a8_test_2 = "__snapshot_a94a8_test_2";
@@ -105,9 +105,7 @@ describe('background-only element', () => {
       ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, null, null, ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null, true);
       export function App() {
           return /*#__PURE__*/ _jsx(__snapshot_a94a8_test_1, {
-              $0: /*#__PURE__*/ _jsx(_Fragment, {
-                  children: /*#__PURE__*/ _jsx(Feed, {})
-              })
+              $0: /*#__PURE__*/ _jsx(Feed, {})
           });
       }
       "

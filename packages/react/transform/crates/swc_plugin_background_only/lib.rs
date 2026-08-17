@@ -94,10 +94,50 @@ fn take_fallback(el: &mut JSXElement) -> Option<Box<Expr>> {
   fallback
 }
 
-fn children_to_expr(children: Vec<JSXElementChild>, span: Span) -> Expr {
-  if children.is_empty() {
-    return Expr::Lit(Lit::Null(Null { span }));
+/// Whether a child is only there to lay the source out: JSX drops
+/// whitespace that spans a line break, and drops `{/* comments */}` outright,
+/// so neither counts towards how many children there really are.
+fn is_layout_only(child: &JSXElementChild) -> bool {
+  match child {
+    JSXElementChild::JSXText(text) => {
+      text.value.contains('\n') && text.value.chars().all(char::is_whitespace)
+    }
+    JSXElementChild::JSXExprContainer(JSXExprContainer {
+      expr: JSXExpr::JSXEmptyExpr(..),
+      ..
+    }) => true,
+    _ => false,
   }
+}
+
+fn children_to_expr(mut children: Vec<JSXElementChild>, span: Span) -> Expr {
+  let mut content = children
+    .iter()
+    .enumerate()
+    .filter(|(_, child)| !is_layout_only(child));
+  let first = content.next().map(|(index, _)| index);
+  let has_more = content.next().is_some();
+
+  let Some(index) = first else {
+    return Expr::Lit(Lit::Null(Null { span }));
+  };
+
+  // A lone child is already a valid branch expression. Wrapping it in a
+  // fragment would cost a vnode per boundary on every background render and
+  // buy nothing.
+  if !has_more {
+    match children.remove(index) {
+      JSXElementChild::JSXElement(el) => return Expr::JSXElement(el),
+      JSXElementChild::JSXFragment(fragment) => return Expr::JSXFragment(fragment),
+      JSXElementChild::JSXExprContainer(JSXExprContainer {
+        expr: JSXExpr::Expr(expr),
+        ..
+      }) => return *expr,
+      // Text or a spread child: it still needs the fragment to become one.
+      other => children.insert(index, other),
+    }
+  }
+
   Expr::JSXFragment(JSXFragment {
     span,
     opening: JSXOpeningFragment { span },
@@ -228,6 +268,35 @@ mod tests {
           </background-only>
         </view>
       );
+    }
+    "#
+  );
+
+  test!(
+    module,
+    syntax(),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
+    unwraps_a_lone_child_past_layout_and_comments,
+    r#"
+    function App() {
+      return (
+        <background-only fallback={<Skeleton />}>
+          {/* the feed is background-only */}
+          <Feed />
+        </background-only>
+      );
+    }
+    "#
+  );
+
+  test!(
+    module,
+    syntax(),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
+    keeps_the_fragment_for_a_lone_text_child,
+    r#"
+    function App() {
+      return <background-only fallback={<Skeleton />}>plain text</background-only>;
     }
     "#
   );
