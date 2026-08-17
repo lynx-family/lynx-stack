@@ -47,3 +47,36 @@
   font-size: 18px;
   font-weight: 700;
 }
+
+.performance-panel {
+  width: 320px;
+  margin-top: 32px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #2c3040;
+  border-radius: 12px;
+  background-color: #191b22;
+}
+
+.performance-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.performance-row {
+  margin-top: 10px;
+  color: #c8cce0;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: normal;
+}
+
+.performance-hint {
+  margin-top: 14px;
+  color: #858ba3;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: normal;
+}
