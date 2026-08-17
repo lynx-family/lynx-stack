@@ -28,15 +28,17 @@ import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
+import type { LocalA2UIMessagesPayload } from '../utils/renderUrl.js';
 import {
-  buildA2UIRenderShellUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
   canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  createLocalA2UIMessagesPayload,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
+  isPortableA2UIMessagesUrl,
 } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
@@ -596,37 +598,63 @@ export function PreviewPanel(props: PreviewPanelProps) {
         return;
       }
 
+      const demoId = typeof previewSource.demoId === 'string'
+          && previewSource.demoId.trim().length > 0
+        ? previewSource.demoId.trim()
+        : undefined;
+      const providedMessagesUrl = typeof previewSource.messagesUrl === 'string'
+          && previewSource.messagesUrl.trim().length > 0
+        ? previewSource.messagesUrl.trim()
+        : undefined;
+      const portableMessagesUrl = isPortableA2UIMessagesUrl(
+          providedMessagesUrl,
+        )
+        ? providedMessagesUrl
+        : undefined;
+      let localMessagesPayload: LocalA2UIMessagesPayload | undefined;
+      if (!demoId && !providedMessagesUrl) {
+        try {
+          localMessagesPayload = createLocalA2UIMessagesPayload(
+            previewSource.messages,
+            window.URL,
+          );
+        } catch {
+          setRenderUrl('');
+          setRenderShareUrl('');
+          setLynxDevUrl('');
+          return;
+        }
+      }
+      const disposeLocalMessagesPayload = () => localMessagesPayload?.dispose();
+
       const renderInit = {
         protocol: previewSource.protocol,
         demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-        messagesUrl: previewSource.messagesUrl,
+        messagesUrl: providedMessagesUrl ?? localMessagesPayload?.messagesUrl,
         messages: previewSource.messages,
         actionMocksUrl: previewSource.actionMocksUrl,
         actionMocks: previewSource.actionMocks,
         theme: previewSource.theme,
-        demoId: previewSource.demoId,
+        demoId,
         speed,
         liveAction: previewSource.liveAction,
         playbackMode: previewSource.playbackMode,
       };
       const isLivePreview = previewSource.liveAction === true;
       const hasExternalPayload = hasExternalA2UIRenderPayload(previewSource);
-      const inlineUrl = buildRenderUrl(renderInit, baseUrl);
-      const url = isLivePreview
-        ? buildA2UIRenderShellUrl(renderInit, baseUrl)
-        : inlineUrl;
+      const url = buildRenderUrl(renderInit, baseUrl);
       // Shared URLs always render normally — playback is a local-only
       // visualization tool, not something a QR-scanner should land in.
       const shareUrl = buildRenderUrl(
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-          messagesUrl: previewSource.messagesUrl,
+          messagesUrl: portableMessagesUrl,
           messages: previewSource.messages,
           actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
-          demoId: previewSource.demoId,
+          demoId,
           speed,
         },
         shareBaseUrl,
@@ -646,20 +674,20 @@ export function PreviewPanel(props: PreviewPanelProps) {
         }
         uInline.searchParams.set('theme', previewSource.theme);
         let hasNativePayload = false;
-        if (previewSource.demoId) {
+        if (demoId) {
           const demosBase = shareBaseUrl.endsWith('/')
             ? shareBaseUrl
             : `${shareBaseUrl}/`;
           uInline.searchParams.set(
             'messagesUrl',
             new URL(
-              `demos/${previewSource.demoId}.json`,
+              `demos/${demoId}.json`,
               demosBase,
             ).toString(),
           );
           hasNativePayload = true;
-        } else if (previewSource.messagesUrl) {
-          uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
+        } else if (portableMessagesUrl) {
+          uInline.searchParams.set('messagesUrl', portableMessagesUrl);
           uInline.searchParams.delete('messages');
           if (previewSource.actionMocksUrl) {
             uInline.searchParams.set(
@@ -699,11 +727,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
       }
 
       if (
-        previewSource.demoId
-        || previewSource.messagesUrl
+        demoId
+        || portableMessagesUrl
         || !useClientPayloadStore
       ) {
-        return;
+        return disposeLocalMessagesPayload;
       }
 
       void (async () => {
@@ -731,20 +759,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
             ? absoluteUrl(data.actionMocksUrl, payloadOrigin)
             : undefined;
 
-          const shortUrl = buildRenderUrl(
-            {
-              protocol: previewSource.protocol,
-              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-              messagesUrl,
-              messages: previewSource.messages,
-              actionMocksUrl,
-              theme: previewSource.theme,
-              speed,
-              liveAction: previewSource.liveAction,
-              playbackMode: previewSource.playbackMode,
-            },
-            baseUrl,
-          );
           const shortShareUrl = buildRenderUrl(
             {
               protocol: previewSource.protocol,
@@ -757,9 +771,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
             },
             shareBaseUrl,
           );
-          if (!isLivePreview && canInlineA2UIRenderUrl(shortUrl)) {
-            setRenderUrl(shortUrl);
-          }
           setRenderShareUrl(
             canInlineA2UIRenderUrl(shortShareUrl) ? shortShareUrl : '',
           );
@@ -790,10 +801,10 @@ export function PreviewPanel(props: PreviewPanelProps) {
             canInlineA2UIRenderUrl(nativeUrl) ? nativeUrl : '',
           );
         } catch {
-          // Keep the live shell or length-guarded inline URL selected above.
+          // Keep the local Blob URL or length-guarded URL selected above.
         }
       })();
-      return;
+      return disposeLocalMessagesPayload;
     }
 
     if (previewSource.kind === 'mcp-apps') {

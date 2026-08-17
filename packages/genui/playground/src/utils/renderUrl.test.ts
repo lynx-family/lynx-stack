@@ -8,14 +8,15 @@ import { PROTOCOLS } from './protocol.js';
 import {
   A2UI_INLINE_RENDER_URL_MAX_LENGTH,
   OPENUI_INLINE_RENDER_URL_MAX_LENGTH,
-  buildA2UIRenderShellUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
   canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  createLocalA2UIMessagesPayload,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
+  isPortableA2UIMessagesUrl,
 } from './renderUrl.js';
 
 describe('A2UI render payloads', () => {
@@ -42,16 +43,41 @@ describe('A2UI render payloads', () => {
     expect(hasExternalA2UIRenderPayload({})).toBe(false);
     expect(hasExternalA2UIRenderPayload({ demoId: '   ' })).toBe(false);
     expect(hasExternalA2UIRenderPayload({ messagesUrl: '' })).toBe(false);
+    expect(hasExternalA2UIRenderPayload({
+      messagesUrl: 'blob:https://example.com/local-messages',
+    })).toBe(false);
     expect(hasExternalA2UIRenderPayload({ demoId: 'weather' })).toBe(true);
     expect(hasExternalA2UIRenderPayload({
       messagesUrl: 'https://example.com/messages.json',
     })).toBe(true);
+    expect(isPortableA2UIMessagesUrl('/messages.json')).toBe(true);
+    expect(isPortableA2UIMessagesUrl('data:application/json,[]')).toBe(false);
+    expect(isPortableA2UIMessagesUrl('javascript:void(0)')).toBe(false);
   });
 
-  test('keeps live messages and action mocks out of the render shell URL', () => {
-    const url = new URL(buildA2UIRenderShellUrl({
+  test('loads local JSON from a Blob URL without embedding messages', async () => {
+    const messages = [{ text: '北京'.repeat(4_000) }];
+    let blob: { text: () => Promise<string>; type: string } | undefined;
+    const revoked: string[] = [];
+    const localPayload = createLocalA2UIMessagesPayload(messages, {
+      createObjectURL(value) {
+        blob = value;
+        return 'blob:https://lynx-stack.dev/local-messages';
+      },
+      revokeObjectURL(url) {
+        revoked.push(url);
+      },
+    });
+    expect(blob?.type).toBe('application/json');
+    expect(blob).toBeDefined();
+    if (!blob) return;
+    expect(JSON.parse(await blob.text())).toEqual(messages);
+
+    const url = new URL(buildRenderUrl({
       protocol: PROTOCOLS.a2ui,
       demoUrl: './a2ui.web.js',
+      messages,
+      messagesUrl: localPayload.messagesUrl,
       theme: 'dark',
       speed: 2,
       liveAction: true,
@@ -65,9 +91,18 @@ describe('A2UI render payloads', () => {
     expect(url.searchParams.get('liveAction')).toBe('1');
     expect(url.searchParams.get('playbackMode')).toBe('1');
     expect(url.searchParams.has('messages')).toBe(false);
-    expect(url.searchParams.has('messagesUrl')).toBe(false);
+    expect(url.searchParams.get('messagesUrl')).toBe(
+      'blob:https://lynx-stack.dev/local-messages',
+    );
     expect(url.searchParams.has('actionMocks')).toBe(false);
-    expect(url.searchParams.has('initData')).toBe(false);
+    expect(url.searchParams.has('initData')).toBe(true);
+    expect(canInlineA2UIRenderUrl(url.toString())).toBe(true);
+
+    localPayload.dispose();
+    localPayload.dispose();
+    expect(revoked).toEqual([
+      'blob:https://lynx-stack.dev/local-messages',
+    ]);
   });
 
   test('marks oversized Chinese and image payload URLs as unsafe', () => {

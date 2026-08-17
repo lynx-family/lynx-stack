@@ -63,9 +63,59 @@ export function hasShareableA2UIRenderPayload(
 export function hasExternalA2UIRenderPayload(
   init: Pick<RenderInit, 'demoId' | 'messagesUrl'>,
 ): boolean {
-  return [init.demoId, init.messagesUrl].some(
-    (value) => typeof value === 'string' && value.trim().length > 0,
+  if (typeof init.demoId === 'string' && init.demoId.trim().length > 0) {
+    return true;
+  }
+  return isPortableA2UIMessagesUrl(init.messagesUrl);
+}
+
+export function isPortableA2UIMessagesUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.trim().length === 0) return false;
+  try {
+    const protocol = new URL(
+      value,
+      'https://a2ui-payload.invalid/',
+    ).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+interface ObjectURLRegistry {
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  createObjectURL(object: Blob): string;
+  revokeObjectURL(url: string): void;
+}
+
+export interface LocalA2UIMessagesPayload {
+  messagesUrl: string;
+  dispose: () => void;
+}
+
+export function createLocalA2UIMessagesPayload(
+  messages: unknown,
+  registry: ObjectURLRegistry = URL,
+): LocalA2UIMessagesPayload {
+  const serialized = JSON.stringify(messages);
+  if (serialized === undefined) {
+    throw new Error('A2UI messages must be JSON serializable');
+  }
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  const messagesUrl = registry.createObjectURL(
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+    new Blob([serialized], { type: 'application/json' }),
   );
+  let disposed = false;
+  return {
+    messagesUrl,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      registry.revokeObjectURL(messagesUrl);
+    },
+  };
 }
 
 function buildRenderInitData(init: RenderInit): Record<string, unknown> {
@@ -95,7 +145,7 @@ function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   return initData;
 }
 
-type A2UIRenderShellInit = Pick<
+type A2UIRenderBaseInit = Pick<
   RenderInit,
   | 'demoUrl'
   | 'instant'
@@ -107,7 +157,7 @@ type A2UIRenderShellInit = Pick<
 >;
 
 function buildA2UIRenderBaseUrl(
-  init: A2UIRenderShellInit,
+  init: A2UIRenderBaseInit,
   baseUrl: string,
 ): URL {
   const url = new URL('render.html', baseUrl);
@@ -134,17 +184,6 @@ function buildA2UIRenderBaseUrl(
   }
 
   return url;
-}
-
-/**
- * Build an A2UI render shell that receives its messages from the parent frame.
- * Keeping the payload out of the navigation URL avoids request-line limits.
- */
-export function buildA2UIRenderShellUrl(
-  init: A2UIRenderShellInit,
-  baseUrl: string,
-): string {
-  return buildA2UIRenderBaseUrl(init, baseUrl).toString();
 }
 
 export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
