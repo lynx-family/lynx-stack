@@ -20,8 +20,36 @@ export namespace JSX {
   interface IntrinsicAttributes {}
   interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
   interface IntrinsicElements extends Lynx.IntrinsicElements {
+    /**
+     * Renders `fallback` on the main thread and `children` on the background thread.
+     *
+     * Resolved at compile time, so the main-thread bundle keeps only `fallback`.
+     * Modules that nothing but `children` reference are dropped from it, including
+     * their top-level side effects. The background thread renders `children`, which
+     * replace the fallback once it takes over.
+     *
+     * Only the `fallback` attribute is supported. Spread attributes are a build error.
+     *
+     * @example
+     * ```tsx
+     * <view>
+     *   <background-only fallback={<Skeleton />}>
+     *     <Feed />
+     *   </background-only>
+     * </view>
+     * ```
+     *
+     * @public
+     */
     'background-only': {
+      /**
+       * Rendered on the main thread first screen in place of `children`.
+       * Defaults to rendering nothing.
+       */
       fallback?: React.JSX.Element | undefined;
+      /**
+       * Rendered on the background thread only.
+       */
       children?: React.ReactNode | undefined;
     };
   }
