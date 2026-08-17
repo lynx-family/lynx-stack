@@ -13,6 +13,12 @@ export interface PublishedOpenUIPayload {
   rawTextUrl: string;
 }
 
+export type PayloadStorageMethod = 'a2ui' | 'openui' | 'mcp-apps';
+
+export type A2UIPayloadStorageLocation =
+  | { method?: 'a2ui'; type?: 'preview' }
+  | { method: PayloadStorageMethod; type: 'conversation' };
+
 export function isDevHost(hostname: string): boolean {
   return (
     hostname === 'localhost'
@@ -40,11 +46,14 @@ export function getOpenUIPayloadEndpoint(): string {
 export async function publishA2UIPayload(
   messages: unknown,
   actionMocks?: Record<string, unknown>,
+  storage: A2UIPayloadStorageLocation = {},
 ): Promise<PublishedPayload> {
+  const method = storage.method ?? 'a2ui';
+  const type = storage.type ?? 'preview';
   const res = await window.fetch(getA2UIPayloadEndpoint(), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, actionMocks }),
+    body: JSON.stringify({ messages, actionMocks, method, type }),
   });
   const payload = await res.json().catch(() => ({})) as {
     preview?: {

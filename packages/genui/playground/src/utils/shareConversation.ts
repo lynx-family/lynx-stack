@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { publishA2UIPayload } from './publishPayload.js';
+import { resolveSharedConversationProtocol } from '../storage/sharedConversation.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 
 /** Query param that carries the URL of a shared conversation document. */
@@ -10,14 +11,18 @@ export const IMPORT_CONVERSATION_PARAM = 'importConv';
 
 /**
  * Upload a serialized conversation through the GenUI server and return the
- * durable public URL selected by the server. Reuses the generic A2UI payload
- * upload path — the server stores the JSON body verbatim, so the conversation
- * document is persisted as-is.
+ * durable public URL selected by the server. The protocol selects the TOS
+ * method segment, while the conversation document is stored verbatim.
  */
 export async function publishConversation(
   doc: SharedConversationDoc,
 ): Promise<string> {
-  const { messagesUrl } = await publishA2UIPayload(doc);
+  const method = resolveSharedConversationProtocol(doc);
+  if (!method) throw new Error('Unsupported conversation protocol');
+  const { messagesUrl } = await publishA2UIPayload(doc, undefined, {
+    method,
+    type: 'conversation',
+  });
   return messagesUrl;
 }
 

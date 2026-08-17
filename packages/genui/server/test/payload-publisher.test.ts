@@ -41,6 +41,7 @@ describe('Volcengine TOS payload publishing', () => {
       a2uiPrefix: 'a2ui',
       bucket: 'genui',
       endpoint: 'tos-cn-beijing.volces.com',
+      mcpAppsPrefix: 'mcp-apps',
       openuiPrefix: 'openui',
       region: 'cn-beijing',
       secure: true,
@@ -49,9 +50,9 @@ describe('Volcengine TOS payload publishing', () => {
     expect(config).toBeDefined();
     if (!config) return;
     expect(
-      buildTosObjectUrl('a2ui/id/messages.json', config),
+      buildTosObjectUrl('a2ui/preview/id/messages.json', config),
     ).toBe(
-      'https://genui.tos-cn-beijing.volces.com/a2ui/id/messages.json',
+      'https://genui.tos-cn-beijing.volces.com/a2ui/preview/id/messages.json',
     );
   });
 
@@ -60,6 +61,7 @@ describe('Volcengine TOS payload publishing', () => {
       TOS_ACCESS_KEY: ' ak ',
       TOS_BUCKET: 'preview-bucket',
       TOS_ENDPOINT: 'http://tos-ap-southeast-1.volces.com:8080',
+      TOS_MCP_APPS_STORAGE_PREFIX: '/custom-mcp-apps/',
       TOS_OPENUI_STORAGE_PREFIX: '/custom-openui/',
       TOS_REGION: 'ap-southeast-1',
       TOS_SECRET_KEY: ' sk ',
@@ -72,17 +74,42 @@ describe('Volcengine TOS payload publishing', () => {
       accessKeySecret: 'sk',
       bucket: 'preview-bucket',
       endpoint: 'tos-ap-southeast-1.volces.com:8080',
+      mcpAppsPrefix: '/custom-mcp-apps/',
       region: 'ap-southeast-1',
       secure: false,
       securityToken: 'token',
     });
     expect(config).toBeDefined();
     if (!config) return;
-    expect(buildTosStoragePath('id', 'messages.json', config.a2uiPrefix))
-      .toBe('custom-a2ui/id/messages.json');
-    expect(buildTosObjectUrl('a2ui/id with spaces/messages.json', config))
+    expect(
+      buildTosStoragePath(
+        config.a2uiPrefix,
+        'preview',
+        'id',
+        'messages.json',
+      ),
+    ).toBe('custom-a2ui/preview/id/messages.json');
+    expect(
+      buildTosObjectUrl(
+        'a2ui/preview/id with spaces/messages.json',
+        config,
+      ),
+    )
       .toBe(
-        'http://preview-bucket.tos-ap-southeast-1.volces.com:8080/a2ui/id%20with%20spaces/messages.json',
+        'http://preview-bucket.tos-ap-southeast-1.volces.com:8080/a2ui/preview/id%20with%20spaces/messages.json',
       );
+  });
+
+  test('separates storage method and payload type in object keys', () => {
+    expect(buildTosStoragePath('a2ui', 'preview', 'id', 'messages.json'))
+      .toBe('a2ui/preview/id/messages.json');
+    expect(buildTosStoragePath('openui', 'preview', 'id', 'raw.txt'))
+      .toBe('openui/preview/id/raw.txt');
+
+    for (const method of ['a2ui', 'openui', 'mcp-apps']) {
+      expect(
+        buildTosStoragePath(method, 'conversation', 'id', 'messages.json'),
+      ).toBe(`${method}/conversation/id/messages.json`);
+    }
   });
 });
