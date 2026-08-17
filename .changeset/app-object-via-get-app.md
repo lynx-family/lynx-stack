@@ -1,8 +1,7 @@
 ---
-"@lynx-js/react-runtime": patch
+"@lynx-js/react": patch
 "@lynx-js/cache-events-webpack-plugin": patch
 "@lynx-js/testing-environment": patch
-"@lynx-js/reactlynx-testing-library": patch
 ---
 
 Reach lynx-core's app object through `lynx.getApp()` instead of the
