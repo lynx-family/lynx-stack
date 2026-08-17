@@ -22,6 +22,7 @@
   "devDependencies": {
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/motion": "workspace:*",
     "@lynx-js/playwright-fixtures": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",

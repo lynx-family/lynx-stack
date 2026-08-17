@@ -770,6 +770,89 @@ test.describe('reactlynx3 tests', () => {
       },
     );
 
+    test('basic-motion-hover-live-rect', async ({ page }) => {
+      await goto(page, 'basic-motion-hover-live-rect');
+      const scroller = page.locator('#scroller');
+      const scrollTarget = page.locator('#scroll-target');
+      const shiftTarget = page.locator('#shift-target');
+      await expect(scrollTarget).toBeVisible();
+
+      const initialScrollBox = await scrollTarget.boundingBox();
+      expect(initialScrollBox).not.toBeNull();
+      const scrollX = initialScrollBox!.x + initialScrollBox!.width / 2;
+      const scrollY = initialScrollBox!.y + initialScrollBox!.height / 2;
+      await page.mouse.move(scrollX, scrollY);
+      await expect(scrollTarget).toHaveCSS(
+        'background-color',
+        'rgb(0, 255, 0)',
+      );
+
+      await scroller.evaluate((element) => {
+        element.scrollTop = 140;
+      });
+      await page.mouse.move(scrollX + 1, scrollY);
+      await expect(scrollTarget).toHaveCSS(
+        'background-color',
+        'rgb(255, 0, 0)',
+      );
+
+      const shiftedScrollBox = await scrollTarget.boundingBox();
+      expect(shiftedScrollBox).not.toBeNull();
+      await page.mouse.move(
+        shiftedScrollBox!.x + shiftedScrollBox!.width / 2,
+        shiftedScrollBox!.y + shiftedScrollBox!.height / 2,
+      );
+      await expect(scrollTarget).toHaveCSS(
+        'background-color',
+        'rgb(0, 255, 0)',
+      );
+      await page.mouse.move(
+        shiftedScrollBox!.x + shiftedScrollBox!.width + 10,
+        shiftedScrollBox!.y + shiftedScrollBox!.height / 2,
+      );
+      await expect(scrollTarget).toHaveCSS(
+        'background-color',
+        'rgb(255, 0, 0)',
+      );
+
+      const initialShiftBox = await shiftTarget.boundingBox();
+      expect(initialShiftBox).not.toBeNull();
+      const shiftX = initialShiftBox!.x + initialShiftBox!.width / 2;
+      const shiftY = initialShiftBox!.y + initialShiftBox!.height / 2;
+      await page.mouse.move(shiftX, shiftY);
+      await expect(shiftTarget).toHaveCSS(
+        'background-color',
+        'rgb(0, 255, 0)',
+      );
+      await page.locator('#shift-control').dispatchEvent('click');
+      await page.mouse.move(shiftX + 1, shiftY);
+      await expect(shiftTarget).toHaveCSS(
+        'background-color',
+        'rgb(255, 0, 0)',
+      );
+
+      const shiftedBox = await shiftTarget.boundingBox();
+      expect(shiftedBox).not.toBeNull();
+      await page.mouse.move(
+        shiftedBox!.x + shiftedBox!.width / 2,
+        shiftedBox!.y + shiftedBox!.height / 2,
+      );
+      await expect(shiftTarget).toHaveCSS(
+        'background-color',
+        'rgb(0, 255, 0)',
+      );
+      const lynxViewBox = await page.locator('lynx-view').boundingBox();
+      expect(lynxViewBox).not.toBeNull();
+      await page.mouse.move(
+        lynxViewBox!.x + lynxViewBox!.width / 2,
+        lynxViewBox!.y + lynxViewBox!.height + 20,
+      );
+      await expect(shiftTarget).toHaveCSS(
+        'background-color',
+        'rgb(255, 0, 0)',
+      );
+    });
+
     test(
       'basic-mts-bindtap-change-element-background',
       async ({ page }, { title }) => {

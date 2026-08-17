@@ -2218,6 +2218,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../../rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../motion
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
         version: link:../playwright-fixtures

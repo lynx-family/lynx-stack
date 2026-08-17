@@ -29,6 +29,7 @@ export type WASMJSBindingInjectedHandler = {
 };
 
 const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
+const OUTSIDE_VIEW_CONTINUATION_EVENTS = new Set(['mousemove']);
 const POINTER_DERIVED_TOUCH_EVENTS = new Set([
   'touchstart',
   'touchmove',
@@ -68,6 +69,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   #pointerTouchEventNames: Set<string> = new Set();
   #activePointerTouches: Map<number, ActivePointerTouch> = new Map();
   #pointerTouchListenersAdded = false;
+  #outsideViewEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
   toBeDisabledElement: Set<HTMLElement> = new Set();
 
@@ -287,6 +289,16 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     this.#dispatchCommonEvent(event, event.target as HTMLElement);
   };
 
+  #outsideViewEventHandler = (event: Event) => {
+    if (event.composedPath().includes(this.lynxViewInstance.rootDom)) {
+      return;
+    }
+    const target = event.target instanceof HTMLElement
+      ? event.target
+      : document.documentElement;
+    this.#dispatchCommonEvent(event, target);
+  };
+
   #toPointerTouch(event: PointerEvent): PointerTouch {
     return {
       identifier: event.pointerId,
@@ -416,6 +428,14 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
           capture: true,
         },
       );
+      if (OUTSIDE_VIEW_CONTINUATION_EVENTS.has(w3cEventName)) {
+        this.#outsideViewEventListeners.add(w3cEventName);
+        document.addEventListener(
+          w3cEventName,
+          this.#outsideViewEventHandler,
+          { passive: true },
+        );
+      }
     }
   }
 
@@ -437,6 +457,13 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     }
     this.#addedEventListeners.clear();
     this.#documentEventListeners.clear();
+    for (const eventName of this.#outsideViewEventListeners) {
+      document.removeEventListener(
+        eventName,
+        this.#outsideViewEventHandler,
+      );
+    }
+    this.#outsideViewEventListeners.clear();
     if (this.#pointerTouchListenersAdded) {
       this.lynxViewInstance.rootDom.removeEventListener(
         'pointerdown',
