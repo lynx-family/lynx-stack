@@ -56,8 +56,17 @@ if (__DEV__) {
   setupComponentStack();
 }
 
+const includeProfileComponentHooks = typeof __PROFILE_COMPONENT_HOOKS__ === 'undefined'
+  || __PROFILE_COMPONENT_HOOKS__;
+
 // We are profiling both main-thread and background.
-if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+if (
+  includeProfileComponentHooks
+  && typeof __MAIN_THREAD__ !== 'undefined'
+  && __MAIN_THREAD__
+  && typeof __PROFILE__ !== 'undefined'
+  && __PROFILE__
+) {
   initProfileHook();
 }
 
@@ -84,7 +93,7 @@ if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     if (__DEV__ && isProfiling) {
       setupVNodeSourceHook();
     }
-    if (isProfiling) {
+    if (includeProfileComponentHooks && isProfiling) {
       initProfileHook();
     }
   }

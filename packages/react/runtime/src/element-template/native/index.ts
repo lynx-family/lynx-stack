@@ -49,6 +49,9 @@ function updateGlobalProps(newData: Record<string, any>): void {
 }
 
 function init(): void {
+  const includeProfileComponentHooks = typeof __PROFILE_COMPONENT_HOOKS__ === 'undefined'
+    || __PROFILE_COMPONENT_HOOKS__;
+
   if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
     initElementTemplatePAPICallAlog();
   }
@@ -58,7 +61,7 @@ function init(): void {
     injectCalledByNative();
     installElementTemplatePatchListener();
     installOnMtsDestruction();
-    if (__PROFILE__) {
+    if (includeProfileComponentHooks && __PROFILE__) {
       initProfileHook();
     }
   }
@@ -79,7 +82,7 @@ function init(): void {
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();
-      if (isProfiling) {
+      if (includeProfileComponentHooks && isProfiling) {
         initProfileHook();
       }
     }

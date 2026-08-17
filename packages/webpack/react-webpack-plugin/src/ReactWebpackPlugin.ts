@@ -4,6 +4,7 @@
 
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
@@ -370,6 +371,15 @@ class ReactWebpackPlugin {
 
     const isDev = process.env['NODE_ENV'] === 'development'
       || compiler.options.mode === 'development';
+    const profileEnv = process.env['REACT_PROFILE'];
+    const profile = profileEnv === undefined
+      ? options.profile ?? isDev
+      : profileEnv !== 'false';
+    const isWebTarget = compiler.options.name === 'web'
+      || compiler.options.name?.startsWith('web-');
+    const includeProfileComponentHooks = !isWebTarget
+      || Boolean(profile)
+      || !options.workletRuntimePath;
 
     new DefinePlugin({
       __DEV__: isDev,
@@ -383,10 +393,9 @@ class ReactWebpackPlugin {
       ),
       // We enable profile by default in development.
       // It can also be disabled by environment variable `REACT_PROFILE=false`
-      __PROFILE__: JSON.stringify(
-        process.env['REACT_PROFILE']
-          ?? options.profile
-          ?? isDev,
+      __PROFILE__: JSON.stringify(profile),
+      __PROFILE_COMPONENT_HOOKS__: JSON.stringify(
+        includeProfileComponentHooks,
       ),
       // User can enable ALog by environment variable `REACT_ALOG=true`
       __ALOG__: JSON.stringify(Boolean(process.env['REACT_ALOG'])),
@@ -411,6 +420,30 @@ class ReactWebpackPlugin {
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
+
+    if (!includeProfileComponentHooks) {
+      const runtimeRoot = path.resolve(
+        path.dirname(options.workletRuntimePath),
+        '../..',
+      );
+      const profileComponentHooksPattern =
+        /[\\/](?:snapshot[\\/]debug[\\/]profileHooks|element-template[\\/]debug[\\/]profile)(?:\.js)?$/;
+      const profileComponentHooksStub = require.resolve(
+        '../lib/layer.js',
+      );
+      new compiler.webpack.NormalModuleReplacementPlugin(
+        profileComponentHooksPattern,
+        data => {
+          const context = path.resolve(data.context);
+          if (
+            context === runtimeRoot
+            || context.startsWith(`${runtimeRoot}${path.sep}`)
+          ) {
+            data.request = profileComponentHooksStub;
+          }
+        },
+      ).apply(compiler);
+    }
 
     const entryPairs = options.entryPairs ?? [];
     if (entryPairs.length > 0) {

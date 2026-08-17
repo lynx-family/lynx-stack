@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 interface RuntimeGlobals {
   __DEV__: boolean;
   __PROFILE__: boolean;
+  __PROFILE_COMPONENT_HOOKS__: boolean | undefined;
   __BACKGROUND__: boolean;
   __MAIN_THREAD__: boolean;
   __ALOG__: boolean;
@@ -22,6 +23,7 @@ const runtimeGlobals = globalThis as typeof globalThis & RuntimeGlobals;
 const originalNodeEnv = process.env['NODE_ENV'];
 const originalDevFlag = runtimeGlobals.__DEV__;
 const originalProfileFlag = runtimeGlobals.__PROFILE__;
+const originalProfileComponentHooksFlag = runtimeGlobals.__PROFILE_COMPONENT_HOOKS__;
 const originalBackgroundFlag = runtimeGlobals.__BACKGROUND__;
 const originalMainThreadFlag = runtimeGlobals.__MAIN_THREAD__;
 const originalAlogFlag = runtimeGlobals.__ALOG__;
@@ -31,11 +33,13 @@ const originalIsProfileRecording = globalThis.lynx.performance.isProfileRecordin
 async function importBackgroundRuntime(
   compileTimeProfile: boolean,
   isProfileRecording: boolean,
+  includeProfileComponentHooks = true,
 ) {
   vi.resetModules();
   process.env['NODE_ENV'] = 'production';
   runtimeGlobals.__DEV__ = false;
   runtimeGlobals.__PROFILE__ = compileTimeProfile;
+  runtimeGlobals.__PROFILE_COMPONENT_HOOKS__ = includeProfileComponentHooks;
   runtimeGlobals.__BACKGROUND__ = true;
   runtimeGlobals.__MAIN_THREAD__ = false;
   runtimeGlobals.__ALOG__ = false;
@@ -123,6 +127,7 @@ afterEach(() => {
   process.env['NODE_ENV'] = originalNodeEnv;
   runtimeGlobals.__DEV__ = originalDevFlag;
   runtimeGlobals.__PROFILE__ = originalProfileFlag;
+  runtimeGlobals.__PROFILE_COMPONENT_HOOKS__ = originalProfileComponentHooksFlag;
   runtimeGlobals.__BACKGROUND__ = originalBackgroundFlag;
   runtimeGlobals.__MAIN_THREAD__ = originalMainThreadFlag;
   runtimeGlobals.__ALOG__ = originalAlogFlag;
@@ -153,15 +158,16 @@ afterEach(() => {
 
 describe('snapshot runtime profile activation', () => {
   it.each([
-    ['default Web', false, false, 0],
-    ['compile-time profiling', true, false, 1],
-    ['host recording', false, true, 1],
+    ['default Web', false, false, false, 0],
+    ['compile-time Web profiling', true, false, true, 1],
+    ['native host recording', false, true, true, 1],
   ])(
     'installs background profile hooks for %s',
     async (
       _activation,
       compileTimeProfile,
       isProfileRecording,
+      includeProfileComponentHooks,
       expectedProfileHookCalls,
     ) => {
       const {
@@ -173,6 +179,7 @@ describe('snapshot runtime profile activation', () => {
       } = await importBackgroundRuntime(
         compileTimeProfile,
         isProfileRecording,
+        includeProfileComponentHooks,
       );
 
       expect(setupBackgroundDocument).toHaveBeenCalledTimes(1);

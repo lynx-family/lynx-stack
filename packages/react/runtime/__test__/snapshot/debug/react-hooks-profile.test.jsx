@@ -14,13 +14,16 @@ let currentRender;
 let currentCreateElement;
 
 async function importHooksWithProfiling({
+  includeProfileComponentHooks,
   isRecording,
   isCompileTimeProfile = false,
 }) {
   const original = lynx.performance.isProfileRecording;
   const originalProfile = globalThis.__PROFILE__;
+  const originalProfileComponentHooks = globalThis.__PROFILE_COMPONENT_HOOKS__;
   lynx.performance.isProfileRecording = vi.fn(() => isRecording);
   globalThis.__PROFILE__ = isCompileTimeProfile;
+  globalThis.__PROFILE_COMPONENT_HOOKS__ = includeProfileComponentHooks;
   vi.resetModules();
   try {
     const [hooks, preact, document, utils] = await Promise.all([
@@ -38,6 +41,7 @@ async function importHooksWithProfiling({
   } finally {
     lynx.performance.isProfileRecording = original;
     globalThis.__PROFILE__ = originalProfile;
+    globalThis.__PROFILE_COMPONENT_HOOKS__ = originalProfileComponentHooks;
   }
 }
 
@@ -299,6 +303,28 @@ describe('react hooks profile', () => {
     ));
 
     expect(hookTraceCalls).toHaveLength(0);
+  });
+
+  it('should preserve profiling when the component-hook flag is undefined', async () => {
+    const { useState } = await importHooksWithProfiling({
+      includeProfileComponentHooks: undefined,
+      isRecording: true,
+    });
+
+    const preactHooks = await import('preact/hooks');
+    expect(useState).not.toBe(preactHooks.useState);
+  });
+
+  it('should not profile hooks when component hooks are excluded', async () => {
+    const { useEffect, useLayoutEffect, useState } = await importHooksWithProfiling({
+      includeProfileComponentHooks: false,
+      isRecording: true,
+    });
+    const preactHooks = await import('preact/hooks');
+
+    expect(useState).toBe(preactHooks.useState);
+    expect(useEffect).toBe(preactHooks.useEffect);
+    expect(useLayoutEffect).toBe(preactHooks.useEffect);
   });
 
   it('should profile hooks when compile-time profiling is enabled', async () => {

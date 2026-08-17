@@ -1,15 +1,246 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it } from '@rstest/core';
+import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import os from 'node:os';
+import path from 'node:path';
+
+import { rspack } from '@rspack/core';
+import { afterAll, describe, expect, it } from '@rstest/core';
 
 import {
+  ReactWebpackPlugin,
   collectElementTemplatesForEntries,
   collectElementTemplatesFromModule,
   mergeElementTemplate,
   mergeElementTemplatesFromModule,
 } from '../src/ReactWebpackPlugin.js';
 import type { ModuleWithElementTemplateBuildInfo } from '../src/ReactWebpackPlugin.js';
+
+const require = createRequire(import.meta.url);
+const reactPackagePath = require.resolve('@lynx-js/react/package.json');
+const reactRuntimePath = path.dirname(reactPackagePath);
+const workletRuntimePath = require.resolve(
+  '@lynx-js/react/worklet-runtime',
+);
+const snapshotEntry = path.join(
+  reactRuntimePath,
+  'runtime/lib/lynx.js',
+);
+const elementTemplateEntry = path.join(
+  reactRuntimePath,
+  'runtime/lib/element-template/native/index.js',
+);
+const profileOutputRoots: string[] = [];
+const profileMarkers = [
+  'FLOW_ID',
+  'PATCH_LENGTH',
+  'ReactLynx::diffFinishNoPatch',
+  'ReactLynx::hooks::',
+  'ReactLynx::render::',
+];
+
+interface ProfileCompileOptions {
+  backend?: 'element-template' | 'snapshot';
+  compilerName: string;
+  entry?: string;
+  mode?: 'development' | 'production';
+  profile: boolean | undefined;
+  resolvedRuntime: boolean;
+}
+
+async function compileProfileArtifact({
+  backend = 'snapshot',
+  compilerName,
+  entry = backend === 'snapshot' ? snapshotEntry : elementTemplateEntry,
+  mode = 'production',
+  profile,
+  resolvedRuntime,
+}: ProfileCompileOptions): Promise<string> {
+  const outputPath = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'react-profile-reachability-'),
+  );
+  profileOutputRoots.push(outputPath);
+
+  const compiler = rspack({
+    name: compilerName,
+    mode,
+    context: reactRuntimePath,
+    entry,
+    output: {
+      path: outputPath,
+      filename: 'bundle.js',
+    },
+    plugins: [
+      new ReactWebpackPlugin({
+        profile,
+        workletRuntimePath: resolvedRuntime ? workletRuntimePath : '',
+        experimental_useElementTemplate: backend === 'element-template',
+      }),
+    ],
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    compiler.run((error, stats) => {
+      if (error || stats?.hasErrors()) {
+        reject(
+          error
+            ?? new Error(stats?.toString({ all: false, errors: true })),
+        );
+        return;
+      }
+      resolve();
+    });
+  });
+
+  return await fs.readFile(path.join(outputPath, 'bundle.js'), 'utf8');
+}
+
+afterAll(async () => {
+  await Promise.all(
+    profileOutputRoots.map(outputPath =>
+      fs.rm(outputPath, { recursive: true, force: true })
+    ),
+  );
+});
+
+describe('profile component-hook reachability', () => {
+  it.each(
+    [
+      ['Snapshot', 'snapshot'],
+      ['Element Template', 'element-template'],
+    ] as const,
+  )('excludes exhaustive hooks from scoped default Web %s builds', async (
+    _caseName,
+    backend,
+  ) => {
+    const code = await compileProfileArtifact({
+      backend,
+      compilerName: 'web',
+      profile: false,
+      resolvedRuntime: true,
+    });
+
+    for (const marker of profileMarkers) {
+      expect(code).not.toContain(marker);
+    }
+  });
+
+  it.each(
+    [
+      ['Snapshot explicit Web profiling', 'snapshot', 'web', true, true],
+      [
+        'Snapshot native host recording support',
+        'snapshot',
+        'lynx',
+        false,
+        true,
+      ],
+      ['Snapshot unresolved direct webpack', 'snapshot', 'web', false, false],
+      [
+        'Element Template explicit Web profiling',
+        'element-template',
+        'web',
+        true,
+        true,
+      ],
+      [
+        'Element Template native host recording support',
+        'element-template',
+        'lynx',
+        false,
+        true,
+      ],
+    ] as const,
+  )('retains exhaustive hooks for %s', async (
+    _caseName,
+    backend,
+    compilerName,
+    profile,
+    resolvedRuntime,
+  ) => {
+    const code = await compileProfileArtifact({
+      backend,
+      compilerName,
+      profile,
+      resolvedRuntime,
+    });
+
+    const expectedMarkers = backend === 'snapshot'
+      ? profileMarkers
+      : profileMarkers.filter(marker => marker !== 'ReactLynx::hooks::');
+    for (const marker of expectedMarkers) {
+      expect(code).toContain(marker);
+    }
+  });
+
+  it('retains exhaustive hooks in development Web builds', async () => {
+    const code = await compileProfileArtifact({
+      compilerName: 'web',
+      mode: 'development',
+      profile: undefined,
+      resolvedRuntime: true,
+    });
+
+    for (const marker of profileMarkers) {
+      expect(code).toContain(marker);
+    }
+  });
+
+  it('treats REACT_PROFILE=false as an explicit disable', async () => {
+    const previous = process.env['REACT_PROFILE'];
+    process.env['REACT_PROFILE'] = 'false';
+    try {
+      const code = await compileProfileArtifact({
+        compilerName: 'web',
+        profile: true,
+        resolvedRuntime: true,
+      });
+
+      for (const marker of profileMarkers) {
+        expect(code).not.toContain(marker);
+      }
+    } finally {
+      if (previous === undefined) {
+        delete process.env['REACT_PROFILE'];
+      } else {
+        process.env['REACT_PROFILE'] = previous;
+      }
+    }
+  });
+
+  it('does not replace lookalike user modules outside React runtime', async () => {
+    const fixtureRoot = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'react-profile-lookalike-'),
+    );
+    profileOutputRoots.push(fixtureRoot);
+    const moduleDirectory = path.join(
+      fixtureRoot,
+      'snapshot/debug',
+    );
+    await fs.mkdir(moduleDirectory, { recursive: true });
+    await fs.writeFile(
+      path.join(moduleDirectory, 'profileHooks.js'),
+      'export const userProfileHookMarker = "USER_PROFILE_HOOK";\n',
+    );
+    const entry = path.join(fixtureRoot, 'index.js');
+    await fs.writeFile(
+      entry,
+      'import { userProfileHookMarker } from "./snapshot/debug/profileHooks.js";\n'
+        + 'globalThis.userProfileHookMarker = userProfileHookMarker;\n',
+    );
+
+    const code = await compileProfileArtifact({
+      compilerName: 'web',
+      entry,
+      profile: false,
+      resolvedRuntime: true,
+    });
+
+    expect(code).toContain('USER_PROFILE_HOOK');
+  });
+});
 
 describe('collectElementTemplatesFromModule', () => {
   it('collects templates from nested modules', () => {

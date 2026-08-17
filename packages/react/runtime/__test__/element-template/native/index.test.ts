@@ -7,6 +7,7 @@ const envManager = new ElementTemplateEnvManager();
 describe('element-template native index wiring', () => {
   const originalNodeEnv = process.env['NODE_ENV'];
   const originalProfileFlag = globalThis.__PROFILE__;
+  const originalProfileComponentHooksFlag = globalThis.__PROFILE_COMPONENT_HOOKS__;
   const originalIsProfileRecording = globalThis.lynx.performance.isProfileRecording;
 
   beforeEach(() => {
@@ -19,6 +20,7 @@ describe('element-template native index wiring', () => {
     process.env['NODE_ENV'] = originalNodeEnv;
     globalThis.__ALOG_ELEMENT_API__ = undefined;
     globalThis.__PROFILE__ = originalProfileFlag;
+    globalThis.__PROFILE_COMPONENT_HOOKS__ = originalProfileComponentHooksFlag;
     globalThis.lynx.performance.isProfileRecording = originalIsProfileRecording;
     vi.resetModules();
     vi.doUnmock('../../../src/element-template/native/main-thread-api.js');
@@ -116,11 +118,13 @@ describe('element-template native index wiring', () => {
   async function expectBackgroundWiring(
     compileTimeProfile: boolean,
     isProfileRecording: boolean,
+    includeProfileComponentHooks: boolean,
     expectedProfileHookCalls: number,
   ): Promise<void> {
     envManager.resetEnv('background');
     process.env['NODE_ENV'] = 'production';
     globalThis.__PROFILE__ = compileTimeProfile;
+    globalThis.__PROFILE_COMPONENT_HOOKS__ = includeProfileComponentHooks;
     globalThis.lynx.performance.isProfileRecording = vi.fn(
       () => isProfileRecording,
     );
@@ -225,16 +229,23 @@ describe('element-template native index wiring', () => {
   }
 
   it.each([
-    ['default Web', false, false, 0],
-    ['compile-time profiling', true, false, 1],
-    ['host recording', false, true, 1],
+    ['default Web', false, false, false, 0],
+    ['compile-time Web profiling', true, false, true, 1],
+    ['native host recording', false, true, true, 1],
   ])(
     'installs background wiring for %s',
-    async (_activation, compileTimeProfile, isProfileRecording, expectedProfileHookCalls) => {
+    async (
+      _activation,
+      compileTimeProfile,
+      isProfileRecording,
+      includeProfileComponentHooks,
+      expectedProfileHookCalls,
+    ) => {
       expect.hasAssertions();
       await expectBackgroundWiring(
         compileTimeProfile,
         isProfileRecording,
+        includeProfileComponentHooks,
         expectedProfileHookCalls,
       );
     },
