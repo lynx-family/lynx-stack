@@ -22,5 +22,10 @@ export namespace JSX {
     key?: React.Key | null | undefined;
   }
   interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
-  interface IntrinsicElements extends Lynx.IntrinsicElements {}
+  interface IntrinsicElements extends Lynx.IntrinsicElements {
+    'background-only': {
+      fallback?: React.JSX.Element | undefined;
+      children?: React.ReactNode | undefined;
+    };
+  }
 }

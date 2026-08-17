@@ -19,5 +19,10 @@ export namespace JSX {
   type LibraryManagedAttributes<C, P> = React.JSX.LibraryManagedAttributes<C, P>;
   interface IntrinsicAttributes {}
   interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
-  interface IntrinsicElements extends Lynx.IntrinsicElements {}
+  interface IntrinsicElements extends Lynx.IntrinsicElements {
+    'background-only': {
+      fallback?: React.JSX.Element | undefined;
+      children?: React.ReactNode | undefined;
+    };
+  }
 }

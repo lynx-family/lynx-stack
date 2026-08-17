@@ -18,6 +18,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 sha-1 = { workspace = true }
 swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_transforms_typescript", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "ecma_visit", "testing_transform"] }
+swc_plugin_background_only = { path = "./crates/swc_plugin_background_only" }
 swc_plugin_compat = { path = "./crates/swc_plugin_compat", features = ["napi"] }
 swc_plugin_css_scope = { path = "./crates/swc_plugin_css_scope", features = ["napi"] }
 swc_plugin_define_dce = { path = "./crates/swc_plugin_define_dce", features = ["napi"] }
