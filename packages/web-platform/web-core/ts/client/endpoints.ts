@@ -240,3 +240,13 @@ export const reloadEndpoint = createRpcEndpoint<
   [],
   void
 >('reload', false, false);
+
+export interface FontFaceDescriptor {
+  'font-family': string;
+  'src': string;
+}
+
+export const addFontEndpoint = createRpcEndpoint<
+  [fontFace: FontFaceDescriptor],
+  void
+>('addFont', false, true);

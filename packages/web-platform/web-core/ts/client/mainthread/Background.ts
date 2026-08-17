@@ -46,6 +46,7 @@ import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandle
 import { registerNapiModulesCallHandler } from './crossThreadHandlers/registerNapiModulesCallHandler.js';
 import { registerNativeModulesCallHandler } from './crossThreadHandlers/registerNativeModulesCallHandler.js';
 import { registerReloadHandler } from './crossThreadHandlers/registerReloadHandler.js';
+import { registerAddFontHandler } from './crossThreadHandlers/registerAddFontHandler.js';
 
 function createWebWorker(): Worker {
   return new Worker(
@@ -275,6 +276,7 @@ export class BackgroundThread implements AsyncDisposable {
       },
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);
+    registerAddFontHandler(this.#rpc, this.#lynxViewInstance);
     registerGetPathInfoHandler(this.#rpc, this.#lynxViewInstance);
     registerInvokeUIMethodHandler(this.#rpc, this.#lynxViewInstance);
     registerNapiModulesCallHandler(this.#rpc, this.#lynxViewInstance);

@@ -467,6 +467,23 @@ test.describe('reactlynx3 tests', () => {
       await expect(await target.getAttribute('style')).toContain('pink');
     });
 
+    test('basic-lynx-add-font', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const isRegisteredBefore = await page.evaluate(() =>
+        document.fonts.check('1em "Add Font E2E"')
+      );
+      expect(isRegisteredBefore).toBe(false);
+      await page.locator('#target').click();
+      await wait(500);
+      const isRegisteredAfter = await page.evaluate(() =>
+        document.fonts.check('1em "Add Font E2E"')
+      );
+      expect(isRegisteredAfter).toBe(true);
+      await expect(await page.locator('#target').getAttribute('style'))
+        .toContain('Add Font E2E');
+    });
+
     test(
       'basic-wrapper-element-do-not-impact-layout',
       async ({ page }, { title }) => {
