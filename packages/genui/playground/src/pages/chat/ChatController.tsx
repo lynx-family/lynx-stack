@@ -7,7 +7,11 @@ import type { KeyboardEvent } from 'react';
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
   isA2UIRuntimeReadyMessage,
+  isMatchingLivePreviewFrame,
+  isMatchingReadyLivePreviewFrame,
   prepareLivePreviewOutputs,
+  queueOrDeliverLivePreviewOutput,
+  readLivePreviewNavigationToken,
 } from './livePreviewDelivery.js';
 import type {
   LivePreviewMessageType,
@@ -850,10 +854,22 @@ export function ChatController<
     if (adapter.preview.delivery !== 'live-message') return false;
     const messages = adapter.preview.livePayload?.(nextOutput);
     const frame = previewFrameRef.current;
-    if (!previewFrameReadyRef.current || !messages || !frame?.contentWindow) {
+    const frameWindow = frame?.contentWindow;
+    if (
+      !messages
+      || !frame
+      || !frameWindow
+      || !isMatchingReadyLivePreviewFrame(
+        previewFrameReadyRef.current,
+        previewReadyFrameUrlRef.current,
+        previewReadyWindowRef.current,
+        frame.src,
+        frameWindow,
+      )
+    ) {
       return false;
     }
-    frame.contentWindow.postMessage(
+    frameWindow.postMessage(
       { type, messages },
       targetOriginForUrl(frame.src, host),
     );
@@ -864,15 +880,30 @@ export function ChatController<
     type: LivePreviewMessageType,
     nextOutput: TOutput,
   ) => {
-    if (postLiveOutput(type, nextOutput)) return;
-    pendingLiveOutputsRef.current.push({ type, output: nextOutput });
+    queueOrDeliverLivePreviewOutput(
+      pendingLiveOutputsRef.current,
+      { type, output: nextOutput },
+      (item) => postLiveOutput(item.type, item.output),
+    );
   }, [postLiveOutput]);
 
-  const handlePreviewFrameReady = useCallback(() => {
+  const handlePreviewFrameReady = useCallback((
+    expectedFrameUrl: string,
+    expectedFrameWindow: Window,
+  ) => {
     if (adapter.preview.delivery !== 'live-message') return;
     const frame = previewFrameRef.current;
     const frameWindow = frame?.contentWindow;
-    if (!frame || !frameWindow) return;
+    if (
+      !frame || !frameWindow || !isMatchingLivePreviewFrame(
+        expectedFrameUrl,
+        expectedFrameWindow,
+        frame.src,
+        frameWindow,
+      )
+    ) {
+      return;
+    }
 
     if (previewReadyFallbackTimerRef.current !== null) {
       window.clearTimeout(previewReadyFallbackTimerRef.current);
@@ -901,20 +932,28 @@ export function ChatController<
     const frameWindow = frame?.contentWindow;
     if (!frame || !frameWindow) return;
     if (
-      previewFrameReadyRef.current
-      && previewReadyFrameUrlRef.current === frame.src
-      && previewReadyWindowRef.current === frameWindow
+      isMatchingReadyLivePreviewFrame(
+        previewFrameReadyRef.current,
+        previewReadyFrameUrlRef.current,
+        previewReadyWindowRef.current,
+        frame.src,
+        frameWindow,
+      )
     ) {
       return;
     }
+    previewFrameReadyRef.current = false;
+    previewReadyFrameUrlRef.current = '';
+    previewReadyWindowRef.current = null;
     const generation = liveDeliveryGenerationRef.current;
+    const loadedFrameUrl = frame.src;
     if (previewReadyFallbackTimerRef.current !== null) {
       window.clearTimeout(previewReadyFallbackTimerRef.current);
     }
     previewReadyFallbackTimerRef.current = window.setTimeout(() => {
       previewReadyFallbackTimerRef.current = null;
       if (generation !== liveDeliveryGenerationRef.current) return;
-      handlePreviewFrameReady();
+      handlePreviewFrameReady(loadedFrameUrl, frameWindow);
     }, PREVIEW_RENDER_READY_FALLBACK_MS);
   }, [adapter.preview.delivery, handlePreviewFrameReady]);
 
@@ -924,8 +963,17 @@ export function ChatController<
       const frame = previewFrameRef.current;
       if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
       if (event.origin !== targetOriginForUrl(frame.src, host)) return;
-      if (!isA2UIRuntimeReadyMessage(event.data)) return;
-      handlePreviewFrameReady();
+      const navigationToken = readLivePreviewNavigationToken(frame.src);
+      if (
+        !isA2UIRuntimeReadyMessage(
+          event.data,
+          frame.src,
+          navigationToken,
+        )
+      ) {
+        return;
+      }
+      handlePreviewFrameReady(frame.src, frame.contentWindow);
     };
 
     window.addEventListener('message', handleRenderReady);

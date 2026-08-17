@@ -14,6 +14,7 @@ import {
   canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
   createLocalA2UIMessagesPayload,
+  createLocalA2UIMessagesPayloadCache,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
   isPortableA2UIMessagesUrl,
@@ -102,6 +103,68 @@ describe('A2UI render payloads', () => {
     localPayload.dispose();
     expect(revoked).toEqual([
       'blob:https://lynx-stack.dev/local-messages',
+    ]);
+  });
+
+  test('keeps local Blob URLs alive until their runtime finishes loading', () => {
+    let nextId = 0;
+    const revoked: string[] = [];
+    let scheduledRelease: (() => void) | undefined;
+    const registry = {
+      createObjectURL() {
+        nextId += 1;
+        return `blob:https://lynx-stack.dev/local-${nextId}`;
+      },
+      revokeObjectURL(url: string) {
+        revoked.push(url);
+      },
+    };
+    const cache = createLocalA2UIMessagesPayloadCache({
+      createPayload: (messages) =>
+        createLocalA2UIMessagesPayload(messages, registry),
+      releaseTimeoutMs: 100,
+      scheduleRelease: (callback) => {
+        scheduledRelease = callback;
+        return callback;
+      },
+      cancelRelease: (handle) => {
+        if (scheduledRelease === handle) scheduledRelease = undefined;
+      },
+    });
+    const firstMessages = [{ text: 'first' }];
+    const first = cache.ensure(firstMessages);
+
+    expect(cache.ensure(firstMessages)).toBe(first);
+    expect(revoked).toEqual([]);
+
+    const second = cache.ensure([{ text: 'second' }]);
+    expect(second.messagesUrl).not.toBe(first.messagesUrl);
+    expect(revoked).toEqual([]);
+    expect(scheduledRelease).toBeDefined();
+
+    cache.markLoaded(first.messagesUrl);
+    expect(revoked).toEqual([]);
+
+    cache.markLoaded(second.messagesUrl);
+    expect(revoked).toEqual([first.messagesUrl]);
+    expect(scheduledRelease).toBeUndefined();
+
+    cache.clear();
+    expect(revoked).toEqual([first.messagesUrl]);
+    scheduledRelease?.();
+    expect(revoked).toEqual([first.messagesUrl, second.messagesUrl]);
+
+    const orphaned = cache.ensure([{ text: 'orphaned' }]);
+    cache.clear();
+    expect(revoked).not.toContain(orphaned.messagesUrl);
+    scheduledRelease?.();
+    expect(revoked).toContain(orphaned.messagesUrl);
+
+    cache.dispose();
+    expect(revoked).toEqual([
+      first.messagesUrl,
+      second.messagesUrl,
+      orphaned.messagesUrl,
     ]);
   });
 

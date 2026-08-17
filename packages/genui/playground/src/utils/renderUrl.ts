@@ -6,6 +6,7 @@ import type { Protocol } from './protocol.js';
 
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
 export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
+export const RENDER_NAVIGATION_TOKEN_QUERY_PARAM = 'previewNavigationToken';
 export const A2UI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 
@@ -93,6 +94,29 @@ export interface LocalA2UIMessagesPayload {
   dispose: () => void;
 }
 
+export const LOCAL_A2UI_MESSAGES_PAYLOAD_RELEASE_TIMEOUT_MS = 30_000;
+
+export interface LocalA2UIMessagesPayloadCache {
+  ensure: (messages: unknown) => LocalA2UIMessagesPayload;
+  markLoaded: (messagesUrl: string) => void;
+  clear: () => void;
+  dispose: () => void;
+}
+
+interface LocalA2UIMessagesPayloadCacheOptions {
+  createPayload: (messages: unknown) => LocalA2UIMessagesPayload;
+  releaseTimeoutMs?: number;
+  scheduleRelease?: (callback: () => void, delayMs: number) => unknown;
+  cancelRelease?: (handle: unknown) => void;
+}
+
+interface LocalA2UIMessagesPayloadCacheEntry {
+  messages: unknown;
+  payload: LocalA2UIMessagesPayload;
+  releaseHandle?: unknown;
+  releaseScheduled: boolean;
+}
+
 export function createLocalA2UIMessagesPayload(
   messages: unknown,
   registry: ObjectURLRegistry = URL,
@@ -114,6 +138,74 @@ export function createLocalA2UIMessagesPayload(
       disposed = true;
       // eslint-disable-next-line n/no-unsupported-features/node-builtins
       registry.revokeObjectURL(messagesUrl);
+    },
+  };
+}
+
+/**
+ * Reuse the current Blob while its messages stay unchanged. Replaced payloads
+ * remain alive until the successor runtime confirms loading, with a bounded
+ * fallback for frames that disappear before they can report readiness.
+ */
+export function createLocalA2UIMessagesPayloadCache(
+  options: LocalA2UIMessagesPayloadCacheOptions,
+): LocalA2UIMessagesPayloadCache {
+  const releaseTimeoutMs = options.releaseTimeoutMs
+    ?? LOCAL_A2UI_MESSAGES_PAYLOAD_RELEASE_TIMEOUT_MS;
+  const scheduleRelease = options.scheduleRelease
+    ?? ((callback: () => void, delayMs: number) =>
+      setTimeout(callback, delayMs));
+  const cancelRelease = options.cancelRelease
+    ?? ((handle: unknown) =>
+      clearTimeout(handle as ReturnType<typeof setTimeout>));
+  const entries = new Map<string, LocalA2UIMessagesPayloadCacheEntry>();
+  let current: LocalA2UIMessagesPayloadCacheEntry | null = null;
+
+  const disposeEntry = (entry: LocalA2UIMessagesPayloadCacheEntry) => {
+    if (entries.get(entry.payload.messagesUrl) !== entry) return;
+    entries.delete(entry.payload.messagesUrl);
+    if (entry.releaseScheduled) cancelRelease(entry.releaseHandle);
+    entry.releaseScheduled = false;
+    entry.payload.dispose();
+  };
+
+  const retireCurrent = () => {
+    const entry = current;
+    current = null;
+    if (!entry || entry.releaseScheduled) return;
+    entry.releaseScheduled = true;
+    entry.releaseHandle = scheduleRelease(
+      () => disposeEntry(entry),
+      releaseTimeoutMs,
+    );
+  };
+
+  return {
+    ensure: (messages) => {
+      if (current && Object.is(current.messages, messages)) {
+        return current.payload;
+      }
+      retireCurrent();
+
+      const payload = options.createPayload(messages);
+      current = {
+        messages,
+        payload,
+        releaseScheduled: false,
+      };
+      entries.set(payload.messagesUrl, current);
+      return payload;
+    },
+    markLoaded: (messagesUrl) => {
+      if (current?.payload.messagesUrl !== messagesUrl) return;
+      for (const entry of [...entries.values()]) {
+        if (entry !== current) disposeEntry(entry);
+      }
+    },
+    clear: retireCurrent,
+    dispose: () => {
+      current = null;
+      for (const entry of [...entries.values()]) disposeEntry(entry);
     },
   };
 }

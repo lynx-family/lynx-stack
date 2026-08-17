@@ -395,7 +395,6 @@ export function App() {
     );
   }, []);
   const postRuntimeReady = useCallback(() => {
-    if (!effectiveData.liveAction) return;
     NativeModules.bridge?.call?.(
       'A2UI_RUNTIME_READY',
       {},
@@ -403,7 +402,7 @@ export function App() {
         // jsb callback
       },
     );
-  }, [effectiveData.liveAction]);
+  }, []);
 
   const syncPlaybackAgent = useCallback(() => {
     const agent = agentRef.current;

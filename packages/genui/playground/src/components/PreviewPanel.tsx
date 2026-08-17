@@ -28,7 +28,10 @@ import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
-import type { LocalA2UIMessagesPayload } from '../utils/renderUrl.js';
+import type {
+  LocalA2UIMessagesPayload,
+  LocalA2UIMessagesPayloadCache,
+} from '../utils/renderUrl.js';
 import {
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
@@ -36,6 +39,7 @@ import {
   canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
   createLocalA2UIMessagesPayload,
+  createLocalA2UIMessagesPayloadCache,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
   isPortableA2UIMessagesUrl,
@@ -384,6 +388,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const buildSeqRef = useRef(0);
+  const localMessagesPayloadCacheRef = useRef<
+    LocalA2UIMessagesPayloadCache | null
+  >(null);
+  localMessagesPayloadCacheRef.current ??= createLocalA2UIMessagesPayloadCache({
+    createPayload: (messages) =>
+      createLocalA2UIMessagesPayload(messages, window.URL),
+  });
+  const localMessagesPayloadCache = localMessagesPayloadCacheRef.current;
   const speedInputId = useId();
   const rawMetricId = useId();
   const metricId = useMemo(
@@ -571,9 +583,36 @@ export function PreviewPanel(props: PreviewPanelProps) {
   }, [previewSource, speed]);
 
   useEffect(() => {
+    const handleRuntimeReady = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data === null || typeof event.data !== 'object') return;
+      const message = event.data as {
+        messagesUrl?: unknown;
+        runtimeReady?: unknown;
+        type?: unknown;
+      };
+      if (
+        message.type !== 'A2UI_RENDER_READY'
+        || message.runtimeReady !== true
+        || typeof message.messagesUrl !== 'string'
+      ) {
+        return;
+      }
+      localMessagesPayloadCache.markLoaded(message.messagesUrl);
+    };
+
+    window.addEventListener('message', handleRuntimeReady);
+    return () => {
+      window.removeEventListener('message', handleRuntimeReady);
+      localMessagesPayloadCache.dispose();
+    };
+  }, [localMessagesPayloadCache]);
+
+  useEffect(() => {
     const seq = ++buildSeqRef.current;
 
     if (!previewSource) {
+      localMessagesPayloadCache.clear();
       setRenderUrl('');
       setRenderShareUrl('');
       setLynxDevUrl('');
@@ -581,6 +620,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     if (previewSource.kind === 'placeholder') {
+      localMessagesPayloadCache.clear();
       setRenderUrl('');
       setRenderShareUrl('');
       setLynxDevUrl('');
@@ -592,6 +632,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       const hasPayload = hasShareableA2UIRenderPayload(previewSource)
         || useClientPayloadStore;
       if (!hasPayload) {
+        localMessagesPayloadCache.clear();
         setRenderUrl('');
         setRenderShareUrl('');
         setLynxDevUrl('');
@@ -614,18 +655,19 @@ export function PreviewPanel(props: PreviewPanelProps) {
       let localMessagesPayload: LocalA2UIMessagesPayload | undefined;
       if (!demoId && !providedMessagesUrl) {
         try {
-          localMessagesPayload = createLocalA2UIMessagesPayload(
+          localMessagesPayload = localMessagesPayloadCache.ensure(
             previewSource.messages,
-            window.URL,
           );
         } catch {
+          localMessagesPayloadCache.clear();
           setRenderUrl('');
           setRenderShareUrl('');
           setLynxDevUrl('');
           return;
         }
+      } else {
+        localMessagesPayloadCache.clear();
       }
-      const disposeLocalMessagesPayload = () => localMessagesPayload?.dispose();
 
       const renderInit = {
         protocol: previewSource.protocol,
@@ -731,7 +773,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
         || portableMessagesUrl
         || !useClientPayloadStore
       ) {
-        return disposeLocalMessagesPayload;
+        return;
       }
 
       void (async () => {
@@ -804,8 +846,10 @@ export function PreviewPanel(props: PreviewPanelProps) {
           // Keep the local Blob URL or length-guarded URL selected above.
         }
       })();
-      return disposeLocalMessagesPayload;
+      return;
     }
+
+    localMessagesPayloadCache.clear();
 
     if (previewSource.kind === 'mcp-apps') {
       setRenderUrl(buildMcpAppsRenderUrl({
@@ -922,7 +966,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
         console.warn('[openui] Failed to publish preview raw text', err);
       }
     })();
-  }, [baseUrl, previewSource, rspeedyDevUrl, shareBaseUrl, speed]);
+  }, [
+    baseUrl,
+    localMessagesPayloadCache,
+    previewSource,
+    rspeedyDevUrl,
+    shareBaseUrl,
+    speed,
+  ]);
 
   useEffect(() => {
     if (!previewSource || previewSource.kind === 'placeholder') {
