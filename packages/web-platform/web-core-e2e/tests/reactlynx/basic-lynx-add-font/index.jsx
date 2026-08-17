@@ -11,7 +11,10 @@ function App() {
         lynx.addFont(
           {
             'font-family': 'Add Font E2E',
-            'src': 'url("../../../resources/PressStart2P-Regular.ttf")',
+            // Served from `web-core-e2e`'s `resources/` by the dev server's
+            // `publicDir`. Absolute, because a `FontFace` `src` is resolved
+            // against the host page, not against this bundle.
+            'src': 'url("/resources/PressStart2P-Regular.ttf")',
           },
           () => {
             setLoaded(true);
