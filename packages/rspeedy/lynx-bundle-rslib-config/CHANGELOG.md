@@ -1,5 +1,17 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.7.0
+
+### Minor Changes
+
+- Require `@rslib/core ^1.0.0-beta.1` in `peerDependencies`, matching the `output.autoExternal` usage introduced by the Rslib v1 upgrade. ([#3437](https://github.com/lynx-family/lynx-stack/pull/3437))
+
+### Patch Changes
+
+- Updated dependencies [[`948eece`](https://github.com/lynx-family/lynx-stack/commit/948eece02aa9f7051f879a21f6c51d96a99fe1aa), [`e35739a`](https://github.com/lynx-family/lynx-stack/commit/e35739aa0ca3b46b74ad0bd681c3fbfcf183c7ec), [`365cc58`](https://github.com/lynx-family/lynx-stack/commit/365cc580d076db4878ff95da7f15d2c9044fbe87)]:
+  - @lynx-js/css-serializer@0.1.8
+  - @lynx-js/web-core@0.24.1
+
 ## 0.6.3
 
 ### Patch Changes
