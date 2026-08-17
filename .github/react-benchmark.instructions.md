@@ -22,4 +22,11 @@ Import Signal APIs from `@lynx-js/react-signals`; the ReactLynx build aliases th
 
 Consume Signals through `@lynx-js/react-signals`; do not add direct `@preact/signals`, `@preact/signals-core`, or `preact` dependencies to the benchmark package. The adapter package owns the compatible implementation and peer resolution.
 
+When benchmarking MainThreadObject, keep the ordinary `MainThreadRef` workload in a separate bundle with no Motion imports so it measures the cost paid by applications that never opt into typed objects. Use `@lynx-js/motion` and real `useMotionValue`/`motion.*` components in the opt-in bundles so the MTS profile includes actual factory realization, capture, hydration, binding, and disposal rather than a framework lookalike.
+
+Resolve the repository root for benchmark transforms with a `.git` lookup that accepts either a directory or a worktree gitfile. A directory-only lookup leaves `__REPO_FILEPATH__` unreplaced in worktree-built bundles and makes native benchmark execution fail before rendering.
+
+Keep declarative `motion.*` lifecycle benchmarks separate: post-commit `runOnMainThread` can race the existing asynchronous `MainThreadRef` initialization path, so combining it with the object benchmark confounds two independent runtime questions.
+
+The headless `benchx_cli` MTS environment may not expose the browser `queueMicrotask` global or the newer `lynx.queueMicrotask` API. Prepend a benchmark-scoped compatibility module to Motion entries that prefers `lynx.queueMicrotask` and otherwise schedules with `setTimeout`; do not change Motion or ReactLynx production behavior solely for the benchmark runner.
 When `benchmark/react/lynx.config.js` enables builtin attribute-name transformation, declare the React-style aliases used by the benchmark explicitly in `benchmark/react/types/index.d.ts` and reference their original Lynx prop types with indexed access. Key-remapped mapped types provide type checking but not reliable completion documentation or definition navigation.

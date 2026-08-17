@@ -15,6 +15,7 @@ import { globalPipelineOptions, setPipeline } from '../../../src/core/performanc
 import { __root, setRoot } from '../../../src/root.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { hydrationMap } from '../../../src/snapshot/snapshot/snapshotInstanceHydrationMap.js';
+import { clearMainThreadEventLastIdForTesting } from '../../../src/snapshot/worklet/callable/mainThreadEvent.js';
 import { clearWorkletRefLastIdForTesting } from '../../../src/snapshot/worklet/ref/workletRef.js';
 import { snapshotManager } from '../../../src/snapshot/snapshot/definition.js';
 
@@ -95,6 +96,7 @@ export class EnvManager {
     clearListGlobal();
     deinitGlobalSnapshotPatch();
     clearWorkletRefLastIdForTesting();
+    clearMainThreadEventLastIdForTesting();
     // `renderPage` no longer resets the first-screen state (it is initialized once
     // at module load), so reset it here for test isolation across tests.
     resetFirstScreenSyncState();

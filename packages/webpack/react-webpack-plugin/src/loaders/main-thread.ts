@@ -11,6 +11,7 @@ import {
   DEFINES_FOR_SNAPSHOT_BUILD_INFO,
   DEFINES_FOR_WORKLET_BUILD_INFO,
 } from '../Defines.js';
+import { DIRECTIVE_INFERENCE_BUILD_INFO } from '../DirectiveInferenceReport.js';
 import {
   boundaryKey,
   definesImportByBoundary,
@@ -41,7 +42,7 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
 
   const result = transformReactLynxSync(
     content,
-    getMainThreadTransformOptions.call(this, swcInputSourceMap),
+    getMainThreadTransformOptions.call(this, content, swcInputSourceMap),
   );
 
   if (result.errors.length > 0) {
@@ -122,6 +123,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     if (result.definesForWorklet) {
       buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet;
     }
+    buildInfo[DIRECTIVE_INFERENCE_BUILD_INFO] = result.directiveInferenceRecords
+      ?? [];
   }
 
   const definesImport = definesImportByBoundary.get(

@@ -42,6 +42,40 @@ export interface DefineDceVisitorConfig {
 }
 
 // @public
+export interface DirectiveInferenceConfig {
+    // (undocumented)
+    modules: ReadonlyArray<DirectiveInferenceModule>
+    // (undocumented)
+    protocolVersion: 1
+}
+
+// @public
+export interface DirectiveInferenceDeclaration {
+    args?: Readonly<Record<string, DirectiveInferenceRule>>
+    marker?: boolean
+    props?: Readonly<Record<string, DirectiveInferenceRule>>
+}
+
+// @public
+export interface DirectiveInferenceModule {
+    // (undocumented)
+    exports: Readonly<Record<string, DirectiveInferenceDeclaration>>
+    // (undocumented)
+    manifest?: string
+    // (undocumented)
+    package: string
+    // (undocumented)
+    packageVersion?: string
+    // (undocumented)
+    source: string
+}
+
+// @public
+export type DirectiveInferenceRule = true | '*' | '**' | {
+    readonly [path: string]: DirectiveInferenceRule
+}
+
+// @public
 export interface ExtractStrConfig {
     // @internal (undocumented)
     extractedStrArr?: Array<string>
@@ -70,6 +104,10 @@ export interface PluginReactLynxOptions {
     debugInfoOutside?: boolean;
     defaultDisplayLinear?: boolean;
     defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
+    directiveInference?: false | {
+        declarations?: DirectiveInferenceConfig;
+        report?: false | string;
+    };
     enableAccessibilityElement?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;

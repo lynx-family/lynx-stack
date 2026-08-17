@@ -37,6 +37,7 @@
     "@emnapi/runtime": "^1.7.1",
     "@napi-rs/cli": "2.18.4",
     "esbuild": "^0.28.1",
-    "tiny-glob": "0.2.9"
+    "tiny-glob": "0.2.9",
+    "typescript": "catalog:"
   }
 }

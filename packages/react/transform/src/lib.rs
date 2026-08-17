@@ -73,7 +73,13 @@ use swc_plugin_transform_builtin_attribute_names::TransformBuiltinAttributeNames
 pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
-use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugin_worklet::{
+  directive_inference::{
+    take_sorted_records, DirectiveInferenceCollector, DirectiveInferenceConfig,
+    DirectiveInferenceRecord as CoreDirectiveInferenceRecord, DirectiveInferenceVisitor,
+  },
+  napi::{WorkletVisitor, WorkletVisitorConfig},
+};
 use swc_plugins_shared::defines::{DefineKind, DefinesCollector};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
@@ -224,6 +230,14 @@ pub struct TransformNodiffOptions {
   #[napi(js_name = "directiveDCE")]
   pub directive_dce: Either<bool, DirectiveDCEVisitorConfig>,
   pub worklet: Either<bool, WorkletVisitorConfig>,
+  /**
+   * Generic declaration data used to infer main-thread directives from
+   * import-resolved call and JSX positions.
+   *
+   * @experimental
+   */
+  #[napi(ts_type = "DirectiveInferenceConfig")]
+  pub directive_inference: Option<serde_json::Value>,
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /**
    * Transform attribute names on Lynx builtin elements.
@@ -271,6 +285,7 @@ impl Default for TransformNodiffOptions {
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
       worklet: Either::A(false),
+      directive_inference: None,
       dynamic_import: Some(Either::B(Default::default())),
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
@@ -319,6 +334,42 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "definesForWorklet")]
   pub defines_for_worklet: Option<Vec<Define>>,
+  /**
+   * Stable, source-ordered record of every inferred directive.
+   *
+   * @experimental
+   */
+  #[napi(js_name = "directiveInferenceRecords")]
+  pub directive_inference_records: Option<Vec<DirectiveInferenceRecord>>,
+}
+
+#[napi(object)]
+pub struct DirectiveInferenceRecord {
+  pub filename: String,
+  pub start: u32,
+  pub end: u32,
+  pub package: String,
+  pub package_version: Option<String>,
+  pub manifest: Option<String>,
+  pub source: String,
+  pub export: String,
+  pub path: String,
+}
+
+impl From<CoreDirectiveInferenceRecord> for DirectiveInferenceRecord {
+  fn from(record: CoreDirectiveInferenceRecord) -> Self {
+    Self {
+      filename: record.filename,
+      start: record.start,
+      end: record.end,
+      package: record.package,
+      package_version: record.package_version,
+      manifest: record.manifest,
+      source: record.source,
+      export: record.export,
+      path: record.path,
+    }
+  }
 }
 
 fn print_define(
@@ -437,6 +488,7 @@ fn transform_react_lynx_inner(
   let comments = SingleThreadedComments::default();
   let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
   let fm = cm.new_source_file(FileName::Real(options.filename.clone().into()).into(), code);
+  let directive_inference_file_start = fm.start_pos.0;
 
   let c = Compiler::new(cm.clone());
 
@@ -448,6 +500,8 @@ fn transform_react_lynx_inner(
 
   let snapshot_ui_source_map_records: Rc<RefCell<Vec<SnapshotCoreUISourceMapRecord>>> =
     Rc::new(RefCell::new(vec![]));
+  let directive_inference_records: DirectiveInferenceCollector = Rc::new(RefCell::new(vec![]));
+  let directive_inference_enabled = options.directive_inference.is_some();
 
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
@@ -470,6 +524,7 @@ fn transform_react_lynx_inner(
           element_templates: None,
           defines_for_snapshot: None,
           defines_for_worklet: None,
+          directive_inference_records: directive_inference_enabled.then(Vec::new),
         };
       }
     };
@@ -789,6 +844,46 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let directive_inference_filename = match &options.worklet {
+      Either::B(config) => config.filename.clone(),
+      Either::A(_) => options.filename.clone(),
+    };
+    let directive_inference_plugin = match options.directive_inference {
+      Some(config) => match serde_json::from_value::<DirectiveInferenceConfig>(config) {
+        Ok(config) => Optional::new(
+          visit_mut_pass(
+            DirectiveInferenceVisitor::new(config, directive_inference_filename.clone())
+              .with_collector(directive_inference_records.clone())
+              .with_file_start(directive_inference_file_start),
+          ),
+          true,
+        ),
+        Err(error) => {
+          HANDLER.with(|handler| {
+            handler
+              .struct_err(&format!(
+                "invalid directive-inference configuration: {error}"
+              ))
+              .emit();
+          });
+          Optional::new(
+            visit_mut_pass(DirectiveInferenceVisitor::new(
+              DirectiveInferenceConfig::default(),
+              directive_inference_filename.clone(),
+            )),
+            false,
+          )
+        }
+      },
+      None => Optional::new(
+        visit_mut_pass(DirectiveInferenceVisitor::new(
+          DirectiveInferenceConfig::default(),
+          directive_inference_filename,
+        )),
+        false,
+      ),
+    };
+
     let worklet_plugin = match options.worklet {
       Either::A(config) => {
         let visitor = WorkletVisitor::default().with_content_hash(content_hash);
@@ -838,14 +933,17 @@ fn transform_react_lynx_inner(
     let pass = (
       &mut fixer(Some(&comments)),
       resolver(unresolved_mark, top_level_mark, true),
-      typescript::typescript(
-        typescript::Config {
-          verbatim_module_syntax: false,
-          import_not_used_as_values: typescript::ImportsNotUsedAsValues::Remove,
-          ..Default::default()
-        },
-        unresolved_mark,
-        top_level_mark,
+      (
+        directive_inference_plugin,
+        typescript::typescript(
+          typescript::Config {
+            verbatim_module_syntax: false,
+            import_not_used_as_values: typescript::ImportsNotUsedAsValues::Remove,
+            ..Default::default()
+          },
+          unresolved_mark,
+          top_level_mark,
+        ),
       ),
       dynamic_import_plugin,
       refresh_plugin,
@@ -968,6 +1066,12 @@ fn transform_react_lynx_inner(
           element_templates,
           defines_for_snapshot: Some(defines_for_snapshot),
           defines_for_worklet: Some(defines_for_worklet),
+          directive_inference_records: directive_inference_enabled.then(|| {
+            take_sorted_records(&directive_inference_records)
+              .into_iter()
+              .map(Into::into)
+              .collect()
+          }),
         }
       }
       Err(_) => {
@@ -985,6 +1089,12 @@ fn transform_react_lynx_inner(
           element_templates,
           defines_for_snapshot: None,
           defines_for_worklet: None,
+          directive_inference_records: directive_inference_enabled.then(|| {
+            take_sorted_records(&directive_inference_records)
+              .into_iter()
+              .map(Into::into)
+              .collect()
+          }),
         };
       }
     }
@@ -1004,6 +1114,7 @@ fn transform_react_lynx_inner(
     element_templates: result.element_templates,
     defines_for_snapshot: result.defines_for_snapshot,
     defines_for_worklet: result.defines_for_worklet,
+    directive_inference_records: result.directive_inference_records,
   };
 
   r

@@ -2,8 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type {
+  ClosureValueType,
+  MainThreadCallableImpl,
+  MainThreadInstanceImpl,
+  RunWorkletOptions,
+  Worklet,
+  WorkletRefImpl,
+} from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
+import { getFromCallableMap, getFromInstanceMap, initCallable } from './callable.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
@@ -18,7 +26,9 @@ import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
+    _resolveWorklet: resolveWorklet,
     _refImpl: initWorkletRef(),
+    _callableImpl: initCallable(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
@@ -105,6 +115,13 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
+function resolveWorklet(ctx: Worklet): (...args: unknown[]) => unknown {
+  if (!validateWorklet(ctx) || '_lepusWorkletHash' in ctx) {
+    throw new Error('Cannot resolve an invalid Main Thread Function.');
+  }
+  return transformWorklet(ctx, true);
+}
+
 const workletCache = /*#__PURE__*/ new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
 
 function transformWorklet(ctx: Worklet, isWorklet: true): (...args: unknown[]) => unknown;
@@ -160,6 +177,17 @@ const transformWorkletInner = (
       continue;
     }
 
+    // A MainThreadObject initialization payload is user data. Resolve the
+    // typed descriptor before walking it so payload properties that resemble
+    // worklet metadata remain untouched. Legacy MainThreadRef descriptors do
+    // not carry a protocol version and retain the existing recursive path.
+    if (isMainThreadObjectDescriptor(subObj)) {
+      obj[key] = getFromWorkletRefMap(
+        subObj as unknown as WorkletRefImpl<unknown>,
+      );
+      continue;
+    }
+
     if (/** isEventTarget */ 'elementRefptr' in subObj) {
       obj[key] = new Element(subObj['elementRefptr'] as ElementNode);
       continue;
@@ -201,8 +229,35 @@ const transformWorkletInner = (
       );
       continue;
     }
+    // Checked after the common discriminants so hot paths (worklet ctxs,
+    // refs, background functions) do not pay for the callable lookup.
+    const isMainThreadCallable = '_wcid' in (subObj as object);
+    if (isMainThreadCallable) {
+      obj[key] = getFromCallableMap(
+        subObj as unknown as MainThreadCallableImpl,
+      );
+      continue;
+    }
+    const isMainThreadInstance = '_wiid' in (subObj as object);
+    if (isMainThreadInstance) {
+      obj[key] = getFromInstanceMap(
+        subObj as unknown as MainThreadInstanceImpl,
+      ) as ClosureValueType;
+      continue;
+    }
   }
 };
+
+function isMainThreadObjectDescriptor(
+  value: ClosureValueType,
+): boolean {
+  const descriptor = value as unknown as Partial<WorkletRefImpl<unknown>>;
+  return typeof value === 'object'
+    && value !== null
+    && typeof descriptor._wvid === 'number'
+    && typeof descriptor._type === 'string'
+    && typeof descriptor._mtoVersion === 'number';
+}
 
 function createWeakCtxRef(ctx: object): WeakRef<object> | undefined {
   try {

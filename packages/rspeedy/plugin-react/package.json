@@ -50,6 +50,7 @@
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/debug-metadata": "workspace:*",
+    "@lynx-js/motion": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
@@ -68,7 +69,7 @@
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.124.0"
+    "@lynx-js/react": "^0.124.0 || ^0.125.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/react": {

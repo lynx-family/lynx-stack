@@ -9,6 +9,7 @@ const enum WorkletEvents {
   FunctionCallRet = 'Lynx.Worklet.FunctionCallRet',
   releaseBackgroundWorkletCtx = 'Lynx.Worklet.releaseBackgroundWorkletCtx',
   releaseWorkletRef = 'Lynx.Worklet.releaseWorkletRef',
+  releaseMainThreadCallable = 'Lynx.Worklet.releaseMainThreadCallable',
 }
 
 interface RunWorkletCtxData {

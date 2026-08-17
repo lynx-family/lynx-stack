@@ -195,6 +195,9 @@ importers:
 
   benchmark/react:
     dependencies:
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -1408,6 +1411,9 @@ importers:
       tiny-glob:
         specifier: 0.2.9
         version: 0.2.9
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   packages/react/transform/rspack-napi:
     dependencies:
@@ -1833,6 +1839,9 @@ importers:
       '@lynx-js/debug-metadata':
         specifier: workspace:*
         version: link:../../tools/debug-metadata
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../motion
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
@@ -2545,6 +2554,9 @@ importers:
 
   packages/webpack/react-webpack-plugin:
     dependencies:
+      '@babel/parser':
+        specifier: 7.29.7
+        version: 7.29.7
       '@lynx-js/debug-metadata':
         specifier: workspace:^
         version: link:../../tools/debug-metadata

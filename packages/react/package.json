@@ -215,13 +215,15 @@
     "docs",
     "testing-library",
     "CHANGELOG.md",
+    "directive-inference.json",
     "internal.js",
     "README.md",
     "README.zh.md"
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build"
+    "build": "pnpm run generate:directive-inference && rslib build",
+    "generate:directive-inference": "node ./transform/scripts/generate_directive_inference_manifest.mjs --input ./types/directive-inference.d.ts --output ./directive-inference.json"
   },
   "dependencies": {
     "preact": "catalog:lynxjs"
@@ -239,5 +241,8 @@
     "@lynx-js/types": {
       "optional": true
     }
+  },
+  "lynx": {
+    "directiveInference": "./directive-inference.json"
   }
 }

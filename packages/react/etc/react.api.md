@@ -87,6 +87,9 @@ export interface DataProcessors {
     };
 }
 
+// @public
+export function defineMainThreadObjectType<I, O extends object>(definition: MainThreadObjectTypeDefinition<I, O>): MainThreadObjectType<I, O>;
+
 export { forwardRef }
 
 export { Fragment }
@@ -135,6 +138,45 @@ export { lazy }
 export interface Lynx {
     registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
+}
+
+// @public
+export function mainThread<Args extends readonly unknown[], Return>(fn: (...args: Args) => Return): MainThreadFn<Args, Return>;
+
+// @public
+export type MainThreadDeep<T> = T extends null | undefined ? T : T & {
+    readonly [mainThreadDeepBrand]?: true;
+};
+
+// @public
+export class MainThreadEvent<F extends (...args: any[]) => any = (...args: unknown[]) => unknown> {
+    constructor(fn: F);
+    release(): void;
+}
+
+// @public
+export type MainThreadFn<Args extends readonly unknown[] = readonly unknown[], Return = unknown> = ((...args: Args) => Return) & {
+    readonly [mainThreadFunctionBrand]?: true;
+};
+
+// @public
+export class MainThreadInstance<O = unknown> {
+    constructor(create: () => O, dispose?: (obj: O) => void);
+    release(): void;
+}
+
+// @public
+export interface MainThreadObjectType<I, O extends object> {
+    readonly getInitialPayload: (value: O) => I;
+    readonly isHandle: (value: unknown) => value is O;
+    readonly type: string;
+}
+
+// @public
+export interface MainThreadObjectTypeDefinition<I, O extends object> {
+    readonly create: (initialValue: I) => O;
+    readonly dispose?: (object: O) => void;
+    readonly type: string;
 }
 
 // Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts
@@ -206,6 +248,21 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
+
+// @public
+export function useMainThreadEffect(fn: MainThreadFn<[], void | MainThreadFn<[], void>> | null | undefined, deps?: readonly unknown[]): void;
+
+// @public
+export function useMainThreadEvent<F extends (...args: any[]) => any>(fn: (F & MainThreadFn<Parameters<F>, ReturnType<F>>) | null | undefined): MainThreadEvent<F> | null;
+
+// @public
+export function useMainThreadEvents<T>(value: MainThreadDeep<T>): T;
+
+// @public
+export function useMainThreadInstance<O>(create: MainThreadFn<[], O> | null | undefined, dispose?: MainThreadFn<[obj: O], void> | null): MainThreadInstance<O> | null;
+
+// @public
+export function useMainThreadObject<I, O extends object>(objectType: MainThreadObjectType<I, O>, initialValue: I): O;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

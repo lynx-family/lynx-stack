@@ -8,6 +8,7 @@ import type { LoaderContext } from '@rspack/core';
 
 import type { ElementTemplateConfig } from '@lynx-js/react/transform';
 
+import { resolveDirectiveInferenceConfig } from './directive-inference.js';
 import {
   ELEMENT_TEMPLATE_RUNTIME_PKG,
   JSX_IMPORT_SOURCE,
@@ -30,6 +31,7 @@ function testingLoader(
     engineVersion = '',
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate = false,
+    directiveInference = true,
     shake = false,
     transformPath = '@lynx-js/react/transform',
   } = this.getOptions();
@@ -60,6 +62,14 @@ function testingLoader(
       darkMode: compat.darkMode ?? false,
     }
     : (compat ?? false);
+  // Partial loader contexts (e.g. programmatic testing callers) may not
+  // implement dependency tracking.
+  const directiveInferenceConfig = resolveDirectiveInferenceConfig(
+    content,
+    this.resourcePath,
+    directiveInference,
+    dependency => this.addDependency?.(dependency),
+  );
   const result = transformReactLynxSync(
     content,
     {
@@ -94,6 +104,9 @@ function testingLoader(
         runtimePkg: RUNTIME_PKG,
         target: 'MIXED',
       },
+      ...(directiveInferenceConfig === undefined
+        ? {}
+        : { directiveInference: directiveInferenceConfig }),
       refresh: false,
       cssScope: false,
       ...(experimental_transformBuiltinAttributeNames !== undefined && {

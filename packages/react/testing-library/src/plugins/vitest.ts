@@ -7,6 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
+import type { DirectiveInferenceConfig } from '@lynx-js/react/transform';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
@@ -36,6 +38,13 @@ export interface TestingLibraryOptions {
    * @default `false`
    */
   experimental_enableReactCompiler?: boolean;
+
+  /**
+   * Generic declaration data used to infer main-thread directives.
+   *
+   * @experimental
+   */
+  directiveInference?: DirectiveInferenceConfig;
 }
 
 export function testingLibraryPlugin(
@@ -276,6 +285,9 @@ export function testingLibraryPlugin(
             runtimePkg: `${runtimePkgName}/internal`,
             target: 'MIXED',
           },
+          ...(options?.directiveInference === undefined
+            ? {}
+            : { directiveInference: options.directiveInference }),
           refresh: false,
           cssScope: false,
         });

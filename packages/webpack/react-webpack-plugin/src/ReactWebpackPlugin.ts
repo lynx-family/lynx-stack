@@ -9,6 +9,7 @@ import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
 import type {
+  DirectiveInferenceConfig,
   ExtractStrConfig,
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react/transform';
@@ -16,6 +17,10 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { applyDefinesInjection } from './DefinesInjection.js';
+import {
+  collectDirectiveInferenceRecords,
+  createDirectiveInferenceReport,
+} from './DirectiveInferenceReport.js';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
@@ -251,6 +256,18 @@ interface ReactWebpackPluginOptions {
     | TransformBuiltinAttributeNamesOptions;
 
   /**
+   * Generic package declaration discovery and audit reporting.
+   *
+   * @experimental
+   */
+  directiveInference?:
+    | false
+    | {
+      declarations?: DirectiveInferenceConfig;
+      report?: false | string;
+    };
+
+  /**
    * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
    * `pluginReactLynx`) from the host engine version and any
    * `REACT_LAZY_BUNDLE_FETCHER` env override.
@@ -337,6 +354,7 @@ class ReactWebpackPlugin {
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
       experimental_transformBuiltinAttributeNames: false,
+      directiveInference: {},
       lazyBundleFetcher: 'QueryComponent',
     });
 
@@ -476,6 +494,32 @@ class ReactWebpackPlugin {
             });
         },
       );
+
+      const reportFilename = options.directiveInference === false
+          || options.directiveInference.report === false
+        ? undefined
+        : options.directiveInference.report ?? 'directive-inference.json';
+      if (reportFilename !== undefined) {
+        compilation.hooks.processAssets.tap(
+          {
+            name: `${this.constructor.name}.DirectiveInferenceReport`,
+            stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
+          },
+          () => {
+            const report = createDirectiveInferenceReport(
+              collectDirectiveInferenceRecords(
+                compilation.modules as Iterable<ModuleWithDirectiveInference>,
+              ),
+            );
+            compilation.emitAsset(
+              reportFilename,
+              new compiler.webpack.sources.RawSource(
+                `${JSON.stringify(report, null, 2)}\n`,
+              ),
+            );
+          },
+        );
+      }
 
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
@@ -621,6 +665,12 @@ class ReactWebpackPlugin {
       },
     );
   }
+}
+
+interface ModuleWithDirectiveInference {
+  layer?: string | null | undefined;
+  buildInfo?: Record<string, unknown> | undefined;
+  modules?: Iterable<ModuleWithDirectiveInference> | undefined;
 }
 
 export { ReactWebpackPlugin as ReactWebpackPlugin };

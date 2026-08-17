@@ -4,6 +4,7 @@
 import { WorkletEvents } from './bindings/events.js';
 import type { ReleaseWorkletRefData, RunWorkletCtxData } from './bindings/events.js';
 import type { ClosureValueType } from './bindings/types.js';
+import { removeCallable } from './callable.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import type { Event } from './types/runtimeProxy.js';
 import { removeValueFromWorkletRefMap } from './workletRef.js';
@@ -21,6 +22,12 @@ function initEventListeners(): void {
     WorkletEvents.releaseWorkletRef,
     (event: Event) => {
       removeValueFromWorkletRefMap((event.data as ReleaseWorkletRefData).id);
+    },
+  );
+  jsContext.addEventListener(
+    WorkletEvents.releaseMainThreadCallable,
+    (event: Event) => {
+      removeCallable((event.data as ReleaseWorkletRefData).id);
     },
   );
 }

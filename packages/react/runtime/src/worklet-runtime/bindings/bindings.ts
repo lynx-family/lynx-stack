@@ -2,7 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefImpl } from './types.js';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  MainThreadCallableCtxPatch,
+  MainThreadCallableId,
+  MainThreadCallableRunPatch,
+  Worklet,
+  WorkletRefImpl,
+} from './types.js';
 import type { Element } from '../api/element.js';
 
 /**
@@ -30,10 +38,65 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
  *
  * @param patch - An array containing the index and new value of the worklet value.
  */
-function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
+function updateWorkletRefInitValueChanges(
+  patch?: ([number, unknown] | [number, unknown, string, number])[],
+): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }
+}
+
+/**
+ * Install the latest ctx for each `MainThreadEvent` in the patch.
+ * A `null` ctx releases the callable.
+ *
+ * @param patch - An array containing the id and new ctx of the callable.
+ * @internal
+ */
+function updateMainThreadCallableCtxChanges(patch?: MainThreadCallableCtxPatch): void {
+  if (patch) {
+    globalThis.lynxWorkletImpl?._callableImpl?.updateCallableCtxChanges(patch);
+  }
+}
+
+/**
+ * Run the callable ctxs scheduled by `useMainThreadEffect` for this commit.
+ *
+ * @internal
+ */
+function runMainThreadCallableCtxs(ids?: MainThreadCallableRunPatch): void {
+  if (ids) {
+    globalThis.lynxWorkletImpl?._callableImpl?.runCallableCtxs(ids);
+  }
+}
+
+/**
+ * Register a callable ctx created during first screen rendering.
+ *
+ * @internal
+ */
+function registerFirstScreenCallableCtx(id: MainThreadCallableId, ctx: Worklet): void {
+  globalThis.lynxWorkletImpl?._callableImpl?.registerFirstScreenCallableCtx(id, ctx);
+}
+
+/**
+ * Register a definition for an opaque main-thread object type.
+ *
+ * @internal
+ */
+function registerMainThreadObjectType(
+  type: string,
+  create: ((initialValue: unknown) => object) | Worklet,
+  dispose: ((object: object) => void) | Worklet | undefined,
+  protocolVersion: number,
+): void {
+  const refImpl = globalThis.lynxWorkletImpl?._refImpl;
+  if (!refImpl || typeof refImpl.registerMainThreadObjectType !== 'function') {
+    throw new Error(
+      'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+    );
+  }
+  refImpl.registerMainThreadObjectType(type, create, dispose, protocolVersion);
 }
 
 /**
@@ -76,6 +139,10 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
+  updateMainThreadCallableCtxChanges,
+  runMainThreadCallableCtxs,
+  registerFirstScreenCallableCtx,
+  registerMainThreadObjectType,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

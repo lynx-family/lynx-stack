@@ -1,0 +1,29 @@
+{
+  "protocolVersion": 1,
+  "exports": {
+    "motion.div": {
+      "props": {
+        "transformTemplate": true,
+        "transition": "**"
+      }
+    },
+    "motion.image": {
+      "props": {
+        "transformTemplate": true,
+        "transition": "**"
+      }
+    },
+    "motion.text": {
+      "props": {
+        "transformTemplate": true,
+        "transition": "**"
+      }
+    },
+    "motion.view": {
+      "props": {
+        "transformTemplate": true,
+        "transition": "**"
+      }
+    }
+  }
+}
