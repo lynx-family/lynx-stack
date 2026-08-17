@@ -214,4 +214,38 @@ describe('background-only element', () => {
       ]
     `);
   });
+  it('rejects the element under element templates', async () => {
+    const result = await transformReactLynx(
+      `
+      export function App() {
+        return (
+          <view>
+            <background-only fallback={<text>loading</text>}>
+              <text>content</text>
+            </background-only>
+          </view>
+        );
+      }
+      `,
+      {
+        ...options('LEPUS'),
+        snapshot: false,
+        elementTemplate: {
+          preserveJsx: false,
+          runtimePkg: '@lynx-js/react/element-template',
+          jsxImportSource: '@lynx-js/react/element-template',
+          filename: 'test',
+          target: 'LEPUS',
+          isDynamicComponent: false,
+          isExternalBundle: false,
+        },
+      },
+    );
+
+    expect(result.errors.map((error) => error.text)).toMatchInlineSnapshot(`
+      [
+        "<background-only> is not supported with \`experimental_useElementTemplate\`: the element templates of the deferred subtree are not registered for the main thread, so it cannot hydrate.",
+      ]
+    `);
+  });
 });

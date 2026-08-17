@@ -23,12 +23,18 @@ export namespace JSX {
     /**
      * Renders `fallback` on the main thread and `children` on the background thread.
      *
-     * Resolved at compile time, so the main-thread bundle keeps only `fallback`.
-     * Modules that nothing but `children` reference are dropped from it, including
-     * their top-level side effects. The background thread renders `children`, which
-     * replace the fallback once it takes over.
+     * Resolved at compile time, so the main thread renders only `fallback`. Modules
+     * that nothing but `children` reference leave its bundle, including their
+     * top-level side effects, while the element definitions the deferred subtree
+     * needs stay behind so it can hydrate. The background thread renders `children`,
+     * which replace the fallback once it takes over.
      *
      * Only the `fallback` attribute is supported. Spread attributes are a build error.
+     * Not supported with `experimental_useElementTemplate`.
+     *
+     * The fold is the same in development, so what renders there is what renders in
+     * production, at the cost of the deferred modules not being refreshable on the
+     * main thread.
      *
      * @example
      * ```tsx
