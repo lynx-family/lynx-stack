@@ -219,6 +219,61 @@ describe('Element APIs', () => {
     expect(commonEventHandler).toHaveBeenCalledTimes(1);
     expect(commonEventHandler.mock.calls[0]![0].type).toBe('touchstart');
   });
+
+  test('continues global mousemove outside the Lynx view without duplicating in-view delivery', () => {
+    const commonEventHandler = rstest.fn();
+    mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
+      common_event_handler: commonEventHandler,
+    }) as any;
+    mtsBinding.addEventListener('mousemove');
+
+    const target = mtsGlobalThis.__CreateView(0);
+    rootDom.appendChild(target);
+    target.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        composed: true,
+        clientX: 20,
+        clientY: 30,
+      }),
+    );
+
+    const outside = document.createElement('div');
+    document.body.appendChild(outside);
+    outside.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        composed: true,
+        clientX: 200,
+        clientY: 300,
+      }),
+    );
+
+    expect(commonEventHandler).toHaveBeenCalledTimes(2);
+    expect([...commonEventHandler.mock.calls[0]![1]]).toEqual([
+      __GetElementUniqueID(target),
+    ]);
+    expect([...commonEventHandler.mock.calls[1]![1]]).toEqual([]);
+    expect(commonEventHandler.mock.calls.map(call => ({
+      type: call[0].type,
+      x: call[0].x,
+      y: call[0].y,
+    }))).toEqual([
+      { type: 'mousemove', x: 20, y: 30 },
+      { type: 'mousemove', x: 200, y: 300 },
+    ]);
+
+    commonEventHandler.mockClear();
+    mtsBinding.disposeEventListeners();
+    outside.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    expect(commonEventHandler).not.toHaveBeenCalled();
+    outside.remove();
+  });
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
       common_event_handler: rstest.fn(),

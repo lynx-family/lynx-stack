@@ -119,6 +119,7 @@ function useMotionHostProps<Props extends MotionProps>(
     AnimationPlaybackControlsWithThen[]
   >([]);
   const hoverActiveRef = useMainThreadRef(false);
+  const hoverActiveWebRef = useMainThreadRef(false);
   const tapActiveRef = useMainThreadRef(false);
   const animationGenerationRef = useMainThreadRef(0);
   const hoverLayoutRef = useRef<
@@ -232,10 +233,14 @@ function useMotionHostProps<Props extends MotionProps>(
     onHoverStart,
     onHoverEnd,
   ].some(Boolean);
-  const bindLayoutChange = hasHoverInteraction || externalLayoutChange
+  const isLynxForWeb = typeof SystemInfo !== 'undefined'
+    && String(SystemInfo.platform) === 'web';
+  const usesBackgroundHoverHitTesting = hasHoverInteraction && !isLynxForWeb;
+  const bindLayoutChange = usesBackgroundHoverHitTesting
+      || externalLayoutChange
     ? (event: unknown) => {
       externalLayoutChange?.(event);
-      if (!hasHoverInteraction) {
+      if (!usesBackgroundHoverHitTesting) {
         return;
       }
       const detail = (event as {
@@ -256,11 +261,12 @@ function useMotionHostProps<Props extends MotionProps>(
       }
     }
     : undefined;
-  const bindGlobalMouseMove = hasHoverInteraction || externalGlobalMouseMove
+  const bindGlobalMouseMove = usesBackgroundHoverHitTesting
+      || externalGlobalMouseMove
     ? (event: unknown) => {
       externalGlobalMouseMove?.(event);
       const layout = hoverLayoutRef.current;
-      if (!hasHoverInteraction || !layout) {
+      if (!usesBackgroundHoverHitTesting || !layout) {
         return;
       }
       const mouseEvent = event as { x?: unknown; y?: unknown };
@@ -685,6 +691,56 @@ function useMotionHostProps<Props extends MotionProps>(
     );
   }
 
+  function bindGlobalMouseMoveOnWeb(event: unknown) {
+    'main thread';
+    if (
+      typeof SystemInfo === 'undefined'
+      || String(SystemInfo.platform) !== 'web'
+      || !elementRef.current
+    ) {
+      return;
+    }
+    const mouseEvent = event as { x?: unknown; y?: unknown };
+    const x = mouseEvent.x;
+    const y = mouseEvent.y;
+    if (typeof x !== 'number' || typeof y !== 'number') {
+      return;
+    }
+    void elementRef.current.invoke('boundingClientRect').then(
+      (data) => {
+        const layout = data as Record<string, unknown>;
+        const isInside = typeof layout['left'] === 'number'
+          && typeof layout['right'] === 'number'
+          && typeof layout['top'] === 'number'
+          && typeof layout['bottom'] === 'number'
+          && x >= layout['left']
+          && x <= layout['right']
+          && y >= layout['top']
+          && y <= layout['bottom'];
+        if (isInside === hoverActiveWebRef.current) {
+          return;
+        }
+        hoverActiveWebRef.current = isInside;
+        if (isInside) {
+          if (onHoverStart) {
+            void runOnBackground(onHoverStart)(event);
+          }
+          if (resolvedHover.target) {
+            startHoverAnimation();
+          }
+        } else {
+          if (onHoverEnd) {
+            void runOnBackground(onHoverEnd)(event);
+          }
+          if (resolvedHover.target) {
+            endHoverAnimation();
+          }
+        }
+      },
+      () => undefined,
+    );
+  }
+
   return {
     ...hostProps,
     style: initialStyle,
@@ -695,6 +751,9 @@ function useMotionHostProps<Props extends MotionProps>(
     ...(bindLayoutChange ? { bindlayoutchange: bindLayoutChange } : {}),
     ...(bindGlobalMouseMove
       ? { 'global-bindmousemove': bindGlobalMouseMove }
+      : {}),
+    ...(hasHoverInteraction && isLynxForWeb
+      ? { 'main-thread:global-bindmousemove': bindGlobalMouseMoveOnWeb }
       : {}),
     ...(resolvedTap.target
       ? {
