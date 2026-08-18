@@ -469,7 +469,7 @@ describe('Config - toRsBuildConfig', () => {
           "filename": undefined,
           "filenameHash": undefined,
           "inlineScripts": undefined,
-          "legalComments": "none",
+          "legalComments": undefined,
           "minify": undefined,
           "polyfill": "off",
           "sourceMap": undefined,

@@ -44,6 +44,8 @@ export function pluginOutput(): RsbuildPlugin {
               filename: {
                 css: originalFilename?.css ?? '[name]/[name].css',
               },
+              // A Lynx bundle has nowhere to link a separate license file to.
+              legalComments: original.output?.legalComments ?? 'none',
             },
           },
         )
