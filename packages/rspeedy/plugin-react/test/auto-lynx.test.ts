@@ -4,6 +4,8 @@
 import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
 import { pluginReactLynx } from '../src/index.js'
 
 describe('pluginAutoLynx', () => {
@@ -25,5 +27,25 @@ describe('pluginAutoLynx', () => {
         plugin?.constructor.name === 'LynxTemplatePlugin'
       ),
     ).toBe(true)
+  })
+
+  test('does not apply the engine again when it is already there', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'production',
+        environments: { lynx: {} },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [...pluginLynx(), pluginReactLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const minimizers = (config?.optimization?.minimizer ?? []).filter(
+      minimizer => minimizer?.constructor.name === 'SwcJsMinimizerRspackPlugin',
+    )
+    expect(minimizers).toHaveLength(1)
   })
 })

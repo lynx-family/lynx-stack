@@ -6,6 +6,11 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { PLUGIN_LYNX_NAME, pluginLynx } from '@lynx-js/rsbuild-plugin'
 
+// Calling `setup` does not register the plugins, so `PLUGIN_LYNX_NAME` cannot
+// be used to tell that the engine was applied this way. The Rsbuild instance is
+// tracked instead, so a second `pluginReactLynx` does not apply it again.
+const applied = new WeakSet<object>()
+
 // Rspeedy applies `pluginLynx` itself. With plain Rsbuild nothing does, so the
 // build engine is applied here to keep `pluginReactLynx` the only plugin a user
 // has to add.
@@ -20,9 +25,10 @@ export function pluginAutoLynx(): RsbuildPlugin {
         return
       }
 
-      if (api.isPluginExists(PLUGIN_LYNX_NAME)) {
+      if (api.isPluginExists(PLUGIN_LYNX_NAME) || applied.has(api.context)) {
         return
       }
+      applied.add(api.context)
 
       const original = api.getRsbuildConfig('original')
 
