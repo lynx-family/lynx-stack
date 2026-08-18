@@ -199,6 +199,40 @@ describe('Hono application', () => {
     });
   });
 
+  test('rejects invalid payload storage classifications', async () => {
+    const invalidMethod = await app.request('/a2ui/payload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [], method: '../other' }),
+    });
+    expect(invalidMethod.status).toBe(400);
+    await expect(invalidMethod.json()).resolves.toEqual({
+      ok: false,
+      error: 'method must be one of: a2ui, openui, mcp-apps',
+    });
+
+    const mismatchedConversation = await app.request('/a2ui/payload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: {
+          v: 1,
+          kind: 'a2ui-conversation',
+          protocol: 'openui',
+          messages: [],
+          snapshot: null,
+        },
+        method: 'a2ui',
+        type: 'conversation',
+      }),
+    });
+    expect(mismatchedConversation.status).toBe(400);
+    await expect(mismatchedConversation.json()).resolves.toEqual({
+      ok: false,
+      error: 'method must match the conversation protocol',
+    });
+  });
+
   test('returns method-not-allowed and not-found responses', async () => {
     const methodNotAllowed = await app.request('/a2ui/health', {
       method: 'POST',
