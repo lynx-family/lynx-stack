@@ -17,6 +17,7 @@ import {
   publishEventEndpoint,
   sendGlobalEventEndpoint,
   dispatchI18nResourceEndpoint,
+  dispatchIntersectionObserverEventEndpoint,
   updateDataEndpoint,
   updateGlobalPropsEndpoint,
   BackgroundThreadStartEndpoint,
@@ -27,6 +28,7 @@ import {
   updateBTSChunkEndpoint,
   queryComponentEndpoint,
   fetchExternalBundleEndpoint,
+  intersectionObserverCommandEndpoint,
 } from '../endpoints.js';
 import type {
   Cloneable,
@@ -90,6 +92,9 @@ export class BackgroundThread implements AsyncDisposable {
   readonly updateData: RpcCallType<typeof updateDataEndpoint>;
   readonly updateGlobalProps: RpcCallType<typeof updateGlobalPropsEndpoint>;
   readonly updateBTSChunk: RpcCallType<typeof updateBTSChunkEndpoint>;
+  readonly dispatchIntersectionObserverEvent: RpcCallType<
+    typeof dispatchIntersectionObserverEventEndpoint
+  >;
 
   readonly #lynxGroupId: number | undefined;
   readonly #lynxViewInstance: LynxViewInstance;
@@ -132,6 +137,9 @@ export class BackgroundThread implements AsyncDisposable {
     this.updateData = this.#rpc.createCall(updateDataEndpoint);
     this.updateGlobalProps = this.#rpc.createCall(updateGlobalPropsEndpoint);
     this.updateBTSChunk = this.#rpc.createCall(updateBTSChunkEndpoint);
+    this.dispatchIntersectionObserverEvent = this.#rpc.createCall(
+      dispatchIntersectionObserverEventEndpoint,
+    );
   }
 
   startWebWorker(
@@ -208,6 +216,14 @@ export class BackgroundThread implements AsyncDisposable {
       this.#lynxViewInstance.exposureServices.switchExposureService.bind(
         this.#lynxViewInstance.exposureServices,
       ),
+    );
+    this.#rpc.registerHandler(
+      intersectionObserverCommandEndpoint,
+      (command) => {
+        this.#lynxViewInstance.intersectionObserverService.handleCommand(
+          command,
+        );
+      },
     );
 
     this.#rpc.registerHandler(
