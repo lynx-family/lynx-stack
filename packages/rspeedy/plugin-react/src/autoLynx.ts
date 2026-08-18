@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildContext, RsbuildPlugin } from '@rsbuild/core'
 
 import { PLUGIN_LYNX_NAME, pluginLynx } from '@lynx-js/rsbuild-plugin'
 
@@ -40,11 +40,15 @@ export function pluginAutoLynx(): RsbuildPlugin {
         // `setup` is called directly instead of registering the plugins, since
         // a plugin cannot add plugins. `apply` is honored here because Rsbuild
         // only evaluates it for registered plugins.
+        // `action` is only set once a build or a server starts, and Rsbuild
+        // passes it along as-is, so it is passed along the same way here.
         const { action } = api.context
         if (
           typeof plugin.apply === 'function'
-          && action !== undefined
-          && !plugin.apply(original, { action })
+          && !plugin.apply(original, { action } as Pick<
+            RsbuildContext,
+            'action'
+          >)
         ) {
           continue
         }

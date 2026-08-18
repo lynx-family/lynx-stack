@@ -58,4 +58,46 @@ describe('pluginAutoLynx', () => {
     const include = swcInclude(config)
     expect(include).toStrictEqual([...new Set(include)])
   })
+
+  test('does not apply the engine for the rslib caller', async () => {
+    const rsbuild = await createRsbuild({
+      callerName: 'rslib',
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'production',
+        environments: { lynx: {} },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [pluginReactLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(
+      config?.plugins?.some(plugin =>
+        plugin?.constructor.name === 'LynxTemplatePlugin'
+      ),
+    ).toBe(false)
+  })
+
+  test('honors the apply condition of the engine plugins', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'production',
+        environments: { lynx: {} },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [pluginReactLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    // `pluginDev` is gated on `apply`, so a production build has no HMR alias.
+    expect(config?.resolve?.alias).not.toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+    )
+  })
 })
