@@ -366,9 +366,11 @@ export function validateA2UIOutput(
             );
           } else if (
             fn.name === 'openUrl'
-            && typeof fn.args.url === 'string'
             && options.isOpenUrlAllowed
-            && !options.isOpenUrlAllowed(fn.args.url)
+            && (
+              typeof fn.args.url !== 'string'
+              || !options.isOpenUrlAllowed(fn.args.url)
+            )
           ) {
             errors.push(
               `Function "openUrl" at ${fn.path} has untrusted url ${

@@ -420,7 +420,7 @@ const searchInputSchema = z.object({
 const searchDocumentSchema = z.object({
   rank: z.number().int().nonnegative(),
   title: z.string(),
-  url: z.string().url(),
+  url: z.url(),
   snippet: z.string(),
   hostname: z.string(),
   publishTime: z.string().optional(),

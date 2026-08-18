@@ -125,13 +125,10 @@ function containsUntrustedOpenURL(
     );
   }
   if (!isRecord(value)) return false;
-  if (
-    value.call === 'openUrl'
-    && isRecord(value.args)
-    && typeof value.args.url === 'string'
-    && !isOpenUrlAllowed(value.args.url)
-  ) {
-    return true;
+  if (value.call === 'openUrl') {
+    if (!isRecord(value.args)) return true;
+    const url = value.args.url;
+    if (typeof url !== 'string' || !isOpenUrlAllowed(url)) return true;
   }
   return Object.values(value).some((item) =>
     containsUntrustedOpenURL(item, isOpenUrlAllowed)

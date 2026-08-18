@@ -114,7 +114,7 @@ const pendingUntilAbortedFetch: typeof fetch = (_input, init) =>
     if (signal?.aborted) onAbort();
   });
 
-function a2uiWithOpenURL(url: string): string {
+function a2uiWithOpenURL(url: unknown): string {
   return JSON.stringify([
     {
       version: 'v0.9',
@@ -374,6 +374,21 @@ describe('A2UI web-search source validation', () => {
     );
   });
 
+  test('rejects dynamically bound openUrl targets', async () => {
+    const catalog = await loadBasicCatalog();
+    const binding = { path: '/sources/0/url' };
+    const result = validateA2UIOutput(
+      a2uiWithOpenURL(binding),
+      catalog,
+      { isOpenUrlAllowed: () => true },
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain(
+      'Function "openUrl" at component.root.action.functionCall has untrusted url {"path":"/sources/0/url"}. Use a URL supplied by the request or returned by web_search.',
+    );
+  });
+
   test('extracts nested and Markdown URLs while remaining HTTP-only', () => {
     const policy = createA2UIOpenURLPolicy([
       {
@@ -404,5 +419,14 @@ describe('A2UI web-search source validation', () => {
     }).push(a2uiWithOpenURL(trustedURL));
     expect(JSON.stringify(trusted)).toContain('"component":"Button"');
     expect(JSON.stringify(trusted)).toContain(trustedURL);
+  });
+
+  test('does not stream a component containing a bound openUrl', () => {
+    const streamed = new A2UIProtocolMessageStreamParser({
+      isOpenUrlAllowed: () => true,
+    }).push(a2uiWithOpenURL({ path: '/sources/0/url' }));
+
+    expect(JSON.stringify(streamed)).toContain('"component":"Loading"');
+    expect(JSON.stringify(streamed)).not.toContain('/sources/0/url');
   });
 });
