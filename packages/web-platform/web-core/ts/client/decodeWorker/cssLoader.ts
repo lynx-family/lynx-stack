@@ -1,31 +1,27 @@
 import type { Selector } from '../../encode/encodeCSS.js';
 import type { RawStyleInfo } from '../../server/wasm.js';
-import type {
-  OrderedStyleEntry,
-  StyleInfoRule,
-} from '../../common/xml/cssToStyleInfo.js';
+import type { StyleInfoRule } from '../../common/xml/cssToStyleInfo.js';
 import { wasmInstance } from '../wasm.js';
 
 interface CSSRule {
+  /**
+   * Rule kind. Absent on the JSON artifact path, whose `rules` channel only ever
+   * carries style rules; a buildless markup card also tokenizes `@font-face` and
+   * `@keyframes`, both of which the binary format represents natively.
+   */
+  type?: StyleInfoRule['type'];
   sel: string[][][];
   decl: [string, string][];
+  /** `@keyframes` name, only for `KeyframesRule`. */
+  name?: StyleInfoRule['name'];
+  /** `@keyframes` steps, only for `KeyframesRule`. */
+  children?: StyleInfoRule['children'];
 }
 
 interface OneInfo {
   content: string[];
   rules: CSSRule[];
   imports?: string[];
-  /**
-   * Stylesheet entries in document order, mixing tokenized rules and verbatim
-   * CSS.
-   *
-   * Set only by the buildless XML path, whose stylesheet cannot be expressed by
-   * `content` / `rules` alone: those two are drained one after the other, which
-   * would hoist every verbatim fragment ahead of every tokenized rule and so
-   * reorder the cascade. When present, `content` and `rules` are ignored for
-   * this stylesheet.
-   */
-  ordered?: OrderedStyleEntry[];
 }
 
 type StyleInfo = Record<string, OneInfo>;
@@ -52,23 +48,6 @@ export function loadStyleFromJSON(
         }
       });
     }
-
-    if (info.ordered) {
-      // Document order is significant, so entries are replayed one by one
-      // rather than per channel.
-      for (const entry of info.ordered) {
-        if (entry.channel === 'verbatim') {
-          const text = entry.text.trim();
-          if (text.length > 0) {
-            parseAndPushContentRules(rawStyleInfo, cssId, text);
-          }
-        } else {
-          pushTokenizedRule(rawStyleInfo, cssId, entry.rule);
-        }
-      }
-      continue;
-    }
-
     if (info.content) {
       const contentStr = info.content.join('\n').trim();
       if (contentStr.length > 0) {
@@ -78,6 +57,10 @@ export function loadStyleFromJSON(
 
     // Handle rules
     for (const rule of info.rules) {
+      if (rule.type !== undefined && rule.type !== 'StyleRule') {
+        pushNamedAtRule(rawStyleInfo, cssId, rule);
+        continue;
+      }
       const wasmRule = new wasmInstance.Rule('StyleRule');
 
       // Declarations
@@ -85,7 +68,49 @@ export function loadStyleFromJSON(
         wasmRule.push_declaration(prop, val);
       }
 
-      wasmRule.set_prelude(buildPrelude(rule.sel));
+      // Selectors
+      const prelude = new wasmInstance.RulePrelude();
+      for (const selectorChain of rule.sel) {
+        const selector = new wasmInstance.Selector();
+
+        // Iterate in chunks of 4
+        for (let i = 0; i < selectorChain.length; i += 4) {
+          const plain = selectorChain[i] || [];
+          const pseudoClass = selectorChain[i + 1] || [];
+          const pseudoElement = selectorChain[i + 2] || [];
+          const combinator = selectorChain[i + 3] || [];
+
+          for (const s of plain) {
+            parseAndPushSelector(selector, s);
+          }
+          for (const s of pseudoClass) {
+            if (s === '::part(input)::placeholder') {
+              selector.push_one_selector_section(
+                'PseudoElementSelector',
+                'placeholder',
+              );
+            } else {
+              // Strip leading :
+              const val = s.startsWith(':') ? s.substring(1) : s;
+              selector.push_one_selector_section('PseudoClassSelector', val);
+            }
+          }
+          for (const s of pseudoElement) {
+            // Strip leading ::
+            const val = s.startsWith('::')
+              ? s.substring(2)
+              : s.startsWith(':')
+              ? s.substring(1)
+              : s;
+            selector.push_one_selector_section('PseudoElementSelector', val);
+          }
+          if (combinator.length > 0) {
+            selector.push_one_selector_section('Combinator', combinator[0]!);
+          }
+        }
+        prelude.push_selector(selector);
+      }
+      wasmRule.set_prelude(prelude);
       rawStyleInfo.push_rule(cssId, wasmRule);
     }
   }
@@ -101,101 +126,50 @@ export function loadStyleFromJSON(
 }
 
 /**
- * Builds a rule prelude from the `sel` wire shape: a list of selectors, each a
- * flat list of `[plain, pseudoClass, pseudoElement, combinator]` groups.
- */
-function buildPrelude(sel: string[][][]) {
-  const prelude = new wasmInstance.RulePrelude();
-  for (const selectorChain of sel) {
-    const selector = new wasmInstance.Selector();
-
-    // Iterate in chunks of 4
-    for (let i = 0; i < selectorChain.length; i += 4) {
-      const plain = selectorChain[i] || [];
-      const pseudoClass = selectorChain[i + 1] || [];
-      const pseudoElement = selectorChain[i + 2] || [];
-      const combinator = selectorChain[i + 3] || [];
-
-      for (const s of plain) {
-        parseAndPushSelector(selector, s);
-      }
-      for (const s of pseudoClass) {
-        if (s === '::part(input)::placeholder') {
-          selector.push_one_selector_section(
-            'PseudoElementSelector',
-            'placeholder',
-          );
-        } else {
-          // Strip leading :
-          const val = s.startsWith(':') ? s.substring(1) : s;
-          selector.push_one_selector_section('PseudoClassSelector', val);
-        }
-      }
-      for (const s of pseudoElement) {
-        // Strip leading ::
-        const val = s.startsWith('::')
-          ? s.substring(2)
-          : s.startsWith(':')
-          ? s.substring(1)
-          : s;
-        selector.push_one_selector_section('PseudoElementSelector', val);
-      }
-      if (combinator.length > 0) {
-        selector.push_one_selector_section('Combinator', combinator[0]!);
-      }
-    }
-    prelude.push_selector(selector);
-  }
-  return prelude;
-}
-
-/**
- * Pushes one rule of an ordered (buildless) stylesheet.
+ * Pushes a rule kind the `rules` channel only carries for a buildless markup
+ * card: `@font-face` and `@keyframes`, both of which the binary style format
+ * represents natively (`RuleType::FontFace` / `RuleType::KeyFrames`).
  *
- * Unlike the `rules` channel, which only ever carries style rules, a
- * hand-written stylesheet can also declare `@keyframes` and `@font-face`, both
- * of which the binary format represents natively.
+ * Neither has a selector list. `@font-face` has no prelude at all, and
+ * `@keyframes` carries its name as bare prelude text with its steps as nested
+ * rules, matching what `encode/encodeCSS.ts` emits for a built card.
  */
-function pushTokenizedRule(
+function pushNamedAtRule(
   rawStyleInfo: RawStyleInfo,
   cssId: number,
-  rule: StyleInfoRule,
+  rule: CSSRule,
 ) {
-  const wasmRule = new wasmInstance.Rule(rule.type);
+  const wasmRule = new wasmInstance.Rule(rule.type!);
 
   if (rule.type === 'KeyframesRule') {
-    // A keyframes rule carries its name as a bare prelude text and its steps as
-    // nested rules, matching `encode/encodeCSS.ts`.
-    const prelude = new wasmInstance.RulePrelude();
-    const nameSelector = new wasmInstance.Selector();
-    nameSelector.push_one_selector_section('UnknownText', rule.name ?? '');
-    prelude.push_selector(nameSelector);
-    wasmRule.set_prelude(prelude);
-
+    wasmRule.set_prelude(unknownTextPrelude(rule.name ?? ''));
     for (const step of rule.children ?? []) {
       const stepRule = new wasmInstance.Rule('StyleRule');
-      const stepPrelude = new wasmInstance.RulePrelude();
-      const stepSelector = new wasmInstance.Selector();
-      stepSelector.push_one_selector_section('UnknownText', step.keyText);
-      stepPrelude.push_selector(stepSelector);
-      stepRule.set_prelude(stepPrelude);
+      stepRule.set_prelude(unknownTextPrelude(step.keyText));
       for (const [prop, val] of step.decl) {
         stepRule.push_declaration(prop, val);
       }
       wasmRule.push_rule_children(stepRule);
     }
-    rawStyleInfo.push_rule(cssId, wasmRule);
-    return;
+  } else {
+    for (const [prop, val] of rule.decl) {
+      wasmRule.push_declaration(prop, val);
+    }
   }
 
-  for (const [prop, val] of rule.decl) {
-    wasmRule.push_declaration(prop, val);
-  }
-  // `@font-face` has no prelude; a style rule always does.
-  if (rule.type === 'StyleRule') {
-    wasmRule.set_prelude(buildPrelude(rule.sel ?? []));
-  }
   rawStyleInfo.push_rule(cssId, wasmRule);
+}
+
+/**
+ * A prelude holding one opaque text section, for a rule whose prelude is a name
+ * or a keyframe selector rather than a selector list.
+ */
+function unknownTextPrelude(text: string) {
+  const prelude = new wasmInstance.RulePrelude();
+  const selector = new wasmInstance.Selector();
+  selector.push_one_selector_section('UnknownText', text);
+  prelude.push_selector(selector);
+  return prelude;
 }
 
 function parseAndPushSelector(selector: Selector, s: string) {

@@ -17,7 +17,8 @@
 import { parseLynxXML } from '../../common/xml/parseLynxXML.js';
 import {
   convertCSSToStyleInfo,
-  type OrderedStyleEntry,
+  reportDiscardedAtRules,
+  type StyleInfoRule,
 } from '../../common/xml/cssToStyleInfo.js';
 
 /**
@@ -58,18 +59,11 @@ const cardCSSId = '0';
  *    root element. A card renders inside a shadow root, where a literal `:root`
  *    would match nothing.
  *
- * Remaining limitation: `@media`, `@supports`, `@layer` and `@import` have no
- * representation in the binary style format, whose rule kinds are only
- * `StyleRule` / `FontFaceRule` / `KeyframesRule`. Those are kept on the
- * `content` channel so the browser still honours them natively - dropping them
- * would be a silent capability loss - but the CSS *inside* such a block is
- * consequently not tokenized, so the three rewrites above do not apply there.
- *
- * Ordering matters and is handled explicitly: `cssLoader.loadStyleFromJSON`
- * drains the whole `content` channel before the `rules` channel, so splitting a
- * stylesheet across both would hoist every preserved at-rule ahead of every
- * tokenized rule and change which of two equal-specificity declarations wins.
- * The converter therefore emits a single `ordered` list in document order.
+ * Everything the format can carry is therefore on the `rules` channel and the
+ * `content` channel stays empty. An at-rule Lynx has no rule kind for - `@media`
+ * and friends - is dropped rather than handed to the browser verbatim, so a
+ * markup card's capabilities stay equal to a built card's; see the note in
+ * `common/xml/cssToStyleInfo.ts`.
  */
 
 /**
@@ -80,11 +74,7 @@ const cardCSSId = '0';
 export interface XMLDerivedTemplate {
   pageConfig: Record<string, string>;
   styleInfo:
-    | Record<string, {
-      content: never[];
-      rules: never[];
-      ordered: OrderedStyleEntry[];
-    }>
+    | Record<string, { content: never[]; rules: StyleInfoRule[] }>
     | undefined;
   lepusCode: { root: string };
   manifest: Record<string, string> | undefined;
@@ -203,18 +193,16 @@ export async function xmlToTemplate(
   // meaningfully different from an absent section, so test against `undefined`
   // rather than for truthiness.
   //
-  // `content` / `rules` stay empty: the stylesheet travels as one `ordered`
-  // list so that tokenized rules and preserved at-rules keep their relative
-  // document order (see the note on ordering above).
-  const styleInfo = parsed.style !== undefined
-    ? {
-      [cardCSSId]: {
-        content: [] as never[],
-        rules: [] as never[],
-        ordered: (await convertCSSToStyleInfo(parsed.style)).ordered,
-      },
-    }
-    : undefined;
+  // `content` stays empty: everything the format can carry is tokenized onto the
+  // `rules` channel, and everything else is dropped rather than passed through.
+  let styleInfo: XMLDerivedTemplate['styleInfo'];
+  if (parsed.style !== undefined) {
+    const { rules, discarded } = await convertCSSToStyleInfo(parsed.style);
+    // Reported here rather than by the converter so that the conversion stays a
+    // pure function, mirroring `xmlToTasmJSON` / `encodeLynxXML`.
+    reportDiscardedAtRules(discarded);
+    styleInfo = { [cardCSSId]: { content: [] as never[], rules } };
+  }
 
   const manifest = parsed.backgroundThreadScript !== undefined
     ? { [backgroundChunkPath]: parsed.backgroundThreadScript }

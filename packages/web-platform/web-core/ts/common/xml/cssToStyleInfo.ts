@@ -3,9 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Converts a buildless card's hand-written CSS into the `styleInfo` shape the
- * decode worker already assembles, tokenizing everything the binary style
- * format can represent.
+ * Converts a buildless card's hand-written CSS into the tokenized `rules`
+ * channel of the `styleInfo` shape the decode worker already assembles.
  *
  * A card produced by a build step arrives with its CSS already tokenized into
  * `rules`, which is what makes the engine's style pipeline run: unit rewriting
@@ -14,11 +13,32 @@
  * operate on tokenized declarations. A buildless card has no build step, so this
  * module performs the equivalent conversion at load time.
  *
+ * ## Unsupported at-rules are discarded, deliberately
+ *
+ * Lynx's binary style format has three rule kinds - `Declaration`, `FontFace`
+ * and `KeyFrames` (`raw_style_info.rs`). There is no representation for a
+ * conditional group, so `@media`, `@supports` and `@layer` are not Lynx
+ * features: a ReactLynx card cannot use them either, on any platform. Handing
+ * them to the browser verbatim would give a web-only markup card a capability
+ * native does not have, so they are dropped instead - the same decision, for the
+ * same reason, as the build-time path in `ts/encode/xmlToTasmJSON.ts`.
+ *
+ * Because none of it is a CSS error, the only failure mode would be silence, so
+ * every drop is reported once per at-rule kind through
+ * {@link reportDiscardedAtRules}. Unlike the build-time path, this module runs
+ * in a browser at card load time, so the report is gated on a development build.
+ *
+ * Anything that is neither a rule nor an at-rule - a comment, a `Raw` node left
+ * by a stylesheet the parser could not classify at all - is skipped. `css-tree`
+ * already discards malformed fragments mid-stylesheet without reporting them
+ * (`.a{}  !!!!  .b{}` parses to exactly two rules), so at-rules are the only
+ * boundary at which a complete report is possible.
+ *
  * ## Why `css-tree` and not `@lynx-js/css-serializer`
  *
  * `ts/encode/encodeCSS.ts` does the same job for the encode path using
  * `@lynx-js/css-serializer`, and reusing it here would have been the obvious
- * move. Three things rule it out, none of which a change to that package would
+ * move. Two things rule it out, neither of which a change to that package would
  * fix on its own:
  *
  * 1. It would not remove the `css-tree` dependency anyway. `css-serializer`
@@ -30,12 +50,7 @@
  *    then parse again with `css-tree`. `css-serializer` also declares `css-tree`
  *    as a runtime dependency and re-exports it, so it stays in the graph either
  *    way.
- * 2. `css-serializer.parse` silently drops at-rules it has no case for,
- *    `@charset` and `@namespace` among them: they vanish from the result with an
- *    empty `errors` array. This converter deliberately preserves an unknown
- *    at-rule verbatim (see the fall-through at the end of the loop), so adopting
- *    it would turn that into silent data loss.
- * 3. `css-serializer` rewrites every `var()` into a `{{--name}}` placeholder
+ * 2. `css-serializer` rewrites every `var()` into a `{{--name}}` placeholder
  *    plus a side table of fallbacks, purely as its own interchange format, which
  *    the encode path then has to undo. Reading declarations from the `css-tree`
  *    AST keeps `var()` intact throughout, with no lossy round trip.
@@ -54,44 +69,23 @@
  * split by pulling the parser back into whatever chunk imports this file.
  *
  * The bundler caches both the chunk and the module, so the cost is paid once.
- *
- * ## Why the output uses both channels
- *
- * The binary format's `RuleType` has exactly three variants - `Declaration`,
- * `FontFace` and `KeyFrames` (`raw_style_info.rs`). There is no representation
- * for a conditional group rule, so `@media`, `@supports` and `@layer` *cannot*
- * be tokenized. `@import` is representable, but only as a link between numeric
- * css ids, which a hand-written `@import url("theme.css")` is not.
- *
- * Those constructs are therefore emitted on the raw `content` channel, which
- * hands them to the browser verbatim (see `cssLoader.parseAndPushContentRules`).
- * The browser honours `@media` / `@supports` / `@layer` natively, so keeping
- * them preserves behaviour that already worked, whereas tokenizing would have
- * had to drop them - silently, since they parse without any error.
- *
- * The trade-off, which is deliberate: CSS *inside* a preserved at-rule block is
- * not tokenized, so the rewrites listed above do not apply there.
- *
- * ## Why order is carried explicitly
- *
- * `cssLoader.loadStyleFromJSON` drains the whole `content` channel before it
- * looks at `rules`. Splitting a stylesheet across both would therefore hoist
- * every preserved at-rule ahead of every tokenized rule and reorder the cascade,
- * changing which of two equal-specificity declarations wins. To avoid that, the
- * conversion emits a single list in document order and the loader replays it
- * entry by entry.
  */
 
 import type * as csstree from 'css-tree';
 
+// Type only, so nothing of the Node-only encode entry reaches the decode
+// Worker's bundle: the build-time path owns the taxonomy and this one mirrors
+// it, rather than inventing a second vocabulary for the same drops.
+import type { DiscardedAtRule } from '../../encode/xmlToTasmJSON.js';
+
 /**
- * The two `css-tree` entry points this module uses, loaded on demand.
+ * The `css-tree` entry points this module uses, loaded on demand.
  *
  * `import type` above erases at compile time, so the only reference to the
  * package that survives into the bundle is the `import()` below - which is what
  * puts the parser in its own chunk. See the note on on-demand loading above.
  */
-type CSSTree = Pick<typeof csstree, 'parse' | 'generate'>;
+type CSSTree = Pick<typeof csstree, 'parse' | 'generate' | 'walk'>;
 
 /**
  * The in-flight or settled parser load.
@@ -119,9 +113,9 @@ function loadCSSTree(): Promise<CSSTree> {
 export interface StyleInfoRule {
   /** Rule kind, matching the wasm `Rule` constructor's argument. */
   type: 'StyleRule' | 'FontFaceRule' | 'KeyframesRule';
-  /** Selector sections, absent for `@font-face` and `@keyframes`. */
-  sel?: string[][][];
-  /** Declarations, as authored. */
+  /** Selector sections, empty for `@font-face` and `@keyframes`. */
+  sel: string[][][];
+  /** Declarations, as authored. Empty for `@keyframes`, which nests them. */
   decl: [string, string][];
   /** `@keyframes` name, only for `KeyframesRule`. */
   name?: string;
@@ -130,35 +124,108 @@ export interface StyleInfoRule {
 }
 
 /**
- * One stylesheet entry, in document order.
- *
- * A single ordered list - rather than two independent channels - is what keeps
- * the cascade intact, see the note on ordering above.
- */
-export type OrderedStyleEntry =
-  /** CSS handed to the browser as written. */
-  | { channel: 'verbatim'; text: string }
-  /** A rule the binary format can represent, tokenized. */
-  | { channel: 'tokenized'; rule: StyleInfoRule };
-
-/**
  * A converted stylesheet.
  */
 export interface ConvertedCSS {
-  /** Every entry, in source order. */
-  ordered: OrderedStyleEntry[];
+  /** Every rule the binary format can represent, in source order. */
+  rules: StyleInfoRule[];
   /**
-   * The at-rule kinds that had to stay verbatim, for diagnostics. Empty when
-   * the whole stylesheet was tokenized.
+   * The at-rules that were dropped, one entry per kind. Empty when the whole
+   * stylesheet was tokenized.
    */
-  verbatimKinds: string[];
+  discarded: DiscardedAtRule[];
 }
 
 /**
- * The at-rules that have no counterpart in the binary style format and are
- * therefore preserved as text.
+ * The at-rules the Lynx CSS parser recognises. Anything else could never reach a
+ * built card either, so it is reported as `unsupported`.
+ *
+ * Mirrors `parsedAtRules` in `ts/encode/xmlToTasmJSON.ts`, which derives the set
+ * from `@lynx-js/css-serializer`'s dispatch.
  */
-const verbatimAtRules = new Set(['media', 'supports', 'layer']);
+const parsedAtRules = new Set([
+  'media',
+  'supports',
+  'layer',
+  'import',
+  'keyframes',
+  'font-face',
+]);
+
+/**
+ * The at-rules that parse but have no rule kind in the binary style format.
+ */
+const unrepresentableAtRules = new Set(['media', 'supports', 'layer']);
+
+/**
+ * Finds every at-rule that will not survive the conversion.
+ *
+ * Walks the whole tree rather than only the top level, since a group's contents
+ * are dropped with it: `@media { @property --x {} }` loses both.
+ *
+ * An `@import` is always `unresolvable` here. The tokenized channel can only
+ * link one numeric css id to another, which is a build step's notion, and a
+ * markup card owns a single stylesheet (css id 0) with nothing to link to.
+ */
+function diagnoseDiscardedAtRules(
+  ast: csstree.StyleSheet,
+  walk: CSSTree['walk'],
+): DiscardedAtRule[] {
+  const seen = new Map<string, DiscardedAtRule>();
+  walk(ast, (node) => {
+    if (node.type !== 'Atrule') {
+      return;
+    }
+    const reason = !parsedAtRules.has(node.name)
+      ? 'unsupported'
+      : unrepresentableAtRules.has(node.name)
+      ? 'unrepresentable'
+      : node.name === 'import'
+      ? 'unresolvable'
+      : undefined;
+    if (reason === undefined) {
+      return;
+    }
+    const name = `@${node.name}`;
+    if (!seen.has(name)) {
+      seen.set(name, { name, reason });
+    }
+  });
+  return [...seen.values()];
+}
+
+/**
+ * Reports the at-rules a stylesheet lost, once per kind.
+ *
+ * The wording mirrors `encodeLynxXML` in `ts/encode/xmlToTasmJSON.ts`, which
+ * reports the same taxonomy for the build-time path. It cannot be shared as
+ * code: that module loads the encode wasm through `node:fs` glue and so cannot
+ * be imported into a browser Worker, which is why only its type comes over.
+ *
+ * Gated on a development build, unlike the build-time path, because this runs in
+ * a browser every time a markup card is loaded. `process.env.NODE_ENV` is
+ * substituted at bundle time by rspack's `optimization.nodeEnv`, so a production
+ * bundle drops the call site entirely.
+ */
+export function reportDiscardedAtRules(discarded: DiscardedAtRule[]): void {
+  // Written as a property access on purpose: that exact expression is what the
+  // bundler substitutes. The cast only silences
+  // `noPropertyAccessFromIndexSignature` and does not change what is emitted -
+  // reading `process.env['NODE_ENV']` instead would not be substituted, and
+  // would then throw in a Worker, where `process` does not exist.
+  if ((process.env as { NODE_ENV?: string }).NODE_ENV === 'production') {
+    return;
+  }
+  for (const { name, reason } of discarded) {
+    console.warn(
+      reason === 'unrepresentable'
+        ? `[lynx-web] ${name} has no representation in the Lynx style format and was dropped, along with the rules inside it. It is not supported on any Lynx platform.`
+        : reason === 'unsupported'
+        ? `[lynx-web] ${name} is not recognised by the Lynx CSS parser and was dropped, along with the rules inside it.`
+        : `[lynx-web] ${name} with a URL cannot be resolved for a markup card, which owns a single stylesheet, and was dropped.`,
+    );
+  }
+}
 
 /**
  * Splits a selector list into the `[plain, pseudoClass, pseudoElement,
@@ -218,10 +285,6 @@ function selectorSections(
         case 'Combinator':
           flush([child.name]);
           break;
-        case 'Percentage':
-          // A `@keyframes` step selector, handled by the keyframes branch.
-          plain.push(`${child.value}%`);
-          break;
         default:
           // Anything else (`NestingSelector`, comments) carries no addressable
           // section, so it is skipped rather than guessed at.
@@ -260,134 +323,89 @@ function declarationsOf(
 }
 
 /**
- * Converts a stylesheet into tokenized rules plus verbatim leftovers.
- *
- * Never throws on CSS it cannot represent: anything unsupported is preserved on
- * the raw channel instead, because losing a rule at load time would surface as
- * an unexplained rendering difference, and throwing would fail the whole card.
- * A stylesheet that does not parse at all is passed through verbatim, which is
- * the previous behaviour for every card and strictly better than rendering
- * nothing.
+ * Converts a stylesheet into the rules the binary style format can carry, plus a
+ * report of what had to be dropped.
  *
  * Asynchronous only because the parser is fetched on demand, see the note on
  * that above. A stylesheet that turns out to be empty is answered without
  * loading it at all, so a markup card with no CSS pays nothing.
+ *
+ * `css-tree`'s parser recovers from malformed input rather than throwing - a
+ * stray `}`, an unterminated block and outright garbage all parse - so there is
+ * no whole-stylesheet failure to catch here. Were it ever to throw, the
+ * rejection travels out through `xmlToTemplate` and is reported on the
+ * `lynx-view` error event like any other load failure.
  */
 export async function convertCSSToStyleInfo(
   source: string,
 ): Promise<ConvertedCSS> {
-  const ordered: OrderedStyleEntry[] = [];
-  const verbatimKinds = new Set<string>();
+  const rules: StyleInfoRule[] = [];
 
   // Nothing to tokenize, and therefore no reason to fetch a parser. This is not
   // just an optimisation for the empty case: `<style></style>` is a section that
   // is present but carries nothing, and it must not trigger a network request.
   if (source.trim().length === 0) {
-    return { ordered, verbatimKinds: [] };
+    return { rules, discarded: [] };
   }
 
-  const { parse, generate } = await loadCSSTree();
+  const { parse, generate, walk } = await loadCSSTree();
 
-  let ast: csstree.StyleSheet;
-  try {
-    ast = parse(source, {
-      parseValue: false,
-      parseAtrulePrelude: false,
-      parseCustomProperty: false,
-      parseRulePrelude: true,
-      positions: false,
-    }) as csstree.StyleSheet;
-  } catch {
-    return {
-      ordered: [{ channel: 'verbatim', text: source }],
-      verbatimKinds: ['unparsed'],
-    };
-  }
+  const ast = parse(source, {
+    parseValue: false,
+    parseAtrulePrelude: false,
+    parseCustomProperty: false,
+    parseRulePrelude: true,
+    positions: false,
+  }) as csstree.StyleSheet;
 
   for (const node of ast.children.toArray()) {
     if (node.type === 'Rule') {
-      ordered.push({
-        channel: 'tokenized',
-        rule: {
-          type: 'StyleRule',
-          sel: selectorSections(node.prelude, generate),
-          decl: declarationsOf(node.block, generate),
-        },
+      rules.push({
+        type: 'StyleRule',
+        sel: selectorSections(node.prelude, generate),
+        decl: declarationsOf(node.block, generate),
       });
       continue;
     }
 
-    if (node.type !== 'Atrule') {
-      // A stray `Raw` node carries CSS the parser could not classify; keeping it
-      // is safer than discarding it.
-      if (node.type === 'Raw' && node.value.trim().length > 0) {
-        verbatimKinds.add('unparsed');
-        ordered.push({ channel: 'verbatim', text: node.value });
-      }
+    if (node.type !== 'Atrule' || !node.block) {
       continue;
     }
 
     if (node.name === 'font-face') {
-      if (node.block) {
-        ordered.push({
-          channel: 'tokenized',
-          rule: {
-            type: 'FontFaceRule',
-            decl: declarationsOf(node.block, generate),
-          },
-        });
-      }
+      rules.push({
+        type: 'FontFaceRule',
+        sel: [],
+        decl: declarationsOf(node.block, generate),
+      });
       continue;
     }
 
     if (node.name === 'keyframes') {
-      if (node.block) {
-        const steps: { keyText: string; decl: [string, string][] }[] = [];
-        for (const step of node.block.children.toArray()) {
-          if (step.type !== 'Rule') {
-            continue;
-          }
-          steps.push({
-            keyText: generate(step.prelude),
-            decl: declarationsOf(step.block, generate),
-          });
+      const children: { keyText: string; decl: [string, string][] }[] = [];
+      for (const step of node.block.children.toArray()) {
+        if (step.type !== 'Rule') {
+          continue;
         }
-        ordered.push({
-          channel: 'tokenized',
-          rule: {
-            type: 'KeyframesRule',
-            name: node.prelude ? generate(node.prelude) : '',
-            children: steps,
-            decl: [],
-          },
+        children.push({
+          keyText: generate(step.prelude),
+          decl: declarationsOf(step.block, generate),
         });
       }
+      rules.push({
+        type: 'KeyframesRule',
+        sel: [],
+        decl: [],
+        name: node.prelude ? generate(node.prelude) : '',
+        children,
+      });
       continue;
     }
 
-    if (verbatimAtRules.has(node.name)) {
-      // No binary representation, so the block is preserved at its source
-      // position and left for the browser to apply.
-      verbatimKinds.add(`@${node.name}`);
-      ordered.push({ channel: 'verbatim', text: generate(node) });
-      continue;
-    }
-
-    if (node.name === 'import') {
-      // The tokenized channel can only link one css id to another, which a
-      // buildless card has no use for: it owns a single stylesheet (css id 0)
-      // and has nothing to link to. The rule is left for the browser to resolve.
-      verbatimKinds.add('@import');
-      ordered.push({ channel: 'verbatim', text: generate(node) });
-      continue;
-    }
-
-    // Any other at-rule (`@charset`, `@namespace`, future additions) is not
-    // something this converter understands, so it is passed through rather than
-    // dropped.
-    verbatimKinds.add(`@${node.name}`);
-    ordered.push({ channel: 'verbatim', text: generate(node) });
+    // Every other at-rule is dropped; see the note on that above. The report is
+    // built from the source tree rather than from here so that an at-rule nested
+    // inside a dropped group is accounted for too.
   }
 
-  return { ordered, verbatimKinds: [...verbatimKinds] };
+  return { rules, discarded: diagnoseDiscardedAtRules(ast, walk) };
 }

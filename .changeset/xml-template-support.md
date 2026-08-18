@@ -28,14 +28,18 @@ style pipeline as a built one:
 - `:root` is rewritten to the card's own root element. A card renders inside a
   shadow root, where a literal `:root` matches nothing, so without this rules and
   custom properties declared under `:root` would never reach the card.
+- `@font-face` and `@keyframes` are tokenized too, both being rule kinds the
+  binary style format represents natively.
 
-Remaining limitation: `@media`, `@supports`, `@layer` and `@import` have no
-representation in the binary style format, whose rule kinds are only style,
-`@font-face` and `@keyframes`. Such a block is passed through to the browser
-verbatim, which honours it natively, but the CSS inside it is **not** tokenized -
-so the three rewrites above do not apply there. Declarations outside those blocks
-are unaffected, and their relative order with the rest of the stylesheet is
-preserved.
+An at-rule the format has no rule kind for is **discarded**, along with the rules
+inside it: `@media`, `@supports` and `@layer` have no representation in it and are
+therefore not Lynx features on any platform, and `@import` can only link numeric
+css ids, which a markup card - owning a single stylesheet - has nothing to do
+with. Keeping them for the browser to honour would give a web-only markup card a
+capability native does not have, so a markup card's CSS capabilities are instead
+exactly a built card's; this matches how `encode`'s markup entry already builds a
+bundle from the same document. Because none of it is a CSS error, every drop is
+reported on the console once per at-rule kind, in development builds only.
 
 Tokenizing at load time needs a CSS parser in the decode Worker, so `css-tree` is
 now a dependency of this package. It does not affect the main thread bundle, and
