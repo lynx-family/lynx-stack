@@ -184,9 +184,10 @@ function buildHardRules(catalogId: string): string {
 22. For UI that should change after a button tap, keep the initial response in
     the pre-action state. Put confirmation, success, or result details in the
     action response instead of showing them before the action happens.
-23. For Image.url, provide a short English image search query such as
-    "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
-    CDN URLs. The server resolves Image.url values through its image provider.
+23. Image.url must be a user-provided or host-provided loadable URL/path, either
+    directly or through a data-model binding. Never invent a CDN URL or put an
+    image search/generation prompt in Image.url. Follow any host-provided image
+    tool instructions; otherwise omit Image when no loadable source is available.
 24. Function calls are allowed only when the "call" name exactly matches a
     function listed under "Available functions" in the active catalog. Do NOT
     invent function names.

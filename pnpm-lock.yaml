@@ -734,6 +734,31 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  examples/react-signals:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../../packages/react-signals
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+
   examples/react-ui-sourcemap:
     dependencies:
       '@lynx-js/react':
@@ -1494,15 +1519,6 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-lynx
-      '@lynx-js/web-rsbuild-server-middleware':
-        specifier: workspace:*
-        version: link:../../web-platform/web-rsbuild-server-middleware
-      '@lynx-js/webpack-dev-transport':
-        specifier: workspace:^
-        version: link:../../webpack/webpack-dev-transport
-      '@lynx-js/websocket':
-        specifier: workspace:^
-        version: link:../websocket
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.10(core-js@3.50.0)
@@ -1546,9 +1562,6 @@ importers:
       expect-type:
         specifier: ^1.4.0
         version: 1.4.0
-      ipaddr.js:
-        specifier: ^2.5.0
-        version: 2.5.0
       javascript-stringify:
         specifier: ^2.1.0
         version: 2.1.0
@@ -1725,6 +1738,15 @@ importers:
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:^
         version: link:../../webpack/chunk-loading-webpack-plugin
+      '@lynx-js/web-rsbuild-server-middleware':
+        specifier: workspace:*
+        version: link:../../web-platform/web-rsbuild-server-middleware
+      '@lynx-js/webpack-dev-transport':
+        specifier: workspace:^
+        version: link:../../webpack/webpack-dev-transport
+      '@lynx-js/websocket':
+        specifier: workspace:^
+        version: link:../websocket
     devDependencies:
       '@lynx-js/test-tools':
         specifier: workspace:*
@@ -1741,6 +1763,9 @@ importers:
       '@swc/core':
         specifier: ^1.15.47
         version: 1.15.47(@swc/helpers@0.5.23)
+      ipaddr.js:
+        specifier: ^2.5.0
+        version: 2.5.0
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1

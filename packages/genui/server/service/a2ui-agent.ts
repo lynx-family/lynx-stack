@@ -6,12 +6,17 @@ import { createA2UIAgent } from '../agent/a2ui-agent';
 import type { A2UIAgent } from '../agent/a2ui-agent';
 import type { A2UICatalog } from '../agent/a2ui-catalog';
 import { loadBasicCatalog } from '../agent/a2ui-catalog';
+import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
 import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
 import type { A2UIMessage, ValidationOptions } from '../agent/a2ui-validator';
-import { resolveA2UIImageUrls } from '../agent/image-resolver';
+import type { ArkImageGenerationRunScope } from '../agent/ark-image-generation-tool.js';
+import {
+  createArkImageGenerationRunScope,
+  generatedArkImageURLs,
+} from '../agent/ark-image-generation-tool.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -71,6 +76,17 @@ function buildDataModelSystemMessage(
   };
 }
 
+function buildA2UIRunOptions(
+  opts: A2UIChatOptions,
+  abortSignal: AbortSignal | undefined,
+  imageGenerationScope: ArkImageGenerationRunScope,
+) {
+  return {
+    ...buildOpenAIRunOptions(opts, abortSignal),
+    requestContext: imageGenerationScope.requestContext,
+  };
+}
+
 export default class A2UIAgentService {
   private readonly agentCache = new ProviderAgentCache<A2UIAgent>();
 
@@ -93,6 +109,7 @@ export default class A2UIAgentService {
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
     abortSignal?: AbortSignal,
+    imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
@@ -111,7 +128,7 @@ export default class A2UIAgentService {
     });
     const result = agent.stream(
       modelMessages,
-      buildOpenAIRunOptions(opts, abortSignal),
+      buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -125,6 +142,7 @@ export default class A2UIAgentService {
     opts: A2UIChatOptions = {},
     conversation?: ConversationContext,
     abortSignal?: AbortSignal,
+    imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<{
     textStream: AsyncIterable<string>;
     finalize: () => Promise<{
@@ -153,6 +171,7 @@ export default class A2UIAgentService {
       preparedMessages,
       opts,
       abortSignal,
+      imageGenerationScope,
     );
     return {
       textStream: toAsyncIterable(streamResult.textStream),
@@ -164,13 +183,14 @@ export default class A2UIAgentService {
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
     abortSignal?: AbortSignal,
+    imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<unknown> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
     return agent.generate(
       toModelMessages(messages),
-      buildOpenAIRunOptions(opts, abortSignal),
+      buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
     );
   }
 
@@ -179,6 +199,7 @@ export default class A2UIAgentService {
     opts: A2UIChatOptions = {},
     conversation?: ConversationContext,
     abortSignal?: AbortSignal,
+    imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
     const result = await this.generate(
       buildConversationMessages(
@@ -188,6 +209,7 @@ export default class A2UIAgentService {
       ),
       opts,
       abortSignal,
+      imageGenerationScope,
     ) as MastraResult;
     return extractGenerationResult(result);
   }
@@ -198,6 +220,7 @@ export default class A2UIAgentService {
     conversation?: ConversationContext,
     validationOptions?: ValidationOptions,
     abortSignal?: AbortSignal,
+    imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<A2UIResponse> {
     abortSignal?.throwIfAborted();
     const catalog = opts.catalog ?? await loadBasicCatalog();
@@ -210,6 +233,24 @@ export default class A2UIAgentService {
       conversation,
       buildDataModelSystemMessage,
     );
+    const trustedImageSource = createA2UIImageSourcePolicy(
+      [
+        messages,
+        conversation,
+        catalog,
+        validationOptions?.existingDataModelBySurface,
+      ],
+      () => generatedArkImageURLs(imageGenerationScope),
+    );
+    const callerImageSourcePolicy = validationOptions?.isImageSourceAllowed;
+    const isImageSourceAllowed = callerImageSourcePolicy
+      ? (source: string) =>
+        callerImageSourcePolicy(source) || trustedImageSource(source)
+      : trustedImageSource;
+    const effectiveValidationOptions: ValidationOptions = {
+      ...validationOptions,
+      isImageSourceAllowed,
+    };
 
     let lastText = '';
     let lastErrors: string[] = [];
@@ -220,7 +261,7 @@ export default class A2UIAgentService {
       abortSignal?.throwIfAborted();
       const result = await agent.generate(
         toModelMessages(convo),
-        buildOpenAIRunOptions(opts, abortSignal),
+        buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
       ) as MastraResult;
 
       const text = await extractText(result);
@@ -230,14 +271,17 @@ export default class A2UIAgentService {
       lastFinishReason = metadata.finishReason;
       abortSignal?.throwIfAborted();
 
-      const validation = validateA2UIOutput(text, catalog, validationOptions);
+      const validation = validateA2UIOutput(
+        text,
+        catalog,
+        effectiveValidationOptions,
+      );
       if (validation.ok) {
-        const messages = await resolveA2UIImageUrls(validation.messages);
         abortSignal?.throwIfAborted();
         return {
           ok: true,
           text,
-          messages,
+          messages: validation.messages,
           errors: [],
           warnings: validation.warnings,
           attempts: attempt,
