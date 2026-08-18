@@ -7,6 +7,12 @@ import type { ComponentClass, ComponentType, VNode } from 'preact';
 import type { TraceOption } from '@lynx-js/types';
 
 import {
+  isLargeProfileArray,
+  summarizeLargeProfileArrayChangedKeys,
+  summarizeLargeProfileArrayKeys,
+  summarizeLargeProfileArrayValue,
+} from '../../shared/profile-array-detail.js';
+import {
   COMMIT,
   COMPONENT,
   DIFF,
@@ -51,26 +57,42 @@ function buildSetStateProfileMarkArgs(
   type: string | ComponentType | undefined,
   currentState: unknown,
   nextState: unknown,
+  boundLargeArrays = false,
 ): Record<string, string> {
   const EMPTY_OBJ = {};
 
-  const currentStateObj = (currentState ?? EMPTY_OBJ) as Record<string, unknown>;
+  const currentStateObj = (currentState ?? EMPTY_OBJ) as Record<
+    string,
+    unknown
+  >;
   const nextStateObj = (nextState ?? EMPTY_OBJ) as Record<string, unknown>;
+  const boundCurrent = boundLargeArrays && isLargeProfileArray(currentState);
+  const boundNext = boundLargeArrays && isLargeProfileArray(nextState);
 
   return {
     componentName: (type && typeof type === 'function')
       ? getDisplayName(type as ComponentClass)
       : 'Unknown',
-    'current state keys': JSON.stringify(Object.keys(currentStateObj)),
-    'next state keys': JSON.stringify(Object.keys(nextStateObj)),
-    'changed (shallow diff) state keys': JSON.stringify(
-      // the setState is in assign manner, we assume nextState is a superset of currentState
-      Object.keys(nextStateObj).filter(
-        key => currentStateObj[key] !== nextStateObj[key],
+    'current state keys': boundCurrent
+      ? summarizeLargeProfileArrayKeys(currentState)
+      : JSON.stringify(Object.keys(currentStateObj)),
+    'next state keys': boundNext
+      ? summarizeLargeProfileArrayKeys(nextState)
+      : JSON.stringify(Object.keys(nextStateObj)),
+    'changed (shallow diff) state keys': boundNext
+      ? summarizeLargeProfileArrayChangedKeys(currentState, nextState)
+      : JSON.stringify(
+        // the setState is in assign manner, we assume nextState is a superset of currentState
+        Object.keys(nextStateObj).filter(
+          key => currentStateObj[key] !== nextStateObj[key],
+        ),
       ),
-    ),
-    currentValue: safeJsonStringify(format(currentState)),
-    nextValue: safeJsonStringify(format(nextState)),
+    currentValue: boundCurrent
+      ? summarizeLargeProfileArrayValue(currentState)
+      : safeJsonStringify(format(currentState)),
+    nextValue: boundNext
+      ? summarizeLargeProfileArrayValue(nextState)
+      : safeJsonStringify(format(nextState)),
   };
 }
 
@@ -189,6 +211,7 @@ export function initProfileHook(): void {
                         type,
                         currentValue,
                         nextValue,
+                        true,
                       ),
                     },
                   });

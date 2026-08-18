@@ -117,24 +117,60 @@ describe('profile', () => {
     );
     triggerUpdate();
 
-    expect(profileMarkSpy.mock.calls).toMatchInlineSnapshot(`
-      [
-        [
-          "ReactLynx::setState",
-          {
-            "args": {
-              "changed (shallow diff) state keys": "["count"]",
-              "componentName": "ClassComponent",
-              "current state keys": "["count"]",
-              "currentValue": "{"count":0}",
-              "next state keys": "["count"]",
-              "nextValue": "{"count":1}",
-            },
-            "flowId": 666,
-          },
-        ],
-      ]
-    `);
+    expect(profileMarkSpy).toHaveBeenCalledTimes(1);
+    expect(profileMarkSpy.mock.calls[0]).toEqual([
+      'ReactLynx::setState',
+      {
+        flowId: 666,
+        args: {
+          componentName: 'ClassComponent',
+          'current state keys': '["count"]',
+          'next state keys': '["count"]',
+          'changed (shallow diff) state keys': '["count"]',
+          currentValue: '{"count":0}',
+          nextValue: '{"count":1}',
+        },
+      },
+    ]);
+  });
+
+  test('should keep class state detail compatible when it contains a large array', async () => {
+    const initialRows = Array.from({ length: 129 }, (_, index) => ({
+      id: index,
+      label: `row ${index}`,
+    }));
+    let triggerUpdate;
+    class ClassComponent extends Component {
+      state = {
+        rows: initialRows,
+      };
+
+      render() {
+        triggerUpdate = () =>
+          this.setState({
+            rows: this.state.rows.map((row, index) => index === 0 ? { ...row, label: 'changed' } : row),
+          });
+        return null;
+      }
+    }
+
+    render(<ClassComponent />, scratch);
+    triggerUpdate();
+
+    expect(lynx.performance.profileMark).toHaveBeenCalledTimes(1);
+    const [, options] = lynx.performance.profileMark.mock.calls[0];
+    expect(options.args['current state keys']).toBe('["rows"]');
+    expect(options.args['next state keys']).toBe('["rows"]');
+    expect(options.args['changed (shallow diff) state keys']).toBe('["rows"]');
+    expect(JSON.parse(options.args.currentValue).rows).toHaveLength(129);
+    expect(JSON.parse(options.args.currentValue).rows[128]).toEqual({
+      id: 128,
+      label: 'row 128',
+    });
+    expect(JSON.parse(options.args.nextValue).rows[0]).toEqual({
+      id: 0,
+      label: 'changed',
+    });
   });
 
   test('should trace useState updates in functional components', async () => {
@@ -181,55 +217,53 @@ describe('profile', () => {
     triggerUpdateObject();
     triggerUpdateObjectCircular();
 
-    expect(profileMarkSpy.mock.calls).toMatchInlineSnapshot(`
+    expect(profileMarkSpy.mock.calls).toEqual([
       [
-        [
-          "ReactLynx::hooks::setState",
-          {
-            "args": {
-              "changed (shallow diff) state keys": "[]",
-              "componentName": "App",
-              "current state keys": "[]",
-              "currentValue": "0",
-              "hookIdx": "0",
-              "next state keys": "[]",
-              "nextValue": "1",
-            },
-            "flowId": 666,
+        'ReactLynx::hooks::setState',
+        {
+          flowId: 666,
+          args: {
+            hookIdx: '0',
+            componentName: 'App',
+            'current state keys': '[]',
+            'next state keys': '[]',
+            'changed (shallow diff) state keys': '[]',
+            currentValue: '0',
+            nextValue: '1',
           },
-        ],
-        [
-          "ReactLynx::hooks::setState",
-          {
-            "args": {
-              "changed (shallow diff) state keys": "["count","newKey"]",
-              "componentName": "App",
-              "current state keys": "["count","unchanged"]",
-              "currentValue": "{"count":0,"unchanged":"unchanged"}",
-              "hookIdx": "1",
-              "next state keys": "["count","unchanged","newKey"]",
-              "nextValue": "{"count":1,"unchanged":"unchanged","newKey":"newValue"}",
-            },
-            "flowId": 666,
+        },
+      ],
+      [
+        'ReactLynx::hooks::setState',
+        {
+          flowId: 666,
+          args: {
+            hookIdx: '1',
+            componentName: 'App',
+            'current state keys': '["count","unchanged"]',
+            'next state keys': '["count","unchanged","newKey"]',
+            'changed (shallow diff) state keys': '["count","newKey"]',
+            currentValue: '{"count":0,"unchanged":"unchanged"}',
+            nextValue: '{"count":1,"unchanged":"unchanged","newKey":"newValue"}',
           },
-        ],
-        [
-          "ReactLynx::hooks::setState",
-          {
-            "args": {
-              "changed (shallow diff) state keys": "["count"]",
-              "componentName": "App",
-              "current state keys": "["count","circularKey"]",
-              "currentValue": "{"count":0,"circularKey":"[Unserializable: Circular]"}",
-              "hookIdx": "2",
-              "next state keys": "["count","circularKey"]",
-              "nextValue": "{"count":1,"circularKey":{"count":0,"circularKey":"[Unserializable: Circular]"}}",
-            },
-            "flowId": 666,
+        },
+      ],
+      [
+        'ReactLynx::hooks::setState',
+        {
+          flowId: 666,
+          args: {
+            hookIdx: '2',
+            componentName: 'App',
+            'current state keys': '["count","circularKey"]',
+            'next state keys': '["count","circularKey"]',
+            'changed (shallow diff) state keys': '["count"]',
+            currentValue: '{"count":0,"circularKey":"[Unserializable: Circular]"}',
+            nextValue: '{"count":1,"circularKey":{"count":0,"circularKey":"[Unserializable: Circular]"}}',
           },
-        ],
-      ]
-    `);
+        },
+      ],
+    ]);
   });
 
   test('should handle function values in useState', async () => {
@@ -250,25 +284,76 @@ describe('profile', () => {
     render(<App />, scratch);
     updateFunc();
 
-    expect(profileMarkSpy.mock.calls).toMatchInlineSnapshot(`
-      [
-        [
-          "ReactLynx::hooks::setState",
-          {
-            "args": {
-              "changed (shallow diff) state keys": "[]",
-              "componentName": "App",
-              "current state keys": "[]",
-              "currentValue": ""() => \\"A\\""",
-              "hookIdx": "0",
-              "next state keys": "[]",
-              "nextValue": ""() => \\"B\\""",
-            },
-            "flowId": 666,
-          },
-        ],
-      ]
-    `);
+    expect(profileMarkSpy.mock.calls[0]).toEqual([
+      'ReactLynx::hooks::setState',
+      {
+        flowId: 666,
+        args: {
+          hookIdx: '0',
+          componentName: 'App',
+          'current state keys': '[]',
+          'next state keys': '[]',
+          'changed (shallow diff) state keys': '[]',
+          currentValue: '"() => \\"A\\""',
+          nextValue: '"() => \\"B\\""',
+        },
+      },
+    ]);
+  });
+
+  test('should bound large array profile detail to an index prefix', async () => {
+    const initial = Array.from({ length: 129 }, (_, index) => ({
+      id: index,
+      label: `row ${index}`,
+    }));
+    let updateRows;
+    function App() {
+      const [rows, setRows] = useState(initial);
+      updateRows = () =>
+        setRows((current) => {
+          const next = current.slice();
+          next[0] = { id: 0, label: 'changed inside prefix' };
+          next[32] = { id: 32, label: 'changed outside prefix' };
+          return next;
+        });
+      return <text>{rows.length}</text>;
+    }
+
+    render(<App />, scratch);
+    updateRows();
+
+    expect(lynx.performance.profileMark).toHaveBeenCalledTimes(1);
+    const [traceName, options] = lynx.performance.profileMark.mock.calls[0];
+    expect(traceName).toBe('ReactLynx::hooks::setState');
+    expect(options.args.hookIdx).toBe('0');
+    expect(JSON.parse(options.args['current state keys'])).toEqual(
+      expect.objectContaining({
+        version: 1,
+        type: 'array-prefix',
+        length: 129,
+        omitted: 97,
+        tail: 'not-inspected',
+      }),
+    );
+    expect(
+      JSON.parse(options.args['changed (shallow diff) state keys']),
+    ).toEqual({
+      version: 1,
+      type: 'array-prefix-diff',
+      currentLength: 129,
+      nextLength: 129,
+      keys: ['0'],
+      omitted: 97,
+      tail: 'not-inspected',
+    });
+    const nextValue = JSON.parse(options.args.nextValue);
+    expect(nextValue).toEqual({
+      version: 1,
+      type: 'array',
+      length: 129,
+      detail: 'omitted',
+    });
+    expect(options.args.nextValue).not.toContain('changed outside prefix');
   });
 
   test('should handle missing component instance', async () => {
