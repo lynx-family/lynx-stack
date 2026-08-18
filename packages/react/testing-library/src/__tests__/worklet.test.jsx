@@ -660,4 +660,31 @@ describe('worklet', () => {
 
     expect(globalThis.classCaptureCb).toHaveBeenCalledWith(42);
   });
+
+  it('evaluates a non-handle class capture accessor once', () => {
+    const captureReads = vi.fn();
+
+    class ClassCapture extends Component {
+      get value() {
+        captureReads();
+        return this.props.value;
+      }
+
+      onTap() {
+        'main thread';
+        return this.value.nested;
+      }
+
+      render() {
+        return <view main-thread:bindtap={this.onTap} />;
+      }
+    }
+
+    render(<ClassCapture value={{ nested: 42 }} />, {
+      enableMainThread: false,
+      enableBackgroundThread: true,
+    });
+
+    expect(captureReads).toHaveBeenCalledOnce();
+  });
 });

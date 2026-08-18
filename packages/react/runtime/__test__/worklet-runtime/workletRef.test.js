@@ -225,6 +225,45 @@ describe('WorkletRef', () => {
     }).toThrow('MainThreadObject type "@test/invalid" created a non-object value.');
   });
 
+  it('finishes first-screen cleanup when a disposer throws', () => {
+    const disposeError = new Error('dispose failed');
+    const dispose = vi.fn(value => {
+      if (value.id === 1) {
+        throw disposeError;
+      }
+    });
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/cleanup',
+      id => ({ id }),
+      dispose,
+      1,
+    );
+
+    getFromWorkletRefMap({
+      _wvid: -1,
+      _initValue: 1,
+      _type: '@test/cleanup',
+      _mtoVersion: 1,
+    });
+    getFromWorkletRefMap({
+      _wvid: -2,
+      _initValue: 2,
+      _type: '@test/cleanup',
+      _mtoVersion: 1,
+    });
+
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
+    }).toThrow(disposeError);
+    expect(dispose.mock.calls.map(([value]) => value.id)).toEqual([1, 2]);
+    expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toEqual({});
+
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
+    }).not.toThrow();
+    expect(dispose).toHaveBeenCalledTimes(2);
+  });
+
   it('hydrates a used first-screen main-thread object into the background id', () => {
     const dispose = vi.fn();
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(

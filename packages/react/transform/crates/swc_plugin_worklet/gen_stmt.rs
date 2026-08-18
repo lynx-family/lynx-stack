@@ -4,8 +4,10 @@ use crate::worklet_type::WorkletType;
 use crate::TransformMode;
 use std::collections::HashSet;
 use std::vec;
-use swc_core::common::DUMMY_SP;
+use swc_core::common::{EqIgnoreSpan, DUMMY_SP};
 use swc_core::ecma::ast::*;
+use swc_core::ecma::utils::private_ident;
+use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
 use swc_core::{quote, quote_expr};
 use swc_plugins_shared::target::TransformTarget;
 
@@ -15,6 +17,23 @@ pub struct StmtGen {}
 enum CaptureRoot {
   Ident,
   ThisMember,
+}
+
+struct CaptureRootReplacer {
+  source: Expr,
+  replacement: Ident,
+}
+
+impl VisitMut for CaptureRootReplacer {
+  noop_visit_mut_type!();
+
+  fn visit_mut_expr(&mut self, expr: &mut Expr) {
+    if expr.eq_ignore_span(&self.source) {
+      *expr = Expr::Ident(self.replacement.clone());
+      return;
+    }
+    expr.visit_mut_children_with(self);
+  }
 }
 
 struct RegisterWorkletParams<'a> {
@@ -235,22 +254,57 @@ impl StmtGen {
         continue;
       };
 
-      let fallback = key_value.value.clone();
+      let mut fallback = key_value.value.clone();
+      let source_argument = source.clone();
+      let capture_argument = match capture_root {
+        CaptureRoot::Ident => source,
+        CaptureRoot::ThisMember => {
+          let capture_source = private_ident!("__mainThreadObjectSource");
+          fallback.visit_mut_with(&mut CaptureRootReplacer {
+            source,
+            replacement: capture_source.clone(),
+          });
+          Expr::Ident(capture_source)
+        }
+      };
       let captured = CallExpr {
         ctxt: Default::default(),
         span: DUMMY_SP,
-        args: vec![source.into()],
+        args: vec![capture_argument.clone().into()],
         callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
         type_args: None,
       }
       .into();
-      key_value.value = BinExpr {
+      let captured_or_fallback: Expr = BinExpr {
         span: DUMMY_SP,
         op: BinaryOp::NullishCoalescing,
         left: captured,
         right: fallback,
       }
       .into();
+      key_value.value = match capture_root {
+        CaptureRoot::Ident => captured_or_fallback.into(),
+        CaptureRoot::ThisMember => CallExpr {
+          ctxt: Default::default(),
+          span: DUMMY_SP,
+          callee: Callee::Expr(
+            ArrowExpr {
+              ctxt: Default::default(),
+              span: DUMMY_SP,
+              params: vec![Pat::Ident(capture_argument.expect_ident().into())],
+              body: Box::new(BlockStmtOrExpr::Expr(captured_or_fallback.into())),
+              is_async: false,
+              is_generator: false,
+              type_params: None,
+              return_type: None,
+            }
+            .into(),
+          ),
+          args: vec![source_argument.into()],
+          type_args: None,
+        }
+        .into(),
+      };
       wrapped = true;
     }
 
