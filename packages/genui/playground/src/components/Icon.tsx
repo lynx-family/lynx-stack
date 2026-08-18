@@ -26,6 +26,7 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  TriangleAlert,
   X,
   Zap,
 } from 'lucide-react';
@@ -51,6 +52,7 @@ export {
   Sparkles,
   Sun,
   Trash2,
+  TriangleAlert,
   X,
   Zap,
 };

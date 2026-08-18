@@ -38,7 +38,7 @@ import type {
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import { Send, Sparkles, Zap } from '../../components/Icon.js';
+import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
@@ -1715,6 +1715,20 @@ export function ChatController<
               </>
             )
             : null}
+          <aside className='chatPrivacyNotice' aria-label='Privacy notice'>
+            <TriangleAlert
+              className='chatPrivacyNoticeIcon'
+              size={16}
+              strokeWidth={2}
+              aria-hidden='true'
+            />
+            <p className='chatPrivacyNoticeText'>
+              <strong>Privacy notice:</strong>{' '}
+              Conversations in this playground are public and will be
+              transmitted to mainland China for processing. Do not include
+              personal, confidential, or sensitive information.
+            </p>
+          </aside>
           <div className='chatComposer'>
             <textarea
               className='chatInput'
