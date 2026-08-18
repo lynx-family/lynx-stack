@@ -3,7 +3,7 @@
 <lynx version="5.4.2">
 <style><![CDATA[
   /*
-    This card pins down selector rewriting and at-rule preservation.
+    This card pins down selector rewriting and at-rule dropping.
 
     A markup card's CSS is tokenized on the way in, so `:root` is rewritten to
     the card's own root element. Both declarations below therefore reach the
@@ -18,11 +18,13 @@
     Both resolving is what proves the rewrite happened rather than the card
     having simply avoided `:root`.
 
-    `.preserved` sits inside an `@media` block. Conditional group rules have no
-    representation in the binary style format, so they are kept verbatim and
-    honoured by the browser instead of being tokenized - and must not be
-    dropped. The query is written to always match so the declaration is
-    observable.
+    `.dropped` sits inside an `@media` block. Conditional group rules have no
+    rule kind in the binary style format, so they are not Lynx features on any
+    platform, and are discarded rather than handed to the browser - which would
+    give a web-only markup card a capability native does not have. The query is
+    written to always match, so the declaration would be in effect had the block
+    survived; `.control` carries the same kind of declaration outside any block
+    and is the positive control for it.
   */
   :root {
     --root-accent: #2f6d54;
@@ -46,7 +48,7 @@
   }
 
   @media (min-width: 1px) {
-    .preserved {
+    .dropped {
       width: 100%;
       height: 20px;
       background-color: #123f35;
@@ -73,7 +75,7 @@
       return;
     }
     rendered = true;
-    ['probe', 'control', 'preserved'].forEach((className) => {
+    ['probe', 'control', 'dropped'].forEach((className) => {
       const node = __CreateView(pageId);
       __SetClasses(node, className);
       __AppendElement(page, node);

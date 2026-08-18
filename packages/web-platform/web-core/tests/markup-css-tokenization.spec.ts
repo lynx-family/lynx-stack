@@ -26,7 +26,7 @@ const { loadStyleFromJSON } = await import(
 const { xmlToTemplate } = await import(
   '../ts/client/decodeWorker/xmlTemplate.js'
 );
-const { convertCSSToStyleInfo } = await import(
+const { convertCSSToStyleInfo, reportDiscardedAtRules } = await import(
   '../ts/common/xml/cssToStyleInfo.js'
 );
 
@@ -193,33 +193,45 @@ describe('markup card CSS tokenization', () => {
   describe('at-rules the binary format cannot represent', () => {
     /**
      * The binary style format's rule kinds are `StyleRule` / `FontFaceRule` /
-     * `KeyframesRule` only, so a conditional group rule cannot be tokenized.
-     * `css-tree` parses `@media` happily and reports no error, so a
-     * converter that simply ignored unknown node types would drop the block
-     * without any signal - hence these tests.
+     * `KeyframesRule` only, so a conditional group rule cannot be tokenized -
+     * which means it is not a Lynx feature on any platform, and a ReactLynx card
+     * cannot use one either. Handing it to the browser verbatim would give a
+     * web-only markup card a capability native does not have, so it is discarded,
+     * exactly as the build-time path in `ts/encode/xmlToTasmJSON.ts` does.
+     *
+     * `css-tree` parses `@media` happily and reports no error, so the only
+     * failure mode is silence - hence the reporting test below.
      */
-    test('preserves `@media` verbatim instead of dropping it', async () => {
+    test('drops `@media` and keeps the rest of the stylesheet', async () => {
       const css = await engineCSS(
         '.a { color: red; } @media (min-width: 600px) { .a { color: blue; } }',
       );
-      // The block reaches the browser, which honours it natively.
-      expect(css).toMatch(/@media \(min-width:\s*600px\)/);
-      expect(css).toContain('color:blue');
+      // Neither the block nor its contents reach the browser.
+      expect(css).not.toContain('@media');
+      expect(css).not.toContain('color:blue');
+      // Positive control: the declaration outside the block still does, so this
+      // cannot pass by the whole stylesheet having been lost.
+      expect(css).toContain('color:red;');
     });
 
-    test('preserves `@supports` and `@layer` verbatim', async () => {
+    test('drops `@supports` and `@layer`', async () => {
       const supports = await engineCSS(
-        '@supports (display: grid) { .a { color: red; } }',
+        '@supports (display: grid) { .a { color: red; } }'
+          + ' .b { color: green; }',
       );
-      expect(supports).toMatch(/@supports \(display:\s*grid\)/);
-      expect(supports).toContain('color:red');
+      expect(supports).not.toContain('@supports');
+      expect(supports).not.toContain('color:red');
+      expect(supports).toContain('color:green;');
 
-      const layer = await engineCSS('@layer base { .a { color: red; } }');
-      expect(layer).toContain('@layer base');
-      expect(layer).toContain('color:red');
+      const layer = await engineCSS(
+        '@layer base { .a { color: red; } } .b { color: green; }',
+      );
+      expect(layer).not.toContain('@layer');
+      expect(layer).not.toContain('color:red');
+      expect(layer).toContain('color:green;');
     });
 
-    test('preserves a non-numeric `@import` rather than failing the card', async () => {
+    test('drops a non-numeric `@import` rather than failing the card', async () => {
       // `encodeCSS`'s import handling does `Number(href)` and throws when that
       // is `NaN`. Inside the decode worker a throw fails the whole card, so an
       // authored `@import url("theme.css")` must not reach it. The conversion is
@@ -230,64 +242,87 @@ describe('markup card CSS tokenization', () => {
       const css = await engineCSS(
         '@import url("theme.css"); .a { color: red; }',
       );
-      expect(css).toContain('@import url("theme.css")');
+      expect(css).not.toContain('@import');
       expect(css).toContain('color:red;');
     });
 
-    test('reports which at-rule kinds stayed verbatim', async () => {
-      const { verbatimKinds } = await convertCSSToStyleInfo(
+    test('reports every dropped at-rule kind once', async () => {
+      const { discarded } = await convertCSSToStyleInfo(
         '.a { color: red; }'
           + ' @media screen { .a { color: blue; } }'
+          + ' @media print { .a { color: black; } }'
           + ' @supports (display: grid) { .a { display: grid; } }'
-          + ' @layer base { .a { color: green; } }',
+          + ' @layer base { .a { color: green; } }'
+          + ' @import url("theme.css");'
+          // Not in the Lynx CSS parser's dispatch at all, so it could never
+          // reach a built card either.
+          + ' @property --x { syntax: "<length>"; inherits: false; }',
       );
-      expect(verbatimKinds.sort()).toEqual(['@layer', '@media', '@supports']);
+      // Deduplicated by kind - two `@media` blocks, one entry - and carrying the
+      // same reason taxonomy the build-time path reports.
+      expect([...discarded].sort((a, b) => a.name.localeCompare(b.name)))
+        .toStrictEqual([
+          { name: '@import', reason: 'unresolvable' },
+          { name: '@layer', reason: 'unrepresentable' },
+          { name: '@media', reason: 'unrepresentable' },
+          { name: '@property', reason: 'unsupported' },
+          { name: '@supports', reason: 'unrepresentable' },
+        ]);
 
       // A stylesheet with nothing unsupported reports nothing, so this cannot
       // pass vacuously.
-      expect((await convertCSSToStyleInfo('.a { color: red; }')).verbatimKinds)
-        .toEqual([]);
+      expect((await convertCSSToStyleInfo('.a { color: red; }')).discarded)
+        .toStrictEqual([]);
+      // Nor do the two kinds that are representable.
+      expect(
+        (await convertCSSToStyleInfo(
+          '@font-face { font-family: "C"; } @keyframes k { to { opacity: 1; } }',
+        )).discarded,
+      ).toStrictEqual([]);
     });
 
-    /**
-     * Ordering is the subtle half of mixing the two channels.
-     * `loadStyleFromJSON` drains the entire `content` channel before it looks at
-     * `rules`, so carrying preserved at-rules on `content` and tokenized rules
-     * on `rules` would hoist every at-rule to the front of the stylesheet. For
-     * two declarations of equal specificity that inverts which one wins, which
-     * is a silent rendering change - so the converter keeps one ordered list.
-     */
-    test('keeps a preserved at-rule at its source position', async () => {
-      const css = await engineCSS(
-        '.a { color: red; }'
-          + ' @media (min-width: 600px) { .a { color: blue; } }'
-          + ' .b { color: green; }',
+    test('reports an at-rule nested inside a dropped group', async () => {
+      // A group's contents go with it, so an author's `@property` is lost even
+      // though the group is what was rejected. Reported at any depth for that
+      // reason.
+      const { discarded } = await convertCSSToStyleInfo(
+        '@media screen { @property --x { syntax: "*"; } }',
       );
-
-      const first = css.indexOf('.a:not(');
-      const media = css.indexOf('@media');
-      const last = css.indexOf('.b:not(');
-
-      expect(first).toBeGreaterThanOrEqual(0);
-      expect(media).toBeGreaterThanOrEqual(0);
-      expect(last).toBeGreaterThanOrEqual(0);
-      // Document order: `.a`, then the `@media` block, then `.b`.
-      expect(first).toBeLessThan(media);
-      expect(media).toBeLessThan(last);
+      expect(discarded.map(({ name }) => name).sort()).toStrictEqual([
+        '@media',
+        '@property',
+      ]);
     });
 
-    test('CSS inside a preserved at-rule is not tokenized', async () => {
-      // The documented, narrower limitation that replaces the old one. Outside
-      // the block `rem` is rewritten; inside it the text is passed through, so
-      // the author's unit survives untouched.
-      const css = await engineCSS(
-        '.a { padding: 1rem; }'
-          + ' @media (min-width: 600px) { .b { padding: 2rem; } }',
-        { rem: true },
+    test('warns once per dropped kind, and not in a production build', async () => {
+      const { discarded } = await convertCSSToStyleInfo(
+        '@media screen { .a { color: red; } } @layer base { .b { color: red; } }',
       );
-      expect(css).toContain('padding:calc(1 * var(--rem-unit));');
-      // Inside the block the author's own unit survives untouched.
-      expect(css).toMatch(/@media[^{]*\{[^}]*padding:\s*2rem/);
+
+      const warn = rstest.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        reportDiscardedAtRules(discarded);
+        expect(warn).toHaveBeenCalledTimes(2);
+        // The wording mirrors `encodeLynxXML`, so an author sees the same
+        // explanation whether the card was built or loaded as markup.
+        expect(warn.mock.calls.map(([message]) => message).join('\n'))
+          .toContain(
+            '[lynx-web] @media has no representation in the Lynx style format',
+          );
+
+        // Production builds stay silent: this runs on every card load.
+        warn.mockClear();
+        const previous = process.env['NODE_ENV'];
+        process.env['NODE_ENV'] = 'production';
+        try {
+          reportDiscardedAtRules(discarded);
+          expect(warn).not.toHaveBeenCalled();
+        } finally {
+          process.env['NODE_ENV'] = previous;
+        }
+      } finally {
+        warn.mockRestore();
+      }
     });
   });
 
@@ -345,8 +380,10 @@ describe('markup card CSS tokenization', () => {
   });
 
   test('leaves an empty stylesheet empty', async () => {
-    expect((await convertCSSToStyleInfo('')).ordered).toEqual([]);
+    expect((await convertCSSToStyleInfo('')).rules).toStrictEqual([]);
     // Comments carry no rules either, and must not produce a stray entry.
-    expect((await convertCSSToStyleInfo('/* nothing */')).ordered).toEqual([]);
+    expect((await convertCSSToStyleInfo('/* nothing */')).rules).toStrictEqual(
+      [],
+    );
   });
 });

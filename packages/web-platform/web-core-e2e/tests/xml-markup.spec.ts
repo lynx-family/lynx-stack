@@ -25,7 +25,7 @@ import type { ConsoleMessage, Locator, Page } from '@playwright/test';
 const XML_CARD = 'markup-card.xml';
 
 /**
- * A second, minimal card covering `:root` rewriting and `@media` preservation,
+ * A second, minimal card covering `:root` rewriting and `@media` dropping,
  * asserted by the last tests in this file.
  */
 const ROOT_SELECTOR_CARD = 'markup-root-selector.xml';
@@ -395,30 +395,40 @@ test.describe('Lynx XML markup card', () => {
   });
 
   /**
-   * The remaining limitation, asserted so that it cannot change silently.
+   * The capability boundary, asserted so that it cannot change silently.
    *
-   * `@media` / `@supports` / `@layer` have no representation in the binary style
-   * format, whose rule kinds are only `StyleRule` / `FontFaceRule` /
-   * `KeyframesRule`. They are therefore kept verbatim and honoured by the
-   * browser - dropping them would be a silent capability loss - but the CSS
-   * inside such a block is consequently not tokenized.
+   * `@media` / `@supports` / `@layer` have no rule kind in the binary style
+   * format, whose kinds are only `StyleRule` / `FontFaceRule` / `KeyframesRule`,
+   * so they are not Lynx features on any platform. Handing them to the browser
+   * verbatim would give a web-only markup card a capability native does not
+   * have, so they are discarded instead - matching what the build-time path in
+   * `ts/encode/xmlToTasmJSON.ts` does.
    */
-  test('preserves an `@media` block for markup cards', async ({ page }) => {
+  test('drops an `@media` block for markup cards', async ({ page }) => {
     const { consoleErrors, pageErrors } = await gotoMarkupCard(
       page,
       ROOT_SELECTOR_CARD,
       '.probe',
     );
 
-    // The block's query always matches, so its declaration must be in effect.
-    // Had the at-rule been dropped on the way in, this element would have no
-    // background at all.
+    // The block's query always matches, so had it survived this element would be
+    // painted. Nothing reaches it, so it keeps the initial transparent value.
     expect(
       await computedStyle(
-        page.locator('lynx-view .preserved'),
+        page.locator('lynx-view .dropped'),
         'background-color',
       ),
-    ).toBe('rgb(18, 63, 53)');
+    ).toBe('rgba(0, 0, 0, 0)');
+
+    // Positive control: the same kind of declaration, written outside any block,
+    // does reach the card. Without it the assertion above would also pass if the
+    // stylesheet had been lost wholesale.
+    expect(
+      await computedStyle(
+        page.locator('lynx-view .control'),
+        'background-color',
+      ),
+    ).toBe('rgb(76, 134, 101)');
 
     expect(consoleErrors).toStrictEqual([]);
     expect(pageErrors).toStrictEqual([]);

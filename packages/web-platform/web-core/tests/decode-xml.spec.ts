@@ -212,7 +212,7 @@ describe('decode worker: Lynx XML markup', () => {
     expect((styleInfo.data as ArrayBuffer).byteLength).toBeGreaterThan(0);
 
     // Decoding it back through the style engine must yield the fixture's rules,
-    // which proves the raw-CSS `content` channel really carried them.
+    // which proves the tokenized `rules` channel really carried them.
     const resource = new wasmInstance.StyleSheetResource(
       new Uint8Array(styleInfo.data as ArrayBuffer),
       document,
@@ -397,36 +397,26 @@ describe('decode worker: existing bypasses are unaffected', () => {
  * most easily pinned down by (and needs no wasm).
  */
 describe('xmlToTemplate', () => {
-  test('tokenizes CSS onto the ordered channel', async () => {
+  test('tokenizes CSS onto the rules channel', async () => {
     const result = await xmlToTemplate(fixture);
     if (!result.success) {
       throw new Error(result.message);
     }
 
     // The stylesheet is handed over under css id 0 (the card's own, non
-    // component scoped rules) as a single `ordered` list. `content` / `rules`
-    // stay empty: `cssLoader` drains those two one after the other, which would
-    // reorder the cascade, so document order is carried by `ordered` instead.
+    // component scoped rules) entirely on the `rules` channel. `content` stays
+    // empty: everything the binary format can carry is tokenized, and anything
+    // it cannot is dropped rather than passed to the browser verbatim.
     const info = result.template.styleInfo!['0']!;
     expect(info.content).toEqual([]);
-    expect(info.rules).toEqual([]);
-    expect(info.ordered.length).toBeGreaterThan(0);
-
-    // Every entry of this fixture is tokenizable, so nothing stays verbatim.
-    expect(info.ordered.every((entry) => entry.channel === 'tokenized')).toBe(
-      true,
-    );
+    expect(info.rules.length).toBeGreaterThan(0);
 
     // Declarations arrive as parsed pairs rather than as CSS text, which is what
     // lets the style engine rewrite them.
-    const selectors = info.ordered.flatMap((entry) =>
-      entry.channel === 'tokenized' ? [entry.rule.sel] : []
-    );
+    const selectors = info.rules.map((rule) => rule.sel);
     expect(JSON.stringify(selectors)).toContain('.card');
 
-    const declarations = info.ordered.flatMap((entry) =>
-      entry.channel === 'tokenized' ? entry.rule.decl : []
-    );
+    const declarations = info.rules.flatMap((rule) => rule.decl);
     // A `var()` must survive as real CSS. `css-serializer` rewrites every
     // `var()` into a `{{--name}}` placeholder, so a missing restore step would
     // show up here as a literal placeholder and kill the declaration.
@@ -462,7 +452,7 @@ describe('xmlToTemplate', () => {
     if (!withEmpty.success) throw new Error(withEmpty.message);
     // Present but empty: the entry exists, carrying nothing to tokenize.
     expect(withEmpty.template.styleInfo).toEqual({
-      '0': { content: [], rules: [], ordered: [] },
+      '0': { content: [], rules: [] },
     });
     expect(withEmpty.template.manifest).toEqual({ '/app-service.js': '' });
 
