@@ -19,6 +19,7 @@ import {
   createTypedElementTemplateWithReservedHandle,
   reserveElementTemplateId,
 } from '../template/handle.js';
+import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 const TYPED_LIST_HOST_TYPE = 'list';
@@ -105,15 +106,19 @@ export function renderOpcodesIntoElementTemplate(
 
         if (concreteType === TYPED_LIST_HOST_TYPE) {
           const listChildren = elementSlots?.[0] ?? [];
+          const handleId = reserveElementTemplateId();
+          const preparedTypedAttributes = prepareTypedElementAttributes(
+            handleId,
+            typedAttributes,
+          );
           const listState = createElementTemplateListState(
             listItemUids ?? EMPTY_LIST_ITEM_UIDS,
-            typedAttributes ?? null,
+            preparedTypedAttributes,
           );
           const attrsWithCallbacks = composeElementTemplateListAttributes(
             undefined,
             listState,
           );
-          const handleId = reserveElementTemplateId();
           const elementRef = createTypedElementTemplateWithReservedHandle(
             handleId,
             TYPED_LIST_HOST_TYPE,

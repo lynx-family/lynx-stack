@@ -91,7 +91,12 @@ describe('renderOpcodesIntoElementTemplate', () => {
   it('creates exact list through typed native create with slot-0 refs as listChildren', () => {
     const itemRef = { kind: 'item-ref' };
     const listRef = { kind: 'list-ref' };
-    const attributes = { id: 'typed-list' };
+    const handler = vi.fn();
+    const attributes = {
+      bindtap: handler,
+      className: 'feed',
+      id: 'typed-list',
+    };
     createElementTemplate.mockReturnValueOnce(itemRef);
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
@@ -123,6 +128,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const typedCreateCall = createTypedElementTemplate.mock.calls[0]!;
     expect(typedCreateCall[0]).toBe('list');
     expect(typedCreateCall[1]).toEqual({
+      bindtap: '-2:0:bindtap',
+      class: 'feed',
       id: 'typed-list',
       'component-at-index': expect.any(Function),
       'component-at-indexes': expect.any(Function),
@@ -134,6 +141,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(flushInitialElementTemplateListUpdates()).toEqual([{
       uid: -2,
       attributes: {
+        bindtap: '-2:0:bindtap',
+        class: 'feed',
         id: 'typed-list',
         'component-at-index': expect.any(Function),
         'component-at-indexes': expect.any(Function),

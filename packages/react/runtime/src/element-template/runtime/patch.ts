@@ -19,6 +19,7 @@ import {
 } from './list/list.js';
 import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { elementTemplateRegistry } from './template/registry.js';
+import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import {
@@ -107,7 +108,7 @@ export function applyElementTemplateUpdateCommands(
         if (!nativeRef) {
           continue;
         }
-        if (attrSlotIndex === 0) {
+        if (attrSlotIndex === TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX) {
           const listAttributes = updateElementTemplateListAttributes(
             targetId,
             value as RuntimeTypedElementAttributes | null,
@@ -301,7 +302,7 @@ function applyListFlushResults(results: ETListFlushResult[]): void {
     }
     __SetAttributeOfElementTemplate(
       listRef,
-      0,
+      TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
       result.attributes,
       null,
     );
