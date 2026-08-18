@@ -8,6 +8,17 @@ import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 import { pluginReactLynx } from '../src/index.js'
 
+function swcInclude(config: unknown): string[] {
+  const found = /"include":\[[^\]]*"transform-[^\]]*\]/.exec(
+    JSON.stringify(config),
+  )
+  return found
+    ? (JSON.parse(`{${found[0].replace('"include"', '"i"')}}`) as {
+      i: string[]
+    }).i
+    : []
+}
+
 describe('pluginAutoLynx', () => {
   test('applies the Lynx build engine with plain Rsbuild', async () => {
     const rsbuild = await createRsbuild({
@@ -43,9 +54,8 @@ describe('pluginAutoLynx', () => {
 
     const [config] = await rsbuild.initConfigs()
 
-    const minimizers = (config?.optimization?.minimizer ?? []).filter(
-      minimizer => minimizer?.constructor.name === 'SwcJsMinimizerRspackPlugin',
-    )
-    expect(minimizers).toHaveLength(1)
+    // Applying the engine twice concatenates the list instead of replacing it.
+    const include = swcInclude(config)
+    expect(include).toStrictEqual([...new Set(include)])
   })
 })

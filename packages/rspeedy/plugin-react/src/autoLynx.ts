@@ -7,9 +7,10 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { PLUGIN_LYNX_NAME, pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 // Calling `setup` does not register the plugins, so `PLUGIN_LYNX_NAME` cannot
-// be used to tell that the engine was applied this way. The Rsbuild instance is
-// tracked instead, so a second `pluginReactLynx` does not apply it again.
-const applied = new WeakSet<object>()
+// be used to tell that the engine was applied this way. The context is marked
+// instead. `Symbol.for` keeps the marker shared with any other copy of this
+// package, and with any other plugin that applies the engine the same way.
+const S_PLUGIN_LYNX_APPLIED = Symbol.for('@lynx-js/rsbuild-plugin:applied')
 
 // Rspeedy applies `pluginLynx` itself. With plain Rsbuild nothing does, so the
 // build engine is applied here to keep `pluginReactLynx` the only plugin a user
@@ -25,10 +26,13 @@ export function pluginAutoLynx(): RsbuildPlugin {
         return
       }
 
-      if (api.isPluginExists(PLUGIN_LYNX_NAME) || applied.has(api.context)) {
+      if (
+        api.isPluginExists(PLUGIN_LYNX_NAME)
+        || Object.hasOwn(api.context, S_PLUGIN_LYNX_APPLIED)
+      ) {
         return
       }
-      applied.add(api.context)
+      Object.defineProperty(api.context, S_PLUGIN_LYNX_APPLIED, { value: true })
 
       const original = api.getRsbuildConfig('original')
 
