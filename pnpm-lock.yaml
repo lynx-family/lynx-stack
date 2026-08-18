@@ -787,6 +787,31 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  examples/rsbuild:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.10(core-js@3.50.0)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+
   examples/tailwindcss:
     dependencies:
       '@lynx-js/react':
