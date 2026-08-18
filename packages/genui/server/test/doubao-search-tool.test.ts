@@ -1,0 +1,408 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { describe, expect, test } from '@rstest/core';
+
+import { loadBasicCatalog } from '../agent/a2ui-catalog.js';
+import {
+  createA2UIOpenURLPolicy,
+  userProvidedA2UIURLSources,
+} from '../agent/a2ui-open-url-policy.js';
+import { A2UIProtocolMessageStreamParser } from '../agent/a2ui-stream-parser.js';
+import { validateA2UIOutput } from '../agent/a2ui-validator.js';
+import { createArkImageGenerationRunScope } from '../agent/ark-image-generation-tool.js';
+import {
+  SEARCH_INFINITY_ENDPOINT,
+  createOptionalDoubaoSearchTool,
+  initializeDoubaoSearchRunScope,
+  readDoubaoSearchConfig,
+  resolveDoubaoSearchConfig,
+  searchDoubao,
+  searchDoubaoForRun,
+  searchedDoubaoDocumentURLs,
+} from '../agent/doubao-search-tool.js';
+
+const CONFIG = {
+  apiKey: 'search-secret',
+  requestTimeoutMs: 5_000,
+};
+
+function requestURL(input: string | URL | Request): string {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.toString();
+  return input.url;
+}
+
+function abortReason(signal: AbortSignal | null | undefined): Error {
+  return signal?.reason instanceof Error
+    ? signal.reason
+    : new DOMException('The operation was aborted', 'AbortError');
+}
+
+function successfulResponse(url = 'https://news.example.com/story') {
+  return new Response(
+    JSON.stringify({
+      ResponseMetadata: { RequestId: 'private-request-id' },
+      Result: {
+        TotalDocCount: 20,
+        ErrorCode: 0,
+        ErrorMsg: '',
+        Documents: [{
+          Rank: 2,
+          Url: url,
+          Title: 'Current result',
+          Snippet: [
+            { Type: 'text', Text: 'First excerpt.' },
+            {
+              Type: 'image',
+              Image: { ImageUrl: 'https://images.example.com/ignored.png' },
+            },
+            { Type: 'text', Text: 'Second excerpt.' },
+          ],
+          DocumentInfo: { PublishTime: '2026-08-18' },
+          HostInfo: {
+            Hostname: 'spoofed.example.com',
+            AuthorityLevel: 3,
+            IconUrl: 'https://images.example.com/ignored-icon.png',
+          },
+        }, {
+          Rank: 3,
+          Url: 'file:///private/result',
+          Title: 'Unsafe result',
+          Snippet: [],
+        }],
+      },
+    }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  );
+}
+
+const successfulFetch: typeof fetch = () =>
+  Promise.resolve(successfulResponse());
+
+const rateLimitedFetch: typeof fetch = () =>
+  Promise.resolve(
+    new Response('secret upstream details', { status: 429 }),
+  );
+
+const apiErrorFetch: typeof fetch = () =>
+  Promise.resolve(
+    new Response(JSON.stringify({
+      Result: {
+        ErrorCode: 1234,
+        ErrorMsg: 'secret upstream details',
+        Documents: [],
+      },
+    })),
+  );
+
+const invalidJsonFetch: typeof fetch = () =>
+  Promise.resolve(new Response('{not-json', { status: 200 }));
+
+const secretRejectingFetch: typeof fetch = () =>
+  Promise.reject(new Error('network failure containing search-secret'));
+
+const failingFetch: typeof fetch = () =>
+  Promise.resolve(new Response('', { status: 500 }));
+
+const pendingUntilAbortedFetch: typeof fetch = (_input, init) =>
+  new Promise<Response>((_resolve, reject) => {
+    const signal = init?.signal;
+    const onAbort = () => reject(abortReason(signal));
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) onAbort();
+  });
+
+function a2uiWithOpenURL(url: string): string {
+  return JSON.stringify([
+    {
+      version: 'v0.9',
+      createSurface: {
+        surfaceId: 'main',
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
+      },
+    },
+    {
+      version: 'v0.9',
+      updateComponents: {
+        surfaceId: 'main',
+        components: [{
+          id: 'root',
+          component: 'Button',
+          child: 'source-label',
+          action: {
+            functionCall: {
+              call: 'openUrl',
+              args: { url },
+              returnType: 'void',
+            },
+          },
+        }, {
+          id: 'source-label',
+          component: 'Text',
+          text: 'Open source',
+        }],
+      },
+    },
+  ]);
+}
+
+describe('Doubao search configuration', () => {
+  test('is disabled when no search configuration is present', () => {
+    expect(readDoubaoSearchConfig({})).toEqual({
+      ok: true,
+      enabled: false,
+    });
+    expect(createOptionalDoubaoSearchTool(true, {})).toBeUndefined();
+    expect(readDoubaoSearchConfig({
+      SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '1000',
+    })).toEqual({ ok: true, enabled: false });
+  });
+
+  test('trims the API key and applies the default timeout', () => {
+    expect(resolveDoubaoSearchConfig({
+      SEARCH_INFINITY_API_KEY: ' search-secret ',
+    })).toEqual({ apiKey: 'search-secret', requestTimeoutMs: 10_000 });
+    expect(
+      resolveDoubaoSearchConfig({
+        SEARCH_INFINITY_API_KEY: 'search-secret',
+        SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '2500',
+      }).requestTimeoutMs,
+    ).toBe(2_500);
+  });
+
+  test('rejects unsafe enabled configuration', () => {
+    expect(() => resolveDoubaoSearchConfig({})).toThrow(
+      'SEARCH_INFINITY_API_KEY is required',
+    );
+    expect(() =>
+      resolveDoubaoSearchConfig({
+        SEARCH_INFINITY_API_KEY: 'Bearer secret',
+      })
+    ).toThrow('must not include the Bearer prefix');
+    for (const timeout of ['0', '60001', '1.5']) {
+      expect(() =>
+        resolveDoubaoSearchConfig({
+          SEARCH_INFINITY_API_KEY: 'secret',
+          SEARCH_INFINITY_REQUEST_TIMEOUT_MS: timeout,
+        })
+      ).toThrow('must be an integer between 1 and 60000');
+    }
+    expect(createOptionalDoubaoSearchTool(true, {
+      SEARCH_INFINITY_API_KEY: 'secret',
+      SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '0',
+    })).toBeUndefined();
+  });
+
+  test('can be explicitly disabled even when configuration exists', () => {
+    expect(createOptionalDoubaoSearchTool(false, {
+      SEARCH_INFINITY_API_KEY: 'search-secret',
+    })).toBeUndefined();
+    expect(createOptionalDoubaoSearchTool(true, {
+      SEARCH_INFINITY_API_KEY: 'search-secret',
+    })).toBeDefined();
+  });
+});
+
+describe('Doubao search request', () => {
+  test('sends bounded Global Search parameters and normalizes text results', async () => {
+    let requestedURL = '';
+    let requestInit: RequestInit | undefined;
+    const fetchImpl: typeof fetch = (input, init) => {
+      requestedURL = requestURL(input);
+      requestInit = init;
+      return Promise.resolve(successfulResponse());
+    };
+
+    await expect(searchDoubao(CONFIG, ' current topic ', fetchImpl)).resolves
+      .toEqual({
+        query: 'current topic',
+        totalDocCount: 20,
+        results: [{
+          rank: 2,
+          title: 'Current result',
+          url: 'https://news.example.com/story',
+          snippet: 'First excerpt.\nSecond excerpt.',
+          hostname: 'news.example.com',
+          publishTime: '2026-08-18',
+          authorityLevel: '3',
+        }],
+      });
+
+    expect(requestedURL).toBe(SEARCH_INFINITY_ENDPOINT);
+    expect(requestInit?.method).toBe('POST');
+    expect(requestInit?.headers).toEqual({
+      Authorization: 'Bearer search-secret',
+      'Content-Type': 'application/json',
+    });
+    const body = requestInit?.body;
+    expect(typeof body).toBe('string');
+    if (typeof body !== 'string') throw new Error('request body is missing');
+    expect(JSON.parse(body)).toEqual({
+      Query: 'current topic',
+      DocCount: 5,
+      MaxSnippetLength: 600,
+      MaxImageCountPerDoc: 0,
+    });
+    expect(JSON.stringify(await searchDoubao(CONFIG, 'topic', fetchImpl)))
+      .not.toContain('ignored.png');
+  });
+
+  test('does not expose upstream response details in failures', async () => {
+    await expect(searchDoubao(CONFIG, 'topic', rateLimitedFetch)).rejects
+      .toThrow('request failed with status 429');
+
+    let failure: unknown;
+    try {
+      await searchDoubao(CONFIG, 'topic', apiErrorFetch);
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(Error);
+    if (!(failure instanceof Error)) throw new Error('expected an Error');
+    expect(failure.message).toBe('Doubao search failed with code 1234');
+    expect(failure.message).not.toContain('secret upstream details');
+
+    await expect(searchDoubao(CONFIG, 'topic', invalidJsonFetch)).rejects
+      .toThrow('returned invalid JSON');
+    await expect(searchDoubao(CONFIG, 'topic', secretRejectingFetch)).rejects
+      .toThrow('Doubao search request failed');
+    try {
+      await searchDoubao(CONFIG, 'topic', secretRejectingFetch);
+    } catch (error) {
+      expect(String(error)).not.toContain('search-secret');
+      expect((error as Error).cause).toBeUndefined();
+    }
+  });
+
+  test('propagates cancellation and applies a bounded timeout', async () => {
+    const controller = new AbortController();
+    const reason = new Error('client disconnected');
+    const pending = searchDoubao(
+      CONFIG,
+      'topic',
+      pendingUntilAbortedFetch,
+      controller.signal,
+    );
+    controller.abort(reason);
+    await expect(pending).rejects.toBe(reason);
+
+    await expect(searchDoubao(
+      { ...CONFIG, requestTimeoutMs: 1 },
+      'topic',
+      pendingUntilAbortedFetch,
+    )).rejects.toThrow('timed out after 1ms');
+  });
+
+  test('shares a request-wide call budget and records trusted URLs', async () => {
+    const scope = createArkImageGenerationRunScope();
+    initializeDoubaoSearchRunScope(scope, 2);
+    await searchDoubaoForRun(scope, CONFIG, 'first', successfulFetch);
+    await searchDoubaoForRun(scope, CONFIG, 'second', successfulFetch);
+    expect(searchedDoubaoDocumentURLs(scope)).toEqual([
+      'https://news.example.com/story',
+    ]);
+    await expect(
+      searchDoubaoForRun(scope, CONFIG, 'third', successfulFetch),
+    ).rejects.toThrow('call limit reached (2 per request)');
+
+    const failedScope = createArkImageGenerationRunScope();
+    initializeDoubaoSearchRunScope(failedScope, 1);
+    await expect(
+      searchDoubaoForRun(failedScope, CONFIG, 'first', failingFetch),
+    ).rejects.toThrow('status 500');
+    await expect(
+      searchDoubaoForRun(failedScope, CONFIG, 'second', successfulFetch),
+    ).rejects.toThrow('call limit reached (1 per request)');
+  });
+});
+
+describe('A2UI web-search source validation', () => {
+  test('trusts user messages but not assistant or system history', () => {
+    const policy = createA2UIOpenURLPolicy(
+      userProvidedA2UIURLSources(
+        [{
+          role: 'user',
+          content: 'Use https://user.example.com/reference',
+        }],
+        [{
+          role: 'assistant',
+          content: 'Invented https://assistant.example.com/reference',
+        }, {
+          role: 'system',
+          content: 'System https://system.example.com/reference',
+        }],
+      ),
+    );
+    expect(policy('https://user.example.com/reference')).toBe(true);
+    expect(policy('https://assistant.example.com/reference')).toBe(false);
+    expect(policy('https://system.example.com/reference')).toBe(false);
+  });
+
+  test('allows user and search URLs but rejects invented openUrl targets', async () => {
+    const catalog = await loadBasicCatalog();
+    const scope = createArkImageGenerationRunScope();
+    await searchDoubaoForRun(scope, CONFIG, 'topic', successfulFetch);
+    const policy = createA2UIOpenURLPolicy(
+      ['User supplied https://user.example.com/reference'],
+      () => searchedDoubaoDocumentURLs(scope),
+    );
+
+    expect(
+      validateA2UIOutput(
+        a2uiWithOpenURL('https://news.example.com/story'),
+        catalog,
+        { isOpenUrlAllowed: policy },
+      ).ok,
+    ).toBe(true);
+    expect(
+      validateA2UIOutput(
+        a2uiWithOpenURL('https://user.example.com/reference'),
+        catalog,
+        { isOpenUrlAllowed: policy },
+      ).ok,
+    ).toBe(true);
+    const invented = validateA2UIOutput(
+      a2uiWithOpenURL('https://invented.example.com/source'),
+      catalog,
+      { isOpenUrlAllowed: policy },
+    );
+    expect(invented.ok).toBe(false);
+    expect(invented.errors).toContain(
+      'Function "openUrl" at component.root.action.functionCall has untrusted url "https://invented.example.com/source". Use a URL supplied by the request or returned by web_search.',
+    );
+  });
+
+  test('extracts nested and Markdown URLs while remaining HTTP-only', () => {
+    const policy = createA2UIOpenURLPolicy([
+      {
+        nested: JSON.stringify({
+          markdown: '[source](https://docs.example.com/story)',
+        }),
+      },
+      '/local/path',
+      'data:text/plain,hello',
+    ]);
+
+    expect(policy('https://docs.example.com/story')).toBe(true);
+    expect(policy('/local/path')).toBe(false);
+    expect(policy('data:text/plain,hello')).toBe(false);
+    expect(policy('file:///tmp/story')).toBe(false);
+  });
+
+  test('does not stream a component containing an untrusted openUrl', () => {
+    const trustedURL = 'https://news.example.com/story';
+    const untrusted = new A2UIProtocolMessageStreamParser({
+      isOpenUrlAllowed: (url) => url === trustedURL,
+    }).push(a2uiWithOpenURL('https://invented.example.com/source'));
+    expect(JSON.stringify(untrusted)).toContain('"component":"Loading"');
+    expect(JSON.stringify(untrusted)).not.toContain('invented.example.com');
+
+    const trusted = new A2UIProtocolMessageStreamParser({
+      isOpenUrlAllowed: (url) => url === trustedURL,
+    }).push(a2uiWithOpenURL(trustedURL));
+    expect(JSON.stringify(trusted)).toContain('"component":"Button"');
+    expect(JSON.stringify(trusted)).toContain(trustedURL);
+  });
+});

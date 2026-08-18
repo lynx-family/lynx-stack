@@ -655,11 +655,14 @@ describe('A2UI Bench UI Judge integration', () => {
       warnings: [],
     });
     let callCount = 0;
+    let receivedEnableWebSearch: boolean | undefined;
     rstest.mocked(getA2UIAgentService).mockReturnValue({
       generateRaw(_messages: unknown, options: {
         catalog?: { id?: string };
+        enableWebSearch?: boolean;
       }) {
         callCount += 1;
+        receivedEnableWebSearch = options.enableWebSearch;
         if (callCount === 1) {
           return Promise.resolve({
             text: 'invalid',
@@ -701,6 +704,7 @@ describe('A2UI Bench UI Judge integration', () => {
 
     await runBenchJob(job.id);
 
+    expect(receivedEnableWebSearch).toBe(false);
     expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
       judgeDimensions: geqiDimensions(4),
       judgeGeqiScore: 80,

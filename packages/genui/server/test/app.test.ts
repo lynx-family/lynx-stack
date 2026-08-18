@@ -15,6 +15,10 @@ import {
   IMG_GEN_ARK_IMAGE_BASE_URL_ENV,
   IMG_GEN_ARK_IMAGE_MODEL_ENV,
 } from '../agent/ark-image-generation-tool.js';
+import {
+  SEARCH_INFINITY_API_KEY_ENV,
+  SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV,
+} from '../agent/doubao-search-tool.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import app from '../src/app.js';
 
@@ -38,6 +42,9 @@ describe('Hono application', () => {
     const previousArkApiKey = process.env[IMG_GEN_ARK_API_KEY_ENV];
     const previousArkImageModel = process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV];
     const previousArkImageBaseURL = process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV];
+    const previousSearchApiKey = process.env[SEARCH_INFINITY_API_KEY_ENV];
+    const previousSearchTimeout =
+      process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV];
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
       'Doubao Seed': {
         apiKey: 'seed-secret',
@@ -56,6 +63,8 @@ describe('Hono application', () => {
     process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV] = 'private-image-model';
     process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] =
       'https://ark-private.example.com/api/v3';
+    process.env[SEARCH_INFINITY_API_KEY_ENV] = 'private-search-key';
+    delete process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV];
     try {
       const response = await app.request('/models', {
         headers: { Origin: 'http://localhost:3000' },
@@ -88,6 +97,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: true,
+        webSearchReady: true,
       });
       const serializedHealth = JSON.stringify(healthPayload);
       expect(serializedHealth).not.toContain('seed-secret');
@@ -96,6 +106,8 @@ describe('Hono application', () => {
       expect(serializedHealth).not.toContain('ark-image-secret');
       expect(serializedHealth).not.toContain('private-image-model');
       expect(serializedHealth).not.toContain('ark-private.example.com');
+      expect(serializedHealth).not.toContain('private-search-key');
+      expect(serializedHealth).not.toContain('open.feedcoopapi.com');
       expect(serializedHealth).not.toContain('"api"');
 
       delete process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV];
@@ -107,6 +119,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: false,
+        webSearchReady: true,
         error: 'IMG_GEN_ARK_IMAGE_MODEL is required',
       });
 
@@ -120,7 +133,34 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: false,
+        webSearchReady: true,
         error: 'IMG_GEN_ARK_IMAGE_BASE_URL is required',
+      });
+
+      process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] =
+        'https://ark-private.example.com/api/v3';
+      delete process.env[SEARCH_INFINITY_API_KEY_ENV];
+      process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV] = '0';
+      const searchDisabledResponse = await app.request('/a2ui/health');
+      expect(searchDisabledResponse.status).toBe(200);
+      await expect(searchDisabledResponse.json()).resolves.toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: true,
+        webSearchReady: false,
+      });
+      process.env[SEARCH_INFINITY_API_KEY_ENV] = 'private-search-key';
+      const invalidSearchResponse = await app.request('/a2ui/health');
+      expect(invalidSearchResponse.status).toBe(200);
+      await expect(invalidSearchResponse.json()).resolves.toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: true,
+        webSearchReady: false,
       });
     } finally {
       if (previous === undefined) {
@@ -142,6 +182,17 @@ describe('Hono application', () => {
         delete process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV];
       } else {
         process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] = previousArkImageBaseURL;
+      }
+      if (previousSearchApiKey === undefined) {
+        delete process.env[SEARCH_INFINITY_API_KEY_ENV];
+      } else {
+        process.env[SEARCH_INFINITY_API_KEY_ENV] = previousSearchApiKey;
+      }
+      if (previousSearchTimeout === undefined) {
+        delete process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV];
+      } else {
+        process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV] =
+          previousSearchTimeout;
       }
     }
   });

@@ -252,6 +252,7 @@ async function generateA2UINative(
         api: request.provider.api,
         catalog,
         disableAgentCache: true,
+        enableWebSearch: false,
         inheritReasoningEffort: false,
       },
       undefined,

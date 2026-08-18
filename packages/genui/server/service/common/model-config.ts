@@ -6,10 +6,11 @@ import type { OpenAIReasoningEffort } from './types.js';
 
 export const GENUI_MODEL_CONFIG_ENV = 'GENUI_MODEL_CONFIG_JSON';
 
-const IMAGE_GENERATION_PRIVATE_ENV_NAMES = [
+const PRIVATE_PROVIDER_ENV_NAMES = [
   'IMG_GEN_ARK_API_KEY',
   'IMG_GEN_ARK_IMAGE_MODEL',
   'IMG_GEN_ARK_IMAGE_BASE_URL',
+  'SEARCH_INFINITY_API_KEY',
 ] as const;
 
 const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
@@ -211,7 +212,7 @@ export function redactModelConfigSecrets(message: string): string {
       }
     }
   }
-  for (const name of IMAGE_GENERATION_PRIVATE_ENV_NAMES) {
+  for (const name of PRIVATE_PROVIDER_ENV_NAMES) {
     const value = process.env[name]?.trim();
     if (value) addSensitiveVariants(sensitiveValues, value);
   }

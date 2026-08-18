@@ -280,6 +280,7 @@ export function createA2UIBenchAdapter(
               api: input.provider.api,
               catalog,
               disableAgentCache: true,
+              enableWebSearch: false,
               inheritReasoningEffort: false,
             },
             signal,
