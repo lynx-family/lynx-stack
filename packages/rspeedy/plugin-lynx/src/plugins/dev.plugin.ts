@@ -312,6 +312,18 @@ export function pluginDev(): RsbuildPlugin {
                   paths: [rsbuildPath],
                 })
               )
+              .set(
+                '@rspack/core/hot/log.js',
+                require.resolve('@rspack/core/hot/log', {
+                  paths: [rsbuildPath],
+                })
+              )
+              .set(
+                '@rspack/core/hot/log-apply-result.js',
+                require.resolve('@rspack/core/hot/log-apply-result', {
+                  paths: [rsbuildPath],
+                })
+              )
               .set('@rspack/core/hot/dev-server', hotDevServerPath)
             .end()
           .end()

@@ -220,32 +220,70 @@ jobs:
         fi
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
-        cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression --tools eslint --skill lynx-devtool
-        cd create-rspeedy-regression
-        npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
-        pnpm install --registry=http://localhost:4873
-        pnpm run build
-        pnpm run build --mode development
-        pnpm run lint
-        cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression-vitest-rltl --tools eslint,vitest-rltl
-        cd create-rspeedy-regression-vitest-rltl
-        npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
-        pnpm install --registry=http://localhost:4873
-        pnpm run build
-        pnpm run build --mode development
-        pnpm run lint
-        pnpm run test
-        cd `mktemp -d`
-        npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir create-rspeedy-regression-rstest-rltl --tools eslint,rstest-rltl
-        cd create-rspeedy-regression-rstest-rltl
-        npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
-        pnpm install --registry=http://localhost:4873
-        pnpm run build
-        pnpm run build --mode development
-        pnpm run lint
-        pnpm run test
+
+        # `npm run <script> <args>` swallows the args unless they follow `--`,
+        # while Yarn 4 would forward the `--` itself to the script.
+        run_script() {
+          local pm=$1 script=$2
+          shift 2
+          if [ "$pm" = npm ] && [ $# -gt 0 ]; then
+            npm run "$script" -- "$@"
+          else
+            "$pm" run "$script" "$@"
+          fi
+        }
+
+        install_with() {
+          case $1 in
+            pnpm) pnpm install --registry=http://localhost:4873 ;;
+            npm) npm install --registry=http://localhost:4873 ;;
+            yarn)
+              corepack prepare yarn@4.18.0 --activate
+              # Marks the generated app as a standalone project so Yarn does not
+              # try to attach it to any package.json above the temp directory.
+              touch yarn.lock
+              yarn config set nodeLinker node-modules
+              yarn config set npmRegistryServer http://localhost:4873
+              yarn config set unsafeHttpWhitelist --json '["localhost"]'
+              # The projects are generated fresh, so there is no lockfile to be
+              # immutable about -- but Yarn turns that on whenever CI is set.
+              yarn config set enableImmutableInstalls false
+              # Yarn quarantines any version published less than `1d` ago, but
+              # the canary versions reached the mock registry seconds earlier.
+              yarn config set npmMinimalAgeGate 0
+              # Hardened mode turns itself on for public pull requests and
+              # validates resolutions against the registry, which the throwaway
+              # project generated here has nothing to gain from.
+              yarn config set enableHardenedMode false
+              yarn install
+              ;;
+          esac
+        }
+
+        # Each package manager lays `node_modules` out differently, so they do
+        # not agree on which undeclared transitive dependency a package can
+        # still resolve. Smoke-test all of them to catch phantom dependencies.
+        smoke_test() {
+          local pm=$1 tools=$2 dir=$3
+          shift 3
+          cd `mktemp -d`
+          npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir "$dir" --tools "$tools" "$@"
+          cd "$dir"
+          npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+          install_with "$pm"
+          local bin=${pm%%-*}
+          run_script "$bin" build
+          run_script "$bin" build --mode development
+          run_script "$bin" lint
+        }
+
+        smoke_test pnpm eslint create-rspeedy-regression --skill lynx-devtool
+        smoke_test pnpm eslint,vitest-rltl create-rspeedy-regression-vitest-rltl
+        run_script pnpm test
+        smoke_test pnpm eslint,rstest-rltl create-rspeedy-regression-rstest-rltl
+        run_script pnpm test
+        smoke_test npm eslint create-rspeedy-regression-npm --skill lynx-devtool
+        smoke_test yarn eslint create-rspeedy-regression-yarn --skill lynx-devtool
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
