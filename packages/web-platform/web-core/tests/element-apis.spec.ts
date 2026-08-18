@@ -1676,6 +1676,73 @@ describe('Element APIs', () => {
     );
   });
 
+  test('cross-thread event errors do not escape the wasm boundary', () => {
+    const publishError = new DOMException(
+      'The object could not be cloned.',
+      'DataCloneError',
+    );
+    mtsBinding.lynxViewInstance.backgroundThread.publishEvent = rstest.fn(
+      () => {
+        throw publishError;
+      },
+    );
+
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__SetID(target, 'publish-error-target');
+    mtsGlobalThis.__AddEvent(target, 'bindEvent', 'tap', 'handler');
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(() => {
+      rootDom.querySelector('#publish-error-target')?.dispatchEvent(
+        new window.Event('click'),
+      );
+    }).not.toThrow();
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
+  test('worklet errors do not escape the wasm boundary', () => {
+    const workletError = {
+      name: 'TypeError',
+      message: 'worklet failed',
+      stack: 'TypeError: worklet failed\n    at worklet.js:1:1',
+    };
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        runWorklet: () => {
+          throw workletError;
+        },
+      } as any),
+    );
+    mtsGlobalThis = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+    );
+
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__SetID(target, 'worklet-error-target');
+    mtsGlobalThis.__AddEvent(
+      target,
+      'bindEvent',
+      'tap',
+      { value: 'worklet' } as any,
+    );
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(() => {
+      rootDom.querySelector('#worklet-error-target')?.dispatchEvent(
+        new window.Event('click'),
+      );
+    }).not.toThrow();
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
   test('event with bubbles: false should not bubble to parent', () => {
     rstest.spyOn(mtsBinding, 'addEventListener');
     rstest.spyOn(mtsBinding, 'publishEvent');

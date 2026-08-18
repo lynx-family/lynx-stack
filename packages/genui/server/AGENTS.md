@@ -101,10 +101,13 @@ export TOS_REGION="cn-beijing"
 ```
 
 Use a dedicated IAM identity with `tos:PutObject` access only to the configured
-`a2ui` and `openui` prefixes. The server signs writes with these credentials;
-the browser reads the resulting public object URL without credentials. Optional
-overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
-`TOS_OPENUI_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
+`a2ui`, `openui`, and `mcp-apps` prefixes. Preview objects use
+`<method>/preview/<uuid>/<file>`; shared conversations use
+`<method>/conversation/<uuid>/messages.json`. The server signs writes with
+these credentials; the browser reads the resulting public object URL without
+credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
+`TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`, and
+`TOS_SECURITY_TOKEN`.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:
