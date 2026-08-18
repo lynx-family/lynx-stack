@@ -1522,9 +1522,6 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.10(core-js@3.50.0)
-      '@rsbuild/plugin-css-minimizer':
-        specifier: 2.0.1
-        version: 2.0.1(@rsbuild/core@2.1.10(core-js@3.50.0))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
       '@rsdoctor/rspack-plugin':
         specifier: ~1.6.1
         version: 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.10(core-js@3.50.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -1538,6 +1535,9 @@ importers:
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
+      '@rsbuild/plugin-css-minimizer':
+        specifier: 2.0.1
+        version: 2.0.1(@rsbuild/core@2.1.10(core-js@3.50.0))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
       '@rsdoctor/core':
         specifier: ~1.6.1
         version: 1.6.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@rsbuild/core@2.1.10(core-js@3.50.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -1747,6 +1747,9 @@ importers:
       '@lynx-js/websocket':
         specifier: workspace:^
         version: link:../websocket
+      '@rsbuild/plugin-css-minimizer':
+        specifier: 2.0.1
+        version: 2.0.1(@rsbuild/core@2.1.10(core-js@3.50.0))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
     devDependencies:
       '@lynx-js/test-tools':
         specifier: workspace:*

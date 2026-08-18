@@ -4,6 +4,7 @@
 import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { pluginChunkLoading } from './plugins/chunkLoading.plugin.js'
+import { pluginCssMinimizer } from './plugins/cssMinimizer.plugin.js'
 import { pluginDev } from './plugins/dev.plugin.js'
 import { pluginMinify } from './plugins/minify.plugin.js'
 import { pluginOptimization } from './plugins/optimization.plugin.js'
@@ -20,6 +21,7 @@ import { pluginTarget } from './plugins/target.plugin.js'
 export function pluginLynx(): RsbuildPlugin[] {
   return [
     pluginChunkLoading(),
+    pluginCssMinimizer(),
     pluginDev(),
     pluginMinify(),
     pluginOptimization(),
