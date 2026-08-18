@@ -331,7 +331,7 @@ impl MainThreadWasmContext {
           };
           is_caught = catch_handler.is_some();
           for handler in [bind_handler, catch_handler].iter().flatten() {
-            self.mts_binding.publish_event(
+            let _ = self.mts_binding.publish_event(
               handler,
               current_target_parent_component_id.as_deref(),
               serialized_event,
@@ -352,7 +352,7 @@ impl MainThreadWasmContext {
         if bind_handler.is_some() || catch_handler.is_some() {
           is_caught = catch_handler.is_some();
           if let Some(handler) = bind_handler {
-            self.mts_binding.publish_mts_event(
+            let _ = self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
               target_unique_id,
@@ -362,7 +362,7 @@ impl MainThreadWasmContext {
             );
           }
           if let Some(handler) = catch_handler {
-            self.mts_binding.publish_mts_event(
+            let _ = self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
               target_unique_id,
@@ -475,7 +475,7 @@ impl MainThreadWasmContext {
               .and_then(|binding| binding.borrow().component_id.clone())
           }
         };
-        self.mts_binding.publish_event(
+        let _ = self.mts_binding.publish_event(
           &handler,
           current_target_parent_component_id.as_deref(),
           serialized_event,
@@ -489,7 +489,7 @@ impl MainThreadWasmContext {
       let run_worklet_handler = current_target_element_data
         .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
       if let Some(handler) = run_worklet_handler {
-        self.mts_binding.publish_mts_event(
+        let _ = self.mts_binding.publish_mts_event(
           &handler,
           serialized_event,
           target_unique_id,
