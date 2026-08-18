@@ -30,7 +30,6 @@ export namespace JSX {
      * which replace the fallback once it takes over.
      *
      * Only the `fallback` attribute is supported. Spread attributes are a build error.
-     * Not supported with `experimental_useElementTemplate`.
      *
      * The fold is the same in development, so what renders there is what renders in
      * production, at the cost of the deferred modules not being refreshable on the

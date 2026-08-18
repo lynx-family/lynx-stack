@@ -614,7 +614,7 @@ fn transform_react_lynx_inner(
       !use_element_template_plugin && snapshot_plugin_config.enable_ui_source_map.unwrap_or(false);
 
     let background_only_plugin = Optional::new(
-      visit_mut_pass(BackgroundOnlyVisitor::new(use_snapshot_plugin)),
+      visit_mut_pass(BackgroundOnlyVisitor::new()),
       jsx_backend_enabled,
     );
 

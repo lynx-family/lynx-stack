@@ -7,27 +7,11 @@ use swc_core::{
 };
 
 #[derive(Default)]
-pub struct BackgroundOnlyVisitor {
-  supported: bool,
-}
+pub struct BackgroundOnlyVisitor {}
 
 impl BackgroundOnlyVisitor {
-  pub fn new(supported: bool) -> Self {
-    BackgroundOnlyVisitor { supported }
-  }
-
-  fn reject_unsupported(&self, span: Span) {
-    if self.supported {
-      return;
-    }
-    HANDLER.with(|handler| {
-      handler
-        .struct_span_err(
-          span,
-          "<background-only> is not supported with `experimental_useElementTemplate`: the element templates of the deferred subtree are not registered for the main thread, so it cannot hydrate.",
-        )
-        .emit()
-    });
+  pub fn new() -> Self {
+    BackgroundOnlyVisitor {}
   }
 }
 
@@ -187,7 +171,6 @@ impl VisitMut for BackgroundOnlyVisitor {
   fn visit_mut_expr(&mut self, n: &mut Expr) {
     if let Expr::JSXElement(el) = n {
       if is_background_only(el) {
-        self.reject_unsupported(el.span);
         *n = desugar(el);
       }
     }
@@ -198,7 +181,6 @@ impl VisitMut for BackgroundOnlyVisitor {
     for child in n.iter_mut() {
       if let JSXElementChild::JSXElement(el) = child {
         if is_background_only(el) {
-          self.reject_unsupported(el.span);
           let span = el.span;
           let expr = desugar(el);
           *child = JSXElementChild::JSXExprContainer(JSXExprContainer {
@@ -232,7 +214,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     desugars_to_thread_conditional_in_child_position,
     r#"
     function App() {
@@ -251,7 +233,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     desugars_to_thread_conditional_in_expression_position,
     r#"
     function Deferred({ children }) {
@@ -263,7 +245,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     defaults_to_null_without_fallback,
     r#"
     function App() {
@@ -281,7 +263,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     desugars_nested_background_only,
     r#"
     function App() {
@@ -299,7 +281,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     unwraps_a_lone_child_past_layout_and_comments,
     r#"
     function App() {
@@ -316,7 +298,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     keeps_the_fragment_for_a_lone_text_child,
     r#"
     function App() {
@@ -328,7 +310,7 @@ mod tests {
   test!(
     module,
     syntax(),
-    |_| visit_mut_pass(BackgroundOnlyVisitor::new(true)),
+    |_| visit_mut_pass(BackgroundOnlyVisitor::new()),
     renders_nothing_for_empty_children,
     r#"
     function App() {
