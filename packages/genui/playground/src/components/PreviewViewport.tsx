@@ -10,7 +10,10 @@ import {
   PreviewPanelRenderContext,
 } from './PreviewPanel.js';
 import type { PreviewMode } from './PreviewPanel.js';
-import { RENDER_METRIC_ID_QUERY_PARAM } from '../utils/renderUrl.js';
+import {
+  RENDER_METRIC_ID_QUERY_PARAM,
+  RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
+} from '../utils/renderUrl.js';
 
 interface PreviewViewportProps {
   src?: string;
@@ -53,13 +56,32 @@ function PhoneShell(props: { children: ReactNode }) {
   );
 }
 
-function withPreviewMetricId(src: string, metricId: string): string {
-  if (!src || !metricId) return src;
+let nextPreviewNavigationToken = 0;
+
+function createPreviewNavigationToken(navigationKey: string): string {
+  nextPreviewNavigationToken += 1;
+  return `${Date.now().toString(36)}-${
+    nextPreviewNavigationToken.toString(36)
+  }-${navigationKey.length.toString(36)}`;
+}
+
+function withPreviewFrameMetadata(
+  src: string,
+  metricId: string,
+  navigationToken: string,
+): string {
+  if (!src) return src;
 
   try {
     const url = new URL(src, window.location.href);
     if (!url.pathname.endsWith('/render.html')) return src;
-    url.searchParams.set(RENDER_METRIC_ID_QUERY_PARAM, metricId);
+    if (metricId) {
+      url.searchParams.set(RENDER_METRIC_ID_QUERY_PARAM, metricId);
+    }
+    url.searchParams.set(
+      RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
+      navigationToken,
+    );
     return url.toString();
   } catch {
     return src;
@@ -86,13 +108,19 @@ export function PreviewViewport(props: PreviewViewportProps) {
   const previewMetricsContext = useContext(PreviewPanelMetricsContext);
   const mode: PreviewMode = displayMode ?? previewModeContext?.mode ?? 'phone';
   const rawResolvedSrc = src ?? previewRenderContext?.renderUrl ?? '';
+  const metricId = previewMetricsContext?.metricId ?? '';
+  const navigationToken = useMemo(
+    () => createPreviewNavigationToken(`${metricId}\0${rawResolvedSrc}`),
+    [metricId, rawResolvedSrc],
+  );
   const resolvedSrc = useMemo(
     () =>
-      withPreviewMetricId(
+      withPreviewFrameMetadata(
         rawResolvedSrc,
-        previewMetricsContext?.metricId ?? '',
+        metricId,
+        navigationToken,
       ),
-    [previewMetricsContext?.metricId, rawResolvedSrc],
+    [metricId, navigationToken, rawResolvedSrc],
   );
 
   useEffect(() => {

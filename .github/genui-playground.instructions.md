@@ -109,6 +109,8 @@ Gate host-specific OpenUI visual treatments behind an additional root class in t
 
 ### Large Preview Payloads
 
+For local A2UI Web previews without `demoId` or `messagesUrl`, serialize the messages into an `application/json` Blob and pass its object URL through `messagesUrl` so local and remote JSON use the same runtime loading path. Reuse that object URL while the messages are unchanged; after replacement, keep it alive until the consuming runtime reports that loading completed, with a bounded cleanup fallback, and revoke all remaining URLs on unmount. Deliver later live deltas through `A2UI_LIVE_MESSAGES`, and replay the current surface only after the Lynx A2UI runtime reports that its message store is ready; the outer render-frame listener alone is not sufficient readiness. Give every `PreviewViewport` render navigation a unique token, require runtime-ready messages to echo it, and bind readiness fallbacks to the loaded URL and window so a delayed signal from an older iframe document cannot unlock the current frame. Blob URLs are local-only: share and native URLs must never expose them, and live share/native URLs require `demoId` or a published HTTP(S) `messagesUrl`. Apply `A2UI_INLINE_RENDER_URL_MAX_LENGTH` to remaining non-live inline A2UI preview URLs so deployed request-line limits cannot produce HTTP 414 responses.
+
 When building OpenUI playground preview links, avoid inlining large OpenUI Lang source in `rawText` query parameters. URL-encoded Chinese or generated DSL can exceed common request-line limits on deployed hosts; publish large source text and pass `rawTextUrl` to `render.html` instead.
 
 ## LazyComponent Integration
@@ -125,8 +127,8 @@ Keep both `web` and `lynx` environments enabled when the same lazy demo should r
 
 LazyComponent demo data should contain complete `url` and `webUrl` values before it reaches preview rendering. Build those URLs at data construction time from the runtime playground base URL, with query and hash removed and file paths such as `render.html` collapsed to their containing directory. Keep this resolution in the demo data layer, not in `PreviewPanel`.
 
-Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios but pass inline `messages` into web preview and native QR preview links, because no corresponding `dist/demos/*.json` file exists.
+Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios, but because no corresponding `dist/demos/*.json` file exists, their local Web preview should expose the messages through a Blob `messagesUrl` while non-live native QR preview links may continue to carry inline `messages`.
 
-Keep `PreviewPanel` unaware of LazyComponent payload structure. It should choose between `demoId`, `messagesUrl`, and inline `messages/actionMocks`, then pass the selected payload through unchanged for web preview and QR/native preview paths.
+Keep `PreviewPanel` unaware of LazyComponent payload structure. It should select `demoId`, a portable `messagesUrl`, or local `messages/actionMocks`; derive a Blob `messagesUrl` only for the local Web preview, while keeping share and QR/native payloads portable.
 
 For the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy bundle URLs with `import(url, { with: { type: 'component' } })`. In web rendering, use `webUrl` only when `SystemInfo.platform === 'web'`; if `webUrl` is absent, show the mobile-scan fallback instead of trying to load the native `url` in Lynx for Web.

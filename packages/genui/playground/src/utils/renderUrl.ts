@@ -6,6 +6,8 @@ import type { Protocol } from './protocol.js';
 
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
 export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
+export const RENDER_NAVIGATION_TOKEN_QUERY_PARAM = 'previewNavigationToken';
+export const A2UI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 
 export interface RenderInit {
@@ -59,6 +61,155 @@ export function hasShareableA2UIRenderPayload(
     : init.messages !== undefined;
 }
 
+export function hasExternalA2UIRenderPayload(
+  init: Pick<RenderInit, 'demoId' | 'messagesUrl'>,
+): boolean {
+  if (typeof init.demoId === 'string' && init.demoId.trim().length > 0) {
+    return true;
+  }
+  return isPortableA2UIMessagesUrl(init.messagesUrl);
+}
+
+export function isPortableA2UIMessagesUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.trim().length === 0) return false;
+  try {
+    const protocol = new URL(
+      value,
+      'https://a2ui-payload.invalid/',
+    ).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+interface ObjectURLRegistry {
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  createObjectURL(object: Blob): string;
+  revokeObjectURL(url: string): void;
+}
+
+export interface LocalA2UIMessagesPayload {
+  messagesUrl: string;
+  dispose: () => void;
+}
+
+export const LOCAL_A2UI_MESSAGES_PAYLOAD_RELEASE_TIMEOUT_MS = 30_000;
+
+export interface LocalA2UIMessagesPayloadCache {
+  ensure: (messages: unknown) => LocalA2UIMessagesPayload;
+  markLoaded: (messagesUrl: string) => void;
+  clear: () => void;
+  dispose: () => void;
+}
+
+interface LocalA2UIMessagesPayloadCacheOptions {
+  createPayload: (messages: unknown) => LocalA2UIMessagesPayload;
+  releaseTimeoutMs?: number;
+  scheduleRelease?: (callback: () => void, delayMs: number) => unknown;
+  cancelRelease?: (handle: unknown) => void;
+}
+
+interface LocalA2UIMessagesPayloadCacheEntry {
+  messages: unknown;
+  payload: LocalA2UIMessagesPayload;
+  releaseHandle?: unknown;
+  releaseScheduled: boolean;
+}
+
+export function createLocalA2UIMessagesPayload(
+  messages: unknown,
+  registry: ObjectURLRegistry = URL,
+): LocalA2UIMessagesPayload {
+  const serialized = JSON.stringify(messages);
+  if (serialized === undefined) {
+    throw new Error('A2UI messages must be JSON serializable');
+  }
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  const messagesUrl = registry.createObjectURL(
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+    new Blob([serialized], { type: 'application/json' }),
+  );
+  let disposed = false;
+  return {
+    messagesUrl,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      registry.revokeObjectURL(messagesUrl);
+    },
+  };
+}
+
+/**
+ * Reuse the current Blob while its messages stay unchanged. Replaced payloads
+ * remain alive until the successor runtime confirms loading, with a bounded
+ * fallback for frames that disappear before they can report readiness.
+ */
+export function createLocalA2UIMessagesPayloadCache(
+  options: LocalA2UIMessagesPayloadCacheOptions,
+): LocalA2UIMessagesPayloadCache {
+  const releaseTimeoutMs = options.releaseTimeoutMs
+    ?? LOCAL_A2UI_MESSAGES_PAYLOAD_RELEASE_TIMEOUT_MS;
+  const scheduleRelease = options.scheduleRelease
+    ?? ((callback: () => void, delayMs: number) =>
+      setTimeout(callback, delayMs));
+  const cancelRelease = options.cancelRelease
+    ?? ((handle: unknown) =>
+      clearTimeout(handle as ReturnType<typeof setTimeout>));
+  const entries = new Map<string, LocalA2UIMessagesPayloadCacheEntry>();
+  let current: LocalA2UIMessagesPayloadCacheEntry | null = null;
+
+  const disposeEntry = (entry: LocalA2UIMessagesPayloadCacheEntry) => {
+    if (entries.get(entry.payload.messagesUrl) !== entry) return;
+    entries.delete(entry.payload.messagesUrl);
+    if (entry.releaseScheduled) cancelRelease(entry.releaseHandle);
+    entry.releaseScheduled = false;
+    entry.payload.dispose();
+  };
+
+  const retireCurrent = () => {
+    const entry = current;
+    current = null;
+    if (!entry || entry.releaseScheduled) return;
+    entry.releaseScheduled = true;
+    entry.releaseHandle = scheduleRelease(
+      () => disposeEntry(entry),
+      releaseTimeoutMs,
+    );
+  };
+
+  return {
+    ensure: (messages) => {
+      if (current && Object.is(current.messages, messages)) {
+        return current.payload;
+      }
+      retireCurrent();
+
+      const payload = options.createPayload(messages);
+      current = {
+        messages,
+        payload,
+        releaseScheduled: false,
+      };
+      entries.set(payload.messagesUrl, current);
+      return payload;
+    },
+    markLoaded: (messagesUrl) => {
+      if (current?.payload.messagesUrl !== messagesUrl) return;
+      for (const entry of [...entries.values()]) {
+        if (entry !== current) disposeEntry(entry);
+      }
+    },
+    clear: retireCurrent,
+    dispose: () => {
+      current = null;
+      for (const entry of [...entries.values()]) disposeEntry(entry);
+    },
+  };
+}
+
 function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   const initData: Record<string, unknown> = {
     protocol: init.protocol.name,
@@ -86,13 +237,49 @@ function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   return initData;
 }
 
-export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
+type A2UIRenderBaseInit = Pick<
+  RenderInit,
+  | 'demoUrl'
+  | 'instant'
+  | 'liveAction'
+  | 'playbackMode'
+  | 'protocol'
+  | 'speed'
+  | 'theme'
+>;
+
+function buildA2UIRenderBaseUrl(
+  init: A2UIRenderBaseInit,
+  baseUrl: string,
+): URL {
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', init.protocol.name);
   url.searchParams.set('demoUrl', init.demoUrl);
   if (init.theme) {
     url.searchParams.set('theme', init.theme);
   }
+
+  if (init.speed !== undefined && init.speed !== 1) {
+    url.searchParams.set('speed', String(init.speed));
+  }
+
+  if (init.instant) {
+    url.searchParams.set('instant', '1');
+  }
+
+  if (init.liveAction) {
+    url.searchParams.set('liveAction', '1');
+  }
+
+  if (init.playbackMode) {
+    url.searchParams.set('playbackMode', '1');
+  }
+
+  return url;
+}
+
+export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
+  const url = buildA2UIRenderBaseUrl(init, baseUrl);
 
   if (init.demoId) {
     // Known demo: reference static JSON file by ID instead of inlining payload.
@@ -124,22 +311,6 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
         encodeBase64Url(JSON.stringify(init.actionMocks)),
       );
     }
-  }
-
-  if (init.speed !== undefined && init.speed !== 1) {
-    url.searchParams.set('speed', String(init.speed));
-  }
-
-  if (init.instant) {
-    url.searchParams.set('instant', '1');
-  }
-
-  if (init.liveAction) {
-    url.searchParams.set('liveAction', '1');
-  }
-
-  if (init.playbackMode) {
-    url.searchParams.set('playbackMode', '1');
   }
 
   return url.toString();
@@ -204,4 +375,8 @@ export function buildMcpAppsRenderUrl(
 
 export function canInlineOpenUIRenderUrl(url: string): boolean {
   return url.length <= OPENUI_INLINE_RENDER_URL_MAX_LENGTH;
+}
+
+export function canInlineA2UIRenderUrl(url: string): boolean {
+  return url.length <= A2UI_INLINE_RENDER_URL_MAX_LENGTH;
 }
