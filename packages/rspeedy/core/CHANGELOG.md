@@ -1,5 +1,18 @@
 # @lynx-js/rspeedy
 
+## 0.16.4
+
+### Patch Changes
+
+- Bind the default Rspeedy development server to an IP-family wildcard address while continuing to advertise a concrete local address. IPv6-only hosts now accept loopback connections through `localhost` in addition to connections through their detected network address. ([#3530](https://github.com/lynx-family/lynx-stack/pull/3530))
+
+- Recover the HMR session after an update fails to apply. ([#3434](https://github.com/lynx-family/lynx-stack/pull/3434))
+
+- Updated dependency `@rsbuild/core` to `2.1.10`. ([#3267](https://github.com/lynx-family/lynx-stack/pull/3267))
+- Updated dependencies [[`1886fdf`](https://github.com/lynx-family/lynx-stack/commit/1886fdf5de9274666351705596e1f670e909fdd0), [`9bef0dd`](https://github.com/lynx-family/lynx-stack/commit/9bef0dd08ca42511961226eb5f0bec4b338f25bf)]:
+  - @lynx-js/webpack-dev-transport@0.4.0
+  - @lynx-js/web-rsbuild-server-middleware@0.24.1
+
 ## 0.16.3
 
 ### Patch Changes

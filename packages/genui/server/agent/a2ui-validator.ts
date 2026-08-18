@@ -106,6 +106,7 @@ export interface ValidationOptions {
   requireCreateSurface?: boolean;
   existingSurfaceIds?: string[];
   existingDataModelBySurface?: Record<string, unknown>;
+  isImageSourceAllowed?: ((source: string) => boolean) | undefined;
 }
 
 export interface A2UIValidationDebugEntry {
@@ -323,6 +324,7 @@ export function validateA2UIOutput(
 
   const surfaces = new Set<string>(options.existingSurfaceIds ?? []);
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
+  const dataModelBySurface = new Map<string, unknown>();
   const allPaths: { surfaceId: string; path: string }[] = [];
   const providedPaths: { surfaceId: string; path: string }[] = [];
   const templatePaths: { surfaceId: string; path: string }[] = [];
@@ -332,6 +334,7 @@ export function validateA2UIOutput(
       options.existingDataModelBySurface ?? {},
     )
   ) {
+    dataModelBySurface.set(surfaceId, dataModel);
     for (const path of flattenProvidedPaths('/', dataModel)) {
       providedPaths.push({ surfaceId, path });
     }
@@ -369,7 +372,11 @@ export function validateA2UIOutput(
             errors,
             warnings,
           );
-          validateRendererSemantics(comp, errors);
+          validateRendererSemantics(
+            comp,
+            errors,
+            options.isImageSourceAllowed,
+          );
         } else {
           errors.push(
             `Unknown component "${comp.component}" (id=${comp.id}). Allowed: ${
@@ -431,6 +438,14 @@ export function validateA2UIOutput(
         continue;
       }
       const basePath = updateDataModel.path ?? '/';
+      dataModelBySurface.set(
+        sId,
+        setDataModelValue(
+          dataModelBySurface.get(sId),
+          basePath,
+          updateDataModel.value,
+        ),
+      );
       for (
         const p of flattenProvidedPaths(
           basePath,
@@ -486,6 +501,13 @@ export function validateA2UIOutput(
       );
     }
   }
+
+  validateBoundImageSources(
+    componentsBySurface,
+    dataModelBySurface,
+    errors,
+    options.isImageSourceAllowed,
+  );
 
   return {
     ok: errors.length === 0,
@@ -707,7 +729,7 @@ function validateComponentAgainstCatalog(
   for (const prop of spec.props) {
     const hasValue = Object.prototype.hasOwnProperty.call(comp, prop.name);
     if (prop.required && !hasValue) {
-      if (isOptionalServerResolvedProp(comp, prop.name, hasValue)) {
+      if (isCatalogPropShapeException(comp, prop.name, hasValue)) {
         continue;
       }
       errors.push(
@@ -734,14 +756,14 @@ function validateComponentAgainstCatalog(
       prop.schema,
       `${comp.id}.${prop.name}`,
     );
-    if (isOptionalServerResolvedProp(comp, prop.name, hasValue)) {
+    if (isCatalogPropShapeException(comp, prop.name, hasValue)) {
       continue;
     }
     errors.push(...propErrors);
   }
 }
 
-function isOptionalServerResolvedProp(
+function isCatalogPropShapeException(
   comp: A2UIComponent,
   propName: string,
   hasValue: boolean,
@@ -801,7 +823,29 @@ function sanitizeInvalidStringEnumProp(
 function validateRendererSemantics(
   comp: A2UIComponent,
   errors: string[],
+  isImageSourceAllowed?: (source: string) => boolean,
 ): void {
+  if (comp.component === 'Image') {
+    const url = (comp as Record<string, unknown>).url;
+    if (typeof url === 'string' && !isLoadableImageSource(url)) {
+      errors.push(
+        `Component "${comp.id}" (Image) has unresolved url ${
+          JSON.stringify(url)
+        }. Call generate_image and copy its returned URL exactly into Image.url.`,
+      );
+    } else if (
+      typeof url === 'string'
+      && isImageSourceAllowed
+      && !isImageSourceAllowed(url)
+    ) {
+      errors.push(
+        `Component "${comp.id}" (Image) has untrusted url ${
+          JSON.stringify(url)
+        }. The URL was neither provided by the request or host nor returned by generate_image.`,
+      );
+    }
+  }
+
   const weight = (comp as { weight?: unknown }).weight;
   if (typeof weight !== 'number') return;
   if (!Number.isFinite(weight) || weight <= 0) {
@@ -815,6 +859,196 @@ function validateRendererSemantics(
       `Component "${comp.id}" (${comp.component}) has weight "${weight}", but weight is a small Row/Column layout ratio, not CSS font-weight. Use values like 1, 1.5, 2, 3, or 5.`,
     );
   }
+}
+
+export function isLoadableImageSource(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const source = value.trim();
+  if (!source) return false;
+  if (/^(?:https?:|data:image\/|blob:|file:)/iu.test(source)) return true;
+  if (/^(?:\/|\.\/|\.\.\/)/u.test(source)) return true;
+  return /\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/iu.test(source);
+}
+
+function validateBoundImageSources(
+  componentsBySurface: Map<string, Map<string, A2UIComponent>>,
+  dataModelBySurface: Map<string, unknown>,
+  errors: string[],
+  isImageSourceAllowed?: (source: string) => boolean,
+): void {
+  for (const [surfaceId, components] of componentsBySurface) {
+    const dataModel = dataModelBySurface.get(surfaceId);
+
+    for (const component of components.values()) {
+      if (component.component !== 'Image') continue;
+      const url = (component as Record<string, unknown>).url;
+      if (!isRecord(url) || typeof url.path !== 'string') continue;
+
+      const values = boundDataValues(
+        dataModel,
+        url.path,
+        templatePathsForComponent(component.id, components),
+      );
+      if (values.length === 0) continue;
+      const invalidIndex = values.findIndex((value) =>
+        !isLoadableImageSource(value)
+        || (isImageSourceAllowed && !isImageSourceAllowed(value))
+      );
+      if (invalidIndex === -1) continue;
+      const invalid = values[invalidIndex];
+
+      if (isLoadableImageSource(invalid)) {
+        errors.push(
+          `Component "${component.id}" (Image) path ${
+            JSON.stringify(url.path)
+          } resolves to an untrusted image URL ${
+            JSON.stringify(invalid)
+          }. The URL was neither provided by the request or host nor returned by generate_image.`,
+        );
+      } else {
+        errors.push(
+          `Component "${component.id}" (Image) path ${
+            JSON.stringify(url.path)
+          } resolves to an unresolved image value ${
+            JSON.stringify(invalid)
+          }. Call generate_image and store its returned URL at that path.`,
+        );
+      }
+    }
+  }
+}
+
+function templatePathsForComponent(
+  componentId: string,
+  components: Map<string, A2UIComponent>,
+): string[] {
+  const matches: { distance: number; path: string }[] = [];
+  for (const component of components.values()) {
+    const children = component.children;
+    if (!isRecord(children)) continue;
+    const template = isRecord(children.template)
+      ? children.template
+      : undefined;
+    const path = typeof children.path === 'string'
+      ? children.path
+      : (typeof template?.path === 'string' ? template.path : undefined);
+    const rootId = typeof children.componentId === 'string'
+      ? children.componentId
+      : (typeof template?.componentId === 'string'
+        ? template.componentId
+        : undefined);
+    if (!path || !rootId) continue;
+
+    const distance = componentDistance(rootId, componentId, components);
+    if (distance !== undefined) matches.push({ distance, path });
+  }
+
+  if (matches.length === 0) return [];
+  const closest = Math.min(...matches.map((match) => match.distance));
+  return [
+    ...new Set(
+      matches
+        .filter((match) => match.distance === closest)
+        .map((match) => match.path),
+    ),
+  ];
+}
+
+function componentDistance(
+  rootId: string,
+  targetId: string,
+  components: Map<string, A2UIComponent>,
+): number | undefined {
+  const queue: { distance: number; id: string }[] = [{
+    distance: 0,
+    id: rootId,
+  }];
+  const visited = new Set<string>();
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) break;
+    if (current.id === targetId) return current.distance;
+    if (visited.has(current.id)) continue;
+    visited.add(current.id);
+    const component = components.get(current.id);
+    if (!component) continue;
+    for (const childId of collectChildRefs(component)) {
+      queue.push({ distance: current.distance + 1, id: childId });
+    }
+  }
+  return undefined;
+}
+
+function boundDataValues(
+  dataModel: unknown,
+  path: string,
+  templatePaths: string[],
+): unknown[] {
+  if (path.startsWith('/')) {
+    return [dataValueAtPath(dataModel, path)];
+  }
+
+  if (templatePaths.length === 0) {
+    return [dataValueAtPath(dataModel, path)];
+  }
+
+  const values: unknown[] = [];
+  let foundCollection = false;
+  for (const templatePath of templatePaths) {
+    const collection = dataValueAtPath(dataModel, templatePath);
+    if (!Array.isArray(collection)) continue;
+    foundCollection = true;
+    for (const item of collection) {
+      values.push(dataValueAtPath(item, path));
+    }
+  }
+  return foundCollection ? values : [undefined];
+}
+
+function setDataModelValue(
+  current: unknown,
+  path: string,
+  value: unknown,
+): unknown {
+  const segments = dataPathSegments(path);
+  if (segments.length === 0) return value;
+
+  const setAt = (container: unknown, index: number): unknown => {
+    if (index === segments.length) return value;
+    const segment = segments[index]!;
+    let nextContainer: Record<string, unknown> | unknown[];
+    if (Array.isArray(container)) {
+      const array = container as unknown[];
+      nextContainer = [...array];
+    } else if (isRecord(container)) {
+      nextContainer = { ...container };
+    } else {
+      nextContainer = {};
+    }
+    const child = (nextContainer as Record<string, unknown>)[segment];
+    (nextContainer as Record<string, unknown>)[segment] = setAt(
+      child,
+      index + 1,
+    );
+    return nextContainer;
+  };
+
+  return setAt(current, 0);
+}
+
+function dataValueAtPath(value: unknown, path: string): unknown {
+  let current = value;
+  for (const segment of dataPathSegments(path)) {
+    if (!isRecord(current) && !Array.isArray(current)) return undefined;
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return current;
+}
+
+function dataPathSegments(path: string): string[] {
+  return normalizePathSegments(path).map((segment) =>
+    segment.replace(/~1/gu, '/').replace(/~0/gu, '~')
+  );
 }
 
 function validateValueAgainstSchema(

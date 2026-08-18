@@ -12,6 +12,7 @@ import {
   GENUI_MODEL_CONFIG_ENV,
   configuredModelName,
   parseModelConfig,
+  redactModelConfigSecrets,
   resolveModelConfig,
 } from '../service/common/model-config.js';
 
@@ -137,14 +138,24 @@ describe('GenUI model configuration', () => {
 
   test('redacts private model configuration from client-visible errors', () => {
     const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    const previousArkApiKey = process.env.IMG_GEN_ARK_API_KEY;
+    const previousArkImageModel = process.env.IMG_GEN_ARK_IMAGE_MODEL;
+    const previousArkImageBaseURL = process.env.IMG_GEN_ARK_IMAGE_BASE_URL;
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
+    process.env.IMG_GEN_ARK_API_KEY = 'ark-image-secret';
+    process.env.IMG_GEN_ARK_IMAGE_MODEL = 'private-image-model';
+    process.env.IMG_GEN_ARK_IMAGE_BASE_URL =
+      'https://ark-private.example.com/api/v3';
     try {
       const privateMessage =
         'Doubao Seed failed at https://seed.example.com/api/v3 '
-        + 'for doubao-seed-upstream with seed-secret and Bearer session-token';
+        + 'for doubao-seed-upstream with seed-secret and Bearer session-token; '
+        + 'image config ark-image-secret private-image-model '
+        + 'https://ark-private.example.com/api/v3';
       const publicMessage =
         'Doubao Seed failed at [REDACTED] for [REDACTED] with [REDACTED] '
-        + 'and Bearer [REDACTED]';
+        + 'and Bearer [REDACTED]; image config [REDACTED] [REDACTED] '
+        + '[REDACTED]';
       const upstreamError = new Error(privateMessage);
       upstreamError.name = 'ProviderError seed-secret';
       expect(errorMessage(upstreamError)).toEqual({
@@ -152,11 +163,32 @@ describe('GenUI model configuration', () => {
         name: 'ProviderError [REDACTED]',
       });
       expect(redactBenchText(privateMessage, {})).toBe(publicMessage);
+
+      process.env[GENUI_MODEL_CONFIG_ENV] = '{invalid json';
+      expect(redactModelConfigSecrets(
+        'image config ark-image-secret private-image-model '
+          + 'https://ark-private.example.com/api/v3',
+      )).toBe('image config [REDACTED] [REDACTED] [REDACTED]');
     } finally {
       if (previous === undefined) {
         delete process.env[GENUI_MODEL_CONFIG_ENV];
       } else {
         process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+      }
+      if (previousArkApiKey === undefined) {
+        delete process.env.IMG_GEN_ARK_API_KEY;
+      } else {
+        process.env.IMG_GEN_ARK_API_KEY = previousArkApiKey;
+      }
+      if (previousArkImageModel === undefined) {
+        delete process.env.IMG_GEN_ARK_IMAGE_MODEL;
+      } else {
+        process.env.IMG_GEN_ARK_IMAGE_MODEL = previousArkImageModel;
+      }
+      if (previousArkImageBaseURL === undefined) {
+        delete process.env.IMG_GEN_ARK_IMAGE_BASE_URL;
+      } else {
+        process.env.IMG_GEN_ARK_IMAGE_BASE_URL = previousArkImageBaseURL;
       }
     }
   });

@@ -16,6 +16,12 @@ describe('shared conversation protocol metadata', () => {
     );
   });
 
+  test('keeps MCP Apps shared conversations explicit', () => {
+    expect(resolveSharedConversationProtocol({ protocol: 'mcp-apps' })).toBe(
+      'mcp-apps',
+    );
+  });
+
   test('rejects unknown shared conversation protocols', () => {
     expect(resolveSharedConversationProtocol({ protocol: 'unknown' })).toBe(
       null,

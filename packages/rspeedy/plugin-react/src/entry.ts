@@ -62,6 +62,7 @@ export function applyEntry(
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
+    const entryPairs: Array<{ mainThread: string, background: string }> = []
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -158,6 +159,11 @@ export function applyEntry(
         const backgroundEntry = entryName
 
         mainThreadChunks.push(mainThreadName)
+
+        entryPairs.push({
+          mainThread: mainThreadEntry,
+          background: backgroundEntry,
+        })
 
         chain
           .entry(mainThreadEntry)
@@ -313,6 +319,7 @@ export function applyEntry(
         globalPropsMode,
         enableSSR,
         mainThreadChunks,
+        entryPairs,
         extractStr,
         experimental_isLazyBundle,
         experimental_useElementTemplate:

@@ -458,11 +458,11 @@ describe('chat protocol adapters', () => {
       });
       expect(fetchMetadata).toHaveBeenCalledTimes(1);
       expect(fetchMetadata.mock.calls[0]?.[0]).toBe(
-        'https://genui-server.vercel.app/mcp-apps/metadata',
+        'http://localhost:3060/mcp-apps/metadata',
       );
       expect(fetchMetadata.mock.calls[0]?.[1]).toMatchObject({ signal });
       expect(chatRequest).toMatchObject({
-        url: 'https://genui-server.vercel.app/mcp-apps/stream',
+        url: 'http://localhost:3060/mcp-apps/stream',
         body: {
           model: 'gpt-5.5',
           registry: {

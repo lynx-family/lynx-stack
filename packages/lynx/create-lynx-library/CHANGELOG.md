@@ -1,5 +1,14 @@
 # create-lynx-library
 
+## 0.5.2
+
+### Patch Changes
+
+- Build shared Node-API module sources against `@lynx-js/weak-node-api` on every ([#3403](https://github.com/lynx-family/lynx-stack/pull/3403))
+  platform while limiting weak suffix remapping to runtimes that require it.
+- Updated dependencies [[`db621f4`](https://github.com/lynx-family/lynx-stack/commit/db621f4baad431c6b0f2796e6ea67342f8c0ea23)]:
+  - @lynx-js/autolink-codegen@0.4.1
+
 ## 0.5.1
 
 ### Patch Changes

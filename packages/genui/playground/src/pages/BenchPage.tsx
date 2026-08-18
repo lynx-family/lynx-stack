@@ -24,6 +24,10 @@ import {
   Zap,
 } from '../components/Icon.js';
 import { PageHeader } from '../components/PageHeader.js';
+import {
+  GENUI_SERVER_URL,
+  buildGenuiServerUrl,
+} from '../config/genuiServer.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import type { BenchLocale } from './bench/benchLocale.js';
 
@@ -366,6 +370,8 @@ interface BenchHealth {
   provider?: string;
   hasKey?: boolean;
   modelName?: string;
+  imageGenerationReady?: boolean;
+  error?: string;
 }
 
 type BenchHealthError =
@@ -624,7 +630,6 @@ const SCREENSHOT_DIALOG_WIDTH_STORAGE_KEY =
 const EVENT_SOURCE_CLOSED_READY_STATE = 2;
 const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
 const BENCH_HISTORY_LIMIT = 20;
-const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const LOCAL_A2UI_SERVER_PORT = '3060';
 
 const DEFAULT_GROUPS: BenchGroup[] = [
@@ -843,15 +848,15 @@ function isDevHost(hostname: string): boolean {
   );
 }
 
-function isTrustedOnlineEndpoint(endpoint: URL): boolean {
-  return endpoint.origin === ONLINE_A2UI_SERVER_ORIGIN;
+function isConfiguredServerEndpoint(endpoint: URL): boolean {
+  return endpoint.origin === GENUI_SERVER_URL;
 }
 
 function resolveTrustedA2UIEndpoint(raw: string): string | null {
   try {
     const endpoint = new URL(raw, window.location.origin);
     if (endpoint.origin === window.location.origin) return endpoint.toString();
-    if (isTrustedOnlineEndpoint(endpoint)) return endpoint.toString();
+    if (isConfiguredServerEndpoint(endpoint)) return endpoint.toString();
     const isTrustedDevEndpoint = endpoint.protocol === 'http:'
       && endpoint.port === LOCAL_A2UI_SERVER_PORT
       && isDevHost(endpoint.hostname);
@@ -886,12 +891,7 @@ function getA2UIBenchJobsEndpoint(): string {
     if (trustedEndpoint) return toBenchJobsEndpoint(trustedEndpoint);
   }
 
-  if (
-    window.location.protocol === 'http:' && isDevHost(window.location.hostname)
-  ) {
-    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/bench/jobs`;
-  }
-  return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs`;
+  return buildGenuiServerUrl('a2ui/bench/jobs');
 }
 
 function getA2UIBenchHealthEndpoint(): string {
@@ -902,7 +902,7 @@ function getA2UIBenchHealthEndpoint(): string {
     url.search = '';
     return url.toString();
   } catch {
-    return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/health`;
+    return buildGenuiServerUrl('a2ui/health');
   }
 }
 
@@ -914,9 +914,9 @@ function getA2UIBenchReportEndpoint(jobId: string): string {
     url.search = '';
     return url.toString();
   } catch {
-    return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs/${
-      encodeURIComponent(jobId)
-    }/report`;
+    return buildGenuiServerUrl(
+      `a2ui/bench/jobs/${encodeURIComponent(jobId)}/report`,
+    );
   }
 }
 
@@ -999,9 +999,13 @@ function getA2UIPlaygroundBaseUrl(): string {
 function canForwardApiKeyToEndpoint(raw: string): boolean {
   try {
     const endpoint = new URL(raw, window.location.origin);
-    return endpoint.protocol === 'http:'
+    const isConfiguredDevEndpoint = endpoint.origin === GENUI_SERVER_URL
+      && endpoint.protocol === 'http:'
+      && isDevHost(endpoint.hostname);
+    const isLegacyDevEndpoint = endpoint.protocol === 'http:'
       && endpoint.port === LOCAL_A2UI_SERVER_PORT
       && isDevHost(endpoint.hostname);
+    return isConfiguredDevEndpoint || isLegacyDevEndpoint;
   } catch {
     return false;
   }
@@ -1042,6 +1046,16 @@ function getBenchHealthKeyLabel(
   }
   if (healthError) return benchText(locale, '状态未知', 'Unknown');
   return benchText(locale, '检查中…', 'Checking…');
+}
+
+function getBenchImageHealthLabel(
+  health: BenchHealth | null,
+  locale: BenchLocale = 'zh-CN',
+): string {
+  if (!health) return benchText(locale, '检查中…', 'Checking…');
+  return health.imageGenerationReady
+    ? benchText(locale, '已配置', 'Configured')
+    : benchText(locale, '未配置', 'Not configured');
 }
 
 function getBenchHealthErrorText(
@@ -2540,7 +2554,19 @@ export function BenchPage({
           });
           return;
         }
-        setBenchHealth(await response.json() as BenchHealth);
+        const health = await response.json() as BenchHealth;
+        setBenchHealth(health);
+        if (!health.ok) {
+          setBenchHealthError({
+            kind: 'raw',
+            message: health.error
+              ?? benchText(
+                locale,
+                '服务端默认配置尚未就绪',
+                'The server defaults are not ready',
+              ),
+          });
+        }
       } catch (error) {
         setBenchHealthError({
           kind: 'raw',
@@ -2548,7 +2574,7 @@ export function BenchPage({
         });
       }
     })();
-  }, []);
+  }, [locale]);
 
   const startBench = useCallback((confirmedServerDefaults = false) => {
     if (benchRunBlockers.length > 0 || runCount === 0) {
@@ -4625,6 +4651,12 @@ export function BenchPage({
                               )}
                           </strong>
                         </div>
+                        <div>
+                          <span>Image generation</span>
+                          <strong>
+                            {getBenchImageHealthLabel(benchHealth, locale)}
+                          </strong>
+                        </div>
                       </div>
                       {benchHealthError
                         ? (
@@ -4667,7 +4699,7 @@ export function BenchPage({
                       variant='primary'
                       size='md'
                       iconBefore={Play}
-                      disabled={benchHealth?.hasKey === false}
+                      disabled={benchHealth?.ok !== true}
                       onClick={() => {
                         setBenchRunNoticeOpen(false);
                         startBench(true);

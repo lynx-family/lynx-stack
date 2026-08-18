@@ -4,6 +4,7 @@
 
 import { Hono } from 'hono';
 
+import { readArkImageGenerationConfig } from '../../../agent/ark-image-generation-tool.js';
 import { readModelConfig } from '../../../service/common/model-config.js';
 import { jsonWithCors } from '../../common/cors';
 
@@ -20,12 +21,24 @@ function getA2UIHealth(req: Request) {
 
   const { defaultModel, models } = result.config;
   const { apiKey } = models[defaultModel]!;
+  const imageGeneration = readArkImageGenerationConfig();
+  if (!imageGeneration.ok) {
+    return jsonWithCors(req, {
+      ok: false,
+      provider: 'openai',
+      hasKey: Boolean(apiKey),
+      modelName: defaultModel,
+      imageGenerationReady: false,
+      error: imageGeneration.error,
+    });
+  }
 
   return jsonWithCors(req, {
     ok: true,
     provider: 'openai',
     hasKey: Boolean(apiKey),
     modelName: defaultModel,
+    imageGenerationReady: true,
   });
 }
 

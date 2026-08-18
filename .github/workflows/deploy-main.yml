@@ -191,16 +191,33 @@ jobs:
       - name: build
         run: |
           corepack pnpm turbo build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
+      - name: Select Changesets mode
+        id: changesets
+        uses: changesets/action/select-mode@22ccf9aa43179fe9e27dc62e575971d28cce197c # v2.0.0
       - name: Get current date
+        if: steps.changesets.outputs.mode == 'version'
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
-      - name: attempt to release
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+      - name: Version packages
+        if: steps.changesets.outputs.mode == 'version'
+        uses: changesets/action/version@22ccf9aa43179fe9e27dc62e575971d28cce197c # v2.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          publish: pnpm changeset publish
-          title: "chore: Release ${{ steps.date.outputs.date }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-title: "chore: Release ${{ steps.date.outputs.date }}"
+      - name: Pack packages
+        if: steps.changesets.outputs.mode == 'publish'
+        id: pack
+        uses: changesets/action/pack@22ccf9aa43179fe9e27dc62e575971d28cce197c # v2.0.0
+        with:
+          publish-plan-artifact-id: ${{ steps.changesets.outputs.publish-plan-artifact-id }}
+      - name: Publish packages
+        if: steps.changesets.outputs.mode == 'publish'
+        uses: changesets/action/publish@22ccf9aa43179fe9e27dc62e575971d28cce197c # v2.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pack-dir-artifact-id: ${{ steps.pack.outputs.pack-dir-artifact-id }}
 
   canary-publish:
     timeout-minutes: 30
@@ -244,7 +261,10 @@ jobs:
           # changesets-changelog-github requires a GITHUB_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pnpm changeset version --snapshot canary
+          pnpm changeset status --output "$RUNNER_TEMP/changeset-status.json"
+          if jq -e '.releases | length > 0' "$RUNNER_TEMP/changeset-status.json" > /dev/null; then
+            pnpm changeset version --snapshot canary
+          fi
           node packages/tools/canary-release/snapshot.js
       - name: publish canary packages
         run: |

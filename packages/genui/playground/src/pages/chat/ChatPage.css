@@ -1177,6 +1177,33 @@
   -webkit-box-orient: vertical;
 }
 
+.chatPrivacyNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, #d97706 36%, var(--geist-border));
+  border-radius: var(--geist-radius-md);
+  background: color-mix(in srgb, #f59e0b 9%, var(--geist-background));
+  color: color-mix(in srgb, #b45309 72%, var(--geist-foreground));
+}
+
+.chatPrivacyNoticeIcon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.chatPrivacyNoticeText {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.chatPrivacyNoticeText strong {
+  color: color-mix(in srgb, #b45309 84%, var(--geist-foreground));
+  font-weight: 700;
+}
+
 .chatComposer {
   display: flex;
   flex-direction: column;
@@ -1540,6 +1567,16 @@
   .chatInputArea {
     padding: 8px 14px 10px;
     gap: 8px;
+  }
+
+  .chatPrivacyNotice {
+    gap: 7px;
+    padding: 7px 9px;
+  }
+
+  .chatPrivacyNoticeText {
+    font-size: 10.5px;
+    line-height: 1.4;
   }
 
   /* Instant examples: same horizontal rail, but each tile is smaller
