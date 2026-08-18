@@ -153,8 +153,12 @@ describe('Lazy Exports', () => {
     expect(compatType).toMatchObject({ type: definition.type });
     expect(compatType).not.toHaveProperty('create');
     expect(compatType.downcast).toBeTypeOf('function');
-    expect(() => ReactExports.useMainThreadObject(reactType, 1)).toThrow();
-    expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow();
+    expect(() => ReactExports.useMainThreadObject(reactType, 1)).toThrow(
+      'Cannot read properties of undefined (reading \'__H\')',
+    );
+    expect(() => ReactCompatExports.useMainThreadObject(compatType, 1)).toThrow(
+      'Cannot read properties of undefined (reading \'__H\')',
+    );
 
     expect(ReactInternalExports.captureMainThreadObject({})).toBeUndefined();
   });

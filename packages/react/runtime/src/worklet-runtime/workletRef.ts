@@ -337,9 +337,26 @@ function updateWorkletRefInitValueChanges(
 }
 
 function clearFirstScreenWorkletRefMap(): void {
-  firstScreenMainThreadObjects.forEach(value => disposeMainThreadObject(value));
-  firstScreenMainThreadObjects.clear();
-  impl!._firstScreenWorkletRefMap = {};
+  let firstError: unknown;
+  let hasError = false;
+  try {
+    firstScreenMainThreadObjects.forEach(value => {
+      try {
+        disposeMainThreadObject(value);
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
+      }
+    });
+  } finally {
+    firstScreenMainThreadObjects.clear();
+    impl!._firstScreenWorkletRefMap = {};
+  }
+  if (hasError) {
+    throw firstError;
+  }
 }
 
 export {

@@ -561,10 +561,12 @@ describe('MainThreadObject', () => {
     delete refImpl.registerMainThreadObjectType;
     globalEnvManager.switchToMainThread();
 
-    expect(() => registerMainThreadObjectDefinition(definition)).toThrow(
-      'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
-    );
-
-    refImpl.registerMainThreadObjectType = register;
+    try {
+      expect(() => registerMainThreadObjectDefinition(definition)).toThrow(
+        'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+      );
+    } finally {
+      refImpl.registerMainThreadObjectType = register;
+    }
   });
 });
