@@ -1072,7 +1072,7 @@ describe('ElementTemplate hydration listener', () => {
     expect(reportErrorSpy).toHaveBeenCalledTimes(1);
     expect(String(reportErrorSpy.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid uid 0');
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
-    expect(backgroundElementTemplateInstanceManager.get(0)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBe(backgroundRoot);
 
     lynxObj.reportError = oldReportError;
   });

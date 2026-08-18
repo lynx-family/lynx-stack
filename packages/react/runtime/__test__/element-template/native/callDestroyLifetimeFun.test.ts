@@ -68,14 +68,19 @@ describe('callDestroyLifetimeFun', () => {
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
       data: {
-        instances: [
-          {
-            templateKey: '_et_test',
-            attributeSlots: [],
-            elementSlots: [],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
+        page: {
+          tag: 'page',
+          attributes: null,
+          elementSlots: [[
+            {
+              templateKey: '_et_test',
+              attributeSlots: [],
+              elementSlots: [],
+              uid: -1,
+            } satisfies SerializedElementTemplate,
+          ]],
+          uid: 0,
+        },
         reloadVersion: getReloadVersion(),
       },
     });

@@ -17,7 +17,7 @@ import { updateCardData } from '../../core/lynx-update-data.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../background/instance.js';
+import { BackgroundPageRootInstance } from '../background/instance.js';
 import { installElementTemplateRenderScopeHooks } from '../background/render-scope.js';
 import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
@@ -64,7 +64,7 @@ function init(): void {
 
   if (__BACKGROUND__) {
     console.log('experimental_useElementTemplate:', __USE_ELEMENT_TEMPLATE__);
-    setRoot(new BackgroundElementTemplateInstance('root'));
+    setRoot(new BackgroundPageRootInstance());
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
     resetEventStateForRuntime();

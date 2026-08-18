@@ -4,7 +4,7 @@ import { increaseReloadVersion } from '../../../src/core/reload-version.js';
 import { setupBackgroundElementTemplateDocument } from '../../../src/element-template/background/document.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../src/element-template/background/destroy.js';
 import { installElementTemplateHydrationListener } from '../../../src/element-template/background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/instance.js';
+import { BackgroundPageRootInstance } from '../../../src/element-template/background/instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
 import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
 import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
@@ -106,11 +106,19 @@ vi.mock('../../../src/element-template/prop-adapters/event.js', () => ({
   resetEventStateForRuntime: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/instance.js', () => ({
-  BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {
+vi.mock('../../../src/element-template/background/instance.js', () => {
+  class BackgroundElementTemplateInstance {
     constructor(public type: string) {}
-  },
-}));
+  }
+  return {
+    BackgroundElementTemplateInstance,
+    BackgroundPageRootInstance: class BackgroundPageRootInstance extends BackgroundElementTemplateInstance {
+      constructor() {
+        super('root');
+      }
+    },
+  };
+});
 
 vi.mock('../../../src/element-template/debug/profile.js', () => ({
   profileEnd: vi.fn(),
@@ -339,8 +347,8 @@ describe('ElementTemplate reloadBackground', () => {
     expect(increaseReloadVersion).toHaveBeenCalledTimes(1);
     expect(lynx.__initData).not.toBe(initData);
     expect(lynx.__initData).toEqual({ msg: 'reload', stable: true });
-    expect(vi.mocked(setRoot)).toHaveBeenCalledWith(expect.any(BackgroundElementTemplateInstance));
-    expect(__root).toBeInstanceOf(BackgroundElementTemplateInstance);
+    expect(vi.mocked(setRoot)).toHaveBeenCalledWith(expect.any(BackgroundPageRootInstance));
+    expect(__root).toBeInstanceOf(BackgroundPageRootInstance);
     expect(__root).not.toBe(oldRoot);
     expect(__root.__jsx).toBe(jsx);
     expect(__root).not.toHaveProperty('stale');

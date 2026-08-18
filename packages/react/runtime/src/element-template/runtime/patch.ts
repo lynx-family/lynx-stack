@@ -22,6 +22,7 @@ import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
 import {
   elementTemplateIdentityKey,
   elementTemplateTypeTag,
@@ -442,7 +443,7 @@ function resolveTargetHandle(id: number, role: string): ElementRef | null {
 }
 
 function isValidHandleId(handleId: number): boolean {
-  return Number.isInteger(handleId) && handleId !== 0;
+  return Number.isInteger(handleId) && handleId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID;
 }
 
 function validateCreateHandleId(handleId: number): Error | null {

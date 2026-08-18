@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
 import { __page } from '../page/page.js';
 
 // Registry for mapping element-template handle IDs to native refs.
@@ -30,7 +31,7 @@ export function getElementTemplateNativeRef(id: number): ElementRef | undefined 
 }
 
 export function getElementTemplateTargetNativeRef(id: number): ElementRef | undefined {
-  return id === 0 ? __page : getElementTemplateNativeRef(id);
+  return id === ELEMENT_TEMPLATE_PAGE_HANDLE_ID ? __page : getElementTemplateNativeRef(id);
 }
 
 export function hasElementTemplateNativeRef(id: number): boolean {
