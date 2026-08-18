@@ -1814,6 +1814,9 @@ importers:
       '@lynx-js/react-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/react-webpack-plugin
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
