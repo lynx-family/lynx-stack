@@ -43,7 +43,8 @@
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:^",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:^",
-    "@lynx-js/websocket": "workspace:^"
+    "@lynx-js/websocket": "workspace:^",
+    "@rsbuild/plugin-css-minimizer": "2.0.1"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
