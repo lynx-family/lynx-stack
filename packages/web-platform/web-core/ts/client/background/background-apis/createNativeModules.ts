@@ -11,6 +11,7 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createBuiltinNativeModules } from '../nativeModules/createBuiltinNativeModules.js';
 import { isBuiltinNativeModuleName } from '../../nativeModules/BuiltinNativeModules.js';
+import { createIntersectionObserverModule } from './createIntersectionObserverModule.js';
 
 export async function createNativeModules(
   uiThreadRpc: Rpc,
@@ -38,6 +39,9 @@ export async function createNativeModules(
       nativeModulesCall(name, data, 'bridge').then(callback);
     },
   };
+  const intersectionObserverModule = createIntersectionObserverModule(
+    mainThreadRpc,
+  );
 
   const nativeModules = {};
   const builtinNativeModules = createBuiltinNativeModules(nativeModulesCall);
@@ -62,6 +66,7 @@ export async function createNativeModules(
 
   return Object.assign(nativeModules, {
     bridge: bridgeModule,
+    IntersectionObserverModule: intersectionObserverModule,
     LynxExposureModule: lynxExposureModule,
     ...customNativeModules,
     ...builtinNativeModules,

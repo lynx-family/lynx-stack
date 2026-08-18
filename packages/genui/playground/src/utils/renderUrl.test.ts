@@ -4,12 +4,20 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { decodeBase64Url } from './base64url.js';
+import { PROTOCOLS } from './protocol.js';
 import {
+  A2UI_INLINE_RENDER_URL_MAX_LENGTH,
   OPENUI_INLINE_RENDER_URL_MAX_LENGTH,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
+  buildRenderUrl,
+  canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  createLocalA2UIMessagesPayload,
+  createLocalA2UIMessagesPayloadCache,
+  hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
+  isPortableA2UIMessagesUrl,
 } from './renderUrl.js';
 
 describe('A2UI render payloads', () => {
@@ -30,6 +38,176 @@ describe('A2UI render payloads', () => {
       messages: [],
       messagesUrl: 'https://example.com/messages.json',
     })).toBe(true);
+  });
+
+  test('requires a non-blank external payload reference', () => {
+    expect(hasExternalA2UIRenderPayload({})).toBe(false);
+    expect(hasExternalA2UIRenderPayload({ demoId: '   ' })).toBe(false);
+    expect(hasExternalA2UIRenderPayload({ messagesUrl: '' })).toBe(false);
+    expect(hasExternalA2UIRenderPayload({
+      messagesUrl: 'blob:https://example.com/local-messages',
+    })).toBe(false);
+    expect(hasExternalA2UIRenderPayload({ demoId: 'weather' })).toBe(true);
+    expect(hasExternalA2UIRenderPayload({
+      messagesUrl: 'https://example.com/messages.json',
+    })).toBe(true);
+    expect(isPortableA2UIMessagesUrl('/messages.json')).toBe(true);
+    expect(isPortableA2UIMessagesUrl('data:application/json,[]')).toBe(false);
+    expect(isPortableA2UIMessagesUrl('javascript:void(0)')).toBe(false);
+  });
+
+  test('loads local JSON from a Blob URL without embedding messages', async () => {
+    const messages = [{ text: '北京'.repeat(4_000) }];
+    let blob: { text: () => Promise<string>; type: string } | undefined;
+    const revoked: string[] = [];
+    const localPayload = createLocalA2UIMessagesPayload(messages, {
+      createObjectURL(value) {
+        blob = value;
+        return 'blob:https://lynx-stack.dev/local-messages';
+      },
+      revokeObjectURL(url) {
+        revoked.push(url);
+      },
+    });
+    expect(blob?.type).toBe('application/json');
+    expect(blob).toBeDefined();
+    if (!blob) return;
+    expect(JSON.parse(await blob.text())).toEqual(messages);
+
+    const url = new URL(buildRenderUrl({
+      protocol: PROTOCOLS.a2ui,
+      demoUrl: './a2ui.web.js',
+      messages,
+      messagesUrl: localPayload.messagesUrl,
+      theme: 'dark',
+      speed: 2,
+      liveAction: true,
+      playbackMode: true,
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(url.searchParams.get('protocol')).toBe('a2ui');
+    expect(url.searchParams.get('demoUrl')).toBe('./a2ui.web.js');
+    expect(url.searchParams.get('theme')).toBe('dark');
+    expect(url.searchParams.get('speed')).toBe('2');
+    expect(url.searchParams.get('liveAction')).toBe('1');
+    expect(url.searchParams.get('playbackMode')).toBe('1');
+    expect(url.searchParams.has('messages')).toBe(false);
+    expect(url.searchParams.get('messagesUrl')).toBe(
+      'blob:https://lynx-stack.dev/local-messages',
+    );
+    expect(url.searchParams.has('actionMocks')).toBe(false);
+    expect(url.searchParams.has('initData')).toBe(true);
+    expect(canInlineA2UIRenderUrl(url.toString())).toBe(true);
+
+    localPayload.dispose();
+    localPayload.dispose();
+    expect(revoked).toEqual([
+      'blob:https://lynx-stack.dev/local-messages',
+    ]);
+  });
+
+  test('keeps local Blob URLs alive until their runtime finishes loading', () => {
+    let nextId = 0;
+    const revoked: string[] = [];
+    let scheduledRelease: (() => void) | undefined;
+    const registry = {
+      createObjectURL() {
+        nextId += 1;
+        return `blob:https://lynx-stack.dev/local-${nextId}`;
+      },
+      revokeObjectURL(url: string) {
+        revoked.push(url);
+      },
+    };
+    const cache = createLocalA2UIMessagesPayloadCache({
+      createPayload: (messages) =>
+        createLocalA2UIMessagesPayload(messages, registry),
+      releaseTimeoutMs: 100,
+      scheduleRelease: (callback) => {
+        scheduledRelease = callback;
+        return callback;
+      },
+      cancelRelease: (handle) => {
+        if (scheduledRelease === handle) scheduledRelease = undefined;
+      },
+    });
+    const firstMessages = [{ text: 'first' }];
+    const first = cache.ensure(firstMessages);
+
+    expect(cache.ensure(firstMessages)).toBe(first);
+    expect(revoked).toEqual([]);
+
+    const second = cache.ensure([{ text: 'second' }]);
+    expect(second.messagesUrl).not.toBe(first.messagesUrl);
+    expect(revoked).toEqual([]);
+    expect(scheduledRelease).toBeDefined();
+
+    cache.markLoaded(first.messagesUrl);
+    expect(revoked).toEqual([]);
+
+    cache.markLoaded(second.messagesUrl);
+    expect(revoked).toEqual([first.messagesUrl]);
+    expect(scheduledRelease).toBeUndefined();
+
+    cache.clear();
+    expect(revoked).toEqual([first.messagesUrl]);
+    scheduledRelease?.();
+    expect(revoked).toEqual([first.messagesUrl, second.messagesUrl]);
+
+    const orphaned = cache.ensure([{ text: 'orphaned' }]);
+    cache.clear();
+    expect(revoked).not.toContain(orphaned.messagesUrl);
+    scheduledRelease?.();
+    expect(revoked).toContain(orphaned.messagesUrl);
+
+    cache.dispose();
+    expect(revoked).toEqual([
+      first.messagesUrl,
+      second.messagesUrl,
+      orphaned.messagesUrl,
+    ]);
+  });
+
+  test('marks oversized Chinese and image payload URLs as unsafe', () => {
+    const url = buildRenderUrl({
+      protocol: PROTOCOLS.a2ui,
+      demoUrl: './a2ui.web.js',
+      messages: [{
+        updateDataModel: {
+          path: '/weather',
+          value: {
+            description: '北京今天晴朗'.repeat(2_000),
+            imageUrl: `https://image.example.com/${'a'.repeat(1_000)}`,
+          },
+        },
+      }],
+    }, 'https://lynx-stack.dev/genui/');
+
+    expect(url.length).toBeGreaterThan(A2UI_INLINE_RENDER_URL_MAX_LENGTH);
+    expect(canInlineA2UIRenderUrl(url)).toBe(false);
+  });
+
+  test('keeps external A2UI payload URLs short without embedding messages', () => {
+    const url = new URL(buildRenderUrl({
+      protocol: PROTOCOLS.a2ui,
+      demoUrl: './a2ui.web.js',
+      messagesUrl: 'https://storage.example.com/a2ui/id/messages.json',
+      messages: [{ text: '北京'.repeat(4_000) }],
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(canInlineA2UIRenderUrl(url.toString())).toBe(true);
+    expect(url.searchParams.get('messagesUrl')).toBe(
+      'https://storage.example.com/a2ui/id/messages.json',
+    );
+    expect(url.searchParams.has('messages')).toBe(false);
+    const initData = url.searchParams.get('initData');
+    expect(initData).toBeTruthy();
+    if (!initData) return;
+    expect(JSON.parse(decodeBase64Url(initData))).toEqual({
+      protocol: 'a2ui',
+      demoUrl: './a2ui.web.js',
+      messagesUrl: 'https://storage.example.com/a2ui/id/messages.json',
+    });
   });
 });
 

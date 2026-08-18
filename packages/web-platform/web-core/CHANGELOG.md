@@ -1,5 +1,21 @@
 # @lynx-js/web-core
 
+## 0.24.1
+
+### Patch Changes
+
+- Allow `__FlushElementTree()` to run inside a main-thread event handler without ([#3438](https://github.com/lynx-family/lynx-stack/pull/3438))
+  triggering wasm-bindgen's recursive-borrow error or aborting the remaining
+  event dispatch.
+- Support the `__GetAttributeNames` element PAPI. ([#3291](https://github.com/lynx-family/lynx-stack/pull/3291))
+
+  `ElementNode.getAttributeNames()` of the ReactLynx worklet runtime calls it, so a
+  main-thread script reaching that API threw `ReferenceError` on web.
+- Updated dependencies [[`948eece`](https://github.com/lynx-family/lynx-stack/commit/948eece02aa9f7051f879a21f6c51d96a99fe1aa), [`f9fdbad`](https://github.com/lynx-family/lynx-stack/commit/f9fdbad607c5c8893d8f6e13c658fd46bbac3aeb), [`6cc9624`](https://github.com/lynx-family/lynx-stack/commit/6cc9624fb54dc7f73b6e68e49e2322b8136d3418), [`6cc9624`](https://github.com/lynx-family/lynx-stack/commit/6cc9624fb54dc7f73b6e68e49e2322b8136d3418)]:
+  - @lynx-js/css-serializer@0.1.8
+  - @lynx-js/web-elements@0.12.8
+  - @lynx-js/web-worker-rpc@0.24.1
+
 ## 0.24.0
 
 ### Minor Changes

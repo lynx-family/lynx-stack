@@ -6,6 +6,18 @@ import type { KeyboardEvent } from 'react';
 
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
+  isA2UIRuntimeReadyMessage,
+  isMatchingLivePreviewFrame,
+  isMatchingReadyLivePreviewFrame,
+  prepareLivePreviewOutputs,
+  queueOrDeliverLivePreviewOutput,
+  readLivePreviewNavigationToken,
+} from './livePreviewDelivery.js';
+import type {
+  LivePreviewMessageType,
+  PendingLivePreviewOutput,
+} from './livePreviewDelivery.js';
+import {
   EMPTY_CHAT_TOKEN_USAGE,
   addTokenUsage,
   createChatHost,
@@ -26,7 +38,7 @@ import type {
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import { Send, Sparkles, Zap } from '../../components/Icon.js';
+import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
@@ -64,6 +76,7 @@ const DESKTOP_CHAT_MIN_WIDTH = 360;
 const COMPACT_CHAT_MIN_HEIGHT = 280;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
+const PREVIEW_RENDER_READY_FALLBACK_MS = 5_000;
 
 interface ChatControllerProps<
   TOutput,
@@ -88,13 +101,6 @@ interface ChatControllerProps<
 interface ConsumeResponseOptions<TOutput> {
   signal: AbortSignal;
   onEmission: (emission: ChatStreamEmission<TOutput>) => void;
-}
-
-type LiveMessageType = 'A2UI_LIVE_MESSAGES' | 'A2UI_ACTION_RESPONSE';
-
-interface PendingLiveOutput<TOutput> {
-  type: LiveMessageType;
-  output: TOutput;
 }
 
 type BrowserResponse = Awaited<ReturnType<typeof window.fetch>>;
@@ -610,8 +616,13 @@ export function ChatController<
   const metricsRef = useRef(metrics);
   const metricsPersistenceReadyRef = useRef(false);
   const previewFrameReadyRef = useRef(false);
+  const previewReadyFrameUrlRef = useRef('');
+  const previewReadyWindowRef = useRef<Window | null>(null);
+  const previewReadyFallbackTimerRef = useRef<number | null>(null);
   const liveDeliveryGenerationRef = useRef(0);
-  const pendingLiveOutputsRef = useRef<PendingLiveOutput<TOutput>[]>([]);
+  const pendingLiveOutputsRef = useRef<
+    PendingLivePreviewOutput<TOutput>[]
+  >([]);
   outputRef.current = output;
   previewOutputRef.current = previewOutput;
   previewPayloadUrlsRef.current = previewPayloadUrls;
@@ -658,6 +669,12 @@ export function ChatController<
   const resetLivePreviewDelivery = useCallback(() => {
     liveDeliveryGenerationRef.current++;
     previewFrameReadyRef.current = false;
+    previewReadyFrameUrlRef.current = '';
+    previewReadyWindowRef.current = null;
+    if (previewReadyFallbackTimerRef.current !== null) {
+      window.clearTimeout(previewReadyFallbackTimerRef.current);
+      previewReadyFallbackTimerRef.current = null;
+    }
     pendingLiveOutputsRef.current = [];
   }, []);
 
@@ -831,16 +848,28 @@ export function ChatController<
   }, [adapter.id, importShared, isReady, protocol.name]);
 
   const postLiveOutput = useCallback((
-    type: LiveMessageType,
+    type: LivePreviewMessageType,
     nextOutput: TOutput,
   ) => {
     if (adapter.preview.delivery !== 'live-message') return false;
     const messages = adapter.preview.livePayload?.(nextOutput);
     const frame = previewFrameRef.current;
-    if (!previewFrameReadyRef.current || !messages || !frame?.contentWindow) {
+    const frameWindow = frame?.contentWindow;
+    if (
+      !messages
+      || !frame
+      || !frameWindow
+      || !isMatchingReadyLivePreviewFrame(
+        previewFrameReadyRef.current,
+        previewReadyFrameUrlRef.current,
+        previewReadyWindowRef.current,
+        frame.src,
+        frameWindow,
+      )
+    ) {
       return false;
     }
-    frame.contentWindow.postMessage(
+    frameWindow.postMessage(
       { type, messages },
       targetOriginForUrl(frame.src, host),
     );
@@ -848,29 +877,116 @@ export function ChatController<
   }, [adapter.preview, host]);
 
   const queueOrPostLiveOutput = useCallback((
-    type: LiveMessageType,
+    type: LivePreviewMessageType,
     nextOutput: TOutput,
   ) => {
-    if (postLiveOutput(type, nextOutput)) return;
-    pendingLiveOutputsRef.current.push({ type, output: nextOutput });
+    queueOrDeliverLivePreviewOutput(
+      pendingLiveOutputsRef.current,
+      { type, output: nextOutput },
+      (item) => postLiveOutput(item.type, item.output),
+    );
   }, [postLiveOutput]);
+
+  const handlePreviewFrameReady = useCallback((
+    expectedFrameUrl: string,
+    expectedFrameWindow: Window,
+  ) => {
+    if (adapter.preview.delivery !== 'live-message') return;
+    const frame = previewFrameRef.current;
+    const frameWindow = frame?.contentWindow;
+    if (
+      !frame || !frameWindow || !isMatchingLivePreviewFrame(
+        expectedFrameUrl,
+        expectedFrameWindow,
+        frame.src,
+        frameWindow,
+      )
+    ) {
+      return;
+    }
+
+    if (previewReadyFallbackTimerRef.current !== null) {
+      window.clearTimeout(previewReadyFallbackTimerRef.current);
+      previewReadyFallbackTimerRef.current = null;
+    }
+    previewFrameReadyRef.current = true;
+    previewReadyFrameUrlRef.current = frame.src;
+    previewReadyWindowRef.current = frameWindow;
+
+    const pending = prepareLivePreviewOutputs(
+      outputRef.current,
+      pendingLiveOutputsRef.current,
+    );
+    pendingLiveOutputsRef.current = [];
+    for (let index = 0; index < pending.length; index++) {
+      const item = pending[index];
+      if (item && postLiveOutput(item.type, item.output)) continue;
+      pendingLiveOutputsRef.current.push(...pending.slice(index));
+      break;
+    }
+  }, [adapter.preview.delivery, postLiveOutput]);
 
   const handlePreviewFrameLoad = useCallback(() => {
     if (adapter.preview.delivery !== 'live-message') return;
+    const frame = previewFrameRef.current;
+    const frameWindow = frame?.contentWindow;
+    if (!frame || !frameWindow) return;
+    if (
+      isMatchingReadyLivePreviewFrame(
+        previewFrameReadyRef.current,
+        previewReadyFrameUrlRef.current,
+        previewReadyWindowRef.current,
+        frame.src,
+        frameWindow,
+      )
+    ) {
+      return;
+    }
+    previewFrameReadyRef.current = false;
+    previewReadyFrameUrlRef.current = '';
+    previewReadyWindowRef.current = null;
     const generation = liveDeliveryGenerationRef.current;
-    window.setTimeout(() => {
+    const loadedFrameUrl = frame.src;
+    if (previewReadyFallbackTimerRef.current !== null) {
+      window.clearTimeout(previewReadyFallbackTimerRef.current);
+    }
+    previewReadyFallbackTimerRef.current = window.setTimeout(() => {
+      previewReadyFallbackTimerRef.current = null;
       if (generation !== liveDeliveryGenerationRef.current) return;
-      previewFrameReadyRef.current = true;
-      const pending = pendingLiveOutputsRef.current;
-      pendingLiveOutputsRef.current = [];
-      for (let index = 0; index < pending.length; index++) {
-        const item = pending[index];
-        if (item && postLiveOutput(item.type, item.output)) continue;
-        pendingLiveOutputsRef.current.push(...pending.slice(index));
-        break;
+      handlePreviewFrameReady(loadedFrameUrl, frameWindow);
+    }, PREVIEW_RENDER_READY_FALLBACK_MS);
+  }, [adapter.preview.delivery, handlePreviewFrameReady]);
+
+  useEffect(() => {
+    if (adapter.preview.delivery !== 'live-message') return;
+    const handleRenderReady = (event: MessageEvent<unknown>) => {
+      const frame = previewFrameRef.current;
+      if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
+      if (event.origin !== targetOriginForUrl(frame.src, host)) return;
+      const navigationToken = readLivePreviewNavigationToken(frame.src);
+      if (
+        !isA2UIRuntimeReadyMessage(
+          event.data,
+          frame.src,
+          navigationToken,
+        )
+      ) {
+        return;
       }
-    }, 0);
-  }, [adapter.preview.delivery, postLiveOutput]);
+      handlePreviewFrameReady(frame.src, frame.contentWindow);
+    };
+
+    window.addEventListener('message', handleRenderReady);
+    return () => window.removeEventListener('message', handleRenderReady);
+  }, [adapter.preview.delivery, handlePreviewFrameReady, host]);
+
+  useEffect(() => {
+    return () => {
+      if (previewReadyFallbackTimerRef.current !== null) {
+        window.clearTimeout(previewReadyFallbackTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleStreamEmission = useCallback((
     emission: ChatStreamEmission<TOutput>,
@@ -909,9 +1025,14 @@ export function ChatController<
       }
       return;
     }
-    resetLivePreviewDelivery();
-    setCurrentPreviewOutput(nextOutput);
-    setPreviewRevision((value) => value + 1);
+    if (adapter.preview.delivery === 'live-message') {
+      setCurrentPreviewOutput(nextOutput);
+      queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', nextOutput);
+    } else {
+      resetLivePreviewDelivery();
+      setCurrentPreviewOutput(nextOutput);
+      setPreviewRevision((value) => value + 1);
+    }
   }, [
     adapter.preview.delivery,
     adapter.preview.merge,
@@ -984,8 +1105,16 @@ export function ChatController<
         if (controller.signal.aborted || runIdRef.current !== runId) return;
 
         setCurrentOutput(finalOutput);
+        if (
+          adapter.preview.delivery === 'live-message'
+          && previewOutputRef.current !== finalOutput
+        ) {
+          queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', finalOutput);
+        }
         setCurrentPreviewOutput(finalOutput);
-        setPreviewRevision((value) => value + 1);
+        if (adapter.preview.delivery === 'reload') {
+          setPreviewRevision((value) => value + 1);
+        }
         const nextMetrics = mergeMetrics(metricsRef.current, {
           agentOutputMs: performance.now() - startedAt,
         });
@@ -1038,6 +1167,7 @@ export function ChatController<
     host,
     inputValue,
     isReady,
+    queueOrPostLiveOutput,
     recordTurn,
     resetLivePreviewDelivery,
     setCurrentOutput,
@@ -1283,10 +1413,12 @@ export function ChatController<
                         : message
                     )
                   );
-                  queueOrPostLiveOutput(
-                    'A2UI_ACTION_RESPONSE',
-                    emission.output,
-                  );
+                  if (adapter.preview.delivery === 'live-message') {
+                    queueOrPostLiveOutput(
+                      'A2UI_ACTION_RESPONSE',
+                      emission.output,
+                    );
+                  }
                 }
               },
             },
@@ -1297,10 +1429,14 @@ export function ChatController<
             responseOutput,
           );
           setCurrentPreviewPayloadUrls(null);
-          resetLivePreviewDelivery();
           setCurrentOutput(mergedOutput);
           setCurrentPreviewOutput(mergedOutput);
-          setPreviewRevision((value) => value + 1);
+          if (adapter.preview.delivery === 'live-message') {
+            queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
+          } else {
+            resetLivePreviewDelivery();
+            setPreviewRevision((value) => value + 1);
+          }
           const nextMetrics = mergeMetrics(metricsRef.current, {
             agentOutputMs: performance.now() - startedAt,
           });
@@ -1579,6 +1715,20 @@ export function ChatController<
               </>
             )
             : null}
+          <aside className='chatPrivacyNotice' aria-label='Privacy notice'>
+            <TriangleAlert
+              className='chatPrivacyNoticeIcon'
+              size={16}
+              strokeWidth={2}
+              aria-hidden='true'
+            />
+            <p className='chatPrivacyNoticeText'>
+              <strong>Privacy notice:</strong>{' '}
+              Conversations in this playground are public and will be
+              transmitted to mainland China for processing. Do not include
+              personal, confidential, or sensitive information.
+            </p>
+          </aside>
           <div className='chatComposer'>
             <textarea
               className='chatInput'
@@ -1660,9 +1810,7 @@ export function ChatController<
         onPreviewMetric: handlePreviewMetric,
         children: (
           <PreviewViewport
-            key={adapter.preview.delivery === 'reload'
-              ? previewRevision
-              : undefined}
+            key={previewRevision}
             iframeRef={previewFrameRef}
             onLoad={handlePreviewFrameLoad}
             retainPreviousFrame

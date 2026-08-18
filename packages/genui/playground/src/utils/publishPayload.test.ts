@@ -49,6 +49,8 @@ describe('payload publishing', () => {
         {
           messages: ['message'],
           actionMocks: { tap: 'action' },
+          method: 'a2ui',
+          type: 'preview',
         },
       );
       expect(fetchPayload.mock.calls[1]?.[0]).toBe(

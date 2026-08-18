@@ -17,6 +17,11 @@ export function toRsbuildConfig(
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
     dev: {
+      assetPrefix: config.dev?.assetPrefix,
+
+      // TODO: move the Lynx-only `websocketTransport` to a Lynx-owned option.
+      client: config.dev?.client as NonNullable<RsbuildConfig['dev']>['client'],
+
       hmr: config.dev?.hmr ?? true,
       lazyCompilation: false,
       liveReload: config.dev?.liveReload ?? true,
@@ -100,8 +105,8 @@ export function toRsbuildConfig(
       cors: config.server?.cors,
 
       headers: config.server?.headers,
-      // rsbuild default value is `localhost`.
-      host: config.server?.host ?? '0.0.0.0',
+
+      host: config.server?.host,
 
       port: config.server?.port,
 

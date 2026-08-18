@@ -38,11 +38,15 @@ import {
   runGenuiBenchUiJudge,
 } from './genui-bench-judge';
 import { createOpenUIBenchAdapter } from './openui-bench-adapter';
+import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
 import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
-import { resolveA2UIImageUrls } from '../agent/image-resolver';
+import {
+  createArkImageGenerationRunScope,
+  generatedArkImageURLs,
+} from '../agent/ark-image-generation-tool.js';
 
 interface BenchRunItem {
   group: BenchGroupRequest;
@@ -230,6 +234,11 @@ async function generateA2UINative(
   let lastErrors: string[] = [];
   let lastFinishReason: unknown;
   let lastWarnings: string[] = [];
+  const imageGenerationScope = createArkImageGenerationRunScope();
+  const isImageSourceAllowed = createA2UIImageSourcePolicy(
+    [messages, catalog],
+    () => generatedArkImageURLs(imageGenerationScope),
+  );
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     signal.throwIfAborted();
@@ -247,11 +256,14 @@ async function generateA2UINative(
       },
       undefined,
       signal,
+      imageGenerationScope,
     );
     usage.push(generated.usage);
     lastText = generated.text;
     lastFinishReason = generated.finishReason;
-    const validation = validateA2UIOutput(generated.text, catalog);
+    const validation = validateA2UIOutput(generated.text, catalog, {
+      isImageSourceAllowed,
+    });
     lastErrors = validation.errors;
     lastWarnings = validation.warnings;
     if (validation.ok) {
@@ -259,7 +271,7 @@ async function generateA2UINative(
         attempts: attempt,
         errors: [],
         finishReason: lastFinishReason,
-        messages: await resolveA2UIImageUrls(validation.messages),
+        messages: validation.messages,
         ok: true,
         text: lastText,
         usage,

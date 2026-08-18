@@ -23,6 +23,7 @@ import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
   RENDER_INIT_DATA_QUERY_PARAM,
   RENDER_METRIC_ID_QUERY_PARAM,
+  RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
 } from './utils/renderUrl.js';
 
 interface InitData {
@@ -280,6 +281,12 @@ function readPreviewMetricId(): string {
   ) ?? '';
 }
 
+function readPreviewNavigationToken(): string {
+  return new URLSearchParams(window.location.search).get(
+    RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
+  ) ?? '';
+}
+
 function readFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -360,6 +367,10 @@ function Render() {
   const pendingFlushTimerRef = useRef<number | null>(null);
   const pendingFlushAttemptsRef = useRef(0);
   const previewMetricId = useMemo(() => readPreviewMetricId(), []);
+  const previewNavigationToken = useMemo(
+    () => readPreviewNavigationToken(),
+    [],
+  );
   const initDataRef = useRef<InitData | null>(initData);
   const reportedMetricsRef = useRef<Set<PreviewMetricName>>(new Set());
   const ttiTimerRef = useRef<number | null>(null);
@@ -433,13 +444,25 @@ function Render() {
 
   const postRenderReady = useCallback(() => {
     if (!window.parent || window.parent === window) return;
-    window.parent.postMessage({ type: 'A2UI_RENDER_READY' }, '*');
+    window.parent.postMessage(
+      {
+        type: 'A2UI_RENDER_READY',
+        frameUrl: window.location.href,
+        navigationToken: previewNavigationToken,
+      },
+      '*',
+    );
     scheduleFcpFallbackMetric();
     if (initDataRef.current?.protocol !== 'a2ui') {
       scheduleFmpMetric();
       scheduleTtiMetric(TTI_READY_FALLBACK_MS);
     }
-  }, [scheduleFcpFallbackMetric, scheduleFmpMetric, scheduleTtiMetric]);
+  }, [
+    previewNavigationToken,
+    scheduleFcpFallbackMetric,
+    scheduleFmpMetric,
+    scheduleTtiMetric,
+  ]);
 
   useEffect(() => {
     initDataRef.current = initData;
@@ -652,6 +675,22 @@ function Render() {
         }
         return;
       }
+      if (name === 'A2UI_RUNTIME_READY') {
+        if (window.parent && window.parent !== window) {
+          const messagesUrl = initDataRef.current?.messagesUrl;
+          window.parent.postMessage(
+            {
+              type: 'A2UI_RENDER_READY',
+              runtimeReady: true,
+              frameUrl: window.location.href,
+              navigationToken: previewNavigationToken,
+              ...(messagesUrl ? { messagesUrl } : {}),
+            },
+            '*',
+          );
+        }
+        return;
+      }
       if (name === 'A2UI_USER_ACTION') {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(
@@ -678,6 +717,7 @@ function Render() {
     };
   }, [
     clearTtiTimer,
+    previewNavigationToken,
     scheduleFmpMetric,
     scheduleTtiMetric,
   ]);

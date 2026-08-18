@@ -1,5 +1,15 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.11.0
+
+### Minor Changes
+
+- Register the snapshot and worklet definitions collected from the background build on the main thread, so a definition the main-thread bundle dropped no longer fails with `Snapshot not found`. ([#3393](https://github.com/lynx-family/lynx-stack/pull/3393))
+
+### Patch Changes
+
+- Add `compat.transformLegacyEventAttributeNames` to disable legacy event attribute-name conversion independently from other compatibility transforms. ([#3475](https://github.com/lynx-family/lynx-stack/pull/3475))
+
 ## 0.10.3
 
 ### Patch Changes

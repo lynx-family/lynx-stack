@@ -5,9 +5,30 @@
 import { TosClient } from '@volcengine/tos-sdk';
 
 const DEFAULT_A2UI_STORAGE_PREFIX = 'a2ui';
+const DEFAULT_MCP_APPS_STORAGE_PREFIX = 'mcp-apps';
 const DEFAULT_OPENUI_STORAGE_PREFIX = 'openui';
 
 type StorageEnvironment = Readonly<Record<string, string | undefined>>;
+
+export const TOS_STORAGE_METHODS = ['a2ui', 'openui', 'mcp-apps'] as const;
+export type TosStorageMethod = typeof TOS_STORAGE_METHODS[number];
+
+export const TOS_STORAGE_TYPES = ['preview', 'conversation'] as const;
+export type TosStorageType = typeof TOS_STORAGE_TYPES[number];
+
+export type TosStorageLocation =
+  | { method: 'a2ui' | 'openui'; type: 'preview' }
+  | { method: TosStorageMethod; type: 'conversation' };
+
+const A2UI_PREVIEW_LOCATION: TosStorageLocation = {
+  method: 'a2ui',
+  type: 'preview',
+};
+
+const OPENUI_PREVIEW_LOCATION: TosStorageLocation = {
+  method: 'openui',
+  type: 'preview',
+};
 
 export interface TosStorageConfig {
   accessKeyId: string;
@@ -18,6 +39,7 @@ export interface TosStorageConfig {
   secure: boolean;
   securityToken?: string;
   a2uiPrefix: string;
+  mcpAppsPrefix: string;
   openuiPrefix: string;
 }
 
@@ -67,18 +89,44 @@ export function resolveTosStorageConfig(
     securityToken: readNonEmpty(environment, 'TOS_SECURITY_TOKEN'),
     a2uiPrefix: readNonEmpty(environment, 'TOS_STORAGE_PREFIX')
       ?? DEFAULT_A2UI_STORAGE_PREFIX,
+    mcpAppsPrefix: readNonEmpty(environment, 'TOS_MCP_APPS_STORAGE_PREFIX')
+      ?? DEFAULT_MCP_APPS_STORAGE_PREFIX,
     openuiPrefix: readNonEmpty(environment, 'TOS_OPENUI_STORAGE_PREFIX')
       ?? DEFAULT_OPENUI_STORAGE_PREFIX,
   };
 }
 
 export function buildTosStoragePath(
+  method: string,
+  type: TosStorageType,
   id: string,
   file: string,
-  storagePrefix: string,
 ): string {
-  const prefix = trimSlashes(storagePrefix);
-  return prefix ? `${prefix}/${id}/${file}` : `${id}/${file}`;
+  const prefix = trimSlashes(method);
+  const suffix = `${type}/${id}/${file}`;
+  return prefix ? `${prefix}/${suffix}` : suffix;
+}
+
+export function isTosStorageMethod(value: unknown): value is TosStorageMethod {
+  return TOS_STORAGE_METHODS.some(method => method === value);
+}
+
+export function isTosStorageType(value: unknown): value is TosStorageType {
+  return TOS_STORAGE_TYPES.some(type => type === value);
+}
+
+function storageMethodPrefix(
+  config: TosStorageConfig,
+  method: TosStorageMethod,
+): string {
+  switch (method) {
+    case 'a2ui':
+      return config.a2uiPrefix;
+    case 'mcp-apps':
+      return config.mcpAppsPrefix;
+    case 'openui':
+      return config.openuiPrefix;
+  }
 }
 
 function parseTosEndpoint(endpoint: string): URL {
@@ -164,6 +212,7 @@ async function uploadTosJson(
 export async function publishA2UIPayload(
   messages: unknown,
   actionMocks?: unknown,
+  location: TosStorageLocation = A2UI_PREVIEW_LOCATION,
 ): Promise<A2UIPublishedPayload | undefined> {
   if (messages === undefined) return undefined;
 
@@ -178,18 +227,20 @@ export async function publishA2UIPayload(
     const client = createTosClient(config);
     const id = crypto.randomUUID();
     const messagesPath = buildTosStoragePath(
+      storageMethodPrefix(config, location.method),
+      location.type,
       id,
       'messages.json',
-      config.a2uiPrefix,
     );
     await uploadTosJson(client, config, messagesPath, messages);
     const messagesUrl = buildTosObjectUrl(messagesPath, config);
 
     if (actionMocks !== undefined) {
       const actionMocksPath = buildTosStoragePath(
+        storageMethodPrefix(config, location.method),
+        location.type,
         id,
         'actionMocks.json',
-        config.a2uiPrefix,
       );
       await uploadTosJson(client, config, actionMocksPath, actionMocks);
       const actionMocksUrl = buildTosObjectUrl(actionMocksPath, config);
@@ -220,9 +271,10 @@ export async function publishOpenUIRawText(
     const client = createTosClient(config);
     const id = crypto.randomUUID();
     const rawTextPath = buildTosStoragePath(
+      storageMethodPrefix(config, OPENUI_PREVIEW_LOCATION.method),
+      OPENUI_PREVIEW_LOCATION.type,
       id,
       'raw.txt',
-      config.openuiPrefix,
     );
     await uploadTosObject(
       client,

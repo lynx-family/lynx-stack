@@ -45,15 +45,24 @@ export GENUI_MODEL_CONFIG_JSON='{
 `GET /models` exposes only the top-level names and default selection. It must
 never expose `model`, `apiKey`, or `baseURL` to the playground.
 
-Image components are resolved after A2UI validation. To enable query-matched
-stock images, provide a Pexels API key:
+The A2UI agent generates image assets through a server-side Volcengine Ark
+tool. The Ark credential, image-generation model name, and base URL are
+required:
 
 ```bash
-export PEXELS_API_KEY="..."
+export IMG_GEN_ARK_API_KEY="..."
+export IMG_GEN_ARK_IMAGE_MODEL="doubao-seedream-..."
+export IMG_GEN_ARK_IMAGE_BASE_URL="https://ark.cn-beijing.volces.com/api/v3"
 ```
 
-When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
-back to a deterministic Picsum URL.
+`IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS` optionally overrides the 120-second
+request timeout and must be an integer from 1 through 600000. The agent may
+make at most four image-generation calls across the initial response and all
+repair attempts for one request. Keep the credential, model name, and endpoint
+server-only. The text model configured through `GENUI_MODEL_CONFIG_JSON` must
+support tool/function calling. Only user/host-provided image sources and URLs
+returned by the request's tool scope may reach the renderer. There is no
+stock-image or placeholder-image fallback when generation fails.
 
 The hosting runtime must provide these variables before starting the server.
 
@@ -69,10 +78,13 @@ export TOS_REGION="cn-beijing"
 ```
 
 Use a dedicated IAM identity with `tos:PutObject` access only to the configured
-`a2ui` and `openui` prefixes. The server signs writes with these credentials;
-the browser reads the resulting public object URL without credentials. Optional
-overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
-`TOS_OPENUI_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
+`a2ui`, `openui`, and `mcp-apps` prefixes. Preview objects use
+`<method>/preview/<uuid>/<file>`; shared conversations use
+`<method>/conversation/<uuid>/messages.json`. The server signs writes with
+these credentials; the browser reads the resulting public object URL without
+credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
+`TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`, and
+`TOS_SECURITY_TOKEN`.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:

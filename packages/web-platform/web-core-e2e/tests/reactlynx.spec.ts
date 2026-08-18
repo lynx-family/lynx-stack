@@ -2981,6 +2981,31 @@ test.describe('reactlynx3 tests', () => {
           );
         },
       );
+      test(
+        'basic-element-x-foldview-ng-method-setFoldExpanded-overflow',
+        async ({ page }, {
+          title,
+        }) => {
+          await goto(page, title);
+          await page.locator('#tap').click();
+          await wait(100);
+          // the header is 400px and the toolbar is 200px, so the foldview can
+          // only be scrolled by 200px however large the requested offset is
+          const scrollTop = await page.locator('#foldview').evaluate((
+            element,
+          ) => element.scrollTop);
+          expect(scrollTop).toBe(200);
+        },
+      );
+      test(
+        'basic-element-x-foldview-ng-header-width',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          // the header is out of flow, it still has to fill the foldview
+          await expect(page.locator('#header')).toHaveCSS('width', '300px');
+        },
+      );
     });
     test.describe('svg', () => {
       test('basic-element-svg-bindload', async ({ page }, { title }) => {

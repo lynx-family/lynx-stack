@@ -1,5 +1,13 @@
 # @lynx-js/css-serializer
 
+## 0.1.8
+
+### Patch Changes
+
+- Replace `node:path` with `pathe` in `generateHref` so the package can be bundled for browsers. ([#3401](https://github.com/lynx-family/lynx-stack/pull/3401))
+
+  Hrefs resolved from a `projectRoot` or `filename` containing a backslash change, because `pathe` normalizes Windows separators on every platform. Pure POSIX inputs, including the defaults, are unaffected.
+
 ## 0.1.7
 
 ### Patch Changes
