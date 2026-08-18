@@ -216,6 +216,47 @@ describe('pluginDev', () => {
     )
   })
 
+  test('alias every @rspack/core/hot subpath the client imports', async () => {
+    // `@rspack/core` is not a dependency of `@lynx-js/webpack-dev-transport`,
+    // so every subpath its client imports has to be aliased here or the app
+    // build breaks wherever the package manager does not hoist it.
+    const rsbuild = await createDevStubRsbuild()
+
+    const config = await rsbuild.unwrapConfig()
+
+    const { createRequire } = await import('node:module')
+    const { readdir, readFile } = await import('node:fs/promises')
+    const clientDir = path.resolve(
+      path.dirname(
+        createRequire(import.meta.url).resolve(
+          '@lynx-js/webpack-dev-transport/client',
+        ),
+      ),
+      '../../client',
+    )
+    const entries = await readdir(clientDir, { recursive: true })
+    const sources = await Promise.all(
+      entries
+        .filter(name => /\.[cm]?tsx?$/.test(name))
+        .map(name => readFile(path.join(clientDir, name), 'utf-8')),
+    )
+    // Covers `from '…'`, bare side-effect `import '…'` and `import('…')`,
+    // under either quote style. `declare module '…'` is deliberately not a
+    // match -- a type shim needs no alias.
+    const importRE =
+      /(?:from|import)\s*(?:\(\s*)?(['"])(@rspack\/core\/hot\/[^'"]+)\1/g
+    const imported = new Set(
+      sources.flatMap(source =>
+        [...source.matchAll(importRE)].map(([, , specifier]) => specifier!)
+      ),
+    )
+
+    expect(imported.size).toBeGreaterThan(0)
+    for (const specifier of imported) {
+      expect(config.resolve?.alias).toHaveProperty(specifier)
+    }
+  })
+
   test('no Websocket class injected for web', async () => {
     const rsbuild = await createDevStubRsbuild({
       environments: {
