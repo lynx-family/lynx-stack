@@ -2,9 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-opcodes.js';
+import { __OpAttr, __OpBegin, __OpEnd, __OpPageEnd, __OpPageStart, __OpSlot, __OpText } from './render-to-opcodes.js';
 import { elementTemplateIdentityKey, parseElementTemplateType } from '../../protocol/template-type.js';
-import type { RuntimeTypedElementAttributes, SerializableValue } from '../../protocol/types.js';
+import type {
+  RuntimeTypedElementAttributes,
+  SerializableValue,
+  TypedElementAttributesCommand,
+} from '../../protocol/types.js';
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
@@ -26,6 +30,7 @@ const TYPED_LIST_HOST_TYPE = 'list';
 const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 
 export interface MainThreadCreateResult {
+  pageAttributes: TypedElementAttributesCommand | null;
   rootRefs: ElementRef[];
 }
 
@@ -54,6 +59,8 @@ export function renderOpcodesIntoElementTemplate(
   opcodes: unknown[],
 ): MainThreadCreateResult {
   const rootRefs: ElementRef[] = [];
+  let pageAttributes: TypedElementAttributesCommand | null | undefined;
+  let isInsideAuthoredPage = false;
   const typeStack: Array<string | null> = [null];
   const attributeSlotsStack: Array<SerializableValue[] | undefined> = [undefined];
   const typedAttributesStack: Array<RuntimeTypedElementAttributes | undefined> = [undefined];
@@ -69,6 +76,9 @@ export function renderOpcodesIntoElementTemplate(
     const opcode = opcodes[i];
     switch (opcode) {
       case __OpBegin: {
+        if (__DEV__ && stackTop === 0 && pageAttributes !== undefined && !isInsideAuthoredPage) {
+          throw new Error('Element Template authored <page /> must wrap all materialized roots.');
+        }
         const vnode = opcodes[i + 1] as { type: string; props?: Record<string, unknown> };
         const props = vnode.props;
         stackTop += 1;
@@ -195,13 +205,35 @@ export function renderOpcodesIntoElementTemplate(
       }
       case __OpAttr: {
         const name = opcodes[i + 1] as string;
-        const value = opcodes[i + 2] as SerializableValue;
+        const value = opcodes[i + 2] as SerializableValue | null;
         if (name === 'attributeSlots') {
           attributeSlotsStack[stackTop] = value as SerializableValue[];
         } else if (name === 'typedAttributes') {
           typedAttributesStack[stackTop] = value as RuntimeTypedElementAttributes;
         }
         i += 3;
+        break;
+      }
+      case __OpPageStart: {
+        if (__DEV__ && stackTop !== 0) {
+          throw new Error('Element Template authored <page /> must be the outermost element.');
+        }
+        if (__DEV__ && pageAttributes !== undefined) {
+          throw new Error('Element Template does not support multiple authored <page /> elements.');
+        }
+        if (__DEV__ && rootRefs.length !== 0) {
+          throw new Error('Element Template authored <page /> must wrap all materialized roots.');
+        }
+        pageAttributes = opcodes[i + 1] as TypedElementAttributesCommand | null;
+        isInsideAuthoredPage = true;
+        i += 2;
+        break;
+      }
+      case __OpPageEnd: {
+        if (__DEV__) {
+          isInsideAuthoredPage = false;
+        }
+        i += 1;
         break;
       }
       case __OpSlot: {
@@ -222,6 +254,9 @@ export function renderOpcodesIntoElementTemplate(
         break;
       }
       case __OpText: {
+        if (__DEV__ && stackTop === 0 && pageAttributes !== undefined && !isInsideAuthoredPage) {
+          throw new Error('Element Template authored <page /> must wrap all materialized roots.');
+        }
         const text = opcodes[i + 1] as string;
         const parentTemplateKey = stackTop === 0 ? null : typeStack[stackTop]!;
         if (__DEV__ && parentTemplateKey === TYPED_LIST_HOST_TYPE) {
@@ -252,6 +287,7 @@ export function renderOpcodesIntoElementTemplate(
     }
   }
   return {
+    pageAttributes: pageAttributes ?? null,
     rootRefs,
   };
 }

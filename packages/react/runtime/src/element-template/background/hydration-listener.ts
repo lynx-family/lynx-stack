@@ -11,8 +11,8 @@ import {
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
 } from './commit-hook.js';
-import { hydrateRootChildrenIntoContext } from './hydrate.js';
-import type { BackgroundElementTemplateInstance } from './instance.js';
+import type { BackgroundPageRootInstance } from './instance.js';
+import { hydratePageRootIntoContext } from './page-root-hydrate.js';
 import {
   PerformanceTimingFlags,
   PipelineOrigins,
@@ -46,12 +46,12 @@ export function installElementTemplateHydrationListener(): void {
   resetElementTemplateCommitState();
 
   listener = (event: { data: ElementTemplateHydrateCommitContext }) => {
-    const { instances, reloadVersion } = event.data;
+    const { page, reloadVersion } = event.data;
     if (reloadVersion < getReloadVersion()) {
       return;
     }
 
-    const root = __root as BackgroundElementTemplateInstance;
+    const root = __root as BackgroundPageRootInstance;
 
     if (__PROFILE__) {
       profileStart('ReactLynx::hydrate');
@@ -66,7 +66,7 @@ export function installElementTemplateHydrationListener(): void {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate:\n'
-            + JSON.stringify({ data: instances }, null, 2),
+            + JSON.stringify({ data: page }, null, 2),
         );
         console.alog?.(
           '[ReactLynxDebug] BackgroundElementTemplate tree before hydration:\n'
@@ -74,7 +74,7 @@ export function installElementTemplateHydrationListener(): void {
         );
       }
 
-      const didHydrateMatchedInstances = hydrateRootChildrenIntoContext(instances, root);
+      const didHydrateMatchedInstances = hydratePageRootIntoContext(page, root);
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'

@@ -24,12 +24,18 @@ import { render as mockRender } from '../../../../src/element-template/runtime/r
 import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 
 describe('renderMainThread', () => {
+  let dispatchEvent: ReturnType<typeof vi.fn>;
+  let pageRef: ElementRef;
+
   beforeEach(() => {
+    vi.mocked(mockRender).mockReset();
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReset();
     setRoot({ __jsx: { type: 'test-root' } });
-    setupPage({ type: 'page', children: [] } as unknown as ElementRef);
+    pageRef = { type: 'page', children: [] } as unknown as ElementRef;
+    setupPage(pageRef);
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
-    const dispatchEvent = vi.fn();
+    dispatchEvent = vi.fn();
     globalThis.lynx = {
       ...(globalThis.lynx ?? {}),
       reportError: vi.fn(),
@@ -42,7 +48,7 @@ describe('renderMainThread', () => {
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ pageAttributes: null, rootRefs: [] });
   });
 
   afterEach(() => {
@@ -52,15 +58,35 @@ describe('renderMainThread', () => {
 
   it('should report error when renderToOpcodes fails', () => {
     const reportErrorSpy = vi.fn();
+    const serializedPage = {
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[]],
+      uid: 0,
+    };
     (globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void }).reportError = reportErrorSpy;
 
     vi.mocked(mockRender).mockImplementationOnce(() => {
       throw new Error('Render failed');
     });
+    vi.mocked(__SerializeElementTemplate).mockReturnValue(
+      serializedPage as unknown as ReturnType<typeof __SerializeElementTemplate>,
+    );
 
     renderMainThread();
 
     expect(reportErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ message: 'Render failed' }));
+    expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith([]);
+    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(pageRef, 0, null, null);
+    expect(__InsertNodeToElementTemplate).not.toHaveBeenCalled();
+    expect(__SerializeElementTemplate).toHaveBeenCalledWith(pageRef);
+    expect(dispatchEvent).toHaveBeenCalledWith({
+      type: 'rLynxElementTemplateHydrate',
+      data: {
+        page: serializedPage,
+        reloadVersion: getReloadVersion(),
+      },
+    });
   });
 
   it('should render opcodes into the current page and dispatch hydrate data', () => {
@@ -80,23 +106,24 @@ describe('renderMainThread', () => {
       elementSlots: [],
       uid: -2,
     };
+    const serializedPage = {
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[serializedA, serializedB]],
+      uid: 0,
+    };
     vi.mocked(mockRender).mockReturnValue(opcodes);
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
       rootRefs: [rootRefA, rootRefB],
     });
     (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
       .getJSContext = vi.fn(() => ({
         dispatchEvent,
       }));
-    vi.mocked(__SerializeElementTemplate).mockImplementation((ref: ElementRef) => {
-      if (ref === rootRefA) {
-        return serializedA as unknown as ReturnType<typeof __SerializeElementTemplate>;
-      }
-      if (ref === rootRefB) {
-        return serializedB as unknown as ReturnType<typeof __SerializeElementTemplate>;
-      }
-      throw new Error('Unexpected root ref.');
-    });
+    vi.mocked(__SerializeElementTemplate).mockReturnValue(
+      serializedPage as unknown as ReturnType<typeof __SerializeElementTemplate>,
+    );
 
     expect(() => renderMainThread()).not.toThrow();
     expect(mockRender).toHaveBeenCalledWith({ type: 'test-root' }, undefined);
@@ -105,44 +132,111 @@ describe('renderMainThread', () => {
     );
     expect(__InsertNodeToElementTemplate).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({ type: 'page' }),
+      pageRef,
       0,
       rootRefA,
       null,
     );
     expect(__InsertNodeToElementTemplate).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ type: 'page' }),
+      pageRef,
       0,
       rootRefB,
       null,
     );
-    expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(1, rootRefA);
-    expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(2, rootRefB);
+    expect(__SerializeElementTemplate).toHaveBeenCalledTimes(1);
+    expect(__SerializeElementTemplate).toHaveBeenCalledWith(pageRef);
+    expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[1]).toBeLessThan(
+      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
+    );
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'rLynxElementTemplateHydrate',
       data: {
-        instances: [serializedA, serializedB],
+        page: serializedPage,
         reloadVersion: getReloadVersion(),
       },
     });
   });
 
-  it('flushes initial list metadata after page insertion and before serialize', () => {
+  it('does not commit the physical page when opcode materialization fails', () => {
+    vi.mocked(mockRender).mockReturnValue([0, 'opcode']);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
+      throw new Error('Materialization failed');
+    });
+
+    expect(() => renderMainThread()).toThrow('Materialization failed');
+    expect(__SetAttributeOfElementTemplate).not.toHaveBeenCalled();
+    expect(__InsertNodeToElementTemplate).not.toHaveBeenCalled();
+    expect(__SerializeElementTemplate).not.toHaveBeenCalled();
+  });
+
+  it('applies authored page attrs before inserting rendered roots', () => {
     const rootRef = { type: 'root-ref' } as unknown as ElementRef;
-    const listRef = { type: 'list-ref' } as unknown as ElementRef;
-    const serialized = {
-      templateKey: '_et_root',
-      attributeSlots: [],
-      elementSlots: [],
-      uid: -1,
-    };
     vi.mocked(mockRender).mockReturnValue([]);
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: {
+        id: 'screen',
+        bindtap: '0:0:bindtap',
+      },
       rootRefs: [rootRef],
     });
     vi.mocked(__SerializeElementTemplate).mockReturnValue(
-      serialized as unknown as ReturnType<typeof __SerializeElementTemplate>,
+      {
+        tag: 'page',
+        attributes: {
+          id: 'screen',
+          bindtap: '0:0:bindtap',
+        },
+        elementSlots: [[{
+          templateKey: '_et_root',
+          attributeSlots: [],
+          elementSlots: [],
+          uid: -1,
+        }]],
+        uid: 0,
+      } as unknown as ReturnType<typeof __SerializeElementTemplate>,
+    );
+
+    renderMainThread();
+
+    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(
+      pageRef,
+      0,
+      {
+        id: 'screen',
+        bindtap: '0:0:bindtap',
+      },
+      null,
+    );
+    expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]!,
+    );
+    expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it('flushes initial list metadata after page insertion and before serialize', () => {
+    const rootRef = { type: 'root-ref' } as unknown as ElementRef;
+    const listRef = { type: 'list-ref' } as unknown as ElementRef;
+    const serializedPage = {
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[{
+        templateKey: '_et_root',
+        attributeSlots: [],
+        elementSlots: [],
+        uid: -1,
+      }]],
+      uid: 0,
+    };
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [rootRef],
+    });
+    vi.mocked(__SerializeElementTemplate).mockReturnValue(
+      serializedPage as unknown as ReturnType<typeof __SerializeElementTemplate>,
     );
     elementTemplateRegistry.set(-2, listRef);
     registerElementTemplateListState(
@@ -171,9 +265,9 @@ describe('renderMainThread', () => {
       null,
     );
     expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]!,
+      vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[1]!,
     );
-    expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+    expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[1]).toBeLessThan(
       vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
     );
   });

@@ -5,7 +5,10 @@ import { vi } from 'vitest';
 
 import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
-import type { ElementTemplateHydrateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import type {
+  ElementTemplateHydrateCommitContext,
+  SerializedEtNode,
+} from '../../../../../src/element-template/protocol/types.js';
 import { resetTemplateId } from '../../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
 import { loadCompiledFixtureApp } from '../../../test-utils/debug/compiledFixtureApp.js';
@@ -15,7 +18,7 @@ import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.j
 declare const renderPage: () => void;
 
 type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
-type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+type HydrateInstances = SerializedEtNode[];
 
 interface HydrationContext {
   hydrationData: HydrateInstances;
@@ -36,7 +39,7 @@ function setup(): HydrationContext {
 
   const hydrationData: HydrateInstances = [];
   const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-    hydrationData.push(...event.data.instances);
+    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

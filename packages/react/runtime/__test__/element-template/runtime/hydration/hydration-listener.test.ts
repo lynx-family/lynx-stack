@@ -32,6 +32,7 @@ import type {
   SerializableValue,
   SerializedElementTemplate,
   SerializedEtNode,
+  SerializedPageRoot,
   SerializedTypedNode,
 } from '../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
@@ -76,11 +77,17 @@ function parseUpdateEventData(data: unknown): unknown {
 function dispatchHydrate(
   instances: SerializedEtNode[],
   reloadVersion = getReloadVersion(),
+  attributes: SerializedPageRoot['attributes'] = null,
 ): void {
   lynx.getJSContext().dispatchEvent({
     type: ElementTemplateLifecycleConstant.hydrate,
     data: {
-      instances,
+      page: {
+        tag: 'page',
+        attributes,
+        elementSlots: [instances],
+        uid: 0,
+      },
       reloadVersion,
     },
   });
@@ -262,13 +269,7 @@ describe('ElementTemplate hydration listener', () => {
     increaseReloadVersion();
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: {
-        instances: [createSerializedTemplate(-1, '_et_test')],
-        reloadVersion: staleReloadVersion,
-      },
-    });
+    dispatchHydrate([createSerializedTemplate(-1, '_et_test')], staleReloadVersion);
 
     envManager.switchToBackground();
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);

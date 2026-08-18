@@ -134,7 +134,7 @@ export function installMockNativePapi(
       children: [...(elementSlots?.[0] ?? [])],
     };
     attachMockNativeId(element);
-    if (typeof handleId === 'number') {
+    if (typeof handleId === 'number' || typeof handleId === 'string') {
       Object.defineProperty(element, '__handleId', {
         value: handleId,
         writable: true,

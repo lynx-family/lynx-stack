@@ -26,6 +26,9 @@ import {
   SKIP_EFFECTS,
   VNODE,
 } from '../../../shared/render-constants.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
+import { __ElementTemplatePage } from '../page/authored-page.js';
+import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 /** @typedef {import('preact').VNode} VNode */
 
@@ -96,6 +99,8 @@ export const __OpEnd = 1;
 export const __OpAttr = 2;
 export const __OpText = 3;
 export const __OpSlot = 4;
+export const __OpPageStart = 5;
+export const __OpPageEnd = 6;
 
 /**
  * @param {VNode} vnode
@@ -366,6 +371,17 @@ function _renderToString(
 
   // Invoke rendering on Components
   if (typeof type === 'function') {
+    if (type === __ElementTemplatePage) {
+      opcodes.push(
+        __OpPageStart,
+        prepareTypedElementAttributes(ELEMENT_TEMPLATE_PAGE_HANDLE_ID, props.attributes),
+      );
+      renderComponentVNode(vnode, type, props, context, opcodes);
+      if (__DEV__) {
+        opcodes.push(__OpPageEnd);
+      }
+      return;
+    }
     renderComponentVNode(vnode, type, props, context, opcodes);
     return;
   }

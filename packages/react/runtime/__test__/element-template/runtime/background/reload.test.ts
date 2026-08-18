@@ -62,7 +62,12 @@ describe('ElementTemplate background reload', () => {
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
       data: {
-        instances: [createSerializedTemplate(-1, '_et_test')],
+        page: {
+          tag: 'page',
+          attributes: null,
+          elementSlots: [[createSerializedTemplate(-1, '_et_test')]],
+          uid: 0,
+        },
         reloadVersion: getReloadVersion(),
       },
     });

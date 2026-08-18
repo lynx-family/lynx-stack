@@ -22,6 +22,8 @@ import {
   __OpAttr,
   __OpBegin,
   __OpEnd,
+  __OpPageEnd,
+  __OpPageStart,
   __OpSlot,
   __OpText,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
@@ -78,6 +80,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const result = renderOpcodesIntoElementTemplate([__OpText, 'hello']);
 
     expect(result.rootRefs).toEqual([rootTextRef]);
+    expect(result.pageAttributes).toBeNull();
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_builtin_raw_text',
       null,
@@ -86,6 +89,100 @@ describe('renderOpcodesIntoElementTemplate', () => {
       -1,
     );
     expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
+  });
+
+  it('returns singleton page attrs from the synthetic root frame', () => {
+    const attributes = { id: 'screen' };
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpPageStart,
+      attributes,
+    ]);
+
+    expect(result).toEqual({
+      pageAttributes: attributes,
+      rootRefs: [],
+    });
+  });
+
+  it('rejects page attrs inside a materialized host', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: '_et_parent' },
+        __OpPageStart,
+        { id: 'nested' },
+        __OpEnd,
+      ])
+    ).toThrow('must be the outermost element');
+  });
+
+  it('rejects more than one page attr instruction', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpPageStart,
+        { id: 'first' },
+        __OpPageStart,
+        { id: 'second' },
+      ])
+    ).toThrow('does not support multiple authored <page /> elements');
+  });
+
+  it('materializes multiple roots inside one outermost page', () => {
+    const firstRootRef = { kind: 'first-root-ref' };
+    const secondRootRef = { kind: 'second-root-ref' };
+    const attributes = { id: 'page' };
+    createElementTemplate
+      .mockReturnValueOnce(firstRootRef)
+      .mockReturnValueOnce(secondRootRef);
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpPageStart,
+      attributes,
+      __OpBegin,
+      { type: '_et_first_root' },
+      __OpEnd,
+      __OpBegin,
+      { type: '_et_second_root' },
+      __OpEnd,
+      __OpPageEnd,
+    ]);
+
+    expect(result).toEqual({
+      pageAttributes: attributes,
+      rootRefs: [firstRootRef, secondRootRef],
+    });
+  });
+
+  it.each([
+    [
+      __OpBegin,
+      { type: '_et_before_page' },
+      __OpEnd,
+      __OpPageStart,
+      { id: 'page' },
+    ],
+    [
+      __OpPageStart,
+      { id: 'page' },
+      __OpPageEnd,
+      __OpBegin,
+      { type: '_et_after_page' },
+      __OpEnd,
+    ],
+    [
+      __OpPageStart,
+      { id: 'page' },
+      __OpPageEnd,
+      __OpText,
+      'outside page',
+    ],
+  ])('rejects a materialized root sibling outside page', (...opcodes) => {
+    createElementTemplate.mockReturnValue({ kind: 'root-ref' });
+
+    expect(() => renderOpcodesIntoElementTemplate(opcodes)).toThrow(
+      'must wrap all materialized roots',
+    );
   });
 
   it('creates exact list through typed native create with slot-0 refs as listChildren', () => {

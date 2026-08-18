@@ -24,6 +24,7 @@ import { ElementTemplateUpdateOps } from '../../../../../src/element-template/pr
 import type {
   ElementTemplateHydrateCommitContext,
   SerializedElementTemplate,
+  SerializedEtNode,
 } from '../../../../../src/element-template/protocol/types.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
@@ -41,7 +42,7 @@ declare module '@lynx-js/types' {
 }
 
 type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
-type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+type HydrateInstances = SerializedEtNode[];
 
 interface CaseContext {
   hydrationData: HydrateInstances;
@@ -103,7 +104,7 @@ function setup(): CaseContext {
   envManager.setUseElementTemplate(true);
 
   const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-    hydrationData.push(...event.data.instances);
+    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

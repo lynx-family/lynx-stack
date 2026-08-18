@@ -5,10 +5,12 @@
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
+import type { SerializedPageRoot } from '../protocol/types.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { __page } from '../runtime/page/page.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
-import { removeMainThreadRootRefs, renderMainThread } from '../runtime/render/render-main-thread.js';
+import { renderMainThread } from '../runtime/render/render-main-thread.js';
 import { resetTemplateId } from '../runtime/template/handle.js';
 import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
 import { clearMainThreadDynamicAttrState } from '../runtime/template/main-thread-dynamic-attr-state.js';
@@ -24,13 +26,19 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     applyUpdatePageData(data, options);
 
     destroyAllElementTemplateListStates();
+    // TODO: Replace this cleanup-only serialization with a direct page-children
+    // or clear-slot PAPI once native exposes one.
+    const page = __SerializeElementTemplate(__page) as SerializedPageRoot;
+    for (const root of page.elementSlots?.[ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX] ?? []) {
+      const rootRef = elementTemplateRegistry.get(root.uid as number)!;
+      __RemoveNodeFromElementTemplate(__page, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX, rootRef);
+    }
     elementTemplateRegistry.clear();
     clearMainThreadDynamicAttrState();
     resetElementTemplateMainThreadBackgroundFunctionRuntime();
     resetTemplateId();
 
     const oldRoot = __root;
-    removeMainThreadRootRefs();
     setRoot({ __jsx: oldRoot.__jsx });
     renderMainThread();
 
