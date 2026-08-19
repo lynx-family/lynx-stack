@@ -22,7 +22,10 @@ import {
 } from './utils.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/ChoicePicker.css';
 
@@ -42,51 +45,18 @@ const HitSlop = {
  */
 export interface ChoicePickerProps extends GenericComponentProps {
   /** The label for the group of options. */
-  label?: string | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  label?: string | { path: string } | V1FunctionCall;
   /** A hint for how the choice picker should be displayed and behave. */
   variant?: 'multipleSelection' | 'mutuallyExclusive';
   /** The list of available options to choose from. */
   options: Array<{
     /** The text to display for this option. */
-    label: string | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    label: string | { path: string } | V1FunctionCall;
     /** The stable value associated with this option. */
     value: string;
   }>;
   /** The list of currently selected values. */
-  value: string[] | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  value: string[] | { path: string } | V1FunctionCall;
   /** The display style of the component. */
   displayStyle?: 'checkbox' | 'chips';
   /** If true, displays a search input to filter the options. */
@@ -94,18 +64,7 @@ export interface ChoicePickerProps extends GenericComponentProps {
   /** A list of checks to perform. */
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    condition: boolean | { path: string } | V1FunctionCall;
     /** The error message to display if the check fails. */
     message: string;
   }>;

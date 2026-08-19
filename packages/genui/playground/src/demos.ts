@@ -30,11 +30,10 @@ function collectComponentNamesFromMessages(
 
   const v = value as Record<string, unknown>;
 
-  // Standard v0.9 message: { updateComponents: { components: [...] } }
-  const updateComponents = v.updateComponents;
-  if (updateComponents && typeof updateComponents === 'object') {
-    const uc = updateComponents as Record<string, unknown>;
-    const components = uc.components;
+  // v1.0 may send the initial component list inline in createSurface.
+  for (const payload of [v.createSurface, v.updateComponents]) {
+    if (!payload || typeof payload !== 'object') continue;
+    const components = (payload as Record<string, unknown>).components;
     if (Array.isArray(components)) {
       for (const c of components) {
         if (!c || typeof c !== 'object') continue;

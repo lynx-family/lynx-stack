@@ -5,7 +5,10 @@ import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/RadioGroup.css';
 
@@ -25,46 +28,13 @@ const HitSlop = {
  */
 export interface RadioGroupComponentProps extends GenericComponentProps {
   /** The list of string options to display. */
-  items: string[] | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  items: string[] | { path: string } | V1FunctionCall;
   /** The currently selected value. */
-  value: string | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  value: string | { path: string } | V1FunctionCall;
   /** A hint for the visual style of the radio group. */
   usageHint?: 'default' | 'card' | 'row';
   checks?: Array<{
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    condition: boolean | { path: string } | V1FunctionCall;
     message: string;
   }>;
 }

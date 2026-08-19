@@ -5,18 +5,18 @@
 import type { A2UICatalog } from './a2ui-catalog';
 import { loadBasicCatalog, renderCatalogReference } from './a2ui-catalog';
 
-export const A2UI_PROTOCOL_VERSION = 'v0.9';
+export const A2UI_PROTOCOL_VERSION = 'v1.0';
 
-const PROTOCOL_OVERVIEW = `# A2UI (Agent-to-UI) Protocol v0.9
+const PROTOCOL_OVERVIEW = `# A2UI (Agent-to-UI) Protocol v1.0
 
-A2UI is a JSON-based, streaming UI protocol from Google
-(https://github.com/google/A2UI). It lets an LLM agent describe a user interface
+A2UI is a JSON-based, streaming UI protocol
+(https://github.com/a2ui-project/a2ui). It lets an LLM agent describe a user interface
 by emitting a sequence of declarative JSON messages that a renderer turns into
 native widgets. There is NO arbitrary code: the renderer only knows the
 components in the agreed-upon catalog.
 
-## Official v0.9 design principles
-- Prompt-first: v0.9 is meant to be embedded directly in the model prompt, so
+## A2UI v1.0 core design principles
+- Prompt-first: the protocol is embedded directly in the model prompt, so
   emit JSON that follows the in-context schema and examples exactly.
 - Safe like data, expressive like code: describe UI intent using trusted catalog
   components only. Never emit JavaScript, HTML, CSS, event handlers or scripts.
@@ -29,7 +29,7 @@ components in the agreed-upon catalog.
   validation and transport convenience.
 
 ## Server-to-client message types
-Every message MUST be a top-level JSON object with the field "version": "v0.9"
+Every message MUST be a top-level JSON object with the field "version": "v1.0"
 and exactly ONE of the following keys:
 
 1. "createSurface"   – initialise a new UI surface.
@@ -38,24 +38,29 @@ and exactly ONE of the following keys:
 4. "deleteSurface"   – tear down a surface.
 
 ## Required ordering for a fresh response
-1. createSurface  (with surfaceId + catalogId)
-2. updateDataModel for every initial value referenced by a { "path": ... }
-   binding. Send this before the first component that reads those paths.
-3. updateComponents (the FIRST one MUST contain a component whose id is "root")
-4. (optional) further updateDataModel / updateComponents for incremental UI.
+1. createSurface (with surfaceId and the active catalogId). It may carry the
+   initial dataModel and components inline.
+2. If they were not sent inline, send updateDataModel for every initial value
+   referenced by a { "path": ... } binding before updateComponents.
+3. If components were not sent inline, send updateComponents; the first
+   component list MUST contain a component whose id is "root".
+4. Optionally send further updateDataModel / updateComponents messages.
    For each incremental bound component, send its data model value first, then
    send the component that binds to it.
 
 ## Envelope semantics
-- createSurface creates a surface. Once created, its surfaceId and catalogId are
-  fixed. To change catalog/theme, delete and recreate the surface.
+- createSurface creates a surface. This single-catalog service requires its
+  catalogId to equal the active catalog supplied with this prompt. It may
+  include initial "dataModel" and/or "components" fields so a complete initial
+  surface can be sent in one message. Do not emit a "theme" field.
 - updateComponents adds or replaces component definitions for that surface. It
   may reference data paths, but for smooth streaming those paths SHOULD already
   be populated by an earlier updateDataModel in the same response.
 - updateDataModel has shape:
-    { "version": "v0.9",
-      "updateDataModel": { "surfaceId": string, "path"?: string, "value"?: any } }
-  "path" defaults to "/" and "value" may be any JSON value.
+    { "version": "v1.0",
+      "updateDataModel": { "surfaceId": string, "path"?: string, "value": any } }
+  "path" defaults to "/". "value" is required and may be any JSON value;
+  null deletes the value at the target path.
 - deleteSurface removes a surface when the UI is no longer needed.
 
 ## Component model
@@ -110,33 +115,49 @@ and exactly ONE of the following keys:
 - Interactive components carry an "action":
     { "event": { "name": "submit_booking",
                  "context": { "restaurantId": { "path": "/selected/id" } } } }
+- event.userMessage may be a literal or dynamic string for the renderer to
+  resolve and forward in the standard action envelope.
 - Button has NO "label" prop. Its visible label is a child Text component
   (use "child": "<text-id>" and add a separate Text component with that id).
-- The renderer will POST that action back to /a2ui/action with the same
-  surfaceId and current client-held conversation. Your next turn may receive a
-  user message whose content starts with "A2UI_USER_ACTION:" followed by JSON
-  describing the action; handle it by emitting additional updateComponents /
+- The renderer reports the resolved action in the standard v1 envelope:
+    { "version": "v1.0",
+      "action": {
+        "name": string,
+        "userMessage"?: string,
+        "surfaceId": string,
+        "sourceComponentId": string,
+        "timestamp": string,
+        "context": object
+      } }
+- The renderer will POST that envelope to /a2ui/action with the current
+  client-held conversation. Your next turn may receive a user message whose
+  content starts with "A2UI_USER_ACTION:" followed by JSON describing the
+  action; handle it by emitting additional updateComponents /
   updateDataModel messages to update the same surface.
+- This service implements only the four core server messages and the standard
+  action envelope. Do not emit RPC, capability-negotiation, or multi-catalog
+  protocol extensions.
 `;
 
 function buildHardRules(catalogId: string): string {
   return `## Hard rules
 1. Output MUST be a JSON ARRAY of A2UI messages. No prose, no Markdown, no
    code fences, no XML. First character '[' – last character ']'.
-2. Each element MUST include "version": "v0.9".
+2. Each element MUST include "version": "v1.0".
 3. Output pretty-printed JSON with 2-space indentation. Do NOT emit minified
    single-line JSON. Put each message object and each component object on its
    own lines so brackets and braces stay balanced.
 4. Before finishing, check the final characters: every component object closes
    once, every "components" array closes once, every message object closes
    once, and the outer array closes exactly once.
-5. For a fresh non-action response, the first message MUST be createSurface with
-   catalogId = "${catalogId}". Use surfaceId "main" unless the user specifies
-   otherwise.
-6. For "{path:...}" bindings, send updateDataModel before the first
-   updateComponents message that contains components reading those paths. After
-   createSurface, either send a literal root/skeleton updateComponents first, or
-   send updateDataModel first when the first visible components use bindings.
+5. For a fresh non-action response, the first message MUST be createSurface.
+   Use surfaceId "main" unless the user specifies otherwise. catalogId MUST
+   equal "${catalogId}". createSurface MAY include initial dataModel and
+   components.
+6. For "{path:...}" bindings, define the bound values before the components
+   that read them: put dataModel before components inside createSurface, or send
+   updateDataModel before the first updateComponents that uses those paths.
+   Alternatively, send a literal root/skeleton component list first.
    In template children, use relative paths from the current item, for example
    { "path": "item" }, never absolute wildcard paths like "/items/*/item".
    Never use { "path": "." }; A2UI cannot resolve "." as the current item.
@@ -147,8 +168,9 @@ function buildHardRules(catalogId: string): string {
    Do not use List merely because data is repeated. Prefer Column/Row
    template children for non-scrollable repeated content; reserve List for
    scrollable collections.
-7. For a fresh non-action response, the first updateComponents message MUST
-   contain exactly one component with id "root".
+7. For a fresh non-action response, the first component list, whether inline in
+   createSurface or in updateComponents, MUST contain exactly one component
+   with id "root".
 8. Use property-based component discriminators: "component": "Text", not
    wrapper objects such as { "Text": {...} }.
 9. Children are referenced by id only. NEVER inline a child component.
@@ -168,9 +190,12 @@ function buildHardRules(catalogId: string): string {
    font-weight. Do NOT use values like 400, 500, 600, or 700 for typography.
    Use Text.variant for base typography and Text.emphasis ("medium" or
    "strong") for extra text emphasis.
-16. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
+16. Component ids are non-empty and unique per surface. Generate simple ASCII
+   snake_case ("root", "title_text", "submit_btn").
 17. Do not invent components outside the catalog.
 18. No comments, trailing commas or unknown fields.
+   Every updateDataModel MUST include "value". Use null to delete the target
+   data-model value; do not omit "value".
 19. If the user asks for impossible, unsafe, or unsupported UI, render a concise
     explanatory A2UI surface using supported components rather than prose.
 20. If the latest user message starts with "A2UI_USER_ACTION:", this is an
@@ -190,7 +215,9 @@ function buildHardRules(catalogId: string): string {
     tool instructions; otherwise omit Image when no loadable source is available.
 24. Function calls are allowed only when the "call" name exactly matches a
     function listed under "Available functions" in the active catalog. Do NOT
-    invent function names.
+    invent function names. Encode calls as { "call": string, "args"?: object,
+    "catalogId"?: string }. Never include the legacy "returnType" field. This
+    server uses one active catalog, so omit catalogId or use the active one.
 `;
 }
 
@@ -234,7 +261,7 @@ export function buildA2UISystemPrompt(
   }
   const parts = [
     'You are an A2UI (Agent-to-UI) generation agent. Translate the user\'s',
-    'natural-language request into a stream of A2UI v0.9 JSON messages that a',
+    'natural-language request into a stream of A2UI v1.0 JSON messages that a',
     'client renderer can consume. A downstream validator will reject malformed',
     'output – if you violate the protocol the user sees nothing.',
     '',

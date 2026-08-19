@@ -27,6 +27,10 @@
       "types": "./a2ui/dist/index.d.ts",
       "default": "./a2ui/dist/index.js"
     },
+    "./a2ui/1.0": {
+      "types": "./a2ui/dist/index.d.ts",
+      "default": "./a2ui/dist/index.js"
+    },
     "./a2ui/store": {
       "types": "./a2ui/dist/store/index.d.ts",
       "default": "./a2ui/dist/store/index.js"

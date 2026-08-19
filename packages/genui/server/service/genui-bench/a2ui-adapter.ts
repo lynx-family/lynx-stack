@@ -211,7 +211,7 @@ function buildPrompt(input: ProtocolBenchAdapterInput): string {
     'User request:',
     input.scenario.prompt,
     '',
-    'Return only valid A2UI v0.9 protocol messages using the selected catalog.',
+    'Return only valid A2UI v1.0 protocol messages using the selected catalog.',
     'Do not include benchmark metadata in the generated UI.',
   ]
     .filter((line): line is string => line !== undefined)

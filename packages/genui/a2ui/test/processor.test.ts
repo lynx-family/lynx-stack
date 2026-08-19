@@ -116,6 +116,200 @@ describe('MessageProcessor', () => {
     expect(surface.store.getSignal('/title').value).toBe('hello');
   });
 
+  test('v1.0 createSurface processes inline components and data model', () => {
+    const proc = new MessageProcessor();
+    const events: string[] = [];
+    let initialTitleAtBeginRendering: unknown;
+    proc.onUpdate((event) => {
+      events.push(String(event['type']));
+      if (event['type'] === 'beginRendering') {
+        initialTitleAtBeginRendering = proc.getOrCreateSurface('inline').store
+          .getSignal('/title').value;
+      }
+    });
+
+    proc.processMessages([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'inline',
+          components: [
+            {
+              id: 'root',
+              component: 'Column',
+              children: { componentId: 'item', path: '/items' },
+            },
+            { id: 'item', component: 'Text', text: { path: 'label' } },
+          ],
+          dataModel: {
+            title: 'Ready',
+            enabled: false,
+            count: 2,
+            items: [{ label: 'One' }, { label: 'Two' }],
+          },
+        },
+      },
+    ]);
+
+    const surface = proc.getOrCreateSurface('inline');
+    expect(surface.rootComponentId).toBe('root');
+    expect(initialTitleAtBeginRendering).toBe('Ready');
+    expect(surface.store.getSignal('/enabled').value).toBe(false);
+    expect(surface.store.getSignal('/count').value).toBe(2);
+    expect(surface.components.get('root')).toMatchObject({
+      children: ['item:0', 'item:1'],
+    });
+    expect(events).toContain('beginRendering');
+  });
+
+  test('v1.0 null deletes a data-model path and its descendants', () => {
+    const proc = new MessageProcessor();
+    proc.processMessages([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'delete-data',
+          dataModel: {
+            profile: { name: 'Ada', details: { role: 'Engineer' } },
+          },
+        },
+      },
+      {
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'delete-data',
+          path: '/profile/details',
+          value: null,
+        },
+      },
+    ]);
+
+    const store = proc.getOrCreateSurface('delete-data').store;
+    expect(store.getSignal('/profile/details').value).toBeUndefined();
+    expect(store.getSignal('/profile/details/role').value).toBeUndefined();
+    expect(store.getSignal('/profile').value).toEqual({ name: 'Ada' });
+    expect(store.getSignal('/').value).toEqual({
+      profile: { name: 'Ada' },
+    });
+  });
+
+  test('v1.0 nested replacement synchronizes ancestor bindings', () => {
+    const proc = new MessageProcessor();
+    proc.processMessages([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'replace-data',
+          dataModel: {
+            profile: { name: 'Ada', role: 'Engineer' },
+          },
+        },
+      },
+      {
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'replace-data',
+          path: '/profile/name',
+          value: 'Bob',
+        },
+      },
+    ]);
+
+    const store = proc.getOrCreateSurface('replace-data').store;
+    expect(store.getSignal('/profile/name').value).toBe('Bob');
+    expect(store.getSignal('/profile').value).toEqual({
+      name: 'Bob',
+      role: 'Engineer',
+    });
+    expect(store.getSignal('/').value).toEqual({
+      profile: { name: 'Bob', role: 'Engineer' },
+    });
+  });
+
+  test('v0.9 explicit null replaces data while omitted value deletes', () => {
+    const proc = new MessageProcessor();
+    proc.processMessages([
+      { version: 'v0.9', createSurface: { surfaceId: 'legacy-null' } },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-null',
+          value: { profile: { name: 'Ada', role: 'Engineer' } },
+        },
+      },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-null',
+          path: '/profile/name',
+          value: null,
+        },
+      },
+    ]);
+
+    const store = proc.getOrCreateSurface('legacy-null').store;
+    expect(store.getSignal('/profile/name').value).toBeNull();
+    expect(store.getSignal('/profile').value).toEqual({
+      name: null,
+      role: 'Engineer',
+    });
+
+    proc.processMessages([
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-null',
+          path: '/profile/name',
+        },
+      },
+    ]);
+    expect(store.getSignal('/profile/name').value).toBeUndefined();
+    expect(store.getSignal('/profile').value).toEqual({ role: 'Engineer' });
+  });
+
+  test('v0.9 omitted-value deletion reindexes array signals', () => {
+    const proc = new MessageProcessor();
+    proc.processMessages([
+      { version: 'v0.9', createSurface: { surfaceId: 'legacy-array' } },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-array',
+          value: {
+            items: [
+              { name: 'Alpha' },
+              { name: 'Beta' },
+              { name: 'Gamma' },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const store = proc.getOrCreateSurface('legacy-array').store;
+    const firstName = store.getSignal('/items/0/name');
+    const secondName = store.getSignal('/items/1/name');
+    const staleName = store.getSignal('/items/2/name');
+
+    proc.processMessages([
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-array',
+          path: '/items/0',
+        },
+      },
+    ]);
+
+    expect(firstName.value).toBe('Beta');
+    expect(secondName.value).toBe('Gamma');
+    expect(staleName.value).toBeUndefined();
+    expect(store.getSignal('/items').value).toEqual([
+      { name: 'Beta' },
+      { name: 'Gamma' },
+    ]);
+  });
+
   test('expands dynamic children templates on layout components', () => {
     const proc = new MessageProcessor();
     const events: Array<{ type: string; updates?: Array<{ id?: string }> }> =

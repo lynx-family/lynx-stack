@@ -112,6 +112,239 @@ function dataValues(result: SnapshotResult): unknown[] {
 }
 
 describe('compactA2UIMessagesToSnapshot', () => {
+  test('consumes inline v1.0 state and preserves the protocol version', () => {
+    const result = compactA2UIMessagesToSnapshot([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'inline',
+          components: [
+            { id: 'root', component: 'Text', text: { path: '/title' } },
+          ],
+          dataModel: { title: 'Hello' },
+        },
+      },
+    ]);
+
+    expect(result.messages.every(message => message.version === 'v1.0')).toBe(
+      true,
+    );
+    expect(componentIds(result)).toEqual(['root']);
+    expect(dataPaths(result)).toEqual(['/title']);
+    expect(dataValues(result)).toEqual(['Hello']);
+  });
+
+  test('replays nested null deletion through a retained parent binding', () => {
+    const result = compactA2UIMessagesToSnapshot([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'delete-nested',
+          components: [
+            { id: 'root', component: 'Text', text: { path: '/profile' } },
+          ],
+          dataModel: {
+            profile: { name: 'Ada', details: { role: 'Engineer' } },
+          },
+        },
+      },
+      {
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'delete-nested',
+          path: '/profile/details',
+          value: null,
+        },
+      },
+    ]);
+
+    expect(dataPaths(result)).toEqual(['/profile']);
+    expect(dataValues(result)).toEqual([{ name: 'Ada' }]);
+
+    const replayed = compactA2UIMessagesToSnapshot(result.messages);
+    expect(replayed.messages).toEqual(result.messages);
+  });
+
+  test('replays nested replacement through a retained parent binding', () => {
+    const result = compactA2UIMessagesToSnapshot([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'replace-nested',
+          components: [
+            { id: 'root', component: 'Text', text: { path: '/profile' } },
+          ],
+          dataModel: {
+            profile: { name: 'Ada', role: 'Engineer' },
+          },
+        },
+      },
+      {
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'replace-nested',
+          path: '/profile/name',
+          value: 'Bob',
+        },
+      },
+    ]);
+
+    expect(dataPaths(result)).toEqual(['/profile']);
+    expect(dataValues(result)).toEqual([
+      { name: 'Bob', role: 'Engineer' },
+    ]);
+
+    const replayed = compactA2UIMessagesToSnapshot(result.messages);
+    expect(replayed.messages).toEqual(result.messages);
+  });
+
+  test('preserves v0.9 explicit null as a replacement value', () => {
+    const result = compactA2UIMessagesToSnapshot([
+      {
+        version: 'v0.9',
+        createSurface: { surfaceId: 'legacy-null' },
+      },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-null',
+          value: { profile: { name: 'Ada' } },
+        },
+      },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'legacy-null',
+          path: '/profile/name',
+          value: null,
+        },
+      },
+      {
+        version: 'v0.9',
+        updateComponents: {
+          surfaceId: 'legacy-null',
+          components: [
+            {
+              id: 'root',
+              component: 'Text',
+              text: { path: '/profile/name' },
+            },
+          ],
+        },
+      },
+    ]);
+
+    expect(dataPaths(result)).toEqual(['/profile/name']);
+    expect(dataValues(result)).toEqual([null]);
+    expect(result.messages.every(message => message.version === 'v0.9')).toBe(
+      true,
+    );
+
+    const replayed = compactA2UIMessagesToSnapshot(result.messages);
+    expect(replayed.messages).toEqual(result.messages);
+  });
+
+  test.each(
+    [
+      [
+        'v1.0 null',
+        [
+          {
+            version: 'v1.0',
+            createSurface: {
+              surfaceId: 'array-delete',
+              dataModel: {
+                items: [
+                  { name: 'Alpha' },
+                  { name: 'Beta' },
+                  { name: 'Gamma' },
+                ],
+              },
+            },
+          },
+          {
+            version: 'v1.0',
+            updateDataModel: {
+              surfaceId: 'array-delete',
+              path: '/items/0',
+              value: null,
+            },
+          },
+        ],
+      ],
+      [
+        'v0.9 omitted value',
+        [
+          {
+            version: 'v0.9',
+            createSurface: { surfaceId: 'array-delete' },
+          },
+          {
+            version: 'v0.9',
+            updateDataModel: {
+              surfaceId: 'array-delete',
+              value: {
+                items: [
+                  { name: 'Alpha' },
+                  { name: 'Beta' },
+                  { name: 'Gamma' },
+                ],
+              },
+            },
+          },
+          {
+            version: 'v0.9',
+            updateDataModel: {
+              surfaceId: 'array-delete',
+              path: '/items/0',
+            },
+          },
+        ],
+      ],
+    ] as const,
+  )(
+    'reindexes snapshot paths after %s deletion',
+    (_label, setupMessages) => {
+      const result = compactA2UIMessagesToSnapshot([
+        ...setupMessages,
+        {
+          version: setupMessages[0].version,
+          updateComponents: {
+            surfaceId: 'array-delete',
+            components: [
+              {
+                id: 'root',
+                component: 'Column',
+                children: ['first', 'second', 'stale'],
+              },
+              {
+                id: 'first',
+                component: 'Text',
+                text: { path: '/items/0/name' },
+              },
+              {
+                id: 'second',
+                component: 'Text',
+                text: { path: '/items/1/name' },
+              },
+              {
+                id: 'stale',
+                component: 'Text',
+                text: { path: '/items/2/name' },
+              },
+            ],
+          },
+        },
+      ] as ServerToClientMessage[]);
+
+      expect(dataPaths(result)).toEqual([
+        '/items/0/name',
+        '/items/1/name',
+      ]);
+      expect(dataValues(result)).toEqual(['Beta', 'Gamma']);
+    },
+  );
+
   test('drops components removed from the final reachable tree', () => {
     const result = compactA2UIMessagesToSnapshot([
       {

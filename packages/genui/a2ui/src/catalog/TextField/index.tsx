@@ -10,7 +10,10 @@ import {
   normalizeTextFieldValue,
   normalizeTextFieldVariant,
 } from './utils.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/TextField.css';
 
@@ -34,11 +37,7 @@ export interface TextFieldProps extends GenericComponentProps {
     condition:
       | boolean
       | { path: string }
-      | {
-        call: string;
-        args?: Record<string, string | number | boolean | { path: string }>;
-        returnType?: 'boolean';
-      };
+      | V1FunctionCall;
     /** The error message to display if the check fails. */
     message: string;
   }>;

@@ -2,7 +2,7 @@
 
 Generate and customize the system instructions that teach an LLM to emit valid A2UI messages.
 
-Generate a reusable prompt with the CLI for most deployments, or build one programmatically when the backend needs request-specific catalog or policy inputs. The prompt tells the model how to produce A2UI v0.9 JSON. It includes the protocol rules, the component catalog, function signatures, validated examples, and hard constraints that keep the renderer output safe and parseable.
+Generate a reusable prompt with the CLI for most deployments, or build one programmatically when the backend needs request-specific catalog or policy inputs. The prompt tells the model how to produce the A2UI v1.0 core rendering messages supported by Lynx. It includes the protocol rules, the component catalog, function signatures, validated examples, and hard constraints that keep the renderer output safe and parseable.
 
 ## 1. CLI
 
@@ -28,7 +28,7 @@ npx @lynx-js/genui a2ui generate prompt \
   --out dist/a2ui-system-prompt.txt
 ```
 
-`generate prompt` uses the built-in A2UI basic catalog by default. The generated prompt requires `createSurface.catalogId` to match the catalog id embedded in the prompt.
+`generate prompt` uses the built-in A2UI basic catalog by default. The generated prompt requires `createSurface.catalogId` to match the catalog ID embedded in the prompt. This gives every component a default catalog without adding per-component multi-catalog routing.
 
 ### Custom catalogs
 
@@ -103,8 +103,8 @@ For fully in-memory catalog construction, use `createA2UICatalogFromManifests(..
 
 The generated prompt includes:
 
-- A2UI v0.9 protocol overview and design principles.
-- Required server-to-client message types: `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`.
+- A2UI v1.0 core protocol overview and design principles.
+- Supported agent-to-renderer message types: `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`.
 - Required message ordering for a fresh response.
 - Data binding rules for `{ "path": "/..." }` values and list children.
 - Client action rules for events and function calls.
@@ -118,21 +118,18 @@ The model should return a JSON array of A2UI messages, not Markdown or prose:
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
-      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateComponents": {
-      "surfaceId": "main",
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+      "dataModel": {
+        "title": "Hello A2UI"
+      },
       "components": [
         {
           "id": "root",
           "component": "Text",
-          "text": "Hello A2UI"
+          "text": { "path": "/title" }
         }
       ]
     }
@@ -169,6 +166,8 @@ export async function POST(req: Request) {
 ```
 
 If the backend supports interactive A2UI actions, preserve the conversation history and pass client action messages back to the model. Action responses should update the existing surface with `updateDataModel` and/or `updateComponents` instead of creating a new surface.
+
+This integration supports the v1.0 core rendering messages and the standard `action` envelope. It does not currently implement RPC or multi-catalog extensions.
 
 ## Choosing an approach
 

@@ -20,27 +20,15 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
     user: 'Generate a login card with email, password, and a submit button.',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
-        },
-      },
-      {
-        version: 'v0.9',
-        updateDataModel: {
-          surfaceId: 'main',
-          value: { form: { email: '', password: '' } },
-        },
-      },
-      {
-        version: 'v0.9',
-        updateComponents: {
-          surfaceId: 'main',
+          dataModel: { form: { email: '', password: '' } },
           components: [
-            { id: 'root', component: 'Card', child: 'form-column' },
+            { id: 'root', component: 'Card', child: 'form_column' },
             {
-              id: 'form-column',
+              id: 'form_column',
               component: 'Column',
               children: ['title', 'email', 'password', 'submit'],
             },
@@ -62,10 +50,11 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
               id: 'submit',
               component: 'Button',
               variant: 'primary',
-              child: 'submit-label',
+              child: 'submit_label',
               action: {
                 event: {
                   name: 'submit_login',
+                  userMessage: 'Sign me in',
                   context: {
                     email: { path: '/form/email' },
                     password: { path: '/form/password' },
@@ -73,7 +62,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
                 },
               },
             },
-            { id: 'submit-label', component: 'Text', text: 'Sign in' },
+            { id: 'submit_label', component: 'Text', text: 'Sign in' },
           ],
         },
       },
@@ -84,14 +73,14 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
     user: 'Show three trip ideas as a compact vertical group.',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           path: '/items',
@@ -106,14 +95,14 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
             {
               id: 'root',
               component: 'Column',
-              children: ['title', 'trip-items'],
+              children: ['title', 'trip_items'],
             },
             {
               id: 'title',
@@ -122,30 +111,30 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
               variant: 'h2',
             },
             {
-              id: 'trip-items',
+              id: 'trip_items',
               component: 'Column',
-              children: { path: '/items', componentId: 'trip-row' },
+              children: { path: '/items', componentId: 'trip_row' },
             },
             {
-              id: 'trip-row',
+              id: 'trip_row',
               component: 'Row',
-              children: ['trip-icon', 'trip-copy'],
+              children: ['trip_icon', 'trip_copy'],
               align: 'center',
             },
-            { id: 'trip-icon', component: 'Icon', name: 'location_on' },
+            { id: 'trip_icon', component: 'Icon', name: 'location_on' },
             {
-              id: 'trip-copy',
+              id: 'trip_copy',
               component: 'Column',
-              children: ['trip-name', 'trip-detail'],
+              children: ['trip_name', 'trip_detail'],
             },
             {
-              id: 'trip-name',
+              id: 'trip_name',
               component: 'Text',
               text: { path: 'name' },
               variant: 'h3',
             },
             {
-              id: 'trip-detail',
+              id: 'trip_detail',
               component: 'Text',
               text: { path: 'detail' },
               variant: 'body',
@@ -160,14 +149,14 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
     user: 'Show weekly active users as a line chart.',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           value: {
@@ -179,13 +168,13 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
-            { id: 'root', component: 'Card', child: 'chart-column' },
+            { id: 'root', component: 'Card', child: 'chart_column' },
             {
-              id: 'chart-column',
+              id: 'chart_column',
               component: 'Column',
               children: ['title', 'chart'],
             },
@@ -213,10 +202,10 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
   {
     name: 'action-update',
     user:
-      'A2UI_USER_ACTION: {"surfaceId":"main","action":{"name":"submit_login","context":{"email":"me@example.com"}}}',
+      'A2UI_USER_ACTION: {"version":"v1.0","action":{"name":"submit_login","surfaceId":"main","sourceComponentId":"submit","timestamp":"2026-01-01T00:00:00.000Z","context":{"email":"me@example.com"}}}',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           path: '/status',
@@ -227,28 +216,28 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
             {
               id: 'root',
               component: 'Card',
-              child: 'status-column',
+              child: 'status_column',
             },
             {
-              id: 'status-column',
+              id: 'status_column',
               component: 'Column',
-              children: ['status-title', 'status-message'],
+              children: ['status_title', 'status_message'],
             },
             {
-              id: 'status-title',
+              id: 'status_title',
               component: 'Text',
               text: 'Success',
               variant: 'h2',
             },
             {
-              id: 'status-message',
+              id: 'status_message',
               component: 'Text',
               text: { path: '/status/message' },
             },

@@ -15,15 +15,29 @@ export {
   prepareMessagesForProcessing,
 } from './payloadNormalizer.js';
 export type {
+  A2UIAction,
   A2UIClientEventMessage,
+  A2UIDataBinding,
+  A2UIFunctionCall,
+  A2UIProtocolVersion,
   ComponentInstance,
+  CreateSurfacePayload,
+  DeleteSurfacePayload,
   GenericComponentProps,
+  LegacyCreateSurfacePayload,
+  LegacyServerToClientMessage,
   Resource,
   ResourceInfo,
   ServerToClientMessage,
   Surface,
   SurfaceId,
+  UpdateComponentsPayload,
+  UpdateDataModelPayload,
   UserActionPayload,
+  V1CreateSurfacePayload,
+  V1FunctionCall,
+  V1ServerToClientMessage,
+  V1UpdateDataModelPayload,
 } from './types.js';
 export { FunctionRegistry, functionRegistry } from './FunctionRegistry.js';
 export type { FunctionEntry, FunctionImpl } from './FunctionRegistry.js';

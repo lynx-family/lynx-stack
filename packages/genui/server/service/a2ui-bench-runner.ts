@@ -149,7 +149,7 @@ function buildBenchPrompt(
   scenario: BenchScenarioRequest,
 ): string {
   return [
-    'Generate one A2UI v0.9 UI for the following benchmark scenario.',
+    'Generate one A2UI v1.0 UI for the following benchmark scenario.',
     '',
     `Scenario name: ${scenario.name}`,
     `Scenario type: ${scenario.type}`,

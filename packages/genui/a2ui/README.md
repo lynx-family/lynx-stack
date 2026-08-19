@@ -2,9 +2,18 @@
 
 English | [简体中文](./README_zh.md)
 
-`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v0.9. It
-consumes validated A2UI server-to-client JSON messages and renders trusted
-ReactLynx components in your app.
+`@lynx-js/genui/a2ui` is the ReactLynx client runtime for the A2UI v1.0 core
+rendering protocol. It consumes validated agent-to-renderer JSON messages and
+renders trusted ReactLynx components in your app. Existing v0.9 rendering
+streams remain readable during migration.
+
+The upstream project currently labels v1.0 as a Candidate specification. This
+package tracks that wire format through the deliberately small core described
+below.
+
+The v1.0 path intentionally covers the four core rendering messages and the
+standard `action` envelope. RPC, capability negotiation, and multi-catalog
+extensions are outside this package's current scope.
 
 Use this package when you already have, or plan to build, an Agent service that
 returns A2UI messages. The package does not host an Agent, call an LLM, own a
@@ -72,7 +81,7 @@ async function sendPrompt(input: string) {
     void fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ version: 'v1.0', action }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));
@@ -83,6 +92,26 @@ async function sendPrompt(input: string) {
 `MessageStore` stores raw protocol messages in arrival order. `<A2UI>`
 subscribes to it, processes new messages, renders the active surface, and emits
 generated UI actions through `onAction`.
+
+A v1.0 surface can include its initial data and components in one message:
+
+```json
+{
+  "version": "v1.0",
+  "createSurface": {
+    "surfaceId": "main",
+    "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+    "dataModel": { "title": "Hello A2UI" },
+    "components": [
+      {
+        "id": "root",
+        "component": "Text",
+        "text": { "path": "/title" }
+      }
+    ]
+  }
+}
+```
 
 ## What You Own
 
