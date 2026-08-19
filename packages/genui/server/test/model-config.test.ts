@@ -141,21 +141,24 @@ describe('GenUI model configuration', () => {
     const previousArkApiKey = process.env.IMG_GEN_ARK_API_KEY;
     const previousArkImageModel = process.env.IMG_GEN_ARK_IMAGE_MODEL;
     const previousArkImageBaseURL = process.env.IMG_GEN_ARK_IMAGE_BASE_URL;
+    const previousSearchApiKey = process.env.SEARCH_INFINITY_API_KEY;
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
     process.env.IMG_GEN_ARK_API_KEY = 'ark-image-secret';
     process.env.IMG_GEN_ARK_IMAGE_MODEL = 'private-image-model';
     process.env.IMG_GEN_ARK_IMAGE_BASE_URL =
       'https://ark-private.example.com/api/v3';
+    process.env.SEARCH_INFINITY_API_KEY = 'search-infinity-secret';
     try {
       const privateMessage =
         'Doubao Seed failed at https://seed.example.com/api/v3 '
         + 'for doubao-seed-upstream with seed-secret and Bearer session-token; '
         + 'image config ark-image-secret private-image-model '
-        + 'https://ark-private.example.com/api/v3';
+        + 'https://ark-private.example.com/api/v3; '
+        + 'search config search-infinity-secret';
       const publicMessage =
         'Doubao Seed failed at [REDACTED] for [REDACTED] with [REDACTED] '
         + 'and Bearer [REDACTED]; image config [REDACTED] [REDACTED] '
-        + '[REDACTED]';
+        + '[REDACTED]; search config [REDACTED]';
       const upstreamError = new Error(privateMessage);
       upstreamError.name = 'ProviderError seed-secret';
       expect(errorMessage(upstreamError)).toEqual({
@@ -167,8 +170,12 @@ describe('GenUI model configuration', () => {
       process.env[GENUI_MODEL_CONFIG_ENV] = '{invalid json';
       expect(redactModelConfigSecrets(
         'image config ark-image-secret private-image-model '
-          + 'https://ark-private.example.com/api/v3',
-      )).toBe('image config [REDACTED] [REDACTED] [REDACTED]');
+          + 'https://ark-private.example.com/api/v3; '
+          + 'search config search-infinity-secret',
+      )).toBe(
+        'image config [REDACTED] [REDACTED] [REDACTED]; '
+          + 'search config [REDACTED]',
+      );
     } finally {
       if (previous === undefined) {
         delete process.env[GENUI_MODEL_CONFIG_ENV];
@@ -189,6 +196,11 @@ describe('GenUI model configuration', () => {
         delete process.env.IMG_GEN_ARK_IMAGE_BASE_URL;
       } else {
         process.env.IMG_GEN_ARK_IMAGE_BASE_URL = previousArkImageBaseURL;
+      }
+      if (previousSearchApiKey === undefined) {
+        delete process.env.SEARCH_INFINITY_API_KEY;
+      } else {
+        process.env.SEARCH_INFINITY_API_KEY = previousSearchApiKey;
       }
     }
   });

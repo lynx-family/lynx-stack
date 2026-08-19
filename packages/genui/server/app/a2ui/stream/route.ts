@@ -6,6 +6,10 @@ import { Hono } from 'hono';
 
 import { loadBasicCatalog } from '../../../agent/a2ui-catalog';
 import { createA2UIImageSourcePolicy } from '../../../agent/a2ui-image-source-policy.js';
+import {
+  createA2UIOpenURLPolicy,
+  userProvidedA2UIURLSources,
+} from '../../../agent/a2ui-open-url-policy.js';
 import { A2UIProtocolMessageStreamParser } from '../../../agent/a2ui-stream-parser';
 import {
   getA2UIValidationDebugData,
@@ -15,6 +19,7 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../../../agent/ark-image-generation-tool.js';
+import { searchedDoubaoDocumentURLs } from '../../../agent/doubao-search-tool.js';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
   configuredApiStyle,
@@ -119,7 +124,14 @@ async function postA2UIStream(req: Request) {
     [messages, validatedConversation.conversation, catalog],
     () => generatedArkImageURLs(imageGenerationScope),
   );
-  const validationOptions = { isImageSourceAllowed };
+  const isOpenUrlAllowed = createA2UIOpenURLPolicy(
+    userProvidedA2UIURLSources(
+      messages,
+      validatedConversation.conversation?.history,
+    ),
+    () => searchedDoubaoDocumentURLs(imageGenerationScope),
+  );
+  const validationOptions = { isImageSourceAllowed, isOpenUrlAllowed };
 
   log('request.accepted', {
     messageCount: messages.length,
@@ -185,6 +197,7 @@ async function postA2UIStream(req: Request) {
           });
           const protocolParser = new A2UIProtocolMessageStreamParser({
             isImageSourceAllowed,
+            isOpenUrlAllowed,
           });
           const streamedMessages: unknown[] = [];
           let streamedText = '';

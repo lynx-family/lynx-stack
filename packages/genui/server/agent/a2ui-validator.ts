@@ -107,6 +107,7 @@ export interface ValidationOptions {
   existingSurfaceIds?: string[];
   existingDataModelBySurface?: Record<string, unknown>;
   isImageSourceAllowed?: ((source: string) => boolean) | undefined;
+  isOpenUrlAllowed?: ((source: string) => boolean) | undefined;
 }
 
 export interface A2UIValidationDebugEntry {
@@ -363,6 +364,19 @@ export function validateA2UIOutput(
             errors.push(
               `Unknown function "${fn.name}" at ${fn.path}. Allowed functions: ${allowed}.`,
             );
+          } else if (
+            fn.name === 'openUrl'
+            && options.isOpenUrlAllowed
+            && (
+              typeof fn.args.url !== 'string'
+              || !options.isOpenUrlAllowed(fn.args.url)
+            )
+          ) {
+            errors.push(
+              `Function "openUrl" at ${fn.path} has untrusted url ${
+                JSON.stringify(fn.args.url)
+              }. Use a URL supplied by the request or returned by web_search.`,
+            );
           }
         }
         if (knownComponents.has(comp.component)) {
@@ -597,7 +611,7 @@ function collectPaths(node: unknown, acc: string[]): void {
 function collectFunctionCalls(
   node: unknown,
   path = '<root>',
-): { name: string; path: string }[] {
+): { name: string; path: string; args: Record<string, unknown> }[] {
   if (!isRecord(node) && !Array.isArray(node)) return [];
   if (Array.isArray(node)) {
     return node.flatMap((item, index) =>
@@ -606,9 +620,13 @@ function collectFunctionCalls(
   }
 
   const record = node;
-  const calls: { name: string; path: string }[] = [];
+  const calls: {
+    name: string;
+    path: string;
+    args: Record<string, unknown>;
+  }[] = [];
   if (typeof record.call === 'string' && isRecord(record.args)) {
-    calls.push({ name: record.call, path });
+    calls.push({ name: record.call, path, args: record.args });
   }
 
   for (const [key, value] of Object.entries(record)) {

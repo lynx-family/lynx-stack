@@ -89,7 +89,18 @@ function isA2UIComponent(value: unknown): value is Record<string, unknown> & {
 function toStreamRenderableComponent(
   component: Record<string, unknown> & { id: string; component: string },
   isImageSourceAllowed?: (source: string) => boolean,
+  isOpenUrlAllowed?: (source: string) => boolean,
 ): Record<string, unknown> & { id: string; component: string } {
+  if (
+    isOpenUrlAllowed
+    && containsUntrustedOpenURL(component, isOpenUrlAllowed)
+  ) {
+    return {
+      id: component.id,
+      component: 'Loading',
+      variant: 'block',
+    };
+  }
   if (component.component !== 'Image') return component;
   if (
     isLoadableImageSource(component.url)
@@ -102,6 +113,26 @@ function toStreamRenderableComponent(
     component: 'Loading',
     variant: 'block',
   };
+}
+
+function containsUntrustedOpenURL(
+  value: unknown,
+  isOpenUrlAllowed: (source: string) => boolean,
+): boolean {
+  if (Array.isArray(value)) {
+    return value.some((item) =>
+      containsUntrustedOpenURL(item, isOpenUrlAllowed)
+    );
+  }
+  if (!isRecord(value)) return false;
+  if (value.call === 'openUrl') {
+    if (!isRecord(value.args)) return true;
+    const url = value.args.url;
+    if (typeof url !== 'string' || !isOpenUrlAllowed(url)) return true;
+  }
+  return Object.values(value).some((item) =>
+    containsUntrustedOpenURL(item, isOpenUrlAllowed)
+  );
 }
 
 function sniffUpdateComponentsSurfaceId(buffer: string): string | null {
@@ -292,6 +323,7 @@ export class A2UIProtocolMessageStreamParser {
   public constructor(
     private readonly options: {
       isImageSourceAllowed?: ((source: string) => boolean) | undefined;
+      isOpenUrlAllowed?: ((source: string) => boolean) | undefined;
     } = {},
   ) {}
 
@@ -408,6 +440,7 @@ export class A2UIProtocolMessageStreamParser {
     const renderable = toStreamRenderableComponent(
       parsed,
       this.options.isImageSourceAllowed,
+      this.options.isOpenUrlAllowed,
     );
     const seen = this.seenComponentsBySurface.get(surfaceId)
       ?? new Map<string, ComponentRecord>();

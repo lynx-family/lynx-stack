@@ -8,6 +8,10 @@ import type { A2UICatalog } from '../agent/a2ui-catalog';
 import { loadBasicCatalog } from '../agent/a2ui-catalog';
 import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
 import {
+  createA2UIOpenURLPolicy,
+  userProvidedA2UIURLSources,
+} from '../agent/a2ui-open-url-policy.js';
+import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
@@ -17,6 +21,7 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../agent/ark-image-generation-tool.js';
+import { searchedDoubaoDocumentURLs } from '../agent/doubao-search-tool.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -50,6 +55,8 @@ export interface A2UIChatOptions extends ChatOptions {
    * credentials in the shared provider cache.
    */
   disableAgentCache?: boolean | undefined;
+  /** Disable non-deterministic web search for controlled server-side runs. */
+  enableWebSearch?: boolean | undefined;
   maxRepairAttempts?: number | undefined;
 }
 
@@ -96,12 +103,18 @@ export default class A2UIAgentService {
       createA2UIAgent({
         ...pickProviderConfig(opts),
         catalog,
+        enableWebSearch: opts.enableWebSearch,
       }).then(({ agent }) => agent);
     if (opts.disableAgentCache) return createAgent();
     return this.agentCache.get(
       opts,
       createAgent,
-      `${catalog.id}:${createStableValueHash(catalog)}`,
+      `${catalog.id}:${
+        createStableValueHash({
+          catalog,
+          enableWebSearch: opts.enableWebSearch,
+        })
+      }`,
     );
   }
 
@@ -247,9 +260,22 @@ export default class A2UIAgentService {
       ? (source: string) =>
         callerImageSourcePolicy(source) || trustedImageSource(source)
       : trustedImageSource;
+    const trustedOpenURL = createA2UIOpenURLPolicy(
+      userProvidedA2UIURLSources(
+        messages,
+        conversation?.history,
+      ),
+      () => searchedDoubaoDocumentURLs(imageGenerationScope),
+    );
+    const callerOpenURLPolicy = validationOptions?.isOpenUrlAllowed;
+    const isOpenUrlAllowed = callerOpenURLPolicy
+      ? (source: string) =>
+        callerOpenURLPolicy(source) || trustedOpenURL(source)
+      : trustedOpenURL;
     const effectiveValidationOptions: ValidationOptions = {
       ...validationOptions,
       isImageSourceAllowed,
+      isOpenUrlAllowed,
     };
 
     let lastText = '';

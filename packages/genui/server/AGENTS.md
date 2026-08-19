@@ -66,6 +66,29 @@ stock-image or placeholder-image fallback when generation fails.
 
 The hosting runtime must provide these variables before starting the server.
 
+To let the A2UI agent retrieve current or externally verifiable public-web
+information, configure the optional server-side Doubao Search credential:
+
+```bash
+export SEARCH_INFINITY_API_KEY="..."
+```
+
+When the key is present, the server conditionally registers a `web_search`
+tool. The tool calls the Doubao Search Global API with a fixed maximum of five
+text results and never returns search images. It may be called at most three
+times per HTTP request across the initial generation and all repair attempts.
+`SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
+request timeout and must be an integer from 1 through 60000. Keep the key
+server-only and do not include a `Bearer` prefix. Missing configuration leaves
+search disabled without affecting the rest of the A2UI server; `GET
+/a2ui/health` reports this through `webSearchReady`.
+
+URLs supplied by the user or returned by the current request's search scope
+may be used with `openUrl`. The server rejects other model-generated targets,
+and the streaming parser keeps components with untrusted links in a loading
+state until final validation. Bench runs explicitly disable web search so
+their output stays deterministic.
+
 To publish short, shareable A2UI and OpenUI preview URLs, configure the
 public-read Volcengine TOS bucket and server-only write credentials. All four
 variables are required; do not add fallback bucket or region values:

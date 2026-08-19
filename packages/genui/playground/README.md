@@ -27,6 +27,7 @@ GENUI_MODEL_CONFIG_JSON='{"GPT-5.4":{"model":"gpt-5.4","apiKey":"sk-...","baseUR
   IMG_GEN_ARK_API_KEY='...' \
   IMG_GEN_ARK_IMAGE_MODEL='doubao-seedream-...' \
   IMG_GEN_ARK_IMAGE_BASE_URL='https://ark.cn-beijing.volces.com/api/v3' \
+  SEARCH_INFINITY_API_KEY='...' \
   LYNX_USE_PORT=3060 \
   pnpm -C packages/genui/server dev
 ```
@@ -71,16 +72,18 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 
 ### Server environment
 
-| Variable                                                       | Purpose                                          | Default             |
-| -------------------------------------------------------------- | ------------------------------------------------ | ------------------- |
-| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations    | —                   |
-| `IMG_GEN_ARK_API_KEY`                                          | Server-side Volcengine Ark image-generation key  | —                   |
-| `IMG_GEN_ARK_IMAGE_MODEL`                                      | Ark image-generation model/endpoint id           | —                   |
-| `IMG_GEN_ARK_IMAGE_BASE_URL`                                   | Ark image-generation HTTPS API base URL          | —                   |
-| `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)    | `120000`            |
-| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring          | disabled            |
-| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
-| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS | disabled            |
+| Variable                                                       | Purpose                                             | Default             |
+| -------------------------------------------------------------- | --------------------------------------------------- | ------------------- |
+| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations       | —                   |
+| `IMG_GEN_ARK_API_KEY`                                          | Server-side Volcengine Ark image-generation key     | —                   |
+| `IMG_GEN_ARK_IMAGE_MODEL`                                      | Ark image-generation model/endpoint id              | —                   |
+| `IMG_GEN_ARK_IMAGE_BASE_URL`                                   | Ark image-generation HTTPS API base URL             | —                   |
+| `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)       | `120000`            |
+| `SEARCH_INFINITY_API_KEY`                                      | Optional server-side Doubao Search API key          | disabled            |
+| `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
+| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring             | disabled            |
+| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
+| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
 
 The Create tab loads its model selector from the server's `GET /models`
 endpoint. Provider credentials, upstream model ids, and upstream API URLs
@@ -93,6 +96,16 @@ image URLs invented by the text model are rejected. `IMG_GEN_ARK_API_KEY`,
 configured explicitly. See the
 [Volcengine Ark image-generation API](https://www.volcengine.com/docs/82379/1541523?lang=zh)
 for model/endpoint setup.
+
+When `SEARCH_INFINITY_API_KEY` is configured, the A2UI agent can call the
+server-side `web_search` tool for current or explicitly requested public-web
+information. The key is never sent to the Playground. Each generation may
+perform at most three searches across the initial response and validation
+repairs; each search returns at most five normalized text results. Source links
+must come from the user input or the current request's search results. Search
+images are intentionally excluded from this first integration. See the
+[Doubao Search console](https://console.volcengine.com/search-infinity) for
+service activation and API-key management.
 
 Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
 enabled only when that sidecar is ready. See
