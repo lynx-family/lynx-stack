@@ -11,9 +11,9 @@ let onTapLepus = {
     ...{
         aaaa: this.aaaa,
         bbbb: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
-                cccc: {
-                    dddd: __mainThreadObjectSource.cccc.dddd
-                }
+                cccc: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        dddd: __mainThreadObjectSource.dddd
+                    })(__mainThreadObjectSource.cccc)
             })(this.bbbb),
         eeee: this.eeee,
         ffff: this.ffff,
@@ -23,9 +23,9 @@ let onTapLepus = {
             })(this.hhhh),
         llll: this.llll,
         mmmm: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
-                nnnn: {
-                    'oooo': __mainThreadObjectSource.nnnn['oooo']
-                }
+                nnnn: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        'oooo': __mainThreadObjectSource['oooo']
+                    })(__mainThreadObjectSource.nnnn)
             })(this.mmmm)
     }
 };

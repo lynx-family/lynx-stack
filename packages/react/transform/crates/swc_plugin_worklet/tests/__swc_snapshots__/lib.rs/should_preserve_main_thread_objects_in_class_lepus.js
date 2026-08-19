@@ -11,6 +11,11 @@ class App extends Component {
                     "get": __mainThreadObjectSource["get"],
                     set: __mainThreadObjectSource.set
                 })(this.value),
+            props: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                            get: __mainThreadObjectSource.get
+                        })(__mainThreadObjectSource.value)
+                })(this.props),
             ref: this.ref
         }
     };
@@ -36,6 +41,7 @@ __workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", 
     this["onTap"] = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();

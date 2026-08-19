@@ -142,7 +142,7 @@ export interface Lynx {
 
 // @public
 export abstract class MainThreadObjectHandle<I, O extends object> {
-    get payload(): I;
+    get payload(): Readonly<I>;
 }
 
 // @public

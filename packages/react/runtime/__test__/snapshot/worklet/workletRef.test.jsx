@@ -523,6 +523,29 @@ describe('MainThreadObject', () => {
     ).toThrow(
       'MainThreadObject dispose function for "@test/capturing-dispose" must not capture values. Import dependencies from a shared-runtime module instead.',
     );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/js-function-capture',
+        create: {
+          _wkltId: 'js-function-capture',
+          _jsFn: { callback: { _jsFnId: 1 } },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/js-function-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/this-capture',
+        create: value => ({ value }),
+        dispose: {
+          _wkltId: 'this-capture',
+          helper: { stop() {} },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject dispose function for "@test/this-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
 
     const type = defineMainThreadObjectType({
       type: '@test/frozen',
@@ -548,6 +571,32 @@ describe('MainThreadObject', () => {
       'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.',
     );
     expect(() => renderTestMainThreadObject([1, { value: 2 }])).not.toThrow();
+  });
+
+  it('owns an immutable snapshot of the creation payload', () => {
+    globalEnvManager.switchToBackground();
+    const initialValue = { nested: { value: 1 }, values: [2, 3] };
+    const value = renderTestMainThreadObject(initialValue);
+    const handle = captureMainThreadObject(value);
+
+    expect(handle).toBeDefined();
+
+    initialValue.nested.value = 4;
+    initialValue.values.push(5);
+
+    expect(handle.payload).toEqual({ nested: { value: 1 }, values: [2, 3] });
+    expect(handle.payload).not.toBe(initialValue);
+    expect(handle.payload.nested).not.toBe(initialValue.nested);
+    expect(Object.isFrozen(handle.payload)).toBe(true);
+    expect(Object.isFrozen(handle.payload.nested)).toBe(true);
+    expect(Object.isFrozen(handle.payload.values)).toBe(true);
+    expect(() => {
+      handle.payload.nested.value = 6;
+    }).toThrow();
+    expect(JSON.parse(JSON.stringify(value))._initValue).toEqual({
+      nested: { value: 1 },
+      values: [2, 3],
+    });
   });
 
   it('diagnoses an incompatible main-thread runtime', () => {

@@ -935,6 +935,72 @@ function worklet(event: Event) {
       )),
       hygiene()
     ),
+    should_expose_object_method_capture_channels_lepus,
+    r#"
+const callback = () => {};
+const valueType = defineMainThreadObjectType({
+  type: '@test/capturing-value',
+  helper: 1,
+  create(initialValue: number) {
+    "main thread";
+    runOnBackground(callback)();
+    return { value: initialValue + this.helper };
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_expose_object_method_capture_channels_js,
+    r#"
+const callback = () => {};
+const valueType = defineMainThreadObjectType({
+  type: '@test/capturing-value',
+  helper: 1,
+  create(initialValue: number) {
+    "main thread";
+    runOnBackground(callback)();
+    return { value: initialValue + this.helper };
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
     should_transform_lepus_alias,
     r#"
 function worklet(event: Event) {
@@ -1071,6 +1137,7 @@ class App extends Component {
   onTap() {
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
@@ -1118,6 +1185,7 @@ class App extends Component {
   onTap() {
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
@@ -2062,7 +2130,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );
@@ -2092,7 +2160,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );

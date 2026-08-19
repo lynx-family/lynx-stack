@@ -12,6 +12,11 @@ class App extends Component {
                         "get": __mainThreadObjectSource["get"],
                         set: __mainThreadObjectSource.set
                     })(this.value),
+                props: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                                get: __mainThreadObjectSource.get
+                            })(__mainThreadObjectSource.value)
+                    })(this.props),
                 ref: this.ref
             }
         };
