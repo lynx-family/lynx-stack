@@ -50,6 +50,7 @@ interface AuthoredPageProps {
   onTap?: () => void;
   pageId?: string;
   pageKey?: string;
+  pageKeys?: string[];
   pageRef?: unknown;
   refMode?: 'direct' | 'spread';
   withPage?: boolean;
@@ -76,6 +77,14 @@ describe('Compiled authored ET page fixtures', () => {
     }
   }
 
+  function waitForPassiveEffects(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        setTimeout(resolve);
+      });
+    });
+  }
+
   async function renderHydratedPair(
     backgroundProps: AuthoredPageProps,
     mainThreadProps: AuthoredPageProps = backgroundProps,
@@ -86,11 +95,7 @@ describe('Compiled authored ET page fixtures', () => {
     expect(isElementTemplateHydrated()).toBe(true);
     envManager.switchToMainThread();
     envManager.switchToBackground();
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        setTimeout(resolve);
-      });
-    });
+    await waitForPassiveEffects();
     return modules.backgroundModule;
   }
 
@@ -124,6 +129,71 @@ describe('Compiled authored ET page fixtures', () => {
 
     expect(vnode.key).toBe('stable-page');
     expect(vnode.props).not.toHaveProperty('key');
+  });
+
+  it('reports multiple authored pages mounted concurrently on background', async () => {
+    const { backgroundModule } = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
+    const originalReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      renderOnBackground(backgroundModule, { pageKeys: ['first-page', 'second-page'], withPage: true });
+      await waitForPassiveEffects();
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(reportError).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Attempt to render more than one `<page />`, which is not supported.',
+      }));
+    } finally {
+      lynx.reportError = originalReportError;
+    }
+  });
+
+  it('keeps tracking a duplicate after the first authored page unmounts', async () => {
+    const { backgroundModule } = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
+    const originalReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      renderOnBackground(backgroundModule, { pageKeys: ['first-page', 'second-page'], withPage: true });
+      await waitForPassiveEffects();
+      expect(reportError).toHaveBeenCalledTimes(1);
+      reportError.mockClear();
+
+      renderOnBackground(backgroundModule, { pageKeys: ['second-page'], withPage: true });
+      await waitForPassiveEffects();
+      renderOnBackground(backgroundModule, { pageKeys: ['second-page', 'third-page'], withPage: true });
+      await waitForPassiveEffects();
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(reportError).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Attempt to render more than one `<page />`, which is not supported.',
+      }));
+    } finally {
+      lynx.reportError = originalReportError;
+    }
+  });
+
+  it('does not report a keyed authored page replacement as multiple pages', async () => {
+    const { backgroundModule } = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
+    const originalReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      renderOnBackground(backgroundModule, { pageKey: 'first-page', withPage: true });
+      await waitForPassiveEffects();
+      reportError.mockClear();
+
+      renderOnBackground(backgroundModule, { pageKey: 'replacement-page', withPage: true });
+      await waitForPassiveEffects();
+
+      expect(reportError).not.toHaveBeenCalled();
+    } finally {
+      lynx.reportError = originalReportError;
+    }
   });
 
   it('reconciles background page attrs when main-thread first screen differs', async () => {
