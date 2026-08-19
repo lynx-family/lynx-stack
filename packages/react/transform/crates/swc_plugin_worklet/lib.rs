@@ -100,6 +100,8 @@ impl VisitMut for WorkletVisitor {
     });
     method.visit_mut_with(&mut collector);
 
+    let should_use_getter = collector.has_extracted_this_props();
+
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let collect_main_thread = self.defines_collector.is_some();
     let collected_hash = collect_main_thread.then(|| hash.clone());
@@ -122,10 +124,32 @@ impl VisitMut for WorkletVisitor {
       collect_main_thread,
     );
 
-    *n = Prop::KeyValue(KeyValueProp {
-      key: method.key.clone(),
-      value: worklet_object_expr,
-    });
+    // Extracted `this.xxx` captures are spread into the ctx object. In an object literal,
+    // `this` in a plain key-value initializer refers to the enclosing lexical scope
+    // (`undefined` at ESM module top level), not the object being defined. Emitting a
+    // getter keeps `this` bound to the receiver on property read, matching the original
+    // method-call semantics (`obj.create()` has `this === obj`).
+    if should_use_getter {
+      *n = Prop::Getter(GetterProp {
+        span: method.span(),
+        key: method.key.clone(),
+        type_ann: None,
+        body: Some(BlockStmt {
+          ctxt: Default::default(),
+          span: DUMMY_SP,
+          stmts: vec![ReturnStmt {
+            span: DUMMY_SP,
+            arg: Some(worklet_object_expr),
+          }
+          .into()],
+        }),
+      });
+    } else {
+      *n = Prop::KeyValue(KeyValueProp {
+        key: method.key.clone(),
+        value: worklet_object_expr,
+      });
+    }
     self.collect_worklet_define(
       collected_hash,
       main_thread_stmt,
