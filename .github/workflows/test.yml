@@ -216,7 +216,7 @@ jobs:
           --config "$pnpr_config" \
           --listen 127.0.0.1:4873 \
           --public-url http://localhost:4873 &
-        sleep 10
+        sleep 15
         pnpr_login=$(curl --fail --silent --show-error \
           --request PUT \
           --header 'content-type: application/json' \
