@@ -73,9 +73,9 @@
 
 import type * as csstree from 'css-tree';
 
-// Type only, so nothing of the Node-only encode entry reaches the decode
-// Worker's bundle: the build-time path owns the taxonomy and this one mirrors
-// it, rather than inventing a second vocabulary for the same drops.
+// Type only, so nothing of the encode entry reaches the decode Worker's bundle:
+// the build-time path owns the taxonomy and this one mirrors it, rather than
+// inventing a second vocabulary for the same drops.
 import type { DiscardedAtRule } from '../../encode/xmlToTasmJSON.js';
 
 /**
@@ -198,9 +198,9 @@ function diagnoseDiscardedAtRules(
  * Reports the at-rules a stylesheet lost, once per kind.
  *
  * The wording mirrors `encodeLynxXML` in `ts/encode/xmlToTasmJSON.ts`, which
- * reports the same taxonomy for the build-time path. It cannot be shared as
- * code: that module loads the encode wasm through `node:fs` glue and so cannot
- * be imported into a browser Worker, which is why only its type comes over.
+ * reports the same taxonomy for the build-time path. It is not shared as code:
+ * importing that module would pull the encode wasm (~168 kB) into the decode
+ * Worker just to format a message, so only its type comes over.
  *
  * Gated on a development build, unlike the build-time path, because this runs in
  * a browser every time a markup card is loaded. `process.env.NODE_ENV` is
