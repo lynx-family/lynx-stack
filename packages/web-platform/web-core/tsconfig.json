@@ -5,7 +5,7 @@
     "types": ["node"],
     "rootDir": "./ts",
     "outDir": "./dist",
-    "lib": ["DOM", "ESNext", "WebWorker"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
   },
   "include": ["ts"],
   "references": [
