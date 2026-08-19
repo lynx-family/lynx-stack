@@ -212,7 +212,7 @@ jobs:
         export no_proxy="${no_proxy:+$no_proxy,}localhost,127.0.0.1"
         pnpr_config="$RUNNER_TEMP/pnpr-config.json"
         node packages/tools/canary-release/pnpr-config.js "$pnpr_config" "$RUNNER_TEMP/pnpr-storage"
-        pnpm dlx @pnpm/pnpr@0.1.0-alpha.7 \
+        pnpm --config.minimum-release-age=0 dlx @pnpm/pnpr@0.1.0-alpha.7 \
           --config "$pnpr_config" \
           --listen 127.0.0.1:4873 \
           --public-url http://localhost:4873 &
