@@ -13,8 +13,8 @@
   "exports": {
     "./encode": {
       "types": "./dist/encode/index.d.ts",
-      "import": "./dist/encode/index.js",
-      "default": "./dist/encode/index.js"
+      "import": "./dist/encode_prod/index.js",
+      "default": "./dist/encode_prod/index.js"
     },
     "./client": {
       "types": "./dist/client/index.d.ts",
