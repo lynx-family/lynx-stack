@@ -10,7 +10,6 @@
 
 import type {
   EnvironmentContext,
-  RsbuildConfig,
   RsbuildPlugin,
 } from '@rsbuild/core'
 
@@ -129,16 +128,8 @@ export function pluginQRCode(
     pre: ['lynx:rsbuild:api'],
     setup(api) {
       if (fullscreen) {
-        api.modifyRsbuildConfig({
-          order: 'post',
-          handler: (config, { mergeRsbuildConfig }) => {
-            const prev = config.server?.printUrls
-            if (typeof prev !== 'function') return
-            return mergeRsbuildConfig(config, {
-              server: { printUrls: wrapPrintUrlsWithFullscreen(prev) },
-            })
-          },
-        })
+        api.onAfterStartDevServer(appendFullscreenRoutes)
+        api.onAfterStartPreviewServer(appendFullscreenRoutes)
       }
 
       let unregisterPreviewShortcuts: (() => void) | undefined
@@ -212,33 +203,27 @@ function getEntriesFromRoutes(
   ]
 }
 
-type PrintUrlsFn = Extract<
-  NonNullable<NonNullable<RsbuildConfig['server']>['printUrls']>,
-  (...args: never[]) => unknown
->
-
 /**
- * Wrap a `server.printUrls` function so that each `Lynx`-labelled URL is
- * followed by an `∟ Fullscreen` entry with `?fullscreen=true`.
+ * Append an `∟ Fullscreen` route after every Lynx bundle route, so the dev and
+ * preview servers print a `?fullscreen=true` variant under each bundle URL.
  *
  * @internal
  */
-export function wrapPrintUrlsWithFullscreen(
-  prev: PrintUrlsFn,
-): PrintUrlsFn {
-  return (params) => {
-    const urls = prev(params) ?? []
-    const out: typeof urls = []
-    for (const entry of urls) {
-      out.push(entry)
-      if (typeof entry !== 'string' && entry.label === 'Lynx') {
-        out.push({
-          label: '∟ Fullscreen',
-          url: appendFullscreenParam(entry.url),
-        })
-      }
+export function appendFullscreenRoutes(
+  { routes, environments }: {
+    routes: { entryName: string, pathname: string }[]
+    environments: Record<string, EnvironmentContext>
+  },
+): void {
+  const lynxEntries = new Set(Object.keys(environments['lynx']?.entry ?? {}))
+  for (const route of [...routes]) {
+    if (!lynxEntries.has(route.entryName)) {
+      continue
     }
-    return out
+    routes.push({
+      entryName: '∟ Fullscreen',
+      pathname: appendFullscreenParam(route.pathname),
+    })
   }
 }
 

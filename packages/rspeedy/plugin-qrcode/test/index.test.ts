@@ -21,7 +21,7 @@ import { getRandomNumberInRange } from './port.js'
 import {
   pluginQRCode,
   withFullscreenSchema,
-  wrapPrintUrlsWithFullscreen,
+  appendFullscreenRoutes,
 } from '../src/index.js'
 
 const exit = vi.fn()
@@ -586,104 +586,66 @@ describe('Plugins - Terminal', () => {
     })
   })
 
-  describe('fullscreen printUrls hint', () => {
-    const params = { urls: [], port: 0, routes: [] } as never
+  describe('fullscreen routes', () => {
+    const environments = {
+      lynx: { entry: { main: {}, other: {} } },
+      web: { entry: { main: {} } },
+    } as never
 
-    test('appends ∟ Fullscreen under Lynx URL', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => [
-        { label: 'Lynx', url: 'http://example.com/foo/main.lynx.bundle' },
-      ])
+    test('appends ∟ Fullscreen after each Lynx bundle route', () => {
+      const routes = [
+        { entryName: 'main', pathname: '/main.lynx.bundle' },
+        { entryName: 'other', pathname: '/other.lynx.bundle' },
+      ]
 
-      expect(wrapped(params)).toEqual([
-        { label: 'Lynx', url: 'http://example.com/foo/main.lynx.bundle' },
+      appendFullscreenRoutes({ routes, environments })
+
+      expect(routes).toEqual([
+        { entryName: 'main', pathname: '/main.lynx.bundle' },
+        { entryName: 'other', pathname: '/other.lynx.bundle' },
         {
-          label: '∟ Fullscreen',
-          url: 'http://example.com/foo/main.lynx.bundle?fullscreen=true',
+          entryName: '∟ Fullscreen',
+          pathname: '/main.lynx.bundle?fullscreen=true',
+        },
+        {
+          entryName: '∟ Fullscreen',
+          pathname: '/other.lynx.bundle?fullscreen=true',
         },
       ])
     })
 
-    test('preserves existing query params on Lynx URL', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => [
-        {
-          label: 'Lynx',
-          url: 'http://example.com/foo/main.lynx.bundle?dev=1',
-        },
-      ])
+    test('preserves existing query params', () => {
+      const routes = [
+        { entryName: 'main', pathname: '/main.lynx.bundle?dev=1' },
+      ]
 
-      expect(wrapped(params)).toContainEqual({
-        label: '∟ Fullscreen',
-        url: 'http://example.com/foo/main.lynx.bundle?dev=1&fullscreen=true',
+      appendFullscreenRoutes({ routes, environments })
+
+      expect(routes).toContainEqual({
+        entryName: '∟ Fullscreen',
+        pathname: '/main.lynx.bundle?dev=1&fullscreen=true',
       })
     })
 
-    test('does not append for non-Lynx entries', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => [
-        { label: 'Web', url: 'http://example.com/foo/main.web.bundle' },
-        { label: '∟ Preview', url: 'http://example.com/foo/__web_preview' },
-      ])
-
-      expect(wrapped(params)).not.toContainEqual(
-        expect.objectContaining({ label: '∟ Fullscreen' }),
-      )
-    })
-
-    test('passes through string entries untouched', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => [
-        'http://example.com/foo/main.lynx.bundle',
-      ])
-
-      expect(wrapped(params)).toEqual([
-        'http://example.com/foo/main.lynx.bundle',
-      ])
-    })
-
-    test('handles undefined return from previous printUrls', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => undefined)
-
-      expect(wrapped(params)).toEqual([])
-    })
-
-    test('falls back to string concat when URL parsing fails', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => [
-        { label: 'Lynx', url: 'not-a-url' },
-        { label: 'Lynx', url: 'not-a-url?dev=1' },
-      ])
-
-      expect(wrapped(params)).toEqual([
-        { label: 'Lynx', url: 'not-a-url' },
-        { label: '∟ Fullscreen', url: 'not-a-url?fullscreen=true' },
-        { label: 'Lynx', url: 'not-a-url?dev=1' },
-        { label: '∟ Fullscreen', url: 'not-a-url?dev=1&fullscreen=true' },
-      ])
-    })
-
-    test('appends with all Lynx-labelled entries', () => {
-      const wrapped = wrapPrintUrlsWithFullscreen(() => [
-        { label: 'Lynx', url: 'http://example.com/a.lynx.bundle' },
-        { label: 'Web', url: 'http://example.com/a.web.bundle' },
-        { label: 'Lynx', url: 'http://example.com/b.lynx.bundle' },
-      ])
-
-      const result = wrapped(params) as Array<
-        { label: string, url: string } | string
-      >
-
-      expect(result).toHaveLength(5)
-      expect(
-        result.filter((e) =>
-          typeof e !== 'string' && e.label === '∟ Fullscreen'
-        ),
-      ).toEqual([
+    test('does not append for routes outside the lynx environment', () => {
+      const routes = [
         {
-          label: '∟ Fullscreen',
-          url: 'http://example.com/a.lynx.bundle?fullscreen=true',
+          entryName: '∟ Preview',
+          pathname: '/__web_preview?casename=main.web.bundle',
         },
-        {
-          label: '∟ Fullscreen',
-          url: 'http://example.com/b.lynx.bundle?fullscreen=true',
-        },
-      ])
+      ]
+
+      appendFullscreenRoutes({ routes, environments })
+
+      expect(routes).toHaveLength(1)
+    })
+
+    test('is a no-op without a lynx environment', () => {
+      const routes = [{ entryName: 'main', pathname: '/main.lynx.bundle' }]
+
+      appendFullscreenRoutes({ routes, environments: {} as never })
+
+      expect(routes).toHaveLength(1)
     })
   })
 

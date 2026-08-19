@@ -20,6 +20,9 @@ import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 const DEFAULT_IPV4_SERVER_HOST = '0.0.0.0'
 const DEFAULT_IPV6_SERVER_HOST = '::'
 
+/** Entry name of the route that opens the web bundle in the browser preview. */
+const WEB_PREVIEW_ENTRY_NAME = '∟ Preview'
+
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
 
 interface BundleFilenameContext {
@@ -83,10 +86,19 @@ export function pluginDev(): RsbuildPlugin {
           )
         ) {
           for (const entryName of Object.keys(environmentContext.entry)) {
+            const bundleName = resolveName(entryName, environmentName)
             routes.push({
               entryName,
-              pathname: `/${resolveName(entryName, environmentName)}`,
+              pathname: `/${bundleName}`,
             })
+            if (environmentName === 'web') {
+              routes.push({
+                entryName: WEB_PREVIEW_ENTRY_NAME,
+                pathname: `/__web_preview?casename=${
+                  encodeURIComponent(bundleName)
+                }`,
+              })
+            }
           }
         }
       }
@@ -200,52 +212,28 @@ export function pluginDev(): RsbuildPlugin {
       })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const resolveName = getResolveBundleName()
         if (
           config.server?.printUrls === undefined
           || config.server?.printUrls === true
         ) {
-          const environmentNames = Object.keys(config.environments ?? {})
           return mergeRsbuildConfig(config, {
             server: {
+              // Rsbuild renders one line per (url, route) pair as
+              // `url + route.pathname`. `appendBundleRoutes` already provides
+              // the Lynx bundle routes, so this returns the base URL only —
+              // returning fully resolved bundle URLs here would apply the
+              // entry path twice.
               printUrls: (param) => {
                 const currentConfig = api.getRsbuildConfig('current')
                 const assetPrefix = currentConfig.dev?.assetPrefix
                 const hostname = currentConfig.dev?.client?.host
                   ?? formatHostname(currentConfig.server?.host)
-                const finalUrls: { label: string, url: string }[] = []
                 const baseForUrls = (
                   typeof assetPrefix === 'string'
                     ? assetPrefix
                     : `http://${hostname}:<port>/`
                 ).replaceAll('<port>', String(param.port))
-                for (const entry of Object.keys(config.source?.entry ?? {})) {
-                  for (const environmentName of environmentNames) {
-                    const pathname = resolveName(entry, environmentName)
-                    finalUrls.push({
-                      label: environmentName,
-                      url: new URL(pathname, baseForUrls).toString(),
-                    })
-                    if (environmentName === 'web') {
-                      finalUrls.push({
-                        label: `∟ Preview`,
-                        url: new URL(
-                          `/__web_preview?casename=${
-                            encodeURIComponent(pathname)
-                          }`,
-                          baseForUrls,
-                        ).toString(),
-                      })
-                    }
-                  }
-                }
-                return finalUrls.map((urlInfo) => {
-                  // capitalize the first letter of label
-                  const label = urlInfo.label.charAt(0).toUpperCase()
-                    + urlInfo.label.slice(1)
-                  urlInfo.label = label
-                  return urlInfo
-                })
+                return [{ label: 'Lynx', url: baseForUrls }]
               },
             },
           })

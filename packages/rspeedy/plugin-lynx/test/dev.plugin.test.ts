@@ -827,10 +827,14 @@ describe('pluginDev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toContainEqual({
+    // Rsbuild renders one line per (url, route) pair as `url + pathname`, so
+    // `printUrls` returns the base URL and the bundle routes supply the
+    // per-entry part. Returning a resolved bundle URL here would print the
+    // entry path twice.
+    expect(printedUrls).toStrictEqual([{
       'label': 'Lynx',
-      'url': 'http://example.com:8091/main.lynx.bundle',
-    })
+      'url': 'http://example.com:8091/',
+    }])
   })
 
   test('dev.assetPrefix with environment.web', async () => {
@@ -878,15 +882,70 @@ describe('pluginDev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toContainEqual({
-      'label': 'Web',
-      'url': 'http://example.com:8092/main.web.bundle',
+    expect(printedUrls).toStrictEqual([{
+      'label': 'Lynx',
+      'url': 'http://example.com:8092/',
+    }])
+  })
+
+  test('web preview is exposed as a route', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      server: {
+        port: 8097,
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
     })
 
-    expect(printedUrls).toContainEqual({
-      'label': '∟ Preview',
-      'url': 'http://example.com:8092/__web_preview?casename=main.web.bundle',
+    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
+
+    rsbuild.onAfterStartDevServer(({ routes }) => {
+      receivedRoutes = [...routes]
     })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+
+    expect(receivedRoutes).toContainEqual({
+      entryName: '∟ Preview',
+      pathname: '/__web_preview?casename=main.web.bundle',
+    })
+  })
+
+  test('preview URLs do not repeat the bundle path', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          pageA: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+          pageB: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      server: {
+        port: 8098,
+      },
+    })
+
+    const previewServer = await rsbuild.preview({ checkDistDir: false })
+    try {
+      const message = String(
+        (previewServer.server as unknown as {
+          printUrls: () => string | null
+        }).printUrls(),
+      )
+
+      expect(message).toContain('/pageA.lynx.bundle')
+      expect(message).toContain('/pageB.lynx.bundle')
+      expect(message).not.toContain('.bundle/')
+    } finally {
+      await previewServer.server.close()
+    }
   })
 
   test('onAfterStartDevServer routes contains bundle entries', async () => {

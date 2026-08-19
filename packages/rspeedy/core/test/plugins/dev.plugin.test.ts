@@ -718,10 +718,14 @@ describe('Plugins - Dev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toContainEqual({
+    // Rsbuild renders one line per (url, route) pair as `url + pathname`, so
+    // `printUrls` returns the base URL and the bundle routes supply the
+    // per-entry part. Returning a resolved bundle URL here would print the
+    // entry path twice.
+    expect(printedUrls).toStrictEqual([{
       'label': 'Lynx',
-      'url': 'http://example.com:8080/main.lynx.bundle',
-    })
+      'url': 'http://example.com:8080/',
+    }])
   })
 
   test('dev.assetPrefix with environment.web', async () => {
@@ -767,15 +771,10 @@ describe('Plugins - Dev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toContainEqual({
-      'label': 'Web',
-      'url': 'http://example.com:8080/main.web.bundle',
-    })
-
-    expect(printedUrls).toContainEqual({
-      'label': '∟ Preview',
-      'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
-    })
+    expect(printedUrls).toStrictEqual([{
+      'label': 'Lynx',
+      'url': 'http://example.com:8080/',
+    }])
   })
 
   test('onAfterStartDevServer routes contains bundle entries', async () => {
