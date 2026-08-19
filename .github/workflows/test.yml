@@ -214,18 +214,31 @@ jobs:
     with:
       runs-on: lynx-ubuntu-26.04-medium
       run: |
-        # Generated smoke-test projects do not carry a packageManager pin, so
-        # keep this stage on pnpm 10 even when Corepack's registry default moves.
-        corepack prepare pnpm@10.29.3 --activate
-        pnpm dlx @pnpm/registry-mock@4 prepare
-        pnpm dlx @pnpm/registry-mock@4 &
-        printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
+        export NO_PROXY="${NO_PROXY:+$NO_PROXY,}localhost,127.0.0.1"
+        export no_proxy="${no_proxy:+$no_proxy,}localhost,127.0.0.1"
+        pnpr_config="$RUNNER_TEMP/pnpr-config.json"
+        node packages/tools/canary-release/pnpr-config.js "$pnpr_config" "$RUNNER_TEMP/pnpr-storage"
+        pnpm --config.minimum-release-age=0 dlx @pnpm/pnpr@0.1.0-alpha.7 \
+          --config "$pnpr_config" \
+          --listen 127.0.0.1:4873 \
+          --public-url http://localhost:4873 &
+        curl --fail --silent --retry 60 --retry-delay 1 --retry-connrefused \
+          http://localhost:4873/-/ping > /dev/null
+        pnpr_login=$(curl --fail --silent --show-error \
+          --request PUT \
+          --header 'content-type: application/json' \
+          --data '{"name":"ci","password":"pnpr-local-only","email":"ci@example.com","type":"user","roles":[]}' \
+          http://localhost:4873/-/user/org.couchdb.user:ci)
+        pnpr_token=$(printf '%s' "$pnpr_login" | jq --exit-status --raw-output '.token')
+        pnpr_auth="$RUNNER_TEMP/pnpr-auth.npmrc"
+        npm config set '//localhost:4873/:_authToken' "$pnpr_token" --userconfig="$pnpr_auth"
+        export PNPM_CONFIG_NPMRC_AUTH_FILE="$pnpr_auth"
         pnpm changeset status --since=origin/main --output "$RUNNER_TEMP/changeset-status.json"
         if jq -e '.releases | length > 0' "$RUNNER_TEMP/changeset-status.json" > /dev/null; then
           pnpm changeset version --snapshot regression
         fi
         node packages/tools/canary-release/snapshot.js
-        pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
+        pnpm --recursive publish --batch --force --no-git-checks --access public --registry=http://localhost:4873
 
         # `npm run <script> <args>` swallows the args unless they follow `--`,
         # while Yarn 4 would forward the `--` itself to the script.
@@ -276,6 +289,14 @@ jobs:
           npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir "$dir" --tools "$tools" "$@"
           cd "$dir"
           npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+          if [ "$pm" = pnpm ]; then
+            # pnpm 11 reads these typed settings from pnpm-workspace.yaml.
+            printf '%s\n' \
+              'pnprServer: http://localhost:4873' \
+              'strictDepBuilds: false' \
+              'minimumReleaseAge: 0' \
+              > pnpm-workspace.yaml
+          fi
           install_with "$pm"
           local bin=${pm%%-*}
           run_script "$bin" build
