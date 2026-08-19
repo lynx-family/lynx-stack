@@ -8,7 +8,7 @@ Lynx Stack 提供两种声明式 Generative UI 接入：A2UI 和 OpenUI。两者
 
 | 组成部分      | A2UI                                        | OpenUI                                             |
 | ------------- | ------------------------------------------- | -------------------------------------------------- |
-| 协议          | A2UI v0.9 messages                          | OpenUI Lang v0.5 assignments                       |
+| 协议          | A2UI v1.0 核心 messages                     | OpenUI Lang v0.5 assignments                       |
 | 组件 contract | Catalog                                     | Library                                            |
 | Client 输入   | 增量 protocol messages                      | 累计的 OpenUI 文本                                 |
 | 主要 renderer | `<A2UI>`                                    | `<OpenUiRenderer>`                                 |

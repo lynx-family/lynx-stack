@@ -72,4 +72,22 @@ describe('payloadNormalizer', () => {
     }
     expect(active.has('s1')).toBe(true);
   });
+
+  test('prepareMessagesForProcessing detects v1.0 inline components', () => {
+    const result = prepareMessagesForProcessing(
+      [{
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 'inline',
+          components: [{ id: 'root', component: 'Text', text: 'hello' }],
+        },
+      }],
+      'task_inline',
+      new Set(),
+    );
+
+    expect(result.hasComponentUpdate).toBe(true);
+    expect(result.messages).toHaveLength(1);
+    expect(result.messages[0]!.messageId).toBe('task_inline');
+  });
 });

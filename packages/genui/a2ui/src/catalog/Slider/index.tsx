@@ -19,7 +19,10 @@ import {
 } from './utils.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/Slider.css';
 
@@ -30,50 +33,17 @@ import '../../../styles/catalog/Slider.css';
  */
 export interface SliderProps extends GenericComponentProps {
   /** The label for the slider. */
-  label?: string | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  label?: string | { path: string } | V1FunctionCall;
   /** The minimum value of the slider. */
   min?: number;
   /** The maximum value of the slider. */
   max: number;
   /** The current value of the slider. */
-  value: number | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  value: number | { path: string } | V1FunctionCall;
   /** A list of checks to perform. */
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    condition: boolean | { path: string } | V1FunctionCall;
     /** The error message to display if the check fails. */
     message: string;
   }>;

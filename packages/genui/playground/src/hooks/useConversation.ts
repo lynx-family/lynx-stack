@@ -138,6 +138,7 @@ function applyDataModel(
   model: Record<string, unknown>,
   path: string,
   value: unknown,
+  deleteTarget = false,
 ): void {
   if (!path || path === '/' || path === '') {
     for (const key of Object.keys(model)) {
@@ -162,14 +163,14 @@ function applyDataModel(
 
   const last = parts[parts.length - 1];
   if (!last) return;
-  if (value === undefined) {
+  if (deleteTarget) {
     delete cursor[last];
   } else {
     cursor[last] = cloneDataValue(value);
   }
 }
 
-function applyA2UIMessagesToSnapshot(
+export function applyA2UIMessagesToSnapshot(
   dataModel: Record<string, unknown>,
   surfaceIds: Set<string>,
   messages: unknown[],
@@ -177,7 +178,8 @@ function applyA2UIMessagesToSnapshot(
   for (const message of messages) {
     if (!message || typeof message !== 'object') continue;
     const record = message as {
-      createSurface?: { surfaceId?: unknown };
+      version?: unknown;
+      createSurface?: { dataModel?: unknown; surfaceId?: unknown };
       deleteSurface?: { surfaceId?: unknown };
       updateDataModel?: { path?: unknown; value?: unknown };
     };
@@ -186,7 +188,13 @@ function applyA2UIMessagesToSnapshot(
       && typeof record.createSurface.surfaceId === 'string'
     ) {
       surfaceIds.add(record.createSurface.surfaceId);
-      continue;
+      if (
+        record.createSurface.dataModel
+        && typeof record.createSurface.dataModel === 'object'
+        && !Array.isArray(record.createSurface.dataModel)
+      ) {
+        applyDataModel(dataModel, '/', record.createSurface.dataModel);
+      }
     }
     if (
       record.deleteSurface
@@ -196,12 +204,19 @@ function applyA2UIMessagesToSnapshot(
       continue;
     }
     if (record.updateDataModel) {
+      const hasValue = Object.prototype.hasOwnProperty.call(
+        record.updateDataModel,
+        'value',
+      );
       applyDataModel(
         dataModel,
         typeof record.updateDataModel.path === 'string'
           ? record.updateDataModel.path
           : '/',
         record.updateDataModel.value,
+        !hasValue
+          || (record.version === 'v1.0'
+            && record.updateDataModel.value === null),
       );
     }
   }

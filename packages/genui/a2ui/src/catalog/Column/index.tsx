@@ -105,7 +105,7 @@ export function Column(
     >
       {childList.map((item) => {
         if (!item) return null;
-        const weight = item.component.weight;
+        const weight = item.component['weight'];
         if (typeof weight === 'number' && weight > 0) {
           return (
             <view

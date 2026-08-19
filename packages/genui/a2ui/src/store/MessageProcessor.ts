@@ -1,8 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
-
+import { flattenJsonPointerValue } from './jsonPointer.js';
 import { resolveBindingPath } from './resolveDynamic.js';
 import { createResource } from './Resource.js';
 import { SignalStore } from './SignalStore.js';
@@ -36,7 +35,7 @@ function isMeaningfulResponse(value: unknown): boolean {
 }
 
 /**
- * Stateful A2UI protocol processor that turns raw v0.9 messages into
+ * Stateful A2UI protocol processor that turns raw v0.9/v1.0 messages into
  * renderable surfaces, resources, data-model signals, and user-action events.
  */
 export class MessageProcessor {
@@ -231,54 +230,109 @@ export class MessageProcessor {
     return newId;
   }
 
-  private flattenValue(
-    value: unknown,
-    basePath: string,
-    updates: { path: string; value: unknown }[],
-  ) {
-    const normalizedBase = basePath === '' ? '/' : basePath;
+  private expandTemplates(surface: Surface): ComponentInstance[] {
+    const componentUpdates: ComponentInstance[] = [];
 
-    const push = (path: string, v: unknown) => {
-      updates.push({ path, value: v });
-    };
+    // Snapshot the current component set. Cloning adds entries to the map and
+    // those generated entries should not themselves become new expansion
+    // roots during this pass.
+    for (const component of Array.from(surface.components.values())) {
+      const anyComponent = component as unknown as Record<string, unknown>;
+      const templateInfo = anyComponent['__template'] as
+        | { componentId: string; path: string }
+        | undefined;
 
-    if (Array.isArray(value)) {
-      push(normalizedBase, value);
-      value.forEach((item, index) => {
-        const childPath = normalizedBase === '/'
-          ? `/${index}`
-          : `${normalizedBase}/${index}`;
-        if (isObject(item) || Array.isArray(item)) {
-          push(childPath, item);
-          this.flattenValue(item, childPath, updates);
-        } else {
-          updates.push({ path: childPath, value: String(item) });
+      if (!templateInfo) continue;
+
+      const dataSignal = surface.store.getSignal(templateInfo.path);
+      const rawData = dataSignal.value;
+      let data: unknown;
+      if (typeof rawData === 'string') {
+        try {
+          data = rawData ? JSON.parse(rawData) : undefined;
+        } catch {
+          data = undefined;
         }
-      });
-      return;
-    }
+      } else {
+        data = rawData;
+      }
 
-    if (isObject(value)) {
-      push(normalizedBase, value);
-      for (const [key, v] of Object.entries(value)) {
-        const childPath = normalizedBase === '/'
-          ? `/${key}`
-          : `${normalizedBase}/${key}`;
-        if (isObject(v) || Array.isArray(v)) {
-          push(childPath, v);
-          this.flattenValue(v, childPath, updates);
-        } else {
-          updates.push({ path: childPath, value: String(v) });
+      const explicitChildren: string[] = [];
+      const generatedUpdates: ComponentInstance[] = [];
+
+      if (Array.isArray(data)) {
+        data.forEach((_, index) => {
+          const suffix = `:${index}`;
+          const ctx = `${templateInfo.path}/${index}`;
+          const newId = this.cloneComponentTree(
+            templateInfo.componentId,
+            suffix,
+            ctx,
+            surface,
+            generatedUpdates,
+          );
+          if (newId) explicitChildren.push(newId);
+        });
+      } else if (isObject(data)) {
+        for (const key of Object.keys(data)) {
+          const suffix = `:${key}`;
+          const ctx = `${templateInfo.path}/${key}`;
+          const newId = this.cloneComponentTree(
+            templateInfo.componentId,
+            suffix,
+            ctx,
+            surface,
+            generatedUpdates,
+          );
+          if (newId) explicitChildren.push(newId);
         }
       }
-      return;
+
+      anyComponent['children'] = explicitChildren;
+      componentUpdates.push(component, ...generatedUpdates);
     }
 
-    updates.push({ path: normalizedBase, value: String(value) });
+    return componentUpdates;
   }
 
   processMessages(messages: ServerToClientMessage[]): void {
+    // v1.0 may put the initial component tree and data model directly in
+    // createSurface. Expand those fields into the existing update paths so the
+    // surface state machine has exactly one implementation for each mutation.
+    const expandedMessages: ServerToClientMessage[] = [];
     for (const message of messages) {
+      expandedMessages.push(message);
+      if (
+        message.version !== 'v1.0'
+        || !('createSurface' in message)
+        || !message.createSurface
+      ) continue;
+
+      const { components, dataModel, surfaceId } = message.createSurface;
+      const envelope = {
+        version: 'v1.0' as const,
+        ...(message.messageId === undefined
+          ? {}
+          : { messageId: message.messageId }),
+      };
+      // Seed bindings before landing the component tree. The component update
+      // emits beginRendering, so observers see a fully initialized surface at
+      // that boundary instead of a transient render with undefined bindings.
+      if (dataModel !== undefined) {
+        expandedMessages.push({
+          ...envelope,
+          updateDataModel: { surfaceId, value: dataModel },
+        });
+      }
+      if (Array.isArray(components) && components.length > 0) {
+        expandedMessages.push({
+          ...envelope,
+          updateComponents: { surfaceId, components },
+        });
+      }
+    }
+
+    for (const message of expandedMessages) {
       if ('createSurface' in message && message.createSurface) {
         const createSurface = (message as unknown as Record<string, unknown>)[
           'createSurface'
@@ -345,6 +399,10 @@ export class MessageProcessor {
           }
         }
 
+        for (const templateUpdate of this.expandTemplates(surface)) {
+          updatesMap.set(templateUpdate.id, templateUpdate);
+        }
+
         if (!surface.rootComponentId) {
           if (surface.components.has('root')) {
             surface.rootComponentId = 'root';
@@ -361,8 +419,8 @@ export class MessageProcessor {
             }
             // Fall back to a surface-derived id so consumers that key
             // resources by `messageId` still get a non-empty key when the
-            // protocol message lacks one (the v0.9 stream does not require
-            // `messageId` on every message).
+            // protocol message lacks one (`messageId` is host metadata, not a
+            // required A2UI envelope field).
             const messageId = (message as { messageId?: string }).messageId
               ?? `surface:${surfaceId}`;
             this.emitUpdate({
@@ -384,88 +442,37 @@ export class MessageProcessor {
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
-        const { surfaceId, path, value } = message.updateDataModel as {
-          surfaceId: string;
-          path?: string;
-          value?: unknown;
-        };
+        const updateDataModel = message.updateDataModel;
+        const { surfaceId, path, value } = updateDataModel;
         const surface = this.getOrCreateSurface(surfaceId);
 
         const updates: { path: string; value: unknown }[] = [];
 
-        if (value !== undefined) {
-          const basePath = path && path !== '' ? path : '/';
-          this.flattenValue(value, basePath, updates);
-        } else if (path) {
-          updates.push({ path, value: '' });
+        const basePath = path && path !== '' ? path : '/';
+        const hasValue = Object.prototype.hasOwnProperty.call(
+          updateDataModel,
+          'value',
+        );
+
+        // v1.0 requires the value key and uses null for deletion. In v0.9 an
+        // omitted value deletes while an explicit null is a real replacement.
+        if (message.version === 'v1.0' && !hasValue) continue;
+        const shouldDelete = message.version === 'v1.0'
+          ? value === null
+          : !hasValue;
+
+        if (shouldDelete) {
+          surface.store.delete(basePath);
+        } else {
+          surface.store.replace(basePath, value);
+          flattenJsonPointerValue(value, basePath, updates);
         }
 
         if (updates.length > 0) {
           surface.store.updateBatch(updates);
         }
 
-        const componentUpdates: ComponentInstance[] = [];
-
-        for (const component of surface.components.values()) {
-          const anyComponent = component as unknown as Record<string, unknown>;
-          const templateInfo = anyComponent['__template'] as
-            | { componentId: v0_9.ComponentId; path: string }
-            | undefined;
-
-          if (!templateInfo) continue;
-
-          const dataSignal = surface.store.getSignal(templateInfo.path);
-          const rawData = dataSignal.value;
-          let data: unknown;
-          if (typeof rawData === 'string') {
-            try {
-              data = rawData ? JSON.parse(rawData) : undefined;
-            } catch {
-              data = undefined;
-            }
-          } else {
-            data = rawData;
-          }
-
-          const explicitChildren: string[] = [];
-          const generatedUpdates: ComponentInstance[] = [];
-
-          if (Array.isArray(data)) {
-            data.forEach((_, index) => {
-              const suffix = `:${index}`;
-              const ctx = `${templateInfo.path}/${index}`;
-              const newId = this.cloneComponentTree(
-                templateInfo.componentId,
-                suffix,
-                ctx,
-                surface,
-                generatedUpdates,
-              );
-              if (newId) {
-                explicitChildren.push(newId);
-              }
-            });
-          } else if (isObject(data)) {
-            for (const key of Object.keys(data)) {
-              const suffix = `:${key}`;
-              const ctx = `${templateInfo.path}/${key}`;
-              const newId = this.cloneComponentTree(
-                templateInfo.componentId,
-                suffix,
-                ctx,
-                surface,
-                generatedUpdates,
-              );
-              if (newId) {
-                explicitChildren.push(newId);
-              }
-            }
-          }
-
-          anyComponent['children'] = explicitChildren;
-          componentUpdates.push(component);
-          componentUpdates.push(...generatedUpdates);
-        }
+        const componentUpdates = this.expandTemplates(surface);
 
         if (componentUpdates.length > 0) {
           this.emitUpdate({

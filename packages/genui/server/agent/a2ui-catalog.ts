@@ -191,14 +191,56 @@ function inferEnums(schema: JsonSchema | undefined): string[] | undefined {
   return nested.length > 0 ? [...new Set(nested)] : undefined;
 }
 
+/**
+ * Project legacy extractor output onto the v1.0 FunctionCall shape.
+ *
+ * The bundled catalog is also consumed by the v0.9 compatibility path, so
+ * keep that artifact unchanged and normalize only the prompt/validator view.
+ */
+function normalizeV1FunctionCallSchemas(schema: JsonSchema): JsonSchema {
+  const normalized: JsonSchema = { ...schema };
+  if (schema.oneOf) {
+    normalized.oneOf = schema.oneOf.map((branch) =>
+      normalizeV1FunctionCallSchemas(branch)
+    );
+  }
+  if (schema.items) {
+    normalized.items = normalizeV1FunctionCallSchemas(schema.items);
+  }
+  if (!schema.properties) return normalized;
+
+  normalized.properties = Object.fromEntries(
+    Object.entries(schema.properties).map(([name, child]) => [
+      name,
+      normalizeV1FunctionCallSchemas(child),
+    ]),
+  );
+
+  const properties = normalized.properties;
+  const call = properties.call;
+  if (call?.type !== 'string') return normalized;
+
+  delete properties.returnType;
+  properties.catalogId ??= { type: 'string' };
+  if (normalized.required) {
+    normalized.required = normalized.required.filter(
+      (name) => name !== 'args' && name !== 'returnType',
+    );
+  }
+  return normalized;
+}
+
 function componentFromManifest(
   manifest: CatalogManifest,
 ): A2UIComponentSpec | null {
   const [name, schema] = Object.entries(manifest)[0] ?? [];
   if (!name || !schema) return null;
 
-  const properties = isRecord(schema.properties) ? schema.properties : {};
-  const required = new Set(schema.required ?? []);
+  const v1Schema = normalizeV1FunctionCallSchemas(schema);
+  const properties = isRecord(v1Schema.properties)
+    ? v1Schema.properties
+    : {};
+  const required = new Set(v1Schema.required ?? []);
   const props = Object.entries(properties).map(([propName, propSchema]) => {
     const enums = inferEnums(propSchema);
     return {
@@ -344,8 +386,8 @@ export function createA2UICatalogFromManifests(options: {
 
 export const BASIC_CATALOG: A2UICatalog = {
   id: BASIC_CATALOG_ID,
-  label: 'Lynx A2UI basic catalog (v0.9)',
-  version: 'v0.9',
+  label: 'Lynx A2UI basic catalog (v1.0)',
+  version: 'v1.0',
   components: componentManifestsFromGeneratedCatalog(generatedCatalog)
     .map((manifest) => componentFromManifest(manifest))
     .filter((component): component is A2UIComponentSpec => component !== null),
@@ -402,8 +444,8 @@ function createA2UICatalogFromExtractedManifest(
     catalogId: manifest.catalogId ?? BASIC_CATALOG_ID,
     componentManifests: componentManifestsFromGeneratedCatalog(manifest),
     functions: functionsFromGeneratedCatalog(manifest),
-    label: 'Lynx A2UI basic catalog (v0.9)',
-    version: 'v0.9',
+    label: 'Lynx A2UI basic catalog (v1.0)',
+    version: 'v1.0',
     extraRules: [
       'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
       'The implemented checkbox component is named "CheckBox" with a capital B.',

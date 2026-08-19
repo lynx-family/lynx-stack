@@ -20,9 +20,14 @@ export type { A2UIProps, ActionProps, CheckLike } from './react/index.js';
 // build their own renderer instead of using `<A2UI>`.
 export { createMessageStore, MessageProcessor } from './store/index.js';
 export type {
+  A2UIAction,
   A2UIClientEventMessage,
+  A2UIDataBinding,
+  A2UIFunctionCall,
+  A2UIProtocolVersion,
   ComponentInstance,
   GenericComponentProps,
+  LegacyServerToClientMessage,
   MessageStore,
   MessageStoreOptions,
   Resource,
@@ -31,6 +36,8 @@ export type {
   Surface,
   SurfaceId,
   UserActionPayload,
+  V1FunctionCall,
+  V1ServerToClientMessage,
 } from './store/index.js';
 // Helpers for IO that returns free-form text instead of structured
 // protocol messages.

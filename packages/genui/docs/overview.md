@@ -9,7 +9,7 @@ contracts.
 
 | Component          | A2UI                                         | OpenUI                                               |
 | ------------------ | -------------------------------------------- | ---------------------------------------------------- |
-| Protocol           | A2UI v0.9 messages                           | OpenUI Lang v0.5 assignments                         |
+| Protocol           | A2UI v1.0 core messages                      | OpenUI Lang v0.5 assignments                         |
 | Component contract | Catalog                                      | Library                                              |
 | Client input       | Incremental protocol messages                | Accumulated OpenUI text                              |
 | Primary renderer   | `<A2UI>`                                     | `<OpenUiRenderer>`                                   |

@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/CheckBox.css';
 
@@ -13,43 +16,10 @@ import '../../../styles/catalog/CheckBox.css';
  * @a2uiCatalog CheckBox
  */
 export interface CheckBoxProps extends GenericComponentProps {
-  label: string | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
-  value: boolean | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  label: string | { path: string } | V1FunctionCall;
+  value: boolean | { path: string } | V1FunctionCall;
   checks?: Array<{
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    condition: boolean | { path: string } | V1FunctionCall;
     message: string;
   }>;
 }

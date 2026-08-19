@@ -258,7 +258,7 @@ describe('runBenchUiJudge', () => {
     const result = await runBenchUiJudge(
       {
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           createSurface: {
             catalogId: 'catalog',
             surfaceId: 'surface',
@@ -300,7 +300,7 @@ describe('runBenchUiJudge', () => {
         benchMode: true,
         instant: true,
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           createSurface: {
             catalogId: 'catalog',
             surfaceId: 'surface',
@@ -492,7 +492,7 @@ describe('runBenchUiJudge', () => {
     const result = await runBenchUiJudge(
       {
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           updateComponents: {
             components: [
               {
@@ -599,19 +599,101 @@ describe('runBenchUiJudge', () => {
     });
   });
 
+  test('sanitizes resource components embedded in createSurface', async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    const result = await runBenchUiJudge(
+      {
+        messages: [{
+          version: 'v1.0',
+          createSurface: {
+            catalogId: 'catalog',
+            components: [
+              {
+                component: 'Image',
+                id: 'image',
+                url: 'file:///etc/passwd',
+              },
+              {
+                component: 'LazyComponent',
+                id: 'lazy',
+                url: 'http://169.254.169.254/latest/meta-data',
+              },
+              {
+                component: 'McpApp',
+                id: 'mcp',
+                mcpAppData: {},
+                url: 'https://untrusted.test/app.lynx.js',
+              },
+              {
+                component: 'Text',
+                id: 'markdown',
+                text: '![remote](http://127.0.0.1/image.png)',
+                variant: 'markdown',
+              },
+            ],
+            surfaceId: 'surface',
+          },
+        }],
+        scenario: {
+          id: 'safe-inline',
+          name: 'Safe inline',
+          prompt: 'Build a safe card',
+          type: 'Information',
+        },
+        session: {
+          bundleUrl: 'https://assets.test/a2ui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      (_input, init) => {
+        if (typeof init?.body !== 'string') {
+          throw new Error('expected a JSON string request body');
+        }
+        requestBody = JSON.parse(init.body) as Record<string, unknown>;
+        return Promise.resolve(Response.json(geqiResponse(3)));
+      },
+    );
+
+    const globalProps = requestBody?.globalProps as
+      | Record<string, unknown>
+      | undefined;
+    const messages = globalProps?.messages as
+      | Record<string, unknown>[]
+      | undefined;
+    const create = messages?.[0]?.createSurface as
+      | Record<string, unknown>
+      | undefined;
+    expect(create?.components).toEqual([
+      { component: 'Loading', id: 'image', variant: 'block' },
+      { component: 'Loading', id: 'lazy', variant: 'block' },
+      { component: 'Loading', id: 'mcp', variant: 'block' },
+      {
+        component: 'Text',
+        id: 'markdown',
+        text: '![remote](http://127.0.0.1/image.png)',
+        variant: 'body',
+      },
+    ]);
+    expect(result.warnings).toEqual([
+      'ui-judge replaced 1 Image component to prevent untrusted resource loading.',
+      'ui-judge replaced 1 LazyComponent component to prevent untrusted resource loading.',
+      'ui-judge replaced 1 McpApp component to prevent untrusted resource loading.',
+      'ui-judge replaced 1 markdown Text component to prevent untrusted resource loading.',
+    ]);
+  });
+
   test('rejects recursive openUrl calls before contacting the sidecar', async () => {
     let called = false;
     const result = await runBenchUiJudge(
       {
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           updateDataModel: {
             surfaceId: 'surface',
             value: {
               nested: {
                 args: { url: 'http://127.0.0.1/private' },
                 call: 'openUrl',
-                returnType: 'void',
               },
             },
           },

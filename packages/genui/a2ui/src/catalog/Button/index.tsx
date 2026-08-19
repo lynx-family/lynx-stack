@@ -4,7 +4,10 @@
 import { A2UIRenderer } from '../../react/A2UIRenderer.jsx';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/Button.css';
 
@@ -17,40 +20,20 @@ export interface ButtonProps extends GenericComponentProps {
   child: string;
   variant?: 'primary' | 'borderless';
   isValid?: boolean;
-  /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
+  /** Agent-dispatched actions use the protocol's `event` wrapper. */
   action: {
     event: {
       name: string;
-      /** Context is a JSON object map in v0.9. */
+      /** Context is resolved before the action is forwarded to the host. */
       context?: Record<string, unknown>;
+      /** Optional renderer-to-agent text introduced in A2UI v1.0. */
+      userMessage?: string | { path: string } | V1FunctionCall;
     };
   } | {
-    functionCall: {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    functionCall: V1FunctionCall;
   };
   checks?: Array<{
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    condition: boolean | { path: string } | V1FunctionCall;
     message: string;
   }>;
 }

@@ -627,7 +627,7 @@ export const A2UI_CHAT_ADAPTER = {
     userText(action) {
       return `A2UI_USER_ACTION: ${
         JSON.stringify({
-          surfaceId: action.surfaceId,
+          version: 'v1.0',
           action: action.action,
         })
       }`;
@@ -645,7 +645,7 @@ export const A2UI_CHAT_ADAPTER = {
           Accept: 'text/event-stream',
         },
         body: {
-          surfaceId: action.surfaceId,
+          version: 'v1.0',
           action: action.action,
           conversation,
           ...provider,

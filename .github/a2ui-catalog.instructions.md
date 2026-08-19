@@ -2,7 +2,7 @@
 applyTo: "packages/genui/a2ui*/**"
 ---
 
-When maintaining A2UI component catalogs, keep the catalog-facing contract in a TypeScript interface marked with `@a2uiCatalog <ComponentName>`. The extractor consumes TypeDoc reflection data and does not parse TS/TSX source itself, so inline the JSON-schema-facing property shape instead of relying on aliases or external interfaces.
+When maintaining A2UI component catalogs, keep the catalog-facing contract in a TypeScript interface marked with `@a2uiCatalog <ComponentName>`. The extractor consumes TypeDoc reflection data and does not parse TS/TSX source itself, so inline the JSON-schema-facing property shape by default. A small interface deliberately shared across component contracts may instead use TypeDoc's `@inline` modifier so each reference expands into the generated schema; unannotated aliases or external interfaces remain unsupported.
 
 When working on multi-theme A2UI styling, keep shared token definitions in `packages/genui/a2ui/styles/theme.css` `:root`, and put theme-specific differences in the `.a2ui-light` and `.a2ui-dark` blocks. Prefer light/dark overrides for colors such as surface, text, border, overlay, and icon colors. Avoid reintroducing layout tokens like spacing, size, or radius as global CSS variables unless the component contract truly needs them; those should generally be handled by component CSS overrides instead. Keep `--a2ui-icon-font-family` configurable when icon glyph fonts need to vary by theme or embedding host.
 

@@ -35,14 +35,14 @@ function adapterInput(maxAttempts = 2): ProtocolBenchAdapterInput {
 function validA2UIOutput(catalogId: string | undefined): string {
   return JSON.stringify([
     {
-      version: 'v0.9',
+      version: 'v1.0',
       createSurface: {
         surfaceId: 'main',
         catalogId,
       },
     },
     {
-      version: 'v0.9',
+      version: 'v1.0',
       updateComponents: {
         surfaceId: 'main',
         components: [{
@@ -110,14 +110,14 @@ describe('A2UI matched-core bench adapter', () => {
         return Promise.resolve({
           text: JSON.stringify([
             {
-              version: 'v0.9',
+              version: 'v1.0',
               createSurface: {
                 surfaceId: 'main',
                 catalogId: options.catalog?.id,
               },
             },
             {
-              version: 'v0.9',
+              version: 'v1.0',
               updateComponents: {
                 surfaceId: 'main',
                 components: [{
@@ -129,7 +129,7 @@ describe('A2UI matched-core bench adapter', () => {
               },
             },
             {
-              version: 'v0.9',
+              version: 'v1.0',
               updateComponents: {
                 surfaceId: 'main',
                 components: [{
