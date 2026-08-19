@@ -180,10 +180,7 @@ pub(crate) fn prepare_judge_page_request(
     .reference_image
     .map(|reference_image| reference_image.trim().to_string());
 
-  let model_options = match ModelOptions::from_env() {
-    Ok(options) => options,
-    Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
-  };
+  let model_options = ModelOptions::from_env();
   let client = match ModelClient::new(model_options) {
     Ok(client) => client,
     Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
