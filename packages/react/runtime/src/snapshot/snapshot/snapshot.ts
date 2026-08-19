@@ -500,6 +500,9 @@ export class SnapshotInstance {
         )).onRemoveChild(child);
       }
 
+      // Native elements may be recycled later, but React-owned worklet refs end
+      // at the logical removal boundary.
+      unref(child, true);
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
         clearTransientChildPropRefs(v, removedSnapshots);
