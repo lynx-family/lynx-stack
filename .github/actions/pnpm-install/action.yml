@@ -19,30 +19,35 @@ runs:
         node-version: ${{ inputs.node-version }}
         package-manager-cache: false
 
-    - name: Get pnpm store directory
-      id: pnpm-store
+    - name: Get pnpm cache directories
+      id: pnpm-cache
       shell: bash
       run: | # zizmor: ignore[adhoc-packages] corepack must be installed globally outside of a lockfile
-        npm install -g corepack@latest
+        npm install -g corepack@0.35.0
         corepack enable
-        echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+        {
+          echo "paths<<EOF"
+          pnpm store path
+          pnpm cache path
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
 
-    - name: Restore pnpm store cache
+    - name: Restore pnpm caches
       id: restore
       uses: lynx-infra/cache/restore@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
       with:
-        path: ${{ steps.pnpm-store.outputs.path }}
-        key: pnpm-store-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        path: ${{ steps.pnpm-cache.outputs.paths }}
+        key: pnpm-cache-v2-${{ runner.os }}-${{ runner.arch }}-node-${{ inputs.node-version }}-pnpm-11-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}
         restore-keys: |
-          pnpm-store-v1-${{ runner.os }}-
+          pnpm-cache-v2-${{ runner.os }}-${{ runner.arch }}-node-${{ inputs.node-version }}-pnpm-11-
 
     - name: Install
       shell: bash
       run: pnpm install --frozen-lockfile
 
-    - name: Save pnpm store cache
+    - name: Save pnpm caches
       if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}
       uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
       with:
-        path: ${{ steps.pnpm-store.outputs.path }}
-        key: pnpm-store-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        path: ${{ steps.pnpm-cache.outputs.paths }}
+        key: pnpm-cache-v2-${{ runner.os }}-${{ runner.arch }}-node-${{ inputs.node-version }}-pnpm-11-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}
