@@ -2,7 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefImpl } from './types.js';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  MainThreadCallableCtxPatch,
+  MainThreadCallableId,
+  MainThreadCallableRunPatch,
+  Worklet,
+  WorkletRefImpl,
+} from './types.js';
 import type { Element } from '../api/element.js';
 
 /**
@@ -34,6 +42,39 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }
+}
+
+/**
+ * Install the latest ctx for each `MainThreadEvent` in the patch.
+ * A `null` ctx releases the callable.
+ *
+ * @param patch - An array containing the id and new ctx of the callable.
+ * @internal
+ */
+function updateMainThreadCallableCtxChanges(patch?: MainThreadCallableCtxPatch): void {
+  if (patch) {
+    globalThis.lynxWorkletImpl?._callableImpl?.updateCallableCtxChanges(patch);
+  }
+}
+
+/**
+ * Run the callable ctxs scheduled by `useMainThreadEffect` for this commit.
+ *
+ * @internal
+ */
+function runMainThreadCallableCtxs(ids?: MainThreadCallableRunPatch): void {
+  if (ids) {
+    globalThis.lynxWorkletImpl?._callableImpl?.runCallableCtxs(ids);
+  }
+}
+
+/**
+ * Register a callable ctx created during first screen rendering.
+ *
+ * @internal
+ */
+function registerFirstScreenCallableCtx(id: MainThreadCallableId, ctx: Worklet): void {
+  globalThis.lynxWorkletImpl?._callableImpl?.registerFirstScreenCallableCtx(id, ctx);
 }
 
 /**
@@ -76,6 +117,9 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
+  updateMainThreadCallableCtxChanges,
+  runMainThreadCallableCtxs,
+  registerFirstScreenCallableCtx,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

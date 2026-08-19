@@ -3,6 +3,7 @@ import { options } from 'preact';
 import { clearCommitTaskId, replaceCommitHook } from '../../../../runtime/lib/snapshot/lifecycle/patch/commit.js';
 import { deinitGlobalSnapshotPatch } from '../../../../runtime/lib/snapshot/lifecycle/patch/snapshotPatch.js';
 import { injectUpdateMainThread } from '../../../../runtime/lib/snapshot/lifecycle/patch/updateMainThread.js';
+import { injectUpdateMTCallableCtx } from '../../../../runtime/lib/snapshot/worklet/callable/updateCallableCtx.js';
 import { injectUpdateMTRefInitValue } from '../../../../runtime/lib/snapshot/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../../../runtime/lib/snapshot/lynx/calledByNative.js';
 import { flushDelayedLifecycleEvents, injectTt } from '../../../../runtime/lib/snapshot/lynx/tt.js';
@@ -33,6 +34,7 @@ const {
 injectCalledByNative();
 injectUpdateMainThread();
 injectUpdateMTRefInitValue();
+injectUpdateMTCallableCtx();
 replaceCommitHook();
 
 globalThis.onInitWorkletRuntime = () => {

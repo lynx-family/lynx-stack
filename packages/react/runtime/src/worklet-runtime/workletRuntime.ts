@@ -2,8 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type {
+  ClosureValueType,
+  MainThreadCallableImpl,
+  MainThreadInstanceImpl,
+  RunWorkletOptions,
+  Worklet,
+  WorkletRefImpl,
+} from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
+import { getFromCallableMap, getFromInstanceMap, initCallable } from './callable.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
@@ -19,6 +27,7 @@ function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
     _refImpl: initWorkletRef(),
+    _callableImpl: initCallable(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
@@ -199,6 +208,22 @@ const transformWorkletInner = (
         (ctx as Worklet)._execId!,
         subObj,
       );
+      continue;
+    }
+    // Checked after the common discriminants so hot paths (worklet ctxs,
+    // refs, background functions) do not pay for the callable lookup.
+    const isMainThreadCallable = '_wcid' in (subObj as object);
+    if (isMainThreadCallable) {
+      obj[key] = getFromCallableMap(
+        subObj as unknown as MainThreadCallableImpl,
+      );
+      continue;
+    }
+    const isMainThreadInstance = '_wiid' in (subObj as object);
+    if (isMainThreadInstance) {
+      obj[key] = getFromInstanceMap(
+        subObj as unknown as MainThreadInstanceImpl,
+      ) as ClosureValueType;
       continue;
     }
   }

@@ -11,6 +11,8 @@ export const LifecycleConstant = {
   patchUpdate: 'rLynxChange',
   publishEvent: 'rLynxPublishEvent',
   updateMTRefInitValue: 'rLynxChangeRefInitValue',
+  updateMTCallableCtx: 'rLynxChangeCallableCtx',
+  runMTCallableCtx: 'rLynxRunCallableCtx',
   prepareLazyBundleMTS: 'rLynxPrepareLazyBundleMTS',
 } as const;
 

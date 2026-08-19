@@ -42,6 +42,11 @@ import { hook, isEmptyObject } from '../../../utils.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
+import {
+  sendMTCallableCtxToMainThread,
+  sendMTCallableReleasesToMainThread,
+  sendMTCallableRunsToMainThread,
+} from '../../worklet/callable/updateCallableCtx.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
@@ -130,13 +135,17 @@ function replaceCommitHook(): void {
       });
 
       sendMTRefInitValueToMainThread();
+      sendMTCallableCtxToMainThread();
 
       // Collect patches for this update
       const snapshotPatch = takeGlobalSnapshotPatch();
       const flushOptions = takeGlobalFlushOptions();
       const patchOptions = takeGlobalPatchOptions();
       if (!snapshotPatch) {
-        // before hydration, skip patch
+        // Before hydration, skip patch. Staged effect runs are deliberately
+        // NOT flushed here: they stay staged and flush with the hydration
+        // commit, so the first run observes the hydrated tree.
+        sendMTCallableReleasesToMainThread();
         applyQueuedRefs();
         originalPreactCommit?.(vnode, commitQueue);
         return;
@@ -171,6 +180,12 @@ function replaceCommitHook(): void {
           globalCommitTaskMap.delete(commitTaskId);
         }
       });
+
+      // Effect runs are flushed after the patch so they observe the committed
+      // element state; releases after the runs so this commit's main-thread
+      // tasks (effects included) can still call the released callables.
+      sendMTCallableRunsToMainThread();
+      sendMTCallableReleasesToMainThread();
 
       applyQueuedRefs();
       originalPreactCommit?.(vnode, commitQueue);

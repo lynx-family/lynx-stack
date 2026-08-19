@@ -32,6 +32,11 @@ import {
   hydrate,
 } from '../snapshot/backgroundSnapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot/types.js';
+import {
+  sendMTCallableCtxToMainThread,
+  sendMTCallableReleasesToMainThread,
+  sendMTCallableRunsToMainThread,
+} from '../worklet/callable/updateCallableCtx.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 
@@ -164,6 +169,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
+      sendMTCallableCtxToMainThread();
       lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
@@ -173,6 +179,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
           globalCommitTaskMap.delete(id);
         });
       });
+      sendMTCallableRunsToMainThread();
+      sendMTCallableReleasesToMainThread();
       runDelayedUiOps();
 
       if (processErr) {
