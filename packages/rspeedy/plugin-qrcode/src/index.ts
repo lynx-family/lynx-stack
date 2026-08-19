@@ -8,10 +8,7 @@
  * A rsbuild plugin that print the template.js url using QRCode.
  */
 
-import type {
-  EnvironmentContext,
-  RsbuildPlugin,
-} from '@rsbuild/core'
+import type { EnvironmentContext, RsbuildPlugin } from '@rsbuild/core'
 
 import { registerConsoleShortcuts } from './shortcuts.js'
 
