@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getFromWorkletRefMap,
+  hydrateWorkletValue,
   isHydratedWorkletValue,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
@@ -262,6 +263,71 @@ describe('WorkletRef', () => {
       globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
     }).not.toThrow();
     expect(dispose).toHaveBeenCalledTimes(2);
+  });
+
+  it('removes a released entry when its disposer throws', () => {
+    const disposeError = new Error('dispose failed');
+    const dispose = vi.fn(() => {
+      throw disposeError;
+    });
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/release-cleanup',
+      value => ({ value }),
+      dispose,
+      1,
+    );
+    updateWorkletRefInitValueChanges([
+      [74, 'value', '@test/release-cleanup', 1],
+    ]);
+
+    expect(() => removeValueFromWorkletRefMap(74)).toThrow(disposeError);
+    expect(getFromWorkletRefMap({ _wvid: 74 })).toBeUndefined();
+    expect(() => removeValueFromWorkletRefMap(74)).not.toThrow();
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
+  it('finishes hydration bookkeeping when the replaced disposer throws', () => {
+    const disposeError = new Error('dispose failed');
+    const dispose = vi.fn(value => {
+      if (value.id === 'background') {
+        throw disposeError;
+      }
+    });
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/hydration-cleanup',
+      id => ({ id }),
+      dispose,
+      1,
+    );
+    const backgroundHandle = {
+      _wvid: 75,
+      _initValue: 'background',
+      _type: '@test/hydration-cleanup',
+      _mtoVersion: 1,
+    };
+    updateWorkletRefInitValueChanges([
+      [75, 'background', '@test/hydration-cleanup', 1],
+    ]);
+    const firstScreenValue = getFromWorkletRefMap({
+      _wvid: -75,
+      _initValue: 'first-screen',
+      _type: '@test/hydration-cleanup',
+      _mtoVersion: 1,
+    });
+
+    expect(() => hydrateWorkletValue(backgroundHandle, firstScreenValue)).toThrow(
+      disposeError,
+    );
+    expect(getFromWorkletRefMap({ _wvid: 75 })).toBe(firstScreenValue);
+
+    expect(() => {
+      globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
+    }).not.toThrow();
+    expect(dispose).toHaveBeenCalledOnce();
+
+    removeValueFromWorkletRefMap(75);
+    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(dispose).toHaveBeenLastCalledWith(firstScreenValue);
   });
 
   it('hydrates a used first-screen main-thread object into the background id', () => {

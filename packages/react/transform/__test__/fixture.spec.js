@@ -2133,9 +2133,9 @@ export function getCurrentDelta(event) {
           export let getCurrentDelta = {
               _c: {
                   foo: captureMainThreadObject(foo) ?? {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
@@ -2158,9 +2158,9 @@ export function getCurrentDelta(event) {
           export let getCurrentDelta = {
               _c: {
                   foo: captureMainThreadObject(foo) ?? {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
@@ -2176,9 +2176,9 @@ export function getCurrentDelta(event) {
           export let getCurrentDelta = {
               _c: {
                   foo: captureMainThreadObject(foo) ?? {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
@@ -2236,17 +2236,17 @@ export function foo(event) {
       export let foo = {
           _c: {
               bar: captureMainThreadObject(bar) ?? {
-                  baz: {
-                      'qux': bar.baz['qux']
-                  },
-                  qux: {
-                      'baz': bar.qux['baz']
-                  }
+                  baz: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          'qux': __mainThreadObjectSource['qux']
+                      })(bar.baz),
+                  qux: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          'baz': __mainThreadObjectSource['baz']
+                      })(bar.qux)
               },
               qux: captureMainThreadObject(qux) ?? {
-                  bar: {
-                      baz: qux.bar.baz
-                  }
+                  bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          baz: __mainThreadObjectSource.baz
+                      })(qux.bar)
               }
           },
           _wkltId: "da39:64631:1"

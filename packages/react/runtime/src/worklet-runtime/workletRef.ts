@@ -224,8 +224,11 @@ const getFromWorkletRefMap = <T>(
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
-  disposeMainThreadObject(impl!._workletRefMap[id]);
-  delete impl!._workletRefMap[id];
+  try {
+    disposeMainThreadObject(impl!._workletRefMap[id]);
+  } finally {
+    delete impl!._workletRefMap[id];
+  }
 }
 
 function hydrateWorkletValue(
@@ -234,11 +237,14 @@ function hydrateWorkletValue(
 ): void {
   assertCompatibleWorkletValue(handle, value, 'hydration');
   const previous = impl!._workletRefMap[handle._wvid];
-  if (previous !== value) {
-    disposeMainThreadObject(previous);
+  try {
+    if (previous !== value) {
+      disposeMainThreadObject(previous);
+    }
+  } finally {
+    impl!._workletRefMap[handle._wvid] = value;
+    firstScreenMainThreadObjects.delete(value);
   }
-  impl!._workletRefMap[handle._wvid] = value;
-  firstScreenMainThreadObjects.delete(value);
 }
 
 function assertCompatibleWorkletValue(
