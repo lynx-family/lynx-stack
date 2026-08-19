@@ -30,10 +30,6 @@ export async function applyDefaultPlugins(
   const defaultPlugins = Object.freeze<Promise<RsbuildPlugin>[]>([
     import('./api.plugin.js').then(({ pluginAPI }) => pluginAPI(config)),
 
-    import('@lynx-js/debug-metadata-rsbuild-plugin').then(
-      ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
-    ),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
     ),

@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
+
 import { pluginChunkLoading } from './plugins/chunkLoading.plugin.js'
 import { pluginCssMinimizer } from './plugins/cssMinimizer.plugin.js'
 import { pluginDev } from './plugins/dev.plugin.js'
@@ -37,6 +39,7 @@ export function pluginLynx(): RsbuildPlugin[] {
     pluginChunkLoading(),
     pluginCssMinimizer(),
     pluginDev(),
+    pluginLynxDebugMetadata(),
     pluginMinify(),
     pluginOptimization(),
     pluginOutput(),
