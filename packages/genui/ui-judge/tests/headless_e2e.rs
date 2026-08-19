@@ -83,15 +83,7 @@ fn fixture_url(bundle: &Path) -> String {
 }
 
 fn real_model_credentials_configured() -> bool {
-  [
-    "MIDSCENE_MODEL_API_KEY",
-    "OPENAI_API_KEY",
-    "MIDSCENE_MODEL_INIT_CONFIG_JSON",
-    "MIDSCENE_OPENAI_INIT_CONFIG_JSON",
-    "OPENAI_INIT_CONFIG_JSON",
-  ]
-  .iter()
-  .any(|name| std::env::var(name).is_ok_and(|value| !value.trim().is_empty()))
+  std::env::var("UI_JUDGE_API_KEY").is_ok_and(|value| !value.trim().is_empty())
 }
 
 fn restore_env(name: &str, value: Option<std::ffi::OsString>) {

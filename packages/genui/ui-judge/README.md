@@ -229,26 +229,34 @@ headless worker is joined.
 
 ## Model configuration
 
-The internal model client preserves the existing environment-variable
-interface:
+Set `UI_JUDGE_API_KEY` to authenticate model requests. The other model
+environment variables are optional:
 
-- `MIDSCENE_MODEL_API_KEY`
-- `MIDSCENE_MODEL_BASE_URL`
-- `MIDSCENE_MODEL_NAME`
-- `MIDSCENE_MODEL_FAMILY`
-- `MIDSCENE_MODEL_API` (`chat` or `responses`)
-- `MIDSCENE_MODEL_TIMEOUT` or `MIDSCENE_MODEL_TIMEOUT_MS`
-- `MIDSCENE_MODEL_INIT_CONFIG_JSON`
-- `MIDSCENE_OPENAI_INIT_CONFIG_JSON` (legacy alias)
-- `OPENAI_ORG_ID`
-- `OPENAI_PROJECT_ID`
+- `UI_JUDGE_BASE_URL`
+- `UI_JUDGE_MODEL`
+- `UI_JUDGE_API_STYLE` (`chat` or `responses`)
+- `UI_JUDGE_TIMEOUT_MS`
 
-These names are retained for configuration compatibility; the implementation
-does not load Midscene. OpenAI-compatible `OPENAI_*` aliases are also accepted.
-The JSON init config preserves scalar `defaultHeaders` / `extraHeaders`,
-`defaultQuery`, `organization`, and `project` entries. Both Chat Completions and
-Responses wire formats feed Agent SDK structured-output validation. The legacy
-`/crawl?ak=` endpoint is Chat-only.
+The model defaults to `gpt-4o-mini`, the Responses API, the OpenAI API base URL,
+and a 120-second request timeout. No legacy Midscene- or OpenAI-prefixed model
+environment variables or JSON init config are accepted. Both Chat Completions
+and Responses wire formats feed Agent SDK structured-output validation. The
+legacy `/crawl?ak=` endpoint is Chat-only.
+
+Other user-configurable environment variables are:
+
+- `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
+- `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
+- `LYNX_CORE_JS_PATH`: override `lynx_core.js` when it is not colocated with the
+  executable.
+- `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime downloading.
+- `LYNX_RUNTIME_URL` and `LYNX_RUNTIME_SHA256`: use and verify a custom
+  build-time runtime download.
+- `LYNX_SKIP_ADHOC_SIGN`: skip build-time ad-hoc signing on macOS.
+- `CARGO_TARGET_DIR`: override Cargo's intermediate output directory.
+- `UI_JUDGE_OUTPUT_DIR`: override `build.sh`'s final bundle directory.
+- `HEADLESS_RUST_TEST_RUNNER_DEBUG` and `LYNX_HEADLESS_DEBUG`: enable inherited
+  headless-runner diagnostics.
 
 Unit tests use `UI_JUDGE_MODEL_RESPONSE_JSON` or
 `UI_JUDGE_MODEL_RESPONSES_JSON` for deterministic model output. The
