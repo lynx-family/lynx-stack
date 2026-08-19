@@ -2210,6 +2210,9 @@ importers:
 
   packages/web-platform/web-core:
     dependencies:
+      '@lynx-js/css-serializer':
+        specifier: workspace:*
+        version: link:../../tools/css-serializer
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
@@ -2220,9 +2223,6 @@ importers:
         specifier: ^1.8.0
         version: 1.8.0
     devDependencies:
-      '@lynx-js/css-serializer':
-        specifier: workspace:*
-        version: link:../../tools/css-serializer
       '@lynx-js/lynx-core':
         specifier: 0.1.4
         version: 0.1.4

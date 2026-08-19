@@ -24,6 +24,37 @@ import { decodeBinaryMap } from '../../common/decodeUtils.js';
 const MTS_CODE_WRAPPER_PREFIX =
   '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
 
+/**
+ * The bundle compiler, loaded only when a markup (buildless Lynx XML) card
+ * actually arrives.
+ *
+ * This is `@lynx-js/web-core/encode`'s own `encodeLynxXML` - the function the
+ * build uses - reached through its source module rather than reimplemented. It is
+ * heavy: a CSS parser (`@lynx-js/css-serializer`, which re-exports `css-tree`)
+ * plus the `binary/encode` wasm, a few hundred kilobytes a card built ahead of
+ * time never needs.
+ *
+ * It must stay behind this lazy `import()`. `TemplateManager` requests this worker
+ * with `webpackPrefetch`, `webpackPreload` and `fetchPriority: "high"`, so
+ * anything imported statically here is eagerly fetched for *every* card; the magic
+ * comments below undo those inherited hints for this one chunk. Nothing in
+ * `decodeWorker/` may import `ts/encode/` statically.
+ *
+ * Reaching the encoder from a browser bundle at all is what #3589 made possible:
+ * `binary/encode`'s glue used to load its wasm through `node:fs` and is now
+ * generated with `wasm-bindgen --target bundler`, which a bundler resolves on
+ * either platform.
+ */
+const loadMarkupEncoder = () =>
+  import(
+    /* webpackChunkName: "web-core-markup-encoder" */
+    /* webpackMode: "lazy" */
+    /* webpackFetchPriority: "low" */
+    /* webpackPrefetch: false */
+    /* webpackPreload: false */
+    '../../encode/xmlToTasmJSON.js'
+  );
+
 const HEARTBREAK_INTERVAL_MS = 1000;
 let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -219,7 +250,22 @@ async function handleStream(
   const magic0 = view.getUint32(0, true);
   const magic1 = view.getUint32(4, true);
   if (magic0 !== MagicHeader0 || magic1 !== MagicHeader1) {
-    throw new Error('Invalid Magic Header');
+    // Neither a bundle nor JSON, so the one artifact shape left is a Lynx XML
+    // markup card. It arrives here rather than being sniffed for up front
+    // because it is the only shape that cannot be streamed - the XML parser has
+    // no incremental mode - and making every artifact pay for a look-ahead in
+    // order to route the one that does not stream had it backwards. By this
+    // point the header is already in hand and nothing has to be replayed.
+    await handleMarkup(
+      headerBytes,
+      await streamReader.readRest(),
+      url,
+      transformVW,
+      transformVH,
+      transformREM,
+      overrideConfig,
+    );
+    return;
   }
 
   // 2. Check Version
@@ -375,6 +421,116 @@ async function handleStream(
         throw new Error(`Unknown section label: ${label}`);
     }
   }
+}
+
+/**
+ * Whether the text begins an XML document, i.e. its first non-whitespace
+ * character opens a tag.
+ *
+ * This is not a sniff and nothing is routed by it: by the time it runs the
+ * artifact has already been classified as markup, by elimination. It exists only
+ * so that {@link handleMarkup} can tell the two failures apart - a document the
+ * author wrote wrong, and bytes that were never a Lynx artifact of any kind.
+ *
+ * The rule is deliberately the parser's own precondition rather than a new one:
+ * `parseLynxXML` skips a BOM (already stripped by `TextDecoder` here) and the
+ * same ASCII whitespace set, then requires `<?xml`, `<!` or `<lynx`. Anything
+ * this rejects would have been rejected there too, one step later and with a
+ * message about a missing root element.
+ */
+function startsXMLDocument(source: string): boolean {
+  for (let index = 0; index < source.length; index++) {
+    const character = source[index]!;
+    if (
+      character === ' ' || character === '\t' || character === '\n'
+      || character === '\r' || character === '\f'
+    ) {
+      continue;
+    }
+    return character === '<';
+  }
+  return false;
+}
+
+/**
+ * Compiles a Lynx XML markup card into a bundle and loads that, the artifact
+ * shape reached by elimination.
+ *
+ * A markup card is not a third kind of artifact. It is compiled here, in the
+ * browser, by the same `encodeLynxXML` a build would run, into the same
+ * `.web.bundle` bytes a build would emit - magic header, version, and the five
+ * sections in the encoder's order - and those bytes are then handed back to
+ * {@link handleStream}. Every section is read by the reader that already exists,
+ * so there is no markup-specific decoding anywhere: not in this worker, and not
+ * on the main thread.
+ *
+ * The recursion terminates after exactly one extra level. `encode` writes
+ * `MagicHeader0`/`MagicHeader1` at offset 0 unconditionally, so the second
+ * `handleStream` takes the binary branch. Were that ever untrue the bytes would
+ * reach {@link startsXMLDocument}, whose answer for a bundle's first byte (`S`)
+ * is `false`, and the recursion would end in a thrown error rather than a loop.
+ *
+ * ## Why it reports two different failures
+ *
+ * Because it is the fallback, a corrupted binary bundle lands here too: a single
+ * flipped bit in the magic header is enough. Handing those bytes to the XML
+ * parser would answer with `expected '<lynx version="...">' root element`, which
+ * sends whoever is reading it looking for a markup bug in a file that is not
+ * markup. So the bytes are checked for the shape of a text document first, and if
+ * they do not have it the diagnosis `handleStream` used to give -
+ * `Invalid Magic Header` - is reported instead, with the offending header bytes.
+ * That check also keeps the several hundred kilobyte compiler chunk from being
+ * fetched only to reject a corrupt bundle.
+ */
+async function handleMarkup(
+  head: Uint8Array,
+  rest: Uint8Array,
+  url: string,
+  transformVW: boolean,
+  transformVH: boolean,
+  transformREM: boolean,
+  overrideConfig?: Partial<PageConfig>,
+) {
+  const bytes = new Uint8Array(head.length + rest.length);
+  bytes.set(head);
+  bytes.set(rest, head.length);
+  // Joined before a single `TextDecoder` pass rather than decoded in two,
+  // because a multi-byte sequence can straddle the eight byte header. Nothing
+  // observable rests on it today: bytes 0..7 of a Lynx XML document are ASCII
+  // by grammar - `<?xml`, `<!`, `<lynx` or whitespace - so a character can only
+  // straddle inside a leading comment or declaration, both of which are
+  // discarded. It costs three lines and stops being a question.
+  // `TextDecoder` strips a leading UTF-8 BOM for us.
+  const source = new TextDecoder().decode(bytes);
+
+  if (!startsXMLDocument(source)) {
+    const headHex = Array.from(head, byte => byte.toString(16).padStart(2, '0'))
+      .join(' ');
+    throw new Error(
+      `Invalid Magic Header: not a Lynx bundle, and not a Lynx XML markup card`
+        + ` either - the content does not begin a tag. First bytes: ${headHex}`,
+    );
+  }
+
+  const { encodeLynxXML } = await loadMarkupEncoder();
+  const compiled = encodeLynxXML(source);
+  if (!compiled.success) {
+    throw new Error(compiled.message);
+  }
+
+  await handleStream(
+    url,
+    new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(compiled.buffer);
+        controller.close();
+      },
+    }).getReader(),
+    transformVW,
+    transformVH,
+    transformREM,
+    overrideConfig,
+  );
 }
 
 async function handleJSON(

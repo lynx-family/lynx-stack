@@ -447,6 +447,129 @@ describe('parseLynxXML', () => {
     });
   });
 
+  /**
+   * A comment may appear in every ignorable position, so an *unterminated* one
+   * has to be rejected from every one of them. Each slot is a separate call
+   * site in `parse()`, and a missed one degrades quietly: the parser would stop
+   * scanning and report whatever the state happened to be - typically "missing
+   * closing tag" or a bogus success - instead of naming the real defect.
+   */
+  describe('an unterminated comment is rejected from every position', () => {
+    const root = '<lynx version="5.4.2"><script main-thread>m</script></lynx>';
+    /**
+     * `truncated` and `closed` differ only in the comment's `-->`, so the pair
+     * shows the rejection is about the missing terminator and not about a
+     * comment being disallowed in that position.
+     */
+    const positions: Record<string, { truncated: string; closed: string }> = {
+      'before the XML declaration': {
+        truncated: `<!-- oops\n<?xml version="1.0"?>\n${root}`,
+        closed: `<!-- fine -->\n<?xml version="1.0"?>\n${root}`,
+      },
+      'between the declaration and the doctype': {
+        truncated: `<?xml version="1.0"?>\n<!-- oops\n<!DOCTYPE lynx>\n${root}`,
+        closed:
+          `<?xml version="1.0"?>\n<!-- fine -->\n<!DOCTYPE lynx>\n${root}`,
+      },
+      'between the doctype and the root element': {
+        truncated: `<!DOCTYPE lynx>\n<!-- oops\n${root}`,
+        closed: `<!DOCTYPE lynx>\n<!-- fine -->\n${root}`,
+      },
+      'between two sections': {
+        truncated: '<lynx version="5.4.2"><script main-thread>m</script>\n'
+          + '<!-- oops\n<script background>b</script></lynx>',
+        closed: '<lynx version="5.4.2"><script main-thread>m</script>\n'
+          + '<!-- fine -->\n<script background>b</script></lynx>',
+      },
+      'after the root closing tag': {
+        truncated: `${root}\n<!-- oops`,
+        closed: `${root}\n<!-- fine -->`,
+      },
+    };
+
+    for (const [where, { truncated, closed }] of Object.entries(positions)) {
+      it(`rejects one ${where}`, () => {
+        expect(expectFailure(truncated)).toBe('unterminated comment');
+
+        const result = parseLynxXML(truncated);
+        if (result.success) {
+          throw new Error('unreachable');
+        }
+        // Pointing at the comment's own start is what makes the message
+        // actionable; the end of the document would be useless.
+        expect(result.error.offset).toBe(truncated.indexOf('<!--'));
+
+        expectSuccess(parseLynxXML(closed));
+      });
+    }
+  });
+
+  /**
+   * Both attribute matchers start with a `startsWith` test, so a missing
+   * follow-up check would accept any attribute that merely *begins* with the
+   * expected name. That is the silent-acceptance direction: the document looks
+   * legal, and the value is then read from the wrong attribute.
+   */
+  describe('attribute names are matched whole, not by prefix', () => {
+    const versionRejected =
+      '\'<lynx>\' requires exactly one non-empty \'version\' attribute';
+
+    it('rejects a bare \'version\' with no value', () => {
+      expect(expectFailure(
+        '<lynx version><script main-thread>m</script></lynx>',
+      )).toBe(versionRejected);
+    });
+
+    it('rejects an attribute that only starts with \'version\'', () => {
+      for (const attribute of ['versionless="1"', 'version-name="5.4.2"']) {
+        expect(expectFailure(
+          `<lynx ${attribute}><script main-thread>m</script></lynx>`,
+        )).toBe(versionRejected);
+      }
+    });
+
+    it('rejects a script attribute that only starts with a known name', () => {
+      for (const attribute of ['main-threaded', 'backgrounded="true"']) {
+        expect(expectFailure(
+          `<lynx version="5.4.2"><script ${attribute}>m</script></lynx>`,
+        )).toBe(
+          '\'<script>\' requires exactly one of \'main-thread\' or \'background\'',
+        );
+      }
+    });
+  });
+
+  describe('CDATA boundaries', () => {
+    it('rejects text after the CDATA section with no second \']]>\'', () => {
+      // Distinct from both existing CDATA failures: the `]]>` *is* found, so
+      // the section is not unterminated from `#consumeSection`'s point of
+      // view, and the trailing text is not a second CDATA end either. Without
+      // the `endsWith` check the trailing text would be silently swallowed
+      // into - or dropped from - the section's content.
+      const source = '<lynx version="5.4.2">'
+        + '<script main-thread><![CDATA[main]]>tail</script></lynx>';
+      expect(expectFailure(source)).toBe('unterminated CDATA section');
+
+      const result = parseLynxXML(source);
+      if (result.success) {
+        throw new Error('unreachable');
+      }
+      // Reported at the section's content start, i.e. where the CDATA began.
+      expect(result.error.offset).toBe(source.indexOf('<![CDATA['));
+    });
+
+    it('strips whitespace around a CDATA wrapper but not inside it', () => {
+      const result = expectSuccess(parseLynxXML(
+        '<lynx version="5.4.2">'
+          + '<style>\n  <![CDATA[ .a { width: 1px; } ]]>\n  </style>'
+          + '<script main-thread>m</script></lynx>',
+      ));
+      // The wrapper's surrounding whitespace is layout, the inner whitespace is
+      // content.
+      expect(result.style).toBe(' .a { width: 1px; } ');
+    });
+  });
+
   describe('real world fixture', () => {
     it('parses markup-card.xml into three non-empty sections', () => {
       const source = readFileSync(

@@ -1,6 +1,10 @@
 import './jsdom.js';
 import { describe, test, expect, rstest, beforeEach } from '@rstest/core';
-import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
+import {
+  encode,
+  encodeLynxXML,
+  type TasmJSONInfo,
+} from '../ts/encode/index.js';
 import { MagicHeader0, MagicHeader1 } from '../ts/constants.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import type { HeartbreakMessage } from '../ts/client/decodeWorker/types.js';
@@ -662,5 +666,306 @@ describe('Template Manager', () => {
     expect(decodedCustomSections).toEqual(sampleTasm.customSections);
     expect(instance1.onPageConfigReady).toHaveBeenCalled();
     expect(instance2.onPageConfigReady).toHaveBeenCalled();
+  });
+  /**
+   * The markup path, end to end through the worker.
+   *
+   * A markup card is decoded in the worker like any other artifact, and it is
+   * reached the way the worker reaches everything else: `handleStream` reads the
+   * 8 byte header, dispatches JSON on `{` and a bundle on the magic header, and
+   * what is left over is a markup card. It is the only artifact that cannot be
+   * streamed - the XML parser has no incremental mode - so it is the one that
+   * waits for the whole response, and putting it last is what keeps the two that
+   * do stream from paying for it.
+   *
+   * The conversion happens in a lazily loaded chunk and emits the ordinary
+   * `Configurations` / `StyleInfo` / `LepusCode` / `Manifest` sections. The main
+   * thread has no markup branch at all, so what these assert is precisely that -
+   * a markup card arrives through the same section handler, and completes through
+   * the same `done`, as a built card.
+   */
+  describe('markup cards', () => {
+    const markupSource = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<!DOCTYPE lynx>',
+      '<lynx version="5.4.2">',
+      // The viewport and root-relative units are load bearing, not decoration:
+      // they are what makes `transformVW` / `transformVH` / `transformREM`
+      // observable in the decoded bytes. Without them those flags are no-ops and
+      // any test comparing two loads would agree however they were propagated.
+      '<style><![CDATA[.a{color:red;display:linear;width:10vw;height:20vh;font-size:2rem}]]></style>',
+      '<script main-thread="true"><![CDATA[globalThis.__mts = 1;]]></script>',
+      '<script background="true"><![CDATA[globalThis.__bts = 1;]]></script>',
+      '</lynx>',
+    ].join('\n');
+
+    function serveBytes(bytes: Uint8Array, chunkSize = bytes.length) {
+      const stream = new ReadableStream({
+        start(controller) {
+          for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+            controller.enqueue(bytes.slice(offset, offset + chunkSize));
+          }
+          controller.close();
+        },
+      });
+      (globalThis.fetch as any).mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        body: stream,
+      });
+    }
+
+    function serveText(text: string, chunkSize?: number) {
+      const bytes = new TextEncoder().encode(text);
+      serveBytes(bytes, chunkSize ?? bytes.length);
+    }
+
+    function load(url: string, transforms = false) {
+      return templateManager.fetchBundle(
+        url,
+        Promise.resolve(mockLynxViewInstance),
+        transforms,
+        transforms,
+        transforms,
+      );
+    }
+
+    test('loads a markup card and resolves the load', async () => {
+      const url = 'http://example.com/card.xml';
+      serveText(markupSource);
+
+      await load(url);
+
+      const bundle = templateManager.getBundle(url);
+      expect(bundle).toBeDefined();
+      // The engine hard-codes a markup bundle's config, so these are the values
+      // a native XML bundle would carry too.
+      expect(bundle!.config).toMatchObject({
+        cardType: 'react',
+        isLazy: 'false',
+        enableCSSSelector: 'true',
+      });
+      expect(bundle!.styleSheet).toBeDefined();
+      expect(Object.keys(bundle!.lepusCode ?? {})).toStrictEqual(['root']);
+      expect(Object.keys(bundle!.backgroundCode ?? {})).toStrictEqual([
+        '/app-service.js',
+      ]);
+
+      // Same callbacks, same order, as a bundle card.
+      expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalled();
+      expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(url);
+      expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
+        url,
+        false,
+      );
+      expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(url);
+    });
+
+    /**
+     * The whole claim of the markup path, end to end: a hand-written card is
+     * compiled in the browser into the bundle a build would have produced, and
+     * loading it is therefore the same act as loading that bundle.
+     *
+     * Asserted on what the worker actually posts, because that is the entire
+     * interface between the two threads. The section *order* matters as much as
+     * the payloads: a markup card is not adapted into the section sequence, it
+     * produces the encoder's own sequence, because after compiling
+     * `handleMarkup` hands the bytes back to `handleStream` and the ordinary
+     * binary reader takes over. If it were reordered, adapted, or given the wrong
+     * transform flags on the way through, these would diverge.
+     *
+     * The `StyleInfo` payload is copied out of the message before it is posted:
+     * the worker transfers that `ArrayBuffer`, so reading it afterwards would
+     * find it detached.
+     */
+    test('is indistinguishable from loading the bundle compiled from it', async () => {
+      const compiled = encodeLynxXML(markupSource);
+      expect(compiled.success).toBe(true);
+      const bundleBytes = (compiled as { buffer: Uint8Array }).buffer;
+
+      function recordSections() {
+        const seen: { label: number; bytes?: number[] }[] = [];
+        const original = globalThis.postMessage;
+        const spy = rstest.spyOn(globalThis, 'postMessage')
+          .mockImplementation(
+            ((message: any, ...rest: any[]) => {
+              if (message?.type === 'section') {
+                seen.push({
+                  label: message.label,
+                  ...(message.data instanceof ArrayBuffer
+                    ? { bytes: Array.from(new Uint8Array(message.data)) }
+                    : {}),
+                });
+              }
+              return (original as any).call(globalThis, message, ...rest);
+            }) as any,
+          );
+        return { seen, restore: () => spy.mockRestore() };
+      }
+
+      async function sectionsOf(
+        url: string,
+        serve: () => void,
+        transforms: boolean,
+      ) {
+        const recorder = recordSections();
+        serve();
+        await load(url, transforms);
+        recorder.restore();
+        return recorder.seen;
+      }
+
+      // Run under both flag settings. The card carries `vw`, `vh` and `rem`, so
+      // the transforms genuinely move the decoded style bytes - which is what
+      // makes this sensitive to the flags being carried into the recursive
+      // `handleStream` call rather than defaulted or dropped along the way.
+      for (const transforms of [false, true]) {
+        const suffix = transforms ? 'transformed' : 'plain';
+        const asMarkup = await sectionsOf(
+          `http://example.com/twin-${suffix}.xml`,
+          () => serveText(markupSource),
+          transforms,
+        );
+        const asBundle = await sectionsOf(
+          `http://example.com/twin-${suffix}.web.bundle`,
+          () => serveBytes(bundleBytes),
+          transforms,
+        );
+
+        // Control: the recording saw a whole load, so an equality between two
+        // empty arrays cannot be what passes here.
+        expect(asMarkup).toHaveLength(5);
+        expect(asMarkup).toStrictEqual(asBundle);
+      }
+
+      // And the two flag settings really do produce different bytes, so the
+      // equality above cannot be holding because the transforms did nothing.
+      const plain = await sectionsOf(
+        'http://example.com/twin-a.xml',
+        () => serveText(markupSource),
+        false,
+      );
+      const transformed = await sectionsOf(
+        'http://example.com/twin-b.xml',
+        () => serveText(markupSource),
+        true,
+      );
+      expect(plain).not.toStrictEqual(transformed);
+    });
+
+    /**
+     * The document is reassembled from the 8 header bytes `handleStream` already
+     * consumed plus the remainder, so how the response was split has to make no
+     * difference. One byte at a time is the worst case for that seam.
+     */
+    test('loads a card delivered one byte at a time', async () => {
+      const url = 'http://example.com/card-drip.xml';
+      serveText(markupSource, 1);
+
+      await load(url);
+      expect(templateManager.getBundle(url)?.styleSheet).toBeDefined();
+    });
+
+    /**
+     * A BOM and leading whitespace are the author's, not the tool's, so however
+     * much of it there is the card still loads.
+     *
+     * This used to have a limit. When the markup check ran ahead of
+     * `handleStream` it only ever saw 8 bytes, so a `<` pushed past byte 8 by a
+     * BOM plus a few blank lines was not recognised and the card was reported as
+     * a corrupt binary. Reaching markup by elimination removes the window
+     * entirely: the padding here is deliberately far longer than 8 bytes.
+     */
+    test('tolerates a BOM and any amount of leading whitespace', async () => {
+      const url = 'http://example.com/card-bom.xml';
+      serveText('\ufeff\n \t\n \t\n \t\n \t\n \t\n \t\n' + markupSource);
+
+      await load(url);
+      expect(templateManager.getBundle(url)?.styleSheet).toBeDefined();
+    });
+
+    /**
+     * A document that is markup but wrong is reported by the XML parser, in the
+     * parser's own words and with an offset.
+     */
+    test('rejects an unparsable card with the parser\'s own message', async () => {
+      const url = 'http://example.com/card-broken.xml';
+      serveText('<lynx version="1">never closed');
+
+      await expect(load(url)).rejects.toThrow(
+        /invalid TemplateBundle XML at offset \d+:/,
+      );
+    });
+
+    /**
+     * The cost of making markup the fallback, paid off deliberately.
+     *
+     * A corrupted bundle no longer stops at `Invalid Magic Header`; it reaches
+     * the markup path like anything else that is not a bundle and not JSON. Left
+     * alone it would come back as `expected '<lynx version="...">' root element`,
+     * which points whoever is reading it at a markup bug in a file that is not
+     * markup. So the two are told apart before the parser is even loaded, on
+     * whether the content begins a tag at all, and a corrupt bundle keeps the
+     * diagnosis it always had.
+     */
+    describe('bytes that are no kind of Lynx artifact', () => {
+      test('a corrupted bundle is reported as a bad header, not as bad XML', async () => {
+        const url = 'http://example.com/corrupt.bundle';
+        const encoded = encode(sampleTasm);
+        // One flipped bit in the magic header, the cheapest real corruption.
+        // 'S' of 'SDRAWROF' becomes 0xac.
+        expect(encoded[0]).toBe(0x53);
+        encoded[0] = encoded[0]! ^ 0xff;
+        serveBytes(encoded);
+
+        const error = await load(url).then(
+          () => undefined,
+          (thrown: Error) => thrown,
+        );
+        expect(error).toBeDefined();
+        expect(error!.message).toContain('Invalid Magic Header');
+        // Not the XML parser's answer: that is the confusing outcome this
+        // guards against.
+        expect(error!.message).not.toContain('TemplateBundle XML');
+        // The bytes that failed to match, so the reader can see how close it
+        // was - 'DRAWROF' is still legible after the corrupted first byte.
+        expect(error!.message).toContain('ac 44 52 41 57 52 4f 46');
+      });
+
+      test('a non-text payload is reported the same way', async () => {
+        const url = 'http://example.com/not-lynx.gz';
+        // A gzip member: real enough that a misconfigured server could serve it.
+        serveBytes(
+          new Uint8Array([0x1f, 0x8b, 0x08, 0x00, 0, 0, 0, 0, 0x00, 0x03]),
+        );
+
+        await expect(load(url)).rejects.toThrow(
+          /Invalid Magic Header.*1f 8b 08 00 00 00 00 00/s,
+        );
+      });
+
+      /**
+       * The one input markup does *not* rescue, pinned because it is the
+       * boundary of the fallback rather than an oversight.
+       *
+       * Markup is reached from the magic header check, which is downstream of
+       * the eight byte header read, so a response too short to fill that header
+       * never gets there and keeps the stream errors it always had. Making
+       * markup work for a document shorter than eight bytes would mean moving
+       * the read, and no useful card is that short.
+       */
+      test('a response too short for the header keeps the stream errors', async () => {
+        serveText('<a>');
+        await expect(load('http://example.com/tiny.xml')).rejects.toThrow(
+          'Unexpected end of stream. Expected 8 bytes, got 3',
+        );
+
+        serveBytes(new Uint8Array(0));
+        await expect(load('http://example.com/empty.xml')).rejects.toThrow(
+          'Empty stream',
+        );
+      });
+    });
   });
 });
