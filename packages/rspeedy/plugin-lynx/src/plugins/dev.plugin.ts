@@ -212,17 +212,14 @@ export function pluginDev(): RsbuildPlugin {
       })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        const resolveName = getResolveBundleName()
         if (
           config.server?.printUrls === undefined
           || config.server?.printUrls === true
         ) {
+          const environmentNames = Object.keys(config.environments ?? {})
           return mergeRsbuildConfig(config, {
             server: {
-              // Rsbuild renders one line per (url, route) pair as
-              // `url + route.pathname`. `appendBundleRoutes` already provides
-              // the Lynx bundle routes, so this returns the base URL only —
-              // returning fully resolved bundle URLs here would apply the
-              // entry path twice.
               printUrls: (param) => {
                 const currentConfig = api.getRsbuildConfig('current')
                 const assetPrefix = currentConfig.dev?.assetPrefix
@@ -233,7 +230,46 @@ export function pluginDev(): RsbuildPlugin {
                     ? assetPrefix
                     : `http://${hostname}:<port>/`
                 ).replaceAll('<port>', String(param.port))
-                return [{ label: 'Lynx', url: baseForUrls }]
+
+                // Rsbuild renders one line per (url, route) pair as
+                // `url + route.pathname`. Whether the bundle routes are
+                // already in place depends on when Rsbuild calls this: the
+                // dev server prints before `onAfterStartDevServer` runs, the
+                // preview server prints after `onAfterStartPreviewServer`.
+                // Resolve the entry path here only when nothing else will
+                // append it, otherwise it lands in the URL twice.
+                if (param.routes.length > 0) {
+                  return [{ label: 'Lynx', url: baseForUrls }]
+                }
+
+                const finalUrls: { label: string, url: string }[] = []
+                for (const entry of Object.keys(config.source?.entry ?? {})) {
+                  for (const environmentName of environmentNames) {
+                    const pathname = resolveName(entry, environmentName)
+                    finalUrls.push({
+                      label: environmentName,
+                      url: new URL(pathname, baseForUrls).toString(),
+                    })
+                    if (environmentName === 'web') {
+                      finalUrls.push({
+                        label: WEB_PREVIEW_ENTRY_NAME,
+                        url: new URL(
+                          `/__web_preview?casename=${
+                            encodeURIComponent(pathname)
+                          }`,
+                          baseForUrls,
+                        ).toString(),
+                      })
+                    }
+                  }
+                }
+                return finalUrls.map((urlInfo) => {
+                  // capitalize the first letter of label
+                  const label = urlInfo.label.charAt(0).toUpperCase()
+                    + urlInfo.label.slice(1)
+                  urlInfo.label = label
+                  return urlInfo
+                })
               },
             },
           })

@@ -8,7 +8,11 @@
  * A rsbuild plugin that print the template.js url using QRCode.
  */
 
-import type { EnvironmentContext, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  EnvironmentContext,
+  RsbuildConfig,
+  RsbuildPlugin,
+} from '@rsbuild/core'
 
 import { registerConsoleShortcuts } from './shortcuts.js'
 
@@ -125,8 +129,22 @@ export function pluginQRCode(
     pre: ['lynx:rsbuild:api'],
     setup(api) {
       if (fullscreen) {
+        // The bundle URL is either resolved by `server.printUrls` or composed
+        // from a route, depending on whether the routes are in place when
+        // Rsbuild prints. Cover both, each guarded so the variant is only
+        // added once.
         api.onAfterStartDevServer(appendFullscreenRoutes)
         api.onAfterStartPreviewServer(appendFullscreenRoutes)
+        api.modifyRsbuildConfig({
+          order: 'post',
+          handler: (config, { mergeRsbuildConfig }) => {
+            const prev = config.server?.printUrls
+            if (typeof prev !== 'function') return
+            return mergeRsbuildConfig(config, {
+              server: { printUrls: wrapPrintUrlsWithFullscreen(prev) },
+            })
+          },
+        })
       }
 
       let unregisterPreviewShortcuts: (() => void) | undefined
@@ -198,6 +216,42 @@ function getEntriesFromRoutes(
         .filter(entryName => entries.has(entryName)),
     ),
   ]
+}
+
+type PrintUrlsFn = Extract<
+  NonNullable<NonNullable<RsbuildConfig['server']>['printUrls']>,
+  (...args: never[]) => unknown
+>
+
+/**
+ * Wrap a `server.printUrls` function so that each `Lynx`-labelled URL is
+ * followed by an `∟ Fullscreen` entry with `?fullscreen=true`.
+ *
+ * Skipped once routes exist, because the bundle path then comes from a route
+ * and {@link appendFullscreenRoutes} contributes the variant instead.
+ *
+ * @internal
+ */
+export function wrapPrintUrlsWithFullscreen(
+  prev: PrintUrlsFn,
+): PrintUrlsFn {
+  return (params) => {
+    const urls = prev(params) ?? []
+    if (params.routes.length > 0) {
+      return urls
+    }
+    const out: typeof urls = []
+    for (const entry of urls) {
+      out.push(entry)
+      if (typeof entry !== 'string' && entry.label === 'Lynx') {
+        out.push({
+          label: '∟ Fullscreen',
+          url: appendFullscreenParam(entry.url),
+        })
+      }
+    }
+    return out
+  }
 }
 
 /**

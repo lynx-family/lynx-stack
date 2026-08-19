@@ -803,11 +803,20 @@ describe('pluginDev', () => {
 
     let printedUrls: undefined | (string | { url: string, label?: string })[] =
       undefined
+    let capturedPrintUrls:
+      | undefined
+      | ((param: {
+        urls: string[]
+        port: number
+        routes: { entryName: string, pathname: string }[]
+        protocol: string
+      }) => (string | { url: string, label?: string })[] | null | undefined)
 
     rsbuild.modifyRsbuildConfig({
       handler: (config, { mergeRsbuildConfig }) => {
         if (typeof config.server?.printUrls === 'function') {
           const originalPrintUrls = config.server.printUrls
+          capturedPrintUrls = originalPrintUrls as typeof capturedPrintUrls
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (...args) => {
@@ -827,14 +836,21 @@ describe('pluginDev', () => {
 
     await server.waitDevCompileDone()
 
-    // Rsbuild renders one line per (url, route) pair as `url + pathname`, so
-    // `printUrls` returns the base URL and the bundle routes supply the
-    // per-entry part. Returning a resolved bundle URL here would print the
-    // entry path twice.
-    expect(printedUrls).toStrictEqual([{
+    expect(printedUrls).toBeDefined()
+
+    // With no routes in place nothing else appends the entry path, so
+    // `printUrls` resolves the bundle URL itself.
+    expect(
+      capturedPrintUrls?.({
+        urls: [],
+        port: 8091,
+        routes: [],
+        protocol: 'http',
+      }),
+    ).toContainEqual({
       'label': 'Lynx',
-      'url': 'http://example.com:8091/',
-    }])
+      'url': 'http://example.com:8091/main.lynx.bundle',
+    })
   })
 
   test('dev.assetPrefix with environment.web', async () => {
@@ -856,22 +872,20 @@ describe('pluginDev', () => {
       },
     })
 
-    let printedUrls: undefined | (string | { url: string, label?: string })[] =
-      undefined
+    let capturedPrintUrls:
+      | undefined
+      | ((param: {
+        urls: string[]
+        port: number
+        routes: { entryName: string, pathname: string }[]
+        protocol: string
+      }) => (string | { url: string, label?: string })[] | null | undefined)
 
     rsbuild.modifyRsbuildConfig({
-      handler: (config, { mergeRsbuildConfig }) => {
+      handler: (config) => {
         if (typeof config.server?.printUrls === 'function') {
-          const originalPrintUrls = config.server.printUrls
-          return mergeRsbuildConfig(config, {
-            server: {
-              printUrls: (...args) => {
-                const result = originalPrintUrls(...args)
-                printedUrls = result ?? undefined
-                return result
-              },
-            },
-          })
+          capturedPrintUrls = config.server
+            .printUrls as typeof capturedPrintUrls
         }
         return config
       },
@@ -882,10 +896,22 @@ describe('pluginDev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toStrictEqual([{
-      'label': 'Lynx',
-      'url': 'http://example.com:8092/',
-    }])
+    const resolved = capturedPrintUrls?.({
+      urls: [],
+      port: 8092,
+      routes: [],
+      protocol: 'http',
+    })
+
+    expect(resolved).toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8092/main.web.bundle',
+    })
+
+    expect(resolved).toContainEqual({
+      'label': '∟ Preview',
+      'url': 'http://example.com:8092/__web_preview?casename=main.web.bundle',
+    })
   })
 
   test('web preview is exposed as a route', async () => {
@@ -946,6 +972,42 @@ describe('pluginDev', () => {
     } finally {
       await previewServer.server.close()
     }
+  })
+
+  test('printUrls resolves the bundle path while routes are still empty', async () => {
+    // The dev server prints before `onAfterStartDevServer` fills the routes,
+    // so nothing else appends the entry path and `printUrls` has to.
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      server: {
+        port: 8099,
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+    const printUrls = rsbuild.getRsbuildConfig().server?.printUrls
+    expect(typeof printUrls).toBe('function')
+    void config
+
+    expect(
+      (printUrls as (param: {
+        urls: string[]
+        port: number
+        routes: { entryName: string, pathname: string }[]
+        protocol: string
+      }) => unknown)({
+        urls: [],
+        port: 8099,
+        routes: [],
+        protocol: 'http',
+      }),
+    ).toContainEqual(
+      expect.objectContaining({ label: 'Lynx' }),
+    )
   })
 
   test('onAfterStartDevServer routes contains bundle entries', async () => {
