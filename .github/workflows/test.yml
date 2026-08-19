@@ -211,15 +211,38 @@ jobs:
         # Generated smoke-test projects do not carry a packageManager pin, so
         # keep this stage on pnpm 10 even when Corepack's registry default moves.
         corepack prepare pnpm@10.29.3 --activate
-        pnpm dlx @pnpm/registry-mock@4 prepare
-        pnpm dlx @pnpm/registry-mock@4 &
-        printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
+        export NO_PROXY="${NO_PROXY:+$NO_PROXY,}localhost,127.0.0.1"
+        export no_proxy="${no_proxy:+$no_proxy,}localhost,127.0.0.1"
+        pnpr_config="$RUNNER_TEMP/pnpr-config.json"
+        pnpr_log="$RUNNER_TEMP/pnpr.log"
+        node packages/tools/canary-release/pnpr-config.js "$pnpr_config" "$RUNNER_TEMP/pnpr-storage"
+        pnpm --config.minimum-release-age=0 dlx @pnpm/pnpr@0.1.0-alpha.7 \
+          --config "$pnpr_config" \
+          --listen 127.0.0.1:4873 \
+          --public-url http://localhost:4873 \
+          > "$pnpr_log" 2>&1 &
+        pnpr_pid=$!
+        trap 'kill "$pnpr_pid" 2>/dev/null || true' EXIT
+        for attempt in {1..30}; do
+          if curl --fail --silent http://localhost:4873/-/ping > /dev/null; then
+            break
+          fi
+          if ! kill -0 "$pnpr_pid" 2>/dev/null; then
+            cat "$pnpr_log"
+            exit 1
+          fi
+          if [ "$attempt" -eq 30 ]; then
+            cat "$pnpr_log"
+            exit 1
+          fi
+          sleep 1
+        done
         pnpm changeset status --since=origin/main --output "$RUNNER_TEMP/changeset-status.json"
         if jq -e '.releases | length > 0' "$RUNNER_TEMP/changeset-status.json" > /dev/null; then
           pnpm changeset version --snapshot regression
         fi
         node packages/tools/canary-release/snapshot.js
-        pnpm --recursive publish --no-git-checks --access public --registry=http://localhost:4873
+        pnpm --recursive publish --batch --force --no-git-checks --access public --registry=http://localhost:4873
 
         # `npm run <script> <args>` swallows the args unless they follow `--`,
         # while Yarn 4 would forward the `--` itself to the script.
