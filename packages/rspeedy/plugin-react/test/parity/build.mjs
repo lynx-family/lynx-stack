@@ -27,8 +27,10 @@ const config = {
 
 if (tool === 'rspeedy') {
   const rspeedy = await createRspeedy({ cwd, rspeedyConfig: config })
-  await rspeedy.build()
+  const { close } = await rspeedy.build()
+  await close()
 } else {
   const rsbuild = await createRsbuild({ cwd, rsbuildConfig: config })
-  await rsbuild.build()
+  const { close } = await rsbuild.build()
+  await close()
 }
