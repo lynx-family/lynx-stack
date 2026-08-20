@@ -12,6 +12,7 @@ import {
   onFunctionCall,
   resetFunctionCallReturnListener,
 } from '../../src/core/thread-function-call/return-value.js';
+import { clearMtsConfigCacheForTesting } from '../../src/core/mts-capability.js';
 
 function createLynxMock() {
   const coreContext = {
@@ -40,11 +41,13 @@ describe('thread-function-call main-thread primitives', () => {
     globalThis.SystemInfo = {
       lynxSdkVersion: '999.999',
     } as SystemInfo;
+    clearMtsConfigCacheForTesting();
   });
 
   afterEach(() => {
     takeDelayedRunOnMainThreadData();
     resetFunctionCallReturnListener();
+    clearMtsConfigCacheForTesting();
     vi.unstubAllGlobals();
   });
 

@@ -3,21 +3,39 @@
 // LICENSE file in the root directory of this source tree.
 import type { RefObject } from 'react';
 
-import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
-import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
+import { useMemo } from './hooks/react.js';
+import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
+import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
+import type { Worklet, WorkletRefImpl } from '../worklet-runtime/bindings/types.js';
 
-import { addWorkletRefInitValue } from './workletRefPool.js';
-import { useMemo } from '../../../core/hooks/react.js';
-
-// Split into two variables for testing purposes
+// Split into two variables for testing purposes.
 let lastIdBG = 0;
 let lastIdMT = 0;
 
-export function clearWorkletRefLastIdForTesting(): void {
+export function clearMainThreadRefLastIdForTesting(): void {
   lastIdBG = lastIdMT = 0;
 }
 
-abstract class WorkletRef<T> {
+export function isMainThreadRef(value: unknown): value is WorkletRefImpl<unknown> {
+  return typeof value === 'object'
+    && value !== null
+    && typeof (value as { _wvid?: unknown })._wvid === 'number';
+}
+
+export function isMainThreadRefCallback(value: unknown): value is Worklet {
+  return typeof value === 'object'
+    && value !== null
+    && typeof (value as { _wkltId?: unknown })._wkltId === 'string';
+}
+
+/**
+ * A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
+ * states between main thread function calls.
+ * The data saved in `current` property of the `MainThreadRef` can be read and written in
+ * multiple main thread functions.
+ * @public
+ */
+export class MainThreadRef<T> {
   /**
    * @internal
    */
@@ -35,15 +53,21 @@ abstract class WorkletRef<T> {
    */
   protected _lifecycleObserver: unknown;
 
-  /**
-   * @internal
-   */
-  protected constructor(initValue: T, type: string) {
+  constructor(initValue: T) {
     this._initValue = initValue;
-    this._type = type;
+    this._type = 'main-thread';
     if (__JS__) {
       this._wvid = ++lastIdBG;
-      addWorkletRefInitValue(this._wvid, initValue);
+      addMainThreadRefInitValue(this._wvid, initValue);
+      const id = this._wvid;
+      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
+        lynx.getCoreContext?.().dispatchEvent({
+          type: WorkletEvents.releaseWorkletRef,
+          data: {
+            id,
+          },
+        });
+      });
     } else {
       this._wvid = --lastIdMT;
     }
@@ -76,30 +100,6 @@ abstract class WorkletRef<T> {
     return {
       _wvid: this._wvid,
     };
-  }
-}
-
-/**
- * A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
- * states between main thread function calls.
- * The data saved in `current` property of the `MainThreadRef` can be read and written in
- * multiple main thread functions.
- * @public
- */
-export class MainThreadRef<T> extends WorkletRef<T> {
-  constructor(initValue: T) {
-    super(initValue, 'main-thread');
-    if (__JS__) {
-      const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: {
-            id,
-          },
-        });
-      });
-    }
   }
 }
 
@@ -143,7 +143,7 @@ export class MainThreadRef<T> extends WorkletRef<T> {
  */
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;
 
-// convenience overload for refs given as a ref prop as they typically start with a null value
+// Convenience overload for refs given as a ref prop as they typically start with a null value.
 /**
  * Create A `MainThreadRef`.
  *
@@ -184,8 +184,8 @@ export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;
  */
 export function useMainThreadRef<T>(initValue: T | null): RefObject<T>;
 
-// convenience overload for potentially undefined initialValue / call with 0 arguments
-// has a default to stop it from defaulting to {} instead
+// Convenience overload for potentially undefined initialValue / call with 0 arguments
+// has a default to stop it from defaulting to {} instead.
 /**
  * Create A `MainThreadRef`.
  *
