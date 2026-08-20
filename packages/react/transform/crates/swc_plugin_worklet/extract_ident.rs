@@ -28,7 +28,7 @@ struct ScopeEnv {
  */
 pub struct ExtractingIdentsCollector {
   cfg: ExtractingIdentsCollectorConfig,
-  saw_shared_identifiers: bool,
+  shared_identifiers_seen: FxHashSet<Id>,
   values_extracted: Box<Expr>,
   idents_to_extract: Vec<Ident>,
   this_expr_to_extract: Box<Expr>,
@@ -49,7 +49,7 @@ impl ExtractingIdentsCollector {
   pub fn new(cfg: ExtractingIdentsCollectorConfig) -> Self {
     ExtractingIdentsCollector {
       cfg,
-      saw_shared_identifiers: false,
+      shared_identifiers_seen: FxHashSet::default(),
       values_extracted: quote!("{}" as Expr).into(),
       idents_to_extract: vec![],
       this_expr_to_extract: quote!("{}" as Expr).into(),
@@ -96,8 +96,8 @@ impl ExtractingIdentsCollector {
     !self.js_fns_to_extract.is_empty()
   }
 
-  pub fn saw_shared_identifiers(&self) -> bool {
-    self.saw_shared_identifiers
+  pub fn shared_identifiers(&self) -> Vec<Id> {
+    self.shared_identifiers_seen.iter().cloned().collect()
   }
 
   pub fn take_js_fns(&mut self) -> Vec<(IdentName, Box<Expr>)> {
@@ -283,7 +283,7 @@ impl VisitMut for ExtractingIdentsCollector {
     // Skip shared identifiers from shared-runtime imports
     if let Some(ref shared_idents) = self.cfg.shared_identifiers {
       if shared_idents.contains(&n.to_id()) {
-        self.saw_shared_identifiers = true;
+        self.shared_identifiers_seen.insert(n.to_id());
         return;
       }
     }
@@ -397,6 +397,14 @@ impl VisitMut for ExtractingIdentsCollector {
   }
 
   fn visit_mut_fn_expr(&mut self, n: &mut FnExpr) {
+    self.push_fn_scope(collect_inner_scope_decls(n));
+    self.next_block_decls_collected = true;
+    n.visit_mut_children_with(self);
+    self.next_block_decls_collected = false;
+    self.pop_scope();
+  }
+
+  fn visit_mut_method_prop(&mut self, n: &mut MethodProp) {
     self.push_fn_scope(collect_inner_scope_decls(n));
     self.next_block_decls_collected = true;
     n.visit_mut_children_with(self);

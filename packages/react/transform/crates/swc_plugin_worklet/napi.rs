@@ -1,5 +1,6 @@
 use napi_derive::napi;
 
+use swc_core::common::comments::SingleThreadedComments;
 use swc_core::ecma::ast::*;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
 
@@ -105,6 +106,11 @@ impl WorkletVisitor {
 
   pub fn with_defines_collector(mut self, collector: DefinesCollector) -> Self {
     self.inner.defines_collector = Some(collector);
+    self
+  }
+
+  pub fn with_comments(mut self, comments: SingleThreadedComments) -> Self {
+    self.inner = self.inner.with_comments(comments);
     self
   }
 

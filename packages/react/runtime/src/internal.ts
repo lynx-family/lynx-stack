@@ -82,6 +82,8 @@ export { createBackgroundFunctionHandle as transformToWorklet } from './core/bac
 export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+export { captureMainThreadObject } from './snapshot/worklet/capture.js';
+export { registerMainThreadObjectDefinition } from './snapshot/worklet/ref/mainThreadObject.js';
 
 if (__DEV__) {
   // Dev snapshot creators take the runtime as a parameter (they are

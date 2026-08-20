@@ -20,10 +20,15 @@ import {
   selectMissingDefines,
 } from '../src/Defines.js';
 import type { Define } from '../src/Defines.js';
+import { parseMainThreadObjectMarker } from '../src/DefinesInjection.js';
 import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 
-function define(id: string, code = `/* ${id} */`): Define {
-  return { id, code };
+function define(
+  id: string,
+  code = `/* ${id} */`,
+  resource?: string,
+): Define {
+  return { id, code, ...(resource ? { resource } : {}) };
 }
 
 interface TestModule {
@@ -138,6 +143,31 @@ describe('selectMissingDefines', () => {
   });
 });
 
+describe('MainThreadObject definition markers', () => {
+  it('decodes a compiler marker', () => {
+    expect(parseMainThreadObjectMarker(
+      '@lynx-js/react/internal/main-thread-object-definition?type=40746573742f76616c7565&create=6372656174652d6964&dispose=646973706f73652d6964',
+    )).toEqual({
+      type: '@test/value',
+      create: 'create-id',
+      dispose: 'dispose-id',
+    });
+  });
+
+  it('rejects incomplete and malformed markers', () => {
+    expect(() =>
+      parseMainThreadObjectMarker(
+        '@lynx-js/react/internal/main-thread-object-definition?type=00&create=00',
+      )
+    ).toThrow(/Invalid MainThreadObject definition marker/);
+    expect(() =>
+      parseMainThreadObjectMarker(
+        '@lynx-js/react/internal/main-thread-object-definition?type=not-hex&create=00&dispose=',
+      )
+    ).toThrow(/Invalid MainThreadObject definition marker/);
+  });
+});
+
 describe('renderDefinesModule', () => {
   it('references the runtime through namespace member accesses', () => {
     const code = renderDefinesModule(
@@ -199,13 +229,25 @@ describe('missing definitions injection', () => {
     >,
     entries: Record<string, { import: string; layer: string }>,
     entryPairs: Array<{ mainThread: string; background: string }>,
-    options?: { mainThreadDefines?: boolean },
+    options?: {
+      mainThreadDefines?: boolean;
+      treeShaking?: boolean;
+    },
   ) {
     const compiler = rspack({
       context: __dirname,
-      mode: 'none',
+      mode: options?.treeShaking ? 'production' : 'none',
       entry: entries,
       experiments: { layers: true },
+      optimization: options?.treeShaking
+        ? {
+          concatenateModules: false,
+          innerGraph: true,
+          minimize: true,
+          sideEffects: true,
+          usedExports: true,
+        }
+        : undefined,
       output: {
         path: mkdtempSync(path.join(tmpdir(), 'defines-')),
         filename: '[name].js',
@@ -449,6 +491,120 @@ describe('missing definitions injection', () => {
     );
 
     expect(content).not.toContain('ReactLynx');
+  });
+
+  it('roots only lifecycle definitions connected to a used background type token', async () => {
+    const owner = path.join(__dirname, 'fixtures/mto-types.js');
+    const outputPath = await compile(
+      {
+        'mto-types.js': {
+          worklet: [
+            {
+              ...define(
+                'used-create',
+                `import { sharedMarker } from './mto-shared.js' with { runtime: 'shared' };
+globalThis.__MTO_USED_LIFECYCLE__ = sharedMarker;`,
+                owner,
+              ),
+              unmergeable: true,
+            },
+            {
+              ...define(
+                'unused-create',
+                'globalThis.__MTO_UNUSED_LIFECYCLE__ = true;',
+                owner,
+              ),
+              unmergeable: true,
+            },
+            {
+              ...define(
+                'used-dispose',
+                'globalThis.__MTO_USED_DISPOSE__ = true;',
+                owner,
+              ),
+              unmergeable: true,
+            },
+          ],
+        },
+      },
+      {
+        'main__main-thread': {
+          import: './fixtures/empty.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: {
+          import: './fixtures/mto-entry.js',
+          layer: LAYERS.BACKGROUND,
+        },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+      { treeShaking: true },
+    );
+    const content = await fs.readFile(
+      path.join(outputPath, 'main__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(content).toContain('__MTO_USED_LIFECYCLE__');
+    expect(content).toContain('__MTO_USED_DISPOSE__');
+    expect(content).toContain('__MTO_SHARED_IMPORT__');
+    expect(content).toContain('@test/used');
+    expect(content).not.toContain('__MTO_UNUSED_LIFECYCLE__');
+    expect(content).not.toContain('@test/unused');
+  });
+
+  it('roots a lifecycle definition used only by the main-thread entry', async () => {
+    const owner = path.join(__dirname, 'fixtures/mto-types.js');
+    const outputPath = await compile(
+      {
+        'mto-types.js': {
+          worklet: [{
+            ...define(
+              'used-create',
+              'globalThis.__MTO_MAIN_THREAD_ONLY__ = true;',
+              owner,
+            ),
+            unmergeable: true,
+          }, {
+            ...define(
+              'unused-create',
+              'globalThis.__MTO_UNUSED_MAIN_THREAD_ONLY__ = true;',
+              owner,
+            ),
+            unmergeable: true,
+          }, {
+            ...define(
+              'used-dispose',
+              'globalThis.__MTO_MAIN_THREAD_ONLY_DISPOSE__ = true;',
+              owner,
+            ),
+            unmergeable: true,
+          }],
+        },
+      },
+      {
+        'main__main-thread': {
+          import: './fixtures/mto-entry.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: {
+          import: './fixtures/empty.js',
+          layer: LAYERS.BACKGROUND,
+        },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+      { mainThreadDefines: true, treeShaking: true },
+    );
+    const content = await fs.readFile(
+      path.join(outputPath, 'main__main-thread.js'),
+      'utf-8',
+    );
+
+    expect(content).toContain('__MTO_MAIN_THREAD_ONLY__');
+    expect(content).toContain('__MTO_MAIN_THREAD_ONLY_DISPOSE__');
+    expect(content).toContain('@test/used');
+    expect(content).not.toContain('__MTO_UNUSED_MAIN_THREAD_ONLY__');
+    expect(content).not.toContain('@test/unused');
   });
 
   it('leaves the definitions of an async-only module out of the entry injection', async () => {

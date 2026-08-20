@@ -791,7 +791,9 @@ fn transform_react_lynx_inner(
 
     let worklet_plugin = match options.worklet {
       Either::A(config) => {
-        let visitor = WorkletVisitor::default().with_content_hash(content_hash);
+        let visitor = WorkletVisitor::default()
+          .with_content_hash(content_hash)
+          .with_comments(comments.clone());
         let visitor =
           visitor.with_defines_collector(defines_collector.clone());
         Optional::new(visit_mut_pass(visitor), config)
@@ -799,7 +801,8 @@ fn transform_react_lynx_inner(
       Either::B(config) => {
         let visitor =
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
-            .with_content_hash(content_hash);
+            .with_content_hash(content_hash)
+            .with_comments(comments.clone());
         let visitor =
           visitor.with_defines_collector(defines_collector.clone());
         Optional::new(visit_mut_pass(visitor), true)

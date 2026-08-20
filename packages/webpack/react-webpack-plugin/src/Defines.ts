@@ -9,6 +9,7 @@ export interface Define {
   id: string;
   code: string;
   unmergeable?: boolean;
+  resource?: string;
 }
 
 interface ModuleWithDefines {

@@ -7,14 +7,11 @@ import type { WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { addWorkletRefInitValue } from './workletRefPool.js';
+import { allocateWorkletValueId, clearWorkletValueIdsForTesting } from './workletValueId.js';
 import { useMemo } from '../../../core/hooks/react.js';
 
-// Split into two variables for testing purposes
-let lastIdBG = 0;
-let lastIdMT = 0;
-
 export function clearWorkletRefLastIdForTesting(): void {
-  lastIdBG = lastIdMT = 0;
+  clearWorkletValueIdsForTesting();
 }
 
 abstract class WorkletRef<T> {
@@ -41,11 +38,9 @@ abstract class WorkletRef<T> {
   protected constructor(initValue: T, type: string) {
     this._initValue = initValue;
     this._type = type;
+    this._wvid = allocateWorkletValueId();
     if (__JS__) {
-      this._wvid = ++lastIdBG;
       addWorkletRefInitValue(this._wvid, initValue);
-    } else {
-      this._wvid = --lastIdMT;
     }
   }
 
