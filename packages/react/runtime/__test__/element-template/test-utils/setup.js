@@ -35,24 +35,24 @@ afterEach(async () => {
     g.lynxCoreInject?.tt?.callDestroyLifetimeFun?.();
   } catch {}
 
-  // Preact 11 defers unmounted components' passive-effect cleanups (and any
-  // still-pending effects) to the after-paint flush. Tests have already torn
-  // their stubbed globals down at this point, so give the deferred work inert
-  // stand-ins while it drains.
-  installMockNativePapi();
-  installThreadContexts();
-  if (g.lynx && typeof g.lynx.getJSModule !== 'function') {
-    const inertEmitter = {
-      addListener() {},
-      removeListener() {},
-      removeAllListeners() {},
-      emit() {},
-      trigger() {},
-      toggle() {},
-    };
-    g.lynx.getJSModule = () => inertEmitter;
-  }
-  await new Promise(resolve => setTimeout(resolve, 150));
+  // // Preact 11 defers unmounted components' passive-effect cleanups (and any
+  // // still-pending effects) to the after-paint flush. Tests have already torn
+  // // their stubbed globals down at this point, so give the deferred work inert
+  // // stand-ins while it drains.
+  // installMockNativePapi();
+  // installThreadContexts();
+  // if (g.lynx && typeof g.lynx.getJSModule !== 'function') {
+  //   const inertEmitter = {
+  //     addListener() {},
+  //     removeListener() {},
+  //     removeAllListeners() {},
+  //     emit() {},
+  //     trigger() {},
+  //     toggle() {},
+  //   };
+  //   g.lynx.getJSModule = () => inertEmitter;
+  // }
+  // await new Promise(resolve => setTimeout(resolve, 150));
 
   g.__LEPUS__ = true;
   g.__JS__ = false;

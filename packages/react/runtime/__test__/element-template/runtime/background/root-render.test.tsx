@@ -59,7 +59,7 @@ describe('ElementTemplate root render timing', () => {
     const { options: preactOptions } = await import('preact');
     // Fire the renderComponent hook without a following commit (a render that
     // throws or suspends): the generation microtask must clear the flag.
-    (preactOptions as unknown as Record<string, (a: unknown, b: unknown) => void>)['renderComponent'](null, null);
+    preactOptions!['renderComponent']!(<view />, null);
     expect(isElementTemplateRendering()).toBe(true);
     await Promise.resolve();
     expect(isElementTemplateRendering()).toBe(false);
