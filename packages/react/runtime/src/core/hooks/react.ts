@@ -23,11 +23,15 @@ import { isProfiling, profileEnd, profileFlowId, profileStart } from '../../shar
 
 type GenericSetState = Dispatch<StateUpdater<unknown>>;
 
+const includeProfileComponentHooks = typeof __PROFILE_COMPONENT_HOOKS__ === 'undefined'
+  || __PROFILE_COMPONENT_HOOKS__;
+
 // Cache profiled wrappers by the original preact setter to preserve stable
 // identity without introducing extra hooks in component render flow.
-const stateSetterTraceCache: WeakMap<GenericSetState, GenericSetState> | undefined = /* @__PURE__ */ isProfiling
-  ? new WeakMap<GenericSetState, GenericSetState>()
-  : undefined;
+const stateSetterTraceCache: WeakMap<GenericSetState, GenericSetState> | undefined =
+  /* @__PURE__ */ includeProfileComponentHooks && isProfiling
+    ? new WeakMap<GenericSetState, GenericSetState>()
+    : undefined;
 
 function buildTraceOption(flowId: number, stack: string | undefined): TraceOption {
   if (!stack) {
@@ -122,7 +126,7 @@ function useStateWithProfile<S>(
   return [state, tracedSetState];
 }
 
-const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
+const useState: typeof usePreactState = (includeProfileComponentHooks && __BACKGROUND__ && isProfiling)
   ? useStateWithProfile as typeof usePreactState
   : usePreactState;
 
@@ -135,9 +139,10 @@ const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
  *
  * @public
  */
-const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
-  ? useEffectProfiled
-  : usePreactEffect;
+const useEffect: (effect: EffectCallback, deps?: DependencyList) => void =
+  (includeProfileComponentHooks && __BACKGROUND__ && isProfiling)
+    ? useEffectProfiled
+    : usePreactEffect;
 
 /**
  * `useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
@@ -151,9 +156,10 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BA
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
-  ? useLayoutEffectProfiled
-  : usePreactEffect;
+const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void =
+  (includeProfileComponentHooks && __BACKGROUND__ && isProfiling)
+    ? useLayoutEffectProfiled
+    : usePreactEffect;
 
 export {
   // preact

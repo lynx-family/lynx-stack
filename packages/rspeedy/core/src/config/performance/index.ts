@@ -83,7 +83,13 @@ export interface Performance {
 
   // TODO: Remove this option in Rspeedy v1 to align with Rsbuild v2.
   /**
-   * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
+   * Whether to include runtime profiling in Lynx integrations such as ReactLynx.
+   *
+   * On Lynx Web, enabling this option activates ReactLynx profiling and emits
+   * its traces through browser User Timing. Browser User Timing support alone
+   * does not activate profiling. Native hosts may also activate profiling
+   * without this option when host recording is already active as ReactLynx
+   * initializes. Starting host recording later does not install profiling hooks.
    *
    * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
    *
@@ -91,7 +97,7 @@ export interface Performance {
    *
    * Enable profile.
    *
-   * - Frameworks like ReactLynx will include runtime information using `console.profile`.
+   * - Frameworks like ReactLynx will include runtime profiling traces.
    * - Rspeedy will emit `dist/stats.json` after build for bundle analysis compatibility.
    *
    * ```ts

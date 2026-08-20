@@ -5,3 +5,7 @@ export const LAYERS = {
   BACKGROUND: 'react:background',
   MAIN_THREAD: 'react:main-thread',
 } as const;
+
+export const initProfileHook = (): void => undefined;
+export const profileStart = (): void => undefined;
+export const profileEnd = (): void => undefined;
