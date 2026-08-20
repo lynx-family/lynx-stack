@@ -2210,6 +2210,9 @@ importers:
 
   packages/web-platform/web-core:
     dependencies:
+      '@lynx-js/animax':
+        specifier: 0.1.0-alpha.0
+        version: 0.1.0-alpha.0
       '@lynx-js/css-serializer':
         specifier: workspace:*
         version: link:../../tools/css-serializer
@@ -4265,6 +4268,9 @@ packages:
   '@lukeed/uuid@2.0.1':
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
+
+  '@lynx-js/animax@0.1.0-alpha.0':
+    resolution: {integrity: sha512-cAF5xicCvRu88xCMi8+wPtGCbf7lB1zs6cjFtxNx/Pea1UklO7J+o9EvbBot7xnt9H6qy2V/K4bj2LBwsdApQg==}
 
   '@lynx-js/devtool-connector@0.13.2':
     resolution: {integrity: sha512-7NXFJFogGJAOQmIk4x95Ef9b9JbBJK5J5xviDF5OWmOeW+ZiSfCAALUMwRUlU9nXPMeH/rdtT3Kis0QtV4WDfA==}
@@ -13849,6 +13855,8 @@ snapshots:
   '@lukeed/uuid@2.0.1':
     dependencies:
       '@lukeed/csprng': 1.1.0
+
+  '@lynx-js/animax@0.1.0-alpha.0': {}
 
   '@lynx-js/devtool-connector@0.13.2':
     dependencies:

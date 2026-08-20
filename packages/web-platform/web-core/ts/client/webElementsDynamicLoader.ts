@@ -10,3 +10,46 @@ export function loadAllWebElements(): Promise<void> {
     '@lynx-js/web-elements/all'
   ).then(() => {});
 }
+
+const dynamicWebElementLoaders: Record<string, () => Promise<unknown>> = {
+  'animax-view': () =>
+    import(
+      /* webpackChunkName: "animax-view" */
+      '@lynx-js/animax'
+    ),
+};
+
+const dynamicWebElementLoadingPromises = new Map<string, Promise<void>>();
+
+export function loadDynamicWebElement(
+  tagName: string,
+): Promise<void> | undefined {
+  const loader = dynamicWebElementLoaders[tagName];
+  if (!loader) {
+    return undefined;
+  }
+
+  if (customElements.get(tagName)) {
+    return Promise.resolve();
+  }
+
+  const existingPromise = dynamicWebElementLoadingPromises.get(tagName);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const loadingPromise = loader()
+    .then(() => {
+      if (!customElements.get(tagName)) {
+        throw new Error(
+          `The module for <${tagName}> did not register its custom element`,
+        );
+      }
+    })
+    .catch((error: unknown) => {
+      dynamicWebElementLoadingPromises.delete(tagName);
+      throw error;
+    });
+  dynamicWebElementLoadingPromises.set(tagName, loadingPromise);
+  return loadingPromise;
+}

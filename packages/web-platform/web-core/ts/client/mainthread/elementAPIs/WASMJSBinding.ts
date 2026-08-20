@@ -25,6 +25,7 @@ export type WASMJSBindingInjectedHandler = {
   readonly invokeUIMethod: InvokeUIMethodPAPI;
   readonly lynxViewClientLeft: number;
   readonly lynxViewClientTop: number;
+  loadUnknownElement(tagName: string): void;
 };
 
 const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);

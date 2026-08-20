@@ -27,5 +27,6 @@ export function createTestLynxViewInstance(
     invokeUIMethod: rstest.fn(),
     lynxViewClientLeft: 0,
     lynxViewClientTop: 0,
+    loadUnknownElement: rstest.fn(),
   };
 }

@@ -231,9 +231,9 @@ export function createElementAPI(
       return dom;
     },
     __CreateElement(tagName, parentComponentUniqueId) {
-      const dom = document.createElement(
-        LYNX_TAG_TO_HTML_TAG_MAP[tagName] ?? tagName,
-      ) as DecoratedHTMLElement;
+      const webTagName = LYNX_TAG_TO_HTML_TAG_MAP[tagName] ?? tagName;
+      mtsBinding.lynxViewInstance.loadUnknownElement(webTagName);
+      const dom = document.createElement(webTagName) as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,

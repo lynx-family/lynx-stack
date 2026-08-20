@@ -62,6 +62,7 @@
     ]
   },
   "dependencies": {
+    "@lynx-js/animax": "0.1.0-alpha.0",
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",

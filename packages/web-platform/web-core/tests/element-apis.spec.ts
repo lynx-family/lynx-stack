@@ -126,6 +126,14 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetTag(element)).toBe('textarea');
   });
 
+  test('createElement requests lazy loading for animax-view', () => {
+    mtsGlobalThis.__CreateElement('animax-view', 0);
+
+    expect(
+      mtsBinding.lynxViewInstance.loadUnknownElement,
+    ).toHaveBeenCalledWith('animax-view');
+  });
+
   test('createCrossThreadEvent properly sets touch detail x and y', async () => {
     const { createCrossThreadEvent } = await import(
       '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
