@@ -390,8 +390,13 @@ export class LynxViewElement extends HTMLElement {
    * @public
    * @method
    * reload the current page
+   * @param value [optional] the new initial data for the reloaded page. When
+   * omitted, the current `initData` is kept.
    */
-  reload() {
+  reload(value?: Cloneable) {
+    if (value !== undefined) {
+      this.#initData = value;
+    }
     this.removeAttribute('ssr');
     this.#render();
   }
