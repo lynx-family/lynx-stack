@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  MainThreadRef,
-  clearMainThreadRefLastIdForTesting,
-  isMainThreadRef,
-  isMainThreadRefCallback,
-} from '../../src/core/main-thread-ref.js';
+import { MainThreadRef, clearMainThreadRefLastIdForTesting, isMainThreadRef } from '../../src/core/main-thread-ref.js';
 import { takeMainThreadRefInitValuePatch } from '../../src/core/main-thread-ref-init-value.js';
 import { clearMtsConfigCacheForTesting } from '../../src/core/mts-capability.js';
 
@@ -99,12 +94,9 @@ describe('core/main-thread-ref primitive', () => {
     );
   });
 
-  it('identifies object refs and main-thread callback worklets', () => {
+  it('identifies object refs', () => {
     expect(isMainThreadRef({ _wvid: 1 })).toBe(true);
     expect(isMainThreadRef({ _wvid: '1' })).toBe(false);
     expect(isMainThreadRef(null)).toBe(false);
-    expect(isMainThreadRefCallback({ _wkltId: 'callback' })).toBe(true);
-    expect(isMainThreadRefCallback({ _wkltId: 1 })).toBe(false);
-    expect(isMainThreadRefCallback({ _wvid: 1 })).toBe(false);
   });
 });

@@ -12,12 +12,8 @@ import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
-import {
-  MainThreadRef,
-  isMainThreadRef,
-  isMainThreadRefCallback,
-  useMainThreadRef,
-} from '../../../src/core/main-thread-ref';
+import { MainThreadRef, isMainThreadRef, useMainThreadRef } from '../../../src/core/main-thread-ref';
+import { isMainThreadFunction } from '../../../src/core/main-thread-function';
 import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value';
 import { globalEnvManager } from '../utils/envManager';
 import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
@@ -97,8 +93,8 @@ describe('WorkletRef in js', () => {
   it('should identify main-thread ref values', () => {
     expect(isMainThreadRef({ _wvid: 1 })).toBe(true);
     expect(isMainThreadRef({ _wkltId: 'callback' })).toBe(false);
-    expect(isMainThreadRefCallback({ _wkltId: 'callback' })).toBe(true);
-    expect(isMainThreadRefCallback({ _wvid: 1 })).toBe(false);
+    expect(isMainThreadFunction({ _wkltId: 'callback' })).toBe(true);
+    expect(isMainThreadFunction({ _wvid: 1 })).toBe(false);
   });
 
   it('should send init value to the main thread', () => {

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { __etAttrPlanMap, adaptMTEventAttrSlot } from './attr-slot-plan.js';
-import { retainMTEventBackgroundFunctionCtx } from './main-thread-background-function.js';
+import { retainMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
 import { isMTEventNativeWrapper } from './main-thread-event-ctx.js';
 import type { MTEventCtx } from './main-thread-event-ctx.js';
 
@@ -33,7 +33,7 @@ function deleteSlotState(handleId: number, attrSlotIndex: number): void {
 }
 
 function setSlotState(handleId: number, attrSlotIndex: number, nativeHeldValue: MTEventCtx): void {
-  retainMTEventBackgroundFunctionCtx(nativeHeldValue);
+  retainMainThreadBackgroundFunctionCtx(nativeHeldValue);
   let handleState = dynamicAttrState.get(handleId);
   if (!handleState) {
     handleState = new Map();

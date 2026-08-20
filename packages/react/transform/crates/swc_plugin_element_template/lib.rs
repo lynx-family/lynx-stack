@@ -414,6 +414,7 @@ where
       Event,
       MTEvent,
       Ref,
+      MTRef,
       Spread,
     }
 
@@ -435,6 +436,11 @@ where
           slot_index,
           ..
         } => Some((*slot_index, AttrPlanAdapter::Ref)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::MTRef,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::MTRef)),
         DynamicAttributePart::Spread { slot_index, .. } => {
           Some((*slot_index, AttrPlanAdapter::Spread))
         }
@@ -448,6 +454,7 @@ where
           AttrPlanAdapter::Event => "event",
           AttrPlanAdapter::MTEvent => "mt-event",
           AttrPlanAdapter::Ref => "ref",
+          AttrPlanAdapter::MTRef => "mt-ref",
           AttrPlanAdapter::Spread => "spread",
         };
         format!("{slot_index}:{adapter}")
@@ -568,6 +575,10 @@ where
             ),
             AttrPlanAdapter::Ref => quote!(
               "$internal_runtime_id.adaptRefAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+            AttrPlanAdapter::MTRef => quote!(
+              "$internal_runtime_id.adaptMTRefAttrSlot" as Expr,
               internal_runtime_id: Expr = internal_runtime_id.clone(),
             ),
             AttrPlanAdapter::Spread => quote!(

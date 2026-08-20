@@ -8,6 +8,7 @@ import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
 import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { registerBackgroundFunctionCtx } from '../background-function/run-on-background.js';
+import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
 
 interface RunOnMainThreadOptions {
@@ -66,15 +67,8 @@ function isRunOnBackgroundSupported(): boolean {
   return isSdkVersionGt(2, 15);
 }
 
-function isMainThreadFunctionCtx(value: unknown): value is Worklet {
-  return value != null
-    && typeof value === 'object'
-    && !Array.isArray(value)
-    && typeof (value as { _wkltId?: unknown })._wkltId === 'string';
-}
-
 function prepareMainThreadFunctionCtx(worklet: unknown): void {
-  if (isMainThreadFunctionCtx(worklet) && isRunOnBackgroundSupported()) {
+  if (isMainThreadFunction(worklet) && isRunOnBackgroundSupported()) {
     registerBackgroundFunctionCtx(worklet);
   }
 }

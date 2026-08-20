@@ -16,7 +16,7 @@ import { isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLif
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
 type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];
 
-interface MTEventBackgroundFunctionCtx {
+interface MainThreadBackgroundFunctionCtx {
   _wkltId: string;
   [key: string]: unknown;
 }
@@ -27,13 +27,13 @@ interface MTEventBackgroundFunctionCtx {
 export const transformToWorklet = createBackgroundFunctionHandle;
 export { runOnBackground };
 
-export function registerMTEventBackgroundFunctionCtx(ctx: MTEventBackgroundFunctionCtx): void {
+export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
   if (__JS__ && isRunOnBackgroundEnabled()) {
     registerBackgroundFunctionCtx(ctx as BackgroundFunctionCtx);
   }
 }
 
-export function retainMTEventBackgroundFunctionCtx(ctx: MTEventBackgroundFunctionCtx): void {
+export function retainMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
   retainWorkletCtx(ctx as RetainableMainThreadCtx);
 }
 

@@ -31,6 +31,7 @@ static NO_FLATTEN_ATTRIBUTES: Lazy<HashSet<String>> = Lazy::new(|| {
     "overlap".to_string(),
     "exposure-scene".to_string(),
     "exposure-id".to_string(),
+    "main-thread:ref".to_string(),
   ])
 });
 
@@ -210,7 +211,10 @@ where
           key,
         );
       }
-      AttrName::WorkletEvent | AttrName::WorkletRef | AttrName::Gesture => {
+      AttrName::WorkletEvent
+      | AttrName::UnsupportedNamespacedRef
+      | AttrName::MTRef
+      | AttrName::Gesture => {
         self.push_dynamic_attr(*jsx_attr_value((*value).clone()), attr_name, key);
       }
     }
@@ -265,7 +269,10 @@ where
         let attr_name = AttrName::from_ns(ns.clone().into(), name.clone().into());
         let preserve_literal_expr = !matches!(
           attr_name,
-          AttrName::WorkletEvent | AttrName::WorkletRef | AttrName::Gesture
+          AttrName::WorkletEvent
+            | AttrName::UnsupportedNamespacedRef
+            | AttrName::MTRef
+            | AttrName::Gesture
         );
         self.push_dynamic_jsx_attr(attr_name, &key, value, preserve_literal_expr);
       }
