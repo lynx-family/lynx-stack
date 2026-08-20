@@ -7,6 +7,7 @@ import { waitSchedule } from './utils/nativeMethod';
 import { globalCommitTaskMap, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../../src/snapshot/lifecycle/constant';
+import { injectTt } from '../../src/snapshot/lynx/tt';
 import { CATCH_ERROR } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
@@ -369,6 +370,10 @@ describe('componentWillUnmount', () => {
 
     lynxCoreInject.tt.callDestroyLifetimeFun();
     expect(willUnmount).toHaveBeenCalledTimes(2);
+
+    // `callDestroyLifetimeFun` tears down the engine event listeners; the
+    // suites below keep driving the same module-level runtime, so re-init.
+    injectTt();
   });
 });
 

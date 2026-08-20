@@ -37,17 +37,54 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
+/**
+ * Engine events the runtime subscribes to instead of patching `tt`.
+ *
+ * The engine dispatches both as `CoreContext -> JSContext` message events
+ * (`tasm_mediator.cc`, `bts_runtime.cc`); lynx-core only forwards them to
+ * `tt.OnLifecycleEvent` / `tt.updateGlobalProps`, whose base implementations
+ * are empty. Listening directly removes that indirection.
+ */
+const enum CoreContextEvent {
+  onLifecycleEvent = '__OnLifecycleEvent',
+  notifyGlobalPropsUpdated = '__NotifyGlobalPropsUpdated',
+}
+
+function onLifecycleEventMessage(event: { data: [LifecycleConstant, unknown] }): void {
+  onLifecycleEvent(event.data);
+}
+
+function onGlobalPropsUpdatedMessage(event: { data: Record<string, any> }): void {
+  updateGlobalProps(event.data);
+}
+
+let engineListenersRegistered = false;
+
 function injectTt(): void {
+  const coreContext = lynx.getCoreContext();
+  // Assigning to `tt` was idempotent; adding listeners is not.
+  if (!engineListenersRegistered) {
+    engineListenersRegistered = true;
+    coreContext.addEventListener(CoreContextEvent.onLifecycleEvent, onLifecycleEventMessage);
+    coreContext.addEventListener(CoreContextEvent.notifyGlobalPropsUpdated, onGlobalPropsUpdatedMessage);
+  }
+
+  // The rest are still invoked by the engine as direct property lookups on
+  // the app object (`js_app.cc`), so they have to stay on `tt` for now.
   const tt = lynxCoreInject.tt;
-  tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
   tt.publicComponentEvent = delayedPublicComponentEvent;
   tt.callDestroyLifetimeFun = () => {
+    engineListenersRegistered = false;
+    coreContext.removeEventListener(CoreContextEvent.onLifecycleEvent, onLifecycleEventMessage);
+    coreContext.removeEventListener(
+      CoreContextEvent.notifyGlobalPropsUpdated,
+      onGlobalPropsUpdatedMessage,
+    );
     removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
   };
-  tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
   tt.onAppReload = reloadBackground;
   tt.processCardConfig = () => {

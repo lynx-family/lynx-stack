@@ -51,6 +51,9 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
 }
 
 export function addCtxNotFoundEventListener(): void {
+  // Guard against double registration (re-init / reload would otherwise
+  // report the same error twice).
+  removeCtxNotFoundEventListener();
   ctxNotFoundEventListener = (e) => {
     reportCtxNotFound(e.data as CtxNotFoundData);
   };

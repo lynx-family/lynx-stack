@@ -71,3 +71,26 @@ const jsContext = new EventEmitter('jsContext');
 
 globalThis.lynx.getCoreContext = vi.fn(() => coreContext);
 globalThis.lynx.getJSContext = vi.fn(() => jsContext);
+
+/**
+ * Emulate the engine delivering a `CoreContext -> JSContext` message event,
+ * the way `tasm_mediator.cc` / `bts_runtime.cc` do in production. Tests keep
+ * calling `lynxCoreInject.tt.OnLifecycleEvent(...)` as their "the engine fired
+ * this" entry point; the runtime now receives it through `getCoreContext()`.
+ */
+function emulateEngineEvent(type: string, data: unknown) {
+  // Deliver synchronously on the caller's thread, matching how lynx-core
+  // forwards the event today. Going through `dispatchEvent` would toggle the
+  // thread globals and change the timing these tests were written against.
+  const listeners = coreContext.listeners[getType('jsContext', type)];
+  listeners?.forEach((listener: (event: { data: unknown }) => void) => {
+    listener({ data });
+  });
+}
+
+globalThis.lynxCoreInject.tt.OnLifecycleEvent = vi.fn((data) => {
+  emulateEngineEvent('__OnLifecycleEvent', data);
+});
+globalThis.lynxCoreInject.tt.updateGlobalProps = vi.fn((data) => {
+  emulateEngineEvent('__NotifyGlobalPropsUpdated', data);
+});
