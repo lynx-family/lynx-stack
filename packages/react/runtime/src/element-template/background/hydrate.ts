@@ -13,6 +13,7 @@ import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
 import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   SerializableValue,
@@ -24,8 +25,6 @@ import { __etAttrPlanMap, adaptMTEventAttrSlot } from '../runtime/template/attr-
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
 
 const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
-const PAGE_ROOT_TARGET_HANDLE_ID = 0;
-const PAGE_ROOT_SLOT_ID = 0;
 const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
 const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
 const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
@@ -38,8 +37,8 @@ export function hydrateRootChildrenIntoContext(
   root: BackgroundElementTemplateInstance,
 ): boolean {
   return hydrateChildListIntoContext(
-    PAGE_ROOT_TARGET_HANDLE_ID,
-    PAGE_ROOT_SLOT_ID,
+    ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
+    ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX,
     serializedChildren,
     root.childNodes,
   );
@@ -435,7 +434,12 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
 
 function getRemovableSerializedHandleId(serialized: SerializedEtNode): number | null {
   const handleId = serialized.uid as number;
-  if (__DEV__ && (typeof handleId !== 'number' || !Number.isInteger(handleId) || handleId === 0)) {
+  if (
+    __DEV__
+    && (typeof handleId !== 'number'
+      || !Number.isInteger(handleId)
+      || handleId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID)
+  ) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate remove received invalid uid ${String(handleId)}.`),
     );

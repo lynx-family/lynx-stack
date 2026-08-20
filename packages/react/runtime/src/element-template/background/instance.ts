@@ -8,6 +8,7 @@ import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from '../protocol/page.js';
 import { parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
@@ -17,6 +18,7 @@ import type {
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
+import type { AuthoredPageAttributes } from '../runtime/page/authored-page.js';
 import type { EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, TYPED_ELEMENT_ATTR_PLAN } from '../runtime/template/typed-attributes.js';
 
@@ -109,7 +111,7 @@ export class BackgroundElementTemplateInstance {
     if (this.isMaterializedOnMainThread) {
       return;
     }
-    if (__DEV__ && this.instanceId === 0) {
+    if (__DEV__ && this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
       lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
@@ -138,7 +140,7 @@ export class BackgroundElementTemplateInstance {
   }
 
   private needsMainThreadCreate(): boolean {
-    return this.instanceId !== 0 && !this.isMaterializedOnMainThread;
+    return this.instanceId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID && !this.isMaterializedOnMainThread;
   }
 
   protected getAttributeSlotPlan(): EtAttrPlan | undefined {
@@ -146,7 +148,7 @@ export class BackgroundElementTemplateInstance {
   }
 
   private markSubtreeDetachedFromMainThread(): void {
-    if (this.instanceId !== 0) {
+    if (this.instanceId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
       this.isMaterializedOnMainThread = false;
     }
     let child = this.firstChild;
@@ -164,7 +166,7 @@ export class BackgroundElementTemplateInstance {
   }
 
   private restoreManagerRegistration(): void {
-    if (this.instanceId === 0) {
+    if (this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
       return;
     }
     const instances = backgroundElementTemplateInstanceManager.values;
@@ -201,8 +203,6 @@ export class BackgroundElementTemplateInstance {
   }
 
   protected canEmitUpdatePatch(): boolean {
-    // Background tree construction is local until hydrate binds it to main-thread
-    // instances. Only hydrated and materialized owners can emit update ops.
     return isElementTemplateHydrated() && !this.needsMainThreadCreate();
   }
 
@@ -355,7 +355,7 @@ export class BackgroundElementTemplateInstance {
     this.rawAttributeSlots = undefined;
 
     // Remove from manager
-    if (this.instanceId) {
+    if (backgroundElementTemplateInstanceManager.values.get(this.instanceId) === this) {
       backgroundElementTemplateInstanceManager.values.delete(this.instanceId);
     }
   }
@@ -436,7 +436,7 @@ export class BackgroundElementTemplateInstance {
       const previousSlots = this.attributeSlots;
       const previousRawSlots = this.rawAttributeSlots ?? previousSlots;
       const isHydrated = isElementTemplateHydrated();
-      const canEmitUpdatePatch = isHydrated && !this.needsMainThreadCreate();
+      const canEmitUpdatePatch = this.canEmitUpdatePatch();
       // Pre-hydration commits must expose refs to effects, while post-hydration
       // unmaterialized nodes defer ref attach to create emission to avoid dupes.
       const shouldQueueRefEffects = !isHydrated || canEmitUpdatePatch;
@@ -528,7 +528,7 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
     if (this.isMaterializedOnMainThread) {
       return;
     }
-    if (__DEV__ && this.instanceId === 0) {
+    if (__DEV__ && this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
       lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
@@ -566,6 +566,51 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
 
   protected getRuntimeOptionsForCreate(): RuntimeOptionsCommand | null {
     return null;
+  }
+}
+
+export class BackgroundPageRootInstance extends BackgroundTypedElementTemplateInstance {
+  // Preact may render a keyed replacement before running the old Page's passive cleanup.
+  // Only the current helper lifetime may clear the shared root attributes.
+  private authoredPageLifetime: object | undefined;
+
+  constructor() {
+    super(ELEMENT_TEMPLATE_PAGE_TYPE);
+    backgroundElementTemplateInstanceManager.registerPageRoot(this);
+    this.isMaterializedOnMainThread = true;
+  }
+
+  setAuthoredPageAttributes(
+    lifetime: object,
+    attributes: AuthoredPageAttributes,
+  ): void {
+    this.authoredPageLifetime = lifetime;
+    this.setAttribute('attributes', attributes);
+  }
+
+  clearAuthoredPageAttributes(lifetime: object): void {
+    if (this.authoredPageLifetime !== lifetime) {
+      return;
+    }
+    this.authoredPageLifetime = undefined;
+    this.setAttribute('attributes', null);
+  }
+
+  reconcileAuthoredPageAttributesOnHydration(
+    mainThreadAttributes: TypedElementAttributesCommand | null,
+  ): void {
+    const backgroundAttributes = this.attributeSlots[TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX] as
+      | TypedElementAttributesCommand
+      | null;
+    if (isDirectOrDeepEqual(mainThreadAttributes, backgroundAttributes)) {
+      return;
+    }
+    pushOp(
+      ElementTemplateUpdateOps.setAttribute,
+      this.instanceId,
+      TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
+      backgroundAttributes,
+    );
   }
 }
 
@@ -685,7 +730,7 @@ function collectElementTemplateSubtreeHandleIdsImpl(
   instance: BackgroundElementTemplateInstance,
   handles: number[],
 ): void {
-  if (instance.instanceId !== 0) {
+  if (instance.instanceId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
     handles.push(instance.instanceId);
   }
   let child = instance.firstChild;
@@ -698,7 +743,7 @@ function collectElementTemplateSubtreeHandleIdsImpl(
 function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstance): void {
   if (
     !isElementTemplateHydrated()
-    || instance.instanceId === 0
+    || instance.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID
   ) {
     return;
   }

@@ -10,7 +10,7 @@ import { increaseReloadVersion } from '../../core/reload-version.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../background/instance.js';
+import { BackgroundPageRootInstance } from '../background/instance.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
@@ -29,7 +29,7 @@ export function reloadBackground(updateData: unknown): void {
     lynx.__initData = Object.assign({}, lynx.__initData);
     applyUpdatePageData(updateData);
 
-    setRoot(new BackgroundElementTemplateInstance('root'));
+    setRoot(new BackgroundPageRootInstance());
     __root.__jsx = jsx;
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();

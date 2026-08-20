@@ -14,6 +14,7 @@ import { setupBackgroundElementTemplateDocument } from '../../../../src/element-
 import {
   BackgroundElementTemplateInstance,
   BackgroundListElementTemplateInstance,
+  BackgroundPageRootInstance,
   BackgroundTypedElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
@@ -64,6 +65,97 @@ describe('BackgroundElementTemplateInstance', () => {
     new BackgroundElementTemplateInstance('image', ['logo.png']);
 
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('routes hydrated logical root child patches through the native page handle', () => {
+    const root = new BackgroundPageRootInstance();
+    expect(root).toBeInstanceOf(BackgroundTypedElementTemplateInstance);
+    expect(root.type).toBe('page');
+    expect(root.instanceId).toBe(0);
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBe(root);
+    const child = new BackgroundElementTemplateInstance('_et_child');
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    root.appendChild(child);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      child.instanceId,
+      '_et_child',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      0,
+      0,
+      child.instanceId,
+      0,
+    ]);
+
+    globalCommitContext.ops = [];
+    root.removeChild(child);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      0,
+      0,
+      child.instanceId,
+      [child.instanceId],
+    ]);
+  });
+
+  it('keeps authored page attrs on the root and ignores stale helper cleanup', () => {
+    const root = new BackgroundPageRootInstance();
+    const firstLifetime = {};
+    const replacementLifetime = {};
+
+    root.setAuthoredPageAttributes(firstLifetime, { id: 'first' });
+    root.setAuthoredPageAttributes(replacementLifetime, { id: 'replacement' });
+    root.clearAuthoredPageAttributes(firstLifetime);
+
+    expect(root.getRawAttributeSlot(0)).toEqual({ id: 'replacement' });
+    expect(root.getRawAttributeSlot(1)).toBeUndefined();
+
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+    root.clearAuthoredPageAttributes(replacementLifetime);
+
+    expect(root.getRawAttributeSlot(0)).toBeNull();
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      0,
+      0,
+      null,
+    ]);
+  });
+
+  it('reconciles authored page attrs after hydration', () => {
+    const root = new BackgroundPageRootInstance();
+    root.setAuthoredPageAttributes({}, { id: 'background' });
+    globalCommitContext.ops = [];
+
+    root.reconcileAuthoredPageAttributesOnHydration({ id: 'main-thread' });
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      0,
+      0,
+      { id: 'background' },
+    ]);
+
+    globalCommitContext.ops = [];
+    root.reconcileAuthoredPageAttributesOnHydration({ id: 'background' });
+
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('removes the reserved page root registration on teardown', () => {
+    const root = new BackgroundPageRootInstance();
+
+    root.tearDown();
+
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBeUndefined();
   });
 
   it('creates exact list hosts through the list-specific background instance', () => {

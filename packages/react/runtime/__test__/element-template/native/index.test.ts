@@ -88,6 +88,7 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {},
+      BackgroundPageRootInstance: class BackgroundPageRootInstance {},
     }));
     vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
@@ -131,6 +132,14 @@ describe('element-template native index wiring', () => {
     const updateCardData = vi.fn();
     const updateGlobalProps = vi.fn();
     const reloadBackground = vi.fn();
+    class MockBackgroundElementTemplateInstance {
+      constructor(public type: string) {}
+    }
+    class MockBackgroundPageRootInstance extends MockBackgroundElementTemplateInstance {
+      constructor() {
+        super('root');
+      }
+    }
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -177,9 +186,8 @@ describe('element-template native index wiring', () => {
       resetEventStateForRuntime,
     }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
-      BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {
-        constructor(public type: string) {}
-      },
+      BackgroundElementTemplateInstance: MockBackgroundElementTemplateInstance,
+      BackgroundPageRootInstance: MockBackgroundPageRootInstance,
     }));
     vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
@@ -188,6 +196,7 @@ describe('element-template native index wiring', () => {
     await import('../../../src/element-template/native/index.js');
 
     expect(setRoot).toHaveBeenCalledTimes(1);
+    expect(setRoot).toHaveBeenCalledWith(expect.any(MockBackgroundPageRootInstance));
     expect(setupBackgroundElementTemplateDocument).toHaveBeenCalledTimes(1);
     expect(installElementTemplateHydrationListener).toHaveBeenCalledTimes(1);
     expect(installElementTemplateCommitHook).toHaveBeenCalledTimes(1);
