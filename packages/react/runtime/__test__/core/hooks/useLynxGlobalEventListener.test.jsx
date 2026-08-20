@@ -6,6 +6,7 @@
 import { EventEmitter } from 'node:events';
 
 import { render } from 'preact';
+import { act } from 'preact/test-utils';
 import { useState } from 'preact/hooks';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -105,7 +106,9 @@ describe('useLynxGlobalEventListener', () => {
     `);
     expect(ee.listeners('eventName').length).toMatchInlineSnapshot(`1`);
 
-    render(null, scratch);
+    act(() => {
+      render(null, scratch);
+    });
     expect(ee.listeners('eventName').length).toMatchInlineSnapshot(`0`);
   });
 

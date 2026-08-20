@@ -38,7 +38,7 @@ import {
 } from '../../../core/thread-function-call/main-thread.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
-import { hook, isEmptyObject } from '../../../utils.js';
+import { hook, isEmptyObject, lynxQueueMicrotask } from '../../../utils.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
@@ -89,9 +89,43 @@ function takeGlobalPatchOptions(): GlobalPatchOptions {
 }
 
 /**
+ * Sends any pending snapshot patch produced outside a Preact commit.
+ * Preact 11 defers passive-effect cleanups of unmounted components to the
+ * after-paint flush, so their snapshot mutations no longer land inside the
+ * commit that unmounted them; flush them right after those effects run.
+ */
+function flushPendingSnapshotPatch(): void {
+  if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
+    return;
+  }
+  const snapshotPatch = takeGlobalSnapshotPatch();
+  if (!snapshotPatch?.length) {
+    return;
+  }
+  const commitTaskId = genCommitTaskId();
+  const patchList: PatchList = {
+    patchList: [{ id: commitTaskId, snapshotPatch }],
+  };
+  const obj = commitPatchUpdate(patchList, {});
+  // Unlike a real commit, this flush registers no commit task, so the ack
+  // has nothing to run.
+  lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {});
+}
+
+/**
  * Replaces Preact's default commit hook with our custom implementation
  */
 function replaceCommitHook(): void {
+  hook(options, 'requestAnimationFrame', (old, cb) => {
+    const run = () => {
+      cb();
+      flushPendingSnapshotPatch();
+    };
+    /* v8 ignore next 2 */
+    if (old) old(run);
+    else lynxQueueMicrotask(run);
+  });
+
   hook(
     options,
     COMMIT,

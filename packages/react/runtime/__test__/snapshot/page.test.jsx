@@ -389,6 +389,15 @@ describe('support <page /> element attributes', () => {
       globalThis[rLynxChange[0]](rLynxChange[1]);
     }
 
+    // Preact 11 defers the unmounted <page />'s effect cleanup to the
+    // after-paint flush, so the page-attribute reset arrives in a follow-up
+    // patch instead of the unmount patch.
+    {
+      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
+      globalThis[rLynxChange[0]](rLynxChange[1]);
+      rLynxChange[2]();
+    }
+
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"

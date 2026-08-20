@@ -148,6 +148,14 @@ overrides:
   # singletons, which breaks ReactLynx snapshot registration ("BackgroundSnapshot not
   # found"). Force every @lynx-js/react to the single workspace copy.
   "@lynx-js/react": "workspace:*"
+  # Preact 11 exploration: temporary pkg.pr.new build of lynx-family/internal-preact#22
+  # (branch feat/v11-lynx-patches). Replace with a published
+  # @lynx-js/internal-preact@11.x snapshot via the catalog before landing.
+  preact: "https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d"
+  # Preact 11 exploration: devtools adapter fix for the released v11 line
+  # (lynx-family/preact-devtools#19).
+  "@lynx-js/preact-devtools": "https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b"
+
   "@rspack/core": "catalog:rspack"
   "@rsbuild/core>@rspack/core": "catalog:rspack"
   "@rsdoctor/rspack-plugin>@rspack/core": "catalog:rspack"

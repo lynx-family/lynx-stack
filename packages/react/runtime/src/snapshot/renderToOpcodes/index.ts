@@ -14,13 +14,14 @@ import { Fragment, h, options, isValidElement } from 'preact';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 import {
+  BITS,
   CHILDREN,
   COMMIT,
   COMPONENT,
+  COMPONENT_DIRTY,
   DIFF,
   DIFF2,
   DIFFED,
-  DIRTY,
   NEXT_STATE,
   PARENT,
   RENDER,
@@ -89,7 +90,7 @@ export function renderToString(vnode: any, context: any, into: SnapshotInstance)
 
 // Installed as setState/forceUpdate for function components
 function markAsDirty() {
-  this[DIRTY] = true;
+  this[BITS] |= COMPONENT_DIRTY;
 }
 
 const EMPTY_OBJ = {};
@@ -120,7 +121,7 @@ function renderClassComponent(vnode, context) {
   c.props = vnode.props;
   c.context = context;
   // turn off stateful re-rendering:
-  c[DIRTY] = true;
+  c[BITS] |= COMPONENT_DIRTY;
 
   if (c.state == null) c.state = EMPTY_OBJ;
 
@@ -234,7 +235,7 @@ function _renderToString(
           // silently drop state updates
           setState: markAsDirty,
           forceUpdate: markAsDirty,
-          [DIRTY]: true,
+          [BITS]: COMPONENT_DIRTY,
           // hooks
           [HOOK]: [],
         };
@@ -244,18 +245,15 @@ function _renderToString(
 
         // If a hook invokes setState() to invalidate the component during rendering,
         // re-render it up to 25 times to allow "settling" of memoized states.
-        // Note:
-        //   This will need to be updated for Preact 11 to use internal.flags rather than component._dirty:
-        //   https://github.com/preactjs/preact/blob/d4ca6fdb19bc715e49fd144e69f7296b2f4daa40/src/diff/component.js#L35-L44
         let count = 0;
-        while (component[DIRTY] && count++ < 25) {
-          component[DIRTY] = false;
+        while (component[BITS] & COMPONENT_DIRTY && count++ < 25) {
+          component[BITS] &= ~COMPONENT_DIRTY;
 
           if (renderHook) renderHook(vnode);
 
           rendered = component.render(props, component.state, cctx);
         }
-        component[DIRTY] = true;
+        component[BITS] |= COMPONENT_DIRTY;
       }
 
       if (component.getChildContext != null) {
@@ -295,7 +293,7 @@ function _renderToString(
         component[NEXT_STATE] = assign({}, component[NEXT_STATE], {
           /* _suspended */ __a: true,
         });
-        if (component[DIRTY]) {
+        if (component[BITS] & COMPONENT_DIRTY) {
           rendered = renderClassComponent(vnode, context);
           component = vnode[COMPONENT];
 
