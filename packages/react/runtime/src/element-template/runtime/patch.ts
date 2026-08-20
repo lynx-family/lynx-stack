@@ -443,11 +443,16 @@ function resolveTypedListItem(
   // native list identifies items by the same identity key the templates were
   // registered under (see the `createTemplate` op above), so normalize it.
   const nativeTemplate = parseElementTemplateType(item.type);
+  const subtreeHandles = resolveSubtreeHandles(item.subtreeHandleIds, `${role} subtree`);
+  if (subtreeHandles === null) {
+    return null;
+  }
   return {
     uid: item.__etHandleRef,
     ref,
     templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
     platformInfo: item.platformInfo,
+    subtreeHandles,
   };
 }
 
