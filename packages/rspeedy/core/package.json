@@ -53,7 +53,6 @@
     "test:type": "tsc6 --noEmit"
   },
   "dependencies": {
-    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:^",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsdoctor/rspack-plugin": "~1.6.1"
