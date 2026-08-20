@@ -1,5 +1,17 @@
 # @lynx-js/react
 
+## 0.124.0
+
+### Minor Changes
+
+- Register the snapshot and worklet definitions collected from the background build on the main thread, so a definition the main-thread bundle dropped no longer fails with `Snapshot not found`. ([#3393](https://github.com/lynx-family/lynx-stack/pull/3393))
+
+### Patch Changes
+
+- Add `compat.transformLegacyEventAttributeNames` to disable legacy event attribute-name conversion independently from other compatibility transforms. ([#3475](https://github.com/lynx-family/lynx-stack/pull/3475))
+
+- Fix `snapshotPatchApply failed: ctx not found` when a lazy bundle is loaded during first-screen direct render. ([#3452](https://github.com/lynx-family/lynx-stack/pull/3452))
+
 ## 0.123.3
 
 ### Patch Changes

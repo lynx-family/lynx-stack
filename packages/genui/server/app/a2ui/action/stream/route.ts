@@ -6,20 +6,26 @@ import { Hono } from 'hono';
 
 import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
 import { loadBasicCatalog } from '../../../../agent/a2ui-catalog';
+import { createA2UIImageSourcePolicy } from '../../../../agent/a2ui-image-source-policy.js';
 import {
-  A2UIProtocolMessageStreamParser,
-  splitA2UIProtocolMessages,
-} from '../../../../agent/a2ui-stream-parser';
+  createA2UIOpenURLPolicy,
+  userProvidedA2UIURLSources,
+} from '../../../../agent/a2ui-open-url-policy.js';
+import { A2UIProtocolMessageStreamParser } from '../../../../agent/a2ui-stream-parser';
 import {
   getA2UIValidationDebugData,
   validateA2UIOutput,
 } from '../../../../agent/a2ui-validator';
 import {
-  replacePendingA2UIImagesWithLoading,
-  resolveA2UIImageUrlsIncrementally,
-  resolveStaticA2UIImageComponent,
-} from '../../../../agent/image-resolver';
+  createArkImageGenerationRunScope,
+  generatedArkImageURLs,
+} from '../../../../agent/ark-image-generation-tool.js';
+import { searchedDoubaoDocumentURLs } from '../../../../agent/doubao-search-tool.js';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
+import {
+  configuredApiStyle,
+  defaultModelName,
+} from '../../../../service/common/model-config.js';
 import type {
   ChatMessage,
   OpenAIReasoningEffort,
@@ -178,6 +184,29 @@ async function postA2UIActionStream(req: Request) {
     return jsonWithCors(req, { ok: false, error }, { status: 502 });
   }
   const optsWithCatalog = { ...opts, catalog };
+  const imageGenerationScope = createArkImageGenerationRunScope();
+  const isImageSourceAllowed = createA2UIImageSourcePolicy(
+    [[userMessage], validatedConversation.conversation, catalog],
+    () => generatedArkImageURLs(imageGenerationScope),
+  );
+  const isOpenUrlAllowed = createA2UIOpenURLPolicy(
+    userProvidedA2UIURLSources(
+      [userMessage],
+      validatedConversation.conversation?.history,
+    ),
+    () => searchedDoubaoDocumentURLs(imageGenerationScope),
+  );
+  const validationOptions = {
+    requireCreateSurface: false,
+    existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+    existingDataModelBySurface: body.surfaceId
+      ? {
+        [body.surfaceId]: validatedConversation.conversation?.dataModel ?? {},
+      }
+      : {},
+    isImageSourceAllowed,
+    isOpenUrlAllowed,
+  };
 
   log('request.accepted', {
     surfaceId: body.surfaceId,
@@ -226,34 +255,6 @@ async function postA2UIActionStream(req: Request) {
           return false;
         }
       };
-      const resolveMessagesForStreaming = async (
-        messages: Parameters<typeof resolveA2UIImageUrlsIncrementally>[0],
-      ) => {
-        const pendingImages = replacePendingA2UIImagesWithLoading(messages);
-        if (pendingImages.replacementCount > 0) {
-          const loadingMessages = splitA2UIProtocolMessages(
-            pendingImages.messages,
-          );
-          enqueue('message', { messages: loadingMessages });
-          log('images.loading.enqueued', {
-            replacementCount: pendingImages.replacementCount,
-            messageCount: loadingMessages.length,
-          });
-        }
-
-        const resolvedMessages = await resolveA2UIImageUrlsIncrementally(
-          messages,
-          (imageMessages) => {
-            if (imageMessages.length === 0) return;
-            enqueue('message', { messages: imageMessages });
-            log('images.resolved.enqueued', {
-              messageCount: imageMessages.length,
-            });
-          },
-        );
-        return resolvedMessages;
-      };
-
       const run = async () => {
         try {
           const connectStartedAt = performance.now();
@@ -263,36 +264,14 @@ async function postA2UIActionStream(req: Request) {
             optsWithCatalog,
             validatedConversation.conversation,
             generationController.signal,
+            imageGenerationScope,
           );
           log('agent.connect.completed', {
             durationMs: performance.now() - connectStartedAt,
           });
-          const streamingImageResolutions: Promise<void>[] = [];
-          const streamingImageKeys = new Set<string>();
           const protocolParser = new A2UIProtocolMessageStreamParser({
-            onStaticImageComponent: (surfaceId, component) => {
-              if (typeof component.url !== 'string') return;
-              const key = `${surfaceId}\0${component.id}\0${component.url}`;
-              if (streamingImageKeys.has(key)) return;
-              streamingImageKeys.add(key);
-              const resolution = resolveStaticA2UIImageComponent(
-                surfaceId,
-                component,
-              ).then((message) => {
-                if (!message) return;
-                enqueue('message', { messages: [message] });
-                log('images.resolved.enqueued', {
-                  messageCount: 1,
-                  streaming: true,
-                });
-              }).catch((err: unknown) => {
-                log('images.resolved.error', {
-                  streaming: true,
-                  error: errorMessage(err).message,
-                });
-              });
-              streamingImageResolutions.push(resolution);
-            },
+            isImageSourceAllowed,
+            isOpenUrlAllowed,
           });
           const streamedMessages: unknown[] = [];
           let streamedText = '';
@@ -333,9 +312,6 @@ async function postA2UIActionStream(req: Request) {
             streamedMessageCount: streamedMessages.length,
           });
 
-          await Promise.allSettled(streamingImageResolutions);
-          generationController.signal.throwIfAborted();
-
           let { text: finalText, usage, finishReason } = await finalize();
           generationController.signal.throwIfAborted();
           let usageMetrics = extractUsageMetrics(usage);
@@ -346,8 +322,8 @@ async function postA2UIActionStream(req: Request) {
             finishReason,
             hasUsage: usage !== undefined,
             catalogId: catalog.id,
-            model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
-            api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+            model: opts.model ?? defaultModelName() ?? 'default',
+            api: opts.api ?? configuredApiStyle(opts.model) ?? 'default',
             ...usageMetrics,
           });
           let repair:
@@ -371,24 +347,12 @@ async function postA2UIActionStream(req: Request) {
             warnings: [],
             messages: [],
           };
-          const validationOptions = {
-            requireCreateSurface: false,
-            existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
-            existingDataModelBySurface: body.surfaceId
-              ? {
-                [body.surfaceId]: validatedConversation.conversation?.dataModel
-                  ?? {},
-              }
-              : {},
-          };
           const v = validateA2UIOutput(
             finalText ?? '',
             catalog,
             validationOptions,
           );
-          let resolvedMessages = v.ok
-            ? await resolveMessagesForStreaming(v.messages)
-            : [];
+          let validatedMessages = v.ok ? v.messages : [];
           log('validation.completed', {
             ok: v.ok,
             errorCount: v.errors.length,
@@ -398,13 +362,13 @@ async function postA2UIActionStream(req: Request) {
             invalidData: v.ok
               ? undefined
               : getA2UIValidationDebugData(finalText ?? '', v.errors),
-            resolvedMessageCount: resolvedMessages.length,
+            messageCount: validatedMessages.length,
           });
           validation = {
             ok: v.ok,
             errors: v.errors,
             warnings: v.warnings,
-            messages: resolvedMessages,
+            messages: validatedMessages,
           };
           if (!v.ok) {
             try {
@@ -417,6 +381,7 @@ async function postA2UIActionStream(req: Request) {
                 validatedConversation.conversation,
                 validationOptions,
                 generationController.signal,
+                imageGenerationScope,
               );
               repair = {
                 attempted: true,
@@ -441,14 +406,12 @@ async function postA2UIActionStream(req: Request) {
                 usageMetrics = extractUsageMetrics(usage);
                 cachedTokens = usageMetrics.cachedTokens;
                 finishReason = repaired.finishReason;
-                resolvedMessages = await resolveMessagesForStreaming(
-                  repaired.messages,
-                );
+                validatedMessages = repaired.messages;
                 validation = {
                   ok: true,
                   errors: [],
                   warnings: repaired.warnings,
-                  messages: resolvedMessages,
+                  messages: validatedMessages,
                 };
               } else {
                 validation = {
@@ -494,8 +457,8 @@ async function postA2UIActionStream(req: Request) {
             repairAttempted: repair?.attempted ?? false,
             repairOk: repair?.ok,
             catalogId: catalog.id,
-            model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
-            api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+            model: opts.model ?? defaultModelName() ?? 'default',
+            api: opts.api ?? configuredApiStyle(opts.model) ?? 'default',
             ...usageMetrics,
             requestId,
           });

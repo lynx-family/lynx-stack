@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/genui",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Generative UI for Lynx.",
   "repository": {
     "type": "git",
@@ -65,9 +65,117 @@
       "types": "./openui/dist/core/index.d.ts",
       "default": "./openui/dist/core/index.js"
     },
+    "./openui/explicit": {
+      "types": "./openui/dist/core/explicit.d.ts",
+      "default": "./openui/dist/core/explicit.js"
+    },
     "./openui/catalog": {
       "types": "./openui/dist/catalog/index.d.ts",
       "default": "./openui/dist/catalog/index.js"
+    },
+    "./openui/catalog/AudioPlayer": {
+      "types": "./openui/dist/catalog/AudioPlayer/index.d.ts",
+      "default": "./openui/dist/catalog/AudioPlayer/index.jsx"
+    },
+    "./openui/catalog/Button": {
+      "types": "./openui/dist/catalog/Button/index.d.ts",
+      "default": "./openui/dist/catalog/Button/index.jsx"
+    },
+    "./openui/catalog/Buttons": {
+      "types": "./openui/dist/catalog/Button/index.d.ts",
+      "default": "./openui/dist/catalog/Button/index.jsx"
+    },
+    "./openui/catalog/Card": {
+      "types": "./openui/dist/catalog/Card/index.d.ts",
+      "default": "./openui/dist/catalog/Card/index.jsx"
+    },
+    "./openui/catalog/CardHeader": {
+      "types": "./openui/dist/catalog/CardHeader/index.d.ts",
+      "default": "./openui/dist/catalog/CardHeader/index.jsx"
+    },
+    "./openui/catalog/CheckBox": {
+      "types": "./openui/dist/catalog/CheckBox/index.d.ts",
+      "default": "./openui/dist/catalog/CheckBox/index.jsx"
+    },
+    "./openui/catalog/ChoicePicker": {
+      "types": "./openui/dist/catalog/ChoicePicker/index.d.ts",
+      "default": "./openui/dist/catalog/ChoicePicker/index.jsx"
+    },
+    "./openui/catalog/Column": {
+      "types": "./openui/dist/catalog/Column/index.d.ts",
+      "default": "./openui/dist/catalog/Column/index.jsx"
+    },
+    "./openui/catalog/DateTimeInput": {
+      "types": "./openui/dist/catalog/DateTimeInput/index.d.ts",
+      "default": "./openui/dist/catalog/DateTimeInput/index.jsx"
+    },
+    "./openui/catalog/Divider": {
+      "types": "./openui/dist/catalog/Divider/index.d.ts",
+      "default": "./openui/dist/catalog/Divider/index.jsx"
+    },
+    "./openui/catalog/Icon": {
+      "types": "./openui/dist/catalog/Icon/index.d.ts",
+      "default": "./openui/dist/catalog/Icon/index.jsx"
+    },
+    "./openui/catalog/Image": {
+      "types": "./openui/dist/catalog/Image/index.d.ts",
+      "default": "./openui/dist/catalog/Image/index.jsx"
+    },
+    "./openui/catalog/List": {
+      "types": "./openui/dist/catalog/List/index.d.ts",
+      "default": "./openui/dist/catalog/List/index.jsx"
+    },
+    "./openui/catalog/Loading": {
+      "types": "./openui/dist/catalog/Loading/index.d.ts",
+      "default": "./openui/dist/catalog/Loading/index.jsx"
+    },
+    "./openui/catalog/Modal": {
+      "types": "./openui/dist/catalog/Modal/index.d.ts",
+      "default": "./openui/dist/catalog/Modal/index.jsx"
+    },
+    "./openui/catalog/RadioGroup": {
+      "types": "./openui/dist/catalog/RadioGroup/index.d.ts",
+      "default": "./openui/dist/catalog/RadioGroup/index.jsx"
+    },
+    "./openui/catalog/Row": {
+      "types": "./openui/dist/catalog/Row/index.d.ts",
+      "default": "./openui/dist/catalog/Row/index.jsx"
+    },
+    "./openui/catalog/Separator": {
+      "types": "./openui/dist/catalog/Separator/index.d.ts",
+      "default": "./openui/dist/catalog/Separator/index.jsx"
+    },
+    "./openui/catalog/Slider": {
+      "types": "./openui/dist/catalog/Slider/index.d.ts",
+      "default": "./openui/dist/catalog/Slider/index.jsx"
+    },
+    "./openui/catalog/Stack": {
+      "types": "./openui/dist/catalog/Stack/index.d.ts",
+      "default": "./openui/dist/catalog/Stack/index.jsx"
+    },
+    "./openui/catalog/Tabs": {
+      "types": "./openui/dist/catalog/Tabs/index.d.ts",
+      "default": "./openui/dist/catalog/Tabs/index.jsx"
+    },
+    "./openui/catalog/Tag": {
+      "types": "./openui/dist/catalog/Tag/index.d.ts",
+      "default": "./openui/dist/catalog/Tag/index.jsx"
+    },
+    "./openui/catalog/Text": {
+      "types": "./openui/dist/catalog/Text/index.d.ts",
+      "default": "./openui/dist/catalog/Text/index.jsx"
+    },
+    "./openui/catalog/TextContent": {
+      "types": "./openui/dist/catalog/TextContent/index.d.ts",
+      "default": "./openui/dist/catalog/TextContent/index.jsx"
+    },
+    "./openui/catalog/TextField": {
+      "types": "./openui/dist/catalog/TextField/index.d.ts",
+      "default": "./openui/dist/catalog/TextField/index.jsx"
+    },
+    "./openui/catalog/Video": {
+      "types": "./openui/dist/catalog/Video/index.d.ts",
+      "default": "./openui/dist/catalog/Video/index.jsx"
     },
     "./openui/prompt": {
       "types": "./openui/dist/openui-prompt/index.d.ts",

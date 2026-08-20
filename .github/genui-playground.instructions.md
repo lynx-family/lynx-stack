@@ -26,6 +26,15 @@ When serving the playground's native Lynx bundles as static Android test fixture
 
 ## Chat Page Architecture
 
+Use the build-time `GENUI_SERVER_URL` environment variable as the single
+default GenUI server origin for Chat, Bench, health checks, and preview payload
+publishing. Keep its fallback at `http://localhost:3060`, validate it as a
+credential-free HTTP(S) origin in the playground build configuration, and do
+not reintroduce separate hosted-server constants in individual frontend
+modules. URL query endpoint overrides may remain available for diagnosis.
+
+Load Create-tab model choices from the GenUI server's `GET /models` endpoint. Keep provider credentials, upstream model ids, and upstream base URLs out of playground state, persistence, controls, and request bodies; persist only the selected server-approved model name.
+
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
 Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, and `pages/chat/mcp-apps.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.
@@ -56,7 +65,7 @@ When an action response is merged with the current preview messages, clear any p
 
 ### Shared Imports
 
-When importing shared playground conversations, validate the `importConv` URL before fetching it. Accept only current-origin documents or the GenUI Supabase Storage conversation-object path, then validate the shared document protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
+Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. Publish a shared conversation with storage type `conversation` and its validated protocol as the storage method; treat a missing protocol as legacy A2UI and reject an unknown protocol before uploading. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
 
 ## Component Catalog Architecture
 
@@ -100,6 +109,8 @@ Gate host-specific OpenUI visual treatments behind an additional root class in t
 
 ### Large Preview Payloads
 
+For local A2UI Web previews without `demoId` or `messagesUrl`, serialize the messages into an `application/json` Blob and pass its object URL through `messagesUrl` so local and remote JSON use the same runtime loading path. Reuse that object URL while the messages are unchanged; after replacement, keep it alive until the consuming runtime reports that loading completed, with a bounded cleanup fallback, and revoke all remaining URLs on unmount. Deliver later live deltas through `A2UI_LIVE_MESSAGES`, and replay the current surface only after the Lynx A2UI runtime reports that its message store is ready; the outer render-frame listener alone is not sufficient readiness. Give every `PreviewViewport` render navigation a unique token, require runtime-ready messages to echo it, and bind readiness fallbacks to the loaded URL and window so a delayed signal from an older iframe document cannot unlock the current frame. Blob URLs are local-only: share and native URLs must never expose them, and live share/native URLs require `demoId` or a published HTTP(S) `messagesUrl`. Apply `A2UI_INLINE_RENDER_URL_MAX_LENGTH` to remaining non-live inline A2UI preview URLs so deployed request-line limits cannot produce HTTP 414 responses.
+
 When building OpenUI playground preview links, avoid inlining large OpenUI Lang source in `rawText` query parameters. URL-encoded Chinese or generated DSL can exceed common request-line limits on deployed hosts; publish large source text and pass `rawTextUrl` to `render.html` instead.
 
 ## LazyComponent Integration
@@ -116,8 +127,8 @@ Keep both `web` and `lynx` environments enabled when the same lazy demo should r
 
 LazyComponent demo data should contain complete `url` and `webUrl` values before it reaches preview rendering. Build those URLs at data construction time from the runtime playground base URL, with query and hash removed and file paths such as `render.html` collapsed to their containing directory. Keep this resolution in the demo data layer, not in `PreviewPanel`.
 
-Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios but pass inline `messages` into web preview and native QR preview links, because no corresponding `dist/demos/*.json` file exists.
+Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios, but because no corresponding `dist/demos/*.json` file exists, their local Web preview should expose the messages through a Blob `messagesUrl` while non-live native QR preview links may continue to carry inline `messages`.
 
-Keep `PreviewPanel` unaware of LazyComponent payload structure. It should choose between `demoId`, `messagesUrl`, and inline `messages/actionMocks`, then pass the selected payload through unchanged for web preview and QR/native preview paths.
+Keep `PreviewPanel` unaware of LazyComponent payload structure. It should select `demoId`, a portable `messagesUrl`, or local `messages/actionMocks`; derive a Blob `messagesUrl` only for the local Web preview, while keeping share and QR/native payloads portable.
 
 For the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy bundle URLs with `import(url, { with: { type: 'component' } })`. In web rendering, use `webUrl` only when `SystemInfo.platform === 'web'`; if `webUrl` is absent, show the mobile-scan fallback instead of trying to load the native `url` in Lynx for Web.

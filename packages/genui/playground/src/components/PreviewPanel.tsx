@@ -28,12 +28,21 @@ import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
+import type {
+  LocalA2UIMessagesPayload,
+  LocalA2UIMessagesPayloadCache,
+} from '../utils/renderUrl.js';
 import {
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
+  canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  createLocalA2UIMessagesPayload,
+  createLocalA2UIMessagesPayloadCache,
+  hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
+  isPortableA2UIMessagesUrl,
 } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
@@ -379,6 +388,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const buildSeqRef = useRef(0);
+  const localMessagesPayloadCacheRef = useRef<
+    LocalA2UIMessagesPayloadCache | null
+  >(null);
+  localMessagesPayloadCacheRef.current ??= createLocalA2UIMessagesPayloadCache({
+    createPayload: (messages) =>
+      createLocalA2UIMessagesPayload(messages, window.URL),
+  });
+  const localMessagesPayloadCache = localMessagesPayloadCacheRef.current;
   const speedInputId = useId();
   const rawMetricId = useId();
   const metricId = useMemo(
@@ -566,9 +583,36 @@ export function PreviewPanel(props: PreviewPanelProps) {
   }, [previewSource, speed]);
 
   useEffect(() => {
+    const handleRuntimeReady = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data === null || typeof event.data !== 'object') return;
+      const message = event.data as {
+        messagesUrl?: unknown;
+        runtimeReady?: unknown;
+        type?: unknown;
+      };
+      if (
+        message.type !== 'A2UI_RENDER_READY'
+        || message.runtimeReady !== true
+        || typeof message.messagesUrl !== 'string'
+      ) {
+        return;
+      }
+      localMessagesPayloadCache.markLoaded(message.messagesUrl);
+    };
+
+    window.addEventListener('message', handleRuntimeReady);
+    return () => {
+      window.removeEventListener('message', handleRuntimeReady);
+      localMessagesPayloadCache.dispose();
+    };
+  }, [localMessagesPayloadCache]);
+
+  useEffect(() => {
     const seq = ++buildSeqRef.current;
 
     if (!previewSource) {
+      localMessagesPayloadCache.clear();
       setRenderUrl('');
       setRenderShareUrl('');
       setLynxDevUrl('');
@@ -576,6 +620,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     if (previewSource.kind === 'placeholder') {
+      localMessagesPayloadCache.clear();
       setRenderUrl('');
       setRenderShareUrl('');
       setLynxDevUrl('');
@@ -584,106 +629,148 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     if (previewSource.kind === 'a2ui') {
       const useClientPayloadStore = shouldUseClientPayloadStore();
-      const canSharePayload = hasShareableA2UIRenderPayload(previewSource)
+      const hasPayload = hasShareableA2UIRenderPayload(previewSource)
         || useClientPayloadStore;
-      if (!canSharePayload) {
+      if (!hasPayload) {
+        localMessagesPayloadCache.clear();
         setRenderUrl('');
         setRenderShareUrl('');
         setLynxDevUrl('');
         return;
       }
 
-      const url = buildRenderUrl(
-        {
-          protocol: previewSource.protocol,
-          demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-          messagesUrl: previewSource.messagesUrl,
-          messages: previewSource.messages,
-          actionMocksUrl: previewSource.actionMocksUrl,
-          actionMocks: previewSource.actionMocks,
-          theme: previewSource.theme,
-          demoId: previewSource.demoId,
-          speed,
-          liveAction: previewSource.liveAction,
-          playbackMode: previewSource.playbackMode,
-        },
-        baseUrl,
-      );
+      const demoId = typeof previewSource.demoId === 'string'
+          && previewSource.demoId.trim().length > 0
+        ? previewSource.demoId.trim()
+        : undefined;
+      const providedMessagesUrl = typeof previewSource.messagesUrl === 'string'
+          && previewSource.messagesUrl.trim().length > 0
+        ? previewSource.messagesUrl.trim()
+        : undefined;
+      const portableMessagesUrl = isPortableA2UIMessagesUrl(
+          providedMessagesUrl,
+        )
+        ? providedMessagesUrl
+        : undefined;
+      let localMessagesPayload: LocalA2UIMessagesPayload | undefined;
+      if (!demoId && !providedMessagesUrl) {
+        try {
+          localMessagesPayload = localMessagesPayloadCache.ensure(
+            previewSource.messages,
+          );
+        } catch {
+          localMessagesPayloadCache.clear();
+          setRenderUrl('');
+          setRenderShareUrl('');
+          setLynxDevUrl('');
+          return;
+        }
+      } else {
+        localMessagesPayloadCache.clear();
+      }
+
+      const renderInit = {
+        protocol: previewSource.protocol,
+        demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+        messagesUrl: providedMessagesUrl ?? localMessagesPayload?.messagesUrl,
+        messages: previewSource.messages,
+        actionMocksUrl: previewSource.actionMocksUrl,
+        actionMocks: previewSource.actionMocks,
+        theme: previewSource.theme,
+        demoId,
+        speed,
+        liveAction: previewSource.liveAction,
+        playbackMode: previewSource.playbackMode,
+      };
+      const isLivePreview = previewSource.liveAction === true;
+      const hasExternalPayload = hasExternalA2UIRenderPayload(previewSource);
+      const url = buildRenderUrl(renderInit, baseUrl);
       // Shared URLs always render normally — playback is a local-only
       // visualization tool, not something a QR-scanner should land in.
       const shareUrl = buildRenderUrl(
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-          messagesUrl: previewSource.messagesUrl,
+          messagesUrl: portableMessagesUrl,
           messages: previewSource.messages,
           actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
-          demoId: previewSource.demoId,
+          demoId,
           speed,
         },
         shareBaseUrl,
       );
-      setRenderUrl(url);
-      setRenderShareUrl(canSharePayload ? shareUrl : '');
+      setRenderUrl(canInlineA2UIRenderUrl(url) ? url : '');
+      setRenderShareUrl(
+        (hasExternalPayload || !isLivePreview)
+          && canInlineA2UIRenderUrl(shareUrl)
+          ? shareUrl
+          : '',
+      );
 
-      if (!canSharePayload) {
-        setLynxDevUrl('');
-        return;
-      }
-
-      if (!rspeedyDevUrl) {
-        setLynxDevUrl('');
-        return;
-      }
-
-      const uInline = new URL(rspeedyDevUrl);
-      if (speed !== 1) {
-        uInline.searchParams.set('speed', String(speed));
-      }
-      uInline.searchParams.set('theme', previewSource.theme);
-      if (previewSource.demoId) {
-        const demosBase = shareBaseUrl.endsWith('/')
-          ? shareBaseUrl
-          : `${shareBaseUrl}/`;
-        uInline.searchParams.set(
-          'messagesUrl',
-          new URL(`demos/${previewSource.demoId}.json`, demosBase).toString(),
-        );
-      } else if (previewSource.messagesUrl) {
-        uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
-        uInline.searchParams.delete('messages');
-        if (previewSource.actionMocksUrl) {
-          uInline.searchParams.set(
-            'actionMocksUrl',
-            previewSource.actionMocksUrl,
-          );
-          uInline.searchParams.delete('actionMocks');
-        } else if (previewSource.actionMocks) {
-          uInline.searchParams.set(
-            'actionMocks',
-            JSON.stringify(previewSource.actionMocks),
-          );
-          uInline.searchParams.delete('actionMocksUrl');
+      if (rspeedyDevUrl) {
+        const uInline = new URL(rspeedyDevUrl);
+        if (speed !== 1) {
+          uInline.searchParams.set('speed', String(speed));
         }
+        uInline.searchParams.set('theme', previewSource.theme);
+        let hasNativePayload = false;
+        if (demoId) {
+          const demosBase = shareBaseUrl.endsWith('/')
+            ? shareBaseUrl
+            : `${shareBaseUrl}/`;
+          uInline.searchParams.set(
+            'messagesUrl',
+            new URL(
+              `demos/${demoId}.json`,
+              demosBase,
+            ).toString(),
+          );
+          hasNativePayload = true;
+        } else if (portableMessagesUrl) {
+          uInline.searchParams.set('messagesUrl', portableMessagesUrl);
+          uInline.searchParams.delete('messages');
+          if (previewSource.actionMocksUrl) {
+            uInline.searchParams.set(
+              'actionMocksUrl',
+              previewSource.actionMocksUrl,
+            );
+            uInline.searchParams.delete('actionMocks');
+          } else if (previewSource.actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+            uInline.searchParams.delete('actionMocksUrl');
+          }
+          hasNativePayload = true;
+        } else if (!isLivePreview) {
+          uInline.searchParams.set(
+            'messages',
+            JSON.stringify(previewSource.messages),
+          );
+          if (previewSource.actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+          }
+          hasNativePayload = true;
+        }
+        const nativeUrl = uInline.toString();
+        setLynxDevUrl(
+          hasNativePayload && canInlineA2UIRenderUrl(nativeUrl)
+            ? nativeUrl
+            : '',
+        );
       } else {
-        uInline.searchParams.set(
-          'messages',
-          JSON.stringify(previewSource.messages),
-        );
-        if (previewSource.actionMocks) {
-          uInline.searchParams.set(
-            'actionMocks',
-            JSON.stringify(previewSource.actionMocks),
-          );
-        }
+        setLynxDevUrl('');
       }
-      setLynxDevUrl(uInline.toString());
 
       if (
-        previewSource.demoId
-        || previewSource.messagesUrl
+        demoId
+        || portableMessagesUrl
         || !useClientPayloadStore
       ) {
         return;
@@ -714,20 +801,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
             ? absoluteUrl(data.actionMocksUrl, payloadOrigin)
             : undefined;
 
-          const shortUrl = buildRenderUrl(
-            {
-              protocol: previewSource.protocol,
-              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-              messagesUrl,
-              messages: previewSource.messages,
-              actionMocksUrl,
-              theme: previewSource.theme,
-              speed,
-              liveAction: previewSource.liveAction,
-              playbackMode: previewSource.playbackMode,
-            },
-            baseUrl,
-          );
           const shortShareUrl = buildRenderUrl(
             {
               protocol: previewSource.protocol,
@@ -740,9 +813,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
             },
             shareBaseUrl,
           );
-          setRenderUrl(shortUrl);
-          setRenderShareUrl(shortShareUrl);
+          setRenderShareUrl(
+            canInlineA2UIRenderUrl(shortShareUrl) ? shortShareUrl : '',
+          );
 
+          if (!rspeedyDevUrl) return;
           const u = new URL(rspeedyDevUrl);
           if (speed !== 1) {
             u.searchParams.set('speed', String(speed));
@@ -763,13 +838,18 @@ export function PreviewPanel(props: PreviewPanelProps) {
             u.searchParams.delete('actionMocksUrl');
             u.searchParams.delete('actionMocks');
           }
-          setLynxDevUrl(u.toString());
+          const nativeUrl = u.toString();
+          setLynxDevUrl(
+            canInlineA2UIRenderUrl(nativeUrl) ? nativeUrl : '',
+          );
         } catch {
-          // Keep the inline URLs above if the local dev payload store is unavailable.
+          // Keep the local Blob URL or length-guarded URL selected above.
         }
       })();
       return;
     }
+
+    localMessagesPayloadCache.clear();
 
     if (previewSource.kind === 'mcp-apps') {
       setRenderUrl(buildMcpAppsRenderUrl({
@@ -886,7 +966,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
         console.warn('[openui] Failed to publish preview raw text', err);
       }
     })();
-  }, [baseUrl, previewSource, rspeedyDevUrl, shareBaseUrl, speed]);
+  }, [
+    baseUrl,
+    localMessagesPayloadCache,
+    previewSource,
+    rspeedyDevUrl,
+    shareBaseUrl,
+    speed,
+  ]);
 
   useEffect(() => {
     if (!previewSource || previewSource.kind === 'placeholder') {
@@ -930,6 +1017,19 @@ export function PreviewPanel(props: PreviewPanelProps) {
           urlTitle: renderShareUrl,
           copyButtonTitle: 'Copy render URL',
           showQrCode,
+        },
+      });
+    } else if (
+      previewSource.kind === 'a2ui'
+      && previewSource.liveAction === true
+    ) {
+      cards.push({
+        key: 'webPreview',
+        item: {
+          title: 'Web Preview',
+          description:
+            'This live preview stays in the current browser. Sharing requires a short published preview payload URL.',
+          placeholder: 'Share link unavailable',
         },
       });
     }
@@ -1032,31 +1132,35 @@ export function PreviewPanel(props: PreviewPanelProps) {
                       ? item.errorDescription
                       : item.description}
                   </div>
-                  <div className='previewQrUrlRow'>
-                    <div
-                      className='previewQrUrlText'
-                      title={item.urlTitle ?? item.url}
-                    >
-                      {item.urlTitle ?? item.url}
-                    </div>
-                    <button
-                      type='button'
-                      className='previewQrCopyBtn'
-                      aria-label={item.copyButtonTitle ?? 'Copy URL'}
-                      title={copied
-                        ? 'Copied'
-                        : (copyFailed
-                          ? 'Copy failed'
-                          : (item.copyButtonTitle ?? 'Copy URL'))}
-                      onClick={() => {
-                        if (item.url) {
-                          handleCopyUrl(key, item.url);
-                        }
-                      }}
-                    >
-                      {copied ? 'Copied' : (copyFailed ? 'Failed' : 'Copy')}
-                    </button>
-                  </div>
+                  {item.url
+                    ? (
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={item.urlTitle ?? item.url}
+                        >
+                          {item.urlTitle ?? item.url}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label={item.copyButtonTitle ?? 'Copy URL'}
+                          title={copied
+                            ? 'Copied'
+                            : (copyFailed
+                              ? 'Copy failed'
+                              : (item.copyButtonTitle ?? 'Copy URL'))}
+                          onClick={() => {
+                            if (item.url) handleCopyUrl(key, item.url);
+                          }}
+                        >
+                          {copied
+                            ? 'Copied'
+                            : (copyFailed ? 'Failed' : 'Copy')}
+                        </button>
+                      </div>
+                    )
+                    : null}
                 </div>
                 {item.url && item.showQrCode !== false
                   ? (

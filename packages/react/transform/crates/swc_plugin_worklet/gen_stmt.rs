@@ -26,6 +26,7 @@ struct RegisterWorkletParams<'a> {
 }
 
 impl StmtGen {
+  #[allow(clippy::too_many_arguments)]
   pub fn transform_worklet(
     mode: TransformMode,
     worklet_type: WorkletType,
@@ -37,11 +38,29 @@ impl StmtGen {
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
     worklet_runtime_loaded_ident: Ident,
-  ) -> (Box<Expr>, Stmt) {
+    collect_main_thread: bool,
+  ) -> (Box<Expr>, Stmt, Option<Stmt>) {
     let hash = Expr::Lit(hash.into());
     let extracted_value = ident_collector.take_values();
     let extracted_idents = ident_collector.take_idents();
     let extracted_js_fns = ident_collector.take_js_fns();
+
+    let main_thread_stmt = collect_main_thread.then(|| {
+      let mut collected_imports = HashSet::new();
+      StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
+        mode,
+        target: TransformTarget::LEPUS,
+        worklet_type: worklet_type.clone(),
+        function_name: function_name.clone(),
+        function: function.clone(),
+        extracted_idents: extracted_idents.clone(),
+        extracted_js_fns: extracted_js_fns.clone(),
+        hash: hash.clone(),
+        is_class_member,
+        named_imports: &mut collected_imports,
+        worklet_runtime_loaded_ident: worklet_runtime_loaded_ident.clone(),
+      })
+    });
 
     (
       StmtGen::gen_transformed_worklet_expr(
@@ -73,6 +92,7 @@ impl StmtGen {
         named_imports,
         worklet_runtime_loaded_ident,
       }),
+      main_thread_stmt,
     )
   }
 

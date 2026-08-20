@@ -26,7 +26,11 @@ export function pluginOutput(): RsbuildPlugin {
             // `transform-block-scoping` pass handles user source separately.
             // Placed first so user-provided
             // `tools.rspack.output.environment.const` can opt out.
-            tools: { rspack: { output: { environment: { const: false } } } },
+            tools: {
+              // Lynx does not use HTML.
+              htmlPlugin: false,
+              rspack: { output: { environment: { const: false } } },
+            },
           },
           config,
           {

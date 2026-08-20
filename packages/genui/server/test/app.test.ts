@@ -10,6 +10,16 @@ import {
 import { createAdaptorServer } from '@hono/node-server';
 import { describe, expect, test } from '@rstest/core';
 
+import {
+  IMG_GEN_ARK_API_KEY_ENV,
+  IMG_GEN_ARK_IMAGE_BASE_URL_ENV,
+  IMG_GEN_ARK_IMAGE_MODEL_ENV,
+} from '../agent/ark-image-generation-tool.js';
+import {
+  SEARCH_INFINITY_API_KEY_ENV,
+  SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV,
+} from '../agent/doubao-search-tool.js';
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import app from '../src/app.js';
 
 describe('Hono application', () => {
@@ -25,6 +35,166 @@ describe('Hono application', () => {
     await expect(response.json()).resolves.toMatchObject({
       provider: 'openai',
     });
+  });
+
+  test('returns only public model metadata from discovery endpoints', async () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    const previousArkApiKey = process.env[IMG_GEN_ARK_API_KEY_ENV];
+    const previousArkImageModel = process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV];
+    const previousArkImageBaseURL = process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV];
+    const previousSearchApiKey = process.env[SEARCH_INFINITY_API_KEY_ENV];
+    const previousSearchTimeout =
+      process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
+      'Doubao Seed': {
+        apiKey: 'seed-secret',
+        baseURL: 'https://seed.example.com/api/v3',
+        model: 'doubao-seed-upstream',
+        api: 'chat',
+        default: true,
+      },
+      'Doubao Pro': {
+        apiKey: 'pro-secret',
+        baseURL: 'https://pro.example.com/api/v3',
+        model: 'doubao-pro-upstream',
+      },
+    });
+    process.env[IMG_GEN_ARK_API_KEY_ENV] = 'ark-image-secret';
+    process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV] = 'private-image-model';
+    process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] =
+      'https://ark-private.example.com/api/v3';
+    process.env[SEARCH_INFINITY_API_KEY_ENV] = 'private-search-key';
+    delete process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV];
+    try {
+      const response = await app.request('/models', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+        'http://localhost:3000',
+      );
+      const payload: unknown = await response.json();
+      expect(payload).toEqual({
+        defaultModel: 'Doubao Seed',
+        models: [
+          { id: 'Doubao Seed', label: 'Doubao Seed' },
+          { id: 'Doubao Pro', label: 'Doubao Pro' },
+        ],
+      });
+      const serializedPayload = JSON.stringify(payload);
+      expect(serializedPayload).not.toContain('seed-secret');
+      expect(serializedPayload).not.toContain('seed.example.com');
+      expect(serializedPayload).not.toContain('doubao-seed-upstream');
+
+      const healthResponse = await app.request('/a2ui/health', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      expect(healthResponse.status).toBe(200);
+      const healthPayload: unknown = await healthResponse.json();
+      expect(healthPayload).toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: true,
+        webSearchReady: true,
+      });
+      const serializedHealth = JSON.stringify(healthPayload);
+      expect(serializedHealth).not.toContain('seed-secret');
+      expect(serializedHealth).not.toContain('seed.example.com');
+      expect(serializedHealth).not.toContain('doubao-seed-upstream');
+      expect(serializedHealth).not.toContain('ark-image-secret');
+      expect(serializedHealth).not.toContain('private-image-model');
+      expect(serializedHealth).not.toContain('ark-private.example.com');
+      expect(serializedHealth).not.toContain('private-search-key');
+      expect(serializedHealth).not.toContain('open.feedcoopapi.com');
+      expect(serializedHealth).not.toContain('"api"');
+
+      delete process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV];
+      const missingImageModelResponse = await app.request('/a2ui/health');
+      expect(missingImageModelResponse.status).toBe(200);
+      await expect(missingImageModelResponse.json()).resolves.toEqual({
+        ok: false,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: false,
+        webSearchReady: true,
+        error: 'IMG_GEN_ARK_IMAGE_MODEL is required',
+      });
+
+      process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV] = 'private-image-model';
+      delete process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV];
+      const missingImageBaseURLResponse = await app.request('/a2ui/health');
+      expect(missingImageBaseURLResponse.status).toBe(200);
+      await expect(missingImageBaseURLResponse.json()).resolves.toEqual({
+        ok: false,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: false,
+        webSearchReady: true,
+        error: 'IMG_GEN_ARK_IMAGE_BASE_URL is required',
+      });
+
+      process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] =
+        'https://ark-private.example.com/api/v3';
+      delete process.env[SEARCH_INFINITY_API_KEY_ENV];
+      process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV] = '0';
+      const searchDisabledResponse = await app.request('/a2ui/health');
+      expect(searchDisabledResponse.status).toBe(200);
+      await expect(searchDisabledResponse.json()).resolves.toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: true,
+        webSearchReady: false,
+      });
+      process.env[SEARCH_INFINITY_API_KEY_ENV] = 'private-search-key';
+      const invalidSearchResponse = await app.request('/a2ui/health');
+      expect(invalidSearchResponse.status).toBe(200);
+      await expect(invalidSearchResponse.json()).resolves.toEqual({
+        ok: true,
+        provider: 'openai',
+        hasKey: true,
+        modelName: 'Doubao Seed',
+        imageGenerationReady: true,
+        webSearchReady: false,
+      });
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
+      } else {
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+      }
+      if (previousArkApiKey === undefined) {
+        delete process.env[IMG_GEN_ARK_API_KEY_ENV];
+      } else {
+        process.env[IMG_GEN_ARK_API_KEY_ENV] = previousArkApiKey;
+      }
+      if (previousArkImageModel === undefined) {
+        delete process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV];
+      } else {
+        process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV] = previousArkImageModel;
+      }
+      if (previousArkImageBaseURL === undefined) {
+        delete process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV];
+      } else {
+        process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] = previousArkImageBaseURL;
+      }
+      if (previousSearchApiKey === undefined) {
+        delete process.env[SEARCH_INFINITY_API_KEY_ENV];
+      } else {
+        process.env[SEARCH_INFINITY_API_KEY_ENV] = previousSearchApiKey;
+      }
+      if (previousSearchTimeout === undefined) {
+        delete process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV];
+      } else {
+        process.env[SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV] =
+          previousSearchTimeout;
+      }
+    }
   });
 
   test('allows IPv6 loopback origins during local development', async () => {
@@ -58,6 +228,60 @@ describe('Hono application', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
       'http://localhost:3000',
     );
+  });
+
+  test('accepts PUT requests on the payload upload endpoint', async () => {
+    const response = await app.request('/a2ui/payload', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: 'http://localhost:3000',
+      },
+      body: '{}',
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get('Access-Control-Allow-Methods')).toContain(
+      'PUT',
+    );
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: 'messages is required',
+    });
+  });
+
+  test('rejects invalid payload storage classifications', async () => {
+    const invalidMethod = await app.request('/a2ui/payload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [], method: '../other' }),
+    });
+    expect(invalidMethod.status).toBe(400);
+    await expect(invalidMethod.json()).resolves.toEqual({
+      ok: false,
+      error: 'method must be one of: a2ui, openui, mcp-apps',
+    });
+
+    const mismatchedConversation = await app.request('/a2ui/payload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: {
+          v: 1,
+          kind: 'a2ui-conversation',
+          protocol: 'openui',
+          messages: [],
+          snapshot: null,
+        },
+        method: 'a2ui',
+        type: 'conversation',
+      }),
+    });
+    expect(mismatchedConversation.status).toBe(400);
+    await expect(mismatchedConversation.json()).resolves.toEqual({
+      ok: false,
+      error: 'method must match the conversation protocol',
+    });
   });
 
   test('returns method-not-allowed and not-found responses', async () => {

@@ -2,11 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { A2UIMessage } from './a2ui-validator';
-import {
-  isLoadableImageSource,
-  isResolvableStaticA2UIImage,
-} from './image-resolver';
+import { isLoadableImageSource } from './a2ui-validator.js';
+import type { A2UIMessage } from './a2ui-validator.js';
 
 type A2UIUpdateComponentsMessage = Extract<
   A2UIMessage,
@@ -16,13 +13,6 @@ type A2UIComponent = A2UIUpdateComponentsMessage['updateComponents'][
   'components'
 ][number];
 type ComponentRecord = A2UIComponent & Record<string, unknown>;
-
-interface A2UIProtocolMessageStreamParserOptions {
-  onStaticImageComponent?: (
-    surfaceId: string,
-    component: ComponentRecord,
-  ) => void;
-}
 
 const ROOT_COMPONENT_ID = 'root';
 
@@ -98,20 +88,51 @@ function isA2UIComponent(value: unknown): value is Record<string, unknown> & {
 
 function toStreamRenderableComponent(
   component: Record<string, unknown> & { id: string; component: string },
-  pendingImagePaths?: Set<string>,
+  isImageSourceAllowed?: (source: string) => boolean,
+  isOpenUrlAllowed?: (source: string) => boolean,
 ): Record<string, unknown> & { id: string; component: string } {
+  if (
+    isOpenUrlAllowed
+    && containsUntrustedOpenURL(component, isOpenUrlAllowed)
+  ) {
+    return {
+      id: component.id,
+      component: 'Loading',
+      variant: 'block',
+    };
+  }
   if (component.component !== 'Image') return component;
-  const url = component.url;
-  if (isRecord(url) && typeof url.path === 'string') {
-    if (!pendingImagePaths?.has(normalizePointer(url.path))) {
-      return component;
-    }
-  } else if (isLoadableImageSource(url)) return component;
+  if (
+    isLoadableImageSource(component.url)
+    && (!isImageSourceAllowed || isImageSourceAllowed(component.url))
+  ) {
+    return component;
+  }
   return {
     id: component.id,
     component: 'Loading',
     variant: 'block',
   };
+}
+
+function containsUntrustedOpenURL(
+  value: unknown,
+  isOpenUrlAllowed: (source: string) => boolean,
+): boolean {
+  if (Array.isArray(value)) {
+    return value.some((item) =>
+      containsUntrustedOpenURL(item, isOpenUrlAllowed)
+    );
+  }
+  if (!isRecord(value)) return false;
+  if (value.call === 'openUrl') {
+    if (!isRecord(value.args)) return true;
+    const url = value.args.url;
+    if (typeof url !== 'string' || !isOpenUrlAllowed(url)) return true;
+  }
+  return Object.values(value).some((item) =>
+    containsUntrustedOpenURL(item, isOpenUrlAllowed)
+  );
 }
 
 function sniffUpdateComponentsSurfaceId(buffer: string): string | null {
@@ -131,68 +152,6 @@ function sniffUpdateComponentsSurfaceId(buffer: string): string | null {
 
 function placeholderId(id: string): string {
   return `loading_${id}`;
-}
-
-function normalizePointer(path: string): string {
-  if (!path || path === '/') return '/';
-  return path.startsWith('/') ? path : `/${path}`;
-}
-
-function appendPointer(path: string, segment: string): string {
-  const encoded = segment.replace(/~/gu, '~0').replace(/\//gu, '~1');
-  return path === '/' ? `/${encoded}` : `${path}/${encoded}`;
-}
-
-function decodePointerSegment(segment: string): string {
-  return segment.replace(/~1/gu, '/').replace(/~0/gu, '~');
-}
-
-function lastPointerSegment(path: string): string {
-  const parts = normalizePointer(path).split('/').filter(Boolean);
-  const last = parts[parts.length - 1];
-  return last ? decodePointerSegment(last) : '';
-}
-
-function isImageLikeKey(key: string): boolean {
-  return /(?:^|[-_])(?:image|photo|picture|avatar|cover|poster|artwork|thumbnail)(?:$|[-_])/iu
-    .test(key);
-}
-
-function updatePendingImagePathsFromData(
-  value: unknown,
-  path: string,
-  pendingImagePaths: Set<string>,
-): void {
-  const normalizedPath = normalizePointer(path);
-  const key = lastPointerSegment(normalizedPath);
-  if (typeof value === 'string' && isImageLikeKey(key)) {
-    if (isLoadableImageSource(value)) {
-      pendingImagePaths.delete(normalizedPath);
-    } else {
-      pendingImagePaths.add(normalizedPath);
-    }
-    return;
-  }
-
-  if (Array.isArray(value)) {
-    value.forEach((item, index) =>
-      updatePendingImagePathsFromData(
-        item,
-        appendPointer(normalizedPath, String(index)),
-        pendingImagePaths,
-      )
-    );
-    return;
-  }
-
-  if (!isRecord(value)) return;
-  for (const [childKey, child] of Object.entries(value)) {
-    updatePendingImagePathsFromData(
-      child,
-      appendPointer(normalizedPath, childKey),
-      pendingImagePaths,
-    );
-  }
 }
 
 function createPlaceholderComponent(id: string): ComponentRecord {
@@ -343,10 +302,6 @@ function buildReachableComponentSnapshot(
 }
 
 export class A2UIProtocolMessageStreamParser {
-  public constructor(
-    private readonly options: A2UIProtocolMessageStreamParserOptions = {},
-  ) {}
-
   private buffer = '';
   private cursor = 0;
   private depth = 0;
@@ -363,8 +318,14 @@ export class A2UIProtocolMessageStreamParser {
     string,
     Map<string, string>
   >();
-  private pendingImagePathsBySurface = new Map<string, Set<string>>();
   private createdSurfaceIds = new Set<string>();
+
+  public constructor(
+    private readonly options: {
+      isImageSourceAllowed?: ((source: string) => boolean) | undefined;
+      isOpenUrlAllowed?: ((source: string) => boolean) | undefined;
+    } = {},
+  ) {}
 
   public push(chunk: string): A2UIMessage[] {
     this.buffer += chunk;
@@ -426,9 +387,6 @@ export class A2UIProtocolMessageStreamParser {
               messages.push(
                 createSurfaceLoadingMessage(parsed.createSurface.surfaceId),
               );
-            } else if ('updateDataModel' in parsed && parsed.updateDataModel) {
-              this.updatePendingImagePaths(parsed);
-              messages.push(parsed);
             } else if (!isUpdateComponentsMessage(parsed)) {
               messages.push(parsed);
             }
@@ -479,15 +437,10 @@ export class A2UIProtocolMessageStreamParser {
       this.buffer.slice(0, start),
     );
     if (!surfaceId) return;
-    if (isResolvableStaticA2UIImage(parsed as ComponentRecord)) {
-      this.options.onStaticImageComponent?.(
-        surfaceId,
-        parsed as ComponentRecord,
-      );
-    }
     const renderable = toStreamRenderableComponent(
       parsed,
-      this.pendingImagePathsBySurface.get(surfaceId),
+      this.options.isImageSourceAllowed,
+      this.options.isOpenUrlAllowed,
     );
     const seen = this.seenComponentsBySurface.get(surfaceId)
       ?? new Map<string, ComponentRecord>();
@@ -520,34 +473,4 @@ export class A2UIProtocolMessageStreamParser {
       },
     });
   }
-
-  private updatePendingImagePaths(
-    message: Extract<
-      A2UIMessage,
-      { updateDataModel: unknown }
-    >,
-  ): void {
-    const dataModel = message.updateDataModel as {
-      surfaceId: string;
-      path?: string;
-      value?: unknown;
-    };
-    if (!('value' in dataModel)) return;
-    const pendingImagePaths = this.pendingImagePathsBySurface.get(
-      dataModel.surfaceId,
-    ) ?? new Set<string>();
-    updatePendingImagePathsFromData(
-      dataModel.value,
-      dataModel.path ?? '/',
-      pendingImagePaths,
-    );
-    this.pendingImagePathsBySurface.set(dataModel.surfaceId, pendingImagePaths);
-  }
-}
-
-export function splitA2UIProtocolMessages(
-  messages: A2UIMessage[],
-): A2UIMessage[] {
-  const parser = new A2UIProtocolMessageStreamParser();
-  return parser.push(JSON.stringify(messages));
 }

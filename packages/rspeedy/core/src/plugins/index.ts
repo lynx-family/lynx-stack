@@ -34,10 +34,6 @@ export async function applyDefaultPlugins(
       ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
     ),
 
-    import('./dev.plugin.js').then(({ pluginDev }) =>
-      pluginDev(config.dev, config.server)
-    ),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
     ),
@@ -60,12 +56,4 @@ export async function applyDefaultPlugins(
   }
 
   await Promise.all(promises)
-
-  // If no `@rsbuild/plugin-css-minimizer` is applied, apply it
-  const { pluginCssMinimizer, PLUGIN_CSS_MINIMIZER_NAME } = await import(
-    '@rsbuild/plugin-css-minimizer'
-  )
-  if (!rsbuildInstance.isPluginExists(PLUGIN_CSS_MINIMIZER_NAME)) {
-    rsbuildInstance.addPlugins([pluginCssMinimizer()])
-  }
 }

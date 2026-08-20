@@ -20,7 +20,6 @@ import { createStubRspeedy } from '../createStubRspeedy.js'
 describe('Plugins - Dev', () => {
   beforeEach(async () => {
     rstest.stubEnv('NODE_ENV', 'development')
-    rstest.mock('../../src/webpack/ProvidePlugin.js', { mock: true })
 
     const { default: os } = await import('node:os')
 
@@ -59,6 +58,7 @@ describe('Plugins - Dev', () => {
     expect(isIPv4(hostname)).toBe(true)
     expect(pathname).toBe('/')
 
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
     expect(isIPv4(rsbuild.getRsbuildConfig().dev!.client!.host!)).toBe(true)
 
     assert(config.resolve?.alias)
@@ -96,7 +96,7 @@ describe('Plugins - Dev', () => {
     const config = await rsbuild.unwrapConfig()
 
     expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
-    expect(rsbuild.getRsbuildConfig().server!.host).toBe('fd00::1')
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('::')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
   })
 
@@ -192,26 +192,6 @@ describe('Plugins - Dev', () => {
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('10.0.0.2')
   })
 
-  test('provide HMR variables', async () => {
-    const rsbuild = await createStubRspeedy({})
-
-    await rsbuild.unwrapConfig()
-
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
-
-    expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
-    expect(rstest.mocked(ProvidePlugin)).toBeCalled()
-    expect(ProvidePlugin).toHaveBeenCalledWith({
-      WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
-    })
-    expect(ProvidePlugin).toHaveBeenCalledWith({
-      __webpack_dev_server_client__: [
-        require.resolve('../../client/hmr/WebSocketClient.js'),
-        'default',
-      ],
-    })
-  })
-
   test('alias HMR entries', async () => {
     const rsbuild = await createStubRspeedy({})
 
@@ -231,38 +211,6 @@ describe('Plugins - Dev', () => {
         'packages/webpack/webpack-dev-transport'.replaceAll('/', path.sep),
       ),
     )
-  })
-
-  test('no Websocket class injected for web', async () => {
-    const rsbuild = await createStubRspeedy({
-      environments: {
-        web: {},
-      },
-    })
-
-    await rsbuild.unwrapConfig()
-
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
-
-    expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
-    expect(rstest.mocked(ProvidePlugin)).toBeCalled()
-    expect(ProvidePlugin).toBeCalledWith({
-      __webpack_dev_server_client__: [
-        require.resolve('../../client/hmr/WebSocketClient.js'),
-        'default',
-      ],
-    })
-  })
-
-  test('not inject entry and provide variables in production', async () => {
-    rstest.stubEnv('NODE_ENV', 'production')
-    const rsbuild = await createStubRspeedy({})
-
-    await rsbuild.unwrapConfig()
-
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
-
-    expect(ProvidePlugin).not.toBeCalled()
   })
 
   test('not inject Rsbuild HMR client', async () => {
@@ -484,23 +432,6 @@ describe('Plugins - Dev', () => {
     expect(rsbuild.getRsbuildConfig().dev!.assetPrefix).toBe(false)
   })
 
-  test('assetPrefix with mode production', async () => {
-    const rsbuild = await createStubRspeedy({
-      mode: 'production',
-    })
-
-    // dev.plugin.js will not be applied by default in production mode
-    rsbuild.addPlugins([
-      await import('../../src/plugins/dev.plugin.js').then(
-        ({ pluginDev }) => pluginDev(),
-      ),
-    ])
-
-    const config = await rsbuild.unwrapConfig()
-
-    expect(config.output?.publicPath).not.toBe('/')
-  })
-
   // The result of this test is not correct, since Rsbuild is using `context.devServer?.port || DEFAULT_PORT`
   // See: https://github.com/web-infra-dev/rsbuild/blob/4494b4bbf77f6e45d7d38fbaaa188a941227505d/packages/core/src/plugins/output.ts#L29
   // TODO: Fix this test after https://github.com/web-infra-dev/rsbuild/pull/4578 landed
@@ -705,30 +636,6 @@ describe('Plugins - Dev', () => {
     )
   })
 
-  test('websocketTransport', async () => {
-    const rsbuild = await createStubRspeedy({
-      dev: {
-        client: {
-          websocketTransport: '/foo',
-        },
-      },
-    })
-
-    await rsbuild.unwrapConfig()
-
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
-
-    expect(ProvidePlugin).toHaveBeenCalledWith({
-      WebSocket: ['/foo', 'default'],
-    })
-    expect(ProvidePlugin).toHaveBeenCalledWith({
-      __webpack_dev_server_client__: [
-        require.resolve('../../client/hmr/WebSocketClient.js'),
-        'default',
-      ],
-    })
-  })
-
   test('server.base without /', async () => {
     try {
       const rsbuild = await createStubRspeedy({
@@ -770,25 +677,6 @@ describe('Plugins - Dev', () => {
     expect(isIP(hostname)).toBe(0)
     expect(hostname).toBe('example.com')
     expect(pathname).toBe('/dist/')
-  })
-
-  test('environment.web to have middleware installed', async () => {
-    const rsbuild = await createStubRspeedy({
-      source: {
-        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
-      },
-      environments: {
-        web: {},
-        lynx: {},
-      },
-    })
-    const middleware = await import('@lynx-js/web-rsbuild-server-middleware')
-    rstest.spyOn(middleware, 'createWebVirtualFilesMiddleware')
-
-    await using server = await rsbuild.usingDevServer()
-    await server.waitDevCompileDone()
-    expect(rstest.mocked(middleware.createWebVirtualFilesMiddleware))
-      .toBeCalled()
   })
 
   test('dev.assetPrefix with server.printUrls', async () => {

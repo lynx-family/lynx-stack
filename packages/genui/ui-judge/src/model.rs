@@ -16,7 +16,6 @@ use agent_sdk::{
 };
 use anyhow::{anyhow, Result as AnyhowResult};
 use async_trait::async_trait;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::{Client as HttpClient, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -38,9 +37,6 @@ pub struct ModelOptions {
   pub api: Option<ModelApi>,
   pub api_key: Option<String>,
   pub base_url: Option<String>,
-  pub default_headers: Vec<(String, String)>,
-  pub default_query: Vec<(String, String)>,
-  pub family: Option<String>,
   pub model: Option<String>,
   pub timeout_ms: Option<u64>,
 }
@@ -52,9 +48,6 @@ impl fmt::Debug for ModelOptions {
       .field("api", &self.api)
       .field("api_key", &self.api_key.as_ref().map(|_| "[REDACTED]"))
       .field("base_url", &self.base_url.as_ref().map(|_| "[CONFIGURED]"))
-      .field("default_headers", &self.default_headers.len())
-      .field("default_query", &self.default_query.len())
-      .field("family", &self.family)
       .field("model", &self.model)
       .field("timeout_ms", &self.timeout_ms)
       .finish()
@@ -62,110 +55,20 @@ impl fmt::Debug for ModelOptions {
 }
 
 impl ModelOptions {
-  pub fn from_env() -> Result<Self, ModelError> {
-    let init_config = midscene_openai_init_config()?;
-    Ok(Self::from_config(init_config.as_ref()))
-  }
-
-  fn from_config(init_config: Option<&Value>) -> Self {
+  pub fn from_env() -> Self {
     Self {
-      api: first_env(&["MIDSCENE_MODEL_API", "OPENAI_API_STYLE"])
-        .or_else(|| {
-          json_config_string(
-            init_config,
-            &["api", "apiStyle", "api_style", "OPENAI_API_STYLE"],
-          )
-        })
-        .and_then(|value| parse_model_api(&value)),
-      api_key: first_env(&["MIDSCENE_MODEL_API_KEY", "OPENAI_API_KEY"]).or_else(|| {
-        json_config_string(
-          init_config,
-          &[
-            "apiKey",
-            "api_key",
-            "MIDSCENE_MODEL_API_KEY",
-            "OPENAI_API_KEY",
-          ],
-        )
-      }),
-      base_url: first_env(&[
-        "MIDSCENE_MODEL_BASE_URL",
-        "OPENAI_BASE_URL",
-        "OPENAI_API_BASE",
-      ])
-      .or_else(|| {
-        json_config_string(
-          init_config,
-          &[
-            "baseURL",
-            "baseUrl",
-            "base_url",
-            "MIDSCENE_MODEL_BASE_URL",
-            "OPENAI_BASE_URL",
-            "OPENAI_API_BASE",
-          ],
-        )
-      }),
-      default_headers: model_default_headers(init_config),
-      default_query: json_config_pairs(init_config, &["defaultQuery", "default_query"]),
-      family: first_env(&[
-        "MIDSCENE_MODEL_FAMILY",
-        "OPENAI_MODEL_FAMILY",
-        "MODEL_FAMILY",
-      ])
-      .or_else(|| {
-        json_config_string(
-          init_config,
-          &[
-            "family",
-            "modelFamily",
-            "model_family",
-            "MIDSCENE_MODEL_FAMILY",
-            "OPENAI_MODEL_FAMILY",
-          ],
-        )
-      }),
-      model: first_env(&["MIDSCENE_MODEL_NAME", "OPENAI_MODEL"]).or_else(|| {
-        json_config_string(
-          init_config,
-          &[
-            "model",
-            "modelName",
-            "model_name",
-            "MIDSCENE_MODEL_NAME",
-            "OPENAI_MODEL",
-          ],
-        )
-      }),
-      timeout_ms: first_env(&[
-        "MIDSCENE_MODEL_TIMEOUT",
-        "MIDSCENE_MODEL_TIMEOUT_MS",
-        "JUDGE_TIMEOUT_MS",
-        "OPENAI_TIMEOUT_MS",
-      ])
-      .and_then(|value| value.parse::<u64>().ok())
-      .or_else(|| {
-        json_config_u64(
-          init_config,
-          &[
-            "timeout",
-            "timeoutMs",
-            "timeout_ms",
-            "MIDSCENE_MODEL_TIMEOUT",
-            "MIDSCENE_MODEL_TIMEOUT_MS",
-            "JUDGE_TIMEOUT_MS",
-            "OPENAI_TIMEOUT_MS",
-          ],
-        )
-      }),
+      api: first_env(&["UI_JUDGE_API_STYLE"]).and_then(|value| parse_model_api(&value)),
+      api_key: first_env(&["UI_JUDGE_API_KEY"]),
+      base_url: first_env(&["UI_JUDGE_BASE_URL"]),
+      model: first_env(&["UI_JUDGE_MODEL"]),
+      timeout_ms: first_env(&["UI_JUDGE_TIMEOUT_MS"]).and_then(|value| value.parse::<u64>().ok()),
     }
   }
 }
 
 pub(crate) fn configured_model_name() -> String {
   ModelOptions::from_env()
-    .ok()
-    .and_then(|options| options.model)
+    .model
     .unwrap_or_else(|| DEFAULT_MODEL.to_string())
 }
 
@@ -195,10 +98,8 @@ impl fmt::Debug for ModelClient {
 
 #[derive(Debug, Error)]
 pub enum ModelError {
-  #[error("OpenAI-compatible credentials not provided: set MIDSCENE_MODEL_API_KEY or MIDSCENE_MODEL_INIT_CONFIG_JSON")]
+  #[error("OpenAI-compatible credentials not provided: set UI_JUDGE_API_KEY")]
   MissingApiKey,
-  #[error("model init config must be valid JSON: {0}")]
-  InvalidInitConfig(String),
   #[error("model HTTP client setup failed: {0}")]
   Request(#[from] reqwest::Error),
   #[error("agent SDK structured evaluation failed: {0}")]
@@ -209,7 +110,7 @@ pub enum ModelError {
   MockResponsesExhausted,
   #[error("UI_JUDGE_MODEL_RESPONSES_JSON state is unavailable")]
   MockResponsesUnavailable,
-  #[error("the /crawl model endpoint supports chat completions only; set MIDSCENE_MODEL_API=chat")]
+  #[error("the /crawl model endpoint supports chat completions only; set UI_JUDGE_API_STYLE=chat")]
   ResponsesUnsupportedForCrawl,
 }
 
@@ -226,7 +127,7 @@ impl ModelClient {
         (mock_response.is_some() || mock_responses.is_some()).then(|| "ui-judge-mock".to_string())
       })
       .ok_or(ModelError::MissingApiKey)?;
-    let api = options.api.unwrap_or(ModelApi::Chat);
+    let api = options.api.unwrap_or(ModelApi::Responses);
     let base_url = options.base_url.as_deref().unwrap_or(DEFAULT_BASE_URL);
     if api == ModelApi::Responses && uses_query_ak_auth(base_url) {
       return Err(ModelError::ResponsesUnsupportedForCrawl);
@@ -241,10 +142,7 @@ impl ModelClient {
       provider: OpenAiCompatibleProvider {
         api,
         api_key,
-        default_headers: options.default_headers,
-        default_query: options.default_query,
         endpoint,
-        family: options.family,
         http_client,
         model: options.model.unwrap_or_else(|| DEFAULT_MODEL.to_string()),
       },
@@ -318,17 +216,14 @@ impl ModelClient {
 
 /// A deliberately small OpenAI-compatible provider.
 ///
-/// UI Judge owns the wire adapter so its preserved MIDSCENE endpoint and
-/// `/crawl?ak=` authentication conventions can still feed Agent SDK's
-/// structured-output runner without depending on Midscene itself.
+/// UI Judge owns the wire adapter so OpenAI-compatible endpoints, including
+/// `/crawl?ak=` authentication conventions, can feed Agent SDK's
+/// structured-output runner.
 #[derive(Clone)]
 struct OpenAiCompatibleProvider {
   api: ModelApi,
   api_key: String,
-  default_headers: Vec<(String, String)>,
-  default_query: Vec<(String, String)>,
   endpoint: String,
-  family: Option<String>,
   http_client: HttpClient,
   model: String,
 }
@@ -339,10 +234,7 @@ impl fmt::Debug for OpenAiCompatibleProvider {
       .debug_struct("OpenAiCompatibleProvider")
       .field("api", &self.api)
       .field("api_key", &"[REDACTED]")
-      .field("default_headers", &self.default_headers.len())
-      .field("default_query", &self.default_query.len())
       .field("endpoint", &"[CONFIGURED]")
-      .field("family", &self.family)
       .field("model", &self.model)
       .finish_non_exhaustive()
   }
@@ -351,11 +243,7 @@ impl fmt::Debug for OpenAiCompatibleProvider {
 #[async_trait]
 impl LlmProvider for OpenAiCompatibleProvider {
   async fn chat(&self, request: ChatRequest) -> AnyhowResult<ChatOutcome> {
-    let include_structured_format = !uses_query_ak_auth(&self.endpoint)
-      && !self
-        .family
-        .as_deref()
-        .is_some_and(family_avoids_openai_response_format);
+    let include_structured_format = !uses_query_ak_auth(&self.endpoint);
     let mut body = match self.api {
       ModelApi::Chat => chat_request_body(&self.model, &request, include_structured_format),
       ModelApi::Responses => {
@@ -440,9 +328,6 @@ impl OpenAiCompatibleProvider {
     let mut url = reqwest::Url::parse(&self.endpoint)
       .map_err(|error| anyhow!("invalid model endpoint URL: {error}"))?;
     let mut query = url.query_pairs().into_owned().collect::<Vec<_>>();
-    for (name, value) in &self.default_query {
-      replace_query_value(&mut query, name, value);
-    }
     if query_ak_auth {
       replace_query_value(&mut query, "ak", &self.api_key);
     }
@@ -457,32 +342,11 @@ impl OpenAiCompatibleProvider {
     if !query_ak_auth {
       request = request.bearer_auth(&self.api_key);
     }
-    let mut headers = HeaderMap::new();
-    for (name, value) in &self.default_headers {
-      let name = HeaderName::from_bytes(name.as_bytes())
-        .map_err(|error| anyhow!("invalid default header name: {error}"))?;
-      let mut value = HeaderValue::from_str(value)
-        .map_err(|error| anyhow!("invalid value for default header {name}: {error}"))?;
-      value.set_sensitive(true);
-      headers.insert(name, value);
-    }
-    // Match the OpenAI client used by the previous implementation: JSON body
-    // headers are applied after defaultHeaders, so the wire content type stays
-    // application/json even when defaultHeaders contains Content-Type.
-    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-    request = request.headers(headers);
     Ok(request)
   }
 
-  fn redact_error_body(&self, mut body: String) -> String {
-    for secret in std::iter::once(self.api_key.as_str())
-      .chain(self.default_headers.iter().map(|(_, value)| value.as_str()))
-      .chain(self.default_query.iter().map(|(_, value)| value.as_str()))
-      .filter(|value| !value.is_empty())
-    {
-      body = body.replace(secret, "[REDACTED]");
-    }
-    body
+  fn redact_error_body(&self, body: String) -> String {
+    body.replace(&self.api_key, "[REDACTED]")
   }
 }
 
@@ -928,136 +792,6 @@ fn first_env(names: &[&str]) -> Option<String> {
   })
 }
 
-fn midscene_openai_init_config() -> Result<Option<Value>, ModelError> {
-  let Some(value) = first_env(&[
-    "MIDSCENE_MODEL_INIT_CONFIG_JSON",
-    "MIDSCENE_OPENAI_INIT_CONFIG_JSON",
-    "OPENAI_INIT_CONFIG_JSON",
-  ]) else {
-    return Ok(None);
-  };
-  parse_model_init_config(&value).map(Some)
-}
-
-fn parse_model_init_config(value: &str) -> Result<Value, ModelError> {
-  serde_json::from_str::<Value>(value)
-    .map_err(|error| ModelError::InvalidInitConfig(error.to_string()))
-}
-
-fn json_config_pairs(config: Option<&Value>, keys: &[&str]) -> Vec<(String, String)> {
-  find_json_object(config, keys)
-    .map(|object| {
-      object
-        .iter()
-        .filter_map(|(name, value)| json_scalar_string(value).map(|value| (name.clone(), value)))
-        .collect()
-    })
-    .unwrap_or_default()
-}
-
-fn model_default_headers(config: Option<&Value>) -> Vec<(String, String)> {
-  config_headers(
-    config,
-    first_env(&["OPENAI_ORG_ID"]),
-    first_env(&["OPENAI_PROJECT_ID"]),
-  )
-}
-
-fn config_headers(
-  config: Option<&Value>,
-  environment_organization: Option<String>,
-  environment_project: Option<String>,
-) -> Vec<(String, String)> {
-  let mut headers = json_config_pairs(config, &["defaultHeaders", "extra_headers", "extraHeaders"]);
-  for (config_key, header_name, environment_value) in [
-    (
-      "organization",
-      "OpenAI-Organization",
-      environment_organization,
-    ),
-    ("project", "OpenAI-Project", environment_project),
-  ] {
-    if headers
-      .iter()
-      .any(|(name, _)| name.eq_ignore_ascii_case(header_name))
-    {
-      continue;
-    }
-    if let Some(value) = json_config_string(config, &[config_key]).or(environment_value) {
-      headers.push((header_name.to_string(), value));
-    }
-  }
-  headers
-}
-
-fn find_json_object<'a>(value: Option<&'a Value>, keys: &[&str]) -> Option<&'a Map<String, Value>> {
-  let object = value?.as_object()?;
-  for key in keys {
-    if let Some(value) = object.get(*key).and_then(Value::as_object) {
-      return Some(value);
-    }
-  }
-  object
-    .values()
-    .filter(|value| value.is_object())
-    .find_map(|value| find_json_object(Some(value), keys))
-}
-
-fn json_scalar_string(value: &Value) -> Option<String> {
-  match value {
-    Value::String(value) => Some(value.clone()),
-    Value::Number(value) => Some(value.to_string()),
-    Value::Bool(value) => Some(value.to_string()),
-    _ => None,
-  }
-}
-
-fn json_config_string(config: Option<&Value>, keys: &[&str]) -> Option<String> {
-  find_json_string(config?, keys)
-}
-
-fn json_config_u64(config: Option<&Value>, keys: &[&str]) -> Option<u64> {
-  find_json_u64(config?, keys)
-}
-
-fn find_json_string(value: &Value, keys: &[&str]) -> Option<String> {
-  let object = value.as_object()?;
-  for key in keys {
-    if let Some(value) = object
-      .get(*key)
-      .and_then(Value::as_str)
-      .map(str::trim)
-      .filter(|value| !value.is_empty())
-    {
-      return Some(value.to_string());
-    }
-  }
-  object
-    .values()
-    .filter(|value| value.is_object())
-    .find_map(|value| find_json_string(value, keys))
-}
-
-fn find_json_u64(value: &Value, keys: &[&str]) -> Option<u64> {
-  let object = value.as_object()?;
-  for key in keys {
-    if let Some(value) = object.get(*key) {
-      if let Some(value) = value.as_u64().or_else(|| {
-        value
-          .as_str()
-          .map(str::trim)
-          .and_then(|value| value.parse::<u64>().ok())
-      }) {
-        return Some(value);
-      }
-    }
-  }
-  object
-    .values()
-    .filter(|value| value.is_object())
-    .find_map(|value| find_json_u64(value, keys))
-}
-
 fn model_endpoint(api: ModelApi, base_url: &str) -> String {
   match api {
     ModelApi::Chat => chat_endpoint(base_url),
@@ -1126,11 +860,6 @@ fn remove_path_suffix(value: &str, suffix: &str) -> String {
     Some((base, query)) => format!("{}?{query}", base.trim_end_matches(suffix)),
     None => value.trim_end_matches(suffix).to_string(),
   }
-}
-
-fn family_avoids_openai_response_format(family: &str) -> bool {
-  let family = family.trim().to_ascii_lowercase();
-  family.starts_with("anthropic") || family.starts_with("claude") || family.starts_with("gemini")
 }
 
 fn response_format_is_unsupported(body: &str) -> bool {
@@ -1322,10 +1051,7 @@ mod tests {
     let provider = OpenAiCompatibleProvider {
       api: ModelApi::Chat,
       api_key: secret.to_string(),
-      default_headers: vec![],
-      default_query: vec![],
       endpoint: format!("http://{address}/crawl"),
-      family: None,
       http_client: HttpClient::builder()
         .timeout(Duration::from_secs(1))
         .build()
@@ -1347,52 +1073,20 @@ mod tests {
   }
 
   #[test]
-  fn default_headers_and_query_replace_existing_values() {
+  fn crawl_auth_replaces_an_existing_ak_query() {
     let provider = OpenAiCompatibleProvider {
       api: ModelApi::Chat,
       api_key: "crawl-secret".to_string(),
-      default_headers: vec![
-        (
-          "authorization".to_string(),
-          "Gateway credential".to_string(),
-        ),
-        (
-          "content-type".to_string(),
-          "application/custom+json".to_string(),
-        ),
-      ],
-      default_query: vec![("api-version".to_string(), "new".to_string())],
-      endpoint: "https://example.com/v1/chat/completions?api-version=old&keep=yes".to_string(),
-      family: None,
+      endpoint: "https://example.com/crawl?api-version=old&keep=yes&ak=old".to_string(),
       http_client: HttpClient::new(),
       model: "judge-model".to_string(),
     };
 
-    let request = provider
+    let crawl_request = provider
       .request_builder(&json!({ "model": "judge-model" }))
       .expect("build request")
       .build()
       .expect("finish request");
-    let query = request.url().query_pairs().into_owned().collect::<Vec<_>>();
-    assert_eq!(
-      query,
-      vec![
-        ("keep".to_string(), "yes".to_string()),
-        ("api-version".to_string(), "new".to_string()),
-      ]
-    );
-    assert_eq!(request.headers().get_all("authorization").iter().count(), 1);
-    assert_eq!(request.headers()["authorization"], "Gateway credential");
-    assert_eq!(request.headers()["content-type"], "application/json");
-
-    let mut crawl_provider = provider;
-    crawl_provider.endpoint =
-      "https://example.com/crawl?api-version=old&keep=yes&ak=old".to_string();
-    let crawl_request = crawl_provider
-      .request_builder(&json!({ "model": "judge-model" }))
-      .expect("build crawl request")
-      .build()
-      .expect("finish crawl request");
     let crawl_query = crawl_request
       .url()
       .query_pairs()
@@ -1401,11 +1095,12 @@ mod tests {
     assert_eq!(
       crawl_query,
       vec![
+        ("api-version".to_string(), "old".to_string()),
         ("keep".to_string(), "yes".to_string()),
-        ("api-version".to_string(), "new".to_string()),
         ("ak".to_string(), "crawl-secret".to_string()),
       ]
     );
+    assert!(!crawl_request.headers().contains_key("authorization"));
   }
 
   #[test]
@@ -1431,100 +1126,14 @@ mod tests {
   }
 
   #[test]
-  fn extracts_all_midscene_init_config_fields() {
-    let config = json!({
-      "openai": {
-        "apiKey": "key-from-json",
-        "baseURL": "https://example.com/v1",
-        "defaultHeaders": {
-          "x-gateway-key": "gateway-key",
-          "x-tenant-id": 42
-        },
-        "defaultQuery": { "api-version": "2026-07-01" },
-        "organization": "org-lynx",
-        "project": "proj-ui-judge",
-        "modelName": "judge-model",
-        "modelFamily": "gemini",
-        "apiStyle": "responses",
-        "timeoutMs": 30_000
-      }
-    });
-    assert_eq!(
-      json_config_string(Some(&config), &["apiKey"]).as_deref(),
-      Some("key-from-json")
-    );
-    assert_eq!(
-      json_config_string(Some(&config), &["baseURL"]).as_deref(),
-      Some("https://example.com/v1")
-    );
-    assert_eq!(
-      json_config_string(Some(&config), &["modelName"]).as_deref(),
-      Some("judge-model")
-    );
-    assert_eq!(
-      json_config_string(Some(&config), &["modelFamily"]).as_deref(),
-      Some("gemini")
-    );
-    assert_eq!(
-      json_config_string(Some(&config), &["apiStyle"]).and_then(|value| parse_model_api(&value)),
-      Some(ModelApi::Responses)
-    );
-    assert_eq!(json_config_u64(Some(&config), &["timeoutMs"]), Some(30_000));
-    assert_eq!(
-      json_config_pairs(Some(&config), &["defaultHeaders"]),
-      vec![
-        ("x-gateway-key".to_string(), "gateway-key".to_string()),
-        ("x-tenant-id".to_string(), "42".to_string()),
-      ]
-    );
-    assert_eq!(
-      json_config_pairs(Some(&config), &["defaultQuery"]),
-      vec![("api-version".to_string(), "2026-07-01".to_string())]
-    );
-    assert!(config_headers(Some(&config), None, None)
-      .contains(&("OpenAI-Organization".to_string(), "org-lynx".to_string())));
-    assert!(config_headers(Some(&config), None, None)
-      .contains(&("OpenAI-Project".to_string(), "proj-ui-judge".to_string())));
-  }
+  fn defaults_to_the_responses_api() {
+    let client = ModelClient::new(ModelOptions {
+      api_key: Some("ui-judge-test".to_string()),
+      ..ModelOptions::default()
+    })
+    .expect("construct model client");
 
-  #[test]
-  fn maps_openai_organization_and_project_environment_fallbacks() {
-    let headers = config_headers(
-      None,
-      Some("org-from-env".to_string()),
-      Some("project-from-env".to_string()),
-    );
-    assert!(headers.contains(&(
-      "OpenAI-Organization".to_string(),
-      "org-from-env".to_string()
-    )));
-    assert!(headers.contains(&("OpenAI-Project".to_string(), "project-from-env".to_string())));
-
-    let config = json!({
-      "organization": "org-from-config",
-      "defaultHeaders": { "OpenAI-Project": "project-from-header" }
-    });
-    let headers = config_headers(
-      Some(&config),
-      Some("org-from-env".to_string()),
-      Some("project-from-env".to_string()),
-    );
-    assert!(headers.contains(&(
-      "OpenAI-Organization".to_string(),
-      "org-from-config".to_string()
-    )));
-    assert!(headers.contains(&(
-      "OpenAI-Project".to_string(),
-      "project-from-header".to_string()
-    )));
-  }
-
-  #[test]
-  fn rejects_malformed_model_init_config() {
-    assert!(matches!(
-      parse_model_init_config("{not-json"),
-      Err(ModelError::InvalidInitConfig(_))
-    ));
+    assert_eq!(client.provider.api, ModelApi::Responses);
   }
 
   #[test]

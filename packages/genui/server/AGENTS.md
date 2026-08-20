@@ -18,32 +18,97 @@ For multi-instance deployments, place a shared rate limiter (e.g. an API
 gateway or Redis-backed limiter) in front of this server when global rate
 limits are required.
 
-## Required Environment Variables
+## Required Model Configuration
 
-Before starting this server, explicitly provide these three environment
-variables:
-
-```bash
-export OPENAI_API_KEY="..."
-export OPENAI_BASE_URL="..."
-export OPENAI_MODEL="..."
-```
-
-- `OPENAI_API_KEY` is required by the OpenAI provider.
-- `OPENAI_BASE_URL` selects the OpenAI-compatible API endpoint.
-- `OPENAI_MODEL` selects the model used by the A2UI agent.
-
-Image components are resolved after A2UI validation. To enable query-matched
-stock images, provide a Pexels API key:
+Before starting this server, provide the provider credentials, endpoint, and
+model list through one JSON environment variable:
 
 ```bash
-export PEXELS_API_KEY="..."
+export GENUI_MODEL_CONFIG_JSON='{
+  "GPT-5.4": {
+    "model": "gpt-5.4",
+    "apiKey": "...",
+    "baseURL": "https://api.openai.com/v1",
+    "api": "responses",
+    "default": true
+  }
+}'
 ```
 
-When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
-back to a deterministic Picsum URL.
+- Each top-level key is the public model name returned to the playground.
+- Each value requires `model`, `apiKey`, and `baseURL`, so models may use
+  independent upstream ids, credentials, and endpoints.
+- `api` is optional and accepts `chat` or `responses`.
+- `default: true` is optional. When omitted, the first entry is the default.
+- `reasoningEffort` is optional per model.
+
+`GET /models` exposes only the top-level names and default selection. It must
+never expose `model`, `apiKey`, or `baseURL` to the playground.
+
+The A2UI agent generates image assets through a server-side Volcengine Ark
+tool. The Ark credential, image-generation model name, and base URL are
+required:
+
+```bash
+export IMG_GEN_ARK_API_KEY="..."
+export IMG_GEN_ARK_IMAGE_MODEL="doubao-seedream-..."
+export IMG_GEN_ARK_IMAGE_BASE_URL="https://ark.cn-beijing.volces.com/api/v3"
+```
+
+`IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS` optionally overrides the 120-second
+request timeout and must be an integer from 1 through 600000. The agent may
+make at most four image-generation calls across the initial response and all
+repair attempts for one request. Keep the credential, model name, and endpoint
+server-only. The text model configured through `GENUI_MODEL_CONFIG_JSON` must
+support tool/function calling. Only user/host-provided image sources and URLs
+returned by the request's tool scope may reach the renderer. There is no
+stock-image or placeholder-image fallback when generation fails.
 
 The hosting runtime must provide these variables before starting the server.
+
+To let the A2UI agent retrieve current or externally verifiable public-web
+information, configure the optional server-side Doubao Search credential:
+
+```bash
+export SEARCH_INFINITY_API_KEY="..."
+```
+
+When the key is present, the server conditionally registers a `web_search`
+tool. The tool calls the Doubao Search Custom web API, which supports both
+subscription-plan and post-paid API keys, with a fixed maximum of five text
+results and never returns search images. It may be called at most three times
+per HTTP request across the initial generation and all repair attempts.
+`SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
+request timeout and must be an integer from 1 through 60000. Keep the key
+server-only and do not include a `Bearer` prefix. Missing configuration leaves
+search disabled without affecting the rest of the A2UI server; `GET
+/a2ui/health` reports this through `webSearchReady`.
+
+URLs supplied by the user or returned by the current request's search scope
+may be used with `openUrl`. The server rejects other model-generated targets,
+and the streaming parser keeps components with untrusted links in a loading
+state until final validation. Bench runs explicitly disable web search so
+their output stays deterministic.
+
+To publish short, shareable A2UI and OpenUI preview URLs, configure the
+public-read Volcengine TOS bucket and server-only write credentials. All four
+variables are required; do not add fallback bucket or region values:
+
+```bash
+export TOS_ACCESS_KEY="..."
+export TOS_SECRET_KEY="..."
+export TOS_BUCKET="genui"
+export TOS_REGION="cn-beijing"
+```
+
+Use a dedicated IAM identity with `tos:PutObject` access only to the configured
+`a2ui`, `openui`, and `mcp-apps` prefixes. Preview objects use
+`<method>/preview/<uuid>/<file>`; shared conversations use
+`<method>/conversation/<uuid>/messages.json`. The server signs writes with
+these credentials; the browser reads the resulting public object URL without
+credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
+`TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`, and
+`TOS_SECURITY_TOKEN`.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:

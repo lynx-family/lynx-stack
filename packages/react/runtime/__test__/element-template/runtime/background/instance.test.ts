@@ -100,10 +100,11 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
-  it('emits generic typed element create with standard attribute slots and no runtime options', () => {
+  it('owns empty attributes in the generic typed attribute slot', () => {
     const typed = new BackgroundTypedElementTemplateInstance('x-host');
-    typed.setAttribute('attributeSlots', ['title']);
     globalCommitContext.ops = [];
+
+    expect(typed.attributeSlots).toEqual([null]);
 
     typed.emitCreate();
 
@@ -115,11 +116,58 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       null,
     ]);
+  });
+
+  it('prepares generic typed attributes through the slot-0 spread plan', () => {
+    const handler = vi.fn();
+    const ref = vi.fn();
+    const typed = new BackgroundTypedElementTemplateInstance('x-host');
+    typed.setAttribute('attributes', {
+      bindtap: handler,
+      className: 'card',
+      ref,
+    });
+    flushPendingRefs();
+    globalCommitContext.ops = [];
+
+    typed.emitCreate();
+
+    expect(typed.attributeSlots).toEqual([{
+      bindtap: `${typed.instanceId}:0:bindtap`,
+      class: 'card',
+      ref: `${typed.instanceId}-0`,
+    }]);
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(
+      `${typed.instanceId}:0:bindtap`,
+    )).toBe(handler);
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+      selector: `[ref=${typed.instanceId}-0]`,
+    }));
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTypedElement,
+      typed.instanceId,
+      'x-host',
+      {
+        bindtap: `${typed.instanceId}:0:bindtap`,
+        class: 'card',
+        ref: `${typed.instanceId}-0`,
+      },
+      null,
+      null,
+    ]);
 
     globalCommitContext.ops = [];
     typed.emitCreate();
 
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('retains inherited instance metadata on typed hosts', () => {
+    const typed = new BackgroundTypedElementTemplateInstance('x-host');
+
+    typed.setAttribute('__listItemPlatformInfo', { 'item-key': 'typed' });
+
+    expect(typed.getListItemPlatformInfo()).toEqual({ 'item-key': 'typed' });
   });
 
   it('reports illegal typed element handle ids on create', () => {

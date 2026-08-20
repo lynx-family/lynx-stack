@@ -6,6 +6,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import type { AgentConfig } from '@mastra/core/agent';
 
 import { isOfficialOpenAIBaseURL } from './openai-utils';
+import { resolveModelConfig } from '../service/common/model-config.js';
 import type { ChatMessage } from '../service/common/types';
 
 export interface OpenAIProviderOptions {
@@ -14,8 +15,6 @@ export interface OpenAIProviderOptions {
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
 }
-
-const DEFAULT_MODEL = 'gpt-4o-mini';
 
 interface LLMProvider {
   provider: ReturnType<typeof createOpenAI>;
@@ -33,13 +32,6 @@ type CompatChatMessage =
 
 interface CompatRequestBody {
   messages?: CompatChatMessage[];
-}
-
-interface OpenAIEnv {
-  OPENAI_API_KEY?: string | undefined;
-  OPENAI_API_STYLE?: 'chat' | 'responses' | undefined;
-  OPENAI_BASE_URL?: string | undefined;
-  OPENAI_MODEL?: string | undefined;
 }
 
 function createCompatFetch(): typeof fetch {
@@ -71,20 +63,16 @@ function createCompatFetch(): typeof fetch {
 export function createLLMProvider(
   opts: OpenAIProviderOptions = {},
 ): LLMProvider {
-  const env = process.env as OpenAIEnv;
-  const apiKey = opts.apiKey ?? env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      'OpenAI credentials not provided: set OPENAI_API_KEY env var or pass apiKey',
-    );
-  }
-  const baseURL = opts.baseURL ?? env.OPENAI_BASE_URL
-    ?? 'https://api.openai.com/v1';
-  const model = opts.model ?? env.OPENAI_MODEL ?? DEFAULT_MODEL;
+  const resolved = resolveModelConfig(opts.model);
+  const apiKey = opts.apiKey ?? resolved.config.apiKey;
+  const baseURL = opts.baseURL ?? resolved.config.baseURL;
+  const model = opts.model && opts.model !== resolved.name
+    ? opts.model
+    : resolved.config.model;
 
   const isOfficial = isOfficialOpenAIBaseURL(baseURL);
   const api = opts.api
-    ?? env.OPENAI_API_STYLE
+    ?? resolved.config.api
     ?? (isOfficial ? 'responses' : 'chat');
 
   const providerSettings = {

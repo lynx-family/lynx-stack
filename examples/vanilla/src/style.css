@@ -1,0 +1,49 @@
+:root {
+  background-color: #101114;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.content {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.counter {
+  margin-top: 16px;
+  color: #b7bbc8;
+  font-size: 18px;
+}
+
+.button {
+  width: 180px;
+  height: 52px;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #4f6ef7;
+  border-radius: 12px;
+}
+
+.button:active {
+  opacity: 0.8;
+}
+
+.button-label {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+}

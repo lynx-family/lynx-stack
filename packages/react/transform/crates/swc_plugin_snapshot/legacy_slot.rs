@@ -26,6 +26,7 @@ use swc_core::{
 
 use swc_plugins_shared::{
   css::get_string_inline_style_from_literal,
+  defines::{collect_define, DefineKind},
   jsx_helpers::{
     jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr, jsx_has_dynamic_key,
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
@@ -36,8 +37,8 @@ use swc_plugins_shared::{
 };
 
 use super::{
-  attr_name::AttrName, bool_jsx_attr, bool_to_expr, i32_to_expr, JSXTransformer, UISourceMapRecord,
-  NO_FLATTEN_ATTRIBUTES, WRAPPER_NODE, WRAPPER_NODE_2,
+  attr_name::AttrName, bool_jsx_attr, bool_to_expr, build_snapshot_registration, i32_to_expr,
+  JSXTransformer, UISourceMapRecord, NO_FLATTEN_ATTRIBUTES, WRAPPER_NODE, WRAPPER_NODE_2,
 };
 
 // ---------------------------------------------------------------------------
@@ -1233,6 +1234,8 @@ where
     }))
   };
 
+  let collecting = t.defines_collector.is_some();
+
   let mut dynamic_part_extractor = DynamicPartExtractor::new(
     creator_runtime_expr.clone(),
     wrap_dynamic_part.dynamic_part_count,
@@ -1248,6 +1251,7 @@ where
   let mut snapshot_attrs: Vec<JSXAttrOrSpread> = vec![];
   let mut snapshot_children: Vec<JSXElementChild> = vec![];
   let mut snapshot_dynamic_part_def: Vec<Option<ExprOrSpread>> = vec![];
+  let mut snapshot_dynamic_part_def_mt: Vec<Option<ExprOrSpread>> = vec![];
   let mut snapshot_refs_and_spread_index: Vec<Option<ExprOrSpread>> = vec![];
   let mut snapshot_slot_def: Vec<Option<ExprOrSpread>> = vec![];
   let mut list_item_platform_info_index: Option<i32> = None;
@@ -1279,14 +1283,19 @@ where
             Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
           ));
         }
-        snapshot_dynamic_part_def.push(Some(ExprOrSpread {
+        let updater_index = snapshot_dynamic_part_def.len() as i32;
+        let updater = |target: TransformTarget| ExprOrSpread {
           spread: None,
           expr: Box::new(dynamic_part.to_updater(
             creator_runtime_expr.clone(),
             target,
-            snapshot_dynamic_part_def.len() as i32,
+            updater_index,
           )),
-        }));
+        };
+        if collecting {
+          snapshot_dynamic_part_def_mt.push(Some(updater(TransformTarget::LEPUS)));
+        }
+        snapshot_dynamic_part_def.push(Some(updater(target)));
       }
       DynamicPart::Slot(_, _) => {}
       DynamicPart::Children(_, _) => {}
@@ -1418,12 +1427,19 @@ where
     }
   };
 
+  let snapshot_creator_fn = dynamic_part_extractor.snapshot_creator.unwrap();
+  let snapshot_creator_mt = collecting.then(|| {
+    Expr::Fn(FnExpr {
+      ident: None,
+      function: Box::new(snapshot_creator_fn.clone()),
+    })
+  });
   let snapshot_creator = if target == TransformTarget::JS {
     Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))
   } else {
     Expr::Fn(FnExpr {
       ident: None,
-      function: Box::new(dynamic_part_extractor.snapshot_creator.unwrap()),
+      function: Box::new(snapshot_creator_fn),
     })
   };
 
@@ -1457,51 +1473,42 @@ where
     }),
   };
 
-  let snapshot_create_call = if t.dev_creator_param {
-    quote!(
-        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id, $creator_runtime) => $creator_runtime_ref.createSnapshot(
-             $snapshot_id,
-             $snapshot_creator,
-             $snapshot_dynamic_parts_def,
-             $slot,
-             $css_id,
-             $entry_name,
-             $snapshot_refs_and_spread_index,
-             true
-        )"# as Expr,
-        runtime_id: Expr = t.runtime_id.clone(),
-        creator_runtime = creator_runtime_id.clone(),
-        creator_runtime_ref: Expr = creator_runtime_expr.clone(),
-        snapshot_id = snapshot_id.clone(),
-        entry_name: Expr = entry_name,
-        snapshot_creator: Expr = snapshot_creator,
-        snapshot_dynamic_parts_def: Expr = snapshot_dynamic_parts_def,
-        slot: Expr = slot_expr,
-        css_id: Expr = css_id,
-        snapshot_refs_and_spread_index: Expr = snapshot_refs_and_spread_index,
-    )
-  } else {
-    quote!(
-        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
-             $snapshot_id,
-             $snapshot_creator,
-             $snapshot_dynamic_parts_def,
-             $slot,
-             $css_id,
-             $entry_name,
-             $snapshot_refs_and_spread_index,
-             true
-        )"# as Expr,
-        runtime_id: Expr = t.runtime_id.clone(),
-        snapshot_id = snapshot_id.clone(),
-        entry_name: Expr = entry_name,
-        snapshot_creator: Expr = snapshot_creator,
-        snapshot_dynamic_parts_def: Expr = snapshot_dynamic_parts_def,
-        slot: Expr = slot_expr,
-        css_id: Expr = css_id,
-        snapshot_refs_and_spread_index: Expr = snapshot_refs_and_spread_index,
-    )
+  let snapshot_dynamic_parts_def_mt: Expr = match snapshot_dynamic_part_def_mt.len() {
+    0 => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
+    _ => Expr::Array(ArrayLit {
+      span: DUMMY_SP,
+      elems: snapshot_dynamic_part_def_mt,
+    }),
   };
+
+  let snapshot_create_call_mt = snapshot_creator_mt.map(|snapshot_creator_mt| {
+    build_snapshot_registration(
+      t.dev_creator_param,
+      t.runtime_id.clone(),
+      creator_runtime_expr.clone(),
+      creator_runtime_id.clone(),
+      snapshot_id.clone(),
+      snapshot_creator_mt,
+      snapshot_dynamic_parts_def_mt,
+      slot_expr.clone(),
+      css_id.clone(),
+      entry_name.clone(),
+      snapshot_refs_and_spread_index.clone(),
+    )
+  });
+  let snapshot_create_call = build_snapshot_registration(
+    t.dev_creator_param,
+    t.runtime_id.clone(),
+    creator_runtime_expr,
+    creator_runtime_id,
+    snapshot_id.clone(),
+    snapshot_creator,
+    snapshot_dynamic_parts_def,
+    slot_expr,
+    css_id,
+    entry_name,
+    snapshot_refs_and_spread_index,
+  );
 
   let mut entry_snapshot_uid = quote!("$snapshot_uid" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
   if matches!(t.cfg.is_dynamic_component, Some(true)) {
@@ -1519,6 +1526,21 @@ where
           as Stmt,
       snapshot_create_call: Expr = snapshot_create_call,
   ));
+
+  if let Some(snapshot_create_call_mt) = snapshot_create_call_mt {
+    collect_define(
+      &t.defines_collector,
+      DefineKind::Snapshot,
+      snapshot_uid,
+      vec![
+        entry_snapshot_uid_def.clone(),
+        ModuleItem::Stmt(quote!(
+          r#"$snapshot_create_call"# as Stmt,
+          snapshot_create_call: Expr = snapshot_create_call_mt,
+        )),
+      ],
+    );
+  }
 
   t.current_snapshot_id = Some(snapshot_id.clone());
   t.current_snapshot_defs.push(entry_snapshot_uid_def);

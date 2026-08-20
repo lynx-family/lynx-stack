@@ -16,8 +16,10 @@ data, or incremental edits.
 ## Program And Expressions
 
 - Write one `identifier = Expression` statement per line.
-- In a complete program, define `root = Stack(...)` first. Forward references
-  are allowed. An edit-mode patch may omit `root`.
+- In a complete program, assign `root` to a call of the active Library's
+  explicit root override first, for example `root = Shell(...)`. When the host
+  does not override it, use the Library's default `root = Stack(...)`. Forward
+  references are allowed. An edit-mode patch may omit `root`.
 - Use double-quoted strings, numbers, booleans, `null`, arrays, objects,
   component calls, and ordinary references.
 - Access fields and indices with `data.rows`, `rows[0]`, and
@@ -71,14 +73,33 @@ weather = Query("get_weather", { city: $city }, { city: "Seattle", temp: 62, ale
 ```
 
 Arguments are tool name, arguments object, immediate default result, and an
-optional refresh interval in seconds. Use an ordinary identifier such as
-`weather`, not `$weather`.
+optional refresh interval in seconds. After the response becomes stable, the
+default participates in the first synchronous render before tool revalidation
+resolves. Use an ordinary identifier such as `weather`, not `$weather`.
 
 - Match defaults to the real result shape and keep them compact.
 - Read results with field access, index access, array pluck, or built-ins.
 - Changing a referenced `$variable` re-runs the query.
 - Use `@Run(weather)` for manual refresh.
 - Do not turn tool results into manually copied static component statements.
+
+The host may supply prefetched results through `initialQueryResults`. This does
+not change the generated DSL, but each map key is the Query assignment name
+(statement ID), not the tool name:
+
+```openui
+openOrders = Query("list_orders", { status: "open" }, { rows: [] })
+```
+
+If the host supplies an `openOrders` prefetch key, preserve that exact assignment
+name. Give separate calls to the same tool distinct assignment names. A
+prefetched value, including `null`, `false`, or `0`, takes precedence over the
+DSL default in the first synchronous render. With a tool provider, the Query
+revalidates after commit and replaces the fallback when the request successfully
+resolves; without one, the prefetched result can remain an immutable snapshot.
+Always keep a compact, shape-correct DSL default for hosts or Query IDs without
+a prefetched value. Never emit `initialQueryResults` host configuration in the
+OpenUI program.
 
 ## Mutation
 
@@ -130,14 +151,17 @@ Do not extract `Card([Text(task.title)])` into another statement because
 
 For complete programs, use this order:
 
-1. `root = Stack(...)`
+1. `root = ConfiguredRoot(...)`, replacing `ConfiguredRoot` with the active
+   Library's actual root component name
 2. `$state` declarations
 3. `Query` and `Mutation` declarations
 4. structural component declarations
 5. leaf content
 
 The parser resolves forward references as statements stream in. Keep the root
-first so the shell appears immediately.
+first so the shell appears immediately. Query defaults and prefetched results
+join the synchronous render after the response becomes stable, not while the
+host still marks it as streaming.
 
 Return a complete program unless the caller explicitly says the host enables
 edit mode or merges patches with `mergeStatements`. In edit mode, output only

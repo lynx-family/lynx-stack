@@ -17,6 +17,8 @@ import type {
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
+import type { EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
+import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, TYPED_ELEMENT_ATTR_PLAN } from '../runtime/template/typed-attributes.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
   globalCommitContext.ops.push(...items);
@@ -143,6 +145,10 @@ export class BackgroundElementTemplateInstance {
 
   private needsMainThreadCreate(): boolean {
     return this.instanceId !== 0 && !this.isMaterializedOnMainThread;
+  }
+
+  protected getAttributeSlotPlan(): EtAttrPlan | undefined {
+    return undefined;
   }
 
   private markSubtreeDetachedFromMainThread(): void {
@@ -362,7 +368,13 @@ export class BackgroundElementTemplateInstance {
 
   queueRefCleanupForSubtree(): void {
     if (this.rawAttributeSlots) {
-      queueRefAttributeSlotUpdates(this.type, this.instanceId, this.rawAttributeSlots);
+      queueRefAttributeSlotUpdates(
+        this.type,
+        this.instanceId,
+        this.rawAttributeSlots,
+        undefined,
+        this.getAttributeSlotPlan(),
+      );
     }
 
     let child = this.firstChild;
@@ -394,10 +406,17 @@ export class BackgroundElementTemplateInstance {
       {
         previousPreparedSlots: this.attributeSlots,
         previousRawSlots: this.rawAttributeSlots,
+        attributePlan: this.getAttributeSlotPlan(),
       },
     );
     if (options?.publishRefEffects ?? true) {
-      queueRefAttributeSlotUpdates(this.type, this.instanceId, undefined, this.rawAttributeSlots);
+      queueRefAttributeSlotUpdates(
+        this.type,
+        this.instanceId,
+        undefined,
+        this.rawAttributeSlots,
+        this.getAttributeSlotPlan(),
+      );
     }
   }
 
@@ -434,10 +453,17 @@ export class BackgroundElementTemplateInstance {
         {
           previousPreparedSlots: previousSlots,
           previousRawSlots,
+          attributePlan: this.getAttributeSlotPlan(),
         },
       );
       if (shouldQueueRefEffects) {
-        queueRefAttributeSlotUpdates(this.type, this.instanceId, previousRawSlots, value);
+        queueRefAttributeSlotUpdates(
+          this.type,
+          this.instanceId,
+          previousRawSlots,
+          value,
+          this.getAttributeSlotPlan(),
+        );
       }
       this.rawAttributeSlots = nextSlots === value ? undefined : value;
       const maxLength = Math.max(previousSlots.length, nextSlots.length);
@@ -498,16 +524,10 @@ export class BackgroundElementTemplateInstance {
   }
 }
 
-function toTypedAttributesCommand(value: unknown): TypedElementAttributesCommand | null {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
-    return null;
-  }
-  return value as TypedElementAttributesCommand;
-}
-
 export class BackgroundTypedElementTemplateInstance extends BackgroundElementTemplateInstance {
   constructor(type: string) {
     super(type);
+    this.attributeSlots = [null];
   }
 
   override emitCreate(): void {
@@ -535,25 +555,15 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
       super.setAttribute(key, value);
       return;
     }
-    const previousValue = this.attributeSlots[0];
-    const nextValue = toTypedAttributesCommand(value);
-    this.attributeSlots = [nextValue];
-    if (
-      isElementTemplateHydrated()
-      && this.isMaterializedOnMainThread
-      && !isDirectOrDeepEqual(previousValue, nextValue)
-    ) {
-      pushOp(
-        ElementTemplateUpdateOps.setAttribute,
-        this.instanceId,
-        0,
-        nextValue,
-      );
-    }
+    super.setAttribute('attributeSlots', [value]);
   }
 
   protected getTypedAttributesForCreate(): TypedElementAttributesCommand | null {
-    return toTypedAttributesCommand(this.attributeSlots[0]);
+    return this.attributeSlots[TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX] as TypedElementAttributesCommand | null;
+  }
+
+  protected override getAttributeSlotPlan(): EtAttrPlan {
+    return TYPED_ELEMENT_ATTR_PLAN;
   }
 
   protected getElementSlotsForCreate(): ElementTemplateHandleSlotsCommand | null {

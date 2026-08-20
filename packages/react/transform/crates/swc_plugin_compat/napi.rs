@@ -311,6 +311,16 @@ pub struct CompatVisitorConfig {
   pub simplify_ctor_like_react_lynx_2: bool,
 
   /// @public
+  /// Whether to transform legacy event attribute names on Lynx elements.
+  ///
+  /// When enabled, legacy event attributes such as `onClick` and
+  /// `onClickCatch` are transformed to `bindtap` and `catchtap`.
+  /// Disable this when another transform owns event attribute-name conversion.
+  ///
+  /// @defaultValue `true`
+  pub transform_legacy_event_attribute_names: Option<bool>,
+
+  /// @public
   /// Regular expression used to remove component attributes
   ///
   /// @deprecated It's recommended to use `background-only`.
@@ -395,6 +405,7 @@ impl Default for CompatVisitorConfig {
       additional_component_attributes: vec![],
       add_component_element: NapiEither::A(false),
       simplify_ctor_like_react_lynx_2: false,
+      transform_legacy_event_attribute_names: None,
       remove_component_attr_regex: None,
       disable_deprecated_warning: false,
       dark_mode: None,
@@ -412,6 +423,7 @@ impl From<CompatVisitorConfig> for CoreConfig {
       additional_component_attributes: val.additional_component_attributes,
       add_component_element: val.add_component_element.into(),
       simplify_ctor_like_react_lynx_2: val.simplify_ctor_like_react_lynx_2,
+      transform_legacy_event_attribute_names: val.transform_legacy_event_attribute_names,
       remove_component_attr_regex: val.remove_component_attr_regex,
       disable_deprecated_warning: val.disable_deprecated_warning,
       dark_mode: convert_dark_mode_option(val.dark_mode),
@@ -429,6 +441,7 @@ impl From<CoreConfig> for CompatVisitorConfig {
       additional_component_attributes: val.additional_component_attributes,
       add_component_element: val.add_component_element.into(),
       simplify_ctor_like_react_lynx_2: val.simplify_ctor_like_react_lynx_2,
+      transform_legacy_event_attribute_names: val.transform_legacy_event_attribute_names,
       remove_component_attr_regex: val.remove_component_attr_regex,
       disable_deprecated_warning: val.disable_deprecated_warning,
       dark_mode: convert_dark_mode_option_back(val.dark_mode),

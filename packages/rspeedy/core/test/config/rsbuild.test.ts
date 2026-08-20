@@ -72,6 +72,8 @@ describe('Config - toRsBuildConfig', () => {
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
+          "assetPrefix": undefined,
+          "client": undefined,
           "hmr": true,
           "lazyCompilation": false,
           "liveReload": true,
@@ -525,13 +527,16 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.output?.filename).toHaveProperty('css', 'style.css')
     })
 
-    test('transform output.filename string is not forwarded', () => {
+    test('transform output.filename string', () => {
       const rsbuildConfig = toRsbuildConfig({
         output: {
           filename: 'main.bundle',
         },
       })
-      expect(rsbuildConfig.output?.filename).toBeUndefined()
+      expect(rsbuildConfig.output?.filename).toStrictEqual({
+        bundle: 'main.bundle',
+        template: 'main.bundle',
+      })
     })
 
     test('transform output.inlineScripts', () => {
@@ -777,7 +782,7 @@ describe('Config - toRsBuildConfig', () => {
   describe('Server', () => {
     test('transform default server.host', () => {
       const rsbuildConfig = toRsbuildConfig({})
-      expect(rsbuildConfig.server?.host).toBe('0.0.0.0')
+      expect(rsbuildConfig.server?.host).toBeUndefined()
     })
 
     test('transform server.host', () => {

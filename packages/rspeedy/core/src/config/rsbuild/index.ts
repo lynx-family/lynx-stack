@@ -6,6 +6,7 @@ import type { ConsoleType, RsbuildConfig, SourceMap } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { toRsbuildEntry } from './entry.js'
+import { getFilename } from '../defaults.js'
 import type { Config } from '../index.js'
 
 // This is the default value from lynx-speedy.
@@ -17,6 +18,11 @@ export function toRsbuildConfig(
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
     dev: {
+      assetPrefix: config.dev?.assetPrefix,
+
+      // TODO: move the Lynx-only `websocketTransport` to a Lynx-owned option.
+      client: config.dev?.client as NonNullable<RsbuildConfig['dev']>['client'],
+
       hmr: config.dev?.hmr ?? true,
       lazyCompilation: false,
       liveReload: config.dev?.liveReload ?? true,
@@ -44,9 +50,11 @@ export function toRsbuildConfig(
 
       distPath: config.output?.distPath,
 
-      filename: typeof config.output?.filename === 'object'
-        ? config.output.filename
-        : undefined,
+      // The string form carries the same `bundle`/`template` meaning, so it is
+      // resolved here instead of being dropped.
+      filename: typeof config.output?.filename === 'string'
+        ? getFilename(config.output.filename)
+        : config.output?.filename,
 
       filenameHash: config.output?.filenameHash,
 
@@ -100,8 +108,8 @@ export function toRsbuildConfig(
       cors: config.server?.cors,
 
       headers: config.server?.headers,
-      // rsbuild default value is `localhost`.
-      host: config.server?.host ?? '0.0.0.0',
+
+      host: config.server?.host,
 
       port: config.server?.port,
 
@@ -128,8 +136,6 @@ export function toRsbuildConfig(
       cssExtract: config.tools?.cssExtract,
 
       cssLoader: config.tools?.cssLoader,
-
-      htmlPlugin: false,
 
       rspack: config.tools?.rspack,
 

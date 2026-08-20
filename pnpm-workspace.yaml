@@ -33,11 +33,14 @@ packages:
 enablePrePostScripts: false
 engineStrict: true
 hoistWorkspacePackages: true
-ignorePatchFailures: false
 optimisticRepeatInstall: true
 publicHoistPattern: []
 resolutionMode: "lowest-direct"
 strictPeerDependencies: true
+
+# Treat workspace topology and filter mistakes as hard errors.
+disallowWorkspaceCycles: true
+failIfNoMatch: true
 
 # Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
 minimumReleaseAge: 4320
@@ -53,15 +56,13 @@ minimumReleaseAgeExclude:
   - "@rsbuild/*"
   - "@rstest/*"
   - "@rstackjs/create-toolkit"
-  # Renovate security update: turbo@2.9.14
-  - turbo@2.9.14
-  # Renovate security update: dompurify@3.4.0
-  - dompurify@3.4.0
-# npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
-# (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
-# `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
-# is available and skipped (with a warning) when it is not.
-minimumReleaseAgeStrict: false
+  # Changesets v3 packages were released as one coordinated set.
+  - "@changesets/*"
+minimumReleaseAgeExcludePrune: true
+# Some registry metadata omits the `time` field. Skip only those packages;
+# otherwise fail rather than falling back to a release younger than three days.
+minimumReleaseAgeIgnoreMissingTime: true
+minimumReleaseAgeStrict: true
 
 peerDependencyRules:
   allowedVersions:
@@ -125,7 +126,7 @@ catalogs:
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0-beta.1"
+    "@rslib/core": "1.0.0-beta.3"
 
   # Rspack monorepo packages
   rspack:
@@ -152,10 +153,10 @@ overrides:
   # @lynx-js/internal-preact@11.x snapshot via the catalog before landing.
   preact: "https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d"
 
-  "@rspack/core": "$@rspack/core"
-  "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
-  "@rsdoctor/types>@rspack/core": "$@rspack/core"
+  "@rspack/core": "catalog:rspack"
+  "@rsbuild/core>@rspack/core": "catalog:rspack"
+  "@rsdoctor/rspack-plugin>@rspack/core": "catalog:rspack"
+  "@rsdoctor/types>@rspack/core": "catalog:rspack"
 
 packageExtensions:
   # Typia's internal packages import TypeScript without declaring it. Keep
@@ -187,4 +188,7 @@ allowBuilds:
   dprint: true
   esbuild: true
   sharp: true
+  # The published package already includes its generated JS implementation.
+  # Its postinstall only rebuilds that file when it is absent.
+  tos-crc64-js: false
   unrs-resolver: false

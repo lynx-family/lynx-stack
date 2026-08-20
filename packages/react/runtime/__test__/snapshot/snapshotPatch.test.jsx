@@ -990,6 +990,84 @@ describe('DEV_ONLY_addSnapshot', () => {
     `);
   });
 
+  it('with lazy bundle loaded before hydration', () => {
+    const uniqID1 = 'first-screen-lazy-0';
+    deinitGlobalSnapshotPatch();
+    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+      globalThis.createSnapshot(
+        uniqID1,
+        /* v8 ignore start */
+        () => {
+          const pageId = 0;
+          const el = __CreateView(pageId);
+          return [el];
+        },
+        /* v8 ignore stop */
+        null,
+        null,
+        undefined,
+        globDynamicComponentEntry,
+        null,
+        true,
+      );
+    };
+    initGlobalSnapshotPatch();
+
+    const oldDynamicComponentEntry = global.globDynamicComponentEntry;
+    global.globDynamicComponentEntry = 'https://example.com/lazy-bundle.js';
+    new SnapshotInstance(uniqID1);
+    global.globDynamicComponentEntry = oldDynamicComponentEntry;
+
+    expect(takeGlobalSnapshotPatch()).toMatchInlineSnapshot(`[]`);
+  });
+
+  it('with a creator that cannot be re-evaluated', () => {
+    const uniqID1 = 'first-screen-lazy-1';
+    snapshotCreatorMap[uniqID1] = ((uniqID1) => {
+      globalThis.createSnapshot(uniqID1, () => [__CreateView(0)], null, null, undefined, undefined, null, true);
+    }).bind(null);
+
+    expect(snapshotCreatorMap[uniqID1].toString()).toContain('[native code]');
+    expect(() =>
+      snapshotPatchApply([
+        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+        uniqID1,
+        'https://example.com/lazy-bundle.js',
+      ])
+    ).not.toThrow();
+  });
+
+  it('with a creator whose rewrite is not evaluatable', () => {
+    const uniqID1 = 'first-screen-lazy-2';
+    const holder = {
+      globDynamicComponentEntry() {
+        return 1;
+      },
+    };
+    snapshotCreatorMap[uniqID1] = holder.globDynamicComponentEntry;
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() =>
+      snapshotPatchApply([
+        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+        uniqID1,
+        'https://example.com/lazy-bundle.js',
+      ])
+    ).not.toThrow();
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it('with a creator that is missing', () => {
+    expect(() =>
+      snapshotPatchApply([
+        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+        'first-screen-lazy-missing',
+        'https://example.com/lazy-bundle.js',
+      ])
+    ).not.toThrow();
+  });
+
   it('with update', () => {
     const uniqID1 = 'with-update-0';
     // We have to use `snapshotCreatorMap[uniqID1] =` so that it can be created after `initGlobalSnapshotPatch`

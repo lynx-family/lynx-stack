@@ -12,7 +12,7 @@ import type {
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
+import type { ExposedAPI, Filename } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -62,6 +62,7 @@ export function applyEntry(
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
+    const entryPairs: Array<{ mainThread: string, background: string }> = []
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -75,6 +76,9 @@ export function applyEntry(
       // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
+
+    const bundleFilenameConfig = api.getRsbuildConfig('original').output
+      ?.filename as Filename | undefined
 
     const isRspeedy = api.context.callerName === 'rspeedy'
     if (isRspeedy) {
@@ -92,11 +96,8 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const bundleFilename =
-          typeof rspeedyConfig?.output?.filename === 'object'
-            ? rspeedyConfig.output.filename.bundle
-              ?? rspeedyConfig.output.filename.template
-            : rspeedyConfig?.output?.filename
+        const bundleFilename = bundleFilenameConfig?.bundle
+          ?? bundleFilenameConfig?.template
 
         let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.
@@ -158,6 +159,11 @@ export function applyEntry(
         const backgroundEntry = entryName
 
         mainThreadChunks.push(mainThreadName)
+
+        entryPairs.push({
+          mainThread: mainThreadEntry,
+          background: backgroundEntry,
+        })
 
         chain
           .entry(mainThreadEntry)
@@ -313,6 +319,7 @@ export function applyEntry(
         globalPropsMode,
         enableSSR,
         mainThreadChunks,
+        entryPairs,
         extractStr,
         experimental_isLazyBundle,
         experimental_useElementTemplate:
