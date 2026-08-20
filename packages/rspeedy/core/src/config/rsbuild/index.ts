@@ -134,8 +134,6 @@ export function toRsbuildConfig(
 
       cssLoader: config.tools?.cssLoader,
 
-      htmlPlugin: false,
-
       rspack: config.tools?.rspack,
 
       swc: config.tools?.swc,

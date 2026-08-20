@@ -58,6 +58,13 @@ describe('pluginOutput', () => {
     expect(config.output?.environment?.const).toBe(false)
   })
 
+  test('does not emit HTML', async () => {
+    const rsbuild = await createStubRsbuild()
+    await rsbuild.unwrapConfig()
+
+    expect(rsbuild.getNormalizedConfig().tools?.htmlPlugin).toBe(false)
+  })
+
   test('user can opt out of const/let lowering', async () => {
     const rsbuild = await createStubRsbuild({
       tools: {
