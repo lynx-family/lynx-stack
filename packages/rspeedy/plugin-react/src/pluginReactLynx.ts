@@ -24,6 +24,7 @@ import type {
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { pluginAutoLynx } from './autoLynx.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
@@ -427,6 +428,7 @@ export function pluginReactLynx(
   })
 
   return [
+    pluginAutoLynx(),
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
       elementTemplate: resolvedOptions.experimental_useElementTemplate,
