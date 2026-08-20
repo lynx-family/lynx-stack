@@ -4,14 +4,14 @@
 
 import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { takeWorkletRefInitValuePatch } from './workletRefPool.js';
-import type { workletRefInitValuePatch } from './workletRefPool.js';
+import { takeMainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
+import type { MainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 function updateMTRefInitValue({ data }: { data: string }): void {
   // This update ignores reloadVersion check.
   // MainThreadRefs created before reloadTemplate may still be referenced by user in some cases after reloadTemplate.
-  const patch = JSON.parse(data) as workletRefInitValuePatch;
+  const patch = JSON.parse(data) as MainThreadRefInitValuePatch;
   updateWorkletRefInitValueChanges(patch);
 }
 
@@ -20,7 +20,7 @@ export function injectUpdateMTRefInitValue(): void {
 }
 
 export function sendMTRefInitValueToMainThread(): void {
-  const patch = takeWorkletRefInitValuePatch();
+  const patch = takeMainThreadRefInitValuePatch();
   if (patch.length === 0) {
     return;
   }
