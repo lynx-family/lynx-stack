@@ -45,7 +45,7 @@ describe('renderMainThread contract', () => {
             { kind: 'slot', key: 'id', attrSlotIndex: 0 },
           ],
           children: [
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 0 },
           ],
         },
       },
@@ -54,7 +54,7 @@ describe('renderMainThread contract', () => {
     resetTemplateId();
     elementTemplateRegistry.clear();
     setRoot({ __jsx: { type: 'test-root' } });
-    setupPage({ type: 'page', children: [] } as unknown as ElementRef);
+    setupPage({ type: 'page', children: [] } as unknown as ElementTemplateHandle);
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
   });
@@ -127,7 +127,7 @@ describe('renderMainThread contract', () => {
       },
     });
 
-    const slotChildren = rootSerialized['elementSlots'] as unknown[][];
+    const slotChildren = rootSerialized['childSlots'] as unknown[][];
     expect(slotChildren[0]?.[0]).toMatchObject({
       templateKey: BUILTIN_RAW_TEXT_TEMPLATE_ID,
       attributeSlots: ['hello'],

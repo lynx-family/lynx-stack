@@ -89,6 +89,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
       .calls;
     expect(flushCalls.length).toBeGreaterThan(0);
+    expect(flushCalls[0]?.[0]).toBeUndefined();
     expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions });
     expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::patch', {
       flowId: flowIds[0],
@@ -121,6 +122,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
       .calls;
     expect(flushCalls.length).toBeGreaterThan(0);
+    expect(flushCalls[0]?.[0]).toBeUndefined();
   });
 
   it('ignores update payloads from an older reload version', () => {
@@ -158,6 +160,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
       .calls;
     expect(flushCalls.length).toBeGreaterThan(0);
+    expect(flushCalls[0]?.[0]).toBeUndefined();
     expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions });
     expect(lynx.performance._markTiming.mock.calls).toEqual([
       ['pipelineID', 'mtsRenderStart'],
@@ -183,6 +186,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
       .calls;
     expect(flushCalls.length).toBeGreaterThan(0);
+    expect(flushCalls[0]?.[0]).toBeUndefined();
     expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions });
   });
 });

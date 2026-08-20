@@ -18,7 +18,7 @@ import type {
   SerializableValue,
   SerializedCompiledNode,
   SerializedEtNode,
-  SerializedTypedNode,
+  SerializedTypedListNode,
 } from '../protocol/types.js';
 import { __etAttrPlanMap, adaptMTEventAttrSlot } from '../runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
@@ -30,8 +30,6 @@ const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
 const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
 const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
 const UPDATE_LIST_INFO_ATTR = 'update-list-info';
-
-type SerializedTypedListNode = SerializedTypedNode & { tag: 'list' };
 
 export function hydrateRootChildrenIntoContext(
   serializedChildren: SerializedEtNode[],
@@ -47,6 +45,10 @@ export function hydrateRootChildrenIntoContext(
 
 function isSerializedCompiledNode(serialized: SerializedEtNode): serialized is SerializedCompiledNode {
   return typeof (serialized as { templateKey?: unknown }).templateKey === 'string';
+}
+
+function isSerializedTypedListNode(serialized: SerializedEtNode): serialized is SerializedTypedListNode {
+  return !isSerializedCompiledNode(serialized) && serialized.tag === 'list';
 }
 
 interface HydrateChildListDiff {
@@ -133,7 +135,7 @@ function hydrateInstance(
   if (isSerializedCompiledNode(serialized)) {
     return hydrateCompiledInstance(serialized, instance);
   }
-  if (__DEV__ && serialized.tag !== 'list') {
+  if (__DEV__ && !isSerializedTypedListNode(serialized)) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
@@ -149,7 +151,7 @@ function hydrateCompiledInstance(
   serialized: SerializedCompiledNode,
   instance: BackgroundElementTemplateInstance,
 ): boolean {
-  const handleId = serialized.uid as number;
+  const handleId = serialized.uid;
   if (!bindHydrationHandleId(instance, handleId, serialized.templateKey)) {
     return false;
   }
@@ -160,15 +162,15 @@ function hydrateCompiledInstance(
     return true;
   }
 
-  const serializedElementSlots = serialized.elementSlots ?? [];
-  const backgroundElementSlots = instance.elementSlots;
+  const serializedChildSlots = serialized.childSlots ?? [];
+  const backgroundChildSlots = instance.childSlots;
   // Snapshot hydrates dynamic children through slot-filtered lists. Keeping ET
   // scoped the same way means a cross-slot candidate is a source remove plus a
   // target create/insert, while same-slot reorder can still stay move-like.
-  const slotCount = Math.max(serializedElementSlots.length, backgroundElementSlots.length);
+  const slotCount = Math.max(serializedChildSlots.length, backgroundChildSlots.length);
   for (let slotId = 0; slotId < slotCount; slotId += 1) {
-    const serializedSlot = serializedElementSlots[slotId];
-    const backgroundSlot = backgroundElementSlots[slotId];
+    const serializedSlot = serializedChildSlots[slotId];
+    const backgroundSlot = backgroundChildSlots[slotId];
     if (!serializedSlot && !backgroundSlot) {
       continue;
     }
@@ -201,15 +203,15 @@ function normalizeSerializedBundleUrl(bundleUrl: string | undefined): string | n
 }
 
 function getSerializedTypedListChildren(serialized: SerializedTypedListNode): SerializedEtNode[] {
-  return (__DEV__ ? serialized.options?.['listChildren'] : serialized.options!['listChildren']) as SerializedEtNode[];
+  return (__DEV__ ? serialized.options?.listChildren : serialized.options!.listChildren)!;
 }
 
 function hydrateListInstance(
   serialized: SerializedTypedListNode,
   instance: BackgroundListElementTemplateInstance,
 ): boolean {
-  if (__DEV__ && (serialized.elementSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support elementSlots.'));
+  if (__DEV__ && (serialized.childSlots?.length ?? 0) > 0) {
+    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
     return false;
   }
 
@@ -220,7 +222,7 @@ function hydrateListInstance(
   }
 
   const backgroundChildren = instance.childNodes;
-  const handleId = serialized.uid as number;
+  const handleId = serialized.uid;
   if (!bindHydrationHandleId(instance, handleId, serialized.tag)) {
     return false;
   }
@@ -246,7 +248,7 @@ function hydrateListInstance(
 }
 
 function getStableSerializedListAttributes(
-  attributes: SerializedTypedNode['attributes'],
+  attributes: SerializedTypedListNode['attributes'],
 ): SerializableValue {
   if (attributes == null) {
     return null;
@@ -324,7 +326,7 @@ function hydrateChildListIntoContext(
       movesWaitingForInsertionPoint.set(move.toIndex, move.instance);
       insertOrMovePatchesWaitingForInsertionPoint += 1;
     } else {
-      const beforeChildId = currentSerializedChild ? currentSerializedChild.uid as number : 0;
+      const beforeChildId = currentSerializedChild ? currentSerializedChild.uid : 0;
       const movedChild = movesWaitingForInsertionPoint.get(newIndex);
       if (movedChild) {
         keepCurrentSerializedChild = true;
@@ -397,7 +399,7 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
   handles.push(handleId);
 
   if (isSerializedCompiledNode(serialized)) {
-    for (const slotChildren of serialized.elementSlots ?? []) {
+    for (const slotChildren of serialized.childSlots ?? []) {
       if (!slotChildren) {
         continue;
       }
@@ -410,17 +412,18 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
     return true;
   }
 
-  if (__DEV__ && serialized.tag !== 'list') {
+  if (__DEV__ && !isSerializedTypedListNode(serialized)) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
     return false;
   }
-  if (__DEV__ && (serialized.elementSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support elementSlots.'));
+  const serializedList = serialized as SerializedTypedListNode;
+  if (__DEV__ && (serializedList.childSlots?.length ?? 0) > 0) {
+    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
     return false;
   }
-  const listChildren = getSerializedTypedListChildren(serialized as SerializedTypedListNode);
+  const listChildren = getSerializedTypedListChildren(serializedList);
   if (__DEV__ && !Array.isArray(listChildren)) {
     lynx.reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
     return false;
@@ -434,7 +437,7 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
 }
 
 function getRemovableSerializedHandleId(serialized: SerializedEtNode): number | null {
-  const handleId = serialized.uid as number;
+  const handleId = serialized.uid;
   if (__DEV__ && (typeof handleId !== 'number' || !Number.isInteger(handleId) || handleId === 0)) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate remove received invalid uid ${String(handleId)}.`),
@@ -463,7 +466,7 @@ function emitHydrateTypedListReconciliation(
       }
       itemId = removedSubtreeHandleIds[0]!;
     } else {
-      itemId = serialized.uid as number;
+      itemId = serialized.uid;
     }
     globalCommitContext.ops.push(
       ElementTemplateUpdateOps.removeTypedListItem,
@@ -484,9 +487,7 @@ function emitHydrateTypedListReconciliation(
   for (let index = 0; index < insertedIndexes.length; index += 1) {
     const insertedIndex = insertedIndexes[index]!;
     const child = backgroundChildren[insertedIndex]!;
-    if (listDiff.insertions[insertedIndex]) {
-      emitCreateSubtree(child);
-    }
+    emitCreateSubtree(child);
     globalCommitContext.ops.push(
       ElementTemplateUpdateOps.insertTypedListItem,
       instance.instanceId,

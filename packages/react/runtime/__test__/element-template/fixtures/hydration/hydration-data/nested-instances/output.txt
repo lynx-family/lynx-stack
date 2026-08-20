@@ -1,7 +1,7 @@
 Array [
   Object {
     "attributeSlots": Array [],
-    "elementSlots": Array [],
+    "childSlots": Array [],
     "templateKey": "_et_845cad5012d7",
     "uid": -1,
   },

@@ -15,7 +15,6 @@ import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
-import { __page } from '../runtime/page/page.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
 
 let listener:
@@ -101,7 +100,7 @@ export function installElementTemplatePatchListener(): void {
       }
     }
 
-    __FlushElementTree(__page, flushOptions);
+    __FlushElementTree(undefined, flushOptions);
 
     if (shouldProfilePatch) {
       lynx.performance.profileEnd();

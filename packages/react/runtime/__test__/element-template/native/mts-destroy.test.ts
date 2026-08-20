@@ -91,7 +91,7 @@ describe('mts-destroy', () => {
   });
 
   it('clears the element template registry on destruction', () => {
-    const registryRef = {} as ElementRef;
+    const registryRef = {} as ElementTemplateHandle;
     elementTemplateRegistry.set(-1, registryRef);
     __etAttrPlanMap._et_destroy = [0, adaptMTEventAttrSlot];
     initializeMainThreadDynamicAttrSlots(-1, '_et_destroy', [{
@@ -128,8 +128,9 @@ describe('mts-destroy', () => {
   });
 
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {
-    const listRef = { __isNativeRef: true, id: 'list', __mockNativeId: 100 } as unknown as ElementRef;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 101 } as unknown as ElementRef;
+    const listRef = { __isNativeRef: true, id: 'list', __mockNativeId: 100 } as unknown as ElementTemplateHandle;
+    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 101 } as unknown as ElementTemplateHandle;
+    const listElement = { __isNativeRef: true, id: 'list-element' } as unknown as FiberElement;
     const insertNode = vi.fn();
     const removeNode = vi.fn();
     const flush = vi.fn();
@@ -150,8 +151,8 @@ describe('mts-destroy', () => {
 
     onMtsDestruction();
 
-    expect(componentAtIndex(listRef, 7, 0, 91, false)).toBe(-1);
-    enqueueComponent(listRef, 7, 101);
+    expect(componentAtIndex(listElement, 7, 0, 91, false)).toBe(-1);
+    enqueueComponent(listElement, 7, 101);
     expect(insertNode).not.toHaveBeenCalled();
     expect(removeNode).not.toHaveBeenCalled();
     expect(flush).not.toHaveBeenCalled();

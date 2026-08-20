@@ -9,14 +9,14 @@ Object {
     Object {
       "attributeSlots": Array [],
       "bundleUrl": null,
-      "elementSlots": Array [],
+      "childSlots": Array [],
       "handleId": 7,
       "op": "createTemplate",
       "templateKey": "_et_11dbef641d2c",
     },
     Object {
       "childId": 7,
-      "elementSlotIndex": 0,
+      "childSlotIndex": 0,
       "op": "insertNode",
       "referenceId": 0,
       "targetId": -4,

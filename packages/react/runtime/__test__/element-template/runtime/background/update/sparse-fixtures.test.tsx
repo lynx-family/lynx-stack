@@ -63,7 +63,7 @@ async function loadFixture(): Promise<{
   return loadCompiledFixturePair<SparseTemplateModule>(path.join(FIXTURE_DIR, 'index.tsx'));
 }
 
-describe('Sparse element slot updates', () => {
+describe('Sparse child slot updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
@@ -113,7 +113,7 @@ describe('Sparse element slot updates', () => {
     globalThis.__ALOG__ = false;
   });
 
-  it('emits a create patch with sparse element slots when mounting post-hydration', async () => {
+  it('emits a create patch with sparse child slots when mounting post-hydration', async () => {
     const { backgroundModule, mainModule } = await loadFixture();
 
     renderOnBackground(backgroundModule, { showCard: false });
@@ -142,7 +142,7 @@ describe('Sparse element slot updates', () => {
     envManager.switchToBackground();
   });
 
-  it('walks sparse element slots when alog prints the background tree during hydration', async () => {
+  it('walks sparse child slots when alog prints the background tree during hydration', async () => {
     globalThis.__ALOG__ = true;
     const alogSpy = vi.fn();
     (console as { alog?: (message: string) => void }).alog = alogSpy;
@@ -156,8 +156,8 @@ describe('Sparse element slot updates', () => {
       message.includes('BackgroundElementTemplate tree before hydration')
     );
     expect(treeLog).toBeDefined();
-    // SparseCard's root template lists only `elementSlots[1]:` because slot 0
+    // SparseCard's root template lists only `childSlots[1]:` because slot 0
     // (the header view's conditional child) is the hole the print loop must skip.
-    expect(treeLog!).toMatch(/elementSlots\[1\]:/);
+    expect(treeLog!).toMatch(/childSlots\[1\]:/);
   });
 });

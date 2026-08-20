@@ -36,8 +36,8 @@ export function run() {
           kind: 'element',
           type: 'view',
           children: [
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 1 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 0 },
+            { kind: 'childSlot', type: 'slot', elementSlotIndex: 1 },
           ],
         },
       },

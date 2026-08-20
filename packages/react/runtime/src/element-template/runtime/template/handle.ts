@@ -9,9 +9,10 @@ import {
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
 import { elementTemplateTypeTag } from '../../protocol/template-type.js';
 import type {
-  RuntimeElementSlots,
+  RuntimeChildSlots,
   RuntimeOptions,
   RuntimeTypedElementAttributes,
+  RuntimeTypedListOptions,
   SerializableValue,
 } from '../../protocol/types.js';
 
@@ -28,13 +29,13 @@ export function createElementTemplateWithReservedHandle(
   templateKey: string,
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: RuntimeElementSlots | null | undefined,
-): ElementRef {
+  childSlots: RuntimeChildSlots | null | undefined,
+): ElementTemplateHandle {
   const nativeRef = __CreateElementTemplate(
     templateKey,
     bundleUrl,
     attributeSlots,
-    elementSlots,
+    childSlots,
     handleId,
   );
   if (nativeRef) {
@@ -52,13 +53,13 @@ export function createTypedElementTemplateWithReservedHandle(
   handleId: number,
   type: string,
   attributes: RuntimeTypedElementAttributes | null | undefined,
-  elementSlots: RuntimeElementSlots | null | undefined,
-  options: RuntimeOptions | null | undefined,
-): ElementRef {
+  childSlots: RuntimeChildSlots | null | undefined,
+  options: RuntimeOptions | RuntimeTypedListOptions | null | undefined,
+): ElementTemplateHandle {
   const nativeRef = __CreateTypedElementTemplate(
     type,
     attributes,
-    elementSlots,
+    childSlots,
     handleId,
     options,
   );

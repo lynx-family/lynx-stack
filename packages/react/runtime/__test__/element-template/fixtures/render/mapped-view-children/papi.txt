@@ -4,7 +4,7 @@
     "page",
     null,
     null,
-    "0",
+    0,
     null
   ],
   [
@@ -19,7 +19,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_602071c91d92",
+    "_et_80daa5907c0f",
     null,
     [
       "A"
@@ -50,7 +50,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_602071c91d92",
+    "_et_80daa5907c0f",
     null,
     [
       "B"
@@ -81,7 +81,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_602071c91d92",
+    "_et_80daa5907c0f",
     null,
     [
       "C"
@@ -102,7 +102,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_d7c09654e316",
+    "_et_955a06fee137",
     null,
     null,
     [
@@ -136,7 +136,7 @@
               ]
             }
           ],
-          "templateId": "_et_602071c91d92"
+          "templateId": "_et_80daa5907c0f"
         },
         {
           "tag": "view",
@@ -167,7 +167,7 @@
               ]
             }
           ],
-          "templateId": "_et_602071c91d92"
+          "templateId": "_et_80daa5907c0f"
         },
         {
           "tag": "view",
@@ -198,7 +198,7 @@
               ]
             }
           ],
-          "templateId": "_et_602071c91d92"
+          "templateId": "_et_80daa5907c0f"
         }
       ]
     ],
@@ -208,7 +208,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_d7c09654e316 />",
+    "<_et_955a06fee137 />",
     null
   ]
 ]

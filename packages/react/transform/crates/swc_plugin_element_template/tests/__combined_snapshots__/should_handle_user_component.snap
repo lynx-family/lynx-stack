@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_b2f62f2ab913 = `${globDynamicComponentEntry}:${\"_et_b2f62f2ab913\"}`;\nconst _et_d7c09654e316 = `${globDynamicComponentEntry}:${\"_et_d7c09654e316\"}`;\n<_et_d7c09654e316 $0={<Component id={1}>\n        <_et_b2f62f2ab913/>\n      </Component>}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_b2f62f2ab913 = `${globDynamicComponentEntry}:${\"_et_b2f62f2ab913\"}`;\nconst _et_955a06fee137 = `${globDynamicComponentEntry}:${\"_et_955a06fee137\"}`;\n<_et_955a06fee137 $0={<Component id={1}>\n        <_et_b2f62f2ab913/>\n      </Component>}/>;\n",
   "templates": [
     {
       "template_id": "_et_b2f62f2ab913",
@@ -21,14 +21,14 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
       }
     },
     {
-      "template_id": "_et_d7c09654e316",
+      "template_id": "_et_955a06fee137",
       "template": {
         "kind": "element",
         "type": "view",
         "attributesArray": [],
         "children": [
           {
-            "kind": "elementSlot",
+            "kind": "childSlot",
             "type": "slot",
             "elementSlotIndex": 0.0
           }

@@ -4,7 +4,7 @@
     "page",
     null,
     null,
-    "0",
+    0,
     null
   ],
   [
@@ -29,7 +29,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_3a121f15a890",
+    "_et_b2bb4db3b1ed",
     null,
     [
       "-3:0:",
@@ -64,7 +64,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_3a121f15a890 />",
+    "<_et_b2bb4db3b1ed />",
     null
   ]
 ]
