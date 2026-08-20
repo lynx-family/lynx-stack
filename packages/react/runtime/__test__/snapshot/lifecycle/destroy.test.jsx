@@ -1,3 +1,4 @@
+import { act } from 'preact/test-utils';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 describe('Destroy', () => {
@@ -48,9 +49,10 @@ describe('Destroy', () => {
       caught.push(e);
     };
 
-    expect(() => lynx.getApp().callDestroyLifetimeFun()).not.toThrow();
+    // act() drains the deferred cleanups synchronously; the throwing cleanup
+    // is routed to options._catchError inside the flush.
+    expect(() => act(() => lynx.getApp().callDestroyLifetimeFun())).not.toThrow();
 
-    await new Promise(resolve => setTimeout(resolve, 150));
     options[CATCH_ERROR] = prevCatchError;
 
     expect(caught).toEqual(['???']);
