@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act } from 'preact/test-utils';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
@@ -128,6 +129,14 @@ describe('ElementTemplate commit hook', () => {
   });
 
   afterEach(() => {
+    // Unmount inside act() while the stubbed globals are still installed, so
+    // Preact 11's deferred passive-effect cleanups run against the real test
+    // doubles instead of leaking past teardown. Destroy runs on the
+    // background thread.
+    envManager.switchToBackground();
+    act(() => {
+      globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
+    });
     globalThis.__ALOG__ = true;
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
@@ -265,6 +274,13 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
+      // Unmount inside act() before un-stubbing getJSModule, so the effect
+      // cleanups remove their listeners through the stub they registered on
+      // (Preact 11 defers passive cleanups; act() drains them).
+      envManager.switchToBackground();
+      act(() => {
+        globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
+      });
       dataChange.restore();
     }
   });
@@ -303,6 +319,13 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
+      // Unmount inside act() before un-stubbing getJSModule, so the effect
+      // cleanups remove their listeners through the stub they registered on
+      // (Preact 11 defers passive cleanups; act() drains them).
+      envManager.switchToBackground();
+      act(() => {
+        globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
+      });
       dataChange.restore();
     }
   });
@@ -325,6 +348,13 @@ describe('ElementTemplate commit hook', () => {
       expect(onChanged).toHaveBeenCalledTimes(1);
       expect(onChanged).toHaveBeenCalledWith({ msg: 'after' });
     } finally {
+      // Unmount inside act() before un-stubbing getJSModule, so the effect
+      // cleanups remove their listeners through the stub they registered on
+      // (Preact 11 defers passive cleanups; act() drains them).
+      envManager.switchToBackground();
+      act(() => {
+        globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
+      });
       dataChange.restore();
     }
   });
@@ -355,6 +385,13 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
+      // Unmount inside act() before un-stubbing getJSModule, so the effect
+      // cleanups remove their listeners through the stub they registered on
+      // (Preact 11 defers passive cleanups; act() drains them).
+      envManager.switchToBackground();
+      act(() => {
+        globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
+      });
       dataChange.restore();
     }
   });
@@ -400,6 +437,13 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
+      // Unmount inside act() before un-stubbing getJSModule, so the effect
+      // cleanups remove their listeners through the stub they registered on
+      // (Preact 11 defers passive cleanups; act() drains them).
+      envManager.switchToBackground();
+      act(() => {
+        globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
+      });
       dataChange.restore();
     }
   });

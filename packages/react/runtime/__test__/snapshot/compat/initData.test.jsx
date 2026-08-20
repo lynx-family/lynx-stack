@@ -1,4 +1,5 @@
 import { Component, render } from 'preact';
+import { act } from 'preact/test-utils';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { setupBackgroundDocument } from '../../../src/document';
@@ -65,10 +66,11 @@ describe('initData', () => {
         "key1": "value1",
       }
     `);
-    render(null, scratch);
-    // Preact 11 defers passive-effect cleanups of unmounted components to the
-    // after-paint flush instead of running them synchronously on unmount.
-    await new Promise(resolve => setTimeout(resolve, 150));
+    // act() drains Preact 11's deferred passive-effect cleanups of the
+    // unmounted components before returning.
+    act(() => {
+      render(null, scratch);
+    });
     expect(lynx.getJSModule('GlobalEventEmitter').listeners['onDataChanged'].length).toMatchInlineSnapshot(`0`);
   });
 });
