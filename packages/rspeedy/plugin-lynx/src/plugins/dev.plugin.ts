@@ -20,6 +20,9 @@ import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 const DEFAULT_IPV4_SERVER_HOST = '0.0.0.0'
 const DEFAULT_IPV6_SERVER_HOST = '::'
 
+/** Entry name of the route that opens the web bundle in the browser preview. */
+const WEB_PREVIEW_ENTRY_NAME = '∟ Preview'
+
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
 
 interface BundleFilenameContext {
@@ -83,10 +86,19 @@ export function pluginDev(): RsbuildPlugin {
           )
         ) {
           for (const entryName of Object.keys(environmentContext.entry)) {
+            const bundleName = resolveName(entryName, environmentName)
             routes.push({
               entryName,
-              pathname: `/${resolveName(entryName, environmentName)}`,
+              pathname: `/${bundleName}`,
             })
+            if (environmentName === 'web') {
+              routes.push({
+                entryName: WEB_PREVIEW_ENTRY_NAME,
+                pathname: `/__web_preview?casename=${
+                  encodeURIComponent(bundleName)
+                }`,
+              })
+            }
           }
         }
       }
@@ -213,12 +225,24 @@ export function pluginDev(): RsbuildPlugin {
                 const assetPrefix = currentConfig.dev?.assetPrefix
                 const hostname = currentConfig.dev?.client?.host
                   ?? formatHostname(currentConfig.server?.host)
-                const finalUrls: { label: string, url: string }[] = []
                 const baseForUrls = (
                   typeof assetPrefix === 'string'
                     ? assetPrefix
                     : `http://${hostname}:<port>/`
                 ).replaceAll('<port>', String(param.port))
+
+                // Rsbuild renders one line per (url, route) pair as
+                // `url + route.pathname`. Whether the bundle routes are
+                // already in place depends on when Rsbuild calls this: the
+                // dev server prints before `onAfterStartDevServer` runs, the
+                // preview server prints after `onAfterStartPreviewServer`.
+                // Resolve the entry path here only when nothing else will
+                // append it, otherwise it lands in the URL twice.
+                if (param.routes.length > 0) {
+                  return [{ label: 'Lynx', url: baseForUrls }]
+                }
+
+                const finalUrls: { label: string, url: string }[] = []
                 for (const entry of Object.keys(config.source?.entry ?? {})) {
                   for (const environmentName of environmentNames) {
                     const pathname = resolveName(entry, environmentName)
@@ -228,7 +252,7 @@ export function pluginDev(): RsbuildPlugin {
                     })
                     if (environmentName === 'web') {
                       finalUrls.push({
-                        label: `∟ Preview`,
+                        label: WEB_PREVIEW_ENTRY_NAME,
                         url: new URL(
                           `/__web_preview?casename=${
                             encodeURIComponent(pathname)

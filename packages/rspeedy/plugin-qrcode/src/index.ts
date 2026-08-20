@@ -129,6 +129,12 @@ export function pluginQRCode(
     pre: ['lynx:rsbuild:api'],
     setup(api) {
       if (fullscreen) {
+        // The bundle URL is either resolved by `server.printUrls` or composed
+        // from a route, depending on whether the routes are in place when
+        // Rsbuild prints. Cover both, each guarded so the variant is only
+        // added once.
+        api.onAfterStartDevServer(appendFullscreenRoutes)
+        api.onAfterStartPreviewServer(appendFullscreenRoutes)
         api.modifyRsbuildConfig({
           order: 'post',
           handler: (config, { mergeRsbuildConfig }) => {
@@ -221,6 +227,9 @@ type PrintUrlsFn = Extract<
  * Wrap a `server.printUrls` function so that each `Lynx`-labelled URL is
  * followed by an `∟ Fullscreen` entry with `?fullscreen=true`.
  *
+ * Skipped once routes exist, because the bundle path then comes from a route
+ * and {@link appendFullscreenRoutes} contributes the variant instead.
+ *
  * @internal
  */
 export function wrapPrintUrlsWithFullscreen(
@@ -228,6 +237,9 @@ export function wrapPrintUrlsWithFullscreen(
 ): PrintUrlsFn {
   return (params) => {
     const urls = prev(params) ?? []
+    if (params.routes.length > 0) {
+      return urls
+    }
     const out: typeof urls = []
     for (const entry of urls) {
       out.push(entry)
@@ -239,6 +251,30 @@ export function wrapPrintUrlsWithFullscreen(
       }
     }
     return out
+  }
+}
+
+/**
+ * Append an `∟ Fullscreen` route after every Lynx bundle route, so the dev and
+ * preview servers print a `?fullscreen=true` variant under each bundle URL.
+ *
+ * @internal
+ */
+export function appendFullscreenRoutes(
+  { routes, environments }: {
+    routes: { entryName: string, pathname: string }[]
+    environments: Record<string, EnvironmentContext>
+  },
+): void {
+  const lynxEntries = new Set(Object.keys(environments['lynx']?.entry ?? {}))
+  for (const route of [...routes]) {
+    if (!lynxEntries.has(route.entryName)) {
+      continue
+    }
+    routes.push({
+      entryName: '∟ Fullscreen',
+      pathname: appendFullscreenParam(route.pathname),
+    })
   }
 }
 

@@ -694,11 +694,20 @@ describe('Plugins - Dev', () => {
 
     let printedUrls: undefined | (string | { url: string, label?: string })[] =
       undefined
+    let capturedPrintUrls:
+      | undefined
+      | ((param: {
+        urls: string[]
+        port: number
+        routes: { entryName: string, pathname: string }[]
+        protocol: string
+      }) => (string | { url: string, label?: string })[] | null | undefined)
 
     rsbuild.modifyRsbuildConfig({
       handler: (config, { mergeRsbuildConfig }) => {
         if (typeof config.server?.printUrls === 'function') {
           const originalPrintUrls = config.server.printUrls
+          capturedPrintUrls = originalPrintUrls as typeof capturedPrintUrls
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (...args) => {
@@ -718,7 +727,18 @@ describe('Plugins - Dev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toContainEqual({
+    expect(printedUrls).toBeDefined()
+
+    // With no routes in place nothing else appends the entry path, so
+    // `printUrls` resolves the bundle URL itself.
+    expect(
+      capturedPrintUrls?.({
+        urls: [],
+        port: 8080,
+        routes: [],
+        protocol: 'http',
+      }),
+    ).toContainEqual({
       'label': 'Lynx',
       'url': 'http://example.com:8080/main.lynx.bundle',
     })
@@ -741,22 +761,20 @@ describe('Plugins - Dev', () => {
       },
     })
 
-    let printedUrls: undefined | (string | { url: string, label?: string })[] =
-      undefined
+    let capturedPrintUrls:
+      | undefined
+      | ((param: {
+        urls: string[]
+        port: number
+        routes: { entryName: string, pathname: string }[]
+        protocol: string
+      }) => (string | { url: string, label?: string })[] | null | undefined)
 
     rsbuild.modifyRsbuildConfig({
-      handler: (config, { mergeRsbuildConfig }) => {
+      handler: (config) => {
         if (typeof config.server?.printUrls === 'function') {
-          const originalPrintUrls = config.server.printUrls
-          return mergeRsbuildConfig(config, {
-            server: {
-              printUrls: (...args) => {
-                const result = originalPrintUrls(...args)
-                printedUrls = result ?? undefined
-                return result
-              },
-            },
-          })
+          capturedPrintUrls = config.server
+            .printUrls as typeof capturedPrintUrls
         }
         return config
       },
@@ -767,12 +785,19 @@ describe('Plugins - Dev', () => {
 
     await server.waitDevCompileDone()
 
-    expect(printedUrls).toContainEqual({
+    const resolved = capturedPrintUrls?.({
+      urls: [],
+      port: 8080,
+      routes: [],
+      protocol: 'http',
+    })
+
+    expect(resolved).toContainEqual({
       'label': 'Web',
       'url': 'http://example.com:8080/main.web.bundle',
     })
 
-    expect(printedUrls).toContainEqual({
+    expect(resolved).toContainEqual({
       'label': '∟ Preview',
       'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
     })
