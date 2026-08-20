@@ -1,23 +1,16 @@
 use std::io::Cursor;
-use std::sync::{mpsc, Arc, Mutex, OnceLock};
+use std::sync::{Arc, OnceLock};
 
-use tokio::sync::{oneshot, OwnedSemaphorePermit, Semaphore};
+use rayon::{ThreadPool, ThreadPoolBuilder};
+use tokio::sync::{oneshot, Semaphore};
 
 use crate::{Error, Result};
 
 const DEFAULT_MAX_ENCODER_THREADS: usize = 4;
 const JOBS_PER_THREAD: usize = 2;
 
-struct EncodeJob {
-  width: usize,
-  height: usize,
-  rgba: Arc<[u8]>,
-  result: oneshot::Sender<std::result::Result<Vec<u8>, String>>,
-  _permit: OwnedSemaphorePermit,
-}
-
 struct PngEncoderPool {
-  sender: mpsc::Sender<EncodeJob>,
+  workers: ThreadPool,
   permits: Arc<Semaphore>,
 }
 
@@ -28,19 +21,14 @@ impl PngEncoderPool {
       .unwrap_or(1)
       .clamp(1, DEFAULT_MAX_ENCODER_THREADS);
     let capacity = thread_count.saturating_mul(JOBS_PER_THREAD).max(1);
-    let (sender, receiver) = mpsc::channel::<EncodeJob>();
-    let receiver = Arc::new(Mutex::new(receiver));
-
-    for index in 0..thread_count {
-      let receiver = Arc::clone(&receiver);
-      std::thread::Builder::new()
-        .name(format!("lynx-png-encoder-{index}"))
-        .spawn(move || worker_loop(&receiver))
-        .map_err(|error| format!("failed to start PNG encoder worker: {error}"))?;
-    }
+    let workers = ThreadPoolBuilder::new()
+      .num_threads(thread_count)
+      .thread_name(|index| format!("lynx-png-encoder-{index}"))
+      .build()
+      .map_err(|error| format!("failed to start PNG encoder workers: {error}"))?;
 
     Ok(Self {
-      sender,
+      workers,
       permits: Arc::new(Semaphore::new(capacity)),
     })
   }
@@ -51,34 +39,20 @@ impl PngEncoderPool {
       .await
       .map_err(|_| Error::Protocol("PNG encoder pool is closed".into()))?;
     let (result, response) = oneshot::channel();
-    self
-      .sender
-      .send(EncodeJob {
-        width,
-        height,
-        rgba,
-        result,
-        _permit: permit,
-      })
-      .map_err(|_| Error::Protocol("PNG encoder workers have stopped".into()))?;
+    self.workers.spawn(move || {
+      // A cancelled async waiter must not release capacity while its CPU work
+      // is still running on Rayon.
+      let _permit = permit;
+      let encoded = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        encode_png(width, height, &rgba).map_err(|error| error.to_string())
+      }))
+      .unwrap_or_else(|_| Err("PNG encoder worker panicked".into()));
+      let _ = result.send(encoded);
+    });
     response
       .await
       .map_err(|_| Error::Protocol("PNG encoder worker stopped before replying".into()))?
       .map_err(Error::Protocol)
-  }
-}
-
-fn worker_loop(receiver: &Mutex<mpsc::Receiver<EncodeJob>>) {
-  loop {
-    let job = {
-      let receiver = receiver.lock().expect("PNG encoder queue lock poisoned");
-      receiver.recv()
-    };
-    let Ok(job) = job else {
-      return;
-    };
-    let encoded = encode_png(job.width, job.height, &job.rgba).map_err(|error| error.to_string());
-    let _ = job.result.send(encoded);
   }
 }
 

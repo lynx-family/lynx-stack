@@ -25,13 +25,13 @@ use protocol::{
 };
 use resource::ResourceContext;
 use serde_json::{json, Value};
+use tokio_util::task::LocalPoolHandle;
 
 const DEFAULT_VIEWPORT_WIDTH: usize = 800;
 const DEFAULT_VIEWPORT_HEIGHT: usize = 600;
 const DEFAULT_DEVICE_PIXEL_RATIO: f32 = 1.0;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const APP_NAME: &str = "HeadlessRustTestRunner";
-const VISIT_COMMAND_CAPACITY: usize = 32;
 const MAX_CONCURRENT_VISITS: usize = 4;
 
 #[derive(Clone, Debug)]
@@ -175,15 +175,8 @@ impl PageOwner {
 
 #[derive(Clone)]
 struct VisitDispatcher {
-  commands: tokio::sync::mpsc::Sender<VisitCommand>,
-}
-
-struct VisitCommand {
-  lynx: Lynx,
-  input: String,
-  goto_options: GotoOptions,
-  screenshot_options: ScreenshotOptions,
-  reply: tokio::sync::oneshot::Sender<Result<Vec<u8>>>,
+  pool: LocalPoolHandle,
+  permits: Arc<tokio::sync::Semaphore>,
 }
 
 #[derive(Default)]
@@ -290,9 +283,10 @@ impl Lynx {
   /// Runs one screenshot visit on the process-wide native page owner.
   ///
   /// Unlike [`Lynx::new_page`], this method may be called from any OS thread.
-  /// Owned request data crosses a bounded queue; the native page is created,
-  /// navigated, captured, and dropped on a dedicated current-thread executor.
-  /// This dispatcher mode and direct `new_page` mode are mutually exclusive.
+  /// Admission is bounded before the request is submitted to a single-worker
+  /// local pool; the native page is created, navigated, captured, and dropped
+  /// on that worker. This mode and direct `new_page` mode are mutually
+  /// exclusive.
   pub async fn visit_screenshot(
     &self,
     input: String,
@@ -300,21 +294,23 @@ impl Lynx {
     screenshot_options: ScreenshotOptions,
   ) -> Result<Vec<u8>> {
     let dispatcher = self.visit_dispatcher()?;
-    let (reply, response) = tokio::sync::oneshot::channel();
+    let permit = Arc::clone(&dispatcher.permits)
+      .acquire_owned()
+      .await
+      .map_err(|_| Error::VisitDispatcher("native visit admission has closed".into()))?;
+    let lynx = self.clone();
     dispatcher
-      .commands
-      .send(VisitCommand {
-        lynx: self.clone(),
-        input,
-        goto_options,
-        screenshot_options,
-        reply,
+      .pool
+      .spawn_pinned(move || async move {
+        let _permit = permit;
+        run_screenshot_visit(&lynx, &input, goto_options, screenshot_options).await
       })
       .await
-      .map_err(|_| Error::VisitDispatcher("native owner thread has stopped".into()))?;
-    response
-      .await
-      .map_err(|_| Error::VisitDispatcher("native owner stopped before replying".into()))?
+      .map_err(|error| {
+        Error::VisitDispatcher(format!(
+          "native owner task stopped before completing the visit: {error}"
+        ))
+      })?
   }
 
   fn visit_dispatcher(&self) -> Result<VisitDispatcher> {
@@ -334,70 +330,22 @@ impl Lynx {
 fn start_visit_dispatcher(
   process: Arc<LynxProcess>,
 ) -> std::result::Result<VisitDispatcher, String> {
-  let (commands, receiver) = tokio::sync::mpsc::channel(VISIT_COMMAND_CAPACITY);
+  let pool = std::panic::catch_unwind(|| LocalPoolHandle::new(1))
+    .map_err(|_| "failed to start native owner local pool".to_string())?;
+  // Claim ownership before publishing the pool. This one-shot handshake keeps
+  // dispatcher initialization atomic even if the first async caller is later
+  // cancelled; it is not a request queue.
   let (ready, initialized) = std::sync::mpsc::sync_channel(1);
-  std::thread::Builder::new()
-    .name("lynx-native-page-owner".into())
-    .spawn(move || {
-      let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|error| format!("failed to create native owner runtime: {error}"));
-      let runtime = match runtime {
-        Ok(runtime) => runtime,
-        Err(message) => {
-          let _ = ready.send(Err(message));
-          return;
-        }
-      };
-      if let Err(message) = process.page_owner.claim_visit_dispatcher() {
-        let _ = ready.send(Err(message));
-        return;
-      }
-      if ready.send(Ok(())).is_err() {
-        return;
-      }
-      let local = tokio::task::LocalSet::new();
-      runtime.block_on(local.run_until(run_visit_dispatcher(receiver)));
-    })
-    .map_err(|error| format!("failed to start native owner thread: {error}"))?;
+  std::mem::drop(pool.spawn_pinned(move || async move {
+    let _ = ready.send(process.page_owner.claim_visit_dispatcher());
+  }));
   initialized
     .recv()
-    .map_err(|_| "native owner thread stopped during initialization".to_string())??;
-  Ok(VisitDispatcher { commands })
-}
-
-async fn run_visit_dispatcher(mut commands: tokio::sync::mpsc::Receiver<VisitCommand>) {
-  let mut visits = tokio::task::JoinSet::new();
-  let mut accepting = true;
-  while accepting || !visits.is_empty() {
-    tokio::select! {
-      command = commands.recv(), if accepting && visits.len() < MAX_CONCURRENT_VISITS => {
-        let Some(command) = command else {
-          accepting = false;
-          continue;
-        };
-        visits.spawn_local(async move {
-          if command.reply.is_closed() {
-            return;
-          }
-          let result = run_screenshot_visit(
-            &command.lynx,
-            &command.input,
-            command.goto_options,
-            command.screenshot_options,
-          )
-          .await;
-          let _ = command.reply.send(result);
-        });
-      }
-      completed = visits.join_next(), if !visits.is_empty() => {
-        if let Some(Err(error)) = completed {
-          eprintln!("[headless-rust-test-runner] screenshot visit task failed: {error}");
-        }
-      }
-    }
-  }
+    .map_err(|_| "native owner task stopped during initialization".to_string())??;
+  Ok(VisitDispatcher {
+    pool,
+    permits: Arc::new(tokio::sync::Semaphore::new(MAX_CONCURRENT_VISITS)),
+  })
 }
 
 async fn run_screenshot_visit(

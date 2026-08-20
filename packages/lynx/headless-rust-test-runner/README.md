@@ -16,7 +16,7 @@ windowless software-rendering harness with DOM inspection and interaction APIs:
 - `Page::screenshot` captures the software renderer directly as PNG.
 - A process-wide DebugRouter actor owns the TCP connection and routes concurrent
   responses to callers.
-- Screenshot frames use shared RGBA storage, and a bounded worker pool encodes
+- Screenshot frames use shared RGBA storage, and a dedicated Rayon pool encodes
   PNG data away from the native page owner thread.
 
 ## Example
@@ -47,10 +47,11 @@ process-wide ownership modes:
   thread. Run those futures on a Tokio current-thread runtime and use a
   `LocalSet` when several pages need to overlap.
 - For screenshot services with callers on multiple OS threads, call
-  `visit_screenshot`. A bounded queue dispatches owned request data to a
-  dedicated current-thread owner, where each page is created, navigated,
-  captured, and dropped. Up to four visits overlap on that owner while PNG
-  encoding runs on the worker pool.
+  `visit_screenshot`. A single-thread Tokio local pool pins every visit to one
+  native owner. A four-permit admission semaphore applies backpressure before a
+  visit is submitted, so the runner does not maintain a separate request
+  backlog. Up to four visits overlap on that owner while PNG encoding runs on
+  the Rayon pool.
 
 Direct Page mode and dispatched screenshot mode are mutually exclusive. Start
 the chosen mode before creating pages; the runner returns a clear error rather
@@ -59,7 +60,7 @@ than transferring native ownership between threads.
 For screenshot-only work, call `goto_for_screenshot` instead of `goto`. It waits
 for a new rendered frame but skips DebugRouter session discovery and DOM setup.
 Several screenshot visits can then overlap while PNG encoding runs on the
-worker pool. Use regular `goto` when the caller also needs `content`, `locator`,
+Rayon pool. Use regular `goto` when the caller also needs `content`, `locator`,
 or other DOM APIs.
 
 The runtime needs `lynx_core.js` beside the executable on Linux or inside
@@ -101,6 +102,6 @@ cargo test --locked -p lynx-headless-rust-test-runner \
 ```
 
 Linux runs this behavior as the CI contract. On macOS, add `--ignored` for a
-local diagnostic run. The dispatcher caps active native visits at four because
-the current embedder runtime has one process-wide UI owner and does not support
-pages owned by different OS threads.
+local diagnostic run. The admission semaphore caps active native visits at four
+because the current embedder runtime has one process-wide UI owner and does not
+support pages owned by different OS threads.
