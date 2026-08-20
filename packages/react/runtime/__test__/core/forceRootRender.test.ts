@@ -24,15 +24,15 @@ describe('core/forceRootRender', () => {
   it('bumps root vnode identity and marks existing components as forced', () => {
     const oldDiff = vi.fn();
     mutablePreactOptions[DIFF2] = oldDiff;
-    const component = {};
-    const rootVNode = { [ORIGINAL]: 1 } as VNode;
+    const component: Record<string, number> = {};
+    const rootVNode = { [ORIGINAL]: 1 } as unknown as VNode;
     const setRootVNode = vi.fn();
 
     runWithForceRootRender({
       getRootVNode: () => rootVNode,
       setRootVNode,
       render: () => {
-        mutablePreactOptions[DIFF2]({} as VNode, { [COMPONENT]: component } as VNode);
+        mutablePreactOptions[DIFF2]!({} as VNode, { [COMPONENT]: component } as unknown as VNode);
       },
     });
 
@@ -40,7 +40,7 @@ describe('core/forceRootRender', () => {
     expect(setRootVNode.mock.calls[0]![0]).not.toBe(rootVNode);
     expect(setRootVNode.mock.calls[0]![0][ORIGINAL]).toBe(2);
     expect(oldDiff).toHaveBeenCalledTimes(1);
-    expect(component[BITS] & COMPONENT_FORCE).toBeTruthy();
+    expect(component[BITS]! & COMPONENT_FORCE).toBeTruthy();
     expect(mutablePreactOptions[DIFF2]).toBe(oldDiff);
   });
 
@@ -53,7 +53,7 @@ describe('core/forceRootRender', () => {
         getRootVNode: () => undefined,
         setRootVNode,
         render: () => {
-          mutablePreactOptions[DIFF2]({} as VNode, {} as VNode);
+          mutablePreactOptions[DIFF2]!({} as VNode, {} as VNode);
           throw error;
         },
       })

@@ -41,7 +41,7 @@ function collectRawText(instance: BackgroundElementTemplateInstance): string[] {
   return texts;
 }
 
-function App({ items }: { items: readonly string[] }): JSX.Element {
+function App({ items }: { items: readonly string[] }) {
   return (
     <view>
       <view>header</view>
@@ -59,7 +59,7 @@ interface ListItemModel {
   fullSpan?: boolean;
 }
 
-function ListApp({ items }: { items: readonly ListItemModel[] }): JSX.Element {
+function ListApp({ items }: { items: readonly ListItemModel[] }) {
   return createElement(
     'list',
     null,
@@ -72,7 +72,7 @@ function ListApp({ items }: { items: readonly ListItemModel[] }): JSX.Element {
         },
       })
     ),
-  );
+  ) as unknown as ReturnType<typeof App>;
 }
 
 function materializeHydratedSubtree(
@@ -245,14 +245,18 @@ describe('Background Preact render', () => {
   ) {
     it(`unmounts the old child when a same-key host child moves from $${from} to $${to}`, () => {
       const moved = createElement('_et_child', { key: 'moved' });
-      root.render(createElement('_et_host', { [`$${from}`]: moved }));
+      root.render(
+        createElement('_et_host', { [`$${from}`]: moved }) as unknown as Parameters<typeof root.render>[0],
+      );
       markElementTemplateHydrated();
 
       const initialHost = (__root as BackgroundElementTemplateInstance).firstChild!;
       const initialChild = initialHost.elementSlots[from]?.[0];
       expect(initialChild?.type).toBe('_et_child');
 
-      root.render(createElement('_et_host', { [`$${to}`]: moved }));
+      root.render(
+        createElement('_et_host', { [`$${to}`]: moved }) as unknown as Parameters<typeof root.render>[0],
+      );
 
       const host = (__root as BackgroundElementTemplateInstance).firstChild!;
       const movedChild = host.elementSlots[to]?.[0];
