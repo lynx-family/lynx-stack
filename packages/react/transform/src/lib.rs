@@ -15,12 +15,12 @@ use std::{cell::RefCell, rc::Rc, vec};
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
-use rustc_hash::FxBuildHasher;
+use rustc_hash::FxHashMap;
 
 use swc_core::{
   atoms::Atom,
   base::{
-    config::{GlobalPassOption, IsModule, SourceMapsConfig},
+    config::{IsModule, SourceMapsConfig},
     Compiler, PrintArgs,
   },
   common::{
@@ -33,7 +33,7 @@ use swc_core::{
   ecma::{
     ast::*,
     codegen,
-    parser::{Syntax, TsSyntax},
+    parser::{parse_file_as_expr, Syntax, TsSyntax},
     transforms::{
       base::{
         fixer::fixer,
@@ -41,9 +41,10 @@ use swc_core::{
         hygiene::{hygiene_with_config, Config},
         resolver,
       },
-      optimization::{simplifier, simplify},
+      optimization::{inline_globals, simplifier, simplify},
       react, typescript,
     },
+    utils::{drop_span, NodeIgnoringSpan},
     visit::visit_mut_pass,
   },
 };
@@ -508,23 +509,50 @@ fn transform_react_lynx_inner(
     };
 
     let define_dce_plugin = {
-      let opts = GlobalPassOption {
-        vars: match &options.define_dce {
-          Either::A(_) => Default::default(),
-          Either::B(config) => {
-            let mut map = indexmap::IndexMap::<_, _, FxBuildHasher>::default();
-            for (key, value) in &config.define {
-              map.insert(key.as_str().into(), value.as_str().into());
-            }
-            map
-          }
-        },
-        envs: Default::default(),
-        typeofs: Default::default(),
+      // Not `GlobalPassOption::build`: its process-wide cache hands back
+      // spans of a `SourceMap` that is already gone. See swc-project/swc#12129.
+      let parse = |src: &str| -> Expr {
+        let fm = cm.new_source_file(FileName::Anon.into(), src.to_string());
+
+        let mut errors = vec![];
+        let expr = parse_file_as_expr(
+          &fm,
+          Syntax::Es(Default::default()),
+          Default::default(),
+          None,
+          &mut errors,
+        );
+
+        for e in errors {
+          e.into_diagnostic(&handler).emit()
+        }
+
+        match expr {
+          Ok(v) => *drop_span(v),
+          _ => panic!("{} is not a valid expression", fm.src),
+        }
       };
 
+      let mut globals = FxHashMap::default();
+      let mut global_exprs = FxHashMap::default();
+
+      if let Either::B(config) = &options.define_dce {
+        for (key, value) in &config.define {
+          if key.contains('.') {
+            global_exprs.insert(NodeIgnoringSpan::owned(parse(key)), parse(value));
+          } else {
+            globals.insert(Atom::from(key.as_str()), parse(value));
+          }
+        }
+      }
+
       Optional::new(
-        opts.build(&cm, &handler),
+        inline_globals(
+          Default::default(),
+          Lrc::new(globals),
+          Lrc::new(global_exprs),
+          Default::default(),
+        ),
         matches!(options.define_dce, Either::B(_)),
       )
     };

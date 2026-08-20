@@ -10,14 +10,13 @@ crate-type = ["cdylib"]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
 convert_case = { workspace = true }
 hex = { workspace = true }
-indexmap = { workspace = true }
 napi = { workspace = true, features = ["serde-json"] }
 napi-derive = { workspace = true }
 rustc-hash = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 sha-1 = { workspace = true }
-swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_transforms_typescript", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "ecma_visit", "testing_transform"] }
+swc_core = { workspace = true, features = ["base", "ecma_codegen", "ecma_parser", "ecma_transforms_typescript", "ecma_quote", "ecma_transforms_react", "ecma_transforms_optimization", "ecma_utils", "ecma_visit", "testing_transform"] }
 swc_plugin_compat = { path = "./crates/swc_plugin_compat", features = ["napi"] }
 swc_plugin_css_scope = { path = "./crates/swc_plugin_css_scope", features = ["napi"] }
 swc_plugin_define_dce = { path = "./crates/swc_plugin_define_dce", features = ["napi"] }
