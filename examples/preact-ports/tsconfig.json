@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2022"],
+    "types": [],
+    "isolatedDeclarations": false,
+  },
+  "include": ["src", "lynx.config.js"],
+}
