@@ -45,6 +45,7 @@ catalogs:
 overrides:
   '@lynx-js/react': workspace:*
   preact: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
+  '@lynx-js/preact-devtools': https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
   '@rspack/core': 2.1.7
   '@rsbuild/core>@rspack/core': 2.1.7
   '@rsdoctor/rspack-plugin>@rspack/core': 2.1.7
@@ -246,8 +247,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -274,8 +275,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -299,8 +300,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -355,8 +356,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -389,8 +390,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -414,8 +415,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -461,8 +462,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -536,8 +537,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/lynx-bundle-rslib-config
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -573,8 +574,8 @@ importers:
         specifier: 0.1.4
         version: 0.1.4
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-react
@@ -610,8 +611,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -635,8 +636,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -663,8 +664,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -691,8 +692,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -763,8 +764,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -2101,8 +2102,8 @@ importers:
         version: 2.5.2
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260721114100-d7da994
-        version: 5.0.1-20260721114100-d7da994
+        specifier: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
+        version: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
@@ -4442,8 +4443,9 @@ packages:
       '@lynx-js/types':
         optional: true
 
-  '@lynx-js/preact-devtools@5.0.1-20260721114100-d7da994':
-    resolution: {integrity: sha512-UdP8IdKQVkE3LqhhQ+hqEuacfhPOoG/9qGeR856sDvbrFXOLLAik+gf5QH+GEfcVh/YG1/IiaRbGd1TUPlD+jg==}
+  '@lynx-js/preact-devtools@https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b':
+    resolution: {integrity: sha512-Lk+d+989KzVvgfE06elov13eIAhp7GMP4f5e0DJ14Z4oSLylO1o9KbnUzXJTKvAkOH0lBZkHO+Rib7M6zdONiA==, tarball: https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b}
+    version: 5.0.1
 
   '@lynx-js/react-use@0.2.2':
     resolution: {integrity: sha512-+cFNtHNraLojSWwZL0uHFLHqoh/bCQU1fT7L2gSOqkwnKYmyDbtZOj+CXtHyDPVHEaGTYqqRt93ZuYA2jztD2Q==}
@@ -14445,7 +14447,7 @@ snapshots:
       - react
       - react-dom
 
-  '@lynx-js/preact-devtools@5.0.1-20260721114100-d7da994':
+  '@lynx-js/preact-devtools@https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@f83587b':
     dependencies:
       errorstacks: 2.4.1
       htm: 3.1.1
