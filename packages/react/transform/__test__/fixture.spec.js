@@ -2128,14 +2128,14 @@ export function getCurrentDelta(event) {
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
+          var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
           export let getCurrentDelta = {
               _c: {
-                  foo: {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                  foo: captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
@@ -2153,12 +2153,14 @@ export function getCurrentDelta(event) {
         expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
-          "export let getCurrentDelta = {
+          "import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react";
+          var captureMainThreadObject = __captureMainThreadObject;
+          export let getCurrentDelta = {
               _c: {
-                  foo: {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                  foo: captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
@@ -2169,14 +2171,14 @@ export function getCurrentDelta(event) {
         expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
+          var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
           export let getCurrentDelta = {
               _c: {
-                  foo: {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                  foo: captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
@@ -2229,22 +2231,22 @@ export function foo(event) {
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
+      var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
       export let foo = {
           _c: {
-              bar: {
-                  baz: {
-                      'qux': bar.baz['qux']
-                  },
-                  qux: {
-                      'baz': bar.qux['baz']
-                  }
+              bar: captureMainThreadObject(bar) ?? {
+                  baz: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          'qux': __mainThreadObjectSource['qux']
+                      })(bar.baz),
+                  qux: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          'baz': __mainThreadObjectSource['baz']
+                      })(bar.qux)
               },
-              qux: {
-                  bar: {
-                      baz: qux.bar.baz
-                  }
+              qux: captureMainThreadObject(qux) ?? {
+                  bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          baz: __mainThreadObjectSource.baz
+                      })(qux.bar)
               }
           },
           _wkltId: "da39:64631:1"

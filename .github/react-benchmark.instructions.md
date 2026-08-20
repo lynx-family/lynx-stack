@@ -22,4 +22,8 @@ Import Signal APIs from `@lynx-js/react-signals`; the ReactLynx build aliases th
 
 Consume Signals through `@lynx-js/react-signals`; do not add direct `@preact/signals`, `@preact/signals-core`, or `preact` dependencies to the benchmark package. The adapter package owns the compatible implementation and peer resolution.
 
+When benchmarking MainThreadObject, keep the ordinary `MainThreadRef` workload in a separate bundle with no Motion imports so it measures the cost paid by applications that never opt into typed objects. Use `@lynx-js/motion` and real `useMotionValue`/`motion.*` components in the opt-in bundles so the MTS profile includes actual factory realization, capture, hydration, binding, and disposal rather than a framework lookalike.
+
+Resolve the repository root for benchmark transforms with a `.git` lookup that accepts either a directory or a worktree gitfile. A directory-only lookup leaves `__REPO_FILEPATH__` unreplaced in worktree-built bundles and makes native benchmark execution fail before rendering.
+
 When `benchmark/react/lynx.config.js` enables builtin attribute-name transformation, declare the React-style aliases used by the benchmark explicitly in `benchmark/react/types/index.d.ts` and reference their original Lynx prop types with indexed access. Key-remapped mapped types provide type checking but not reliable completion documentation or definition navigation.

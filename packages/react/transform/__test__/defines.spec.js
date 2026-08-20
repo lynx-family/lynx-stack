@@ -62,6 +62,40 @@ export function App() {
 `;
 
 describe('collected defines', () => {
+  it('collects object-method worklets used by main-thread object definitions', async () => {
+    const objectTypeSource = `
+const valueType = defineMainThreadObjectType({
+  type: '@test/value',
+  create(initialValue) {
+    'main thread';
+    return { value: initialValue };
+  },
+  dispose(value) {
+    'main thread';
+    value.dispose();
+  },
+});
+`;
+    const fromBackground = await transformReactLynx(
+      objectTypeSource,
+      options('JS'),
+    );
+    const fromMainThread = await transformReactLynx(
+      objectTypeSource,
+      options('LEPUS'),
+    );
+
+    expect(fromBackground.errors).toEqual([]);
+    expect(fromBackground.definesForSnapshot).toEqual([]);
+    expect(fromBackground.definesForWorklet).toHaveLength(2);
+    expect(fromBackground.definesForWorklet).toStrictEqual(
+      fromMainThread.definesForWorklet,
+    );
+    expect(
+      fromBackground.definesForWorklet.every(({ code }) => code.includes('registerWorkletInternal')),
+    ).toBe(true);
+  });
+
   it('collects the definitions the main thread needs while compiling the background', async () => {
     const result = await transformReactLynx(
       source,

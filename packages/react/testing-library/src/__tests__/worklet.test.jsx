@@ -1,6 +1,21 @@
 import { describe, expect, vi } from 'vitest';
 import { fireEvent, render, waitSchedule } from '..';
-import { runOnBackground, useMainThreadRef, runOnMainThread } from '@lynx-js/react';
+import {
+  Component,
+  defineMainThreadObjectType,
+  runOnBackground,
+  runOnMainThread,
+  useMainThreadObject,
+  useMainThreadRef,
+} from '@lynx-js/react';
+
+const guardedClassCaptureType = defineMainThreadObjectType({
+  type: '@test/guarded-class-capture',
+  create: initialValue => ({
+    get: () => initialValue,
+  }),
+});
+
 describe('worklet', () => {
   it('main-thread script should work', async () => {
     const cb = vi.fn();
@@ -614,5 +629,109 @@ describe('worklet', () => {
     expect(globalThis.secondCb).toBeCalledTimes(1);
     expect(globalThis.secondCb).toBeCalledWith('second-key');
     vi.resetAllMocks();
+  });
+
+  it('preserves a guarded main-thread object captured from a class field', () => {
+    globalThis.classCaptureCb = vi.fn();
+
+    class ClassCapture extends Component {
+      value = this.props.value;
+
+      onTap() {
+        'main thread';
+        globalThis.classCaptureCb(this.value.get());
+      }
+
+      render() {
+        return <view main-thread:bindtap={this.onTap} />;
+      }
+    }
+
+    const Comp = () => {
+      const value = useMainThreadObject(guardedClassCaptureType, 42);
+      return <ClassCapture value={value} />;
+    };
+
+    const { container } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(container.firstChild);
+
+    expect(globalThis.classCaptureCb).toHaveBeenCalledWith(42);
+  });
+
+  it('preserves guarded main-thread objects captured through nested props', () => {
+    globalThis.nestedCaptureCb = vi.fn();
+
+    function NestedCapture(props) {
+      function onTap() {
+        'main thread';
+        globalThis.nestedCaptureCb(
+          props.value.get(),
+          props.nested.value.get(),
+        );
+      }
+
+      return <view main-thread:bindtap={onTap} />;
+    }
+
+    class NestedClassCapture extends Component {
+      onTap() {
+        'main thread';
+        globalThis.nestedCaptureCb(this.props.value.get());
+      }
+
+      render() {
+        return <view main-thread:bindtap={this.onTap} />;
+      }
+    }
+
+    const Comp = () => {
+      const value = useMainThreadObject(guardedClassCaptureType, 42);
+      return (
+        <view>
+          <NestedCapture nested={{ value }} value={value} />
+          <NestedClassCapture value={value} />
+        </view>
+      );
+    };
+
+    const { container } = render(<Comp />, {
+      enableMainThread: true,
+      enableBackgroundThread: true,
+    });
+    fireEvent.tap(container.firstChild.firstChild);
+    fireEvent.tap(container.firstChild.lastChild);
+
+    expect(globalThis.nestedCaptureCb).toHaveBeenNthCalledWith(1, 42, 42);
+    expect(globalThis.nestedCaptureCb).toHaveBeenNthCalledWith(2, 42);
+  });
+
+  it('evaluates a non-handle class capture accessor once', () => {
+    const captureReads = vi.fn();
+
+    class ClassCapture extends Component {
+      get value() {
+        captureReads();
+        return this.props.value;
+      }
+
+      onTap() {
+        'main thread';
+        return this.value.nested;
+      }
+
+      render() {
+        return <view main-thread:bindtap={this.onTap} />;
+      }
+    }
+
+    render(<ClassCapture value={{ nested: 42 }} />, {
+      enableMainThread: false,
+      enableBackgroundThread: true,
+    });
+
+    expect(captureReads).toHaveBeenCalledOnce();
   });
 });

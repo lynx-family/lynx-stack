@@ -11,7 +11,13 @@ import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/up
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
+import { captureMainThreadObject } from '../../../src/snapshot/worklet/capture';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
+import {
+  defineMainThreadObjectType,
+  registerMainThreadObjectDefinition,
+  useMainThreadObject,
+} from '../../../src/snapshot/worklet/ref/mainThreadObject';
 import { MainThreadRef, useMainThreadRef } from '../../../src/snapshot/worklet/ref/workletRef';
 import { globalEnvManager } from '../utils/envManager';
 import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
@@ -30,6 +36,7 @@ beforeAll(() => {
     _refImpl: {
       updateWorkletRef: vi.fn(),
       updateWorkletRefInitValueChanges: vi.fn(),
+      registerMainThreadObjectType: vi.fn(),
       clearFirstScreenWorkletRefMap: vi.fn(),
     },
     _runOnBackgroundDelayImpl: {
@@ -275,6 +282,340 @@ describe('WorkletRef in js', () => {
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
       globalThis[rLynxChange[1][0]](rLynxChange[1][1]);
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
+    }
+  });
+});
+
+function renderTestMainThreadObject(initialValue) {
+  const type = defineMainThreadObjectType({
+    type: '@test/main-thread-object',
+    create: value => ({ value }),
+  });
+  let value;
+  const App = () => {
+    value = useMainThreadObject(type, initialValue);
+    return <view />;
+  };
+  render(<App />, __root);
+  return value;
+}
+
+describe('MainThreadObject', () => {
+  it('downcasts null creation payloads without confusing them with a failed match', () => {
+    globalEnvManager.switchToBackground();
+    const type = defineMainThreadObjectType({
+      type: '@test/null-payload',
+      create: value => ({ value }),
+    });
+    let value;
+    const App = () => {
+      value = useMainThreadObject(type, null);
+      return <view />;
+    };
+    render(<App />, __root);
+
+    const handle = type.downcast(value);
+    expect(handle).toBe(value);
+    expect(handle.payload).toBeNull();
+    expect(type.downcast(undefined)).toBeUndefined();
+  });
+
+  it('serializes an opaque typed handle and releases it with the shared id lifecycle', () => {
+    globalEnvManager.switchToBackground();
+    const dispatchEvent = vi.fn();
+    lynx.getCoreContext = () => ({ dispatchEvent });
+    const value = renderTestMainThreadObject(42);
+
+    expect(JSON.parse(JSON.stringify(value))).toEqual({
+      _wvid: 1,
+      _initValue: 42,
+      _type: '@test/main-thread-object',
+      _mtoVersion: 1,
+    });
+
+    lynx.getNativeApp().createJSObjectDestructionObserver.mock.calls[0][0]();
+    expect(dispatchEvent).toHaveBeenCalledWith({
+      type: 'Lynx.Worklet.releaseWorkletRef',
+      data: { id: 1 },
+    });
+  });
+
+  it('preserves opaque handles without changing ordinary member captures', () => {
+    globalEnvManager.switchToBackground();
+    const value = renderTestMainThreadObject(42);
+
+    expect(captureMainThreadObject(value)).toBe(value);
+    expect(captureMainThreadObject({ value: 42 })).toBeUndefined();
+  });
+
+  it('creates a typed handle through the library-author hook', () => {
+    const definition = {
+      type: '@test/counter',
+      create: value => ({ value }),
+    };
+    const type = defineMainThreadObjectType(definition);
+    let counter;
+    const App = () => {
+      counter = useMainThreadObject(type, 42);
+      return <view />;
+    };
+
+    globalThis.globDynamicComponentEntry = '__Card__';
+    globalEnvManager.switchToBackground();
+    render(<App />, __root);
+
+    expect(JSON.parse(JSON.stringify(counter))).toMatchObject({
+      _initValue: 42,
+      _type: '@test/counter',
+      _mtoVersion: 1,
+    });
+    definition.type = '@test/mutated-counter';
+    expect(type.type).toBe('@test/counter');
+    expect(type).not.toHaveProperty('create');
+    expect(type).not.toHaveProperty('dispose');
+    const handle = type.downcast(counter);
+    expect(handle).toBe(counter);
+    expect(handle.payload).toBe(42);
+
+    const otherType = defineMainThreadObjectType({
+      type: '@test/other-counter',
+      create: value => ({ value }),
+    });
+    expect(otherType.downcast(counter)).toBeUndefined();
+    expect(otherType.downcast(null)).toBeUndefined();
+    expect(otherType.downcast(42)).toBeUndefined();
+    expect(otherType.downcast({
+      _initValue: 42,
+      _type: '@test/other-counter',
+    })).toBeUndefined();
+    expect(() => counter.get()).toThrow(
+      'MainThreadObject handle for "@test/counter" cannot access "get" in the background runtime. Use the object only inside a main-thread function.',
+    );
+    expect(() => counter.value = 43).toThrow(
+      'MainThreadObject handle for "@test/counter" cannot set "value" in the background runtime. Use the object only inside a main-thread function.',
+    );
+    expect(() => counter._type = '@test/counter').not.toThrow();
+  });
+
+  it('registers a type during main-thread module evaluation without rendering its hook', () => {
+    const create = value => ({ value });
+    const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType;
+
+    globalEnvManager.switchToMainThread();
+    const type = defineMainThreadObjectType({
+      type: '@test/lazy-module-value',
+      create,
+    });
+
+    expect(register).toHaveBeenCalledWith(
+      '@test/lazy-module-value',
+      create,
+      undefined,
+      1,
+    );
+    expect(type).not.toHaveProperty('create');
+  });
+
+  it('ensures registration on the first main-thread hook use', () => {
+    const create = value => ({ value });
+    const register = globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType;
+
+    globalEnvManager.switchToBackground();
+    const type = defineMainThreadObjectType({
+      type: '@test/retained-module-value',
+      create,
+    });
+    expect(register).not.toHaveBeenCalled();
+
+    globalEnvManager.switchToMainThread();
+    const App = () => {
+      useMainThreadObject(type, 42);
+      return <view />;
+    };
+    render(<App />, __root);
+
+    expect(register).toHaveBeenCalledWith(
+      '@test/retained-module-value',
+      create,
+      undefined,
+      1,
+    );
+  });
+
+  it('rejects a forged main-thread object type token', () => {
+    globalEnvManager.switchToMainThread();
+    const App = () => {
+      useMainThreadObject({ type: '@test/forged' }, 42);
+      return <view />;
+    };
+
+    expect(() => render(<App />, __root)).toThrow(
+      'Invalid MainThreadObject type token for "@test/forged". Create it with defineMainThreadObjectType().',
+    );
+  });
+
+  it('uses a plain serializable handle in the main-thread runtime', () => {
+    globalEnvManager.switchToMainThread();
+    const type = defineMainThreadObjectType({
+      type: '@test/main-thread-counter',
+      create: value => ({ value }),
+    });
+    let counter;
+    const App = () => {
+      counter = useMainThreadObject(type, 42);
+      return <view />;
+    };
+
+    globalThis.globDynamicComponentEntry = '__Card__';
+    render(<App />, __root);
+
+    expect(JSON.parse(JSON.stringify(counter))).toMatchObject({
+      _initValue: 42,
+      _type: '@test/main-thread-counter',
+      _mtoVersion: 1,
+    });
+  });
+
+  it('validates and freezes object type definitions', () => {
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '',
+        create: value => ({ value }),
+      })
+    ).toThrow('MainThreadObject type must be a non-empty string.');
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/missing-create',
+      })
+    ).toThrow(
+      'MainThreadObject type "@test/missing-create" must provide a create Main Thread Function.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/invalid-dispose',
+        create: value => ({ value }),
+        dispose: true,
+      })
+    ).toThrow(
+      'MainThreadObject type "@test/invalid-dispose" has an invalid dispose Main Thread Function.',
+    );
+
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/capturing-create',
+        create: {
+          _wkltId: 'capturing-create',
+          _c: { mutableValue: 1 },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/capturing-create" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/capturing-dispose',
+        create: value => ({ value }),
+        dispose: {
+          _wkltId: 'capturing-dispose',
+          _c: { mutableValue: 1 },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject dispose function for "@test/capturing-dispose" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/js-function-capture',
+        create: {
+          _wkltId: 'js-function-capture',
+          _jsFn: { callback: { _jsFnId: 1 } },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/js-function-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/this-capture',
+        create: value => ({ value }),
+        dispose: {
+          _wkltId: 'this-capture',
+          helper: { stop() {} },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject dispose function for "@test/this-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+
+    const type = defineMainThreadObjectType({
+      type: '@test/frozen',
+      create: value => ({ value }),
+    });
+    expect(Object.isFrozen(type)).toBe(true);
+  });
+
+  it('rejects non-serializable initialization payloads in development', () => {
+    globalEnvManager.switchToBackground();
+
+    expect(() => renderTestMainThreadObject({ nested: { callback() {} } }))
+      .toThrow(
+        'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.nested.callback.',
+      );
+
+    const cyclic = {};
+    cyclic.self = cyclic;
+    expect(() => renderTestMainThreadObject(cyclic)).toThrow(
+      'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.self.',
+    );
+    expect(() => renderTestMainThreadObject(new Date())).toThrow(
+      'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.',
+    );
+    expect(() => renderTestMainThreadObject([1, { value: 2 }])).not.toThrow();
+  });
+
+  it('owns an immutable snapshot of the creation payload', () => {
+    globalEnvManager.switchToBackground();
+    const initialValue = { nested: { value: 1 }, values: [2, 3] };
+    const value = renderTestMainThreadObject(initialValue);
+    const handle = captureMainThreadObject(value);
+
+    expect(handle).toBeDefined();
+
+    initialValue.nested.value = 4;
+    initialValue.values.push(5);
+
+    expect(handle.payload).toEqual({ nested: { value: 1 }, values: [2, 3] });
+    expect(handle.payload).not.toBe(initialValue);
+    expect(handle.payload.nested).not.toBe(initialValue.nested);
+    expect(Object.isFrozen(handle.payload)).toBe(true);
+    expect(Object.isFrozen(handle.payload.nested)).toBe(true);
+    expect(Object.isFrozen(handle.payload.values)).toBe(true);
+    expect(() => {
+      handle.payload.nested.value = 6;
+    }).toThrow();
+    expect(JSON.parse(JSON.stringify(value))._initValue).toEqual({
+      nested: { value: 1 },
+      values: [2, 3],
+    });
+  });
+
+  it('diagnoses an incompatible main-thread runtime', () => {
+    const definition = {
+      type: '@test/incompatible-runtime',
+      create: value => ({ value }),
+    };
+    defineMainThreadObjectType(definition);
+    const refImpl = globalThis.lynxWorkletImpl._refImpl;
+    const register = refImpl.registerMainThreadObjectType;
+    delete refImpl.registerMainThreadObjectType;
+    globalEnvManager.switchToMainThread();
+
+    try {
+      expect(() => registerMainThreadObjectDefinition(definition)).toThrow(
+        'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+      );
+    } finally {
+      refImpl.registerMainThreadObjectType = register;
     }
   });
 });
