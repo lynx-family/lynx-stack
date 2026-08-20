@@ -16,6 +16,7 @@ import type { ElementTemplateHydrateCommitContext, SerializedPageRoot } from '..
 import { flushInitialElementTemplateListUpdates } from '../list/list.js';
 import { __page } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
+import { attachMainThreadDynamicAttrRefsForSubtree } from '../template/main-thread-dynamic-attr-state.js';
 import { getElementTemplateNativeRef } from '../template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from '../template/typed-attributes.js';
 
@@ -33,10 +34,12 @@ function renderMainThread(): void {
 
   profileStart('ReactLynx::renderOpcodes');
   try {
-    const { pageAttributes, rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
+    const { pageAttributes, rootRefs, rootSubtreeHandles } = renderOpcodesIntoElementTemplate(opcodes);
     __SetAttributeOfElementTemplate(__page, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, pageAttributes, null);
-    for (const rootRef of rootRefs) {
+    for (let index = 0; index < rootRefs.length; index += 1) {
+      const rootRef = rootRefs[index]!;
       __InsertNodeToElementTemplate(__page, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX, rootRef, null);
+      attachMainThreadDynamicAttrRefsForSubtree(rootSubtreeHandles[index]!);
     }
     flushInitialListUpdates();
   } finally {

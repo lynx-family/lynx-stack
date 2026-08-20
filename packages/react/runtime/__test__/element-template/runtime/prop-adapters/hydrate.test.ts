@@ -77,6 +77,7 @@ describe('Element Template prop adapter hydration', () => {
       0,
       child.instanceId,
       0,
+      [],
     ]);
     expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
   });

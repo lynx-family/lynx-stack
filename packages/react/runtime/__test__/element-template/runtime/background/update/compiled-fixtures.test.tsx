@@ -13,6 +13,7 @@ import {
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import {
   collectElementTemplateSubtreeHandleIds,
+  collectMainThreadRefSubtreeHandleIds,
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
@@ -24,7 +25,10 @@ import type {
 } from '../../../../../src/element-template/protocol/types.js';
 import { parseElementTemplateType } from '../../../../../src/element-template/protocol/template-type.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
-import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import {
+  clearEtAttrPlanMap,
+  hasMainThreadRefAttrSlot,
+} from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import {
   loadCompiledFixturePair,
@@ -88,6 +92,9 @@ function collectRecursiveCreateCommandStream(
     instance.attributeSlots,
     instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );
+  if (hasMainThreadRefAttrSlot(instance.type)) {
+    commands.push(true);
+  }
   return commands;
 }
 
@@ -173,6 +180,7 @@ describe('Compiled background Preact updates', () => {
           SLOT_ID,
           moved.instanceId,
           first.instanceId,
+          collectMainThreadRefSubtreeHandleIds(moved),
         ]);
         envManager.switchToBackground();
         expect(getSlotChildren(host)).toEqual([moved, first, second]);
@@ -257,6 +265,7 @@ describe('Compiled background Preact updates', () => {
             SLOT_ID,
             current.instanceId,
             0,
+            collectMainThreadRefSubtreeHandleIds(current),
           ]);
           envManager.switchToBackground();
 

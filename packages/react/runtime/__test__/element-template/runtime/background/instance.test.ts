@@ -24,6 +24,7 @@ import { ElementTemplateUpdateOps } from '../../../../src/element-template/proto
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
@@ -187,6 +188,7 @@ describe('BackgroundElementTemplateInstance', () => {
           __etHandleRef: item.instanceId,
           type: '_et_list_item',
           platformInfo: {},
+          subtreeHandleIds: [],
         }],
       },
     ]);
@@ -331,6 +333,7 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: second.instanceId,
         type: '_et_item_b',
         platformInfo: { 'item-key': 'b' },
+        subtreeHandleIds: [],
       },
       -11,
     ]);
@@ -359,7 +362,39 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: -11,
         type: '_et_item_a',
         platformInfo: { 'item-key': 'a', 'estimated-height': 42 },
+        subtreeHandleIds: [],
       },
+    ]);
+  });
+
+  it('does not refresh list membership when adding a subtree without MTRefs', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    const child = new BackgroundElementTemplateInstance('_et_ref_child');
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    item.appendChild(child);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      child.instanceId,
+      '_et_ref_child',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      -11,
+      0,
+      child.instanceId,
+      0,
+      [],
     ]);
   });
 
@@ -455,8 +490,165 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: -11,
         type: '_et_item_a',
         platformInfo: { 'item-key': 'a' },
+        subtreeHandleIds: [],
       },
       0,
+    ]);
+  });
+
+  it('refreshes both list item subtree memberships when a descendant is reparented', () => {
+    __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
+    const list = new BackgroundListElementTemplateInstance();
+    const itemA = new BackgroundElementTemplateInstance('_et_item_a');
+    const itemB = new BackgroundElementTemplateInstance('_et_item_b');
+    const child = new BackgroundElementTemplateInstance('_et_child');
+    list.appendChild(itemA);
+    list.appendChild(itemB);
+    itemA.appendChild(child);
+    markElementTemplateHydrated();
+    list.markMaterializedByHydration();
+    itemA.markMaterializedByHydration();
+    itemB.markMaterializedByHydration();
+    child.markMaterializedByHydration();
+    globalCommitContext.ops = [];
+
+    itemB.appendChild(child);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.insertNode,
+      itemB.instanceId,
+      0,
+      child.instanceId,
+      0,
+      [],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
+      {
+        __etHandleRef: itemA.instanceId,
+        type: '_et_item_a',
+        platformInfo: {},
+        subtreeHandleIds: [],
+      },
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
+      {
+        __etHandleRef: itemB.instanceId,
+        type: '_et_item_b',
+        platformInfo: {},
+        subtreeHandleIds: [child.instanceId],
+      },
+    ]);
+  });
+
+  it('removes stale list membership when a descendant moves outside its item', () => {
+    __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
+    const outside = new BackgroundElementTemplateInstance('_et_outside');
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item');
+    const child = new BackgroundElementTemplateInstance('_et_child');
+    list.appendChild(item);
+    item.appendChild(child);
+    markElementTemplateHydrated();
+    outside.markMaterializedByHydration();
+    list.markMaterializedByHydration();
+    item.markMaterializedByHydration();
+    child.markMaterializedByHydration();
+    globalCommitContext.ops = [];
+
+    outside.appendChild(child);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.insertNode,
+      outside.instanceId,
+      0,
+      child.instanceId,
+      0,
+      [child.instanceId],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
+      {
+        __etHandleRef: item.instanceId,
+        type: '_et_item',
+        platformInfo: {},
+        subtreeHandleIds: [],
+      },
+    ]);
+  });
+
+  it('refreshes list item subtree membership when a descendant is removed', () => {
+    __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item');
+    const child = new BackgroundElementTemplateInstance('_et_child');
+    list.appendChild(item);
+    item.appendChild(child);
+    markElementTemplateHydrated();
+    list.markMaterializedByHydration();
+    item.markMaterializedByHydration();
+    child.markMaterializedByHydration();
+    globalCommitContext.ops = [];
+
+    item.removeChild(child);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      item.instanceId,
+      0,
+      child.instanceId,
+      [child.instanceId],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
+      {
+        __etHandleRef: item.instanceId,
+        type: '_et_item',
+        platformInfo: {},
+        subtreeHandleIds: [],
+      },
+    ]);
+  });
+
+  it('publishes moved-out membership before removing the old list holder', () => {
+    __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
+    const parent = new BackgroundElementTemplateInstance('_et_parent');
+    const outside = new BackgroundElementTemplateInstance('_et_outside');
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item');
+    const child = new BackgroundElementTemplateInstance('_et_child');
+    parent.appendChild(outside);
+    parent.appendChild(list);
+    list.appendChild(item);
+    item.appendChild(child);
+    markElementTemplateHydrated();
+    parent.markMaterializedByHydration();
+    outside.markMaterializedByHydration();
+    list.markMaterializedByHydration();
+    item.markMaterializedByHydration();
+    child.markMaterializedByHydration();
+    globalCommitContext.ops = [];
+
+    outside.appendChild(child);
+    parent.removeChild(list);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.insertNode,
+      outside.instanceId,
+      0,
+      child.instanceId,
+      0,
+      [child.instanceId],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
+      {
+        __etHandleRef: item.instanceId,
+        type: '_et_item',
+        platformInfo: {},
+        subtreeHandleIds: [],
+      },
+      ElementTemplateUpdateOps.removeNode,
+      parent.instanceId,
+      0,
+      list.instanceId,
+      [list.instanceId, item.instanceId],
     ]);
   });
 
@@ -493,6 +685,7 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: third.instanceId,
         type: '_et_item_c',
         platformInfo: {},
+        subtreeHandleIds: [],
       },
       -12,
       ElementTemplateUpdateOps.removeTypedListItem,
@@ -505,6 +698,7 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: -12,
         type: '_et_item_b',
         platformInfo: { 'item-key': 'b', 'full-span': true },
+        subtreeHandleIds: [],
       },
     ]);
   });
@@ -636,6 +830,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         child.instanceId,
         0,
+        [],
       ]);
     });
 
@@ -665,10 +860,27 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         child.instanceId,
         0,
+        [],
       ]);
       expect(ref).toHaveBeenCalledWith(expect.objectContaining({
         selector: `[ref=${child.instanceId}-0]`,
       }));
+    });
+
+    it('sends only MTRef-capable handles with a structural insert', () => {
+      __etAttrPlanMap.child = [0, adaptMTRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('parent');
+      parent.emitCreate();
+      markElementTemplateHydrated();
+      globalCommitContext.ops = [];
+
+      const child = new BackgroundElementTemplateInstance('child');
+      const ordinaryDescendant = new BackgroundElementTemplateInstance('ordinary');
+      child.appendChild(ordinaryDescendant);
+      parent.appendChild(child);
+
+      expect(globalCommitContext.ops[12]).toBe(true);
+      expect(globalCommitContext.ops.at(-1)).toEqual([child.instanceId]);
     });
 
     it('does not detach refs that never attached on a post-hydration unmaterialized subtree', () => {
@@ -720,6 +932,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         child.instanceId,
         before.instanceId,
+        [],
       ]);
       expect(ref).not.toHaveBeenCalled();
     });
@@ -757,6 +970,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         owner.instanceId,
         0,
+        [],
       ]);
     });
 
@@ -787,6 +1001,57 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         child.instanceId,
         0,
+        [],
+      ]);
+    });
+
+    it('creates nested list item subtrees before inserting a post-hydration list', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      parent.emitCreate();
+
+      markElementTemplateHydrated();
+      globalCommitContext.ops = [];
+
+      const list = new BackgroundListElementTemplateInstance();
+      const item = new BackgroundElementTemplateInstance('_et_item');
+      const nested = new BackgroundElementTemplateInstance('_et_nested');
+      item.appendChild(nested);
+      list.appendChild(item);
+
+      parent.appendChild(list);
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        nested.instanceId,
+        '_et_nested',
+        null,
+        [],
+        [],
+        ElementTemplateUpdateOps.createTemplate,
+        item.instanceId,
+        '_et_item',
+        null,
+        [],
+        [[nested.instanceId]],
+        ElementTemplateUpdateOps.createTypedElement,
+        list.instanceId,
+        'list',
+        null,
+        null,
+        {
+          listChildren: [{
+            __etHandleRef: item.instanceId,
+            type: '_et_item',
+            platformInfo: {},
+            subtreeHandleIds: [],
+          }],
+        },
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        0,
+        list.instanceId,
+        0,
+        [],
       ]);
     });
 
@@ -902,6 +1167,7 @@ describe('BackgroundElementTemplateInstance', () => {
         1,
         newChild.instanceId,
         0,
+        [],
       ]);
     });
 
@@ -933,6 +1199,7 @@ describe('BackgroundElementTemplateInstance', () => {
         1,
         newChild.instanceId,
         anchor.instanceId,
+        [],
       ]);
     });
 
@@ -948,7 +1215,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       parent.appendChild(child);
 
-      expect(globalCommitContext.ops).toHaveLength(5);
+      expect(globalCommitContext.ops).toHaveLength(6);
       expect(globalCommitContext.ops[0]).toBe(ElementTemplateUpdateOps.insertNode);
       expect(backgroundElementTemplateInstanceManager.get(0)).toBeUndefined();
     });
@@ -996,6 +1263,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         child.instanceId,
         0,
+        [],
       ]);
     });
 
@@ -1035,6 +1303,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         -2,
         0,
+        [],
       ]);
     });
   });
@@ -1697,6 +1966,7 @@ describe('BackgroundElementTemplateInstance', () => {
       0,
       textNode.instanceId,
       0,
+      [],
     ]);
   });
 

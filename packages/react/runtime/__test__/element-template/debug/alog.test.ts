@@ -52,6 +52,7 @@ describe('ElementTemplate alog helpers', () => {
       1,
       12,
       0,
+      [12],
       ElementTemplateUpdateOps.removeNode,
       11,
       1,
@@ -109,6 +110,7 @@ describe('ElementTemplate alog helpers', () => {
         elementSlotIndex: 1,
         childId: 12,
         referenceId: 0,
+        attachedSubtreeHandleIds: [12],
       },
       {
         op: 'removeNode',
@@ -127,6 +129,38 @@ describe('ElementTemplate alog helpers', () => {
         opcode: 99,
         index: 0,
         remaining: ['leftover'],
+      },
+    ]);
+  });
+
+  it('consumes deferred MTRef create metadata before the next opcode', () => {
+    expect(formatElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTemplate,
+      11,
+      '_et_list_item_child',
+      null,
+      [null],
+      null,
+      true,
+      ElementTemplateUpdateOps.setAttribute,
+      11,
+      0,
+      'updated',
+    ])).toEqual([
+      {
+        op: 'createTemplate',
+        handleId: 11,
+        templateKey: '_et_list_item_child',
+        bundleUrl: null,
+        attributeSlots: [null],
+        elementSlots: null,
+        deferMainThreadRefAttach: true,
+      },
+      {
+        op: 'setAttribute',
+        targetId: 11,
+        attrSlotIndex: 0,
+        value: 'updated',
       },
     ]);
   });

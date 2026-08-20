@@ -14,6 +14,7 @@ describe('element-template update runner', () => {
       null,
       ['hello'],
       [],
+      true,
       ElementTemplateUpdateOps.setAttribute,
       2,
       3,
@@ -53,6 +54,7 @@ describe('element-template update runner', () => {
         template: '_et_builtin_raw_text',
         attributeSlots: ['hello'],
         elementSlots: [],
+        deferMainThreadRefAttach: true,
       },
       {
         type: 'setAttribute',

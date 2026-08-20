@@ -37,6 +37,7 @@ type FormattedUpdateEntry =
     template: string;
     attributeSlots: unknown;
     elementSlots: unknown;
+    deferMainThreadRefAttach?: true;
   }
   | {
     type: 'createTypedElement';
@@ -75,6 +76,7 @@ type FormattedUpdateEntry =
     elementSlotIndex: number;
     child: unknown;
     reference: unknown;
+    attachedSubtreeHandleIds: unknown;
   }
   | {
     type: 'removeNode';
@@ -111,14 +113,19 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
 
 function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): FormattedUpdateEntry {
   switch (entry.op) {
-    case 'createTemplate':
-      return {
+    case 'createTemplate': {
+      const formatted: Extract<FormattedUpdateEntry, { type: 'create' }> = {
         type: 'create',
         id: entry.handleId,
         template: entry.templateKey,
         attributeSlots: entry.attributeSlots,
         elementSlots: entry.elementSlots,
       };
+      if (entry.deferMainThreadRefAttach) {
+        formatted.deferMainThreadRefAttach = true;
+      }
+      return formatted;
+    }
 
     case 'createTypedElement':
       return {
@@ -168,6 +175,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         elementSlotIndex: entry.elementSlotIndex,
         child: entry.childId,
         reference: entry.referenceId,
+        attachedSubtreeHandleIds: entry.attachedSubtreeHandleIds,
       };
 
     case 'removeNode':

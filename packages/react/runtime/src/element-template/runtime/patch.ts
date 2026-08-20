@@ -40,11 +40,17 @@ import type {
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
 import {
+  attachMainThreadDynamicAttrRefsForSubtree,
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
+  prepareMainThreadDynamicAttrValueForNative,
   updateMainThreadDynamicAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
-import type { MainThreadDynamicAttrHydrateHandoff } from './template/main-thread-dynamic-attr-state.js';
+import type {
+  MainThreadDynamicAttrHydrateHandoff,
+  MainThreadDynamicAttrSubtreeHandle,
+} from './template/main-thread-dynamic-attr-state.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -63,6 +69,10 @@ export function applyElementTemplateUpdateCommands(
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
         const elementSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
+        const deferMainThreadRefAttach = stream[i] === true;
+        if (deferMainThreadRefAttach) {
+          i += 1;
+        }
 
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
@@ -81,7 +91,12 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
 
-        const nativeAttributeSlots = normalizeAttributeSlots(attributeSlots);
+        const preparedAttributeSlots = normalizeAttributeSlots(attributeSlots);
+        const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
+        const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(
+          templateType,
+          preparedAttributeSlots,
+        );
         const nativeRef = __CreateElementTemplate(
           templateKey,
           bundleUrl,
@@ -94,8 +109,10 @@ export function applyElementTemplateUpdateCommands(
           elementTemplateRegistry.set(handleId, nativeRef);
           initializeMainThreadDynamicAttrSlots(
             handleId,
-            elementTemplateTypeTag(templateKey, bundleUrl),
-            nativeAttributeSlots,
+            templateType,
+            preparedAttributeSlots,
+            nativeRef,
+            !deferMainThreadRefAttach,
           );
         }
         break;
@@ -119,11 +136,13 @@ export function applyElementTemplateUpdateCommands(
             break;
           }
         }
-        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
+        const nativeValue = prepareMainThreadDynamicAttrValueForNative(targetId, attrSlotIndex, value);
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, nativeValue, null);
         const hydrateHandoff = updateMainThreadDynamicAttrSlot(
           targetId,
           attrSlotIndex,
           value,
+          nativeRef,
           isHydration,
         );
         if (isHydration) {
@@ -251,9 +270,14 @@ export function applyElementTemplateUpdateCommands(
         const elementSlotIndex = stream[i++] as number;
         const childId = stream[i++] as number;
         const referenceId = stream[i++] as number;
+        const attachedSubtreeHandleIds = stream[i++] as number[];
         const nativeRef = resolveTargetHandle(targetId, 'target');
         const childRef = resolveTargetHandle(childId, 'child');
-        if (!nativeRef || !childRef) {
+        const attachedSubtreeHandles = resolveSubtreeHandles(
+          attachedSubtreeHandleIds,
+          'insert subtree',
+        );
+        if (!nativeRef || !childRef || attachedSubtreeHandles === null) {
           continue;
         }
         const referenceRef = referenceId === 0 ? null : resolveTargetHandle(referenceId, 'reference');
@@ -261,6 +285,7 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
         __InsertNodeToElementTemplate(nativeRef, elementSlotIndex, childRef, referenceRef);
+        attachMainThreadDynamicAttrRefsForSubtree(attachedSubtreeHandles);
         break;
       }
 
@@ -424,6 +449,22 @@ function resolveTypedListItem(
     templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
     platformInfo: item.platformInfo,
   };
+}
+
+function resolveSubtreeHandles(
+  subtreeHandleIds: readonly number[],
+  role: string,
+): MainThreadDynamicAttrSubtreeHandle[] | null {
+  const subtreeHandles: MainThreadDynamicAttrSubtreeHandle[] = [];
+  for (let index = 0; index < subtreeHandleIds.length; index += 1) {
+    const uid = subtreeHandleIds[index]!;
+    const ref = resolveTargetHandle(uid, role);
+    if (!ref) {
+      return null;
+    }
+    subtreeHandles.push({ uid, ref });
+  }
+  return subtreeHandles;
 }
 
 function isTypedListElementSlotsEmpty(elementSlots: ElementTemplateHandleSlotsCommand | null | undefined): boolean {

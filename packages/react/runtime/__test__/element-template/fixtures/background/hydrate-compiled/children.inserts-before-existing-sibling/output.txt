@@ -9,6 +9,7 @@ Object {
       "templateKey": "_et_157abe83dcba",
     },
     Object {
+      "attachedSubtreeHandleIds": Array [],
       "childId": 3,
       "elementSlotIndex": 0,
       "op": "insertNode",

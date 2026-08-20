@@ -628,6 +628,7 @@ describe('ElementTemplate commit hook', () => {
         0,
         root.instanceId,
         0,
+        [],
       ]);
     } finally {
       vi.useRealTimers();

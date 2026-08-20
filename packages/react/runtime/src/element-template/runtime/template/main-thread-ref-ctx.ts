@@ -2,9 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { hydrateWorkletCtx, runWorkletCtx, updateWorkletRef } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { registerMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
+import {
+  registerMainThreadBackgroundFunctionCtx,
+  retainMainThreadBackgroundFunctionCtx,
+} from './main-thread-background-function.js';
 import { isMainThreadFunction } from '../../../core/main-thread-function.js';
 import { isMainThreadRef } from '../../../core/main-thread-ref.js';
 import type { SerializableValue } from '../../protocol/types.js';
@@ -18,6 +22,47 @@ export interface MTRefNativeWrapper {
 
 export function isMTRefValue(value: unknown): value is MTRefValue {
   return isMainThreadRef(value) || isMainThreadFunction(value);
+}
+
+export function retainMTRefValue(value: MTRefValue): void {
+  if (isMainThreadFunction(value)) {
+    retainMainThreadBackgroundFunctionCtx(value);
+  }
+}
+
+export function hydrateMTRefValue(
+  value: MTRefValue,
+  previousValue: MTRefValue | undefined,
+): void {
+  if (isMainThreadFunction(value) && previousValue && isMainThreadFunction(previousValue)) {
+    hydrateWorkletCtx(value, previousValue);
+  }
+}
+
+export function attachMTRefValue(
+  value: MTRefValue,
+  nativeRef: ElementRef,
+): void {
+  if (isMainThreadRef(value)) {
+    updateWorkletRef(value, nativeRef as ElementNode);
+    return;
+  }
+  value._unmount = runWorkletCtx(
+    value,
+    [{ elementRefptr: nativeRef }] as unknown as Parameters<typeof runWorkletCtx>[1],
+  ) as () => void;
+}
+
+export function cleanupMTRefValue(value: MTRefValue): void {
+  if (isMainThreadRef(value)) {
+    updateWorkletRef(value, null);
+    return;
+  }
+  if (typeof value._unmount === 'function') {
+    value._unmount();
+    return;
+  }
+  runWorkletCtx(value, [null]);
 }
 
 export function prepareMTRefForNative(

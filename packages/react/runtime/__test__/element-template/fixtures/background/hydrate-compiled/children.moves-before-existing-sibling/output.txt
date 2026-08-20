@@ -1,6 +1,7 @@
 Object {
   "ops": Array [
     Object {
+      "attachedSubtreeHandleIds": Array [],
       "childId": -1,
       "elementSlotIndex": 0,
       "op": "insertNode",

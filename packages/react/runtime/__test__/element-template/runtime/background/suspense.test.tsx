@@ -42,6 +42,7 @@ interface ParsedCreateTemplateOp {
   bundleUrl: string | null | undefined;
   attributeSlots: SerializableValue[] | null | undefined;
   elementSlots: number[][] | null | undefined;
+  deferMainThreadRefAttach?: true;
 }
 
 interface ParsedInsertNodeOp {
@@ -50,6 +51,7 @@ interface ParsedInsertNodeOp {
   elementSlotIndex: number;
   childId: number;
   referenceId: number;
+  attachedSubtreeHandleIds: number[];
 }
 
 interface ParsedRemoveNodeOp {
@@ -195,16 +197,22 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
   while (i < stream.length) {
     const op = stream[i++] as number;
     switch (op) {
-      case ElementTemplateUpdateOps.createTemplate:
-        parsed.push({
+      case ElementTemplateUpdateOps.createTemplate: {
+        const createTemplate: ParsedCreateTemplateOp = {
           op: 'createTemplate',
           handleId: stream[i++] as number,
           templateKey: stream[i++] as string,
           bundleUrl: stream[i++] as string | null | undefined,
           attributeSlots: stream[i++] as SerializableValue[] | null | undefined,
           elementSlots: stream[i++] as number[][] | null | undefined,
-        });
+        };
+        if (stream[i] === true) {
+          createTemplate.deferMainThreadRefAttach = true;
+          i += 1;
+        }
+        parsed.push(createTemplate);
         break;
+      }
       case ElementTemplateUpdateOps.setAttribute:
         parsed.push({
           op: 'setAttribute',
@@ -220,6 +228,7 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
           elementSlotIndex: stream[i++] as number,
           childId: stream[i++] as number,
           referenceId: stream[i++] as number,
+          attachedSubtreeHandleIds: stream[i++] as number[],
         });
         break;
       case ElementTemplateUpdateOps.removeNode:
@@ -352,6 +361,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
       elementSlotIndex: 0,
       childId: loaded.instanceId,
       referenceId: after.instanceId,
+      attachedSubtreeHandleIds: [],
     });
     expect(ops.filter(op => op.op === 'removeNode')).toEqual([]);
     envManager.switchToBackground();
