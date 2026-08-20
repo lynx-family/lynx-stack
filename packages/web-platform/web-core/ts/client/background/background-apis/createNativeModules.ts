@@ -9,6 +9,8 @@ import {
   switchExposureServiceEndpoint,
 } from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
+import { createBuiltinNativeModules } from '../nativeModules/createBuiltinNativeModules.js';
+import { isBuiltinNativeModuleName } from '../../nativeModules/BuiltinNativeModules.js';
 import { createIntersectionObserverModule } from './createIntersectionObserverModule.js';
 
 export async function createNativeModules(
@@ -42,9 +44,12 @@ export async function createNativeModules(
   );
 
   const nativeModules = {};
+  const builtinNativeModules = createBuiltinNativeModules(nativeModulesCall);
   const customNativeModules: Record<string, Record<string, any>> = {};
   await Promise.all(
-    Object.entries(nativeModulesMap).map((
+    Object.entries(nativeModulesMap).filter(
+      ([moduleName]) => !isBuiltinNativeModuleName(moduleName),
+    ).map((
       [moduleName, moduleStr],
     ) =>
       import(/* webpackIgnore: true */ moduleStr).then(
@@ -64,5 +69,6 @@ export async function createNativeModules(
     IntersectionObserverModule: intersectionObserverModule,
     LynxExposureModule: lynxExposureModule,
     ...customNativeModules,
+    ...builtinNativeModules,
   });
 }
