@@ -6,6 +6,7 @@
 import { EventEmitter } from 'node:events';
 
 import { render } from 'preact';
+import { act } from 'preact/test-utils';
 import { useState } from 'preact/hooks';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -105,10 +106,9 @@ describe('useLynxGlobalEventListener', () => {
     `);
     expect(ee.listeners('eventName').length).toMatchInlineSnapshot(`1`);
 
-    render(null, scratch);
-    // Preact 11 defers passive-effect cleanups of unmounted components to the
-    // after-paint flush instead of running them synchronously on unmount.
-    await new Promise(resolve => setTimeout(resolve, 150));
+    act(() => {
+      render(null, scratch);
+    });
     expect(ee.listeners('eventName').length).toMatchInlineSnapshot(`0`);
   });
 
