@@ -44,7 +44,7 @@ catalogs:
 
 overrides:
   '@lynx-js/react': workspace:*
-  preact: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+  preact: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
   '@rspack/core': 2.1.7
   '@rsbuild/core>@rspack/core': 2.1.7
   '@rsdoctor/rspack-plugin>@rspack/core': 2.1.7
@@ -1195,8 +1195,8 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
     devDependencies:
       '@lynx-js/types':
         specifier: 4.1.0
@@ -1212,13 +1212,13 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^2.9.4
-        version: 2.11.0(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)
+        version: 2.11.0(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d)
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
       preact:
-        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -1252,13 +1252,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.10
-        version: 1.5.10(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)
+        version: 1.5.10(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
       preact:
-        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
 
   packages/react/runtime:
     devDependencies:
@@ -1314,8 +1314,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)
       preact:
-        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+        specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
 
   packages/react/transform:
     devDependencies:
@@ -10479,8 +10479,8 @@ packages:
       rxjs:
         optional: true
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce:
-    resolution: {integrity: sha512-Rk8/n81IXLwATdP3hhBmm29TC6Xg9X2FsYUdkNgmdesXC0DEUv2IksNLOWgkH6Eb/XbYOFu6NbWrXWbaqat9Jw==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d:
+    resolution: {integrity: sha512-J0J/9gDrHHCcNUNyCoe/WC5AqNPPjNglGB4JDGCgoQ6k6a6SRxaqg766fkkMdvkrsZzNfQqgPtQaoUYzX6LhXg==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d}
     version: 11.0.0-rc.0
     peerDependencies:
       preact-render-to-string: '>=5'
@@ -15070,14 +15070,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.0(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)':
+  '@preact/signals@2.11.0(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d)':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
 
-  '@prefresh/core@1.5.10(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce)':
+  '@prefresh/core@1.5.10(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d)':
     dependencies:
-      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce
+      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d
 
   '@prefresh/utils@1.2.1': {}
 
@@ -21322,7 +21322,7 @@ snapshots:
     optionalDependencies:
       rxjs: 7.8.2
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce: {}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d: {}
 
   prelude-ls@1.2.1: {}
 
