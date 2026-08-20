@@ -45,32 +45,23 @@ function successfulResponse(url = 'https://news.example.com/story') {
     JSON.stringify({
       ResponseMetadata: { RequestId: 'private-request-id' },
       Result: {
-        TotalDocCount: 20,
-        ErrorCode: 0,
-        ErrorMsg: '',
-        Documents: [{
-          Rank: 2,
+        ResultCount: 20,
+        WebResults: [{
+          SortId: 2,
           Url: url,
           Title: 'Current result',
-          Snippet: [
-            { Type: 'text', Text: 'First excerpt.' },
-            {
-              Type: 'image',
-              Image: { ImageUrl: 'https://images.example.com/ignored.png' },
-            },
-            { Type: 'text', Text: 'Second excerpt.' },
-          ],
-          DocumentInfo: { PublishTime: '2026-08-18' },
-          HostInfo: {
-            Hostname: 'spoofed.example.com',
-            AuthorityLevel: 3,
-            IconUrl: 'https://images.example.com/ignored-icon.png',
-          },
+          Snippet: 'Short excerpt.',
+          Summary: 'First excerpt.\nSecond excerpt.',
+          Content: 'Ignored full content.',
+          PublishTime: '2026-08-18',
+          AuthInfoDes: 'Normal authority',
+          AuthInfoLevel: 3,
+          LogoUrl: 'https://images.example.com/ignored.png',
         }, {
-          Rank: 3,
+          SortId: 3,
           Url: 'file:///private/result',
           Title: 'Unsafe result',
-          Snippet: [],
+          Summary: 'Unsafe excerpt.',
         }],
       },
     }),
@@ -89,11 +80,14 @@ const rateLimitedFetch: typeof fetch = () =>
 const apiErrorFetch: typeof fetch = () =>
   Promise.resolve(
     new Response(JSON.stringify({
-      Result: {
-        ErrorCode: 1234,
-        ErrorMsg: 'secret upstream details',
-        Documents: [],
+      ResponseMetadata: {
+        Error: {
+          CodeN: 1234,
+          Code: '1234',
+          Message: 'secret upstream details',
+        },
       },
+      Result: null,
     })),
   );
 
@@ -206,7 +200,7 @@ describe('Doubao search configuration', () => {
 });
 
 describe('Doubao search request', () => {
-  test('sends bounded Global Search parameters and normalizes text results', async () => {
+  test('sends bounded Custom web-search parameters and normalizes text results', async () => {
     let requestedURL = '';
     let requestInit: RequestInit | undefined;
     const fetchImpl: typeof fetch = (input, init) => {
@@ -241,12 +235,19 @@ describe('Doubao search request', () => {
     if (typeof body !== 'string') throw new Error('request body is missing');
     expect(JSON.parse(body)).toEqual({
       Query: 'current topic',
-      DocCount: 5,
-      MaxSnippetLength: 600,
-      MaxImageCountPerDoc: 0,
+      SearchType: 'web',
+      Count: 5,
+      Filter: {
+        NeedContent: false,
+        NeedUrl: true,
+      },
+      ContentFormats: 'text',
     });
     expect(JSON.stringify(await searchDoubao(CONFIG, 'topic', fetchImpl)))
       .not.toContain('ignored.png');
+    await expect(
+      searchDoubao(CONFIG, 'x'.repeat(101), fetchImpl),
+    ).rejects.toThrow('must not exceed 100 characters');
   });
 
   test('does not expose upstream response details in failures', async () => {

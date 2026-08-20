@@ -10,15 +10,15 @@ export const SEARCH_INFINITY_API_KEY_ENV = 'SEARCH_INFINITY_API_KEY';
 export const SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV =
   'SEARCH_INFINITY_REQUEST_TIMEOUT_MS';
 export const SEARCH_INFINITY_ENDPOINT =
-  'https://open.feedcoopapi.com/search_api/global_search';
+  'https://open.feedcoopapi.com/search_api/web_search';
 
 const DEFAULT_SEARCH_REQUEST_TIMEOUT_MS = 10_000;
 const MAX_SEARCH_REQUEST_TIMEOUT_MS = 60_000;
 const SEARCH_DOCUMENT_COUNT = 5;
 const SEARCH_SNIPPET_LENGTH = 600;
-const SEARCH_IMAGE_COUNT_PER_DOCUMENT = 0;
+const SEARCH_TYPE = 'web';
 const SEARCH_RUN_STATE_KEY = 'a2ui:doubao-search-run-state' as const;
-const MAX_SEARCH_QUERY_LENGTH = 1_000;
+const MAX_SEARCH_QUERY_LENGTH = 100;
 const MAX_SEARCH_TITLE_LENGTH = 500;
 export const MAX_DOUBAO_SEARCH_CALLS_PER_RUN = 3;
 
@@ -155,18 +155,6 @@ function boundedText(value: unknown, maxLength: number): string {
   return value.trim().slice(0, maxLength);
 }
 
-function normalizeSnippet(value: unknown): string {
-  if (!Array.isArray(value)) return '';
-  return value
-    .flatMap((item): string[] => {
-      if (!isRecord(item) || item.Type !== 'text') return [];
-      const text = boundedText(item.Text, SEARCH_SNIPPET_LENGTH);
-      return text ? [text] : [];
-    })
-    .join('\n')
-    .slice(0, SEARCH_SNIPPET_LENGTH);
-}
-
 function normalizeDocument(
   value: unknown,
   index: number,
@@ -175,22 +163,20 @@ function normalizeDocument(
   const url = normalizedHttpURL(value.Url);
   if (!url) return undefined;
   const title = boundedText(value.Title, MAX_SEARCH_TITLE_LENGTH);
-  const snippet = normalizeSnippet(value.Snippet);
-  const documentInfo = isRecord(value.DocumentInfo)
-    ? value.DocumentInfo
-    : undefined;
-  const hostInfo = isRecord(value.HostInfo) ? value.HostInfo : undefined;
-  const rank = typeof value.Rank === 'number'
-      && Number.isSafeInteger(value.Rank)
-      && value.Rank >= 0
-    ? value.Rank
+  const snippet = boundedText(value.Summary, SEARCH_SNIPPET_LENGTH)
+    || boundedText(value.Snippet, SEARCH_SNIPPET_LENGTH)
+    || boundedText(value.Content, SEARCH_SNIPPET_LENGTH);
+  const rank = typeof value.SortId === 'number'
+      && Number.isSafeInteger(value.SortId)
+      && value.SortId >= 0
+    ? value.SortId
     : index;
   const hostname = new URL(url).hostname;
-  const publishTime = boundedText(documentInfo?.PublishTime, 100);
-  const authorityLevel = typeof hostInfo?.AuthorityLevel === 'number'
-      && Number.isFinite(hostInfo.AuthorityLevel)
-    ? String(hostInfo.AuthorityLevel)
-    : boundedText(hostInfo?.AuthorityLevel, 100);
+  const publishTime = boundedText(value.PublishTime, 100);
+  const authorityLevel = typeof value.AuthInfoLevel === 'number'
+      && Number.isFinite(value.AuthInfoLevel)
+    ? String(value.AuthInfoLevel)
+    : boundedText(value.AuthInfoDes, 100);
   return {
     rank,
     title,
@@ -206,28 +192,37 @@ function normalizeSearchResponse(
   value: unknown,
   query: string,
 ): DoubaoSearchResult {
-  if (!isRecord(value) || !isRecord(value.Result)) {
+  if (!isRecord(value)) {
     throw new Error('Doubao search returned an invalid response');
   }
-  const result = value.Result;
-  if (result.ErrorCode !== 0) {
-    const code = typeof result.ErrorCode === 'number'
-        || typeof result.ErrorCode === 'string'
-      ? String(result.ErrorCode)
+  const responseMetadata = isRecord(value.ResponseMetadata)
+    ? value.ResponseMetadata
+    : undefined;
+  const responseError = isRecord(responseMetadata?.Error)
+    ? responseMetadata.Error
+    : undefined;
+  if (responseError) {
+    const rawCode = responseError.CodeN ?? responseError.Code;
+    const code = typeof rawCode === 'number' || typeof rawCode === 'string'
+      ? String(rawCode)
       : 'unknown';
     throw new Error(`Doubao search failed with code ${code}`);
   }
-  if (!Array.isArray(result.Documents)) {
+  if (!isRecord(value.Result)) {
     throw new Error('Doubao search returned an invalid response');
   }
-  const results = result.Documents
+  const result = value.Result;
+  if (!Array.isArray(result.WebResults)) {
+    throw new Error('Doubao search returned an invalid response');
+  }
+  const results = result.WebResults
     .map((document, index) => normalizeDocument(document, index))
     .filter((document): document is DoubaoSearchDocument => Boolean(document))
     .slice(0, SEARCH_DOCUMENT_COUNT);
-  const totalDocCount = typeof result.TotalDocCount === 'number'
-      && Number.isSafeInteger(result.TotalDocCount)
-      && result.TotalDocCount >= 0
-    ? result.TotalDocCount
+  const totalDocCount = typeof result.ResultCount === 'number'
+      && Number.isSafeInteger(result.ResultCount)
+      && result.ResultCount >= 0
+    ? result.ResultCount
     : results.length;
   return { query, totalDocCount, results };
 }
@@ -283,9 +278,13 @@ export async function searchDoubao(
         },
         body: JSON.stringify({
           Query: normalized,
-          DocCount: SEARCH_DOCUMENT_COUNT,
-          MaxSnippetLength: SEARCH_SNIPPET_LENGTH,
-          MaxImageCountPerDoc: SEARCH_IMAGE_COUNT_PER_DOCUMENT,
+          SearchType: SEARCH_TYPE,
+          Count: SEARCH_DOCUMENT_COUNT,
+          Filter: {
+            NeedContent: false,
+            NeedUrl: true,
+          },
+          ContentFormats: 'text',
         }),
         signal: controller.signal,
       });

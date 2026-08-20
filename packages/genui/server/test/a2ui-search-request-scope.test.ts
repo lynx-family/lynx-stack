@@ -32,10 +32,10 @@ interface TestRunOptions {
 
 function searchResponse(): Response {
   return new Response(JSON.stringify({
+    ResponseMetadata: { RequestId: 'private-request-id' },
     Result: {
-      TotalDocCount: 0,
-      ErrorCode: 0,
-      Documents: [],
+      ResultCount: 0,
+      WebResults: [],
     },
   }));
 }
