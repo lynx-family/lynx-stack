@@ -3,10 +3,14 @@
 `ui_judge` is a Rust crate that renders a Lynx URL with the existing
 `lynx-headless-rust-test-runner`, performs optional natural-language steps,
 captures the software-renderer frame, and asks Agent SDK for a structured
-visual-correctness score. When a reference image is included, the crate also
-normalizes, aligns, and compares it with the same captured frame through a
-separate deterministic evaluation chain. The default build provides the Rust
-library. The `server` feature adds an HTTP server binary.
+visual-correctness score. An optional independent pairwise dimension follows
+the core [UI-Bench](https://arxiv.org/abs/2508.20410) match protocol: it
+captures a second project generated for the same task, randomizes their blinded
+model order, forces a client-delivery preference with no tie, and updates the
+two prompt-specific TrueSkill ratings. When a reference image is included, a
+separate deterministic evaluation chain normalizes, aligns, and compares it
+with the primary captured frame. The default build provides the Rust library.
+The `server` feature adds an HTTP server binary.
 
 UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, or npm runtime.
 It does not modify or duplicate the headless runner.
@@ -31,6 +35,11 @@ async fn main() {
     steps: vec!["Tap the Save button".into()],
     task: "The saved state should be clear and visually correct".into(),
     timeout: Duration::from_secs(120),
+    ui_bench_candidate_mu: None,
+    ui_bench_candidate_sigma: None,
+    ui_bench_opponent_mu: None,
+    ui_bench_opponent_sigma: None,
+    ui_bench_opponent_url: None,
     url: "file:///absolute/path/to/dist/main.lynx.bundle".into(),
   })
   .await;
@@ -45,7 +54,9 @@ before model or runtime initialization.
 
 `timeout` applies independently to connection, navigation, each natural
 language step, final screenshot capture, visual-correctness scoring, every
-enabled GEQI dimension, and optional reference-image comparison. It is not an
+enabled GEQI dimension, and optional reference-image comparison. An optional
+opponent receives its own connection, navigation, steps, and screenshot
+timeouts, and the pairwise vote receives a separate full timeout. It is not an
 overall deadline for the entire request; this preserves the behavior of the
 former TypeScript implementation.
 
@@ -74,30 +85,75 @@ normalized cross-correlation to align the images, compares 32-pixel blocks,
 and returns `alignment_score`, `visual_similarity`, `different_blocks`,
 `total_blocks`, and `diff_image_base64` on `UiJudgeResult`.
 
-The VLM and reference-image comparison are independent consumers of the final
-screenshot. The VLM always receives only that screenshot plus `task` and the
-optional textual `reference`; it never receives `reference_image`, alignment
-output, pixel-diff output, or algorithmic similarity. Consequently the public
-`score`, `reason`, `summary`, `dimensions`, and `geqi_score` fields come from
-the VLM evaluations. The `error`
-field reports failures in the primary page-capture or VLM chain. A
-reference-image failure is reported separately as `reference_image_error` and
-does not replace a successful VLM result; a VLM failure likewise does not
-discard successful comparison diagnostics. The default public crate surface
-remains `judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`;
-comparison types and algorithms stay internal.
+The visual-correctness and GEQI VLM dimensions, optional UI-Bench pairwise
+dimension, and reference-image comparison are independent chains. The
+single-screenshot dimensions receive only the primary screenshot plus `task`
+and textual `reference`. UI-Bench receives only anonymized primary and opponent
+screenshots plus the same textual context. No VLM receives `reference_image`,
+alignment output, pixel-diff output, algorithmic similarity, or candidate URLs.
+The public `score`, `reason`, `summary`, and `error` fields retain their original
+visual-correctness meaning; `dimensions` and `geqi_score` retain their GEQI
+meaning. A UI-Bench or reference-image failure is reported separately and never
+overwrites another successful dimension; independent results also survive a
+primary VLM failure. The default public crate surface remains `judge_page`,
+`JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`; model, rating, and
+comparison implementation types stay internal.
 
-The public VLM `score` remains an integer from 0 through 5. The independent
-`visual_similarity` diagnostic is a block-level ratio from 0 through 1. Input
-images are limited to 10 MiB compressed, 8192 pixels per dimension, and 8
-megapixels after decoding.
+The primary `score` remains an integer from 0 through 5. UI-Bench does not
+produce an absolute score: it returns one pairwise winner and updated
+continuous TrueSkill state. The independent `visual_similarity` diagnostic is
+a block-level ratio from 0 through 1. Input images are limited to 10 MiB
+compressed, 8192 pixels per dimension, and 8 megapixels after decoding.
+
+## UI-Bench pairwise evaluation
+
+Set `ui_bench_opponent_url` to a second Lynx project generated for the same
+`task`. UI Judge executes the same normalized `steps` on both projects,
+captures them sequentially on the thread-bound Lynx worker, removes their
+identities from the model input, randomly assigns them to Project A and Project
+B, and asks the paper's forced-choice client-delivery question. The structured
+response permits only `project_a` or `project_b`; there is no absolute rating or
+tie.
+
+The first match for a prompt defaults both participants to the paper's
+TrueSkill initialization, `mu = 25` and `sigma = 25 / 3`. For later matches,
+feed the prior prompt-specific state back through:
+
+- `ui_bench_candidate_mu`
+- `ui_bench_candidate_sigma`
+- `ui_bench_opponent_mu`
+- `ui_bench_opponent_sigma`
+
+The pairwise result is returned independently through:
+
+- `ui_bench_winner`: `candidate` for the primary `url`, or `opponent`
+- `ui_bench_reason`
+- `ui_bench_candidate_mu` and `ui_bench_candidate_sigma`
+- `ui_bench_opponent_mu` and `ui_bench_opponent_sigma`
+- `ui_bench_opponent_url`
+- `ui_bench_evaluator`
+- `ui_bench_error`
+
+The update uses the paper's no-draw, no-drift prompt-specific TrueSkill setup.
+An arena coordinator can persist the returned state per prompt, use uncertainty
+and match quality to schedule more comparisons, then average each tool's
+prompt-level `mu` values for a leaderboard.
+
+`ui_bench_evaluator` is currently `vlm_proxy`: UI Judge automates the paper's
+blinded forced-choice and rating mechanics with Agent SDK, but does not claim
+to reproduce the paper's 194-person expert panel. The existing Lynx runner also
+captures its complete available software-renderer viewport rather than an
+interactive scrollable full-page presentation. Adaptive tournament scheduling,
+multi-rater collection, global persistence, confidence intervals, and the
+30-prompt leaderboard remain responsibilities of the calling arena.
 
 The function internally creates the model client from the environment,
 connects to headless Lynx, creates and navigates the page, executes steps,
-captures the final PNG, and releases the page and Lynx connection before the
-independent VLM and reference-image evaluations. Model, runner, page,
-screenshot-comparison, prompt, and fixture-helper types are implementation
-details and are not exported.
+captures the final PNG, and releases the page and Lynx connection. When
+UI-Bench is requested, it repeats that lifecycle sequentially for the opponent
+before starting the independent model and reference-image evaluations. Model,
+runner, page, rating, screenshot-comparison, prompt, and fixture-helper types
+are implementation details and are not exported.
 
 Run `judge_page` sequentially on a Tokio current-thread runtime. The runner's
 native task pump and page state remain bound to their creation thread. The
@@ -185,9 +241,20 @@ curl --request POST http://127.0.0.1:8080/judge \
     "includeScreenshot": true,
     "steps": ["Tap the Save button"],
     "screenshotSettleMs": 16,
-    "timeoutMs": 60000
+    "timeoutMs": 60000,
+    "uiBenchOpponentUrl": "file:///absolute/path/to/opponent/main.lynx.bundle",
+    "uiBenchCandidateMu": 25.0,
+    "uiBenchCandidateSigma": 8.333333333333334,
+    "uiBenchOpponentMu": 25.0,
+    "uiBenchOpponentSigma": 8.333333333333334
   }'
 ```
+
+Omit `uiBenchOpponentUrl` and all four rating fields to run only the original
+visual-correctness and optional GEQI dimensions. On the first pairwise match,
+the four rating fields may also be omitted to use the paper defaults.
+Subsequent match requests should pass the previous response's prompt-specific
+`mu` and `sigma` values.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
