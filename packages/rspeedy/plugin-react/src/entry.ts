@@ -12,7 +12,7 @@ import type {
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI } from '@lynx-js/rspeedy'
+import type { ExposedAPI, Filename } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -77,6 +77,9 @@ export function applyEntry(
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
+    const bundleFilenameConfig = api.getRsbuildConfig('original').output
+      ?.filename as Filename | undefined
+
     const isRspeedy = api.context.callerName === 'rspeedy'
     if (isRspeedy) {
       const entries = chain.entryPoints.entries() ?? {}
@@ -93,11 +96,8 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const bundleFilename =
-          typeof rspeedyConfig?.output?.filename === 'object'
-            ? rspeedyConfig.output.filename.bundle
-              ?? rspeedyConfig.output.filename.template
-            : rspeedyConfig?.output?.filename
+        const bundleFilename = bundleFilenameConfig?.bundle
+          ?? bundleFilenameConfig?.template
 
         let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.

@@ -65,7 +65,7 @@ function getEnableChunkSplitting(config: Config): boolean {
 
 const DEFAULT_FILENAME = '[name].[platform].bundle'
 
-function getFilename(filename: string | Filename | undefined): Filename {
+export function getFilename(filename: string | Filename | undefined): Filename {
   if (typeof filename === 'string') {
     return {
       bundle: filename,

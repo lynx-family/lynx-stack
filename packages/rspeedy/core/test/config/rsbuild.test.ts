@@ -527,13 +527,16 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.output?.filename).toHaveProperty('css', 'style.css')
     })
 
-    test('transform output.filename string is not forwarded', () => {
+    test('transform output.filename string', () => {
       const rsbuildConfig = toRsbuildConfig({
         output: {
           filename: 'main.bundle',
         },
       })
-      expect(rsbuildConfig.output?.filename).toBeUndefined()
+      expect(rsbuildConfig.output?.filename).toStrictEqual({
+        bundle: 'main.bundle',
+        template: 'main.bundle',
+      })
     })
 
     test('transform output.inlineScripts', () => {
