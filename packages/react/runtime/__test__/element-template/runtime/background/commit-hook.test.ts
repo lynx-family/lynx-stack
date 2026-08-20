@@ -4,6 +4,9 @@ import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
 import { Component, createElement } from 'preact/compat';
 
+import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../../src/core/main-thread-ref.js';
+import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
+import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
@@ -108,16 +111,22 @@ function installDataChangeHarness() {
 describe('ElementTemplate commit hook', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: unknown[] = [];
+  let originalLynxSdkVersion: string | undefined;
 
   const onUpdate = (event: { data: unknown }) => {
     updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   beforeEach(() => {
+    originalLynxSdkVersion = SystemInfo.lynxSdkVersion;
     resetElementTemplateCommitState();
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearRefState();
+    SystemInfo.lynxSdkVersion = '4.0';
+    clearMainThreadRefLastIdForTesting();
+    clearMtsConfigCacheForTesting();
+    takeMainThreadRefInitValuePatch();
     updateEvents = [];
     envManager.resetEnv('background');
     installElementTemplateCommitHook();
@@ -135,7 +144,10 @@ describe('ElementTemplate commit hook', () => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     clearRefState();
+    takeMainThreadRefInitValuePatch();
     takeDelayedRunOnMainThreadData();
+    SystemInfo.lynxSdkVersion = originalLynxSdkVersion;
+    clearMtsConfigCacheForTesting();
   });
 
   it('dispatches update after commit when hydrated', () => {
@@ -204,6 +216,26 @@ describe('ElementTemplate commit hook', () => {
     ]);
     envManager.switchToBackground();
     expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+  });
+
+  it('dispatches MainThreadRef init-value patch after commit when hydrated', () => {
+    markElementTemplateHydrated();
+    new MainThreadRef('commit-init');
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toEqual([
+      {
+        ops: [],
+        flushOptions: { emptyPatch: true },
+        flowIds: undefined,
+        reloadVersion: getReloadVersion(),
+        mainThreadRefInitValuePatch: [[1, 'commit-init']],
+      },
+    ]);
+    envManager.switchToBackground();
+    expect(takeMainThreadRefInitValuePatch()).toEqual([]);
   });
 
   it('drops only the failed delayed runOnMainThread return when update dispatch throws', async () => {

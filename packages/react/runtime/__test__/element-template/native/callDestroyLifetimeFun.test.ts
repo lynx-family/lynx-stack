@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getReloadVersion } from '../../../src/core/reload-version.js';
+import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../src/core/main-thread-ref.js';
+import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value.js';
+import { clearMtsConfigCacheForTesting } from '../../../src/core/mts-capability.js';
 import {
   globalCommitContext,
   markRemovedSubtreeForPostDispatchTeardown,
@@ -26,12 +29,16 @@ describe('callDestroyLifetimeFun', () => {
     vi.clearAllMocks();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
+    clearMainThreadRefLastIdForTesting();
+    clearMtsConfigCacheForTesting();
+    takeMainThreadRefInitValuePatch();
     envManager.resetEnv('background');
   });
 
   afterEach(() => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
+    takeMainThreadRefInitValuePatch();
   });
 
   it('destroys background runtime state', () => {
@@ -53,6 +60,14 @@ describe('callDestroyLifetimeFun', () => {
     expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(globalCommitContext.ops).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.values.size).toBe(0);
+  });
+
+  it('discards pending MainThreadRef init values on full-lifetime destroy', () => {
+    new MainThreadRef('stale');
+
+    callDestroyLifetimeFun();
+
+    expect(takeMainThreadRefInitValuePatch()).toEqual([]);
   });
 
   it('removes the hydration listener without processing later hydrate payloads', () => {

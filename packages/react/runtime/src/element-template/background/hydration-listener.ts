@@ -13,6 +13,7 @@ import {
 } from './commit-hook.js';
 import type { BackgroundPageRootInstance } from './instance.js';
 import { hydratePageRootIntoContext } from './page-root-hydrate.js';
+import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import {
   PerformanceTimingFlags,
   PipelineOrigins,
@@ -97,6 +98,7 @@ export function installElementTemplateHydrationListener(): void {
         clearPendingRefs();
         clearDelayedRefUiOps();
         resetElementTemplateMainThreadFunctionRuntime();
+        takeMainThreadRefInitValuePatch();
         resetGlobalCommitContext();
       }
 
@@ -105,25 +107,11 @@ export function installElementTemplateHydrationListener(): void {
         const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
           ? takeDelayedRunOnMainThreadData()
           : undefined;
+        const mainThreadRefInitValuePatch = takeMainThreadRefInitValuePatch();
+        const hasMainThreadRefInitValuePatch = mainThreadRefInitValuePatch.length > 0;
         const pipelineOptions = globalPipelineOptions;
         if (pipelineOptions) {
           globalCommitContext.flushOptions.pipelineOptions = pipelineOptions;
-        }
-        if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-          console.alog?.(
-            '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
-              + JSON.stringify(
-                {
-                  ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
-                  flushOptions: globalCommitContext.flushOptions,
-                  flowIds: globalCommitContext.flowIds,
-                  isHydration: true,
-                  delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-                },
-                null,
-                2,
-              ),
-          );
         }
         const removedSubtreesAwaitingTeardown = globalCommitContext.ops.length > 0
           ? takeRemovedSubtreesForPostDispatchTeardown()
@@ -134,6 +122,23 @@ export function installElementTemplateHydrationListener(): void {
         }
         markTiming('packChangesStart');
         try {
+          if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+            console.alog?.(
+              '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
+                + JSON.stringify(
+                  {
+                    ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                    flushOptions: globalCommitContext.flushOptions,
+                    flowIds: globalCommitContext.flowIds,
+                    isHydration: true,
+                    delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
+                    mainThreadRefInitValuePatchCount: mainThreadRefInitValuePatch.length,
+                  },
+                  null,
+                  2,
+                ),
+            );
+          }
           hydrateUpdateEvent = createElementTemplateUpdateEvent({
             ops: globalCommitContext.ops,
             flushOptions: globalCommitContext.flushOptions,
@@ -141,6 +146,9 @@ export function installElementTemplateHydrationListener(): void {
             reloadVersion: getReloadVersion(),
             flowIds: globalCommitContext.flowIds,
             delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
+            mainThreadRefInitValuePatch: hasMainThreadRefInitValuePatch
+              ? mainThreadRefInitValuePatch
+              : undefined,
           });
         } catch (error) {
           if (delayedRunOnMainThreadPayload) {
@@ -167,7 +175,21 @@ export function installElementTemplateHydrationListener(): void {
         if (!hydrateUpdateEvent) {
           return;
         }
-        lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
+
+        let didDispatchHydrateUpdate = false;
+        try {
+          lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
+          didDispatchHydrateUpdate = true;
+        } finally {
+          if (!didDispatchHydrateUpdate) {
+            if (delayedRunOnMainThreadPayload) {
+              dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+            }
+            clearPendingEvents();
+            clearPendingRefs();
+            clearDelayedRefUiOps();
+          }
+        }
         flushPendingEvents();
         // Ordinary refs attach on Preact commit boundaries; hydration only releases
         // delayed selector ops after ids have been rebound to stable native handles.
