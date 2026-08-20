@@ -80,8 +80,11 @@ export function applyEntry(
     const bundleFilenameConfig = api.getRsbuildConfig('original').output
       ?.filename as Filename | undefined
 
-    const isRspeedy = api.context.callerName === 'rspeedy'
-    if (isRspeedy) {
+    // `rslib` builds libraries and `rstest` runs tests, neither of which emits
+    // a Lynx template.
+    const emitTemplate = api.context.callerName !== 'rslib'
+      && api.context.callerName !== 'rstest'
+    if (emitTemplate) {
       const entries = chain.entryPoints.entries() ?? {}
       const isLynx = environment.name === 'lynx'
         || environment.name.startsWith('lynx-')
