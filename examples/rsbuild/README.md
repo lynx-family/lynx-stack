@@ -13,8 +13,6 @@ this is the whole plugin list:
 ## Scripts
 
 - `pnpm build` / `pnpm dev` — build or serve through the Rsbuild CLI.
-- `pnpm compare` — build this source twice, once through Rspeedy and once
-  through Rsbuild, and check that the Lynx bundles are byte-identical.
 
-`compare` turns off `output.filenameHash`, because the chunk content hash is not
-stable between builds, including two builds of the same configuration.
+That the two produce the same bundle is covered by a test, in
+`@lynx-js/react-rsbuild-plugin`.
