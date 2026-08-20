@@ -186,7 +186,7 @@ describe('Ark image-generation request', () => {
           JSON.stringify({
             data: [{
               url: 'https://images.example.com/generated.jpeg',
-              size: '2048x2048',
+              size: '1024x1024',
             }],
           }),
           {
@@ -201,7 +201,7 @@ describe('Ark image-generation request', () => {
       generateArkImage(CONFIG, 'A red panda in soft studio light', fetchImpl),
     ).resolves.toEqual({
       url: 'https://images.example.com/generated.jpeg',
-      size: '2048x2048',
+      size: '1024x1024',
     });
 
     expect(requestedURL).toBe(
@@ -218,7 +218,7 @@ describe('Ark image-generation request', () => {
     expect(JSON.parse(body)).toEqual({
       model: 'seedream-test-model',
       prompt: 'A red panda in soft studio light',
-      size: '2K',
+      size: '1K',
       sequential_image_generation: 'disabled',
       stream: false,
       response_format: 'url',

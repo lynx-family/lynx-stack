@@ -4,11 +4,27 @@
 
 import { describe, expect, test } from '@rstest/core';
 
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import {
   ProviderAgentCache,
   buildOpenAIRunOptions,
   createStableValueHash,
+  resolveReasoningEffort,
 } from '../service/common/provider.js';
+
+function withModelConfig(raw: string, run: () => void): void {
+  const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+  process.env[GENUI_MODEL_CONFIG_ENV] = raw;
+  try {
+    run();
+  } finally {
+    if (previous === undefined) {
+      delete process.env[GENUI_MODEL_CONFIG_ENV];
+    } else {
+      process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+    }
+  }
+}
 
 describe('ProviderAgentCache', () => {
   test('reuses an in-flight creation for identical requests', async () => {
@@ -100,11 +116,52 @@ describe('createStableValueHash', () => {
 });
 
 describe('buildOpenAIRunOptions', () => {
-  test('passes the request abort signal to model runs', () => {
+  test('passes the request abort signal and minimum reasoning effort', () => {
     const controller = new AbortController();
 
-    expect(buildOpenAIRunOptions({}, controller.signal)).toMatchObject({
-      abortSignal: controller.signal,
-    });
+    withModelConfig(
+      JSON.stringify({
+        Fast: {
+          apiKey: 'server-secret',
+          baseURL: 'https://example.com/v1',
+          model: 'fast-upstream',
+        },
+      }),
+      () => {
+        expect(buildOpenAIRunOptions({}, controller.signal)).toMatchObject({
+          abortSignal: controller.signal,
+          providerOptions: { openai: { reasoningEffort: 'none' } },
+        });
+      },
+    );
+  });
+
+  test('prefers explicit and configured reasoning effort over the default', () => {
+    withModelConfig(
+      JSON.stringify({
+        Fast: {
+          apiKey: 'server-secret',
+          baseURL: 'https://example.com/v1',
+          model: 'fast-upstream',
+          reasoningEffort: 'low',
+        },
+      }),
+      () => {
+        expect(resolveReasoningEffort({ model: 'Fast' })).toBe('low');
+        expect(resolveReasoningEffort({
+          model: 'Fast',
+          reasoningEffort: 'high',
+        })).toBe('high');
+      },
+    );
+  });
+
+  test('lets controlled runs opt out of the server default', () => {
+    expect(resolveReasoningEffort({ inheritReasoningEffort: false })).toBe(
+      undefined,
+    );
+    expect(buildOpenAIRunOptions({ inheritReasoningEffort: false })).toEqual(
+      {},
+    );
   });
 });

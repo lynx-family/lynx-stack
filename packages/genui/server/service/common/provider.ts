@@ -15,6 +15,7 @@ const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'high',
   'xhigh',
 ]);
+const DEFAULT_REASONING_EFFORT: OpenAIReasoningEffort = 'none';
 
 export function pickDefined<T extends Record<string, unknown>>(
   input: T,
@@ -136,18 +137,12 @@ export function resolveReasoningEffort(
   if (explicit !== undefined) return explicit;
   if (opts.inheritReasoningEffort === false) return undefined;
   const config = readModelConfig();
-  if (!config.ok) return undefined;
+  if (!config.ok) return DEFAULT_REASONING_EFFORT;
   const modelName = opts.model && config.config.models[opts.model]
     ? opts.model
     : config.config.defaultModel;
-  return config.config.models[modelName]!.reasoningEffort;
-}
-
-export function buildResourceRunOptions(
-  opts: ChatOptions,
-  abortSignal?: AbortSignal,
-) {
-  return pickDefined({ resourceId: opts.resourceId, abortSignal });
+  return config.config.models[modelName]!.reasoningEffort
+    ?? DEFAULT_REASONING_EFFORT;
 }
 
 export function buildOpenAIRunOptions(

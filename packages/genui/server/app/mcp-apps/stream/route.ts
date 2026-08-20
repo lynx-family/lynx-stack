@@ -12,6 +12,7 @@ import {
   resolveMcpAppsResource,
   validateMcpAppsClientRegistry,
 } from '../../../agent/mcp-apps-registry';
+import type { OpenAIReasoningEffort } from '../../../service/common/types';
 import { getMcpAppsAgentService } from '../../../service/mcp-apps-agent';
 import {
   validateConversation,
@@ -33,6 +34,7 @@ interface McpAppsChatBody {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
 }
 
 async function postMcpAppsStream(req: Request) {

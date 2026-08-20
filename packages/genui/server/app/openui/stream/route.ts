@@ -4,6 +4,7 @@
 
 import { Hono } from 'hono';
 
+import type { OpenAIReasoningEffort } from '../../../service/common/types';
 import { getOpenUIAgentService } from '../../../service/openui-agent';
 import {
   validateConversation,
@@ -25,6 +26,7 @@ interface OpenUIChatBody {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
 }
 
 async function postOpenUIStream(req: Request) {

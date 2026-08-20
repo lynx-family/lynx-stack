@@ -29,7 +29,8 @@ export interface ChatOptions {
   reasoningEffort?: OpenAIReasoningEffort | undefined;
   /**
    * Set to false for controlled runs that must not inherit the process-wide
-   * reasoningEffort from the selected GENUI_MODEL_CONFIG_JSON entry.
+   * reasoningEffort from the selected GENUI_MODEL_CONFIG_JSON entry or the
+   * server default.
    */
   inheritReasoningEffort?: boolean | undefined;
   onPerformanceEvent?: (

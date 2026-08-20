@@ -40,7 +40,8 @@ export GENUI_MODEL_CONFIG_JSON='{
   independent upstream ids, credentials, and endpoints.
 - `api` is optional and accepts `chat` or `responses`.
 - `default: true` is optional. When omitted, the first entry is the default.
-- `reasoningEffort` is optional per model.
+- `reasoningEffort` is optional per model and defaults to `none`. Set it on a
+  model entry when that provider needs another supported effort level.
 
 `GET /models` exposes only the top-level names and default selection. It must
 never expose `model`, `apiKey`, or `baseURL` to the playground.
@@ -58,7 +59,8 @@ export IMG_GEN_ARK_IMAGE_BASE_URL="https://ark.cn-beijing.volces.com/api/v3"
 `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS` optionally overrides the 120-second
 request timeout and must be an integer from 1 through 600000. The agent may
 make at most four image-generation calls across the initial response and all
-repair attempts for one request. Keep the credential, model name, and endpoint
+repair attempts for one request. Images use Ark's minimum `1K` output size.
+Keep the credential, model name, and endpoint
 server-only. The text model configured through `GENUI_MODEL_CONFIG_JSON` must
 support tool/function calling. Only user/host-provided image sources and URLs
 returned by the request's tool scope may reach the renderer. There is no

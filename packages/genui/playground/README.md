@@ -87,13 +87,16 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 
 The Create tab loads its model selector from the server's `GET /models`
 endpoint. Provider credentials, upstream model ids, and upstream API URLs
-remain server-only. The configured text model must support tool/function calls:
+remain server-only. Each model entry may set `reasoningEffort`; when omitted,
+the server uses the minimum `none` effort. The configured text model must
+support tool/function calls:
 the A2UI agent invokes its `generate_image` tool and copies the generated Ark
 URL into the final `Image.url` value. One request may invoke the image tool at
 most four times across initial generation and validation repairs. Arbitrary
 image URLs invented by the text model are rejected. `IMG_GEN_ARK_API_KEY`,
 `IMG_GEN_ARK_IMAGE_MODEL`, and `IMG_GEN_ARK_IMAGE_BASE_URL` must all be
-configured explicitly. See the
+configured explicitly. Generated images use Ark's minimum `1K` output size.
+See the
 [Volcengine Ark image-generation API](https://www.volcengine.com/docs/82379/1541523?lang=zh)
 for model/endpoint setup.
 

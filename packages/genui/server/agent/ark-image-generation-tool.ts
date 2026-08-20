@@ -284,7 +284,7 @@ export async function generateArkImage(
         body: JSON.stringify({
           model: config.model,
           prompt,
-          size: '2K',
+          size: '1K',
           sequential_image_generation: 'disabled',
           stream: false,
           response_format: 'url',

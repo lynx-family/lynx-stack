@@ -11,7 +11,7 @@ import {
 } from './common/messages';
 import {
   ProviderAgentCache,
-  buildResourceRunOptions,
+  buildOpenAIRunOptions,
   createStableValueHash,
   pickProviderConfig,
 } from './common/provider';
@@ -110,7 +110,7 @@ export default class OpenUIAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = agent.stream(
       modelMessages,
-      buildResourceRunOptions(opts, abortSignal),
+      buildOpenAIRunOptions(opts, abortSignal),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -177,7 +177,7 @@ export default class OpenUIAgentService {
           buildDataModelSystemMessage,
         ),
       ),
-      buildResourceRunOptions(opts, abortSignal),
+      buildOpenAIRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

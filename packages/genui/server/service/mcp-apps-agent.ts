@@ -7,7 +7,7 @@ import type { McpAppsAgent } from '../agent/mcp-apps-agent';
 import { buildConversationMessages, toModelMessages } from './common/messages';
 import {
   ProviderAgentCache,
-  buildResourceRunOptions,
+  buildOpenAIRunOptions,
   pickProviderConfig,
 } from './common/provider';
 import { extractGenerationResult } from './common/result';
@@ -46,7 +46,7 @@ export class McpAppsAgentService {
     );
     const result = await agent.generate(
       modelMessages,
-      buildResourceRunOptions(opts, abortSignal),
+      buildOpenAIRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }
