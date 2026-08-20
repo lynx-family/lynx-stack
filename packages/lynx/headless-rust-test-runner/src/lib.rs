@@ -9,7 +9,7 @@ mod resource;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::sync::{Arc, Mutex as StdMutex, OnceLock, Weak};
+use std::sync::{Arc, Mutex as StdMutex, Weak};
 use std::time::{Duration, Instant};
 
 use debug_router::DebugRouter;
@@ -25,14 +25,12 @@ use protocol::{
 };
 use resource::ResourceContext;
 use serde_json::{json, Value};
-use tokio_util::task::LocalPoolHandle;
 
 const DEFAULT_VIEWPORT_WIDTH: usize = 800;
 const DEFAULT_VIEWPORT_HEIGHT: usize = 600;
 const DEFAULT_DEVICE_PIXEL_RATIO: f32 = 1.0;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const APP_NAME: &str = "HeadlessRustTestRunner";
-const MAX_CONCURRENT_VISITS: usize = 4;
 
 #[derive(Clone, Debug)]
 pub struct ConnectOptions {
@@ -85,25 +83,12 @@ struct LynxProcess {
   debug_router: DebugRouter,
   devtool_schema: Option<String>,
   page_owner: PageOwner,
-  visit_dispatcher: OnceLock<std::result::Result<VisitDispatcher, String>>,
   session_locks: Arc<SessionLocks>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum PageOwnerMode {
-  Direct,
-  VisitDispatcher,
-}
-
-#[derive(Clone, Copy)]
-struct PageOwnerClaim {
-  thread: std::thread::ThreadId,
-  mode: PageOwnerMode,
 }
 
 #[derive(Default)]
 struct PageOwner {
-  claim: StdMutex<Option<PageOwnerClaim>>,
+  claim: StdMutex<Option<std::thread::ThreadId>>,
 }
 
 impl PageOwner {
@@ -111,72 +96,17 @@ impl PageOwner {
     let current = std::thread::current().id();
     let mut claim = self.claim.lock().expect("page owner lock poisoned");
     match *claim {
-      Some(owner) if owner.mode == PageOwnerMode::VisitDispatcher => {
-        Err(Error::VisitDispatcher(format!(
-          "direct new_page mode is unavailable because the native owner is the visit dispatcher on thread {:?}; use visit_screenshot",
-          owner.thread
-        )))
-      }
-      Some(owner) if owner.thread != current => Err(Error::ThreadAffinity {
-        owner: format!("{:?} ({:?} mode)", owner.thread, owner.mode),
+      Some(owner) if owner != current => Err(Error::ThreadAffinity {
+        owner: format!("{owner:?}"),
         current: format!("{current:?}"),
       }),
       Some(_) => Ok(()),
       None => {
-        *claim = Some(PageOwnerClaim {
-          thread: current,
-          mode: PageOwnerMode::Direct,
-        });
+        *claim = Some(current);
         Ok(())
       }
     }
   }
-
-  fn ensure_visit_dispatcher_owner(&self) -> Result<()> {
-    let current = std::thread::current().id();
-    let claim = self.claim.lock().expect("page owner lock poisoned");
-    match *claim {
-      Some(owner) if owner.thread == current && owner.mode == PageOwnerMode::VisitDispatcher => {
-        Ok(())
-      }
-      Some(owner) => Err(Error::VisitDispatcher(format!(
-        "native visit was executed on {current:?}, but {:?} mode owns thread {:?}",
-        owner.mode, owner.thread
-      ))),
-      None => Err(Error::VisitDispatcher(
-        "native page owner was not initialized".into(),
-      )),
-    }
-  }
-
-  fn claim_visit_dispatcher(&self) -> std::result::Result<(), String> {
-    let current = std::thread::current().id();
-    let mut claim = self.claim.lock().expect("page owner lock poisoned");
-    match *claim {
-      Some(owner)
-        if owner.thread == current && owner.mode == PageOwnerMode::VisitDispatcher =>
-      {
-        Ok(())
-      }
-      Some(owner) => Err(format!(
-        "native page ownership was already claimed by {:?} mode on thread {:?}; call visit_screenshot before creating direct pages",
-        owner.mode, owner.thread
-      )),
-      None => {
-        *claim = Some(PageOwnerClaim {
-          thread: current,
-          mode: PageOwnerMode::VisitDispatcher,
-        });
-        Ok(())
-      }
-    }
-  }
-}
-
-#[derive(Clone)]
-struct VisitDispatcher {
-  pool: LocalPoolHandle,
-  permits: Arc<tokio::sync::Semaphore>,
 }
 
 #[derive(Default)]
@@ -200,9 +130,7 @@ impl SessionLocks {
 
 /// A cloneable, thread-safe handle to the process-wide Lynx runtime.
 ///
-/// Direct [`Lynx::new_page`] calls bind native pages to the first caller thread.
-/// Alternatively, [`Lynx::visit_screenshot`] lazily starts a dedicated owner
-/// that accepts visits from any thread. The two ownership modes are exclusive.
+/// [`Lynx::new_page`] binds native pages to the first caller thread.
 #[derive(Clone)]
 pub struct Lynx {
   process: Arc<LynxProcess>,
@@ -229,15 +157,6 @@ impl Lynx {
 
   pub fn new_page(&self) -> Result<Page> {
     self.process.page_owner.claim()?;
-    self.new_page_on_owner()
-  }
-
-  fn new_page_for_visit_dispatcher(&self) -> Result<Page> {
-    self.process.page_owner.ensure_visit_dispatcher_owner()?;
-    self.new_page_on_owner()
-  }
-
-  fn new_page_on_owner(&self) -> Result<Page> {
     let global_tasks = initialize_platform(&self.process.env)?;
     let renderer_tasks = SharedTasks::new();
     let frames = FrameStore::default();
@@ -280,85 +199,7 @@ impl Lynx {
     })
   }
 
-  /// Runs one screenshot visit on the process-wide native page owner.
-  ///
-  /// Unlike [`Lynx::new_page`], this method may be called from any OS thread.
-  /// Admission is bounded before the request is submitted to a single-worker
-  /// local pool; the native page is created, navigated, captured, and dropped
-  /// on that worker. This mode and direct `new_page` mode are mutually
-  /// exclusive.
-  pub async fn visit_screenshot(
-    &self,
-    input: String,
-    goto_options: GotoOptions,
-    screenshot_options: ScreenshotOptions,
-  ) -> Result<Vec<u8>> {
-    let dispatcher = self.visit_dispatcher()?;
-    let permit = Arc::clone(&dispatcher.permits)
-      .acquire_owned()
-      .await
-      .map_err(|_| Error::VisitDispatcher("native visit admission has closed".into()))?;
-    let lynx = self.clone();
-    dispatcher
-      .pool
-      .spawn_pinned(move || async move {
-        let _permit = permit;
-        run_screenshot_visit(&lynx, &input, goto_options, screenshot_options).await
-      })
-      .await
-      .map_err(|error| {
-        Error::VisitDispatcher(format!(
-          "native owner task stopped before completing the visit: {error}"
-        ))
-      })?
-  }
-
-  fn visit_dispatcher(&self) -> Result<VisitDispatcher> {
-    match self
-      .process
-      .visit_dispatcher
-      .get_or_init(|| start_visit_dispatcher(Arc::clone(&self.process)))
-    {
-      Ok(dispatcher) => Ok(dispatcher.clone()),
-      Err(message) => Err(Error::VisitDispatcher(message.clone())),
-    }
-  }
-
   pub fn close(self) {}
-}
-
-fn start_visit_dispatcher(
-  process: Arc<LynxProcess>,
-) -> std::result::Result<VisitDispatcher, String> {
-  let pool = std::panic::catch_unwind(|| LocalPoolHandle::new(1))
-    .map_err(|_| "failed to start native owner local pool".to_string())?;
-  // Claim ownership before publishing the pool. This one-shot handshake keeps
-  // dispatcher initialization atomic even if the first async caller is later
-  // cancelled; it is not a request queue.
-  let (ready, initialized) = std::sync::mpsc::sync_channel(1);
-  std::mem::drop(pool.spawn_pinned(move || async move {
-    let _ = ready.send(process.page_owner.claim_visit_dispatcher());
-  }));
-  initialized
-    .recv()
-    .map_err(|_| "native owner task stopped during initialization".to_string())??;
-  Ok(VisitDispatcher {
-    pool,
-    permits: Arc::new(tokio::sync::Semaphore::new(MAX_CONCURRENT_VISITS)),
-  })
-}
-
-async fn run_screenshot_visit(
-  lynx: &Lynx,
-  input: &str,
-  goto_options: GotoOptions,
-  screenshot_options: ScreenshotOptions,
-) -> Result<Vec<u8>> {
-  let mut page = lynx.new_page_for_visit_dispatcher()?;
-  page.goto_for_screenshot(input, goto_options).await?;
-  let png = page.screenshot(screenshot_options).await?;
-  drop(page);
-  Ok(png)
 }
 
 async fn initialize_process(options: &ConnectOptions) -> Result<Arc<LynxProcess>> {
@@ -391,7 +232,6 @@ async fn initialize_process(options: &ConnectOptions) -> Result<Arc<LynxProcess>
         debug_router,
         devtool_schema: options.devtool_schema.clone(),
         page_owner: PageOwner::default(),
-        visit_dispatcher: OnceLock::new(),
         session_locks: Arc::new(SessionLocks::default()),
       }))
     })
@@ -940,17 +780,7 @@ fn final_url_component(url: &str) -> Option<&str> {
 mod tests {
   use super::*;
 
-  fn assert_send<T: Send>(_: T) {}
   fn assert_send_sync<T: Send + Sync>() {}
-
-  #[allow(dead_code)]
-  fn assert_visit_screenshot_future_is_send(lynx: &Lynx) {
-    assert_send(lynx.visit_screenshot(
-      String::new(),
-      GotoOptions::default(),
-      ScreenshotOptions::default(),
-    ));
-  }
 
   #[test]
   fn lynx_handle_is_send_and_sync() {
@@ -967,22 +797,6 @@ mod tests {
     });
     let error = other_thread.join().unwrap().unwrap_err();
     assert!(error.to_string().contains("bound to owner thread"));
-  }
-
-  #[test]
-  fn direct_page_mode_rejects_visit_dispatcher_mode() {
-    let owner = PageOwner::default();
-    owner.claim().unwrap();
-    let error = owner.claim_visit_dispatcher().unwrap_err();
-    assert!(error.to_string().contains("direct"));
-  }
-
-  #[test]
-  fn visit_dispatcher_mode_rejects_direct_page_mode() {
-    let owner = PageOwner::default();
-    owner.claim_visit_dispatcher().unwrap();
-    let error = owner.claim().unwrap_err();
-    assert!(error.to_string().contains("use visit_screenshot"));
   }
 
   #[test]
