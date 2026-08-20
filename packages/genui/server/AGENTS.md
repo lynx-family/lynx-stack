@@ -74,9 +74,10 @@ export SEARCH_INFINITY_API_KEY="..."
 ```
 
 When the key is present, the server conditionally registers a `web_search`
-tool. The tool calls the Doubao Search Global API with a fixed maximum of five
-text results and never returns search images. It may be called at most three
-times per HTTP request across the initial generation and all repair attempts.
+tool. The tool calls the Doubao Search Custom web API, which supports both
+subscription-plan and post-paid API keys, with a fixed maximum of five text
+results and never returns search images. It may be called at most three times
+per HTTP request across the initial generation and all repair attempts.
 `SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
 request timeout and must be an integer from 1 through 60000. Keep the key
 server-only and do not include a `Bearer` prefix. Missing configuration leaves

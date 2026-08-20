@@ -79,7 +79,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `IMG_GEN_ARK_IMAGE_MODEL`                                      | Ark image-generation model/endpoint id              | —                   |
 | `IMG_GEN_ARK_IMAGE_BASE_URL`                                   | Ark image-generation HTTPS API base URL             | —                   |
 | `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)       | `120000`            |
-| `SEARCH_INFINITY_API_KEY`                                      | Optional server-side Doubao Search API key          | disabled            |
+| `SEARCH_INFINITY_API_KEY`                                      | Optional Doubao Custom subscription/post-paid key   | disabled            |
 | `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
 | `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring             | disabled            |
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
@@ -103,8 +103,10 @@ information. The key is never sent to the Playground. Each generation may
 perform at most three searches across the initial response and validation
 repairs; each search returns at most five normalized text results. Source links
 must come from the user input or the current request's search results. Search
-images are intentionally excluded from this first integration. See the
-[Doubao Search console](https://console.volcengine.com/search-infinity) for
+images are intentionally excluded from this first integration. The server uses
+the Custom web-search API so both subscription-plan and post-paid keys are
+supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
+and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 
 Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
