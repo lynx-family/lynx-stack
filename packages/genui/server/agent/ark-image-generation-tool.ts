@@ -22,6 +22,7 @@ interface ArkImageGenerationRunState {
   attemptedCalls: number;
   generatedURLs: string[];
   maxCalls: number;
+  scopeId: string;
 }
 
 type ArkImageGenerationRequestContextValues = Record<
@@ -50,6 +51,37 @@ export interface GeneratedImage {
   url: string;
   size?: string;
 }
+
+const imageGenerationSuspendSchema = z.object({
+  jobId: z.string().uuid(),
+});
+
+export type ArkImageGenerationSuspendPayload = z.infer<
+  typeof imageGenerationSuspendSchema
+>;
+
+const imageGenerationResumeSchema = z.discriminatedUnion('ok', [
+  z.object({
+    ok: z.literal(true),
+    jobId: z.string().uuid(),
+    url: z.string().url(),
+    size: z.string().optional(),
+  }),
+  z.object({
+    ok: z.literal(false),
+    jobId: z.string().uuid(),
+    error: z.string().min(1),
+  }),
+]);
+
+export type ArkImageGenerationResumeData = z.infer<
+  typeof imageGenerationResumeSchema
+>;
+
+const pendingImageJobsByScope = new Map<
+  string,
+  Map<string, Promise<ArkImageGenerationResumeData>>
+>();
 
 function readNonEmpty(
   environment: Environment,
@@ -162,6 +194,7 @@ export function createArkImageGenerationRunScope(
     attemptedCalls: 0,
     generatedURLs: [],
     maxCalls,
+    scopeId: crypto.randomUUID(),
   });
   return { requestContext };
 }
@@ -199,6 +232,68 @@ function recordGeneratedImageURL(
       ? state.generatedURLs
       : [...state.generatedURLs, url],
   });
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function startPendingImageGeneration(
+  requestContext: RequestContext<ArkImageGenerationRequestContextValues>,
+  config: ArkImageGenerationConfig,
+  prompt: string,
+  fetchImpl: typeof fetch,
+  abortSignal?: AbortSignal,
+): ArkImageGenerationSuspendPayload {
+  reserveImageGenerationCall(requestContext);
+  const { scopeId } = requestContext.get(ARK_IMAGE_GENERATION_RUN_STATE_KEY);
+  const jobId = crypto.randomUUID();
+  const jobs = pendingImageJobsByScope.get(scopeId)
+    ?? new Map<string, Promise<ArkImageGenerationResumeData>>();
+  const pending: Promise<ArkImageGenerationResumeData> = generateArkImage(
+    config,
+    prompt,
+    fetchImpl,
+    abortSignal,
+  ).then(
+    (generated): ArkImageGenerationResumeData => ({
+      ok: true,
+      jobId,
+      url: generated.url,
+      ...(typeof generated.size === 'string' ? { size: generated.size } : {}),
+    }),
+  ).catch(
+    (error: unknown): ArkImageGenerationResumeData => ({
+      ok: false,
+      jobId,
+      error: errorMessage(error),
+    }),
+  );
+  jobs.set(jobId, pending);
+  pendingImageJobsByScope.set(scopeId, jobs);
+  return { jobId };
+}
+
+export async function waitForPendingArkImageGeneration(
+  scope: ArkImageGenerationRunScope,
+  suspendPayload: unknown,
+): Promise<ArkImageGenerationResumeData> {
+  const { jobId } = imageGenerationSuspendSchema.parse(suspendPayload);
+  const { scopeId } = scope.requestContext.get(
+    ARK_IMAGE_GENERATION_RUN_STATE_KEY,
+  );
+  const jobs = pendingImageJobsByScope.get(scopeId);
+  const pending = jobs?.get(jobId);
+  if (!pending) {
+    throw new Error(`Image generation job "${jobId}" was not found`);
+  }
+
+  try {
+    return await pending;
+  } finally {
+    jobs?.delete(jobId);
+    if (jobs?.size === 0) pendingImageJobsByScope.delete(scopeId);
+  }
 }
 
 function imageGenerationEndpoint(baseURL: string): string {
@@ -355,6 +450,7 @@ const imageGenerationRequestContextSchema = z.object({
     attemptedCalls: z.number().int().nonnegative(),
     generatedURLs: z.array(z.string().url()),
     maxCalls: z.number().int().min(1).max(10),
+    scopeId: z.string().uuid(),
   }),
 });
 
@@ -365,21 +461,47 @@ export function createArkImageGenerationTool(
   return createTool({
     id: 'generate_image',
     description:
-      'Generate one original image for an A2UI Image component. Call this tool before returning A2UI whenever an image is needed and the user did not already provide a loadable image URL. Reuse a returned URL when the same visual can serve multiple components.',
+      'Asynchronously generate one original image for an A2UI Image component. Emit a complete renderable A2UI array with a same-id Loading placeholder in the assistant content before calling this tool. The agent run suspends while the image is generated, then resumes with the generated URL so the agent can return the A2UI patch. Reuse a returned URL when the same visual can serve multiple components.',
     inputSchema: imageGenerationInputSchema,
     outputSchema: imageGenerationOutputSchema,
+    suspendSchema: imageGenerationSuspendSchema,
+    resumeSchema: imageGenerationResumeSchema,
     requestContextSchema: imageGenerationRequestContextSchema,
-    execute: ({ prompt }, context) => {
+    execute: async ({ prompt }, context) => {
       const requestContext = context.requestContext as RequestContext<
         ArkImageGenerationRequestContextValues
       >;
-      return generateArkImageForRun(
-        { requestContext },
+
+      const resumeData = context.agent?.resumeData;
+      if (resumeData !== undefined) {
+        const resumed = imageGenerationResumeSchema.parse(resumeData);
+        if (!resumed.ok) throw new Error(resumed.error);
+        recordGeneratedImageURL(requestContext, resumed.url);
+        return {
+          url: resumed.url,
+          ...(typeof resumed.size === 'string' ? { size: resumed.size } : {}),
+        };
+      }
+
+      const suspend = context.agent?.suspend;
+      if (!suspend) {
+        return generateArkImageForRun(
+          { requestContext },
+          config,
+          prompt,
+          fetchImpl,
+          context.abortSignal,
+        );
+      }
+
+      const suspendPayload = startPendingImageGeneration(
+        requestContext,
         config,
         prompt,
         fetchImpl,
         context.abortSignal,
       );
+      await suspend(suspendPayload);
     },
   });
 }

@@ -12,6 +12,7 @@ import {
   userProvidedA2UIURLSources,
 } from '../agent/a2ui-open-url-policy.js';
 import {
+  extractJsonArray,
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
@@ -20,6 +21,7 @@ import type { ArkImageGenerationRunScope } from '../agent/ark-image-generation-t
 import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
+  waitForPendingArkImageGeneration,
 } from '../agent/ark-image-generation-tool.js';
 import { searchedDoubaoDocumentURLs } from '../agent/doubao-search-tool.js';
 import {
@@ -35,7 +37,7 @@ import {
   resolveReasoningEffort,
 } from './common/provider';
 import {
-  extractGenerationResult,
+  extractSuspension,
   extractText,
   finalizeResult,
   toAsyncIterable,
@@ -94,6 +96,33 @@ function buildA2UIRunOptions(
   };
 }
 
+interface CompletedA2UIRun {
+  text: string;
+  usage: unknown;
+  finishReason: unknown;
+}
+
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
+function canonicalA2UIText(phaseTexts: readonly string[]): string {
+  const messages: unknown[] = [];
+  for (const text of phaseTexts) {
+    if (!text.trim()) continue;
+    const parsed = extractJsonArray(text);
+    if (!isUnknownArray(parsed)) return phaseTexts.join('\n');
+    messages.push(...parsed);
+  }
+  return messages.length > 0
+    ? JSON.stringify(messages, null, 2)
+    : phaseTexts.join('\n');
+}
+
+function isSuspended(finishReason: unknown): boolean {
+  return finishReason === 'suspended';
+}
+
 export default class A2UIAgentService {
   private readonly agentCache = new ProviderAgentCache<A2UIAgent>();
 
@@ -118,12 +147,12 @@ export default class A2UIAgentService {
     );
   }
 
-  public async stream(
+  private async startStream(
     messages: ChatMessage[],
-    opts: A2UIChatOptions = {},
-    abortSignal?: AbortSignal,
-    imageGenerationScope = createArkImageGenerationRunScope(),
-  ): Promise<MastraStreamResult> {
+    opts: A2UIChatOptions,
+    abortSignal: AbortSignal | undefined,
+    imageGenerationScope: ArkImageGenerationRunScope,
+  ): Promise<{ agent: A2UIAgent; result: MastraStreamResult }> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
@@ -147,7 +176,22 @@ export default class A2UIAgentService {
       durationMs: performance.now() - streamStartedAt,
       hasTextStream: Boolean(result.textStream),
     });
-    return result;
+    return { agent, result };
+  }
+
+  public async stream(
+    messages: ChatMessage[],
+    opts: A2UIChatOptions = {},
+    abortSignal?: AbortSignal,
+    imageGenerationScope = createArkImageGenerationRunScope(),
+  ): Promise<MastraStreamResult> {
+    const started = await this.startStream(
+      messages,
+      opts,
+      abortSignal,
+      imageGenerationScope,
+    );
+    return started.result;
   }
 
   public async streamAsAsyncIterable(
@@ -180,15 +224,105 @@ export default class A2UIAgentService {
       preparedMessageCount: preparedMessages.length,
       preparedContentChars: sumContentChars(preparedMessages),
     });
-    const streamResult: MastraStreamResult = await this.stream(
+    const started = await this.startStream(
       preparedMessages,
       opts,
       abortSignal,
       imageGenerationScope,
     );
+    let resolveFinal!: (value: CompletedA2UIRun) => void;
+    let rejectFinal!: (reason?: unknown) => void;
+    const finalResult = new Promise<CompletedA2UIRun>((resolve, reject) => {
+      resolveFinal = resolve;
+      rejectFinal = reject;
+    });
+    void finalResult.catch(() => undefined);
+    let consumed = false;
+    let finalSettled = false;
+
     return {
-      textStream: toAsyncIterable(streamResult.textStream),
-      finalize: () => finalizeResult(streamResult),
+      textStream: {
+        [Symbol.asyncIterator]: async function*() {
+          if (consumed) {
+            throw new Error('A2UI agent stream can only be consumed once');
+          }
+          consumed = true;
+          const phaseTexts: string[] = [];
+          let result = started.result;
+
+          try {
+            while (true) {
+              for await (const chunk of toAsyncIterable(result.textStream)) {
+                yield chunk;
+              }
+
+              const metadata = await finalizeResult(result);
+              const phaseText = metadata.text ?? await extractText(result);
+              if (phaseText) phaseTexts.push(phaseText);
+              if (!isSuspended(metadata.finishReason)) {
+                const completed = {
+                  text: canonicalA2UIText(phaseTexts),
+                  usage: metadata.usage,
+                  finishReason: metadata.finishReason,
+                };
+                finalSettled = true;
+                resolveFinal(completed);
+                return;
+              }
+
+              const suspended = await extractSuspension(result);
+              if (!suspended.runId) {
+                throw new Error(
+                  'Suspended image generation did not provide an agent runId',
+                );
+              }
+              opts.onPerformanceEvent?.('image_generation.suspended', {
+                runId: suspended.runId,
+              });
+              const waitStartedAt = performance.now();
+              const resumeData = await waitForPendingArkImageGeneration(
+                imageGenerationScope,
+                suspended.suspendPayload,
+              );
+              abortSignal?.throwIfAborted();
+              opts.onPerformanceEvent?.('image_generation.completed', {
+                durationMs: performance.now() - waitStartedAt,
+                ok: resumeData.ok,
+              });
+
+              yield '\n';
+              const resumeStartedAt = performance.now();
+              result = await started.agent.resumeStream(
+                resumeData,
+                {
+                  ...buildA2UIRunOptions(
+                    opts,
+                    abortSignal,
+                    imageGenerationScope,
+                  ),
+                  runId: suspended.runId,
+                },
+              ) as MastraStreamResult;
+              opts.onPerformanceEvent?.('agent.stream.resume.completed', {
+                durationMs: performance.now() - resumeStartedAt,
+                hasTextStream: Boolean(result.textStream),
+              });
+            }
+          } catch (error) {
+            finalSettled = true;
+            rejectFinal(error);
+            throw error;
+          } finally {
+            if (!finalSettled) {
+              finalSettled = true;
+              rejectFinal(
+                new Error('A2UI agent stream ended before completion'),
+              );
+            }
+          }
+        },
+      },
+      finalize: () => finalResult,
     };
   }
 
@@ -207,6 +341,64 @@ export default class A2UIAgentService {
     );
   }
 
+  private async generateToCompletion(
+    agent: A2UIAgent,
+    modelMessages: unknown,
+    opts: A2UIChatOptions,
+    abortSignal: AbortSignal | undefined,
+    imageGenerationScope: ArkImageGenerationRunScope,
+  ): Promise<CompletedA2UIRun> {
+    abortSignal?.throwIfAborted();
+    let result = await agent.generate(
+      modelMessages,
+      buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
+    ) as MastraResult;
+    const phaseTexts: string[] = [];
+
+    while (true) {
+      const [text, metadata] = await Promise.all([
+        extractText(result),
+        finalizeResult(result),
+      ]);
+      if (text) phaseTexts.push(text);
+      abortSignal?.throwIfAborted();
+      if (!isSuspended(metadata.finishReason)) {
+        return {
+          text: canonicalA2UIText(phaseTexts),
+          usage: metadata.usage,
+          finishReason: metadata.finishReason,
+        };
+      }
+
+      const suspended = await extractSuspension(result);
+      if (!suspended.runId) {
+        throw new Error(
+          'Suspended image generation did not provide an agent runId',
+        );
+      }
+      opts.onPerformanceEvent?.('image_generation.suspended', {
+        runId: suspended.runId,
+      });
+      const waitStartedAt = performance.now();
+      const resumeData = await waitForPendingArkImageGeneration(
+        imageGenerationScope,
+        suspended.suspendPayload,
+      );
+      abortSignal?.throwIfAborted();
+      opts.onPerformanceEvent?.('image_generation.completed', {
+        durationMs: performance.now() - waitStartedAt,
+        ok: resumeData.ok,
+      });
+      result = await agent.resumeGenerate(
+        resumeData,
+        {
+          ...buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
+          runId: suspended.runId,
+        },
+      ) as MastraResult;
+    }
+  }
+
   public async generateRaw(
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
@@ -214,17 +406,20 @@ export default class A2UIAgentService {
     abortSignal?: AbortSignal,
     imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
-    const result = await this.generate(
-      buildConversationMessages(
+    abortSignal?.throwIfAborted();
+    const agent = await this.getAgent(opts);
+    abortSignal?.throwIfAborted();
+    return this.generateToCompletion(
+      agent,
+      toModelMessages(buildConversationMessages(
         messages,
         conversation,
         buildDataModelSystemMessage,
-      ),
+      )),
       opts,
       abortSignal,
       imageGenerationScope,
-    ) as MastraResult;
-    return extractGenerationResult(result);
+    );
   }
 
   public async generateValidated(
@@ -285,16 +480,18 @@ export default class A2UIAgentService {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       abortSignal?.throwIfAborted();
-      const result = await agent.generate(
+      const completed = await this.generateToCompletion(
+        agent,
         toModelMessages(convo),
-        buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
-      ) as MastraResult;
+        opts,
+        abortSignal,
+        imageGenerationScope,
+      );
 
-      const text = await extractText(result);
+      const { text } = completed;
       lastText = text;
-      const metadata = await finalizeResult(result);
-      lastUsage = metadata.usage;
-      lastFinishReason = metadata.finishReason;
+      lastUsage = completed.usage;
+      lastFinishReason = completed.finishReason;
       abortSignal?.throwIfAborted();
 
       const validation = validateA2UIOutput(

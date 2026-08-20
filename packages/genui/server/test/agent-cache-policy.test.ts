@@ -29,6 +29,8 @@ function testAgent() {
         finishReason: 'stop',
       }),
     stream: () => ({ textStream: undefined }),
+    resumeGenerate: () => Promise.resolve({}),
+    resumeStream: () => ({}),
   };
 }
 

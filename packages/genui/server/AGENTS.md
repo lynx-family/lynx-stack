@@ -64,6 +64,15 @@ support tool/function calling. Only user/host-provided image sources and URLs
 returned by the request's tool scope may reach the renderer. There is no
 stock-image or placeholder-image fallback when generation fails.
 
+Image generation uses Mastra tool suspension. The agent first streams a
+complete surface with its theme, body, and a stable-id `Loading` placeholder.
+`generate_image` starts Ark generation and suspends the run; the service waits
+without closing the SSE response and resumes the same agent run with the image
+result. The resumed agent owns the final `updateComponents` or
+`updateDataModel` patch. The tool itself never constructs protocol messages.
+The JSON endpoints use the same continuation internally but return only after
+the resumed agent has completed.
+
 The hosting runtime must provide these variables before starting the server.
 
 To let the A2UI agent retrieve current or externally verifiable public-web
