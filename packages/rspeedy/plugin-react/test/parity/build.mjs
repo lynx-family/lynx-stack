@@ -16,11 +16,7 @@ const config = {
   mode,
   environments: { lynx: {} },
   source: { entry: { main: './fixtures/basic.tsx' } },
-  // `chunk.hash` is not reproducible across builds, and both the content hash
-  // in a filename and the debug metadata release are keyed on it. The filename
-  // hash is turned off and the release is stripped before comparing; minifying
-  // is turned off as well, because a release that differs by one string still
-  // permutes every mangled name.
+  // TODO: restore the defaults once swc-project/swc#12129 lands.
   output: { distPath: { root }, filenameHash: false, minify: false },
   plugins: [pluginReactLynx()],
 }
