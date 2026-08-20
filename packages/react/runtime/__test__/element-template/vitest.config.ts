@@ -107,6 +107,9 @@ const config: UserConfigExport = defineConfig({
     name: 'react/runtime-et',
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
+      // Separate directory so this suite's report does not overwrite the
+      // snapshot/core suite report in ./coverage (both are uploaded to Codecov).
+      reportsDirectory: './coverage/element-template',
       include: ['src/element-template/**'],
       exclude: [
         'src/element-template/**/*.d.ts',
