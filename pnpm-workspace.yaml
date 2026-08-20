@@ -151,7 +151,7 @@ overrides:
   # Preact 11 exploration: temporary pkg.pr.new build of lynx-family/internal-preact#22
   # (branch feat/v11-lynx-patches). Replace with a published
   # @lynx-js/internal-preact@11.x snapshot via the catalog before landing.
-  preact: "https://pkg.pr.new/lynx-family/internal-preact/preact@0b8f2ce"
+  preact: "https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d"
 
   "@rspack/core": "catalog:rspack"
 
