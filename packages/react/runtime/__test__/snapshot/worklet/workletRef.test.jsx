@@ -372,7 +372,7 @@ describe('MainThreadObject', () => {
     expect(captureMainThreadObject({ value: 42 })).toBeUndefined();
   });
 
-  it('creates a typed handle through the library-author hook', () => {
+  it('creates a typed handle through the library-author hook', async () => {
     const definition = {
       type: '@test/counter',
       create: value => ({ value }),
@@ -415,6 +415,10 @@ describe('MainThreadObject', () => {
     expect(() => counter.get()).toThrow(
       'MainThreadObject handle for "@test/counter" cannot access "get" in the background runtime. Use the object only inside a main-thread function.',
     );
+    expect(counter.then).toBeUndefined();
+    expect(counter.$$typeof).toBeUndefined();
+    expect(counter[Symbol.toStringTag]).toBeUndefined();
+    await expect(Promise.resolve(counter)).resolves.toBe(counter);
     expect(() => counter.value = 43).toThrow(
       'MainThreadObject handle for "@test/counter" cannot set "value" in the background runtime. Use the object only inside a main-thread function.',
     );
@@ -516,16 +520,6 @@ describe('MainThreadObject', () => {
     );
     expect(() =>
       defineMainThreadObjectType({
-        type: '@test/invalid-dispose',
-        create: value => ({ value }),
-        dispose: true,
-      })
-    ).toThrow(
-      'MainThreadObject type "@test/invalid-dispose" has an invalid dispose Main Thread Function.',
-    );
-
-    expect(() =>
-      defineMainThreadObjectType({
         type: '@test/capturing-create',
         create: {
           _wkltId: 'capturing-create',
@@ -534,18 +528,6 @@ describe('MainThreadObject', () => {
       })
     ).toThrow(
       'MainThreadObject create function for "@test/capturing-create" must not capture values. Import dependencies from a shared-runtime module instead.',
-    );
-    expect(() =>
-      defineMainThreadObjectType({
-        type: '@test/capturing-dispose',
-        create: value => ({ value }),
-        dispose: {
-          _wkltId: 'capturing-dispose',
-          _c: { mutableValue: 1 },
-        },
-      })
-    ).toThrow(
-      'MainThreadObject dispose function for "@test/capturing-dispose" must not capture values. Import dependencies from a shared-runtime module instead.',
     );
     expect(() =>
       defineMainThreadObjectType({
@@ -561,14 +543,13 @@ describe('MainThreadObject', () => {
     expect(() =>
       defineMainThreadObjectType({
         type: '@test/this-capture',
-        create: value => ({ value }),
-        dispose: {
+        create: {
           _wkltId: 'this-capture',
           helper: { stop() {} },
         },
       })
     ).toThrow(
-      'MainThreadObject dispose function for "@test/this-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+      'MainThreadObject create function for "@test/this-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
     );
 
     const type = defineMainThreadObjectType({

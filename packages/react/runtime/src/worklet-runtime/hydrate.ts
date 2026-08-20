@@ -38,14 +38,20 @@ function hydrateCtxImpl(
     return;
   }
 
+  // Worklet-value descriptors are atomic. In particular, a MainThreadObject's
+  // `_initValue` is user data and must never be interpreted as nested worklet
+  // metadata during hydration.
+  if (typeof ctxObj['_wvid'] === 'number') {
+    hydrateWorkletValueHandle(
+      ctxObj as unknown as WorkletRefImpl<unknown>,
+      firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
+    );
+    return;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
-    if (key === '_wvid') {
-      hydrateWorkletValueHandle(
-        ctxObj as unknown as WorkletRefImpl<unknown>,
-        firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
-      );
-    } else if (key === '_jsFn') {
+    if (key === '_jsFn') {
       hydrateDelayRunOnBackgroundTasks(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,

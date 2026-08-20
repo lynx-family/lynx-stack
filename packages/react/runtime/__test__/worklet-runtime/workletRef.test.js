@@ -330,6 +330,23 @@ describe('WorkletRef', () => {
     expect(dispose).toHaveBeenLastCalledWith(firstScreenValue);
   });
 
+  it('discards typed objects even when their shape resembles a mutable cell', () => {
+    const dispose = vi.fn();
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/mutable-cell-shaped-object',
+      () => ({ _wvid: 91, current: 0 }),
+      dispose,
+      1,
+    );
+    updateWorkletRefInitValueChanges([
+      [91, null, '@test/mutable-cell-shaped-object', 1],
+    ]);
+
+    removeValueFromWorkletRefMap(91);
+
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
   it('hydrates a used first-screen main-thread object into the background id', () => {
     const dispose = vi.fn();
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
@@ -375,6 +392,47 @@ describe('WorkletRef', () => {
 
     removeValueFromWorkletRefMap(1);
     expect(dispose).toHaveBeenCalledWith(firstScreenValue);
+  });
+
+  it('does not hydrate worklet metadata found inside object payloads', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/atomic-hydration-payload',
+      value => ({ value }),
+      undefined,
+      1,
+    );
+    const unrelatedRef = { _wvid: 3, current: 'unrelated' };
+    globalThis.lynxWorkletImpl._refImpl._workletRefMap[3] = unrelatedRef;
+    const payload = { _wvid: 3, current: 'payload' };
+    const worklet = {
+      _wkltId: 'atomic-hydration-payload',
+      _c: {
+        value: {
+          _wvid: 92,
+          _initValue: payload,
+          _type: '@test/atomic-hydration-payload',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    const firstScreenWorklet = {
+      _wkltId: 'atomic-hydration-payload',
+      _c: {
+        value: {
+          _wvid: -92,
+          _initValue: payload,
+          _type: '@test/atomic-hydration-payload',
+          _mtoVersion: 1,
+        },
+      },
+    };
+
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+
+    expect(globalThis.lynxWorkletImpl._refImpl._workletRefMap[3]).toBe(
+      unrelatedRef,
+    );
+    expect(getFromWorkletRefMap({ _wvid: 92 })).toBeUndefined();
   });
 
   it('rejects different typed-object keys at the same hydration path', () => {

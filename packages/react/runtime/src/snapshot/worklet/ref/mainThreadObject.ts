@@ -27,6 +27,10 @@ const mainThreadObjectTypeDefinitions = new WeakMap<
  * Describes how a serializable initialization payload becomes a stable object
  * in the main-thread runtime.
  *
+ * V1 does not expose a disposal callback because handle release may be
+ * GC-driven. Created objects must remain safe until the runtime releases them,
+ * which may be as late as page teardown.
+ *
  * @public
  */
 export interface MainThreadObjectTypeDefinition<I, O extends object> {
@@ -39,20 +43,14 @@ export interface MainThreadObjectTypeDefinition<I, O extends object> {
    * function must come from shared-runtime modules.
    */
   readonly create: (initialValue: I) => O;
-  /**
-   * Dispose a realized object after its handle is released.
-   *
-   * This must be a capture-free Main Thread Function when provided.
-   */
-  readonly dispose?: (object: O) => void;
 }
 
 /**
  * An immutable MainThreadObject type token with source-handle downcasting.
  *
- * The lifecycle functions belong to the input definition and are not exposed
- * by the returned token. In the background runtime they compile to opaque
- * Main Thread Function descriptors rather than bundling their implementation.
+ * The factory belongs to the input definition and is not exposed by the
+ * returned token. In the background runtime it compiles to an opaque Main
+ * Thread Function descriptor rather than bundling its implementation.
  *
  * @public
  */
@@ -146,7 +144,7 @@ class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHa
 /**
  * Define a main-thread object type for use by a library-provided hook.
  *
- * @param definition - Stable type key and target-object lifecycle functions.
+ * @param definition - Stable type key and target-object factory.
  * @returns An immutable object type definition.
  * @public
  */
@@ -161,15 +159,7 @@ export function defineMainThreadObjectType<I, O extends object>(
       `MainThreadObject type "${definition.type}" must provide a create Main Thread Function.`,
     );
   }
-  if (definition.dispose !== undefined && !isMainThreadLifecycleFunction(definition.dispose)) {
-    throw new Error(
-      `MainThreadObject type "${definition.type}" has an invalid dispose Main Thread Function.`,
-    );
-  }
   assertCaptureFreeLifecycleFunction(definition.type, 'create', definition.create);
-  if (definition.dispose !== undefined) {
-    assertCaptureFreeLifecycleFunction(definition.type, 'dispose', definition.dispose);
-  }
 
   const type = definition.type;
   const objectType = Object.freeze({
@@ -236,7 +226,7 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
   registerMainThreadObjectType(
     definition.type,
     definition.create as ((initialValue: unknown) => object) | Worklet,
-    definition.dispose as (((object: object) => void) | Worklet | undefined),
+    undefined,
     MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   );
 }
@@ -266,7 +256,7 @@ function isMainThreadLifecycleFunction(
 
 function assertCaptureFreeLifecycleFunction(
   type: string,
-  name: 'create' | 'dispose',
+  name: 'create',
   value: ((...args: never[]) => unknown) | Worklet,
 ): void {
   if (typeof value === 'function') {
@@ -305,6 +295,13 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
     get(target, property, receiver): unknown {
       if (property in target) {
         return Reflect.get(target, property, receiver) as unknown;
+      }
+      if (
+        typeof property === 'symbol'
+        || property === 'then'
+        || property === '$$typeof'
+      ) {
+        return undefined;
       }
       throw new Error(
         `MainThreadObject handle for "${type}" cannot access "${
