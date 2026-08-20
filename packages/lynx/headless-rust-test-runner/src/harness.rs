@@ -3,11 +3,11 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, ThreadId};
 use std::time::{Duration, Instant};
 
-use lynx::{
-  run_global_ui_task, Env, HeadlessView, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost,
-};
 #[cfg(not(target_os = "macos"))]
-use lynx::{set_global_ui_task_runner, GlobalUiTaskRunner};
+use lynx::{run_global_ui_task, set_global_ui_task_runner, GlobalUiTaskRunner};
+use lynx::{
+  Env, HeadlessView, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost, WindowlessRenderer,
+};
 
 use crate::{Error, Result};
 
@@ -51,18 +51,22 @@ impl SharedTasks {
   fn drain_ready(&self) -> Vec<Task> {
     let now = Instant::now();
     let mut queue = self.queue.lock().expect("task queue lock poisoned");
-    let mut ready = Vec::new();
-    let mut pending = Vec::with_capacity(queue.len());
-    for scheduled in queue.drain(..) {
-      if scheduled.deadline <= now {
-        ready.push(scheduled.task);
-      } else {
-        pending.push(scheduled);
-      }
-    }
-    *queue = pending;
-    ready
+    drain_ready_at(&mut queue, now)
   }
+}
+
+fn drain_ready_at(queue: &mut Vec<ScheduledTask>, now: Instant) -> Vec<Task> {
+  let mut ready = Vec::new();
+  let mut pending = Vec::with_capacity(queue.len());
+  for scheduled in queue.drain(..) {
+    if scheduled.deadline <= now {
+      ready.push(scheduled.task);
+    } else {
+      pending.push(scheduled);
+    }
+  }
+  *queue = pending;
+  ready
 }
 
 pub(crate) struct QueueingHost {
@@ -100,54 +104,47 @@ impl GlobalUiTaskRunner for QueueingGlobalRunner {
   }
 }
 
+#[cfg(target_os = "macos")]
+pub(crate) fn initialize_platform(_env: &Env) -> Result<SharedTasks> {
+  static PLATFORM: OnceLock<SharedTasks> = OnceLock::new();
+  Ok(
+    PLATFORM
+      .get_or_init(|| {
+        macos_headless_display::install_if_needed();
+        SharedTasks::new()
+      })
+      .clone(),
+  )
+}
+
+#[cfg(not(target_os = "macos"))]
 pub(crate) fn initialize_platform(env: &Env) -> Result<SharedTasks> {
-  install_headless_display_link_if_needed();
-  static GLOBAL_TASKS: OnceLock<SharedTasks> = OnceLock::new();
-  if let Some(tasks) = GLOBAL_TASKS.get() {
-    return Ok(tasks.clone());
+  static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
+  match PLATFORM.get_or_init(|| {
+    let tasks = SharedTasks::new();
+    let installed = set_global_ui_task_runner(
+      env,
+      QueueingGlobalRunner {
+        tasks: tasks.clone(),
+        thread_id: thread::current().id(),
+      },
+    )
+    .map_err(|error| error.to_string())?;
+    if !installed {
+      return Err("failed to register Lynx global UI task runner".into());
+    }
+    Ok(tasks)
+  }) {
+    Ok(tasks) => Ok(tasks.clone()),
+    Err(message) => Err(Error::Protocol(message.clone())),
   }
-
-  let tasks = SharedTasks::new();
-  install_global_ui_task_runner_if_needed(env, tasks.clone())?;
-  let _ = GLOBAL_TASKS.set(tasks.clone());
-  Ok(GLOBAL_TASKS.get().cloned().unwrap_or(tasks))
-}
-
-#[cfg(target_os = "macos")]
-fn install_headless_display_link_if_needed() {
-  macos_headless_display::install_if_needed();
-}
-
-#[cfg(not(target_os = "macos"))]
-fn install_headless_display_link_if_needed() {}
-
-#[cfg(target_os = "macos")]
-fn install_global_ui_task_runner_if_needed(_env: &Env, _tasks: SharedTasks) -> Result<()> {
-  Ok(())
-}
-
-#[cfg(not(target_os = "macos"))]
-fn install_global_ui_task_runner_if_needed(env: &Env, tasks: SharedTasks) -> Result<()> {
-  let installed = set_global_ui_task_runner(
-    env,
-    QueueingGlobalRunner {
-      tasks,
-      thread_id: thread::current().id(),
-    },
-  )?;
-  if !installed {
-    return Err(Error::Protocol(
-      "failed to register Lynx global UI task runner".into(),
-    ));
-  }
-  Ok(())
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct CapturedFrame {
   pub width: usize,
   pub height: usize,
-  pub rgba: Vec<u8>,
+  pub rgba: Arc<[u8]>,
   pub sequence: u64,
 }
 
@@ -194,7 +191,7 @@ impl SoftwareRenderer for FrameStore {
     state.latest = Some(CapturedFrame {
       width: frame.row_bytes / 4,
       height: frame.height,
-      rgba: bytes.to_vec(),
+      rgba: Arc::from(bytes),
       sequence: state.sequence,
     });
     true
@@ -202,17 +199,27 @@ impl SoftwareRenderer for FrameStore {
 }
 
 pub(crate) struct TaskPump {
-  env: Env,
   renderer_tasks: SharedTasks,
+  #[cfg(not(target_os = "macos"))]
   global_tasks: SharedTasks,
+  #[cfg(not(target_os = "macos"))]
+  env: Env,
 }
 
 impl TaskPump {
   pub(crate) fn new(env: Env, renderer_tasks: SharedTasks, global_tasks: SharedTasks) -> Self {
-    Self {
-      env,
-      renderer_tasks,
-      global_tasks,
+    #[cfg(target_os = "macos")]
+    {
+      let _ = (env, global_tasks);
+      Self { renderer_tasks }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+      Self {
+        renderer_tasks,
+        global_tasks,
+        env,
+      }
     }
   }
 
@@ -245,30 +252,48 @@ impl TaskPump {
   }
 
   pub(crate) fn pump_once(&self, view: &HeadlessView) {
+    let ran_renderer_task = self.run_renderer_tasks(view.renderer());
+    #[cfg(target_os = "macos")]
+    let ran_task = ran_renderer_task;
+    #[cfg(not(target_os = "macos"))]
+    let ran_task = {
+      let mut ran_task = ran_renderer_task;
+      for task in self.global_tasks.drain_ready() {
+        run_global_ui_task(&self.env, task);
+        ran_task = true;
+      }
+      ran_task
+    };
+    let max_wait = if ran_task {
+      Duration::ZERO
+    } else {
+      Duration::from_millis(1)
+    };
+    let _ = pump_platform_events(max_wait);
+  }
+
+  fn run_renderer_tasks(&self, renderer: &WindowlessRenderer) -> bool {
     let mut ran_task = false;
     for task in self.renderer_tasks.drain_ready() {
-      view.renderer().run_task(task);
+      renderer.run_task(task);
       ran_task = true;
     }
-    for task in self.global_tasks.drain_ready() {
-      run_global_ui_task(&self.env, task);
-      ran_task = true;
-    }
-    if !ran_task {
-      pump_platform_events();
-    }
+    ran_task
   }
 }
 
 #[cfg(target_os = "macos")]
-fn pump_platform_events() {
+fn pump_platform_events(max_wait: Duration) -> bool {
+  const RUN_HANDLED_SOURCE: i32 = 4;
   unsafe {
-    CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.001, true);
+    CFRunLoopRunInMode(kCFRunLoopDefaultMode, max_wait.as_secs_f64(), true) == RUN_HANDLED_SOURCE
   }
 }
 
 #[cfg(not(target_os = "macos"))]
-fn pump_platform_events() {}
+fn pump_platform_events(_max_wait: Duration) -> bool {
+  false
+}
 
 #[cfg(target_os = "macos")]
 type CFStringRef = *const std::ffi::c_void;
@@ -278,4 +303,17 @@ type CFStringRef = *const std::ffi::c_void;
 unsafe extern "C" {
   static kCFRunLoopDefaultMode: CFStringRef;
   fn CFRunLoopRunInMode(mode: CFStringRef, seconds: f64, return_after_source_handled: bool) -> i32;
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn assert_send_sync<T: Send + Sync>() {}
+
+  #[test]
+  fn captured_frames_can_cross_encoder_threads() {
+    assert_send_sync::<CapturedFrame>();
+    assert_send_sync::<FrameStore>();
+  }
 }

@@ -28,6 +28,12 @@ pub enum Error {
   SessionNotFound(String),
   #[error("debug-router protocol error: {0}")]
   Protocol(String),
+  #[error(
+    "native Lynx pages are bound to owner thread {owner}; new_page was called from {current}"
+  )]
+  ThreadAffinity { owner: String, current: String },
+  #[error("screenshot visit dispatcher unavailable: {0}")]
+  VisitDispatcher(String),
   #[error("CDP request error: {0}")]
   Cdp(String),
   #[error("operation timed out: {0}")]

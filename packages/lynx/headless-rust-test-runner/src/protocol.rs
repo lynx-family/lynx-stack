@@ -123,15 +123,36 @@ pub(crate) fn parse_initialize_response(value: &Value) -> Result<Option<AppInfo>
   Ok(Some(serde_json::from_value(info.clone())?))
 }
 
-pub(crate) fn list_session_request(port: u16) -> Value {
+pub(crate) fn list_session_request(port: u16, id: u32) -> Value {
   json!({
     "event": "Customized",
     "data": {
       "type": "ListSession",
       "sender": port,
+      "id": id,
       "data": { "client_id": port },
     },
   })
+}
+
+/// Returns the correlation id emitted by newer DebugRouter implementations.
+///
+/// Older Lynx runtimes do not echo this field. Callers must therefore permit
+/// `None`, while still ensuring that at most one uncorrelated ListSession
+/// request is in flight on a connection.
+pub(crate) fn session_list_response_id(value: &Value) -> Option<u32> {
+  if customized_type(value) != Some("SessionList") {
+    return None;
+  }
+  value
+    .get("data")
+    .and_then(|data| {
+      data
+        .get("id")
+        .or_else(|| data.get("data").and_then(|inner| inner.get("id")))
+    })
+    .and_then(Value::as_u64)
+    .and_then(|id| u32::try_from(id).ok())
 }
 
 pub(crate) fn parse_session_list_response(value: &Value) -> Result<Option<Vec<Session>>> {
@@ -193,16 +214,9 @@ pub(crate) fn parse_cdp_response<T: DeserializeOwned>(
   value: &Value,
   expected_id: u32,
 ) -> Result<Option<T>> {
-  if customized_type(value) != Some("CDP") {
+  let Some(message) = cdp_message(value)? else {
     return Ok(None);
-  }
-  let message = value
-    .get("data")
-    .and_then(|data| data.get("data"))
-    .and_then(|data| data.get("message"))
-    .and_then(Value::as_str)
-    .ok_or_else(|| Error::Protocol("CDP response missing message".into()))?;
-  let message: Value = serde_json::from_str(message)?;
+  };
   if message.get("id").and_then(Value::as_u64) != Some(expected_id as u64) {
     return Ok(None);
   }
@@ -218,6 +232,44 @@ pub(crate) fn parse_cdp_response<T: DeserializeOwned>(
     .cloned()
     .ok_or_else(|| Error::Protocol("CDP response missing result".into()))?;
   Ok(Some(serde_json::from_value(result)?))
+}
+
+/// Extracts the inner CDP request id without deserializing its result.
+///
+/// CDP notifications have no `id` and deliberately return `None`. This lets
+/// the router's single reader dispatch out-of-order responses while safely
+/// ignoring notifications instead of consuming another request's response.
+pub(crate) fn cdp_response_id(value: &Value) -> Result<Option<u32>> {
+  let Some(message) = cdp_message(value)? else {
+    return Ok(None);
+  };
+  let Some(id) = message.get("id") else {
+    return Ok(None);
+  };
+  let id = id
+    .as_u64()
+    .ok_or_else(|| Error::Protocol("CDP response id is not an unsigned integer".into()))?;
+  let id =
+    u32::try_from(id).map_err(|_| Error::Protocol(format!("CDP response id {id} exceeds u32")))?;
+  Ok(Some(id))
+}
+
+fn cdp_message(value: &Value) -> Result<Option<Value>> {
+  if customized_type(value) != Some("CDP") {
+    return Ok(None);
+  }
+  let message = value
+    .get("data")
+    .and_then(|data| data.get("data"))
+    .and_then(|data| data.get("message"))
+    .ok_or_else(|| Error::Protocol("CDP response missing message".into()))?;
+  match message {
+    Value::String(message) => Ok(Some(serde_json::from_str(message)?)),
+    Value::Object(_) => Ok(Some(message.clone())),
+    _ => Err(Error::Protocol(
+      "CDP response message must be a JSON string or object".into(),
+    )),
+  }
 }
 
 fn customized_type(value: &Value) -> Option<&str> {
