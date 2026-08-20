@@ -16,6 +16,7 @@ import { flushInitialElementTemplateListUpdates } from '../list/list.js';
 import { insertRootIntoPage, removeRootFromPage } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
 import { getElementTemplateNativeRef } from '../template/registry.js';
+import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from '../template/typed-attributes.js';
 
 // ET reload reuses the native page, so the main-thread render path owns the
 // root refs it appended and can remove only those roots before rebuilding.
@@ -83,7 +84,7 @@ function flushInitialListUpdates(): void {
     const result = results[index]!;
     const listRef = getElementTemplateNativeRef(result.uid);
     if (listRef) {
-      __SetAttributeOfElementTemplate(listRef, 0, result.attributes, null);
+      __SetAttributeOfElementTemplate(listRef, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, result.attributes, null);
     }
   }
 }

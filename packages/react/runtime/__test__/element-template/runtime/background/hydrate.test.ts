@@ -11,6 +11,7 @@ import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type {
   SerializedElementTemplate,
@@ -68,6 +69,7 @@ describe('hydrate', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
+    clearRefState();
     resetElementTemplateCommitState();
     vi.clearAllMocks();
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
@@ -1249,6 +1251,52 @@ describe('hydrate', () => {
     expect(backgroundElementTemplateInstanceManager.get(oldItemId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(item);
+  });
+
+  it('re-prepares typed list event and ref attributes after hydration handle binding', () => {
+    const handler = vi.fn();
+    const ref = vi.fn();
+    const list = new BackgroundListElementTemplateInstance();
+    const oldListId = list.instanceId;
+    list.setAttribute('attributes', {
+      bindtap: handler,
+      ref,
+    });
+    flushPendingRefs();
+    const refProxy = ref.mock.calls[0]![0];
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: {
+          bindtap: '-10:0:bindtap',
+          ref: '-10-0',
+          'component-at-index': null,
+          'component-at-indexes': null,
+          'enqueue-component': null,
+        },
+        elementSlots: null,
+        uid: -10,
+        options: {
+          listChildren: [],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+    flushPendingRefs();
+
+    expect(stream).toEqual([]);
+    expect(list.attributeSlots).toEqual([{
+      bindtap: '-10:0:bindtap',
+      ref: '-10-0',
+    }]);
+    expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(
+      '-10:0:bindtap',
+    )).toBe(handler);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(refProxy).toMatchObject({ selector: '[ref=-10-0]' });
   });
 
   it('hydrates typed lists outside development while dropping transient native list attributes', () => {
