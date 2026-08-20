@@ -6,6 +6,9 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core';
 
+// @public
+export const PLUGIN_LYNX_NAME = "lynx:rsbuild";
+
 // @public (undocumented)
 export function pluginLynx(): RsbuildPlugin[];
 
