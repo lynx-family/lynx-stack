@@ -9,7 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 libloading = "0.9"
-thiserror = "2.0.19"
+thiserror = "2.0.20"
 
 [build-dependencies]
 fs2 = "0.4.3"

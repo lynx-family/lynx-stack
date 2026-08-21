@@ -18,7 +18,7 @@ convert_case = "0.11.0"
 dashmap = "5.5.3"
 hex = "0.4.3"
 indexmap = "2.14.0"
-js-sys = "0.3.103"
+js-sys = "0.3.104"
 lazy_static = "1.5.0"
 # Pinned exactly: napi 2.16 emits a second `napi_register_wasm_v1` definition,
 # which breaks the wasm32 build of `react-transform` with `symbol multiply
@@ -43,7 +43,7 @@ version-compare = "0.2.1"
 # packages/web-platform/web-core/scripts/wasm-bindgen exactly, so pin the crate
 # instead of letting `cargo update` drift it. Bump both together.
 wasm-bindgen = "=0.2.126"
-web-sys = "0.3.103"
+web-sys = "0.3.104"
 
 [profile.release]
 codegen-units = 1
