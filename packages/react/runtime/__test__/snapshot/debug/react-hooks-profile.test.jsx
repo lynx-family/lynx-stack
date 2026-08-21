@@ -13,9 +13,14 @@ import { globalEnvManager } from '../utils/envManager';
 let currentRender;
 let currentCreateElement;
 
-async function importHooksWithProfileRecording(isRecording) {
+async function importHooksWithProfiling({
+  isRecording,
+  isCompileTimeProfile = false,
+}) {
   const original = lynx.performance.isProfileRecording;
+  const originalProfile = globalThis.__PROFILE__;
   lynx.performance.isProfileRecording = vi.fn(() => isRecording);
+  globalThis.__PROFILE__ = isCompileTimeProfile;
   vi.resetModules();
   try {
     const [hooks, preact, document, utils] = await Promise.all([
@@ -32,6 +37,7 @@ async function importHooksWithProfileRecording(isRecording) {
     return hooks;
   } finally {
     lynx.performance.isProfileRecording = original;
+    globalThis.__PROFILE__ = originalProfile;
   }
 }
 
@@ -58,7 +64,9 @@ describe('react hooks profile', () => {
   });
 
   it('should profile useEffect and useLayoutEffect with flowId and cleanup', async () => {
-    const { useEffect, useLayoutEffect } = await importHooksWithProfileRecording(true);
+    const { useEffect, useLayoutEffect } = await importHooksWithProfiling({
+      isRecording: true,
+    });
 
     function App() {
       useEffect(() => {
@@ -112,7 +120,9 @@ describe('react hooks profile', () => {
   });
 
   it('should skip stack payload when Error.stack is missing in useState setter profile', async () => {
-    const { useState } = await importHooksWithProfileRecording(true);
+    const { useState } = await importHooksWithProfiling({
+      isRecording: true,
+    });
     let setValue;
 
     function App() {
@@ -150,7 +160,9 @@ describe('react hooks profile', () => {
   });
 
   it('should use flowId-only trace option when stack is missing in effect profile', async () => {
-    const { useEffect } = await importHooksWithProfileRecording(true);
+    const { useEffect } = await importHooksWithProfiling({
+      isRecording: true,
+    });
 
     function App() {
       useEffect(() => undefined, []);
@@ -188,7 +200,9 @@ describe('react hooks profile', () => {
   });
 
   it('should support useState without initial value in profiling mode', async () => {
-    const { useState } = await importHooksWithProfileRecording(true);
+    const { useState } = await importHooksWithProfiling({
+      isRecording: true,
+    });
     let setValue;
 
     function App() {
@@ -219,7 +233,9 @@ describe('react hooks profile', () => {
   });
 
   it('should profile useState setter with realtime stack', async () => {
-    const { useState } = await importHooksWithProfileRecording(true);
+    const { useState } = await importHooksWithProfiling({
+      isRecording: true,
+    });
     let setValue;
 
     function App() {
@@ -251,7 +267,9 @@ describe('react hooks profile', () => {
   });
 
   it('should not profile hooks when profiling is disabled', async () => {
-    const { useEffect, useLayoutEffect, useState } = await importHooksWithProfileRecording(false);
+    const { useEffect, useLayoutEffect, useState } = await importHooksWithProfiling({
+      isRecording: false,
+    });
     const preactHooks = await import('preact/hooks');
     let setValue;
 
@@ -281,5 +299,35 @@ describe('react hooks profile', () => {
     ));
 
     expect(hookTraceCalls).toHaveLength(0);
+  });
+
+  it('should profile hooks when compile-time profiling is enabled', async () => {
+    const { useState } = await importHooksWithProfiling({
+      isRecording: false,
+      isCompileTimeProfile: true,
+    });
+    let setValue;
+
+    function App() {
+      const [value, _setValue] = useState(0);
+      setValue = _setValue;
+      return currentCreateElement('div', { value });
+    }
+
+    currentRender(currentCreateElement(App), scratch);
+
+    lynx.performance.profileStart.mockClear();
+    lynx.performance.profileEnd.mockClear();
+
+    setValue(value => value + 1);
+
+    expect(lynx.performance.profileStart).toHaveBeenCalledWith(
+      'ReactLynx::hooks::useState::setter',
+      expect.objectContaining({
+        args: expect.objectContaining({
+          stack: expect.any(String),
+        }),
+      }),
+    );
   });
 });
