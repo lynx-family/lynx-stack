@@ -62,13 +62,13 @@ beforeAll(() => {
       MTFQueue.push({ api: '__FlushElementTree' });
     }),
   );
+  replaceCommitHook();
 });
 
 beforeEach(() => {
   globalThis.SystemInfo.lynxSdkVersion = '2.14';
   clearConfigCacheForTesting();
   globalEnvManager.resetEnv();
-  replaceCommitHook();
 });
 
 afterEach(() => {

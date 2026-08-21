@@ -11,6 +11,7 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
+  uninstallElementTemplateCommitHookForTesting,
 } from '../../../../src/element-template/background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import {
@@ -759,7 +760,47 @@ describe('ElementTemplate commit hook', () => {
 
   it('is idempotent', () => {
     installElementTemplateCommitHook();
+    const wrapped = options.__c;
     installElementTemplateCommitHook();
-    expect(true).toBe(true);
+    expect(options.__c).toBe(wrapped);
+  });
+
+  it('can be uninstalled and reinstalled', () => {
+    installElementTemplateCommitHook();
+    const wrapped = options.__c;
+    uninstallElementTemplateCommitHookForTesting();
+    const original = options.__c;
+    expect(original).not.toBe(wrapped);
+
+    uninstallElementTemplateCommitHookForTesting();
+    expect(options.__c).toBe(original);
+
+    installElementTemplateCommitHook();
+    expect(options.__c).not.toBe(original);
+    uninstallElementTemplateCommitHookForTesting();
+    expect(options.__c).toBe(original);
+    installElementTemplateCommitHook();
+  });
+
+  it('deletes the commit option when none existed before install', () => {
+    uninstallElementTemplateCommitHookForTesting();
+    const hadCommit = '__c' in options;
+    const original = options.__c;
+    try {
+      delete options.__c;
+
+      installElementTemplateCommitHook();
+      expect(typeof options.__c).toBe('function');
+      uninstallElementTemplateCommitHookForTesting();
+      expect('__c' in options).toBe(false);
+    } finally {
+      uninstallElementTemplateCommitHookForTesting();
+      if (hadCommit && original) {
+        options.__c = original;
+      } else {
+        delete options.__c;
+      }
+      installElementTemplateCommitHook();
+    }
   });
 });
