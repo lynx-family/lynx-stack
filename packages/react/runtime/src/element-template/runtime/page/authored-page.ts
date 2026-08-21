@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ComponentChild, FunctionalComponent } from 'preact';
+import { useLayoutEffect } from 'preact/hooks';
 
-import { useEffect, useRef } from '@lynx-js/react/hooks';
+import { useRef } from '@lynx-js/react/hooks';
 
 import { __root } from './root-instance.js';
 
@@ -29,7 +30,7 @@ export const __ElementTemplatePage: FunctionalComponent<ElementTemplatePageProps
 
   if (__BACKGROUND__) {
     root.setAuthoredPageAttributes(lifetime.current, props.attributes ?? null);
-    useEffect(() => () => root.clearAuthoredPageAttributes(lifetime.current), []);
+    useLayoutEffect(() => () => root.clearAuthoredPageAttributes(lifetime.current), []);
   }
 
   return props.$0;
