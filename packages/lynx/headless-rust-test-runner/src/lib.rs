@@ -2,13 +2,14 @@ mod debug_router;
 mod error;
 mod fixture;
 mod harness;
+mod png_encoder;
 mod protocol;
 mod resource;
 
-use std::collections::{BTreeMap, HashSet};
-use std::io::Cursor;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::sync::{Arc, Mutex as StdMutex, Weak};
 use std::time::{Duration, Instant};
 
 use debug_router::DebugRouter;
@@ -16,6 +17,7 @@ pub use error::{Error, Result};
 pub use fixture::{run_react_fixture, RunReport};
 use harness::{initialize_platform, FrameStore, QueueingHost, SharedTasks, TaskPump};
 use lynx::{Env, HeadlessView, WindowlessRenderer};
+use png_encoder::encode_png_async;
 pub use protocol::NodeInfo;
 use protocol::{
   ComputedStyleProperty, GetAttributesResult, GetBoxModelResult, GetComputedStyleResult,
@@ -76,10 +78,62 @@ pub struct BoundingBox {
   pub height: f64,
 }
 
-pub struct Lynx {
+struct LynxProcess {
   env: Env,
-  global_tasks: SharedTasks,
-  debug_router: Rc<DebugRouter>,
+  debug_router: DebugRouter,
+  devtool_schema: Option<String>,
+  page_owner: PageOwner,
+  session_locks: Arc<SessionLocks>,
+}
+
+#[derive(Default)]
+struct PageOwner {
+  claim: StdMutex<Option<std::thread::ThreadId>>,
+}
+
+impl PageOwner {
+  fn claim(&self) -> Result<()> {
+    let current = std::thread::current().id();
+    let mut claim = self.claim.lock().expect("page owner lock poisoned");
+    match *claim {
+      Some(owner) if owner != current => Err(Error::ThreadAffinity {
+        owner: format!("{owner:?}"),
+        current: format!("{current:?}"),
+      }),
+      Some(_) => Ok(()),
+      None => {
+        *claim = Some(current);
+        Ok(())
+      }
+    }
+  }
+}
+
+#[derive(Default)]
+struct SessionLocks {
+  locks: StdMutex<HashMap<String, Weak<tokio::sync::Mutex<()>>>>,
+}
+
+impl SessionLocks {
+  fn for_url(&self, url: &str) -> Arc<tokio::sync::Mutex<()>> {
+    let key = final_url_component(url).unwrap_or(url);
+    let mut locks = self.locks.lock().expect("session lock map poisoned");
+    locks.retain(|_, lock| lock.strong_count() > 0);
+    if let Some(lock) = locks.get(key).and_then(Weak::upgrade) {
+      return lock;
+    }
+    let lock = Arc::new(tokio::sync::Mutex::new(()));
+    locks.insert(key.to_string(), Arc::downgrade(&lock));
+    lock
+  }
+}
+
+/// A cloneable, thread-safe handle to the process-wide Lynx runtime.
+///
+/// [`Lynx::new_page`] binds native pages to the first caller thread.
+#[derive(Clone)]
+pub struct Lynx {
+  process: Arc<LynxProcess>,
   lynx_core_path: PathBuf,
   options: ConnectOptions,
 }
@@ -87,40 +141,27 @@ pub struct Lynx {
 impl Lynx {
   pub async fn connect(options: ConnectOptions) -> Result<Self> {
     let lynx_core_path = install_lynx_core_resource(options.lynx_core_path.as_deref()).await?;
-    let env = Env::load()?;
-    set_icu_data_path_if_available(&env)?;
-    let global_tasks = initialize_platform(&env)?;
-
-    env.set_devtool_app_info("App", APP_NAME)?;
-    env.set_devtool_app_info("AppVersion", env!("CARGO_PKG_VERSION"))?;
-    env.set_devtool_app_info("AppProcessName", APP_NAME)?;
-    env.set_devtool_app_info("deviceModel", "headless")?;
-    env.set_devtool_app_info("osVersion", std::env::consts::OS)?;
-    env.set_devtool_app_info("sdkVersion", &env.sdk_version())?;
-    env.set_devtool_enabled(true);
-    if let Some(schema) = &options.devtool_schema {
-      if !env.connect_devtool(schema)? {
-        return Err(Error::Protocol(format!(
-          "failed to connect debug-router schema: {schema}"
-        )));
-      }
+    let process = initialize_process(&options).await?;
+    if process.devtool_schema != options.devtool_schema {
+      return Err(Error::Protocol(format!(
+        "Lynx was already initialized with debug-router schema {:?}, cannot reconnect with {:?}",
+        process.devtool_schema, options.devtool_schema
+      )));
     }
-
-    let debug_router = Rc::new(DebugRouter::connect(APP_NAME, options.timeout).await?);
     Ok(Self {
-      env,
-      global_tasks,
-      debug_router,
+      process,
       lynx_core_path,
       options,
     })
   }
 
   pub fn new_page(&self) -> Result<Page> {
+    self.process.page_owner.claim()?;
+    let global_tasks = initialize_platform(&self.process.env)?;
     let renderer_tasks = SharedTasks::new();
     let frames = FrameStore::default();
     let renderer = WindowlessRenderer::software(
-      &self.env,
+      &self.process.env,
       frames.clone(),
       QueueingHost::new(renderer_tasks.clone()),
     )?;
@@ -128,7 +169,7 @@ impl Lynx {
       self.options.resources_path.clone(),
       self.lynx_core_path.clone(),
     );
-    let view = HeadlessView::builder(self.env.clone(), renderer)
+    let view = HeadlessView::builder(self.process.env.clone(), renderer)
       .viewport(
         self.options.width as f32,
         self.options.height as f32,
@@ -137,12 +178,13 @@ impl Lynx {
       .resource_fetcher(resources.fetcher())?
       .build()?;
     view.enter_foreground();
-    let pump = TaskPump::new(self.env.clone(), renderer_tasks, self.global_tasks.clone());
+    let pump = TaskPump::new(self.process.env.clone(), renderer_tasks, global_tasks);
     let runtime = Rc::new(PageRuntime {
       view,
       pump,
       frames,
-      debug_router: Rc::clone(&self.debug_router),
+      debug_router: self.process.debug_router.clone(),
+      session_locks: Arc::clone(&self.process.session_locks),
       resources,
       width: self.options.width,
       height: self.options.height,
@@ -160,11 +202,49 @@ impl Lynx {
   pub fn close(self) {}
 }
 
+async fn initialize_process(options: &ConnectOptions) -> Result<Arc<LynxProcess>> {
+  static PROCESS: tokio::sync::OnceCell<Arc<LynxProcess>> = tokio::sync::OnceCell::const_new();
+
+  PROCESS
+    .get_or_try_init(|| async {
+      let env = Env::load()?;
+      set_icu_data_path_if_available(&env)?;
+      let app_name = format!("{APP_NAME}-{}", std::process::id());
+
+      env.set_devtool_app_info("App", &app_name)?;
+      env.set_devtool_app_info("AppVersion", env!("CARGO_PKG_VERSION"))?;
+      env.set_devtool_app_info("AppProcessName", &app_name)?;
+      env.set_devtool_app_info("deviceModel", "headless")?;
+      env.set_devtool_app_info("osVersion", std::env::consts::OS)?;
+      env.set_devtool_app_info("sdkVersion", &env.sdk_version())?;
+      env.set_devtool_enabled(true);
+      if let Some(schema) = &options.devtool_schema {
+        if !env.connect_devtool(schema)? {
+          return Err(Error::Protocol(format!(
+            "failed to connect debug-router schema: {schema}"
+          )));
+        }
+      }
+
+      let debug_router = DebugRouter::connect(&app_name, options.timeout).await?;
+      Ok(Arc::new(LynxProcess {
+        env,
+        debug_router,
+        devtool_schema: options.devtool_schema.clone(),
+        page_owner: PageOwner::default(),
+        session_locks: Arc::new(SessionLocks::default()),
+      }))
+    })
+    .await
+    .cloned()
+}
+
 struct PageRuntime {
   view: HeadlessView,
   pump: TaskPump,
   frames: FrameStore,
-  debug_router: Rc<DebugRouter>,
+  debug_router: DebugRouter,
+  session_locks: Arc<SessionLocks>,
   resources: ResourceContext,
   width: usize,
   height: usize,
@@ -225,15 +305,42 @@ pub struct Page {
 
 impl Page {
   pub async fn goto(&mut self, input: &str, options: GotoOptions) -> Result<()> {
+    self.goto_internal(input, options, true).await
+  }
+
+  /// Loads a page through the native renderer without attaching a DOM session.
+  ///
+  /// This is the preferred navigation path when the only consumer is
+  /// [`Page::screenshot`]. DOM APIs remain unavailable until a later regular
+  /// [`Page::goto`] call.
+  pub async fn goto_for_screenshot(&mut self, input: &str, options: GotoOptions) -> Result<()> {
+    self.goto_internal(input, options, false).await
+  }
+
+  async fn goto_internal(
+    &mut self,
+    input: &str,
+    options: GotoOptions,
+    attach_dom: bool,
+  ) -> Result<()> {
     let timeout = options.timeout.unwrap_or(self.runtime.timeout);
-    let existing_session_ids = self
-      .runtime
-      .list_sessions()
-      .await?
-      .into_iter()
-      .map(|session| session.session_id)
-      .collect::<HashSet<_>>();
     let (url, bytes) = self.runtime.resources.read_template(input).await?;
+    let _session_guard = if attach_dom {
+      Some(self.runtime.session_locks.for_url(&url).lock_owned().await)
+    } else {
+      None
+    };
+    let existing_session_ids = if attach_dom {
+      self
+        .runtime
+        .list_sessions()
+        .await?
+        .into_iter()
+        .map(|session| session.session_id)
+        .collect::<HashSet<_>>()
+    } else {
+      HashSet::new()
+    };
     self.runtime.resources.set_base_url(&url);
     let global_props = options
       .global_props_json
@@ -264,10 +371,15 @@ impl Page {
       )
       .await?;
 
-    let session = self
-      .wait_for_session(&url, &existing_session_ids, timeout)
-      .await?;
-    self.attach_to_session(session.session_id, timeout).await?;
+    if attach_dom {
+      let session = self
+        .wait_for_session(&url, &existing_session_ids, timeout)
+        .await?;
+      self.attach_to_session(session.session_id, timeout).await?;
+    } else {
+      self.root_node_id = None;
+      self.session_id = None;
+    }
     self.url = url;
     Ok(())
   }
@@ -319,7 +431,7 @@ impl Page {
       .frames
       .latest()
       .ok_or(Error::FrameNotAvailable)?;
-    let png = encode_png(frame.width, frame.height, &frame.rgba)?;
+    let png = encode_png_async(frame.width, frame.height, frame.rgba).await?;
     if let Some(path) = options.path {
       if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent).await?;
@@ -365,24 +477,10 @@ impl Page {
           if std::env::var_os("HEADLESS_RUST_TEST_RUNNER_DEBUG").is_some() {
             eprintln!("[headless-rust-test-runner] sessions: {sessions:?}");
           }
-          let matches = sessions
-            .into_iter()
-            .filter(|session| session_url_matches(url, &session.url))
-            .collect::<Vec<_>>();
-          if let Some(session) = matches
-            .iter()
-            .filter(|session| !existing_session_ids.contains(&session.session_id))
-            .max_by_key(|session| session.session_id)
+          if let Some(session) =
+            select_session(sessions, url, existing_session_ids, self.session_id)
           {
-            return Ok(session.clone());
-          }
-          if let Some(current_session_id) = self.session_id {
-            if let Some(session) = matches
-              .into_iter()
-              .find(|session| session.session_id == current_session_id)
-            {
-              return Ok(session);
-            }
+            return Ok(session);
           }
         }
         Err(error) => {
@@ -604,25 +702,6 @@ fn set_icu_data_path_if_available(env: &Env) -> Result<()> {
   Ok(())
 }
 
-fn encode_png(width: usize, height: usize, rgba: &[u8]) -> Result<Vec<u8>> {
-  let expected = width
-    .checked_mul(height)
-    .and_then(|pixels| pixels.checked_mul(4))
-    .ok_or_else(|| Error::Protocol("frame is too large".into()))?;
-  if rgba.len() < expected {
-    return Err(Error::Protocol("frame buffer is too small".into()));
-  }
-  let mut output = Cursor::new(Vec::new());
-  {
-    let mut encoder = png::Encoder::new(&mut output, width as u32, height as u32);
-    encoder.set_color(png::ColorType::Rgba);
-    encoder.set_depth(png::BitDepth::Eight);
-    let mut writer = encoder.write_header()?;
-    writer.write_image_data(&rgba[..expected])?;
-  }
-  Ok(output.into_inner())
-}
-
 fn content_to_string(buffer: &mut String, node: &NodeInfo) {
   let tag_name = node.node_name.to_lowercase();
   buffer.push('<');
@@ -662,6 +741,30 @@ fn session_url_matches(url: &str, session_url: &str) -> bool {
     }
 }
 
+fn select_session(
+  sessions: Vec<Session>,
+  url: &str,
+  existing_session_ids: &HashSet<i64>,
+  current_session_id: Option<i64>,
+) -> Option<Session> {
+  let matches = sessions
+    .into_iter()
+    .filter(|session| session_url_matches(url, &session.url))
+    .collect::<Vec<_>>();
+  matches
+    .iter()
+    .filter(|session| !existing_session_ids.contains(&session.session_id))
+    .max_by_key(|session| session.session_id)
+    .cloned()
+    .or_else(|| {
+      current_session_id.and_then(|current_session_id| {
+        matches
+          .into_iter()
+          .find(|session| session.session_id == current_session_id)
+      })
+    })
+}
+
 fn final_url_component(url: &str) -> Option<&str> {
   url
     .split(['?', '#'])
@@ -676,6 +779,49 @@ fn final_url_component(url: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  fn assert_send_sync<T: Send + Sync>() {}
+
+  #[test]
+  fn lynx_handle_is_send_and_sync() {
+    assert_send_sync::<Lynx>();
+  }
+
+  #[test]
+  fn page_owner_rejects_a_second_os_thread() {
+    let owner = Arc::new(PageOwner::default());
+    owner.claim().unwrap();
+    let other_thread = std::thread::spawn({
+      let owner = Arc::clone(&owner);
+      move || owner.claim()
+    });
+    let error = other_thread.join().unwrap().unwrap_err();
+    assert!(error.to_string().contains("bound to owner thread"));
+  }
+
+  #[test]
+  fn session_locks_use_the_same_filename_equivalence_as_discovery() {
+    let locks = SessionLocks::default();
+    let first = locks.for_url("file:///first/main.lynx.bundle?one");
+    let second = locks.for_url("file:///second/main.lynx.bundle#two");
+    assert!(Arc::ptr_eq(&first, &second));
+  }
+
+  #[test]
+  fn repeated_navigation_can_reuse_the_current_debug_session() {
+    let current = Session {
+      session_id: 7,
+      r#type: "page".into(),
+      url: "file:///fixture/main.lynx.bundle".into(),
+    };
+    let selected = select_session(
+      vec![current.clone()],
+      &current.url,
+      &HashSet::from([current.session_id]),
+      Some(current.session_id),
+    );
+    assert_eq!(selected, Some(current));
+  }
 
   #[test]
   fn serializes_content_and_maps_id_selector() {

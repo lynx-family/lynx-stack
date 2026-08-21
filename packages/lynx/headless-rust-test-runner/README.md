@@ -4,15 +4,18 @@
 Tokio futures and Puppeteer-style page APIs. It combines the original
 windowless software-rendering harness with DOM inspection and interaction APIs:
 
-- `Lynx::connect` initializes the runtime and local DebugRouter.
+- `Lynx::connect` initializes the process-wide runtime and local DebugRouter.
 - `Lynx::new_page` creates a windowless `Page`.
 - `Page::goto`, `content`, and `locator` load and inspect Lynx bundles through
   CDP.
+- `Page::goto_for_screenshot` loads a bundle without attaching a DOM session.
 - `ElementNode` reads attributes and computed styles and dispatches taps by
   native node id, without absolute coordinates or hit-testing.
 - `Page::screenshot` captures the software renderer directly as PNG.
-- DebugRouter I/O, resource loading, waits, and public waiting operations use
-  Tokio `async`/`await`.
+- A process-wide DebugRouter actor owns the TCP connection and routes concurrent
+  responses to callers.
+- Screenshot frames use shared RGBA storage, and a dedicated Rayon pool encodes
+  PNG data away from the native page owner thread.
 
 ## Example
 
@@ -34,8 +37,15 @@ let png = page.screenshot(ScreenshotOptions::default()).await?;
 # Ok::<(), lynx_headless_rust_test_runner::Error>(())
 ```
 
-Run these futures on a Tokio current-thread runtime. The headless Lynx view and
-its native task pump stay on the thread where the page was created.
+`Lynx` is cloneable, `Send`, and `Sync`. Native pages are not. The first
+`new_page()` call selects the native owner thread; every later page must be
+created, used, and dropped on that thread. Run those futures on a Tokio
+current-thread runtime and use a `LocalSet` when several pages need to overlap.
+
+For screenshot-only work, call `goto_for_screenshot` instead of `goto`. It waits
+for a new rendered frame but skips DebugRouter session discovery and DOM setup.
+PNG encoding runs on the Rayon pool. Use regular `goto` when the caller also
+needs `content`, `locator`, or other DOM APIs.
 
 The runtime needs `lynx_core.js` beside the executable on Linux or inside
 `LynxResources.bundle` beside it on macOS. Set `lynx_core_path` or

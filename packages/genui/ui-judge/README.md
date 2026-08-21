@@ -218,14 +218,14 @@ shutdown, and is propagated as a server error after the worker is joined. Each
 uploaded comparison image is limited to 10 MiB. Request bodies are limited to
 20 MiB plus 64 KiB of multipart overhead.
 
-The server accepts connections concurrently. It keeps native Lynx capture on a
-dedicated current-thread runtime because the renderer is thread-bound. After a
-capture completes, Tokio runs model scoring concurrently across requests and a
-bounded Rayon pool performs CPU-heavy image normalization, alignment, and
-comparison. The capture queue holds at most eight requests. Dropped queued
-requests release their request data, dropped visual waiters signal cooperative
-cancellation, and SIGINT or SIGTERM triggers graceful HTTP shutdown before the
-headless worker is joined.
+The server accepts connections concurrently. It runs up to four native Lynx
+captures on a dedicated current-thread runtime because the renderer is
+thread-bound. After a capture completes, Tokio runs model scoring concurrently
+across requests and a bounded Rayon pool performs CPU-heavy image normalization,
+alignment, and comparison. The capture queue holds at most eight requests.
+Dropped queued requests release their request data, dropped visual waiters
+signal cooperative cancellation, and SIGINT or SIGTERM triggers graceful HTTP
+shutdown before the headless worker is joined.
 
 ## Model configuration
 
@@ -280,4 +280,6 @@ cargo test -p ui_judge --lib --tests --all-features
 ```
 
 The generated `.generated/main.lynx.bundle` is ignored by Git. Runtime-backed
-headless coverage runs on Linux and macOS.
+headless coverage runs on Linux and macOS. The server test submits four distinct
+fixture bundles through the concurrent capture worker and validates each result;
+it does not assert timing or throughput.
