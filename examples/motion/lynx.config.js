@@ -5,15 +5,17 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 
 export default defineConfig({
-  environments: {
-    lynx: {},
-    web: {},
-  },
   source: {
     entry: {
-      main: './src/index.tsx',
+      basic: './src/Basic/index.tsx',
+      gesture: './src/iOSSlider/index.tsx',
       mini: './src/Mini/index.tsx',
+      'motion-value': './src/MotionValue/index.tsx',
+      spring: './src/Spring/index.tsx',
     },
+  },
+  output: {
+    filename: '[name].[platform].bundle',
   },
   plugins: [
     pluginReactLynx(),
@@ -24,6 +26,10 @@ export default defineConfig({
       },
     }),
   ],
+  environments: {
+    web: {},
+    lynx: {},
+  },
   performance: {
     profile: enableBundleAnalysis,
   },

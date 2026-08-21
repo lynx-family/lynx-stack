@@ -1,5 +1,10 @@
 import { animate } from '@lynx-js/motion';
-import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
+import {
+  root,
+  runOnMainThread,
+  useEffect,
+  useMainThreadRef,
+} from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
 import './styles.css';
@@ -58,4 +63,10 @@ export default function Basic() {
       </view>
     </view>
   );
+}
+
+root.render(<Basic />);
+
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept();
 }
