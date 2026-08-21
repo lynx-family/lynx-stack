@@ -2,13 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { render } from 'preact';
+import { options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../../src/index';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
-import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
+import { removeCommitHookForTesting, replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
@@ -23,6 +23,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  removeCommitHookForTesting();
   vi.restoreAllMocks();
   elementTree.clear();
 });
@@ -45,12 +46,14 @@ function mountAndHydrate(jsx) {
 }
 
 describe('replaceCommitHook', () => {
-  // Repeated installation (as test files do in `beforeEach`) stacks one
-  // commit-hook wrapper per call onto Preact's global `options`. On every
-  // commit the outermost wrapper takes the real snapshot patch and each
-  // inner copy re-fires with an already-drained queue, sending a spurious
-  // empty patch per extra install.
-  it('stacks wrappers and sends duplicate empty patches when installed repeatedly', async () => {
+  it('is idempotent', () => {
+    replaceCommitHook();
+    const wrapped = options.__c;
+    replaceCommitHook();
+    expect(options.__c).toBe(wrapped);
+  });
+
+  it('sends a single patch per commit when installed repeatedly', async () => {
     replaceCommitHook();
     replaceCommitHook();
     replaceCommitHook();
@@ -68,14 +71,42 @@ describe('replaceCommitHook', () => {
     setText('b');
     await waitSchedule();
 
-    const newCalls = lynx.getNativeApp().callLepusMethod.mock.calls.slice(callsBeforeUpdate);
-    expect(newCalls.length).toBe(3);
+    expect(lynx.getNativeApp().callLepusMethod.mock.calls.length).toBe(callsBeforeUpdate + 1);
+  });
 
-    const patches = newCalls.map(call => JSON.parse(call[1].data));
-    expect(patches[0].patchList[0].snapshotPatch).not.toHaveLength(0);
-    expect(patches[1].patchList[0].snapshotPatch).toBeUndefined();
-    expect(patches[1].flushOptions).toMatchObject({ emptyPatch: true });
-    expect(patches[2].patchList[0].snapshotPatch).toBeUndefined();
-    expect(patches[2].flushOptions).toMatchObject({ emptyPatch: true });
+  it('can be removed and reinstalled', () => {
+    replaceCommitHook();
+    const wrapped = options.__c;
+    removeCommitHookForTesting();
+    const original = options.__c;
+    expect(original).not.toBe(wrapped);
+
+    removeCommitHookForTesting();
+    expect(options.__c).toBe(original);
+
+    replaceCommitHook();
+    expect(options.__c).not.toBe(original);
+    removeCommitHookForTesting();
+    expect(options.__c).toBe(original);
+  });
+
+  it('deletes the commit option when none existed before install', () => {
+    const hadCommit = '__c' in options;
+    const original = options.__c;
+    try {
+      delete options.__c;
+
+      replaceCommitHook();
+      expect(typeof options.__c).toBe('function');
+      removeCommitHookForTesting();
+      expect('__c' in options).toBe(false);
+    } finally {
+      removeCommitHookForTesting();
+      if (hadCommit) {
+        options.__c = original;
+      } else {
+        delete options.__c;
+      }
+    }
   });
 });

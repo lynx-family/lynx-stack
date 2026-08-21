@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
 import { flushDelayedLifecycleEvents } from '../../src/snapshot/lynx/tt';
 import { __root } from '../../src/root';
@@ -7,8 +7,11 @@ import { expect } from 'vitest';
 import { render } from 'preact';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 
-beforeEach(() => {
+beforeAll(() => {
   replaceCommitHook();
+});
+
+beforeEach(() => {
   globalEnvManager.resetEnv();
 });
 afterEach(() => {
