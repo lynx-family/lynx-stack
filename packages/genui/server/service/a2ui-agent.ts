@@ -168,7 +168,7 @@ export default class A2UIAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started', {
       reasoningEffort: resolveReasoningEffort(opts),
     });
-    const result = agent.stream(
+    const result = await agent.stream(
       modelMessages,
       buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
     ) as MastraStreamResult;
@@ -301,6 +301,9 @@ export default class A2UIAgentService {
                     imageGenerationScope,
                   ),
                   runId: suspended.runId,
+                  ...(suspended.toolCallId
+                    ? { toolCallId: suspended.toolCallId }
+                    : {}),
                 },
               ) as MastraStreamResult;
               opts.onPerformanceEvent?.('agent.stream.resume.completed', {
@@ -394,6 +397,9 @@ export default class A2UIAgentService {
         {
           ...buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
           runId: suspended.runId,
+          ...(suspended.toolCallId
+            ? { toolCallId: suspended.toolCallId }
+            : {}),
         },
       ) as MastraResult;
     }

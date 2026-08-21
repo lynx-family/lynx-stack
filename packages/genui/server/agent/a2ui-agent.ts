@@ -61,19 +61,19 @@ export interface A2UIAgent {
   generate: (
     messages: unknown,
     options?: A2UIAgentRunOptions,
-  ) => unknown;
+  ) => Promise<unknown>;
   stream: (
     messages: unknown,
     options?: A2UIAgentRunOptions,
-  ) => unknown;
+  ) => Promise<unknown>;
   resumeGenerate: (
     resumeData: unknown,
     options: A2UIAgentRunOptions & { runId: string },
-  ) => unknown;
+  ) => Promise<unknown>;
   resumeStream: (
     resumeData: unknown,
     options: A2UIAgentRunOptions & { runId: string },
-  ) => unknown;
+  ) => Promise<unknown>;
 }
 
 export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
