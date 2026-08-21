@@ -15,13 +15,23 @@ import type { OpenAIProviderOptions } from './openai-provider';
 
 const IMAGE_GENERATION_TOOL_INSTRUCTIONS = `## Image generation tool
 
-Before returning an Image without a user-provided loadable URL, call the
-generate_image tool with a detailed image prompt. Do not emit any text before
-calling the tool. After it succeeds, copy its returned url exactly into
-Image.url or the bound data-model field. Never invent an image URL or put an
+When an Image needs generation, return the usable UI before waiting for the
+image. In the same assistant step that calls generate_image, emit one complete
+A2UI JSON array containing createSurface (for a fresh response), the theme and
+body, and a Loading component at the exact id where the Image will appear. The
+array must be complete and independently renderable before the tool call
+suspends the run.
+
+Call generate_image with a detailed image prompt. When the asynchronous tool
+result resumes the run, emit a new complete A2UI JSON array containing only the
+smallest updateComponents and/or updateDataModel patch for the existing
+surface. Replace the Loading component by reusing its exact id, and copy the
+returned url exactly into Image.url or the bound data-model field. Do not emit
+createSurface again in this resumed patch. Never invent an image URL or put an
 image-generation prompt in Image.url. Generate only the minimum number of
 distinct images needed and reuse a returned URL when appropriate. If the tool
-fails, omit the Image and build the UI from other components.`;
+fails, replace or remove the pending image presentation using other catalog
+components; do not leave a permanent Loading component.`;
 
 const WEB_SEARCH_TOOL_INSTRUCTIONS = `## Web search tool
 
@@ -43,6 +53,8 @@ export interface A2UIAgentOptions extends OpenAIProviderOptions {
 interface A2UIAgentRunOptions {
   requestContext: ArkImageGenerationRunScope['requestContext'];
   resourceId?: string | undefined;
+  runId?: string | undefined;
+  toolCallId?: string | undefined;
 }
 
 export interface A2UIAgent {
@@ -53,6 +65,14 @@ export interface A2UIAgent {
   stream: (
     messages: unknown,
     options?: A2UIAgentRunOptions,
+  ) => unknown;
+  resumeGenerate: (
+    resumeData: unknown,
+    options: A2UIAgentRunOptions & { runId: string },
+  ) => unknown;
+  resumeStream: (
+    resumeData: unknown,
+    options: A2UIAgentRunOptions & { runId: string },
   ) => unknown;
 }
 

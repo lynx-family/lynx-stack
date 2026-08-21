@@ -83,6 +83,20 @@ export async function finalizeResult(result: MastraResult): Promise<{
   };
 }
 
+export async function extractSuspension(result: MastraResult): Promise<{
+  runId: string | undefined;
+  suspendPayload: unknown;
+}> {
+  const runId = await Promise.resolve(result.runId).catch(() => undefined);
+  const suspendPayload = await Promise.resolve(result.suspendPayload).catch(
+    () => undefined,
+  );
+  return {
+    runId: typeof runId === 'string' ? runId : undefined,
+    suspendPayload,
+  };
+}
+
 export async function extractGenerationResult(result: MastraResult): Promise<{
   text: string;
   usage: unknown;

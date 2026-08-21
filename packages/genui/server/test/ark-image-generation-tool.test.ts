@@ -10,10 +10,12 @@ import { A2UIProtocolMessageStreamParser } from '../agent/a2ui-stream-parser.js'
 import { validateA2UIOutput } from '../agent/a2ui-validator.js';
 import {
   createArkImageGenerationRunScope,
+  createArkImageGenerationTool,
   generateArkImage,
   generateArkImageForRun,
   generatedArkImageURLs,
   resolveArkImageGenerationConfig,
+  waitForPendingArkImageGeneration,
 } from '../agent/ark-image-generation-tool.js';
 
 const CONFIG = {
@@ -175,6 +177,61 @@ describe('Ark image-generation configuration', () => {
 });
 
 describe('Ark image-generation request', () => {
+  test('suspends the agent while generating and returns the URL after resume', async () => {
+    const scope = createArkImageGenerationRunScope();
+    const tool = createArkImageGenerationTool(CONFIG, toolGeneratedFetch);
+    if (!tool.execute) throw new Error('generate_image execute is missing');
+    let suspendPayload: unknown;
+
+    const initial = await tool.execute(
+      { prompt: 'A red panda in soft studio light' },
+      {
+        requestContext: scope.requestContext,
+        agent: {
+          suspend: (payload: unknown) => {
+            suspendPayload = payload;
+            return Promise.resolve();
+          },
+        },
+      } as never,
+    );
+
+    expect(initial).toBeUndefined();
+    if (
+      suspendPayload === null
+      || typeof suspendPayload !== 'object'
+      || !('jobId' in suspendPayload)
+      || typeof suspendPayload.jobId !== 'string'
+    ) {
+      throw new Error('generate_image did not provide a string jobId');
+    }
+    const suspendedJobId = suspendPayload.jobId;
+    expect(generatedArkImageURLs(scope)).toEqual([]);
+
+    const resumeData = await waitForPendingArkImageGeneration(
+      scope,
+      suspendPayload,
+    );
+    expect(resumeData).toEqual({
+      ok: true,
+      jobId: suspendedJobId,
+      url: 'https://images.example.com/tool-generated.jpeg',
+    });
+
+    await expect(tool.execute(
+      { prompt: 'A red panda in soft studio light' },
+      {
+        requestContext: scope.requestContext,
+        agent: { resumeData },
+      } as never,
+    )).resolves.toEqual({
+      url: 'https://images.example.com/tool-generated.jpeg',
+    });
+    expect(generatedArkImageURLs(scope)).toEqual([
+      'https://images.example.com/tool-generated.jpeg',
+    ]);
+  });
+
   test('sends a bounded single-image request and returns its URL', async () => {
     let requestedURL = '';
     let requestInit: RequestInit | undefined;

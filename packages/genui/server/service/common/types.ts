@@ -44,6 +44,8 @@ export interface MastraResult {
   finishReason?: unknown;
   content?: unknown;
   response?: unknown;
+  runId?: unknown;
+  suspendPayload?: unknown;
 }
 
 export interface MastraStreamResult extends MastraResult {
