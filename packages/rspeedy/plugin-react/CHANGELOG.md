@@ -1,5 +1,25 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.19.1
+
+### Patch Changes
+
+- Apply the Lynx build engine automatically when it is not already applied, so `pluginReactLynx` works with plain Rsbuild. ([#3578](https://github.com/lynx-family/lynx-stack/pull/3578))
+
+- Read the bundle filename from the Rsbuild config instead of the Rspeedy API. ([#3570](https://github.com/lynx-family/lynx-stack/pull/3570))
+
+- Emit the Lynx template for callers other than `rslib` and `rstest`. ([#3572](https://github.com/lynx-family/lynx-stack/pull/3572))
+
+- Widen the `@lynx-js/react` peer dependency range to include 0.125. ([#3551](https://github.com/lynx-family/lynx-stack/pull/3551))
+- Updated dependencies [[`1d08862`](https://github.com/lynx-family/lynx-stack/commit/1d08862ef9a1883fe98f2b9f7dce59d092d14d68), [`99ed745`](https://github.com/lynx-family/lynx-stack/commit/99ed7451d190cd18a45f78f731141994104a054b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`92b54ed`](https://github.com/lynx-family/lynx-stack/commit/92b54edba5adea2a4ddd355c821ff25205273479), [`37497d5`](https://github.com/lynx-family/lynx-stack/commit/37497d58fe4e0762d687001d61181ec5e0e650b9)]:
+  - @lynx-js/react-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.0.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.19.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+  - @lynx-js/css-extract-webpack-plugin@0.10.1
+  - @lynx-js/template-webpack-plugin@0.15.2
+
 ## 0.19.0
 
 ### Minor Changes

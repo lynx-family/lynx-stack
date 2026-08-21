@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.15.2
+
+### Patch Changes
+
+- Updated dependencies [[`9c2be3e`](https://github.com/lynx-family/lynx-stack/commit/9c2be3e239daf55f55a1991a9490705aa3587f46), [`cf98e14`](https://github.com/lynx-family/lynx-stack/commit/cf98e1461a8d571350d0c125ac095cc8531ac8f8), [`3bf135c`](https://github.com/lynx-family/lynx-stack/commit/3bf135c0bc8e30a9743b4a0d0dba18337d68b881), [`ae25e93`](https://github.com/lynx-family/lynx-stack/commit/ae25e93c63cb793cf53d99ce7345de0320b68046), [`9c2be3e`](https://github.com/lynx-family/lynx-stack/commit/9c2be3e239daf55f55a1991a9490705aa3587f46)]:
+  - @lynx-js/css-serializer@0.1.9
+  - @lynx-js/web-core@0.25.0
+
 ## 0.15.1
 
 ### Patch Changes
