@@ -18,6 +18,7 @@ import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
+  SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
 import { createElementTemplateUpdateEvent } from '../../../../src/element-template/protocol/update-event.js';
 import { __page, setupPage } from '../../../../src/element-template/runtime/page/page.js';
@@ -63,7 +64,7 @@ interface PageWithChildren {
 }
 
 type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
-type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+type HydrateInstances = SerializedEtNode[];
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -145,7 +146,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.setUseElementTemplate(true);
 
     onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-      hydrationData.push(...event.data.instances);
+      hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
     });
     lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
   });
@@ -206,7 +207,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
-  it('uses page slot target id 0 for root insert and remove patches', () => {
+  it('resolves page target id 0 and uses the generic attr and root patch paths', () => {
     envManager.switchToMainThread();
     const pageRef = { __isNativeRef: true, id: 'page' } as unknown as ElementRef;
     const childRef = { __isNativeRef: true, id: 'root' } as unknown as ElementRef;
@@ -214,6 +215,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     elementTemplateRegistry.set(10, childRef);
 
     applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.setAttribute,
+      0,
+      0,
+      { id: 'background' },
       ElementTemplateUpdateOps.insertNode,
       0,
       0,
@@ -226,6 +231,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       [10],
     ]);
 
+    expect(mockSetAttributeOfElementTemplate.mock.calls).toEqual([[pageRef, 0, { id: 'background' }, null]]);
     expect(mockInsertNodeToElementTemplate.mock.calls).toEqual([[pageRef, 0, childRef, null]]);
     expect(mockRemoveNodeFromElementTemplate.mock.calls).toEqual([[pageRef, 0, childRef]]);
     expect(elementTemplateRegistry.has(10)).toBe(false);

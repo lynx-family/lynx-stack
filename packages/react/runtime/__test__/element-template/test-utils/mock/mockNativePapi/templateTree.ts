@@ -14,7 +14,7 @@ export interface CompiledTemplateNode {
   children?: unknown[];
   type?: string;
   text?: string;
-  __handleId?: number;
+  __handleId?: number | string;
   __compiledTemplate?: CompiledElementNode;
   __typedElementType?: string;
   __attributeSlots?: unknown[] | null;
@@ -571,7 +571,7 @@ function serializeTemplateNode(
   }
 
   const handleId = root['__handleId'];
-  if (typeof handleId !== 'number') {
+  if (typeof handleId !== 'number' && typeof handleId !== 'string') {
     throw new Error('ElementTemplate: __SerializeElementTemplate expects a template instance handleId.');
   }
 

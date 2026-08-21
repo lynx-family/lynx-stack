@@ -10,10 +10,13 @@ import {
   __OpAttr,
   __OpBegin,
   __OpEnd,
+  __OpPageEnd,
+  __OpPageStart,
   __OpSlot,
   __OpText,
   renderToString,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes';
+import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page';
 import { DIFFED, PARENT } from '../../../../src/shared/render-constants';
 
 describe('Element Template renderToOpcodes', () => {
@@ -23,6 +26,8 @@ describe('Element Template renderToOpcodes', () => {
     expect(__OpAttr).toBe(2);
     expect(__OpText).toBe(3);
     expect(__OpSlot).toBe(4);
+    expect(__OpPageStart).toBe(5);
+    expect(__OpPageEnd).toBe(6);
   });
 
   it('emits slot opcodes for ET host nodes using $N named props', () => {
@@ -33,6 +38,58 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes).toContain(__OpSlot);
     expect(opcodes[opcodes.indexOf(__OpSlot) + 1]).toBe(3);
     expect(opcodes).toContain(__OpEnd);
+  });
+
+  it('emits prepared outermost page attrs as root metadata and keeps children transparent', () => {
+    const Template = '_et_page_child';
+    const opcodes = renderToString(
+      <__ElementTemplatePage
+        attributes={{ id: 'screen' }}
+        $0={<Template />}
+      />,
+    );
+
+    expect(opcodes.slice(0, 2)).toEqual([
+      __OpPageStart,
+      { id: 'screen' },
+    ]);
+    expect(opcodes[2]).toBe(__OpBegin);
+    expect(opcodes[3]).toMatchObject({ type: Template });
+    expect(opcodes.at(-2)).toBe(__OpEnd);
+    expect(opcodes.at(-1)).toBe(__OpPageEnd);
+  });
+
+  it.each(['direct', 'spread'])('prepares %s page refs from typed attributes', mode => {
+    const ref = () => {};
+    const attributes = mode === 'direct'
+      ? { id: 'screen', ref }
+      : { id: 'screen', ...{ ref } };
+    const vnode = h(__ElementTemplatePage, { attributes });
+
+    expect(renderToString(vnode).slice(0, 2)).toEqual([
+      __OpPageStart,
+      { id: 'screen', ref: '0-0' },
+    ]);
+  });
+
+  it('does not emit the development page-end instruction in production', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      const opcodes = renderToString(
+        <__ElementTemplatePage attributes={{ id: 'screen' }} $0='content' />,
+      );
+
+      expect(opcodes.slice(0, 2)).toEqual([
+        __OpPageStart,
+        { id: 'screen' },
+      ]);
+      expect(opcodes.at(-2)).toBe(__OpText);
+      expect(opcodes.at(-1)).toBe('content');
+      expect(opcodes).not.toContain(__OpPageEnd);
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
   });
 
   it('skips empty $N slots and renders only the populated indices', () => {

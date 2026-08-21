@@ -18,7 +18,7 @@ import {
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import type { ElementTemplateHydrateCommitContext } from '../../../../src/element-template/protocol/types.js';
-import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
+import { createElementTemplatePage, setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
@@ -54,7 +54,7 @@ describe('renderMainThread contract', () => {
     resetTemplateId();
     elementTemplateRegistry.clear();
     setRoot({ __jsx: { type: 'test-root' } });
-    setupPage({ type: 'page', children: [] } as unknown as ElementRef);
+    setupPage(createElementTemplatePage());
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
   });
@@ -110,11 +110,16 @@ describe('renderMainThread contract', () => {
       | { type: string; data: ElementTemplateHydrateCommitContext }
       | undefined;
     expect(dispatched?.type).toBe('rLynxElementTemplateHydrate');
-    expect(Array.isArray(dispatched?.data.instances)).toBe(true);
-    expect(dispatched?.data.instances).toHaveLength(1);
     expect(typeof dispatched?.data.reloadVersion).toBe('number');
+    expect(dispatched?.data).not.toHaveProperty('instances');
+    expect(dispatched?.data).not.toHaveProperty('pageAttributes');
+    expect(dispatched?.data.page).toMatchObject({
+      tag: 'page',
+      attributes: null,
+      uid: '0',
+    });
 
-    const [rootSerialized] = dispatched!.data.instances as Array<Record<string, unknown>>;
+    const [rootSerialized] = dispatched!.data.page.elementSlots?.[0] as Array<Record<string, unknown>>;
     expect(rootSerialized).toMatchObject({
       templateKey: '_et_contract_root',
       attributeSlots: ['main', 'lazy-entry'],

@@ -423,7 +423,12 @@ describe('ElementTemplate commit hook', () => {
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
       data: {
-        instances: [],
+        page: {
+          tag: 'page',
+          attributes: null,
+          elementSlots: [[]],
+          uid: 0,
+        },
         reloadVersion: getReloadVersion(),
       },
     });

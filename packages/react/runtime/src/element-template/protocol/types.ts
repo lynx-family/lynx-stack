@@ -5,6 +5,7 @@
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { ElementTemplateUpdateOps } from './opcodes.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from './page.js';
 
 export type SerializableValue =
   | string
@@ -83,8 +84,13 @@ export interface SerializedTypedNode extends SerializedEtNodeBase {
 
 export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
 
+export interface SerializedPageRoot extends SerializedTypedNode {
+  tag: typeof ELEMENT_TEMPLATE_PAGE_TYPE;
+  uid: typeof ELEMENT_TEMPLATE_PAGE_HANDLE_ID | '0';
+}
+
 export interface ElementTemplateHydrateCommitContext {
-  instances: SerializedEtNode[];
+  page: SerializedPageRoot;
   reloadVersion: number;
 }
 

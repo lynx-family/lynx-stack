@@ -16,6 +16,13 @@ Array [
     -1,
   ],
   Array [
+    "__SetAttributeOfElementTemplate",
+    "<page />",
+    0,
+    null,
+    null,
+  ],
+  Array [
     "__InsertNodeToElementTemplate",
     "<page />",
     0,

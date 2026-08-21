@@ -22,6 +22,7 @@ import { ElementTemplateLifecycleConstant } from '../../../../src/element-templa
 import type {
   ElementTemplateHydrateCommitContext,
   ElementTemplateUpdateCommitContext,
+  SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { root } from '../../../../src/element-template/client/root.js';
@@ -48,8 +49,8 @@ interface RootNode {
 }
 
 type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
-type HydrateInstance = ElementTemplateHydrateCommitContext['instances'][number];
-type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+type HydrateInstance = SerializedEtNode;
+type HydrateInstances = SerializedEtNode[];
 
 export interface PatchContext {
   envManager: ElementTemplateEnvManager;
@@ -92,7 +93,7 @@ export function setupPatchContext(): PatchContext {
   envManager.switchToBackground();
 
   const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-    hydrationData.push(...event.data.instances);
+    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
@@ -124,7 +125,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
   installElementTemplateHydrationListener();
   installElementTemplateCommitHook();
   const onHydrate = (event: HydrateEvent) => {
-    hydrationData.push(...event.data.instances);
+    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

@@ -24,10 +24,7 @@ import {
   adaptMTEventAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../src/element-template/runtime/template/attr-slot-plan.js';
-import {
-  renderMainThread,
-  resetMainThreadRootRefs,
-} from '../../../src/element-template/runtime/render/render-main-thread.js';
+import { renderMainThread } from '../../../src/element-template/runtime/render/render-main-thread.js';
 import { render as mockRender } from '../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../src/element-template/runtime/render/render-opcodes.js';
 import { render as preactRender } from 'preact';
@@ -48,12 +45,6 @@ vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
   },
   setupPage: vi.fn((page: unknown) => {
     mockedState.page = page;
-  }),
-  insertRootIntoPage: vi.fn((rootRef: ElementRef) => {
-    __InsertNodeToElementTemplate(mockedState.page as ElementRef, 0, rootRef, null);
-  }),
-  removeRootFromPage: vi.fn((rootRef: ElementRef) => {
-    __RemoveNodeFromElementTemplate(mockedState.page as ElementRef, 0, rootRef);
   }),
 }));
 
@@ -78,6 +69,7 @@ vi.mock('../../../src/element-template/runtime/render/render-opcodes.js', () => 
 vi.mock('../../../src/element-template/runtime/template/registry.js', () => ({
   elementTemplateRegistry: {
     clear: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -132,8 +124,7 @@ vi.mock('preact', () => ({
 describe('ElementTemplate reloadMainThread', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetMainThreadRootRefs();
-    mockedState.page = undefined;
+    mockedState.page = { type: 'page', id: '0', children: [] };
     mockedState.root = {};
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
@@ -142,6 +133,13 @@ describe('ElementTemplate reloadMainThread', () => {
     vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
     vi.stubGlobal('__RemoveNodeFromElementTemplate', vi.fn());
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
+    vi.stubGlobal('__SetAttributeOfElementTemplate', vi.fn());
+    vi.mocked(__SerializeElementTemplate).mockReturnValue({
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[]],
+      uid: 0,
+    } as ReturnType<typeof __SerializeElementTemplate>);
     globalThis.lynx = {
       ...(globalThis.lynx ?? {}),
       __initData: {},
@@ -153,7 +151,6 @@ describe('ElementTemplate reloadMainThread', () => {
   });
 
   afterEach(() => {
-    resetMainThreadRootRefs();
     vi.unstubAllGlobals();
   });
 
@@ -174,6 +171,12 @@ describe('ElementTemplate reloadMainThread', () => {
       elementSlots: [],
       uid: -1,
     };
+    const oldSerializedPage = {
+      tag: 'page',
+      attributes: { id: 'background' },
+      elementSlots: [[oldSerializedRoot]],
+      uid: 0,
+    };
     const opcodes = [0, 'opcode'];
     const rootRef = { type: 'ref-a' } as unknown as ElementRef;
     const serializedRoot = {
@@ -181,6 +184,12 @@ describe('ElementTemplate reloadMainThread', () => {
       attributeSlots: [],
       elementSlots: [],
       uid: -1,
+    };
+    const serializedPage = {
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[serializedRoot]],
+      uid: 0,
     };
     const dispatchEvent = vi.fn();
     __etAttrPlanMap._et_old = [0, adaptMTEventAttrSlot];
@@ -190,9 +199,12 @@ describe('ElementTemplate reloadMainThread', () => {
     }]);
     expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
     vi.mocked(mockRender).mockReturnValueOnce(['old-opcode']);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValueOnce({ rootRefs: [oldRootRef] });
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValueOnce({
+      pageAttributes: { id: 'background' },
+      rootRefs: [oldRootRef],
+    });
     vi.mocked(__SerializeElementTemplate).mockReturnValueOnce(
-      oldSerializedRoot as ReturnType<typeof __SerializeElementTemplate>,
+      oldSerializedPage as ReturnType<typeof __SerializeElementTemplate>,
     );
     (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
       .getJSContext = vi.fn(() => ({
@@ -201,15 +213,20 @@ describe('ElementTemplate reloadMainThread', () => {
     renderMainThread();
 
     vi.mocked(__InsertNodeToElementTemplate).mockClear();
+    vi.mocked(__SetAttributeOfElementTemplate).mockClear();
     vi.mocked(__SerializeElementTemplate).mockClear();
     vi.mocked(mockRender).mockClear();
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockClear();
     dispatchEvent.mockClear();
     vi.mocked(mockRender).mockReturnValue(opcodes);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [rootRef] });
-    vi.mocked(__SerializeElementTemplate).mockReturnValue(
-      serializedRoot as ReturnType<typeof __SerializeElementTemplate>,
-    );
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [rootRef],
+    });
+    vi.mocked(elementTemplateRegistry.get).mockReturnValue(oldRootRef);
+    vi.mocked(__SerializeElementTemplate)
+      .mockReturnValueOnce(oldSerializedPage as ReturnType<typeof __SerializeElementTemplate>)
+      .mockReturnValueOnce(serializedPage as ReturnType<typeof __SerializeElementTemplate>);
 
     reloadMainThread(data, options);
 
@@ -224,7 +241,9 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
     expect(resetTemplateId).toHaveBeenCalledTimes(1);
     expect(vi.mocked(setupPage)).not.toHaveBeenCalled();
+    expect(elementTemplateRegistry.get).toHaveBeenCalledWith(-1);
     expect(__RemoveNodeFromElementTemplate).toHaveBeenCalledWith(page, 0, oldRootRef);
+    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(page, 0, null, null);
     expect(vi.mocked(setRoot)).toHaveBeenCalledTimes(1);
     expect(__root).not.toBe(oldRoot);
     expect(__root.__jsx).toBe(jsx);
@@ -232,15 +251,51 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(mockRender).toHaveBeenCalledWith(jsx, undefined);
     expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith(opcodes);
     expect(__InsertNodeToElementTemplate).toHaveBeenCalledWith(page, 0, rootRef, null);
-    expect(__SerializeElementTemplate).toHaveBeenCalledWith(rootRef);
+    expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
+    expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(1, page);
+    expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(2, page);
+    expect(vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(__RemoveNodeFromElementTemplate).mock.invocationCallOrder[0]!,
+    );
+    expect(vi.mocked(__RemoveNodeFromElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
+    );
+    expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[1]!,
+    );
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'rLynxElementTemplateHydrate',
       data: {
-        instances: [serializedRoot],
+        page: serializedPage,
         reloadVersion: expect.any(Number),
       },
     });
     expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
+  });
+
+  it('rebuilds when the physical page has no root slot', () => {
+    mockedState.root = { __jsx: null };
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ pageAttributes: null, rootRefs: [] });
+    vi.mocked(__SerializeElementTemplate)
+      .mockReturnValueOnce({
+        tag: 'page',
+        attributes: null,
+        elementSlots: null,
+        uid: 0,
+      } as ReturnType<typeof __SerializeElementTemplate>)
+      .mockReturnValueOnce({
+        tag: 'page',
+        attributes: null,
+        elementSlots: [[]],
+        uid: 0,
+      } as ReturnType<typeof __SerializeElementTemplate>);
+
+    reloadMainThread(undefined, { reloadTemplate: true });
+
+    expect(elementTemplateRegistry.get).not.toHaveBeenCalled();
+    expect(__RemoveNodeFromElementTemplate).not.toHaveBeenCalled();
+    expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
   });
 
   it('clears delayed runOnBackground tasks during main-thread reload', () => {
@@ -256,7 +311,7 @@ describe('ElementTemplate reloadMainThread', () => {
     } as typeof globalThis.lynxWorkletImpl;
     mockedState.root = { __jsx: null };
     vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ pageAttributes: null, rootRefs: [] });
 
     reloadMainThread(undefined, { reloadTemplate: true });
 
@@ -280,7 +335,7 @@ describe('ElementTemplate reloadMainThread', () => {
         type: 'worklet',
         value: ctx,
       }]);
-      return { rootRefs: [rootRef] };
+      return { pageAttributes: null, rootRefs: [rootRef] };
     });
     vi.mocked(__FlushElementTree).mockImplementationOnce(() => {
       throw new Error('flush failed');
@@ -296,7 +351,7 @@ describe('ElementTemplate reloadMainThread', () => {
     lynx.__initData = { stale: true, msg: 'init' };
     mockedState.page = { type: 'page', id: '0', children: [] };
     vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ pageAttributes: null, rootRefs: [] });
 
     reloadMainThread({ msg: 'reset' }, { reloadTemplate: true, resetPageData: true });
 
@@ -307,7 +362,7 @@ describe('ElementTemplate reloadMainThread', () => {
     vi.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
     vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ pageAttributes: null, rootRefs: [] });
 
     reloadMainThread(undefined, { reloadTemplate: true });
 

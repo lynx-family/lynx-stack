@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
+  ElementTemplateHydrateCommitContext,
   ElementTemplateUpdateCommandStream,
   SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
@@ -45,8 +46,8 @@ export async function runCompiledHydrationScenario(
   envManager.setUseElementTemplate(true);
 
   const hydrationData: SerializedEtNode[] = [];
-  const onHydrate = vi.fn().mockImplementation((event: { data: { instances: SerializedEtNode[] } }) => {
-    hydrationData.push(...event.data.instances);
+  const onHydrate = vi.fn().mockImplementation((event: { data: ElementTemplateHydrateCommitContext }) => {
+    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
