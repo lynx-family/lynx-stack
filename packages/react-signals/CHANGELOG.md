@@ -1,5 +1,11 @@
 # @lynx-js/react-signals
 
+## 0.0.2
+
+### Patch Changes
+
+- Widen the `@lynx-js/react` peer dependency range to include 0.125. ([#3551](https://github.com/lynx-family/lynx-stack/pull/3551))
+
 ## 0.0.1
 
 ### Patch Changes

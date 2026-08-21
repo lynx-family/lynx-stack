@@ -1,5 +1,19 @@
 # @lynx-js/web-elements
 
+## 0.12.9
+
+### Patch Changes
+
+- Clamp the `setFoldExpanded` offset of `<x-foldview-ng>` to the scrollable length. ([#3290](https://github.com/lynx-family/lynx-stack/pull/3290))
+
+  `setFoldExpanded` called the native `scrollTo`, bypassing the clamping done by the
+  `scrollTop` setter. A page collapsing its header with a deliberately large offset
+  (e.g. `offset: '99999px'`) scrolled past the end, which does not happen on native.
+- Give `<x-foldview-header-ng>` a `width: 100%`. ([#3290](https://github.com/lynx-family/lynx-stack/pull/3290))
+
+  The element is laid out with `position: absolute` but had no width, so it shrank to
+  fit its content instead of filling the foldview.
+
 ## 0.12.8
 
 ### Patch Changes

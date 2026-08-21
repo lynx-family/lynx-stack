@@ -1,5 +1,17 @@
 # @lynx-js/react
 
+## 0.125.0
+
+### Minor Changes
+
+- Add the `<background-only>` element, which renders its `fallback` on the main thread first screen and its children on the background thread. ([#3551](https://github.com/lynx-family/lynx-stack/pull/3551))
+
+### Patch Changes
+
+- Tag main-thread vnodes with `$$typeof: Symbol.for('react.element')` so `isValidElement` recognizes them, matching the background thread. ([#3514](https://github.com/lynx-family/lynx-stack/pull/3514))
+
+- Release worklet refs when list items are logically removed while preserving native element recycling. ([#3590](https://github.com/lynx-family/lynx-stack/pull/3590))
+
 ## 0.124.0
 
 ### Minor Changes

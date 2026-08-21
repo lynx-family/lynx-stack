@@ -1,5 +1,14 @@
 # @lynx-js/genui
 
+## 0.3.1
+
+### Patch Changes
+
+- Make A2UI image prompt guidance provider-neutral so host agents can generate ([#3537](https://github.com/lynx-family/lynx-stack/pull/3537))
+  image assets through their configured tools.
+- Updated dependencies [[`d8f80cd`](https://github.com/lynx-family/lynx-stack/commit/d8f80cd019ecafddbacb7749e16a3eb293b28727)]:
+  - @lynx-js/react-signals@0.0.2
+
 ## 0.3.0
 
 ### Minor Changes

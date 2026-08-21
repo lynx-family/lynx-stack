@@ -1,5 +1,23 @@
 # @lynx-js/rspeedy
 
+## 0.16.5
+
+### Patch Changes
+
+- Move the debug metadata plugin from `@lynx-js/rspeedy` into `pluginLynx`. ([#3596](https://github.com/lynx-family/lynx-stack/pull/3596))
+
+- Move `pluginDev` into `pluginLynx()`. ([#3364](https://github.com/lynx-family/lynx-stack/pull/3364))
+
+- Move the cssnano-based CSS minimizer into `pluginLynx()`. ([#3364](https://github.com/lynx-family/lynx-stack/pull/3364))
+
+- Move the `tools.htmlPlugin` default into `pluginLynx()`. ([#3364](https://github.com/lynx-family/lynx-stack/pull/3364))
+
+- Move the `output.legalComments` default into `pluginLynx()`. ([#3364](https://github.com/lynx-family/lynx-stack/pull/3364))
+
+- Read the bundle filename from the Rsbuild config instead of the Rspeedy API. ([#3570](https://github.com/lynx-family/lynx-stack/pull/3570))
+- Updated dependencies [[`99ed745`](https://github.com/lynx-family/lynx-stack/commit/99ed7451d190cd18a45f78f731141994104a054b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`92b54ed`](https://github.com/lynx-family/lynx-stack/commit/92b54edba5adea2a4ddd355c821ff25205273479), [`37497d5`](https://github.com/lynx-family/lynx-stack/commit/37497d58fe4e0762d687001d61181ec5e0e650b9)]:
+  - @lynx-js/rsbuild-plugin@0.0.3
+
 ## 0.16.4
 
 ### Patch Changes
