@@ -374,7 +374,7 @@ where
     rendered_attrs.push(jsx_expr_attr("$0", page_children));
     let page_helper_name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
       obj: JSXObject::Ident(internal_runtime_ident),
-      prop: private_ident!("__ElementTemplatePage").into(),
+      prop: IdentName::new("__ElementTemplatePage".into(), DUMMY_SP),
       span: node.opening.span,
     });
     node.opening.name = page_helper_name.clone();
@@ -382,7 +382,6 @@ where
     if let Some(closing) = &mut node.closing {
       closing.name = page_helper_name;
     }
-    node.children.clear();
   }
 }
 

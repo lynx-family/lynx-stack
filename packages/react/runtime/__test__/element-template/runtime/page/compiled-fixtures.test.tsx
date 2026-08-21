@@ -390,6 +390,7 @@ describe('Compiled authored ET page fixtures', () => {
     expect(patchedPage.attributes?.id).toBe('background-replacement');
     expect(patchedPage.elementSlots?.[0]).toHaveLength(1);
     const patchedRootUid = patchedPage.elementSlots?.[0]?.[0]?.uid;
+    expect(patchedRootUid).toBeDefined();
     expect(serializeToJSX(pageModule.__page)).toContain('child');
 
     envManager.switchToBackground();
