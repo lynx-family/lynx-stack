@@ -49,9 +49,6 @@ catalogs:
 overrides:
   '@lynx-js/react': workspace:*
   '@rspack/core': 2.1.7
-  '@rsbuild/core>@rspack/core': 2.1.7
-  '@rsdoctor/rspack-plugin>@rspack/core': 2.1.7
-  '@rsdoctor/types>@rspack/core': 2.1.7
 
 packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 

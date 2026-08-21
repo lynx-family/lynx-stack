@@ -149,9 +149,6 @@ overrides:
   # found"). Force every @lynx-js/react to the single workspace copy.
   "@lynx-js/react": "workspace:*"
   "@rspack/core": "catalog:rspack"
-  "@rsbuild/core>@rspack/core": "catalog:rspack"
-  "@rsdoctor/rspack-plugin>@rspack/core": "catalog:rspack"
-  "@rsdoctor/types>@rspack/core": "catalog:rspack"
 
 packageExtensions:
   # Typia's internal packages import TypeScript without declaring it. Keep
