@@ -153,8 +153,8 @@ overrides:
   # @lynx-js/internal-preact@11.x snapshot via the catalog before landing.
   preact: "https://pkg.pr.new/lynx-family/internal-preact/preact@d974e1d"
   # Preact 11 exploration: devtools adapter fix for the released v11 line
-  # (lynx-family/preact-devtools#20).
-  "@lynx-js/preact-devtools": "https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@20a86a0"
+  # (lynx-family/preact-devtools main, includes #20 upstream sync and #18 refresh ack).
+  "@lynx-js/preact-devtools": "https://pkg.pr.new/lynx-family/preact-devtools/@lynx-js/preact-devtools@21e65a4"
 
   "@rspack/core": "catalog:rspack"
   "@rsbuild/core>@rspack/core": "catalog:rspack"
