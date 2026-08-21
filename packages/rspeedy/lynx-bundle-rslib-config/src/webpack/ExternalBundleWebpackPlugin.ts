@@ -5,6 +5,7 @@ import type { Rspack } from '@rslib/core'
 
 import { cssChunksToMap } from '@lynx-js/css-serializer'
 import type { LynxStyleNode } from '@lynx-js/css-serializer'
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 /**
  * The options for {@link ExternalBundleWebpackPlugin}.
@@ -35,7 +36,19 @@ export interface ExternalBundleWebpackPluginOptions {
    * })
    * ```
    */
-  encode: (opts: unknown) => { buffer: Buffer } | Promise<{ buffer: Buffer }>
+  encode: (
+    opts: unknown,
+  ) =>
+    | {
+      buffer: Buffer
+      lepus_debug?: string
+      css_diagnostics?: string
+    }
+    | Promise<{
+      buffer: Buffer
+      lepus_debug?: string
+      css_diagnostics?: string
+    }>
   /**
    * The engine version of the external bundle.
    *
@@ -116,7 +129,8 @@ export class ExternalBundleWebpackPlugin {
     // of `DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG`.
     const enableJsBytecode = this.options.enableJsBytecode
       ?? process.env['NODE_ENV'] !== 'development'
-    const { buffer, encodeOptions } = await this.#encode(
+    const { buffer, encodeOptions, hooks } = await this.#encode(
+      compilation,
       assets,
       enableJsBytecode,
     )
@@ -126,6 +140,9 @@ export class ExternalBundleWebpackPlugin {
       this.options.bundleFileName,
       new RawSource(buffer, false),
     )
+    await hooks.afterEmit.promise({
+      outputName: this.options.bundleFileName,
+    })
     if (isDebug()) {
       compilation.emitAsset(
         'tasm.json',
@@ -141,54 +158,15 @@ export class ExternalBundleWebpackPlugin {
   }
 
   async #encode(
+    compilation: Rspack.Compilation,
     assets: readonly Rspack.Asset[],
     enableJsBytecode: boolean,
   ) {
-    const customSections = assets
-      .reduce<
-        Record<string, {
-          content: string | {
-            ruleList: LynxStyleNode[]
-          }
-        }>
-      >(
-        (prev, cur) => {
-          switch (cur.info.assetType) {
-            case 'javascript':
-              return ({
-                ...prev,
-                [cur.name.replace(/\.js$/, '')]: {
-                  ...(enableJsBytecode
-                      && this.options.mainThreadChunks?.includes(cur.name)
-                    ? {
-                      'encoding': 'JsBytecode',
-                    }
-                    : {}),
-                  content: cur.source.source().toString(),
-                },
-              })
-            case 'extract-css':
-              return ({
-                ...prev,
-                [`${cur.name.replace(/\.css$/, '')}:CSS`]: {
-                  'encoding': 'CSS',
-                  content: {
-                    ruleList: cssChunksToMap(
-                      [cur.source.source().toString()],
-                      [],
-                      true,
-                    ).cssMap[0] ?? [],
-                  },
-                },
-              })
-            default:
-              return prev
-          }
-        },
-        {},
-      )
-
-    const compilerOptions: Record<string, unknown> = {
+    const compilerOptions: {
+      enableCSSSelector: boolean
+      targetSdkVersion: string
+      [key: string]: string | boolean
+    } = {
       enableFiberArch: true,
       useLepusNG: true,
       // `lynx.fetchBundle` and `lynx.loadScript` require engineVersion >= 3.5
@@ -198,16 +176,159 @@ export class ExternalBundleWebpackPlugin {
       debugInfoOutside: true,
     }
 
-    const encodeOptions = {
-      compilerOptions,
-      sourceContent: {
-        appType: 'DynamicComponent',
+    const mainThreadChunkNames = new Set(this.options.mainThreadChunks ?? [])
+    const mainThreadAssets: Rspack.Asset[] = []
+    const backgroundAssets: Rspack.Asset[] = []
+    const cssAssets: Rspack.Asset[] = []
+
+    for (const asset of assets) {
+      let tasmSection: string[] | undefined
+      let isMainThread = false
+      if (asset.info.assetType === 'javascript') {
+        isMainThread = mainThreadChunkNames.has(asset.name)
+        tasmSection = ['customSections', asset.name.replace(/\.js$/, '')]
+        if (isMainThread) {
+          mainThreadAssets.push(asset)
+        } else {
+          backgroundAssets.push(asset)
+        }
+      } else if (asset.info.assetType === 'extract-css') {
+        tasmSection = [
+          'customSections',
+          `${asset.name.replace(/\.css$/, '')}:CSS`,
+        ]
+        cssAssets.push(asset)
+      }
+
+      if (!tasmSection) continue
+      compilation.updateAsset(asset.name, asset.source, {
+        ...asset.info,
+        ...(asset.info.assetType === 'javascript'
+          ? { 'lynx:main-thread': isMainThread }
+          : {}),
+        'lynx:tasm-section': tasmSection,
+      })
+    }
+
+    const cssData = cssChunksToMap(
+      cssAssets.map(asset => asset.source.source().toString()),
+      [],
+      true,
+    )
+    const chunkGroups = [...compilation.entrypoints.values()]
+    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+      compilation as unknown as Parameters<
+        typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+      >[0],
+    )
+    const intermediateAssets: string[] = []
+    const beforeEncode = await hooks.beforeEncode.promise({
+      encodeData: {
+        compilerOptions,
+        lepusCode: {
+          root: mainThreadAssets[0],
+          chunks: mainThreadAssets.slice(1),
+          filename: this.options.bundleFileName,
+        },
+        manifest: Object.fromEntries(
+          backgroundAssets.map(asset => [
+            asset.name,
+            asset.source.source().toString(),
+          ]),
+        ),
+        css: {
+          chunks: cssAssets,
+          ...cssData,
+        },
+        customSections: {},
+        sourceContent: {
+          dsl: 'external-bundle',
+          appType: 'DynamicComponent',
+          config: {},
+        },
       },
+      filenameTemplate: this.options.bundleFileName,
+      chunkGroups: chunkGroups as unknown as Parameters<
+        typeof hooks.beforeEncode.promise
+      >[0]['chunkGroups'],
+      intermediate: '',
+      intermediateAssets,
+    })
+
+    const { lepusCode: _lepusCode, manifest: _manifest, css: _css, ...rest } =
+      beforeEncode.encodeData
+    const customSections = {
+      ...beforeEncode.encodeData.customSections,
+      ...this.#createAssetSections(
+        compilation,
+        mainThreadChunkNames,
+        enableJsBytecode,
+      ),
+    }
+    const encodeOptions = {
+      ...rest,
+      lepusCode: undefined,
       customSections,
     }
 
-    const { buffer } = await this.options.encode(encodeOptions)
+    const result = await this.options.encode(encodeOptions)
+    const beforeEmit = await hooks.beforeEmit.promise({
+      finalEncodeOptions: encodeOptions,
+      debugInfo: result.lepus_debug ?? '',
+      ...(result.css_diagnostics === undefined
+        ? {}
+        : { cssDiagnostics: result.css_diagnostics }),
+      template: result.buffer,
+      outputName: this.options.bundleFileName,
+      mainThreadAssets,
+      cssChunks: cssAssets,
+      chunkGroups: chunkGroups as unknown as Parameters<
+        typeof hooks.beforeEmit.promise
+      >[0]['chunkGroups'],
+    })
 
-    return { buffer, encodeOptions }
+    return {
+      buffer: beforeEmit.template,
+      encodeOptions,
+      hooks,
+    }
+  }
+
+  #createAssetSections(
+    compilation: Rspack.Compilation,
+    mainThreadChunkNames: Set<string>,
+    enableJsBytecode: boolean,
+  ): Record<string, {
+    encoding?: 'JsBytecode' | 'CSS'
+    content: string | { ruleList: LynxStyleNode[] }
+  }> {
+    return compilation.getAssets().reduce<
+      Record<string, {
+        encoding?: 'JsBytecode' | 'CSS'
+        content: string | { ruleList: LynxStyleNode[] }
+      }>
+    >((sections, asset) => {
+      if (asset.info.assetType === 'javascript') {
+        const isMainThread = mainThreadChunkNames.has(asset.name)
+        sections[asset.name.replace(/\.js$/, '')] = {
+          ...(enableJsBytecode && isMainThread
+            ? { encoding: 'JsBytecode' as const }
+            : {}),
+          content: asset.source.source().toString(),
+        }
+      } else if (asset.info.assetType === 'extract-css') {
+        sections[`${asset.name.replace(/\.css$/, '')}:CSS`] = {
+          encoding: 'CSS',
+          content: {
+            ruleList: cssChunksToMap(
+              [asset.source.source().toString()],
+              [],
+              true,
+            ).cssMap[0] ?? [],
+          },
+        }
+      }
+      return sections
+    }, {})
   }
 }

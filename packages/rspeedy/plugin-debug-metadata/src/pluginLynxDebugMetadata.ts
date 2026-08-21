@@ -14,6 +14,9 @@ import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
+const EXTERNAL_BUNDLE_EXPOSURE = Symbol.for(
+  '@lynx-js/lynx-bundle-rslib-config/external-bundle',
+)
 
 function isDebugMode(): boolean {
   const debug = process.env['DEBUG']
@@ -162,6 +165,9 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         const exposed = api.useExposed<LynxTemplatePluginExposure>(
           Symbol.for('LynxTemplatePlugin'),
         )
+        const isExternalBundle = api.useExposed<boolean>(
+          EXTERNAL_BUNDLE_EXPOSURE,
+        ) === true
 
         if (isLocalProductionBuild(isProd)) return
 
@@ -174,7 +180,7 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         // fine via the default `.map` sibling; skip cleanly.
         const isLynx = environment.name === 'lynx'
           || environment.name.startsWith('lynx-')
-        if (!isLynx) return
+        if (!isLynx && !isExternalBundle) return
 
         if (!exposed) return
 

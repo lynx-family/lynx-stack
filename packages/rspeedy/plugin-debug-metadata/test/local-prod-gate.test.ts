@@ -16,7 +16,10 @@ function noop(): void {
   return
 }
 
-function runChain(utils: ChainUtils): string[] {
+function runChain(
+  utils: ChainUtils,
+  options: { externalBundle?: boolean } = {},
+): string[] {
   const registered: string[] = []
   const chain = {
     plugin(name: string) {
@@ -27,7 +30,12 @@ function runChain(utils: ChainUtils): string[] {
   const api = {
     onAfterCreateCompiler: noop,
     onBeforeStartDevServer: noop,
-    useExposed: () => ({ LynxTemplatePlugin: class {} }),
+    useExposed: (key: symbol) =>
+      key === Symbol.for(
+          '@lynx-js/lynx-bundle-rslib-config/external-bundle',
+        )
+        ? options.externalBundle
+        : { LynxTemplatePlugin: class {} },
     getNormalizedConfig: () => ({ dev: { assetPrefix: '' } }),
     context: {},
     modifyBundlerChain: (
@@ -98,5 +106,16 @@ describe('pluginLynxDebugMetadata production gate', () => {
 
     expect(runChain({ environment: { name: 'web', entry: {} }, isProd: true }))
       .not.toContain('lynx:debug-metadata')
+  })
+
+  test('emits for an external-bundle environment on CI', () => {
+    vi.stubEnv('CI', 'true')
+
+    expect(
+      runChain(
+        { environment: { name: 'component-library', entry: {} }, isProd: true },
+        { externalBundle: true },
+      ),
+    ).toContain('lynx:debug-metadata')
   })
 })

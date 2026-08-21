@@ -39,9 +39,11 @@
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/tasm": "0.0.49",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/web-core": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",

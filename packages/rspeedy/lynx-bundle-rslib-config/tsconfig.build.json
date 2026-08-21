@@ -5,5 +5,8 @@
     "outDir": "./lib",
     "rootDir": "./src",
   },
+  "references": [
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
   "include": ["src"],
 }

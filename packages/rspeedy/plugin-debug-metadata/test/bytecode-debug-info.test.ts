@@ -4,7 +4,10 @@
 
 import { describe, expect, test } from 'vitest'
 
-import { parseLepusNGDebugInfo } from '../src/collectors/bytecode-debug-info.js'
+import {
+  parseCustomSectionDebugInfo,
+  parseLepusNGDebugInfo,
+} from '../src/collectors/bytecode-debug-info.js'
 
 const validEnvelope = {
   lepusNG_debug_info: {
@@ -49,5 +52,30 @@ describe('parseLepusNGDebugInfo', () => {
     expect(parsed?.lepusNG_debug_info.function_info[0]?.function_name).toBe(
       'foo',
     )
+  })
+})
+
+describe('parseCustomSectionDebugInfo', () => {
+  test('does not treat the ordinary LepusNG envelope as a section', () => {
+    expect(parseCustomSectionDebugInfo(JSON.stringify(validEnvelope)))
+      .toBeUndefined()
+  })
+
+  test('wraps valid section payloads in the LepusNG envelope', () => {
+    const section = validEnvelope.lepusNG_debug_info
+    expect(
+      parseCustomSectionDebugInfo(JSON.stringify({
+        ...validEnvelope,
+        'widget-alpha': section,
+        invalid: { function_info: 'not-an-array' },
+      })),
+    ).toEqual({
+      'widget-alpha': validEnvelope,
+    })
+  })
+
+  test('returns undefined when no section contains function info', () => {
+    expect(parseCustomSectionDebugInfo(JSON.stringify({ empty: {} })))
+      .toBeUndefined()
   })
 })

@@ -45,8 +45,12 @@ export interface ExternalBundleWebpackPluginOptions {
     enableJsBytecode?: boolean | undefined;
     encode: (opts: unknown) => {
         buffer: Buffer;
+        lepus_debug?: string;
+        css_diagnostics?: string;
     } | Promise<{
         buffer: Buffer;
+        lepus_debug?: string;
+        css_diagnostics?: string;
     }>;
     engineVersion?: string | undefined;
     mainThreadChunks?: string[] | undefined;

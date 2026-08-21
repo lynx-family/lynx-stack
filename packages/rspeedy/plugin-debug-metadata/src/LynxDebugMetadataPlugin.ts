@@ -16,7 +16,10 @@ import type {
 } from '@lynx-js/template-webpack-plugin'
 
 import { collectArtifacts } from './collectors/artifacts.js'
-import { parseLepusNGDebugInfo } from './collectors/bytecode-debug-info.js'
+import {
+  parseCustomSectionDebugInfo,
+  parseLepusNGDebugInfo,
+} from './collectors/bytecode-debug-info.js'
 import {
   collectEntryPathMap,
   collectLazyBundleEntryResources,
@@ -275,18 +278,44 @@ export class LynxDebugMetadataPluginImpl {
             if (section) artifact.tasmSection = section
           }
 
-          const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
-          if (lepusNG) {
-            const target = metadata.artifacts.find(a =>
-              a.kind === 'main-thread'
-              && a.tasmSection?.[0] === 'lepusCode'
-              && a.tasmSection?.[1] === 'root'
-            ) ?? metadata.artifacts.find(a => a.kind === 'main-thread')
-            if (target) {
-              target.debugSources.unshift({
+          const sections = parseCustomSectionDebugInfo(args.debugInfo)
+          if (sections) {
+            for (const artifact of metadata.artifacts) {
+              if (
+                artifact.kind !== 'main-thread'
+                || artifact.tasmSection?.[0] !== 'customSections'
+              ) {
+                continue
+              }
+              const sectionName = artifact.tasmSection[1]
+              if (!sectionName) continue
+              const debugInfo = sections[sectionName]
+              if (!debugInfo) continue
+
+              // TASM reports custom-section stack frames with the section
+              // key, not the intermediate JavaScript asset name.
+              artifact.filename = sectionName
+              artifact.debugSources.unshift({
                 kind: 'bytecode-debug-info',
-                debugInfo: lepusNG,
+                debugInfo,
               })
+            }
+          } else {
+            const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
+            if (lepusNG) {
+              const target = metadata.artifacts.find(a =>
+                a.kind === 'main-thread'
+                && a.tasmSection?.[0] === 'lepusCode'
+                && a.tasmSection?.[1] === 'root'
+              ) ?? metadata.artifacts.find(a =>
+                a.kind === 'main-thread'
+              )
+              if (target) {
+                target.debugSources.unshift({
+                  kind: 'bytecode-debug-info',
+                  debugInfo: lepusNG,
+                })
+              }
             }
           }
 

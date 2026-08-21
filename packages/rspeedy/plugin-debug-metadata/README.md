@@ -54,6 +54,7 @@ The legacy `debug-info.json` is **no longer written to disk** — its contents a
 ## Contents
 
 - `pluginLynxDebugMetadata` — the Rsbuild plugin wrapper (the only public export), applied by `applyDefaultPlugins` in `@lynx-js/rspeedy/core`. Internally it taps `LynxTemplatePlugin.beforeEncode` to assemble + emit the metadata asset and to rewrite JS / CSS source-map trailers, and `beforeEmit` to enrich the asset with `tasmSection` paths and bytecode debug info.
+- External bundles created by `@lynx-js/lynx-bundle-rslib-config` are also supported. Their main-thread artifacts are matched to bytecode debug info by the actual TASM `customSections` key recorded on each emitted asset.
 
 ## Convention for plugin authors
 

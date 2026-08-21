@@ -35,6 +35,40 @@ export default defineExternalBundleRslibConfig({
 This produces an external bundle whose React-related requests are mapped to the
 built-in `reactlynx` preset instead of a hand-written externals table.
 
+### Debug metadata
+
+External bundle builds participate in the standard `LynxTemplatePlugin`
+lifecycle, so `pluginLynxDebugMetadata` can collect source maps and per-section
+TASM bytecode debug information without an adapter:
+
+```ts
+import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
+
+export default defineExternalBundleRslibConfig({
+  source: {
+    entry: {
+      'component-runtime': {
+        import: './src/component-runtime.ts',
+        layer: 'main-thread',
+      },
+    },
+  },
+  output: {
+    sourceMap: {
+      js: 'source-map',
+    },
+  },
+  plugins: [
+    pluginReactLynx(),
+    pluginLynxDebugMetadata(),
+  ],
+})
+```
+
+Main-thread status comes from the configured entry layer. Metadata routing uses
+the emitted asset's actual TASM custom-section name, so entry names remain
+application-defined.
+
 ### Custom presets
 
 If your business bundle needs extra preset mappings, define them next to

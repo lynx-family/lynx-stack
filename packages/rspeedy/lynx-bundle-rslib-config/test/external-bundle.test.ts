@@ -18,6 +18,7 @@ import {
   rstest,
 } from '@rstest/core'
 
+import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 
 import { decodeTemplate } from './utils.js'
@@ -1032,6 +1033,73 @@ describe('debug info outside', () => {
         fs.readFileSync(path.join(distRoot, 'tasm.json'), 'utf-8'),
       ) as { compilerOptions: Record<string, unknown> }
       expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+  })
+})
+
+describe('debug metadata', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  it('matches main-thread bytecode metadata by custom section names', async () => {
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      const distRoot = path.join(fixtureDir, 'dist')
+      await build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            'widget-alpha': {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.MAIN_THREAD,
+            },
+            'widget-beta': {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.MAIN_THREAD,
+            },
+          },
+        },
+        id: 'feature-library',
+        output: {
+          distPath: {
+            root: distRoot,
+          },
+          sourceMap: {
+            js: 'source-map',
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+          pluginLynxDebugMetadata(),
+        ],
+      }))
+
+      const metadata = JSON.parse(
+        fs.readFileSync(path.join(distRoot, 'debug-metadata.json'), 'utf-8'),
+      ) as {
+        artifacts: Array<{
+          kind: string
+          filename: string
+          path: string
+          tasmSection?: string[]
+          debugSources: Array<{ kind: string }>
+        }>
+      }
+      for (const sectionName of ['widget-alpha', 'widget-beta']) {
+        const artifact = metadata.artifacts.find(
+          item => item.path === `${sectionName}.js`,
+        )
+
+        expect(artifact).toMatchObject({
+          kind: 'main-thread',
+          filename: sectionName,
+          tasmSection: ['customSections', sectionName],
+        })
+        expect(artifact?.debugSources.map(source => source.kind)).toEqual([
+          'bytecode-debug-info',
+          'source-map',
+        ])
+      }
     } finally {
       rstest.unstubAllEnvs()
     }

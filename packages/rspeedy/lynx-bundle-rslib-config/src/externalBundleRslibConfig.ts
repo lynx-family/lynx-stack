@@ -6,6 +6,7 @@ import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
 import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
@@ -606,6 +607,10 @@ interface ExposedLayers {
   readonly MAIN_THREAD: string
 }
 
+const EXTERNAL_BUNDLE_EXPOSURE = Symbol.for(
+  '@lynx-js/lynx-bundle-rslib-config/external-bundle',
+)
+
 /**
  * Rewrite user entries into explicit background/main-thread entries.
  *
@@ -627,6 +632,16 @@ const externalBundleRsbuildPlugin = ({
   // ensure dsl plugin has exposed LAYERS
   enforce: 'post',
   setup(api) {
+    if (!api.useExposed(Symbol.for('LynxTemplatePlugin'))) {
+      api.expose(Symbol.for('LynxTemplatePlugin'), {
+        LynxTemplatePlugin: {
+          getLynxTemplatePluginHooks: LynxTemplatePlugin
+            .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
+        },
+      })
+    }
+    api.expose(EXTERNAL_BUNDLE_EXPOSURE, true)
+
     // Get layer names from react-rsbuild-plugin
     const LAYERS = api.useExposed<ExposedLayers>(
       Symbol.for('LAYERS'),

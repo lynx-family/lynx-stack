@@ -532,6 +532,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react
     devDependencies:
+      '@lynx-js/debug-metadata-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-debug-metadata
       '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-external-bundle
@@ -1623,10 +1626,16 @@ importers:
       '@lynx-js/tasm':
         specifier: 0.0.49
         version: 0.0.49
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
     devDependencies:
+      '@lynx-js/debug-metadata-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-debug-metadata
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
