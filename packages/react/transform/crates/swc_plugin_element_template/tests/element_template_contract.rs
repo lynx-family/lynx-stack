@@ -262,6 +262,73 @@ fn should_emit_spread_attr_plan_with_ref_adapter() {
 }
 
 #[test]
+fn should_emit_direct_main_thread_ref_attr_plan_for_js_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view main-thread:ref={mainThreadRef} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::JS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert_attr_plan_assignment(
+    &code,
+    "0,ReactLynxInternal.adaptMTRefAttrSlot",
+    "direct main-thread ref slots should register an ET MTRef attr plan",
+  );
+  assert!(
+    code.contains("attributeSlots={[mainThreadRef]}"),
+    "JS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_direct_main_thread_ref_attr_plan_for_lepus_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view main-thread:ref={mainThreadRef} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::LEPUS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert_attr_plan_assignment(
+    &code,
+    "0,ReactLynxInternal.adaptMTRefAttrSlot",
+    "direct main-thread ref slots should register an ET MTRef attr plan",
+  );
+  assert!(
+    code.contains("attributeSlots={[mainThreadRef]}"),
+    "LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_disable_flatten_for_direct_main_thread_ref_targets() {
+  let template = first_user_template_json(
+    r#"
+      <view main-thread:ref={mainThreadRef} />
+    "#,
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert!(
+    attrs.iter().any(|attr| {
+      attr["kind"] == "static" && attr["key"] == "flatten" && attr["value"] == false
+    }),
+    "main-thread:ref target should carry create-time flatten=false descriptor, got: {template:?}",
+  );
+}
+
+#[test]
 fn should_inject_css_scope_attr_for_element_template_subtree() {
   let (code, template) = first_user_template_json_with_code(
     r#"
@@ -664,7 +731,7 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
 }
 
 #[test]
-fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
+fn should_keep_main_thread_attr_descriptor_keys_for_namespaced_attrs() {
   let (code, template) = first_user_template_json_with_code(
     r#"
       <view main-thread:bindtap={handleTap} main-thread:ref={viewRef} />
@@ -685,14 +752,18 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
     "main-thread:ref must not be lowered as an ordinary ET ref adapter, got: {code}"
   );
   assert!(
-    !code.contains("viewRef"),
-    "unsupported namespaced ref must not leak the raw ref value, got: {code}"
+    code.contains("adaptMTRefAttrSlot"),
+    "main-thread:ref must use the ET MTRef adapter, got: {code}"
+  );
+  assert!(
+    code.contains("attributeSlots={[handleTap,viewRef]}"),
+    "default LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
   );
 
   let attrs = template["attributesArray"]
     .as_array()
     .expect("attributesArray");
-  assert_eq!(attrs.len(), 2);
+  assert_eq!(attrs.len(), 3);
 
   assert_eq!(attrs[0]["kind"], "slot");
   assert_eq!(attrs[0]["key"], "main-thread:bindtap");
@@ -701,6 +772,10 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
   assert_eq!(attrs[1]["kind"], "slot");
   assert_eq!(attrs[1]["key"], "main-thread:ref");
   assert_eq!(attrs[1]["attrSlotIndex"].as_f64(), Some(1.0));
+
+  assert_eq!(attrs[2]["kind"], "static");
+  assert_eq!(attrs[2]["key"], "flatten");
+  assert_eq!(attrs[2]["value"], false);
 }
 
 #[test]

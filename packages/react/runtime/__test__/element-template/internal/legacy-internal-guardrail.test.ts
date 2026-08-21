@@ -14,6 +14,8 @@ describe('legacy internal guardrail', () => {
   it('keeps ref attr slot adapter on the ET internal surface only', () => {
     expect(ElementTemplateInternal.adaptRefAttrSlot).toBeTypeOf('function');
     expect('adaptRefAttrSlot' in ElementTemplateRuntime).toBe(false);
+    expect(ElementTemplateInternal.adaptMTRefAttrSlot).toBeTypeOf('function');
+    expect('adaptMTRefAttrSlot' in ElementTemplateRuntime).toBe(false);
   });
 
   it('keeps the ET main-thread event loader surface minimal', () => {

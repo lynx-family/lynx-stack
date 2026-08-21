@@ -49,7 +49,6 @@ export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 
 export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 
-// TODO(ET MTS): add MTRef hydrate semantics in follow-up tracks.
 export { transformToWorklet } from './runtime/template/main-thread-background-function.js';
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -63,6 +62,7 @@ export {
   __etAttrPlanMap,
   adaptEventAttrSlot,
   adaptMTEventAttrSlot,
+  adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
 } from './runtime/template/attr-slot-plan.js';

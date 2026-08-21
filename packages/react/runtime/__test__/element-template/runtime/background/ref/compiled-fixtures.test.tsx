@@ -34,7 +34,7 @@ const __dirname = path.dirname(__filename);
 const DIRECT_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/direct-ref/index.tsx');
 const SPREAD_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/spread-ref/index.tsx');
 const MULTI_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/multi-ref/index.tsx');
-const UNSUPPORTED_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/unsupported-ref/index.tsx');
+const NAMESPACED_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/unsupported-ref/index.tsx');
 
 interface DirectFixtureProps {
   hostRef?: unknown;
@@ -303,21 +303,20 @@ describe('Compiled ordinary ref background updates', () => {
     }));
   });
 
-  it('drops compiled unsupported namespaced refs before native payloads', async () => {
+  it('hydrates compiled direct MTRefs while dropping unsupported worklet refs', async () => {
     const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<UnsupportedFixtureProps>>(
-      UNSUPPORTED_REF_FIXTURE,
+      NAMESPACED_REF_FIXTURE,
     );
-    const mainThreadRef = vi.fn();
+    const mainThreadRef = { _wvid: 7 };
     const workletRef = vi.fn();
 
     const props = { mainThreadRef, workletRef };
     const host = renderOnBackground(backgroundModule, props);
-    expect(host.attributeSlots).toEqual([null, null]);
+    expect(host.attributeSlots).toEqual([{ type: 'main-thread-ref', value: mainThreadRef }, null]);
 
     hydrateFromMainThread(mainModule, props);
 
-    expect(host.attributeSlots).toEqual([null, null]);
-    expect(mainThreadRef).not.toHaveBeenCalled();
+    expect(host.attributeSlots).toEqual([{ type: 'main-thread-ref', value: mainThreadRef }, null]);
     expect(workletRef).not.toHaveBeenCalled();
   });
 });

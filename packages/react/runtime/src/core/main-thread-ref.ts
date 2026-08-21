@@ -6,7 +6,7 @@ import type { RefObject } from 'react';
 import { useMemo } from './hooks/react.js';
 import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
 import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
-import type { Worklet, WorkletRefImpl } from '../worklet-runtime/bindings/types.js';
+import type { WorkletRefImpl } from '../worklet-runtime/bindings/types.js';
 
 // Split into two variables for testing purposes.
 let lastIdBG = 0;
@@ -20,12 +20,6 @@ export function isMainThreadRef(value: unknown): value is WorkletRefImpl<unknown
   return typeof value === 'object'
     && value !== null
     && typeof (value as { _wvid?: unknown })._wvid === 'number';
-}
-
-export function isMainThreadRefCallback(value: unknown): value is Worklet {
-  return typeof value === 'object'
-    && value !== null
-    && typeof (value as { _wkltId?: unknown })._wkltId === 'string';
 }
 
 /**
