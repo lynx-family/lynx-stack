@@ -4,9 +4,11 @@
 
 import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
 import {
+  clearFirstScreenMainThreadRefs,
   flushDelayedRunOnBackgroundFunctions,
   runRunOnMainThreadTask,
   setEomShouldFlushElementTree,
+  updateWorkletRefInitValueChanges,
 } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { markTiming, setPipeline } from '../../core/performance.js';
@@ -27,13 +29,6 @@ export function installElementTemplatePatchListener(): void {
 
   listener = (event: Pick<ElementTemplateUpdateEvent, 'data'>) => {
     const { patchOptions } = event.data;
-    if (
-      typeof patchOptions.reloadVersion === 'number'
-      && patchOptions.reloadVersion < getReloadVersion()
-    ) {
-      return;
-    }
-
     const { flowIds, pipelineOptions } = patchOptions;
     const shouldProfilePatch = !!flowIds
       && typeof lynx.performance?.profileStart === 'function'
@@ -50,6 +45,21 @@ export function installElementTemplatePatchListener(): void {
 
     const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
     markTiming('parseChangesEnd');
+
+    if (payload.mainThreadRefInitValuePatch?.length) {
+      updateWorkletRefInitValueChanges(payload.mainThreadRefInitValuePatch);
+    }
+
+    if (
+      typeof patchOptions.reloadVersion === 'number'
+      && patchOptions.reloadVersion < getReloadVersion()
+    ) {
+      markTiming('mtsRenderEnd');
+      if (shouldProfilePatch) {
+        lynx.performance.profileEnd();
+      }
+      return;
+    }
 
     const hasOps = payload.ops.length > 0;
     const flushOptions = payload.flushOptions;
@@ -78,12 +88,14 @@ export function installElementTemplatePatchListener(): void {
         markTiming('mtsRenderEnd');
         if (isHydration) {
           flushDelayedRunOnBackgroundFunctions();
+          clearFirstScreenMainThreadRefs();
         }
       }
     } else {
       markTiming('mtsRenderEnd');
       if (isHydration) {
         flushDelayedRunOnBackgroundFunctions();
+        clearFirstScreenMainThreadRefs();
       }
     }
     if (delayedRunOnMainThreadData?.length) {

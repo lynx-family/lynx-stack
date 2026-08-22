@@ -129,6 +129,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const payload = {
       ops: createRawTextOps(1, 'stale'),
       flushOptions: { pipelineOptions },
+      flowIds: [101, 202],
       reloadVersion: staleReloadVersion,
     };
 
@@ -140,7 +141,17 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
       .calls;
     expect(flushCalls).toHaveLength(0);
-    expect(lynx.performance._markTiming.mock.calls).toEqual([]);
+    expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::patch', {
+      flowId: 101,
+      flowIds: [101, 202],
+    });
+    expect(lynx.performance.profileEnd).toHaveBeenCalledTimes(1);
+    expect(lynx.performance._markTiming.mock.calls).toEqual([
+      ['pipelineID', 'mtsRenderStart'],
+      ['pipelineID', 'parseChangesStart'],
+      ['pipelineID', 'parseChangesEnd'],
+      ['pipelineID', 'mtsRenderEnd'],
+    ]);
   });
 
   it('marks parse timing for empty update envelopes with pipeline options', () => {

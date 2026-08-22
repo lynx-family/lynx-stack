@@ -174,6 +174,7 @@ export function installMockNativePapi(
     g.__LYNX_REPORT_ERROR_CALLS.push(error);
     nativeLog.push(['lynx.reportError', error]);
   });
+  const mockCreateJSObjectDestructionObserver = vi.fn().mockImplementation(() => ({}));
 
   const mockSetAttribute = vi.fn().mockImplementation((element: unknown, name: string, value: unknown) => {
     nativeLog.push(['__SetAttribute', formatNode(element), name, value]);
@@ -354,8 +355,15 @@ export function installMockNativePapi(
   vi.stubGlobal('__FlushElementTree', mockFlushElementTree);
   const currentLynx = (globalThis as unknown as { lynx?: any }).lynx;
   const baseLynx = (currentLynx && typeof currentLynx === 'object') ? currentLynx : {};
+  const baseGetNativeApp = typeof baseLynx.getNativeApp === 'function'
+    ? baseLynx.getNativeApp
+    : undefined;
   vi.stubGlobal('lynx', {
     ...baseLynx,
+    getNativeApp: () => ({
+      ...baseGetNativeApp?.call(baseLynx),
+      createJSObjectDestructionObserver: mockCreateJSObjectDestructionObserver,
+    }),
     reportError: mockReportError,
   });
 
