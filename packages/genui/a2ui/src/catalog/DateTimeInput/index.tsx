@@ -28,7 +28,10 @@ import {
 } from './utils.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/DateTimeInput.css';
 
@@ -74,18 +77,7 @@ export interface DateTimeInputProps extends GenericComponentProps {
   /** The current date/time value. Typically bound to a data path. */
   value: string | { path: string };
   /** The text label for the input field. */
-  label?: string | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  label?: string | { path: string } | V1FunctionCall;
   /** Whether to show the date picker. */
   enableDate?: boolean;
   /** Whether to show the time picker. */
@@ -99,18 +91,7 @@ export interface DateTimeInputProps extends GenericComponentProps {
   /** A list of checks to perform. */
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
-    };
+    condition: boolean | { path: string } | V1FunctionCall;
     /** The error message to display if the check fails. */
     message: string;
   }>;

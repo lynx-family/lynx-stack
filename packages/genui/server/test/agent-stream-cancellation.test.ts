@@ -22,9 +22,11 @@ type GlobalWithStreamingServices = typeof globalThis & {
 
 function createPendingService(
   receiveSignal: (signal: AbortSignal | undefined) => void,
+  receiveMessages: (messages: unknown) => void = () => undefined,
 ): MockStreamingService {
   return {
-    streamAsAsyncIterable(_messages, _options, _conversation, abortSignal) {
+    streamAsAsyncIterable(messages, _options, _conversation, abortSignal) {
+      receiveMessages(messages);
       receiveSignal(abortSignal);
       return new Promise((_resolve, reject) => {
         const rejectAbort = () => {
@@ -99,21 +101,47 @@ describe('agent stream cancellation', () => {
   test('aborts A2UI action generation when the response reader disconnects', async () => {
     const global = globalThis as GlobalWithStreamingServices;
     const previousService = global.__A2UI_AGENT_SERVICE__;
+    let receivedMessages: unknown;
     let receivedSignal: AbortSignal | undefined;
-    global.__A2UI_AGENT_SERVICE__ = createPendingService((signal) => {
-      receivedSignal = signal;
-    });
+    global.__A2UI_AGENT_SERVICE__ = createPendingService(
+      (signal) => {
+        receivedSignal = signal;
+      },
+      (messages) => {
+        receivedMessages = messages;
+      },
+    );
 
     try {
       await cancelResponse(
         '/a2ui/action/stream',
         {
-          action: { name: 'refresh' },
-          surfaceId: 'surface-1',
+          action: {
+            context: {},
+            name: 'refresh',
+            sourceComponentId: 'refresh_button',
+            surfaceId: 'surface-1',
+            timestamp: '2026-08-19T01:02:03Z',
+          },
+          version: 'v1.0',
         },
         '203.0.113.44',
       );
       expect(receivedSignal?.aborted).toBe(true);
+      expect(receivedMessages).toEqual([{
+        content: 'A2UI_USER_ACTION: '
+          + JSON.stringify({
+            version: 'v1.0',
+            action: {
+              name: 'refresh',
+              surfaceId: 'surface-1',
+              sourceComponentId: 'refresh_button',
+              timestamp: '2026-08-19T01:02:03Z',
+              context: {},
+            },
+          }),
+        role: 'user',
+      }]);
     } finally {
       global.__A2UI_AGENT_SERVICE__ = previousService;
     }

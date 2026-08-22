@@ -111,14 +111,14 @@ const pendingUntilAbortedFetch: typeof fetch = (_input, init) =>
 function a2uiWithOpenURL(url: unknown): string {
   return JSON.stringify([
     {
-      version: 'v0.9',
+      version: 'v1.0',
       createSurface: {
         surfaceId: 'main',
         catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
-      version: 'v0.9',
+      version: 'v1.0',
       updateComponents: {
         surfaceId: 'main',
         components: [{
@@ -129,7 +129,6 @@ function a2uiWithOpenURL(url: unknown): string {
             functionCall: {
               call: 'openUrl',
               args: { url },
-              returnType: 'void',
             },
           },
         }, {
@@ -410,12 +409,14 @@ describe('A2UI web-search source validation', () => {
   test('does not stream a component containing an untrusted openUrl', () => {
     const trustedURL = 'https://news.example.com/story';
     const untrusted = new A2UIProtocolMessageStreamParser({
+      hasLoadingComponent: true,
       isOpenUrlAllowed: (url) => url === trustedURL,
     }).push(a2uiWithOpenURL('https://invented.example.com/source'));
     expect(JSON.stringify(untrusted)).toContain('"component":"Loading"');
     expect(JSON.stringify(untrusted)).not.toContain('invented.example.com');
 
     const trusted = new A2UIProtocolMessageStreamParser({
+      hasLoadingComponent: true,
       isOpenUrlAllowed: (url) => url === trustedURL,
     }).push(a2uiWithOpenURL(trustedURL));
     expect(JSON.stringify(trusted)).toContain('"component":"Button"');
@@ -424,6 +425,7 @@ describe('A2UI web-search source validation', () => {
 
   test('does not stream a component containing a bound openUrl', () => {
     const streamed = new A2UIProtocolMessageStreamParser({
+      hasLoadingComponent: true,
       isOpenUrlAllowed: () => true,
     }).push(a2uiWithOpenURL({ path: '/sources/0/url' }));
 

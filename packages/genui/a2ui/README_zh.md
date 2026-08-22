@@ -2,8 +2,14 @@
 
 [English](./README.md) | 简体中文
 
-`@lynx-js/genui/a2ui` 是面向 A2UI v0.9 的 ReactLynx 客户端运行时。它消费经过校验的
-A2UI server-to-client JSON messages，并在你的应用中渲染可信的 ReactLynx 组件。
+`@lynx-js/genui/a2ui` 是面向 A2UI v1.0 核心渲染协议的 ReactLynx 客户端运行时。它消费经过校验的
+A2UI agent-to-renderer JSON messages，并在你的应用中渲染可信的 ReactLynx 组件。迁移期间仍可读取已有的
+v0.9 渲染消息流。
+
+上游目前仍将 v1.0 标记为 Candidate 规范；本包以刻意收窄的核心范围跟随这套 wire format。
+
+当前 v1.0 路径只覆盖四种核心渲染消息和标准 `action` envelope。RPC、能力协商和多 catalog 扩展暂不在
+这个包的范围内。
 
 当你已经有、或准备构建一个返回 A2UI messages 的 Agent 服务时，使用这个包。它不托管 Agent，不调用
 LLM，不拥有后端路由，也不提供 chat shell。你的应用负责传输层，并把消息写入 renderer。
@@ -65,7 +71,7 @@ async function sendPrompt(input: string) {
     void fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ version: 'v1.0', action }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));
@@ -75,6 +81,26 @@ async function sendPrompt(input: string) {
 
 `MessageStore` 按到达顺序保存原始 protocol messages。`<A2UI>` 订阅它、处理新消息、渲染 active surface，并通过
 `onAction` 抛出 generated UI actions。
+
+v1.0 可以在一条消息里发送初始数据和组件：
+
+```json
+{
+  "version": "v1.0",
+  "createSurface": {
+    "surfaceId": "main",
+    "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+    "dataModel": { "title": "Hello A2UI" },
+    "components": [
+      {
+        "id": "root",
+        "component": "Text",
+        "text": { "path": "/title" }
+      }
+    ]
+  }
+}
+```
 
 ## 你需要负责什么
 

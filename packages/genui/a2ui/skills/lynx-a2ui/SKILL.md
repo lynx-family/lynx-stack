@@ -1,12 +1,12 @@
 ---
 name: lynx-a2ui
-description: Convert natural-language UI requests into A2UI v0.9 JSON protocol messages that an A2UI renderer can consume.
+description: Convert natural-language UI requests into A2UI v1.0 JSON protocol messages that an A2UI renderer can consume.
 ---
 
 # A2UI Generator
 
 Use this skill when an agent must turn a natural-language request into A2UI
-protocol data for rendering. The output is data only: a JSON array of A2UI v0.9
+protocol data for rendering. The output is data only: a JSON array of A2UI v1.0
 messages.
 
 ## Generation Workflow
@@ -43,12 +43,13 @@ Design principles:
 
 Envelope semantics:
 
-- `createSurface` creates a surface. Once created, its `surfaceId` and
-  `catalogId` are fixed. To change catalog or theme, delete and recreate the
-  surface.
+- `createSurface` creates a surface. Use the active fetched `catalogId` as the
+  surface default because this lean profile does not route per-component
+  catalogs. It can include the initial `dataModel` and `components` so a
+  complete surface fits in one message. Do not emit `theme`.
 - `updateDataModel` sets values inside a surface's data model. It has shape
-  `{ "surfaceId": string, "path"?: string, "value"?: any }`. `path` defaults
-  to `/`, and `value` may be any JSON value.
+  `{ "surfaceId": string, "path"?: string, "value": any }`. `path` defaults
+  to `/`; `value` is required, and `null` deletes the target value.
 - `updateComponents` adds or replaces component definitions for a surface. It
   may reference data paths, but those paths should already be populated by an
   earlier `updateDataModel` message in the same response.
@@ -59,7 +60,7 @@ Envelope semantics:
 Return only a **pretty**-printed JSON array. Do not return Markdown, prose, XML,
 HTML, JavaScript, CSS, code fences, comments, or trailing commas.
 
-Each array item must be a top-level object with `"version": "v0.9"` and exactly
+Each array item must be a top-level object with `"version": "v1.0"` and exactly
 one of these message keys:
 
 - `"createSurface"`: create a new render surface.
@@ -67,17 +68,18 @@ one of these message keys:
 - `"updateComponents"`: add or replace component definitions.
 - `"deleteSurface"`: remove an existing surface.
 
-For a fresh UI response, emit messages in this order:
+For a fresh UI response, prefer one `createSurface` with inline `dataModel` and
+`components`. For progressive updates, emit messages in this order:
 
-1. `createSurface`
+1. `createSurface` without inline values
 2. `updateDataModel` for any initial values read through `{ "path": ... }`
 3. `updateComponents` containing a component with id `"root"`
 4. optional additional `updateDataModel` or `updateComponents` messages
 
-The first fresh `updateComponents` message should contain exactly one `root`
-component. Later `updateComponents` messages may replace or add more components
-as needed. Put each message object and component object on separate lines so the
-JSON remains easy to parse and validate.
+The first fresh component list, whether inline or in `updateComponents`, should
+contain exactly one `root` component. Later `updateComponents` messages may
+replace or add more components as needed. Put each message object and component
+object on separate lines so the JSON remains easy to parse and validate.
 
 Before finishing, check bracket balance: every component object closes once,
 every `components` array closes once, every message object closes once, and the
@@ -104,12 +106,11 @@ skill. The catalog has this top-level structure:
 }
 ```
 
-Use the fetched `catalogId` value in `createSurface.catalogId`. Use only
-components listed under `components`, only functions listed under `functions`,
-and only props, required fields, enum values, dynamic value shapes, and action
-schemas allowed by that latest catalog. If the catalog cannot be fetched, ask
-for the catalog content or a reachable catalog URL before generating non-trivial
-UI.
+Use the fetched `catalogId` value in `createSurface.catalogId`. Use only components listed
+under `components`, only functions listed under `functions`, and only props,
+required fields, enum values, dynamic value shapes, and action schemas allowed
+by that latest catalog. If the catalog cannot be fetched, ask for the catalog
+content or a reachable catalog URL before generating non-trivial UI.
 
 If the user supplies a different catalog URL or catalog JSON, use that catalog
 instead of the default URL and keep `createSurface.catalogId` aligned with the
@@ -137,23 +138,25 @@ way:
 
 1. Output must be a JSON array of A2UI messages. No prose, Markdown, XML, code
    fences, comments, or trailing commas.
-2. Each element must include `"version": "v0.9"`.
+2. Each element must include `"version": "v1.0"`.
 3. Output pretty-printed JSON with 2-space indentation. Do not emit minified
    single-line JSON.
 4. For a fresh non-action response, the first message must be `createSurface`.
-   Use the fetched `catalogId`, and use surface id `"main"` unless the user
-   specifies otherwise.
-5. For `{ "path": ... }` bindings, send `updateDataModel` before the first
+   Use the exact fetched `catalogId` as its surface default. Use surface id
+   `"main"` unless the user specifies otherwise.
+5. For `{ "path": ... }` bindings, put `dataModel` before `components` in an
+   inline `createSurface`, or send `updateDataModel` before the first
    `updateComponents` message that reads those paths.
-6. The first fresh `updateComponents` message must contain exactly one component
-   with id `"root"`.
+6. The first fresh component list, whether inline or sent through
+   `updateComponents`, must contain exactly one component with id `"root"`.
 7. Use property-based component discriminators: `"component": "SomeComponent"`,
    not wrapper objects such as `{ "SomeComponent": { ... } }`.
 8. Children are referenced by id only. Never inline child components.
 9. Child references must point to components present in the same response, or to
    components that already exist on the same surface during a patch.
-10. Keep ids kebab-case and unique per surface, such as `"root"`,
-    `"title-text"`, and `"submit-button"`.
+10. Keep ids valid A2UI v1.0 identifiers and unique per surface. Prefer the
+    portable snake_case subset, such as `"root"`, `"title_text"`, and
+    `"submit_button"`.
 11. Do not invent components, props, functions, enum values, or action shapes
     outside the latest fetched catalog.
 12. If a component has a layout `weight` prop, treat it as a small child layout
@@ -171,12 +174,16 @@ way:
 16. For UI that should change after an interaction, keep the initial response in
     the pre-action state. Put confirmation, success, error, or result details in
     the action response.
+17. Every `updateDataModel` must include `value`. Use `null` to delete the
+    target value; never omit `value`.
+18. Emit only the four core renderer messages and standard actions. Do not emit
+    RPC, capability-negotiation, or multi-catalog extensions.
 
 ## Component Rules
 
 - Components are flat objects in `updateComponents.components`; children are
   referenced by id strings, never nested inline.
-- Every component has a unique kebab-case `"id"` and a catalog discriminator
+- Every component has a unique A2UI v1.0 identifier as its `"id"` and a catalog discriminator
   whose value is one of the keys in the fetched catalog's `components` object.
 - The first visible component tree for a fresh UI must include `"id": "root"`.
 - If a component schema has `children`, provide the shape allowed by that
@@ -205,8 +212,8 @@ when values need to be shared, editable, repeated, or updated after an action.
 { "someProp": { "path": "/data/path" } }
 ```
 
-If a component reads `{ "path": "/..." }`, send a preceding `updateDataModel`
-message that creates that value.
+If a component reads `{ "path": "/..." }`, define that value earlier in the
+same inline `createSurface.dataModel` or in a preceding `updateDataModel`.
 
 For repeated children, use the template shape from the fetched component schema.
 When the schema supports `{ "path": "...", "componentId": "..." }`, the
@@ -257,36 +264,24 @@ User: `Generate a login card with email, password, and a submit button.`
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
-      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateDataModel": {
-      "surfaceId": "main",
-      "value": {
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+      "dataModel": {
         "form": {
           "email": "",
           "password": ""
         }
-      }
-    }
-  },
-  {
-    "version": "v0.9",
-    "updateComponents": {
-      "surfaceId": "main",
+      },
       "components": [
         {
           "id": "root",
           "component": "Card",
-          "child": "form-column"
+          "child": "form_column"
         },
         {
-          "id": "form-column",
+          "id": "form_column",
           "component": "Column",
           "children": [
             "title",
@@ -322,7 +317,7 @@ User: `Generate a login card with email, password, and a submit button.`
           "id": "submit",
           "component": "Button",
           "variant": "primary",
-          "child": "submit-label",
+          "child": "submit_label",
           "action": {
             "event": {
               "name": "submit_login",
@@ -338,7 +333,7 @@ User: `Generate a login card with email, password, and a submit button.`
           }
         },
         {
-          "id": "submit-label",
+          "id": "submit_label",
           "component": "Text",
           "text": "Sign in"
         }
@@ -355,14 +350,14 @@ User: `Show three trip ideas as a compact vertical group.`
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "path": "/items",
@@ -383,7 +378,7 @@ User: `Show three trip ideas as a compact vertical group.`
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -392,7 +387,7 @@ User: `Show three trip ideas as a compact vertical group.`
           "component": "Column",
           "children": [
             "title",
-            "trip-items"
+            "trip_items"
           ]
         },
         {
@@ -402,37 +397,37 @@ User: `Show three trip ideas as a compact vertical group.`
           "variant": "h2"
         },
         {
-          "id": "trip-items",
+          "id": "trip_items",
           "component": "Column",
           "children": {
             "path": "/items",
-            "componentId": "trip-row"
+            "componentId": "trip_row"
           }
         },
         {
-          "id": "trip-row",
+          "id": "trip_row",
           "component": "Row",
           "children": [
-            "trip-icon",
-            "trip-copy"
+            "trip_icon",
+            "trip_copy"
           ],
           "align": "center"
         },
         {
-          "id": "trip-icon",
+          "id": "trip_icon",
           "component": "Icon",
           "name": "location_on"
         },
         {
-          "id": "trip-copy",
+          "id": "trip_copy",
           "component": "Column",
           "children": [
-            "trip-name",
-            "trip-detail"
+            "trip_name",
+            "trip_detail"
           ]
         },
         {
-          "id": "trip-name",
+          "id": "trip_name",
           "component": "Text",
           "text": {
             "path": "name"
@@ -440,7 +435,7 @@ User: `Show three trip ideas as a compact vertical group.`
           "variant": "h3"
         },
         {
-          "id": "trip-detail",
+          "id": "trip_detail",
           "component": "Text",
           "text": {
             "path": "detail"
@@ -460,14 +455,14 @@ User: `Show weekly active users as a line chart.`
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "value": {
@@ -496,17 +491,17 @@ User: `Show weekly active users as a line chart.`
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
         {
           "id": "root",
           "component": "Card",
-          "child": "chart-column"
+          "child": "chart_column"
         },
         {
-          "id": "chart-column",
+          "id": "chart_column",
           "component": "Column",
           "children": [
             "title",
@@ -542,12 +537,12 @@ User: `Show weekly active users as a line chart.`
 ### Action Response Patch
 
 User:
-`A2UI_USER_ACTION: {"surfaceId":"main","action":{"name":"submit_login","context":{"email":"me@example.com"}}}`
+`A2UI_USER_ACTION: {"version":"v1.0","action":{"name":"submit_login","surfaceId":"main","sourceComponentId":"submit","timestamp":"2026-08-19T00:00:00.000Z","context":{"email":"me@example.com"}}}`
 
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "path": "/status",
@@ -558,31 +553,31 @@ User:
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
         {
           "id": "root",
           "component": "Card",
-          "child": "status-column"
+          "child": "status_column"
         },
         {
-          "id": "status-column",
+          "id": "status_column",
           "component": "Column",
           "children": [
-            "status-title",
-            "status-message"
+            "status_title",
+            "status_message"
           ]
         },
         {
-          "id": "status-title",
+          "id": "status_title",
           "component": "Text",
           "text": "Success",
           "variant": "h2"
         },
         {
-          "id": "status-message",
+          "id": "status_message",
           "component": "Text",
           "text": {
             "path": "/status/message"
@@ -599,9 +594,11 @@ User:
 Before final output, verify:
 
 - The first character is `[` and the last character is `]`.
-- Every message includes `"version": "v0.9"`.
+- Every message includes `"version": "v1.0"`.
 - A fresh response starts with `createSurface`.
-- The first fresh `updateComponents` message contains `root`.
+- The first fresh component list, inline or in `updateComponents`, contains
+  `root`.
+- Every `updateDataModel` includes `value`; `null` is used for deletion.
 - Every child id reference exists in the same response.
 - Bound paths have matching earlier data-model values.
 - Repeated templates use object items and relative item fields.

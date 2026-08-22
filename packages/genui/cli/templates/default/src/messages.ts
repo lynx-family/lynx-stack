@@ -2,33 +2,27 @@ import type { ServerToClientMessage } from '@lynx-js/genui/a2ui';
 
 export const initialMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     createSurface: {
       surfaceId: 'main',
-      catalogId: 'https://a2ui.org/specification/v0_9/basic_catalog.json',
-    },
-  },
-  {
-    version: 'v0.9',
-    updateComponents: {
-      surfaceId: 'main',
+      catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       components: [
         {
-          id: 'root-card',
+          id: 'root',
           component: 'Card',
           variant: 'elevated',
-          child: 'content-column',
+          child: 'content_column',
         },
         {
-          id: 'content-column',
+          id: 'content_column',
           component: 'Column',
           children: [
-            'loading-text',
+            'loading_text',
           ],
           align: 'center',
         },
         {
-          id: 'loading-text',
+          id: 'loading_text',
           component: 'Text',
           text: 'Loading...',
           variant: 'body',
@@ -40,27 +34,27 @@ export const initialMessages: ServerToClientMessage[] = [
 
 export const secondStageMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
         {
-          id: 'content-column',
+          id: 'content_column',
           component: 'Column',
           children: [
-            'title-text',
-            'loading-text',
+            'title_text',
+            'loading_text',
           ],
           align: 'center',
         },
         {
-          id: 'title-text',
+          id: 'title_text',
           component: 'Text',
           text: 'Welcome to A2UI Demo',
           variant: 'h1',
         },
         {
-          id: 'loading-text',
+          id: 'loading_text',
           component: 'Text',
           text: 'Loading more content...',
           variant: 'body',
@@ -72,28 +66,28 @@ export const secondStageMessages: ServerToClientMessage[] = [
 
 export const thirdStageMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
         {
-          id: 'content-column',
+          id: 'content_column',
           component: 'Column',
           children: [
-            'title-text',
-            'description-text',
-            'loading-text',
+            'title_text',
+            'description_text',
+            'loading_text',
           ],
           align: 'center',
         },
         {
-          id: 'description-text',
+          id: 'description_text',
           component: 'Text',
           text: 'This is a ReactLynx A2UI demonstration',
           variant: 'body',
         },
         {
-          id: 'loading-text',
+          id: 'loading_text',
           component: 'Text',
           text: 'Almost done...',
           variant: 'body',
@@ -105,25 +99,25 @@ export const thirdStageMessages: ServerToClientMessage[] = [
 
 export const finalStageMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
         {
-          id: 'content-column',
+          id: 'content_column',
           component: 'Column',
           children: [
-            'title-text',
-            'description-text',
-            'action-button',
+            'title_text',
+            'description_text',
+            'action_button',
           ],
           align: 'center',
         },
         {
-          id: 'action-button',
+          id: 'action_button',
           component: 'Button',
           variant: 'primary',
-          child: 'button-text',
+          child: 'button_text',
           action: {
             event: {
               name: 'button_click',
@@ -132,7 +126,7 @@ export const finalStageMessages: ServerToClientMessage[] = [
           },
         },
         {
-          id: 'button-text',
+          id: 'button_text',
           component: 'Text',
           text: 'Click Me',
         },
@@ -143,12 +137,12 @@ export const finalStageMessages: ServerToClientMessage[] = [
 
 export const buttonClickMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
         {
-          id: 'button-text',
+          id: 'button_text',
           component: 'Text',
           text: 'Clicked!',
         },

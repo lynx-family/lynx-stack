@@ -48,8 +48,9 @@ import { pickA2UIChatOptions, validateAction } from '../../_shared';
 import { publishA2UIPayload } from '../../payload-publisher';
 
 interface A2UIActionStreamBody {
+  version?: unknown;
   conversation?: unknown;
-  surfaceId?: string;
+  surfaceId?: unknown;
   action?: unknown;
   resourceId?: string;
   model?: string;
@@ -98,7 +99,10 @@ async function postA2UIActionStream(req: Request) {
   const body = parsed.body;
 
   const validationStartedAt = performance.now();
-  const validatedAction = validateAction(body.action);
+  const validatedAction = validateAction(body.action, {
+    version: body.version,
+    surfaceId: body.surfaceId,
+  });
   if (!validatedAction.ok) {
     log('action.rejected', {
       durationMs: performance.now() - validationStartedAt,
@@ -108,21 +112,6 @@ async function postA2UIActionStream(req: Request) {
       req,
       { ok: false, error: validatedAction.error },
       { status: validatedAction.status },
-    );
-  }
-
-  if (!body.surfaceId) {
-    log('action.rejected', {
-      durationMs: performance.now() - validationStartedAt,
-      error: 'surfaceId is required for action responses',
-    });
-    return jsonWithCors(
-      req,
-      {
-        ok: false,
-        error: 'surfaceId is required for action responses',
-      },
-      { status: 400 },
     );
   }
 
@@ -144,7 +133,7 @@ async function postA2UIActionStream(req: Request) {
 
   const service = getA2UIAgentService();
   const payload = {
-    surfaceId: body.surfaceId,
+    version: 'v1.0',
     action: validatedAction.action,
   };
   const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
@@ -198,18 +187,17 @@ async function postA2UIActionStream(req: Request) {
   );
   const validationOptions = {
     requireCreateSurface: false,
-    existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
-    existingDataModelBySurface: body.surfaceId
-      ? {
-        [body.surfaceId]: validatedConversation.conversation?.dataModel ?? {},
-      }
-      : {},
+    existingSurfaceIds: [validatedAction.action.surfaceId],
+    existingDataModelBySurface: {
+      [validatedAction.action.surfaceId]: validatedConversation.conversation
+        ?.dataModel ?? {},
+    },
     isImageSourceAllowed,
     isOpenUrlAllowed,
   };
 
   log('request.accepted', {
-    surfaceId: body.surfaceId,
+    surfaceId: validatedAction.action.surfaceId,
     actionKind: validatedAction.kind,
     actionName: validatedAction.name,
     conversationHistoryCount: validatedConversation.conversation?.history.length
@@ -270,6 +258,9 @@ async function postA2UIActionStream(req: Request) {
             durationMs: performance.now() - connectStartedAt,
           });
           const protocolParser = new A2UIProtocolMessageStreamParser({
+            hasLoadingComponent: catalog.components.some((component) =>
+              component.name === 'Loading'
+            ),
             isImageSourceAllowed,
             isOpenUrlAllowed,
           });

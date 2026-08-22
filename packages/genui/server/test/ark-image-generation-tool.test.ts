@@ -389,7 +389,7 @@ describe('A2UI image URL validation', () => {
     const createMessages = (url: unknown, dataModel?: unknown) =>
       JSON.stringify([
         {
-          version: 'v0.9',
+          version: 'v1.0',
           createSurface: {
             surfaceId: 'main',
             catalogId: catalog.id,
@@ -398,7 +398,7 @@ describe('A2UI image URL validation', () => {
         ...(dataModel === undefined
           ? []
           : [{
-            version: 'v0.9',
+            version: 'v1.0',
             updateDataModel: {
               surfaceId: 'main',
               path: '/',
@@ -406,7 +406,7 @@ describe('A2UI image URL validation', () => {
             },
           }]),
         {
-          version: 'v0.9',
+          version: 'v1.0',
           updateComponents: {
             surfaceId: 'main',
             components: [{
@@ -503,11 +503,11 @@ describe('A2UI image URL validation', () => {
     const catalog = await loadBasicCatalog();
     const raw = JSON.stringify([
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [{
@@ -518,7 +518,9 @@ describe('A2UI image URL validation', () => {
         },
       },
     ]);
-    const streamed = new A2UIProtocolMessageStreamParser().push(raw);
+    const streamed = new A2UIProtocolMessageStreamParser({
+      hasLoadingComponent: true,
+    }).push(raw);
     const serialized = JSON.stringify(streamed);
 
     expect(serialized).toContain(
@@ -534,6 +536,7 @@ describe('A2UI image URL validation', () => {
       'https://images.example.com/hallucinated.jpeg',
     );
     const untrustedStream = new A2UIProtocolMessageStreamParser({
+      hasLoadingComponent: true,
       isImageSourceAllowed,
     }).push(untrustedRaw);
     expect(JSON.stringify(untrustedStream)).not.toContain('hallucinated.jpeg');
@@ -543,6 +546,7 @@ describe('A2UI image URL validation', () => {
       'https://images.example.com/user-provided.jpeg',
     );
     const trustedStream = new A2UIProtocolMessageStreamParser({
+      hasLoadingComponent: true,
       isImageSourceAllowed,
     }).push(trustedRaw);
     expect(JSON.stringify(trustedStream)).toContain('user-provided.jpeg');
