@@ -59,6 +59,8 @@ When rendering the unified `ChatPage`, key it by protocol so switching between A
 
 When adding or updating playground conversation history, keep records isolated by protocol. Store new records with `ConversationMeta.protocol`, use protocol-scoped active-id metadata such as `activeConversationId:a2ui` and `activeConversationId:openui`, and treat legacy records without a `protocol` field as A2UI conversations so existing browser history remains visible.
 
+Treat external `updateDataModel` paths and values as untrusted when materializing conversation snapshots. Traverse only own properties and define own data properties without invoking the legacy `__proto__` setter, while preserving prototype-like names as valid JSON keys.
+
 Rebuild A2UI `Generated Output` cards from each ordinary assistant history entry, preserving transcript order and rendering the entry's A2UI message array as separate chunks. Keep successful action responses in their action-specific Applied cards, and do not replace history-scoped output cards with a single controller-level artifact derived from the latest preview output.
 
 When an action response is merged with the current preview messages, clear any previous or action-only snapshot payload URL and persist the merged inline preview. Treat an explicitly present `snapshotPreviewPayloadUrls: null` as a clear operation rather than falling back to `previewPayloadUrls`; otherwise reopened and shared conversations can render a stale pre-action snapshot.
