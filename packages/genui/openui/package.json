@@ -153,7 +153,7 @@
     "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
-    "@lynx-js/lynx-ui": "^3.135.4",
+    "@lynx-js/lynx-ui": "^3.136.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rstest/core": "catalog:rstest",
