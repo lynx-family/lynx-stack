@@ -1589,6 +1589,17 @@ describe('Element APIs', () => {
     expect(inlineStyle).toContain('flex-shrink');
   });
 
+  test('__AddInlineStyle supports the grid-lanes display id', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const view = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(view, 'target');
+    mtsGlobalThis.__AddInlineStyle(view, 24, 'grid-lanes');
+    mtsGlobalThis.__AppendElement(root, view);
+    mtsGlobalThis.__FlushElementTree();
+    const inlineStyle = rootDom.querySelector('#target')?.getAttribute('style');
+    expect(inlineStyle).toContain('display: grid-lanes');
+  });
+
   test('event upper case `Tap` works', () => {
     rstest.spyOn(mtsBinding, 'addEventListener');
     rstest.spyOn(mtsBinding, 'publishEvent');

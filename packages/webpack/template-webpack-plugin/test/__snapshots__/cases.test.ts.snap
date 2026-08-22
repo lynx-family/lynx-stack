@@ -24,6 +24,7 @@ exports[`template > templateCases-cases/defaults/config > should pass 1`] = `
   enableA11y: true,
   enableAccessibilityElement: false,
   enableCSSInheritance: false,
+  enableGridLanes: true,
   enableGridPlacementShorthands: true,
   enableNativeList: true,
   enableNewGesture: false,

@@ -29,6 +29,39 @@ type DiagnosticError = Error & {
 };
 
 describe('LynxTemplatePlugin', () => {
+  test('enables grid lanes in the default page config', async () => {
+    let enableGridLanes: unknown;
+    const stats = await runWebpack({
+      context: dirname(fileURLToPath(import.meta.url)),
+      mode: 'development',
+      devtool: false,
+      output: {
+        iife: false,
+      },
+      entry: './fixtures/basic.tsx',
+      plugins: [
+        new LynxTemplatePlugin(),
+        function(this: Compiler) {
+          this.hooks.thisCompilation.tap('test', (compilation) => {
+            const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+              compilation,
+            );
+            hooks.beforeEncode.tap('test', (options) => {
+              enableGridLanes =
+                options.encodeData.sourceContent.config['enableGridLanes'];
+              return options;
+            });
+          });
+        },
+        new LynxEncodePlugin(),
+      ],
+    });
+
+    expect([...stats.compilation.errors]).toEqual([]);
+    expect(stats.compilation.children.flatMap(i => [...i.errors])).toEqual([]);
+    expect(enableGridLanes).toBe(true);
+  });
+
   test('build with custom lepus', async () => {
     const stats = await runWebpack({
       context: dirname(fileURLToPath(import.meta.url)),

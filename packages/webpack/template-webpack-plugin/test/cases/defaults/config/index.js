@@ -10,6 +10,8 @@ it('should match default pageConfig', async () => {
   );
 
   const { sourceContent } = JSON.parse(tasmJSON);
+  const { enableGridLanes } = sourceContent.config;
 
-  expect(sourceContent['config']).toMatchSnapshot();
+  expect(sourceContent.config).toMatchSnapshot();
+  expect(enableGridLanes).toBe(true);
 });

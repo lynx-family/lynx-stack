@@ -1,6 +1,105 @@
 import type { LynxViewElement } from '@lynx-js/web-core/client';
 import './index.css';
 
+type GridLanesBoxModel = {
+  width: number;
+  height: number;
+  content: number[];
+  padding: number[];
+  border: number[];
+  margin: number[];
+};
+
+declare global {
+  var __collectGridLanesModeBGeometry:
+    | (() => Record<string, GridLanesBoxModel>)
+    | undefined;
+}
+
+const toQuad = (left: number, top: number, right: number, bottom: number) => [
+  left,
+  top,
+  right,
+  top,
+  right,
+  bottom,
+  left,
+  bottom,
+];
+
+const collectGridLanesModeBGeometry = () => {
+  const number = (value: string) => Number.parseFloat(value) || 0;
+  const taggedElements: Element[] = [];
+  const visit = (root: Document | ShadowRoot) => {
+    for (const element of root.querySelectorAll('*')) {
+      if (element.hasAttribute('lynx-test-tag')) {
+        taggedElements.push(element);
+      }
+      if (element.shadowRoot) {
+        visit(element.shadowRoot);
+      }
+    }
+  };
+  visit(document);
+
+  return Object.fromEntries(taggedElements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    const borderLeft = number(style.borderLeftWidth);
+    const borderTop = number(style.borderTopWidth);
+    const borderRight = number(style.borderRightWidth);
+    const borderBottom = number(style.borderBottomWidth);
+    const paddingLeft = number(style.paddingLeft);
+    const paddingTop = number(style.paddingTop);
+    const paddingRight = number(style.paddingRight);
+    const paddingBottom = number(style.paddingBottom);
+    const marginLeft = number(style.marginLeft);
+    const marginTop = number(style.marginTop);
+    const marginRight = number(style.marginRight);
+    const marginBottom = number(style.marginBottom);
+    const paddingBox = {
+      left: rect.left + borderLeft,
+      top: rect.top + borderTop,
+      right: rect.right - borderRight,
+      bottom: rect.bottom - borderBottom,
+    };
+    const contentBox = {
+      left: paddingBox.left + paddingLeft,
+      top: paddingBox.top + paddingTop,
+      right: paddingBox.right - paddingRight,
+      bottom: paddingBox.bottom - paddingBottom,
+    };
+    return [
+      element.getAttribute('lynx-test-tag'),
+      {
+        width: rect.width,
+        height: rect.height,
+        content: toQuad(
+          contentBox.left,
+          contentBox.top,
+          contentBox.right,
+          contentBox.bottom,
+        ),
+        padding: toQuad(
+          paddingBox.left,
+          paddingBox.top,
+          paddingBox.right,
+          paddingBox.bottom,
+        ),
+        border: toQuad(rect.left, rect.top, rect.right, rect.bottom),
+        margin: toQuad(
+          rect.left - marginLeft,
+          rect.top - marginTop,
+          rect.right + marginRight,
+          rect.bottom + marginBottom,
+        ),
+      },
+    ];
+  }));
+};
+
+globalThis.__collectGridLanesModeBGeometry = collectGridLanesModeBGeometry;
+
 export const lynxViewTests = (
   lynxView?: LynxViewElement | undefined,
 ) => {

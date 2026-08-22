@@ -225,10 +225,32 @@ const STYLE_PROPERTY_MAP: &[&str] = &[
   "hyphens",
   "-x-app-region",
   "-x-animation-color-interpolation",
-  "-x-handle-color",
   "-x-handle-size",
-  "offset-path",
+  "-x-handle-color",
   "offset-distance",
+  "offset-path",
+  "offset-rotate",
+  "font-variation-settings",
+  "font-feature-settings",
+  "font-optical-sizing",
+  "-x-placeholder-color",
+  "-x-placeholder-font-family",
+  "-x-placeholder-font-size",
+  "-x-placeholder-font-weight",
+  "-x-placeholder-font-style",
+  "pointer-events",
+  "-x-auto-font-size-line-ranges",
+  "grid-column",
+  "grid-row",
+  "mask-composite",
+  "x-caret-gradient",
+  "x-caret-width",
+  "x-caret-height",
+  "x-caret-radius",
+  "text-decoration-thickness",
+  "-x-text-decoration-width",
+  "-x-text-decoration-gap",
+  "flow-tolerance",
 ];
 
 lazy_static! {
@@ -457,15 +479,37 @@ pub enum CSSPropertyEnum {
   Hyphens = 209,
   XAppRegion = 210,
   XAnimationColorInterpolation = 211,
-  XHandleColor = 212,
-  XHandleSize = 213,
-  OffsetPath = 214,
-  OffsetDistance = 215,
+  XHandleSize = 212,
+  XHandleColor = 213,
+  OffsetDistance = 214,
+  OffsetPath = 215,
+  OffsetRotate = 216,
+  FontVariationSettings = 217,
+  FontFeatureSettings = 218,
+  FontOpticalSizing = 219,
+  XPlaceholderColor = 220,
+  XPlaceholderFontFamily = 221,
+  XPlaceholderFontSize = 222,
+  XPlaceholderFontWeight = 223,
+  XPlaceholderFontStyle = 224,
+  PointerEvents = 225,
+  XAutoFontSizeLineRanges = 226,
+  GridColumn = 227,
+  GridRow = 228,
+  MaskComposite = 229,
+  XCaretGradient = 230,
+  XCaretWidth = 231,
+  XCaretHeight = 232,
+  XCaretRadius = 233,
+  TextDecorationThickness = 234,
+  XTextDecorationWidth = 235,
+  XTextDecorationGap = 236,
+  FlowTolerance = 237,
 }
 
 impl CSSPropertyEnum {
   pub fn from_id(id: usize) -> Self {
-    if id <= CSSPropertyEnum::OffsetDistance as usize {
+    if id <= CSSPropertyEnum::FlowTolerance as usize {
       unsafe { std::mem::transmute::<u32, CSSPropertyEnum>(id as u32) }
     } else {
       CSSPropertyEnum::Unknown
@@ -642,6 +686,34 @@ mod tests {
       .position(|&s| s == "display")
       .unwrap();
     assert_eq!(display_idx, CSSPropertyEnum::Display as usize);
+    assert_eq!(
+      STYLE_PROPERTY_MAP[CSSPropertyEnum::XHandleSize as usize],
+      "-x-handle-size"
+    );
+    assert_eq!(
+      STYLE_PROPERTY_MAP[CSSPropertyEnum::XHandleColor as usize],
+      "-x-handle-color"
+    );
+    assert_eq!(
+      STYLE_PROPERTY_MAP[CSSPropertyEnum::OffsetDistance as usize],
+      "offset-distance"
+    );
+    assert_eq!(
+      STYLE_PROPERTY_MAP[CSSPropertyEnum::OffsetPath as usize],
+      "offset-path"
+    );
+    assert_eq!(
+      STYLE_PROPERTY_MAP[CSSPropertyEnum::FlowTolerance as usize],
+      "flow-tolerance"
+    );
+    assert_eq!(CSSProperty::from(212).to_string(), "-x-handle-size");
+    assert_eq!(CSSProperty::from(213).to_string(), "-x-handle-color");
+    assert_eq!(CSSProperty::from(214).to_string(), "offset-distance");
+    assert_eq!(CSSProperty::from(215).to_string(), "offset-path");
+    assert_eq!(
+      CSSProperty::from(237),
+      CSSProperty::from(CSSPropertyEnum::FlowTolerance)
+    );
 
     assert_eq!(
       CSSProperty::from(9999),
