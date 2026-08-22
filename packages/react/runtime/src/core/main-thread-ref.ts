@@ -16,6 +16,11 @@ export function clearMainThreadRefLastIdForTesting(): void {
   lastIdBG = lastIdMT = 0;
 }
 
+/** @internal */
+export function allocateMainThreadRefId(): number {
+  return __JS__ ? ++lastIdBG : --lastIdMT;
+}
+
 export function isMainThreadRef(value: unknown): value is WorkletRefImpl<unknown> {
   return typeof value === 'object'
     && value !== null
@@ -50,8 +55,8 @@ export class MainThreadRef<T> {
   constructor(initValue: T) {
     this._initValue = initValue;
     this._type = 'main-thread';
+    this._wvid = allocateMainThreadRefId();
     if (__JS__) {
-      this._wvid = ++lastIdBG;
       addMainThreadRefInitValue(this._wvid, initValue);
       const id = this._wvid;
       this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
@@ -62,8 +67,6 @@ export class MainThreadRef<T> {
           },
         });
       });
-    } else {
-      this._wvid = --lastIdMT;
     }
   }
 

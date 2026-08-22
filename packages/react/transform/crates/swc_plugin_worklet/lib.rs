@@ -80,6 +80,86 @@ impl Default for WorkletVisitor {
 impl VisitMut for WorkletVisitor {
   noop_visit_mut_type!();
 
+  fn visit_mut_prop(&mut self, n: &mut Prop) {
+    let Prop::Method(method) = n else {
+      n.visit_mut_children_with(self);
+      return;
+    };
+    let Some(body) = method.function.body.as_mut() else {
+      n.visit_mut_children_with(self);
+      return;
+    };
+    let Some(worklet_type) = self.check_is_worklet_block(body) else {
+      n.visit_mut_children_with(self);
+      return;
+    };
+
+    let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
+      custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
+      shared_identifiers: Some(self.shared_identifiers.clone()),
+    });
+    method.visit_mut_with(&mut collector);
+
+    let should_use_getter = collector.has_extracted_this_props();
+
+    let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
+    let collect_main_thread = self.defines_collector.is_some();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
+    let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
+      self.mode,
+      worklet_type,
+      hash,
+      self.cfg.target,
+      method
+        .key
+        .clone()
+        .ident()
+        .unwrap_or(Ident::dummy().into())
+        .into(),
+      method.function.clone(),
+      &mut collector,
+      false,
+      &mut self.named_imports,
+      self.worklet_runtime_loaded_ident.clone(),
+      collect_main_thread,
+    );
+
+    // Extracted `this.xxx` captures are spread into the ctx object. In an object literal,
+    // `this` in a plain key-value initializer refers to the enclosing lexical scope
+    // (`undefined` at ESM module top level), not the object being defined. Emitting a
+    // getter keeps `this` bound to the receiver on property read, matching the original
+    // method-call semantics (`obj.create()` has `this === obj`).
+    if should_use_getter {
+      *n = Prop::Getter(GetterProp {
+        span: method.span(),
+        key: method.key.clone(),
+        type_ann: None,
+        body: Some(BlockStmt {
+          ctxt: Default::default(),
+          span: DUMMY_SP,
+          stmts: vec![ReturnStmt {
+            span: DUMMY_SP,
+            arg: Some(worklet_object_expr),
+          }
+          .into()],
+        }),
+      });
+    } else {
+      *n = Prop::KeyValue(KeyValueProp {
+        key: method.key.clone(),
+        value: worklet_object_expr,
+      });
+    }
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.saw_shared_identifiers(),
+    );
+    self
+      .stmts_to_insert_at_top_level
+      .push(register_worklet_stmt);
+  }
+
   fn visit_mut_class_member(&mut self, n: &mut ClassMember) {
     match n {
       ClassMember::Method(_) => {
@@ -879,6 +959,72 @@ function worklet(event: Event) {
       )),
       hygiene()
     ),
+    should_expose_object_method_capture_channels_lepus,
+    r#"
+const callback = () => {};
+const valueType = defineMainThreadObjectType({
+  type: '@test/capturing-value',
+  helper: 1,
+  create(initialValue: number) {
+    "main thread";
+    runOnBackground(callback)();
+    return { value: initialValue + this.helper };
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_expose_object_method_capture_channels_js,
+    r#"
+const callback = () => {};
+const valueType = defineMainThreadObjectType({
+  type: '@test/capturing-value',
+  helper: 1,
+  create(initialValue: number) {
+    "main thread";
+    runOnBackground(callback)();
+    return { value: initialValue + this.helper };
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
     should_transform_lepus_alias,
     r#"
 function worklet(event: Event) {
@@ -983,6 +1129,102 @@ function X(event) {
     a, b, c;
     y6.m = y7;
     function xxx() {}
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_preserve_main_thread_objects_in_class_js,
+    r#"
+class App extends Component {
+  value: MotionValue<number>;
+  ref: MainThreadRef<number>;
+  static value: MotionValue<number>;
+
+  onTap() {
+    "main thread";
+    this.value.get();
+    this.props.value.get();
+    this.value.set(1);
+    this.value?.get();
+    this.value["get"]();
+    return this.ref.current;
+  }
+
+  onMove = () => {
+    "main thread";
+    return this.value.get();
+  };
+
+  static onStatic() {
+    "main thread";
+    return this.value.get();
+  }
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.ts".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_preserve_main_thread_objects_in_class_lepus,
+    r#"
+class App extends Component {
+  value: MotionValue<number>;
+  ref: MainThreadRef<number>;
+  static value: MotionValue<number>;
+
+  onTap() {
+    "main thread";
+    this.value.get();
+    this.props.value.get();
+    this.value.set(1);
+    this.value?.get();
+    this.value["get"]();
+    return this.ref.current;
+  }
+
+  onMove = () => {
+    "main thread";
+    return this.value.get();
+  };
+
+  static onStatic() {
+    "main thread";
+    return this.value.get();
+  }
 }
     "#
   );
@@ -1345,6 +1587,78 @@ let X = function (event) {
     "main thread";
     console.log(y1[y2 + 1]);
 }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_object_methods_lepus,
+    r#"
+import { createValue } from './shared.js' with { runtime: "shared" };
+
+const valueType = defineMainThreadObjectType({
+  type: '@test/value',
+  create(initialValue: number) {
+    "main thread";
+    return createValue(initialValue);
+  },
+  dispose(value) {
+    "main thread";
+    value.stop();
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_transform_object_methods_js,
+    r#"
+import { createValue } from './shared.js' with { runtime: "shared" };
+
+const valueType = defineMainThreadObjectType({
+  type: '@test/value',
+  create(initialValue: number) {
+    "main thread";
+    return createValue(initialValue);
+  },
+  dispose(value) {
+    "main thread";
+    value.stop();
+  },
+});
     "#
   );
 
@@ -1840,7 +2154,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );
@@ -1870,7 +2184,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );

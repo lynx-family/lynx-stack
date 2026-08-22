@@ -30,10 +30,32 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
  *
  * @param patch - An array containing the index and new value of the worklet value.
  */
-function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
+function updateWorkletRefInitValueChanges(
+  patch?: ([number, unknown] | [number, unknown, string, number])[],
+): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }
+}
+
+/**
+ * Register a definition for an opaque main-thread object type.
+ *
+ * @internal
+ */
+function registerMainThreadObjectType(
+  type: string,
+  create: ((initialValue: unknown) => object) | Worklet,
+  discard: ((object: object) => void) | Worklet | undefined,
+  protocolVersion: number,
+): void {
+  const refImpl = globalThis.lynxWorkletImpl?._refImpl;
+  if (!refImpl || typeof refImpl.registerMainThreadObjectType !== 'function') {
+    throw new Error(
+      'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+    );
+  }
+  refImpl.registerMainThreadObjectType(type, create, discard, protocolVersion);
 }
 
 /**
@@ -76,6 +98,7 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
+  registerMainThreadObjectType,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

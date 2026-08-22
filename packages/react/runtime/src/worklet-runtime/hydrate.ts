@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefId, WorkletRefImpl } from './bindings/index.js';
+import type { ClosureValueType, JsFnHandle, Worklet, WorkletRef, WorkletRefImpl } from './bindings/index.js';
 import { profile } from './utils/profile.js';
+import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -37,14 +38,20 @@ function hydrateCtxImpl(
     return;
   }
 
+  // Worklet-value descriptors are atomic. In particular, a MainThreadObject's
+  // `_initValue` is user data and must never be interpreted as nested worklet
+  // metadata during hydration.
+  if (typeof ctxObj['_wvid'] === 'number') {
+    hydrateWorkletValueHandle(
+      ctxObj as unknown as WorkletRefImpl<unknown>,
+      firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
+    );
+    return;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
-    if (key === '_wvid') {
-      hydrateMainThreadRef(
-        ctxObj[key] as WorkletRefId,
-        firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
-      );
-    } else if (key === '_jsFn') {
+    if (key === '_jsFn') {
       hydrateDelayRunOnBackgroundTasks(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,
@@ -60,22 +67,22 @@ function hydrateCtxImpl(
 }
 
 /**
- * Hydrates a WorkletRef on the main thread.
- * This is used to update the WorkletRef's background initial value based on changes
- * that occurred in the first-screen Worklet context before hydration.
+ * Hydrates a worklet value handle on the main thread.
+ * This maps the positive-ID background handle to the compatible target realized
+ * from the first-screen main-thread handle.
  *
- * @param refId The ID of the WorkletRef to hydrate.
- * @param value The new value for the WorkletRef.
+ * @param handle The positive-ID background handle to hydrate.
+ * @param value The realized first-screen target.
  */
-function hydrateMainThreadRef(
-  refId: WorkletRefId,
-  value: WorkletRefImpl<unknown>,
+function hydrateWorkletValueHandle(
+  handle: WorkletRefImpl<unknown>,
+  value: object,
 ) {
-  if ('_initValue' in value) {
+  if (!isHydratedWorkletValue(value)) {
     // The ref has not been accessed yet.
     return;
   }
-  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value;
+  hydrateWorkletValue(handle, value as WorkletRef<unknown>);
 }
 
 /**
