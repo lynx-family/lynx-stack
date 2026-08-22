@@ -5,6 +5,7 @@
 import {
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
 } from './main-thread-dynamic-attr-state.js';
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
 import { elementTemplateTypeTag } from '../../protocol/template-type.js';
@@ -29,11 +30,14 @@ export function createElementTemplateWithReservedHandle(
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
   elementSlots: RuntimeElementSlots | null | undefined,
+  deferMainThreadRefAttach = false,
 ): ElementRef {
+  const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
+  const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(templateType, attributeSlots);
   const nativeRef = __CreateElementTemplate(
     templateKey,
     bundleUrl,
-    attributeSlots,
+    nativeAttributeSlots,
     elementSlots,
     handleId,
   );
@@ -41,8 +45,10 @@ export function createElementTemplateWithReservedHandle(
     setElementTemplateNativeRef(handleId, nativeRef);
     initializeMainThreadDynamicAttrSlots(
       handleId,
-      elementTemplateTypeTag(templateKey, bundleUrl),
+      templateType,
       attributeSlots,
+      nativeRef,
+      !deferMainThreadRefAttach,
     );
   }
   return nativeRef;

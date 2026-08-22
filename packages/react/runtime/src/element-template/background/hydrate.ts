@@ -6,10 +6,13 @@ import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from '
 import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
   BackgroundListElementTemplateInstance,
+  collectMainThreadRefSubtreeHandleIds,
+  getContainingListItem,
   toUpdateTypedListItemCommand,
 } from './instance.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { isMainThreadRefCallback } from '../../core/main-thread-ref.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
@@ -21,8 +24,9 @@ import type {
   SerializedEtNode,
   SerializedTypedNode,
 } from '../protocol/types.js';
-import { __etAttrPlanMap, adaptMTEventAttrSlot } from '../runtime/template/attr-slot-plan.js';
+import { getMainThreadDynamicAttrSlotKinds } from '../runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
+import type { MTRefNativeWrapper } from '../runtime/template/main-thread-ref-ctx.js';
 
 const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
 const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
@@ -333,6 +337,7 @@ function hydrateChildListIntoContext(
           slotId,
           movedChild.instanceId,
           beforeChildId,
+          getContainingListItem(movedChild) ? [] : collectMainThreadRefSubtreeHandleIds(movedChild),
         );
         insertOrMovePatchesWaitingForInsertionPoint -= 1;
       } else if (insertions[newIndex] !== undefined) {
@@ -345,6 +350,7 @@ function hydrateChildListIntoContext(
           slotId,
           insertedChild.instanceId,
           beforeChildId,
+          getContainingListItem(insertedChild) ? [] : collectMainThreadRefSubtreeHandleIds(insertedChild),
         );
         insertOrMovePatchesWaitingForInsertionPoint -= 1;
       }
@@ -522,7 +528,7 @@ function emitCreateSubtree(node: BackgroundElementTemplateInstance): void {
     child = child.nextSibling;
   }
   node.prepareAttributeSlotsForHydration();
-  node.emitCreate();
+  node.emitCreate(true);
 }
 
 function bindHydrationHandleId(
@@ -566,7 +572,7 @@ function hydrateAttributeSlots(
     const afterValue = afterSlots[slotIndex];
     if (
       isDirectOrDeepEqual(beforeValue, afterValue)
-      && !shouldForceMTEventHydrateSlot(templateType, slotIndex, afterValue)
+      && !shouldForceMainThreadHydrateSlot(templateType, slotIndex, afterValue)
     ) {
       continue;
     }
@@ -583,25 +589,16 @@ function hydrateAttributeSlots(
   }
 }
 
-function shouldForceMTEventHydrateSlot(
+function shouldForceMainThreadHydrateSlot(
   templateType: string,
   attrSlotIndex: number,
   value: SerializableValue | undefined,
 ): boolean {
-  if (!isMTEventNativeWrapper(value)) {
-    return false;
+  const slotKind = getMainThreadDynamicAttrSlotKinds(templateType)?.get(attrSlotIndex);
+  if (slotKind === 'mt-event') {
+    return isMTEventNativeWrapper(value);
   }
-  const attrPlan = __etAttrPlanMap[templateType];
-  if (!attrPlan) {
-    return false;
-  }
-  for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
-    if (
-      attrPlan[planIndex] === attrSlotIndex
-      && attrPlan[planIndex + 1] === adaptMTEventAttrSlot
-    ) {
-      return true;
-    }
-  }
-  return false;
+  return slotKind === 'mt-ref'
+    && value != null
+    && isMainThreadRefCallback((value as unknown as MTRefNativeWrapper).value);
 }

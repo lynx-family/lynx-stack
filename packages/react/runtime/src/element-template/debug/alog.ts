@@ -15,6 +15,7 @@ export type FormattedElementTemplateUpdateCommand =
     bundleUrl: string | null | undefined;
     attributeSlots: unknown;
     elementSlots: unknown;
+    deferMainThreadRefAttach?: true;
   }
   | {
     op: 'createTypedElement';
@@ -53,6 +54,7 @@ export type FormattedElementTemplateUpdateCommand =
     elementSlotIndex: number;
     childId: number;
     referenceId: number;
+    attachedSubtreeHandleIds: number[];
   }
   | {
     op: 'removeNode';
@@ -81,16 +83,22 @@ export function formatElementTemplateUpdateCommands(
     const op = stream[index++] as ElementTemplateUpdateOp;
 
     switch (op) {
-      case ElementTemplateUpdateOps.createTemplate:
-        result.push({
+      case ElementTemplateUpdateOps.createTemplate: {
+        const command: Extract<FormattedElementTemplateUpdateCommand, { op: 'createTemplate' }> = {
           op: 'createTemplate',
           handleId: stream[index++] as number,
           templateKey: stream[index++] as string,
           bundleUrl: stream[index++] as string | null | undefined,
           attributeSlots: stream[index++],
           elementSlots: stream[index++],
-        });
+        };
+        if (stream[index] === true) {
+          command.deferMainThreadRefAttach = true;
+          index += 1;
+        }
+        result.push(command);
         break;
+      }
 
       case ElementTemplateUpdateOps.setAttribute:
         result.push({
@@ -145,6 +153,7 @@ export function formatElementTemplateUpdateCommands(
           elementSlotIndex: stream[index++] as number,
           childId: stream[index++] as number,
           referenceId: stream[index++] as number,
+          attachedSubtreeHandleIds: stream[index++] as number[],
         });
         break;
 

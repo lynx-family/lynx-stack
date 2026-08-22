@@ -66,11 +66,13 @@ export function run() {
       0,
       10,
       0,
+      [10],
       ElementTemplateUpdateOps.insertNode,
       20,
       0,
       11,
       0,
+      [11],
     ]);
 
     const beforeMove = serializeToJSX(__page);
@@ -81,6 +83,7 @@ export function run() {
       1,
       10,
       0,
+      [10],
     ]);
 
     const afterMove = serializeToJSX(__page);

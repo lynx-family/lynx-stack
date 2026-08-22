@@ -10,6 +10,7 @@ import {
 import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
+  adaptMTRefAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
@@ -112,6 +113,46 @@ describe('ElementTemplateHandle', () => {
       kind: 'mt-event',
       nativeHeldValue: ctx,
     });
+  });
+
+  it('attaches object MTRef after reserved-handle create succeeds and strips the native slot payload', () => {
+    const id = reserveElementTemplateId();
+    const ref = { _wvid: 7 };
+    const updateWorkletRef = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: {
+        updateWorkletRef,
+      },
+    };
+    __etAttrPlanMap['__Card__:_et_test'] = [0, adaptMTRefAttrSlot];
+
+    try {
+      createElementTemplateWithReservedHandle(
+        id,
+        '_et_test',
+        null,
+        [{ type: 'main-thread-ref', value: ref }],
+        null,
+      );
+
+      expect(mockCreateElementTemplate).toHaveBeenCalledWith(
+        '_et_test',
+        null,
+        [null],
+        null,
+        -1,
+      );
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, mockCreatedNativeRef);
+      expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+        kind: 'mt-ref',
+        value: ref,
+        attached: true,
+      });
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
   });
 
   it('should allocate monotonically decreasing handle ids for template creation', () => {

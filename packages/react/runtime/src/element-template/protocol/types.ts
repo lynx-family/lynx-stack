@@ -48,6 +48,7 @@ export interface ElementTemplateHandleRefCommandValue {
 export interface UpdateTypedListItemCommand extends ElementTemplateHandleRefCommandValue {
   type: string;
   platformInfo: Record<string, SerializableValue>;
+  subtreeHandleIds: number[];
 }
 
 // Typed list create carries logical item records here, and MTS resolves their
@@ -106,6 +107,7 @@ export type CreateTemplateCommand = [
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
   elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+  deferMainThreadRefAttach?: true,
 ];
 
 export type SetAttributeCommand = [
@@ -121,6 +123,7 @@ export type InsertNodeCommand = [
   elementSlotIndex: number,
   childHandleId: number,
   referenceHandleId: number,
+  attachedSubtreeHandleIds: number[],
 ];
 
 export type RemoveNodeCommand = [
