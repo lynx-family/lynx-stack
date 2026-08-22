@@ -85,7 +85,7 @@ function eventTypeOf(options: ElementEventListenerOptions | undefined): string {
  * that could neither stop nor be stopped by those handlers.
  *
  * `once` is handled here rather than in Rust: the slot is cleared before the
- * callback runs, so a re-entrant dispatch cannot see it twice. `passive` is
+ * callback runs, so a re-entrant dispatch cannot deliver it twice. `passive` is
  * accepted and ignored, because the delegated listener - not the per-element
  * registration - is what decides passiveness, and it is already passive.
  */
@@ -202,26 +202,25 @@ export function createElementEventListenerAPIs(
       callback,
     );
 
-    // `once` lives here rather than in the handler table. The wrapper guards
-    // with a flag so a re-entrant dispatch cannot deliver twice, then drops the
-    // registration in a microtask: the dispatcher owns the element data for the
-    // duration of the walk, so mutating the handler table from inside a callback
-    // would abort with "recursive use of an object".
+    // `once` lives here rather than in the handler table. The registration is
+    // dropped before the callback runs, so a re-entrant dispatch cannot see it
+    // and a callback that re-registers itself files a fresh wrapper rather than
+    // racing a pending removal. The flag is the second line of defence: the
+    // dispatcher reads an element's callbacks out before running any of them,
+    // so removing one mid-walk does not un-list what it already snapshotted.
     let fired = false;
     const wrapper = (...args: unknown[]) => {
       if (fired) {
         return;
       }
       fired = true;
-      queueMicrotask(() => {
-        mtsBinding.wasmContext?.add_closure_event(
-          uniqueId,
-          eventType,
-          eventName,
-          undefined,
-          wrapper,
-        );
-      });
+      mtsBinding.wasmContext?.add_closure_event(
+        uniqueId,
+        eventType,
+        eventName,
+        undefined,
+        wrapper,
+      );
       wrappers.delete(callback);
       (callback as (...args: unknown[]) => void)(...args);
     };
