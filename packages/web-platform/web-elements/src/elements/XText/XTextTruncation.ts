@@ -371,32 +371,32 @@ export class XTextTruncation
     this.#enableLayoutEvent = status;
   }
 
+  #getTextMeasure() {
+    return this.#textMeasure ??= new TextRenderingMeasureTool(
+      this.#dom,
+      this.#getInnerBox().getBoundingClientRect(),
+    );
+  }
+
   #sendLayoutEvent(truncateAt?: number) {
     if (!this.#enableLayoutEvent) return;
     const detail = new Proxy(this, {
       get(that, property): any {
         if (property === 'lineCount') {
-          if (!that.#textMeasure) {
-            that.#textMeasure = new TextRenderingMeasureTool(
-              that.#dom,
-              that.#dom.getBoundingClientRect(),
-            );
-          }
-          return that.#textMeasure.getLineCount();
+          return that.#getTextMeasure().getLineCount();
         } else if (property === 'lines') {
           // event.detail.lines
           return new Proxy(that, {
             get(that, lineIndex): any {
+              if (lineIndex === 'length') {
+                return that.#getTextMeasure().getLineCount();
+              }
               // event.detail.lines[num]
               const lineIndexNum = parseFloat(lineIndex.toString());
               if (!isNaN(lineIndexNum)) {
-                if (!that.#textMeasure) {
-                  that.#textMeasure = new TextRenderingMeasureTool(
-                    that.#dom,
-                    that.#dom.getBoundingClientRect(),
-                  );
-                }
-                const lineInfo = that.#textMeasure.getLineInfo(lineIndexNum);
+                const lineInfo = that.#getTextMeasure().getLineInfo(
+                  lineIndexNum,
+                );
                 if (lineInfo) {
                   return new Proxy(lineInfo, {
                     get(lineInfo, property): any {
@@ -480,9 +480,7 @@ class TextRenderingMeasureTool {
     const { left: containerLeft } = this.#domRect;
     const lastLineInfo = this.#lazyLinesInfo[this.#lazyLinesInfo.length - 1];
     const lastNodeInfo = lastLineInfo?.[lastLineInfo.length - 1];
-    const nextNodeIndex = lastNodeInfo?.nodeIndex
-      ? lastNodeInfo?.nodeIndex + 1
-      : 0;
+    const nextNodeIndex = lastNodeInfo ? lastNodeInfo.nodeIndex + 1 : 0;
     for (
       let nodeIndex: number = nextNodeIndex,
         currentNodeInfo: NodeInfo | undefined;

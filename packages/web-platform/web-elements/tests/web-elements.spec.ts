@@ -122,6 +122,91 @@ test.describe('web-elements test suite', () => {
     });
   });
   test.describe('x-text', () => {
+    test('layout-detail-lazy', async ({ page }, { titlePath }) => {
+      const title = getTitle(titlePath);
+      await gotoWebComponentPage(page, title);
+      const details = await page.evaluate(async () => {
+        const readDetail = (firstProperty: 'lineCount' | 'linesLength') =>
+          new Promise<{
+            firstValue: number;
+            repeatedValue: number;
+            counterpartValue: number;
+            rangeReadCounts: number[];
+          }>((resolve, reject) => {
+            const originalGetClientRects = Range.prototype.getClientRects;
+            let rangeReadCount = 0;
+            Range.prototype.getClientRects = function() {
+              rangeReadCount++;
+              return originalGetClientRects.call(this);
+            };
+
+            try {
+              const element = document.createElement('x-text');
+              element.style.width = '140px';
+              element.style.padding = '20px';
+              element.style.wordBreak = 'break-all';
+              element.setAttribute('text-maxline', '2');
+              element.textContent =
+                'A topic title long enough to wrap across several lines';
+              element.addEventListener(
+                'layout',
+                (event) => {
+                  try {
+                    const eventDetail = (event as CustomEvent).detail;
+                    const rangeReadsBeforeDetail = rangeReadCount;
+                    const readFirstProperty = () =>
+                      firstProperty === 'lineCount'
+                        ? eventDetail.lineCount
+                        : eventDetail.lines.length;
+                    const firstValue = readFirstProperty();
+                    const rangeReadsAfterFirstValue = rangeReadCount;
+                    const repeatedValue = readFirstProperty();
+                    const rangeReadsAfterRepeatedValue = rangeReadCount;
+                    const counterpartValue = firstProperty === 'lineCount'
+                      ? eventDetail.lines.length
+                      : eventDetail.lineCount;
+                    resolve({
+                      firstValue,
+                      repeatedValue,
+                      counterpartValue,
+                      rangeReadCounts: [
+                        rangeReadsBeforeDetail,
+                        rangeReadsAfterFirstValue,
+                        rangeReadsAfterRepeatedValue,
+                        rangeReadCount,
+                      ],
+                    });
+                  } catch (error) {
+                    reject(error);
+                  } finally {
+                    Range.prototype.getClientRects = originalGetClientRects;
+                  }
+                },
+                { once: true },
+              );
+              document.body.append(element);
+            } catch (error) {
+              Range.prototype.getClientRects = originalGetClientRects;
+              reject(error);
+            }
+          });
+
+        return {
+          lineCountFirst: await readDetail('lineCount'),
+          linesLengthFirst: await readDetail('linesLength'),
+        };
+      });
+
+      for (const detail of Object.values(details)) {
+        expect(detail.firstValue).toBeGreaterThan(1);
+        expect(detail.repeatedValue).toBe(detail.firstValue);
+        expect(detail.counterpartValue).toBe(detail.firstValue);
+        expect(detail.rangeReadCounts[0]).toBe(0);
+        expect(detail.rangeReadCounts[1]).toBeGreaterThan(0);
+        expect(detail.rangeReadCounts[2]).toBe(detail.rangeReadCounts[1]);
+        expect(detail.rangeReadCounts[3]).toBe(detail.rangeReadCounts[2]);
+      }
+    });
     test('raw-text-no-js', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
