@@ -93,7 +93,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -230,10 +230,10 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
-    lynxCoreInject.tt.publishEvent('-2:0:bindtap', 'data');
+    lynx.getApp().publishEvent('-2:0:bindtap', 'data');
     expect(handleTap).toHaveBeenCalledTimes(1);
     expect(handleTap).toHaveBeenCalledWith('data');
   });
@@ -276,7 +276,7 @@ describe('createElement', () => {
     render(<App />, __root);
 
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
     // rLynxChange
     globalEnvManager.switchToMainThread();
@@ -526,7 +526,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -645,7 +645,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -776,7 +776,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -864,7 +864,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -951,7 +951,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -1072,7 +1072,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -1195,7 +1195,7 @@ describe('createElement', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange

@@ -40,7 +40,7 @@ describe('delayedLifecycleEvents', () => {
         ],
       ]
     `);
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     expect(delayedLifecycleEvents).toMatchInlineSnapshot(`
       [
         [

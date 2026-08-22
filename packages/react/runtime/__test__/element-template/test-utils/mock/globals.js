@@ -23,10 +23,10 @@ export function injectGlobals() {
   globalThis.SystemInfo = {
     lynxSdkVersion: '4.0',
   };
-  globalThis.lynxCoreInject = {};
-  globalThis.lynxCoreInject.tt = {};
+  const lynxApp = {};
 
   installPerformanceGlobals();
+  globalThis.lynx.getApp = () => lynxApp;
 
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;

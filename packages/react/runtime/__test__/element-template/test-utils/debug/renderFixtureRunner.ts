@@ -155,19 +155,7 @@ async function runCompiledRenderFixture(options: {
   globalThis.__MAIN_THREAD__ = true;
   globalThis.__BACKGROUND__ = false;
 
-  const globalWithInject = globalThis as typeof globalThis & {
-    lynxCoreInject?: {
-      tt?: {
-        _params?: {
-          initData: Record<string, unknown>;
-          updateData: Record<string, unknown>;
-        };
-      };
-    };
-  };
-  globalWithInject.lynxCoreInject ??= {};
-  globalWithInject.lynxCoreInject.tt ??= {};
-  globalWithInject.lynxCoreInject.tt._params ??= { initData: {}, updateData: {} };
+  lynx.getApp()._params ??= { initData: {}, updateData: {} };
 
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: true });
   const nativeLog = installed.nativeLog as unknown[];

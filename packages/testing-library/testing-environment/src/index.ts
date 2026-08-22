@@ -521,6 +521,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
 
   const globalEventEmitter = new GlobalEventEmitter();
   target.lynx = {
+    getApp: () => target.lynxCoreInject.tt,
     getNativeApp: () => app,
     performance,
     createSelectorQuery: (() => {
