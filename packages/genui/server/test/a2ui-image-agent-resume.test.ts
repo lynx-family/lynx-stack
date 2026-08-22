@@ -108,7 +108,10 @@ describe('A2UI asynchronous image continuation', () => {
       } as never,
     );
 
-    const resumeStream = rstest.fn(async (resumeData: unknown) => {
+    const resumeStream = rstest.fn(async (
+      resumeData: unknown,
+      _options?: unknown,
+    ) => {
       await executeImageTool(
         { prompt: 'A generated hero image' },
         {
@@ -119,10 +122,14 @@ describe('A2UI asynchronous image continuation', () => {
       return streamResult(patchText, 'stop');
     });
     const agent = {
-      stream: () =>
+      stream: async () =>
         streamResult(initialText, 'suspended', {
           runId: 'image-run-1',
-          suspendPayload,
+          suspendPayload: {
+            toolCallId: 'image-tool-call-1',
+            toolName: 'generate_image',
+            suspendPayload,
+          },
         }),
       resumeStream,
     } as unknown as A2UIAgent;
@@ -146,7 +153,103 @@ describe('A2UI asynchronous image continuation', () => {
 
     expect(chunks).toEqual([initialText, '\n', patchText]);
     expect(resumeStream).toHaveBeenCalledTimes(1);
+    expect(resumeStream).toHaveBeenCalledWith(
+      expect.objectContaining({ ok: true }),
+      expect.objectContaining({
+        runId: 'image-run-1',
+        toolCallId: 'image-tool-call-1',
+      }),
+    );
     if (!completed.text) throw new Error('completed text is missing');
+    expect(JSON.parse(completed.text)).toHaveLength(3);
+    expect(generatedArkImageURLs(scope)).toEqual([
+      'https://images.example.com/generated.jpeg',
+    ]);
+  });
+
+  test('resumes non-streaming generation from the tool-call envelope', async () => {
+    const scope = createArkImageGenerationRunScope();
+    const imageTool = createArkImageGenerationTool(
+      config,
+      () =>
+        Promise.resolve(
+          new Response(JSON.stringify({
+            data: [{ url: 'https://images.example.com/generated.jpeg' }],
+          })),
+        ),
+    );
+    if (!imageTool.execute) {
+      throw new Error('generate_image execute is missing');
+    }
+    const executeImageTool = imageTool.execute;
+    let suspendPayload: unknown;
+    await executeImageTool(
+      { prompt: 'A generated hero image' },
+      {
+        requestContext: scope.requestContext,
+        agent: {
+          suspend: (payload: unknown) => {
+            suspendPayload = payload;
+            return Promise.resolve();
+          },
+        },
+      } as never,
+    );
+
+    const resumeGenerate = rstest.fn(async (
+      resumeData: unknown,
+      _options?: unknown,
+    ) => {
+      await executeImageTool(
+        { prompt: 'A generated hero image' },
+        {
+          requestContext: scope.requestContext,
+          agent: { resumeData },
+        } as never,
+      );
+      return {
+        text: patchText,
+        usage: {},
+        finishReason: 'stop',
+      };
+    });
+    const agent = {
+      generate: async () => ({
+        text: initialText,
+        usage: {},
+        finishReason: 'suspended',
+        runId: 'image-run-2',
+        suspendPayload: {
+          toolCallId: 'image-tool-call-2',
+          toolName: 'generate_image',
+          suspendPayload,
+        },
+      }),
+      resumeGenerate,
+    } as unknown as A2UIAgent;
+    rstest.mocked(createA2UIAgent).mockResolvedValue({
+      agent,
+      catalog,
+      model: 'test-model',
+    });
+
+    const service = new A2UIAgentService();
+    const completed = await service.generateRaw(
+      [],
+      { catalog, disableAgentCache: true },
+      undefined,
+      undefined,
+      scope,
+    );
+
+    expect(resumeGenerate).toHaveBeenCalledTimes(1);
+    expect(resumeGenerate).toHaveBeenCalledWith(
+      expect.objectContaining({ ok: true }),
+      expect.objectContaining({
+        runId: 'image-run-2',
+        toolCallId: 'image-tool-call-2',
+      }),
+    );
     expect(JSON.parse(completed.text)).toHaveLength(3);
     expect(generatedArkImageURLs(scope)).toEqual([
       'https://images.example.com/generated.jpeg',
