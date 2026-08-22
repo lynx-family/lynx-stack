@@ -33,7 +33,10 @@ import {
   LynxEngineContextImpl,
 } from './LynxEngineContext.js';
 import { templateManager } from './TemplateManager.js';
-import { loadAllWebElements } from '../webElementsDynamicLoader.js';
+import {
+  loadAllWebElements,
+  loadDynamicWebElement,
+} from '../webElementsDynamicLoader.js';
 // @ts-expect-error
 import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
 import type { LynxViewElement } from './LynxView.js';
@@ -281,8 +284,16 @@ export class LynxViewInstance implements AsyncDisposable {
           },
         }),
       );
+      const dynamicLoadingPromise = loadDynamicWebElement(tagName);
       this.webElementsLoadingPromises.push(
-        customElements.whenDefined(tagName).then(() => {}),
+        (dynamicLoadingPromise ?? customElements.whenDefined(tagName))
+          .then(() => {})
+          .catch((error: unknown) => {
+            console.error(
+              `[lynx-web] Failed to load custom element <${tagName}>`,
+              error,
+            );
+          }),
       );
     }
   }

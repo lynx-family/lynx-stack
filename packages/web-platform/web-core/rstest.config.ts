@@ -15,6 +15,11 @@ const config: RstestConfig = defineConfig({
   include: ['./tests/*.spec.ts'],
   exclude: ['./tests/*.bench.spec.ts'],
   testTimeout: 10_000,
+  resolve: {
+    alias: {
+      '@lynx-js/animax': path.join(root, 'tests/fixtures/animax.ts'),
+    },
+  },
   coverage: {
     include: ['ts/**', 'src/**'],
   },
