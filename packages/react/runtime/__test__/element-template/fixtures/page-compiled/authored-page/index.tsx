@@ -1,4 +1,5 @@
 interface AppProps {
+  multiplePages?: boolean;
   onTap?: () => void;
   pageId?: string;
   pageKey?: string;
@@ -8,6 +9,7 @@ interface AppProps {
 }
 
 export function App({
+  multiplePages = false,
   onTap,
   pageId = 'screen',
   pageKey = 'page',
@@ -25,6 +27,18 @@ export function App({
       <view id='without-page'>
         <text>without page</text>
       </view>
+    );
+  }
+  if (multiplePages) {
+    return (
+      <>
+        <page key='first-page'>
+          <view id='first-page-child' />
+        </page>
+        <page key='second-page'>
+          <view id='second-page-child' />
+        </page>
+      </>
     );
   }
   const pageProps = {

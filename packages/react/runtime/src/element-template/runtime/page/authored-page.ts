@@ -10,6 +10,8 @@ import { __root } from './root-instance.js';
 
 export type AuthoredPageAttributes = Record<string, unknown> | null;
 
+let authoredPageMounted = false;
+
 export interface ElementTemplatePageProps {
   $0?: ComponentChild;
   attributes?: AuthoredPageAttributes;
@@ -24,12 +26,28 @@ interface BackgroundAuthoredPageRoot {
 export const __ElementTemplatePage: FunctionalComponent<ElementTemplatePageProps> = function ElementTemplatePage(
   props,
 ): ComponentChild {
-  const lifetime = useRef<object>({});
+  const lifetime = useRef({ isFirstPageElement: true });
   const root = __root as unknown as BackgroundAuthoredPageRoot;
 
   if (__BACKGROUND__) {
     root.setAuthoredPageAttributes(lifetime.current, props.attributes ?? null);
-    useEffect(() => () => root.clearAuthoredPageAttributes(lifetime.current), []);
+    useEffect(() => {
+      if (__DEV__) {
+        if (authoredPageMounted) {
+          lynx.reportError(new Error('Attempt to render more than one `<page />`, which is not supported.'));
+          lifetime.current.isFirstPageElement = false;
+        } else {
+          authoredPageMounted = true;
+        }
+      }
+
+      return () => {
+        if (__DEV__ && lifetime.current.isFirstPageElement) {
+          authoredPageMounted = false;
+        }
+        root.clearAuthoredPageAttributes(lifetime.current);
+      };
+    }, []);
   }
 
   return props.$0;
