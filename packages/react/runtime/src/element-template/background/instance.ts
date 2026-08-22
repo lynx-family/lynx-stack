@@ -570,7 +570,7 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
 }
 
 export class BackgroundPageRootInstance extends BackgroundTypedElementTemplateInstance {
-  // Preact may render a keyed replacement before running the old Page's passive cleanup.
+  // Preact may render a keyed replacement before running the old Page's cleanup.
   // Only the current helper lifetime may clear the shared root attributes.
   private authoredPageLifetime: object | undefined;
 
