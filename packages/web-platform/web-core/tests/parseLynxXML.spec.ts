@@ -37,18 +37,17 @@ function expectFailure(source: string): string {
 
 describe('parseLynxXML', () => {
   describe('happy paths', () => {
-    it('parses a full document with declaration, doctype and CDATA', () => {
+    it('parses the canonical Vanilla Lynx XML format', () => {
       const style = '\n.card { width: 100px; color: red; }\n';
       const mainThreadScript = '\nfunction renderPage() { return null; }\n';
       const backgroundThreadScript =
         '\nglobalThis.__background_started = true;\n';
       const result = expectSuccess(parseLynxXML(
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-          + '<!DOCTYPE lynx>\n'
-          + '<lynx version="5.4.2">\n'
-          + `<style><![CDATA[${style}]]></style>\n`
-          + `<script main-thread="true"><![CDATA[${mainThreadScript}]]></script>\n`
-          + `<script background="true"><![CDATA[${backgroundThreadScript}]]></script>\n`
+        '<!doctype lynx>\n'
+          + '<lynx engine-version="4.2">\n'
+          + `<style>${style}</style>\n`
+          + `<script thread="main">${mainThreadScript}</script>\n`
+          + `<script thread="background">${backgroundThreadScript}</script>\n`
           + '</lynx>',
       ));
 
@@ -59,7 +58,7 @@ describe('parseLynxXML', () => {
 
     it('parses the minimal legal document', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2"><script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script></lynx>',
       ));
 
       expect(result.style).toBeUndefined();
@@ -67,11 +66,11 @@ describe('parseLynxXML', () => {
       expect(result.backgroundThreadScript).toBeUndefined();
     });
 
-    it('keeps bare (non CDATA) content verbatim, whitespace included', () => {
+    it('keeps section content verbatim, whitespace included', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2">\n'
+        '<lynx engine-version="5.4.2">\n'
           + '<style>\n.card { width: 1px; }\n</style>\n'
-          + '<script main-thread>\nmain\n</script>\n'
+          + '<script thread="main">\nmain\n</script>\n'
           + '</lynx>',
       ));
 
@@ -79,81 +78,49 @@ describe('parseLynxXML', () => {
       expect(result.mainThreadScript).toBe('\nmain\n');
     });
 
-    it('allows CDATA content that itself contains a closing tag', () => {
-      const mainThreadScript = '\nconst closingTag = "</script>";\n';
-      const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2">'
-          + `<script main-thread="true"><![CDATA[${mainThreadScript}]]></script>`
-          + '</lynx>',
-      ));
-
-      expect(result.mainThreadScript).toBe(mainThreadScript);
-    });
-
-    it('accepts the three boolean attribute spellings', () => {
+    it('accepts double and single quoted thread attributes', () => {
       for (
         const attribute of [
-          'main-thread',
-          'main-thread="true"',
-          'main-thread=\'true\'',
+          'thread="main"',
+          'thread=\'main\'',
         ]
       ) {
         const result = expectSuccess(parseLynxXML(
-          `<lynx version="5.4.2"><script ${attribute}>main</script></lynx>`,
+          `<lynx engine-version="5.4.2"><script ${attribute}>main</script></lynx>`,
         ));
         expect(result.mainThreadScript).toBe('main');
       }
       for (
         const attribute of [
-          'background',
-          'background="true"',
-          'background=\'true\'',
+          'thread="background"',
+          'thread=\'background\'',
         ]
       ) {
         const result = expectSuccess(parseLynxXML(
-          `<lynx version="5.4.2"><script main-thread>main</script>`
+          `<lynx engine-version="5.4.2"><script thread="main">main</script>`
             + `<script ${attribute}>bg</script></lynx>`,
         ));
         expect(result.backgroundThreadScript).toBe('bg');
       }
     });
 
-    it('accepts doctype casing variants', () => {
-      for (
-        const doctype of [
-          '<!DOCTYPE lynx>',
-          '<!doctype lynx>',
-          '<!DoCtYpE LyNx>',
-          '<!DOCTYPE   lynx  >',
-        ]
-      ) {
-        const result = expectSuccess(parseLynxXML(
-          `${doctype}<lynx version="5.4.2">`
-            + '<script main-thread>main</script></lynx>',
-        ));
-        expect(result.mainThreadScript).toBe('main');
-      }
-    });
-
-    it('accepts a single quoted version attribute', () => {
+    it('accepts a single quoted engine-version attribute', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version=\'5.4.2\'><script main-thread>main</script></lynx>',
+        '<lynx engine-version=\'5.4.2\'><script thread="main">main</script></lynx>',
       ));
       expect(result.mainThreadScript).toBe('main');
     });
 
     it('skips comments in every ignorable position', () => {
       const result = expectSuccess(parseLynxXML(
-        '<!-- before declaration -->\n'
-          + '<?xml version="1.0"?>\n'
-          + '<!-- between declaration and doctype -->\n'
-          + '<!DOCTYPE lynx>\n'
+        '<!-- before doctype -->\n'
+          + '<!doctype lynx>\n'
           + '<!-- before root -->\n'
-          + '<lynx version="5.4.2">\n'
+          + '<lynx engine-version="5.4.2">\n'
           + '<!-- inside root -->\n'
-          + '<script main-thread>main</script>\n'
+          + '<script thread="main">main</script>\n'
           + '<!-- between sections -->\n'
-          + '<script background>bg</script>\n'
+          + '<script thread="background">bg</script>\n'
           + '</lynx>\n'
           + '<!-- after root -->\n',
       ));
@@ -164,9 +131,9 @@ describe('parseLynxXML', () => {
 
     it('accepts optional sections in any order and a leading BOM', () => {
       const result = expectSuccess(parseLynxXML(
-        '\uFEFF<lynx version="5.4.2">\n'
-          + '<script background>background-code</script>\n'
-          + '<script main-thread>main-code</script>\n'
+        '\uFEFF<lynx engine-version="5.4.2">\n'
+          + '<script thread="background">background-code</script>\n'
+          + '<script thread="main">main-code</script>\n'
           + '</lynx>',
       ));
 
@@ -177,9 +144,9 @@ describe('parseLynxXML', () => {
 
     it('parses a document without a style section', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2">'
-          + '<script main-thread>main</script>'
-          + '<script background>bg</script>'
+        '<lynx engine-version="5.4.2">'
+          + '<script thread="main">main</script>'
+          + '<script thread="background">bg</script>'
           + '</lynx>',
       ));
 
@@ -189,9 +156,9 @@ describe('parseLynxXML', () => {
 
     it('parses a document without a background script section', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2">'
+        '<lynx engine-version="5.4.2">'
           + '<style>.a { width: 1px; }</style>'
-          + '<script main-thread>main</script>'
+          + '<script thread="main">main</script>'
           + '</lynx>',
       ));
 
@@ -201,8 +168,8 @@ describe('parseLynxXML', () => {
 
     it('keeps an empty style section as an empty string', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2"><style></style>'
-          + '<script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><style></style>'
+          + '<script thread="main">main</script></lynx>',
       ));
 
       expect(result.style).toBe('');
@@ -211,19 +178,19 @@ describe('parseLynxXML', () => {
     it('accepts extra whitespace around attributes', () => {
       for (
         const source of [
-          '<lynx  version = "5.4.2" ><script main-thread>m</script></lynx>',
-          '<lynx version="5.4.2" ><script main-thread>m</script></lynx>',
-          '<lynx version="5.4.2"><script  main-thread  =  "true" >m</script></lynx>',
+          '<lynx  engine-version = "5.4.2" ><script thread="main">m</script></lynx>',
+          '<lynx engine-version="5.4.2" ><script thread="main">m</script></lynx>',
+          '<lynx engine-version="5.4.2"><script  thread  =  "main" >m</script></lynx>',
         ]
       ) {
         expect(expectSuccess(parseLynxXML(source)).mainThreadScript).toBe('m');
       }
     });
 
-    it('keeps an empty CDATA section as an empty string', () => {
+    it('keeps an empty script section as an empty string', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2">'
-          + '<script main-thread><![CDATA[]]></script></lynx>',
+        '<lynx engine-version="5.4.2">'
+          + '<script thread="main"></script></lynx>',
       ));
 
       expect(result.mainThreadScript).toBe('');
@@ -231,7 +198,7 @@ describe('parseLynxXML', () => {
 
     it('tolerates trailing whitespace after the root closing tag', () => {
       const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2"><script main-thread>main</script></lynx>\n\n',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script></lynx>\n\n',
       ));
 
       expect(result.mainThreadScript).toBe('main');
@@ -240,165 +207,178 @@ describe('parseLynxXML', () => {
 
   describe('error branches', () => {
     it('rejects a missing root element', () => {
-      expect(expectFailure('<script main-thread>main</script>')).toContain(
+      expect(expectFailure('<script thread="main">main</script>')).toContain(
         'root element',
       );
     });
 
     it('rejects a non lynx doctype', () => {
       expect(expectFailure(
-        '<!doctype html><lynx version="5.4.2">'
-          + '<script main-thread>main</script></lynx>',
+        '<!doctype html><lynx engine-version="5.4.2">'
+          + '<script thread="main">main</script></lynx>',
       )).toBe('expected \'<!doctype lynx>\'');
     });
 
     it('rejects an unterminated doctype declaration', () => {
       expect(expectFailure('<!doctype lynx')).toBe(
-        'unterminated doctype declaration',
+        'expected \'<!doctype lynx>\'',
       );
     });
 
-    it('rejects a missing version attribute', () => {
+    it('rejects a missing engine-version attribute', () => {
       expect(expectFailure(
-        '<lynx><script main-thread>main</script></lynx>',
-      )).toContain('\'version\' attribute');
+        '<lynx><script thread="main">main</script></lynx>',
+      )).toContain('\'engine-version\' attribute');
     });
 
-    it('rejects an empty version attribute', () => {
+    it('rejects an empty engine-version attribute', () => {
       expect(expectFailure(
-        '<lynx version=""><script main-thread>main</script></lynx>',
-      )).toContain('\'version\' attribute');
+        '<lynx engine-version=""><script thread="main">main</script></lynx>',
+      )).toContain('\'engine-version\' attribute');
     });
 
     it('rejects an unrelated root attribute', () => {
       expect(expectFailure(
-        '<lynx lang="en"><script main-thread>main</script></lynx>',
-      )).toContain('\'version\' attribute');
+        '<lynx lang="en"><script thread="main">main</script></lynx>',
+      )).toContain('\'engine-version\' attribute');
     });
 
     it('rejects an unterminated root opening tag', () => {
-      expect(expectFailure('<lynx version="5.4.2"')).toBe(
+      expect(expectFailure('<lynx engine-version="5.4.2"')).toBe(
         'unterminated \'<lynx>\' opening tag',
       );
     });
 
     it('rejects a missing main-thread script', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><script background>background</script></lynx>',
-      )).toBe('missing \'<script main-thread>\' section');
+        '<lynx engine-version="5.4.2"><script thread="background">background</script></lynx>',
+      )).toBe('missing \'<script thread="main">\' section');
     });
 
     it('rejects a document with only a style section', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><style>.a { width: 1px; }</style></lynx>',
-      )).toBe('missing \'<script main-thread>\' section');
+        '<lynx engine-version="5.4.2"><style>.a { width: 1px; }</style></lynx>',
+      )).toBe('missing \'<script thread="main">\' section');
     });
 
     it('rejects duplicate script sections', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><script main-thread>main</script>'
-          + '<script main-thread>duplicate</script></lynx>',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script>'
+          + '<script thread="main">duplicate</script></lynx>',
       )).toContain('duplicate');
       expect(expectFailure(
-        '<lynx version="5.4.2"><script main-thread>main</script>'
-          + '<script background>a</script><script background>b</script></lynx>',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script>'
+          + '<script thread="background">a</script><script thread="background">b</script></lynx>',
       )).toContain('duplicate');
     });
 
     it('rejects duplicate style sections', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><style>a</style><style>b</style>'
-          + '<script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><style>a</style><style>b</style>'
+          + '<script thread="main">main</script></lynx>',
       )).toBe('duplicate \'<style>\' section');
     });
 
     it('rejects attributes on the style section', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><style scoped>.a { width: 1px; }</style>'
-          + '<script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><style scoped>.a { width: 1px; }</style>'
+          + '<script thread="main">main</script></lynx>',
       )).toBe('\'<style>\' does not accept attributes');
     });
 
-    it('rejects a script without main-thread or background', () => {
+    it('rejects a script without a valid thread attribute', () => {
       for (
         const openingTag of [
           '<script>',
           '<script worker>',
+          '<script thread>',
+          '<script thread="worker">',
+          '<script thread="main" defer="true">',
           '<script main-thread="false">',
           '<script background="false">',
           '<script main-thread background>',
         ]
       ) {
         expect(expectFailure(
-          `<lynx version="5.4.2">${openingTag}main</script></lynx>`,
+          `<lynx engine-version="5.4.2">${openingTag}main</script></lynx>`,
         )).toBe(
-          '\'<script>\' requires exactly one of \'main-thread\' or \'background\'',
+          '\'<script>\' requires exactly one \'thread="main"\' or \'thread="background"\' attribute',
         );
       }
     });
 
     it('rejects unknown top-level tags, naming the tag', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><view></view>'
-          + '<script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><view></view>'
+          + '<script thread="main">main</script></lynx>',
       )).toBe('unsupported top-level tag \'<view>\'');
     });
 
     it('rejects an unexpected closing tag at the top level', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"></style>'
-          + '<script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2"></style>'
+          + '<script thread="main">main</script></lynx>',
       )).toBe('unexpected closing tag');
     });
 
     it('rejects an unterminated section opening tag', () => {
-      expect(expectFailure('<lynx version="5.4.2"><script main-thread')).toBe(
-        'unterminated opening tag',
-      );
+      expect(expectFailure(
+        '<lynx engine-version="5.4.2"><script thread="main"',
+      )).toBe('unterminated opening tag');
     });
 
-    it('rejects an unterminated CDATA section', () => {
+    it('rejects CDATA sections', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2">'
-          + '<script main-thread="true"><![CDATA[main</script></lynx>',
-      )).toBe('unterminated CDATA section');
-    });
-
-    it('rejects content after the CDATA section', () => {
-      expect(expectFailure(
-        '<lynx version="5.4.2">'
-          + '<script main-thread><![CDATA[a]]>trailing]]></script></lynx>',
-      )).toBe('unexpected content after the CDATA section');
+        '<lynx engine-version="5.4.2">'
+          + '<script thread="main"><![CDATA[main]]></script></lynx>',
+      )).toBe('CDATA sections are not supported');
     });
 
     it('rejects an unterminated comment', () => {
-      expect(expectFailure('<lynx version="5.4.2"><!-- unterminated')).toBe(
-        'unterminated comment',
-      );
+      expect(expectFailure('<lynx engine-version="5.4.2"><!-- unterminated'))
+        .toBe(
+          'unterminated comment',
+        );
     });
 
     it('rejects a missing section closing tag', () => {
-      expect(expectFailure('<lynx version="5.4.2"><script main-thread>main'))
+      expect(
+        expectFailure(
+          '<lynx engine-version="5.4.2"><script thread="main">main',
+        ),
+      )
         .toBe('missing closing tag \'</script>\'');
     });
 
     it('rejects a missing root closing tag', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><script main-thread="true">main</script>',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script>',
       )).toBe('missing closing tag \'</lynx>\'');
     });
 
     it('rejects content after the root closing tag', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2"><script main-thread>main</script></lynx>trailing',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script></lynx>trailing',
       )).toBe('unexpected content after \'</lynx>\'');
     });
 
-    it('rejects an unterminated XML declaration', () => {
-      expect(expectFailure(
-        '<?xml version="1.0"<lynx version="5.4.2">'
-          + '<script main-thread>main</script></lynx>',
-      )).toBe('unterminated XML declaration');
+    it('rejects legacy wrapper syntax', () => {
+      const canonical = '<!doctype lynx><lynx engine-version="4.2">'
+        + '<script thread="main">main</script></lynx>';
+      for (
+        const source of [
+          `<?xml version="1.0"?>${canonical}`,
+          canonical.replace('<!doctype lynx>', '<!DOCTYPE lynx>'),
+          canonical.replace('engine-version="4.2"', 'version="5.4.2"'),
+          canonical.replace('thread="main"', 'main-thread="true"'),
+          '<lynx engine-version="4.2"><script thread="main">main</script>'
+          + '<script background="true">background</script></lynx>',
+          '<lynx engine-version="4.2"><script thread="main">'
+          + '<![CDATA[main]]></script></lynx>',
+        ]
+      ) {
+        expect(parseLynxXML(source).success).toBe(false);
+      }
     });
 
     it('rejects an empty document', () => {
@@ -407,8 +387,8 @@ describe('parseLynxXML', () => {
 
     it('rejects bare text between sections', () => {
       expect(expectFailure(
-        '<lynx version="5.4.2">garbage'
-          + '<script main-thread>main</script></lynx>',
+        '<lynx engine-version="5.4.2">garbage'
+          + '<script thread="main">main</script></lynx>',
       )).toBe('unexpected content outside a section');
     });
 
@@ -421,13 +401,13 @@ describe('parseLynxXML', () => {
           '<!-',
           '<?xml',
           '<lynx',
-          '<lynx version',
-          '<lynx version=',
-          '<lynx version="',
+          '<lynx engine-version',
+          '<lynx engine-version=',
+          '<lynx engine-version="',
           '</lynx>',
           '<![CDATA[',
           '\uFEFF',
-          '\uFEFF<lynx version="1">',
+          '\uFEFF<lynx engine-version="1">',
         ]
       ) {
         expect(() => parseLynxXML(source)).not.toThrow();
@@ -436,9 +416,9 @@ describe('parseLynxXML', () => {
     });
 
     it('reports the offset of the failing section, not of the document', () => {
-      const prefix = '<lynx version="5.4.2">\n';
+      const prefix = '<lynx engine-version="5.4.2">\n';
       const result = parseLynxXML(
-        `${prefix}<view></view><script main-thread>main</script></lynx>`,
+        `${prefix}<view></view><script thread="main">main</script></lynx>`,
       );
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -455,31 +435,29 @@ describe('parseLynxXML', () => {
    * closing tag" or a bogus success - instead of naming the real defect.
    */
   describe('an unterminated comment is rejected from every position', () => {
-    const root = '<lynx version="5.4.2"><script main-thread>m</script></lynx>';
+    const root =
+      '<lynx engine-version="5.4.2"><script thread="main">m</script></lynx>';
     /**
      * `truncated` and `closed` differ only in the comment's `-->`, so the pair
      * shows the rejection is about the missing terminator and not about a
      * comment being disallowed in that position.
      */
     const positions: Record<string, { truncated: string; closed: string }> = {
-      'before the XML declaration': {
-        truncated: `<!-- oops\n<?xml version="1.0"?>\n${root}`,
-        closed: `<!-- fine -->\n<?xml version="1.0"?>\n${root}`,
-      },
-      'between the declaration and the doctype': {
-        truncated: `<?xml version="1.0"?>\n<!-- oops\n<!DOCTYPE lynx>\n${root}`,
-        closed:
-          `<?xml version="1.0"?>\n<!-- fine -->\n<!DOCTYPE lynx>\n${root}`,
+      'before the doctype': {
+        truncated: `<!-- oops\n<!doctype lynx>\n${root}`,
+        closed: `<!-- fine -->\n<!doctype lynx>\n${root}`,
       },
       'between the doctype and the root element': {
-        truncated: `<!DOCTYPE lynx>\n<!-- oops\n${root}`,
-        closed: `<!DOCTYPE lynx>\n<!-- fine -->\n${root}`,
+        truncated: `<!doctype lynx>\n<!-- oops\n${root}`,
+        closed: `<!doctype lynx>\n<!-- fine -->\n${root}`,
       },
       'between two sections': {
-        truncated: '<lynx version="5.4.2"><script main-thread>m</script>\n'
-          + '<!-- oops\n<script background>b</script></lynx>',
-        closed: '<lynx version="5.4.2"><script main-thread>m</script>\n'
-          + '<!-- fine -->\n<script background>b</script></lynx>',
+        truncated:
+          '<lynx engine-version="5.4.2"><script thread="main">m</script>\n'
+          + '<!-- oops\n<script thread="background">b</script></lynx>',
+        closed:
+          '<lynx engine-version="5.4.2"><script thread="main">m</script>\n'
+          + '<!-- fine -->\n<script thread="background">b</script></lynx>',
       },
       'after the root closing tag': {
         truncated: `${root}\n<!-- oops`,
@@ -511,62 +489,36 @@ describe('parseLynxXML', () => {
    * legal, and the value is then read from the wrong attribute.
    */
   describe('attribute names are matched whole, not by prefix', () => {
-    const versionRejected =
-      '\'<lynx>\' requires exactly one non-empty \'version\' attribute';
+    const engineVersionRejected =
+      '\'<lynx>\' requires exactly one non-empty \'engine-version\' attribute';
 
-    it('rejects a bare \'version\' with no value', () => {
+    it('rejects a bare \'engine-version\' with no value', () => {
       expect(expectFailure(
-        '<lynx version><script main-thread>m</script></lynx>',
-      )).toBe(versionRejected);
+        '<lynx engine-version><script thread="main">m</script></lynx>',
+      )).toBe(engineVersionRejected);
     });
 
-    it('rejects an attribute that only starts with \'version\'', () => {
-      for (const attribute of ['versionless="1"', 'version-name="5.4.2"']) {
+    it('rejects an attribute that only starts with \'engine-version\'', () => {
+      for (
+        const attribute of [
+          'engine-versionless="1"',
+          'engine-version-name="5.4.2"',
+        ]
+      ) {
         expect(expectFailure(
-          `<lynx ${attribute}><script main-thread>m</script></lynx>`,
-        )).toBe(versionRejected);
+          `<lynx ${attribute}><script thread="main">m</script></lynx>`,
+        )).toBe(engineVersionRejected);
       }
     });
 
     it('rejects a script attribute that only starts with a known name', () => {
-      for (const attribute of ['main-threaded', 'backgrounded="true"']) {
+      for (const attribute of ['threaded="main"', 'thread-name="background"']) {
         expect(expectFailure(
-          `<lynx version="5.4.2"><script ${attribute}>m</script></lynx>`,
+          `<lynx engine-version="5.4.2"><script ${attribute}>m</script></lynx>`,
         )).toBe(
-          '\'<script>\' requires exactly one of \'main-thread\' or \'background\'',
+          '\'<script>\' requires exactly one \'thread="main"\' or \'thread="background"\' attribute',
         );
       }
-    });
-  });
-
-  describe('CDATA boundaries', () => {
-    it('rejects text after the CDATA section with no second \']]>\'', () => {
-      // Distinct from both existing CDATA failures: the `]]>` *is* found, so
-      // the section is not unterminated from `#consumeSection`'s point of
-      // view, and the trailing text is not a second CDATA end either. Without
-      // the `endsWith` check the trailing text would be silently swallowed
-      // into - or dropped from - the section's content.
-      const source = '<lynx version="5.4.2">'
-        + '<script main-thread><![CDATA[main]]>tail</script></lynx>';
-      expect(expectFailure(source)).toBe('unterminated CDATA section');
-
-      const result = parseLynxXML(source);
-      if (result.success) {
-        throw new Error('unreachable');
-      }
-      // Reported at the section's content start, i.e. where the CDATA began.
-      expect(result.error.offset).toBe(source.indexOf('<![CDATA['));
-    });
-
-    it('strips whitespace around a CDATA wrapper but not inside it', () => {
-      const result = expectSuccess(parseLynxXML(
-        '<lynx version="5.4.2">'
-          + '<style>\n  <![CDATA[ .a { width: 1px; } ]]>\n  </style>'
-          + '<script main-thread>m</script></lynx>',
-      ));
-      // The wrapper's surrounding whitespace is layout, the inner whitespace is
-      // content.
-      expect(result.style).toBe(' .a { width: 1px; } ');
     });
   });
 
@@ -588,7 +540,7 @@ describe('parseLynxXML', () => {
       expect(result.mainThreadScript).toContain('__CreatePage');
       expect(result.backgroundThreadScript).toBeTruthy();
       expect(result.backgroundThreadScript).toContain('lynx.getCoreContext');
-      // No CDATA markers may leak into the extracted sections.
+      // The fixture uses raw sections, so no legacy wrapper may appear.
       for (
         const section of [
           result.style!,
@@ -603,36 +555,35 @@ describe('parseLynxXML', () => {
   });
 
   /**
-   * The corpus below mirrors the rejection and acceptance cases of the
-   * engine-side reference parser, so that any behavioral drift from it is
-   * caught here.
+   * The corpus below pins the rejection and acceptance boundaries of the
+   * current Vanilla Lynx XML grammar.
    */
-  describe('parity with the reference parser', () => {
-    it('rejects every document the reference parser rejects', () => {
+  describe('current grammar boundaries', () => {
+    it('rejects every malformed document in the corpus', () => {
       const sources = [
-        '<script main-thread>main</script>',
-        '<!doctype html><lynx version="5.4.2">'
-        + '<script main-thread>main</script></lynx>',
-        '<lynx version="5.4.2"><style scoped>.a { width: 1px; }</style>'
-        + '<script main-thread>main</script></lynx>',
-        '<lynx version="5.4.2"><script>main</script></lynx>',
-        '<lynx version="5.4.2"><script worker>main</script></lynx>',
-        '<lynx version="5.4.2"><script main-thread>main</script>'
-        + '<script main-thread>duplicate</script></lynx>',
-        '<lynx version="5.4.2"><script background>background</script></lynx>',
-        '<lynx version="5.4.2"><view></view>'
-        + '<script main-thread>main</script></lynx>',
-        '<lynx version="5.4.2"><script main-thread>main',
-        '<lynx version="5.4.2"><!-- unterminated',
-        '<lynx><script main-thread>main</script></lynx>',
-        '<lynx version=""><script main-thread>main</script></lynx>',
-        '<lynx lang="en"><script main-thread>main</script></lynx>',
-        '<lynx version="5.4.2">'
+        '<script thread="main">main</script>',
+        '<!doctype html><lynx engine-version="5.4.2">'
+        + '<script thread="main">main</script></lynx>',
+        '<lynx engine-version="5.4.2"><style scoped>.a { width: 1px; }</style>'
+        + '<script thread="main">main</script></lynx>',
+        '<lynx engine-version="5.4.2"><script>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><script worker>main</script></lynx>',
+        '<lynx engine-version="5.4.2"><script thread="main">main</script>'
+        + '<script thread="main">duplicate</script></lynx>',
+        '<lynx engine-version="5.4.2"><script thread="background">background</script></lynx>',
+        '<lynx engine-version="5.4.2"><view></view>'
+        + '<script thread="main">main</script></lynx>',
+        '<lynx engine-version="5.4.2"><script thread="main">main',
+        '<lynx engine-version="5.4.2"><!-- unterminated',
+        '<lynx><script thread="main">main</script></lynx>',
+        '<lynx engine-version=""><script thread="main">main</script></lynx>',
+        '<lynx lang="en"><script thread="main">main</script></lynx>',
+        '<lynx engine-version="5.4.2">'
         + '<script main-thread="false">main</script></lynx>',
-        '<lynx version="5.4.2">'
-        + '<script main-thread="true"><![CDATA[main</script></lynx>',
-        '<lynx version="5.4.2">'
-        + '<script main-thread="true">main</script>',
+        '<lynx engine-version="5.4.2">'
+        + '<script thread="main"><![CDATA[main</script></lynx>',
+        '<lynx engine-version="5.4.2">'
+        + '<script thread="main">main</script>',
       ];
 
       expect(sources.filter((source) => parseLynxXML(source).success))
@@ -642,14 +593,14 @@ describe('parseLynxXML', () => {
       }
     });
 
-    it('extracts the same sections as the reference parser', () => {
+    it('extracts every current-format section', () => {
       const full = expectSuccess(parseLynxXML(
-        '<?xml version="1.0"?>\n'
+        '<!doctype lynx>\n'
           + '<!-- A Lynx single-file bundle. -->\n'
-          + '<lynx version="5.4.2">\n'
+          + '<lynx engine-version="5.4.2">\n'
           + '<style>\n.card { width: 100px; }\n</style>\n'
-          + '<script main-thread>\nmain\n</script>\n'
-          + '<script background>\nbackground\n</script>\n'
+          + '<script thread="main">\nmain\n</script>\n'
+          + '<script thread="background">\nbackground\n</script>\n'
           + '</lynx>',
       ));
       expect(full.style).toBe('\n.card { width: 100px; }\n');
@@ -657,9 +608,9 @@ describe('parseLynxXML', () => {
       expect(full.backgroundThreadScript).toBe('\nbackground\n');
 
       const anyOrder = expectSuccess(parseLynxXML(
-        '\uFEFF<lynx version="5.4.2">\n'
-          + '<script background>background-code</script>\n'
-          + '<script main-thread>main-code</script>\n'
+        '\uFEFF<lynx engine-version="5.4.2">\n'
+          + '<script thread="background">background-code</script>\n'
+          + '<script thread="main">main-code</script>\n'
           + '</lynx>',
       ));
       expect(anyOrder.style).toBeUndefined();
