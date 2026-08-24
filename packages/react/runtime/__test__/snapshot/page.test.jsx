@@ -140,7 +140,11 @@ describe('support <page /> element attributes', () => {
       globalEnvManager.switchToBackground();
       render(<Comp />, __root);
     }
-    expect(errors).toMatchInlineSnapshot(`[]`);
+    expect(errors).toMatchInlineSnapshot(`
+      [
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+      ]
+    `);
     vi.clearAllMocks();
   });
 
