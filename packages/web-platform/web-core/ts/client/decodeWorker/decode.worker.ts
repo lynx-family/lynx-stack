@@ -434,9 +434,9 @@ async function handleStream(
  *
  * The rule is deliberately the parser's own precondition rather than a new one:
  * `parseLynxXML` skips a BOM (already stripped by `TextDecoder` here) and the
- * same ASCII whitespace set, then requires `<?xml`, `<!` or `<lynx`. Anything
- * this rejects would have been rejected there too, one step later and with a
- * message about a missing root element.
+ * same ASCII whitespace set, then accepts a leading comment, `<!doctype lynx>`
+ * or `<lynx`. Anything this rejects would have been rejected there too, one
+ * step later and with a message about a missing root element.
  */
 function startsXMLDocument(source: string): boolean {
   for (let index = 0; index < source.length; index++) {
@@ -474,10 +474,11 @@ function startsXMLDocument(source: string): boolean {
  *
  * Because it is the fallback, a corrupted binary bundle lands here too: a single
  * flipped bit in the magic header is enough. Handing those bytes to the XML
- * parser would answer with `expected '<lynx version="...">' root element`, which
- * sends whoever is reading it looking for a markup bug in a file that is not
- * markup. So the bytes are checked for the shape of a text document first, and if
- * they do not have it the diagnosis `handleStream` used to give -
+ * parser would answer with
+ * `expected '<lynx engine-version="...">' root element`, which sends whoever is
+ * reading it looking for a markup bug in a file that is not markup. So the
+ * bytes are checked for the shape of a text document first, and if they do not
+ * have it the diagnosis `handleStream` used to give -
  * `Invalid Magic Header` - is reported instead, with the offending header bytes.
  * That check also keeps the several hundred kilobyte compiler chunk from being
  * fetched only to reject a corrupt bundle.
@@ -497,9 +498,9 @@ async function handleMarkup(
   // Joined before a single `TextDecoder` pass rather than decoded in two,
   // because a multi-byte sequence can straddle the eight byte header. Nothing
   // observable rests on it today: bytes 0..7 of a Lynx XML document are ASCII
-  // by grammar - `<?xml`, `<!`, `<lynx` or whitespace - so a character can only
-  // straddle inside a leading comment or declaration, both of which are
-  // discarded. It costs three lines and stops being a question.
+  // by grammar - `<!doctype`, `<lynx` or whitespace - so a character can only
+  // straddle inside a leading comment, which is discarded. It costs three
+  // lines and stops being a question.
   // `TextDecoder` strips a leading UTF-8 BOM for us.
   const source = new TextDecoder().decode(bytes);
 

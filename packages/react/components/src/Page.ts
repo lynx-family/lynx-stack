@@ -2,12 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { useLayoutEffect } from 'preact/hooks';
 import type { ForwardRefExoticComponent, PropsWithChildren, RefAttributes } from 'react';
 
 // We use "@lynx-js/react" here
 // because import * as ReactLynx from "@lynx-js/react/internal"; will be added when transform
 // no matter if we use "@lynx-js/react" here
-import { forwardRef, useEffect, useRef } from '@lynx-js/react';
+import { forwardRef, useRef } from '@lynx-js/react';
 import { __root, snapshotManager, updateSpread } from '@lynx-js/react/internal';
 
 let pageMounted = false;
@@ -39,7 +40,8 @@ const Page: ForwardRefExoticComponent<Omit<PropsWithChildren, 'ref'> & RefAttrib
         }]);
         const isFirstPageElement = useRef(true);
 
-        useEffect(() => {
+        // biome-ignore lint/correctness/useExhaustiveDependencies: runs on mount/unmount only
+        useLayoutEffect(() => {
           if (pageMounted) {
             lynx.reportError(
               new Error(

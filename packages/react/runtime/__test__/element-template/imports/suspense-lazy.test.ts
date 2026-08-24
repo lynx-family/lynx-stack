@@ -130,7 +130,7 @@ describe('element-template Suspense and lazy imports', () => {
 
     originalQueryComponent = (lynx as LynxWithDynamicImportMocks).QueryComponent;
     originalRequireModuleAsync = (lynx as LynxWithDynamicImportMocks).requireModuleAsync;
-    originalGetDynamicComponentExports = (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    originalGetDynamicComponentExports = (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports;
     originalLazyTargetDescriptors = captureLazyTargetDescriptors();
@@ -144,7 +144,7 @@ describe('element-template Suspense and lazy imports', () => {
       originalRequireModuleAsync,
     );
     restoreProperty(
-      lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+      lynx.getApp() as LynxApp & {
         getDynamicComponentExports?: DynamicExportsGetter;
       },
       'getDynamicComponentExports',
@@ -181,7 +181,7 @@ describe('element-template Suspense and lazy imports', () => {
     });
     const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithDynamicImportMocks).QueryComponent = QueryComponent;
-    (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports = getDynamicComponentExports;
 

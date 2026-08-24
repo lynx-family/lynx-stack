@@ -857,10 +857,10 @@ fn should_keep_dynamic_component_asset_id_content_addressed_without_entry_prefix
 }
 
 #[test]
-fn should_report_page_element_as_unsupported() {
-  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+fn should_lower_page_element_to_internal_page_helper() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
     r#"
-      <page>
+      <page key={pageKey} id="root-page" bindtap={onTap} ref={pageRef}>
         <view>Page Element Test</view>
       </page>
     "#,
@@ -868,14 +868,195 @@ fn should_report_page_element_as_unsupported() {
   );
 
   assert!(
-    diagnostics
+    !diagnostics
       .iter()
       .any(|message| message == "<page /> is not supported"),
-    "expected <page /> unsupported diagnostic, got: {diagnostics:?}"
+    "valid <page /> should not emit unsupported diagnostic, got: {diagnostics:?}"
+  );
+  assert!(
+    code.contains("__ElementTemplatePage"),
+    "authored <page /> should lower to ET internal page helper:\n{code}"
+  );
+  assert!(
+    code.contains("key={pageKey}") && code.contains("attributes={{"),
+    "authored <page /> should use explicit key plus typed attributes:\n{code}"
+  );
+  assert!(
+    code.contains("\"bindtap\": onTap")
+      && code.contains("\"ref\": pageRef")
+      && !code.contains("__ELEMENT_TEMPLATE_DIRECT_REF_MARKER"),
+    "page event/ref values should remain in typed attributes:\n{code}"
+  );
+
+  let user_templates = user_templates(&templates);
+  assert_eq!(
+    user_templates.len(),
+    1,
+    "only the child view should produce a compiled ET template: {templates:?}"
+  );
+  let template =
+    serde_json::to_value(&user_templates[0].compiled_template).expect("compiled template json");
+  assert_eq!(template["type"], "view");
+  assert!(
+    user_templates
+      .iter()
+      .all(|template| template.compiled_template["type"].as_str() != Some("page")),
+    "authored <page /> must not emit a page compiled template: {templates:?}"
+  );
+}
+
+#[test]
+fn should_lower_page_element_in_development_mode() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics_with_mode(
+    r#"
+      <page id="root-page">
+        <view>Page Element Test</view>
+      </page>
+    "#,
+    JSXTransformerConfig {
+      runtime_pkg: "@custom/react".into(),
+      ..element_template_config()
+    },
+    TransformMode::Development,
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "valid <page /> should not emit diagnostics in development mode, got: {diagnostics:?}"
+  );
+  assert!(
+    code.contains(r#"import * as ReactLynxInternal from "@custom/react/internal""#),
+    "development mode should use the current internal runtime namespace import:\n{code}"
+  );
+  assert!(
+    !code.contains("require("),
+    "development mode should not restore the obsolete runtime require alias:\n{code}"
+  );
+  assert!(
+    code.contains("__ElementTemplatePage"),
+    "authored <page /> should lower to ET internal page helper:\n{code}"
+  );
+  assert_eq!(user_templates(&templates).len(), 1);
+}
+
+#[test]
+fn should_follow_typed_list_carrier_for_explicit_page_children() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"<page id="root-page" children={explicitChild} />"#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "unexpected diagnostics: {diagnostics:?}"
+  );
+  assert!(
+    code.contains("attributes={{")
+      && code.contains("\"id\": \"root-page\"")
+      && code.contains("\"children\": explicitChild")
+      && code.contains("$0={[]}"),
+    "page should inherit the current typed-list carrier contract:\n{code}"
+  );
+  assert!(
+    user_templates(&templates).is_empty(),
+    "a childless authored page should not emit a user page template: {templates:?}"
+  );
+}
+
+#[test]
+fn should_follow_typed_list_key_partition_order() {
+  let (code, _, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"<page id={before()} key={pageKey()} ref={pageRef()} title={after()} />"#,
+    element_template_config_for_target(TransformTarget::JS),
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "unexpected diagnostics: {diagnostics:?}"
+  );
+  let before_position = code.find("before()").expect("before attr");
+  let key_position = code.find("pageKey()").expect("page key");
+  let ref_position = code.find("pageRef()").expect("page ref");
+  let after_position = code.find("after()").expect("after attr");
+  assert!(
+    key_position < before_position
+      && before_position < ref_position
+      && ref_position < after_position,
+    "page should inherit the current typed-list key partition order:\n{code}"
+  );
+}
+
+#[test]
+fn should_lower_spread_page_with_typed_list_carrier() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      <page key={beforeKey} id="before" {...first()} children={explicitChild} {...second()} bindtap={onTap} ref={pageRef}>
+        {jsxChild}
+      </page>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "unexpected diagnostics: {diagnostics:?}"
+  );
+  assert_eq!(
+    code.matches("first()").count(),
+    1,
+    "each page spread expression must be evaluated once:\n{code}"
+  );
+  assert_eq!(
+    code.matches("second()").count(),
+    1,
+    "each page spread expression must be evaluated once:\n{code}"
+  );
+  assert!(
+    code.contains("key={beforeKey}")
+      && code.contains("attributes={{")
+      && code.contains("\"children\": explicitChild")
+      && code.contains("...first()")
+      && code.contains("...second()")
+      && !code.contains("__ElementTemplatePageSpread")
+      && !code.contains("__ELEMENT_TEMPLATE_DIRECT_REF_MARKER"),
+    "page should collect non-key opening attrs with the typed-list carrier:\n{code}"
+  );
+  assert!(
+    code.contains("\"bindtap\": onTap") && code.contains("\"ref\": pageRef"),
+    "page event/ref values should remain in typed attributes:\n{code}"
+  );
+  assert!(
+    code.contains("$0={jsxChild}"),
+    "JSX children should use the typed logical carrier:\n{code}"
+  );
+  assert!(
+    user_templates(&templates)
+      .iter()
+      .all(|template| template.compiled_template["type"].as_str() != Some("page")),
+    "spread-authored <page /> must not emit a page compiled template: {templates:?}"
+  );
+}
+
+#[test]
+fn should_still_report_component_element_as_unsupported() {
+  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      <component is="dynamic-view">
+        <view>Component Element Test</view>
+      </component>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| message == "<component /> is not supported"),
+    "expected <component /> unsupported diagnostic, got: {diagnostics:?}"
   );
   assert!(
     templates.is_empty(),
-    "unsupported <page /> should not emit poisoned templates: {templates:?}"
+    "unsupported <component /> should not emit poisoned templates: {templates:?}"
   );
 }
 

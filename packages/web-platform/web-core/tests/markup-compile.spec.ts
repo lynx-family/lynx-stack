@@ -51,11 +51,11 @@ const BACKGROUND_SCRIPT = 'globalThis.__bts = 2;';
 
 function cardOf(style: string): string {
   return [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<lynx version="5.4.2">',
-    `<style><![CDATA[${style}]]></style>`,
-    `<script main-thread="true"><![CDATA[${MAIN_THREAD_SCRIPT}]]></script>`,
-    `<script background="true"><![CDATA[${BACKGROUND_SCRIPT}]]></script>`,
+    '<!doctype lynx>',
+    '<lynx engine-version="4.2">',
+    `<style>${style}</style>`,
+    `<script thread="main">${MAIN_THREAD_SCRIPT}</script>`,
+    `<script thread="background">${BACKGROUND_SCRIPT}</script>`,
     '</lynx>',
   ].join('\n');
 }
@@ -188,7 +188,9 @@ describe('a markup card compiles to bundle bytes', () => {
   });
 
   test('reports a document it cannot parse instead of throwing', () => {
-    const result = encodeLynxXML('<lynx version="1">never closed');
+    const result = encodeLynxXML(
+      '<lynx engine-version="1">never closed',
+    );
     expect(result.success).toBe(false);
     expect((result as { message: string }).message).toMatch(
       /invalid TemplateBundle XML at offset \d+:/,

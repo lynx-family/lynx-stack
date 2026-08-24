@@ -139,20 +139,25 @@ pub(crate) fn list_session_request(port: u16, id: u32) -> Value {
 ///
 /// Older Lynx runtimes do not echo this field. Callers must therefore permit
 /// `None`, while still ensuring that at most one uncorrelated ListSession
-/// request is in flight on a connection.
-pub(crate) fn session_list_response_id(value: &Value) -> Option<u32> {
+/// request is in flight on a connection. An id that is present but malformed
+/// is rejected instead of being treated as an omitted legacy id.
+pub(crate) fn session_list_response_id(value: &Value) -> Result<Option<u32>> {
   if customized_type(value) != Some("SessionList") {
-    return None;
+    return Ok(None);
   }
-  value
-    .get("data")
-    .and_then(|data| {
-      data
-        .get("id")
-        .or_else(|| data.get("data").and_then(|inner| inner.get("id")))
-    })
-    .and_then(Value::as_u64)
-    .and_then(|id| u32::try_from(id).ok())
+  let Some(id) = value.get("data").and_then(|data| {
+    data
+      .get("id")
+      .or_else(|| data.get("data").and_then(|inner| inner.get("id")))
+  }) else {
+    return Ok(None);
+  };
+  let id = id
+    .as_u64()
+    .ok_or_else(|| Error::Protocol("SessionList response id is not an unsigned integer".into()))?;
+  let id = u32::try_from(id)
+    .map_err(|_| Error::Protocol(format!("SessionList response id {id} exceeds u32")))?;
+  Ok(Some(id))
 }
 
 pub(crate) fn parse_session_list_response(value: &Value) -> Result<Option<Vec<Session>>> {
@@ -294,14 +299,18 @@ fn read_u32(source: &[u8]) -> u32 {
 mod tests {
   use super::*;
 
-  fn cdp_response(message: Value) -> Value {
+  fn cdp_envelope(message: Value) -> Value {
     json!({
       "event": "Customized",
       "data": {
         "type": "CDP",
-        "data": { "message": message.to_string() },
+        "data": { "message": message },
       },
     })
+  }
+
+  fn cdp_response(message: Value) -> Value {
+    cdp_envelope(Value::String(message.to_string()))
   }
 
   #[tokio::test]
@@ -326,6 +335,32 @@ mod tests {
   }
 
   #[test]
+  fn distinguishes_missing_and_malformed_session_list_ids() {
+    let missing = json!({
+      "event": "Customized",
+      "data": {
+        "type": "SessionList",
+        "data": [],
+      },
+    });
+    assert_eq!(session_list_response_id(&missing).unwrap(), None);
+
+    let malformed = json!({
+      "event": "Customized",
+      "data": {
+        "type": "SessionList",
+        "id": "not-an-id",
+        "data": [],
+      },
+    });
+    assert!(matches!(
+      session_list_response_id(&malformed),
+      Err(Error::Protocol(message))
+        if message == "SessionList response id is not an unsigned integer"
+    ));
+  }
+
+  #[test]
   fn parses_matching_cdp_response() {
     let response = cdp_response(json!({
       "id": 42,
@@ -333,6 +368,41 @@ mod tests {
     }));
     let result: QuerySelectorResult = parse_cdp_response(&response, 42).unwrap().unwrap();
     assert_eq!(result.node_id, 7);
+  }
+
+  #[test]
+  fn parses_object_encoded_cdp_response() {
+    let response = cdp_envelope(json!({
+      "id": 42,
+      "result": { "nodeId": 7 },
+    }));
+    assert_eq!(cdp_response_id(&response).unwrap(), Some(42));
+    let result: QuerySelectorResult = parse_cdp_response(&response, 42).unwrap().unwrap();
+    assert_eq!(result.node_id, 7);
+  }
+
+  #[test]
+  fn recognizes_object_encoded_cdp_notification() {
+    let notification = cdp_envelope(json!({
+      "method": "DOM.documentUpdated",
+    }));
+    assert_eq!(cdp_response_id(&notification).unwrap(), None);
+    assert!(parse_cdp_response::<Value>(&notification, 42)
+      .unwrap()
+      .is_none());
+  }
+
+  #[test]
+  fn rejects_object_encoded_cdp_response_with_malformed_id() {
+    let response = cdp_envelope(json!({
+      "id": "not-an-id",
+      "result": {},
+    }));
+    assert!(matches!(
+      cdp_response_id(&response),
+      Err(Error::Protocol(message))
+        if message == "CDP response id is not an unsigned integer"
+    ));
   }
 
   #[test]

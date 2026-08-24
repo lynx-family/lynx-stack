@@ -71,7 +71,7 @@ describe('updateGlobalProps', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -99,7 +99,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       globalEnvManager.switchToMainThread();
@@ -156,7 +156,7 @@ describe('updateGlobalProps', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -184,7 +184,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       globalEnvManager.switchToMainThread();
@@ -255,7 +255,7 @@ describe('updateGlobalProps', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -283,7 +283,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       expect(count).toBe(1);
       expect(dataTheme).toBe('light');
       expect(globalPropsTheme).toBe('light');
@@ -342,7 +342,7 @@ describe('updateGlobalProps', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -358,7 +358,7 @@ describe('updateGlobalProps', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       // No rLynxChange should be called because it skips runWithForce
