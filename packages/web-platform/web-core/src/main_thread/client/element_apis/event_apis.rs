@@ -24,7 +24,7 @@ pub struct EventInfo {
 #[wasm_bindgen]
 impl MainThreadWasmContext {
   pub fn add_cross_thread_event(
-    &mut self,
+    &self,
     unique_id: usize,
     event_type: String,
     event_name: String,
@@ -65,22 +65,22 @@ impl MainThreadWasmContext {
     }
 
     if should_enable {
-      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+      if let Some(element) = self.get_dom_ref_by_unique_id(unique_id) {
         let _ = self
           .mts_binding
-          .enable_element_event(element, event_name_str);
+          .enable_element_event(&element, event_name_str);
       }
     } else if should_disable {
-      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+      if let Some(element) = self.get_dom_ref_by_unique_id(unique_id) {
         let _ = self
           .mts_binding
-          .disable_element_event(element, event_name_str);
+          .disable_element_event(&element, event_name_str);
       }
     }
   }
 
   pub fn add_run_worklet_event(
-    &mut self,
+    &self,
     unique_id: usize,
     event_type: String,
     event_name: String,
@@ -121,16 +121,16 @@ impl MainThreadWasmContext {
     }
 
     if should_enable {
-      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+      if let Some(element) = self.get_dom_ref_by_unique_id(unique_id) {
         let _ = self
           .mts_binding
-          .enable_element_event(element, event_name_str);
+          .enable_element_event(&element, event_name_str);
       }
     } else if should_disable {
-      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+      if let Some(element) = self.get_dom_ref_by_unique_id(unique_id) {
         let _ = self
           .mts_binding
-          .disable_element_event(element, event_name_str);
+          .disable_element_event(&element, event_name_str);
       }
     }
   }
@@ -142,7 +142,7 @@ impl MainThreadWasmContext {
   /// cross-thread and worklet slots, which hold a single handler each, this one
   /// holds a list, so clearing has to know *which* callback to drop.
   pub fn add_closure_event(
-    &mut self,
+    &self,
     unique_id: usize,
     event_type: String,
     event_name: String,
@@ -189,37 +189,40 @@ impl MainThreadWasmContext {
     }
 
     if should_enable {
-      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+      if let Some(element) = self.get_dom_ref_by_unique_id(unique_id) {
         let _ = self
           .mts_binding
-          .enable_element_event(element, event_name_str);
+          .enable_element_event(&element, event_name_str);
       }
     } else if should_disable {
-      if let Some(element) = self.unique_id_to_dom_map.get(&unique_id) {
+      if let Some(element) = self.get_dom_ref_by_unique_id(unique_id) {
         let _ = self
           .mts_binding
-          .disable_element_event(element, event_name_str);
+          .disable_element_event(&element, event_name_str);
       }
     }
   }
 
-  fn update_global_bind_events(&mut self, unique_id: usize, event_name: &str, has_handler: bool) {
+  fn update_global_bind_events(&self, unique_id: usize, event_name: &str, has_handler: bool) {
     if has_handler {
       self
         .global_bind_events
+        .borrow_mut()
         .entry(event_name.to_string())
         .or_default()
         .insert(unique_id);
     } else if let Some(binding) = self.get_element_data_by_unique_id(unique_id) {
-      let element_data = binding.borrow();
-      if element_data
-        .get_framework_cross_thread_event_handler(event_name, "global-bindevent")
-        .is_none()
-        && element_data
-          .get_framework_run_worklet_event_handler(event_name, "global-bindevent")
-          .is_none()
-      {
-        if let Some(ids) = self.global_bind_events.get_mut(event_name) {
+      let still_bound = {
+        let element_data = binding.borrow();
+        element_data
+          .get_framework_cross_thread_event_handler(event_name, "global-bindevent")
+          .is_some()
+          || element_data
+            .get_framework_run_worklet_event_handler(event_name, "global-bindevent")
+            .is_some()
+      };
+      if !still_bound {
+        if let Some(ids) = self.global_bind_events.borrow_mut().get_mut(event_name) {
           ids.remove(&unique_id);
         }
       }
@@ -245,8 +248,9 @@ impl MainThreadWasmContext {
     let mut event_infos: Vec<EventInfo> = vec![];
     let binding = self.get_element_data_by_unique_id(unique_id).unwrap();
     let element_data = binding.borrow();
+    let enabled_events = self.enabled_events.borrow();
     for event_type in constants::EVENT_TYPES.iter() {
-      for event_name in self.enabled_events.iter() {
+      for event_name in enabled_events.iter() {
         if let Some(event_handlers) =
           element_data.get_framework_cross_thread_event_handler(event_name, event_type)
         {
@@ -284,9 +288,9 @@ impl MainThreadWasmContext {
       Some(b) => b,
       None => return false,
     };
-    let target_element_data = binding.borrow();
-
-    let target_element_dataset = target_element_data.dataset.clone();
+    // Cloned out, not held: every JS call below can re-enter and write to this
+    // same element data.
+    let target_element_dataset: JsValue = binding.borrow().dataset.clone().into();
 
     let iter: Box<dyn Iterator<Item = &usize> + '_> = if is_capture {
       Box::new(bubble_unique_id_path.iter().rev())
@@ -311,17 +315,45 @@ impl MainThreadWasmContext {
         Some(b) => b,
         None => continue,
       };
-      let current_target_element_data = binding.borrow();
+      // Read out every handler this element carries and release the element
+      // data before any of them run. A main-thread handler is free to call the
+      // Element PAPIs on the element it is dispatching on - add a listener, set
+      // a dataset, and a `once` listener removes itself - which borrows this
+      // same cell mutably. Holding the borrow across the call would abort with
+      // "recursive use of an object".
+      let (
+        cross_thread_bind_handler,
+        cross_thread_catch_handler,
+        worklet_bind_handler,
+        worklet_catch_handler,
+        closure_bind_handlers,
+        closure_catch_handlers,
+        current_target_dataset,
+        parent_component_unique_id,
+      ) = {
+        let current_target_element_data = binding.borrow();
+        (
+          current_target_element_data
+            .get_framework_cross_thread_event_handler(&event_name, bind_handler_name),
+          current_target_element_data
+            .get_framework_cross_thread_event_handler(&event_name, catch_handler_name),
+          current_target_element_data
+            .get_framework_run_worklet_event_handler(&event_name, bind_handler_name),
+          current_target_element_data
+            .get_framework_run_worklet_event_handler(&event_name, catch_handler_name),
+          current_target_element_data.get_closure_event_handlers(&event_name, bind_handler_name),
+          current_target_element_data.get_closure_event_handlers(&event_name, catch_handler_name),
+          current_target_element_data.dataset.clone(),
+          current_target_element_data.parent_component_unique_id,
+        )
+      };
+      let current_target_dataset: JsValue = current_target_dataset.into();
       {
         // cross thread handler
-        let bind_handler = current_target_element_data
-          .get_framework_cross_thread_event_handler(&event_name, bind_handler_name);
-        let catch_handler = current_target_element_data
-          .get_framework_cross_thread_event_handler(&event_name, catch_handler_name);
+        let (bind_handler, catch_handler) = (cross_thread_bind_handler, cross_thread_catch_handler);
         if bind_handler.is_some() || catch_handler.is_some() {
           let current_target_parent_component_id = {
-            let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
-            if self.page_element_unique_id == Some(parent_component_unique_id) {
+            if self.page_element_unique_id.get() == Some(parent_component_unique_id) {
               None
             } else {
               self
@@ -336,19 +368,16 @@ impl MainThreadWasmContext {
               current_target_parent_component_id.as_deref(),
               serialized_event,
               target_unique_id,
-              &target_element_dataset.clone().into(),
+              &target_element_dataset,
               *unique_id,
-              &current_target_element_data.dataset.clone().into(),
+              &current_target_dataset,
             );
           }
         }
       }
       {
         // run worklet handler
-        let bind_handler = current_target_element_data
-          .get_framework_run_worklet_event_handler(&event_name, bind_handler_name);
-        let catch_handler = current_target_element_data
-          .get_framework_run_worklet_event_handler(&event_name, catch_handler_name);
+        let (bind_handler, catch_handler) = (worklet_bind_handler, worklet_catch_handler);
         if bind_handler.is_some() || catch_handler.is_some() {
           is_caught = catch_handler.is_some();
           if let Some(handler) = bind_handler {
@@ -356,9 +385,9 @@ impl MainThreadWasmContext {
               &handler,
               serialized_event,
               target_unique_id,
-              &target_element_dataset.clone().into(),
+              &target_element_dataset,
               *unique_id,
-              &current_target_element_data.dataset.clone().into(),
+              &current_target_dataset,
             );
           }
           if let Some(handler) = catch_handler {
@@ -366,36 +395,27 @@ impl MainThreadWasmContext {
               &handler,
               serialized_event,
               target_unique_id,
-              &target_element_dataset.clone().into(),
+              &target_element_dataset,
               *unique_id,
-              &current_target_element_data.dataset.clone().into(),
+              &current_target_dataset,
             );
           }
         }
       }
       {
         // callback registered through `__AddEventListener`
-        let bind_handlers =
-          current_target_element_data.get_closure_event_handlers(&event_name, bind_handler_name);
-        let catch_handlers =
-          current_target_element_data.get_closure_event_handlers(&event_name, catch_handler_name);
+        let (bind_handlers, catch_handlers) = (closure_bind_handlers, closure_catch_handlers);
         if !bind_handlers.is_empty() || !catch_handlers.is_empty() {
           // Assigned, not accumulated, matching the two blocks above: the
           // callback form is not expected to be mixed with the handler-name or
           // worklet forms on the same element, event name and type.
           is_caught = !catch_handlers.is_empty();
-          let current_target_dataset: JsValue = current_target_element_data.dataset.clone().into();
-          // Release the element data before entering JS. A callback is free to
-          // register or remove listeners - a `once` listener removes itself -
-          // which re-enters this context, and holding the borrow across the call
-          // would abort with "recursive use of an object".
-          drop(current_target_element_data);
           for closure in bind_handlers.iter().chain(catch_handlers.iter()) {
             self.mts_binding.run_element_closure(
               closure,
               serialized_event,
               target_unique_id,
-              &target_element_dataset.clone().into(),
+              &target_element_dataset,
               *unique_id,
               &current_target_dataset,
             );
@@ -441,15 +461,17 @@ impl MainThreadWasmContext {
     let event_name_lowercase = event_name.to_ascii_lowercase();
     let target_unique_id = bubble_unique_id_path.first().cloned().unwrap_or_default();
 
-    let target_element_dataset =
+    let target_element_dataset: JsValue =
       if let Some(binding) = self.get_element_data_by_unique_id(target_unique_id) {
         binding.borrow().dataset.clone()
       } else {
         None
-      };
+      }
+      .into();
 
     let global_bind_ids: Vec<usize> = self
       .global_bind_events
+      .borrow()
       .get(&event_name_lowercase)
       .map(|ids| ids.iter().copied().collect())
       .unwrap_or_default();
@@ -459,15 +481,24 @@ impl MainThreadWasmContext {
         Some(b) => b,
         None => continue,
       };
-      let current_target_element_data = binding.borrow();
-
-      let bind_handler = current_target_element_data
-        .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent");
+      // Same rule as `dispatch_event_by_path`: read the handlers out, then drop
+      // the element data before running them.
+      let (bind_handler, run_worklet_handler, current_target_dataset, parent_component_unique_id) = {
+        let current_target_element_data = binding.borrow();
+        (
+          current_target_element_data
+            .get_framework_cross_thread_event_handler(&event_name_lowercase, "global-bindevent"),
+          current_target_element_data
+            .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent"),
+          current_target_element_data.dataset.clone(),
+          current_target_element_data.parent_component_unique_id,
+        )
+      };
+      let current_target_dataset: JsValue = current_target_dataset.into();
 
       if let Some(handler) = bind_handler {
         let current_target_parent_component_id = {
-          let parent_component_unique_id = current_target_element_data.parent_component_unique_id;
-          if self.page_element_unique_id == Some(parent_component_unique_id) {
+          if self.page_element_unique_id.get() == Some(parent_component_unique_id) {
             None
           } else {
             self
@@ -480,22 +511,20 @@ impl MainThreadWasmContext {
           current_target_parent_component_id.as_deref(),
           serialized_event,
           target_unique_id,
-          &target_element_dataset.clone().into(),
+          &target_element_dataset,
           unique_id,
-          &current_target_element_data.dataset.clone().into(),
+          &current_target_dataset,
         );
       }
 
-      let run_worklet_handler = current_target_element_data
-        .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
       if let Some(handler) = run_worklet_handler {
         let _ = self.mts_binding.publish_mts_event(
           &handler,
           serialized_event,
           target_unique_id,
-          &target_element_dataset.clone().into(),
+          &target_element_dataset,
           unique_id,
-          &current_target_element_data.dataset.clone().into(),
+          &current_target_dataset,
         );
       }
     }
@@ -517,10 +546,15 @@ impl MainThreadWasmContext {
  *
  */
 impl MainThreadWasmContext {
-  pub(super) fn enable_event(&mut self, event_name: &String) {
-    if !self.enabled_events.contains(event_name) {
-      self.enabled_events.insert(event_name.clone());
-      self.mts_binding.add_event_listener(event_name);
+  pub(super) fn enable_event(&self, event_name: &String) {
+    {
+      let mut enabled_events = self.enabled_events.borrow_mut();
+      if enabled_events.contains(event_name) {
+        return;
+      }
+      enabled_events.insert(event_name.clone());
     }
+    // Outside the borrow: attaching the delegated listener enters JS.
+    self.mts_binding.add_event_listener(event_name);
   }
 }
