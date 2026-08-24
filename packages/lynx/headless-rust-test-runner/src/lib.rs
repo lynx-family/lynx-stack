@@ -82,6 +82,8 @@ struct LynxProcess {
   env: Env,
   debug_router: DebugRouter,
   devtool_schema: Option<String>,
+  lynx_core_path: PathBuf,
+  lynx_core_source: Option<PathBuf>,
   page_owner: PageOwner,
   session_locks: Arc<SessionLocks>,
 }
@@ -111,18 +113,18 @@ impl PageOwner {
 
 #[derive(Default)]
 struct SessionLocks {
-  locks: StdMutex<HashMap<String, Weak<tokio::sync::Mutex<()>>>>,
+  locks: StdMutex<HashMap<String, Weak<tokio::sync::RwLock<()>>>>,
 }
 
 impl SessionLocks {
-  fn for_url(&self, url: &str) -> Arc<tokio::sync::Mutex<()>> {
+  fn for_url(&self, url: &str) -> Arc<tokio::sync::RwLock<()>> {
     let key = final_url_component(url).unwrap_or(url);
     let mut locks = self.locks.lock().expect("session lock map poisoned");
     locks.retain(|_, lock| lock.strong_count() > 0);
     if let Some(lock) = locks.get(key).and_then(Weak::upgrade) {
       return lock;
     }
-    let lock = Arc::new(tokio::sync::Mutex::new(()));
+    let lock = Arc::new(tokio::sync::RwLock::new(()));
     locks.insert(key.to_string(), Arc::downgrade(&lock));
     lock
   }
@@ -140,14 +142,19 @@ pub struct Lynx {
 
 impl Lynx {
   pub async fn connect(options: ConnectOptions) -> Result<Self> {
-    let lynx_core_path = install_lynx_core_resource(options.lynx_core_path.as_deref()).await?;
-    let process = initialize_process(&options).await?;
+    let lynx_core_source = resolve_lynx_core_source(options.lynx_core_path.as_deref());
+    let process = initialize_process(&options, lynx_core_source.as_deref()).await?;
+    ensure_compatible_lynx_core_source(
+      process.lynx_core_source.as_deref(),
+      lynx_core_source.as_deref(),
+    )?;
     if process.devtool_schema != options.devtool_schema {
       return Err(Error::Protocol(format!(
         "Lynx was already initialized with debug-router schema {:?}, cannot reconnect with {:?}",
         process.devtool_schema, options.devtool_schema
       )));
     }
+    let lynx_core_path = process.lynx_core_path.clone();
     Ok(Self {
       process,
       lynx_core_path,
@@ -202,11 +209,15 @@ impl Lynx {
   pub fn close(self) {}
 }
 
-async fn initialize_process(options: &ConnectOptions) -> Result<Arc<LynxProcess>> {
+async fn initialize_process(
+  options: &ConnectOptions,
+  lynx_core_source: Option<&Path>,
+) -> Result<Arc<LynxProcess>> {
   static PROCESS: tokio::sync::OnceCell<Arc<LynxProcess>> = tokio::sync::OnceCell::const_new();
 
   PROCESS
     .get_or_try_init(|| async {
+      let lynx_core_path = install_lynx_core_resource(lynx_core_source).await?;
       let env = Env::load()?;
       set_icu_data_path_if_available(&env)?;
       let app_name = format!("{APP_NAME}-{}", std::process::id());
@@ -231,6 +242,8 @@ async fn initialize_process(options: &ConnectOptions) -> Result<Arc<LynxProcess>
         env,
         debug_router,
         devtool_schema: options.devtool_schema.clone(),
+        lynx_core_path,
+        lynx_core_source: lynx_core_source.map(PathBuf::from),
         page_owner: PageOwner::default(),
         session_locks: Arc::new(SessionLocks::default()),
       }))
@@ -325,10 +338,16 @@ impl Page {
   ) -> Result<()> {
     let timeout = options.timeout.unwrap_or(self.runtime.timeout);
     let (url, bytes) = self.runtime.resources.read_template(input).await?;
-    let _session_guard = if attach_dom {
-      Some(self.runtime.session_locks.for_url(&url).lock_owned().await)
+    let session_lock = self.runtime.session_locks.for_url(&url);
+    let _session_write_guard = if attach_dom {
+      Some(Arc::clone(&session_lock).write_owned().await)
     } else {
       None
+    };
+    let _session_read_guard = if attach_dom {
+      None
+    } else {
+      Some(session_lock.read_owned().await)
     };
     let existing_session_ids = if attach_dom {
       self
@@ -651,7 +670,32 @@ impl ElementNode {
   }
 }
 
-async fn install_lynx_core_resource(configured_path: Option<&Path>) -> Result<PathBuf> {
+fn resolve_lynx_core_source(configured_path: Option<&Path>) -> Option<PathBuf> {
+  configured_path
+    .map(PathBuf::from)
+    .or_else(|| std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from))
+}
+
+fn ensure_compatible_lynx_core_source(
+  initialized_source: Option<&Path>,
+  requested_source: Option<&Path>,
+) -> Result<()> {
+  let Some(requested_source) = requested_source else {
+    return Ok(());
+  };
+  if initialized_source == Some(requested_source) {
+    return Ok(());
+  }
+  let initialized_source = initialized_source
+    .map(|source| source.display().to_string())
+    .unwrap_or_else(|| "the existing executable resource".into());
+  Err(Error::Protocol(format!(
+    "Lynx was already initialized with lynx_core.js source {initialized_source}, cannot reconnect with {}",
+    requested_source.display()
+  )))
+}
+
+async fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
   let executable = std::env::current_exe()?;
   let executable_dir = executable
     .parent()
@@ -662,10 +706,7 @@ async fn install_lynx_core_resource(configured_path: Option<&Path>) -> Result<Pa
     executable_dir.join("lynx_core.js")
   };
 
-  let source = configured_path
-    .map(PathBuf::from)
-    .or_else(|| std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from));
-  let Some(source) = source else {
+  let Some(source) = source.map(PathBuf::from) else {
     return tokio::fs::metadata(&destination)
       .await
       .map(|metadata| metadata.is_file())
@@ -805,6 +846,34 @@ mod tests {
     let first = locks.for_url("file:///first/main.lynx.bundle?one");
     let second = locks.for_url("file:///second/main.lynx.bundle#two");
     assert!(Arc::ptr_eq(&first, &second));
+  }
+
+  #[test]
+  fn session_locks_allow_readers_and_exclude_writers() {
+    let lock = SessionLocks::default().for_url("file:///fixture/main.lynx.bundle");
+    let first_reader = Arc::clone(&lock).try_read_owned().unwrap();
+    let second_reader = Arc::clone(&lock).try_read_owned().unwrap();
+    assert!(Arc::clone(&lock).try_write_owned().is_err());
+    drop((first_reader, second_reader));
+    assert!(lock.try_write_owned().is_ok());
+  }
+
+  #[test]
+  fn lynx_core_source_allows_implicit_or_matching_reuse() {
+    let source = Path::new("first/lynx_core.js");
+    assert!(ensure_compatible_lynx_core_source(Some(source), None).is_ok());
+    assert!(ensure_compatible_lynx_core_source(Some(source), Some(source)).is_ok());
+  }
+
+  #[test]
+  fn lynx_core_source_rejects_a_different_explicit_source() {
+    let error = ensure_compatible_lynx_core_source(
+      Some(Path::new("first/lynx_core.js")),
+      Some(Path::new("second/lynx_core.js")),
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("first/lynx_core.js"));
+    assert!(error.to_string().contains("second/lynx_core.js"));
   }
 
   #[test]

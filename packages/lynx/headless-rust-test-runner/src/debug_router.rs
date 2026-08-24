@@ -237,11 +237,19 @@ impl ActorState {
   }
 
   fn fail_all(&mut self, message: &str) {
+    self.fail_list(message);
+    self.fail_cdp(message);
+  }
+
+  fn fail_list(&mut self, message: &str) {
     if let Some(pending) = self.list.take() {
       for reply in pending.replies {
         let _ = reply.send(Err(Error::Protocol(message.to_string())));
       }
     }
+  }
+
+  fn fail_cdp(&mut self, message: &str) {
     for (_, pending) in self.cdp.drain() {
       let _ = pending
         .reply
@@ -348,9 +356,17 @@ async fn handle_command(
 fn handle_message(state: &mut ActorState, message: Value) {
   match parse_session_list_response(&message) {
     Ok(Some(sessions)) => {
-      let matches = state.list.as_ref().is_some_and(|pending| {
-        session_list_response_id(&message).is_none_or(|id| id == pending.id)
-      });
+      let response_id = match session_list_response_id(&message) {
+        Ok(response_id) => response_id,
+        Err(error) => {
+          state.fail_list(&format!("invalid SessionList response: {error}"));
+          return;
+        }
+      };
+      let matches = state
+        .list
+        .as_ref()
+        .is_some_and(|pending| response_id.is_none_or(|id| id == pending.id));
       if matches {
         let pending = state.list.take().expect("checked above");
         for reply in pending.replies {
@@ -360,12 +376,7 @@ fn handle_message(state: &mut ActorState, message: Value) {
       return;
     }
     Err(error) => {
-      if let Some(pending) = state.list.take() {
-        let message = format!("invalid SessionList response: {error}");
-        for reply in pending.replies {
-          let _ = reply.send(Err(Error::Protocol(message.clone())));
-        }
-      }
+      state.fail_list(&format!("invalid SessionList response: {error}"));
       return;
     }
     Ok(None) => {}
@@ -374,8 +385,13 @@ fn handle_message(state: &mut ActorState, message: Value) {
   // Notifications have no id and are intentionally ignored. Responses for
   // every outstanding id are dispatched here, so an event or a response for
   // another caller can no longer be consumed by the wrong request.
-  let Ok(Some(id)) = cdp_response_id(&message) else {
-    return;
+  let id = match cdp_response_id(&message) {
+    Ok(Some(id)) => id,
+    Ok(None) => return,
+    Err(error) => {
+      state.fail_cdp(&format!("invalid CDP response: {error}"));
+      return;
+    }
   };
   let Some(pending) = state.cdp.remove(&id) else {
     return;
@@ -556,6 +572,34 @@ mod tests {
     );
   }
 
+  #[tokio::test]
+  async fn surfaces_malformed_cdp_response_id() {
+    let (router, mut server) = connected_test_router().await;
+    let serve = async move {
+      read_peertalk_message(&mut server).await.unwrap();
+      let response = json!({
+        "event": "Customized",
+        "data": {
+          "type": "CDP",
+          "data": {
+            "message": { "id": "not-an-id", "result": {} },
+          },
+        },
+      });
+      write_peertalk_message(&mut server, &response)
+        .await
+        .unwrap();
+    };
+    let request = router.send_cdp::<Value, _>(1, "DOM.getDocument", json!({}));
+    let (result, ()) = tokio::join!(request, serve);
+    let message = match result {
+      Err(Error::Protocol(message)) => message,
+      other => panic!("expected protocol error, got {other:?}"),
+    };
+    assert!(message.contains("invalid CDP response"));
+    assert!(message.contains("CDP response id is not an unsigned integer"));
+  }
+
   #[tokio::test(flavor = "current_thread")]
   async fn shared_handle_accepts_requests_from_multiple_os_threads() {
     let (router, mut server) = connected_test_router().await;
@@ -632,5 +676,31 @@ mod tests {
     let second = router.list_sessions();
     let (first, second, ()) = tokio::join!(first, second, serve);
     assert_eq!(first.unwrap(), second.unwrap());
+  }
+
+  #[tokio::test]
+  async fn rejects_malformed_session_list_response_id() {
+    let (router, mut server) = connected_test_router().await;
+    let serve = async move {
+      read_peertalk_message(&mut server).await.unwrap();
+      let response = json!({
+        "event": "Customized",
+        "data": {
+          "type": "SessionList",
+          "id": "not-an-id",
+          "data": [{ "session_id": 7, "url": "main.lynx.bundle" }],
+        },
+      });
+      write_peertalk_message(&mut server, &response)
+        .await
+        .unwrap();
+    };
+    let (result, ()) = tokio::join!(router.list_sessions(), serve);
+    let message = match result {
+      Err(Error::Protocol(message)) => message,
+      other => panic!("expected protocol error, got {other:?}"),
+    };
+    assert!(message.contains("invalid SessionList response"));
+    assert!(message.contains("SessionList response id is not an unsigned integer"));
   }
 }
