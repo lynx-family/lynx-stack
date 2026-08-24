@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.11.1
+
+### Patch Changes
+
+- Collect element templates from the background build as well, so a template the main-thread bundle does not reach is still registered for it. ([#3563](https://github.com/lynx-family/lynx-stack/pull/3563))
+
 ## 0.11.0
 
 ### Minor Changes

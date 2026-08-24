@@ -26,6 +26,7 @@ import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adap
 import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 
 let installed = false;
+let previousCommit: typeof options[typeof COMMIT];
 let hasHydrated = false;
 const scheduledRemovedSubtreeCleanupTimers = /*#__PURE__*/ new Set<ReturnType<typeof setTimeout>>();
 
@@ -152,6 +153,7 @@ export function installElementTemplateCommitHook(): void {
     return;
   }
   installed = true;
+  previousCommit = options[COMMIT];
 
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
     if (__BACKGROUND__) {
@@ -176,4 +178,25 @@ export function installElementTemplateCommitHook(): void {
 
     originalCommit?.(vnode, commitQueue);
   });
+}
+
+/**
+ * Restores the commit option replaced by
+ * {@link installElementTemplateCommitHook} so tests can clean up the global
+ * Preact `options` object. Assumes the matching install was the most recent
+ * commit-option replacement; the snapshot and ElementTemplate runtimes are
+ * separate entrypoints and never install their commit hooks in the same
+ * context.
+ */
+export function uninstallElementTemplateCommitHookForTesting(): void {
+  if (!installed) {
+    return;
+  }
+  installed = false;
+  if (previousCommit) {
+    options[COMMIT] = previousCommit;
+    previousCommit = undefined;
+  } else {
+    delete options[COMMIT];
+  }
 }

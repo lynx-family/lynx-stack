@@ -88,10 +88,20 @@ function takeGlobalPatchOptions(): GlobalPatchOptions {
   return res;
 }
 
+let commitHookInstalled = false;
+let previousCommit: typeof options[typeof COMMIT];
+
 /**
- * Replaces Preact's default commit hook with our custom implementation
+ * Replaces Preact's default commit hook with our custom implementation.
+ * Calling it again is a no-op until {@link removeCommitHookForTesting} is called.
  */
 function replaceCommitHook(): void {
+  if (commitHookInstalled) {
+    return;
+  }
+  commitHookInstalled = true;
+  previousCommit = options[COMMIT];
+
   hook(
     options,
     COMMIT,
@@ -179,6 +189,26 @@ function replaceCommitHook(): void {
 }
 
 /**
+ * Restores the commit option replaced by {@link replaceCommitHook} so tests
+ * can clean up the global Preact `options` object. Assumes the matching
+ * install was the most recent commit-option replacement; the snapshot and
+ * ElementTemplate runtimes are separate entrypoints and never install their
+ * commit hooks in the same context.
+ */
+function removeCommitHookForTesting(): void {
+  if (!commitHookInstalled) {
+    return;
+  }
+  commitHookInstalled = false;
+  if (previousCommit) {
+    options[COMMIT] = previousCommit;
+    previousCommit = undefined;
+  } else {
+    delete options[COMMIT];
+  }
+}
+
+/**
  * Prepares the patch update for transmission to the native layer
  */
 function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOptions): {
@@ -240,6 +270,7 @@ export {
   genCommitTaskId,
   globalBackgroundSnapshotInstancesToRemove,
   globalCommitTaskMap,
+  removeCommitHookForTesting,
   replaceCommitHook,
   type PatchList,
   type PatchOptions,

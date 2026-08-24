@@ -10,10 +10,7 @@ export function setupLynxEnv(): void {
     let updateData: Record<string, unknown> = {};
 
     try {
-      const params = (lynxCoreInject as {
-        tt?: { _params?: { initData?: Record<string, unknown>; updateData?: Record<string, unknown> } };
-      })
-        ?.tt?._params;
+      const params = lynx.getApp()._params;
       if (params) {
         initData = params.initData ?? {};
         updateData = params.updateData ?? {};

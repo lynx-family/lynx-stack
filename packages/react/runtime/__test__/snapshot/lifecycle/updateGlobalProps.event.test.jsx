@@ -78,7 +78,7 @@ describe('updateGlobalProps event mode', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -94,7 +94,7 @@ describe('updateGlobalProps event mode', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       // rLynxChange should be called
@@ -164,7 +164,7 @@ describe('updateGlobalProps event mode', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -180,7 +180,7 @@ describe('updateGlobalProps event mode', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       // rLynxChange should be called

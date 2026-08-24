@@ -85,7 +85,7 @@ describe('eventUpdate', () => {
 
     // LifecycleConstant.firstScreen
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(`
         [
           [
@@ -110,7 +110,7 @@ describe('eventUpdate', () => {
       `);
     }
 
-    lynxCoreInject.tt.publishEvent('-2:1:', 'data');
+    lynx.getApp().publishEvent('-2:1:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(0);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
@@ -118,7 +118,7 @@ describe('eventUpdate', () => {
 
     const reportError = lynx.reportError;
     lynx.reportError = vi.fn();
-    lynxCoreInject.tt.publishEvent('-2:0:', 'data');
+    lynx.getApp().publishEvent('-2:0:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(lynx.reportError).toHaveBeenCalledTimes(1);
     expect(lynx.reportError).toHaveBeenCalledWith(
@@ -177,7 +177,7 @@ describe('eventUpdate', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -254,7 +254,7 @@ describe('eventUpdate', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynxCoreInject.tt.publishEvent('-2:1:', 'data');
+    lynx.getApp().publishEvent('-2:1:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(0);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
@@ -290,7 +290,7 @@ describe('eventUpdate', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[],"id":3}]}"`,
       );
@@ -346,7 +346,7 @@ describe('eventUpdate', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynxCoreInject.tt.publishEvent('3:0:', 'data');
+    lynx.getApp().publishEvent('3:0:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data');
   });
@@ -409,7 +409,7 @@ describe('eventUpdate', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[],"id":4}]}"`,
       );
@@ -421,12 +421,12 @@ describe('eventUpdate', () => {
     }
 
     globalEnvManager.switchToBackground();
-    lynxCoreInject.tt.publishEvent('-2:0:', 'data1');
+    lynx.getApp().publishEvent('-2:0:', 'data1');
     expect(handleTap2).toHaveBeenCalledTimes(0);
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data1');
 
-    lynxCoreInject.tt.publishEvent('-2:1:', 'data2');
+    lynx.getApp().publishEvent('-2:1:', 'data2');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data2');
@@ -440,12 +440,12 @@ describe('eventUpdate', () => {
     snapshotPatchApply(patch);
     globalEnvManager.switchToBackground();
 
-    lynxCoreInject.tt.publishEvent('-2:0:', 'data3');
+    lynx.getApp().publishEvent('-2:0:', 'data3');
     expect(handleTap2).toHaveBeenCalledTimes(0);
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data3');
 
-    lynxCoreInject.tt.publishEvent('-2:1:', 'data4');
+    lynx.getApp().publishEvent('-2:1:', 'data4');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data4');
@@ -505,7 +505,7 @@ describe('eventUpdate', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[3,-2,1,"-2:1:"],"id":5}]}"`,
       );
@@ -518,12 +518,12 @@ describe('eventUpdate', () => {
 
     globalEnvManager.switchToBackground();
 
-    lynxCoreInject.tt.publishEvent('-2:0:', 'data1');
+    lynx.getApp().publishEvent('-2:0:', 'data1');
     expect(handleTap2).toHaveBeenCalledTimes(0);
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data1');
 
-    lynxCoreInject.tt.publishEvent('-2:1:', 'data2');
+    lynx.getApp().publishEvent('-2:1:', 'data2');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data2');
@@ -587,7 +587,7 @@ describe('eventUpdate', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[],"id":6}]}"`,
       );
@@ -720,7 +720,7 @@ describe('event in spread', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[],"id":7}]}"`,
       );
@@ -757,7 +757,7 @@ describe('event in spread', () => {
     }
 
     globalEnvManager.switchToBackground();
-    lynxCoreInject.tt.publishEvent('-2:1:bindtouchstart', 'data');
+    lynx.getApp().publishEvent('-2:1:bindtouchstart', 'data');
     expect(handleTouchStart).toHaveBeenCalledTimes(1);
     expect(handleTouchStart).toHaveBeenCalledWith('data');
     handleTouchStart.mockReset();
@@ -818,15 +818,15 @@ describe('event in spread', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynxCoreInject.tt.publishEvent('-2:0:bindtap', 'data');
+    lynx.getApp().publishEvent('-2:0:bindtap', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data');
 
-    lynxCoreInject.tt.publishEvent('-2:1:bindtap', 'data');
+    lynx.getApp().publishEvent('-2:1:bindtap', 'data');
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
 
-    lynxCoreInject.tt.publishEvent('-2:1:bindtouchstart', 'data');
+    lynx.getApp().publishEvent('-2:1:bindtouchstart', 'data');
     expect(handleTouchStart).toHaveBeenCalledTimes(1);
     expect(handleTouchStart).toHaveBeenCalledWith('data');
 
@@ -918,7 +918,7 @@ describe('event in spread', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[],"id":8}]}"`,
       );
@@ -975,7 +975,7 @@ describe('event in spread', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynxCoreInject.tt.publishEvent('3:0:bindtap', 'data');
+    lynx.getApp().publishEvent('3:0:bindtap', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data');
   });
@@ -1115,9 +1115,9 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
       `);
     }
 
-    lynxCoreInject.tt.publishEvent('-3:0:', 'event 1');
-    lynxCoreInject.tt.publishEvent('-6:0:', 'event 2');
-    lynxCoreInject.tt.publishEvent('-9:0:', 'event 3');
+    lynx.getApp().publishEvent('-3:0:', 'event 1');
+    lynx.getApp().publishEvent('-6:0:', 'event 2');
+    lynx.getApp().publishEvent('-9:0:', 'event 3');
 
     // background render
     {
@@ -1142,7 +1142,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
         [
           [
@@ -1250,14 +1250,14 @@ describe('call `root.render()` async', () => {
       __root[CHILDREN] = null;
     }
 
-    lynxCoreInject.tt.publishEvent('-3:0:', 'event 1');
+    lynx.getApp().publishEvent('-3:0:', 'event 1');
 
     // hydrate
     {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
 
       expect(delayedLifecycleEvents).toMatchInlineSnapshot(`
         [

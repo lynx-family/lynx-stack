@@ -85,7 +85,7 @@ describe('withInitDataInState', () => {
   const _App = withInitDataInState(App);
   it('should inject `__initData` to `state` of component', async () => {
     render(<_App />, scratch);
-    const tt = lynxCoreInject.tt;
+    const tt = lynx.getApp();
     expect(app.state).toMatchInlineSnapshot(`{}`);
     tt.updateCardData({
       key2: 'value2',
@@ -113,7 +113,7 @@ describe('withInitDataInState', () => {
   it('updateCardData twice', async () => {
     const _App = withInitDataInState(App);
     render(<_App />, scratch);
-    const tt = lynxCoreInject.tt;
+    const tt = lynx.getApp();
     expect(app.state).toMatchInlineSnapshot(`{}`);
     tt.updateCardData({
       key3: 'value3',
@@ -151,7 +151,7 @@ describe('withInitDataInState', () => {
   });
 
   it('resets initData and strips timing flag before emitting data changes', () => {
-    const tt = lynxCoreInject.tt;
+    const tt = lynx.getApp();
     const emitter = lynx.getJSModule('GlobalEventEmitter');
     const listener = vi.fn();
     const originalReportError = lynx.reportError;

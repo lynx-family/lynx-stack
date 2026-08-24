@@ -153,7 +153,7 @@ export const loadLazyBundle: <
         const { code, detail } = result;
         if (code === 0) {
           const { schema } = detail;
-          const exports = lynxCoreInject.tt.getDynamicComponentExports(schema);
+          const exports = lynx.getApp().getDynamicComponentExports(schema);
           // `code === 0` means that the lazy bundle has been successfully parsed. However,
           // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
           if (exports) {
