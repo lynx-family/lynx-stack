@@ -686,16 +686,15 @@ describe('Template Manager', () => {
    */
   describe('markup cards', () => {
     const markupSource = [
-      '<?xml version="1.0" encoding="UTF-8"?>',
-      '<!DOCTYPE lynx>',
-      '<lynx version="5.4.2">',
+      '<!doctype lynx>',
+      '<lynx engine-version="4.2">',
       // The viewport and root-relative units are load bearing, not decoration:
       // they are what makes `transformVW` / `transformVH` / `transformREM`
       // observable in the decoded bytes. Without them those flags are no-ops and
       // any test comparing two loads would agree however they were propagated.
-      '<style><![CDATA[.a{color:red;display:linear;width:10vw;height:20vh;font-size:2rem}]]></style>',
-      '<script main-thread="true"><![CDATA[globalThis.__mts = 1;]]></script>',
-      '<script background="true"><![CDATA[globalThis.__bts = 1;]]></script>',
+      '<style>.a{color:red;display:linear;width:10vw;height:20vh;font-size:2rem}</style>',
+      '<script thread="main">globalThis.__mts = 1;</script>',
+      '<script thread="background">globalThis.__bts = 1;</script>',
       '</lynx>',
     ].join('\n');
 
@@ -891,7 +890,7 @@ describe('Template Manager', () => {
      */
     test('rejects an unparsable card with the parser\'s own message', async () => {
       const url = 'http://example.com/card-broken.xml';
-      serveText('<lynx version="1">never closed');
+      serveText('<lynx engine-version="1">never closed');
 
       await expect(load(url)).rejects.toThrow(
         /invalid TemplateBundle XML at offset \d+:/,
@@ -903,7 +902,8 @@ describe('Template Manager', () => {
      *
      * A corrupted bundle no longer stops at `Invalid Magic Header`; it reaches
      * the markup path like anything else that is not a bundle and not JSON. Left
-     * alone it would come back as `expected '<lynx version="...">' root element`,
+     * alone it would come back as
+     * `expected '<lynx engine-version="...">' root element`,
      * which points whoever is reading it at a markup bug in a file that is not
      * markup. So the two are told apart before the parser is even loaded, on
      * whether the content begins a tag at all, and a corrupt bundle keeps the

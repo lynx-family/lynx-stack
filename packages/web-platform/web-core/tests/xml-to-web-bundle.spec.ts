@@ -147,14 +147,13 @@ function xml(
   { style, background }: { style?: string; background?: string } = {},
 ) {
   return [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<!DOCTYPE lynx>',
-    '<lynx version="5.4.2">',
-    style === undefined ? '' : `<style><![CDATA[${style}]]></style>`,
-    '<script main-thread="true"><![CDATA[globalThis.__mts = 1;]]></script>',
+    '<!doctype lynx>',
+    '<lynx engine-version="4.2">',
+    style === undefined ? '' : `<style>${style}</style>`,
+    '<script thread="main">globalThis.__mts = 1;</script>',
     background === undefined
       ? ''
-      : `<script background="true"><![CDATA[${background}]]></script>`,
+      : `<script thread="background">${background}</script>`,
     '</lynx>',
   ].filter(Boolean).join('\n');
 }
@@ -669,7 +668,7 @@ describe('XML markup document to web bundle', () => {
     test('passes the parser\'s own message through unchanged', () => {
       // The conversion must not restate the failure in its own words, or the
       // offset and wording stop matching the reference implementation.
-      const source = '<lynx version="5.4.2"><view></view></lynx>';
+      const source = '<lynx engine-version="4.2"><view></view></lynx>';
       const result = xmlToTasmJSON(source);
       expect(result.success).toBe(false);
       if (result.success) {
