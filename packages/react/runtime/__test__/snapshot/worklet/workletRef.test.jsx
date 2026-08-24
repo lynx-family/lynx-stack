@@ -113,7 +113,7 @@ describe('WorkletRef in js', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -205,7 +205,7 @@ describe('WorkletRef in js', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -258,7 +258,7 @@ describe('WorkletRef in js', () => {
     {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();

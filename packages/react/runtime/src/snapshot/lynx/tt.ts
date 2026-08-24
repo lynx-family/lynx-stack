@@ -38,7 +38,7 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 export { runWithForce };
 
 function injectTt(): void {
-  const tt = lynxCoreInject.tt;
+  const tt = lynx.getApp();
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
   tt.publicComponentEvent = delayedPublicComponentEvent;
@@ -150,8 +150,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      lynxCoreInject.tt.publishEvent = publishEvent;
-      lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+      lynx.getApp().publishEvent = publishEvent;
+      lynx.getApp().publicComponentEvent = publicComponentEvent;
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -187,7 +187,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     }
     case LifecycleConstant.publishEvent: {
       const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
-      lynxCoreInject.tt.publishEvent(handlerName, d);
+      lynx.getApp().publishEvent(handlerName, d);
       break;
     }
   }
@@ -208,7 +208,7 @@ function flushDelayedLifecycleEvents(): void {
 }
 
 function publishEvent(handlerName: string, data: EventDataType) {
-  lynxCoreInject.tt.callBeforePublishEvent?.(data);
+  lynx.getApp().callBeforePublishEvent?.(data);
   let snapshotId: number | undefined;
   const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(

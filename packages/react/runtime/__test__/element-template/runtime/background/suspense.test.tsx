@@ -770,7 +770,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     const lynxWithQuery = lynx as typeof lynx & {
       QueryComponent?: (source: string, callback: QueryComponentCallback) => void;
     };
-    const ttWithDynamic = lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    const ttWithDynamic = lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: (schema: string) => { default: ComponentType<Record<string, never>> } | undefined;
     };
     const originalQueryComponent = lynxWithQuery.QueryComponent;
@@ -852,7 +852,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     const lynxWithQuery = lynx as typeof lynx & {
       QueryComponent?: (source: string, callback: QueryComponentCallback) => void;
     };
-    const ttWithDynamic = lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    const ttWithDynamic = lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: (schema: string) => { default: ComponentType<Record<string, never>> } | undefined;
     };
     const originalQueryComponent = lynxWithQuery.QueryComponent;

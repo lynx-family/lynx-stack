@@ -22,6 +22,7 @@ function __injectGlobals(target) {
   };
   target.lynxCoreInject = {};
   target.lynxCoreInject.tt = {};
+  target.lynx.getApp = () => target.lynxCoreInject.tt;
   target.lynxCoreInject.tt.publicComponentEvent = () => void 0;
   target.lynxCoreInject.tt._params = { updateData: {} };
   target.__OnLifecycleEventQueue = [];
