@@ -790,7 +790,12 @@ class LynxTemplatePluginImpl {
     const context = compilation.compiler.context;
 
     asyncChunkGroups = groupBy(
-      compilation.chunkGroups.filter(cg => !cg.isInitial()),
+      // A statically imported module goes to the initial chunk, leaving its
+      // async chunk empty; `RemoveEmptyChunksPlugin` drops that chunk but
+      // keeps the group, which would otherwise emit an empty lazy bundle.
+      compilation.chunkGroups.filter(cg =>
+        !cg.isInitial() && cg.chunks.length > 0
+      ),
       cg => {
         // A `webpackChunkName` is user-provided (the react transform no longer
         // injects one) — group by it, after the `asyncChunkName` hook. Unnamed
