@@ -27,6 +27,25 @@ describe('app route hash', () => {
     expect(buildRouteHash('mcp-apps', 'create')).toBe('#/mcp-apps');
   });
 
+  test('keeps Lynx XML on its examples-only surface', () => {
+    expect(buildRouteHash('lynx-xml', 'examples')).toBe(
+      '#/lynx-xml/examples',
+    );
+    expect(parseRouteHash('#/lynx-xml')).toMatchObject({
+      protocol: { name: 'lynx-xml', version: '0.1' },
+      tab: 'examples',
+    });
+    expect(parseRouteHash('#/lynx-xml/create')).toMatchObject({
+      protocol: { name: 'lynx-xml' },
+      tab: 'examples',
+    });
+    expect(parseRouteHash('#/lynx-xml/examples/counter')).toMatchObject({
+      protocol: { name: 'lynx-xml' },
+      tab: 'examples',
+      demoId: 'counter',
+    });
+  });
+
   test('recognizes the MCP Apps protocol root', () => {
     expect(parseRouteHash('#/mcp-apps')).toMatchObject({
       protocol: { name: 'mcp-apps', version: '2026-01-26' },

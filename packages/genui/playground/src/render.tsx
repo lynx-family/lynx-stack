@@ -27,7 +27,7 @@ import {
 } from './utils/renderUrl.js';
 
 interface InitData {
-  protocol?: '0.9' | 'a2ui' | 'openui' | 'mcp-apps';
+  protocol?: '0.9' | 'a2ui' | 'openui' | 'mcp-apps' | 'lynx-xml';
   messagesUrl?: string;
   messages?: unknown;
   actionMocksUrl?: string;
@@ -143,6 +143,7 @@ function readProtocol(value: unknown): InitData['protocol'] {
       || value === 'a2ui'
       || value === 'openui'
       || value === 'mcp-apps'
+      || value === 'lynx-xml'
     ? value
     : undefined;
 }

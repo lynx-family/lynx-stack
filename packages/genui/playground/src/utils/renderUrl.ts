@@ -52,6 +52,11 @@ export interface McpAppsRenderInit {
   theme?: 'light' | 'dark';
 }
 
+export interface LynxXmlRenderInit {
+  sourceUrl: string;
+  theme?: 'light' | 'dark';
+}
+
 export function hasShareableA2UIRenderPayload(
   init: Pick<RenderInit, 'demoId' | 'messages' | 'messagesUrl'>,
 ): boolean {
@@ -87,6 +92,81 @@ interface ObjectURLRegistry {
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   createObjectURL(object: Blob): string;
   revokeObjectURL(url: string): void;
+}
+
+interface LocalBlobPayload {
+  url: string;
+  dispose: () => void;
+}
+
+function createLocalBlobPayload(
+  content: BlobPart,
+  type: string,
+  registry: ObjectURLRegistry,
+): LocalBlobPayload {
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  const url = registry.createObjectURL(new Blob([content], { type }));
+  let disposed = false;
+  return {
+    url,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      registry.revokeObjectURL(url);
+    },
+  };
+}
+
+export interface LocalLynxXmlSourcePayload {
+  sourceUrl: string;
+  dispose: () => void;
+}
+
+export interface LocalLynxXmlSourcePayloadCache {
+  ensure: (source: string) => LocalLynxXmlSourcePayload;
+  clear: () => void;
+}
+
+interface LocalLynxXmlSourcePayloadCacheOptions {
+  createPayload: (source: string) => LocalLynxXmlSourcePayload;
+}
+
+export function createLocalLynxXmlSourcePayload(
+  source: string,
+  registry: ObjectURLRegistry = URL,
+): LocalLynxXmlSourcePayload {
+  const { url: sourceUrl, dispose } = createLocalBlobPayload(
+    source,
+    'application/xml;charset=utf-8',
+    registry,
+  );
+  return { sourceUrl, dispose };
+}
+
+export function createLocalLynxXmlSourcePayloadCache(
+  options: LocalLynxXmlSourcePayloadCacheOptions,
+): LocalLynxXmlSourcePayloadCache {
+  let current: {
+    payload: LocalLynxXmlSourcePayload;
+    source: string;
+  } | null = null;
+
+  return {
+    ensure: (source) => {
+      if (current?.source === source) return current.payload;
+
+      const payload = options.createPayload(source);
+      const previous = current;
+      current = { payload, source };
+      previous?.payload.dispose();
+      return payload;
+    },
+    clear: () => {
+      const previous = current;
+      current = null;
+      previous?.payload.dispose();
+    },
+  };
 }
 
 export interface LocalA2UIMessagesPayload {
@@ -125,21 +205,12 @@ export function createLocalA2UIMessagesPayload(
   if (serialized === undefined) {
     throw new Error('A2UI messages must be JSON serializable');
   }
-  // eslint-disable-next-line n/no-unsupported-features/node-builtins
-  const messagesUrl = registry.createObjectURL(
-    // eslint-disable-next-line n/no-unsupported-features/node-builtins
-    new Blob([serialized], { type: 'application/json' }),
+  const { url: messagesUrl, dispose } = createLocalBlobPayload(
+    serialized,
+    'application/json',
+    registry,
   );
-  let disposed = false;
-  return {
-    messagesUrl,
-    dispose: () => {
-      if (disposed) return;
-      disposed = true;
-      // eslint-disable-next-line n/no-unsupported-features/node-builtins
-      registry.revokeObjectURL(messagesUrl);
-    },
-  };
+  return { messagesUrl, dispose };
 }
 
 /**
@@ -369,6 +440,17 @@ export function buildMcpAppsRenderUrl(
       ...(init.theme ? { theme: init.theme } : {}),
     })),
   );
+  if (init.theme) url.searchParams.set('theme', init.theme);
+  return url.toString();
+}
+
+export function buildLynxXmlRenderUrl(
+  init: LynxXmlRenderInit,
+  baseUrl: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'lynx-xml');
+  url.searchParams.set('demoUrl', init.sourceUrl);
   if (init.theme) url.searchParams.set('theme', init.theme);
   return url.toString();
 }

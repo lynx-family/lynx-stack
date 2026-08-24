@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import { A2UI_DEMOS_PAGE_SOURCE } from './a2ui.js';
+import { LYNX_XML_DEMOS_PAGE_SOURCE } from './lynx-xml.js';
 import { OPENUI_DEMOS_PAGE_SOURCE } from './openui.js';
 import type { DemoCommit, DemoPageScenario, DemosPageSource } from './type.js';
 import { Button } from '../../components/Button.js';
@@ -128,6 +129,7 @@ function DemosPageContent<
   const editorIsEditable = currentEditorView?.editable ?? true;
 
   const isPlaybackActive = playState !== 'idle';
+  const playbackEnabled = source.playback !== false;
   const isPlaying = playState === 'playing';
   const isPaused = playState === 'paused';
   const isDone = playState === 'done';
@@ -543,6 +545,7 @@ function DemosPageContent<
               : 'playbackSection top idle'}
             style={playbackPanelStyle}
             aria-label='Playback'
+            hidden={!playbackEnabled}
           >
             <header className='playbackSectionHeader'>
               <span className='playbackSectionTitle'>Playback</span>
@@ -560,7 +563,11 @@ function DemosPageContent<
                 )
                 : (
                   <span className='playbackIdleHint'>
-                    <Play size={11} strokeWidth={2.25} aria-hidden='true' />
+                    <Play
+                      size={11}
+                      strokeWidth={2.25}
+                      aria-hidden='true'
+                    />
                     Replay payload chunk by chunk
                   </span>
                 )}
@@ -652,6 +659,7 @@ function DemosPageContent<
             aria-label={source.editor.splitterAriaLabel}
             title='Drag to resize'
             onPointerDown={handlePlaybackResizeStart}
+            hidden={!playbackEnabled}
           >
             <span className='playbackSplitterGrip' aria-hidden='true' />
           </div>
@@ -780,6 +788,7 @@ function DemosPageContent<
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
+          showSimulationBar={playbackEnabled}
           speed={playbackSpeed}
           onSpeedChange={setPlaybackSpeed}
           previewSource={previewSource}
@@ -809,6 +818,16 @@ export function DemosPage(props: {
   demoId?: string;
   theme: 'light' | 'dark';
 }) {
+  if (props.protocol.name === 'lynx-xml') {
+    return (
+      <DemosPageContent
+        key='lynx-xml'
+        {...props}
+        source={LYNX_XML_DEMOS_PAGE_SOURCE}
+      />
+    );
+  }
+
   if (props.protocol.name === 'openui') {
     return (
       <DemosPageContent

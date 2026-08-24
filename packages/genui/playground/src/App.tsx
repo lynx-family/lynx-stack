@@ -53,6 +53,7 @@ const GENUI_TABS: TabDef[] = [
 ];
 
 const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
+const LYNX_XML_TABS: TabDef[] = [{ id: 'examples', label: 'Examples' }];
 
 function ensureDefaultRouteHash(): void {
   if (!isEmptyRouteHash(window.location.hash)) return;
@@ -122,7 +123,9 @@ export function App() {
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
-  const tabs = protocol.name === 'mcp-apps' ? MCP_APPS_TABS : GENUI_TABS;
+  const tabs = protocol.name === 'mcp-apps'
+    ? MCP_APPS_TABS
+    : (protocol.name === 'lynx-xml' ? LYNX_XML_TABS : GENUI_TABS);
 
   useLayoutEffect(() => {
     ensureDefaultRouteHash();
@@ -165,6 +168,10 @@ export function App() {
       window.location.hash = buildRouteHash(name, 'create');
       return;
     }
+    if (name === 'lynx-xml') {
+      window.location.hash = buildRouteHash(name, 'examples');
+      return;
+    }
     window.location.hash = buildRouteHash(name, route.tab);
   }, [route.tab]);
 
@@ -192,6 +199,25 @@ export function App() {
     );
 
     if (protocol.name === 'mcp-apps') return createPage;
+
+    if (protocol.name === 'lynx-xml') {
+      return route.demoId
+        ? (
+          <DemosPage
+            key='lynx-xml-examples-detail'
+            protocol={protocol}
+            demoId={route.demoId}
+            theme={theme}
+          />
+        )
+        : (
+          <DemosListPage
+            key='lynx-xml-examples-index'
+            protocol={protocol}
+            theme={theme}
+          />
+        );
+    }
 
     if (protocol.name === 'openui') {
       switch (route.tab) {
@@ -316,6 +342,9 @@ export function App() {
         <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
         <option value='mcp-apps'>
           MCP Apps v{PROTOCOLS['mcp-apps'].version}
+        </option>
+        <option value='lynx-xml'>
+          Lynx XML v{PROTOCOLS['lynx-xml'].version}
         </option>
       </select>
     </div>

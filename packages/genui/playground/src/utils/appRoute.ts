@@ -45,6 +45,7 @@ export function parseRouteHash(hash: string): Route {
     parts[0] === 'a2ui'
     || parts[0] === 'openui'
     || parts[0] === 'mcp-apps'
+    || parts[0] === 'lynx-xml'
   ) {
     protocol = getProtocol(parts[0]);
     rest = parts.slice(1);
@@ -56,6 +57,11 @@ export function parseRouteHash(hash: string): Route {
       tab: 'examples',
       demoId: rest[1],
     };
+  }
+  // Lynx XML currently exposes only its example showcase. Keep protocol-root
+  // and unsupported-tab deep links inside that surface as the protocol grows.
+  if (protocol.name === 'lynx-xml') {
+    return { protocol, tab: 'examples' };
   }
   if (rest[0] === 'components' || rest[0] === 'catalog') {
     return {

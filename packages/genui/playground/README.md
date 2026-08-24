@@ -1,9 +1,25 @@
 # GenUI Playground
 
 Interactive playground for the Lynx **GenUI** toolchain. Chat with an agent to
-generate A2UI / OpenUI surfaces, browse ready-made examples, and preview the
-result on the web or a real device — then rename, delete, or **share** any
-conversation as a durable preview link.
+generate A2UI / OpenUI surfaces, browse ready-made examples (including
+zero-build Lynx XML artifacts), and preview the result on the web or a real
+device — then rename, delete, or **share** any conversation as a durable
+preview link.
+
+The Lynx XML protocol currently exposes only its **Examples** surface at
+`#/lynx-xml/examples`. Each example is a single `.lynxml` file containing Lynx
+CSS plus main-thread and, where needed, background-thread JavaScript, loaded
+directly by `<lynx-view>`.
+
+The bundled cases are Counter, Travel Plan, Product Card, Weather Card, and
+Todo List. Together they cover main-thread interaction, subtree re-rendering,
+background-thread computation, selection state, and dynamic-list updates
+without external media assets. Their cards use the same flow-grid arrangement
+and shared card styles as A2UI Playground Examples. The Element PAPI trees
+attach an explicitly styled business root directly to an unstyled `page`; each
+layout container enables Flex instead of relying on Lynx's default Linear
+layout. Examples that can exceed one viewport use that business root itself as
+a vertical scroll view.
 
 > Private development app; it is not published to npm. For the published library
 > see [`@lynx-js/genui`](../README.md).

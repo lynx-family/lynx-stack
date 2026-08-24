@@ -6,6 +6,7 @@ It supports:
 
 - `web` via `@rsbuild/core` (React DOM preview)
 - `lynx` via `@lynx-js/rspeedy` (Lynx preview)
+- zero-build Lynx XML examples loaded directly by Lynx for Web
 
 ## How It Works (Web Shell vs Lynx App)
 
@@ -66,6 +67,21 @@ Inside `lynx-src/App.tsx`:
 - Lynx config: `lynx.config.ts`
 - Web entrypoints: `src/entry.tsx`, `src/render.tsx`
 - Lynx entrypoint: `lynx-src/index.tsx`
+- Lynx XML examples: `src/mock/lynx-xml/*.lynxml`
+
+## Lynx XML Examples
+
+The `lynx-xml` protocol currently exposes only the Examples tab. Its example
+files are imported as raw source for the shared detail workspace and copied to
+`dist/demos/lynx-xml/` for the list previews. `render.html` passes the complete
+artifact URL to `<lynx-view>`; do not add a ReactLynx renderer or a per-example
+Rspeedy build for these files. Keep each Element PAPI tree directly under its
+page rather than adding a generic `app` wrapper. Lynx defaults to Linear
+layout, so every class used as a layout container must explicitly declare
+`display: flex` and the intended direction where it matters. Keep `page`
+unstyled and place viewport sizing, background, and entry layout on the first
+business view. When content can exceed one viewport, make that entry node a
+vertical scroll view instead of adding another wrapper.
 
 ## Common Commands
 
