@@ -2,6 +2,7 @@ interface AppProps {
   onTap?: () => void;
   pageId?: string;
   pageKey?: string;
+  pageKeys?: string[];
   pageRef?: unknown;
   refMode?: 'direct' | 'spread';
   withPage?: boolean;
@@ -11,6 +12,7 @@ export function App({
   onTap,
   pageId = 'screen',
   pageKey = 'page',
+  pageKeys,
   pageRef,
   refMode = 'spread',
   withPage = true,
@@ -25,6 +27,17 @@ export function App({
       <view id='without-page'>
         <text>without page</text>
       </view>
+    );
+  }
+  if (pageKeys) {
+    return (
+      <>
+        {pageKeys.map(pageKey => (
+          <page key={pageKey}>
+            <view id={`${pageKey}-child`} />
+          </page>
+        ))}
+      </>
     );
   }
   const pageProps = {

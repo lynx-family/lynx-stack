@@ -11,6 +11,8 @@ import { __root } from './root-instance.js';
 
 export type AuthoredPageAttributes = Record<string, unknown> | null;
 
+const mountedAuthoredPageLifetimes = new Set<object>();
+
 export interface ElementTemplatePageProps {
   $0?: ComponentChild;
   attributes?: AuthoredPageAttributes;
@@ -30,7 +32,21 @@ export const __ElementTemplatePage: FunctionalComponent<ElementTemplatePageProps
 
   if (__BACKGROUND__) {
     root.setAuthoredPageAttributes(lifetime.current, props.attributes ?? null);
-    useLayoutEffect(() => () => root.clearAuthoredPageAttributes(lifetime.current), []);
+    useLayoutEffect(() => {
+      if (__DEV__) {
+        if (mountedAuthoredPageLifetimes.size > 0) {
+          lynx.reportError(new Error('Attempt to render more than one `<page />`, which is not supported.'));
+        }
+        mountedAuthoredPageLifetimes.add(lifetime.current);
+      }
+
+      return () => {
+        if (__DEV__) {
+          mountedAuthoredPageLifetimes.delete(lifetime.current);
+        }
+        root.clearAuthoredPageAttributes(lifetime.current);
+      };
+    }, []);
   }
 
   return props.$0;
