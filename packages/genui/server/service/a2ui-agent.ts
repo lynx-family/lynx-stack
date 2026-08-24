@@ -252,12 +252,16 @@ export default class A2UIAgentService {
 
           try {
             while (true) {
+              let streamedPhaseText = '';
               for await (const chunk of toAsyncIterable(result.textStream)) {
+                streamedPhaseText += chunk;
                 yield chunk;
               }
 
               const metadata = await finalizeResult(result);
-              const phaseText = metadata.text ?? await extractText(result);
+              const phaseText = streamedPhaseText.trim()
+                ? streamedPhaseText
+                : metadata.text ?? await extractText(result);
               if (phaseText) phaseTexts.push(phaseText);
               if (!isSuspended(metadata.finishReason)) {
                 const completed = {
