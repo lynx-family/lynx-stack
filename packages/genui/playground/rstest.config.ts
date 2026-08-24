@@ -13,4 +13,17 @@ export default defineConfig({
       __GENUI_SERVER_URL__: JSON.stringify(DEFAULT_GENUI_SERVER_URL),
     },
   },
+  tools: {
+    rspack: {
+      module: {
+        rules: [
+          {
+            test: /\.lynxml$/,
+            resourceQuery: /raw/,
+            type: 'asset/source',
+          },
+        ],
+      },
+    },
+  },
 });

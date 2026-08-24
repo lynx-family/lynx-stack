@@ -95,6 +95,13 @@ Protocol-specific showcase sources may vary their header copy, section links, ba
 
 Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the existing `pages/demos/a2ui.ts` and `pages/demos/openui.ts` source modules.
 
+### Lynx XML
+
+- Keep Lynx XML examples-only. Route its protocol root and unsupported tabs to Examples; do not expose Create, Catalog, or Bench.
+- Reuse the A2UI Playground Examples `flow` layout, `DemosList`, `ExamplePreviewCard`, and card styles without protocol-specific markup or CSS.
+- Keep complete `.lynxml` artifacts in `src/mock/lynx-xml`, import them as raw editor source, copy them to `dist/demos/lynx-xml`, and load their URLs directly in `<lynx-view>`. Do not add per-example compilation or a ReactLynx renderer. Keep edited-source Blob URLs keyed to their source and create and consume replacements in the same effect before revoking older URLs. Browser-local Blob URLs are not shareable: keep the Web and Native QR cards mounted with an unavailable placeholder instead of encoding the Blob URL or removing the QR pane. Use `@codemirror/lang-html` in the editor and keep Playback disabled.
+- Append the business root directly to the Element PAPI `page`; do not style the page or add a generic `app` wrapper. The root owns viewport, background, and layout styles, and must be a vertical scroll view when content may overflow. Because Lynx defaults to Linear layout, every layout container must explicitly use `display: flex` and declare its intended `flex-direction`.
+
 ## OpenUI Integration
 
 ### Lynx Entry Styling
