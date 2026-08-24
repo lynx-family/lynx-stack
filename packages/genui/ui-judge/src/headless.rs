@@ -103,6 +103,19 @@ pub(crate) struct CapturedPage {
 }
 
 impl CapturedPage {
+  #[cfg(test)]
+  pub(crate) fn from_png(png: Vec<u8>) -> Self {
+    Self {
+      png,
+      steps: vec![],
+      url: String::new(),
+    }
+  }
+
+  pub(crate) fn into_png(self) -> Vec<u8> {
+    self.png
+  }
+
   pub(crate) fn screenshot_data_url(&self) -> String {
     png_data_url(&self.png)
   }
@@ -155,8 +168,21 @@ pub async fn judge_page(request: JudgePageRequest) -> UiJudgeResult {
 }
 
 pub(crate) fn prepare_judge_page_request(
-  mut request: JudgePageRequest,
+  request: JudgePageRequest,
 ) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
+  let request = prepare_page_request(request)?;
+
+  let model_options = ModelOptions::from_env();
+  let client = match ModelClient::new(model_options) {
+    Ok(client) => client,
+    Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
+  };
+  Ok((request, client))
+}
+
+pub(crate) fn prepare_page_request(
+  mut request: JudgePageRequest,
+) -> Result<JudgePageRequest, Box<UiJudgeResult>> {
   request.url = request.url.trim().to_string();
   if request.url.is_empty() {
     return Err(Box::new(page_request_error(
@@ -179,13 +205,7 @@ pub(crate) fn prepare_judge_page_request(
   request.reference_image = request
     .reference_image
     .map(|reference_image| reference_image.trim().to_string());
-
-  let model_options = ModelOptions::from_env();
-  let client = match ModelClient::new(model_options) {
-    Ok(client) => client,
-    Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
-  };
-  Ok((request, client))
+  Ok(request)
 }
 
 pub(crate) async fn capture_prepared_page(
@@ -197,6 +217,22 @@ pub(crate) async fn capture_prepared_page(
 
 pub(crate) async fn capture_prepared_page_with_options(
   client: &ModelClient,
+  request: &JudgePageRequest,
+  load_options: &PageLoadOptions,
+) -> Result<CapturedPage, UiJudgeResult> {
+  capture_page_with_options(Some(client), request, load_options).await
+}
+
+pub(crate) async fn capture_screenshot_with_options(
+  client: Option<&ModelClient>,
+  request: &JudgePageRequest,
+  load_options: &PageLoadOptions,
+) -> Result<CapturedPage, UiJudgeResult> {
+  capture_page_with_options(client, request, load_options).await
+}
+
+async fn capture_page_with_options(
+  client: Option<&ModelClient>,
   request: &JudgePageRequest,
   load_options: &PageLoadOptions,
 ) -> Result<CapturedPage, UiJudgeResult> {
@@ -225,7 +261,7 @@ pub(crate) async fn capture_prepared_page_with_options(
 
 async fn capture_with_lynx(
   lynx: &Lynx,
-  client: &ModelClient,
+  client: Option<&ModelClient>,
   request: &JudgePageRequest,
   load_options: &PageLoadOptions,
 ) -> Result<CapturedPage, UiJudgeResult> {
@@ -233,11 +269,19 @@ async fn capture_with_lynx(
     Ok(page) => page,
     Err(error) => return Err(page_request_error(request, error.to_string())),
   };
-  let navigation = tokio::time::timeout(
-    request.timeout,
-    page.goto(&request.url, goto_options(request.timeout, load_options)),
-  )
-  .await;
+  let navigation = if client.is_some() {
+    tokio::time::timeout(
+      request.timeout,
+      page.goto(&request.url, goto_options(request.timeout, load_options)),
+    )
+    .await
+  } else {
+    tokio::time::timeout(
+      request.timeout,
+      page.goto_for_screenshot(&request.url, goto_options(request.timeout, load_options)),
+    )
+    .await
+  };
   let navigation_error = match navigation {
     Ok(Ok(())) => None,
     Ok(Err(error)) => Some(error.to_string()),
@@ -259,17 +303,20 @@ fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOption
 }
 
 async fn capture_loaded_page(
-  client: &ModelClient,
+  client: Option<&ModelClient>,
   page: &mut Page,
   request: &JudgePageRequest,
 ) -> Result<CapturedPage, UiJudgeResult> {
-  let steps = match run_page_steps(client, page, &request.steps, request.timeout).await {
-    Ok(steps) => steps,
-    Err(error) => {
-      let mut result = request_error_result(request, page.url().to_string(), error.to_string());
-      result.steps = normalize_steps(&request.steps);
-      return Err(result);
-    }
+  let steps = match client {
+    Some(client) => match run_page_steps(client, page, &request.steps, request.timeout).await {
+      Ok(steps) => steps,
+      Err(error) => {
+        let mut result = request_error_result(request, page.url().to_string(), error.to_string());
+        result.steps = normalize_steps(&request.steps);
+        return Err(result);
+      }
+    },
+    None => vec![],
   };
   let screenshot = match tokio::time::timeout(
     request.timeout,

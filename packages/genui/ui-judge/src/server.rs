@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use axum::extract::multipart::{Field, Multipart, MultipartError};
 use axum::extract::{DefaultBodyLimit, State};
-use axum::http::StatusCode;
+use axum::http::{header::CONTENT_TYPE, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -29,8 +29,8 @@ use tokio::sync::{oneshot, watch};
 use tokio::task::{JoinSet, LocalSet};
 
 use crate::headless::{
-  capture_prepared_page_with_options, prepare_judge_page_request, score_captured_page,
-  CapturedPage, PageLoadOptions,
+  capture_screenshot_with_options, prepare_judge_page_request, prepare_page_request,
+  score_captured_page, CapturedPage, PageLoadOptions,
 };
 use crate::model::{configured_model_name, ModelClient};
 use crate::visual::{
@@ -220,7 +220,7 @@ impl IntoResponse for ApiError {
 }
 
 struct CaptureJob {
-  client: ModelClient,
+  client: Option<ModelClient>,
   load_options: PageLoadOptions,
   request: JudgePageRequest,
   response: oneshot::Sender<CaptureResponse>,
@@ -228,7 +228,7 @@ struct CaptureJob {
 
 struct CaptureResponse {
   capture: Result<CapturedPage, UiJudgeResult>,
-  client: ModelClient,
+  client: Option<ModelClient>,
   request: JudgePageRequest,
 }
 
@@ -290,7 +290,7 @@ impl HeadlessExecutor {
   async fn capture(
     &self,
     request: JudgePageRequest,
-    client: ModelClient,
+    client: Option<ModelClient>,
     load_options: PageLoadOptions,
   ) -> Result<CaptureResponse, ApiError> {
     let (response, response_receiver) = oneshot::channel();
@@ -387,7 +387,7 @@ fn run_headless_worker(runtime: Runtime, mut receiver: Receiver<CaptureJob>) {
 
 async fn run_capture_job(job: CaptureJob) {
   let capture =
-    capture_prepared_page_with_options(&job.client, &job.request, &job.load_options).await;
+    capture_screenshot_with_options(job.client.as_ref(), &job.request, &job.load_options).await;
   let _ = job.response.send(CaptureResponse {
     capture,
     client: job.client,
@@ -412,6 +412,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
     .route("/health", get(health))
     .route("/compare", post(compare))
     .route("/judge", post(judge))
+    .route("/screenshot", post(screenshot))
     .layer(DefaultBodyLimit::max(MAX_REQUEST_BYTES))
     .with_state(state);
   let (shutdown_sender, shutdown_receiver) = watch::channel(false);
@@ -513,8 +514,9 @@ async fn judge(
     request,
   } = state
     .headless
-    .capture(request, client, load_options)
+    .capture(request, Some(client), load_options)
     .await?;
+  let client = client.expect("judge capture retains its model client");
   let (result, screenshot_data_url) = match capture {
     Ok(capture) => {
       let screenshot_data_url = include_screenshot.then(|| capture.screenshot_data_url());
@@ -529,6 +531,42 @@ async fn judge(
     result,
     screenshot_data_url,
   }))
+}
+
+async fn screenshot(
+  State(state): State<AppState>,
+  Json(request): Json<HttpJudgePageRequest>,
+) -> Result<Response, ApiError> {
+  let HttpCaptureRequest {
+    load_options,
+    request,
+    ..
+  } = request.into_capture_request()?;
+  let (request, client) = if request.steps.iter().all(|step| step.trim().is_empty()) {
+    (
+      prepare_page_request(request).map_err(capture_api_error)?,
+      None,
+    )
+  } else {
+    let (request, client) = (state.prepare_request)(request).map_err(capture_api_error)?;
+    (request, Some(client))
+  };
+  let capture = state
+    .headless
+    .capture(request, client, load_options)
+    .await?
+    .capture
+    .map_err(capture_api_error)?;
+  Ok(([(CONTENT_TYPE, "image/png")], capture.into_png()).into_response())
+}
+
+fn capture_api_error(result: impl Into<Box<UiJudgeResult>>) -> ApiError {
+  let result = result.into();
+  let message = result
+    .error
+    .map(|error| error.message)
+    .unwrap_or_else(|| "The Lynx page could not be captured.".to_string());
+  ApiError::new(StatusCode::UNPROCESSABLE_ENTITY, message)
 }
 
 async fn compare(mut multipart: Multipart) -> Result<Json<HttpCompareImagesResponse>, ApiError> {
@@ -642,7 +680,6 @@ mod tests {
 
   use axum::body::Body;
   use axum::extract::FromRequest;
-  use axum::http::header::CONTENT_TYPE;
   use axum::http::Request;
   use base64::prelude::{Engine, BASE64_STANDARD};
   use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
@@ -700,6 +737,12 @@ mod tests {
     request: JudgePageRequest,
   ) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
     Ok((request, test_client()))
+  }
+
+  fn prepare_request_must_not_run(
+    _request: JudgePageRequest,
+  ) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
+    panic!("screenshot without steps must not initialize a model client")
   }
 
   fn sample_png(color: Rgba<u8>) -> Vec<u8> {
@@ -830,6 +873,44 @@ mod tests {
     );
   }
 
+  #[tokio::test]
+  async fn screenshot_returns_raw_png_without_model_evaluation() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let worker_png = png.clone();
+    let headless = Arc::new(
+      HeadlessExecutor::new_with_worker(move |_runtime, mut receiver| {
+        while let Some(job) = receiver.blocking_recv() {
+          assert!(job.client.is_none());
+          let _ = job.response.send(CaptureResponse {
+            capture: Ok(CapturedPage::from_png(worker_png.clone())),
+            client: job.client,
+            request: job.request,
+          });
+        }
+      })
+      .expect("start screenshot worker"),
+    );
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
+      prepare_request: prepare_request_must_not_run,
+    };
+
+    let mut request = http_request("file:///tmp/screenshot.lynx.bundle");
+    request.steps = vec!["   ".to_string()];
+    let response = screenshot(State(state), Json(request))
+      .await
+      .expect("capture screenshot");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[CONTENT_TYPE], "image/png");
+    let body = axum::body::to_bytes(response.into_body(), png.len() + 1)
+      .await
+      .expect("read screenshot body");
+    assert_eq!(body.as_ref(), png);
+    headless.shutdown().expect("stop screenshot worker");
+  }
+
   #[test]
   fn accepts_snake_case_page_data_aliases() {
     let request: HttpJudgePageRequest = serde_json::from_value(json!({
@@ -957,7 +1038,7 @@ mod tests {
             .build()
             .expect("build caller runtime");
           barrier.wait();
-          runtime.block_on(headless.capture(capture.request, test_client(), capture.load_options))
+          runtime.block_on(headless.capture(capture.request, None, capture.load_options))
         })
       })
       .collect::<Vec<_>>();
@@ -1123,7 +1204,7 @@ mod tests {
       .expect("valid panic request");
 
     let error = match headless
-      .capture(request.request, test_client(), request.load_options)
+      .capture(request.request, Some(test_client()), request.load_options)
       .await
     {
       Ok(_) => panic!("worker panic must fail the capture"),

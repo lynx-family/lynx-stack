@@ -159,8 +159,8 @@ from the caller's environment. Linux hosts must also provide the
 process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 `[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
 non-secret configured model name, `POST /judge` to evaluate a page, and
-`POST /compare` to compare two uploaded images without rendering a page or
-calling the VLM.
+`POST /screenshot` to render a page without evaluating it. Use `POST /compare`
+to compare two uploaded images without rendering a page or calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional. `initialData` and `globalProps` accept JSON
@@ -189,6 +189,36 @@ curl --request POST http://127.0.0.1:8080/judge \
   }'
 ```
 
+To capture the same page without scoring it, send the same JSON request to
+`POST /screenshot`. The response body contains the raw PNG, so save it directly
+to a file:
+
+```bash
+curl --request POST http://127.0.0.1:8080/screenshot \
+  --header 'content-type: application/json' \
+  --data '{
+    "url": "file:///absolute/path/to/dist/main.lynx.bundle",
+    "task": "Capture the rendered page",
+    "globalProps": {
+      "messages": [],
+      "instant": true,
+      "theme": "light"
+    },
+    "screenshotSettleMs": 16,
+    "timeoutMs": 60000
+  }' \
+  --output screenshot.png
+```
+
+`POST /screenshot` accepts the same request fields and aliases as
+`POST /judge`. It uses `url`, `initialData`, `globalProps`, `steps`,
+`screenshotSettleMs`, and `timeoutMs` for rendering. It ignores
+`includeScreenshot`, `includeGeqi`, `reference`, and `referenceImage`. Empty
+`steps` do not initialize or call a model. Non-empty `steps` still use Agent SDK
+to perform the requested interactions before capture, but the route never
+scores the PNG or compares it with a reference image. A successful response is
+`200 image/png` with the raw PNG bytes.
+
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
 
@@ -211,18 +241,20 @@ The `/judge` response contains the JSON-encoded `UiJudgeResult`. When
 exact judged PNG as `screenshotDataUrl`; the field is omitted by default to
 avoid inflating ordinary responses. A completed evaluation returns HTTP `200`,
 including evaluation failures reported in the result's `error` field. Invalid
-HTTP input returns `400`, `413`, or `422`. The server returns `503` when its
-bounded capture queue is full or the headless worker is no longer available. A
-headless-worker panic makes readiness return `503`, initiates graceful
+HTTP input returns `400`, `413`, or `422`. `POST /screenshot` returns `422` with
+a JSON error when rendering cannot produce a PNG. The server returns `503` when
+its bounded capture queue is full or the headless worker is no longer
+available. A headless-worker panic makes readiness return `503`, initiates graceful
 shutdown, and is propagated as a server error after the worker is joined. Each
 uploaded comparison image is limited to 10 MiB. Request bodies are limited to
 20 MiB plus 64 KiB of multipart overhead.
 
 The server accepts connections concurrently. It runs up to four native Lynx
 captures on a dedicated current-thread runtime because the renderer is
-thread-bound. After a capture completes, Tokio runs model scoring concurrently
-across requests and a bounded Rayon pool performs CPU-heavy image normalization,
-alignment, and comparison. The capture queue holds at most eight requests.
+thread-bound. After a judge capture completes, Tokio runs model scoring
+concurrently across judge requests and a bounded Rayon pool performs CPU-heavy
+image normalization, alignment, and comparison. The capture queue holds at most
+eight requests.
 Dropped queued requests release their request data, dropped visual waiters
 signal cooperative cancellation, and SIGINT or SIGTERM triggers graceful HTTP
 shutdown before the headless worker is joined.
