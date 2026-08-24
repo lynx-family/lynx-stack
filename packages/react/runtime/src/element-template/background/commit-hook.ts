@@ -77,37 +77,35 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
     || hasDelayedRunOnMainThread
     || hasMainThreadRefInitValuePatch;
   const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
-  let didFlushRefs = false;
-  let didDispatchUpdatePayload = false;
-  let delayedRunOnMainThreadPayload: typeof delayedRunOnMainThreadData | undefined;
-  try {
-    if (hasUpdatePayload) {
-      markTimingLegacy('updateDiffVdomEnd');
-      markTiming('diffVdomEnd');
+  if (hasUpdatePayload) {
+    markTimingLegacy('updateDiffVdomEnd');
+    markTiming('diffVdomEnd');
 
-      if (__PROFILE__) {
-        profileStart('ReactLynx::commitChanges');
-      }
-      markTiming('packChangesStart');
-      if (globalPipelineOptions) {
-        globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
-      }
-      markTiming('packChangesEnd');
-      if (globalPipelineOptions) {
-        setPipeline(undefined);
-      }
-      if (__PROFILE__) {
-        profileEnd();
-      }
+    if (__PROFILE__) {
+      profileStart('ReactLynx::commitChanges');
+    }
+    markTiming('packChangesStart');
+    if (globalPipelineOptions) {
+      globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
+    }
+    markTiming('packChangesEnd');
+    if (globalPipelineOptions) {
+      setPipeline(undefined);
+    }
+    if (__PROFILE__) {
+      profileEnd();
+    }
 
-      if (!hasNativeOps && !hasDelayedRunOnMainThread) {
-        globalCommitContext.flushOptions.emptyPatch = true;
-      }
+    if (!hasNativeOps && !hasDelayedRunOnMainThread) {
+      globalCommitContext.flushOptions.emptyPatch = true;
+    }
 
-      delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
-        ? takeDelayedRunOnMainThreadData()
-        : undefined;
+    const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
+      ? takeDelayedRunOnMainThreadData()
+      : undefined;
 
+    let updateEvent: ReturnType<typeof createElementTemplateUpdateEvent>;
+    try {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
@@ -125,7 +123,7 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
         );
       }
 
-      lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent({
+      updateEvent = createElementTemplateUpdateEvent({
         ops: globalCommitContext.ops,
         flushOptions: globalCommitContext.flushOptions,
         reloadVersion: getReloadVersion(),
@@ -134,26 +132,27 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
         mainThreadRefInitValuePatch: hasMainThreadRefInitValuePatch
           ? mainThreadRefInitValuePatch
           : undefined,
-      }));
-      didDispatchUpdatePayload = true;
-    }
-    // When native ops exist, patch first so a newly attached ref observes the
-    // committed native state. Ref-only commits still flush through this path.
-    flushPendingRefs();
-    didFlushRefs = true;
-  } finally {
-    if (delayedRunOnMainThreadPayload && !didDispatchUpdatePayload) {
-      dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-    }
-    if (!didFlushRefs) {
+      });
+    } catch (error) {
+      if (delayedRunOnMainThreadPayload) {
+        dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+      }
       clearPendingRefs();
+      resetGlobalCommitContext();
+      scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+      throw error;
     }
-    resetGlobalCommitContext();
-    // Match Snapshot's cleanup boundary: start the delayed teardown only
-    // after the bridge dispatch attempt, so background JS objects are not
-    // torn down before main-thread detach observes the same commit.
-    scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+
+    lynx.getCoreContext().dispatchEvent(updateEvent);
   }
+  // When native ops exist, patch first so a newly attached ref observes the
+  // committed native state. Ref-only commits still flush through this path.
+  flushPendingRefs();
+  resetGlobalCommitContext();
+  // Match Snapshot's cleanup boundary: start the delayed teardown only
+  // after the bridge dispatch, so background JS objects are not torn down
+  // before main-thread detach observes the same commit.
+  scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
 }
 
 export function installElementTemplateCommitHook(): void {

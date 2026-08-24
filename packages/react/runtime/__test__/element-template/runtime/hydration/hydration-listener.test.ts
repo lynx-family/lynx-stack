@@ -13,6 +13,10 @@ import {
   resetElementTemplateHydrationListener,
 } from '../../../../src/element-template/background/hydration-listener.js';
 import {
+  installElementTemplatePatchListener,
+  resetElementTemplatePatchListener,
+} from '../../../../src/element-template/native/patch-listener.js';
+import {
   BackgroundElementTemplateInstance,
   BackgroundListElementTemplateInstance,
 } from '../../../../src/element-template/background/instance.js';
@@ -260,6 +264,46 @@ describe('ElementTemplate hydration listener', () => {
       mainThreadRefInitValuePatch: [[1, 'hydrate-init']],
     });
     expect(takeMainThreadRefInitValuePatch()).toEqual([]);
+  });
+
+  it('applies MainThreadRef init values when reload makes the hydration update stale', () => {
+    const updateWorkletRefInitValueChanges = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: {
+        updateWorkletRefInitValueChanges,
+      },
+    };
+
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const after = new BackgroundElementTemplateInstance('_et_test');
+      backgroundRoot.appendChild(after);
+      new MainThreadRef('reload-init');
+
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      dispatchHydrate([createSerializedTemplate(after.instanceId, '_et_test')]);
+
+      envManager.switchToBackground();
+      // This harness shares module state across both simulated threads. Advance
+      // the version after BTS dispatch so the queued update is stale on MTS.
+      increaseReloadVersion();
+      vi.mocked(__FlushElementTree).mockClear();
+      envManager.switchToMainThread();
+
+      expect(updateWorkletRefInitValueChanges).toHaveBeenCalledWith([[1, 'reload-init']]);
+      expect(__FlushElementTree).not.toHaveBeenCalled();
+    } finally {
+      envManager.switchToMainThread();
+      resetElementTemplatePatchListener();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+      envManager.switchToBackground();
+    }
   });
 
   it('clears delayed runOnMainThread state when hydrate matching fails', () => {
@@ -625,56 +669,6 @@ describe('ElementTemplate hydration listener', () => {
       lynx.reportError = oldReportError;
       lynx.createSelectorQuery = oldCreateSelectorQuery;
       printTreeSpy.mockRestore();
-    }
-  });
-
-  it('clears init-value and delayed call state when hydrate update dispatch throws', () => {
-    const dispatchError = new Error('hydrate update dispatch failed');
-    const oldCreateSelectorQuery = lynx.createSelectorQuery;
-    const eventHandler = vi.fn();
-    const ref = vi.fn();
-    const exec = vi.fn();
-    const select = vi.fn(() => ({ setNativeProps: vi.fn(() => ({ exec })) }));
-    lynx.createSelectorQuery = vi.fn(() => ({ select })) as typeof lynx.createSelectorQuery;
-
-    try {
-      __etAttrPlanMap._et_dispatch_failure = [0, adaptEventAttrSlot, 1, adaptRefAttrSlot];
-      resetEventStateForRuntime();
-      envManager.switchToBackground();
-      installElementTemplateHydrationListener();
-      const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
-
-      const backgroundRoot = __root as BackgroundElementTemplateInstance;
-      const after = new BackgroundElementTemplateInstance('_et_dispatch_failure', [eventHandler, ref]);
-      backgroundRoot.appendChild(after);
-      publishEvent('-1:0:', { type: 'tap' });
-      new ElementTemplateRefProxy(after.instanceId, 1).setNativeProps({ opacity: 1 }).exec();
-      new MainThreadRef('failed-dispatch-init');
-      void runOnMainThread({ _wkltId: 'failed-dispatch-main-thread-function' } as unknown as () => void)();
-
-      envManager.switchToMainThread();
-      dispatchHydrate([{
-        ...createSerializedTemplate(after.instanceId, '_et_dispatch_failure'),
-        attributeSlots: ['-1:0:', '-1-1'],
-      }]);
-      vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
-        throw dispatchError;
-      });
-
-      expect(() => envManager.switchToBackground()).toThrow(dispatchError);
-      expect(takeMainThreadRefInitValuePatch()).toEqual([]);
-      expect(takeDelayedRunOnMainThreadData()).toEqual([]);
-      expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
-      expect(globalPipelineOptions).toBeUndefined();
-      flushPendingEvents();
-      flushPendingRefs();
-      flushDelayedRefUiOps();
-      expect(eventHandler).not.toHaveBeenCalled();
-      expect(ref).not.toHaveBeenCalled();
-      expect(select).not.toHaveBeenCalled();
-      expect(exec).not.toHaveBeenCalled();
-    } finally {
-      lynx.createSelectorQuery = oldCreateSelectorQuery;
     }
   });
 

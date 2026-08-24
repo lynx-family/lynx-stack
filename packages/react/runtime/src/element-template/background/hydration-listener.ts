@@ -176,20 +176,7 @@ export function installElementTemplateHydrationListener(): void {
           return;
         }
 
-        let didDispatchHydrateUpdate = false;
-        try {
-          lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
-          didDispatchHydrateUpdate = true;
-        } finally {
-          if (!didDispatchHydrateUpdate) {
-            if (delayedRunOnMainThreadPayload) {
-              dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-            }
-            clearPendingEvents();
-            clearPendingRefs();
-            clearDelayedRefUiOps();
-          }
-        }
+        lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
         flushPendingEvents();
         // Ordinary refs attach on Preact commit boundaries; hydration only releases
         // delayed selector ops after ids have been rebound to stable native handles.
