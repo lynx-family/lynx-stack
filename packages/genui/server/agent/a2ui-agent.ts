@@ -6,6 +6,7 @@ import { Agent } from '@mastra/core/agent';
 
 import type { A2UICatalog } from './a2ui-catalog';
 import { loadBasicCatalog } from './a2ui-catalog';
+import { getA2UIMastra } from './a2ui-mastra.js';
 import { buildA2UISystemPrompt } from './a2ui-prompt';
 import type { ArkImageGenerationRunScope } from './ark-image-generation-tool.js';
 import { createArkImageGenerationTool } from './ark-image-generation-tool.js';
@@ -99,6 +100,7 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
     id: 'a2ui-agent',
     name: 'A2UIAgent',
     instructions,
+    mastra: getA2UIMastra(),
     model: buildModel(model),
     tools: {
       generate_image: generateImage,

@@ -71,7 +71,10 @@ without closing the SSE response and resumes the same agent run with the image
 result. The resumed agent owns the final `updateComponents` or
 `updateDataModel` patch. The tool itself never constructs protocol messages.
 The JSON endpoints use the same continuation internally but return only after
-the resumed agent has completed.
+the resumed agent has completed. Suspended workflow snapshots and pending image
+jobs are held in process memory, so an in-flight continuation must remain in
+the same live server process. Process restarts and cross-replica continuation
+are not supported by this minimum storage configuration.
 
 The hosting runtime must provide these variables before starting the server.
 
