@@ -35,7 +35,7 @@ function mountAndHydrate(jsx) {
   globalEnvManager.switchToBackground();
   render(jsx, __root);
 
-  lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+  lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
   globalEnvManager.switchToMainThread();
   const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
