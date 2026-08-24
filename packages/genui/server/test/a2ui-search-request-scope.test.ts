@@ -49,7 +49,7 @@ describe('A2UI search request scope', () => {
     };
     const agent = {
       stream(_messages: unknown, options: TestRunOptions) {
-        return {
+        return Promise.resolve({
           textStream: (async function*() {
             await searchDoubaoForRun(
               { requestContext: options.requestContext },
@@ -60,7 +60,7 @@ describe('A2UI search request scope', () => {
             );
             yield 'invalid';
           })(),
-        };
+        });
       },
       async generate(_messages: unknown, options: TestRunOptions) {
         await searchDoubaoForRun(
