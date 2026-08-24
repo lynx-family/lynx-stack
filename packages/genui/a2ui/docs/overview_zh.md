@@ -286,4 +286,4 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 - [Catalogs、内置组件与自定义组件](./catalog-guide_zh.md)——组合 contract、加入
   manifest、注册你自己的组件。
 - [System Prompts](./system-prompts_zh.md)——生成让 Agent 与你的 catalog 配套的模型指令。
-- [打开 GenUI playground](https://lynxjs.org/genui)——在线体验。
+- [打开 GenUI playground](https://lynx-stack.dev/genui/)——在线体验。
