@@ -385,10 +385,9 @@ impl MainThreadWasmContext {
           // worklet forms on the same element, event name and type.
           is_caught = !catch_handlers.is_empty();
           let current_target_dataset: JsValue = current_target_element_data.dataset.clone().into();
-          // Release the element data before entering JS. A callback is free to
-          // register or remove listeners - a `once` listener removes itself -
-          // which re-enters this context, and holding the borrow across the call
-          // would abort with "recursive use of an object".
+          // Release the element data before asking JS to queue the callbacks.
+          // This also keeps the binding safe if its scheduling implementation
+          // changes and re-enters this context in the future.
           drop(current_target_element_data);
           for closure in bind_handlers.iter().chain(catch_handlers.iter()) {
             self.mts_binding.run_element_closure(
