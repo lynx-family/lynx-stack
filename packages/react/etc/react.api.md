@@ -70,7 +70,7 @@ export function createPortal(vnode: ComponentChild, container: NodesRef): ReactN
 export { createRef }
 
 // @public
-export function createRenderContext(_context: {
+export function createRenderContext(context: {
     lynx: unknown;
 }): Root;
 
@@ -209,6 +209,9 @@ export const useInitDataChanged: (callback: (data: InitData) => void) => void;
 
 // @public @deprecated
 export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void;
+
+// @public
+export function useLynx(): typeof lynx;
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;

@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createRenderContext, root } from '../../../src/index';
+import { createRenderContext, root, useLynx } from '../../../src/index';
 import { globalEnvManager } from '../utils/envManager';
 
 beforeEach(() => {
@@ -23,7 +23,7 @@ describe('createRenderContext', () => {
   it('returns a root that renders', () => {
     const context = createRenderContext({ lynx });
     expect(context.render).toBeTypeOf('function');
-    expect(context).toBe(root);
+    expect(context.registerDataProcessors).toBe(root.registerDataProcessors);
   });
 
   it('registers without rendering, so a deferred render keeps the callbacks', () => {
@@ -34,5 +34,28 @@ describe('createRenderContext', () => {
     // what lets the engine's queued first-screen events reach the runtime even
     // when the page defers rendering.
     expect(lynx.getApp().OnLifecycleEvent).toBeTypeOf('function');
+  });
+});
+
+describe('useLynx', () => {
+  it('falls back to the module-scope lynx outside a render context', () => {
+    let seen;
+    function Probe() {
+      seen = useLynx();
+      return null;
+    }
+    root.render(<Probe />);
+    expect(seen).toBe(lynx);
+  });
+
+  it('resolves to the lynx of the page rendering it', () => {
+    const pageLynx = { marker: 'page-b' };
+    let seen;
+    function Probe() {
+      seen = useLynx();
+      return null;
+    }
+    createRenderContext({ lynx: pageLynx }).render(<Probe />);
+    expect(seen).toBe(pageLynx);
   });
 });

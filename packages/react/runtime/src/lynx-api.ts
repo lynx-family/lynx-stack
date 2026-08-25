@@ -8,6 +8,7 @@ import type { Consumer, FC, ReactNode } from 'react';
 
 import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
+import { LynxContext } from './core/hooks/useLynx.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
 import { initBackgroundRuntime } from './lynx.js';
@@ -140,11 +141,18 @@ export const root: Root = {
  *
  * @public
  */
-export function createRenderContext(_context: { lynx: unknown }): Root {
+export function createRenderContext(context: { lynx: unknown }): Root {
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     initBackgroundRuntime();
   }
-  return root;
+  return {
+    ...root,
+    render: (jsx: ReactNode): void => {
+      root.render(
+        createElement(LynxContext.Provider, { value: context.lynx }, jsx) as ReactNode,
+      );
+    },
+  };
 }
 
 /**
@@ -587,6 +595,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
+export { useLynx } from './core/hooks/useLynx.js';
 export { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 export { runOnBackground } from './core/background-function/run-on-background.js';
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
