@@ -391,8 +391,6 @@ define_loaded_library! {
     required {
       lynx_template_data_create_from_json:
         unsafe extern "C" fn(*const c_char) -> *mut lynx_template_data_t;
-      lynx_template_data_mark_state: unsafe extern "C" fn(*mut lynx_template_data_t, *const c_char);
-      lynx_template_data_set_read_only: unsafe extern "C" fn(*mut lynx_template_data_t, c_int);
       lynx_template_data_release: unsafe extern "C" fn(*mut lynx_template_data_t);
     }
     optional {
@@ -410,41 +408,6 @@ define_loaded_library! {
       lynx_template_bundle_get_error_message:
         unsafe extern "C" fn(*mut lynx_template_bundle_t) -> *const c_char;
       lynx_template_bundle_release: unsafe extern "C" fn(*mut lynx_template_bundle_t);
-    }
-    optional {
-    }
-  }
-  header "lynx_view_client_capi.h" {
-    required {
-      lynx_view_client_create: unsafe extern "C" fn(*mut c_void) -> *mut lynx_view_client_t;
-      lynx_view_client_get_user_data: unsafe extern "C" fn(*mut lynx_view_client_t) -> *mut c_void;
-      lynx_view_client_bind_on_page_start:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_page_start>);
-      lynx_view_client_bind_on_load_success:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_load_success>);
-      lynx_view_client_bind_on_first_screen:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_first_screen>);
-      lynx_view_client_bind_on_page_updated:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_page_updated>);
-      lynx_view_client_bind_on_data_updated:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_data_updated>);
-      lynx_view_client_bind_on_destroy:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_destroy>);
-      lynx_view_client_bind_on_runtime_ready:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_runtime_ready>);
-      lynx_view_client_bind_on_received_error:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_received_error>);
-      lynx_view_client_bind_on_timing_setup:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_timing_setup>);
-      lynx_view_client_bind_on_timing_update:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_timing_update>);
-      lynx_view_client_bind_on_enter_foreground:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_enter_foreground>);
-      lynx_view_client_bind_on_enter_background:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_enter_background>);
-      lynx_view_client_bind_on_frame_timing:
-        unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_frame_timing>);
-      lynx_view_client_release: unsafe extern "C" fn(*mut lynx_view_client_t);
     }
     optional {
     }
@@ -557,6 +520,50 @@ define_loaded_library! {
   }
 }
 
+// Public CAPI exports intentionally not loaded because no Rust implementation
+// path uses them. Keep the signatures here for comparison with their declaring
+// headers, and move an entry into define_loaded_library! only with its consumer.
+//
+// lynx_template_data_capi.h:
+// lynx_template_data_mark_state:
+//   unsafe extern "C" fn(*mut lynx_template_data_t, *const c_char);
+// lynx_template_data_set_read_only:
+//   unsafe extern "C" fn(*mut lynx_template_data_t, c_int);
+//
+// lynx_view_client_capi.h:
+// lynx_view_client_create:
+//   unsafe extern "C" fn(*mut c_void) -> *mut lynx_view_client_t;
+// lynx_view_client_get_user_data:
+//   unsafe extern "C" fn(*mut lynx_view_client_t) -> *mut c_void;
+// lynx_view_client_bind_on_page_start:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_page_start>);
+// lynx_view_client_bind_on_load_success:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_load_success>);
+// lynx_view_client_bind_on_first_screen:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_first_screen>);
+// lynx_view_client_bind_on_page_updated:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_page_updated>);
+// lynx_view_client_bind_on_data_updated:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_data_updated>);
+// lynx_view_client_bind_on_destroy:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_destroy>);
+// lynx_view_client_bind_on_runtime_ready:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_runtime_ready>);
+// lynx_view_client_bind_on_received_error:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_received_error>);
+// lynx_view_client_bind_on_timing_setup:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_timing_setup>);
+// lynx_view_client_bind_on_timing_update:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_timing_update>);
+// lynx_view_client_bind_on_enter_foreground:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_enter_foreground>);
+// lynx_view_client_bind_on_enter_background:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_enter_background>);
+// lynx_view_client_bind_on_frame_timing:
+//   unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_frame_timing>);
+// lynx_view_client_release:
+//   unsafe extern "C" fn(*mut lynx_view_client_t);
+
 impl LoadedLibrary {
   pub fn load_from_environment() -> Result<Self> {
     let candidates = candidate_library_paths()?;
@@ -595,7 +602,7 @@ mod tests {
     // Each manifest entry expands into exactly one field and one resolver. The
     // compiler rejects missing or duplicate struct fields; these assertions
     // additionally pin the expected public ABI surface and compatibility split.
-    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 133);
+    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 115);
 
     let mut names = HashSet::new();
     let mut required_count = 0;
@@ -614,7 +621,7 @@ mod tests {
     }
 
     optional_names.sort_unstable();
-    assert_eq!(required_count, 130);
+    assert_eq!(required_count, 112);
     assert_eq!(
       optional_names,
       [
