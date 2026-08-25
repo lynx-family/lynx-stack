@@ -603,6 +603,7 @@ export interface Lynx {
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
 }
 
+export { useLynx } from './core/hooks/useLynx.js';
 export { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 export { runOnBackground } from './core/background-function/run-on-background.js';
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';

@@ -38,6 +38,7 @@ export const {
   useImperativeHandle,
   useInitData,
   useInitDataChanged,
+  useLynx,
   useLynxGlobalEventListener,
   useGlobalProps,
   useGlobalPropsChanged,
