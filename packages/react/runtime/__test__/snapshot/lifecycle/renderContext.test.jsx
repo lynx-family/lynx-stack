@@ -16,8 +16,18 @@ describe('createRenderContext', () => {
     const app = { name: 'page-a' };
     createRenderContext({ lynx: { getApp: () => app } });
 
-    expect(lynx.getApp().OnLifecycleEvent).toBeTypeOf('function');
-    expect(lynx.getApp().publishEvent).toBeTypeOf('function');
+    expect(app.OnLifecycleEvent).toBeTypeOf('function');
+    expect(app.publishEvent).toBeTypeOf('function');
+  });
+
+  it('gives each page its own callbacks', () => {
+    const appA = { name: 'page-a' };
+    const appB = { name: 'page-b' };
+    createRenderContext({ lynx: { getApp: () => appA } });
+    createRenderContext({ lynx: { getApp: () => appB } });
+
+    expect(appA.__reactHandlers).not.toBe(appB.__reactHandlers);
+    expect(appB.publishEvent).toBeTypeOf('function');
   });
 
   it('returns a root that renders', () => {
@@ -27,13 +37,13 @@ describe('createRenderContext', () => {
   });
 
   it('registers without rendering, so a deferred render keeps the callbacks', () => {
-    lynx.getApp().OnLifecycleEvent = undefined;
     createRenderContext({ lynx });
 
     // No render() call here: registration must already have happened, which is
     // what lets the engine's queued first-screen events reach the runtime even
     // when the page defers rendering.
-    expect(lynx.getApp().OnLifecycleEvent).toBeTypeOf('function');
+    expect(lynx.getApp().__reactHandlers?.OnLifecycleEvent).toBeTypeOf('function');
+    expect(lynx.getApp().__reactHandlers?.publishEvent).toBeTypeOf('function');
   });
 });
 
@@ -49,7 +59,7 @@ describe('useLynx', () => {
   });
 
   it('resolves to the lynx of the page rendering it', () => {
-    const pageLynx = { marker: 'page-b' };
+    const pageLynx = { marker: 'page-b', getApp: () => ({}) };
     let seen;
     function Probe() {
       seen = useLynx();

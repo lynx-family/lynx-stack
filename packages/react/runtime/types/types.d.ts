@@ -223,6 +223,14 @@ declare global {
     onAppReload: (updateData: Record<string, any>) => void;
     processCardConfig: () => void;
     callBeforePublishEvent?: (data: unknown) => void;
+
+    /**
+     * The runtime's own handler table and subscription marker. Stored on the
+     * app object so each page keeps its own set even when the runtime module
+     * is shared across a group.
+     */
+    __reactHandlers?: Record<string, unknown>;
+    __reactRegistered?: boolean;
     getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
     GlobalEventEmitter: EventEmitter;
   }

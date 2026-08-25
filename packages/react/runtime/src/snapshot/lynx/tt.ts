@@ -4,6 +4,7 @@
 import { process, render } from 'preact';
 
 import { runWithForce } from './runWithForce.js';
+import { registerAppEventHandlers } from '../../core/app-events.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
@@ -37,22 +38,20 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
-function injectTt(): void {
-  const tt = lynx.getApp();
-  tt.OnLifecycleEvent = onLifecycleEvent;
-  tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
-  tt.callDestroyLifetimeFun = () => {
-    removeCtxNotFoundEventListener();
-    destroyWorklet();
-    destroyBackground();
-  };
-  tt.updateGlobalProps = updateGlobalProps;
-  tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
-  tt.processCardConfig = () => {
-    // used to updateTheme, no longer rely on this function
-  };
+function injectTt(pageLynx?: unknown): void {
+  registerAppEventHandlers({
+    OnLifecycleEvent: onLifecycleEvent,
+    publishEvent: delayedPublishEvent,
+    publicComponentEvent: delayedPublicComponentEvent,
+    callDestroyLifetimeFun: () => {
+      removeCtxNotFoundEventListener();
+      destroyWorklet();
+      destroyBackground();
+    },
+    updateGlobalProps,
+    updateCardData,
+    onAppReload: reloadBackground,
+  }, pageLynx);
 }
 
 function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
@@ -150,8 +149,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      lynx.getApp().publishEvent = publishEvent;
-      lynx.getApp().publicComponentEvent = publicComponentEvent;
+      registerAppEventHandlers({ publishEvent, publicComponentEvent });
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
