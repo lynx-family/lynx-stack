@@ -266,7 +266,7 @@ describe('WorkletRef in js', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"snapshotPatch":[],"id":6}]}",
+              "data": "{"patchList":[{"snapshotPatch":[2,-1,-2],"id":16}]}",
               "patchOptions": {
                 "isHydration": true,
                 "pipelineOptions": {
@@ -276,7 +276,7 @@ describe('WorkletRef in js', () => {
                   "pipelineOrigin": "reactLynxHydrate",
                   "stage": "hydrate",
                 },
-                "reloadVersion": 1,
+                "reloadVersion": 6,
               },
             },
             [Function],
