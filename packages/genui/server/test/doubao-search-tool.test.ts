@@ -5,6 +5,7 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { loadBasicCatalog } from '../agent/a2ui-catalog.js';
+import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
 import {
   createA2UIOpenURLPolicy,
   userProvidedA2UIURLSources,
@@ -14,13 +15,17 @@ import { validateA2UIOutput } from '../agent/a2ui-validator.js';
 import { createArkImageGenerationRunScope } from '../agent/ark-image-generation-tool.js';
 import {
   SEARCH_INFINITY_ENDPOINT,
+  createOptionalDoubaoImageSearchTool,
   createOptionalDoubaoSearchTool,
   initializeDoubaoSearchRunScope,
   readDoubaoSearchConfig,
   resolveDoubaoSearchConfig,
   searchDoubao,
   searchDoubaoForRun,
+  searchDoubaoImages,
+  searchDoubaoImagesForRun,
   searchedDoubaoDocumentURLs,
+  searchedDoubaoImageURLs,
 } from '../agent/doubao-search-tool.js';
 
 const CONFIG = {
@@ -69,8 +74,50 @@ function successfulResponse(url = 'https://news.example.com/story') {
   );
 }
 
+function successfulImageResponse(
+  imageUrl = 'https://images.example.com/beijing.jpeg?signature=trusted',
+  sourceUrl = 'https://news.example.com/beijing-photo',
+) {
+  return new Response(
+    JSON.stringify({
+      ResponseMetadata: { RequestId: 'private-request-id' },
+      Result: {
+        ResultCount: 9,
+        ImageResults: [{
+          SortId: 1,
+          Title: 'Beijing skyline',
+          SiteName: 'Example News',
+          Url: sourceUrl,
+          PublishTime: '2026-08-20',
+          Image: {
+            Url: imageUrl,
+            Width: 1600,
+            Height: 900,
+            Shape: '横长方形',
+            BlurDes: '清晰',
+            Category: '城市',
+            Watermark: '0',
+          },
+          RankScore: 0.98,
+        }, {
+          SortId: 2,
+          Title: 'Unsafe image',
+          Url: 'file:///private/source',
+          Image: {
+            Url: 'file:///private/image.jpeg',
+          },
+        }],
+      },
+    }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  );
+}
+
 const successfulFetch: typeof fetch = () =>
   Promise.resolve(successfulResponse());
+
+const successfulImageFetch: typeof fetch = () =>
+  Promise.resolve(successfulImageResponse());
 
 const rateLimitedFetch: typeof fetch = () =>
   Promise.resolve(
@@ -142,6 +189,29 @@ function a2uiWithOpenURL(url: unknown): string {
   ]);
 }
 
+function a2uiWithImage(url: unknown): string {
+  return JSON.stringify([
+    {
+      version: 'v0.9',
+      createSurface: {
+        surfaceId: 'main',
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
+      },
+    },
+    {
+      version: 'v0.9',
+      updateComponents: {
+        surfaceId: 'main',
+        components: [{
+          id: 'root',
+          component: 'Image',
+          url,
+        }],
+      },
+    },
+  ]);
+}
+
 describe('Doubao search configuration', () => {
   test('is disabled when no search configuration is present', () => {
     expect(readDoubaoSearchConfig({})).toEqual({
@@ -149,6 +219,7 @@ describe('Doubao search configuration', () => {
       enabled: false,
     });
     expect(createOptionalDoubaoSearchTool(true, {})).toBeUndefined();
+    expect(createOptionalDoubaoImageSearchTool(true, {})).toBeUndefined();
     expect(readDoubaoSearchConfig({
       SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '1000',
     })).toEqual({ ok: true, enabled: false });
@@ -187,13 +258,23 @@ describe('Doubao search configuration', () => {
       SEARCH_INFINITY_API_KEY: 'secret',
       SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '0',
     })).toBeUndefined();
+    expect(createOptionalDoubaoImageSearchTool(true, {
+      SEARCH_INFINITY_API_KEY: 'secret',
+      SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '0',
+    })).toBeUndefined();
   });
 
   test('can be explicitly disabled even when configuration exists', () => {
     expect(createOptionalDoubaoSearchTool(false, {
       SEARCH_INFINITY_API_KEY: 'search-secret',
     })).toBeUndefined();
+    expect(createOptionalDoubaoImageSearchTool(false, {
+      SEARCH_INFINITY_API_KEY: 'search-secret',
+    })).toBeUndefined();
     expect(createOptionalDoubaoSearchTool(true, {
+      SEARCH_INFINITY_API_KEY: 'search-secret',
+    })).toBeDefined();
+    expect(createOptionalDoubaoImageSearchTool(true, {
       SEARCH_INFINITY_API_KEY: 'search-secret',
     })).toBeDefined();
   });
@@ -250,6 +331,47 @@ describe('Doubao search request', () => {
     ).rejects.toThrow('must not exceed 100 characters');
   });
 
+  test('requests image results and normalizes trusted image metadata', async () => {
+    let requestedURL = '';
+    let requestInit: RequestInit | undefined;
+    const fetchImpl: typeof fetch = (input, init) => {
+      requestedURL = requestURL(input);
+      requestInit = init;
+      return Promise.resolve(successfulImageResponse());
+    };
+
+    await expect(searchDoubaoImages(CONFIG, ' Beijing skyline ', fetchImpl))
+      .resolves.toEqual({
+        query: 'Beijing skyline',
+        totalImageCount: 9,
+        results: [{
+          rank: 1,
+          title: 'Beijing skyline',
+          imageUrl: 'https://images.example.com/beijing.jpeg?signature=trusted',
+          sourceUrl: 'https://news.example.com/beijing-photo',
+          siteName: 'Example News',
+          publishTime: '2026-08-20',
+          width: 1600,
+          height: 900,
+          shape: '横长方形',
+          blurDescription: '清晰',
+          category: '城市',
+          hasWatermark: false,
+        }],
+      });
+
+    expect(requestedURL).toBe(SEARCH_INFINITY_ENDPOINT);
+    expect(requestInit?.method).toBe('POST');
+    const body = requestInit?.body;
+    expect(typeof body).toBe('string');
+    if (typeof body !== 'string') throw new Error('request body is missing');
+    expect(JSON.parse(body)).toEqual({
+      Query: 'Beijing skyline',
+      SearchType: 'image',
+      Count: 5,
+    });
+  });
+
   test('does not expose upstream response details in failures', async () => {
     await expect(searchDoubao(CONFIG, 'topic', rateLimitedFetch)).rejects
       .toThrow('request failed with status 429');
@@ -300,9 +422,18 @@ describe('Doubao search request', () => {
     const scope = createArkImageGenerationRunScope();
     initializeDoubaoSearchRunScope(scope, 2);
     await searchDoubaoForRun(scope, CONFIG, 'first', successfulFetch);
-    await searchDoubaoForRun(scope, CONFIG, 'second', successfulFetch);
+    await searchDoubaoImagesForRun(
+      scope,
+      CONFIG,
+      'second',
+      successfulImageFetch,
+    );
     expect(searchedDoubaoDocumentURLs(scope)).toEqual([
       'https://news.example.com/story',
+      'https://news.example.com/beijing-photo',
+    ]);
+    expect(searchedDoubaoImageURLs(scope)).toEqual([
+      'https://images.example.com/beijing.jpeg?signature=trusted',
     ]);
     await expect(
       searchDoubaoForRun(scope, CONFIG, 'third', successfulFetch),
@@ -316,6 +447,62 @@ describe('Doubao search request', () => {
     await expect(
       searchDoubaoForRun(failedScope, CONFIG, 'second', successfulFetch),
     ).rejects.toThrow('call limit reached (1 per request)');
+  });
+});
+
+describe('A2UI image-search source validation', () => {
+  test('trusts searched images and their source pages but rejects invented images', async () => {
+    const catalog = await loadBasicCatalog();
+    const scope = createArkImageGenerationRunScope();
+    const imagePolicy = createA2UIImageSourcePolicy(
+      [],
+      () => searchedDoubaoImageURLs(scope),
+    );
+    const openURLPolicy = createA2UIOpenURLPolicy(
+      [],
+      () => searchedDoubaoDocumentURLs(scope),
+    );
+    await searchDoubaoImagesForRun(
+      scope,
+      CONFIG,
+      'Beijing skyline',
+      successfulImageFetch,
+    );
+
+    const searchedImage =
+      'https://images.example.com/beijing.jpeg?signature=trusted';
+    expect(
+      validateA2UIOutput(
+        a2uiWithImage(searchedImage),
+        catalog,
+        { isImageSourceAllowed: imagePolicy },
+      ).ok,
+    ).toBe(true);
+    expect(openURLPolicy('https://news.example.com/beijing-photo')).toBe(true);
+
+    const inventedImage = 'https://images.example.com/invented.jpeg';
+    const invented = validateA2UIOutput(
+      a2uiWithImage(inventedImage),
+      catalog,
+      { isImageSourceAllowed: imagePolicy },
+    );
+    expect(invented.ok).toBe(false);
+    expect(invented.errors.join('\n')).toContain(
+      'returned by image_search or generate_image',
+    );
+
+    const trustedStream = new A2UIProtocolMessageStreamParser({
+      isImageSourceAllowed: imagePolicy,
+    }).push(a2uiWithImage(searchedImage));
+    expect(JSON.stringify(trustedStream)).toContain(searchedImage);
+
+    const untrustedStream = new A2UIProtocolMessageStreamParser({
+      isImageSourceAllowed: imagePolicy,
+    }).push(a2uiWithImage(inventedImage));
+    expect(JSON.stringify(untrustedStream)).toContain(
+      '"component":"Loading"',
+    );
+    expect(JSON.stringify(untrustedStream)).not.toContain(inventedImage);
   });
 });
 
@@ -371,7 +558,7 @@ describe('A2UI web-search source validation', () => {
     );
     expect(invented.ok).toBe(false);
     expect(invented.errors).toContain(
-      'Function "openUrl" at component.root.action.functionCall has untrusted url "https://invented.example.com/source". Use a URL supplied by the request or returned by web_search.',
+      'Function "openUrl" at component.root.action.functionCall has untrusted url "https://invented.example.com/source". Use a URL supplied by the request or returned by web_search or image_search.',
     );
   });
 
@@ -386,7 +573,7 @@ describe('A2UI web-search source validation', () => {
 
     expect(result.ok).toBe(false);
     expect(result.errors).toContain(
-      'Function "openUrl" at component.root.action.functionCall has untrusted url {"path":"/sources/0/url"}. Use a URL supplied by the request or returned by web_search.',
+      'Function "openUrl" at component.root.action.functionCall has untrusted url {"path":"/sources/0/url"}. Use a URL supplied by the request or returned by web_search or image_search.',
     );
   });
 

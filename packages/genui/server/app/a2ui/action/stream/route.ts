@@ -20,7 +20,10 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../../../../agent/ark-image-generation-tool.js';
-import { searchedDoubaoDocumentURLs } from '../../../../agent/doubao-search-tool.js';
+import {
+  searchedDoubaoDocumentURLs,
+  searchedDoubaoImageURLs,
+} from '../../../../agent/doubao-search-tool.js';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
 import {
   configuredApiStyle,
@@ -187,7 +190,10 @@ async function postA2UIActionStream(req: Request) {
   const imageGenerationScope = createArkImageGenerationRunScope();
   const isImageSourceAllowed = createA2UIImageSourcePolicy(
     [[userMessage], validatedConversation.conversation, catalog],
-    () => generatedArkImageURLs(imageGenerationScope),
+    () => [
+      ...generatedArkImageURLs(imageGenerationScope),
+      ...searchedDoubaoImageURLs(imageGenerationScope),
+    ],
   );
   const isOpenUrlAllowed = createA2UIOpenURLPolicy(
     userProvidedA2UIURLSources(

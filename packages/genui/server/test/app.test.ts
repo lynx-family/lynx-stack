@@ -97,6 +97,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: true,
+        imageSearchReady: true,
         webSearchReady: true,
       });
       const serializedHealth = JSON.stringify(healthPayload);
@@ -119,6 +120,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: false,
+        imageSearchReady: true,
         webSearchReady: true,
         error: 'IMG_GEN_ARK_IMAGE_MODEL is required',
       });
@@ -133,6 +135,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: false,
+        imageSearchReady: true,
         webSearchReady: true,
         error: 'IMG_GEN_ARK_IMAGE_BASE_URL is required',
       });
@@ -149,6 +152,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: true,
+        imageSearchReady: false,
         webSearchReady: false,
       });
       process.env[SEARCH_INFINITY_API_KEY_ENV] = 'private-search-key';
@@ -160,6 +164,7 @@ describe('Hono application', () => {
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: true,
+        imageSearchReady: false,
         webSearchReady: false,
       });
     } finally {
