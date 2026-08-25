@@ -51,6 +51,14 @@ describe('app route hash', () => {
       protocol: { name: 'mcp-apps', version: '2026-01-26' },
       tab: 'create',
     });
+    expect(buildRouteHash('mcp-apps', 'examples')).toBe(
+      '#/mcp-apps/examples',
+    );
+    expect(parseRouteHash('#/mcp-apps/examples/weather')).toMatchObject({
+      protocol: { name: 'mcp-apps', version: '2026-01-26' },
+      tab: 'examples',
+      demoId: 'weather',
+    });
   });
 
   test('keeps deep links under the selected protocol', () => {

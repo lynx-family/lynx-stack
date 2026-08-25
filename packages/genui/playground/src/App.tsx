@@ -52,7 +52,10 @@ const GENUI_TABS: TabDef[] = [
   { id: 'bench', label: 'Bench' },
 ];
 
-const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
+const MCP_APPS_TABS: TabDef[] = [
+  { id: 'create', label: 'Create' },
+  { id: 'examples', label: 'Examples' },
+];
 const LYNX_XML_TABS: TabDef[] = [{ id: 'examples', label: 'Examples' }];
 
 function ensureDefaultRouteHash(): void {
@@ -165,7 +168,10 @@ export function App() {
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
     if (name === 'mcp-apps') {
-      window.location.hash = buildRouteHash(name, 'create');
+      window.location.hash = buildRouteHash(
+        name,
+        route.tab === 'examples' ? 'examples' : 'create',
+      );
       return;
     }
     if (name === 'lynx-xml') {
@@ -198,7 +204,25 @@ export function App() {
       />
     );
 
-    if (protocol.name === 'mcp-apps') return createPage;
+    if (protocol.name === 'mcp-apps') {
+      if (route.tab !== 'examples') return createPage;
+      return route.demoId
+        ? (
+          <DemosPage
+            key='mcp-apps-examples-detail'
+            protocol={protocol}
+            demoId={route.demoId}
+            theme={theme}
+          />
+        )
+        : (
+          <DemosListPage
+            key='mcp-apps-examples-index'
+            protocol={protocol}
+            theme={theme}
+          />
+        );
+    }
 
     if (protocol.name === 'lynx-xml') {
       return route.demoId

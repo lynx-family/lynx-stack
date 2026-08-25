@@ -7,6 +7,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import { A2UI_DEMOS_PAGE_SOURCE } from './a2ui.js';
 import { LYNX_XML_DEMOS_PAGE_SOURCE } from './lynx-xml.js';
+import { MCP_APPS_DEMOS_PAGE_SOURCE } from './mcp-apps.js';
 import { OPENUI_DEMOS_PAGE_SOURCE } from './openui.js';
 import type { DemoCommit, DemoPageScenario, DemosPageSource } from './type.js';
 import { Button } from '../../components/Button.js';
@@ -824,6 +825,16 @@ export function DemosPage(props: {
         key='lynx-xml'
         {...props}
         source={LYNX_XML_DEMOS_PAGE_SOURCE}
+      />
+    );
+  }
+
+  if (props.protocol.name === 'mcp-apps') {
+    return (
+      <DemosPageContent
+        key='mcp-apps'
+        {...props}
+        source={MCP_APPS_DEMOS_PAGE_SOURCE}
       />
     );
   }

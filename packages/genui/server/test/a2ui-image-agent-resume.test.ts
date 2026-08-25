@@ -119,7 +119,11 @@ describe('A2UI asynchronous image continuation', () => {
           agent: { resumeData },
         } as never,
       );
-      return streamResult(patchText, 'stop');
+      return streamResult(patchText, 'stop', {
+        // Real Mastra resume results may report the pre-suspension text here
+        // even though their textStream contains the resumed patch.
+        text: initialText,
+      });
     });
     const agent = {
       stream: async () =>
@@ -161,7 +165,10 @@ describe('A2UI asynchronous image continuation', () => {
       }),
     );
     if (!completed.text) throw new Error('completed text is missing');
-    expect(JSON.parse(completed.text)).toHaveLength(3);
+    const completedMessages = JSON.parse(completed.text) as unknown[];
+    const expectedPatchMessages = JSON.parse(patchText) as unknown[];
+    expect(completedMessages).toHaveLength(3);
+    expect(completedMessages.at(-1)).toEqual(expectedPatchMessages.at(0));
     expect(generatedArkImageURLs(scope)).toEqual([
       'https://images.example.com/generated.jpeg',
     ]);
