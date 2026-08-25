@@ -133,9 +133,9 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   /**
    * Invokes a callback registered through `__AddEventListener`.
    *
-   * Called from the same per-element loop as `runWorklet` and `publishEvent`, so
-   * a callback sees the same `target` / `currentTarget` shape and takes part in
-   * the same capture, catch and bubble ordering.
+   * Called from the same per-element loop as `runWorklet` and `publishEvent`.
+   * The callback is queued in that loop's capture, catch and bubble order, but
+   * runs one microtask later.
    */
   runElementClosure(
     closure: unknown,
@@ -153,19 +153,23 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       | undefined;
     if (!resolvedTarget) return;
     const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
-    eventObject.target = this.generateTargetObject(
+    const eventTarget = this.generateTargetObject(
       resolvedTarget,
       resolvedTargetDataset,
     );
-    eventObject.currentTarget = this.generateTargetObject(
+    const eventCurrentTarget = this.generateTargetObject(
       currentTarget as DecoratedHTMLElement,
       currentTargetDataset,
     );
     // @ts-expect-error
-    eventObject.target.elementRefptr = resolvedTarget;
+    eventTarget.elementRefptr = resolvedTarget;
     // @ts-expect-error
-    eventObject.currentTarget.elementRefptr = currentTarget;
-    (closure as (event: LynxCrossThreadEvent) => void)(eventObject);
+    eventCurrentTarget.elementRefptr = currentTarget;
+    queueMicrotask(() => {
+      eventObject.target = eventTarget;
+      eventObject.currentTarget = eventCurrentTarget;
+      (closure as (event: LynxCrossThreadEvent) => void)(eventObject);
+    });
   }
 
   publishEvent(
