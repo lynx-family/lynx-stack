@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { root, useLynx } from '../../../src/index';
 import { createRoot } from '../../../src/internal';
 import { globalEnvManager } from '../utils/envManager';
 
@@ -56,5 +57,29 @@ describe('createRoot', () => {
     const { root } = await importWithSharing();
 
     expect(() => root.render(null)).toThrow('createRoot(lynx)');
+  });
+});
+
+describe('useLynx', () => {
+  it('falls back to the module-scope lynx without createRoot', () => {
+    let seen;
+    function Probe() {
+      seen = useLynx();
+      return null;
+    }
+    root.render(<Probe />);
+    expect(seen).toBe(lynx);
+  });
+
+  it('resolves to the lynx given to createRoot', async () => {
+    const { createRoot, useLynx } = await importWithSharing();
+    const { pageLynx } = stubPage();
+    let seen;
+    function Probe() {
+      seen = useLynx();
+      return null;
+    }
+    createRoot(pageLynx).render(<Probe />);
+    expect(seen).toBe(pageLynx);
   });
 });
