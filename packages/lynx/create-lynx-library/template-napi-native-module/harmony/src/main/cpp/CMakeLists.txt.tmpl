@@ -1,0 +1,72 @@
+cmake_minimum_required(VERSION 3.18.1)
+
+project(__ADDON_TARGET_NAME__Harmony LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+get_filename_component(
+  LYNX_LIBRARY_PACKAGE_ROOT
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../../.."
+  ABSOLUTE
+)
+
+set(LYNX_LIBRARY_PLATFORM "harmony")
+set(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX ON CACHE BOOL "Use weak suffix NAPI symbols" FORCE)
+set(LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE ON CACHE BOOL "Register NAPI modules through weak-node-api" FORCE)
+set(LYNX_SHARED_BUILD_ELEMENTS OFF CACHE BOOL "Do not build element sources for Harmony addon" FORCE)
+
+if(NOT DEFINED LYNX_PRIMJS_HAR_ROOT)
+  set(
+    LYNX_PRIMJS_HAR_ROOT
+    "${LYNX_LIBRARY_PACKAGE_ROOT}/harmony/oh_modules/@lynx/primjs"
+  )
+endif()
+
+if(NOT EXISTS "${LYNX_PRIMJS_HAR_ROOT}/oh-package.json5")
+  message(FATAL_ERROR
+    "Unable to resolve @lynx/primjs under ${LYNX_PRIMJS_HAR_ROOT}. "
+    "Run ohpm install in the Harmony package first or set LYNX_PRIMJS_HAR_ROOT.")
+endif()
+
+if(NOT DEFINED OHOS_ARCH OR "${OHOS_ARCH}" STREQUAL "")
+  set(OHOS_ARCH "arm64-v8a")
+endif()
+
+set(LYNX_PRIMJS_ABI_DIR "${LYNX_PRIMJS_HAR_ROOT}/libs/${OHOS_ARCH}")
+foreach(LYNX_PRIMJS_LIBRARY napi_adapter napi)
+  if(NOT EXISTS "${LYNX_PRIMJS_ABI_DIR}/lib${LYNX_PRIMJS_LIBRARY}.so")
+    message(FATAL_ERROR
+      "Missing lib${LYNX_PRIMJS_LIBRARY}.so under ${LYNX_PRIMJS_ABI_DIR}")
+  endif()
+  add_library(lynx_primjs_${LYNX_PRIMJS_LIBRARY} SHARED IMPORTED)
+  set_target_properties(lynx_primjs_${LYNX_PRIMJS_LIBRARY} PROPERTIES
+    IMPORTED_LOCATION
+      "${LYNX_PRIMJS_ABI_DIR}/lib${LYNX_PRIMJS_LIBRARY}.so"
+  )
+endforeach()
+
+add_subdirectory(
+  "${LYNX_LIBRARY_PACKAGE_ROOT}/shared"
+  "${CMAKE_CURRENT_BINARY_DIR}/shared"
+)
+
+add_library(__NODE_API_ADDON_NAME__ SHARED
+  harmony_entry.cc
+)
+
+target_include_directories(__NODE_API_ADDON_NAME__ PRIVATE
+  "${LYNX_LIBRARY_PACKAGE_ROOT}"
+)
+
+target_link_libraries(__NODE_API_ADDON_NAME__ PRIVATE
+  ${LYNX_SHARED_TARGETS}
+  lynx_primjs_napi_adapter
+  lynx_primjs_napi
+  libace_napi.z.so
+)
+
+set_target_properties(__NODE_API_ADDON_NAME__ PROPERTIES
+  OUTPUT_NAME "__NODE_API_ADDON_NAME__"
+)
