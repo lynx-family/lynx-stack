@@ -14,6 +14,8 @@ Keep the safe API surface tied to exercised workflows. `LoadedLibrary` is a capa
 
 Keep public CAPI functions without a Rust consumer out of `LoadedLibrary`. Preserve their checked signatures as comments grouped by declaring header, and move them into the active manifest only when an implementation path actually calls them.
 
+Copy each available function comment from its declaring public CAPI header verbatim into the active loader manifest as Rust `///` documentation. Do not invent documentation for CAPI declarations whose headers do not document the function; preserve source comments alongside any intentionally disabled signature.
+
 Treat the complete `public/capi/*.h` header tree as the runtime ABI source of truth; do not infer the SDK contract from `lynx_view_capi.h` or another individual header. C exports declared with C++ reference parameters such as `const float&` must be bound as pointers (for example, `*const f32`) and called with stable addresses; do not require private `lynx_rust_*` shim exports. When a newly documented symbol is absent from the repository's current default runtime artifact, resolve it optionally and make the calling API report that it is unavailable instead of preventing the entire runtime from loading.
 
 Preserve the windowless builder, renderer, resource, metadata, environment, and view capabilities exercised by `lynx-headless-rust-test-runner`. The downstream headless page-capture and DevTools paths remain supported integration workflows; do not remove them because an individual public header omits declarations owned by another header. Do not move screenshot capture or DebugRouter application logic into the engine bridge.
