@@ -1,7 +1,8 @@
+use std::io::{Read, Write};
+
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::{Error, Result};
 
@@ -14,15 +15,6 @@ const PEERTALK_TYPE: u32 = 101;
 pub(crate) struct AppInfo {
   #[serde(rename = "App")]
   pub app: String,
-}
-
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
-pub(crate) struct Session {
-  pub session_id: i64,
-  #[serde(default)]
-  pub r#type: String,
-  #[serde(default)]
-  pub url: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -76,7 +68,7 @@ pub(crate) struct ComputedStyleProperty {
   pub value: String,
 }
 
-pub(crate) async fn write_peertalk_message<W: AsyncWrite + Unpin, T: Serialize>(
+pub(crate) fn write_peertalk_message<W: Write, T: Serialize>(
   writer: &mut W,
   message: &T,
 ) -> Result<()> {
@@ -89,14 +81,14 @@ pub(crate) async fn write_peertalk_message<W: AsyncWrite + Unpin, T: Serialize>(
   write_u32(&mut frame[12..16], len as u32 + 4);
   write_u32(&mut frame[16..20], len as u32);
   frame[PEERTALK_HEADER_LEN..].copy_from_slice(&body);
-  writer.write_all(&frame).await?;
-  writer.flush().await?;
+  writer.write_all(&frame)?;
+  writer.flush()?;
   Ok(())
 }
 
-pub(crate) async fn read_peertalk_message<R: AsyncRead + Unpin>(reader: &mut R) -> Result<Value> {
+pub(crate) fn read_peertalk_message<R: Read>(reader: &mut R) -> Result<Value> {
   let mut header = [0_u8; PEERTALK_HEADER_LEN];
-  reader.read_exact(&mut header).await?;
+  reader.read_exact(&mut header)?;
   let payload_len = read_u32(&header[16..20]) as usize;
   if payload_len > MAX_PEERTALK_PAYLOAD_LEN {
     return Err(Error::Protocol(format!(
@@ -104,7 +96,7 @@ pub(crate) async fn read_peertalk_message<R: AsyncRead + Unpin>(reader: &mut R) 
     )));
   }
   let mut payload = vec![0_u8; payload_len];
-  reader.read_exact(&mut payload).await?;
+  reader.read_exact(&mut payload)?;
   Ok(serde_json::from_slice(&payload)?)
 }
 
@@ -121,54 +113,6 @@ pub(crate) fn parse_initialize_response(value: &Value) -> Result<Option<AppInfo>
     .and_then(|data| data.get("info"))
     .ok_or_else(|| Error::Protocol("Register response missing data.info".into()))?;
   Ok(Some(serde_json::from_value(info.clone())?))
-}
-
-pub(crate) fn list_session_request(port: u16, id: u32) -> Value {
-  json!({
-    "event": "Customized",
-    "data": {
-      "type": "ListSession",
-      "sender": port,
-      "id": id,
-      "data": { "client_id": port },
-    },
-  })
-}
-
-/// Returns the correlation id emitted by newer DebugRouter implementations.
-///
-/// Older Lynx runtimes do not echo this field. Callers must therefore permit
-/// `None`, while still ensuring that at most one uncorrelated ListSession
-/// request is in flight on a connection. An id that is present but malformed
-/// is rejected instead of being treated as an omitted legacy id.
-pub(crate) fn session_list_response_id(value: &Value) -> Result<Option<u32>> {
-  if customized_type(value) != Some("SessionList") {
-    return Ok(None);
-  }
-  let Some(id) = value.get("data").and_then(|data| {
-    data
-      .get("id")
-      .or_else(|| data.get("data").and_then(|inner| inner.get("id")))
-  }) else {
-    return Ok(None);
-  };
-  let id = id
-    .as_u64()
-    .ok_or_else(|| Error::Protocol("SessionList response id is not an unsigned integer".into()))?;
-  let id = u32::try_from(id)
-    .map_err(|_| Error::Protocol(format!("SessionList response id {id} exceeds u32")))?;
-  Ok(Some(id))
-}
-
-pub(crate) fn parse_session_list_response(value: &Value) -> Result<Option<Vec<Session>>> {
-  if customized_type(value) != Some("SessionList") {
-    return Ok(None);
-  }
-  let data = value
-    .get("data")
-    .and_then(|data| data.get("data"))
-    .ok_or_else(|| Error::Protocol("SessionList response missing data.data".into()))?;
-  Ok(Some(serde_json::from_value(data.clone())?))
 }
 
 pub(crate) fn global_switch_request(port: u16, key: &str, value: bool) -> Value {
@@ -313,51 +257,12 @@ mod tests {
     cdp_envelope(Value::String(message.to_string()))
   }
 
-  #[tokio::test]
-  async fn peertalk_frame_roundtrip() {
+  #[test]
+  fn peertalk_frame_roundtrip() {
     let value = json!({ "event": "Initialize", "data": 8901 });
-    let (mut writer, mut reader) = tokio::io::duplex(1024);
-    write_peertalk_message(&mut writer, &value).await.unwrap();
-    assert_eq!(read_peertalk_message(&mut reader).await.unwrap(), value);
-  }
-
-  #[test]
-  fn parses_session_list() {
-    let response = json!({
-      "event": "Customized",
-      "data": {
-        "type": "SessionList",
-        "data": [{ "session_id": 1, "url": "main.lynx.bundle" }],
-      },
-    });
-    let sessions = parse_session_list_response(&response).unwrap().unwrap();
-    assert_eq!(sessions[0].session_id, 1);
-  }
-
-  #[test]
-  fn distinguishes_missing_and_malformed_session_list_ids() {
-    let missing = json!({
-      "event": "Customized",
-      "data": {
-        "type": "SessionList",
-        "data": [],
-      },
-    });
-    assert_eq!(session_list_response_id(&missing).unwrap(), None);
-
-    let malformed = json!({
-      "event": "Customized",
-      "data": {
-        "type": "SessionList",
-        "id": "not-an-id",
-        "data": [],
-      },
-    });
-    assert!(matches!(
-      session_list_response_id(&malformed),
-      Err(Error::Protocol(message))
-        if message == "SessionList response id is not an unsigned integer"
-    ));
+    let mut frame = Vec::new();
+    write_peertalk_message(&mut frame, &value).unwrap();
+    assert_eq!(read_peertalk_message(&mut frame.as_slice()).unwrap(), value);
   }
 
   #[test]

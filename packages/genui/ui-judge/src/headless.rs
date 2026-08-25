@@ -4,18 +4,20 @@
 
 use std::time::{Duration, Instant};
 
-use base64::prelude::{Engine, BASE64_STANDARD};
-use lynx_headless_rust_test_runner::{ConnectOptions, GotoOptions, Lynx, Page, ScreenshotOptions};
+use lynx_headless_rust_test_runner::{GotoOptions, LynxContainer, LynxPage, ScreenshotOptions};
 use serde::Deserialize;
 use serde_json::json;
 use thiserror::Error;
+use tokio::runtime::Runtime;
 
+use crate::capture::{shared_workers, CaptureResponse};
 use crate::judge::{
   calculate_geqi_score, error_result, geqi_error_result, judge_geqi_dimension, judge_screenshot,
   GeqiDimension, JudgeScreenshotRequest, UiJudgeDimensionResult, UiJudgeError, UiJudgeResult,
   GEQI_DIMENSIONS,
 };
 use crate::model::{ModelClient, ModelError, ModelOptions};
+use crate::screenshot::{bmp_to_jpeg, jpeg_data_url};
 use crate::visual::compare_reference_image;
 
 const MAX_ACTIONS_PER_STEP: usize = 8;
@@ -72,6 +74,8 @@ enum HeadlessPageError {
     operation: &'static str,
     timeout_ms: u128,
   },
+  #[error("headless screenshot could not be transcoded: {0}")]
+  Screenshot(String),
   #[error("headless step is unsupported by the existing runner: {0}")]
   UnsupportedAction(String),
   #[error("headless step exceeded {MAX_ACTIONS_PER_STEP} model actions: {0}")]
@@ -96,28 +100,33 @@ struct PageAction {
   selector: Option<String>,
 }
 
+/// A captured frame plus the steps that produced it.
+///
+/// The frame is kept as the runner's lossless BMP: the deterministic reference
+/// comparison comes from these exact pixels, and only the copies that leave the
+/// process are transcoded to JPEG.
 pub(crate) struct CapturedPage {
-  png: Vec<u8>,
+  screenshot: Vec<u8>,
   steps: Vec<String>,
   url: String,
 }
 
 impl CapturedPage {
   #[cfg(test)]
-  pub(crate) fn from_png(png: Vec<u8>) -> Self {
+  pub(crate) fn from_bmp(screenshot: Vec<u8>) -> Self {
     Self {
-      png,
+      screenshot,
       steps: vec![],
       url: String::new(),
     }
   }
 
-  pub(crate) fn into_png(self) -> Vec<u8> {
-    self.png
+  pub(crate) fn into_jpeg(self) -> Result<Vec<u8>, String> {
+    bmp_to_jpeg(&self.screenshot)
   }
 
-  pub(crate) fn screenshot_data_url(&self) -> String {
-    png_data_url(&self.png)
+  pub(crate) fn screenshot_data_url(&self) -> Result<String, String> {
+    bmp_to_jpeg(&self.screenshot).map(|jpeg| jpeg_data_url(&jpeg))
   }
 }
 
@@ -127,29 +136,27 @@ pub(crate) struct PageLoadOptions {
   pub(crate) initial_data_json: Option<String>,
 }
 
-/// Captures the current software-renderer frame exposed by the existing
-/// headless runner.
-async fn capture_page_png(page: &Page, settle: Duration) -> Result<Vec<u8>, HeadlessPageError> {
-  Ok(
-    page
-      .screenshot(ScreenshotOptions { path: None, settle })
-      .await?,
-  )
+/// Captures the current software-renderer frame as the runner's BMP.
+fn capture_page_screenshot(
+  page: &mut LynxPage,
+  settle: Duration,
+) -> Result<Vec<u8>, HeadlessPageError> {
+  Ok(page.screenshot(ScreenshotOptions { path: None, settle })?)
 }
 
-/// Runs legacy natural-language UI steps through Agent SDK and the existing
-/// runner's selector-based tap API. The runner does not expose swipe, typing,
+/// Runs legacy natural-language UI steps through Agent SDK and the runner's
+/// selector-based tap API. The runner does not expose swipe, typing,
 /// scrolling, or coordinate touch, so the model must report those as
 /// unsupported rather than pretending they completed.
-async fn run_page_steps(
+fn run_page_steps(
   client: &ModelClient,
-  page: &mut Page,
+  page: &mut LynxPage,
   steps: &[String],
   timeout: Duration,
 ) -> Result<Vec<String>, HeadlessPageError> {
   let steps = normalize_steps(steps);
   for step in &steps {
-    run_page_step(client, page, step, timeout).await?;
+    run_page_step(client, page, step, timeout)?;
   }
   Ok(steps)
 }
@@ -161,10 +168,34 @@ pub async fn judge_page(request: JudgePageRequest) -> UiJudgeResult {
     Ok(prepared) => prepared,
     Err(result) => return *result,
   };
-  match capture_prepared_page(&client, &request).await {
-    Ok(capture) => score_captured_page(&client, &request, capture).await,
+  let response = match submit_capture(request, Some(client), PageLoadOptions::default()).await {
+    Ok(response) => response,
+    Err(result) => return *result,
+  };
+  let client = response
+    .client
+    .expect("judge capture retains its model client");
+  match response.capture {
+    Ok(capture) => score_captured_page(&client, &response.request, capture).await,
     Err(result) => result,
   }
+}
+
+/// Hands one capture to the shared worker pool and waits for its reply.
+pub(crate) async fn submit_capture(
+  request: JudgePageRequest,
+  client: Option<ModelClient>,
+  load_options: PageLoadOptions,
+) -> Result<CaptureResponse, Box<UiJudgeResult>> {
+  let reporting_request = request.clone();
+  let workers = match shared_workers() {
+    Ok(workers) => workers,
+    Err(error) => return Err(Box::new(page_request_error(&reporting_request, error))),
+  };
+  workers
+    .capture(request, client, load_options)
+    .await
+    .map_err(|error| Box::new(page_request_error(&reporting_request, error.to_string())))
 }
 
 pub(crate) fn prepare_judge_page_request(
@@ -208,90 +239,28 @@ pub(crate) fn prepare_page_request(
   Ok(request)
 }
 
-pub(crate) async fn capture_prepared_page(
-  client: &ModelClient,
-  request: &JudgePageRequest,
-) -> Result<CapturedPage, UiJudgeResult> {
-  capture_prepared_page_with_options(client, request, &PageLoadOptions::default()).await
-}
-
-pub(crate) async fn capture_prepared_page_with_options(
-  client: &ModelClient,
-  request: &JudgePageRequest,
-  load_options: &PageLoadOptions,
-) -> Result<CapturedPage, UiJudgeResult> {
-  capture_page_with_options(Some(client), request, load_options).await
-}
-
-pub(crate) async fn capture_screenshot_with_options(
+/// Drives one capture on the worker thread that owns `container`.
+///
+/// A page is created, navigated, optionally stepped through, and captured
+/// entirely inline: every wait pumps the container's native tasks instead of
+/// yielding to an executor.
+#[allow(clippy::result_large_err)]
+pub(crate) fn capture_with_container(
+  container: &LynxContainer,
   client: Option<&ModelClient>,
   request: &JudgePageRequest,
   load_options: &PageLoadOptions,
 ) -> Result<CapturedPage, UiJudgeResult> {
-  capture_page_with_options(client, request, load_options).await
-}
-
-async fn capture_page_with_options(
-  client: Option<&ModelClient>,
-  request: &JudgePageRequest,
-  load_options: &PageLoadOptions,
-) -> Result<CapturedPage, UiJudgeResult> {
-  let lynx = match tokio::time::timeout(
-    request.timeout,
-    Lynx::connect(ConnectOptions {
-      timeout: request.timeout,
-      ..ConnectOptions::default()
-    }),
-  )
-  .await
-  {
-    Ok(Ok(lynx)) => lynx,
-    Ok(Err(error)) => return Err(page_request_error(request, error.to_string())),
-    Err(_) => {
-      return Err(page_request_error(
-        request,
-        operation_timeout("Lynx connection", request.timeout).to_string(),
-      ))
-    }
-  };
-  let capture = capture_with_lynx(&lynx, client, request, load_options).await;
-  lynx.close();
-  capture
-}
-
-async fn capture_with_lynx(
-  lynx: &Lynx,
-  client: Option<&ModelClient>,
-  request: &JudgePageRequest,
-  load_options: &PageLoadOptions,
-) -> Result<CapturedPage, UiJudgeResult> {
-  let mut page = match lynx.new_page() {
+  let mut page = match container.new_page() {
     Ok(page) => page,
     Err(error) => return Err(page_request_error(request, error.to_string())),
   };
-  let navigation = if client.is_some() {
-    tokio::time::timeout(
-      request.timeout,
-      page.goto(&request.url, goto_options(request.timeout, load_options)),
-    )
-    .await
-  } else {
-    tokio::time::timeout(
-      request.timeout,
-      page.goto_for_screenshot(&request.url, goto_options(request.timeout, load_options)),
-    )
-    .await
-  };
-  let navigation_error = match navigation {
-    Ok(Ok(())) => None,
-    Ok(Err(error)) => Some(error.to_string()),
-    Err(_) => Some(operation_timeout("navigation", request.timeout).to_string()),
-  };
-  if let Some(error) = navigation_error {
-    return Err(page_request_error(request, error));
+  // Navigation always takes the same path now; the DOM session is attached
+  // lazily, so a screenshot-only request never pays for DevTools setup.
+  if let Err(error) = page.goto(&request.url, goto_options(request.timeout, load_options)) {
+    return Err(page_request_error(request, error.to_string()));
   }
-
-  capture_loaded_page(client, &mut page, request).await
+  capture_loaded_page(client, &mut page, request)
 }
 
 fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOptions {
@@ -302,13 +271,14 @@ fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOption
   }
 }
 
-async fn capture_loaded_page(
+#[allow(clippy::result_large_err)]
+fn capture_loaded_page(
   client: Option<&ModelClient>,
-  page: &mut Page,
+  page: &mut LynxPage,
   request: &JudgePageRequest,
 ) -> Result<CapturedPage, UiJudgeResult> {
   let steps = match client {
-    Some(client) => match run_page_steps(client, page, &request.steps, request.timeout).await {
+    Some(client) => match run_page_steps(client, page, &request.steps, request.timeout) {
       Ok(steps) => steps,
       Err(error) => {
         let mut result = request_error_result(request, page.url().to_string(), error.to_string());
@@ -318,31 +288,17 @@ async fn capture_loaded_page(
     },
     None => vec![],
   };
-  let screenshot = match tokio::time::timeout(
-    request.timeout,
-    capture_page_png(page, request.screenshot_settle),
-  )
-  .await
-  {
-    Ok(Ok(screenshot)) => screenshot,
-    Ok(Err(error)) => {
+  let screenshot = match capture_page_screenshot(page, request.screenshot_settle) {
+    Ok(screenshot) => screenshot,
+    Err(error) => {
       let mut result = request_error_result(request, page.url().to_string(), error.to_string());
-      result.steps = steps;
-      return Err(result);
-    }
-    Err(_) => {
-      let mut result = request_error_result(
-        request,
-        page.url().to_string(),
-        operation_timeout("screenshot capture", request.timeout).to_string(),
-      );
       result.steps = steps;
       return Err(result);
     }
   };
 
   Ok(CapturedPage {
-    png: screenshot,
+    screenshot,
     steps,
     url: page.url().to_string(),
   })
@@ -353,10 +309,24 @@ pub(crate) async fn score_captured_page(
   request: &JudgePageRequest,
   capture: CapturedPage,
 ) -> UiJudgeResult {
-  let CapturedPage { png, steps, url } = capture;
+  let CapturedPage {
+    screenshot,
+    steps,
+    url,
+  } = capture;
+  // The model needs a format it can read; the comparison below keeps the
+  // lossless capture.
+  let screenshot_data_url = match bmp_to_jpeg(&screenshot) {
+    Ok(jpeg) => jpeg_data_url(&jpeg),
+    Err(error) => {
+      let mut result = request_error_result(request, url, error);
+      result.steps = steps;
+      return result;
+    }
+  };
   let scoring_request = JudgeScreenshotRequest {
     reference: request.reference.clone(),
-    screenshot_data_url: png_data_url(&png),
+    screenshot_data_url,
     task: task_with_steps(&request.task, &steps),
     url: url.clone(),
   };
@@ -371,7 +341,7 @@ pub(crate) async fn score_captured_page(
       Some(reference_image) => Some(
         tokio::time::timeout(
           request.timeout,
-          compare_reference_image(reference_image, &png),
+          compare_reference_image(reference_image, &screenshot),
         )
         .await,
       ),
@@ -380,7 +350,7 @@ pub(crate) async fn score_captured_page(
   };
 
   // The VLM and deterministic comparison are independent consumers of the
-  // captured PNG. Neither result is an input to the other evaluation chain.
+  // captured frame. Neither result is an input to the other evaluation chain.
   let (mut result, comparison_result) = tokio::join!(vlm_scoring, reference_comparison);
   if let Some(comparison_result) = comparison_result {
     match comparison_result {
@@ -472,7 +442,10 @@ fn is_supported_page_url(url: &str) -> bool {
   })
 }
 
-fn page_request_error(request: &JudgePageRequest, message: impl Into<String>) -> UiJudgeResult {
+pub(crate) fn page_request_error(
+  request: &JudgePageRequest,
+  message: impl Into<String>,
+) -> UiJudgeResult {
   let mut result = request_error_result(request, request.url.clone(), message);
   result.steps = normalize_steps(&request.steps);
   result
@@ -496,9 +469,25 @@ fn request_error_result(
   result
 }
 
-async fn run_page_step(
+/// Blocks on one model request from a capture worker thread.
+///
+/// The native side of a capture is synchronous, but the model client is an
+/// async HTTP client. Each worker keeps one current-thread runtime and drives
+/// the request on it; worker threads are plain OS threads, so this never runs
+/// inside another runtime.
+fn block_on_model<F: std::future::Future>(future: F) -> F::Output {
+  thread_local! {
+    static RUNTIME: Runtime = tokio::runtime::Builder::new_current_thread()
+      .enable_all()
+      .build()
+      .expect("build the UI Judge model runtime");
+  }
+  RUNTIME.with(|runtime| runtime.block_on(future))
+}
+
+fn run_page_step(
   client: &ModelClient,
-  page: &mut Page,
+  page: &mut LynxPage,
   step: &str,
   timeout: Duration,
 ) -> Result<(), HeadlessPageError> {
@@ -508,37 +497,27 @@ async fn run_page_step(
   let mut history = Vec::new();
 
   for _ in 0..MAX_ACTIONS_PER_STEP {
-    let remaining = deadline.saturating_duration_since(Instant::now());
-    if remaining.is_zero() {
+    if deadline.saturating_duration_since(Instant::now()).is_zero() {
       return Err(step_timeout(step, timeout));
     }
-    let dom = tokio::time::timeout(remaining, page.content())
-      .await
-      .map_err(|_| step_timeout(step, timeout))??;
-    let remaining = deadline.saturating_duration_since(Instant::now());
-    if remaining.is_zero() {
-      return Err(step_timeout(step, timeout));
-    }
-    let screenshot =
-      tokio::time::timeout(remaining, capture_page_png(page, Duration::from_millis(16)))
-        .await
-        .map_err(|_| step_timeout(step, timeout))??;
+    let dom = page.content()?;
+    let screenshot = capture_page_screenshot(page, Duration::from_millis(16))?;
+    let jpeg = bmp_to_jpeg(&screenshot).map_err(HeadlessPageError::Screenshot)?;
     let prompt = build_step_prompt(step, &dom, &history);
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
       return Err(step_timeout(step, timeout));
     }
-    let raw = tokio::time::timeout(
+    let raw = block_on_model(tokio::time::timeout(
       remaining,
       client.evaluate_structured(
         STEP_SYSTEM_PROMPT,
         &prompt,
-        &[&png_data_url(&screenshot)],
+        &[&jpeg_data_url(&jpeg)],
         "lynx_page_action",
         page_action_schema(),
       ),
-    )
-    .await
+    ))
     .map_err(|_| step_timeout(step, timeout))??;
     let action: PageAction = serde_json::from_str(&raw)?;
 
@@ -557,7 +536,7 @@ async fn run_page_step(
           return Err(step_timeout(step, timeout));
         }
         let duration = Duration::from_millis(duration_ms).min(remaining);
-        page.wait_for_timeout(duration).await;
+        page.wait_for_timeout(duration);
         history.push(format!("waited {duration_ms} ms"));
       }
       PageActionKind::Tap => {
@@ -570,23 +549,16 @@ async fn run_page_step(
           history.push("tap failed: selector was empty".to_string());
           continue;
         };
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        if remaining.is_zero() {
+        if deadline.saturating_duration_since(Instant::now()).is_zero() {
           return Err(step_timeout(step, timeout));
         }
-        let element = tokio::time::timeout(remaining, page.locator(selector))
-          .await
-          .map_err(|_| step_timeout(step, timeout))??;
-        let Some(element) = element else {
+        let Some(element) = page.locator(selector)? else {
           history.push(format!(
             "tap failed: selector did not match a node: {selector}"
           ));
           continue;
         };
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        tokio::time::timeout(remaining, element.tap())
-          .await
-          .map_err(|_| step_timeout(step, timeout))??;
+        element.tap()?;
         history.push(format!("tapped {selector}"));
       }
     }
@@ -664,10 +636,6 @@ fn task_with_steps(task: &str, steps: &[String]) -> String {
   output
 }
 
-fn png_data_url(png: &[u8]) -> String {
-  format!("data:image/png;base64,{}", BASE64_STANDARD.encode(png))
-}
-
 fn step_timeout(step: &str, timeout: Duration) -> HeadlessPageError {
   HeadlessPageError::StepTimeout {
     step: step.to_string(),
@@ -693,7 +661,34 @@ fn non_empty_reason(reason: String, fallback: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+  use std::io::Cursor;
+
+  use base64::prelude::{Engine, BASE64_STANDARD};
+  use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
+
   use super::*;
+
+  /// A one-pixel capture in the format the runner produces.
+  fn sample_bmp() -> Vec<u8> {
+    encode(ImageFormat::Bmp)
+  }
+
+  /// The same pixel as a reference upload, which callers may supply as PNG.
+  fn reference_data_url() -> String {
+    format!(
+      "data:image/png;base64,{}",
+      BASE64_STANDARD.encode(encode(ImageFormat::Png))
+    )
+  }
+
+  fn encode(format: ImageFormat) -> Vec<u8> {
+    let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(1, 1, Rgba([20, 40, 60, 255])));
+    let mut bytes = Vec::new();
+    image
+      .write_to(&mut Cursor::new(&mut bytes), format)
+      .expect("encode the sample image");
+    bytes
+  }
 
   fn page_request(url: &str, task: &str) -> JudgePageRequest {
     JudgePageRequest {
@@ -798,11 +793,9 @@ mod tests {
 
   #[tokio::test(flavor = "current_thread")]
   async fn vlm_and_reference_image_comparison_share_only_the_screenshot() {
-    const PNG_BASE64: &str =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let screenshot = sample_bmp();
     let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
-    request.reference_image = Some(format!("data:image/png;base64,{PNG_BASE64}"));
+    request.reference_image = Some(reference_data_url());
     let client = ModelClient::mock(
       r#"{
         "score": 4,
@@ -815,7 +808,7 @@ mod tests {
       &client,
       &request,
       CapturedPage {
-        png,
+        screenshot,
         steps: vec![],
         url: request.url.clone(),
       },
@@ -837,9 +830,7 @@ mod tests {
 
   #[tokio::test(flavor = "current_thread")]
   async fn scores_all_geqi_dimensions_from_the_same_final_screenshot() {
-    const PNG_BASE64: &str =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let screenshot = sample_bmp();
     let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
     request.include_geqi = true;
     let client = ModelClient::mock(
@@ -850,7 +841,7 @@ mod tests {
       &client,
       &request,
       CapturedPage {
-        png,
+        screenshot,
         steps: vec![],
         url: request.url.clone(),
       },
@@ -887,9 +878,7 @@ mod tests {
 
   #[tokio::test(flavor = "current_thread")]
   async fn geqi_failures_stay_independent_from_each_other_and_the_visual_result() {
-    const PNG_BASE64: &str =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let screenshot = sample_bmp();
     let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
     request.include_geqi = true;
     let client = ModelClient::mock("not JSON");
@@ -898,7 +887,7 @@ mod tests {
       &client,
       &request,
       CapturedPage {
-        png,
+        screenshot,
         steps: vec![],
         url: request.url.clone(),
       },
@@ -917,9 +906,7 @@ mod tests {
 
   #[tokio::test(flavor = "current_thread")]
   async fn malformed_reference_image_does_not_replace_the_vlm_result() {
-    const PNG_BASE64: &str =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let screenshot = sample_bmp();
     let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
     request.reference_image = Some("not an image".to_string());
     let client = ModelClient::mock(
@@ -930,7 +917,7 @@ mod tests {
       &client,
       &request,
       CapturedPage {
-        png,
+        screenshot,
         steps: vec![],
         url: request.url.clone(),
       },
@@ -951,18 +938,16 @@ mod tests {
 
   #[tokio::test(flavor = "current_thread")]
   async fn reference_comparison_survives_a_vlm_failure() {
-    const PNG_BASE64: &str =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let screenshot = sample_bmp();
     let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
-    request.reference_image = Some(format!("data:image/png;base64,{PNG_BASE64}"));
+    request.reference_image = Some(reference_data_url());
     let client = ModelClient::mock("not JSON");
 
     let result = score_captured_page(
       &client,
       &request,
       CapturedPage {
-        png,
+        screenshot,
         steps: vec![],
         url: request.url.clone(),
       },
