@@ -37,8 +37,10 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
-function injectTt(): void {
-  const tt = lynx.getApp();
+function injectTt(pageLynx?: unknown): void {
+  // A page may hand over a lynx that carries no app of its own, so fall back.
+  const scope = pageLynx as typeof lynx | undefined;
+  const tt = (typeof scope?.getApp === 'function' ? scope : lynx).getApp();
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
   tt.publicComponentEvent = delayedPublicComponentEvent;
