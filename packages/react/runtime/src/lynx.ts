@@ -69,20 +69,26 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
   initElementPAPICallAlog();
 }
 
+let installed = false;
+
 /**
  * Installs everything the background runtime needs against the current `lynx`:
  * the Preact adapters, the app-level callbacks and the commit/timing hooks.
  *
- * Kept as a function rather than inline module side effects so it can later be
- * run once per page instead of once per module evaluation, which is what a
- * runtime shared between several cards needs.
+ * The adapters and hooks belong to the runtime, so they are installed once; a
+ * page that calls this again only re-registers its app-level callbacks.
  */
-function initBackgroundRuntime(): void {
+export function initBackgroundRuntime(): void {
+  injectTt();
+  if (installed) {
+    return;
+  }
+  installed = true;
+
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
   setupBackgroundDocument();
-  injectTt();
   addCtxNotFoundEventListener();
 
   if (process.env['NODE_ENV'] === 'test') {}
