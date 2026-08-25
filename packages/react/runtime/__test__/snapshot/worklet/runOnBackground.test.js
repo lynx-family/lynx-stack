@@ -159,6 +159,12 @@ describe('runOnBackground', () => {
 });
 
 describe('EventListeners', () => {
+  beforeEach(() => {
+    // the runtime's own app-event subscription is not what these count
+    lynx.getCoreContext().addEventListener.mockClear();
+    lynx.getCoreContext().removeEventListener.mockClear();
+  });
+
   it('should get impl and destroy', () => {
     expect(lynx.getCoreContext().addEventListener).toHaveBeenCalledTimes(0);
     onPostWorkletCtx({});

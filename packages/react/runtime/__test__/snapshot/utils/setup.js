@@ -4,6 +4,11 @@
 import { __injectElementApi } from './inject.ts';
 import '../../../src/lynx.ts';
 import { document } from '../../../src/document.ts';
+import { registerAppEventHandlers } from '../../../src/core/app-events.ts';
+
+// The harness clears the native listeners between tests, which drops the
+// runtime's subscription; this lets it re-subscribe synchronously.
+globalThis.__reactInjectTt = () => registerAppEventHandlers({});
 import { SnapshotInstance } from '../../../src/snapshot/index.ts';
 
 import { afterEach, expect } from 'vitest';
