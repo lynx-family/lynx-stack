@@ -18,6 +18,7 @@ Use this workspace when you need to:
 - provide a windowless renderer callback
 - serve bundle, image, font, or other resources from Rust
 - drive Lynx tasks and input events in a non-windowed host
+- provide the rendering and DevTools primitives used by headless page capture
 
 This workspace does not build `libLynx_clay`, package a full SDK, implement
 platform-native view objects, or provide CLI/example binaries. It does expose
@@ -37,7 +38,8 @@ The bridge follows this runtime path:
 
 1. `Env::load()` finds and opens `libLynx_clay` from `LYNX_LIB_PATH` or
    `LYNX_SDK_DIR`.
-2. `lynx::sys::LoadedLibrary` resolves the required C ABI symbols.
+2. `lynx::sys::LoadedLibrary` resolves the C ABI symbols used by the bridge's
+   supported capabilities.
 3. `WindowlessRenderer` and `GenericResourceFetcher` register Rust callbacks
    with the runtime.
 4. `HeadlessViewBuilder` binds the renderer, resource fetcher, optional
@@ -65,12 +67,23 @@ the loader checks one canonical path for the current platform:
 - `$LYNX_SDK_DIR/lib/libLynx_clay.dylib` on macOS
 - `$LYNX_SDK_DIR/lib/libLynx_clay.so` on Linux
 
-The bridge uses the public `lynx_*` C API exports directly and does not require
-private `lynx_rust_*` shim symbols. Some exported functions declare numeric
-inputs as C++ `const float&` parameters even though they have C linkage; the raw
-Rust ABI binds those parameters as pointers and the safe API passes stable
-addresses. Additive APIs that are absent from the current default runtime are
-resolved optionally and report `UnsupportedRuntimeApi` only when called.
+The complete `public/capi/*.h` header tree is the source of truth for the
+runtime ABI. Do not infer the SDK surface from `lynx_view_capi.h` alone: view
+creation, windowless rendering, resources, load metadata, and DevTools are
+declared across separate headers. The bridge uses those public `lynx_*` exports
+directly and does not require private `lynx_rust_*` shim symbols.
+
+`LoadedLibrary` is a capability-focused symbol table, not a mirror of every SDK
+subsystem. It eagerly resolves only the exports required by the bridge's
+implemented and exercised workflows, including the primitives used by the
+headless page-capture and DevTools paths. A newly documented export remains
+optional when the repository's default runtime does not provide it. Calling
+the corresponding safe method then returns `UnsupportedRuntimeApi` without
+preventing other runtime capabilities from loading.
+
+Some public functions declare numeric inputs as C++ `const float&` parameters
+even though they have C linkage. The raw Rust ABI binds those parameters as
+pointers, and the safe API passes stable addresses.
 
 When Cargo downloads a runtime, it stores the files under
 `target/lynx-engine-bridge-sdk` and injects `LYNX_SDK_DIR` for tests. Existing

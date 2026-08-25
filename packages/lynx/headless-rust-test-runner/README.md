@@ -6,9 +6,10 @@ windowless software-rendering harness with DOM inspection and interaction APIs:
 
 - `Lynx::connect` initializes the process-wide runtime and local DebugRouter.
 - `Lynx::new_page` creates a windowless `Page`.
-- `Page::goto`, `content`, and `locator` load and inspect Lynx bundles through
-  CDP.
-- `Page::goto_for_screenshot` loads a bundle without attaching a DOM session.
+- `Page::goto`, `content`, and `locator` load and inspect compiled Lynx bundles
+  or UTF-8 `.lynxml` source documents through CDP.
+- `Page::goto_for_screenshot` loads either format without attaching a DOM
+  session.
 - `ElementNode` reads attributes and computed styles and dispatches taps by
   native node id, without absolute coordinates or hit-testing.
 - `Page::screenshot` captures the software renderer directly as PNG.
@@ -36,6 +37,14 @@ assert_eq!(title.get_attribute("class").await?.as_deref(), Some("Title"));
 let png = page.screenshot(ScreenshotOptions::default()).await?;
 # Ok::<(), lynx_headless_rust_test_runner::Error>(())
 ```
+
+Navigation chooses the native load API from the final URL path. Inputs ending
+in `.lynxml` are decoded as UTF-8 and loaded as LynxML source; all other inputs
+keep the compiled-template byte path. File paths, `file://` URLs, and HTTP(S)
+URLs are supported. `GotoOptions::initial_data_json` applies to both formats;
+`global_props_json` applies only to compiled templates. Passing it for LynxML
+returns an error because the public LynxML load API does not accept global
+properties.
 
 `Lynx` is cloneable, `Send`, and `Sync`. Native pages are not. The first
 `new_page()` call selects the native owner thread; every later page must be

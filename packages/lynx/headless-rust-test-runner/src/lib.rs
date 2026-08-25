@@ -338,6 +338,7 @@ impl Page {
   ) -> Result<()> {
     let timeout = options.timeout.unwrap_or(self.runtime.timeout);
     let (url, bytes) = self.runtime.resources.read_template(input).await?;
+    validate_navigation_options(&url, &options)?;
     let session_lock = self.runtime.session_locks.for_url(&url);
     let _session_write_guard = if attach_dom {
       Some(Arc::clone(&session_lock).write_owned().await)
@@ -361,17 +362,28 @@ impl Page {
       HashSet::new()
     };
     self.runtime.resources.set_base_url(&url);
-    let global_props = options
-      .global_props_json
-      .unwrap_or_else(|| self.default_global_props_json());
     let previous_sequence = self.runtime.frames.sequence();
 
-    self.runtime.view.load_template_bytes_with_global_props(
-      &url,
-      &bytes,
-      options.initial_data_json.as_deref().or(Some("{}")),
-      Some(&global_props),
-    )?;
+    let initial_data_json = options.initial_data_json.as_deref().or(Some("{}"));
+    if is_lynx_ml_url(&url) {
+      let source = decode_lynx_ml_source(&url, &bytes)?;
+      self
+        .runtime
+        .view
+        .load_lynx_ml(source, &url, initial_data_json)?;
+    } else {
+      let global_props = options
+        .global_props_json
+        .as_deref()
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| self.default_global_props_json());
+      self.runtime.view.load_template_bytes_with_global_props(
+        &url,
+        &bytes,
+        initial_data_json,
+        Some(&global_props),
+      )?;
+    }
     self.runtime.view.enter_foreground();
     self.runtime.view.set_frame(
       0.0,
@@ -817,6 +829,24 @@ fn final_url_component(url: &str) -> Option<&str> {
     .filter(|component| !component.is_empty())
 }
 
+fn is_lynx_ml_url(url: &str) -> bool {
+  final_url_component(url).is_some_and(|component| component.ends_with(".lynxml"))
+}
+
+fn decode_lynx_ml_source<'a>(url: &str, bytes: &'a [u8]) -> Result<&'a str> {
+  std::str::from_utf8(bytes).map_err(|source| Error::InvalidLynxMlUtf8 {
+    url: url.to_string(),
+    source,
+  })
+}
+
+fn validate_navigation_options(url: &str, options: &GotoOptions) -> Result<()> {
+  if is_lynx_ml_url(url) && options.global_props_json.is_some() {
+    return Err(Error::UnsupportedLynxMlGlobalProps);
+  }
+  Ok(())
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -936,5 +966,35 @@ mod tests {
       "file:///tmp/main.lynx.bundle",
       "main.lynx.bundle.map"
     ));
+  }
+
+  #[test]
+  fn recognizes_lynx_ml_urls_and_paths() {
+    assert!(is_lynx_ml_url("file:///tmp/counter.lynxml"));
+    assert!(is_lynx_ml_url(
+      "https://example.test/counter.lynxml?version=1#document"
+    ));
+    assert!(is_lynx_ml_url("fixtures/counter.lynxml"));
+    assert!(!is_lynx_ml_url("file:///tmp/main.lynx.bundle"));
+    assert!(!is_lynx_ml_url("file:///tmp/counter.lynxml.map"));
+  }
+
+  #[test]
+  fn rejects_global_properties_for_lynx_ml() {
+    let options = GotoOptions {
+      global_props_json: Some(r#"{"theme":"dark"}"#.into()),
+      ..GotoOptions::default()
+    };
+    let error = validate_navigation_options("file:///tmp/counter.lynxml", &options).unwrap_err();
+    assert!(matches!(error, Error::UnsupportedLynxMlGlobalProps));
+    assert!(validate_navigation_options("file:///tmp/main.lynx.bundle", &options).is_ok());
+  }
+
+  #[test]
+  fn rejects_non_utf8_lynx_ml_source() {
+    let url = "file:///tmp/counter.lynxml";
+    let error = decode_lynx_ml_source(url, &[0xff]).unwrap_err();
+    assert!(matches!(error, Error::InvalidLynxMlUtf8 { .. }));
+    assert!(error.to_string().contains(url));
   }
 }

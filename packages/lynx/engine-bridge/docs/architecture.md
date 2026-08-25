@@ -10,9 +10,12 @@ function pointers with the safe wrappers that create a headless Lynx view.
 
 ## Code map
 
-`lynx/src/sys` is the raw ABI layer. `bindings.rs` contains checked-in C types,
-constants, and callback signatures. `loader.rs` owns dynamic library discovery,
-dynamic loading, and the `LoadedLibrary` symbol table.
+`lynx/src/sys` is the raw ABI layer. The complete Lynx `public/capi/*.h` tree is
+the ABI source of truth because the view, builder, renderer, resource, metadata,
+and DevTools contracts live in separate headers. `bindings.rs` contains the
+checked-in C types, constants, and callback signatures. `loader.rs` owns
+dynamic library discovery, dynamic loading, and the capability-focused
+`LoadedLibrary` symbol table.
 
 `lynx/src/env.rs` is the runtime entry point. `Env::load()` reads `LYNX_LIB_PATH`
 or `LYNX_SDK_DIR`, creates a reference-counted `LoadedLibrary`, and exposes
@@ -49,10 +52,13 @@ tests use.
 2. `Env::load()` asks `sys::candidate_library_paths()` for the configured
    runtime path.
 3. `LoadedLibrary::load()` opens that dynamic library with `libloading`.
-4. `LoadedLibrary::from_dynamic_library()` resolves the required public
-   `lynx_*` symbols and probes newer additive symbols that remain optional for
-   compatibility with the default runtime artifact. C++ reference parameters
-   in the public headers are represented as pointers in the Rust ABI.
+4. `LoadedLibrary::from_dynamic_library()` eagerly resolves the public
+   `lynx_*` symbols needed by implemented bridge capabilities. It does not
+   mechanically import every service and subsystem declared by the SDK.
+   Newer additive symbols remain optional when the repository's default
+   runtime does not export them, so unrelated capabilities can still load.
+   C++ reference parameters in the public headers are represented as pointers
+   in the Rust ABI.
 5. Safe wrappers clone `Arc<LoadedLibrary>` so the dynamic library stays loaded
    while any object created from the environment is alive.
 
@@ -78,6 +84,20 @@ tests still require a loadable dynamic library; local Cargo builds and CI use
 The library intentionally stops at these embedding primitives. CLI argument
 parsing, filesystem-backed fetchers, screenshot writing, and application-level
 event loops belong to the host or to a separate example workspace.
+
+## Headless capture and DevTools
+
+The downstream headless runner composes the bridge's existing capabilities. It
+creates a software `WindowlessRenderer`, installs a `GenericResourceFetcher`,
+loads templates through the metadata APIs, pumps UI tasks, and copies presented
+RGBA frames for screenshots. Its DevTools connection supplies DOM inspection
+and interaction for page automation. UI Judge uses that runner rather than
+calling the raw C ABI directly.
+
+These page-capture and DevTools paths remain part of the exercised bridge
+surface. Do not remove their builder, renderer, resource, metadata, environment,
+or view imports because one individual CAPI header looks narrower; verify them
+against the complete `public/capi/*.h` set.
 
 ## Ownership and error boundaries
 

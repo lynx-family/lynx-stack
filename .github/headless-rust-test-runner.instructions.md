@@ -22,4 +22,6 @@ Destroy each page on the same process-wide owner thread that created it. Do not 
 
 Resolve Lynx core requests by `ResourceType::LynxCoreJs` or an exact final `lynx_core.js` URL component. Do not use substring matching because it can redirect source maps or similarly named resources to the core script.
 
+Route UTF-8 inputs whose final URL path ends in `.lynxml` through the public `lynx_view_load_lynx_ml` API; keep all other navigation on the compiled-template byte path. The LynxML API accepts initial data but not global properties, so reject an explicit `GotoOptions::global_props_json` instead of silently dropping it.
+
 Dispatch `ElementNode::tap` directly to the Lynx node id with the native `tap` event. Do not derive an absolute point from `DOM.getBoxModel` and do not add coordinate-based tap APIs, because overlay and stacking relationships can make coordinate hit-testing select a different node.
