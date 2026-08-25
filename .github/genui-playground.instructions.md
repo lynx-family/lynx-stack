@@ -89,11 +89,13 @@ Component catalog examples are intentionally inline-only. Keep every bundled usa
 
 ## Example Showcase Architecture
 
-Keep the shared example-list page structure, preview queue, keyboard interaction, section rendering, and card layout in `pages/demos/DemosList.tsx`. Route both protocols through `pages/demos/DemosListPage.tsx`, and keep protocol-specific scenarios, sections, preview URL construction, and queue reset keys in `pages/demos/a2ui.ts` and `pages/demos/openui.ts`.
+Keep the shared example-list page structure, preview queue, keyboard interaction, section rendering, and card layout in `pages/demos/DemosList.tsx`. Route A2UI, OpenUI, and MCP Apps through `pages/demos/DemosListPage.tsx`, and keep protocol-specific scenarios, sections, preview URL construction, and queue reset keys in `pages/demos/a2ui.ts`, `pages/demos/openui.ts`, and `pages/demos/mcp-apps.ts`.
 
 Protocol-specific showcase sources may vary their header copy, section links, badges, layout mode, and preview payload construction, but must not duplicate the shared list-page JSX or card interaction logic.
 
-Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the existing `pages/demos/a2ui.ts` and `pages/demos/openui.ts` source modules.
+Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the respective `pages/demos/a2ui.ts`, `pages/demos/openui.ts`, and `pages/demos/mcp-apps.ts` source modules.
+
+Keep MCP Apps Examples aligned with the renderer registry in `lynx-src/mcp-apps/App.tsx`. Build their deterministic preview data through each renderer's sibling `api.ts`, validate edited data with the shared host parser plus the renderer-specific result parser, and render list and detail previews through the existing `mcp-apps.web.js` / `mcp-apps.lynx.js` bundles.
 
 ### Lynx XML
 
