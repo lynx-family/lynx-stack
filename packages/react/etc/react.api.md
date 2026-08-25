@@ -70,6 +70,11 @@ export function createPortal(vnode: ComponentChild, container: NodesRef): ReactN
 export { createRef }
 
 // @public
+export function createRenderContext(_context: {
+    lynx: unknown;
+}): Root;
+
+// @public
 export interface DataProcessorDefinition {
     dataProcessors?: DataProcessors;
     defaultDataProcessor?: (rawInitData: InitDataRaw) => InitData;

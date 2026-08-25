@@ -10,6 +10,7 @@ import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
+import { initBackgroundRuntime } from './lynx.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
@@ -116,6 +117,35 @@ export const root: Root = {
     lynx.registerDataProcessors(dataProcessorDefinition);
   },
 };
+
+/**
+ * Binds the runtime to one page's `lynx` and returns that page's root.
+ *
+ * A runtime shared between the cards of a LynxGroup is evaluated once, so the
+ * app-level callbacks it installs at module scope would belong to whichever
+ * card was evaluated first. Calling this from a page entry installs them
+ * against the `lynx` that page was given instead.
+ *
+ * Registration happens here, synchronously, and rendering does not: call this
+ * while `app-service.js` evaluates and the engine's queued first-screen events
+ * are still delivered, even if `render` is deferred.
+ *
+ * @example
+ *
+ * ```ts
+ * import { createRenderContext } from '@lynx-js/react'
+ *
+ * createRenderContext({ lynx }).render(<App />)
+ * ```
+ *
+ * @public
+ */
+export function createRenderContext(_context: { lynx: unknown }): Root {
+  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+    initBackgroundRuntime();
+  }
+  return root;
+}
 
 /**
  * Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
