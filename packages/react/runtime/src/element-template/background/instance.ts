@@ -10,6 +10,7 @@ import {
 import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from '../protocol/page.js';
@@ -124,7 +125,7 @@ export class BackgroundElementTemplateInstance {
       return;
     }
     if (__DEV__ && this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
-      lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
+      getPageLynx().reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
     this.restoreManagerRegistration();
@@ -584,7 +585,7 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
       return;
     }
     if (__DEV__ && this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
-      lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
+      getPageLynx().reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
 

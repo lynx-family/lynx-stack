@@ -8,6 +8,7 @@ import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/r
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { markTiming, setPipeline } from '../../../core/performance.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
@@ -29,7 +30,7 @@ function updateMainThread(
 
   const flowIds = patchOptions.flowIds;
   if (flowIds) {
-    lynx.performance.profileStart('ReactLynx::patch', {
+    getPageLynx().performance.profileStart('ReactLynx::patch', {
       flowId: flowIds[0],
       flowIds,
     });
@@ -90,7 +91,7 @@ function updateMainThread(
         runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
         /* v8 ignore next 3 */
       } catch (e) {
-        lynx.reportError(e as Error);
+        getPageLynx().reportError(e as Error);
       }
     }
     setEomShouldFlushElementTree(true);
@@ -101,7 +102,7 @@ function updateMainThread(
   __FlushElementTree(__page, flushOptions);
 
   if (flowIds) {
-    lynx.performance.profileEnd();
+    getPageLynx().performance.profileEnd();
   }
 }
 

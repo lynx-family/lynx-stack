@@ -6,6 +6,7 @@ import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime
 
 import { takeMainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
 import type { MainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 function updateMTRefInitValue({ data }: { data: string }): void {
@@ -26,5 +27,5 @@ export function sendMTRefInitValueToMainThread(): void {
   }
 
   const data = JSON.stringify(patch);
-  lynx.getNativeApp().callLepusMethod(LifecycleConstant.updateMTRefInitValue, { data });
+  getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.updateMTRefInitValue, { data });
 }

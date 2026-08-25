@@ -8,6 +8,7 @@ import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
+import { getPageLynx } from '../page-lynx.js';
 import { registerDestroyTask } from '../runtime-destroy.js';
 import { onFunctionCall } from '../thread-function-call/return-value.js';
 
@@ -31,7 +32,7 @@ function initBackgroundFunctionRuntime(): void {
   }
 
   execIdMap = new BackgroundFunctionExecMap();
-  const context = lynx.getCoreContext();
+  const context = getPageLynx().getCoreContext();
   context.addEventListener(WorkletEvents.runOnBackground, runBackgroundFunction);
   context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
 
@@ -55,7 +56,7 @@ export function runBackgroundFunction(event: RuntimeProxy.Event): void {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
   }
   const returnValue = f(...data.params);
-  lynx.getCoreContext().dispatchEvent({
+  getPageLynx().getCoreContext().dispatchEvent({
     type: WorkletEvents.FunctionCallRet,
     data: JSON.stringify({
       resolveId: data.resolveId,
@@ -137,7 +138,7 @@ function dispatchRunBackgroundFunctionEvent(
   execId: number,
   resolveId: number,
 ): void {
-  lynx.getJSContext().dispatchEvent({
+  getPageLynx().getJSContext().dispatchEvent({
     type: WorkletEvents.runOnBackground,
     data: JSON.stringify({
       obj: {

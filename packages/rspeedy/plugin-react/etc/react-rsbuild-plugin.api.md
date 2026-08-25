@@ -82,6 +82,8 @@ export interface PluginReactLynxOptions {
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    // @alpha
+    experimental_lynxGroupModuleSharing?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;

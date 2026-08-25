@@ -24,6 +24,7 @@ import { applyRefQueue } from '../snapshot/workletRef.js';
 import { clearFirstScreenEventIdSwap, isFirstScreenSynced } from './event/firstScreenSync.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -33,7 +34,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   increaseReloadVersion();
 
   if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
-    Object.assign(lynx.__initData, data);
+    Object.assign(getPageLynx().__initData, data);
   }
 
   snapshotInstanceManager.clear();
@@ -85,7 +86,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   increaseReloadVersion();
 
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
-  lynx.__initData = Object.assign({}, lynx.__initData, updateData);
+  getPageLynx().__initData = Object.assign({}, getPageLynx().__initData, updateData);
 
   shouldDelayUiOps.value = true;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

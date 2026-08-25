@@ -24,6 +24,7 @@ import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { globalPipelineOptions } from '../../core/performance.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -67,7 +68,7 @@ export const backgroundSnapshotInstanceManager: {
     // For PreactDevtools, on first hydration,
     // PreactDevtools can get the real snapshot instance id in main-thread
     if (__DEV__ && __BACKGROUND__) {
-      lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
+      getPageLynx().getJSModule('GlobalEventEmitter').emit('onBackgroundSnapshotInstanceUpdateId', [
         {
           backgroundSnapshotInstance: si,
           oldId: id,

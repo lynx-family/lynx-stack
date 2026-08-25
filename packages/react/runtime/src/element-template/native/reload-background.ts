@@ -6,6 +6,7 @@ import type { ComponentChild, ContainerNode } from 'preact';
 import { render } from 'preact';
 
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
@@ -26,7 +27,7 @@ export function reloadBackground(updateData: unknown): void {
     increaseReloadVersion();
     // Reload creates a new object so InitData Provider / Consumer observers do
     // not retain the pre-reload object identity.
-    lynx.__initData = Object.assign({}, lynx.__initData);
+    getPageLynx().__initData = Object.assign({}, getPageLynx().__initData);
     applyUpdatePageData(updateData);
 
     setRoot(new BackgroundPageRootInstance());

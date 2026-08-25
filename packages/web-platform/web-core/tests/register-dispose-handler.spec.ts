@@ -81,7 +81,7 @@ describe('registerDisposeHandler', () => {
       (id) => calls.push(`destroyCard:${id}`),
       () => {
         // The shape lynx-core throws for a card that never ran ReactLynx's
-        // `injectTt`, i.e. every Lynx XML markup card.
+        // `registerAppCallbacks`, i.e. every Lynx XML markup card.
         throw new TypeError(
           'nativeGlobal.multiApps[id].callDestroyLifetimeFun is not a function',
         );

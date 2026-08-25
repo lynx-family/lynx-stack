@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getPageLynx } from '../../core/page-lynx.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
@@ -25,12 +26,12 @@ export function snapshotCreateList(
   );
   const listID = __GetElementUniqueID(list);
 
-  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
+  if (typeof lynx !== 'undefined' && typeof getPageLynx().getNative === 'function') {
     const cb = () => {
       __UpdateListCallbacks(list, null, null, null);
       destroyLifetimeHandlerMap.delete(listID);
     };
-    lynx.getNative()?.addEventListener('__DestroyLifetime', cb);
+    getPageLynx().getNative()?.addEventListener('__DestroyLifetime', cb);
     destroyLifetimeHandlerMap.set(listID, cb);
   }
 
@@ -53,10 +54,10 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
 
   __UpdateListCallbacks(list, () => -1, () => {}, () => {});
 
-  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
+  if (typeof lynx !== 'undefined' && typeof getPageLynx().getNative === 'function') {
     const cb = destroyLifetimeHandlerMap.get(listID);
     if (cb) {
-      lynx.getNative()?.removeEventListener('__DestroyLifetime', cb);
+      getPageLynx().getNative()?.removeEventListener('__DestroyLifetime', cb);
       destroyLifetimeHandlerMap.delete(listID);
     }
   }

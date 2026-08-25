@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { RESET_WITH_INIT_DATA_IN_STATE_ERROR, hasWithInitDataInStateUsage } from './initData.js';
 import { isEmptyObject } from '../utils.js';
+import { getPageLynx } from './page-lynx.js';
 
 let hasReportedResetWithInitDataInState = false;
 
@@ -10,13 +11,13 @@ export function applyUpdatePageData(data: unknown, options?: Pick<UpdatePageOpti
   if (options?.resetPageData) {
     if (__DEV__ && !hasReportedResetWithInitDataInState && hasWithInitDataInStateUsage()) {
       hasReportedResetWithInitDataInState = true;
-      lynx.reportError(new Error(RESET_WITH_INIT_DATA_IN_STATE_ERROR));
+      getPageLynx().reportError(new Error(RESET_WITH_INIT_DATA_IN_STATE_ERROR));
     }
-    lynx.__initData = {};
+    getPageLynx().__initData = {};
   }
 
   if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
-    lynx.__initData ??= {};
-    Object.assign(lynx.__initData, data);
+    getPageLynx().__initData ??= {};
+    Object.assign(getPageLynx().__initData, data);
   }
 }

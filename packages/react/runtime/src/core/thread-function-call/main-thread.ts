@@ -10,6 +10,7 @@ import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { registerBackgroundFunctionCtx } from '../background-function/run-on-background.js';
 import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
+import { getPageLynx } from '../page-lynx.js';
 
 interface RunOnMainThreadOptions {
   shouldDispatchRunOnMainThreadDirectly: () => boolean;
@@ -74,7 +75,7 @@ function prepareMainThreadFunctionCtx(worklet: unknown): void {
 }
 
 function dispatchRunOnMainThreadEvent(data: RunWorkletCtxData): void {
-  lynx.getCoreContext().dispatchEvent({
+  getPageLynx().getCoreContext().dispatchEvent({
     type: WorkletEvents.runWorkletCtx,
     data: JSON.stringify(data),
   });
