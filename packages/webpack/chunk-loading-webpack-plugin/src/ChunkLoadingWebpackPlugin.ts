@@ -68,6 +68,7 @@ export class ChunkLoadingWebpackPluginImpl {
         if (!isEnabledForChunk(chunk)) return;
         runtimeRequirements.add(RuntimeGlobals.getChunkUpdateScriptFilename);
         runtimeRequirements.add(RuntimeGlobals.moduleFactoriesAddOnly);
+        runtimeRequirements.add(RuntimeGlobals.moduleCache);
         runtimeRequirements.add(RuntimeGlobals.hasOwnProperty);
         runtimeRequirements.add(RuntimeGlobals.publicPath);
         runtimeRequirements.add(LynxRuntimeGlobals.lynxAsyncChunkIds);
