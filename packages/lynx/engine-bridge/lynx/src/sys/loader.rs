@@ -123,7 +123,6 @@ enum LoadedSymbolRequirement {
 #[cfg(test)]
 #[derive(Clone, Copy, Debug)]
 struct LoadedSymbolSpec {
-  header: &'static str,
   name: &'static str,
   requirement: LoadedSymbolRequirement,
 }
@@ -135,7 +134,7 @@ struct LoadedSymbolSpec {
 macro_rules! define_loaded_library {
   (
     $(
-      header $header:literal {
+      header $_header:literal {
         required {
           $(
             $(#[$required_attr:meta])*
@@ -197,14 +196,12 @@ macro_rules! define_loaded_library {
       $(
         $(
           LoadedSymbolSpec {
-            header: $header,
             name: stringify!($required_name),
             requirement: LoadedSymbolRequirement::Required,
           },
         )*
         $(
           LoadedSymbolSpec {
-            header: $header,
             name: stringify!($optional_name),
             requirement: LoadedSymbolRequirement::Optional,
           },
@@ -842,7 +839,6 @@ mod tests {
     let mut required_count = 0;
     let mut optional_names = Vec::new();
     for symbol in LOADED_LIBRARY_SYMBOLS {
-      assert!(symbol.header.ends_with("_capi.h"));
       assert!(
         names.insert(symbol.name),
         "duplicate symbol {}",
