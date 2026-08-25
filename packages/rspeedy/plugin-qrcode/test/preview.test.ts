@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild, logger } from '@rsbuild/core'
+import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import type { Config, ExposedAPI, RsbuildPlugin } from '@lynx-js/rspeedy'
 
 import { getRandomNumberInRange } from './port.js'
@@ -13,6 +15,26 @@ vi.mock('uqr')
 vi.mock('@clack/prompts')
 
 const exit = vi.fn()
+
+// `pluginQRCode` reads the Lynx config the build engine exposes, so the stub
+// applies the engine's config plugin the way a real Lynx build does.
+const exposeLynxConfig = (api: RsbuildPluginAPI): void => {
+  let lynx: unknown
+
+  for (const plugin of pluginLynx()) {
+    void plugin.setup({
+      expose(_id: string | symbol, value: unknown) {
+        lynx = value
+      },
+    } as unknown as RsbuildPluginAPI)
+
+    if (lynx) {
+      break
+    }
+  }
+
+  api.expose(Symbol.for('@lynx-js/rsbuild-plugin:config'), lynx)
+}
 
 const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
   name: 'lynx:rsbuild:api',
@@ -24,6 +46,8 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
+
+    exposeLynxConfig(api)
   },
 })
 
