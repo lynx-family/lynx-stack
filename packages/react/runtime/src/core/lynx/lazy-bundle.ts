@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getPageLynx } from '../page-lynx.js';
 
 // Inlined rather than imported from `snapshot/` so this `core/` module stays
 // free of runtime-backend dependencies (enforced by
@@ -85,7 +86,7 @@ function loadBackgroundBundle<T>(bundleName: string, entry: string): T {
   const previous = g.globDynamicComponentEntry;
   g.globDynamicComponentEntry = entry;
   try {
-    return lynx.loadScript<T>(SECTION_BACKGROUND, { bundleName });
+    return getPageLynx().loadScript<T>(SECTION_BACKGROUND, { bundleName });
   } finally {
     g.globDynamicComponentEntry = previous;
   }
@@ -116,7 +117,7 @@ export const loadLazyBundle: <
     ? loadLazyBundleWithFetchBundle
     : loadLazyBundleWithQueryComponent;
 
-  lynx.loadLazyBundle = impl;
+  getPageLynx().loadLazyBundle = impl;
 
   function loadLazyBundleWithQueryComponent<
     T extends { default: React.ComponentType<any> },
@@ -153,7 +154,7 @@ export const loadLazyBundle: <
         const { code, detail } = result;
         if (code === 0) {
           const { schema } = detail;
-          const exports = lynx.getApp().getDynamicComponentExports(schema);
+          const exports = getPageLynx().getApp().getDynamicComponentExports(schema);
           // `code === 0` means that the lazy bundle has been successfully parsed. However,
           // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
           if (exports) {
@@ -167,10 +168,11 @@ export const loadLazyBundle: <
         e.cause = JSON.stringify(result);
         resolver.reject(e);
       };
-      if (typeof lynx.QueryComponent === 'function') {
-        lynx.QueryComponent(source, callback);
+      const pageLynx = getPageLynx();
+      if (typeof pageLynx.QueryComponent === 'function') {
+        pageLynx.QueryComponent(source, callback);
       } else {
-        lynx.getNativeLynx().QueryComponent!(source, callback);
+        pageLynx.getNativeLynx().QueryComponent!(source, callback);
       }
 
       if (resolver.result !== null) {
@@ -199,13 +201,13 @@ export const loadLazyBundle: <
         // and warms the native bundle cache; the background `async` path then
         // waits less. The main thread renders nothing here.
         try {
-          lynx.fetchBundle(source, {});
+          getPageLynx().fetchBundle(source, {});
         } catch {}
         return new Promise(() => {});
       }
       let response;
       try {
-        response = lynx.fetchBundle(source, {}).wait(
+        response = getPageLynx().fetchBundle(source, {}).wait(
           LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
         );
       } catch {
@@ -216,7 +218,7 @@ export const loadLazyBundle: <
       }
       let result: T;
       try {
-        result = lynx.loadScript<(entry: string) => T>(SECTION_MAIN_THREAD, {
+        result = getPageLynx().loadScript<(entry: string) => T>(SECTION_MAIN_THREAD, {
           bundleName: response.url,
         })(source);
         const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
@@ -239,7 +241,7 @@ export const loadLazyBundle: <
       if (mode === 'sync') {
         let response;
         try {
-          response = lynx.fetchBundle(source, {}).wait(
+          response = getPageLynx().fetchBundle(source, {}).wait(
             LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
           );
         } catch (e) {
@@ -263,7 +265,7 @@ export const loadLazyBundle: <
         // "snapshot not found". Runs synchronously — the bundle is already in
         // the native cache — just like the async path below.
         try {
-          lynx.getNativeApp().callLepusMethod(
+          getPageLynx().getNativeApp().callLepusMethod(
             PREPARE_LAZY_BUNDLE_MTS,
             { url: source, host },
             () => {},
@@ -282,7 +284,7 @@ export const loadLazyBundle: <
       return new Promise<T>((resolve, reject) => {
         let handler;
         try {
-          handler = lynx.fetchBundle(source, {});
+          handler = getPageLynx().fetchBundle(source, {});
         } catch (e) {
           reject(e instanceof Error ? e : new Error(String(e)));
           return;
@@ -306,7 +308,7 @@ export const loadLazyBundle: <
           // the whole prepare runs synchronously inside `Call`, meaning the
           // cb fires only after MT snapshots are registered.
           try {
-            lynx.getNativeApp().callLepusMethod(
+            getPageLynx().getNativeApp().callLepusMethod(
               PREPARE_LAZY_BUNDLE_MTS,
               { url: source, host },
               () => {

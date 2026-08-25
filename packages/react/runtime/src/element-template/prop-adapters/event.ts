@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getPageLynx } from '../../core/page-lynx.js';
 import { backgroundElementTemplateInstanceManager } from '../background/manager.js';
 
 export type EtEventHandler = (data: EventDataType) => unknown;
@@ -34,7 +35,7 @@ function dispatchEvent(eventValue: string, data: EventDataType): boolean {
   try {
     (handler as EtEventHandler)(data);
   } catch (error) {
-    lynx.reportError(error as Error);
+    getPageLynx().reportError(error as Error);
   }
   return true;
 }

@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getPageLynx } from '../core/page-lynx.js';
 
 const lynxEventAttributeNameRegExp = /^(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
 const namespacedEventKeyRegExp = /^[A-Za-z-]+:(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
@@ -66,7 +67,7 @@ function toDashCase(name: string): string {
 }
 
 export function transformAttrName(name: string): string {
-  const config = lynx.__runtime_configs__?.transformBuiltinAttributeNames;
+  const config = getPageLynx().__runtime_configs__?.transformBuiltinAttributeNames;
 
   // A disabled config keeps every name unchanged.
   if (!config) {

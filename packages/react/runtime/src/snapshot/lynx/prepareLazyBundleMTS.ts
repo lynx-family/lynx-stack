@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { SECTION_CSS, SECTION_MAIN_THREAD } from './lazyBundleConstants.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 
 const cache = new Set<string>();
@@ -12,7 +13,7 @@ function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
   if (cache.has(url)) return;
   let handler;
   try {
-    handler = lynx.fetchBundle(url, {});
+    handler = getPageLynx().fetchBundle(url, {});
   } catch {
     // fetchBundle threw — the bundle never loaded. Leave `url` out of the
     // cache so a later prepare for the same url can retry.
@@ -30,7 +31,7 @@ function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
     cache.add(url);
     let loaded: unknown;
     try {
-      const evaluate = lynx.loadScript<(entry: string) => unknown>(
+      const evaluate = getPageLynx().loadScript<(entry: string) => unknown>(
         SECTION_MAIN_THREAD,
         { bundleName: response.url },
       );

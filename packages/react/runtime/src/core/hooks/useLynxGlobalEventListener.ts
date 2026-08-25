@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { useEffect, useMemo, useRef } from '@lynx-js/react/hooks';
 
+import { getPageLynx } from '../page-lynx.js';
+
 /**
  * `useLynxGlobalEventListener` helps you `addListener` as early as possible.
  *
@@ -42,9 +44,9 @@ export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
   useMemo(() => {
     if (previousArgsRef.current) {
       const [eventName, listener] = previousArgsRef.current;
-      lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
+      getPageLynx().getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
     }
-    lynx.getJSModule('GlobalEventEmitter').addListener(eventName, listener);
+    getPageLynx().getJSModule('GlobalEventEmitter').addListener(eventName, listener);
     previousArgsRef.current = [eventName, listener];
   }, [eventName, listener]);
 
@@ -52,7 +54,7 @@ export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
     return () => {
       if (previousArgsRef.current) {
         const [eventName, listener] = previousArgsRef.current;
-        lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
+        getPageLynx().getJSModule('GlobalEventEmitter').removeListener(eventName, listener);
       }
     };
   }, []);

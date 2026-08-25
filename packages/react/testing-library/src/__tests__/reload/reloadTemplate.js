@@ -5,7 +5,7 @@
 import { act } from 'preact/test-utils';
 
 import { __root } from '../../../../runtime/lib/root.js';
-import { flushDelayedLifecycleEvents } from '../../../../runtime/lib/snapshot/lynx/tt.js';
+import { flushDelayedLifecycleEvents } from '../../../../runtime/lib/snapshot/lynx/appCallbacks.js';
 
 // What native does for `reloadTemplate`: the main thread re-renders and
 // hydrates, then the background reloads and hydrates against the main

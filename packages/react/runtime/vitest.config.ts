@@ -156,7 +156,7 @@ export default defineConfig({
         'src/snapshot/debug/utils.ts',
         'src/snapshot/lynx/calledByNative.ts',
         'src/snapshot/lynx/env.ts',
-        'src/snapshot/lynx/tt.ts',
+        'src/snapshot/lynx/appCallbacks.ts',
         'src/snapshot/compat/componentIs.ts',
         'src/snapshot/snapshot/types.ts',
         'src/snapshot/worklet/hmr.ts',

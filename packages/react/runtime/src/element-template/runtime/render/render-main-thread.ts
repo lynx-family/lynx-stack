@@ -7,6 +7,7 @@
  */
 
 import { renderToElementTemplate } from './render-direct.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
@@ -27,7 +28,7 @@ function renderMainThread(): void {
   } catch (error) {
     // Like Snapshot, any failure during synchronous rendering is reported at
     // the lifecycle boundary before committing an empty result.
-    lynx.reportError(error as Error);
+    getPageLynx().reportError(error as Error);
     rendered = { pageAttributes: null, rootRefs: [], rootSubtreeHandles: [] };
   } finally {
     profileEnd();
@@ -59,7 +60,7 @@ function renderMainThread(): void {
       reloadVersion: getReloadVersion(),
     };
 
-    lynx.getJSContext().dispatchEvent({
+    getPageLynx().getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
       data: payload,
     });

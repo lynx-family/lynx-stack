@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { markTiming, setPipeline } from '../../core/performance.js';
 import { __root, setRoot } from '../../root.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
@@ -96,7 +97,7 @@ function injectCalledByNative(): void {
 }
 
 function renderPage(data: Record<string, unknown> | undefined): void {
-  lynx.__initData = data ?? {};
+  getPageLynx().__initData = data ?? {};
 
   setupPage(__CreatePage('0', 0));
   (__root as SnapshotInstance).ensureElements();

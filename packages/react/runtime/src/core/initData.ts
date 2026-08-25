@@ -6,6 +6,7 @@ import type { ComponentClass } from 'react';
 
 import { globalCommitContext } from './commit-context.js';
 import type { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
+import { getPageLynx } from './page-lynx.js';
 
 type Getter<T> = {
   [key in keyof T]: () => T[key];
@@ -31,13 +32,13 @@ export function factory<Data>(
   const Context = createContext({} as Data);
 
   const Provider = ({ children }: { children?: ComponentChildren }) => {
-    const [__, set] = useState<Data>(lynx[prop] as Data);
+    const [__, set] = useState<Data>(getPageLynx()[prop] as Data);
 
     const handleChange = () => {
       if (prop === '__initData') {
         globalCommitContext.flushOptions.triggerDataUpdated = true;
       }
-      set(lynx[prop] as Data);
+      set(getPageLynx()[prop] as Data);
     };
 
     useChanged(handleChange);
@@ -54,12 +55,12 @@ export function factory<Data>(
   const Consumer: Consumer<Data> = Context.Consumer;
 
   const use = (): Data => {
-    const [__, set] = useState(lynx[prop]);
+    const [__, set] = useState(getPageLynx()[prop]);
     useChanged(() => {
       if (prop === '__initData') {
         globalCommitContext.flushOptions.triggerDataUpdated = true;
       }
-      set(lynx[prop]);
+      set(getPageLynx()[prop]);
     });
 
     return __ as Data;
@@ -146,7 +147,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
       };
 
       if (!__LEPUS__) {
-        lynx.getJSModule('GlobalEventEmitter').addListener(
+        getPageLynx().getJSModule('GlobalEventEmitter').addListener(
           'onDataChanged',
           this.h = (...args: unknown[]) => {
             const [newData] = args as [S];
@@ -160,7 +161,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
     override componentWillUnmount(): void {
       super.componentWillUnmount?.();
       if (!__LEPUS__) {
-        lynx.getJSModule('GlobalEventEmitter').removeListener(
+        getPageLynx().getJSModule('GlobalEventEmitter').removeListener(
           'onDataChanged',
           this.h!,
         );
