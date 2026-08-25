@@ -35,6 +35,9 @@ ignore:
   - "**/rstest.config.ts"
   - "**/__test__/**/fixtures/**"
   - "packages/react/runtime/__test__/element-template/test-utils/**"
+  # Stringified into build output, never executed in-process.
+  - "packages/webpack/chunk-loading-webpack-plugin/src/runtime/css/**"
+  - "packages/webpack/chunk-loading-webpack-plugin/src/runtime/javascript/**"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"
