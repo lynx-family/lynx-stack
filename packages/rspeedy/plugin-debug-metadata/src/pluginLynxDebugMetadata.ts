@@ -162,7 +162,6 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         const exposed = api.useExposed<LynxTemplatePluginExposure>(
           Symbol.for('LynxTemplatePlugin'),
         )
-
         if (isLocalProductionBuild(isProd)) return
 
         // Non-lynx envs (e.g. the `web` env in a multi-env build) share
@@ -171,13 +170,15 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         // the lynx one with web-asset paths, and rewriting web JS
         // trailers would point them at a metadata file whose artifacts
         // don't include the web asset paths. Web JS source maps work
-        // fine via the default `.map` sibling; skip cleanly.
+        // fine via the default `.map` sibling. Rslib is allowed because it
+        // does not install this plugin implicitly; an explicit registration
+        // may drive the same hooks for an external bundle.
         const isLynx = environment.name === 'lynx'
           || environment.name.startsWith('lynx-')
-        if (!isLynx) return
+        const isRslib = api.context.callerName === 'rslib'
+        if (!isLynx && !isRslib) return
 
         if (!exposed) return
-
         chain.plugin(PLUGIN_NAME).use(LynxDebugMetadataPlugin, [{
           LynxTemplatePlugin: exposed.LynxTemplatePlugin,
           rsbuildEntry: environment.entry,

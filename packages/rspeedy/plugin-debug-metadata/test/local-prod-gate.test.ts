@@ -16,7 +16,10 @@ function noop(): void {
   return
 }
 
-function runChain(utils: ChainUtils): string[] {
+function runChain(
+  utils: ChainUtils,
+  options: { callerName?: string } = {},
+): string[] {
   const registered: string[] = []
   const chain = {
     plugin(name: string) {
@@ -29,7 +32,7 @@ function runChain(utils: ChainUtils): string[] {
     onBeforeStartDevServer: noop,
     useExposed: () => ({ LynxTemplatePlugin: class {} }),
     getNormalizedConfig: () => ({ dev: { assetPrefix: '' } }),
-    context: {},
+    context: { callerName: options.callerName },
     modifyBundlerChain: (
       callback: (chain: typeof chain, utils: ChainUtils) => void,
     ) => {
@@ -98,5 +101,16 @@ describe('pluginLynxDebugMetadata production gate', () => {
 
     expect(runChain({ environment: { name: 'web', entry: {} }, isProd: true }))
       .not.toContain('lynx:debug-metadata')
+  })
+
+  test('emits for an explicitly configured Rslib environment on CI', () => {
+    vi.stubEnv('CI', 'true')
+
+    expect(
+      runChain(
+        { environment: { name: 'component-library', entry: {} }, isProd: true },
+        { callerName: 'rslib' },
+      ),
+    ).toContain('lynx:debug-metadata')
   })
 })

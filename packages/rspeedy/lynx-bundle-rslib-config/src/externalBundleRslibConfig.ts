@@ -8,6 +8,7 @@ import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
 import { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
+import type { LynxTemplatePluginHooksProvider } from './webpack/ExternalBundleWebpackPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
 
 /**
@@ -627,6 +628,15 @@ const externalBundleRsbuildPlugin = ({
   // ensure dsl plugin has exposed LAYERS
   enforce: 'post',
   setup(api) {
+    const exposed = api.useExposed<{
+      LynxTemplatePlugin: LynxTemplatePluginHooksProvider
+    }>(Symbol.for('LynxTemplatePlugin'))
+    if (!exposed) {
+      throw new Error(
+        'lynx-bundle-rslib-config requires exposed `LynxTemplatePlugin`. Please install a DSL plugin, for example `pluginReactLynx` for ReactLynx.',
+      )
+    }
+
     // Get layer names from react-rsbuild-plugin
     const LAYERS = api.useExposed<ExposedLayers>(
       Symbol.for('LAYERS'),
@@ -779,6 +789,7 @@ const externalBundleRsbuildPlugin = ({
               // For web the `JsBytecode` tag is routing-only (sections stay
               // raw JS), so it must survive regardless of the user option.
               enableJsBytecode: isWeb ? true : enableJsBytecode,
+              LynxTemplatePlugin: exposed.LynxTemplatePlugin,
             },
           ],
         )

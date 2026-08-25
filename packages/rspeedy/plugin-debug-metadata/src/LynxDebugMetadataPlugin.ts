@@ -16,7 +16,10 @@ import type {
 } from '@lynx-js/template-webpack-plugin'
 
 import { collectArtifacts } from './collectors/artifacts.js'
-import { parseLepusNGDebugInfo } from './collectors/bytecode-debug-info.js'
+import {
+  parseCustomSectionDebugInfo,
+  parseLepusNGDebugInfo,
+} from './collectors/bytecode-debug-info.js'
 import {
   collectEntryPathMap,
   collectLazyBundleEntryResources,
@@ -203,6 +206,11 @@ export class LynxDebugMetadataPluginImpl {
               rspeedy,
             },
           }
+          // for customSections
+          for (const artifact of asset.artifacts) {
+            const section = readTasmSection(compilation, artifact.path)
+            if (section) artifact.tasmSection = section
+          }
           const intermediate = args.intermediate.replace(/\\/g, '/')
           const debugMetadataAssetName = path.posix.format({
             dir: intermediate,
@@ -229,9 +237,16 @@ export class LynxDebugMetadataPluginImpl {
             const debugMetadataUrl =
               `${devServerOrigin}/${debugMetadataAssetName}`
             const rootName = args.encodeData.lepusCode.root?.name
-            const mainThreadBasename = rootName
-              ? path.posix.basename(rootName.replace(/\\/g, '/'))
-              : 'main-thread.js'
+            const mainThreadArtifact = asset.artifacts.find(artifact =>
+              artifact.kind === 'main-thread'
+            )
+            const mainThreadBasename =
+              mainThreadArtifact?.tasmSection?.[0] === 'customSections'
+                ? mainThreadArtifact.tasmSection[1]
+                  ?? mainThreadArtifact.filename
+                : (rootName
+                  ? path.posix.basename(rootName.replace(/\\/g, '/'))
+                  : mainThreadArtifact?.filename ?? 'main-thread.js')
             args.encodeData.sourceContent.config['debugMetadataUrl'] =
               debugMetadataUrl
             args.encodeData.compilerOptions['templateDebugUrl'] =
@@ -273,6 +288,30 @@ export class LynxDebugMetadataPluginImpl {
           for (const artifact of metadata.artifacts) {
             const section = readTasmSection(compilation, artifact.path)
             if (section) artifact.tasmSection = section
+          }
+
+          const sections = parseCustomSectionDebugInfo(args.debugInfo)
+          if (sections) {
+            for (const artifact of metadata.artifacts) {
+              if (
+                artifact.kind !== 'main-thread'
+                || artifact.tasmSection?.[0] !== 'customSections'
+              ) {
+                continue
+              }
+              const sectionName = artifact.tasmSection[1]
+              if (!sectionName) continue
+              const debugInfo = sections[sectionName]
+              if (!debugInfo) continue
+
+              // TASM reports custom-section stack frames with the section
+              // key, not the intermediate JavaScript asset name.
+              artifact.filename = sectionName
+              artifact.debugSources.unshift({
+                kind: 'bytecode-debug-info',
+                debugInfo,
+              })
+            }
           }
 
           const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
@@ -335,8 +374,9 @@ export interface RewriteSourceMappingURLsOptions {
 }
 
 /**
- * Rewrite the `//# sourceMappingURL=...` directive of every JS asset in the
- * current template to an absolute URL. No-op when `debugMetadataUrl`
+ * Rewrite sourceMappingURL directives in assets represented by the current
+ * template, including string-valued custom sections, to an absolute URL.
+ * No-op when `debugMetadataUrl`
  * (`args.encodeData.sourceContent.config['debugMetadataUrl']`) is unset.
  *
  * @public
@@ -364,6 +404,16 @@ export function rewriteSourceMappingURLs(
   for (const chunk of args.encodeData.css.chunks) {
     assetNames.push(chunk.name)
   }
+  for (const asset of compilation.getAssets()) {
+    const section = readTasmSection(compilation, asset.name)
+    if (
+      section?.[0] === 'customSections'
+      && section[1] !== undefined
+      && section[1] in args.encodeData.customSections
+    ) {
+      assetNames.push(asset.name)
+    }
+  }
   const seen = new Set<string>()
   for (const assetName of assetNames) {
     if (seen.has(assetName)) continue
@@ -382,6 +432,13 @@ export function rewriteSourceMappingURLs(
     if (after === undefined) continue
     const newSource = new RawSource(after)
     compilation.updateAsset(assetName, newSource, asset.info)
+    const section = readTasmSection(compilation, assetName)
+    if (section?.[0] === 'customSections' && section[1] !== undefined) {
+      const customSection = args.encodeData.customSections[section[1]]
+      if (customSection && typeof customSection.content === 'string') {
+        customSection.content = after
+      }
+    }
     if (!assetName.endsWith('.js')) continue
     if (assetName in args.encodeData.manifest) {
       args.encodeData.manifest[assetName] = after

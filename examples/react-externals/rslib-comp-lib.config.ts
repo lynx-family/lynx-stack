@@ -1,3 +1,4 @@
+import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin';
 import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
@@ -15,6 +16,7 @@ export default defineExternalBundleRslibConfig({
   },
   plugins: [
     pluginReactLynx(),
+    pluginLynxDebugMetadata(),
   ],
   // Sync and async share this config file, so rspack's persistent cache (keyed
   // on the config) would otherwise reuse one variant's compiled modules for the
@@ -32,6 +34,9 @@ export default defineExternalBundleRslibConfig({
     ...(isAsync && {
       distPath: { root: 'dist-external-bundle-react-async' },
     }),
+    sourceMap: {
+      js: 'source-map',
+    },
     globalObject: 'globalThis',
   },
 });

@@ -5,6 +5,7 @@
 ```ts
 
 import type { LibConfig } from '@rslib/core';
+import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import type { RslibConfig } from '@rslib/core';
 import type { Rspack } from '@rslib/core';
 
@@ -45,10 +46,15 @@ export interface ExternalBundleWebpackPluginOptions {
     enableJsBytecode?: boolean | undefined;
     encode: (opts: unknown) => {
         buffer: Buffer;
+        lepus_debug?: string;
+        css_diagnostics?: string;
     } | Promise<{
         buffer: Buffer;
+        lepus_debug?: string;
+        css_diagnostics?: string;
     }>;
     engineVersion?: string | undefined;
+    LynxTemplatePlugin: LynxTemplatePluginHooksProvider;
     mainThreadChunks?: string[] | undefined;
 }
 
@@ -79,6 +85,11 @@ export type ExternalsPresets = {
 export type ExternalsPresetValue = boolean | {
     async?: boolean;
 };
+
+// @public
+export interface LynxTemplatePluginHooksProvider {
+    getLynxTemplatePluginHooks: typeof LynxTemplatePlugin.getLynxTemplatePluginHooks;
+}
 
 // @public
 export class MainThreadRuntimeWrapperWebpackPlugin {

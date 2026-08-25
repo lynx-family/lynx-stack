@@ -6,6 +6,7 @@
   "scripts": {
     "build": "pnpm run build:comp-lib && rspeedy build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
+    "build:comp-lib:debug-metadata": "cross-env DEBUG=rspeedy rslib build --config rslib-comp-lib.config.ts",
     "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
     "dev": "pnpm run build:comp-lib && rspeedy dev",
     "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy dev",
@@ -16,6 +17,7 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
