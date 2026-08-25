@@ -114,14 +114,16 @@ configured explicitly. See the
 for model/endpoint setup.
 
 When `SEARCH_INFINITY_API_KEY` is configured, the A2UI agent can call the
-server-side `web_search` tool for current or explicitly requested public-web
-information. The key is never sent to the Playground. Each generation may
-perform at most three searches across the initial response and validation
-repairs; each search returns at most five normalized text results. Source links
-must come from the user input or the current request's search results. Search
-images are intentionally excluded from this first integration. The server uses
-the Custom web-search API so both subscription-plan and post-paid keys are
-supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
+server-side `web_search` and `image_search` tools. Web search retrieves current
+or explicitly requested public-web information; image search returns existing
+image URLs with source and quality metadata. The agent prefers image search
+before image generation unless the user explicitly requests original generated
+artwork. The key is never sent to the Playground. Each generation may perform
+at most three searches combined across the initial response and validation
+repairs; each call returns at most five normalized results. Source links and
+image URLs must come from the user input or the current request's trusted tool
+scope. The server uses the Custom search API so both subscription-plan and
+post-paid keys are supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
 and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 

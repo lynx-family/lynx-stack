@@ -375,7 +375,7 @@ export function validateA2UIOutput(
             errors.push(
               `Function "openUrl" at ${fn.path} has untrusted url ${
                 JSON.stringify(fn.args.url)
-              }. Use a URL supplied by the request or returned by web_search.`,
+              }. Use a URL supplied by the request or returned by web_search or image_search.`,
             );
           }
         }
@@ -849,7 +849,7 @@ function validateRendererSemantics(
       errors.push(
         `Component "${comp.id}" (Image) has unresolved url ${
           JSON.stringify(url)
-        }. Call generate_image and copy its returned URL exactly into Image.url.`,
+        }. Call image_search first, or generate_image when search is unsuitable, and copy its returned URL exactly into Image.url.`,
       );
     } else if (
       typeof url === 'string'
@@ -859,7 +859,7 @@ function validateRendererSemantics(
       errors.push(
         `Component "${comp.id}" (Image) has untrusted url ${
           JSON.stringify(url)
-        }. The URL was neither provided by the request or host nor returned by generate_image.`,
+        }. The URL was neither provided by the request or host nor returned by image_search or generate_image.`,
       );
     }
   }
@@ -921,7 +921,7 @@ function validateBoundImageSources(
             JSON.stringify(url.path)
           } resolves to an untrusted image URL ${
             JSON.stringify(invalid)
-          }. The URL was neither provided by the request or host nor returned by generate_image.`,
+          }. The URL was neither provided by the request or host nor returned by image_search or generate_image.`,
         );
       } else {
         errors.push(
@@ -929,7 +929,7 @@ function validateBoundImageSources(
             JSON.stringify(url.path)
           } resolves to an unresolved image value ${
             JSON.stringify(invalid)
-          }. Call generate_image and store its returned URL at that path.`,
+          }. Call image_search first, or generate_image when search is unsuitable, and store its returned URL at that path.`,
         );
       }
     }

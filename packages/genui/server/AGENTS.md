@@ -85,22 +85,27 @@ information, configure the optional server-side Doubao Search credential:
 export SEARCH_INFINITY_API_KEY="..."
 ```
 
-When the key is present, the server conditionally registers a `web_search`
-tool. The tool calls the Doubao Search Custom web API, which supports both
-subscription-plan and post-paid API keys, with a fixed maximum of five text
-results and never returns search images. It may be called at most three times
+When the key is present, the server conditionally registers `web_search` and
+`image_search` tools. Both call the Doubao Search Custom API, which supports
+subscription-plan and post-paid API keys. Web search returns at most five
+normalized text results. Image search returns at most five image URLs with
+source and quality metadata. The agent should prefer image search whenever a
+UI needs an existing image, falling back to `generate_image` only when search
+fails, has no suitable result, or the user explicitly asks for original
+generated artwork. The two search tools may make at most three calls combined
 per HTTP request across the initial generation and all repair attempts.
 `SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
 request timeout and must be an integer from 1 through 60000. Keep the key
 server-only and do not include a `Bearer` prefix. Missing configuration leaves
 search disabled without affecting the rest of the A2UI server; `GET
-/a2ui/health` reports this through `webSearchReady`.
+/a2ui/health` reports this through `webSearchReady` and `imageSearchReady`.
 
-URLs supplied by the user or returned by the current request's search scope
-may be used with `openUrl`. The server rejects other model-generated targets,
-and the streaming parser keeps components with untrusted links in a loading
-state until final validation. Bench runs explicitly disable web search so
-their output stays deterministic.
+Image URLs returned by the current request's image-search scope may reach the
+renderer. Source-page URLs returned by either search tool may be used with
+`openUrl`, as may URLs supplied by the user. The server rejects other
+model-generated targets, and the streaming parser keeps components with
+untrusted sources in a loading state until final validation. Bench runs
+explicitly disable both search tools so their output stays deterministic.
 
 To publish short, shareable A2UI and OpenUI preview URLs, configure the
 public-read Volcengine TOS bucket and server-only write credentials. All four
