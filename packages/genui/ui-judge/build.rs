@@ -8,8 +8,12 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
+mod build_support;
+
 #[path = "../../lynx/engine-bridge/tools/runtime_build.rs"]
 mod runtime_build;
+
+use build_support::lynx_core_source;
 
 const START_SCRIPT: &str = r#"#!/bin/sh
 
@@ -25,6 +29,7 @@ fn main() -> io::Result<()> {
   if env::var_os("CARGO_FEATURE_SERVER").is_none() {
     return Ok(());
   }
+  println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_PATH");
 
   let manifest_dir =
     PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("Cargo must set CARGO_MANIFEST_DIR"));
@@ -42,8 +47,8 @@ fn main() -> io::Result<()> {
     .to_path_buf();
   let start_script = profile_dir.join("start.sh");
   let runtime_destination = profile_dir.join("lib").join(runtime_name);
-  let lynx_core_source =
-    manifest_dir.join("../../lynx/headless-rust-test-runner/fixtures/react/lynx_core.js");
+  let configured_lynx_core = env::var_os("LYNX_CORE_JS_PATH");
+  let lynx_core_source = lynx_core_source(&manifest_dir, configured_lynx_core.as_deref());
   let lynx_core_destination = if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
     profile_dir.join("LynxResources.bundle/lynx_core.js")
   } else {

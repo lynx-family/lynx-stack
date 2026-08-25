@@ -279,8 +279,9 @@ Other user-configurable environment variables are:
 
 - `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
 - `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
-- `LYNX_CORE_JS_PATH`: override `lynx_core.js` when it is not colocated with the
-  executable.
+- `LYNX_CORE_JS_PATH`: override the `lynx_core.js` source at runtime and when
+  building a server bundle. The bundled destination remains named
+  `lynx_core.js`, so a compatible source file may use a different filename.
 - `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime downloading.
 - `LYNX_RUNTIME_URL` and `LYNX_RUNTIME_SHA256`: use and verify a custom
   build-time runtime download.

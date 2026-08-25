@@ -10,6 +10,8 @@ pub enum Error {
   InteriorNul { field: &'static str },
   #[error("Lynx returned null while attempting to {operation}")]
   NullPointer { operation: &'static str },
+  #[error("the loaded Lynx runtime does not provide {symbol}")]
+  UnsupportedRuntimeApi { symbol: &'static str },
   #[error("the process-global windowless UI task runner is already set")]
   GlobalUiTaskRunnerAlreadySet,
   #[error("failed to {operation} {}: {source}", path.display())]

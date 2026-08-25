@@ -49,8 +49,10 @@ tests use.
 2. `Env::load()` asks `sys::candidate_library_paths()` for the configured
    runtime path.
 3. `LoadedLibrary::load()` opens that dynamic library with `libloading`.
-4. `LoadedLibrary::from_dynamic_library()` resolves every required `lynx_*` and
-   `lynx_rust_*` symbol.
+4. `LoadedLibrary::from_dynamic_library()` resolves the required public
+   `lynx_*` symbols and probes newer additive symbols that remain optional for
+   compatibility with the default runtime artifact. C++ reference parameters
+   in the public headers are represented as pointers in the Rust ABI.
 5. Safe wrappers clone `Arc<LoadedLibrary>` so the dynamic library stays loaded
    while any object created from the environment is alive.
 

@@ -95,6 +95,12 @@ impl DynamicLibrary {
     })?;
     Ok(*symbol_value)
   }
+
+  unsafe fn optional_symbol<T: Copy>(&self, symbol: &'static str) -> Option<T> {
+    unsafe { self.library.get::<T>(symbol.as_bytes()) }
+      .ok()
+      .map(|symbol_value| *symbol_value)
+  }
 }
 
 #[cfg(unix)]
@@ -135,15 +141,18 @@ pub struct LoadedLibrary {
   pub lynx_group_release: unsafe extern "C" fn(*mut lynx_group_t),
 
   pub lynx_view_builder_create: unsafe extern "C" fn() -> *mut lynx_view_builder_t,
-  pub lynx_rust_view_builder_set_screen_size:
-    unsafe extern "C" fn(*mut lynx_view_builder_t, f32, f32, f32),
-  pub lynx_rust_view_builder_set_frame:
-    unsafe extern "C" fn(*mut lynx_view_builder_t, f32, f32, f32, f32),
-  pub lynx_rust_view_builder_set_font_scale: unsafe extern "C" fn(*mut lynx_view_builder_t, f32),
+  pub lynx_view_builder_set_screen_size:
+    unsafe extern "C" fn(*mut lynx_view_builder_t, *const f32, *const f32, *const f32),
+  pub lynx_view_builder_set_frame:
+    unsafe extern "C" fn(*mut lynx_view_builder_t, *const f32, *const f32, *const f32, *const f32),
+  pub lynx_view_builder_set_font_scale: unsafe extern "C" fn(*mut lynx_view_builder_t, *const f32),
   pub lynx_view_builder_set_icu_data_path:
+    unsafe extern "C" fn(*mut lynx_view_builder_t, *const c_char),
+  pub lynx_view_builder_set_webview2_fixed_runtime_path:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *const c_char),
   pub lynx_view_builder_set_lynx_group:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *mut lynx_group_t),
+  pub lynx_view_builder_set_parent: unsafe extern "C" fn(*mut lynx_view_builder_t, NativeWindow),
   pub lynx_view_builder_set_windowless_renderer:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *mut lynx_windowless_renderer_t),
   pub lynx_view_builder_set_generic_resource_fetcher:
@@ -161,14 +170,30 @@ pub struct LoadedLibrary {
     bool,
     *mut c_void,
   ),
+  pub lynx_view_builder_register_native_view: unsafe extern "C" fn(
+    *mut lynx_view_builder_t,
+    *const c_char,
+    Option<lynx_native_view_creator>,
+    *mut c_void,
+  ),
   pub lynx_view_builder_release: unsafe extern "C" fn(*mut lynx_view_builder_t),
 
   pub lynx_view_create:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *mut c_void) -> *mut lynx_view_t,
+  pub lynx_view_get_user_data: unsafe extern "C" fn(*mut lynx_view_t) -> *mut c_void,
+  pub lynx_view_get_devtool_target:
+    Option<unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_devtool_target_t) -> bool>,
+  pub lynx_view_get_webview2_fixed_runtime_path:
+    unsafe extern "C" fn(*mut lynx_view_t) -> *const c_char,
   pub lynx_view_release: unsafe extern "C" fn(*mut lynx_view_t),
   pub lynx_view_add_client: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_view_client_t),
   pub lynx_view_remove_client: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_view_client_t),
+  pub lynx_view_register_runtime_lifecycle_observer:
+    unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_runtime_lifecycle_observer_t),
   pub lynx_view_load_template: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_load_meta_t),
+  pub lynx_view_load_lynx_ml: Option<
+    unsafe extern "C" fn(*mut lynx_view_t, *const c_char, *const c_char, *mut lynx_template_data_t),
+  >,
   pub lynx_view_update_data: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_update_meta_t),
   pub lynx_view_reload_template:
     unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_template_data_t, *mut lynx_template_data_t),
@@ -176,12 +201,43 @@ pub struct LoadedLibrary {
     unsafe extern "C" fn(*mut lynx_view_t, *const c_char, *const c_char),
   pub lynx_view_send_touch_event:
     unsafe extern "C" fn(*mut lynx_view_t, *const c_char, i32, f32, f32, f32, f32, f32, f32),
-  pub lynx_rust_view_update_screen_metrics: unsafe extern "C" fn(*mut lynx_view_t, f32, f32, f32),
-  pub lynx_rust_view_set_frame: unsafe extern "C" fn(*mut lynx_view_t, f32, f32, f32, f32),
-  pub lynx_rust_view_set_font_scale: unsafe extern "C" fn(*mut lynx_view_t, f32),
-  pub lynx_rust_view_set_use_texture_backend: unsafe extern "C" fn(*mut lynx_view_t, bool) -> bool,
+  pub lynx_view_update_screen_metrics:
+    unsafe extern "C" fn(*mut lynx_view_t, *const f32, *const f32, *const f32),
+  pub lynx_view_set_frame:
+    unsafe extern "C" fn(*mut lynx_view_t, *const f32, *const f32, *const f32, *const f32),
+  pub lynx_view_set_font_scale: unsafe extern "C" fn(*mut lynx_view_t, *const f32),
+  pub lynx_view_set_parent: unsafe extern "C" fn(*mut lynx_view_t, NativeWindow),
+  pub lynx_view_get_native_window: unsafe extern "C" fn(*mut lynx_view_t) -> NativeWindow,
+  pub lynx_view_get_generic_resource_fetcher:
+    unsafe extern "C" fn(*mut lynx_view_t) -> *mut lynx_generic_resource_fetcher_t,
   pub lynx_view_enter_foreground: unsafe extern "C" fn(*mut lynx_view_t),
   pub lynx_view_enter_background: unsafe extern "C" fn(*mut lynx_view_t),
+  pub lynx_view_inject_bubble_event: unsafe extern "C" fn(*mut lynx_view_t, *const c_char),
+  pub lynx_view_register_native_view: unsafe extern "C" fn(
+    *mut lynx_view_t,
+    *const c_char,
+    Option<lynx_native_view_creator>,
+    *mut c_void,
+  ),
+  pub lynx_view_register_ime_handler:
+    unsafe extern "C" fn(*mut lynx_view_t, *mut c_void, *mut c_void),
+  pub lynx_view_set_custom_vsync_monitor:
+    unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_vsync_monitor_t),
+  pub lynx_view_set_event_simulation_proxy:
+    unsafe extern "C" fn(*mut lynx_view_t, Option<lynx_emulate_touch_fn>, *mut c_void),
+  pub lynx_view_set_event_simulation_callbacks: Option<
+    unsafe extern "C" fn(
+      *mut lynx_view_t,
+      Option<lynx_emulate_touch_fn>,
+      Option<lynx_focus_fn>,
+      Option<lynx_insert_text_fn>,
+      *mut c_void,
+    ),
+  >,
+  pub lynx_view_get_node_for_location:
+    unsafe extern "C" fn(*mut lynx_view_t, c_int, c_int) -> c_int,
+  pub lynx_view_emulate_mouse_event:
+    unsafe extern "C" fn(*mut lynx_view_t, *const c_char, f32, f32, f32, f32),
 
   pub lynx_load_meta_create: unsafe extern "C" fn() -> *mut lynx_load_meta_t,
   pub lynx_load_meta_set_url: unsafe extern "C" fn(*mut lynx_load_meta_t, *const c_char),
@@ -350,6 +406,12 @@ macro_rules! load_symbol {
   };
 }
 
+macro_rules! load_optional_symbol {
+  ($library:expr, $name:ident) => {
+    unsafe { $library.optional_symbol(stringify!($name)) }
+  };
+}
+
 impl LoadedLibrary {
   pub fn load_from_environment() -> Result<Self> {
     let candidates = candidate_library_paths()?;
@@ -397,20 +459,19 @@ impl LoadedLibrary {
       lynx_group_release: load_symbol!(library, lynx_group_release),
 
       lynx_view_builder_create: load_symbol!(library, lynx_view_builder_create),
-      lynx_rust_view_builder_set_screen_size: load_symbol!(
-        library,
-        lynx_rust_view_builder_set_screen_size
-      ),
-      lynx_rust_view_builder_set_frame: load_symbol!(library, lynx_rust_view_builder_set_frame),
-      lynx_rust_view_builder_set_font_scale: load_symbol!(
-        library,
-        lynx_rust_view_builder_set_font_scale
-      ),
+      lynx_view_builder_set_screen_size: load_symbol!(library, lynx_view_builder_set_screen_size),
+      lynx_view_builder_set_frame: load_symbol!(library, lynx_view_builder_set_frame),
+      lynx_view_builder_set_font_scale: load_symbol!(library, lynx_view_builder_set_font_scale),
       lynx_view_builder_set_icu_data_path: load_symbol!(
         library,
         lynx_view_builder_set_icu_data_path
       ),
+      lynx_view_builder_set_webview2_fixed_runtime_path: load_symbol!(
+        library,
+        lynx_view_builder_set_webview2_fixed_runtime_path
+      ),
       lynx_view_builder_set_lynx_group: load_symbol!(library, lynx_view_builder_set_lynx_group),
+      lynx_view_builder_set_parent: load_symbol!(library, lynx_view_builder_set_parent),
       lynx_view_builder_set_windowless_renderer: load_symbol!(
         library,
         lynx_view_builder_set_windowless_renderer
@@ -427,29 +488,57 @@ impl LoadedLibrary {
         library,
         lynx_view_builder_register_extension_module
       ),
+      lynx_view_builder_register_native_view: load_symbol!(
+        library,
+        lynx_view_builder_register_native_view
+      ),
       lynx_view_builder_release: load_symbol!(library, lynx_view_builder_release),
 
       lynx_view_create: load_symbol!(library, lynx_view_create),
+      lynx_view_get_user_data: load_symbol!(library, lynx_view_get_user_data),
+      lynx_view_get_devtool_target: load_optional_symbol!(library, lynx_view_get_devtool_target),
+      lynx_view_get_webview2_fixed_runtime_path: load_symbol!(
+        library,
+        lynx_view_get_webview2_fixed_runtime_path
+      ),
       lynx_view_release: load_symbol!(library, lynx_view_release),
       lynx_view_add_client: load_symbol!(library, lynx_view_add_client),
       lynx_view_remove_client: load_symbol!(library, lynx_view_remove_client),
+      lynx_view_register_runtime_lifecycle_observer: load_symbol!(
+        library,
+        lynx_view_register_runtime_lifecycle_observer
+      ),
       lynx_view_load_template: load_symbol!(library, lynx_view_load_template),
+      lynx_view_load_lynx_ml: load_optional_symbol!(library, lynx_view_load_lynx_ml),
       lynx_view_update_data: load_symbol!(library, lynx_view_update_data),
       lynx_view_reload_template: load_symbol!(library, lynx_view_reload_template),
       lynx_view_send_global_event: load_symbol!(library, lynx_view_send_global_event),
       lynx_view_send_touch_event: load_symbol!(library, lynx_view_send_touch_event),
-      lynx_rust_view_update_screen_metrics: load_symbol!(
+      lynx_view_update_screen_metrics: load_symbol!(library, lynx_view_update_screen_metrics),
+      lynx_view_set_frame: load_symbol!(library, lynx_view_set_frame),
+      lynx_view_set_font_scale: load_symbol!(library, lynx_view_set_font_scale),
+      lynx_view_set_parent: load_symbol!(library, lynx_view_set_parent),
+      lynx_view_get_native_window: load_symbol!(library, lynx_view_get_native_window),
+      lynx_view_get_generic_resource_fetcher: load_symbol!(
         library,
-        lynx_rust_view_update_screen_metrics
-      ),
-      lynx_rust_view_set_frame: load_symbol!(library, lynx_rust_view_set_frame),
-      lynx_rust_view_set_font_scale: load_symbol!(library, lynx_rust_view_set_font_scale),
-      lynx_rust_view_set_use_texture_backend: load_symbol!(
-        library,
-        lynx_rust_view_set_use_texture_backend
+        lynx_view_get_generic_resource_fetcher
       ),
       lynx_view_enter_foreground: load_symbol!(library, lynx_view_enter_foreground),
       lynx_view_enter_background: load_symbol!(library, lynx_view_enter_background),
+      lynx_view_inject_bubble_event: load_symbol!(library, lynx_view_inject_bubble_event),
+      lynx_view_register_native_view: load_symbol!(library, lynx_view_register_native_view),
+      lynx_view_register_ime_handler: load_symbol!(library, lynx_view_register_ime_handler),
+      lynx_view_set_custom_vsync_monitor: load_symbol!(library, lynx_view_set_custom_vsync_monitor),
+      lynx_view_set_event_simulation_proxy: load_symbol!(
+        library,
+        lynx_view_set_event_simulation_proxy
+      ),
+      lynx_view_set_event_simulation_callbacks: load_optional_symbol!(
+        library,
+        lynx_view_set_event_simulation_callbacks
+      ),
+      lynx_view_get_node_for_location: load_symbol!(library, lynx_view_get_node_for_location),
+      lynx_view_emulate_mouse_event: load_symbol!(library, lynx_view_emulate_mouse_event),
 
       lynx_load_meta_create: load_symbol!(library, lynx_load_meta_create),
       lynx_load_meta_set_url: load_symbol!(library, lynx_load_meta_set_url),

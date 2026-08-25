@@ -1,6 +1,6 @@
 use lynx::{
   sys, Env, Error, FetchResponse, GenericResourceFetcher, HeadlessView, LynxGroup, NoopHost,
-  ResourceFetcher, ResourceRequest, ResourceType, SoftwareFrame, SoftwareRenderer,
+  ResourceFetcher, ResourceRequest, ResourceType, SoftwareFrame, SoftwareRenderer, TouchEvent,
   WindowlessRenderer,
 };
 use std::env;
@@ -23,6 +23,13 @@ fn public_data_types_work_without_runtime() {
     ResourceType::Image
   );
   assert_eq!(ResourceType::from(123_456), ResourceType::Unknown(123_456));
+  assert_eq!(
+    TouchEvent::new(42),
+    TouchEvent {
+      id: 42,
+      ..TouchEvent::default()
+    }
+  );
 }
 
 #[test]
@@ -112,6 +119,22 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
     "global_event_name",
   );
   assert_interior_nul(view.send_touch_event("bad\0event", 1), "touch_event_name");
+  assert_interior_nul(
+    view.send_touch_event_with_coordinates("bad\0event", TouchEvent::new(1)),
+    "touch_event_name",
+  );
+  assert_interior_nul(
+    view.emulate_mouse_event("bad\0event", 0.0, 0.0, 0.0, 0.0),
+    "mouse_event_name",
+  );
+  assert_interior_nul(
+    view.inject_bubble_event("bad\0params"),
+    "bubble_event_params",
+  );
+  assert_interior_nul(
+    view.load_lynx_ml("bad\0source", "memory://page.lynxml", None),
+    "lynx_ml_source",
+  );
   view
     .update_data_json("{\"count\":1}", Some("{\"theme\":\"dark\"}"))
     .expect("update data JSON");

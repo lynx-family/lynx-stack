@@ -148,6 +148,13 @@ impl GenericResourceFetcher {
     Ok(Self { sys, raw })
   }
 
+  pub(crate) unsafe fn from_owned_raw(
+    sys: Arc<sys::LoadedLibrary>,
+    raw: *mut sys::lynx_generic_resource_fetcher_t,
+  ) -> Self {
+    Self { sys, raw }
+  }
+
   pub(crate) fn raw(&self) -> *mut sys::lynx_generic_resource_fetcher_t {
     self.raw
   }

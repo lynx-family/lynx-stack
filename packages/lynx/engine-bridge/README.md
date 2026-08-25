@@ -19,8 +19,9 @@ Use this workspace when you need to:
 - serve bundle, image, font, or other resources from Rust
 - drive Lynx tasks and input events in a non-windowed host
 
-This workspace does not build `libLynx_clay`, package a full SDK, expose
-windowed APIs such as `NativeView`, or provide CLI/example binaries.
+This workspace does not build `libLynx_clay`, package a full SDK, implement
+platform-native view objects, or provide CLI/example binaries. It does expose
+the public C API hooks needed to register a host-provided native-view factory.
 
 ## Layout
 
@@ -64,11 +65,12 @@ the loader checks one canonical path for the current platform:
 - `$LYNX_SDK_DIR/lib/libLynx_clay.dylib` on macOS
 - `$LYNX_SDK_DIR/lib/libLynx_clay.so` on Linux
 
-The loaded runtime must export the `lynx_rust_*` shim symbols, such as
-`lynx_rust_view_set_frame`. These symbols keep the Rust ABI narrow while the
-existing C++ exports keep reference-parameter signatures. The software
-windowless path also uses `lynx_rust_view_set_use_texture_backend` to switch
-Clay image resources away from the texture backend before loading templates.
+The bridge uses the public `lynx_*` C API exports directly and does not require
+private `lynx_rust_*` shim symbols. Some exported functions declare numeric
+inputs as C++ `const float&` parameters even though they have C linkage; the raw
+Rust ABI binds those parameters as pointers and the safe API passes stable
+addresses. Additive APIs that are absent from the current default runtime are
+resolved optionally and report `UnsupportedRuntimeApi` only when called.
 
 When Cargo downloads a runtime, it stores the files under
 `target/lynx-engine-bridge-sdk` and injects `LYNX_SDK_DIR` for tests. Existing
@@ -137,10 +139,12 @@ when no runtime is available, so keep `build.rs` and CI in sync.
 Set `LYNX_LIB_PATH` to the exact runtime library path, or set `LYNX_SDK_DIR` to a
 folder that contains the runtime in `lib/`.
 
-`failed to load symbol lynx_rust_*`
+`failed to load symbol lynx_*`
 
-The runtime was built without the Rust-friendly shim exports. Use a runtime
-artifact that includes those symbols.
+The runtime does not match the required public C API. Use an artifact built
+against a compatible set of Lynx embedder headers. If a safe method instead
+returns `UnsupportedRuntimeApi`, that method requires a newer additive runtime
+API while the rest of the loaded runtime remains usable.
 
 `libepoxy.so.0: cannot open shared object file`
 

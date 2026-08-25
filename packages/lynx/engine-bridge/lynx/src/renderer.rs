@@ -135,7 +135,6 @@ fn renderer_contexts() -> &'static Mutex<HashMap<usize, Arc<RendererContext>>> {
 pub struct WindowlessRenderer {
   sys: Arc<sys::LoadedLibrary>,
   raw: *mut sys::lynx_windowless_renderer_t,
-  renderer_type: sys::lynx_windowless_renderer_type_e,
 }
 
 impl WindowlessRenderer {
@@ -253,19 +252,11 @@ impl WindowlessRenderer {
       }
     }
 
-    Ok(Self {
-      sys,
-      raw,
-      renderer_type,
-    })
+    Ok(Self { sys, raw })
   }
 
   pub(crate) fn raw(&self) -> *mut sys::lynx_windowless_renderer_t {
     self.raw
-  }
-
-  pub(crate) fn use_texture_backend(&self) -> bool {
-    self.renderer_type != sys::kRendererTypeSoftware
   }
 
   pub fn run_task(&self, task: Task) {

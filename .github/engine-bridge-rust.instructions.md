@@ -10,6 +10,8 @@ Follow a Let it crash style in engine-bridge Rust code. Prefer one documented ru
 
 Keep Rust integration coverage for the `lynx` library crate under `packages/lynx/engine-bridge/lynx/tests/`. These tests should cover public API behavior, and runtime-backed cases should load the configured dylib/so rather than using mocks. Do not add screenshot or image-golden tests to the engine bridge workspace unless product requirements need visual regression coverage.
 
-Keep the safe API surface tied to exercised workflows. Do not add view-client lifecycle wrappers, callback glue, or extra dylib symbols unless a committed integration path uses them.
+Keep the safe API surface tied to exercised workflows. Do not add view-client lifecycle wrappers, callback glue, or extra dylib symbols unless a committed integration path uses them or a task explicitly requires synchronizing the bridge with a newer public C header; keep raw callback and platform-handle wrappers unsafe.
+
+Treat the public C headers as the runtime ABI source of truth. C exports declared with C++ reference parameters such as `const float&` must be bound as pointers (for example, `*const f32`) and called with stable addresses; do not require private `lynx_rust_*` shim exports. When a newly documented symbol is absent from the repository's current default runtime artifact, resolve it optionally and make the calling API report that it is unavailable instead of preventing the entire runtime from loading.
 
 Keep `README.md` and `docs/architecture.md` in sync with API or ownership changes. Do not add SDK packaging scripts unless the workspace also owns the build inputs and CI path that validate them.
