@@ -200,16 +200,6 @@ impl LynxContainer {
       url: String::new(),
     })
   }
-
-  /// The viewport width shared by every page in this container.
-  pub fn width(&self) -> usize {
-    self.shared.options.width
-  }
-
-  /// The viewport height shared by every page in this container.
-  pub fn height(&self) -> usize {
-    self.shared.options.height
-  }
 }
 
 impl ContainerShared {

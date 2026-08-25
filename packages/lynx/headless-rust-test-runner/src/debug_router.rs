@@ -35,19 +35,15 @@ const FIRST_MESSAGE_ID: u32 = 10_000;
 /// A cloneable handle to the process-wide DebugRouter actor.
 #[derive(Clone)]
 pub(crate) struct DebugRouter {
-  inner: Arc<RouterHandle>,
-}
-
-struct RouterHandle {
   port: u16,
-  commands: Mutex<Sender<Command>>,
+  commands: Arc<Mutex<Sender<Command>>>,
 }
 
 impl fmt::Debug for DebugRouter {
   fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
     formatter
       .debug_struct("DebugRouter")
-      .field("port", &self.inner.port)
+      .field("port", &self.port)
       .finish_non_exhaustive()
   }
 }
@@ -65,10 +61,8 @@ impl DebugRouter {
       .name("lynx-debug-router".into())
       .spawn(move || run_actor(port, stream, command_receiver))?;
     Ok(Self {
-      inner: Arc::new(RouterHandle {
-        port,
-        commands: Mutex::new(commands),
-      }),
+      port,
+      commands: Arc::new(Mutex::new(commands)),
     })
   }
 
@@ -89,15 +83,14 @@ impl DebugRouter {
       reply,
     })?;
     Ok(PendingRequest {
-      port: self.inner.port,
+      port: self.port,
       response,
     })
   }
 
   fn send(&self, command: Command) -> Result<()> {
-    let port = self.inner.port;
+    let port = self.port;
     self
-      .inner
       .commands
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -419,10 +412,8 @@ mod tests {
     thread::spawn(move || run_actor(port, client, command_receiver));
     (
       DebugRouter {
-        inner: Arc::new(RouterHandle {
-          port,
-          commands: Mutex::new(commands),
-        }),
+        port,
+        commands: Arc::new(Mutex::new(commands)),
       },
       server,
     )

@@ -9,8 +9,6 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 #[cfg(not(target_os = "macos"))]
-use std::collections::HashSet;
-#[cfg(not(target_os = "macos"))]
 use std::thread::{self, ThreadId};
 
 #[cfg(not(target_os = "macos"))]
@@ -95,31 +93,30 @@ impl WindowlessHost for QueueingHost {
   }
 }
 
+/// The threads that own a container, and so count as UI threads for the
+/// runtime. A handful of entries at most, which a linear scan handles better
+/// than a hashed set would.
+#[cfg(not(target_os = "macos"))]
+static CONTAINER_THREADS: Mutex<Vec<ThreadId>> = Mutex::new(Vec::new());
+
 #[cfg(not(target_os = "macos"))]
 struct SharedGlobalRunner {
   tasks: SharedTasks,
-  threads: Arc<Mutex<HashSet<ThreadId>>>,
 }
 
 #[cfg(not(target_os = "macos"))]
 impl GlobalUiTaskRunner for SharedGlobalRunner {
   fn runs_on_current_thread(&mut self) -> bool {
-    self
-      .threads
+    let current = thread::current().id();
+    CONTAINER_THREADS
       .lock()
       .expect("container thread registry poisoned")
-      .contains(&thread::current().id())
+      .contains(&current)
   }
 
   fn post_task(&mut self, task: Task, _target_time_nanos: u64) {
     self.tasks.push(task, Duration::ZERO);
   }
-}
-
-#[cfg(not(target_os = "macos"))]
-struct GlobalPlatform {
-  tasks: SharedTasks,
-  threads: Arc<Mutex<HashSet<ThreadId>>>,
 }
 
 /// Prepares the process for a container running on the calling thread.
@@ -129,30 +126,30 @@ struct GlobalPlatform {
 /// its thread is a legitimate UI thread for the runtime.
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedTasks> {
-  static PLATFORM: OnceLock<std::result::Result<GlobalPlatform, String>> = OnceLock::new();
+  static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
   match PLATFORM.get_or_init(|| {
     let tasks = SharedTasks::new();
-    let threads = Arc::new(Mutex::new(HashSet::new()));
     let installed = set_global_ui_task_runner(
       env,
       SharedGlobalRunner {
         tasks: tasks.clone(),
-        threads: Arc::clone(&threads),
       },
     )
     .map_err(|error| error.to_string())?;
     if !installed {
       return Err("failed to register Lynx global UI task runner".into());
     }
-    Ok(GlobalPlatform { tasks, threads })
+    Ok(tasks)
   }) {
-    Ok(platform) => {
-      platform
-        .threads
+    Ok(tasks) => {
+      let current = thread::current().id();
+      let mut threads = CONTAINER_THREADS
         .lock()
-        .expect("container thread registry poisoned")
-        .insert(thread::current().id());
-      Ok(platform.tasks.clone())
+        .expect("container thread registry poisoned");
+      if !threads.contains(&current) {
+        threads.push(current);
+      }
+      Ok(tasks.clone())
     }
     Err(message) => Err(Error::Protocol(message.clone())),
   }

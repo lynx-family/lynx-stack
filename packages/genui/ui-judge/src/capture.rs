@@ -28,10 +28,10 @@ use crate::{JudgePageRequest, UiJudgeResult};
 /// Lynx container for the lifetime of the pool.
 pub(crate) const CAPTURE_WORKERS: usize = 4;
 /// Jobs that may wait for a free worker before callers are told to retry.
-pub(crate) const MAX_QUEUED_CAPTURES: usize = 8;
+const MAX_QUEUED_CAPTURES: usize = 8;
 
 #[derive(Debug, Error)]
-pub enum CaptureError {
+pub(crate) enum CaptureError {
   #[error("The UI Judge capture queue is full; retry the request later.")]
   QueueFull,
   #[error("The UI Judge headless worker is unavailable.")]
@@ -44,7 +44,7 @@ pub enum CaptureError {
 
 #[derive(Debug, Error)]
 #[error("UI Judge headless worker panicked")]
-pub struct WorkerPanicked;
+pub(crate) struct WorkerPanicked;
 
 pub(crate) struct CaptureJob {
   pub(crate) client: Option<ModelClient>,
