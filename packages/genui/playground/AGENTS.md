@@ -6,7 +6,8 @@ It supports:
 
 - `web` via `@rsbuild/core` (React DOM preview)
 - `lynx` via `@lynx-js/rspeedy` (Lynx preview)
-- zero-build Lynx XML examples loaded directly by Lynx for Web
+- streamed and example zero-build Lynx XML artifacts loaded directly by Lynx
+  for Web
 
 ## How It Works (Web Shell vs Lynx App)
 
@@ -69,19 +70,30 @@ Inside `lynx-src/App.tsx`:
 - Lynx entrypoint: `lynx-src/index.tsx`
 - Lynx XML examples: `src/mock/lynx-xml/*.lynxml`
 
-## Lynx XML Examples
+## Lynx XML Create and Examples
 
-The `lynx-xml` protocol currently exposes only the Examples tab. Its example
-files are imported as raw source for the shared detail workspace and copied to
-`dist/demos/lynx-xml/` for the list previews. `render.html` passes the complete
-artifact URL to `<lynx-view>`; do not add a ReactLynx renderer or a per-example
-Rspeedy build for these files. Keep each Element PAPI tree directly under its
-page rather than adding a generic `app` wrapper. Lynx defaults to Linear
-layout, so every class used as a layout container must explicitly declare
-`display: flex` and the intended direction where it matters. Keep `page`
-unstyled and place viewport sizing, background, and entry layout on the first
-business view. When content can exceed one viewport, make that entry node a
-vertical scroll view instead of adding another wrapper.
+The `lynx-xml` protocol exposes Create and Examples. Create uses the hook-free
+adapter in `src/pages/chat/lynx-xml.ts`, streams source from
+`/lynx-xml/stream`, and updates the artifact viewer for every usable partial.
+Only the complete document is sent to the reload-based Lynx preview, because an
+unfinished source block is not a valid runtime artifact. Generated source uses
+a browser-local XML Blob URL as the public LynxView `url` input and does not
+require Rspeedy or ReactLynx. `PreviewViewport` mounts that `<lynx-view>`
+directly; do not route generated XML through the A2UI/OpenUI render iframe,
+init data, global props, or global-event delivery.
+
+Example files are imported as raw source for the shared detail workspace and
+copied to `dist/demos/lynx-xml/` for list previews. Shareable/example Web URLs
+use the shared `render.html` entry with `protocol=lynx-xml`; that protocol branch
+passes only the complete artifact URL to the direct `LynxXmlView` and must not
+set A2UI/OpenUI init data, global props, or events. Do not add a ReactLynx
+renderer or a per-example Rspeedy build for these files. Keep each Element PAPI
+tree directly under its page rather than adding a generic `app` wrapper. Lynx
+defaults to Linear layout, so every class used as a layout container must
+explicitly declare `display: flex` and the intended direction where it matters.
+Keep `page` unstyled and place viewport sizing, background, and entry layout on
+the first business view. When content can exceed one viewport, make that entry
+node a vertical scroll view instead of adding another wrapper.
 
 ## Common Commands
 

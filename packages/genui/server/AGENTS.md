@@ -1,7 +1,7 @@
 # GenUI Server
 
 This package contains the Rslib-built Hono server for GenUI agent APIs,
-including A2UI, OpenUI, and MCP Apps.
+including A2UI, OpenUI, MCP Apps, and streamed Lynx XML generation.
 
 ## Deployment Model
 
@@ -119,13 +119,23 @@ export TOS_REGION="cn-beijing"
 ```
 
 Use a dedicated IAM identity with `tos:PutObject` access only to the configured
-`a2ui`, `openui`, and `mcp-apps` prefixes. Preview objects use
+`a2ui`, `openui`, `mcp-apps`, and `lynx-xml` prefixes. Preview objects use
 `<method>/preview/<uuid>/<file>`; shared conversations use
 `<method>/conversation/<uuid>/messages.json`. The server signs writes with
 these credentials; the browser reads the resulting public object URL without
 credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
-`TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`, and
-`TOS_SECURITY_TOKEN`.
+`TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`,
+`TOS_LYNX_XML_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
+
+## Lynx XML Generation
+
+`POST /lynx-xml/stream` uses a dedicated Vanilla Lynx agent and the shared text
+SSE route infrastructure. Stream raw model deltas so the Playground can show
+source growth, but normalize and validate the final document envelope before
+sending `done`. The final artifact must start with lowercase
+`<!doctype lynx>`, use `<lynx engine-version="4.2">`, include exactly one main
+thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
+not route it through ReactLynx, JSX, OpenUI, or A2UI.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:
@@ -160,8 +170,8 @@ export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
 ## Security
 
 By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-`/a2ui/action`, and `/mcp-apps/stream` **cannot** override `apiKey` or
-`baseURL`. This
+`/a2ui/action`, `/openui/stream`, `/mcp-apps/stream`, and `/lynx-xml/stream`
+**cannot** override `apiKey` or `baseURL`. This
 prevents an unauthenticated client from turning the server into an open
 proxy that uses arbitrary keys against arbitrary OpenAI-compatible
 endpoints.
@@ -178,12 +188,13 @@ authentication and an allow-list are added in front of the server.
 
 ## Rate Limiting
 
-The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and
-`/mcp-apps/stream` share an in-process fixed-window rate limiter keyed by
-client IP (`x-forwarded-for` > `x-real-ip` > `unknown`). When a client exceeds
-the limit, the JSON routes respond with HTTP `429` and the SSE route emits a
-single `event: error` frame; both responses include the standard `Retry-After`
-and `X-RateLimit-*` headers.
+The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
+`/openui/stream`, `/mcp-apps/stream`, and `/lynx-xml/stream` share an in-process
+fixed-window rate limiter keyed by client IP (`x-forwarded-for` > `x-real-ip`
+
+> `unknown`). When a client exceeds the limit, the JSON routes respond with
+> HTTP `429` and the SSE route emits a single `event: error` frame; both responses
+> include the standard `Retry-After` and `X-RateLimit-*` headers.
 
 Tune the limiter with the following optional environment variables:
 
@@ -203,8 +214,9 @@ front of this server.
 ## Conversation Context
 
 The server does not keep per-thread conversation memory. `/a2ui/chat`,
-`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, and
-`/mcp-apps/stream` accept an optional `conversation` request field:
+`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, `/openui/stream`,
+`/mcp-apps/stream`, and `/lynx-xml/stream` accept an optional `conversation`
+request field:
 
 ```json
 {

@@ -178,8 +178,9 @@ describe('Lynx XML showcase', () => {
       }),
     );
 
+    expect(previewUrl.pathname).toBe('/genui/render.html');
     expect(previewUrl.searchParams.get('protocol')).toBe('lynx-xml');
-    expect(previewUrl.searchParams.get('demoUrl')).toBe(
+    expect(previewUrl.searchParams.get('sourceUrl')).toBe(
       `https://lynx-stack.dev/genui/${scenario.sourcePath}`,
     );
   });

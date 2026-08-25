@@ -6,12 +6,15 @@ import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
 
 import { createA2UIAgent } from '../agent/a2ui-agent.js';
 import type { A2UICatalog } from '../agent/a2ui-catalog.js';
+import { createLynxXmlAgent } from '../agent/lynx-xml-agent.js';
 import { createOpenUIAgent } from '../agent/openui-agent.js';
 import A2UIAgentService from '../service/a2ui-agent.js';
+import LynxXmlAgentService from '../service/lynx-xml-agent.js';
 import OpenUIAgentService from '../service/openui-agent.js';
 
 rstest.mock('../agent/a2ui-agent.js', { mock: true });
 rstest.mock('../agent/openui-agent.js', { mock: true });
+rstest.mock('../agent/lynx-xml-agent.js', { mock: true });
 
 const catalog: A2UICatalog = {
   id: 'cache-policy-test',
@@ -37,6 +40,7 @@ function testAgent() {
 beforeEach(() => {
   rstest.mocked(createA2UIAgent).mockReset();
   rstest.mocked(createOpenUIAgent).mockReset();
+  rstest.mocked(createLynxXmlAgent).mockReset();
 });
 
 describe('request-scoped provider agent policy', () => {
@@ -74,6 +78,25 @@ describe('request-scoped provider agent policy', () => {
     const second = await service.generateRaw([], options);
 
     expect(createOpenUIAgent).toHaveBeenCalledTimes(2);
+    expect(first.text).toBe('generated');
+    expect(second.text).toBe('generated');
+  });
+
+  test('Lynx XML bypasses its cache for ephemeral credentials', async () => {
+    rstest.mocked(createLynxXmlAgent).mockImplementation(() => ({
+      agent: testAgent(),
+      model: 'test-model',
+    }));
+    const service = new LynxXmlAgentService();
+    const options = {
+      apiKey: 'request-scoped-key',
+      disableAgentCache: true,
+    };
+
+    const first = await service.generateRaw([], options);
+    const second = await service.generateRaw([], options);
+
+    expect(createLynxXmlAgent).toHaveBeenCalledTimes(2);
     expect(first.text).toBe('generated');
     expect(second.text).toBe('generated');
   });

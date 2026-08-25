@@ -899,6 +899,9 @@ importers:
       '@lynx-js/genui-cli':
         specifier: workspace:*
         version: link:cli
+      '@lynx-js/genui-lynx-xml':
+        specifier: workspace:*
+        version: link:lynx-xml
       '@lynx-js/genui-mcp-apps':
         specifier: workspace:*
         version: link:mcp-apps
@@ -986,6 +989,22 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+
+  packages/genui/lynx-xml:
+    dependencies:
+      '@lynx-js/skill-vanilla-lynx':
+        specifier: 0.1.5
+        version: 0.1.5
+    devDependencies:
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.0-beta.3(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
 
   packages/genui/mcp-apps:
     devDependencies:
@@ -1123,6 +1142,9 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.0
         version: 2.1.0(hono@4.13.0)
+      '@lynx-js/genui-lynx-xml':
+        specifier: workspace:*
+        version: link:../lynx-xml
       '@lynx-js/genui-mcp-apps':
         specifier: workspace:*
         version: link:../mcp-apps
@@ -4501,6 +4523,10 @@ packages:
     resolution: {integrity: sha512-+cFNtHNraLojSWwZL0uHFLHqoh/bCQU1fT7L2gSOqkwnKYmyDbtZOj+CXtHyDPVHEaGTYqqRt93ZuYA2jztD2Q==}
     peerDependencies:
       '@lynx-js/react': workspace:*
+
+  '@lynx-js/skill-vanilla-lynx@0.1.5':
+    resolution: {integrity: sha512-veY74Mt/8SsT70gWfVW6R7gig69wJaseWDiIgb1F3mefcHKIn23CxPaL+sawpmTO/o51m+HTZ9pdd0RBph0y8g==}
+    engines: {node: '>=18'}
 
   '@lynx-js/tasm@0.0.49':
     resolution: {integrity: sha512-sI+xmLXaMvXWFN5n47kYNHFEMIEpkrz/bVvU2GwvhB26lXfYPdSNedE3bh85vfW/vAmYsB/TbKwtiNhXgN3LDw==}
@@ -14550,6 +14576,8 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
+
+  '@lynx-js/skill-vanilla-lynx@0.1.5': {}
 
   '@lynx-js/tasm@0.0.49': {}
 

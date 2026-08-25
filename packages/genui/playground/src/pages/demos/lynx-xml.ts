@@ -13,7 +13,7 @@ import travelPlanSource from '../../mock/lynx-xml/travel-plan.lynxml?raw';
 import weatherCardSource from '../../mock/lynx-xml/weather-card.lynxml?raw';
 import { buildLynxXmlRenderUrl } from '../../utils/renderUrl.js';
 
-interface LynxXmlScenario {
+export interface LynxXmlScenario {
   id: string;
   title: string;
   description: string;

@@ -8,6 +8,7 @@ import { PreviewViewport } from './PreviewViewport.js';
 import { MountQueueProvider, useQueuedMount } from '../hooks/useMountQueue.js';
 import { PRIORITY } from '../utils/mountQueue.js';
 import type { Priority } from '../utils/mountQueue.js';
+import { LYNX_XML_RENDER_READY_MESSAGE_TYPE } from '../utils/renderUrl.js';
 
 const ROOT_MARGIN = '50% 0px';
 const RENDER_READY_TIMEOUT_MS = 5000;
@@ -129,7 +130,13 @@ export function ExamplePreviewCard(props: {
       if (e.source !== iframeRef.current?.contentWindow) return;
       if (e.origin !== window.location.origin) return;
       const data = e.data as { type?: string } | null;
-      if (data && data.type === 'A2UI_RENDER_READY') {
+      if (
+        data
+        && (
+          data.type === 'A2UI_RENDER_READY'
+          || data.type === LYNX_XML_RENDER_READY_MESSAGE_TYPE
+        )
+      ) {
         handleRenderReady();
       }
     };

@@ -7,6 +7,8 @@ import type { Protocol } from './protocol.js';
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
 export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
 export const RENDER_NAVIGATION_TOKEN_QUERY_PARAM = 'previewNavigationToken';
+export const LYNX_XML_RENDER_READY_MESSAGE_TYPE = 'LYNX_XML_RENDER_READY';
+export const LYNX_XML_SOURCE_URL_QUERY_PARAM = 'sourceUrl';
 export const A2UI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 
@@ -122,15 +124,6 @@ export interface LocalLynxXmlSourcePayload {
   dispose: () => void;
 }
 
-export interface LocalLynxXmlSourcePayloadCache {
-  ensure: (source: string) => LocalLynxXmlSourcePayload;
-  clear: () => void;
-}
-
-interface LocalLynxXmlSourcePayloadCacheOptions {
-  createPayload: (source: string) => LocalLynxXmlSourcePayload;
-}
-
 export function createLocalLynxXmlSourcePayload(
   source: string,
   registry: ObjectURLRegistry = URL,
@@ -141,32 +134,6 @@ export function createLocalLynxXmlSourcePayload(
     registry,
   );
   return { sourceUrl, dispose };
-}
-
-export function createLocalLynxXmlSourcePayloadCache(
-  options: LocalLynxXmlSourcePayloadCacheOptions,
-): LocalLynxXmlSourcePayloadCache {
-  let current: {
-    payload: LocalLynxXmlSourcePayload;
-    source: string;
-  } | null = null;
-
-  return {
-    ensure: (source) => {
-      if (current?.source === source) return current.payload;
-
-      const payload = options.createPayload(source);
-      const previous = current;
-      current = { payload, source };
-      previous?.payload.dispose();
-      return payload;
-    },
-    clear: () => {
-      const previous = current;
-      current = null;
-      previous?.payload.dispose();
-    },
-  };
 }
 
 export interface LocalA2UIMessagesPayload {
@@ -450,7 +417,7 @@ export function buildLynxXmlRenderUrl(
 ): string {
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'lynx-xml');
-  url.searchParams.set('demoUrl', init.sourceUrl);
+  url.searchParams.set(LYNX_XML_SOURCE_URL_QUERY_PARAM, init.sourceUrl);
   if (init.theme) url.searchParams.set('theme', init.theme);
   return url.toString();
 }

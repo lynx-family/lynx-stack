@@ -71,14 +71,15 @@ export async function finalizeResult(result: MastraResult): Promise<{
   usage: unknown;
   finishReason: unknown;
 }> {
-  const text = await Promise.resolve(result.text).catch(() => undefined);
-  const usage = await Promise.resolve(result.usage).catch(() => undefined);
-  const finishReason = await Promise.resolve(result.finishReason).catch(
-    () => undefined,
-  );
+  const [text, totalUsage, usage, finishReason] = await Promise.all([
+    Promise.resolve(result.text).catch(() => undefined),
+    Promise.resolve(result.totalUsage).catch(() => undefined),
+    Promise.resolve(result.usage).catch(() => undefined),
+    Promise.resolve(result.finishReason).catch(() => undefined),
+  ]);
   return {
     text: typeof text === 'string' ? text : undefined,
-    usage,
+    usage: totalUsage ?? usage,
     finishReason,
   };
 }

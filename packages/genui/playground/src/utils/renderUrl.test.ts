@@ -17,7 +17,6 @@ import {
   createLocalA2UIMessagesPayload,
   createLocalA2UIMessagesPayloadCache,
   createLocalLynxXmlSourcePayload,
-  createLocalLynxXmlSourcePayloadCache,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
   isPortableA2UIMessagesUrl,
@@ -278,56 +277,59 @@ describe('MCP Apps render URLs', () => {
 });
 
 describe('Lynx XML render URLs', () => {
-  test('keeps consecutive inline XML Blob URLs aligned with their source', async () => {
+  test('creates disposable XML-only Blob URLs for direct LynxView input', async () => {
     const readBlobContents: Array<() => Promise<string>> = [];
+    const blobTypes: string[] = [];
     const lifecycle: string[] = [];
     let nextId = 0;
-    const cache = createLocalLynxXmlSourcePayloadCache({
-      createPayload: (source) =>
-        createLocalLynxXmlSourcePayload(source, {
-          createObjectURL(blob) {
-            nextId += 1;
-            readBlobContents.push(() => blob.text());
-            lifecycle.push(`create:${nextId}`);
-            return `blob:https://lynx-stack.dev/lynx-xml-${nextId}`;
-          },
-          revokeObjectURL(url) {
-            lifecycle.push(`revoke:${url}`);
-          },
-        }),
-    });
+    const registry = {
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      createObjectURL(blob: Blob) {
+        nextId += 1;
+        readBlobContents.push(() => blob.text());
+        blobTypes.push(blob.type);
+        lifecycle.push(`create:${nextId}`);
+        return `blob:https://lynx-stack.dev/lynx-xml-${nextId}`;
+      },
+      revokeObjectURL(url: string) {
+        lifecycle.push(`revoke:${url}`);
+      },
+    };
 
     const firstSource = '<lynx id="first"></lynx>';
-    const first = cache.ensure(firstSource);
+    const first = createLocalLynxXmlSourcePayload(firstSource, registry);
     const firstRenderUrl = new URL(buildLynxXmlRenderUrl({
       sourceUrl: first.sourceUrl,
     }, 'https://lynx-stack.dev/genui/'));
 
     const secondSource = '<lynx id="second"></lynx>';
-    const second = cache.ensure(secondSource);
+    const second = createLocalLynxXmlSourcePayload(secondSource, registry);
     const secondRenderUrl = new URL(buildLynxXmlRenderUrl({
       sourceUrl: second.sourceUrl,
     }, 'https://lynx-stack.dev/genui/'));
 
-    expect(firstRenderUrl.searchParams.get('demoUrl')).toBe(first.sourceUrl);
-    expect(secondRenderUrl.searchParams.get('demoUrl')).toBe(second.sourceUrl);
+    expect(firstRenderUrl.searchParams.get('sourceUrl')).toBe(first.sourceUrl);
+    expect(secondRenderUrl.searchParams.get('sourceUrl')).toBe(
+      second.sourceUrl,
+    );
     expect(second.sourceUrl).not.toBe(first.sourceUrl);
-    expect(cache.ensure(secondSource)).toBe(second);
-    expect(lifecycle).toEqual([
-      'create:1',
-      'create:2',
-      `revoke:${first.sourceUrl}`,
-    ]);
+    expect(lifecycle).toEqual(['create:1', 'create:2']);
     expect(lifecycle).not.toContain(`revoke:${second.sourceUrl}`);
+    expect(blobTypes).toEqual([
+      'application/xml;charset=utf-8',
+      'application/xml;charset=utf-8',
+    ]);
     expect(await Promise.all(readBlobContents.map((read) => read()))).toEqual([
       firstSource,
       secondSource,
     ]);
 
-    cache.clear();
-    expect(lifecycle[lifecycle.length - 1]).toBe(
+    first.dispose();
+    second.dispose();
+    expect(lifecycle.slice(-2)).toEqual([
+      `revoke:${first.sourceUrl}`,
       `revoke:${second.sourceUrl}`,
-    );
+    ]);
   });
 
   test('loads the XML artifact URL directly in the Lynx runtime', () => {
@@ -340,7 +342,7 @@ describe('Lynx XML render URLs', () => {
 
     expect(url.pathname).toBe('/genui/render.html');
     expect(url.searchParams.get('protocol')).toBe('lynx-xml');
-    expect(url.searchParams.get('demoUrl')).toBe(sourceUrl);
+    expect(url.searchParams.get('sourceUrl')).toBe(sourceUrl);
     expect(url.searchParams.get('theme')).toBe('dark');
     expect(url.searchParams.has('initData')).toBe(false);
   });
