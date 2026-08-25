@@ -55,7 +55,7 @@ export class MainThreadRef<T> {
       addMainThreadRefInitValue(this._wvid, initValue);
       const id = this._wvid;
       this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
+        lynx.getCoreContext().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: {
             id,
