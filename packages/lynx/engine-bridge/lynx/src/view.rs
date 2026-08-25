@@ -2,15 +2,21 @@ use crate::buffer::CByteBuffer;
 use crate::group::LynxGroup;
 use crate::resource::{GenericResourceFetcher, ResourceFetcher};
 use crate::sys;
-use crate::{c_str_to_string, c_string, Env, Error, Result, WindowlessRenderer};
+use crate::{c_str_to_string, c_string, Error, LynxEnv, Result, WindowlessRenderer};
+use std::cell::Cell;
 use std::ffi::{c_void, CString};
+use std::marker::PhantomData;
 use std::ptr;
 use std::sync::Arc;
 
+/// An owned snapshot of a DevTools target.
+///
+/// The snapshot may move between threads but is intentionally not shareable.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DevtoolTarget {
   pub session_id: i32,
   pub url: String,
+  _not_sync: PhantomData<Cell<()>>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -33,16 +39,15 @@ impl TouchEvent {
   }
 }
 
+/// A movable, non-shareable builder for a windowless [`LynxView`].
 pub struct HeadlessViewBuilder {
-  env: Env,
+  env: &'static LynxEnv,
   renderer: WindowlessRenderer,
   width: f32,
   height: f32,
   pixel_ratio: f32,
   font_scale: f32,
   icu_data_path: Option<CString>,
-  webview2_fixed_runtime_path: Option<CString>,
-  parent: sys::NativeWindow,
   user_data: *mut c_void,
   resource_fetcher: Option<GenericResourceFetcher>,
   lynx_group: Option<LynxGroup>,
@@ -50,6 +55,11 @@ pub struct HeadlessViewBuilder {
   extension_modules: Vec<RawExtensionModule>,
   native_views: Vec<RawNativeView>,
 }
+
+// SAFETY: the builder owns every native wrapper it contains. Its raw callback
+// pointers can only be installed through unsafe methods whose contracts require
+// them to remain valid after the builder is moved. Shared access stays disabled.
+unsafe impl Send for HeadlessViewBuilder {}
 
 struct RawNativeModule {
   name: CString,
@@ -71,7 +81,7 @@ struct RawNativeView {
 }
 
 impl HeadlessViewBuilder {
-  pub fn new(env: Env, renderer: WindowlessRenderer) -> Self {
+  pub fn new(env: &'static LynxEnv, renderer: WindowlessRenderer) -> Self {
     Self {
       env,
       renderer,
@@ -80,8 +90,6 @@ impl HeadlessViewBuilder {
       pixel_ratio: 1.0,
       font_scale: 1.0,
       icu_data_path: None,
-      webview2_fixed_runtime_path: None,
-      parent: ptr::null_mut(),
       user_data: ptr::null_mut(),
       resource_fetcher: None,
       lynx_group: None,
@@ -108,23 +116,7 @@ impl HeadlessViewBuilder {
     Ok(self)
   }
 
-  pub fn webview2_fixed_runtime_path(mut self, path: &str) -> Result<Self> {
-    self.webview2_fixed_runtime_path = Some(c_string(path, "webview2_fixed_runtime_path")?);
-    Ok(self)
-  }
-
-  /// Sets the platform-native parent window for the view.
-  ///
-  /// # Safety
-  ///
-  /// `parent` must be a valid native window handle for the loaded runtime and
-  /// remain valid for as long as Lynx uses it.
-  pub unsafe fn parent_raw(mut self, parent: sys::NativeWindow) -> Self {
-    self.parent = parent;
-    self
-  }
-
-  /// Sets the opaque pointer returned by [`HeadlessView::user_data_raw`].
+  /// Sets the opaque pointer returned by [`LynxView::user_data_raw`].
   ///
   /// # Safety
   ///
@@ -136,7 +128,7 @@ impl HeadlessViewBuilder {
   }
 
   pub fn resource_fetcher(mut self, fetcher: impl ResourceFetcher) -> Result<Self> {
-    self.resource_fetcher = Some(GenericResourceFetcher::new(&self.env, fetcher)?);
+    self.resource_fetcher = Some(GenericResourceFetcher::new(self.env, fetcher)?);
     Ok(self)
   }
 
@@ -209,7 +201,7 @@ impl HeadlessViewBuilder {
     Ok(self)
   }
 
-  pub fn build(self) -> Result<HeadlessView> {
+  pub fn build(self) -> Result<LynxView> {
     let sys = self.env.sys().clone();
     let builder = unsafe { (sys.lynx_view_builder_create)() };
     if builder.is_null() {
@@ -234,12 +226,6 @@ impl HeadlessViewBuilder {
       (sys.lynx_view_builder_set_font_scale)(builder, &self.font_scale);
       if let Some(path) = &self.icu_data_path {
         (sys.lynx_view_builder_set_icu_data_path)(builder, path.as_ptr());
-      }
-      if let Some(path) = &self.webview2_fixed_runtime_path {
-        (sys.lynx_view_builder_set_webview2_fixed_runtime_path)(builder, path.as_ptr());
-      }
-      if !self.parent.is_null() {
-        (sys.lynx_view_builder_set_parent)(builder, self.parent);
       }
       if let Some(group) = &self.lynx_group {
         (sys.lynx_view_builder_set_lynx_group)(builder, group.raw());
@@ -279,11 +265,11 @@ impl HeadlessViewBuilder {
     drop(builder_guard);
     if raw.is_null() {
       return Err(Error::NullPointer {
-        operation: "create headless view",
+        operation: "create Lynx view",
       });
     }
 
-    Ok(HeadlessView {
+    Ok(LynxView {
       env: self.env,
       raw,
       renderer: self.renderer,
@@ -309,16 +295,17 @@ impl Drop for BuilderGuard {
   }
 }
 
-pub struct HeadlessView {
-  env: Env,
+/// An owned Lynx view bound to its native owner thread.
+pub struct LynxView {
+  env: &'static LynxEnv,
   raw: *mut sys::lynx_view_t,
   renderer: WindowlessRenderer,
   _resource_fetcher: Option<GenericResourceFetcher>,
   _lynx_group: Option<LynxGroup>,
 }
 
-impl HeadlessView {
-  pub fn builder(env: Env, renderer: WindowlessRenderer) -> HeadlessViewBuilder {
+impl LynxView {
+  pub fn builder(env: &'static LynxEnv, renderer: WindowlessRenderer) -> HeadlessViewBuilder {
     HeadlessViewBuilder::new(env, renderer)
   }
 
@@ -343,29 +330,8 @@ impl HeadlessView {
     Ok(available.then(|| DevtoolTarget {
       session_id: target.session_id,
       url: unsafe { c_str_to_string(target.url) },
+      _not_sync: PhantomData,
     }))
-  }
-
-  pub fn webview2_fixed_runtime_path(&self) -> String {
-    unsafe {
-      c_str_to_string((self.env.sys().lynx_view_get_webview2_fixed_runtime_path)(
-        self.raw,
-      ))
-    }
-  }
-
-  /// Sets the platform-native parent window for this view.
-  ///
-  /// # Safety
-  ///
-  /// `parent` must be a valid native window handle for the loaded runtime and
-  /// remain valid for as long as Lynx uses it.
-  pub unsafe fn set_parent_raw(&self, parent: sys::NativeWindow) {
-    (self.env.sys().lynx_view_set_parent)(self.raw, parent);
-  }
-
-  pub fn native_window_raw(&self) -> sys::NativeWindow {
-    unsafe { (self.env.sys().lynx_view_get_native_window)(self.raw) }
   }
 
   pub fn generic_resource_fetcher(&self) -> Option<GenericResourceFetcher> {
@@ -786,7 +752,7 @@ impl HeadlessView {
   }
 }
 
-impl Drop for HeadlessView {
+impl Drop for LynxView {
   fn drop(&mut self) {
     if !self.raw.is_null() {
       unsafe {
@@ -805,6 +771,10 @@ struct TemplateData {
   sys: Arc<sys::LoadedLibrary>,
   raw: *mut sys::lynx_template_data_t,
 }
+
+// SAFETY: `TemplateData` uniquely owns its native handle and may transfer that
+// ownership between threads. The raw pointer keeps shared access disabled.
+unsafe impl Send for TemplateData {}
 
 impl TemplateData {
   fn from_json(sys: Arc<sys::LoadedLibrary>, json: &str) -> Result<Self> {
@@ -876,6 +846,10 @@ struct LoadMeta {
   raw: *mut sys::lynx_load_meta_t,
 }
 
+// SAFETY: `LoadMeta` uniquely owns its native handle. It is movable but not
+// shareable between threads.
+unsafe impl Send for LoadMeta {}
+
 impl LoadMeta {
   fn new(sys: Arc<sys::LoadedLibrary>) -> Result<Self> {
     let raw = unsafe { (sys.lynx_load_meta_create)() };
@@ -904,6 +878,10 @@ struct UpdateMeta {
   raw: *mut sys::lynx_update_meta_t,
 }
 
+// SAFETY: `UpdateMeta` uniquely owns its native handle. It is movable but not
+// shareable between threads.
+unsafe impl Send for UpdateMeta {}
+
 impl UpdateMeta {
   fn new(sys: Arc<sys::LoadedLibrary>) -> Result<Self> {
     let raw = unsafe { (sys.lynx_update_meta_create)() };
@@ -925,4 +903,21 @@ impl Drop for UpdateMeta {
       self.raw = ptr::null_mut();
     }
   }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  static_assertions::assert_impl_all!(DevtoolTarget: Send);
+  static_assertions::assert_not_impl_any!(DevtoolTarget: Sync);
+  static_assertions::assert_impl_all!(HeadlessViewBuilder: Send);
+  static_assertions::assert_not_impl_any!(HeadlessViewBuilder: Sync);
+  static_assertions::assert_impl_all!(LoadMeta: Send);
+  static_assertions::assert_not_impl_any!(LoadMeta: Sync);
+  static_assertions::assert_impl_all!(TemplateData: Send);
+  static_assertions::assert_not_impl_any!(TemplateData: Sync);
+  static_assertions::assert_impl_all!(UpdateMeta: Send);
+  static_assertions::assert_not_impl_any!(UpdateMeta: Sync);
+  static_assertions::assert_not_impl_any!(LynxView: Send, Sync);
 }

@@ -1,5 +1,5 @@
 use lynx::{
-  sys, Env, Error, FetchResponse, GenericResourceFetcher, HeadlessView, LynxGroup, NoopHost,
+  sys, Error, FetchResponse, GenericResourceFetcher, LynxEnv, LynxGroup, LynxView, NoopHost,
   ResourceFetcher, ResourceRequest, ResourceType, SoftwareFrame, SoftwareRenderer, TouchEvent,
   WindowlessRenderer,
 };
@@ -86,19 +86,19 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
   let _guard = runtime_test_guard();
   let env = configured_env();
 
-  let renderer = WindowlessRenderer::software(&env, CountingSoftwareRenderer::default(), NoopHost)
+  let renderer = WindowlessRenderer::software(env, CountingSoftwareRenderer::default(), NoopHost)
     .expect("create software renderer");
-  let fetcher = GenericResourceFetcher::new(&env, StaticFetcher).expect("create resource fetcher");
+  let fetcher = GenericResourceFetcher::new(env, StaticFetcher).expect("create resource fetcher");
   drop(fetcher);
 
   let mut group =
-    LynxGroup::with_id(&env, "integration", "runtime").expect("create Lynx group with id");
+    LynxGroup::with_id(env, "integration", "runtime").expect("create Lynx group with id");
   group
     .set_preload_js_paths(["/tmp/lynx_core.js"])
     .expect("set preload JS paths");
   group.set_enable_js_group_thread(false);
 
-  let view = HeadlessView::builder(env.clone(), renderer)
+  let view = LynxView::builder(env, renderer)
     .viewport(320.0, 240.0, 2.0)
     .font_scale(1.2)
     .resource_fetcher(StaticFetcher)
@@ -165,19 +165,19 @@ fn runtime_public_methods_reject_interior_nul_before_ffi() {
   let _guard = runtime_test_guard();
   let env = configured_env();
 
-  assert_interior_nul(LynxGroup::new(&env, "bad\0group").map(|_| ()), "group_name");
+  assert_interior_nul(LynxGroup::new(env, "bad\0group").map(|_| ()), "group_name");
 
-  let renderer = WindowlessRenderer::software(&env, CountingSoftwareRenderer::default(), NoopHost)
+  let renderer = WindowlessRenderer::software(env, CountingSoftwareRenderer::default(), NoopHost)
     .expect("create software renderer");
   assert_interior_nul(
-    HeadlessView::builder(env, renderer)
+    LynxView::builder(env, renderer)
       .icu_data_path("bad\0icu")
       .map(|_| ()),
     "icu_data_path",
   );
 }
 
-fn configured_env() -> Env {
+fn configured_env() -> &'static LynxEnv {
   if !has_runtime_configuration() {
     panic!(
       "runtime integration tests require LYNX_LIB_PATH or LYNX_SDK_DIR; run \
@@ -185,7 +185,7 @@ fn configured_env() -> Env {
        variables explicitly"
     );
   }
-  Env::load().expect("load configured Lynx runtime")
+  LynxEnv::load().expect("load configured Lynx runtime")
 }
 
 fn has_runtime_configuration() -> bool {

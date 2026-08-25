@@ -36,7 +36,8 @@ the public C API hooks needed to register a host-provided native-view factory.
 
 The bridge follows this runtime path:
 
-1. `Env::load()` finds and opens `libLynx_clay` from `LYNX_LIB_PATH` or
+1. `LynxEnv::load()` initializes the process-wide environment and opens
+   `libLynx_clay` from `LYNX_LIB_PATH` or
    `LYNX_SDK_DIR`.
 2. `lynx::sys::LoadedLibrary` resolves the C ABI symbols used by the bridge's
    supported capabilities.
@@ -44,7 +45,7 @@ The bridge follows this runtime path:
    with the runtime.
 4. `HeadlessViewBuilder` binds the renderer, resource fetcher, optional
    `LynxGroup`, viewport metrics, ICU path, and module registrations.
-5. `HeadlessView` owns the runtime view and exposes template loading, data
+5. `LynxView` owns the runtime view and exposes template loading, data
    updates, global events, viewport changes, and lifecycle methods.
 
 See `docs/architecture.md` for the module walkthrough and CI workflow.
@@ -53,8 +54,8 @@ See `docs/architecture.md` for the module walkthrough and CI workflow.
 
 Cargo builds prepare a default runtime for supported targets when neither
 `LYNX_LIB_PATH` nor `LYNX_SDK_DIR` is set. To use your own runtime, set one of
-these environment variables before building or before calling `Env::load()` from
-a non-Cargo host:
+these environment variables before building or before calling
+`LynxEnv::load()` from a non-Cargo host:
 
 ```sh
 export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib # or libLynx_clay.so

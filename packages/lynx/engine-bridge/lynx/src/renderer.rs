@@ -1,5 +1,5 @@
 use crate::sys;
-use crate::{c_str_to_string, Env, Error, Result};
+use crate::{c_str_to_string, Error, LynxEnv, Result};
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -139,7 +139,7 @@ pub struct WindowlessRenderer {
 
 impl WindowlessRenderer {
   pub fn software(
-    env: &Env,
+    env: &LynxEnv,
     renderer: impl SoftwareRenderer,
     host: impl WindowlessHost,
   ) -> Result<Self> {
@@ -151,7 +151,7 @@ impl WindowlessRenderer {
     )
   }
 
-  pub fn gl(env: &Env, renderer: impl GlRenderer, host: impl WindowlessHost) -> Result<Self> {
+  pub fn gl(env: &LynxEnv, renderer: impl GlRenderer, host: impl WindowlessHost) -> Result<Self> {
     Self::create(
       env,
       sys::kRendererTypeGL,
@@ -161,7 +161,7 @@ impl WindowlessRenderer {
   }
 
   pub fn gl_direct(
-    env: &Env,
+    env: &LynxEnv,
     renderer: impl GlRenderer,
     host: impl WindowlessHost,
   ) -> Result<Self> {
@@ -174,7 +174,7 @@ impl WindowlessRenderer {
   }
 
   pub fn accelerated(
-    env: &Env,
+    env: &LynxEnv,
     renderer: impl AcceleratedRenderer,
     host: impl WindowlessHost,
   ) -> Result<Self> {
@@ -187,7 +187,7 @@ impl WindowlessRenderer {
   }
 
   fn create(
-    env: &Env,
+    env: &LynxEnv,
     renderer_type: sys::lynx_windowless_renderer_type_e,
     backend: RendererBackend,
     host: impl WindowlessHost,
@@ -317,7 +317,7 @@ fn global_ui_task_runner_slot() -> &'static Mutex<Option<usize>> {
   SLOT.get_or_init(|| Mutex::new(None))
 }
 
-pub fn set_global_ui_task_runner(env: &Env, runner: impl GlobalUiTaskRunner) -> Result<bool> {
+pub fn set_global_ui_task_runner(env: &LynxEnv, runner: impl GlobalUiTaskRunner) -> Result<bool> {
   let mut slot = global_ui_task_runner_slot()
     .lock()
     .expect("global UI task runner slot lock poisoned");
@@ -348,7 +348,7 @@ pub fn set_global_ui_task_runner(env: &Env, runner: impl GlobalUiTaskRunner) -> 
   Ok(true)
 }
 
-pub fn run_global_ui_task(env: &Env, task: Task) -> bool {
+pub fn run_global_ui_task(env: &LynxEnv, task: Task) -> bool {
   unsafe { (env.sys().lynx_windowless_run_ui_task)(task.raw()) }
 }
 

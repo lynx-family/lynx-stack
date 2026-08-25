@@ -294,11 +294,6 @@ define_loaded_library! {
       /// handling of international text and multilingual support in the LynxView.
       lynx_view_builder_set_icu_data_path:
         unsafe extern "C" fn(*mut lynx_view_builder_t, *const c_char);
-      /// Sets the fixed WebView2 runtime path for the LynxView being built. Windows
-      /// WebView native views first try the system WebView2 runtime, then retry with
-      /// this fixed runtime path if the system runtime is unavailable or fails.
-      lynx_view_builder_set_webview2_fixed_runtime_path:
-        unsafe extern "C" fn(*mut lynx_view_builder_t, *const c_char);
       /// Associates a Lynx group with the LynxView being built. This function allows
       /// you to assign a specific Lynx group to the LynxView that is currently under
       /// construction using the provided builder. The Lynx group can contain shared
@@ -308,11 +303,6 @@ define_loaded_library! {
       /// behavior across multiple views.
       lynx_view_builder_set_lynx_group:
         unsafe extern "C" fn(*mut lynx_view_builder_t, *mut lynx_group_t);
-      /// Sets the parent window for the Lynx view being built. This function assigns a
-      /// parent native window to the Lynx view that is being constructed using the
-      /// provided builder. The parent window will contain the Lynx view, and the
-      /// view's position and behavior may be influenced by its parent.
-      lynx_view_builder_set_parent: unsafe extern "C" fn(*mut lynx_view_builder_t, NativeWindow);
       /// Sets the windowless renderer for the Lynx view being built. This function
       /// assigns a windowless renderer to the Lynx view that is being constructed
       /// using the provided builder. The windowless renderer is responsible for
@@ -358,10 +348,6 @@ define_loaded_library! {
       lynx_view_create:
         unsafe extern "C" fn(*mut lynx_view_builder_t, *mut c_void) -> *mut lynx_view_t;
       lynx_view_get_user_data: unsafe extern "C" fn(*mut lynx_view_t) -> *mut c_void;
-      /// Get the fixed WebView2 runtime path configured by the builder. Returns an
-      /// empty string if no fixed runtime path was configured.
-      lynx_view_get_webview2_fixed_runtime_path:
-        unsafe extern "C" fn(*mut lynx_view_t) -> *const c_char;
       /// Users should call lynx_view_release() to release the LynxView when it is no
       /// longer needed.
       lynx_view_release: unsafe extern "C" fn(*mut lynx_view_t);
@@ -412,10 +398,6 @@ define_loaded_library! {
       /// Changing the font scaling ratio in client settings will automatically change
       /// the text size.
       lynx_view_set_font_scale: unsafe extern "C" fn(*mut lynx_view_t, *const f32);
-      /// Set the parent window of the LynxView.
-      lynx_view_set_parent: unsafe extern "C" fn(*mut lynx_view_t, NativeWindow);
-      /// Get the native window of the LynxView.
-      lynx_view_get_native_window: unsafe extern "C" fn(*mut lynx_view_t) -> NativeWindow;
       /// Get the generic resource fetcher of the LynxView. This function increases the
       /// reference count of the returned fetcher. The caller assumes ownership and is
       /// responsible for calling `lynx_generic_resource_fetcher_release` to release
@@ -752,6 +734,31 @@ define_loaded_library! {
 // path uses them. Keep the signatures here for comparison with their declaring
 // headers, and move an entry into define_loaded_library! only with its consumer.
 //
+// lynx_view_builder_capi.h:
+// /// Sets the fixed WebView2 runtime path for the LynxView being built. Windows
+// /// WebView native views first try the system WebView2 runtime, then retry with
+// /// this fixed runtime path if the system runtime is unavailable or fails.
+// lynx_view_builder_set_webview2_fixed_runtime_path:
+//   unsafe extern "C" fn(*mut lynx_view_builder_t, *const c_char);
+// /// Sets the parent window for the Lynx view being built. This function assigns a
+// /// parent native window to the Lynx view that is being constructed using the
+// /// provided builder. The parent window will contain the Lynx view, and the
+// /// view's position and behavior may be influenced by its parent.
+// lynx_view_builder_set_parent:
+//   unsafe extern "C" fn(*mut lynx_view_builder_t, *mut c_void);
+//
+// lynx_view_capi.h:
+// /// Get the fixed WebView2 runtime path configured by the builder. Returns an
+// /// empty string if no fixed runtime path was configured.
+// lynx_view_get_webview2_fixed_runtime_path:
+//   unsafe extern "C" fn(*mut lynx_view_t) -> *const c_char;
+// /// Set the parent window of the LynxView.
+// lynx_view_set_parent:
+//   unsafe extern "C" fn(*mut lynx_view_t, *mut c_void);
+// /// Get the native window of the LynxView.
+// lynx_view_get_native_window:
+//   unsafe extern "C" fn(*mut lynx_view_t) -> *mut c_void;
+//
 // lynx_template_data_capi.h:
 // /// Mark the name of data processor. The data processor will be called when
 // /// lynx_view_update_data is called.
@@ -833,7 +840,7 @@ mod tests {
     // Each manifest entry expands into exactly one field and one resolver. The
     // compiler rejects missing or duplicate struct fields; these assertions
     // additionally pin the expected public ABI surface and compatibility split.
-    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 115);
+    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 110);
 
     let mut names = HashSet::new();
     let mut required_count = 0;
@@ -851,7 +858,7 @@ mod tests {
     }
 
     optional_names.sort_unstable();
-    assert_eq!(required_count, 112);
+    assert_eq!(required_count, 107);
     assert_eq!(
       optional_names,
       [

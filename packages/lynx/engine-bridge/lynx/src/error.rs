@@ -14,6 +14,15 @@ pub enum Error {
   UnsupportedRuntimeApi { symbol: &'static str },
   #[error("the process-global windowless UI task runner is already set")]
   GlobalUiTaskRunnerAlreadySet,
+  #[error(
+    "LynxEnv is already initialized from {}; cannot replace it with {}",
+    loaded_path.display(),
+    requested_path.display()
+  )]
+  LynxEnvAlreadyInitialized {
+    loaded_path: PathBuf,
+    requested_path: PathBuf,
+  },
   #[error("failed to {operation} {}: {source}", path.display())]
   Io {
     operation: &'static str,

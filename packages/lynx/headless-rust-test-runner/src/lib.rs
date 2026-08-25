@@ -16,7 +16,7 @@ use debug_router::DebugRouter;
 pub use error::{Error, Result};
 pub use fixture::{run_react_fixture, RunReport};
 use harness::{initialize_platform, FrameStore, QueueingHost, SharedTasks, TaskPump};
-use lynx::{Env, HeadlessView, WindowlessRenderer};
+use lynx::{LynxEnv, LynxView, WindowlessRenderer};
 use png_encoder::encode_png_async;
 pub use protocol::NodeInfo;
 use protocol::{
@@ -79,7 +79,7 @@ pub struct BoundingBox {
 }
 
 struct LynxProcess {
-  env: Env,
+  env: &'static LynxEnv,
   debug_router: DebugRouter,
   devtool_schema: Option<String>,
   lynx_core_path: PathBuf,
@@ -164,11 +164,11 @@ impl Lynx {
 
   pub fn new_page(&self) -> Result<Page> {
     self.process.page_owner.claim()?;
-    let global_tasks = initialize_platform(&self.process.env)?;
+    let global_tasks = initialize_platform(self.process.env)?;
     let renderer_tasks = SharedTasks::new();
     let frames = FrameStore::default();
     let renderer = WindowlessRenderer::software(
-      &self.process.env,
+      self.process.env,
       frames.clone(),
       QueueingHost::new(renderer_tasks.clone()),
     )?;
@@ -176,7 +176,7 @@ impl Lynx {
       self.options.resources_path.clone(),
       self.lynx_core_path.clone(),
     );
-    let view = HeadlessView::builder(self.process.env.clone(), renderer)
+    let view = LynxView::builder(self.process.env, renderer)
       .viewport(
         self.options.width as f32,
         self.options.height as f32,
@@ -185,7 +185,7 @@ impl Lynx {
       .resource_fetcher(resources.fetcher())?
       .build()?;
     view.enter_foreground();
-    let pump = TaskPump::new(self.process.env.clone(), renderer_tasks, global_tasks);
+    let pump = TaskPump::new(self.process.env, renderer_tasks, global_tasks);
     let runtime = Rc::new(PageRuntime {
       view,
       pump,
@@ -218,8 +218,8 @@ async fn initialize_process(
   PROCESS
     .get_or_try_init(|| async {
       let lynx_core_path = install_lynx_core_resource(lynx_core_source).await?;
-      let env = Env::load()?;
-      set_icu_data_path_if_available(&env)?;
+      let env = LynxEnv::load()?;
+      set_icu_data_path_if_available(env)?;
       let app_name = format!("{APP_NAME}-{}", std::process::id());
 
       env.set_devtool_app_info("App", &app_name)?;
@@ -253,7 +253,7 @@ async fn initialize_process(
 }
 
 struct PageRuntime {
-  view: HeadlessView,
+  view: LynxView,
   pump: TaskPump,
   frames: FrameStore,
   debug_router: DebugRouter,
@@ -740,7 +740,7 @@ async fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
   Ok(destination)
 }
 
-fn set_icu_data_path_if_available(env: &Env) -> Result<()> {
+fn set_icu_data_path_if_available(env: &LynxEnv) -> Result<()> {
   let Some(sdk_dir) = std::env::var_os("LYNX_SDK_DIR") else {
     return Ok(());
   };

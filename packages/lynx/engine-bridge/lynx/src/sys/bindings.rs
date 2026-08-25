@@ -28,7 +28,6 @@ opaque!(lynx_extension_module_t);
 opaque!(lynx_vsync_observer_t);
 opaque!(lynx_event_reporter_service_t);
 
-pub type NativeWindow = *mut c_void;
 pub type napi_env = *mut c_void;
 pub type napi_value = *mut c_void;
 pub type napi_status = c_int;

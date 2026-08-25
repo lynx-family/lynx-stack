@@ -14,6 +14,10 @@ Keep the safe API surface tied to exercised workflows. `LoadedLibrary` is a capa
 
 Keep public CAPI functions without a Rust consumer out of `LoadedLibrary`. Preserve their checked signatures as comments grouped by declaring header, and move them into the active manifest only when an implementation path actually calls them.
 
+Keep `LynxEnv` as the single process-wide environment value. It must remain `!Send + Sync` and be exposed through a shared `'static` reference. Keep `LynxGroup`, `HeadlessViewBuilder`, internal `LoadMeta`, `UpdateMeta`, and `TemplateData`, and `DevtoolTarget` as `Send + !Sync`; keep `GenericResourceFetcher` at least `Send`. Verify these auto-trait contracts with compile-time assertions whenever their fields change.
+
+Keep native-window and WebView/WebView2 CAPI functions out of the active loader and safe Rust API. Preserve their public-header declarations and source comments only in the disabled signature manifest unless a future task explicitly restores platform-window embedding.
+
 Copy each available function comment from its declaring public CAPI header verbatim into the active loader manifest as Rust `///` documentation. Do not invent documentation for CAPI declarations whose headers do not document the function; preserve source comments alongside any intentionally disabled signature.
 
 Treat the complete `public/capi/*.h` header tree as the runtime ABI source of truth; do not infer the SDK contract from `lynx_view_capi.h` or another individual header. C exports declared with C++ reference parameters such as `const float&` must be bound as pointers (for example, `*const f32`) and called with stable addresses; do not require private `lynx_rust_*` shim exports. When a newly documented symbol is absent from the repository's current default runtime artifact, resolve it optionally and make the calling API report that it is unavailable instead of preventing the entire runtime from loading.
