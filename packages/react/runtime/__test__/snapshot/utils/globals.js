@@ -36,6 +36,14 @@ const native = {
   }),
   _clear: () => {
     native._listeners = {};
+    // Clearing the listeners drops the runtime's subscription; re-establish it
+    // so a test that destroys a page does not disarm the ones after it.
+    const app = typeof globalThis.lynx?.getApp === 'function' ? globalThis.lynx.getApp() : undefined;
+    if (app) {
+      delete app.__reactUnsubscribe;
+      app.__clearLifecycleListeners?.();
+      globalThis.__reactInjectTt?.();
+    }
     native.onTriggerEvent = undefined;
     native.postMessage.mockClear();
     native.addEventListener.mockClear();
@@ -152,12 +160,43 @@ function injectGlobals() {
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
   globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
+  // Stands in for the engine: the runtime subscribes on the core context, and
+  // the app methods the tests call dispatch the matching event.
+  const coreListeners = new Map();
+  const coreContext = {
+    addEventListener: (type, listener) => {
+      if (!coreListeners.has(type)) coreListeners.set(type, []);
+      coreListeners.get(type).push(listener);
+    },
+    dispatchEvent: ({ type, data }) => {
+      for (const listener of coreListeners.get(type) ?? []) listener({ data });
+    },
+  };
+  const dispatchCore = (type, data) => coreContext.dispatchEvent({ type, data });
+  const lifecycleListeners = [];
   const lynxApp = {
+    addLifecycleEventListener: (listener) => {
+      lifecycleListeners.push(listener);
+      return () => {
+        lifecycleListeners.splice(lifecycleListeners.indexOf(listener), 1);
+      };
+    },
+    OnLifecycleEvent: (args) => lifecycleListeners.forEach((listener) => listener(args)),
+    __clearLifecycleListeners: () => {
+      lifecycleListeners.length = 0;
+    },
     GlobalEventEmitter: getJSModule('GlobalEventEmitter'),
+    publishEvent: (name, data) => dispatchCore('__SendPageEvent', ['', name, data]),
+    publicComponentEvent: (id, name, data) => dispatchCore('__PublishComponentEvent', [id, name, data]),
+    updateGlobalProps: (props) => dispatchCore('__UpdateGlobalProps', [props]),
+    updateCardData: (data, options) => dispatchCore('__UpdateCardData', [data, options]),
+    onAppReload: (data) => dispatchCore('__OnAppReload', [data]),
+    callDestroyLifetimeFun: () => native.dispatchEvent({ type: '__DestroyLifetime' }),
   };
   globalThis.lynx = {
     queueMicrotask: Promise.prototype.then.bind(Promise.resolve()),
     getApp: () => lynxApp,
+    getCoreContext: () => coreContext,
     getNativeApp: () => app,
     getNative: () => native,
     performance,

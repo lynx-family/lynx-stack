@@ -72,14 +72,15 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
 let installed = false;
 
 /**
- * Installs everything the background runtime needs against the current `lynx`:
- * the Preact adapters, the app-level callbacks and the commit/timing hooks.
+ * Installs everything the background runtime needs: the Preact adapters and the
+ * commit/timing hooks once per runtime, and the app-level callbacks on the app
+ * of `pageLynx` — the ambient `lynx` when a page does not name one.
  *
- * The adapters and hooks belong to the runtime, so they are installed once; a
- * page that calls this again only re-registers its app-level callbacks.
+ * Kept as a function rather than inline module side effects so a runtime shared
+ * between several cards can register each page's callbacks.
  */
-export function initBackgroundRuntime(): void {
-  injectTt();
+export function initBackgroundRuntime(pageLynx?: unknown): void {
+  injectTt(pageLynx);
   if (installed) {
     return;
   }
