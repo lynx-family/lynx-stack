@@ -6,10 +6,14 @@ zero-build Lynx XML artifacts), and preview the result on the web or a real
 device — then rename, delete, or **share** any conversation as a durable
 preview link.
 
-The Lynx XML protocol currently exposes only its **Examples** surface at
-`#/lynx-xml/examples`. Each example is a single `.lynxml` file containing Lynx
-CSS plus main-thread and, where needed, background-thread JavaScript, loaded
-directly by `<lynx-view>`.
+The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`
+and an **Examples** surface at `#/lynx-xml/examples`. Create calls the GenUI
+server's `/lynx-xml/stream` endpoint, shows the `.lynxml` source as it arrives,
+and loads the complete zero-build artifact in a directly mounted `<lynx-view>`.
+Generated XML never enters the A2UI/OpenUI renderer; the shared `render.html`
+entry selects the direct XML path through `protocol=lynx-xml`. Each example uses
+the same single-file format with Lynx CSS plus main-thread and, where needed,
+background-thread JavaScript.
 
 The bundled cases are Counter, Travel Plan, Product Card, Weather Card, and
 Todo List. Together they cover main-thread interaction, subtree re-rendering,
@@ -74,6 +78,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 ?a2uiEndpoint=http://localhost:3060/a2ui/stream
 ?openuiEndpoint=http://localhost:3060/openui/stream
 ?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
+?lynx-xmlEndpoint=http://localhost:3060/lynx-xml/stream
 ?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
 ```
 

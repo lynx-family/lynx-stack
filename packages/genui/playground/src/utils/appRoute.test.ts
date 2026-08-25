@@ -25,19 +25,20 @@ describe('app route hash', () => {
     expect(buildRouteHash('a2ui', 'create')).toBe('#/a2ui');
     expect(buildRouteHash('openui', 'create')).toBe('#/openui');
     expect(buildRouteHash('mcp-apps', 'create')).toBe('#/mcp-apps');
+    expect(buildRouteHash('lynx-xml', 'create')).toBe('#/lynx-xml');
   });
 
-  test('keeps Lynx XML on its examples-only surface', () => {
+  test('supports Lynx XML create and examples routes', () => {
     expect(buildRouteHash('lynx-xml', 'examples')).toBe(
       '#/lynx-xml/examples',
     );
     expect(parseRouteHash('#/lynx-xml')).toMatchObject({
       protocol: { name: 'lynx-xml', version: '0.1' },
-      tab: 'examples',
+      tab: 'create',
     });
     expect(parseRouteHash('#/lynx-xml/create')).toMatchObject({
       protocol: { name: 'lynx-xml' },
-      tab: 'examples',
+      tab: 'create',
     });
     expect(parseRouteHash('#/lynx-xml/examples/counter')).toMatchObject({
       protocol: { name: 'lynx-xml' },

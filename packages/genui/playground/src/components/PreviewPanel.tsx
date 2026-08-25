@@ -31,7 +31,6 @@ import { publishOpenUIPayload } from '../utils/publishPayload.js';
 import type {
   LocalA2UIMessagesPayload,
   LocalA2UIMessagesPayloadCache,
-  LocalLynxXmlSourcePayloadCache,
 } from '../utils/renderUrl.js';
 import {
   buildLynxXmlRenderUrl,
@@ -42,8 +41,6 @@ import {
   canInlineOpenUIRenderUrl,
   createLocalA2UIMessagesPayload,
   createLocalA2UIMessagesPayloadCache,
-  createLocalLynxXmlSourcePayload,
-  createLocalLynxXmlSourcePayloadCache,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
   isPortableA2UIMessagesUrl,
@@ -63,6 +60,7 @@ export const PreviewPanelPreviewModeContext = createContext<
 >(null);
 
 export interface PreviewPanelRenderContextValue {
+  lynxXmlSource?: string;
   renderUrl: string;
 }
 
@@ -492,16 +490,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
       createLocalA2UIMessagesPayload(messages, window.URL),
   });
   const localMessagesPayloadCache = localMessagesPayloadCacheRef.current;
-  const localLynxXmlSourcePayloadCacheRef = useRef<
-    LocalLynxXmlSourcePayloadCache | null
-  >(null);
-  localLynxXmlSourcePayloadCacheRef.current ??=
-    createLocalLynxXmlSourcePayloadCache({
-      createPayload: (source) =>
-        createLocalLynxXmlSourcePayload(source, window.URL),
-    });
-  const localLynxXmlSourcePayloadCache =
-    localLynxXmlSourcePayloadCacheRef.current;
   const speedInputId = useId();
   const rawMetricId = useId();
   const metricId = useMemo(
@@ -595,8 +583,13 @@ export function PreviewPanel(props: PreviewPanelProps) {
     return u.toString();
   }, [baseUrl, rspeedyDevUrl]);
   const renderContext = useMemo<PreviewPanelRenderContextValue>(
-    () => ({ renderUrl }),
-    [renderUrl],
+    () => ({
+      lynxXmlSource: previewSource?.kind === 'lynx-xml'
+        ? previewSource.source
+        : undefined,
+      renderUrl,
+    }),
+    [previewSource, renderUrl],
   );
   const metricsContext = useMemo<PreviewPanelMetricsContextValue>(
     () => ({ metricId, onFrameSrcChange: handleMetricFrameSrcChange }),
@@ -710,15 +703,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
     return () => {
       window.removeEventListener('message', handleRuntimeReady);
       localMessagesPayloadCache.dispose();
-      localLynxXmlSourcePayloadCache.clear();
     };
-  }, [localLynxXmlSourcePayloadCache, localMessagesPayloadCache]);
+  }, [localMessagesPayloadCache]);
 
   useEffect(() => {
     const seq = ++buildSeqRef.current;
-    if (previewSource?.kind !== 'lynx-xml') {
-      localLynxXmlSourcePayloadCache.clear();
-    }
 
     if (!previewSource) {
       localMessagesPayloadCache.clear();
@@ -961,32 +950,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
     localMessagesPayloadCache.clear();
 
     if (previewSource.kind === 'lynx-xml') {
-      let sourceUrl = '';
-      if (previewSource.sourcePath) {
-        localLynxXmlSourcePayloadCache.clear();
-        sourceUrl = new URL(previewSource.sourcePath, baseUrl).toString();
-      } else if (previewSource.source) {
-        try {
-          sourceUrl = localLynxXmlSourcePayloadCache.ensure(
-            previewSource.source,
-          ).sourceUrl;
-        } catch {
-          localLynxXmlSourcePayloadCache.clear();
-        }
-      } else {
-        localLynxXmlSourcePayloadCache.clear();
-      }
-      if (!sourceUrl) {
-        setRenderUrl('');
+      // PreviewViewport mounts a real <lynx-view> for this source. Keep the
+      // iframe render URL empty so XML never enters the A2UI/OpenUI renderer.
+      setRenderUrl('');
+      if (!previewSource.source) {
         setRenderShareUrl('');
         setLynxDevUrl('');
         return;
       }
-
-      setRenderUrl(buildLynxXmlRenderUrl({
-        sourceUrl,
-        theme: previewSource.theme,
-      }, baseUrl));
 
       if (!previewSource.sourcePath) {
         setRenderShareUrl('');
@@ -1123,7 +1094,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
     })();
   }, [
     baseUrl,
-    localLynxXmlSourcePayloadCache,
     localMessagesPayloadCache,
     previewSource,
     rspeedyDevUrl,

@@ -31,7 +31,7 @@ describe('PreviewPanel QR cards', () => {
 
   test('uses shareable URLs for an unedited Lynx XML example', () => {
     const renderShareUrl =
-      'https://lynx-stack.dev/genui/render.html?protocol=lynx-xml';
+      'https://lynx-stack.dev/genui/render.html?protocol=lynx-xml&sourceUrl=counter';
     const lynxDevUrl =
       'https://lynx-stack.dev/genui/demos/lynx-xml/counter.lynxml';
     const cards = createPreviewQrCards(

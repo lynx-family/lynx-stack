@@ -4,6 +4,7 @@
 import { describe, expect, rs, test } from '@rstest/core';
 
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
+import { LYNX_XML_CHAT_ADAPTER } from './lynx-xml.js';
 import {
   MCP_APPS_CHAT_ADAPTER,
   PRODUCT_RESOURCE_URI,
@@ -28,6 +29,13 @@ const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
 const reduceOpenUIStream = OPENUI_CHAT_ADAPTER.stream.reduce.bind(
   OPENUI_CHAT_ADAPTER.stream,
 );
+const VALID_LYNX_XML = [
+  '<!doctype lynx>',
+  '<lynx engine-version="4.2">',
+  '<style>.root { display: flex; }</style>',
+  '<script thread="main">globalThis.processData = () => {};</script>',
+  '</lynx>',
+].join('\n');
 
 describe('chat protocol adapters', () => {
   test('starts with an unloaded server-backed model list', () => {
@@ -302,6 +310,59 @@ describe('chat protocol adapters', () => {
     ]);
   });
 
+  test('streams a Lynx XML artifact before final preview delivery', () => {
+    const reduceStream = LYNX_XML_CHAT_ADAPTER.stream.reduce.bind(
+      LYNX_XML_CHAT_ADAPTER.stream,
+    );
+    let state = LYNX_XML_CHAT_ADAPTER.stream.initial();
+    const preamble = reduceStream(state, {
+      event: 'delta',
+      data: { text: '```xml\n' },
+    });
+    state = preamble.state;
+    expect(preamble.emissions).toEqual([
+      { type: 'progress', text: '```xml\n' },
+    ]);
+
+    const partial = reduceStream(state, {
+      event: 'delta',
+      data: { text: VALID_LYNX_XML },
+    });
+    state = partial.state;
+    expect(partial.emissions).toEqual([
+      { type: 'progress', text: VALID_LYNX_XML },
+      { type: 'partial', output: { source: VALID_LYNX_XML } },
+    ]);
+
+    const done = reduceStream(state, {
+      event: 'done',
+      data: {
+        text: `Here is the artifact:\n${VALID_LYNX_XML}\n\`\`\``,
+        usage: { inputTokens: 7, outputTokens: 11, totalTokens: 18 },
+      },
+    });
+    expect(done.emissions).toEqual([
+      {
+        type: 'usage',
+        usage: { promptTokens: 7, completionTokens: 11, totalTokens: 18 },
+      },
+      { type: 'final', output: { source: VALID_LYNX_XML } },
+    ]);
+    expect(
+      LYNX_XML_CHAT_ADAPTER.preview.artifact({
+        source: VALID_LYNX_XML,
+      }).views[0]?.text,
+    ).toBe(VALID_LYNX_XML);
+  });
+
+  test('rejects an incomplete final Lynx XML response', () => {
+    expect(() =>
+      LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+        text: '<!doctype lynx><lynx engine-version="4.2">',
+      })
+    ).toThrow('incomplete Lynx XML artifact');
+  });
+
   test('builds protocol-specific preview sources and merge behavior', () => {
     const a2uiOutput = [{ createSurface: { surfaceId: 'main' } }];
     expect(A2UI_CHAT_ADAPTER.preview.source(a2uiOutput, {
@@ -368,6 +429,20 @@ describe('chat protocol adapters', () => {
       theme: 'light',
       previewPayloadUrls: null,
     })).toBeUndefined();
+
+    const lynxXmlOutput = { source: VALID_LYNX_XML };
+    expect(LYNX_XML_CHAT_ADAPTER.preview.source(lynxXmlOutput, {
+      protocol: PROTOCOLS['lynx-xml'],
+      theme: 'dark',
+      previewPayloadUrls: null,
+    })).toEqual({
+      kind: 'lynx-xml',
+      source: VALID_LYNX_XML,
+      theme: 'dark',
+    });
+    expect(LYNX_XML_CHAT_ADAPTER.preview.merge(null, lynxXmlOutput)).toBe(
+      lynxXmlOutput,
+    );
   });
 
   test('parses A2UI action bridge messages', () => {

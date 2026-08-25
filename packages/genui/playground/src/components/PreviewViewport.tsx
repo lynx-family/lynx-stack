@@ -4,6 +4,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
 
+import { LynxXmlView } from './LynxXmlView.js';
 import {
   PreviewPanelMetricsContext,
   PreviewPanelPreviewModeContext,
@@ -17,6 +18,7 @@ import {
 
 interface PreviewViewportProps {
   src?: string;
+  lynxXmlSource?: string;
   iframeTitle?: string;
   iframeRef?: Ref<HTMLIFrameElement>;
   onLoad?: () => void;
@@ -95,6 +97,7 @@ export function PreviewViewport(props: PreviewViewportProps) {
     emptyTitle,
     iframeTitle = 'preview',
     iframeRef,
+    lynxXmlSource: lynxXmlSourceProp,
     displayMode,
     onLoad,
     src,
@@ -107,6 +110,8 @@ export function PreviewViewport(props: PreviewViewportProps) {
   const previewRenderContext = useContext(PreviewPanelRenderContext);
   const previewMetricsContext = useContext(PreviewPanelMetricsContext);
   const mode: PreviewMode = displayMode ?? previewModeContext?.mode ?? 'phone';
+  const lynxXmlSource = lynxXmlSourceProp
+    ?? previewRenderContext?.lynxXmlSource;
   const rawResolvedSrc = src ?? previewRenderContext?.renderUrl ?? '';
   const metricId = previewMetricsContext?.metricId ?? '';
   const navigationToken = useMemo(
@@ -180,6 +185,20 @@ export function PreviewViewport(props: PreviewViewportProps) {
       onLoad={extraProps?.onLoad}
     />
   );
+
+  if (lynxXmlSource) {
+    const lynxXmlView = (
+      <LynxXmlView
+        className={mode === 'phone' ? 'phoneIframe' : 'previewFullIframe'}
+        source={lynxXmlSource}
+        onLoad={onLoad}
+      />
+    );
+
+    return mode === 'phone'
+      ? <PhoneShell>{lynxXmlView}</PhoneShell>
+      : <div className='previewFullFrame'>{lynxXmlView}</div>;
+  }
 
   if (mode === 'phone') {
     if (!activeSrc) {

@@ -61,6 +61,10 @@
       "default": "./a2ui-catalog-extractor/dist/cli.js"
     },
     "./a2ui-catalog-extractor/skill": "./a2ui-catalog-extractor/skills/a2ui-catalog-extractor/SKILL.md",
+    "./lynx-xml": {
+      "types": "./lynx-xml/dist/index.d.ts",
+      "default": "./lynx-xml/dist/index.js"
+    },
     "./openui": {
       "types": "./openui/dist/core/index.d.ts",
       "default": "./openui/dist/core/index.js"
@@ -223,6 +227,8 @@
     "a2ui-catalog-extractor/dist",
     "a2ui-catalog-extractor/skills",
     "a2ui-catalog-extractor/README.md",
+    "lynx-xml/dist",
+    "lynx-xml/README.md",
     "openui/dist",
     "openui/styles",
     "openui/*.md",
@@ -245,6 +251,7 @@
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/genui-a2ui-prompt": "workspace:*",
     "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
