@@ -6,6 +6,7 @@ import { process, render } from 'preact';
 import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import {
   delayedRunOnMainThreadData,
@@ -37,20 +38,20 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
-function injectTt(): void {
-  const tt = lynx.getApp();
-  tt.OnLifecycleEvent = onLifecycleEvent;
-  tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
-  tt.callDestroyLifetimeFun = () => {
+function registerAppCallbacks(pageLynx: typeof lynx): void {
+  const app = pageLynx.getApp();
+  app.OnLifecycleEvent = onLifecycleEvent;
+  app.publishEvent = delayedPublishEvent;
+  app.publicComponentEvent = delayedPublicComponentEvent;
+  app.callDestroyLifetimeFun = () => {
     removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
   };
-  tt.updateGlobalProps = updateGlobalProps;
-  tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
-  tt.processCardConfig = () => {
+  app.updateGlobalProps = updateGlobalProps;
+  app.updateCardData = updateCardData;
+  app.onAppReload = reloadBackground;
+  app.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
 }
@@ -71,7 +72,7 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
   try {
     onLifecycleEventImpl(type, data);
   } catch (e) {
-    lynx.reportError(e as Error);
+    getPageLynx().reportError(e as Error);
   }
 
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -144,14 +145,14 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
           try {
             publishEvent([idStr, ...rest].join(':'), data);
           } catch (e) {
-            lynx.reportError(e as Error);
+            getPageLynx().reportError(e as Error);
           }
         });
         delayedEvents.length = 0;
       }
 
-      lynx.getApp().publishEvent = publishEvent;
-      lynx.getApp().publicComponentEvent = publicComponentEvent;
+      getPageLynx().getApp().publishEvent = publishEvent;
+      getPageLynx().getApp().publicComponentEvent = publicComponentEvent;
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -164,7 +165,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         globalCommitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
@@ -182,12 +183,12 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     }
     case LifecycleConstant.globalEventFromLepus: {
       const [eventName, params] = data as [string, Record<string, any>];
-      lynx.getJSModule('GlobalEventEmitter').trigger(eventName, params);
+      getPageLynx().getJSModule('GlobalEventEmitter').trigger(eventName, params);
       break;
     }
     case LifecycleConstant.publishEvent: {
       const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
-      lynx.getApp().publishEvent(handlerName, d);
+      getPageLynx().getApp().publishEvent(handlerName, d);
       break;
     }
   }
@@ -208,7 +209,7 @@ function flushDelayedLifecycleEvents(): void {
 }
 
 function publishEvent(handlerName: string, data: EventDataType) {
-  lynx.getApp().callBeforePublishEvent?.(data);
+  getPageLynx().getApp().callBeforePublishEvent?.(data);
   let snapshotId: number | undefined;
   const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);
   const eventHandler = backgroundSnapshotInstanceManager.getValueBySign(
@@ -251,7 +252,7 @@ function publishEvent(handlerName: string, data: EventDataType) {
     try {
       eventHandler(data);
     } catch (e) {
-      lynx.reportError(e as Error);
+      getPageLynx().reportError(e as Error);
     }
   }
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -278,4 +279,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { injectTt, flushDelayedLifecycleEvents };
+export { registerAppCallbacks, flushDelayedLifecycleEvents };

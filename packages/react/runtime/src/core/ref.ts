@@ -4,6 +4,8 @@
 
 import type { NodesRef, SelectorQuery } from '@lynx-js/types';
 
+import { getPageLynx } from './page-lynx.js';
+
 export type RefCleanup = (() => void) | void;
 export type RefCallback<T> = (ref: T | null) => RefCleanup;
 export interface OrdinaryRefBinding {
@@ -69,7 +71,7 @@ export function applyOrdinaryRef<T>(
       ref.current = value;
     }
   } catch (error) {
-    lynx.reportError(error as Error);
+    getPageLynx().reportError(error as Error);
   }
 }
 
@@ -175,7 +177,7 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
 
   exec(): void {
     this.runOrDelay(() => {
-      this.task!(lynx.createSelectorQuery().select(this.selector)).exec();
+      this.task!(getPageLynx().createSelectorQuery().select(this.selector)).exec();
     });
   }
 }

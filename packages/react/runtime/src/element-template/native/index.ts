@@ -14,6 +14,7 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { setupComponentStack } from '../../shared/component-stack.js';
 import { lynxQueueMicrotask } from '../../utils.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
@@ -74,17 +75,17 @@ function init(): void {
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
     resetEventStateForRuntime();
-    lynx.getApp().callDestroyLifetimeFun = callDestroyLifetimeFun;
-    lynx.getApp().publishEvent = publishEvent;
-    lynx.getApp().publicComponentEvent = publicComponentEvent;
-    lynx.getApp().updateGlobalProps = updateGlobalProps;
-    lynx.getApp().updateCardData = updateCardData;
-    lynx.getApp().onAppReload = reloadBackground;
+    getPageLynx().getApp().callDestroyLifetimeFun = callDestroyLifetimeFun;
+    getPageLynx().getApp().publishEvent = publishEvent;
+    getPageLynx().getApp().publicComponentEvent = publicComponentEvent;
+    getPageLynx().getApp().updateGlobalProps = updateGlobalProps;
+    getPageLynx().getApp().updateCardData = updateCardData;
+    getPageLynx().getApp().onAppReload = reloadBackground;
     installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();
-      if (lynx.performance?.isProfileRecording?.()) {
+      if (getPageLynx().performance?.isProfileRecording?.()) {
         initProfileHook();
       }
     }

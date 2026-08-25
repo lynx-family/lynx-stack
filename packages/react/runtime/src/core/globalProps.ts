@@ -5,6 +5,7 @@ import type { ComponentChildren, Consumer, Provider } from 'preact';
 
 import type { useLynxGlobalEventListener } from './hooks/useLynxGlobalEventListener.js';
 import { factory } from './initData.js';
+import { getPageLynx } from './page-lynx.js';
 
 type Getter<T> = {
   [key in keyof T]: () => T[key];
@@ -57,15 +58,15 @@ export function updateGlobalProps(
 ): void {
   if (isGlobalPropsEventMode()) {
     // COW keeps Provider / Consumer state readers aligned in event mode.
-    lynx.__globalProps = Object.assign({}, lynx.__globalProps, newData);
+    getPageLynx().__globalProps = Object.assign({}, getPageLynx().__globalProps, newData);
   } else {
-    Object.assign(lynx.__globalProps, newData);
+    Object.assign(getPageLynx().__globalProps, newData);
     if (forceRerender) {
       void Promise.resolve().then(forceRerender);
     }
   }
 
-  lynx.getApp().GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
+  getPageLynx().getApp().GlobalEventEmitter.emit('onGlobalPropsChanged', [getPageLynx().__globalProps]);
 }
 
 function warnGlobalPropsMode(): void {
@@ -85,12 +86,12 @@ function FallbackProvider({ children }: { children?: ComponentChildren | undefin
 
 function FallbackConsumer<Data>({ children }: { children: (data: Data) => ComponentChildren }): ComponentChildren {
   warnGlobalPropsMode();
-  return children(lynx.__globalProps as Data);
+  return children(getPageLynx().__globalProps as Data);
 }
 
 function useFallbackGlobalProps<Data>(): Data {
   warnGlobalPropsMode();
-  return lynx.__globalProps as Data;
+  return getPageLynx().__globalProps as Data;
 }
 
 function createFallbackGlobalProps<Data>(

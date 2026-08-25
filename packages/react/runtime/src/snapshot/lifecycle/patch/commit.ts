@@ -30,6 +30,7 @@ import {
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalFlushOptions } from '../../../core/commit-context.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../../core/performance.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import {
@@ -175,7 +176,7 @@ function replaceCommitHook(): void {
       const obj = commitPatchUpdate(patchList, patchOptions);
 
       // Send the update to the native layer
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         const commitTask = globalCommitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();

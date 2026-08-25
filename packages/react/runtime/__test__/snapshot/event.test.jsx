@@ -10,7 +10,7 @@ import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delay
 import { takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
-import { injectTt } from '../../src/snapshot/lynx/tt';
+import { registerAppCallbacks } from '../../src/snapshot/lynx/appCallbacks';
 import { root } from '../../src/lynx-api';
 import { CHILDREN } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
@@ -992,7 +992,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
 
   it('event before jsReady should works', async function() {
     // resetup
-    injectTt();
+    registerAppCallbacks(lynx);
 
     const handleTouchStart = vi.fn();
 
@@ -1191,7 +1191,7 @@ describe('call `root.render()` async', () => {
 
   it('event should work', async function() {
     // resetup
-    injectTt();
+    registerAppCallbacks(lynx);
 
     const handleTouchStart = vi.fn();
 

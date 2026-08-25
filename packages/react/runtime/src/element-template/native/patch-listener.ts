@@ -11,6 +11,7 @@ import {
   updateWorkletRefInitValueChanges,
 } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { getPageLynx } from '../../core/page-lynx.js';
 import { markTiming, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
@@ -30,10 +31,10 @@ export function installElementTemplatePatchListener(): void {
     const { patchOptions } = event.data;
     const { flowIds, pipelineOptions } = patchOptions;
     const shouldProfilePatch = !!flowIds
-      && typeof lynx.performance?.profileStart === 'function'
-      && typeof lynx.performance?.profileEnd === 'function';
+      && typeof getPageLynx().performance?.profileStart === 'function'
+      && typeof getPageLynx().performance?.profileEnd === 'function';
     if (shouldProfilePatch) {
-      lynx.performance.profileStart('ReactLynx::patch', {
+      getPageLynx().performance.profileStart('ReactLynx::patch', {
         flowId: flowIds[0],
         flowIds,
       });
@@ -55,7 +56,7 @@ export function installElementTemplatePatchListener(): void {
     ) {
       markTiming('mtsRenderEnd');
       if (shouldProfilePatch) {
-        lynx.performance.profileEnd();
+        getPageLynx().performance.profileEnd();
       }
       return;
     }
@@ -104,7 +105,7 @@ export function installElementTemplatePatchListener(): void {
           try {
             runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
           } catch (error) {
-            lynx.reportError(error as Error);
+            getPageLynx().reportError(error as Error);
           }
         }
       } finally {
@@ -115,11 +116,11 @@ export function installElementTemplatePatchListener(): void {
     __FlushElementTree(undefined, flushOptions);
 
     if (shouldProfilePatch) {
-      lynx.performance.profileEnd();
+      getPageLynx().performance.profileEnd();
     }
   };
 
-  lynx.getJSContext().addEventListener(
+  getPageLynx().getJSContext().addEventListener(
     ElementTemplateLifecycleConstant.update,
     listener,
   );
@@ -127,7 +128,7 @@ export function installElementTemplatePatchListener(): void {
 
 export function resetElementTemplatePatchListener(): void {
   if (listener) {
-    lynx.getJSContext().removeEventListener(
+    getPageLynx().getJSContext().removeEventListener(
       ElementTemplateLifecycleConstant.update,
       listener,
     );

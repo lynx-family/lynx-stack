@@ -46,6 +46,7 @@ import {
   updateMainThreadRefAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -74,7 +75,7 @@ export function applyElementTemplateUpdateCommands(
             childSlots,
           );
           if (createError) {
-            lynx.reportError(createError);
+            getPageLynx().reportError(createError);
             continue;
           }
         }
@@ -166,12 +167,12 @@ export function applyElementTemplateUpdateCommands(
         if (__DEV__) {
           const createError = validateCreateHandleId(handleId);
           if (createError) {
-            lynx.reportError(createError);
+            getPageLynx().reportError(createError);
             continue;
           }
         }
         if (__DEV__ && childSlots != null && !Array.isArray(childSlots)) {
-          lynx.reportError(
+          getPageLynx().reportError(
             new Error('ElementTemplate update create childSlots must be an array, null, or undefined.'),
           );
           continue;
@@ -181,7 +182,7 @@ export function applyElementTemplateUpdateCommands(
           && isTypedList
           && !isTypedListChildSlotsEmpty(childSlots)
         ) {
-          lynx.reportError(
+          getPageLynx().reportError(
             new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
           );
           continue;
@@ -195,7 +196,7 @@ export function applyElementTemplateUpdateCommands(
         if (isTypedList) {
           const listChildren = getTypedListChildren(options);
           if (__DEV__ && !Array.isArray(listChildren)) {
-            lynx.reportError(
+            getPageLynx().reportError(
               new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
             );
             continue;
@@ -318,7 +319,7 @@ export function applyElementTemplateUpdateCommands(
 
       default: {
         if (__DEV__) {
-          lynx.reportError(new Error(`ElementTemplate update opcode ${String(op)} is not supported.`));
+          getPageLynx().reportError(new Error(`ElementTemplate update opcode ${String(op)} is not supported.`));
         }
       }
     }
@@ -377,7 +378,7 @@ function resolveChildSlots(
       continue;
     }
     if (__DEV__ && !Array.isArray(children)) {
-      lynx.reportError(
+      getPageLynx().reportError(
         new Error(`ElementTemplate create slot ${slotIndex} must be an array of child handles, null, or undefined.`),
       );
       hasError = true;
@@ -478,7 +479,7 @@ function isTypedListChildSlotsEmpty(childSlots: ElementTemplateHandleSlotsComman
 function resolveTargetHandle(id: number, role: string): ElementTemplateHandle | null {
   const nativeRef = elementTemplateRegistry.getTarget(id);
   if (!nativeRef) {
-    lynx.reportError(new Error(`ElementTemplate update ${role} handle ${id} not found.`));
+    getPageLynx().reportError(new Error(`ElementTemplate update ${role} handle ${id} not found.`));
     return null;
   }
   return nativeRef;

@@ -14,6 +14,7 @@ import {
 import type { BackgroundPageRootInstance } from './instance.js';
 import { hydratePageRootIntoContext } from './page-root-hydrate.js';
 import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import {
   PerformanceTimingFlags,
   PipelineOrigins,
@@ -160,7 +161,7 @@ export function installElementTemplateHydrationListener(): void {
           clearPendingEvents();
           clearPendingRefs();
           clearDelayedRefUiOps();
-          lynx.reportError(error as Error);
+          getPageLynx().reportError(error as Error);
         }
         markTiming('packChangesEnd');
         if (pipelineOptions) {
@@ -176,7 +177,7 @@ export function installElementTemplateHydrationListener(): void {
           return;
         }
 
-        lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
+        getPageLynx().getCoreContext().dispatchEvent(hydrateUpdateEvent);
         flushPendingEvents();
         // Ordinary refs attach on Preact commit boundaries; hydration only releases
         // delayed selector ops after ids have been rebound to stable native handles.
@@ -187,12 +188,12 @@ export function installElementTemplateHydrationListener(): void {
     }
   };
 
-  lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
+  getPageLynx().getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
 }
 
 export function resetElementTemplateHydrationListener(): void {
   if (listener) {
-    lynx.getCoreContext().removeEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
+    getPageLynx().getCoreContext().removeEventListener(ElementTemplateLifecycleConstant.hydrate, listener);
   }
   listener = undefined;
 }

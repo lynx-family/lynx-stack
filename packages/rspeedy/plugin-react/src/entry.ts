@@ -318,6 +318,8 @@ export function applyEntry(
         entryPairs,
         extractStr,
         experimental_isLazyBundle,
+        experimental_lynxGroupModuleSharing:
+          options.experimental_lynxGroupModuleSharing,
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
