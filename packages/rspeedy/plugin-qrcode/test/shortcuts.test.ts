@@ -14,7 +14,7 @@ describe('PluginQRCode - CLI Shortcuts', () => {
       dev: { assetPrefix: 'https://example.com/' },
     }),
     useExposed: vi.fn().mockReturnValue({
-      config: { filename: '[name].[platform].bundle' },
+      output: { filename: { bundle: '[name].[platform].bundle' } },
     }),
   } as unknown as RsbuildPluginAPI
 

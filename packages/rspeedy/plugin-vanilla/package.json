@@ -37,6 +37,7 @@
     "test:type": "tsc6 --noEmit"
   },
   "dependencies": {
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*"
   },

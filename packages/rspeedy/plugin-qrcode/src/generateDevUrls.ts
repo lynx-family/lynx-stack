@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 
-import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { getLynxConfig, resolveBundleFilename } from '@lynx-js/rsbuild-plugin'
 
 import type { CustomizedSchemaFn } from './index.js'
 
@@ -14,9 +14,6 @@ export default function generateDevUrls(
   port: number,
 ): Record<string, string> {
   const { dev: { assetPrefix } } = api.getNormalizedConfig()
-  const { config } = api.useExposed<ExposedAPI>(
-    Symbol.for('rspeedy.api'),
-  )!
 
   if (typeof assetPrefix !== 'string') {
     const errorMsg = 'dev.assetPrefix is not string, skip printing QRCode'
@@ -24,19 +21,16 @@ export default function generateDevUrls(
     throw new Error(errorMsg)
   }
 
-  const defaultFilename = '[name].[platform].bundle'
-  const { filename } = config.output ?? {}
-  const bundle = typeof filename === 'object'
-    ? filename.bundle ?? filename.template
-    : filename
+  const lynx = getLynxConfig(api)
   // QRCode always points at the Lynx main bundle.
-  const name = (typeof bundle === 'function'
-    ? bundle({ lazyBundle: false, entryName: entry, platform: 'lynx' })
-    : bundle) ?? defaultFilename
+  const name = resolveBundleFilename(lynx, {
+    entryName: entry,
+    platform: 'lynx',
+  })
 
   const customSchema = schemaFn(
     new URL(
-      name.replace('[name]', entry).replace('[platform]', 'lynx'),
+      name,
       // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
       assetPrefix.replaceAll('<port>', String(port)),
     ).toString(),

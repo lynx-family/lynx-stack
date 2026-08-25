@@ -1805,6 +1805,10 @@ importers:
         version: 5.8.0
 
   packages/rspeedy/plugin-qrcode:
+    dependencies:
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
     devDependencies:
       '@clack/prompts':
         specifier: 1.7.0
@@ -1945,6 +1949,9 @@ importers:
 
   packages/rspeedy/plugin-vanilla:
     dependencies:
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
@@ -8077,6 +8084,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
