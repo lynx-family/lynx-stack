@@ -6,6 +6,7 @@ import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime
 import type { MainThreadRefInitValuePatch } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { takeMainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 function updateMTRefInitValue({ data }: { data: string }): void {
@@ -32,5 +33,5 @@ export function sendMTRefInitValueToMainThread(): void {
   if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
     console.alog?.('[ReactLynxDebug] Snapshot BTS -> MTS sendMTRefInitValue:\n' + data);
   }
-  lynx.getNativeApp().callLepusMethod(LifecycleConstant.updateMTRefInitValue, { data });
+  getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.updateMTRefInitValue, { data });
 }

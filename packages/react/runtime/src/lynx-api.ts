@@ -12,10 +12,12 @@ import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListe
 import { factory, withInitDataInState } from './core/initData.js';
 import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from './core/lynx-data-processors.js';
 import { __root, transferMode, warnRootRenderOnTransferPage } from './root.js';
+import { bindPageLynx, getPageLynx, hasPageLynx } from './core/page-lynx.js';
+import { initBackgroundRuntime } from './lynx.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
-import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
+import { flushDelayedLifecycleEvents } from './snapshot/lynx/appCallbacks.js';
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
@@ -100,6 +102,12 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
+      if (
+        typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined'
+        && __LYNX_GROUP_MODULE_SHARING__ && !hasPageLynx()
+      ) {
+        throw new Error('experimental_lynxGroupModuleSharing requires rendering through createRoot(lynx).');
+      }
       __root.__jsx = jsx;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::renderBackground');
@@ -112,7 +120,7 @@ export const root: Root = {
       if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
         // `jsReady` is a special case of the `manual` first-screen sync: the
         // framework marks ready automatically once the background is ready.
-        lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+        getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
       } else {
         // `immediately` or `manual`: the first screen is synced without waiting
         // for the background, so the `firstScreen` message might have been
@@ -123,9 +131,38 @@ export const root: Root = {
   },
   /* v8 ignore next 3 */
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {
-    lynx.registerDataProcessors(dataProcessorDefinition);
+    getPageLynx().registerDataProcessors(dataProcessorDefinition);
   },
 };
+
+/**
+ * Binds the runtime to one page's `lynx` and returns that page's root. Requires
+ * `experimental_lynxGroupModuleSharing`; unstable and subject to change.
+ *
+ * @example
+ *
+ * ```ts
+ * import { createRoot } from '@lynx-js/react'
+ *
+ * createRoot(lynx).render(<App />)
+ * ```
+ *
+ * @experimental
+ * @alpha
+ */
+export function createRoot(pageLynx: typeof lynx): Root {
+  if (
+    typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined'
+    || !__LYNX_GROUP_MODULE_SHARING__
+  ) {
+    throw new Error('createRoot(lynx) requires the experimental_lynxGroupModuleSharing option of pluginReactLynx.');
+  }
+  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+    bindPageLynx(pageLynx);
+    initBackgroundRuntime();
+  }
+  return root;
+}
 
 /**
  * Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
@@ -153,7 +190,7 @@ export function markFirstScreenSyncReady(): void {
   }
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     // The sync happens on the main thread, forward the mark to it.
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+    getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
     return;
   }
   onFirstScreenSyncReady();

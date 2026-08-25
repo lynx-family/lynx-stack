@@ -7,6 +7,8 @@ import type { NodesRef, SelectorQuery, uiMethodOptions } from '@lynx-js/types';
 const NODE_NOT_FOUND_CODE = 2;
 const NO_UI_FOR_NODE_CODE = 6;
 
+import { getPageLynx } from './page-lynx.js';
+
 export type RefCleanup = (() => void) | void;
 export type RefCallback<T> = (ref: T | null) => RefCleanup;
 export interface OrdinaryRefBinding {
@@ -94,7 +96,7 @@ export function applyOrdinaryRef<T>(
       ref.current = value;
     }
   } catch (error) {
-    lynx.reportError(error as Error);
+    getPageLynx().reportError(error as Error);
   }
 }
 
@@ -252,7 +254,7 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
       return;
     }
     this.runOrDelay(() => {
-      this.task!(lynx.createSelectorQuery().select(this.selector)).exec();
+      this.task!(getPageLynx().createSelectorQuery().select(this.selector)).exec();
     });
   }
 }

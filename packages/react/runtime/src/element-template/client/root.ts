@@ -6,6 +6,7 @@ import { render } from 'preact';
 import type { ReactNode } from 'react';
 
 import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { __root } from '../runtime/page/root-instance.js';
 
@@ -64,6 +65,6 @@ export const root: Root = {
     }
   },
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition): void => {
-    lynx.registerDataProcessors(dataProcessorDefinition);
+    getPageLynx().registerDataProcessors(dataProcessorDefinition);
   },
 };

@@ -14,6 +14,7 @@ import {
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isMainThreadFunction } from '../../core/main-thread-function.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { isGestureSlotValue } from '../prop-adapters/gesture.js';
@@ -139,7 +140,7 @@ function hydrateInstance(
     return hydrateCompiledInstance(serialized, instance);
   }
   if (__DEV__ && !isSerializedTypedListNode(serialized)) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
     return false;
@@ -277,7 +278,7 @@ function hydrateListInstance(
     // A child's __slotIndex identifies its logical slot.
     const hasUnsupportedBackgroundSlot = backgroundChildren.some(child => child.__slotIndex !== 0);
     if (hasUnsupportedSerializedSlot || hasUnsupportedBackgroundSlot) {
-      lynx.reportError(new Error('ElementTemplate hydrate typed list only supports logical slot 0.'));
+      getPageLynx().reportError(new Error('ElementTemplate hydrate typed list only supports logical slot 0.'));
       return false;
     }
   }
@@ -626,7 +627,7 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
   }
 
   if (__DEV__ && !isSerializedTypedListNode(serialized)) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
     return false;
@@ -640,7 +641,7 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
       (children, slotIndex) => slotIndex !== 0 && (children?.length ?? 0) > 0,
     )
   ) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list only supports logical slot 0.'));
+    getPageLynx().reportError(new Error('ElementTemplate hydrate typed list only supports logical slot 0.'));
     return false;
   }
   const listChildren = getSerializedTypedListChildren(serializedList);
@@ -660,7 +661,7 @@ function getRemovableSerializedHandleId(serialized: SerializedEtNode): number | 
       || !Number.isInteger(handleId)
       || handleId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID)
   ) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(`ElementTemplate hydrate remove received invalid uid ${String(handleId)}.`),
     );
     return null;
@@ -697,7 +698,7 @@ function bindHydrationHandleId(
       return true;
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      lynx.reportError(
+      getPageLynx().reportError(
         new Error(`ElementTemplate hydrate received invalid uid ${handleId} for '${templateKey}': ${reason}`),
       );
       return false;

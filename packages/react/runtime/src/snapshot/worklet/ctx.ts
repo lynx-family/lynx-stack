@@ -9,13 +9,14 @@ import {
   resetBackgroundFunctionRuntime,
 } from '../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 
 /**
  * @internal
  */
 export function onPostWorkletCtx(afterValue: Worklet | null): Worklet | null {
   if (!isMtsEnabled() && afterValue) {
-    lynx.reportError(new Error('Main thread script requires Lynx sdk version 2.14'));
+    getPageLynx().reportError(new Error('Main thread script requires Lynx sdk version 2.14'));
     return null;
   }
   if (!afterValue || !isRunOnBackgroundEnabled()) {

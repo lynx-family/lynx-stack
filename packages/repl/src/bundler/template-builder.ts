@@ -5,7 +5,7 @@ import { getConsoleWrapperCode } from '../console/console-wrapper.js';
 
 // Injects callDestroyLifetimeFun into lynxCoreInject.tt so that lynx-core can
 // register it on multiApps[id] and invoke it safely during card dispose.
-// Mirrors what ReactLynx does in packages/react/runtime/src/lynx/tt.ts,
+// Mirrors what ReactLynx does in packages/react/runtime/src/snapshot/lynx/appCallbacks.ts,
 // but without the React/worklet-specific teardown — for raw Element PAPI cards
 // the only meaningful cleanup is neutralizing stale event handlers.
 function getBackgroundLifecycleCode(): string {

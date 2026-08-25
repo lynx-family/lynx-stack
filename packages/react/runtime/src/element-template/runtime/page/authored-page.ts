@@ -8,6 +8,7 @@ import { useLayoutEffect } from 'preact/hooks';
 import { useRef } from '@lynx-js/react/hooks';
 
 import { __root } from './root-instance.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 
 export type AuthoredPageAttributes = Record<string, unknown> | null;
 
@@ -35,7 +36,7 @@ export const __ElementTemplatePage: FunctionalComponent<ElementTemplatePageProps
     useLayoutEffect(() => {
       if (__DEV__) {
         if (mountedAuthoredPageLifetimes.size > 0) {
-          lynx.reportError(new Error('Attempt to render more than one `<page />`, which is not supported.'));
+          getPageLynx().reportError(new Error('Attempt to render more than one `<page />`, which is not supported.'));
         }
         mountedAuthoredPageLifetimes.add(lifetime.current);
       }

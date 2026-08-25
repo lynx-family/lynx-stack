@@ -11,6 +11,7 @@ import {
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from './render-scope.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import {
@@ -144,7 +145,7 @@ function flushElementTemplateCommitChanges(): void {
       throw error;
     }
 
-    lynx.getCoreContext().dispatchEvent(updateEvent);
+    getPageLynx().getCoreContext().dispatchEvent(updateEvent);
   }
   // When native ops exist, patch first so a newly attached ref observes the
   // committed native state. Ref-only commits still flush through this path.

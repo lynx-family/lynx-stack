@@ -12,6 +12,7 @@ import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
 import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
 import { isRuntimeDestroyed } from '../runtime-destroy.js';
+import { getPageLynx } from '../page-lynx.js';
 
 interface RunOnMainThreadOptions {
   shouldDispatchRunOnMainThreadDirectly: () => boolean;
@@ -77,5 +78,5 @@ function prepareMainThreadFunctionCtx(worklet: unknown): void {
 }
 
 function dispatchRunOnMainThreadEvent(data: RunWorkletCtxData): void {
-  dispatchReloadScopedEvent(lynx.getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
+  dispatchReloadScopedEvent(getPageLynx().getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
 }

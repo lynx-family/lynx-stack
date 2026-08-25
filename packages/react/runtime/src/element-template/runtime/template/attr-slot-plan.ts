@@ -5,6 +5,7 @@
 import { prepareMTEventCtxForNative } from './main-thread-event-ctx.js';
 import { prepareMTRefForNative } from './main-thread-ref-ctx.js';
 import { isMainThreadFunction } from '../../../core/main-thread-function.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { getEventValue } from '../../prop-adapters/event-value.js';
 import { prepareGestureForNative } from '../../prop-adapters/gesture.js';
 import type { GestureSlotValue } from '../../prop-adapters/gesture.js';
@@ -116,7 +117,7 @@ export function adaptMTEventAttrSlot(
   }
   if (!isMainThreadFunction(value)) {
     if (__DEV__) {
-      lynx.reportError(
+      getPageLynx().reportError(
         new Error(`ElementTemplate main-thread event slot ${handleId}:${attrSlotIndex} expects a worklet ctx object.`),
       );
     }

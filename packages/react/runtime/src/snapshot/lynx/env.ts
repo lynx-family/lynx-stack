@@ -2,31 +2,32 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createProcessData } from '../../core/lynx-data-processors.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import type { DataProcessorDefinition } from '../../lynx-api.js';
 
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
-    const { initData, updateData } = lynx.getApp()._params;
-    lynx.__initData = { ...initData, ...updateData };
-    lynx.registerDataProcessors = function() {};
+    const { initData, updateData } = getPageLynx().getApp()._params;
+    getPageLynx().__initData = { ...initData, ...updateData };
+    getPageLynx().registerDataProcessors = function() {};
   }
 
   if (__LEPUS__) {
-    lynx.__initData = {
+    getPageLynx().__initData = {
       /* available only in renderPage */
     };
     // @ts-expect-error no type for lynx.SystemInfo
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    globalThis.SystemInfo = lynx.SystemInfo ?? {};
+    globalThis.SystemInfo = getPageLynx().SystemInfo ?? {};
 
-    lynx.reportError = function(e: Error | string) {
+    getPageLynx().reportError = function(e: Error | string) {
       const error = e instanceof Error ? e : new Error(JSON.stringify(e));
       _ReportError(error, {
         errorCode: 1101, // ErrCode::LYNX_ERROR_CODE_LEPUS in Lynx/base/debug/error_code.h
       });
     };
 
-    lynx.triggerGlobalEventFromLepus = function(
+    getPageLynx().triggerGlobalEventFromLepus = function(
       eventName: string,
       params: any,
     ) {
@@ -46,13 +47,13 @@ export function setupLynxEnv(): void {
       }
     }
 
-    lynx.registerDataProcessors = function(
+    getPageLynx().registerDataProcessors = function(
       dataProcessorDefinition?: DataProcessorDefinition,
     ) {
       globalThis.processData = createProcessData(dataProcessorDefinition);
     };
 
     // register empty DataProcessors to make sure `globalThis.processData` is set
-    lynx.registerDataProcessors();
+    getPageLynx().registerDataProcessors();
   }
 }

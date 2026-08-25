@@ -5,6 +5,7 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './core/hooks/react.js';
 
+import { getPageLynx } from './core/page-lynx.js';
 import { document, setupBackgroundDocument } from './document.js';
 import { setupComponentStack } from './shared/component-stack.js';
 import { isProfiling } from './shared/profile.js';
@@ -15,12 +16,12 @@ import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';
 import { replaceCommitHook } from './snapshot/lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './snapshot/lifecycle/patch/error.js';
 import { injectUpdateMainThread } from './snapshot/lifecycle/patch/updateMainThread.js';
+import { registerAppCallbacks } from './snapshot/lynx/appCallbacks.js';
 import { injectCalledByNative } from './snapshot/lynx/calledByNative.js';
 import { setupLynxEnv } from './snapshot/lynx/env.js';
 import { injectLepusMethods } from './snapshot/lynx/injectLepusMethods.js';
 import { initTimingAPI } from './snapshot/lynx/performance.js';
 import { injectPrepareLazyBundleMTS } from './snapshot/lynx/prepareLazyBundleMTS.js';
-import { injectTt } from './snapshot/lynx/tt.js';
 import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
 import { lynxQueueMicrotask } from './utils.js';
 
@@ -69,12 +70,13 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
   initElementPAPICallAlog();
 }
 
-function initBackgroundRuntime(): void {
+export function initBackgroundRuntime(): void {
+  registerAppCallbacks(getPageLynx());
+
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
   setupBackgroundDocument();
-  injectTt();
   addCtxNotFoundEventListener();
 
   if (process.env['NODE_ENV'] === 'test') {}
@@ -88,10 +90,14 @@ function initBackgroundRuntime(): void {
       initProfileHook();
     }
   }
+
+  setupLynxEnv();
 }
 
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-  initBackgroundRuntime();
+  if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
+    initBackgroundRuntime();
+  }
+} else {
+  setupLynxEnv();
 }
-
-setupLynxEnv();

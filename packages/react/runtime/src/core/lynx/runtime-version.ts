@@ -1,11 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getPageLynx } from '../page-lynx.js';
 
 export const sRuntimeVersion: symbol = Symbol.for('__REACT_LYNX_RUNTIME_VERSION__');
 
 function getTarget(): typeof globalThis & Record<symbol, unknown> {
-  return (__LEPUS__ ? globalThis : lynx) as typeof globalThis & Record<symbol, unknown>;
+  return (__LEPUS__ ? globalThis : getPageLynx()) as typeof globalThis & Record<symbol, unknown>;
 }
 
 /**

@@ -20,6 +20,7 @@ export const {
   createElement,
   createPortal,
   createRef,
+  createRoot,
   defineMainThreadObjectType,
   forwardRef,
   isValidElement,

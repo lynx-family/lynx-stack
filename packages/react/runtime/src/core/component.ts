@@ -9,6 +9,7 @@ import { Component } from 'preact';
 import { globalCommitContext } from './commit-context.js';
 import { PerfSpecificKey, markTimingLegacy } from './performance.js';
 import { NEXT_STATE } from '../shared/render-constants.js';
+import { getPageLynx } from './page-lynx.js';
 
 interface ReactAppInstance {
   GlobalEventEmitter: unknown;
@@ -31,7 +32,7 @@ const OriginalSetStateKey = '__reactLynxOriginalSetState';
 
 function reportRefDeprecationError(fnName: string, newFnName: string) {
   if (__DEV__ && !__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(
         `${fnName} is deprecated and has different behavior in ReactLynx 3.0, please use ref or ${newFnName} instead.`,
       ),
@@ -40,15 +41,15 @@ function reportRefDeprecationError(fnName: string, newFnName: string) {
 }
 
 function getReactAppInstance(): ReactAppInstance {
-  return lynx.getApp() as unknown as ReactAppInstance;
+  return getPageLynx().getApp() as unknown as ReactAppInstance;
 }
 
 function getLegacyNativeApp(): LegacyNativeApp {
-  return (lynx.getApp() as any)._nativeApp;
+  return (getPageLynx().getApp() as any)._nativeApp;
 }
 
 function getLegacyReactComponent(): LegacyReactComponent {
-  return (lynx.getApp() as any)._reactLynx.ReactComponent.prototype;
+  return (getPageLynx().getApp() as any)._reactLynx.ReactComponent.prototype;
 }
 
 function createLegacyComponentReceiver(
@@ -125,14 +126,14 @@ function installComponentCompat(): void {
 
   __Component.prototype.getElementById = function(id: string) {
     reportRefDeprecationError('getElementById', 'lynx.getElementById');
-    return lynx.getElementById(id);
+    return getPageLynx().getElementById(id);
   };
 
   __Component.prototype.GlobalEventEmitter = reactAppInstance.GlobalEventEmitter;
 
   __Component.prototype.createSelectorQuery = function() {
     reportRefDeprecationError('createSelectorQuery on component instance', 'lynx.createSelectorQuery');
-    return lynx.createSelectorQuery();
+    return getPageLynx().createSelectorQuery();
   };
 
   const oldSetState = __Component.prototype[OriginalSetStateKey] ?? __Component.prototype.setState;
