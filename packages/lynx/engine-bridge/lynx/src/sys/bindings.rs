@@ -21,11 +21,13 @@ opaque!(lynx_template_bundle_t);
 opaque!(lynx_load_meta_t);
 opaque!(lynx_update_meta_t);
 opaque!(lynx_view_client_t);
+opaque!(lynx_runtime_lifecycle_observer_t);
+opaque!(lynx_vsync_monitor_t);
+opaque!(lynx_native_view_t);
 opaque!(lynx_extension_module_t);
 opaque!(lynx_vsync_observer_t);
 opaque!(lynx_event_reporter_service_t);
 
-pub type NativeWindow = *mut c_void;
 pub type napi_env = *mut c_void;
 pub type napi_value = *mut c_void;
 pub type napi_status = c_int;
@@ -125,6 +127,13 @@ pub const lynx_value_function: lynx_value_type = 14;
 pub const lynx_value_function_table: lynx_value_type = 15;
 pub const lynx_value_external: lynx_value_type = 16;
 pub const lynx_value_extended: lynx_value_type = 17;
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct lynx_devtool_target_t {
+  pub session_id: i32,
+  pub url: *const c_char,
+}
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -308,6 +317,22 @@ pub type napi_module_creator = unsafe extern "C" fn(
 ) -> napi_value;
 pub type extension_module_creator =
   unsafe extern "C" fn(opaque: *mut c_void) -> *mut lynx_extension_module_t;
+pub type lynx_native_view_creator =
+  unsafe extern "C" fn(opaque: *mut c_void) -> *mut lynx_native_view_t;
+
+pub type lynx_emulate_touch_fn = unsafe extern "C" fn(
+  context: *mut c_void,
+  event_type: *const c_char,
+  x: c_int,
+  y: c_int,
+  button: *const c_char,
+  delta_x: f32,
+  delta_y: f32,
+  modifiers: c_int,
+  click_count: c_int,
+);
+pub type lynx_focus_fn = unsafe extern "C" fn(context: *mut c_void, node_id: c_int);
+pub type lynx_insert_text_fn = unsafe extern "C" fn(context: *mut c_void, text: *const c_char);
 
 pub type on_gl_make_current =
   unsafe extern "C" fn(renderer: *mut lynx_windowless_renderer_t) -> bool;

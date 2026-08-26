@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 #[cfg(not(target_os = "macos"))]
 use lynx::{run_global_ui_task, set_global_ui_task_runner, GlobalUiTaskRunner};
 use lynx::{
-  Env, HeadlessView, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost, WindowlessRenderer,
+  LynxEnv, LynxView, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost, WindowlessRenderer,
 };
 
 use crate::{Error, Result};
@@ -105,7 +105,7 @@ impl GlobalUiTaskRunner for QueueingGlobalRunner {
 }
 
 #[cfg(target_os = "macos")]
-pub(crate) fn initialize_platform(_env: &Env) -> Result<SharedTasks> {
+pub(crate) fn initialize_platform(_env: &LynxEnv) -> Result<SharedTasks> {
   static PLATFORM: OnceLock<SharedTasks> = OnceLock::new();
   Ok(
     PLATFORM
@@ -118,7 +118,7 @@ pub(crate) fn initialize_platform(_env: &Env) -> Result<SharedTasks> {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub(crate) fn initialize_platform(env: &Env) -> Result<SharedTasks> {
+pub(crate) fn initialize_platform(env: &LynxEnv) -> Result<SharedTasks> {
   static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
   match PLATFORM.get_or_init(|| {
     let tasks = SharedTasks::new();
@@ -203,11 +203,15 @@ pub(crate) struct TaskPump {
   #[cfg(not(target_os = "macos"))]
   global_tasks: SharedTasks,
   #[cfg(not(target_os = "macos"))]
-  env: Env,
+  env: &'static LynxEnv,
 }
 
 impl TaskPump {
-  pub(crate) fn new(env: Env, renderer_tasks: SharedTasks, global_tasks: SharedTasks) -> Self {
+  pub(crate) fn new(
+    env: &'static LynxEnv,
+    renderer_tasks: SharedTasks,
+    global_tasks: SharedTasks,
+  ) -> Self {
     #[cfg(target_os = "macos")]
     {
       let _ = (env, global_tasks);
@@ -225,7 +229,7 @@ impl TaskPump {
 
   pub(crate) async fn wait_for_frame(
     &self,
-    view: &HeadlessView,
+    view: &LynxView,
     frames: &FrameStore,
     after_sequence: u64,
     timeout: Duration,
@@ -243,7 +247,7 @@ impl TaskPump {
     Err(Error::Timeout("waiting for a rendered frame".into()))
   }
 
-  pub(crate) async fn pump_for(&self, view: &HeadlessView, duration: Duration) {
+  pub(crate) async fn pump_for(&self, view: &LynxView, duration: Duration) {
     let deadline = Instant::now() + duration;
     while Instant::now() < deadline {
       self.pump_once(view);
@@ -251,7 +255,7 @@ impl TaskPump {
     }
   }
 
-  pub(crate) fn pump_once(&self, view: &HeadlessView) {
+  pub(crate) fn pump_once(&self, view: &LynxView) {
     let ran_renderer_task = self.run_renderer_tasks(view.renderer());
     #[cfg(target_os = "macos")]
     let ran_task = ran_renderer_task;
@@ -259,7 +263,7 @@ impl TaskPump {
     let ran_task = {
       let mut ran_task = ran_renderer_task;
       for task in self.global_tasks.drain_ready() {
-        run_global_ui_task(&self.env, task);
+        run_global_ui_task(self.env, task);
         ran_task = true;
       }
       ran_task

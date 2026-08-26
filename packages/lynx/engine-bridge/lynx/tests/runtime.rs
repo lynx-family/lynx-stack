@@ -1,10 +1,11 @@
 use lynx::{
-  sys, Env, Error, FetchResponse, GenericResourceFetcher, HeadlessView, LynxGroup, NoopHost,
-  ResourceFetcher, ResourceRequest, ResourceType, SoftwareFrame, SoftwareRenderer,
+  sys, Error, FetchResponse, GenericResourceFetcher, LynxEnv, LynxGroup, LynxView, NoopHost,
+  ResourceFetcher, ResourceRequest, ResourceType, SoftwareFrame, SoftwareRenderer, TouchEvent,
   WindowlessRenderer,
 };
 use std::env;
 use std::ffi::c_void;
+use std::path::{Path, PathBuf};
 use std::sync::{
   atomic::{AtomicUsize, Ordering},
   Arc, Mutex, MutexGuard, OnceLock,
@@ -23,6 +24,13 @@ fn public_data_types_work_without_runtime() {
     ResourceType::Image
   );
   assert_eq!(ResourceType::from(123_456), ResourceType::Unknown(123_456));
+  assert_eq!(
+    TouchEvent::new(42),
+    TouchEvent {
+      id: 42,
+      ..TouchEvent::default()
+    }
+  );
 }
 
 #[test]
@@ -77,21 +85,24 @@ fn runtime_env_loads_and_process_settings_are_callable() {
 #[test]
 fn runtime_builds_headless_view_and_validates_bundle_errors() {
   let _guard = runtime_test_guard();
+  let lynx_core_path = install_lynx_core_for_test_process();
   let env = configured_env();
 
-  let renderer = WindowlessRenderer::software(&env, CountingSoftwareRenderer::default(), NoopHost)
+  let renderer = WindowlessRenderer::software(env, CountingSoftwareRenderer::default(), NoopHost)
     .expect("create software renderer");
-  let fetcher = GenericResourceFetcher::new(&env, StaticFetcher).expect("create resource fetcher");
+  let fetcher = GenericResourceFetcher::new(env, StaticFetcher).expect("create resource fetcher");
   drop(fetcher);
 
   let mut group =
-    LynxGroup::with_id(&env, "integration", "runtime").expect("create Lynx group with id");
+    LynxGroup::with_id(env, "integration", "runtime").expect("create Lynx group with id");
   group
-    .set_preload_js_paths(["/tmp/lynx_core.js"])
+    .set_preload_js_paths([lynx_core_path
+      .to_str()
+      .expect("configured Lynx core script path must be UTF-8")])
     .expect("set preload JS paths");
   group.set_enable_js_group_thread(false);
 
-  let view = HeadlessView::builder(env.clone(), renderer)
+  let view = LynxView::builder(env, renderer)
     .viewport(320.0, 240.0, 2.0)
     .font_scale(1.2)
     .resource_fetcher(StaticFetcher)
@@ -112,6 +123,22 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
     "global_event_name",
   );
   assert_interior_nul(view.send_touch_event("bad\0event", 1), "touch_event_name");
+  assert_interior_nul(
+    view.send_touch_event_with_coordinates("bad\0event", TouchEvent::new(1)),
+    "touch_event_name",
+  );
+  assert_interior_nul(
+    view.emulate_mouse_event("bad\0event", 0.0, 0.0, 0.0, 0.0),
+    "mouse_event_name",
+  );
+  assert_interior_nul(
+    view.inject_bubble_event("bad\0params"),
+    "bubble_event_params",
+  );
+  assert_interior_nul(
+    view.load_lynx_ml("bad\0source", "memory://page.lynxml", None),
+    "lynx_ml_source",
+  );
   view
     .update_data_json("{\"count\":1}", Some("{\"theme\":\"dark\"}"))
     .expect("update data JSON");
@@ -142,19 +169,19 @@ fn runtime_public_methods_reject_interior_nul_before_ffi() {
   let _guard = runtime_test_guard();
   let env = configured_env();
 
-  assert_interior_nul(LynxGroup::new(&env, "bad\0group").map(|_| ()), "group_name");
+  assert_interior_nul(LynxGroup::new(env, "bad\0group").map(|_| ()), "group_name");
 
-  let renderer = WindowlessRenderer::software(&env, CountingSoftwareRenderer::default(), NoopHost)
+  let renderer = WindowlessRenderer::software(env, CountingSoftwareRenderer::default(), NoopHost)
     .expect("create software renderer");
   assert_interior_nul(
-    HeadlessView::builder(env, renderer)
+    LynxView::builder(env, renderer)
       .icu_data_path("bad\0icu")
       .map(|_| ()),
     "icu_data_path",
   );
 }
 
-fn configured_env() -> Env {
+fn configured_env() -> &'static LynxEnv {
   if !has_runtime_configuration() {
     panic!(
       "runtime integration tests require LYNX_LIB_PATH or LYNX_SDK_DIR; run \
@@ -162,7 +189,70 @@ fn configured_env() -> Env {
        variables explicitly"
     );
   }
-  Env::load().expect("load configured Lynx runtime")
+  LynxEnv::load().expect("load configured Lynx runtime")
+}
+
+fn configured_lynx_core_path() -> PathBuf {
+  env::var_os("LYNX_CORE_JS_PATH")
+    .map(PathBuf::from)
+    .or_else(|| {
+      env::var_os("LYNX_SDK_DIR")
+        .map(PathBuf::from)
+        .map(|sdk_dir| sdk_dir.join("resources/lynx_core.js"))
+    })
+    .or_else(|| option_env!("LYNX_CORE_JS_PATH").map(PathBuf::from))
+    .or_else(|| {
+      option_env!("LYNX_SDK_DIR")
+        .map(PathBuf::from)
+        .map(|sdk_dir| sdk_dir.join("resources/lynx_core.js"))
+    })
+    .unwrap_or_else(|| {
+      panic!(
+        "runtime integration tests require LYNX_CORE_JS_PATH or \
+         LYNX_SDK_DIR/resources/lynx_core.js"
+      )
+    })
+}
+
+fn install_lynx_core_for_test_process() -> PathBuf {
+  let source = configured_lynx_core_path();
+  assert!(
+    source.is_file(),
+    "configured Lynx core script does not exist: {}",
+    source.display()
+  );
+
+  let executable = env::current_exe().expect("resolve runtime integration test executable");
+  let executable_dir = executable
+    .parent()
+    .expect("runtime integration test executable must have a parent directory");
+  // The desktop runtime resolves the core script relative to the executable,
+  // while Cargo keeps the verified source artifact inside the configured SDK.
+  let destination = lynx_core_process_resource_path(executable_dir);
+  if source != destination {
+    std::fs::create_dir_all(
+      destination
+        .parent()
+        .expect("Lynx core process resource must have a parent directory"),
+    )
+    .expect("create Lynx core process resource directory");
+    std::fs::copy(&source, &destination).unwrap_or_else(|error| {
+      panic!(
+        "failed to install Lynx core script from {} to {}: {error}",
+        source.display(),
+        destination.display()
+      )
+    });
+  }
+  destination
+}
+
+fn lynx_core_process_resource_path(executable_dir: &Path) -> PathBuf {
+  if cfg!(target_os = "macos") {
+    executable_dir.join("LynxResources.bundle/lynx_core.js")
+  } else {
+    executable_dir.join("lynx_core.js")
+  }
 }
 
 fn has_runtime_configuration() -> bool {

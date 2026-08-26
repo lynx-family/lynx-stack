@@ -16,7 +16,7 @@ use debug_router::DebugRouter;
 pub use error::{Error, Result};
 pub use fixture::{run_react_fixture, RunReport};
 use harness::{initialize_platform, FrameStore, QueueingHost, SharedTasks, TaskPump};
-use lynx::{Env, HeadlessView, WindowlessRenderer};
+use lynx::{LynxEnv, LynxView, WindowlessRenderer};
 use png_encoder::encode_png_async;
 pub use protocol::NodeInfo;
 use protocol::{
@@ -31,6 +31,7 @@ const DEFAULT_VIEWPORT_HEIGHT: usize = 600;
 const DEFAULT_DEVICE_PIXEL_RATIO: f32 = 1.0;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const APP_NAME: &str = "HeadlessRustTestRunner";
+const LYNX_CORE_JS_SDK_RELATIVE_PATH: &str = "resources/lynx_core.js";
 
 #[derive(Clone, Debug)]
 pub struct ConnectOptions {
@@ -79,7 +80,7 @@ pub struct BoundingBox {
 }
 
 struct LynxProcess {
-  env: Env,
+  env: &'static LynxEnv,
   debug_router: DebugRouter,
   devtool_schema: Option<String>,
   lynx_core_path: PathBuf,
@@ -164,11 +165,11 @@ impl Lynx {
 
   pub fn new_page(&self) -> Result<Page> {
     self.process.page_owner.claim()?;
-    let global_tasks = initialize_platform(&self.process.env)?;
+    let global_tasks = initialize_platform(self.process.env)?;
     let renderer_tasks = SharedTasks::new();
     let frames = FrameStore::default();
     let renderer = WindowlessRenderer::software(
-      &self.process.env,
+      self.process.env,
       frames.clone(),
       QueueingHost::new(renderer_tasks.clone()),
     )?;
@@ -176,7 +177,7 @@ impl Lynx {
       self.options.resources_path.clone(),
       self.lynx_core_path.clone(),
     );
-    let view = HeadlessView::builder(self.process.env.clone(), renderer)
+    let view = LynxView::builder(self.process.env, renderer)
       .viewport(
         self.options.width as f32,
         self.options.height as f32,
@@ -185,7 +186,7 @@ impl Lynx {
       .resource_fetcher(resources.fetcher())?
       .build()?;
     view.enter_foreground();
-    let pump = TaskPump::new(self.process.env.clone(), renderer_tasks, global_tasks);
+    let pump = TaskPump::new(self.process.env, renderer_tasks, global_tasks);
     let runtime = Rc::new(PageRuntime {
       view,
       pump,
@@ -218,8 +219,8 @@ async fn initialize_process(
   PROCESS
     .get_or_try_init(|| async {
       let lynx_core_path = install_lynx_core_resource(lynx_core_source).await?;
-      let env = Env::load()?;
-      set_icu_data_path_if_available(&env)?;
+      let env = LynxEnv::load()?;
+      set_icu_data_path_if_available(env)?;
       let app_name = format!("{APP_NAME}-{}", std::process::id());
 
       env.set_devtool_app_info("App", &app_name)?;
@@ -253,7 +254,7 @@ async fn initialize_process(
 }
 
 struct PageRuntime {
-  view: HeadlessView,
+  view: LynxView,
   pump: TaskPump,
   frames: FrameStore,
   debug_router: DebugRouter,
@@ -338,6 +339,7 @@ impl Page {
   ) -> Result<()> {
     let timeout = options.timeout.unwrap_or(self.runtime.timeout);
     let (url, bytes) = self.runtime.resources.read_template(input).await?;
+    validate_navigation_options(&url, &options)?;
     let session_lock = self.runtime.session_locks.for_url(&url);
     let _session_write_guard = if attach_dom {
       Some(Arc::clone(&session_lock).write_owned().await)
@@ -361,17 +363,28 @@ impl Page {
       HashSet::new()
     };
     self.runtime.resources.set_base_url(&url);
-    let global_props = options
-      .global_props_json
-      .unwrap_or_else(|| self.default_global_props_json());
     let previous_sequence = self.runtime.frames.sequence();
 
-    self.runtime.view.load_template_bytes_with_global_props(
-      &url,
-      &bytes,
-      options.initial_data_json.as_deref().or(Some("{}")),
-      Some(&global_props),
-    )?;
+    let initial_data_json = options.initial_data_json.as_deref().or(Some("{}"));
+    if is_lynx_ml_url(&url) {
+      let source = decode_lynx_ml_source(&url, &bytes)?;
+      self
+        .runtime
+        .view
+        .load_lynx_ml(source, &url, initial_data_json)?;
+    } else {
+      let global_props = options
+        .global_props_json
+        .as_deref()
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| self.default_global_props_json());
+      self.runtime.view.load_template_bytes_with_global_props(
+        &url,
+        &bytes,
+        initial_data_json,
+        Some(&global_props),
+      )?;
+    }
     self.runtime.view.enter_foreground();
     self.runtime.view.set_frame(
       0.0,
@@ -671,9 +684,37 @@ impl ElementNode {
 }
 
 fn resolve_lynx_core_source(configured_path: Option<&Path>) -> Option<PathBuf> {
+  select_lynx_core_source(
+    configured_path.map(PathBuf::from),
+    std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from),
+    std::env::var_os("LYNX_SDK_DIR").map(PathBuf::from),
+    option_env!("LYNX_CORE_JS_PATH").map(PathBuf::from),
+    option_env!("LYNX_SDK_DIR").map(PathBuf::from),
+  )
+}
+
+fn select_lynx_core_source(
+  configured_path: Option<PathBuf>,
+  runtime_core_path: Option<PathBuf>,
+  runtime_sdk_dir: Option<PathBuf>,
+  build_core_path: Option<PathBuf>,
+  build_sdk_dir: Option<PathBuf>,
+) -> Option<PathBuf> {
   configured_path
+    .or(runtime_core_path)
+    .or_else(|| runtime_sdk_dir.map(lynx_core_path_in_sdk))
+    .or(build_core_path)
+    .or_else(|| build_sdk_dir.map(lynx_core_path_in_sdk))
+}
+
+fn lynx_core_path_in_sdk(sdk_dir: PathBuf) -> PathBuf {
+  sdk_dir.join(LYNX_CORE_JS_SDK_RELATIVE_PATH)
+}
+
+fn resolve_lynx_sdk_dir() -> Option<PathBuf> {
+  std::env::var_os("LYNX_SDK_DIR")
     .map(PathBuf::from)
-    .or_else(|| std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from))
+    .or_else(|| option_env!("LYNX_SDK_DIR").map(PathBuf::from))
 }
 
 fn ensure_compatible_lynx_core_source(
@@ -728,11 +769,11 @@ async fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
   Ok(destination)
 }
 
-fn set_icu_data_path_if_available(env: &Env) -> Result<()> {
-  let Some(sdk_dir) = std::env::var_os("LYNX_SDK_DIR") else {
+fn set_icu_data_path_if_available(env: &LynxEnv) -> Result<()> {
+  let Some(sdk_dir) = resolve_lynx_sdk_dir() else {
     return Ok(());
   };
-  let path = PathBuf::from(sdk_dir).join("data/icudtl.dat");
+  let path = sdk_dir.join("data/icudtl.dat");
   if path.is_file() {
     env.set_icu_data_path(
       path
@@ -817,6 +858,24 @@ fn final_url_component(url: &str) -> Option<&str> {
     .filter(|component| !component.is_empty())
 }
 
+fn is_lynx_ml_url(url: &str) -> bool {
+  final_url_component(url).is_some_and(|component| component.ends_with(".lynxml"))
+}
+
+fn decode_lynx_ml_source<'a>(url: &str, bytes: &'a [u8]) -> Result<&'a str> {
+  std::str::from_utf8(bytes).map_err(|source| Error::InvalidLynxMlUtf8 {
+    url: url.to_string(),
+    source,
+  })
+}
+
+fn validate_navigation_options(url: &str, options: &GotoOptions) -> Result<()> {
+  if is_lynx_ml_url(url) && options.global_props_json.is_some() {
+    return Err(Error::UnsupportedLynxMlGlobalProps);
+  }
+  Ok(())
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -874,6 +933,43 @@ mod tests {
     .unwrap_err();
     assert!(error.to_string().contains("first/lynx_core.js"));
     assert!(error.to_string().contains("second/lynx_core.js"));
+  }
+
+  #[test]
+  fn lynx_core_source_prefers_runtime_configuration_before_build_defaults() {
+    let selected = select_lynx_core_source(
+      None,
+      None,
+      Some(PathBuf::from("runtime-sdk")),
+      Some(PathBuf::from("build/lynx_core.js")),
+      Some(PathBuf::from("build-sdk")),
+    );
+    assert_eq!(
+      selected,
+      Some(PathBuf::from("runtime-sdk/resources/lynx_core.js"))
+    );
+  }
+
+  #[test]
+  fn lynx_core_source_falls_back_to_build_sdk() {
+    let selected =
+      select_lynx_core_source(None, None, None, None, Some(PathBuf::from("build-sdk")));
+    assert_eq!(
+      selected,
+      Some(PathBuf::from("build-sdk/resources/lynx_core.js"))
+    );
+  }
+
+  #[test]
+  fn explicit_lynx_core_source_wins_over_all_sdk_fallbacks() {
+    let selected = select_lynx_core_source(
+      Some(PathBuf::from("explicit/core.js")),
+      Some(PathBuf::from("runtime/core.js")),
+      Some(PathBuf::from("runtime-sdk")),
+      Some(PathBuf::from("build/core.js")),
+      Some(PathBuf::from("build-sdk")),
+    );
+    assert_eq!(selected, Some(PathBuf::from("explicit/core.js")));
   }
 
   #[test]
@@ -936,5 +1032,35 @@ mod tests {
       "file:///tmp/main.lynx.bundle",
       "main.lynx.bundle.map"
     ));
+  }
+
+  #[test]
+  fn recognizes_lynx_ml_urls_and_paths() {
+    assert!(is_lynx_ml_url("file:///tmp/counter.lynxml"));
+    assert!(is_lynx_ml_url(
+      "https://example.test/counter.lynxml?version=1#document"
+    ));
+    assert!(is_lynx_ml_url("fixtures/counter.lynxml"));
+    assert!(!is_lynx_ml_url("file:///tmp/main.lynx.bundle"));
+    assert!(!is_lynx_ml_url("file:///tmp/counter.lynxml.map"));
+  }
+
+  #[test]
+  fn rejects_global_properties_for_lynx_ml() {
+    let options = GotoOptions {
+      global_props_json: Some(r#"{"theme":"dark"}"#.into()),
+      ..GotoOptions::default()
+    };
+    let error = validate_navigation_options("file:///tmp/counter.lynxml", &options).unwrap_err();
+    assert!(matches!(error, Error::UnsupportedLynxMlGlobalProps));
+    assert!(validate_navigation_options("file:///tmp/main.lynx.bundle", &options).is_ok());
+  }
+
+  #[test]
+  fn rejects_non_utf8_lynx_ml_source() {
+    let url = "file:///tmp/counter.lynxml";
+    let error = decode_lynx_ml_source(url, &[0xff]).unwrap_err();
+    assert!(matches!(error, Error::InvalidLynxMlUtf8 { .. }));
+    assert!(error.to_string().contains(url));
   }
 }

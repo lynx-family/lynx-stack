@@ -39,9 +39,10 @@ async fn main() {
 }
 ```
 
-`judge_page` accepts `file://`, `http://`, and `https://` URLs. Local bundles
-must use an absolute `file:///...` URL; bare filesystem paths are rejected
-before model or runtime initialization.
+`judge_page` accepts compiled Lynx bundles and UTF-8 `.lynxml` source documents
+through `file://`, `http://`, and `https://` URLs. Local pages must use an
+absolute `file:///...` URL; bare filesystem paths are rejected before model or
+runtime initialization.
 
 `timeout` applies independently to connection, navigation, each natural
 language step, final screenshot capture, visual-correctness scoring, every
@@ -165,8 +166,10 @@ to compare two uploaded images without rendering a page or calling the VLM.
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional. `initialData` and `globalProps` accept JSON
 objects and are forwarded only by the HTTP server to the headless Lynx
-navigation request; `null` is treated as omitted. The Rust library's public
-`JudgePageRequest` remains unchanged.
+navigation request; `null` is treated as omitted. `initialData` also applies to
+`.lynxml` pages, but `globalProps` does not because the public LynxML load API
+does not accept global properties. The Rust library's public `JudgePageRequest`
+remains unchanged.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/judge \
@@ -279,9 +282,15 @@ Other user-configurable environment variables are:
 
 - `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
 - `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
-- `LYNX_CORE_JS_PATH`: override `lynx_core.js` when it is not colocated with the
-  executable.
-- `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime downloading.
+  Without `LYNX_CORE_JS_PATH`, an SDK also supplies
+  `resources/lynx_core.js`; Cargo downloads it there when missing.
+- `LYNX_CORE_JS_PATH`: override the `lynx_core.js` source at runtime and when
+  building a server bundle. The bundled destination remains named
+  `lynx_core.js`, so a compatible source file may use a different filename.
+- `LYNX_CORE_JS_URL` and `LYNX_CORE_JS_SHA256`: use and verify a custom
+  build-time core-script download.
+- `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime and core-script
+  downloading.
 - `LYNX_RUNTIME_URL` and `LYNX_RUNTIME_SHA256`: use and verify a custom
   build-time runtime download.
 - `LYNX_SKIP_ADHOC_SIGN`: skip build-time ad-hoc signing on macOS.

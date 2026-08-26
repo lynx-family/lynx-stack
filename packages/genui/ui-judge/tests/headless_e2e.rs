@@ -28,10 +28,6 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
     bundle.display()
   );
 
-  let previous_lynx_core = std::env::var_os("LYNX_CORE_JS_PATH");
-  // The runner owns this fixture, but its generic `Lynx::connect` API still
-  // requires callers to select the bundled core through options or this env.
-  std::env::set_var("LYNX_CORE_JS_PATH", fixture_lynx_core());
   let result = judge_page(JudgePageRequest {
     include_geqi: false,
     reference: None,
@@ -43,7 +39,6 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
     url: fixture_url(&bundle),
   })
   .await;
-  restore_env("LYNX_CORE_JS_PATH", previous_lynx_core);
 
   assert!(
     result.error.is_none(),
@@ -73,23 +68,10 @@ fn fixture_bundle() -> PathBuf {
   Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/react/.generated/main.lynx.bundle")
 }
 
-fn fixture_lynx_core() -> PathBuf {
-  Path::new(env!("CARGO_MANIFEST_DIR"))
-    .join("../../lynx/headless-rust-test-runner/fixtures/react/lynx_core.js")
-}
-
 fn fixture_url(bundle: &Path) -> String {
   format!("file://{}", bundle.display())
 }
 
 fn real_model_credentials_configured() -> bool {
   std::env::var("UI_JUDGE_API_KEY").is_ok_and(|value| !value.trim().is_empty())
-}
-
-fn restore_env(name: &str, value: Option<std::ffi::OsString>) {
-  if let Some(value) = value {
-    std::env::set_var(name, value);
-  } else {
-    std::env::remove_var(name);
-  }
 }

@@ -18,30 +18,35 @@ Use this workspace when you need to:
 - provide a windowless renderer callback
 - serve bundle, image, font, or other resources from Rust
 - drive Lynx tasks and input events in a non-windowed host
+- provide the rendering and DevTools primitives used by headless page capture
 
-This workspace does not build `libLynx_clay`, package a full SDK, expose
-windowed APIs such as `NativeView`, or provide CLI/example binaries.
+This workspace does not build `libLynx_clay`, package a full SDK, implement
+platform-native view objects, or provide CLI/example binaries. It does expose
+the public C API hooks needed to register a host-provided native-view factory.
 
 ## Layout
 
 - `lynx/` contains the Rust library crate and Cargo workspace member.
 - `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
 - `tools/runtime_build.rs` is included by package `build.rs` files so runtime
-  setup, download, and ad-hoc signing stay consistent.
+  and `lynx_core.js` downloads, verification, and runtime ad-hoc signing stay
+  consistent.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
 
 ## How the bridge works
 
 The bridge follows this runtime path:
 
-1. `Env::load()` finds and opens `libLynx_clay` from `LYNX_LIB_PATH` or
+1. `LynxEnv::load()` initializes the process-wide environment and opens
+   `libLynx_clay` from `LYNX_LIB_PATH` or
    `LYNX_SDK_DIR`.
-2. `lynx::sys::LoadedLibrary` resolves the required C ABI symbols.
+2. `lynx::sys::LoadedLibrary` resolves the C ABI symbols used by the bridge's
+   supported capabilities.
 3. `WindowlessRenderer` and `GenericResourceFetcher` register Rust callbacks
    with the runtime.
 4. `HeadlessViewBuilder` binds the renderer, resource fetcher, optional
    `LynxGroup`, viewport metrics, ICU path, and module registrations.
-5. `HeadlessView` owns the runtime view and exposes template loading, data
+5. `LynxView` owns the runtime view and exposes template loading, data
    updates, global events, viewport changes, and lifecycle methods.
 
 See `docs/architecture.md` for the module walkthrough and CI workflow.
@@ -50,8 +55,8 @@ See `docs/architecture.md` for the module walkthrough and CI workflow.
 
 Cargo builds prepare a default runtime for supported targets when neither
 `LYNX_LIB_PATH` nor `LYNX_SDK_DIR` is set. To use your own runtime, set one of
-these environment variables before building or before calling `Env::load()` from
-a non-Cargo host:
+these environment variables before building or before calling
+`LynxEnv::load()` from a non-Cargo host:
 
 ```sh
 export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib # or libLynx_clay.so
@@ -64,22 +69,50 @@ the loader checks one canonical path for the current platform:
 - `$LYNX_SDK_DIR/lib/libLynx_clay.dylib` on macOS
 - `$LYNX_SDK_DIR/lib/libLynx_clay.so` on Linux
 
-The loaded runtime must export the `lynx_rust_*` shim symbols, such as
-`lynx_rust_view_set_frame`. These symbols keep the Rust ABI narrow while the
-existing C++ exports keep reference-parameter signatures. The software
-windowless path also uses `lynx_rust_view_set_use_texture_backend` to switch
-Clay image resources away from the texture backend before loading templates.
+The complete `public/capi/*.h` header tree is the source of truth for the
+runtime ABI. Do not infer the SDK surface from `lynx_view_capi.h` alone: view
+creation, windowless rendering, resources, load metadata, and DevTools are
+declared across separate headers. The bridge uses those public `lynx_*` exports
+directly and does not require private `lynx_rust_*` shim symbols.
 
-When Cargo downloads a runtime, it stores the files under
-`target/lynx-engine-bridge-sdk` and injects `LYNX_SDK_DIR` for tests. Existing
-non-empty runtime files are reused when they match the current runtime URL. The
-default artifacts are available for macOS arm64 and Linux x86_64.
+`LoadedLibrary` is a capability-focused symbol table, not a mirror of every SDK
+subsystem. It eagerly resolves only the exports required by the bridge's
+implemented and exercised workflows, including the primitives used by the
+headless page-capture and DevTools paths. A newly documented export remains
+optional when the repository's default runtime does not provide it. Calling
+the corresponding safe method then returns `UnsupportedRuntimeApi` without
+preventing other runtime capabilities from loading.
+
+Some public functions declare numeric inputs as C++ `const float&` parameters
+even though they have C linkage. The raw Rust ABI binds those parameters as
+pointers, and the safe API passes stable addresses.
+
+When Cargo downloads Lynx artifacts, it stores the runtime and `lynx_core.js`
+under one SDK directory and injects their paths for tests. The default directory
+is `target/lynx-engine-bridge-sdk`. When `LYNX_SDK_DIR` is set and
+`LYNX_CORE_JS_PATH` is not, Cargo first checks
+`$LYNX_SDK_DIR/resources/lynx_core.js` and downloads a missing core script into
+that location. Existing files in an explicitly configured SDK are treated as
+SDK inputs. Existing automatically downloaded artifacts are reused when their
+URL and SHA-256 markers match the configured values. The default artifacts are
+available for macOS arm64 and Linux x86_64.
+
+Core-script resolution uses this priority order: `LYNX_CORE_JS_PATH`, then
+`$LYNX_SDK_DIR/resources/lynx_core.js`, then the corresponding paths injected
+by Cargo's default SDK preparation. Runtime environment variables take
+precedence over build-time defaults.
 
 Use these build-time variables to change the default behavior:
 
-- `LYNX_DOWNLOAD_RUNTIME=0` disables the automatic download.
+- `LYNX_DOWNLOAD_RUNTIME=0` disables automatic runtime and `lynx_core.js`
+  downloads.
 - `LYNX_RUNTIME_URL` downloads a different runtime artifact.
 - `LYNX_RUNTIME_SHA256` is required when `LYNX_RUNTIME_URL` points to a
+  non-default artifact.
+- `LYNX_CORE_JS_PATH` uses a local core script instead of the SDK core script
+  or a download.
+- `LYNX_CORE_JS_URL` downloads a different core script.
+- `LYNX_CORE_JS_SHA256` is required when `LYNX_CORE_JS_URL` points to a
   non-default artifact.
 - `LYNX_SKIP_ADHOC_SIGN=1` skips ad-hoc signing on macOS.
 
@@ -137,10 +170,12 @@ when no runtime is available, so keep `build.rs` and CI in sync.
 Set `LYNX_LIB_PATH` to the exact runtime library path, or set `LYNX_SDK_DIR` to a
 folder that contains the runtime in `lib/`.
 
-`failed to load symbol lynx_rust_*`
+`failed to load symbol lynx_*`
 
-The runtime was built without the Rust-friendly shim exports. Use a runtime
-artifact that includes those symbols.
+The runtime does not match the required public C API. Use an artifact built
+against a compatible set of Lynx embedder headers. If a safe method instead
+returns `UnsupportedRuntimeApi`, that method requires a newer additive runtime
+API while the rest of the loaded runtime remains usable.
 
 `libepoxy.so.0: cannot open shared object file`
 

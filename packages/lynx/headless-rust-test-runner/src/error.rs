@@ -14,9 +14,21 @@ pub enum Error {
   Json(#[from] serde_json::Error),
   #[error("URL error: {0}")]
   Url(#[from] url::ParseError),
+  #[error("LynxML source at {url} is not valid UTF-8: {source}")]
+  InvalidLynxMlUtf8 {
+    url: String,
+    #[source]
+    source: std::str::Utf8Error,
+  },
+  #[error(
+    "GotoOptions::global_props_json is not supported for LynxML; the public LynxML load API does not accept global properties"
+  )]
+  UnsupportedLynxMlGlobalProps,
   #[error("PNG encoding error: {0}")]
   Png(#[from] png::EncodingError),
-  #[error("missing lynx_core.js; set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH")]
+  #[error(
+    "missing lynx_core.js; rebuild with automatic artifact downloads enabled, set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH, or place it at $LYNX_SDK_DIR/resources/lynx_core.js"
+  )]
   MissingLynxCore,
   #[error("Lynx core resource does not exist: {0}")]
   LynxCoreNotFound(PathBuf),

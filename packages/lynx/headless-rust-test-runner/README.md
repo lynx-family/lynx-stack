@@ -6,9 +6,10 @@ windowless software-rendering harness with DOM inspection and interaction APIs:
 
 - `Lynx::connect` initializes the process-wide runtime and local DebugRouter.
 - `Lynx::new_page` creates a windowless `Page`.
-- `Page::goto`, `content`, and `locator` load and inspect Lynx bundles through
-  CDP.
-- `Page::goto_for_screenshot` loads a bundle without attaching a DOM session.
+- `Page::goto`, `content`, and `locator` load and inspect compiled Lynx bundles
+  or UTF-8 `.lynxml` source documents through CDP.
+- `Page::goto_for_screenshot` loads either format without attaching a DOM
+  session.
 - `ElementNode` reads attributes and computed styles and dispatches taps by
   native node id, without absolute coordinates or hit-testing.
 - `Page::screenshot` captures the software renderer directly as PNG.
@@ -37,6 +38,14 @@ let png = page.screenshot(ScreenshotOptions::default()).await?;
 # Ok::<(), lynx_headless_rust_test_runner::Error>(())
 ```
 
+Navigation chooses the native load API from the final URL path. Inputs ending
+in `.lynxml` are decoded as UTF-8 and loaded as LynxML source; all other inputs
+keep the compiled-template byte path. File paths, `file://` URLs, and HTTP(S)
+URLs are supported. `GotoOptions::initial_data_json` applies to both formats;
+`global_props_json` applies only to compiled templates. Passing it for LynxML
+returns an error because the public LynxML load API does not accept global
+properties.
+
 `Lynx` is cloneable, `Send`, and `Sync`. Native pages are not. The first
 `new_page()` call selects the native owner thread; every later page must be
 created, used, and dropped on that thread. Run those futures on a Tokio
@@ -47,10 +56,14 @@ for a new rendered frame but skips DebugRouter session discovery and DOM setup.
 PNG encoding runs on the Rayon pool. Use regular `goto` when the caller also
 needs `content`, `locator`, or other DOM APIs.
 
-The runtime needs `lynx_core.js` beside the executable on Linux or inside
-`LynxResources.bundle` beside it on macOS. Set `lynx_core_path` or
-`LYNX_CORE_JS_PATH`; the runner installs the file and also serves
-`ResourceType::LynxCoreJs` requests from that installed path.
+The runner's `build.rs` downloads the default `lynx_core.js` with SHA-256
+verification. At runtime it installs the script beside the executable on Linux
+or inside `LynxResources.bundle` beside it on macOS and serves
+`ResourceType::LynxCoreJs` requests from that installed path. Set
+`lynx_core_path` or `LYNX_CORE_JS_PATH` to use a local override. Otherwise the
+runner checks `$LYNX_SDK_DIR/resources/lynx_core.js`; its build script downloads
+a missing script into that SDK location. Use `LYNX_CORE_JS_URL` with
+`LYNX_CORE_JS_SHA256` for a different build-time download.
 
 ## React fixture test
 
