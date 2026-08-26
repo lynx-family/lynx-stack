@@ -345,6 +345,16 @@ export interface PluginReactLynxOptions {
   experimental_isLazyBundle?: boolean
 
   /**
+   * Entry names to build as background-only runtimes, emitting only the
+   * background bundle.
+   *
+   * @defaultValue `[]`
+   *
+   * @alpha
+   */
+  experimental_backgroundOnlyEntries?: string[]
+
+  /**
    * Share module instances across the cards of a LynxGroup. Each page then
    * renders through `createRoot(lynx)` instead of `root`.
    *
@@ -426,6 +436,7 @@ export function pluginReactLynx(
     globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
+    experimental_backgroundOnlyEntries: [],
     experimental_transformBuiltinAttributeNames: false,
     experimental_lynxGroupModuleSharing: false,
     experimental_useElementTemplate: false,
