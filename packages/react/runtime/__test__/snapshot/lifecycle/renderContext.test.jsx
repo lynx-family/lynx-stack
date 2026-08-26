@@ -17,7 +17,7 @@ describe('createRenderContext', () => {
     createRenderContext({ lynx: { getApp: () => app } });
 
     expect(app.OnLifecycleEvent).toBeTypeOf('function');
-    expect(app.publishEvent).toBeTypeOf('function');
+    expect(app.__reactHandlers).toBeTypeOf('object');
   });
 
   it('gives each page its own callbacks', () => {
@@ -27,7 +27,7 @@ describe('createRenderContext', () => {
     createRenderContext({ lynx: { getApp: () => appB } });
 
     expect(appA.__reactHandlers).not.toBe(appB.__reactHandlers);
-    expect(appB.publishEvent).toBeTypeOf('function');
+    expect(appB.OnLifecycleEvent).toBeTypeOf('function');
   });
 
   it('returns a root that renders', () => {

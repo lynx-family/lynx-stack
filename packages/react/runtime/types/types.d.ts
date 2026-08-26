@@ -105,6 +105,12 @@ declare global {
     eventName: string,
     event: Record<string, any> | string | undefined,
   ): void;
+  declare function __AddEventListener(
+    e: FiberElement,
+    eventName: string,
+    callback: (event: any) => void,
+    options: { closure_type?: number; bind_type?: number },
+  ): void;
   declare function __SetID(e: FiberElement, id: string | undefined | null): void;
   declare function __GetElementUniqueID(e: FiberElement): number;
   declare function __GetTag(e: FiberElement): string;
@@ -229,7 +235,10 @@ declare global {
      * app object so each page keeps its own set even when the runtime module
      * is shared across a group.
      */
-    __reactHandlers?: Record<string, unknown>;
+    __reactHandlers?: {
+      publishEvent?: (handlerName: string, data: any) => void;
+      [key: string]: unknown;
+    };
     __reactRegistered?: boolean;
     getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
     GlobalEventEmitter: EventEmitter;

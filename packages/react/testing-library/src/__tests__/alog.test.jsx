@@ -94,46 +94,40 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #14: __AppendElement(PAGE#0, VIEW#1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #15: __AddEvent(TEXT#2, "bindEvent", "tap", "-2:0:")",
+          "[ReactLynxDebug] FiberElement API call #15: __CreateRawText("") => #text#6",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #16: __AddEvent(TEXT#2, "catchEvent", "focus", "-2:1:")",
+          "[ReactLynxDebug] FiberElement API call #16: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #17: __CreateRawText("") => #text#6",
+          "[ReactLynxDebug] FiberElement API call #17: __AppendElement(WRAPPER#4, #text#6)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #18: __SetAttribute(#text#6, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #18: __CreateView(0) => VIEW#7",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #19: __AppendElement(WRAPPER#4, #text#6)",
+          "[ReactLynxDebug] FiberElement API call #19: __CreateRawText("Class Component") => #text#8",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #20: __CreateView(0) => VIEW#7",
+          "[ReactLynxDebug] FiberElement API call #20: __AppendElement(VIEW#7, #text#8)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #21: __CreateRawText("Class Component") => #text#8",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #22: __AppendElement(VIEW#7, #text#8)",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #23: __AppendElement(WRAPPER#5, VIEW#7)",
+          "[ReactLynxDebug] FiberElement API call #21: __AppendElement(WRAPPER#5, VIEW#7)",
         ],
         [
           "[MainThread Component Render] name: ClassComponent",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
+          "[ReactLynxDebug] FiberElement API call #22: __CreateView(0) => VIEW#9",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Function Component") => #text#10",
+          "[ReactLynxDebug] FiberElement API call #23: __CreateRawText("Function Component") => #text#10",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #26: __AppendElement(VIEW#9, #text#10)",
+          "[ReactLynxDebug] FiberElement API call #24: __AppendElement(VIEW#9, #text#10)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#5, VIEW#9)",
+          "[ReactLynxDebug] FiberElement API call #25: __AppendElement(WRAPPER#5, VIEW#9)",
         ],
         [
           "[MainThread Component Render] name: FunctionComponent",
@@ -142,7 +136,7 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","firstScreenEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #26: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","firstScreenEventIdSwap":{}}])",
         ],
         [
           "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
@@ -247,7 +241,7 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #29: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #27: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
         [
           "[ReactLynxDebug] BTS received event:
@@ -310,10 +304,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #28: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #29: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -362,46 +356,40 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #14: __AppendElement(PAGE#0, VIEW#1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #15: __AddEvent(TEXT#2, "bindEvent", "tap", "-2:0:")",
+          "[ReactLynxDebug] FiberElement API call #15: __CreateRawText("") => #text#6",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #16: __AddEvent(TEXT#2, "catchEvent", "focus", "-2:1:")",
+          "[ReactLynxDebug] FiberElement API call #16: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #17: __CreateRawText("") => #text#6",
+          "[ReactLynxDebug] FiberElement API call #17: __AppendElement(WRAPPER#4, #text#6)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #18: __SetAttribute(#text#6, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #18: __CreateView(0) => VIEW#7",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #19: __AppendElement(WRAPPER#4, #text#6)",
+          "[ReactLynxDebug] FiberElement API call #19: __CreateRawText("Class Component") => #text#8",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #20: __CreateView(0) => VIEW#7",
+          "[ReactLynxDebug] FiberElement API call #20: __AppendElement(VIEW#7, #text#8)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #21: __CreateRawText("Class Component") => #text#8",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #22: __AppendElement(VIEW#7, #text#8)",
-        ],
-        [
-          "[ReactLynxDebug] FiberElement API call #23: __AppendElement(WRAPPER#5, VIEW#7)",
+          "[ReactLynxDebug] FiberElement API call #21: __AppendElement(WRAPPER#5, VIEW#7)",
         ],
         [
           "[MainThread Component Render] name: ClassComponent",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #24: __CreateView(0) => VIEW#9",
+          "[ReactLynxDebug] FiberElement API call #22: __CreateView(0) => VIEW#9",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #25: __CreateRawText("Function Component") => #text#10",
+          "[ReactLynxDebug] FiberElement API call #23: __CreateRawText("Function Component") => #text#10",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #26: __AppendElement(VIEW#9, #text#10)",
+          "[ReactLynxDebug] FiberElement API call #24: __AppendElement(VIEW#9, #text#10)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #27: __AppendElement(WRAPPER#5, VIEW#9)",
+          "[ReactLynxDebug] FiberElement API call #25: __AppendElement(WRAPPER#5, VIEW#9)",
         ],
         [
           "[MainThread Component Render] name: FunctionComponent",
@@ -410,7 +398,7 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","firstScreenEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #26: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","firstScreenEventIdSwap":{}}])",
         ],
         [
           "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
@@ -515,7 +503,7 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #29: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #27: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
         [
           "[ReactLynxDebug] BTS received event:
@@ -578,10 +566,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #28: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #29: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -638,10 +626,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -690,10 +678,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 0)",
+          "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -750,10 +738,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#6, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);
@@ -802,10 +790,10 @@ describe('alog', () => {
       }",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#6, "text", 1)",
+          "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
         ],
       ]
     `);

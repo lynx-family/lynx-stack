@@ -46,13 +46,30 @@ export function registerAppEventHandlers(
   app.__reactRegistered = true;
 
   app.OnLifecycleEvent = (args: [string, unknown]) => handlers.OnLifecycleEvent?.(args);
-  app.publishEvent = (name: string, data: unknown) => handlers.publishEvent?.(name, data);
-  app.publicComponentEvent = (id: string, name: string, data: unknown) =>
-    handlers.publicComponentEvent?.(id, name, data);
   app.updateGlobalProps = (data: Record<string, unknown>) => handlers.updateGlobalProps?.(data);
   app.onAppReload = (...args: unknown[]) => handlers.onAppReload?.(...args);
   app.updateCardData = (...args: unknown[]) => handlers.updateCardData?.(...args);
   app.callDestroyLifetimeFun = () => handlers.callDestroyLifetimeFun?.();
+
+  // Element events are produced by the main thread and arrive as message
+  // events. `publishEvent` and `publicComponentEvent` are deliberately left off
+  // the app object: the engine converts the same message event into a call on
+  // it, so keeping both would deliver every event twice.
+  const coreContext = (pageLynx as typeof lynx | undefined ?? lynx).getCoreContext?.();
+  if (coreContext) {
+    // Both carry [<page name or component id>, handler name, event data].
+    console.info('[PROBE] bts subscribed');
+    coreContext.addEventListener('__SendPageEvent', (event: { data: unknown }) => {
+      console.info('[PROBE] bts recv');
+      const [, handlerName, data] = event.data as [string, string, unknown];
+      handlers.publishEvent?.(handlerName, data);
+    });
+    coreContext.addEventListener('__PublishComponentEvent', (event: { data: unknown }) => {
+      const [componentId, handlerName, data] = event.data as [string, string, unknown];
+      handlers.publicComponentEvent?.(componentId, handlerName, data);
+    });
+  }
+
   app.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };

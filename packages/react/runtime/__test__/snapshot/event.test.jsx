@@ -55,9 +55,15 @@ describe('eventUpdate', () => {
       >
         <view>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:0:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -66,9 +72,15 @@ describe('eventUpdate', () => {
             />
           </text>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -110,7 +122,7 @@ describe('eventUpdate', () => {
       `);
     }
 
-    lynx.getApp().publishEvent('-2:1:', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(0);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
@@ -118,7 +130,7 @@ describe('eventUpdate', () => {
 
     const reportError = lynx.reportError;
     lynx.reportError = vi.fn();
-    lynx.getApp().publishEvent('-2:0:', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:0:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(lynx.reportError).toHaveBeenCalledTimes(1);
     expect(lynx.reportError).toHaveBeenCalledWith(
@@ -158,7 +170,19 @@ describe('eventUpdate', () => {
                 text="1"
               />
             </text>
-            <text>
+            <text
+              eventListeners={
+                {
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
+                }
+              }
+            >
               <raw-text
                 text="1"
               />
@@ -193,7 +217,19 @@ describe('eventUpdate', () => {
                 text="1"
               />
             </text>
-            <text>
+            <text
+              eventListeners={
+                {
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
+                }
+              }
+            >
               <raw-text
                 text="1"
               />
@@ -228,9 +264,15 @@ describe('eventUpdate', () => {
       >
         <view>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:0:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -239,9 +281,15 @@ describe('eventUpdate', () => {
             />
           </text>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -254,7 +302,7 @@ describe('eventUpdate', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynx.getApp().publishEvent('-2:1:', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(0);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
@@ -331,9 +379,15 @@ describe('eventUpdate', () => {
       >
         <view>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "3:0:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -346,7 +400,7 @@ describe('eventUpdate', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynx.getApp().publishEvent('3:0:', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('3:0:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data');
   });
@@ -374,9 +428,15 @@ describe('eventUpdate', () => {
         >
           <view>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:tap": "-2:0:",
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -385,9 +445,15 @@ describe('eventUpdate', () => {
               />
             </text>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:tap": "-2:1:",
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -421,12 +487,12 @@ describe('eventUpdate', () => {
     }
 
     globalEnvManager.switchToBackground();
-    lynx.getApp().publishEvent('-2:0:', 'data1');
+    lynx.getApp().__reactHandlers.publishEvent('-2:0:', 'data1');
     expect(handleTap2).toHaveBeenCalledTimes(0);
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data1');
 
-    lynx.getApp().publishEvent('-2:1:', 'data2');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:', 'data2');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data2');
@@ -440,12 +506,12 @@ describe('eventUpdate', () => {
     snapshotPatchApply(patch);
     globalEnvManager.switchToBackground();
 
-    lynx.getApp().publishEvent('-2:0:', 'data3');
+    lynx.getApp().__reactHandlers.publishEvent('-2:0:', 'data3');
     expect(handleTap2).toHaveBeenCalledTimes(0);
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data3');
 
-    lynx.getApp().publishEvent('-2:1:', 'data4');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:', 'data4');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data4');
@@ -474,9 +540,15 @@ describe('eventUpdate', () => {
         >
           <view>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:tap": "-2:0:",
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -518,12 +590,12 @@ describe('eventUpdate', () => {
 
     globalEnvManager.switchToBackground();
 
-    lynx.getApp().publishEvent('-2:0:', 'data1');
+    lynx.getApp().__reactHandlers.publishEvent('-2:0:', 'data1');
     expect(handleTap2).toHaveBeenCalledTimes(0);
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data1');
 
-    lynx.getApp().publishEvent('-2:1:', 'data2');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:', 'data2');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data2');
@@ -552,9 +624,15 @@ describe('eventUpdate', () => {
         >
           <view>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:tap": "-2:0:",
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -563,9 +641,15 @@ describe('eventUpdate', () => {
               />
             </text>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:tap": "-2:1:",
+                  "tap": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -623,14 +707,34 @@ describe('eventUpdate', () => {
       >
         <view>
           <text
-            event={{}}
+            eventListeners={
+              {
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
+              }
+            }
           >
             <raw-text
               text="1"
             />
           </text>
           <text
-            event={{}}
+            eventListeners={
+              {
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
+              }
+            }
           >
             <raw-text
               text="1"
@@ -696,9 +800,15 @@ describe('event in spread', () => {
               />
             </text>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:touchstart": "-2:1:bindtouchstart",
+                  "touchstart": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -741,9 +851,15 @@ describe('event in spread', () => {
               />
             </text>
             <text
-              event={
+              eventListeners={
                 {
-                  "bindEvent:touchstart": "-2:1:bindtouchstart",
+                  "touchstart": {
+                    "callback": [Function],
+                    "options": {
+                      "bind_type": 1,
+                      "closure_type": 2,
+                    },
+                  },
                 }
               }
             >
@@ -757,7 +873,7 @@ describe('event in spread', () => {
     }
 
     globalEnvManager.switchToBackground();
-    lynx.getApp().publishEvent('-2:1:bindtouchstart', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:bindtouchstart', 'data');
     expect(handleTouchStart).toHaveBeenCalledTimes(1);
     expect(handleTouchStart).toHaveBeenCalledWith('data');
     handleTouchStart.mockReset();
@@ -791,9 +907,15 @@ describe('event in spread', () => {
       >
         <view>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:0:bindtap",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -802,10 +924,22 @@ describe('event in spread', () => {
             />
           </text>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:1:bindtap",
-                "bindEvent:touchstart": "-2:1:bindtouchstart",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
+                "touchstart": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -818,15 +952,15 @@ describe('event in spread', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynx.getApp().publishEvent('-2:0:bindtap', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:0:bindtap', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data');
 
-    lynx.getApp().publishEvent('-2:1:bindtap', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:bindtap', 'data');
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
 
-    lynx.getApp().publishEvent('-2:1:bindtouchstart', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:1:bindtouchstart', 'data');
     expect(handleTouchStart).toHaveBeenCalledTimes(1);
     expect(handleTouchStart).toHaveBeenCalledWith('data');
 
@@ -865,16 +999,39 @@ describe('event in spread', () => {
       >
         <view>
           <text
-            event={{}}
+            eventListeners={
+              {
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
+              }
+            }
           >
             <raw-text
               text="1"
             />
           </text>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:touchstart": "-2:1:bindtouchstart",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
+                "touchstart": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -960,9 +1117,15 @@ describe('event in spread', () => {
       >
         <view>
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "3:0:bindtap",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -975,7 +1138,7 @@ describe('event in spread', () => {
     `);
     globalEnvManager.switchToBackground();
 
-    lynx.getApp().publishEvent('3:0:bindtap', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('3:0:bindtap', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(handleTap1).toHaveBeenCalledWith('data');
   });
@@ -1033,9 +1196,15 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 />
               </text>
               <text
-                event={
+                eventListeners={
                   {
-                    "bindEvent:touchstart": "-3:0:",
+                    "touchstart": {
+                      "callback": [Function],
+                      "options": {
+                        "bind_type": 1,
+                        "closure_type": 2,
+                      },
+                    },
                   }
                 }
               >
@@ -1066,9 +1235,15 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 />
               </text>
               <text
-                event={
+                eventListeners={
                   {
-                    "bindEvent:touchstart": "-6:0:",
+                    "touchstart": {
+                      "callback": [Function],
+                      "options": {
+                        "bind_type": 1,
+                        "closure_type": 2,
+                      },
+                    },
                   }
                 }
               >
@@ -1099,9 +1274,15 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 />
               </text>
               <text
-                event={
+                eventListeners={
                   {
-                    "bindEvent:touchstart": "-9:0:",
+                    "touchstart": {
+                      "callback": [Function],
+                      "options": {
+                        "bind_type": 1,
+                        "closure_type": 2,
+                      },
+                    },
                   }
                 }
               >
@@ -1115,9 +1296,9 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
       `);
     }
 
-    lynx.getApp().publishEvent('-3:0:', 'event 1');
-    lynx.getApp().publishEvent('-6:0:', 'event 2');
-    lynx.getApp().publishEvent('-9:0:', 'event 3');
+    lynx.getApp().__reactHandlers.publishEvent('-3:0:', 'event 1');
+    lynx.getApp().__reactHandlers.publishEvent('-6:0:', 'event 2');
+    lynx.getApp().__reactHandlers.publishEvent('-9:0:', 'event 3');
 
     // background render
     {
@@ -1232,9 +1413,15 @@ describe('call `root.render()` async', () => {
                 />
               </text>
               <text
-                event={
+                eventListeners={
                   {
-                    "bindEvent:touchstart": "-3:0:",
+                    "touchstart": {
+                      "callback": [Function],
+                      "options": {
+                        "bind_type": 1,
+                        "closure_type": 2,
+                      },
+                    },
                   }
                 }
               >
@@ -1250,7 +1437,7 @@ describe('call `root.render()` async', () => {
       __root[CHILDREN] = null;
     }
 
-    lynx.getApp().publishEvent('-3:0:', 'event 1');
+    lynx.getApp().__reactHandlers.publishEvent('-3:0:', 'event 1');
 
     // hydrate
     {
@@ -1290,5 +1477,67 @@ describe('call `root.render()` async', () => {
         ]
       `);
     }
+  });
+});
+
+describe('main-thread event forwarding', () => {
+  it('dispatches the current handler to the background thread', () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('lynx', { ...lynx, getJSContext: () => ({ dispatchEvent }) });
+
+    globalEnvManager.switchToMainThread();
+    const onTap = vi.fn();
+    const Comp = () => <text bindtap={onTap}>1</text>;
+    __root.__jsx = <Comp />;
+    renderPage();
+
+    const element = __root.__element_root.children[0];
+    const listener = elementTree.__GetEventListener(element, 'tap');
+    expect(listener.options).toEqual({ closure_type: 2, bind_type: 1 });
+
+    listener.callback({ type: 'tap' });
+    expect(dispatchEvent).toBeCalledWith({
+      type: '__SendPageEvent',
+      data: ['', '-2:0:', { type: 'tap' }],
+    });
+
+    vi.unstubAllGlobals();
+  });
+
+  it('does not dispatch once the handler is gone', () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('lynx', { ...lynx, getJSContext: () => ({ dispatchEvent }) });
+
+    globalEnvManager.switchToMainThread();
+    const Comp = ({ on }) => <text bindtap={on}>1</text>;
+    __root.__jsx = <Comp on={() => {}} />;
+    renderPage();
+
+    const element = __root.__element_root.children[0];
+    const listener = elementTree.__GetEventListener(element, 'tap');
+
+    // Simulate the handler being removed on a later render.
+    const snapshot = __root.childNodes[0];
+    snapshot.__values[0] = undefined;
+
+    listener.callback({ type: 'tap' });
+    expect(dispatchEvent).not.toBeCalled();
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe('bind type mapping', () => {
+  it('falls back to bubble for an unknown event type', async () => {
+    const { updateEvent } = await import('../../src/snapshot/snapshot/event');
+    const element = __CreateView(0);
+    const snapshot = { __id: 7, __values: ['handler'], __elements: [element] };
+
+    updateEvent(snapshot, 0, undefined, 0, 'unknown-kind', 'tap', '');
+
+    expect(elementTree.__GetEventListener(element, 'tap').options).toEqual({
+      closure_type: 2,
+      bind_type: 1,
+    });
   });
 });

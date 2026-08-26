@@ -119,9 +119,15 @@ describe('mainThread hooks', () => {
           cssId="default-entry-from-native:0"
         >
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-2:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
             react-ref--2-0={1}

@@ -137,6 +137,9 @@ export class SnapshotInstance {
   __elements?: FiberElement[] | undefined;
   __element_root?: FiberElement | undefined;
   __values?: unknown[] | undefined;
+  // Element events already bound, so an update does not register a second
+  // listener for the same one.
+  __boundEvents?: Set<string>;
   // current slot index for dynamic parts
   // only increment when inserting dynamic parts
   // when removing dynamic parts, the slot index will not change

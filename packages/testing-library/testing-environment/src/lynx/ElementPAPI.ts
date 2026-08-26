@@ -264,6 +264,52 @@ export const initElementTree = () => {
       );
     }
 
+    __AddEventListener(
+      e: LynxElement,
+      eventName: string,
+      callback: (event: unknown) => void,
+      options?: { closure_type?: number; bind_type?: number },
+    ) {
+      // `event::Event::BindType` in the engine.
+      const eventType = {
+        1: 'bindEvent',
+        2: 'capture-bind',
+        3: 'capture-catch',
+        4: 'catchEvent',
+        5: 'global-bindEvent',
+      }[options?.bind_type ?? 1] ?? 'bindEvent';
+      const key = `${eventType}:${eventName}`;
+
+      if (e.eventMap?.[key]) {
+        e.removeEventListener(key, e.eventMap[key]);
+        delete e.eventMap[key];
+      }
+
+      const listener: EventListenerOrEventListenerObject = (evt) => {
+        if (eventType === 'catchEvent' || eventType === 'capture-catch') {
+          evt.stopPropagation();
+        }
+        // The callback is a main-thread closure, so run it with the main
+        // thread's globals; anything it forwards to the background thread goes
+        // through the context proxies, which switch back on delivery.
+        const isBackground = !__MAIN_THREAD__;
+        globalThis.lynxTestingEnv.switchToMainThread();
+        try {
+          callback(evt);
+        } finally {
+          if (isBackground) {
+            globalThis.lynxTestingEnv.switchToBackgroundThread();
+          }
+        }
+      };
+
+      e.eventMap = e.eventMap ?? {};
+      e.eventMap[key] = listener;
+      e.addEventListener(key, listener, {
+        capture: eventType === 'capture-bind' || eventType === 'capture-catch',
+      });
+    }
+
     __GetEvent(e: LynxElement, eventType: string, eventName: string) {
       const jsFunction = e.eventMap?.[`${eventType}:${eventName}`];
       if (typeof jsFunction !== 'undefined') {

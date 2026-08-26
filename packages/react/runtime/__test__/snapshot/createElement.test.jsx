@@ -215,9 +215,15 @@ describe('createElement', () => {
         cssId="default-entry-from-native:0"
       >
         <view
-          event={
+          eventListeners={
             {
-              "bindEvent:tap": "-2:0:bindtap",
+              "tap": {
+                "callback": [Function],
+                "options": {
+                  "bind_type": 1,
+                  "closure_type": 2,
+                },
+              },
             }
           }
         />
@@ -233,7 +239,7 @@ describe('createElement', () => {
       lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
-    lynx.getApp().publishEvent('-2:0:bindtap', 'data');
+    lynx.getApp().__reactHandlers.publishEvent('-2:0:bindtap', 'data');
     expect(handleTap).toHaveBeenCalledTimes(1);
     expect(handleTap).toHaveBeenCalledWith('data');
   });
@@ -678,9 +684,15 @@ describe('createElement', () => {
         >
           <view
             class="a-0"
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "2:0:bindtap",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
             style={
@@ -721,9 +733,15 @@ describe('createElement', () => {
         >
           <view
             class="a-1"
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "2:0:bindtap",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
             style={

@@ -638,9 +638,15 @@ describe(`list componentAtIndex`, () => {
           item-key="key-4"
         >
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-8:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -653,9 +659,15 @@ describe(`list componentAtIndex`, () => {
           item-key="key-5"
         >
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-9:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -668,9 +680,15 @@ describe(`list componentAtIndex`, () => {
           item-key="key-2"
         >
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-6:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >
@@ -683,9 +701,15 @@ describe(`list componentAtIndex`, () => {
           item-key="key-3"
         >
           <text
-            event={
+            eventListeners={
               {
-                "bindEvent:tap": "-7:1:",
+                "tap": {
+                  "callback": [Function],
+                  "options": {
+                    "bind_type": 1,
+                    "closure_type": 2,
+                  },
+                },
               }
             }
           >

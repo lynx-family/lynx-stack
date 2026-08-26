@@ -415,9 +415,15 @@ describe('setAttribute', () => {
           />
         </text>
         <view
-          event={
+          eventListeners={
             {
-              "bindEvent:tap": ":2333:5",
+              "tap": {
+                "callback": [Function],
+                "options": {
+                  "bind_type": 1,
+                  "closure_type": 2,
+                },
+              },
             }
           }
         />

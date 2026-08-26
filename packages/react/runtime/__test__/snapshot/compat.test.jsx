@@ -110,9 +110,15 @@ describe('addComponentElement', () => {
               "a": "1",
             }
           }
-          event={
+          eventListeners={
             {
-              "bindEvent:tap": "-2:0:bindtap",
+              "tap": {
+                "callback": [Function],
+                "options": {
+                  "bind_type": 1,
+                  "closure_type": 2,
+                },
+              },
             }
           }
           id="1"
@@ -182,9 +188,15 @@ describe('addComponentElement', () => {
               "a": "1",
             }
           }
-          event={
+          eventListeners={
             {
-              "bindEvent:tap": "-2:0:bindtap",
+              "tap": {
+                "callback": [Function],
+                "options": {
+                  "bind_type": 1,
+                  "closure_type": 2,
+                },
+              },
             }
           }
           id="1"

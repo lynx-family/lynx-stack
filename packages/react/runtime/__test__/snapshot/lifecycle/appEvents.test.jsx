@@ -6,10 +6,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { registerAppEventHandlers } from '../../../src/core/app-events';
 
-function stubApp() {
+function stubApp({ withCoreContext = true } = {}) {
   const app = {};
-  vi.stubGlobal('lynx', { getApp: () => app });
-  return app;
+  const listeners = {};
+  vi.stubGlobal('lynx', {
+    getApp: () => app,
+    ...(withCoreContext
+      ? {
+        getCoreContext: () => ({
+          addEventListener(type, listener) {
+            listeners[type] = listener;
+          },
+        }),
+      }
+      : {}),
+  });
+  return { app, listeners };
 }
 
 afterEach(() => {
@@ -17,12 +29,10 @@ afterEach(() => {
 });
 
 describe('registerAppEventHandlers', () => {
-  it('forwards every app-level callback to the registered handler', () => {
-    const app = stubApp();
+  it('forwards the app-object callbacks to the registered handler', () => {
+    const { app } = stubApp();
     const handlers = {
       OnLifecycleEvent: vi.fn(),
-      publishEvent: vi.fn(),
-      publicComponentEvent: vi.fn(),
       updateGlobalProps: vi.fn(),
       onAppReload: vi.fn(),
       updateCardData: vi.fn(),
@@ -33,14 +43,6 @@ describe('registerAppEventHandlers', () => {
 
     app.OnLifecycleEvent(['rLynxFirstScreen', {}]);
     expect(handlers.OnLifecycleEvent).toBeCalledWith(['rLynxFirstScreen', {}]);
-
-    app.publishEvent('1:0:', { a: 1 });
-    expect(handlers.publishEvent).toBeCalledWith('1:0:', { a: 1 });
-
-    app.publicComponentEvent('card', '2:0:', { b: 2 });
-    expect(handlers.publicComponentEvent).toBeCalledWith('card', '2:0:', {
-      b: 2,
-    });
 
     app.updateGlobalProps({ c: 3 });
     expect(handlers.updateGlobalProps).toBeCalledWith({ c: 3 });
@@ -57,8 +59,27 @@ describe('registerAppEventHandlers', () => {
     expect(app.processCardConfig()).toBeUndefined();
   });
 
+  it('delivers element events through the context proxy', () => {
+    const { app, listeners } = stubApp();
+    const publishEvent = vi.fn();
+    const publicComponentEvent = vi.fn();
+
+    registerAppEventHandlers({ publishEvent, publicComponentEvent });
+
+    listeners['__SendPageEvent']({ data: ['', '1:0:', { a: 1 }] });
+    expect(publishEvent).toBeCalledWith('1:0:', { a: 1 });
+
+    listeners['__PublishComponentEvent']({ data: ['card', '2:0:', { b: 2 }] });
+    expect(publicComponentEvent).toBeCalledWith('card', '2:0:', { b: 2 });
+
+    // The engine turns the same message event into a call on the app object, so
+    // carrying them there as well would deliver every event twice.
+    expect(app.publishEvent).toBeUndefined();
+    expect(app.publicComponentEvent).toBeUndefined();
+  });
+
   it('replaces only the handlers a later registration passes', () => {
-    const app = stubApp();
+    const { app, listeners } = stubApp();
     const first = vi.fn();
     const second = vi.fn();
     const OnLifecycleEvent = vi.fn();
@@ -66,7 +87,7 @@ describe('registerAppEventHandlers', () => {
     registerAppEventHandlers({ OnLifecycleEvent, publishEvent: first });
     registerAppEventHandlers({ publishEvent: second });
 
-    app.publishEvent('1:0:', {});
+    listeners['__SendPageEvent']({ data: ['', '1:0:', {}] });
     expect(first).not.toBeCalled();
     expect(second).toBeCalled();
 
@@ -75,34 +96,43 @@ describe('registerAppEventHandlers', () => {
   });
 
   it('keeps each app object on its own handlers', () => {
-    const appA = stubApp();
     const a = vi.fn();
-    registerAppEventHandlers({ publishEvent: a });
-
-    const appB = stubApp();
     const b = vi.fn();
+
+    const first = stubApp();
+    registerAppEventHandlers({ publishEvent: a });
+    const second = stubApp();
     registerAppEventHandlers({ publishEvent: b });
 
-    appA.publishEvent('1:0:', {});
+    first.listeners['__SendPageEvent']({ data: ['', '1:0:', {}] });
     expect(a).toBeCalled();
     expect(b).not.toBeCalled();
 
-    appB.publishEvent('1:0:', {});
+    second.listeners['__SendPageEvent']({ data: ['', '1:0:', {}] });
     expect(b).toBeCalled();
   });
 
   it('tolerates a callback with no handler registered', () => {
-    const app = stubApp();
+    const { app, listeners } = stubApp();
     registerAppEventHandlers({});
 
     expect(() => {
       app.OnLifecycleEvent(['rLynxFirstScreen', {}]);
-      app.publishEvent('1:0:', {});
-      app.publicComponentEvent('card', '2:0:', {});
       app.updateGlobalProps({});
       app.onAppReload({});
       app.updateCardData({});
       app.callDestroyLifetimeFun();
+      listeners['__SendPageEvent']({ data: ['', '1:0:', {}] });
+      listeners['__PublishComponentEvent']({ data: ['card', '2:0:', {}] });
     }).not.toThrow();
+  });
+
+  it('skips the subscriptions on an engine without context proxies', () => {
+    const { app, listeners } = stubApp({ withCoreContext: false });
+
+    registerAppEventHandlers({ publishEvent: vi.fn() });
+
+    expect(Object.keys(listeners)).toHaveLength(0);
+    expect(app.OnLifecycleEvent).toBeTypeOf('function');
   });
 });

@@ -166,6 +166,19 @@ export const elementTree = new (class {
     (e.props.event ??= {})[`${eventType}:${eventName}`] = event;
   }
 
+  __AddEventListener(
+    e: Element,
+    eventName: string,
+    callback: (event: any) => void,
+    options: { closure_type?: number; bind_type?: number },
+  ) {
+    (e.props.eventListeners ??= {})[eventName] = { callback, options };
+  }
+
+  __GetEventListener(e: Element, eventName: string) {
+    return e.props.eventListeners?.[eventName];
+  }
+
   __GetEvent(e: Element, eventType: string, eventName: string) {
     const jsFunction = e.props.event?.[`${eventType}:${eventName}`];
     if (typeof jsFunction !== 'undefined') {
@@ -404,7 +417,7 @@ export const elementTree = new (class {
     const eventHandler = e.props?.event?.[`${eventType}:${eventName}`];
     if (eventHandler) {
       // @ts-ignore
-      globalThis.lynx.getApp().publishEvent(eventHandler, data);
+      globalThis.lynx.getApp().__reactHandlers.publishEvent(eventHandler, data);
     }
   }
 

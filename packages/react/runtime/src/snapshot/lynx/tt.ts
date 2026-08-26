@@ -185,7 +185,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     }
     case LifecycleConstant.publishEvent: {
       const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
-      lynx.getApp().publishEvent(handlerName, d);
+      // The app object no longer carries it; call the handler directly.
+      lynx.getApp().__reactHandlers?.publishEvent?.(handlerName, d);
       break;
     }
   }

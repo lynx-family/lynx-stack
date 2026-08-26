@@ -79,9 +79,15 @@ describe('support <page /> element attributes', () => {
             "attr": "data-attr",
           }
         }
-        event={
+        eventListeners={
           {
-            "bindEvent:tap": "-1:0:bindtap",
+            "tap": {
+              "callback": [Function],
+              "options": {
+                "bind_type": 1,
+                "closure_type": 2,
+              },
+            },
           }
         }
         react-ref--1-0={1}
