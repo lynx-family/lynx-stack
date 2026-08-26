@@ -1,9 +1,9 @@
 import { createElement } from 'preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act } from 'preact/test-utils';
 
 import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
+import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 
 type UpdateEvent = {
   ops: unknown[];
@@ -83,12 +83,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
 
 describe('ElementTemplate background GlobalProps', () => {
   afterEach(() => {
-    // Unmount inside act() while the stubbed globals are still installed, so
-    // Preact 11's deferred passive-effect cleanups run against the real test
-    // doubles instead of leaking past teardown.
-    act(() => {
-      globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
-    });
+    callDestroyLifetimeFun();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });

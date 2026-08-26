@@ -66,8 +66,6 @@ describe('initData', () => {
         "key1": "value1",
       }
     `);
-    // act() drains Preact 11's deferred passive-effect cleanups of the
-    // unmounted components before returning.
     act(() => {
       render(null, scratch);
     });

@@ -12,12 +12,15 @@ import { clearRefState, flushPendingRefs } from '../prop-adapters/ref.js';
 import { __root } from '../runtime/page/root-instance.js';
 import { resetElementTemplateBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
 import { resetElementTemplateMainThreadFunctionRuntime } from '../runtime/template/main-thread-function.js';
+import { withSyncEffectFlush } from '../../utils.js';
 
 export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateHydrationListener();
   cancelElementTemplateRemovedSubtreeCleanup();
 
-  render(null, __root as unknown as ContainerNode);
+  withSyncEffectFlush(() => {
+    render(null, __root as unknown as ContainerNode);
+  });
   // Run user cleanup before dropping the backend side tables; after clearRefState
   // the raw ref ownership needed to detach callbacks is gone.
   flushPendingRefs();

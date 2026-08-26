@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ComponentClass } from 'preact';
+import { options } from 'preact';
 
 import { getCurrentVNode, getOwnerStack } from './shared/component-stack.js';
 
@@ -82,6 +83,30 @@ export function hook<T, K extends keyof T>(
   object[key] = function(this: T, ...args: unknown[]) {
     return fn.call(this, oldFn, ...args);
   } as T[K];
+}
+
+/**
+ * Runs `fn` with Preact's after-paint scheduler switched to synchronous.
+ *
+ * Preact 11 defers passive-effect cleanups of unmounted components to that
+ * flush. Page destroy is the one path with no later turn to run them in:
+ * `callDestroyLifetimeFun` returns and native tears the runtime down, so a
+ * deferred cleanup would never run at all.
+ */
+export function withSyncEffectFlush<T>(fn: () => T): T {
+  const previousRequestAnimationFrame = options.requestAnimationFrame;
+  options.requestAnimationFrame = cb => {
+    cb();
+  };
+  try {
+    return fn();
+  } finally {
+    if (previousRequestAnimationFrame) {
+      options.requestAnimationFrame = previousRequestAnimationFrame;
+    } else {
+      delete options.requestAnimationFrame;
+    }
+  }
 }
 
 export const lynxQueueMicrotask: typeof lynx.queueMicrotask = /* @__PURE__ */ (() => {

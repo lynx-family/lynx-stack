@@ -3,7 +3,6 @@ import { fileURLToPath } from 'node:url';
 
 import { createElement } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act } from 'preact/test-utils';
 
 import {
   installElementTemplateCommitHook,
@@ -24,6 +23,7 @@ import type { ElementTemplateUpdateCommitContext } from '../../../../../src/elem
 import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { callDestroyLifetimeFun } from '../../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { LynxTestEventEmitter } from '../../../../test-utils/lynx-event-emitter.js';
 import {
   loadCompiledFixturePair,
@@ -93,14 +93,8 @@ describe('Compiled ET InitData updateData fixture', () => {
   });
 
   afterEach(() => {
-    // Unmount inside act() while the stubbed globals are still installed, so
-    // Preact 11's deferred passive-effect cleanups run against the real test
-    // doubles instead of leaking past teardown. Destroy runs on the
-    // background thread.
     envManager.switchToBackground();
-    act(() => {
-      globalThis.lynxCoreInject.tt?.callDestroyLifetimeFun?.();
-    });
+    callDestroyLifetimeFun();
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     resetElementTemplatePatchListener();
