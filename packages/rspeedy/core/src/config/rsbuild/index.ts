@@ -6,7 +6,6 @@ import type { ConsoleType, RsbuildConfig, SourceMap } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { toRsbuildEntry } from './entry.js'
-import { getFilename } from '../defaults.js'
 import type { Config } from '../index.js'
 
 // This is the default value from lynx-speedy.
@@ -50,10 +49,8 @@ export function toRsbuildConfig(
 
       distPath: config.output?.distPath,
 
-      // The string form carries the same `bundle`/`template` meaning, so it is
-      // resolved here instead of being dropped.
       filename: typeof config.output?.filename === 'string'
-        ? getFilename(config.output.filename)
+        ? undefined
         : config.output?.filename,
 
       filenameHash: config.output?.filenameHash,

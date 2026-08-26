@@ -12,7 +12,12 @@ import type {
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI, Filename } from '@lynx-js/rspeedy'
+import {
+  getLynxConfig,
+  resolveBundleFilename,
+  resolveLazyBundleFilename,
+} from '@lynx-js/rsbuild-plugin'
+import type { ExposedAPI } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -77,8 +82,7 @@ export function applyEntry(
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
-    const bundleFilenameConfig = api.getRsbuildConfig('original').output
-      ?.filename as Filename | undefined
+    const lynx = getLynxConfig(api)
 
     // `rslib` builds libraries and `rstest` runs tests, neither of which emits
     // a Lynx template.
@@ -99,36 +103,17 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const bundleFilename = bundleFilenameConfig?.bundle
-          ?? bundleFilenameConfig?.template
+        const templateFilename = resolveBundleFilename(lynx, {
+          entryName,
+          platform: environment.name,
+        })
 
-        let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.
         // Otherwise `LynxTemplatePlugin` keeps its default
         // (`lazy-bundle/[name].[fullhash].bundle`).
-        let lazyBundleFilename: string | undefined
-        if (typeof bundleFilename === 'function') {
-          // A single function controls both the main bundle and the lazy
-          // bundles via the `lazyBundle` flag, without a dedicated
-          // `lazyBundle` field.
-          templateFilename = bundleFilename({
-            lazyBundle: false,
-            entryName,
-            platform: environment.name,
-          })
-          lazyBundleFilename = bundleFilename({
-            lazyBundle: true,
-            // A lazy bundle name is resolved per async chunk, so there is no
-            // single entry name for it.
-            entryName: undefined,
-            platform: environment.name,
-          })
-            // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so
-            // we only resolve `[platform]` here.
-            .replaceAll('[platform]', environment.name)
-        } else {
-          templateFilename = bundleFilename ?? '[name].[platform].bundle'
-        }
+        const lazyBundleFilename = resolveLazyBundleFilename(lynx, {
+          platform: environment.name,
+        })
 
         // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
         // We would like to avoid adding `__background` to the output CSS filename.
@@ -224,11 +209,7 @@ export function applyEntry(
           .use(LynxTemplatePlugin, [{
             dsl: 'react_nodiff',
             chunks: [mainThreadEntry, backgroundEntry],
-            filename: templateFilename.replaceAll('[name]', entryName)
-              .replaceAll(
-                '[platform]',
-                environment.name,
-              ),
+            filename: templateFilename,
             ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
             intermediate: path.posix.join(
               DEFAULT_DIST_PATH_INTERMEDIATE,

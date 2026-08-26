@@ -13,6 +13,7 @@ import type {
 } from '@rsbuild/core'
 import color from 'picocolors'
 
+import { getLynxConfig, resolveBundleFilename } from '../config.js'
 import { debug } from '../debug.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
@@ -21,17 +22,6 @@ const DEFAULT_IPV4_SERVER_HOST = '0.0.0.0'
 const DEFAULT_IPV6_SERVER_HOST = '::'
 
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
-
-interface BundleFilenameContext {
-  lazyBundle: boolean
-  entryName?: string | undefined
-  platform: string
-}
-
-interface Filename {
-  bundle?: string | ((context: BundleFilenameContext) => string) | undefined
-  template?: string | undefined
-}
 
 interface Client {
   websocketTransport?: string | undefined
@@ -44,29 +34,11 @@ export function pluginDev(): RsbuildPlugin {
       return action === 'dev' || config.mode === 'development'
     },
     async setup(api) {
-      // Resolve the main bundle filename template for a given entry/platform.
-      // When `bundle` is a function, it is called with `lazyBundle: false`
-      // since the dev URLs always point at the main bundle.
-      // Lazily initialized on first use.
-      let resolveBundleName: (entry: string, platform: string) => string
-
+      // The dev URLs always point at the main bundle of an entry.
       function getResolveBundleName() {
-        if (!resolveBundleName) {
-          const defaultFilename = '[name].[platform].bundle'
-          const filename = api.getRsbuildConfig('original').output?.filename
-          const bundle = typeof filename === 'object'
-            ? (filename as Filename).bundle ?? (filename as Filename).template
-            : filename
-          resolveBundleName = (entry: string, platform: string): string => {
-            const resolved = typeof bundle === 'function'
-              ? bundle({ lazyBundle: false, entryName: entry, platform })
-              : bundle ?? defaultFilename
-            return resolved
-              .replaceAll('[name]', entry)
-              .replaceAll('[platform]', platform)
-          }
-        }
-        return resolveBundleName
+        const lynx = getLynxConfig(api)
+        return (entry: string, platform: string): string =>
+          resolveBundleFilename(lynx, { entryName: entry, platform })
       }
 
       function appendBundleRoutes({

@@ -4,8 +4,19 @@
 
 import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 
+import type { LynxPluginOptions } from '@lynx-js/rsbuild-plugin'
+
 import type { Config } from '../config/index.js'
 import { debug, isDebug } from '../debug.js'
+
+function toLynxPluginOptions(config: Config): LynxPluginOptions {
+  const filename = config.output?.filename
+  const bundle = typeof filename === 'string'
+    ? filename
+    : filename?.bundle ?? filename?.template
+
+  return bundle === undefined ? {} : { output: { filename: { bundle } } }
+}
 
 async function applyDebugPlugins(
   rsbuildInstance: RsbuildInstance,
@@ -42,7 +53,10 @@ export async function applyDefaultPlugins(
   const promises: Promise<void>[] = [
     Promise.all(defaultPlugins).then(async plugins => {
       const { pluginLynx } = await import('@lynx-js/rsbuild-plugin')
-      rsbuildInstance.addPlugins([...pluginLynx(), ...plugins])
+      rsbuildInstance.addPlugins([
+        ...pluginLynx(toLynxPluginOptions(config)),
+        ...plugins,
+      ])
     }),
   ]
 
