@@ -8,6 +8,8 @@ Runtime-backed tests require a Lynx runtime and matching `lynx_core.js` locally 
 
 When `LYNX_CORE_JS_PATH` is absent, resolve the core script from `$LYNX_SDK_DIR/resources/lynx_core.js`; reuse an existing explicitly configured SDK resource and download a missing one into that same SDK directory. Keep runtime environment overrides ahead of Cargo-injected build defaults.
 
+The desktop runtime resolves `lynx_core.js` from the current executable's platform-standard resource location. Runtime-backed test binaries must install the resolved SDK artifact there before creating a view; treat that target output as generated runtime state, never as a checked-in fixture.
+
 Follow a Let it crash style in engine-bridge Rust code. Prefer one documented runtime path over guessing alternate locations, and surface configuration or I/O errors with specific messages instead of silently falling back to defaults. Keep defensive `catch_unwind` only at FFI boundaries where Rust panics must not cross into C ABI frames.
 
 Keep Rust integration coverage for the `lynx` library crate under `packages/lynx/engine-bridge/lynx/tests/`. These tests should cover public API behavior, and runtime-backed cases should load the configured dylib/so rather than using mocks. Do not add screenshot or image-golden tests to the engine bridge workspace unless product requirements need visual regression coverage.

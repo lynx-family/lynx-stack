@@ -5,6 +5,7 @@ use lynx::{
 };
 use std::env;
 use std::ffi::c_void;
+use std::path::{Path, PathBuf};
 use std::sync::{
   atomic::{AtomicUsize, Ordering},
   Arc, Mutex, MutexGuard, OnceLock,
@@ -84,6 +85,7 @@ fn runtime_env_loads_and_process_settings_are_callable() {
 #[test]
 fn runtime_builds_headless_view_and_validates_bundle_errors() {
   let _guard = runtime_test_guard();
+  let lynx_core_path = install_lynx_core_for_test_process();
   let env = configured_env();
 
   let renderer = WindowlessRenderer::software(env, CountingSoftwareRenderer::default(), NoopHost)
@@ -93,12 +95,6 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
 
   let mut group =
     LynxGroup::with_id(env, "integration", "runtime").expect("create Lynx group with id");
-  let lynx_core_path = configured_lynx_core_path();
-  assert!(
-    lynx_core_path.is_file(),
-    "configured Lynx core script does not exist: {}",
-    lynx_core_path.display()
-  );
   group
     .set_preload_js_paths([lynx_core_path
       .to_str()
@@ -196,18 +192,18 @@ fn configured_env() -> &'static LynxEnv {
   LynxEnv::load().expect("load configured Lynx runtime")
 }
 
-fn configured_lynx_core_path() -> std::path::PathBuf {
+fn configured_lynx_core_path() -> PathBuf {
   env::var_os("LYNX_CORE_JS_PATH")
-    .map(std::path::PathBuf::from)
+    .map(PathBuf::from)
     .or_else(|| {
       env::var_os("LYNX_SDK_DIR")
-        .map(std::path::PathBuf::from)
+        .map(PathBuf::from)
         .map(|sdk_dir| sdk_dir.join("resources/lynx_core.js"))
     })
-    .or_else(|| option_env!("LYNX_CORE_JS_PATH").map(std::path::PathBuf::from))
+    .or_else(|| option_env!("LYNX_CORE_JS_PATH").map(PathBuf::from))
     .or_else(|| {
       option_env!("LYNX_SDK_DIR")
-        .map(std::path::PathBuf::from)
+        .map(PathBuf::from)
         .map(|sdk_dir| sdk_dir.join("resources/lynx_core.js"))
     })
     .unwrap_or_else(|| {
@@ -216,6 +212,47 @@ fn configured_lynx_core_path() -> std::path::PathBuf {
          LYNX_SDK_DIR/resources/lynx_core.js"
       )
     })
+}
+
+fn install_lynx_core_for_test_process() -> PathBuf {
+  let source = configured_lynx_core_path();
+  assert!(
+    source.is_file(),
+    "configured Lynx core script does not exist: {}",
+    source.display()
+  );
+
+  let executable = env::current_exe().expect("resolve runtime integration test executable");
+  let executable_dir = executable
+    .parent()
+    .expect("runtime integration test executable must have a parent directory");
+  // The desktop runtime resolves the core script relative to the executable,
+  // while Cargo keeps the verified source artifact inside the configured SDK.
+  let destination = lynx_core_process_resource_path(executable_dir);
+  if source != destination {
+    std::fs::create_dir_all(
+      destination
+        .parent()
+        .expect("Lynx core process resource must have a parent directory"),
+    )
+    .expect("create Lynx core process resource directory");
+    std::fs::copy(&source, &destination).unwrap_or_else(|error| {
+      panic!(
+        "failed to install Lynx core script from {} to {}: {error}",
+        source.display(),
+        destination.display()
+      )
+    });
+  }
+  destination
+}
+
+fn lynx_core_process_resource_path(executable_dir: &Path) -> PathBuf {
+  if cfg!(target_os = "macos") {
+    executable_dir.join("LynxResources.bundle/lynx_core.js")
+  } else {
+    executable_dir.join("lynx_core.js")
+  }
 }
 
 fn has_runtime_configuration() -> bool {
