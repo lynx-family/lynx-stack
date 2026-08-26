@@ -42,15 +42,16 @@ ICU path, and module registrations before it calls `lynx_view_create`.
 viewport changes, and enters foreground or background state.
 
 `tools/runtime_build.rs` is included by package `build.rs` files. It prepares
-the configured or downloaded runtime and emits the environment variables that
-tests use.
+the configured or downloaded runtime and core script, verifies both downloads,
+and emits the environment variables that tests use. The core script is a build
+artifact rather than a checked-in runner fixture.
 
 ## Runtime loading workflow
 
 1. The caller sets `LYNX_LIB_PATH` to a runtime library or `LYNX_SDK_DIR` to an
    SDK folder. When running through Cargo on supported targets, package
-   `build.rs` files download the default runtime and inject `LYNX_SDK_DIR`
-   automatically.
+   `build.rs` files download the default runtime and core script, then inject
+   `LYNX_SDK_DIR` and `LYNX_CORE_JS_PATH` automatically.
 2. `LynxEnv::load()` asks `sys::candidate_library_paths()` for the configured
    runtime path.
 3. `LoadedLibrary::load()` opens that dynamic library with `libloading`.
@@ -135,9 +136,10 @@ cargo clippy --tests --all-features -- -D warnings
 cargo llvm-cov nextest --all-targets --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info --release
 ```
 
-The Linux test job installs `libepoxy0`, lets `build.rs` download
-`libLynx_clay.so` into `target/lynx-engine-bridge-sdk`, injects `LYNX_SDK_DIR`,
-and runs the engine-bridge runtime tests with the rest of the workspace.
+The Linux test job installs `libepoxy0`, lets package `build.rs` files download
+`libLynx_clay.so` and `lynx_core.js` into
+`target/lynx-engine-bridge-sdk`, injects their paths, and runs the
+engine-bridge runtime tests with the rest of the workspace.
 Runtime-backed tests fail when no runtime is available. This keeps local and CI
 coverage aligned with the real downloaded runtime instead of passing through
 silent skips.

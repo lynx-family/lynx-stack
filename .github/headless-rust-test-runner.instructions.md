@@ -6,6 +6,8 @@ Keep `lynx-headless-rust-test-runner` as the single Rust-only headless testing c
 
 Reuse the React fixture generated under `packages/genui/ui-judge/tests/fixtures/react/.generated`; do not copy generated bundle output into this crate. Runtime-backed CI tests are Linux-only unless the platform contract is deliberately expanded. macOS may keep an ignored diagnostic test.
 
+Obtain the default `lynx_core.js` through the shared, SHA-256-verified Cargo build-artifact downloader. Do not check a copied core script into the runner fixtures. Preserve `ConnectOptions::lynx_core_path` and `LYNX_CORE_JS_PATH` as local overrides and keep custom URL downloads paired with an explicit checksum.
+
 The shipped runtime starts its local DebugRouter after app metadata is registered through `lynx_env_set_devtool_app_info` and devtool support is enabled. Scan ports 8901 through 8910 with the Peertalk Initialize request. Keep one initialized DebugRouter connection per process. A dedicated I/O actor must own its socket, serialize writes, continuously read messages, and route CDP responses by request id. Coalesce ListSession calls while supporting runtimes that omit its correlation id; never let concurrent callers read from the socket directly.
 
 Treat the configured connect timeout as a bound for DebugRouter discovery and required global-switch setup. Propagate `enable_devtool` and `enable_dom_tree` failures instead of returning a partially configured connection.

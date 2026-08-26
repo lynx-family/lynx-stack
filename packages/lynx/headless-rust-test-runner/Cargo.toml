@@ -15,6 +15,13 @@ tokio = { workspace = true, features = ["fs", "io-util", "macros", "net", "rt", 
 ureq = "2.12.1"
 url = "2.5.8"
 
+[build-dependencies]
+fs2 = "0.4.3"
+hex = { workspace = true }
+reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "rustls"] }
+sha2 = { workspace = true }
+tempfile = "3.27.0"
+
 [[bin]]
 name = "lynx-headless-rust-test-runner"
 path = "src/main.rs"

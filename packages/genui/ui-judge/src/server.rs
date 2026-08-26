@@ -1013,12 +1013,7 @@ mod tests {
       .build()
       .expect("build headless runtime");
     runtime
-      .block_on(Lynx::connect(ConnectOptions {
-        lynx_core_path: Some(
-          package_dir.join("../../lynx/headless-rust-test-runner/fixtures/react/lynx_core.js"),
-        ),
-        ..ConnectOptions::default()
-      }))
+      .block_on(Lynx::connect(ConnectOptions::default()))
       .expect("initialize headless Lynx");
     drop(runtime);
 

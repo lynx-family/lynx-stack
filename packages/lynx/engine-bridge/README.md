@@ -29,7 +29,8 @@ the public C API hooks needed to register a host-provided native-view factory.
 - `lynx/` contains the Rust library crate and Cargo workspace member.
 - `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
 - `tools/runtime_build.rs` is included by package `build.rs` files so runtime
-  setup, download, and ad-hoc signing stay consistent.
+  and `lynx_core.js` downloads, verification, and runtime ad-hoc signing stay
+  consistent.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
 
 ## How the bridge works
@@ -86,16 +87,22 @@ Some public functions declare numeric inputs as C++ `const float&` parameters
 even though they have C linkage. The raw Rust ABI binds those parameters as
 pointers, and the safe API passes stable addresses.
 
-When Cargo downloads a runtime, it stores the files under
-`target/lynx-engine-bridge-sdk` and injects `LYNX_SDK_DIR` for tests. Existing
-non-empty runtime files are reused when they match the current runtime URL. The
-default artifacts are available for macOS arm64 and Linux x86_64.
+When Cargo downloads Lynx artifacts, it stores the runtime and `lynx_core.js`
+under `target/lynx-engine-bridge-sdk` and injects their paths for tests.
+Existing non-empty artifacts are reused when their URL and SHA-256 markers
+match the configured values. The default artifacts are available for macOS
+arm64 and Linux x86_64.
 
 Use these build-time variables to change the default behavior:
 
-- `LYNX_DOWNLOAD_RUNTIME=0` disables the automatic download.
+- `LYNX_DOWNLOAD_RUNTIME=0` disables automatic runtime and `lynx_core.js`
+  downloads.
 - `LYNX_RUNTIME_URL` downloads a different runtime artifact.
 - `LYNX_RUNTIME_SHA256` is required when `LYNX_RUNTIME_URL` points to a
+  non-default artifact.
+- `LYNX_CORE_JS_PATH` uses a local core script instead of downloading one.
+- `LYNX_CORE_JS_URL` downloads a different core script.
+- `LYNX_CORE_JS_SHA256` is required when `LYNX_CORE_JS_URL` points to a
   non-default artifact.
 - `LYNX_SKIP_ADHOC_SIGN=1` skips ad-hoc signing on macOS.
 

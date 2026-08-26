@@ -25,7 +25,6 @@ pub async fn run_react_fixture() -> Result<RunReport> {
   let repo_root = crate_dir.join("../../..");
   let bundle =
     repo_root.join("packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle");
-  let lynx_core = crate_dir.join("fixtures/react/lynx_core.js");
   let screenshot_path = repo_root.join("target/headless-rust-test-runner/react-fixture.png");
   if !bundle.is_file() {
     return Err(Error::Protocol(format!(
@@ -37,7 +36,6 @@ pub async fn run_react_fixture() -> Result<RunReport> {
   let lynx = Lynx::connect(ConnectOptions {
     width: VIEWPORT_WIDTH,
     height: VIEWPORT_HEIGHT,
-    lynx_core_path: Some(lynx_core),
     ..ConnectOptions::default()
   })
   .await?;

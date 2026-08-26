@@ -26,7 +26,9 @@ pub enum Error {
   UnsupportedLynxMlGlobalProps,
   #[error("PNG encoding error: {0}")]
   Png(#[from] png::EncodingError),
-  #[error("missing lynx_core.js; set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH")]
+  #[error(
+    "missing lynx_core.js; rebuild with automatic artifact downloads enabled, or set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH"
+  )]
   MissingLynxCore,
   #[error("Lynx core resource does not exist: {0}")]
   LynxCoreNotFound(PathBuf),

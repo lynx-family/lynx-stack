@@ -7,10 +7,6 @@ mod judge;
 mod model;
 mod visual;
 
-#[cfg(test)]
-#[path = "../build_support.rs"]
-mod build_support;
-
 #[cfg(feature = "server")]
 pub mod server;
 

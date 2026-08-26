@@ -1917,11 +1917,16 @@ dependencies = [
 name = "lynx-headless-rust-test-runner"
 version = "0.1.0"
 dependencies = [
+ "fs2",
+ "hex",
  "lynx",
  "png",
  "rayon",
+ "reqwest",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
+ "tempfile",
  "thiserror 2.0.19",
  "tokio",
  "ureq",

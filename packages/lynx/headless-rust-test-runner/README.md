@@ -56,10 +56,13 @@ for a new rendered frame but skips DebugRouter session discovery and DOM setup.
 PNG encoding runs on the Rayon pool. Use regular `goto` when the caller also
 needs `content`, `locator`, or other DOM APIs.
 
-The runtime needs `lynx_core.js` beside the executable on Linux or inside
-`LynxResources.bundle` beside it on macOS. Set `lynx_core_path` or
-`LYNX_CORE_JS_PATH`; the runner installs the file and also serves
-`ResourceType::LynxCoreJs` requests from that installed path.
+The runner's `build.rs` downloads the default `lynx_core.js` with SHA-256
+verification. At runtime it installs the script beside the executable on Linux
+or inside `LynxResources.bundle` beside it on macOS and serves
+`ResourceType::LynxCoreJs` requests from that installed path. Set
+`lynx_core_path` or `LYNX_CORE_JS_PATH` to use a local override; use
+`LYNX_CORE_JS_URL` with `LYNX_CORE_JS_SHA256` for a different build-time
+download.
 
 ## React fixture test
 

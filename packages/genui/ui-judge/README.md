@@ -285,7 +285,10 @@ Other user-configurable environment variables are:
 - `LYNX_CORE_JS_PATH`: override the `lynx_core.js` source at runtime and when
   building a server bundle. The bundled destination remains named
   `lynx_core.js`, so a compatible source file may use a different filename.
-- `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime downloading.
+- `LYNX_CORE_JS_URL` and `LYNX_CORE_JS_SHA256`: use and verify a custom
+  build-time core-script download.
+- `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime and core-script
+  downloading.
 - `LYNX_RUNTIME_URL` and `LYNX_RUNTIME_SHA256`: use and verify a custom
   build-time runtime download.
 - `LYNX_SKIP_ADHOC_SIGN`: skip build-time ad-hoc signing on macOS.

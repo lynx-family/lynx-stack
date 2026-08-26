@@ -686,6 +686,7 @@ fn resolve_lynx_core_source(configured_path: Option<&Path>) -> Option<PathBuf> {
   configured_path
     .map(PathBuf::from)
     .or_else(|| std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from))
+    .or_else(|| option_env!("LYNX_CORE_JS_PATH").map(PathBuf::from))
 }
 
 fn ensure_compatible_lynx_core_source(
