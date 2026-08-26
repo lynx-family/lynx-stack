@@ -263,7 +263,7 @@ impl TaskPump {
     let ran_task = {
       let mut ran_task = ran_renderer_task;
       for task in self.global_tasks.drain_ready() {
-        run_global_ui_task(&self.env, task);
+        run_global_ui_task(self.env, task);
         ran_task = true;
       }
       ran_task
