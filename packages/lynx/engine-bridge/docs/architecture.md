@@ -49,9 +49,11 @@ artifact rather than a checked-in runner fixture.
 ## Runtime loading workflow
 
 1. The caller sets `LYNX_LIB_PATH` to a runtime library or `LYNX_SDK_DIR` to an
-   SDK folder. When running through Cargo on supported targets, package
-   `build.rs` files download the default runtime and core script, then inject
-   `LYNX_SDK_DIR` and `LYNX_CORE_JS_PATH` automatically.
+   SDK folder. When `LYNX_CORE_JS_PATH` is not set, package `build.rs` files use
+   `$LYNX_SDK_DIR/resources/lynx_core.js`, downloading it there when it is
+   missing and automatic downloads are enabled. Without an explicit SDK,
+   supported targets use `target/lynx-engine-bridge-sdk`. Cargo injects both
+   `LYNX_SDK_DIR` and the resolved `LYNX_CORE_JS_PATH` automatically.
 2. `LynxEnv::load()` asks `sys::candidate_library_paths()` for the configured
    runtime path.
 3. `LoadedLibrary::load()` opens that dynamic library with `libloading`.

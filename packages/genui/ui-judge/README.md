@@ -282,6 +282,8 @@ Other user-configurable environment variables are:
 
 - `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
 - `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
+  Without `LYNX_CORE_JS_PATH`, an SDK also supplies
+  `resources/lynx_core.js`; Cargo downloads it there when missing.
 - `LYNX_CORE_JS_PATH`: override the `lynx_core.js` source at runtime and when
   building a server bundle. The bundled destination remains named
   `lynx_core.js`, so a compatible source file may use a different filename.

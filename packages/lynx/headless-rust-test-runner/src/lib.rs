@@ -31,6 +31,7 @@ const DEFAULT_VIEWPORT_HEIGHT: usize = 600;
 const DEFAULT_DEVICE_PIXEL_RATIO: f32 = 1.0;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const APP_NAME: &str = "HeadlessRustTestRunner";
+const LYNX_CORE_JS_SDK_RELATIVE_PATH: &str = "resources/lynx_core.js";
 
 #[derive(Clone, Debug)]
 pub struct ConnectOptions {
@@ -683,10 +684,37 @@ impl ElementNode {
 }
 
 fn resolve_lynx_core_source(configured_path: Option<&Path>) -> Option<PathBuf> {
+  select_lynx_core_source(
+    configured_path.map(PathBuf::from),
+    std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from),
+    std::env::var_os("LYNX_SDK_DIR").map(PathBuf::from),
+    option_env!("LYNX_CORE_JS_PATH").map(PathBuf::from),
+    option_env!("LYNX_SDK_DIR").map(PathBuf::from),
+  )
+}
+
+fn select_lynx_core_source(
+  configured_path: Option<PathBuf>,
+  runtime_core_path: Option<PathBuf>,
+  runtime_sdk_dir: Option<PathBuf>,
+  build_core_path: Option<PathBuf>,
+  build_sdk_dir: Option<PathBuf>,
+) -> Option<PathBuf> {
   configured_path
+    .or(runtime_core_path)
+    .or_else(|| runtime_sdk_dir.map(lynx_core_path_in_sdk))
+    .or(build_core_path)
+    .or_else(|| build_sdk_dir.map(lynx_core_path_in_sdk))
+}
+
+fn lynx_core_path_in_sdk(sdk_dir: PathBuf) -> PathBuf {
+  sdk_dir.join(LYNX_CORE_JS_SDK_RELATIVE_PATH)
+}
+
+fn resolve_lynx_sdk_dir() -> Option<PathBuf> {
+  std::env::var_os("LYNX_SDK_DIR")
     .map(PathBuf::from)
-    .or_else(|| std::env::var_os("LYNX_CORE_JS_PATH").map(PathBuf::from))
-    .or_else(|| option_env!("LYNX_CORE_JS_PATH").map(PathBuf::from))
+    .or_else(|| option_env!("LYNX_SDK_DIR").map(PathBuf::from))
 }
 
 fn ensure_compatible_lynx_core_source(
@@ -742,10 +770,10 @@ async fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
 }
 
 fn set_icu_data_path_if_available(env: &LynxEnv) -> Result<()> {
-  let Some(sdk_dir) = std::env::var_os("LYNX_SDK_DIR") else {
+  let Some(sdk_dir) = resolve_lynx_sdk_dir() else {
     return Ok(());
   };
-  let path = PathBuf::from(sdk_dir).join("data/icudtl.dat");
+  let path = sdk_dir.join("data/icudtl.dat");
   if path.is_file() {
     env.set_icu_data_path(
       path
@@ -905,6 +933,43 @@ mod tests {
     .unwrap_err();
     assert!(error.to_string().contains("first/lynx_core.js"));
     assert!(error.to_string().contains("second/lynx_core.js"));
+  }
+
+  #[test]
+  fn lynx_core_source_prefers_runtime_configuration_before_build_defaults() {
+    let selected = select_lynx_core_source(
+      None,
+      None,
+      Some(PathBuf::from("runtime-sdk")),
+      Some(PathBuf::from("build/lynx_core.js")),
+      Some(PathBuf::from("build-sdk")),
+    );
+    assert_eq!(
+      selected,
+      Some(PathBuf::from("runtime-sdk/resources/lynx_core.js"))
+    );
+  }
+
+  #[test]
+  fn lynx_core_source_falls_back_to_build_sdk() {
+    let selected =
+      select_lynx_core_source(None, None, None, None, Some(PathBuf::from("build-sdk")));
+    assert_eq!(
+      selected,
+      Some(PathBuf::from("build-sdk/resources/lynx_core.js"))
+    );
+  }
+
+  #[test]
+  fn explicit_lynx_core_source_wins_over_all_sdk_fallbacks() {
+    let selected = select_lynx_core_source(
+      Some(PathBuf::from("explicit/core.js")),
+      Some(PathBuf::from("runtime/core.js")),
+      Some(PathBuf::from("runtime-sdk")),
+      Some(PathBuf::from("build/core.js")),
+      Some(PathBuf::from("build-sdk")),
+    );
+    assert_eq!(selected, Some(PathBuf::from("explicit/core.js")));
   }
 
   #[test]

@@ -14,9 +14,9 @@ fn main() {
 
   let manifest_dir =
     PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("Cargo must set CARGO_MANIFEST_DIR"));
-  runtime_build::prepare_runtime_for(
-    manifest_dir
-      .parent()
-      .expect("the lynx crate must be inside engine-bridge"),
-  );
+  let engine_bridge_dir = manifest_dir
+    .parent()
+    .expect("the lynx crate must be inside engine-bridge");
+  runtime_build::prepare_runtime_for(engine_bridge_dir);
+  runtime_build::prepare_lynx_core_for(engine_bridge_dir);
 }

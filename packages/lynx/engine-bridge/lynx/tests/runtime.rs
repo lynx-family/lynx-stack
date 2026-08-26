@@ -93,8 +93,16 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
 
   let mut group =
     LynxGroup::with_id(env, "integration", "runtime").expect("create Lynx group with id");
+  let lynx_core_path = configured_lynx_core_path();
+  assert!(
+    lynx_core_path.is_file(),
+    "configured Lynx core script does not exist: {}",
+    lynx_core_path.display()
+  );
   group
-    .set_preload_js_paths(["/tmp/lynx_core.js"])
+    .set_preload_js_paths([lynx_core_path
+      .to_str()
+      .expect("configured Lynx core script path must be UTF-8")])
     .expect("set preload JS paths");
   group.set_enable_js_group_thread(false);
 
@@ -186,6 +194,28 @@ fn configured_env() -> &'static LynxEnv {
     );
   }
   LynxEnv::load().expect("load configured Lynx runtime")
+}
+
+fn configured_lynx_core_path() -> std::path::PathBuf {
+  env::var_os("LYNX_CORE_JS_PATH")
+    .map(std::path::PathBuf::from)
+    .or_else(|| {
+      env::var_os("LYNX_SDK_DIR")
+        .map(std::path::PathBuf::from)
+        .map(|sdk_dir| sdk_dir.join("resources/lynx_core.js"))
+    })
+    .or_else(|| option_env!("LYNX_CORE_JS_PATH").map(std::path::PathBuf::from))
+    .or_else(|| {
+      option_env!("LYNX_SDK_DIR")
+        .map(std::path::PathBuf::from)
+        .map(|sdk_dir| sdk_dir.join("resources/lynx_core.js"))
+    })
+    .unwrap_or_else(|| {
+      panic!(
+        "runtime integration tests require LYNX_CORE_JS_PATH or \
+         LYNX_SDK_DIR/resources/lynx_core.js"
+      )
+    })
 }
 
 fn has_runtime_configuration() -> bool {

@@ -30,6 +30,7 @@ const LYNX_CORE_JS_URL: &str = concat!(
 );
 const LYNX_CORE_JS_SHA256: &str =
   "81f0b9dbf51684872de0489b037110eab448e42039f5ac69d6ebe18371ea3efa";
+const LYNX_CORE_JS_RELATIVE_PATH: &str = "resources/lynx_core.js";
 
 pub(crate) fn prepare_runtime_for(root: &Path) -> Option<PathBuf> {
   println!("cargo:rerun-if-env-changed=LYNX_LIB_PATH");
@@ -58,7 +59,7 @@ pub(crate) fn prepare_runtime_for(root: &Path) -> Option<PathBuf> {
   let build_helper = root.join("tools/runtime_build.rs");
   println!("cargo:rerun-if-changed={}", build_helper.display());
 
-  let sdk_dir = root.join("target/lynx-engine-bridge-sdk");
+  let sdk_dir = default_sdk_dir(root);
   let runtime_path = sdk_dir.join("lib").join(library_name);
   let url = runtime_url();
   let sha256 = runtime_sha256(&url);
@@ -72,29 +73,55 @@ pub(crate) fn prepare_lynx_core_for(root: &Path) -> Option<PathBuf> {
   println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_PATH");
   println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_URL");
   println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_SHA256");
+  println!("cargo:rerun-if-env-changed=LYNX_SDK_DIR");
   println!("cargo:rerun-if-env-changed=LYNX_DOWNLOAD_RUNTIME");
 
   let build_helper = root.join("tools/runtime_build.rs");
   println!("cargo:rerun-if-changed={}", build_helper.display());
 
+  let configured_sdk_dir = env::var_os("LYNX_SDK_DIR").map(PathBuf::from);
+  if let Some(sdk_dir) = &configured_sdk_dir {
+    emit_path_env("LYNX_SDK_DIR", sdk_dir);
+  }
   if let Some(core_path) = env::var_os("LYNX_CORE_JS_PATH") {
     let core_path = PathBuf::from(core_path);
     println!("cargo:rerun-if-changed={}", core_path.display());
     emit_path_env("LYNX_CORE_JS_PATH", &core_path);
     return Some(core_path);
   }
+  let sdk_dir = configured_sdk_dir
+    .clone()
+    .unwrap_or_else(|| default_sdk_dir(root));
+  let core_path = sdk_dir.join(LYNX_CORE_JS_RELATIVE_PATH);
+
+  if configured_sdk_dir.is_some() {
+    println!("cargo:rerun-if-changed={}", core_path.display());
+    if core_path.is_file() && !has_custom_lynx_core_download() {
+      emit_path_env("LYNX_CORE_JS_PATH", &core_path);
+      return Some(core_path);
+    }
+  }
+
   if !should_download_lynx_core() {
+    if core_path.is_file() {
+      emit_path_env("LYNX_SDK_DIR", &sdk_dir);
+      emit_path_env("LYNX_CORE_JS_PATH", &core_path);
+      return Some(core_path);
+    }
     return None;
   }
 
-  let sdk_dir = root.join("target/lynx-engine-bridge-sdk");
-  let core_path = sdk_dir.join("resources/lynx_core.js");
   let url = lynx_core_url();
   let sha256 = lynx_core_sha256(&url);
   prepare_lynx_core(&sdk_dir, &core_path, &url, &sha256);
 
+  emit_path_env("LYNX_SDK_DIR", &sdk_dir);
   emit_path_env("LYNX_CORE_JS_PATH", &core_path);
   Some(core_path)
+}
+
+fn default_sdk_dir(root: &Path) -> PathBuf {
+  root.join("target/lynx-engine-bridge-sdk")
 }
 
 pub(crate) fn target_library_name() -> Option<&'static str> {
@@ -117,6 +144,10 @@ fn should_download_lynx_core() -> bool {
     return enabled_env_flag(&value);
   }
   default_runtime_url().is_some() || env::var_os("LYNX_CORE_JS_URL").is_some()
+}
+
+fn has_custom_lynx_core_download() -> bool {
+  env::var_os("LYNX_CORE_JS_URL").is_some() || env::var_os("LYNX_CORE_JS_SHA256").is_some()
 }
 
 fn enabled_env_flag(value: &OsStr) -> bool {

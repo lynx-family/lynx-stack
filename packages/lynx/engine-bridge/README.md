@@ -88,10 +88,19 @@ even though they have C linkage. The raw Rust ABI binds those parameters as
 pointers, and the safe API passes stable addresses.
 
 When Cargo downloads Lynx artifacts, it stores the runtime and `lynx_core.js`
-under `target/lynx-engine-bridge-sdk` and injects their paths for tests.
-Existing non-empty artifacts are reused when their URL and SHA-256 markers
-match the configured values. The default artifacts are available for macOS
-arm64 and Linux x86_64.
+under one SDK directory and injects their paths for tests. The default directory
+is `target/lynx-engine-bridge-sdk`. When `LYNX_SDK_DIR` is set and
+`LYNX_CORE_JS_PATH` is not, Cargo first checks
+`$LYNX_SDK_DIR/resources/lynx_core.js` and downloads a missing core script into
+that location. Existing files in an explicitly configured SDK are treated as
+SDK inputs. Existing automatically downloaded artifacts are reused when their
+URL and SHA-256 markers match the configured values. The default artifacts are
+available for macOS arm64 and Linux x86_64.
+
+Core-script resolution uses this priority order: `LYNX_CORE_JS_PATH`, then
+`$LYNX_SDK_DIR/resources/lynx_core.js`, then the corresponding paths injected
+by Cargo's default SDK preparation. Runtime environment variables take
+precedence over build-time defaults.
 
 Use these build-time variables to change the default behavior:
 
@@ -100,7 +109,8 @@ Use these build-time variables to change the default behavior:
 - `LYNX_RUNTIME_URL` downloads a different runtime artifact.
 - `LYNX_RUNTIME_SHA256` is required when `LYNX_RUNTIME_URL` points to a
   non-default artifact.
-- `LYNX_CORE_JS_PATH` uses a local core script instead of downloading one.
+- `LYNX_CORE_JS_PATH` uses a local core script instead of the SDK core script
+  or a download.
 - `LYNX_CORE_JS_URL` downloads a different core script.
 - `LYNX_CORE_JS_SHA256` is required when `LYNX_CORE_JS_URL` points to a
   non-default artifact.

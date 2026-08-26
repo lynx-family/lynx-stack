@@ -27,7 +27,7 @@ pub enum Error {
   #[error("PNG encoding error: {0}")]
   Png(#[from] png::EncodingError),
   #[error(
-    "missing lynx_core.js; rebuild with automatic artifact downloads enabled, or set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH"
+    "missing lynx_core.js; rebuild with automatic artifact downloads enabled, set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH, or place it at $LYNX_SDK_DIR/resources/lynx_core.js"
   )]
   MissingLynxCore,
   #[error("Lynx core resource does not exist: {0}")]
