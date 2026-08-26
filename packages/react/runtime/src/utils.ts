@@ -94,6 +94,7 @@ export function hook<T, K extends keyof T>(
  * deferred cleanup would never run at all.
  */
 export function withSyncEffectFlush<T>(fn: () => T): T {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const previousRequestAnimationFrame = options.requestAnimationFrame;
   options.requestAnimationFrame = cb => {
     cb();
