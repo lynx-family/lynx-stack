@@ -9,9 +9,17 @@ import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
+import type { LynxPluginOptions } from '../src/index.js'
 
-function createDevStubRsbuild(rsbuildConfig: RsbuildConfig = {}) {
-  return createStubRsbuild({ mode: 'development', ...rsbuildConfig })
+function createDevStubRsbuild(
+  rsbuildConfig: RsbuildConfig = {},
+  lynxOptions?: LynxPluginOptions,
+) {
+  return createStubRsbuild(
+    { mode: 'development', ...rsbuildConfig },
+    undefined,
+    lynxOptions,
+  )
 }
 
 describe('pluginDev', () => {
@@ -988,20 +996,19 @@ describe('pluginDev', () => {
     }
   })
 
-  test('output.filename.bundle is used for dev routes', async () => {
+  test('filename.bundle is used for dev routes', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
           main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
         },
       },
-      output: {
-        filename: {
-          bundle: '[name].[platform].custom.bundle',
-        } as NonNullable<NonNullable<RsbuildConfig['output']>['filename']>,
-      },
       server: {
         port: 8096,
+      },
+    }, {
+      output: {
+        filename: { bundle: '[name].[platform].custom.bundle' },
       },
     })
 

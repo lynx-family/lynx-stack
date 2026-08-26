@@ -5,7 +5,9 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 
+import type { LynxPluginOptions } from './config.js'
 import { pluginChunkLoading } from './plugins/chunkLoading.plugin.js'
+import { pluginConfig } from './plugins/config.plugin.js'
 import { pluginCssMinimizer } from './plugins/cssMinimizer.plugin.js'
 import { pluginDev } from './plugins/dev.plugin.js'
 import { pluginMinify } from './plugins/minify.plugin.js'
@@ -25,10 +27,21 @@ import { pluginTarget } from './plugins/target.plugin.js'
  */
 export const PLUGIN_LYNX_NAME = 'lynx:rsbuild'
 
+export type {
+  BundleFilename,
+  BundleFilenameContext,
+  LynxConfig,
+  LynxFilename,
+  LynxOutput,
+  LynxPluginOptions,
+} from './config.js'
+
 /**
  * @public
  */
-export function pluginLynx(): RsbuildPlugin[] {
+export function pluginLynx(
+  options: LynxPluginOptions = {},
+): RsbuildPlugin[] {
   return [
     {
       name: PLUGIN_LYNX_NAME,
@@ -36,6 +49,7 @@ export function pluginLynx(): RsbuildPlugin[] {
         // A marker, so its presence can be detected. It has no behavior.
       },
     },
+    pluginConfig(options),
     pluginChunkLoading(),
     pluginCssMinimizer(),
     pluginDev(),
