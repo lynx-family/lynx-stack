@@ -43,7 +43,7 @@
     "@yume-chan/adb-server-node-tcp": "catalog:adb"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "5.0.1-20260827072047-5f77e12",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
