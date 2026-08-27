@@ -23,6 +23,8 @@ const DEFAULT_IPV6_SERVER_HOST = '::'
 
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
 
+// Rspeedy tunnels `websocketTransport` through the Rsbuild config.
+// `pluginLynx(options)` is the typed home, and it takes precedence.
 interface Client {
   websocketTransport?: string | undefined
 }
@@ -315,13 +317,15 @@ export function pluginDev(): RsbuildPlugin {
             ])
           .end()
         if (isLynx(environment)) {
-          const client = api.getRsbuildConfig('original').dev?.client as
-            | Client
-            | undefined
+          const tunneledClient = api.getRsbuildConfig('original').dev
+            ?.client as
+              | Client
+              | undefined
           chain.plugin('lynx.hmr.provide.websocket')
             .use(ProvidePlugin, [{
               WebSocket: [
-                client?.websocketTransport
+                getLynxConfig(api).dev.client?.websocketTransport
+                  ?? tunneledClient?.websocketTransport
                   ?? require.resolve('@lynx-js/websocket'),
                 'default',
               ],

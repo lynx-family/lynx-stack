@@ -732,6 +732,40 @@ describe('pluginDev', () => {
     })
   })
 
+  test('websocketTransport from the Lynx options', async () => {
+    const rsbuild = await createDevStubRsbuild({}, {
+      dev: { client: { websocketTransport: '/from-options' } },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+
+    expect(ProvidePlugin).toHaveBeenCalledWith({
+      WebSocket: ['/from-options', 'default'],
+    })
+  })
+
+  test('the Lynx options win over the tunneled websocketTransport', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      dev: {
+        client: {
+          websocketTransport: '/tunneled',
+        } as NonNullable<NonNullable<RsbuildConfig['dev']>['client']>,
+      },
+    }, {
+      dev: { client: { websocketTransport: '/from-options' } },
+    })
+
+    await rsbuild.unwrapConfig()
+
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+
+    expect(ProvidePlugin).toHaveBeenCalledWith({
+      WebSocket: ['/from-options', 'default'],
+    })
+  })
+
   test('server.base without /', async () => {
     await expect(async () => {
       const rsbuild = await createDevStubRsbuild({

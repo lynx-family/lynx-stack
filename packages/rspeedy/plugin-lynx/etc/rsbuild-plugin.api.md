@@ -24,9 +24,20 @@ export function getLynxConfig(api: RsbuildPluginAPI): LynxConfig;
 // @beta
 export const LYNX_CONFIG: symbol;
 
+// @public
+export interface LynxClient {
+    websocketTransport?: string | undefined;
+}
+
 // @beta
 export interface LynxConfig {
+    readonly dev: LynxDev;
     readonly output: LynxOutput;
+}
+
+// @public
+export interface LynxDev {
+    client?: LynxClient | undefined;
 }
 
 // @public
@@ -48,6 +59,7 @@ export interface LynxOutput {
 
 // @public
 export interface LynxPluginOptions {
+    dev?: LynxDev | undefined;
     output?: LynxOutput | undefined;
 }
 
