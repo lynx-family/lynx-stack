@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI } from '@rsbuild/core'
+import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 /**
  * The context passed to the {@link LynxFilename.bundle} function.
@@ -62,6 +62,29 @@ export interface LynxFilename {
 }
 
 /**
+ * The minifier options of the Lynx threads.
+ *
+ * @public
+ *
+ * @remarks
+ *
+ * Lynx emits one bundle per thread, and each thread may need different
+ * minifier settings. These are merged on top of the Rsbuild
+ * `output.minify.jsOptions` and applied to that thread only.
+ */
+export interface LynxMinify {
+  /**
+   * The minifier options of the main thread.
+   */
+  mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+
+  /**
+   * The minifier options of the background thread.
+   */
+  backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+}
+
+/**
  * The build outputs of the Lynx build engine.
  *
  * @public
@@ -71,6 +94,11 @@ export interface LynxOutput {
    * The names of the emitted files.
    */
   filename?: LynxFilename | undefined
+
+  /**
+   * The per-thread minifier options.
+   */
+  minify?: LynxMinify | undefined
 }
 
 /**
