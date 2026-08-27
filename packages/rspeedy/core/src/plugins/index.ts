@@ -15,7 +15,14 @@ function toLynxPluginOptions(config: Config): LynxPluginOptions {
     ? filename
     : filename?.bundle ?? filename?.template
 
-  return bundle === undefined ? {} : { output: { filename: { bundle } } }
+  const websocketTransport = config.dev?.client?.websocketTransport
+
+  return {
+    ...bundle === undefined ? {} : { output: { filename: { bundle } } },
+    ...websocketTransport === undefined
+      ? {}
+      : { dev: { client: { websocketTransport } } },
+  }
 }
 
 async function applyDebugPlugins(

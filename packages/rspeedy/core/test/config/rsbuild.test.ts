@@ -73,7 +73,6 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
           "assetPrefix": undefined,
-          "client": undefined,
           "hmr": true,
           "lazyCompilation": false,
           "liveReload": true,

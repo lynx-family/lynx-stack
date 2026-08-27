@@ -102,6 +102,37 @@ export interface LynxOutput {
 }
 
 /**
+ * The dev server client of the Lynx build engine.
+ *
+ * @public
+ */
+export interface LynxClient {
+  /**
+   * The module that provides the `WebSocket` used by HMR.
+   *
+   * @defaultValue `require.resolve('@lynx-js/websocket')`
+   *
+   * @remarks
+   *
+   * Lynx has no `WebSocket` global, so HMR resolves one from this module. The
+   * module has to export it as `default`.
+   */
+  websocketTransport?: string | undefined
+}
+
+/**
+ * The dev server options of the Lynx build engine.
+ *
+ * @public
+ */
+export interface LynxDev {
+  /**
+   * The dev server client.
+   */
+  client?: LynxClient | undefined
+}
+
+/**
  * The options of `pluginLynx`.
  *
  * @public
@@ -111,6 +142,11 @@ export interface LynxPluginOptions {
    * The build outputs.
    */
   output?: LynxOutput | undefined
+
+  /**
+   * The dev server.
+   */
+  dev?: LynxDev | undefined
 }
 
 /**
@@ -169,6 +205,11 @@ export interface LynxConfig {
   resolveLazyBundleFilename(
     context: { platform: string },
   ): string | undefined
+
+  /**
+   * The dev server.
+   */
+  readonly dev: LynxDev
 }
 
 // The key that `pluginLynx` exposes its `LynxConfig` with. It is not exported:
@@ -230,6 +271,8 @@ export function createLynxConfig(options: LynxPluginOptions): LynxConfig {
   // destructure them off the config.
   return {
     output,
+
+    dev: options.dev ?? {},
 
     resolveBundleFilename({ entryName, platform }) {
       return resolve(output.filename?.bundle, {
