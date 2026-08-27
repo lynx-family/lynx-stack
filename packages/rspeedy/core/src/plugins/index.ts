@@ -52,9 +52,17 @@ export async function applyDefaultPlugins(
 
   const promises: Promise<void>[] = [
     Promise.all(defaultPlugins).then(async plugins => {
-      const { pluginLynx } = await import('@lynx-js/rsbuild-plugin')
+      const { PLUGIN_LYNX_NAME, pluginLynx } = await import(
+        '@lynx-js/rsbuild-plugin'
+      )
+
+      // A user who needs to configure the build engine applies `pluginLynx`
+      // themselves. Applying it again here would build a second config from
+      // the Rspeedy options and overwrite theirs.
       rsbuildInstance.addPlugins([
-        ...pluginLynx(toLynxPluginOptions(config)),
+        ...rsbuildInstance.isPluginExists(PLUGIN_LYNX_NAME)
+          ? []
+          : pluginLynx(toLynxPluginOptions(config)),
         ...plugins,
       ])
     }),
