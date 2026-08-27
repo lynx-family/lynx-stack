@@ -8,6 +8,7 @@ import * as ReactJSXDevRuntime from '@lynx-js/react/jsx-dev-runtime';
 import * as ReactJSXRuntime from '@lynx-js/react/jsx-runtime';
 import * as ReactLegacyReactRuntime from '@lynx-js/react/legacy-react-runtime';
 import * as ReactLepusAPIs from '@lynx-js/react/lepus';
+import * as ReactMainThreadObject from '@lynx-js/react/main-thread-object';
 
 import {
   RUNTIME_BACKEND_SNAPSHOT,
@@ -15,6 +16,7 @@ import {
   sExportsJSXDevRuntime,
   sExportsJSXRuntime,
   sExportsLegacyReactRuntime,
+  sExportsMainThreadObject,
   sExportsReact,
   sExportsReactCompat,
   sExportsReactInternal,
@@ -47,6 +49,13 @@ Object.defineProperty(target, sExportsReactLepus, {
 
 Object.defineProperty(target, sExportsReactInternal, {
   value: ReactInternal,
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
+
+Object.defineProperty(target, sExportsMainThreadObject, {
+  value: ReactMainThreadObject,
   enumerable: false,
   writable: false,
   configurable: true,

@@ -63,6 +63,7 @@ export interface ReactWebpackPluginOptions {
     lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;
+    workletCoreRuntimePath?: string;
     workletRuntimePath: string;
 }
 

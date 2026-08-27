@@ -18,7 +18,8 @@ import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
-    _resolveWorklet: resolveWorklet,
+    /* v8 ignore next -- false branch is exercised by the separately built core runtime */
+    ...(__MAIN_THREAD_OBJECT__ ? { _resolveWorklet: resolveWorklet } : {}),
     _refImpl: initWorkletRef(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
@@ -172,7 +173,7 @@ const transformWorkletInner = (
     // typed descriptor before walking it so payload properties that resemble
     // worklet metadata remain untouched. Legacy MainThreadRef descriptors do
     // not carry a protocol version and retain the existing recursive path.
-    if (isMainThreadObjectDescriptor(subObj)) {
+    if (__MAIN_THREAD_OBJECT__ && isMainThreadObjectDescriptor(subObj)) {
       obj[key] = getFromWorkletRefMap(
         subObj as unknown as WorkletRefImpl<unknown>,
       );

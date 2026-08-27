@@ -8,8 +8,43 @@ import {
   collectElementTemplatesFromModule,
   mergeElementTemplate,
   mergeElementTemplatesFromModule,
+  moduleUsesMainThreadObject,
 } from '../src/ReactWebpackPlugin.js';
 import type { ModuleWithElementTemplateBuildInfo } from '../src/ReactWebpackPlugin.js';
+
+describe('moduleUsesMainThreadObject', () => {
+  it('finds used public exports in a concatenated module', () => {
+    expect(moduleUsesMainThreadObject({
+      modules: [
+        { resource: '/repo/runtime/src/core/main-thread-ref.ts' },
+        {
+          resource: '/repo/runtime/src/main-thread-object.ts',
+        },
+      ],
+    }, module =>
+      module.resource?.endsWith('/main-thread-object.ts')
+        ? ['defineMainThreadObjectType']
+        : [])).toBe(true);
+  });
+
+  it('ignores an unused public entry retained in the module graph', () => {
+    expect(moduleUsesMainThreadObject({
+      resource: '/repo/runtime/src/main-thread-object.ts',
+    }, () => [])).toBe(false);
+  });
+
+  it('conservatively selects the full runtime when export usage is unknown', () => {
+    expect(moduleUsesMainThreadObject({
+      resource: '/repo/runtime/src/main-thread-object.ts',
+    }, () => null)).toBe(true);
+  });
+
+  it('does not treat the implementation behind the public entry as feature adoption', () => {
+    expect(moduleUsesMainThreadObject({
+      resource: '/repo/runtime/src/snapshot/worklet/ref/mainThreadObject.ts',
+    }, () => true)).toBe(false);
+  });
+});
 
 describe('collectElementTemplatesFromModule', () => {
   it('collects templates from nested modules', () => {

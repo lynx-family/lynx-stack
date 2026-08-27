@@ -154,8 +154,6 @@ export interface MainThreadObjectTypeDefinition<I, O extends object> {
     readonly type: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts
-//
 // @public
 export class MainThreadRef<T> {
     constructor(initValue: T);

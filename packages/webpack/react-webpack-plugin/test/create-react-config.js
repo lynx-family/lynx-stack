@@ -96,6 +96,9 @@ export function createConfig(loaderOptions, pluginOptions, swcLoaderOptions) {
         workletRuntimePath: require.resolve(
           '@lynx-js/react/worklet-dev-runtime',
         ),
+        workletCoreRuntimePath: require.resolve(
+          '@lynx-js/react/worklet-core-runtime',
+        ),
         ...pluginOptions,
       }),
       /**

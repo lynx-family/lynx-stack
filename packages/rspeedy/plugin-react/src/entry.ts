@@ -321,6 +321,11 @@ export function applyEntry(
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
         ),
+        workletCoreRuntimePath: await resolve(
+          `@lynx-js/react/${
+            isDev ? 'worklet-dev-runtime' : 'worklet-core-runtime'
+          }`,
+        ),
         lazyBundleFetcher,
       }])
 

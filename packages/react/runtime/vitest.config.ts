@@ -60,6 +60,9 @@ function transformReactLynxPlugin(): Plugin {
 }
 
 export default defineConfig({
+  define: {
+    __MAIN_THREAD_OBJECT__: 'true',
+  },
   plugins: [
     transformReactLynxPlugin(),
   ],
@@ -104,6 +107,10 @@ export default defineConfig({
       {
         find: '@lynx-js/react/legacy-react-runtime',
         replacement: path.resolve(__dirname, './src/core/compat/legacy-react-runtime.ts'),
+      },
+      {
+        find: /^@lynx-js\/react\/main-thread-object$/,
+        replacement: path.resolve(__dirname, './src/main-thread-object.ts'),
       },
       { find: '@lynx-js/react', replacement: path.resolve(__dirname, './src/index.ts') },
     ],

@@ -16,7 +16,7 @@ interface RefImpl {
   updateWorkletRefInitValueChanges(
     patch: ([number, unknown] | [number, unknown, string, number])[],
   ): void;
-  registerMainThreadObjectType(
+  registerMainThreadObjectType?(
     type: string,
     create: MainThreadObjectFactory | Worklet,
     dispose: MainThreadObjectDisposer | Worklet | undefined,
@@ -47,9 +47,11 @@ let realizedMainThreadObjectMetadata = new WeakMap<object, MainThreadObjectMetad
 let firstScreenMainThreadObjects = new Set<object>();
 
 function initWorkletRef(): RefImpl {
-  mainThreadObjectDefinitions.clear();
-  realizedMainThreadObjectMetadata = new WeakMap();
-  firstScreenMainThreadObjects = new Set();
+  if (__MAIN_THREAD_OBJECT__) {
+    mainThreadObjectDefinitions.clear();
+    realizedMainThreadObjectMetadata = new WeakMap();
+    firstScreenMainThreadObjects = new Set();
+  }
   return (impl = {
     _workletRefMap: {},
     /**
@@ -61,7 +63,8 @@ function initWorkletRef(): RefImpl {
     _firstScreenWorkletRefMap: {},
     updateWorkletRef,
     updateWorkletRefInitValueChanges,
-    registerMainThreadObjectType,
+    /* v8 ignore next -- false branch is exercised by the separately built core runtime */
+    ...(__MAIN_THREAD_OBJECT__ ? { registerMainThreadObjectType } : {}),
     clearFirstScreenWorkletRefMap,
   });
 }
@@ -144,6 +147,10 @@ function getMainThreadObjectDisposer(
 }
 
 function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
+  /* v8 ignore next 3 -- exercised by the separately built core runtime */
+  if (!__MAIN_THREAD_OBJECT__) {
+    return createWorkletRef(refImpl._wvid, refImpl._initValue);
+  }
   const type = refImpl._type;
   if (!type || type === 'main-thread') {
     return createWorkletRef(refImpl._wvid, refImpl._initValue);
@@ -184,7 +191,7 @@ function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: nu
 
 function isHydratedWorkletValue(value: unknown): value is object {
   return isMutableCell(value)
-    || (typeof value === 'object' && value !== null
+    || (__MAIN_THREAD_OBJECT__ && typeof value === 'object' && value !== null
       && realizedMainThreadObjectMetadata.has(value));
 }
 
@@ -224,14 +231,28 @@ const getFromWorkletRefMap = <T>(
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
-  disposeMainThreadObject(impl!._workletRefMap[id]);
-  delete impl!._workletRefMap[id];
+  if (__MAIN_THREAD_OBJECT__) {
+    try {
+      disposeMainThreadObject(impl!._workletRefMap[id]);
+    } finally {
+      delete impl!._workletRefMap[id];
+    }
+    /* v8 ignore start -- exercised by the separately built core runtime */
+  } else {
+    delete impl!._workletRefMap[id];
+  }
+  /* v8 ignore stop */
 }
 
 function hydrateWorkletValue(
   handle: WorkletRefImpl<unknown>,
   value: WorkletRef<unknown>,
 ): void {
+  /* v8 ignore next 4 -- exercised by the separately built core runtime */
+  if (!__MAIN_THREAD_OBJECT__) {
+    impl!._workletRefMap[handle._wvid] = value;
+    return;
+  }
   assertCompatibleWorkletValue(handle, value, 'hydration');
   const previous = impl!._workletRefMap[handle._wvid];
   if (previous !== value) {
@@ -328,7 +349,13 @@ function updateWorkletRefInitValueChanges(
       } as WorkletRefImpl<unknown>;
       const existing = impl!._workletRefMap[id];
       if (existing) {
-        assertCompatibleWorkletValue(handle, existing, 'initialization patch');
+        if (__MAIN_THREAD_OBJECT__) {
+          assertCompatibleWorkletValue(
+            handle,
+            existing,
+            'initialization patch',
+          );
+        }
       } else {
         impl!._workletRefMap[id] = createWorkletValue(handle);
       }
@@ -337,9 +364,31 @@ function updateWorkletRefInitValueChanges(
 }
 
 function clearFirstScreenWorkletRefMap(): void {
-  firstScreenMainThreadObjects.forEach(value => disposeMainThreadObject(value));
-  firstScreenMainThreadObjects.clear();
-  impl!._firstScreenWorkletRefMap = {};
+  /* v8 ignore next 4 -- exercised by the separately built core runtime */
+  if (!__MAIN_THREAD_OBJECT__) {
+    impl!._firstScreenWorkletRefMap = {};
+    return;
+  }
+  let firstError: unknown;
+  let hasError = false;
+  try {
+    firstScreenMainThreadObjects.forEach(value => {
+      try {
+        disposeMainThreadObject(value);
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
+      }
+    });
+  } finally {
+    firstScreenMainThreadObjects.clear();
+    impl!._firstScreenWorkletRefMap = {};
+  }
+  if (hasError) {
+    throw firstError;
+  }
 }
 
 export {

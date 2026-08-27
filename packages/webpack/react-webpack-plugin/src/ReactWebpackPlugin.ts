@@ -5,7 +5,7 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 
-import type { Chunk, Compilation, Compiler } from '@rspack/core';
+import type { Chunk, Compilation, Compiler, Module } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
 import type {
@@ -30,6 +30,52 @@ interface ElementTemplateBuildInfo {
 export interface ModuleWithElementTemplateBuildInfo {
   buildInfo?: Record<string, unknown>;
   modules?: Iterable<ModuleWithElementTemplateBuildInfo>;
+}
+
+export interface ModuleWithMainThreadObjectResource {
+  resource?: string;
+  modules?: Iterable<ModuleWithMainThreadObjectResource>;
+}
+
+const MAIN_THREAD_OBJECT_MODULE_RE = /[\\/]main-thread-object\.[cm]?[jt]s$/;
+const MAIN_THREAD_OBJECT_EXPORTS = new Set([
+  'defineMainThreadObjectType',
+  'useMainThreadObject',
+]);
+
+export type GetUsedExports = (
+  module: ModuleWithMainThreadObjectResource,
+) => readonly string[] | boolean | null;
+
+export function moduleUsesMainThreadObject(
+  module: ModuleWithMainThreadObjectResource,
+  getUsedExports: GetUsedExports,
+): boolean {
+  if (
+    module.resource !== undefined
+    && MAIN_THREAD_OBJECT_MODULE_RE.test(module.resource)
+  ) {
+    const usedExports = getUsedExports(module);
+    if (usedExports === true || usedExports === null) {
+      return true;
+    }
+    if (
+      Array.isArray(usedExports)
+      && usedExports.some((name: unknown) =>
+        typeof name === 'string' && MAIN_THREAD_OBJECT_EXPORTS.has(name)
+      )
+    ) {
+      return true;
+    }
+  }
+  if (module.modules) {
+    for (const nestedModule of module.modules) {
+      if (moduleUsesMainThreadObject(nestedModule, getUsedExports)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 export function collectElementTemplatesFromModule(
@@ -234,6 +280,12 @@ interface ReactWebpackPluginOptions {
   workletRuntimePath: string;
 
   /**
+   * The file path of the core-only `@lynx-js/react/worklet-core-runtime`.
+   * Falls back to `workletRuntimePath` when omitted.
+   */
+  workletCoreRuntimePath?: string;
+
+  /**
    * Whether to enable Element Template compilation.
    *
    * @experimental
@@ -335,6 +387,7 @@ class ReactWebpackPlugin {
       experimental_isLazyBundle: false,
       profile: undefined,
       workletRuntimePath: '',
+      workletCoreRuntimePath: '',
       experimental_useElementTemplate: false,
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
@@ -489,10 +542,30 @@ class ReactWebpackPlugin {
               'registerWorkletInternal',
             )
           ) {
+            const usesMainThreadObject = args.chunkGroups.some(chunkGroup =>
+              Array.from(chunkGroup.chunks).some(chunk =>
+                Array.from(
+                  compilation.chunkGraph.getChunkModulesIterable(chunk),
+                ).some(module => {
+                  const runtime = Array.from(chunk.runtime);
+                  return moduleUsesMainThreadObject(
+                    module as ModuleWithMainThreadObjectResource,
+                    candidate =>
+                      compilation.moduleGraph.getUsedExports(
+                        candidate as Module,
+                        runtime,
+                      ),
+                  );
+                })
+              )
+            );
             lepusCode.chunks.push({
               name: 'worklet-runtime',
               source: new RawSource(fs.readFileSync(
-                options.workletRuntimePath,
+                usesMainThreadObject
+                  ? options.workletRuntimePath
+                  : options.workletCoreRuntimePath
+                    || options.workletRuntimePath,
                 'utf8',
               )),
               info: {
