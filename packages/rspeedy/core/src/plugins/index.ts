@@ -15,10 +15,15 @@ function toLynxPluginOptions(config: Config): LynxPluginOptions {
     ? filename
     : filename?.bundle ?? filename?.template
 
+  const intermediate = config.output?.distPath?.intermediate
+
   const websocketTransport = config.dev?.client?.websocketTransport
 
   return {
-    ...bundle === undefined ? {} : { output: { filename: { bundle } } },
+    output: {
+      ...intermediate === undefined ? {} : { distPath: { intermediate } },
+      ...bundle === undefined ? {} : { filename: { bundle } },
+    },
     ...websocketTransport === undefined
       ? {}
       : { dev: { client: { websocketTransport } } },

@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { posix } from 'node:path'
+
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 /**
@@ -85,11 +87,35 @@ export interface LynxMinify {
 }
 
 /**
+ * The output directories of the Lynx build engine.
+ *
+ * @public
+ */
+export interface LynxDistPath {
+  /**
+   * The directory of the intermediate files of a bundle.
+   *
+   * @defaultValue `'.rspeedy'`
+   *
+   * @remarks
+   *
+   * A Lynx bundle is encoded from per-thread JS, CSS and HMR outputs. They are
+   * emitted into this directory, per entry, instead of next to the bundle.
+   */
+  intermediate?: string | undefined
+}
+
+/**
  * The build outputs of the Lynx build engine.
  *
  * @public
  */
 export interface LynxOutput {
+  /**
+   * The output directories.
+   */
+  distPath?: LynxDistPath | undefined
+
   /**
    * The names of the emitted files.
    */
@@ -188,6 +214,16 @@ export interface LynxConfig {
   ): string
 
   /**
+   * Resolve the directory of the intermediate files.
+   *
+   * @param context - The entry to resolve the directory for. Without an entry
+   * name, the directory that holds every entry's is returned.
+   */
+  resolveIntermediateDir(
+    context?: { entryName?: string | undefined },
+  ): string
+
+  /**
    * Resolve the name of the lazy bundle files.
    *
    * @param context - The environment to resolve the name for.
@@ -237,6 +273,8 @@ export function getLynxConfig(api: RsbuildPluginAPI): LynxConfig {
 
 const DEFAULT_BUNDLE_FILENAME = '[name].[platform].bundle'
 
+const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
+
 function resolve(
   bundle: BundleFilename | undefined,
   context: BundleFilenameContext,
@@ -280,6 +318,13 @@ export function createLynxConfig(options: LynxPluginOptions): LynxConfig {
         entryName,
         platform,
       })
+    },
+
+    resolveIntermediateDir(context) {
+      const dir = output.distPath?.intermediate
+        ?? DEFAULT_DIST_PATH_INTERMEDIATE
+
+      return context?.entryName ? posix.join(dir, context.entryName) : dir
     },
 
     resolveLazyBundleFilename({ platform }) {

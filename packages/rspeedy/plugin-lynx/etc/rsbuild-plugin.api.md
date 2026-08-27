@@ -30,6 +30,9 @@ export interface LynxConfig {
         entryName: string;
         platform: string;
     }): string;
+    resolveIntermediateDir(context?: {
+        entryName?: string | undefined;
+    }): string;
     resolveLazyBundleFilename(context: {
         platform: string;
     }): string | undefined;
@@ -38,6 +41,11 @@ export interface LynxConfig {
 // @public
 export interface LynxDev {
     client?: LynxClient | undefined;
+}
+
+// @public
+export interface LynxDistPath {
+    intermediate?: string | undefined;
 }
 
 // @public
@@ -53,6 +61,7 @@ export interface LynxMinify {
 
 // @public
 export interface LynxOutput {
+    distPath?: LynxDistPath | undefined;
     filename?: LynxFilename | undefined;
     minify?: LynxMinify | undefined;
 }

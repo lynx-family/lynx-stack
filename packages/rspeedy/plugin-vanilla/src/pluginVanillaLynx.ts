@@ -25,7 +25,6 @@ const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
 const PLUGIN_NAME = 'lynx:vanilla'
 const VANILLA_WEBPACK_PLUGIN_NAME = 'VanillaLynxWebpackPlugin'
 const DEFAULT_ENGINE_VERSION = '3.5'
-const INTERMEDIATE_DIR = '.rspeedy'
 
 /**
  * Rspack layers used by Vanilla Lynx entries.
@@ -290,16 +289,11 @@ function addVanillaEntry(
 
   const backgroundEntry = `${entryName}__background`
   const mainThreadEntry = `${entryName}__main-thread`
-  const backgroundAsset = path.posix.join(
-    INTERMEDIATE_DIR,
+  const intermediateDir = context.lynxConfig.resolveIntermediateDir({
     entryName,
-    'background.js',
-  )
-  const mainThreadAsset = path.posix.join(
-    INTERMEDIATE_DIR,
-    entryName,
-    'main-thread.js',
-  )
+  })
+  const backgroundAsset = path.posix.join(intermediateDir, 'background.js')
+  const mainThreadAsset = path.posix.join(intermediateDir, 'main-thread.js')
 
   if (hasBackground) {
     chain.entry(backgroundEntry).add({
@@ -331,7 +325,7 @@ function addVanillaEntry(
         entryName,
         context.platform,
       ),
-      intermediate: path.posix.join(INTERMEDIATE_DIR, entryName),
+      intermediate: intermediateDir,
       targetSdkVersion: context.engineVersion,
     }],
   )
