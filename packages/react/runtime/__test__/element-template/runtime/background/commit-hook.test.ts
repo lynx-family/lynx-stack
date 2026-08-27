@@ -50,7 +50,6 @@ import {
 } from '../../../../src/element-template/index.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { clearRefState, queueRefAttrUpdate } from '../../../../src/element-template/prop-adapters/ref.js';
-import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -141,8 +140,6 @@ describe('ElementTemplate commit hook', () => {
   });
 
   afterEach(() => {
-    envManager.switchToBackground();
-    callDestroyLifetimeFun();
     globalThis.__ALOG__ = true;
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
@@ -310,8 +307,6 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
-      envManager.switchToBackground();
-      callDestroyLifetimeFun();
       dataChange.restore();
     }
   });
@@ -350,8 +345,6 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
-      envManager.switchToBackground();
-      callDestroyLifetimeFun();
       dataChange.restore();
     }
   });
@@ -374,8 +367,6 @@ describe('ElementTemplate commit hook', () => {
       expect(onChanged).toHaveBeenCalledTimes(1);
       expect(onChanged).toHaveBeenCalledWith({ msg: 'after' });
     } finally {
-      envManager.switchToBackground();
-      callDestroyLifetimeFun();
       dataChange.restore();
     }
   });
@@ -406,8 +397,6 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
-      envManager.switchToBackground();
-      callDestroyLifetimeFun();
       dataChange.restore();
     }
   });
@@ -453,8 +442,6 @@ describe('ElementTemplate commit hook', () => {
         flushOptions: { triggerDataUpdated: true },
       });
     } finally {
-      envManager.switchToBackground();
-      callDestroyLifetimeFun();
       dataChange.restore();
     }
   });

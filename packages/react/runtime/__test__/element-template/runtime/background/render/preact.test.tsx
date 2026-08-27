@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'preact';
+import type { ReactNode } from 'react';
 
 import {
   installElementTemplateCommitHook,
@@ -59,7 +60,7 @@ interface ListItemModel {
   fullSpan?: boolean;
 }
 
-function ListApp({ items }: { items: readonly ListItemModel[] }) {
+function ListApp({ items }: { items: readonly ListItemModel[] }): ReactNode {
   return createElement(
     'list',
     null,
@@ -72,7 +73,7 @@ function ListApp({ items }: { items: readonly ListItemModel[] }) {
         },
       })
     ),
-  ) as unknown as ReturnType<typeof App>;
+  ) as ReactNode;
 }
 
 function materializeHydratedSubtree(

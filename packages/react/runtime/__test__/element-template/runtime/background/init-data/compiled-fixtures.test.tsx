@@ -23,7 +23,6 @@ import type { ElementTemplateUpdateCommitContext } from '../../../../../src/elem
 import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
-import { callDestroyLifetimeFun } from '../../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { LynxTestEventEmitter } from '../../../../test-utils/lynx-event-emitter.js';
 import {
   loadCompiledFixturePair,
@@ -93,8 +92,6 @@ describe('Compiled ET InitData updateData fixture', () => {
   });
 
   afterEach(() => {
-    envManager.switchToBackground();
-    callDestroyLifetimeFun();
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     resetElementTemplatePatchListener();

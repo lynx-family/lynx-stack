@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
-import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 
 type UpdateEvent = {
   ops: unknown[];
@@ -83,7 +82,6 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
 
 describe('ElementTemplate background GlobalProps', () => {
   afterEach(() => {
-    callDestroyLifetimeFun();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });

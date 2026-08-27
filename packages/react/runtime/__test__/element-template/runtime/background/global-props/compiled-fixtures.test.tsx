@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
-import { callDestroyLifetimeFun } from '../../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import type { CompiledFixtureModuleExports } from '../../../test-utils/debug/compiledFixtureModule.js';
 
 globalThis.__GLOBAL_PROPS_MODE__ = 'event';
@@ -132,8 +131,6 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   });
 
   afterEach(() => {
-    envManager.switchToBackground();
-    callDestroyLifetimeFun();
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     resetElementTemplatePatchListener();
