@@ -4,6 +4,12 @@
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
+import {
+  getLynxConfig,
+  pluginLynx,
+  resolveBundleFilename,
+} from '@lynx-js/rsbuild-plugin'
+
 import { createRspeedy } from '../src/create-rspeedy.js'
 
 describe('createRspeedy', () => {
@@ -35,6 +41,34 @@ describe('createRspeedy', () => {
             name: 'test',
             setup(api: RsbuildPluginAPI) {
               expect(api.context.callerName).toBe('my-custom-framework')
+            },
+          },
+        ],
+      },
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(1)
+  })
+
+  test('a user-applied pluginLynx replaces the Rspeedy one', async () => {
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        output: { filename: { bundle: '[name].rspeedy.bundle' } },
+        plugins: [
+          ...pluginLynx({
+            output: { filename: { bundle: '[name].user.bundle' } },
+          }),
+          {
+            name: 'test',
+            setup(api: RsbuildPluginAPI) {
+              expect(
+                resolveBundleFilename(getLynxConfig(api), {
+                  entryName: 'main',
+                  platform: 'lynx',
+                }),
+              ).toBe('main.user.bundle')
             },
           },
         ],

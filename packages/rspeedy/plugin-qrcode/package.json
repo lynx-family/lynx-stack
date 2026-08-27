@@ -61,6 +61,11 @@
   "peerDependencies": {
     "@lynx-js/rspeedy": "^0.16.0"
   },
+  "peerDependenciesMeta": {
+    "@lynx-js/rspeedy": {
+      "optional": true
+    }
+  },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
