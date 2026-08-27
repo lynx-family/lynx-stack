@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ConsoleType, RsbuildConfig, SourceMap } from '@rsbuild/core'
+import type { ConsoleType, RsbuildConfig } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { toRsbuildEntry } from './entry.js'
@@ -60,8 +60,7 @@ export function toRsbuildConfig(
 
       polyfill: 'off',
 
-      // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids`
-      sourceMap: config.output?.sourceMap as SourceMap,
+      sourceMap: config.output?.sourceMap,
     },
     resolve: {
       alias: toRsbuildAlias(config),
