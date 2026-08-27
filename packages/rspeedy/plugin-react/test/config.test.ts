@@ -2694,6 +2694,35 @@ describe('Config', () => {
       expect(ReactLynxWebpackPlugin?.options.profile).toBe(true)
     })
 
+    test('pluginReactLynx profile wins over performance.profile', async () => {
+      rstest.stubEnv('DEBUG', '')
+
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          performance: {
+            profile: false,
+          },
+          plugins: [
+            pluginReactLynx({ profile: true }),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      const ReactLynxWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(ReactLynxWebpackPlugin?.options.profile).toBe(true)
+    })
+
     test('with performance.profile: false', async () => {
       rstest.stubEnv('DEBUG', '')
 

@@ -46,6 +46,19 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
+   * Include ReactLynx runtime profiling information in the output.
+   *
+   * @remarks
+   *
+   * ReactLynx wraps its runtime work in `console.profile` calls when this is
+   * on. It takes precedence over the Rspeedy `performance.profile`, which is
+   * unset under plain Rsbuild.
+   *
+   * @defaultValue `undefined`
+   */
+  profile?: boolean | undefined
+
+  /**
    * Enable UI source map generation and debug-metadata asset emission.
    *
    * @defaultValue `false`
@@ -392,6 +405,7 @@ export function pluginReactLynx(
     ?? userOptions?.targetSdkVersion ?? '3.2'
 
   const defaultOptions: Required<PluginReactLynxOptions> = {
+    profile: undefined,
     compat: undefined,
     customCSSInheritanceList: undefined,
     debugInfoOutside: true,

@@ -90,6 +90,7 @@ export interface PluginReactLynxOptions {
         mainThread?: boolean;
         background?: boolean;
     };
+    profile?: boolean | undefined;
     removeDescendantSelectorScope?: boolean;
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated

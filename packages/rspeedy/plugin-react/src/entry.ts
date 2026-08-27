@@ -317,6 +317,10 @@ export function applyEntry(
       }])
 
     function getDefaultProfile(): boolean | undefined {
+      if (options.profile !== undefined) {
+        return options.profile
+      }
+
       // rsbuild v1
       const environmentProfile = (
         rspeedyConfig?.environments as
