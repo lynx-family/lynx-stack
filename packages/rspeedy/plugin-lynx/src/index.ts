@@ -38,6 +38,7 @@ export type {
   BundleFilenameContext,
   LynxConfig,
   LynxFilename,
+  LynxMinify,
   LynxOutput,
   LynxPluginOptions,
 } from './config.js'

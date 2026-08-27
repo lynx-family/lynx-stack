@@ -120,4 +120,61 @@ describe('pluginMinify', () => {
     expect(mainThreadOptions?.include).toEqual([mainThreadPattern])
     expect(backgroundOptions?.include).toEqual([backgroundPattern])
   })
+
+  test('thread options from the Lynx options', async () => {
+    const rsbuild = await createStubRsbuild({ mode: 'production' }, undefined, {
+      output: {
+        minify: {
+          mainThreadOptions: {
+            minimizerOptions: {
+              compress: { pure_funcs: ['from.options'] },
+            },
+          },
+        },
+      },
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const minimizers = findJsMinimizers(config)
+    expect(minimizers.length).toBe(3)
+    expect(
+      JSON.stringify(minimizers.map((minimizer) => minimizer._args[0])),
+    ).toContain('from.options')
+  })
+
+  test('merges the tunneled thread options with the Lynx options', async () => {
+    const rsbuild = await createStubRsbuild(
+      {
+        mode: 'production',
+        output: {
+          minify: {
+            mainThreadOptions: {
+              minimizerOptions: {
+                compress: { pure_funcs: ['from.tunneled'] },
+              },
+            },
+          } as NonNullable<NonNullable<RsbuildConfig['output']>['minify']>,
+        },
+      },
+      undefined,
+      {
+        output: {
+          minify: {
+            mainThreadOptions: {
+              minimizerOptions: {
+                compress: { pure_funcs: ['from.options'] },
+              },
+            },
+          },
+        },
+      },
+    )
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const serialized = JSON.stringify(
+      findJsMinimizers(config).map((minimizer) => minimizer._args[0]),
+    )
+    expect(serialized).toContain('from.tunneled')
+    expect(serialized).toContain('from.options')
+  })
 })
