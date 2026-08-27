@@ -41,6 +41,7 @@ describe('Volcengine TOS payload publishing', () => {
       a2uiPrefix: 'a2ui',
       bucket: 'genui',
       endpoint: 'tos-cn-beijing.volces.com',
+      htmlPrefix: 'html',
       lynxXmlPrefix: 'lynx-xml',
       mcpAppsPrefix: 'mcp-apps',
       openuiPrefix: 'openui',
@@ -62,6 +63,7 @@ describe('Volcengine TOS payload publishing', () => {
       TOS_ACCESS_KEY: ' ak ',
       TOS_BUCKET: 'preview-bucket',
       TOS_ENDPOINT: 'http://tos-ap-southeast-1.volces.com:8080',
+      TOS_HTML_STORAGE_PREFIX: '/custom-html/',
       TOS_MCP_APPS_STORAGE_PREFIX: '/custom-mcp-apps/',
       TOS_LYNX_XML_STORAGE_PREFIX: '/custom-lynx-xml/',
       TOS_OPENUI_STORAGE_PREFIX: '/custom-openui/',
@@ -76,6 +78,7 @@ describe('Volcengine TOS payload publishing', () => {
       accessKeySecret: 'sk',
       bucket: 'preview-bucket',
       endpoint: 'tos-ap-southeast-1.volces.com:8080',
+      htmlPrefix: '/custom-html/',
       lynxXmlPrefix: '/custom-lynx-xml/',
       mcpAppsPrefix: '/custom-mcp-apps/',
       region: 'ap-southeast-1',
@@ -109,7 +112,9 @@ describe('Volcengine TOS payload publishing', () => {
     expect(buildTosStoragePath('openui', 'preview', 'id', 'raw.txt'))
       .toBe('openui/preview/id/raw.txt');
 
-    for (const method of ['a2ui', 'openui', 'mcp-apps', 'lynx-xml']) {
+    for (
+      const method of ['a2ui', 'openui', 'mcp-apps', 'lynx-xml', 'html']
+    ) {
       expect(
         buildTosStoragePath(method, 'conversation', 'id', 'messages.json'),
       ).toBe(`${method}/conversation/id/messages.json`);

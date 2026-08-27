@@ -17,6 +17,7 @@ interface MockStreamingService {
 
 type GlobalWithStreamingServices = typeof globalThis & {
   __A2UI_AGENT_SERVICE__?: MockStreamingService;
+  __HTML_AGENT_SERVICE__?: MockStreamingService;
   __OPENUI_AGENT_SERVICE__?: MockStreamingService;
   __LYNX_XML_AGENT_SERVICE__?: MockStreamingService;
 };
@@ -114,6 +115,26 @@ describe('agent stream cancellation', () => {
       expect(receivedSignal?.aborted).toBe(true);
     } finally {
       global.__LYNX_XML_AGENT_SERVICE__ = previousService;
+    }
+  });
+
+  test('aborts HTML generation when the response reader disconnects', async () => {
+    const global = globalThis as GlobalWithStreamingServices;
+    const previousService = global.__HTML_AGENT_SERVICE__;
+    let receivedSignal: AbortSignal | undefined;
+    global.__HTML_AGENT_SERVICE__ = createPendingService((signal) => {
+      receivedSignal = signal;
+    });
+
+    try {
+      await cancelResponse(
+        '/html/stream',
+        { messages: [{ role: 'user', content: 'Create a dashboard' }] },
+        '203.0.113.49',
+      );
+      expect(receivedSignal?.aborted).toBe(true);
+    } finally {
+      global.__HTML_AGENT_SERVICE__ = previousService;
     }
   });
 

@@ -6,7 +6,8 @@ export type ConversationProtocol =
   | 'a2ui'
   | 'openui'
   | 'mcp-apps'
-  | 'lynx-xml';
+  | 'lynx-xml'
+  | 'html';
 
 export interface ConversationMeta {
   id: string;

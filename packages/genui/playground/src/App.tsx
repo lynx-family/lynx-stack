@@ -57,6 +57,10 @@ const CREATE_EXAMPLES_TABS: TabDef[] = [
   { id: 'examples', label: 'Examples' },
 ];
 
+const CREATE_ONLY_TABS: TabDef[] = [
+  { id: 'create', label: 'Create' },
+];
+
 function ensureDefaultRouteHash(): void {
   if (!isEmptyRouteHash(window.location.hash)) return;
   const url = new URL(window.location.href);
@@ -125,9 +129,14 @@ export function App() {
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
-  const tabs = protocol.name === 'mcp-apps' || protocol.name === 'lynx-xml'
-    ? CREATE_EXAMPLES_TABS
-    : GENUI_TABS;
+  let tabs = GENUI_TABS;
+  if (protocol.name === 'html') {
+    tabs = CREATE_ONLY_TABS;
+  } else if (
+    protocol.name === 'mcp-apps' || protocol.name === 'lynx-xml'
+  ) {
+    tabs = CREATE_EXAMPLES_TABS;
+  }
 
   useLayoutEffect(() => {
     ensureDefaultRouteHash();
@@ -166,6 +175,10 @@ export function App() {
   }, []);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
+    if (name === 'html') {
+      window.location.hash = buildRouteHash(name, 'create');
+      return;
+    }
     if (name === 'mcp-apps' || name === 'lynx-xml') {
       window.location.hash = buildRouteHash(
         name,
@@ -198,6 +211,8 @@ export function App() {
         theme={theme}
       />
     );
+
+    if (protocol.name === 'html') return createPage;
 
     if (protocol.name === 'mcp-apps') {
       if (route.tab !== 'examples') return createPage;
@@ -366,6 +381,7 @@ export function App() {
         <option value='lynx-xml'>
           Lynx XML v{PROTOCOLS['lynx-xml'].version}
         </option>
+        <option value='html'>HTML v{PROTOCOLS.html.version}</option>
       </select>
     </div>
   );

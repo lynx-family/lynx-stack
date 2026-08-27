@@ -17,7 +17,8 @@ export type PayloadStorageMethod =
   | 'a2ui'
   | 'openui'
   | 'mcp-apps'
-  | 'lynx-xml';
+  | 'lynx-xml'
+  | 'html';
 
 export type A2UIPayloadStorageLocation =
   | { method?: 'a2ui'; type?: 'preview' }

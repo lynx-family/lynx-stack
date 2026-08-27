@@ -51,6 +51,7 @@ describe('publishConversation', () => {
           'openui',
           'mcp-apps',
           'lynx-xml',
+          'html',
         ]
       ) {
         await publishConversation(conversationDoc(protocol));
@@ -66,6 +67,7 @@ describe('publishConversation', () => {
         { method: 'openui', type: 'conversation' },
         { method: 'mcp-apps', type: 'conversation' },
         { method: 'lynx-xml', type: 'conversation' },
+        { method: 'html', type: 'conversation' },
       ]);
     } finally {
       Object.defineProperty(globalThis, 'window', {

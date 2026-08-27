@@ -1,10 +1,10 @@
 # GenUI Playground
 
 Interactive playground for the Lynx **GenUI** toolchain. Chat with an agent to
-generate A2UI / OpenUI surfaces, browse ready-made examples (including
-zero-build Lynx XML artifacts), and preview the result on the web or a real
-device — then rename, delete, or **share** any conversation as a durable
-preview link.
+generate A2UI / OpenUI surfaces or standalone HTML documents, browse ready-made
+examples (including zero-build Lynx XML artifacts), and preview the result on
+the web or a real device — then rename, delete, or **share** any conversation
+as a durable preview link.
 
 The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`
 and an **Examples** surface at `#/lynx-xml/examples`. Create calls the GenUI
@@ -24,6 +24,13 @@ attach an explicitly styled business root directly to an unstyled `page`; each
 layout container enables Flex instead of relying on Lynx's default Linear
 layout. Examples that can exceed one viewport use that business root itself as
 a vertical scroll view.
+
+The HTML protocol exposes a **Create** surface at `#/html`. It calls the GenUI
+server's `/html/stream` endpoint, shows the standalone document source while it
+streams, and renders the complete HTML through a Web `iframe` `srcDoc`. The
+iframe uses `sandbox="allow-scripts"` without same-origin access, so generated
+interactions work without exposing the Playground DOM, cookies, or local
+storage. HTML never enters the Lynx renderer or native preview path.
 
 > Private development app; it is not published to npm. For the published library
 > see [`@lynx-js/genui`](../README.md).
@@ -79,6 +86,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 ?openuiEndpoint=http://localhost:3060/openui/stream
 ?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
 ?lynx-xmlEndpoint=http://localhost:3060/lynx-xml/stream
+?htmlEndpoint=http://localhost:3060/html/stream
 ?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
 ```
 

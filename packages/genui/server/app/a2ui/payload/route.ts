@@ -60,7 +60,7 @@ function parseStorageLocation(
       return {
         ok: false,
         error:
-          'conversation protocol must be one of: a2ui, openui, mcp-apps, lynx-xml',
+          'conversation protocol must be one of: a2ui, openui, mcp-apps, lynx-xml, html',
       };
     }
     if (body.method !== undefined && body.method !== protocol) {
@@ -91,7 +91,7 @@ function parseStorageLocation(
   if (!isTosStorageMethod(method)) {
     return {
       ok: false,
-      error: 'method must be one of: a2ui, openui, mcp-apps, lynx-xml',
+      error: 'method must be one of: a2ui, openui, mcp-apps, lynx-xml, html',
     };
   }
 

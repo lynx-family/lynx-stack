@@ -8,6 +8,7 @@ It supports:
 - `lynx` via `@lynx-js/rspeedy` (Lynx preview)
 - streamed and example zero-build Lynx XML artifacts loaded directly by Lynx
   for Web
+- streamed standalone HTML documents rendered by a sandboxed Web iframe
 
 ## How It Works (Web Shell vs Lynx App)
 
@@ -94,6 +95,19 @@ explicitly declare `display: flex` and the intended direction where it matters.
 Keep `page` unstyled and place viewport sizing, background, and entry layout on
 the first business view. When content can exceed one viewport, make that entry
 node a vertical scroll view instead of adding another wrapper.
+
+## HTML Create
+
+The `html` protocol exposes only Create. Keep its hook-free adapter in
+`src/pages/chat/html.ts`, stream source from `/html/stream`, and update the
+artifact viewer for every partial beginning with the HTML doctype. Send only a
+complete document to preview so incomplete markup or scripts are not executed.
+
+Render generated HTML directly through `PreviewViewport` and `HtmlView` using
+an iframe `srcDoc`. Keep the sandbox at `allow-scripts` without
+`allow-same-origin`; do not route HTML through `render.html`, `<lynx-view>`,
+init data, global props, native preview URLs, or protocol renderer bundles.
+HTML has no Examples, Catalog, Bench, or native preview surface.
 
 ## Common Commands
 

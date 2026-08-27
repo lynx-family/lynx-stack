@@ -1801,7 +1801,7 @@ export function ChatController<
         onPointerDown: handlePanelResizeStart,
       }}
       preview={{
-        title: 'Lynx Preview',
+        title: protocol.name === 'html' ? 'Web Preview' : 'Lynx Preview',
         showPreviewModeSwitch: true,
         showSimulationBar: false,
         previewSource,
@@ -1811,6 +1811,9 @@ export function ChatController<
         children: (
           <PreviewViewport
             key={previewRevision}
+            iframeTitle={protocol.name === 'html'
+              ? 'Generated HTML preview'
+              : 'Lynx preview'}
             iframeRef={previewFrameRef}
             onLoad={handlePreviewFrameLoad}
             retainPreviousFrame

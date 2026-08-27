@@ -19,4 +19,8 @@ describe('conversation protocol metadata', () => {
       'lynx-xml',
     );
   });
+
+  test('keeps HTML conversations isolated by protocol metadata', () => {
+    expect(resolveConversationProtocol({ protocol: 'html' })).toBe('html');
+  });
 });
