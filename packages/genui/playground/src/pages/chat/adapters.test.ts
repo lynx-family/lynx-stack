@@ -4,6 +4,7 @@
 import { describe, expect, rs, test } from '@rstest/core';
 
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
+import { HTML_CHAT_ADAPTER } from './html.js';
 import { LYNX_XML_CHAT_ADAPTER } from './lynx-xml.js';
 import {
   MCP_APPS_CHAT_ADAPTER,
@@ -35,6 +36,13 @@ const VALID_LYNX_XML = [
   '<style>.root { display: flex; }</style>',
   '<script thread="main">globalThis.processData = () => {};</script>',
   '</lynx>',
+].join('\n');
+const VALID_HTML = [
+  '<!doctype html>',
+  '<html lang="en">',
+  '<head><meta charset="utf-8"><title>Counter</title></head>',
+  '<body><button id="counter">0</button></body>',
+  '</html>',
 ].join('\n');
 
 describe('chat protocol adapters', () => {
@@ -363,6 +371,58 @@ describe('chat protocol adapters', () => {
     ).toThrow('incomplete Lynx XML artifact');
   });
 
+  test('streams an HTML document before final iframe delivery', () => {
+    const reduceStream = HTML_CHAT_ADAPTER.stream.reduce.bind(
+      HTML_CHAT_ADAPTER.stream,
+    );
+    let state = HTML_CHAT_ADAPTER.stream.initial();
+    const preamble = reduceStream(state, {
+      event: 'delta',
+      data: { text: '```html\n' },
+    });
+    state = preamble.state;
+    expect(preamble.emissions).toEqual([
+      { type: 'progress', text: '```html\n' },
+    ]);
+
+    const partial = reduceStream(state, {
+      event: 'delta',
+      data: { text: VALID_HTML },
+    });
+    state = partial.state;
+    expect(partial.emissions).toEqual([
+      { type: 'progress', text: VALID_HTML },
+      { type: 'partial', output: { source: VALID_HTML } },
+    ]);
+
+    const done = reduceStream(state, {
+      event: 'done',
+      data: {
+        text: `Here is the document:\n${VALID_HTML}\n\`\`\``,
+        usage: { inputTokens: 5, outputTokens: 9, totalTokens: 14 },
+      },
+    });
+    expect(done.emissions).toEqual([
+      {
+        type: 'usage',
+        usage: { promptTokens: 5, completionTokens: 9, totalTokens: 14 },
+      },
+      { type: 'final', output: { source: VALID_HTML } },
+    ]);
+    expect(
+      HTML_CHAT_ADAPTER.preview.artifact({ source: VALID_HTML }).views[0]
+        ?.text,
+    ).toBe(VALID_HTML);
+  });
+
+  test('rejects an incomplete final HTML response', () => {
+    expect(() =>
+      HTML_CHAT_ADAPTER.stream.fromJson({
+        text: '<!doctype html><html><head></head><body>',
+      })
+    ).toThrow('incomplete HTML document');
+  });
+
   test('builds protocol-specific preview sources and merge behavior', () => {
     const a2uiOutput = [{ createSurface: { surfaceId: 'main' } }];
     expect(A2UI_CHAT_ADAPTER.preview.source(a2uiOutput, {
@@ -443,6 +503,18 @@ describe('chat protocol adapters', () => {
     expect(LYNX_XML_CHAT_ADAPTER.preview.merge(null, lynxXmlOutput)).toBe(
       lynxXmlOutput,
     );
+
+    const htmlOutput = { source: VALID_HTML };
+    expect(HTML_CHAT_ADAPTER.preview.source(htmlOutput, {
+      protocol: PROTOCOLS.html,
+      theme: 'light',
+      previewPayloadUrls: null,
+    })).toEqual({
+      kind: 'html',
+      source: VALID_HTML,
+      theme: 'light',
+    });
+    expect(HTML_CHAT_ADAPTER.preview.merge(null, htmlOutput)).toBe(htmlOutput);
   });
 
   test('parses A2UI action bridge messages', () => {

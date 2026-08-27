@@ -14,6 +14,8 @@ export function ProtocolSwitch(props: {
     label = 'OpenUI';
   } else if (protocol.name === 'lynx-xml') {
     label = 'Lynx XML';
+  } else if (protocol.name === 'html') {
+    label = 'HTML';
   }
   return (
     <div className='protocolSwitch' role='group' aria-label='Protocol version'>

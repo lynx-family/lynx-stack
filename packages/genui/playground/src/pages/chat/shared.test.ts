@@ -37,4 +37,14 @@ describe('shared chat helpers', () => {
       search: '?openuiEndpoint=http%3A%2F%2F127.0.0.1%3A3060%2Fopenui%2Fstream',
     })).toBe('http://127.0.0.1:3060/openui/stream');
   });
+
+  test('builds the HTML stream endpoint', () => {
+    expect(getChatEndpoint('html', {
+      baseUrl: 'http://localhost:3000/',
+      hostname: 'localhost',
+      origin: 'http://localhost:3000',
+      protocol: 'http:',
+      search: '',
+    })).toBe('http://localhost:3060/html/stream');
+  });
 });

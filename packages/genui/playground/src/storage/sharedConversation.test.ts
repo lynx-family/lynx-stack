@@ -28,6 +28,12 @@ describe('shared conversation protocol metadata', () => {
     );
   });
 
+  test('keeps HTML shared conversations explicit', () => {
+    expect(resolveSharedConversationProtocol({ protocol: 'html' })).toBe(
+      'html',
+    );
+  });
+
   test('rejects unknown shared conversation protocols', () => {
     expect(resolveSharedConversationProtocol({ protocol: 'unknown' })).toBe(
       null,

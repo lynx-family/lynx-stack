@@ -60,6 +60,7 @@ export const PreviewPanelPreviewModeContext = createContext<
 >(null);
 
 export interface PreviewPanelRenderContextValue {
+  htmlSource?: string;
   lynxXmlSource?: string;
   renderUrl: string;
 }
@@ -128,6 +129,12 @@ export interface LynxXmlPreviewSource {
   theme?: 'light' | 'dark';
 }
 
+export interface HtmlPreviewSource {
+  kind: 'html';
+  source: string;
+  theme?: 'light' | 'dark';
+}
+
 interface PlaceholderPreviewSource {
   kind: 'placeholder';
   item: PreviewQrItem;
@@ -138,6 +145,7 @@ export type PreviewPanelSource =
   | OpenUIPreviewSource
   | McpAppsPreviewSource
   | LynxXmlPreviewSource
+  | HtmlPreviewSource
   | PlaceholderPreviewSource;
 
 export interface PreviewQrCard {
@@ -584,6 +592,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
   }, [baseUrl, rspeedyDevUrl]);
   const renderContext = useMemo<PreviewPanelRenderContextValue>(
     () => ({
+      htmlSource: previewSource?.kind === 'html'
+        ? previewSource.source
+        : undefined,
       lynxXmlSource: previewSource?.kind === 'lynx-xml'
         ? previewSource.source
         : undefined,
@@ -948,6 +959,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     localMessagesPayloadCache.clear();
+
+    if (previewSource.kind === 'html') {
+      // PreviewViewport writes source directly to a sandboxed srcDoc iframe.
+      // Keep HTML out of the Lynx render bridge and native preview URLs.
+      setRenderUrl('');
+      setRenderShareUrl('');
+      setLynxDevUrl('');
+      return;
+    }
 
     if (previewSource.kind === 'lynx-xml') {
       // PreviewViewport mounts a real <lynx-view> for this source. Keep the

@@ -37,7 +37,7 @@ Load Create-tab model choices from the GenUI server's `GET /models` endpoint. Ke
 
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
-Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, `pages/chat/mcp-apps.ts`, and `pages/chat/lynx-xml.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects. The Lynx XML adapter should expose cumulative partial source as a live artifact while reserving reload-based preview delivery for a complete document.
+Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, `pages/chat/mcp-apps.ts`, `pages/chat/lynx-xml.ts`, and `pages/chat/html.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects. Whole-document adapters should expose cumulative partial source as a live artifact while reserving reload-based preview delivery for a complete document.
 
 For MCP Apps tool turns, show the model's tool selection and the host-executed tool result as separate JSON transcript entries. Build those entries through the same pure helper for live success and history hydration so reopened conversations preserve the Tool Call/Tool Result sequence.
 
@@ -51,7 +51,7 @@ Use `mcpAppData` as the MCP Apps-specific preview payload field across Chat prev
 
 Keep OpenUI artifacts visually aligned with A2UI Generated Output cards: use the same transcript width, compact header alignment, single divider, and code-block density while preserving OpenUI-specific Raw/Parsed views and metadata.
 
-When rendering the unified `ChatPage`, key it by protocol so switching between A2UI, OpenUI, MCP Apps, and Lynx XML fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
+When rendering the unified `ChatPage`, key it by protocol so switching between A2UI, OpenUI, MCP Apps, Lynx XML, and HTML fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
 
 ## Protocol-Aware Conversation Data
 
@@ -65,7 +65,7 @@ When an action response is merged with the current preview messages, clear any p
 
 ### Shared Imports
 
-Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. Publish a shared conversation with storage type `conversation` and its validated protocol (`a2ui`, `openui`, `mcp-apps`, or `lynx-xml`) as the storage method; treat a missing protocol as legacy A2UI and reject an unknown protocol before uploading. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
+Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. Publish a shared conversation with storage type `conversation` and its validated protocol (`a2ui`, `openui`, `mcp-apps`, `lynx-xml`, or `html`) as the storage method; treat a missing protocol as legacy A2UI and reject an unknown protocol before uploading. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
 
 ## Component Catalog Architecture
 
@@ -104,6 +104,12 @@ Keep MCP Apps Examples aligned with the renderer registry in `lynx-src/mcp-apps/
 - Reuse the A2UI Playground Examples `flow` layout, `DemosList`, `ExamplePreviewCard`, and card styles without protocol-specific markup or CSS.
 - Keep complete `.lynxml` artifacts in `src/mock/lynx-xml`, import them as raw editor source, copy them to `dist/demos/lynx-xml`, and load them directly in `<lynx-view>`. Mount generated and edited XML through `PreviewViewport`'s direct `LynxXmlView`; use an `application/xml` Blob URL only to satisfy LynxView's public URL input, and never turn XML into A2UI/OpenUI init data, global props, or events. Use the shared `render.html?protocol=lynx-xml&sourceUrl=...` entry for shareable/example Web URLs and keep its XML protocol branch direct instead of invoking a bundled protocol renderer. Do not add per-example compilation or a ReactLynx renderer. Browser-local Blob URLs are not shareable: keep the Web and Native QR cards mounted with an unavailable placeholder instead of encoding the Blob URL or removing the QR pane. Use `@codemirror/lang-html` in the editor and keep Playback disabled.
 - Append the business root directly to the Element PAPI `page`; do not style the page or add a generic `app` wrapper. The root owns viewport, background, and layout styles, and must be a vertical scroll view when content may overflow. Because Lynx defaults to Linear layout, every layout container must explicitly use `display: flex` and declare its intended `flex-direction`.
+
+### HTML
+
+- Expose HTML only at its Create protocol root; keep Examples, Catalog, Bench, and native preview unavailable.
+- Stream cumulative source into the shared artifact viewer as soon as the HTML doctype arrives, but do not execute partial markup or scripts. Deliver only a complete document to the reload-based preview.
+- Render HTML through `HtmlView` as iframe `srcDoc` with exactly the script capability required for generated interactions. Keep `allow-same-origin` out of the sandbox so model-authored code cannot read the Playground DOM, cookies, or local storage. Do not send HTML through `render.html`, `<lynx-view>`, init data, global props, native URLs, or Lynx bundles.
 
 ## OpenUI Integration
 

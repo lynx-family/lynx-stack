@@ -26,6 +26,18 @@ describe('app route hash', () => {
     expect(buildRouteHash('openui', 'create')).toBe('#/openui');
     expect(buildRouteHash('mcp-apps', 'create')).toBe('#/mcp-apps');
     expect(buildRouteHash('lynx-xml', 'create')).toBe('#/lynx-xml');
+    expect(buildRouteHash('html', 'create')).toBe('#/html');
+  });
+
+  test('recognizes the HTML protocol root', () => {
+    expect(parseRouteHash('#/html')).toMatchObject({
+      protocol: { name: 'html', version: '5' },
+      tab: 'create',
+    });
+    expect(parseRouteHash('#/html/create')).toMatchObject({
+      protocol: { name: 'html' },
+      tab: 'create',
+    });
   });
 
   test('supports Lynx XML create and examples routes', () => {

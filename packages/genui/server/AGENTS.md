@@ -1,7 +1,8 @@
 # GenUI Server
 
 This package contains the Rslib-built Hono server for GenUI agent APIs,
-including A2UI, OpenUI, MCP Apps, and streamed Lynx XML generation.
+including A2UI, OpenUI, MCP Apps, streamed Lynx XML, and standalone HTML
+generation.
 
 ## Deployment Model
 
@@ -119,13 +120,14 @@ export TOS_REGION="cn-beijing"
 ```
 
 Use a dedicated IAM identity with `tos:PutObject` access only to the configured
-`a2ui`, `openui`, `mcp-apps`, and `lynx-xml` prefixes. Preview objects use
+`a2ui`, `openui`, `mcp-apps`, `lynx-xml`, and `html` prefixes. Preview objects use
 `<method>/preview/<uuid>/<file>`; shared conversations use
 `<method>/conversation/<uuid>/messages.json`. The server signs writes with
 these credentials; the browser reads the resulting public object URL without
 credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
 `TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`,
-`TOS_LYNX_XML_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
+`TOS_LYNX_XML_STORAGE_PREFIX`, `TOS_HTML_STORAGE_PREFIX`, and
+`TOS_SECURITY_TOKEN`.
 
 ## Lynx XML Generation
 
@@ -136,6 +138,17 @@ sending `done`. The final artifact must start with lowercase
 `<!doctype lynx>`, use `<lynx engine-version="4.2">`, include exactly one main
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
+
+## HTML Generation
+
+`POST /html/stream` uses a dedicated HTML agent and the shared text SSE route
+infrastructure. Stream raw model deltas so the Playground can display source
+growth, then extract and validate one complete HTML5 document before sending
+`done`. Generated documents must be self-contained and begin with
+`<!doctype html>`, contain `<html>`, `<head>`, and `<body>`, and end with
+`</html>`. The Playground executes inline scripts in an isolated iframe
+without same-origin access; do not add a server-side browser runtime or route
+HTML through Lynx.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:
@@ -170,8 +183,8 @@ export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
 ## Security
 
 By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-`/a2ui/action`, `/openui/stream`, `/mcp-apps/stream`, and `/lynx-xml/stream`
-**cannot** override `apiKey` or `baseURL`. This
+`/a2ui/action`, `/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and
+`/html/stream` **cannot** override `apiKey` or `baseURL`. This
 prevents an unauthenticated client from turning the server into an open
 proxy that uses arbitrary keys against arbitrary OpenAI-compatible
 endpoints.
@@ -189,8 +202,9 @@ authentication and an allow-list are added in front of the server.
 ## Rate Limiting
 
 The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
-`/openui/stream`, `/mcp-apps/stream`, and `/lynx-xml/stream` share an in-process
-fixed-window rate limiter keyed by client IP (`x-forwarded-for` > `x-real-ip`
+`/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream`
+share an in-process fixed-window rate limiter keyed by client IP
+(`x-forwarded-for` > `x-real-ip`
 
 > `unknown`). When a client exceeds the limit, the JSON routes respond with
 > HTTP `429` and the SSE route emits a single `event: error` frame; both responses
@@ -215,8 +229,8 @@ front of this server.
 
 The server does not keep per-thread conversation memory. `/a2ui/chat`,
 `/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, `/openui/stream`,
-`/mcp-apps/stream`, and `/lynx-xml/stream` accept an optional `conversation`
-request field:
+`/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream` accept an optional
+`conversation` request field:
 
 ```json
 {
