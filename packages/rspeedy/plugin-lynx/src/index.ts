@@ -18,6 +18,7 @@ import { pluginServer } from './plugins/server.plugin.js'
 import { pluginSourcemap } from './plugins/sourcemap.plugin.js'
 import { pluginSwc } from './plugins/swc.plugin.js'
 import { pluginTarget } from './plugins/target.plugin.js'
+import { pluginTemplate } from './plugins/template.plugin.js'
 
 /**
  * The name of the plugin that marks `pluginLynx` as applied. Use it with
@@ -65,5 +66,6 @@ export function pluginLynx(
     pluginSourcemap(),
     pluginSwc(),
     pluginTarget(),
+    pluginTemplate(),
   ]
 }

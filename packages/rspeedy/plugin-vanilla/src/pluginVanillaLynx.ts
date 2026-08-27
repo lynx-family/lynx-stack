@@ -218,12 +218,6 @@ function resolvePluginOptions(
 
 function exposeVanillaCapabilities(api: RsbuildPluginAPI): void {
   api.expose(Symbol.for('LAYERS'), LAYERS)
-  api.expose(Symbol.for('LynxTemplatePlugin'), {
-    LynxTemplatePlugin: {
-      getLynxTemplatePluginHooks: LynxTemplatePlugin
-        .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
-    },
-  })
 }
 
 function disableVanillaHotUpdates(api: RsbuildPluginAPI): void {

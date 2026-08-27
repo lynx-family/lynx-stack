@@ -1785,6 +1785,9 @@ importers:
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-debug-metadata
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:^
+        version: link:../../webpack/template-webpack-plugin
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../../web-platform/web-rsbuild-server-middleware
