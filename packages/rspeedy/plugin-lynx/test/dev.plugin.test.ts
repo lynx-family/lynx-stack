@@ -709,12 +709,8 @@ describe('pluginDev', () => {
   })
 
   test('websocketTransport', async () => {
-    const rsbuild = await createDevStubRsbuild({
-      dev: {
-        client: {
-          websocketTransport: '/foo',
-        } as NonNullable<NonNullable<RsbuildConfig['dev']>['client']>,
-      },
+    const rsbuild = await createDevStubRsbuild({}, {
+      dev: { client: { websocketTransport: '/foo' } },
     })
 
     await rsbuild.unwrapConfig()

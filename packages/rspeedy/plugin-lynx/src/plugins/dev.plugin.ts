@@ -23,10 +23,6 @@ const DEFAULT_IPV6_SERVER_HOST = '::'
 
 type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
 
-interface Client {
-  websocketTransport?: string | undefined
-}
-
 export function pluginDev(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:dev',
@@ -315,13 +311,10 @@ export function pluginDev(): RsbuildPlugin {
             ])
           .end()
         if (isLynx(environment)) {
-          const client = api.getRsbuildConfig('original').dev?.client as
-            | Client
-            | undefined
           chain.plugin('lynx.hmr.provide.websocket')
             .use(ProvidePlugin, [{
               WebSocket: [
-                client?.websocketTransport
+                getLynxConfig(api).dev.client?.websocketTransport
                   ?? require.resolve('@lynx-js/websocket'),
                 'default',
               ],
