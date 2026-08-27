@@ -41,6 +41,7 @@
     "@lynx-js/template-webpack-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",

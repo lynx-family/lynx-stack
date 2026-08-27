@@ -7,6 +7,7 @@
   },
   "include": ["src"],
   "references": [
+    { "path": "../plugin-lynx/tsconfig.build.json" },
     { "path": "../../webpack/runtime-wrapper-webpack-plugin/tsconfig.build.json" },
     { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
   ],
