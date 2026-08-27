@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 import { vitestTestingLibraryPlugin } from './dist/plugins/index.js';
 
 export default defineConfig({
+  define: {
+    __MAIN_THREAD_OBJECT__: 'true',
+  },
   plugins: [
     vitestTestingLibraryPlugin({
       runtimePkgName: '@lynx-js/react',

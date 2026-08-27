@@ -13,6 +13,7 @@ export default defineConfig({
       source: {
         define: {
           __DEV__: 'true',
+          __MAIN_THREAD_OBJECT__: 'true',
         },
         entry: {
           dev: './runtime/src/worklet-runtime/index.ts',
@@ -34,9 +35,30 @@ export default defineConfig({
       source: {
         define: {
           __DEV__: 'false',
+          __MAIN_THREAD_OBJECT__: 'true',
         },
         entry: {
           main: './runtime/src/worklet-runtime/index.ts',
+        },
+      },
+      output: {
+        minify: true,
+        distPath: {
+          root: './runtime/worklet-runtime',
+        },
+      },
+    },
+    {
+      id: 'core',
+      format: 'iife',
+      syntax: 'es2019',
+      source: {
+        define: {
+          __DEV__: 'false',
+          __MAIN_THREAD_OBJECT__: 'false',
+        },
+        entry: {
+          core: './runtime/src/worklet-runtime/index.ts',
         },
       },
       output: {

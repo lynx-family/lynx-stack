@@ -1,13 +1,7 @@
 import { describe, expect, vi } from 'vitest';
 import { fireEvent, render, waitSchedule } from '..';
-import {
-  Component,
-  defineMainThreadObjectType,
-  runOnBackground,
-  runOnMainThread,
-  useMainThreadObject,
-  useMainThreadRef,
-} from '@lynx-js/react';
+import { Component, runOnBackground, runOnMainThread, useMainThreadRef } from '@lynx-js/react';
+import { defineMainThreadObjectType, useMainThreadObject } from '@lynx-js/react/main-thread-object';
 
 const guardedClassCaptureType = defineMainThreadObjectType({
   type: '@test/guarded-class-capture',

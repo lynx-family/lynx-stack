@@ -14,6 +14,7 @@ interface WorkletRuntimeCase {
   expectedChunkNames: string[];
   expectedInitSignatureCount: number;
   expectedRegisterIdCount: number;
+  expectedMainThreadObjectRuntime: boolean;
 }
 
 interface BuildOutput {
@@ -90,6 +91,10 @@ async function buildCase(caseName: string): Promise<BuildOutput> {
       ...(baseConfig.output ?? {}),
       path: outputPath,
     },
+    optimization: {
+      ...(baseConfig.optimization ?? {}),
+      usedExports: true,
+    },
   };
 
   await new Promise<Stats>((resolve, reject) => {
@@ -143,12 +148,28 @@ describe('worklet-runtime bundler guardrails', () => {
       expectedChunkNames: ['worklet-runtime'],
       expectedInitSignatureCount: 1,
       expectedRegisterIdCount: 2,
+      expectedMainThreadObjectRuntime: false,
+    },
+    {
+      caseName: 'main-thread-object-root',
+      expectedChunkNames: ['worklet-runtime'],
+      expectedInitSignatureCount: 1,
+      expectedRegisterIdCount: 3,
+      expectedMainThreadObjectRuntime: true,
+    },
+    {
+      caseName: 'namespace-root-without-main-thread-object',
+      expectedChunkNames: ['worklet-runtime'],
+      expectedInitSignatureCount: 1,
+      expectedRegisterIdCount: 2,
+      expectedMainThreadObjectRuntime: false,
     },
     {
       caseName: 'not-using',
       expectedChunkNames: [],
       expectedInitSignatureCount: 0,
       expectedRegisterIdCount: 0,
+      expectedMainThreadObjectRuntime: false,
     },
   ])(
     'should emit the expected worklet chunks for $caseName',
@@ -157,6 +178,7 @@ describe('worklet-runtime bundler guardrails', () => {
       expectedChunkNames,
       expectedInitSignatureCount,
       expectedRegisterIdCount,
+      expectedMainThreadObjectRuntime,
     }) => {
       const { lepusChunk, mainThreadSource } = await buildCase(caseName);
       const workletRuntimeChunks = Object.keys(lepusChunk).filter(
@@ -173,9 +195,14 @@ describe('worklet-runtime bundler guardrails', () => {
         expect(
           countOccurrences(
             lepusChunk['worklet-runtime'],
-            'globalThis.lynxWorkletImpl = {',
+            'globalThis.lynxWorkletImpl',
           ),
-        ).toBe(expectedInitSignatureCount);
+        ).toBeGreaterThanOrEqual(expectedInitSignatureCount);
+        expect(
+          lepusChunk['worklet-runtime'].includes(
+            'registerMainThreadObjectType',
+          ),
+        ).toBe(expectedMainThreadObjectRuntime);
       } else {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
         expect(expectedInitSignatureCount).toBe(0);

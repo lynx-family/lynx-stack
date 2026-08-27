@@ -1,7 +1,7 @@
-import { useState } from '@lynx-js/react';
+import * as ReactLynx from '@lynx-js/react';
 
 export function a2() {
-  const [count] = useState(0);
+  const [count] = ReactLynx.useState(0);
   const onTapMT = () => {
     'main thread';
   };
@@ -11,10 +11,7 @@ export function a2() {
 
   return (
     <view>
-      <text
-        bindtap={onTapMT}
-        bindlongpress={onLongPressMT}
-      >
+      <text bindtap={onTapMT} bindlongpress={onLongPressMT}>
         hello world {count}
       </text>
     </view>

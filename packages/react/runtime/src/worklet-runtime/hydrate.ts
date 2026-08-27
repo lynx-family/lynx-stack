@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRef, WorkletRefImpl } from './bindings/index.js';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  Worklet,
+  WorkletRef,
+  WorkletRefId,
+  WorkletRefImpl,
+} from './bindings/index.js';
 import { profile } from './utils/profile.js';
 import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
@@ -38,11 +45,23 @@ function hydrateCtxImpl(
     return;
   }
 
+  // Worklet-value descriptors are atomic. In particular, a MainThreadObject's
+  // `_initValue` is user data and must never be interpreted as nested worklet
+  // metadata during hydration.
+  if (__MAIN_THREAD_OBJECT__ && typeof ctxObj['_wvid'] === 'number') {
+    hydrateWorkletValueHandle(
+      ctxObj as unknown as WorkletRefImpl<unknown>,
+      firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
+    );
+    return;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
-    if (key === '_wvid') {
-      hydrateWorkletValueHandle(
-        ctxObj as unknown as WorkletRefImpl<unknown>,
+    /* v8 ignore next 5 -- exercised by the separately built core runtime */
+    if (!__MAIN_THREAD_OBJECT__ && key === '_wvid') {
+      hydrateMainThreadRef(
+        ctxObj[key] as WorkletRefId,
         firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
       );
     } else if (key === '_jsFn') {
@@ -59,6 +78,18 @@ function hydrateCtxImpl(
     }
   }
 }
+
+/* v8 ignore start -- exercised by the separately built core runtime */
+function hydrateMainThreadRef(
+  refId: WorkletRefId,
+  value: WorkletRefImpl<unknown>,
+): void {
+  if ('_initValue' in value) {
+    return;
+  }
+  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value;
+}
+/* v8 ignore stop */
 
 /**
  * Hydrates a worklet value handle on the main thread.

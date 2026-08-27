@@ -54,31 +54,6 @@ export const {
   useTransition,
 } = target[sExportsReactCompat];
 
-const { defineMainThreadObjectType: defineMainThreadObjectTypeImpl } = target[sExportsReactCompat];
-const { useMainThreadObject: useMainThreadObjectImpl } = target[sExportsReactCompat];
-
-export function defineMainThreadObjectType(definition) {
-  assertMainThreadObjectRuntimeExport(
-    defineMainThreadObjectTypeImpl,
-    'defineMainThreadObjectType',
-  );
-  return defineMainThreadObjectTypeImpl(definition);
-}
-
-export function useMainThreadObject(objectType, initialValue) {
-  assertMainThreadObjectRuntimeExport(
-    useMainThreadObjectImpl,
-    'useMainThreadObject',
-  );
-  return useMainThreadObjectImpl(objectType, initialValue);
-}
-
-function assertMainThreadObjectRuntimeExport(value, name) {
-  if (typeof value !== 'function') {
-    throw new Error(
-      `This lazy bundle requires ReactLynx runtime export ${name} for MainThreadObject. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.`,
-    );
-  }
-}
+export { defineMainThreadObjectType, useMainThreadObject } from './main-thread-object.js';
 
 export default target[sExportsReactCompat]['default'];

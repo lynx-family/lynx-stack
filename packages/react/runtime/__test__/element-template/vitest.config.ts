@@ -62,6 +62,9 @@ function transformReactLynxPlugin(): Plugin {
 }
 
 const config: UserConfigExport = defineConfig({
+  define: {
+    __MAIN_THREAD_OBJECT__: 'false',
+  },
   plugins: [
     transformReactLynxPlugin(),
   ],

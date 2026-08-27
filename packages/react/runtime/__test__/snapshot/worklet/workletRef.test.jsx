@@ -15,6 +15,7 @@ import { captureMainThreadObject } from '../../../src/snapshot/worklet/capture';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
 import {
   defineMainThreadObjectType,
+  isMainThreadObjectHandle,
   registerMainThreadObjectDefinition,
   useMainThreadObject,
 } from '../../../src/snapshot/worklet/ref/mainThreadObject';
@@ -327,6 +328,8 @@ describe('MainThreadObject', () => {
 
     expect(captureMainThreadObject(value)).toBe(value);
     expect(captureMainThreadObject({ value: 42 })).toBeUndefined();
+    expect(isMainThreadObjectHandle(value)).toBe(true);
+    expect(isMainThreadObjectHandle({ value: 42 })).toBe(false);
   });
 
   it('creates a typed handle through the library-author hook', () => {
