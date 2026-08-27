@@ -93,18 +93,21 @@ The public VLM `score` remains an integer from 0 through 5. The independent
 images are limited to 10 MiB compressed, 8192 pixels per dimension, and 8
 megapixels after decoding.
 
-The function internally creates the model client from the environment,
-connects to headless Lynx, creates and navigates the page, executes steps,
-captures the final PNG, and releases the page and Lynx connection before the
-independent VLM and reference-image evaluations. Model, runner, page,
-screenshot-comparison, prompt, and fixture-helper types are implementation
-details and are not exported.
+The function internally creates the model client from the environment, hands the
+capture to the shared worker pool, and releases the page before the independent
+VLM and reference-image evaluations. Each worker owns one thread and one
+`LynxContainer`, and drives navigation, steps, and capture synchronously on that
+thread. Model, runner, page, screenshot-comparison, prompt, and fixture-helper
+types are implementation details and are not exported.
 
-Run `judge_page` sequentially on a Tokio current-thread runtime. The runner's
-native task pump and page state remain bound to their creation thread. The
-runner must have its standard runtime resources installed, including
-`lynx_core.js` beside the executable on Linux or in `LynxResources.bundle` on
-macOS.
+`judge_page` is safe to call concurrently from any runtime: native work never
+touches the caller's thread. The runner must have its standard runtime resources
+installed, including `lynx_core.js` beside the executable on Linux or in
+`LynxResources.bundle` on macOS.
+
+The runner captures frames as uncompressed BMP. UI Judge keeps that lossless
+copy for the deterministic reference comparison and transcodes to JPEG for every
+byte that leaves the process, because vision models do not accept `image/bmp`.
 
 Natural-language steps are planned with Agent SDK from the current DOM and
 screenshot, then executed with selector-based tap and wait APIs. The runner has
@@ -193,8 +196,8 @@ curl --request POST http://127.0.0.1:8080/judge \
 ```
 
 To capture the same page without scoring it, send the same JSON request to
-`POST /screenshot`. The response body contains the raw PNG, so save it directly
-to a file:
+`POST /screenshot`. The response body contains the JPEG, so save it directly to
+a file:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot \
@@ -210,7 +213,7 @@ curl --request POST http://127.0.0.1:8080/screenshot \
     "screenshotSettleMs": 16,
     "timeoutMs": 60000
   }' \
-  --output screenshot.png
+  --output screenshot.jpg
 ```
 
 `POST /screenshot` accepts the same request fields and aliases as
@@ -219,8 +222,8 @@ curl --request POST http://127.0.0.1:8080/screenshot \
 `includeScreenshot`, `includeGeqi`, `reference`, and `referenceImage`. Empty
 `steps` do not initialize or call a model. Non-empty `steps` still use Agent SDK
 to perform the requested interactions before capture, but the route never
-scores the PNG or compares it with a reference image. A successful response is
-`200 image/png` with the raw PNG bytes.
+scores the image or compares it with a reference image. A successful response is
+`200 image/jpeg` with the transcoded capture.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
@@ -234,33 +237,33 @@ curl --request POST http://127.0.0.1:8080/compare \
 `reference_image` and `rendered_image` are accepted as aliases for clients that
 use snake-case form names. The response contains `alignmentScore`,
 `visualSimilarity`, `differentBlocks`, `totalBlocks`, `diffImageBase64`, and
-any non-fatal `warnings`. This route accepts PNG, JPEG, and WebP image content.
-It normalizes and compares the uploads on the bounded visual worker pool; it
-does not enqueue headless capture, initialize a model client, render a Lynx
-page, or perform VLM scoring.
+any non-fatal `warnings`. This route accepts BMP, PNG, JPEG, and WebP image
+content. It normalizes and compares the uploads on a blocking task; it does not
+enqueue headless capture, initialize a model client, render a Lynx page, or
+perform VLM scoring.
 
 The `/judge` response contains the JSON-encoded `UiJudgeResult`. When
 `includeScreenshot` is true and capture succeeds, it additionally contains the
-exact judged PNG as `screenshotDataUrl`; the field is omitted by default to
+exact judged image as `screenshotDataUrl`; the field is omitted by default to
 avoid inflating ordinary responses. A completed evaluation returns HTTP `200`,
 including evaluation failures reported in the result's `error` field. Invalid
 HTTP input returns `400`, `413`, or `422`. `POST /screenshot` returns `422` with
-a JSON error when rendering cannot produce a PNG. The server returns `503` when
+a JSON error when rendering cannot produce a frame. The server returns `503` when
 its bounded capture queue is full or the headless worker is no longer
 available. A headless-worker panic makes readiness return `503`, initiates graceful
 shutdown, and is propagated as a server error after the worker is joined. Each
 uploaded comparison image is limited to 10 MiB. Request bodies are limited to
 20 MiB plus 64 KiB of multipart overhead.
 
-The server accepts connections concurrently. It runs up to four native Lynx
-captures on a dedicated current-thread runtime because the renderer is
-thread-bound. After a judge capture completes, Tokio runs model scoring
-concurrently across judge requests and a bounded Rayon pool performs CPU-heavy
-image normalization, alignment, and comparison. The capture queue holds at most
-eight requests.
-Dropped queued requests release their request data, dropped visual waiters
-signal cooperative cancellation, and SIGINT or SIGTERM triggers graceful HTTP
-shutdown before the headless worker is joined.
+The server accepts connections concurrently. Native Lynx capture runs on four
+dedicated worker threads, each owning its own `LynxContainer`, because the
+renderer is thread-bound. After a judge capture completes, Tokio runs model
+scoring concurrently across judge requests and CPU-heavy image normalization,
+alignment, and comparison run on blocking tasks. The capture queue holds at most
+eight requests and reports backpressure synchronously, so a caller learns the
+queue is full without first waiting for a scheduler slot. Dropped queued
+requests release their request data, and SIGINT or SIGTERM triggers graceful
+HTTP shutdown before the headless workers are joined.
 
 ## Model configuration
 
@@ -322,5 +325,5 @@ cargo test -p ui_judge --lib --tests --all-features
 
 The generated `.generated/main.lynx.bundle` is ignored by Git. Runtime-backed
 headless coverage runs on Linux and macOS. The server test submits four distinct
-fixture bundles through the concurrent capture worker and validates each result;
-it does not assert timing or throughput.
+fixture bundles through the production capture worker pool and validates each
+result; it does not assert timing or throughput.

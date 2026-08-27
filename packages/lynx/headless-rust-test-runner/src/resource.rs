@@ -34,26 +34,26 @@ impl ResourceContext {
     }
   }
 
-  pub(crate) async fn read_template(&self, input: &str) -> Result<(String, Vec<u8>)> {
+  pub(crate) fn read_template(&self, input: &str) -> Result<(String, Vec<u8>)> {
     if input.starts_with("http://") || input.starts_with("https://") {
-      return Ok((input.to_string(), fetch_http_async(input).await?));
+      return Ok((input.to_string(), fetch_http(input)?));
     }
     if input.starts_with("file://") {
       let url = Url::parse(input)?;
       let path = url
         .to_file_path()
         .map_err(|_| Error::Protocol(format!("invalid file URL: {input}")))?;
-      return Ok((input.to_string(), tokio::fs::read(path).await?));
+      return Ok((input.to_string(), fs::read(path)?));
     }
     if input.starts_with("assets://") {
       let path = self.resolve_assets_url(input)?;
-      return Ok((input.to_string(), tokio::fs::read(path).await?));
+      return Ok((input.to_string(), fs::read(path)?));
     }
 
-    let path = tokio::fs::canonicalize(input).await?;
+    let path = fs::canonicalize(input)?;
     let url = Url::from_file_path(&path)
       .map_err(|_| Error::Protocol(format!("cannot convert path to file URL: {input}")))?;
-    Ok((url.into(), tokio::fs::read(path).await?))
+    Ok((url.into(), fs::read(path)?))
   }
 
   fn resolve_url(&self, input: &str) -> Result<ResolvedResource> {
@@ -86,7 +86,7 @@ impl ResourceContext {
   fn resolve_assets_url(&self, input: &str) -> Result<PathBuf> {
     let root = self.resources_path.as_ref().ok_or_else(|| {
       Error::Protocol(format!(
-        "cannot resolve {input} without ConnectOptions::resources_path"
+        "cannot resolve {input} without ContainerOptions::resources_path"
       ))
     })?;
     let relative = input
@@ -153,13 +153,6 @@ fn fetch_http(url: &str) -> Result<Vec<u8>> {
     .read_to_end(&mut bytes)
     .map_err(Error::from)?;
   Ok(bytes)
-}
-
-async fn fetch_http_async(url: &str) -> Result<Vec<u8>> {
-  let url = url.to_string();
-  tokio::task::spawn_blocking(move || fetch_http(&url))
-    .await
-    .map_err(|error| Error::Protocol(format!("HTTP fetch task failed: {error}")))?
 }
 
 fn safe_join(root: &Path, relative: &str) -> Result<PathBuf> {

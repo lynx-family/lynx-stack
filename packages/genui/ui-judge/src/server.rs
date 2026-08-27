@@ -5,10 +5,7 @@
 use std::io;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::num::{NonZeroU16, ParseIntError};
-use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread::{self, JoinHandle};
+use std::sync::Arc;
 use std::time::Duration;
 
 use axum::extract::multipart::{Field, Multipart, MultipartError};
@@ -22,15 +19,13 @@ use serde_json::{json, Value};
 use socket2::{Domain, Protocol, SockAddr, Socket, Type};
 use thiserror::Error;
 use tokio::net::TcpListener;
-use tokio::runtime::Runtime;
-use tokio::sync::mpsc::error::TrySendError;
-use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio::sync::{oneshot, watch};
-use tokio::task::{JoinSet, LocalSet};
 
+use crate::capture::{
+  CaptureError, CaptureResponse, CaptureWorkers, WorkerPanicked, CAPTURE_WORKERS,
+};
 use crate::headless::{
-  capture_screenshot_with_options, prepare_judge_page_request, prepare_page_request,
-  score_captured_page, CapturedPage, PageLoadOptions,
+  prepare_judge_page_request, prepare_page_request, score_captured_page, PageLoadOptions,
 };
 use crate::model::{configured_model_name, ModelClient};
 use crate::visual::{
@@ -40,8 +35,6 @@ use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
 
 const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
-const MAX_CONCURRENT_CAPTURES: usize = 4;
-const MAX_QUEUED_CAPTURES: usize = 8;
 const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
 
@@ -58,9 +51,15 @@ pub enum ServerError {
   Io(#[from] io::Error),
 }
 
+impl From<WorkerPanicked> for ServerError {
+  fn from(_: WorkerPanicked) -> Self {
+    Self::HeadlessWorkerPanicked
+  }
+}
+
 #[derive(Clone)]
 struct AppState {
-  headless: Arc<HeadlessExecutor>,
+  headless: Arc<CaptureWorkers>,
   model_name: Arc<str>,
   prepare_request: PrepareJudgePageRequest,
 }
@@ -193,6 +192,12 @@ impl ApiError {
   }
 }
 
+impl From<CaptureError> for ApiError {
+  fn from(error: CaptureError) -> Self {
+    Self::new(StatusCode::SERVICE_UNAVAILABLE, error.to_string())
+  }
+}
+
 impl From<VisualEvaluationError> for ApiError {
   fn from(error: VisualEvaluationError) -> Self {
     let status = StatusCode::from_u16(error.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
@@ -219,189 +224,14 @@ impl IntoResponse for ApiError {
   }
 }
 
-struct CaptureJob {
-  client: Option<ModelClient>,
-  load_options: PageLoadOptions,
-  request: JudgePageRequest,
-  response: oneshot::Sender<CaptureResponse>,
-}
-
-struct CaptureResponse {
-  capture: Result<CapturedPage, UiJudgeResult>,
-  client: Option<ModelClient>,
-  request: JudgePageRequest,
-}
-
-struct HeadlessExecutor {
-  failure_receiver: Mutex<Option<oneshot::Receiver<()>>>,
-  healthy: Arc<AtomicBool>,
-  sender: Mutex<Option<Sender<CaptureJob>>>,
-  worker: Mutex<Option<JoinHandle<()>>>,
-}
-
-impl HeadlessExecutor {
-  fn new() -> io::Result<Self> {
-    Self::new_with_worker(run_headless_worker)
-  }
-
-  fn new_with_worker<F>(worker_main: F) -> io::Result<Self>
-  where
-    F: FnOnce(Runtime, Receiver<CaptureJob>) + Send + 'static,
-  {
-    let runtime = tokio::runtime::Builder::new_current_thread()
-      .enable_all()
-      .build()?;
-    let (sender, receiver) = mpsc::channel(MAX_QUEUED_CAPTURES);
-    let (failure_sender, failure_receiver) = oneshot::channel();
-    let healthy = Arc::new(AtomicBool::new(true));
-    let worker_healthy = Arc::clone(&healthy);
-    let worker = thread::Builder::new()
-      .name("ui-judge-headless".to_string())
-      .spawn(move || {
-        let result = catch_unwind(AssertUnwindSafe(move || worker_main(runtime, receiver)));
-        if let Err(payload) = result {
-          worker_healthy.store(false, Ordering::Release);
-          let _ = failure_sender.send(());
-          resume_unwind(payload);
-        }
-      })?;
-    Ok(Self {
-      failure_receiver: Mutex::new(Some(failure_receiver)),
-      healthy,
-      sender: Mutex::new(Some(sender)),
-      worker: Mutex::new(Some(worker)),
-    })
-  }
-
-  fn take_failure_receiver(&self) -> oneshot::Receiver<()> {
-    self
-      .failure_receiver
-      .lock()
-      .unwrap_or_else(|poisoned| poisoned.into_inner())
-      .take()
-      .expect("headless worker failure receiver can only be taken once")
-  }
-
-  fn is_healthy(&self) -> bool {
-    self.healthy.load(Ordering::Acquire)
-  }
-
-  #[allow(clippy::result_large_err)]
-  async fn capture(
-    &self,
-    request: JudgePageRequest,
-    client: Option<ModelClient>,
-    load_options: PageLoadOptions,
-  ) -> Result<CaptureResponse, ApiError> {
-    let (response, response_receiver) = oneshot::channel();
-    let job = CaptureJob {
-      client,
-      load_options,
-      request,
-      response,
-    };
-    let send_result = self
-      .sender
-      .lock()
-      .unwrap_or_else(|poisoned| poisoned.into_inner())
-      .as_ref()
-      .map(|sender| sender.try_send(job));
-    let Some(send_result) = send_result else {
-      return Err(ApiError::new(
-        StatusCode::SERVICE_UNAVAILABLE,
-        "The UI Judge headless worker is shutting down.",
-      ));
-    };
-    match send_result {
-      Ok(()) => {}
-      Err(TrySendError::Full(_)) => {
-        return Err(ApiError::new(
-          StatusCode::SERVICE_UNAVAILABLE,
-          "The UI Judge capture queue is full; retry the request later.",
-        ))
-      }
-      Err(TrySendError::Closed(_)) => {
-        return Err(ApiError::new(
-          StatusCode::SERVICE_UNAVAILABLE,
-          "The UI Judge headless worker is unavailable.",
-        ))
-      }
-    }
-    response_receiver.await.map_err(|_| {
-      ApiError::new(
-        StatusCode::SERVICE_UNAVAILABLE,
-        "The UI Judge headless worker stopped before returning a result.",
-      )
-    })
-  }
-
-  fn shutdown(&self) -> Result<(), ServerError> {
-    let sender = self
-      .sender
-      .lock()
-      .unwrap_or_else(|poisoned| poisoned.into_inner())
-      .take();
-    // Closing the only sender lets the worker drain accepted jobs and exit.
-    drop(sender);
-    let worker = self
-      .worker
-      .lock()
-      .unwrap_or_else(|poisoned| poisoned.into_inner())
-      .take();
-    if let Some(worker) = worker {
-      worker
-        .join()
-        .map_err(|_| ServerError::HeadlessWorkerPanicked)?;
-    }
-    Ok(())
-  }
-}
-
-impl Drop for HeadlessExecutor {
-  fn drop(&mut self) {
-    let _ = self.shutdown();
-  }
-}
-
-fn run_headless_worker(runtime: Runtime, mut receiver: Receiver<CaptureJob>) {
-  LocalSet::new().block_on(&runtime, async move {
-    let mut captures = JoinSet::new();
-    loop {
-      tokio::select! {
-        job = receiver.recv(), if captures.len() < MAX_CONCURRENT_CAPTURES => {
-          let Some(job) = job else { break };
-          if !job.response.is_closed() {
-            captures.spawn_local(run_capture_job(job));
-          }
-        }
-        result = captures.join_next(), if !captures.is_empty() => {
-          result.expect("headless capture task is available").expect("headless capture task panicked");
-        }
-      }
-    }
-    while let Some(result) = captures.join_next().await {
-      result.expect("headless capture task panicked");
-    }
-  });
-}
-
-async fn run_capture_job(job: CaptureJob) {
-  let capture =
-    capture_screenshot_with_options(job.client.as_ref(), &job.request, &job.load_options).await;
-  let _ = job.response.send(CaptureResponse {
-    capture,
-    client: job.client,
-    request: job.request,
-  });
-}
-
 /// Runs the feature-gated UI Judge HTTP server on IPv4 and IPv6 unspecified
-/// addresses. Native Lynx capture runs concurrently on one dedicated thread,
-/// while completed captures are scored by the Tokio and Rayon pools.
+/// addresses. Native Lynx capture runs on a fixed pool of container-owning
+/// worker threads behind a bounded queue, while completed captures are scored
+/// on the async runtime.
 pub async fn serve(port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
   let (ipv4_listener, ipv6_listener) = bind_listeners(port)?;
-  let headless = Arc::new(HeadlessExecutor::new()?);
+  let headless = Arc::new(CaptureWorkers::new(CAPTURE_WORKERS)?);
   let worker_failure = headless.take_failure_receiver();
   let state = AppState {
     headless: Arc::clone(&headless),
@@ -519,7 +349,13 @@ async fn judge(
   let client = client.expect("judge capture retains its model client");
   let (result, screenshot_data_url) = match capture {
     Ok(capture) => {
-      let screenshot_data_url = include_screenshot.then(|| capture.screenshot_data_url());
+      let screenshot_data_url = match include_screenshot
+        .then(|| capture.screenshot_data_url())
+        .transpose()
+      {
+        Ok(screenshot_data_url) => screenshot_data_url,
+        Err(error) => return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error)),
+      };
       (
         score_captured_page(&client, &request, capture).await,
         screenshot_data_url,
@@ -557,7 +393,10 @@ async fn screenshot(
     .await?
     .capture
     .map_err(capture_api_error)?;
-  Ok(([(CONTENT_TYPE, "image/png")], capture.into_png()).into_response())
+  let jpeg = capture
+    .into_jpeg()
+    .map_err(|error| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error))?;
+  Ok(([(CONTENT_TYPE, "image/jpeg")], jpeg).into_response())
 }
 
 fn capture_api_error(result: impl Into<Box<UiJudgeResult>>) -> ApiError {
@@ -676,17 +515,38 @@ async fn shutdown_signal() -> io::Result<()> {
 mod tests {
   use std::io::Cursor;
   use std::path::Path;
-  use std::sync::Barrier;
+  use std::sync::mpsc::Receiver;
+  use std::sync::{Mutex, MutexGuard};
 
   use axum::body::Body;
   use axum::extract::FromRequest;
   use axum::http::Request;
   use base64::prelude::{Engine, BASE64_STANDARD};
   use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
-  use lynx_headless_rust_test_runner::{ConnectOptions, Lynx};
 
   use super::*;
+  use crate::capture::CaptureJob;
+  use crate::headless::CapturedPage;
   use crate::model::ModelOptions;
+
+  /// Serves a queue with one deterministic reply per job.
+  fn scripted_workers<F>(reply: F) -> Arc<CaptureWorkers>
+  where
+    F: Fn(CaptureJob) + Clone + Send + 'static,
+  {
+    Arc::new(
+      CaptureWorkers::with_worker_main(1, move |jobs: Arc<Mutex<Receiver<CaptureJob>>>| loop {
+        let job = {
+          let jobs: MutexGuard<'_, Receiver<CaptureJob>> =
+            jobs.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+          jobs.recv()
+        };
+        let Ok(job) = job else { return };
+        reply(job);
+      })
+      .expect("start a deterministic headless worker"),
+    )
+  }
 
   fn http_request(url: &str) -> HttpJudgePageRequest {
     HttpJudgePageRequest {
@@ -745,13 +605,17 @@ mod tests {
     panic!("screenshot without steps must not initialize a model client")
   }
 
-  fn sample_png(color: Rgba<u8>) -> Vec<u8> {
+  fn sample_image(format: ImageFormat, color: Rgba<u8>) -> Vec<u8> {
     let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(8, 8, color));
-    let mut png = Vec::new();
+    let mut bytes = Vec::new();
     image
-      .write_to(&mut Cursor::new(&mut png), ImageFormat::Png)
-      .expect("encode sample PNG");
-    png
+      .write_to(&mut Cursor::new(&mut bytes), format)
+      .expect("encode the sample image");
+    bytes
+  }
+
+  fn sample_png(color: Rgba<u8>) -> Vec<u8> {
+    sample_image(ImageFormat::Png, color)
   }
 
   async fn multipart(boundary: &str, fields: &[(&str, &[u8])]) -> Multipart {
@@ -875,21 +739,16 @@ mod tests {
 
   #[tokio::test]
   async fn screenshot_returns_raw_png_without_model_evaluation() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
-    let worker_png = png.clone();
-    let headless = Arc::new(
-      HeadlessExecutor::new_with_worker(move |_runtime, mut receiver| {
-        while let Some(job) = receiver.blocking_recv() {
-          assert!(job.client.is_none());
-          let _ = job.response.send(CaptureResponse {
-            capture: Ok(CapturedPage::from_png(worker_png.clone())),
-            client: job.client,
-            request: job.request,
-          });
-        }
-      })
-      .expect("start screenshot worker"),
-    );
+    let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
+    let worker_bmp = bmp.clone();
+    let headless = scripted_workers(move |job| {
+      assert!(job.client.is_none());
+      let _ = job.response.send(CaptureResponse {
+        capture: Ok(CapturedPage::from_bmp(worker_bmp.clone())),
+        client: job.client,
+        request: job.request,
+      });
+    });
     let state = AppState {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
@@ -903,11 +762,20 @@ mod tests {
       .expect("capture screenshot");
 
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/png");
-    let body = axum::body::to_bytes(response.into_body(), png.len() + 1)
+    assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
+    let body = axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES)
       .await
       .expect("read screenshot body");
-    assert_eq!(body.as_ref(), png);
+    // The route transcodes the capture instead of forwarding the raw frame.
+    assert_eq!(&body[0..2], &[0xFF, 0xD8], "JPEG start-of-image marker");
+    assert_eq!(
+      image::load_from_memory(&body)
+        .expect("decode the screenshot response")
+        .to_rgb8()
+        .dimensions(),
+      (8, 8)
+    );
+    assert_ne!(body.as_ref(), bmp.as_slice());
     headless.shutdown().expect("stop screenshot worker");
   }
 
@@ -968,14 +836,7 @@ mod tests {
 
   #[tokio::test]
   async fn health_reports_ready_while_the_worker_is_available() {
-    let headless = Arc::new(
-      HeadlessExecutor::new_with_worker(
-        |_runtime, mut receiver| {
-          while receiver.blocking_recv().is_some() {}
-        },
-      )
-      .expect("start deterministic headless worker"),
-    );
+    let headless = scripted_workers(drop);
     let response = health(State(AppState {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
@@ -996,77 +857,82 @@ mod tests {
     not(target_os = "linux"),
     ignore = "the Linux runtime-backed test is the CI contract; run explicitly for local diagnostics"
   )]
-  fn headless_worker_renders_pages_concurrently() {
+  fn the_worker_pool_renders_distinct_pages_concurrently() {
     let package_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source = package_dir.join("tests/fixtures/react/.generated/main.lynx.bundle");
     assert!(source.is_file(), "build the React fixture before this test");
-    let bundles = (0..MAX_CONCURRENT_CAPTURES)
+    // Distinct URLs prove the pool renders four different pages rather than
+    // reusing one loaded page.
+    let bundles = (0..CAPTURE_WORKERS)
       .map(|index| {
         let bundle = source.with_file_name(format!("concurrent-{index}.lynx.bundle"));
         std::fs::copy(&source, &bundle).expect("copy concurrent fixture");
         bundle
       })
       .collect::<Vec<_>>();
-
-    let runtime = tokio::runtime::Builder::new_current_thread()
+    let headless = Arc::new(
+      CaptureWorkers::new(CAPTURE_WORKERS).expect("start the concurrent headless workers"),
+    );
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+      .worker_threads(2)
       .enable_all()
       .build()
-      .expect("build headless runtime");
-    runtime
-      .block_on(Lynx::connect(ConnectOptions::default()))
-      .expect("initialize headless Lynx");
-    drop(runtime);
-
-    let headless = Arc::new(HeadlessExecutor::new().expect("start concurrent headless worker"));
-    let barrier = Arc::new(Barrier::new(MAX_CONCURRENT_CAPTURES + 1));
-    let callers = bundles
-      .iter()
-      .map(|bundle| {
+      .expect("build the caller runtime");
+    let captures = runtime.block_on(async {
+      let requests = bundles.iter().map(|bundle| {
         let headless = Arc::clone(&headless);
-        let barrier = Arc::clone(&barrier);
         let capture = http_request(&format!("file://{}", bundle.display()))
           .into_capture_request()
           .expect("build capture request");
-        std::thread::spawn(move || {
-          let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .expect("build caller runtime");
-          barrier.wait();
-          runtime.block_on(headless.capture(capture.request, None, capture.load_options))
-        })
-      })
-      .collect::<Vec<_>>();
-    barrier.wait();
+        async move {
+          headless
+            .capture(capture.request, None, capture.load_options)
+            .await
+        }
+      });
+      futures_join_all(requests).await
+    });
 
-    for caller in callers {
-      let capture = caller
-        .join()
-        .expect("concurrent caller should not panic")
-        .expect("receive concurrent capture")
+    for capture in captures {
+      let capture = capture
+        .expect("receive a concurrent capture")
         .capture
-        .expect("render concurrent page");
-      let png = BASE64_STANDARD
+        .expect("render a concurrent page");
+      let jpeg = BASE64_STANDARD
         .decode(
           capture
             .screenshot_data_url()
-            .strip_prefix("data:image/png;base64,")
+            .expect("transcode the screenshot")
+            .strip_prefix("data:image/jpeg;base64,")
             .expect("screenshot data URL"),
         )
         .expect("decode screenshot data URL");
-      let rgba = image::load_from_memory(&png)
-        .expect("decode concurrent screenshot")
-        .to_rgba8();
-      assert_eq!(rgba.dimensions(), (800, 600));
-      assert!(rgba.pixels().filter(|pixel| pixel[3] != 0).count() >= 450_000);
+      let rgb = image::load_from_memory(&jpeg)
+        .expect("decode a concurrent screenshot")
+        .to_rgb8();
+      assert_eq!(rgb.dimensions(), (800, 600));
     }
     headless
       .shutdown()
-      .expect("stop concurrent headless worker");
+      .expect("stop the concurrent headless workers");
 
     for bundle in bundles {
       std::fs::remove_file(bundle).expect("remove concurrent fixture copy");
     }
+  }
+
+  /// Awaits every future concurrently without adding a futures dependency.
+  async fn futures_join_all<F>(futures: impl Iterator<Item = F>) -> Vec<F::Output>
+  where
+    F: std::future::Future + Send + 'static,
+    F::Output: Send + 'static,
+  {
+    let handles = futures.map(tokio::spawn).collect::<Vec<_>>();
+    let mut results = Vec::with_capacity(handles.len());
+    for handle in handles {
+      results.push(handle.await.expect("capture task must not panic"));
+    }
+    results
   }
 
   #[tokio::test]
@@ -1123,23 +989,18 @@ mod tests {
   async fn handles_independent_http_requests_concurrently() {
     let executed_requests = Arc::new(Mutex::new(Vec::new()));
     let worker_requests = Arc::clone(&executed_requests);
-    let headless = Arc::new(
-      HeadlessExecutor::new_with_worker(move |_runtime, mut receiver| {
-        while let Some(job) = receiver.blocking_recv() {
-          let url = job.request.url.clone();
-          worker_requests
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .push((url.clone(), job.load_options.clone()));
-          let _ = job.response.send(CaptureResponse {
-            capture: Err(completed_result(url)),
-            client: job.client,
-            request: job.request,
-          });
-        }
-      })
-      .expect("start deterministic headless worker"),
-    );
+    let headless = scripted_workers(move |job| {
+      let url = job.request.url.clone();
+      worker_requests
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .push((url.clone(), job.load_options.clone()));
+      let _ = job.response.send(CaptureResponse {
+        capture: Err(completed_result(url)),
+        client: job.client,
+        request: job.request,
+      });
+    });
     let state = AppState {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
@@ -1182,11 +1043,15 @@ mod tests {
   #[tokio::test]
   async fn worker_panic_marks_health_unavailable_and_triggers_shutdown() {
     let headless = Arc::new(
-      HeadlessExecutor::new_with_worker(|_runtime, mut receiver| {
-        let _job = receiver.blocking_recv().expect("receive capture job");
+      CaptureWorkers::with_worker_main(1, |jobs: Arc<Mutex<Receiver<CaptureJob>>>| {
+        let _job = jobs
+          .lock()
+          .unwrap_or_else(|poisoned| poisoned.into_inner())
+          .recv()
+          .expect("receive capture job");
         panic!("intentional headless worker panic");
       })
-      .expect("start panicking headless worker"),
+      .expect("start a panicking headless worker"),
     );
     let worker_failure = headless.take_failure_receiver();
     let (shutdown_sender, mut shutdown_receiver) = watch::channel(false);
@@ -1211,7 +1076,11 @@ mod tests {
       .expect("worker panic must trigger shutdown");
     failure_task.await.expect("join worker failure monitor");
 
-    assert_eq!(error.status, StatusCode::SERVICE_UNAVAILABLE);
+    assert!(matches!(error, CaptureError::Stopped), "got {error:?}");
+    assert_eq!(
+      ApiError::from(error).status,
+      StatusCode::SERVICE_UNAVAILABLE
+    );
     assert!(*shutdown_receiver.borrow());
     assert!(!headless.is_healthy());
     let health_error = health(State(AppState {
@@ -1222,9 +1091,6 @@ mod tests {
     .await
     .expect_err("unhealthy worker must fail readiness");
     assert_eq!(health_error.status, StatusCode::SERVICE_UNAVAILABLE);
-    assert!(matches!(
-      headless.shutdown(),
-      Err(ServerError::HeadlessWorkerPanicked)
-    ));
+    assert!(headless.shutdown().is_err());
   }
 }
