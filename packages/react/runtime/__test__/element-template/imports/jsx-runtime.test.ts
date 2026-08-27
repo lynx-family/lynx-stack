@@ -18,7 +18,7 @@ describe('element-template jsx-runtime', () => {
       __i: -1,
       __u: 0,
     });
-    expect(vnode?.constructor).toBeUndefined();
+    expect(vnode.constructor).toBeUndefined();
   });
 
   it('normalizes missing host props to an empty object', () => {
@@ -35,7 +35,7 @@ describe('element-template jsx-runtime', () => {
 
     const vnode = jsx(Foo, { foo: undefined, ref: 'ref', extra: 1 });
 
-    expect(vnode?.props).toEqual({
+    expect(vnode.props).toEqual({
       foo: 'bar',
       extra: 1,
     });
