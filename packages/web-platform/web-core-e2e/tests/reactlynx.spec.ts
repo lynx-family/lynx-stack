@@ -105,6 +105,52 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)');
     });
 
+    test(
+      'basic-grid-lanes',
+      async ({ page, browserName }, { title }) => {
+        await goto(page, title);
+        const target = page.locator('#grid-lanes');
+
+        const support = await page.evaluate(() => ({
+          gridLanes: CSS.supports('display', 'grid-lanes'),
+          flowTolerance: CSS.supports('flow-tolerance', '12px'),
+        }));
+        if (support.flowTolerance) {
+          await expect(target).toHaveCSS('flow-tolerance', '12px');
+        }
+
+        const grid = page.locator('#grid');
+        await expect(grid).toHaveCSS('display', 'grid');
+
+        if (browserName === 'chromium' || browserName === 'webkit') {
+          expect(support.gridLanes).toBe(true);
+        }
+        if (support.gridLanes) {
+          await expect(target).toHaveCSS('display', 'grid-lanes');
+        } else {
+          await expect(target).toHaveCSS('display', 'flex');
+          await expect(target).not.toHaveCSS('display', 'grid');
+          await expect(target).not.toHaveCSS('display', 'masonry');
+        }
+
+        const geometry = await page.evaluate(() =>
+          globalThis.__collectGridLanesModeBGeometry?.()
+        );
+        expect(geometry).toBeDefined();
+        expect(geometry).toEqual(expect.objectContaining({
+          'grid-lanes': expect.any(Object),
+          'item-a': expect.any(Object),
+          'item-b': expect.any(Object),
+          'item-c': expect.any(Object),
+        }));
+        const itemB = geometry!['item-b'];
+        const itemC = geometry!['item-c'];
+        if (support.gridLanes) {
+          expect(itemC.content[1]).toBeLessThan(itemB.content[5]);
+        }
+      },
+    );
+
     test('basic-reload', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

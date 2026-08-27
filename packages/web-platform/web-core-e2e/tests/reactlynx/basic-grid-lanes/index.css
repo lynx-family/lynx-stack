@@ -1,0 +1,43 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. */
+.page {
+  width: 320px;
+}
+
+.grid-lanes,
+.grid {
+  width: 320px;
+  grid-template-columns: repeat(2, 150px);
+  column-gap: 20px;
+  row-gap: 8px;
+  flex-direction: column-reverse;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.grid-lanes {
+  display: grid-lanes;
+  flow-tolerance: 12px;
+}
+
+.grid {
+  display: grid;
+}
+
+.item {
+  width: 150px;
+  background-color: green;
+}
+
+.item-a {
+  height: 40px;
+}
+
+.item-b {
+  height: 80px;
+}
+
+.item-c {
+  height: 60px;
+}

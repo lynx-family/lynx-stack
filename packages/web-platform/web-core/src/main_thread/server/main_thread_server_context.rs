@@ -579,6 +579,19 @@ mod tests {
   }
 
   #[test]
+  fn test_numeric_grid_lanes_properties() {
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
+    let div_id = ctx.create_element("div".to_string(), None, None, None);
+
+    ctx.set_inline_styles_number_key(div_id, 24, Some("grid-lanes".to_string()));
+    ctx.set_inline_styles_number_key(div_id, 237, Some("12px".to_string()));
+
+    let html = ctx.generate_html(div_id);
+    assert!(html.contains("display:grid-lanes;"));
+    assert!(html.contains("flow-tolerance:12px;"));
+  }
+
+  #[test]
   fn test_component_css_id() {
     let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
     // Create a component with component_css_id = 42

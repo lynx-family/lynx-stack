@@ -1012,6 +1012,7 @@ class LynxTemplatePluginImpl {
 
     const intermediatePosix = intermediate.replace(/\\/g, '/');
 
+    const enableGridLanes = true;
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
         enableFiberArch: true,
@@ -1040,6 +1041,7 @@ class LynxTemplatePluginImpl {
           enableNativeList: true,
           enableNewSticky: true,
           flexBasisZeroPercent: true,
+          enableGridLanes,
           enableGridPlacementShorthands: true,
           syncXElementRegistry: true,
           enableA11y,

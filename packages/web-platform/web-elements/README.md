@@ -1,5 +1,16 @@
 # @lynx-js/web-elements
 
+## Grid lanes support
+
+`display: grid-lanes` uses the browser's native implementation when
+`CSS.supports('display', 'grid-lanes')` is true. Chromium requires the
+`CSSGridLanesLayout` feature flag until the feature is enabled by default.
+Safari 26.4 and later use the native value without a flag.
+
+Lynx for Web passes the value through without translating it to `masonry` or
+`grid`. On browsers that do not support `grid-lanes`, the declaration remains
+unsupported and normal CSS invalid-value handling applies.
+
 It provides the custom-element implementation of Lynx Elements in Web.
 
 So far, support compared to Lynx Elements on the client:
