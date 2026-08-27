@@ -5,6 +5,7 @@
 ```ts
 
 import type { RsbuildPlugin } from '@rsbuild/core';
+import type { Rspack } from '@rsbuild/core';
 
 // @public
 export type BundleFilename = string | ((context: BundleFilenameContext) => string);
@@ -34,8 +35,15 @@ export interface LynxFilename {
 }
 
 // @public
+export interface LynxMinify {
+    backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
+    mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
+}
+
+// @public
 export interface LynxOutput {
     filename?: LynxFilename | undefined;
+    minify?: LynxMinify | undefined;
 }
 
 // @public
