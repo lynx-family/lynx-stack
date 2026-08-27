@@ -6,6 +6,7 @@ import type { RsbuildPlugin, Rspack, RspackChain } from '@rsbuild/core'
 import invariant from 'tiny-invariant'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
+import { getLynxConfig } from '../config.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { EvalSourceMapDevToolPlugin } from '../webpack/EvalSourceMapDevToolPlugin.js'
 import { SourceMapDevToolPlugin } from '../webpack/SourceMapDevToolPlugin.js'
@@ -41,6 +42,7 @@ export function pluginSourcemap(): RsbuildPlugin {
             '<port>',
             String(api.context.devServer?.port ?? server?.port),
           ),
+          getLynxConfig(api).output.sourceMap?.debugIds ?? false,
         )
 
         if (isLynx(environment)) {
@@ -107,6 +109,7 @@ function applySourceMapPlugin(
   chain: RspackChain,
   devtool: Rspack.DevTool,
   publicPath: string | undefined,
+  debugIdsOption: boolean,
 ): void {
   if (devtool === false) {
     return
@@ -123,7 +126,9 @@ function applySourceMapPlugin(
     const cheap = devtool.includes('cheap')
     const moduleMaps = devtool.includes('module')
     const noSources = devtool.includes('nosources')
-    const debugIds = devtool.includes('debugids')
+    // Rspeedy asks for debug IDs with a `'*-debugids'` devtool suffix, which
+    // Rsbuild does not know. `pluginLynx(options)` is the typed home.
+    const debugIds = debugIdsOption || devtool.includes('debugids')
 
     const options = {
       filename: inline

@@ -85,6 +85,25 @@ export interface LynxMinify {
 }
 
 /**
+ * The source map options of the Lynx build engine.
+ *
+ * @public
+ */
+export interface LynxSourceMap {
+  /**
+   * Whether to append a debug ID to the emitted source maps.
+   *
+   * @defaultValue `false`
+   *
+   * @remarks
+   *
+   * A debug ID lets a debugger match a bundle with its source map without
+   * relying on filenames.
+   */
+  debugIds?: boolean | undefined
+}
+
+/**
  * The build outputs of the Lynx build engine.
  *
  * @public
@@ -99,6 +118,11 @@ export interface LynxOutput {
    * The per-thread minifier options.
    */
   minify?: LynxMinify | undefined
+
+  /**
+   * The source map options.
+   */
+  sourceMap?: LynxSourceMap | undefined
 }
 
 /**

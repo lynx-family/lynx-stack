@@ -55,12 +55,18 @@ export interface LynxMinify {
 export interface LynxOutput {
     filename?: LynxFilename | undefined;
     minify?: LynxMinify | undefined;
+    sourceMap?: LynxSourceMap | undefined;
 }
 
 // @public
 export interface LynxPluginOptions {
     dev?: LynxDev | undefined;
     output?: LynxOutput | undefined;
+}
+
+// @public
+export interface LynxSourceMap {
+    debugIds?: boolean | undefined;
 }
 
 // @public

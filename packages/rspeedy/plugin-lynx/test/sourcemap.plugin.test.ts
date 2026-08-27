@@ -387,6 +387,31 @@ describe('pluginSourcemap', () => {
       )
     })
 
+    test('with debugIds from the Lynx options', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild(
+        {
+          output: {
+            sourceMap: {
+              js: 'source-map',
+            },
+          },
+        },
+        undefined,
+        { output: { sourceMap: { debugIds: true } } },
+      )
+      await rsbuild.unwrapConfig()
+
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          debugIds: true,
+        }),
+      )
+    })
+
     test('with output.sourceMap.js: "eval"', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
