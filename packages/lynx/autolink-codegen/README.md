@@ -6,37 +6,43 @@ It scans native module declarations annotated with `/** @lynxmodule */`, reads
 `lynx.lib.json`, and generates:
 
 - `generated/<ModuleName>.ts`
-- Android `<ModuleName>Spec.java` from `types/platform-native-module.d.ts`,
-  when `platforms.android` is declared
-- iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m` from
-  `types/platform-native-module.d.ts`, when `platforms.ios` is declared
-- HarmonyOS `<ModuleName>Spec.ets` from
-  `types/platform-native-module.d.ts`, when `platforms.harmony` is declared
-- shared C++ N-API binding files from `types/napi-native-module.d.ts`
+- Android, iOS, and HarmonyOS platform specs when the manifest selects platform
+  native modules
+- shared C++ Node-API binding and registration files when the manifest declares
+  Node-API addons
 
-For NAPI native modules, codegen creates a minimal user-owned N-API callback
+New projects declare their API in `types/native-module.d.ts`. The legacy
+`types/platform-native-module.d.ts` and `types/napi-native-module.d.ts` files
+remain supported for migration. `types/native-module.d.ts` takes precedence:
+when it exists, codegen ignores both legacy files. Move all declarations in one
+step.
+
+For Node-API native modules, codegen creates a minimal user-owned Node-API callback
 stub under `shared/nativeModule/`. The stub registers each module method as a
 `napi_value` callback and leaves argument parsing to the method body via
 `napi_callback_info`.
 
-When a package declares NAPI native module typings, codegen writes these files
+When a package declares Node-API native module metadata, codegen writes these files
 as applicable to the Native platforms in `lynx.lib.json`:
 
-- `generated/<ModuleName>.ts`: an Android/iOS BTS TypeScript facade that lazily
-  loads the addon with `globalThis.getNapiLoader()` or
-  `globalThis.__lynxNapiLoader`, exports the typed module object, and
-  auto-installs a `NativeModules.<ModuleName>` shim when the package is
-  imported. Lynxtron does not use this facade.
+- `generated/<ModuleName>.ts`: a BTS TypeScript facade that lazily loads the
+  addon through `globalThis.getNapiLoader()`, `globalThis.__lynxNapiLoader`, or
+  the standard `lynx.getModuleLoader()` fallback. For a pure Node-API backend,
+  importing the package replaces the bundle-local `NativeModules` variable with
+  a JavaScript proxy. The proxy exposes `NativeModules.<ModuleName>` from the
+  addon and forwards every other property to the original native HostObject.
+  Its target is a plain JavaScript object rather than the HostObject itself, so
+  the shim does not violate JavaScript proxy invariants.
 - `shared/nativeModule/<ModuleName>.cc`: the shared C++ implementation file.
   Codegen creates it once and preserves it on later runs. Method callback bodies
   are intentionally user-owned so library authors can add argument parsing,
   validation, native logic, return values, and errors.
+- `shared/nativeModule/generated/<ModuleName>Registration.cc`: generated
+  Android, iOS, and HarmonyOS registration code. It is overwritten on every
+  codegen run.
 - `shared/nativeModule/CMakeLists.txt`: the shared CMake object target for NAPI
-  sources. Codegen creates it once and preserves later edits. Library authors
-  usually only extend it for extra C++ sources, include directories, compile
-  definitions, or native dependencies. Android and Lynxtron consume this CMake
-  target; iOS compiles the shared implementation through its generated
-  CocoaPods wrapper instead.
+  sources. Android, HarmonyOS, and Lynxtron consume this target; iOS compiles
+  the same implementation through its generated CocoaPods wrapper.
 - `ios/generated/<ModuleName>NapiWrapper.cc`: an iOS CocoaPods compile entry
   generated when iOS is declared. It includes the shared implementation from
   the iOS pod source root.
@@ -55,7 +61,11 @@ platform wrappers. If the module class is renamed, also rename or remove the old
 shared C++ file and update the addon name in `lynx.lib.json`; codegen does not
 delete stale user-owned files or rewrite the manifest.
 
-Each library currently supports one NAPI native module declaration.
+All shared business sources use the standard headers from
+`@lynx-js/weak-node-api`. Android and iOS use unsuffixed symbols, while
+HarmonyOS and Lynxtron enable weak suffix remapping.
+
+Each library currently supports one Node-API native module declaration.
 
 For compatibility, packages without split typings still use `types/**/*.d.ts`
 as platform native module declarations.
