@@ -793,15 +793,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react
     devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-react
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-lynx
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/core
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
@@ -1640,6 +1640,9 @@ importers:
         specifier: 2.1.4
         version: 2.1.4
     devDependencies:
+      '@lynx-js/preact-devtools':
+        specifier: catalog:lynxjs
+        version: 5.0.1-20260827072047-5f77e12
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-qrcode
@@ -1770,6 +1773,9 @@ importers:
       '@lynx-js/react-umd':
         specifier: workspace:*
         version: link:../../react-umd
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
@@ -1788,6 +1794,9 @@ importers:
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-debug-metadata
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:^
+        version: link:../../webpack/template-webpack-plugin
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../../web-platform/web-rsbuild-server-middleware
@@ -1834,6 +1843,9 @@ importers:
       '@clack/prompts':
         specifier: 1.7.0
         version: 1.7.0
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../core
@@ -1946,6 +1958,9 @@ importers:
       '@lynx-js/react-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/react-webpack-plugin
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../../webpack/test-tools
@@ -1977,6 +1992,9 @@ importers:
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
     devDependencies:
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../core
