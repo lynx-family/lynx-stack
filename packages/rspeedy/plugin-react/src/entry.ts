@@ -12,7 +12,8 @@ import type {
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI, Filename } from '@lynx-js/rspeedy'
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
+import type { ExposedAPI } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -22,6 +23,8 @@ import {
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
+
+const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
 
 const PLUGIN_NAME_REACT = 'lynx:react'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
@@ -77,14 +80,22 @@ export function applyEntry(
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
-    const bundleFilenameConfig = api.getRsbuildConfig('original').output
-      ?.filename as Filename | undefined
-
     // `rslib` builds libraries and `rstest` runs tests, neither of which emits
     // a Lynx template.
     const emitTemplate = api.context.callerName !== 'rslib'
       && api.context.callerName !== 'rstest'
     if (emitTemplate) {
+      // `pluginAutoLynx` applies the engine for the same callers, so the config
+      // is there whenever a template is emitted.
+      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+      const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
+
+      if (!lynxConfig) {
+        throw new Error(
+          'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',
+        )
+      }
+
       const entries = chain.entryPoints.entries() ?? {}
       const isLynx = environment.name === 'lynx'
         || environment.name.startsWith('lynx-')
@@ -99,36 +110,17 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const bundleFilename = bundleFilenameConfig?.bundle
-          ?? bundleFilenameConfig?.template
+        const templateFilename = lynxConfig.resolveBundleFilename({
+          entryName,
+          platform: environment.name,
+        })
 
-        let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.
         // Otherwise `LynxTemplatePlugin` keeps its default
         // (`lazy-bundle/[name].[fullhash].bundle`).
-        let lazyBundleFilename: string | undefined
-        if (typeof bundleFilename === 'function') {
-          // A single function controls both the main bundle and the lazy
-          // bundles via the `lazyBundle` flag, without a dedicated
-          // `lazyBundle` field.
-          templateFilename = bundleFilename({
-            lazyBundle: false,
-            entryName,
-            platform: environment.name,
-          })
-          lazyBundleFilename = bundleFilename({
-            lazyBundle: true,
-            // A lazy bundle name is resolved per async chunk, so there is no
-            // single entry name for it.
-            entryName: undefined,
-            platform: environment.name,
-          })
-            // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so
-            // we only resolve `[platform]` here.
-            .replaceAll('[platform]', environment.name)
-        } else {
-          templateFilename = bundleFilename ?? '[name].[platform].bundle'
-        }
+        const lazyBundleFilename = lynxConfig.resolveLazyBundleFilename({
+          platform: environment.name,
+        })
 
         // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
         // We would like to avoid adding `__background` to the output CSS filename.
@@ -224,11 +216,7 @@ export function applyEntry(
           .use(LynxTemplatePlugin, [{
             dsl: 'react_nodiff',
             chunks: [mainThreadEntry, backgroundEntry],
-            filename: templateFilename.replaceAll('[name]', entryName)
-              .replaceAll(
-                '[platform]',
-                environment.name,
-              ),
+            filename: templateFilename,
             ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
             intermediate: path.posix.join(
               DEFAULT_DIST_PATH_INTERMEDIATE,
