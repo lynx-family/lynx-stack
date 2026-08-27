@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'preact';
-import type { ReactNode } from 'react';
 
 import {
   installElementTemplateCommitHook,
@@ -42,7 +41,7 @@ function collectRawText(instance: BackgroundElementTemplateInstance): string[] {
   return texts;
 }
 
-function App({ items }: { items: readonly string[] }) {
+function App({ items }: { items: readonly string[] }): JSX.Element {
   return (
     <view>
       <view>header</view>
@@ -60,7 +59,7 @@ interface ListItemModel {
   fullSpan?: boolean;
 }
 
-function ListApp({ items }: { items: readonly ListItemModel[] }): ReactNode {
+function ListApp({ items }: { items: readonly ListItemModel[] }): JSX.Element {
   return createElement(
     'list',
     null,
@@ -73,7 +72,7 @@ function ListApp({ items }: { items: readonly ListItemModel[] }): ReactNode {
         },
       })
     ),
-  ) as ReactNode;
+  );
 }
 
 function materializeHydratedSubtree(
@@ -246,18 +245,14 @@ describe('Background Preact render', () => {
   ) {
     it(`unmounts the old child when a same-key host child moves from $${from} to $${to}`, () => {
       const moved = createElement('_et_child', { key: 'moved' });
-      root.render(
-        createElement('_et_host', { [`$${from}`]: moved }) as unknown as Parameters<typeof root.render>[0],
-      );
+      root.render(createElement('_et_host', { [`$${from}`]: moved }));
       markElementTemplateHydrated();
 
       const initialHost = (__root as BackgroundElementTemplateInstance).firstChild!;
       const initialChild = initialHost.elementSlots[from]?.[0];
       expect(initialChild?.type).toBe('_et_child');
 
-      root.render(
-        createElement('_et_host', { [`$${to}`]: moved }) as unknown as Parameters<typeof root.render>[0],
-      );
+      root.render(createElement('_et_host', { [`$${to}`]: moved }));
 
       const host = (__root as BackgroundElementTemplateInstance).firstChild!;
       const movedChild = host.elementSlots[to]?.[0];
