@@ -17,14 +17,8 @@ export interface BundleFilenameContext {
     platform: string;
 }
 
-// @public
-export interface LynxClient {
-    websocketTransport?: string | undefined;
-}
-
 // @beta
 export interface LynxConfig {
-    readonly dev: LynxDev;
     readonly output: LynxOutput;
     resolveBundleFilename(context: {
         entryName: string;
@@ -36,11 +30,6 @@ export interface LynxConfig {
     resolveLazyBundleFilename(context: {
         platform: string;
     }): string | undefined;
-}
-
-// @public
-export interface LynxDev {
-    client?: LynxClient | undefined;
 }
 
 // @public
@@ -62,7 +51,6 @@ export interface LynxOutput {
 
 // @public
 export interface LynxPluginOptions {
-    dev?: LynxDev | undefined;
     output?: LynxOutput | undefined;
 }
 

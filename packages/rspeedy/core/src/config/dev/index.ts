@@ -3,8 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import type { WatchFiles } from '@rsbuild/core'
 
-import type { Client } from './client.js'
-
 /**
  * {@inheritdoc Config.dev}
  * @public
@@ -74,13 +72,6 @@ export interface Dev {
    * ```
    */
   assetPrefix?: string | boolean | undefined
-
-  /**
-   * Configuration of the development client.
-   *
-   * @defaultValue undefined
-   */
-  client?: Client | undefined
 
   /**
    * Whether to enable Hot Module Replacement (HMR).

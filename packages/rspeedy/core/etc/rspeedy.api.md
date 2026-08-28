@@ -173,7 +173,6 @@ export function defineConfig(config: (params: ConfigParams) => Promise<Config>):
 // @public
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
-    client?: DevClient | undefined;
     hmr?: boolean | undefined;
     liveReload?: boolean | undefined;
     progressBar?: boolean | {
@@ -181,11 +180,6 @@ export interface Dev {
     } | undefined;
     watchFiles?: WatchFiles | WatchFiles[] | undefined;
     writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
-}
-
-// @public
-export interface DevClient {
-    websocketTransport?: string | undefined;
 }
 
 // @public
