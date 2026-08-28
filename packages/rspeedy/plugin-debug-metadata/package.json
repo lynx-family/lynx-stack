@@ -42,6 +42,14 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@rsbuild/core": "catalog:rsbuild"
   },
+  "peerDependencies": {
+    "@rsbuild/core": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
   "engines": {
     "node": ">=18"
   },

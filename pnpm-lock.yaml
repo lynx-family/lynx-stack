@@ -796,9 +796,6 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-lynx
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/core
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
@@ -1767,6 +1764,9 @@ importers:
       '@lynx-js/react-umd':
         specifier: workspace:*
         version: link:../../react-umd
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.12(@types/node@24.13.3)
@@ -1949,6 +1949,9 @@ importers:
       '@lynx-js/react-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/react-webpack-plugin
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../../webpack/test-tools

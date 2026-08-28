@@ -63,6 +63,9 @@
   "peerDependenciesMeta": {
     "@lynx-js/rspeedy": {
       "optional": true
+    },
+    "@rsbuild/core": {
+      "optional": true
     }
   },
   "engines": {
