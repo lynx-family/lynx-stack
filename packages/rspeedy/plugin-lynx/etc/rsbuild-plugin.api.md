@@ -44,11 +44,6 @@ export interface LynxDev {
 }
 
 // @public
-export interface LynxDistPath {
-    intermediate?: string | undefined;
-}
-
-// @public
 export interface LynxFilename {
     bundle?: BundleFilename | undefined;
 }
@@ -61,7 +56,6 @@ export interface LynxMinify {
 
 // @public
 export interface LynxOutput {
-    distPath?: LynxDistPath | undefined;
     filename?: LynxFilename | undefined;
     minify?: LynxMinify | undefined;
 }

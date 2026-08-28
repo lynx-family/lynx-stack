@@ -34,7 +34,6 @@ export type {
   LynxConfig,
   LynxClient,
   LynxDev,
-  LynxDistPath,
   LynxFilename,
   LynxMinify,
   LynxOutput,

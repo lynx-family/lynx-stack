@@ -425,9 +425,9 @@ function getHash(
     return EMPTY_HASH
   } else if (isProd || experimental_isLazyBundle) {
     // In standalone lazy bundle mode, due to an internal bug of `lynx.requireModule`,
-    // it will cache module with same path (eg. `/.rspeedy/main/background.js`)
+    // it will cache module with same path (eg. `/.lynx/main/background.js`)
     // even they have different entryName (eg. `__Card__` and `http://[ip]:[port]/main/template.js`)
-    // we need add hash (`/.rspeedy/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
+    // we need add hash (`/.lynx/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
     return DEFAULT_FILENAME_HASH
   } else {
     return EMPTY_HASH

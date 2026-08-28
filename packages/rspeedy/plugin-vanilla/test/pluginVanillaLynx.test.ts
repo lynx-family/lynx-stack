@@ -266,14 +266,14 @@ describe('pluginVanillaLynx', () => {
 
     expect(existsSync(path.join(outputRoot, 'card.bundle'))).toBe(true)
     expect(beforeEncodeArgs?.encodeData.lepusCode.root?.name).toBe(
-      '.rspeedy/card/main-thread.js',
+      '.lynx/card/main-thread.js',
     )
     expect(
       beforeEncodeArgs?.encodeData.lepusCode.root?.source.source().toString(),
     ).toContain('__vanillaMainThreadLoaded')
     expect(Object.keys(beforeEncodeArgs?.encodeData.manifest ?? {})).toEqual([
       '/app-service.js',
-      '/.rspeedy/card/background.js',
+      '/.lynx/card/background.js',
     ])
     expect(beforeEncodeArgs?.encodeData.compilerOptions).toMatchObject({
       targetSdkVersion: '3.5',
@@ -432,12 +432,12 @@ describe('pluginVanillaLynx configuration', () => {
     })
 
     expect(result.entries.get('card__background')).toEqual({
-      filename: '.rspeedy/card/background.js',
+      filename: '.lynx/card/background.js',
       import: fixturePath('background.ts'),
       layer: vanilla.LAYERS.BACKGROUND,
     })
     expect(result.entries.get('card__main-thread')).toEqual({
-      filename: '.rspeedy/card/main-thread.js',
+      filename: '.lynx/card/main-thread.js',
       import: [
         'setup.ts',
         mainThreadRequest,
@@ -485,7 +485,7 @@ describe('pluginVanillaLynx configuration', () => {
     })
     expect(result.entries.has('card__background')).toBe(false)
     expect(result.entries.get('card__main-thread')).toEqual({
-      filename: '.rspeedy/card/main-thread.js',
+      filename: '.lynx/card/main-thread.js',
       import: ['?raw'],
       layer: vanilla.LAYERS.MAIN_THREAD,
     })
@@ -607,7 +607,7 @@ describe('pluginVanillaLynx configuration', () => {
     } as unknown as Rspack.Compiler
 
     expect(() => plugin.apply(compiler)).toThrow(
-      '[pluginVanillaLynx] Main-thread asset was not emitted: .rspeedy/main/main-thread.js',
+      '[pluginVanillaLynx] Main-thread asset was not emitted: .lynx/main/main-thread.js',
     )
   })
 })

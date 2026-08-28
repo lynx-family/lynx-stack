@@ -6,7 +6,7 @@ Emits `debug-metadata.json` alongside each Lynx template build, serves it via de
 
 ## What lands on disk
 
-Per Lynx entry (`<intermediate>` defaults to `.rspeedy/<entry>`):
+Per Lynx entry (`<intermediate>` defaults to `.lynx/<entry>`):
 
 ```text
 dist/<intermediate>/debug-metadata.json    one unified file per entry

@@ -189,12 +189,6 @@ export interface DevClient {
 }
 
 // @public
-export interface DistPath extends DistPathConfig {
-    // @deprecated
-    intermediate?: string | undefined;
-}
-
-// @public
 export type Entry = string | string[] | Record<string, string | string[] | EntryDescription>;
 
 // @public
@@ -265,7 +259,7 @@ export interface Output {
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
     dataUriLimit?: number | DataUriLimit | undefined;
-    distPath?: DistPath | undefined;
+    distPath?: DistPathConfig | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
     inlineScripts?: InlineChunkConfig | undefined;
