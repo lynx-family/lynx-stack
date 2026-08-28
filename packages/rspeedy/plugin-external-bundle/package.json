@@ -47,7 +47,7 @@
     "@rsbuild/core": "catalog:rsbuild"
   },
   "peerDependencies": {
-    "@lynx-js/rspeedy": "^0.16.0",
+    "@lynx-js/rspeedy": "^0.16.0 || ^0.17.0",
     "@rsbuild/core": "^2.0.0"
   },
   "peerDependenciesMeta": {

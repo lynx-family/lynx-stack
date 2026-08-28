@@ -193,7 +193,9 @@ export interface LynxTemplatePluginOptions {
   lazyBundleFilename?: string;
 
   /**
-   * {@inheritdoc @lynx-js/rspeedy#DistPath.intermediate}
+   * The directory of the intermediate files of a bundle.
+   *
+   * @defaultValue `'.lynx'`
    */
   intermediate?: string;
 
@@ -421,7 +423,7 @@ export class LynxTemplatePlugin {
     .freeze<Required<LynxTemplatePluginOptions>>({
       filename: '[name].bundle',
       lazyBundleFilename: 'lazy-bundle/[name].[fullhash].bundle',
-      intermediate: '.rspeedy',
+      intermediate: '.lynx',
       chunks: 'all',
       excludeChunks: [],
 

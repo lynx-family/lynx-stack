@@ -32,7 +32,7 @@ export interface SourceMapDebugSource {
   kind: 'source-map';
   /** Basename of the `.map` file, e.g. `main-thread.js.map`. */
   filename: string;
-  /** Bundler-relative path of the `.map` file, e.g. `.rspeedy/main/main-thread.js.map`. */
+  /** Bundler-relative path of the `.map` file, e.g. `.lynx/main/main-thread.js.map`. */
   path: string;
   /**
    * Identifier that platform-side reverse symbolication uses to match
@@ -202,7 +202,7 @@ export interface Artifact {
   filename: string;
   /**
    * Bundler-relative path of the emitted asset itself (e.g.
-   * `.rspeedy/main/main-thread.js`). Distinct from
+   * `.lynx/main/main-thread.js`). Distinct from
    * {@link SourceMapDebugSource.path}, which points at the
    * sibling `.map` file.
    */

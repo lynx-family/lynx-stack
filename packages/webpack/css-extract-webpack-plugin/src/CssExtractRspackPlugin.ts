@@ -153,7 +153,7 @@ class CssExtractRspackPluginImpl {
     compiler: Compiler,
     public options: CssExtractRspackPluginOptions,
   ) {
-    // Route a lazy bundle's CSS chunk to `.rspeedy/lazy-bundle/<name>/<layer>.css`,
+    // Route a lazy bundle's CSS chunk to `.lynx/lazy-bundle/<name>/<layer>.css`,
     // co-located with the bundle's other intermediate outputs. Non-lazy
     // chunks keep the configured template.
     let currentCompilation: Compilation | undefined;
@@ -173,7 +173,7 @@ class CssExtractRspackPluginImpl {
             id,
           );
           if (layoutName !== undefined) {
-            return `.rspeedy/lazy-bundle/${layoutName}.css`;
+            return `.lynx/lazy-bundle/${layoutName}.css`;
           }
         }
         return userChunkFilename;
@@ -329,10 +329,10 @@ class CssExtractRspackPluginImpl {
                   : undefined;
                 const path = layoutName === undefined
                   ? compilation.getAssetPathWithInfo(
-                    options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
+                    options.chunkFilename ?? '.lynx/async/[name]/[name].css',
                     { chunk: c },
                   ).path
-                  : `.rspeedy/lazy-bundle/${layoutName}.css`;
+                  : `.lynx/lazy-bundle/${layoutName}.css`;
                 return [String(c.name ?? c.id), path] as const;
               });
 

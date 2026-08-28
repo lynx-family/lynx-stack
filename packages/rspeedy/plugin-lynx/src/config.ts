@@ -87,35 +87,11 @@ export interface LynxMinify {
 }
 
 /**
- * The output directories of the Lynx build engine.
- *
- * @public
- */
-export interface LynxDistPath {
-  /**
-   * The directory of the intermediate files of a bundle.
-   *
-   * @defaultValue `'.rspeedy'`
-   *
-   * @remarks
-   *
-   * A Lynx bundle is encoded from per-thread JS, CSS and HMR outputs. They are
-   * emitted into this directory, per entry, instead of next to the bundle.
-   */
-  intermediate?: string | undefined
-}
-
-/**
  * The build outputs of the Lynx build engine.
  *
  * @public
  */
 export interface LynxOutput {
-  /**
-   * The output directories.
-   */
-  distPath?: LynxDistPath | undefined
-
   /**
    * The names of the emitted files.
    */
@@ -216,6 +192,11 @@ export interface LynxConfig {
   /**
    * Resolve the directory of the intermediate files.
    *
+   * @remarks
+   *
+   * A Lynx bundle is encoded from per-thread JS, CSS and HMR outputs. They are
+   * emitted into this directory, per entry, instead of next to the bundle.
+   *
    * @param context - The entry to resolve the directory for. Without an entry
    * name, the directory that holds every entry's is returned.
    */
@@ -273,7 +254,7 @@ export function getLynxConfig(api: RsbuildPluginAPI): LynxConfig {
 
 const DEFAULT_BUNDLE_FILENAME = '[name].[platform].bundle'
 
-const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
+const DIST_PATH_INTERMEDIATE = '.lynx'
 
 function resolve(
   bundle: BundleFilename | undefined,
@@ -321,10 +302,9 @@ export function createLynxConfig(options: LynxPluginOptions): LynxConfig {
     },
 
     resolveIntermediateDir(context) {
-      const dir = output.distPath?.intermediate
-        ?? DEFAULT_DIST_PATH_INTERMEDIATE
-
-      return context?.entryName ? posix.join(dir, context.entryName) : dir
+      return context?.entryName
+        ? posix.join(DIST_PATH_INTERMEDIATE, context.entryName)
+        : DIST_PATH_INTERMEDIATE
     },
 
     resolveLazyBundleFilename({ platform }) {

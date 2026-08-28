@@ -21,7 +21,7 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(findCssExtractFilename(config.plugins)).toBe(
-      '.rspeedy/[name]/[name].css',
+      '.lynx/[name]/[name].css',
     )
   })
 
@@ -48,7 +48,7 @@ describe('pluginOutput', () => {
     })
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
-    expect(findCssExtractFilename(config.plugins)).toBe('.rspeedy/style.css')
+    expect(findCssExtractFilename(config.plugins)).toBe('.lynx/style.css')
   })
 
   test('lowers const/let to var via output.environment', async () => {

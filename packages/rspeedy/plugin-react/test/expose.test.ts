@@ -104,7 +104,7 @@ describe('Expose', () => {
       .toMatchInlineSnapshot(`
       [
         "/app-service.js",
-        "/.rspeedy/main/background.js",
+        "/.lynx/main/background.js",
       ]
     `)
   })

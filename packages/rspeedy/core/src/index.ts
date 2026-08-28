@@ -48,7 +48,6 @@ export type {
   CssModules,
   CssModuleLocalsConvention,
 } from './config/output/css-modules.js'
-export type { DistPath } from './config/output/dist-path.js'
 export type {
   BundleFilename,
   BundleFilenameContext,
