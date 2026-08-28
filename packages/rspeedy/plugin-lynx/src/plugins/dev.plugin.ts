@@ -158,6 +158,10 @@ export function pluginDev(): RsbuildPlugin {
                 host: hostname,
                 port: '<port>',
               },
+              // A Lynx client reads the bundle from disk as often as it reads
+              // it from the dev server, so the default is the opposite of
+              // Rsbuild's.
+              writeToDisk: original.dev?.writeToDisk ?? true,
             },
             // When using `rspeedy dev --mode production`
             // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`

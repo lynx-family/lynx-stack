@@ -5,7 +5,11 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
-import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  RsbuildConfig,
+  RsbuildPlugin,
+  RsbuildPluginAPI,
+} from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
@@ -706,6 +710,45 @@ describe('pluginDev', () => {
       '@lynx-js/webpack-dev-transport/client',
       expect.stringContaining('live-reload=true'),
     )
+  })
+
+  test('writeToDisk defaults to true', async () => {
+    let writeToDisk: unknown
+
+    const rsbuild = await createDevStubRsbuild({
+      plugins: [{
+        name: 'test:capture',
+        setup(api: RsbuildPluginAPI) {
+          api.modifyBundlerChain(() => {
+            writeToDisk = api.getNormalizedConfig().dev.writeToDisk
+          })
+        },
+      }],
+    })
+
+    await rsbuild.unwrapConfig()
+
+    expect(writeToDisk).toBe(true)
+  })
+
+  test('writeToDisk keeps a user value', async () => {
+    let writeToDisk: unknown
+
+    const rsbuild = await createDevStubRsbuild({
+      dev: { writeToDisk: false },
+      plugins: [{
+        name: 'test:capture',
+        setup(api: RsbuildPluginAPI) {
+          api.modifyBundlerChain(() => {
+            writeToDisk = api.getNormalizedConfig().dev.writeToDisk
+          })
+        },
+      }],
+    })
+
+    await rsbuild.unwrapConfig()
+
+    expect(writeToDisk).toBe(false)
   })
 
   test('websocketTransport', async () => {

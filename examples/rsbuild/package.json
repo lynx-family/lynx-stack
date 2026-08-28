@@ -11,6 +11,7 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
