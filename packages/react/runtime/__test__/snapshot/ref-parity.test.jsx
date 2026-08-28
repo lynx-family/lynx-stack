@@ -58,6 +58,13 @@ describe('ref parity between the main and background threads', () => {
     });
   });
 
+  it('createElement lifts ref off props for host elements, like the background thread', () => {
+    const background = backgroundJsx('view', { ref, id: 'x' });
+    const mainThread = createElement('view', { ref, id: 'x' });
+
+    expect(mainThread.props).toEqual(background.props);
+  });
+
   it('renders the same tree on both threads when a component reads props.ref', () => {
     function Branching(props) {
       return props.ref ? 'with-ref' : 'without-ref';
