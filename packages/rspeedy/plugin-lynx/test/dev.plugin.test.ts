@@ -751,17 +751,15 @@ describe('pluginDev', () => {
     expect(writeToDisk).toBe(false)
   })
 
-  test('websocketTransport', async () => {
-    const rsbuild = await createDevStubRsbuild({}, {
-      dev: { client: { websocketTransport: '/foo' } },
-    })
+  test('provides the WebSocket that HMR resolves', async () => {
+    const rsbuild = await createDevStubRsbuild({})
 
     await rsbuild.unwrapConfig()
 
     const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
 
     expect(ProvidePlugin).toHaveBeenCalledWith({
-      WebSocket: ['/foo', 'default'],
+      WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
     })
     expect(ProvidePlugin).toHaveBeenCalledWith({
       __webpack_dev_server_client__: [

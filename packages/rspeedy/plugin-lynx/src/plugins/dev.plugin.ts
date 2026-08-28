@@ -317,11 +317,7 @@ export function pluginDev(): RsbuildPlugin {
         if (isLynx(environment)) {
           chain.plugin('lynx.hmr.provide.websocket')
             .use(ProvidePlugin, [{
-              WebSocket: [
-                getLynxConfig(api).dev.client?.websocketTransport
-                  ?? require.resolve('@lynx-js/websocket'),
-                'default',
-              ],
+              WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
             }])
             .end()
         }
