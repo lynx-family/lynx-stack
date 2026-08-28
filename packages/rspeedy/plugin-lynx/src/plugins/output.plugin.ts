@@ -4,7 +4,7 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
+import { getLynxConfig } from '../config.js'
 
 export function pluginOutput(): RsbuildPlugin {
   return {
@@ -39,7 +39,8 @@ export function pluginOutput(): RsbuildPlugin {
                 // We override the default value of Rsbuild(`static/css`) here.
                 // Since all the CSS should be encoded into the template in
                 // Lynx.
-                css: originalDistPath?.css ?? DEFAULT_DIST_PATH_INTERMEDIATE,
+                css: originalDistPath?.css
+                  ?? getLynxConfig(api).resolveIntermediateDir(),
               },
               filename: {
                 css: originalFilename?.css ?? '[name]/[name].css',

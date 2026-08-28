@@ -104,4 +104,30 @@ describe('createRspeedy', () => {
 
     expect.assertions(1)
   })
+
+  test('output.distPath.intermediate reaches the Lynx config', async () => {
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        output: { distPath: { intermediate: '.lynx' } },
+        plugins: [
+          {
+            name: 'test',
+            setup(api: RsbuildPluginAPI) {
+              api.modifyBundlerChain(() => {
+                expect(
+                  api.useExposed<LynxConfig>(
+                    Symbol.for('@lynx-js/rsbuild-plugin:config'),
+                  )?.resolveIntermediateDir({ entryName: 'main' }),
+                ).toBe('.lynx/main')
+              })
+            },
+          },
+        ],
+      },
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(1)
+  })
 })

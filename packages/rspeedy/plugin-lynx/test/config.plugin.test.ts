@@ -137,6 +137,24 @@ describe('pluginConfig', () => {
     })).toBe('lazy/[name].lynx.bundle')
   })
 
+  test('resolveIntermediateDir defaults to .rspeedy', async () => {
+    const lynx = await usingLynxConfig()
+
+    expect(lynx.resolveIntermediateDir()).toBe('.rspeedy')
+    expect(lynx.resolveIntermediateDir({ entryName: 'main' }))
+      .toBe('.rspeedy/main')
+  })
+
+  test('resolveIntermediateDir uses output.distPath.intermediate', async () => {
+    const lynx = await usingLynxConfig({
+      output: { distPath: { intermediate: '.lynx' } },
+    })
+
+    expect(lynx.resolveIntermediateDir()).toBe('.lynx')
+    expect(lynx.resolveIntermediateDir({ entryName: 'main' }))
+      .toBe('.lynx/main')
+  })
+
   test('throws when pluginLynx is not applied', async () => {
     let error: unknown
 

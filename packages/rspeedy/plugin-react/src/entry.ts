@@ -31,7 +31,6 @@ const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
 
-const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
 const DEFAULT_FILENAME_HASH = '.[contenthash:8]'
 const EMPTY_HASH = ''
 
@@ -128,8 +127,7 @@ export function applyEntry(
 
         const mainThreadName = path.posix.join(
           isLynx
-            // TODO: config intermediate
-            ? DEFAULT_DIST_PATH_INTERMEDIATE
+            ? lynxConfig.resolveIntermediateDir()
             // For non-Lynx environment, the entry is not deleted.
             // So we do not put it in the intermediate.
             : '',
@@ -138,8 +136,7 @@ export function applyEntry(
 
         const backgroundName = path.posix.join(
           isLynx
-            // TODO: config intermediate
-            ? DEFAULT_DIST_PATH_INTERMEDIATE
+            ? lynxConfig.resolveIntermediateDir()
             // For non-Lynx environment, the entry is not deleted.
             // So we do not put it in the intermediate.
             : '',
@@ -218,10 +215,7 @@ export function applyEntry(
             chunks: [mainThreadEntry, backgroundEntry],
             filename: templateFilename,
             ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
-            intermediate: path.posix.join(
-              DEFAULT_DIST_PATH_INTERMEDIATE,
-              entryName,
-            ),
+            intermediate: lynxConfig.resolveIntermediateDir({ entryName }),
             customCSSInheritanceList,
             debugInfoOutside,
             defaultDisplayLinear,
