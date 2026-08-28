@@ -20,7 +20,7 @@ describe('lepus jsx-runtime createVNode', () => {
     expect(vnode).toBeInstanceOf(SnapshotInstance);
   });
 
-  it('should strip ref and apply defaultProps for function components', () => {
+  it('should keep ref and apply defaultProps for function components', () => {
     function Foo() {
       return null;
     }
@@ -28,6 +28,18 @@ describe('lepus jsx-runtime createVNode', () => {
 
     const vnode = jsx(Foo, { foo: undefined, ref: 'ref', extra: 1 });
     expect(vnode.props.foo).toBe('bar');
+    expect(vnode.props.extra).toBe(1);
+    expect(vnode.props.ref).toBe('ref');
+  });
+
+  it('should strip ref for class components', () => {
+    class Foo {
+      render() {
+        return null;
+      }
+    }
+
+    const vnode = jsx(Foo, { ref: 'ref', extra: 1 });
     expect(vnode.props.extra).toBe(1);
     expect('ref' in vnode.props).toBe(false);
   });
