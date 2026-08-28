@@ -7,11 +7,12 @@ based on `11.0.0-rc.1`).
 
 **Breaking:** `useEffect` cleanups of unmounted components no longer run
 synchronously during unmount. They run in the after-paint flush instead,
-matching React. Page destroy is unaffected — it drains them synchronously,
-so cleanups that release native resources still run before the runtime
-goes away. Code that assumed a cleanup had already run right after a
-re-render removed the component needs to await a flush, or use
-`useLayoutEffect` from `preact/hooks` when the work must stay inside the
+matching React. This applies to `useLayoutEffect` too, which ReactLynx
+exports as an alias of `useEffect`. Page destroy is unaffected — it drains
+them synchronously, so cleanups that release native resources still run
+before the runtime goes away. Code that assumed a cleanup had already run
+right after a re-render removed the component needs to await a flush;
+ReactLynx does not currently export a hook whose cleanup stays inside the
 unmount commit.
 
 Other runtime-visible changes:
