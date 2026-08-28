@@ -47,6 +47,18 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/core": "catalog:rstest"
   },
+  "peerDependencies": {
+    "@lynx-js/rspeedy": "^0.16.0",
+    "@rsbuild/core": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/rspeedy": {
+      "optional": true
+    },
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
   "engines": {
     "node": ">=18"
   },
