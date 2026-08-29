@@ -35,6 +35,7 @@ export type {
   LynxFilename,
   LynxMinify,
   LynxOutput,
+  LynxPerformance,
   LynxPluginOptions,
 } from './config.js'
 

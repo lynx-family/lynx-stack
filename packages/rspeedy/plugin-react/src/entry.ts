@@ -79,6 +79,9 @@ export function applyEntry(
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
+    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+    const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
+
     // `rslib` builds libraries and `rstest` runs tests, neither of which emits
     // a Lynx template.
     const emitTemplate = api.context.callerName !== 'rslib'
@@ -86,9 +89,6 @@ export function applyEntry(
     if (emitTemplate) {
       // `pluginAutoLynx` applies the engine for the same callers, so the config
       // is there whenever a template is emitted.
-      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
-      const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
-
       if (!lynxConfig) {
         throw new Error(
           'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',
@@ -328,7 +328,7 @@ export function applyEntry(
         return environmentProfile
       }
 
-      const userProfile = rspeedyConfig?.performance?.profile
+      const userProfile = lynxConfig?.performance.profile
       if (userProfile !== undefined) {
         return userProfile
       }

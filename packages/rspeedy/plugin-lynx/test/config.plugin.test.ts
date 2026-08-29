@@ -137,6 +137,19 @@ describe('pluginConfig', () => {
     })).toBe('lazy/[name].lynx.bundle')
   })
 
+  test('performance defaults to empty', async () => {
+    const lynx = await usingLynxConfig()
+
+    expect(lynx.performance).toEqual({})
+    expect(lynx.performance.profile).toBeUndefined()
+  })
+
+  test('exposes performance.profile', async () => {
+    const lynx = await usingLynxConfig({ performance: { profile: true } })
+
+    expect(lynx.performance.profile).toBe(true)
+  })
+
   test('resolveIntermediateDir defaults to .lynx', async () => {
     const lynx = await usingLynxConfig()
 

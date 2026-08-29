@@ -20,6 +20,7 @@ export interface BundleFilenameContext {
 // @beta
 export interface LynxConfig {
     readonly output: LynxOutput;
+    readonly performance: LynxPerformance;
     resolveBundleFilename(context: {
         entryName: string;
         platform: string;
@@ -50,8 +51,14 @@ export interface LynxOutput {
 }
 
 // @public
+export interface LynxPerformance {
+    profile?: boolean | undefined;
+}
+
+// @public
 export interface LynxPluginOptions {
     output?: LynxOutput | undefined;
+    performance?: LynxPerformance | undefined;
 }
 
 // @public

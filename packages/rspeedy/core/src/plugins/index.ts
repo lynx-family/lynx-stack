@@ -15,9 +15,14 @@ function toLynxPluginOptions(config: Config): LynxPluginOptions {
     ? filename
     : filename?.bundle ?? filename?.template
 
+  const { profile } = config.performance ?? {}
+
   return {
     output: {
       ...bundle === undefined ? {} : { filename: { bundle } },
+    },
+    performance: {
+      ...profile === undefined ? {} : { profile },
     },
   }
 }
