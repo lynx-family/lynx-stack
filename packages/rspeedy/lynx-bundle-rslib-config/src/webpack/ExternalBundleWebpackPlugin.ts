@@ -5,6 +5,18 @@ import type { Rspack } from '@rslib/core'
 
 import { cssChunksToMap } from '@lynx-js/css-serializer'
 import type { LynxStyleNode } from '@lynx-js/css-serializer'
+import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+
+/**
+ * Provides the template lifecycle hooks, so the plugins that tap them run for
+ * a bundle assembled outside `LynxTemplatePlugin`.
+ *
+ * @public
+ */
+export interface LynxTemplatePluginHooksProvider {
+  getLynxTemplatePluginHooks:
+    typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+}
 
 /**
  * The options for {@link ExternalBundleWebpackPlugin}.
@@ -49,6 +61,17 @@ export interface ExternalBundleWebpackPluginOptions {
    * @defaultValue []
    */
   mainThreadChunks?: string[] | undefined
+
+  /**
+   * Drives the template lifecycle hooks, so the plugins that tap them run for
+   * an external bundle too.
+   *
+   * @remarks
+   *
+   * `pluginLynx` exposes this under `Symbol.for('LynxTemplatePlugin')`. Left
+   * out, the bundle is assembled without running any of them.
+   */
+  LynxTemplatePlugin?: LynxTemplatePluginHooksProvider | undefined
 
   /**
    * Whether to tag main thread chunks with the `JsBytecode` encoding so the
@@ -116,16 +139,44 @@ export class ExternalBundleWebpackPlugin {
     // of `DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG`.
     const enableJsBytecode = this.options.enableJsBytecode
       ?? process.env['NODE_ENV'] !== 'development'
+    const hooks = this.options.LynxTemplatePlugin
+      ?.getLynxTemplatePluginHooks(compilation)
+
     const { buffer, encodeOptions } = await this.#encode(
       assets,
       enableJsBytecode,
+      compilation,
+      hooks,
     )
 
     const { RawSource } = compiler.webpack.sources
+    const outputName = this.options.bundleFileName
+
+    const emitted = hooks
+      ? await hooks.beforeEmit.promise({
+        finalEncodeOptions: encodeOptions as never,
+        debugInfo: '',
+        template: buffer,
+        outputName,
+        mainThreadAssets: assets.filter(asset =>
+          this.options.mainThreadChunks?.includes(asset.name)
+        ) as never,
+        cssChunks: assets.filter(asset =>
+          asset.info.assetType === 'extract-css'
+        ) as never,
+        chunkGroups: [...compilation.chunkGroups] as never,
+      })
+      : undefined
+    const template = emitted ? emitted.template : buffer
+
     compilation.emitAsset(
-      this.options.bundleFileName,
-      new RawSource(buffer, false),
+      outputName,
+      new RawSource(template, false),
     )
+
+    if (hooks) {
+      await hooks.afterEmit.promise({ outputName })
+    }
     if (isDebug()) {
       compilation.emitAsset(
         'tasm.json',
@@ -143,6 +194,12 @@ export class ExternalBundleWebpackPlugin {
   async #encode(
     assets: readonly Rspack.Asset[],
     enableJsBytecode: boolean,
+    compilation: Rspack.Compilation,
+    hooks:
+      | ReturnType<
+        LynxTemplatePluginHooksProvider['getLynxTemplatePluginHooks']
+      >
+      | undefined,
   ) {
     const customSections = assets
       .reduce<
@@ -206,8 +263,47 @@ export class ExternalBundleWebpackPlugin {
       customSections,
     }
 
-    const { buffer } = await this.options.encode(encodeOptions)
+    if (!hooks) {
+      const { buffer } = await this.options.encode(encodeOptions)
+      return { buffer, encodeOptions }
+    }
 
-    return { buffer, encodeOptions }
+    // `beforeEncode` is where `pluginLynxDebugMetadata` collects the source
+    // maps and rewrites the trailers, so it runs before the encoder does.
+    // Every plugin that taps it reads the shape `LynxTemplatePlugin` builds,
+    // so the sections are carried in one of that shape.
+    const { encodeData } = await hooks.beforeEncode.promise({
+      encodeData: {
+        ...encodeOptions,
+        sourceContent: { ...encodeOptions.sourceContent, config: {} },
+        lepusCode: { chunks: [] },
+        manifest: {},
+        css: {},
+      } as never,
+      filenameTemplate: this.options.bundleFileName,
+      chunkGroups: [...compilation.chunkGroups] as never,
+      intermediate: '',
+      intermediateAssets: [],
+    })
+
+    const resolved = encodeData as unknown as typeof encodeOptions & {
+      sourceContent: { config?: Record<string, unknown> }
+    }
+    const { config, ...sourceContent } = resolved.sourceContent
+
+    // An external bundle carries no `lepusCode`, `manifest` or `css`: its
+    // chunks are sections. They were only there for the hooks, so encode
+    // what it actually carries, keeping whatever a tap wrote.
+    const forEncode = {
+      compilerOptions: resolved.compilerOptions,
+      sourceContent: config && Object.keys(config).length > 0
+        ? { ...sourceContent, config }
+        : sourceContent,
+      customSections: resolved.customSections,
+    } as typeof encodeOptions
+
+    const { buffer } = await this.options.encode(forEncode)
+
+    return { buffer, encodeOptions: forEncode }
   }
 }

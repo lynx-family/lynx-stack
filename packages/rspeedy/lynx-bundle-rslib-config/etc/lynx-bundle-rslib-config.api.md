@@ -5,6 +5,7 @@
 ```ts
 
 import type { LibConfig } from '@rslib/core';
+import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import type { RslibConfig } from '@rslib/core';
 import type { Rspack } from '@rslib/core';
 
@@ -49,6 +50,8 @@ export interface ExternalBundleWebpackPluginOptions {
         buffer: Buffer;
     }>;
     engineVersion?: string | undefined;
+    // Warning: (ae-forgotten-export) The symbol "LynxTemplatePluginHooksProvider" needs to be exported by the entry point index.d.ts
+    LynxTemplatePlugin?: LynxTemplatePluginHooksProvider | undefined;
     mainThreadChunks?: string[] | undefined;
 }
 

@@ -9,6 +9,7 @@ import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
 import { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
+import type { LynxTemplatePluginHooksProvider } from './webpack/ExternalBundleWebpackPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
 
 const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
@@ -776,13 +777,18 @@ const externalBundleRsbuildPlugin = ({
           [
             {
               // The engine config is only there when the user applied
-              // `pluginLynxConfig`, so the default stays the source of truth.
+              // `pluginLynx`, so the default stays the source of truth.
               bundleFileName: api.useExposed<LynxConfig>(S_LYNX_CONFIG)
                 ?.resolveBundleFilename({
                   entryName: libName,
                   platform: isWeb ? 'web' : 'lynx',
                 })
                 ?? `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+              // `pluginLynx` exposes the hooks whether or not it drives the
+              // build, so the plugins that tap them run here too.
+              LynxTemplatePlugin: api.useExposed<
+                { LynxTemplatePlugin: LynxTemplatePluginHooksProvider }
+              >(Symbol.for('LynxTemplatePlugin'))?.LynxTemplatePlugin,
               encode,
               engineVersion,
               mainThreadChunks,

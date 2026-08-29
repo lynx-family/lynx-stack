@@ -544,6 +544,9 @@ importers:
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
@@ -1680,6 +1683,9 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-lynx
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../../webpack/test-tools

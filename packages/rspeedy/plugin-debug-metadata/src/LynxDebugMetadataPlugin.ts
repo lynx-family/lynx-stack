@@ -346,7 +346,9 @@ export function rewriteSourceMappingURLs(
   args: Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0],
   options?: RewriteSourceMappingURLsOptions,
 ): void {
-  const debugMetadataUrl = args.encodeData.sourceContent.config[
+  // A bundle assembled outside `LynxTemplatePlugin` carries no `config`, so
+  // the url is unset there in the same way an empty one is.
+  const debugMetadataUrl = args.encodeData.sourceContent.config?.[
     'debugMetadataUrl'
   ]
   if (typeof debugMetadataUrl !== 'string' || debugMetadataUrl === '') return
