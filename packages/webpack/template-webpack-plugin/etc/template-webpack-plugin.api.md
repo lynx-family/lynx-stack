@@ -26,6 +26,16 @@ export const CSSPlugins: {
 };
 
 // @public
+export interface CustomSectionNaming {
+    // (undocumented)
+    background(chunkName: string, index: number): string | undefined;
+    // (undocumented)
+    css(assetName: string, index: number): string | undefined;
+    // (undocumented)
+    mainThread(assetName: string, index: number): string | undefined;
+}
+
+// @public
 export interface EncodeOptions {
     // (undocumented)
     [k: string]: unknown;

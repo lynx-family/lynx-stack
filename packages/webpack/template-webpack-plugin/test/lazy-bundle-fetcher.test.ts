@@ -155,4 +155,22 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
     process.env['DEBUG'] = 'unrelated';
     expect(await runAndGetMtEncoding('production')).toBe('JsBytecode');
   });
+
+  test('names the sections the runtime resolves', async () => {
+    const { captured, plugin } = captureBeforeEmit();
+    await runWebpack(buildConfig(plugin, 'production'));
+    const lazy = captured.find((c) => c.outputName.startsWith('lazy-bundle/'));
+
+    // The fixture has no CSS, so only the two JS sections are emitted.
+    expect(Object.keys(lazy?.customSections ?? {}).sort()).toEqual([
+      'background',
+      'main-thread',
+    ]);
+    expect(lazy?.customSections['background']?.content).toEqual(
+      expect.any(String),
+    );
+    expect(lazy?.customSections['main-thread']?.content).toEqual(
+      expect.any(String),
+    );
+  });
 });
