@@ -5,10 +5,13 @@
 import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
 import { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
+
+const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
 
 /**
  * The options for encoding the external bundle.
@@ -772,7 +775,14 @@ const externalBundleRsbuildPlugin = ({
           ExternalBundleWebpackPlugin,
           [
             {
-              bundleFileName: `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+              // The engine config is only there when the user applied
+              // `pluginLynxConfig`, so the default stays the source of truth.
+              bundleFileName: api.useExposed<LynxConfig>(S_LYNX_CONFIG)
+                ?.resolveBundleFilename({
+                  entryName: libName,
+                  platform: isWeb ? 'web' : 'lynx',
+                })
+                ?? `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
               encode,
               engineVersion,
               mainThreadChunks,

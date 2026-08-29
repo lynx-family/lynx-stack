@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,6 +20,7 @@ import {
 } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 import { decodeTemplate } from './utils.js'
 import { defineExternalBundleRslibConfig } from '../src/index.js'
@@ -155,6 +157,60 @@ describe('REACT_DEVTOOL minify', () => {
     expect(minify.jsOptions?.minimizerOptions?.compress?.keep_fnames)
       .toBeUndefined()
     expect(minify.jsOptions?.minimizerOptions?.mangle).toBeUndefined()
+  })
+})
+
+function sha256(file: string) {
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+}
+
+describe('with the engine config', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  function configFor(id: string, plugins: unknown[]) {
+    return defineExternalBundleRslibConfig({
+      source: {
+        entry: { utils: path.join(fixtureDir, 'index.ts') },
+      },
+      id,
+      output: { distPath: { root: path.join(fixtureDir, 'dist', id) } },
+      plugins: [...plugins, pluginReactLynx()] as never,
+    })
+  }
+
+  it('emits the same bytes as a build without it', async () => {
+    await build(configFor('engine-off', []))
+    await build(configFor('engine-on', pluginLynx()))
+
+    expect(
+      sha256(
+        path.join(fixtureDir, 'dist/engine-on/engine-on.lynx.bundle'),
+      ),
+    ).toBe(
+      sha256(
+        path.join(fixtureDir, 'dist/engine-off/engine-off.lynx.bundle'),
+      ),
+    )
+  })
+
+  it('resolves the bundle filename from it', async () => {
+    await build(
+      configFor(
+        'engine-named',
+        pluginLynx({
+          output: { filename: { bundle: '[name].[platform].custom.bundle' } },
+        }),
+      ),
+    )
+
+    expect(
+      fs.existsSync(
+        path.join(
+          fixtureDir,
+          'dist/engine-named/engine-named.lynx.custom.bundle',
+        ),
+      ),
+    ).toBe(true)
   })
 })
 

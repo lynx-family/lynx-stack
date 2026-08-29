@@ -39,6 +39,26 @@ export type {
   LynxPluginOptions,
 } from './config.js'
 
+// `rslib` and `rstest` drive the build themselves: an external bundle is
+// assembled by `@lynx-js/lynx-bundle-rslib-config`, which emits its own
+// `.lynx.bundle`, and a test run emits nothing. They read the config all the
+// same, so it is applied for them, but the plugins below assemble a bundle of
+// their own and would rewrite what those callers emit.
+function onlyWhenTheEngineOwnsTheBuild(
+  plugins: RsbuildPlugin[],
+): RsbuildPlugin[] {
+  return plugins.map(plugin => ({
+    ...plugin,
+    setup(api) {
+      const { callerName } = api.context
+      if (callerName === 'rslib' || callerName === 'rstest') {
+        return
+      }
+      return plugin.setup(api)
+    },
+  }))
+}
+
 /**
  * @public
  */
@@ -53,18 +73,20 @@ export function pluginLynx(
       },
     },
     pluginConfig(options),
-    pluginChunkLoading(),
-    pluginCssMinimizer(),
-    pluginDev(),
-    pluginLynxDebugMetadata(),
-    pluginMinify(),
-    pluginOptimization(),
-    pluginOutput(),
-    pluginResolve(),
-    pluginServer(),
-    pluginSourcemap(),
-    pluginSwc(),
-    pluginTarget(),
-    pluginTemplate(),
+    ...onlyWhenTheEngineOwnsTheBuild([
+      pluginChunkLoading(),
+      pluginCssMinimizer(),
+      pluginDev(),
+      pluginLynxDebugMetadata(),
+      pluginMinify(),
+      pluginOptimization(),
+      pluginOutput(),
+      pluginResolve(),
+      pluginServer(),
+      pluginSourcemap(),
+      pluginSwc(),
+      pluginTarget(),
+      pluginTemplate(),
+    ]),
   ]
 }

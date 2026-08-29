@@ -79,11 +79,11 @@ export function applyEntry(
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
-    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
     const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
 
-    // `rslib` builds libraries and `rstest` runs tests, neither of which emits
-    // a Lynx template.
+    // `rslib` and `rstest` drive the build themselves — an external bundle
+    // assembles its own `.lynx.bundle`, and a test run emits nothing — so the
+    // template is not assembled here for them.
     const emitTemplate = api.context.callerName !== 'rslib'
       && api.context.callerName !== 'rstest'
     if (emitTemplate) {
