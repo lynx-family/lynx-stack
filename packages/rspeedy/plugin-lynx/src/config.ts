@@ -104,6 +104,24 @@ export interface LynxOutput {
 }
 
 /**
+ * The performance options of the Lynx build engine.
+ *
+ * @public
+ */
+export interface LynxPerformance {
+  /**
+   * Whether to capture timing information in Lynx runtime integrations such as
+   * ReactLynx.
+   *
+   * @remarks
+   *
+   * A framework includes runtime information using `console.profile` when this
+   * is enabled.
+   */
+  profile?: boolean | undefined
+}
+
+/**
  * The options of `pluginLynx`.
  *
  * @public
@@ -113,6 +131,11 @@ export interface LynxPluginOptions {
    * The build outputs.
    */
   output?: LynxOutput | undefined
+
+  /**
+   * The performance options.
+   */
+  performance?: LynxPerformance | undefined
 }
 
 /**
@@ -143,6 +166,11 @@ export interface LynxConfig {
    * The build outputs.
    */
   readonly output: LynxOutput
+
+  /**
+   * The performance options.
+   */
+  readonly performance: LynxPerformance
 
   /**
    * Resolve the name of the bundle file of an entry.
@@ -249,6 +277,8 @@ export function createLynxConfig(options: LynxPluginOptions): LynxConfig {
   // destructure them off the config.
   return {
     output,
+
+    performance: options.performance ?? {},
 
     resolveBundleFilename({ entryName, platform }) {
       return resolve(output.filename?.bundle, {

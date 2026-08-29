@@ -78,4 +78,30 @@ describe('createRspeedy', () => {
 
     expect.assertions(1)
   })
+
+  test('maps performance.profile onto the engine config', async () => {
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        performance: { profile: true },
+        plugins: [
+          {
+            name: 'test',
+            setup(api: RsbuildPluginAPI) {
+              api.modifyBundlerChain(() => {
+                expect(
+                  api.useExposed<LynxConfig>(
+                    Symbol.for('@lynx-js/rsbuild-plugin:config'),
+                  )?.performance.profile,
+                ).toBe(true)
+              })
+            },
+          },
+        ],
+      },
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(1)
+  })
 })
