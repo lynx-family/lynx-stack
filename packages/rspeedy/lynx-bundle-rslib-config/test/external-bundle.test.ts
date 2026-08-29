@@ -179,18 +179,50 @@ describe('with the engine config', () => {
   }
 
   it('emits the same bytes as a build without it', async () => {
-    await build(configFor('engine-off', []))
-    await build(configFor('engine-on', pluginLynx()))
-
-    expect(
-      sha256(
-        path.join(fixtureDir, 'dist/engine-on/engine-on.lynx.bundle'),
-      ),
-    ).toBe(
-      sha256(
-        path.join(fixtureDir, 'dist/engine-off/engine-off.lynx.bundle'),
-      ),
+    // A local production build ships no debug metadata, so the engine adds
+    // nothing to the bundle here. The rstest harness sets `DEBUG=rspeedy` and
+    // CI sets `CI`, either of which would opt the build back into it.
+    const restore = new Map(
+      ['DEBUG', 'CI', 'CI_REPO_NAME', 'BUILD_VERSION'].map(key => {
+        const value = process.env[key]
+        delete process.env[key]
+        return [key, value] as const
+      }),
     )
+    rstest.stubEnv('NODE_ENV', 'production')
+    try {
+      await build(configFor('engine-off', []))
+      await build(configFor('engine-on', pluginLynx()))
+
+      expect(
+        sha256(
+          path.join(fixtureDir, 'dist/engine-on/engine-on.lynx.bundle'),
+        ),
+      ).toBe(
+        sha256(
+          path.join(fixtureDir, 'dist/engine-off/engine-off.lynx.bundle'),
+        ),
+      )
+    } finally {
+      rstest.unstubAllEnvs()
+      for (const [key, value] of restore) {
+        if (value !== undefined) process.env[key] = value
+      }
+    }
+  })
+
+  it('runs the plugins that tap the template hooks', async () => {
+    await build(configFor('engine-debug', pluginLynx()))
+
+    const decoded = await decodeTemplate(
+      path.join(fixtureDir, 'dist/engine-debug/engine-debug.lynx.bundle'),
+    )
+    // `pluginLynxDebugMetadata` reports the release key through
+    // `_SetSourceMapRelease`, and it only runs when the template hooks are
+    // driven. The main-thread section is bytecode, so it is read from the
+    // background one.
+    expect(String(decoded['custom-sections']['utils']))
+      .toContain('[pluginDebugMetadata] SetSourceMapInfo')
   })
 
   it('resolves the bundle filename from it', async () => {

@@ -1,5 +1,6 @@
 import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 
 // REACTLYNX_ASYNC=true builds comp-lib against async (Promise) ReactLynx
 // externals to match an async host; output isolated in
@@ -14,6 +15,9 @@ export default defineExternalBundleRslibConfig({
     },
   },
   plugins: [
+    // Configures the bundle filename and brings the plugins that tap the
+    // template hooks, `pluginLynxDebugMetadata` among them.
+    ...pluginLynx(),
     pluginReactLynx(),
   ],
   // Sync and async share this config file, so rspack's persistent cache (keyed

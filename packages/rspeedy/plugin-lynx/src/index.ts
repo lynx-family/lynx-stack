@@ -73,11 +73,16 @@ export function pluginLynx(
       },
     },
     pluginConfig(options),
+    // Exposes the template lifecycle hooks and emits nothing itself, so a
+    // caller that assembles its own bundle can drive the same hooks and get
+    // the plugins that tap them, `pluginLynxDebugMetadata` among them.
+    pluginTemplate(),
+    // Taps the hooks above, so it covers an external bundle as well.
+    pluginLynxDebugMetadata(),
     ...onlyWhenTheEngineOwnsTheBuild([
       pluginChunkLoading(),
       pluginCssMinimizer(),
       pluginDev(),
-      pluginLynxDebugMetadata(),
       pluginMinify(),
       pluginOptimization(),
       pluginOutput(),
@@ -86,7 +91,6 @@ export function pluginLynx(
       pluginSourcemap(),
       pluginSwc(),
       pluginTarget(),
-      pluginTemplate(),
     ]),
   ]
 }

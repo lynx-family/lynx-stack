@@ -171,10 +171,13 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         // the lynx one with web-asset paths, and rewriting web JS
         // trailers would point them at a metadata file whose artifacts
         // don't include the web asset paths. Web JS source maps work
-        // fine via the default `.map` sibling; skip cleanly.
+        // fine via the default `.map` sibling; skip cleanly. An external
+        // bundle is the exception: `rslib` names its environment after the
+        // library, and it drives the same template hooks.
         const isLynx = environment.name === 'lynx'
           || environment.name.startsWith('lynx-')
-        if (!isLynx) return
+        const isExternalBundle = api.context.callerName === 'rslib'
+        if (!isLynx && !isExternalBundle) return
 
         if (!exposed) return
 
