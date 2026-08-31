@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, rstest, test } from '@rstest/core'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import { WebEncodePlugin } from '@lynx-js/template-webpack-plugin'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
@@ -305,6 +306,79 @@ describe('Web', () => {
         '/packages/react/runtime/lib/internal.js'.replaceAll('/', path.sep),
       ),
     )
+  })
+
+  test('the bundle filename can differ per environment', async () => {
+    rstest.stubEnv('NODE_ENV', 'development')
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        environments: { lynx: {}, web: {} },
+        plugins: [
+          ...pluginLynx({
+            output: {
+              filename: {
+                bundle: ({ entryName, platform }) =>
+                  `${entryName ?? '[name]'}.for-${platform}.bundle`,
+              },
+            },
+          }),
+          pluginReactLynx(),
+        ],
+      },
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+    })
+
+    const [lynxConfig, webConfig] = await rsbuild.initConfigs()
+
+    expect(
+      lynxConfig?.plugins?.find((
+        p,
+      ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin' // @ts-expect-error private field
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      )?.options?.filename,
+    ).toMatchInlineSnapshot(`"main.for-lynx.bundle"`)
+    expect(
+      webConfig?.plugins?.find((
+        p,
+      ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin' // @ts-expect-error private field
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      )?.options?.filename,
+    ).toMatchInlineSnapshot(`"main.for-web.bundle"`)
+  })
+
+  test('keeps the engine options of a `pluginLynx` an environment registers', async () => {
+    rstest.stubEnv('NODE_ENV', 'development')
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        environments: {
+          lynx: {
+            plugins: [
+              ...pluginLynx({
+                output: { filename: { bundle: '[name].configured.bundle' } },
+              }),
+              pluginReactLynx(),
+            ],
+          },
+        },
+      },
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(
+      config?.plugins?.find((
+        p,
+      ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin' // @ts-expect-error private field
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      )?.options?.filename,
+    ).toMatchInlineSnapshot(`"main.configured.bundle"`)
   })
 
   // TODO: stack overflow, should be fixed in the later PRs
