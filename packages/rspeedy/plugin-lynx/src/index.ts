@@ -82,6 +82,10 @@ export function pluginLynx(
     // What a module resolves to is a property of the Lynx runtime, not of who
     // assembles the bundle, so an external bundle resolves the same way.
     pluginResolve(),
+    // The ES baseline is what the Lynx runtime can parse, so an external
+    // bundle is lowered to it the same way.
+    pluginSwc(),
+    pluginTarget(),
     ...onlyWhenTheEngineOwnsTheBuild([
       pluginChunkLoading(),
       pluginCssMinimizer(),
@@ -91,8 +95,6 @@ export function pluginLynx(
       pluginOutput(),
       pluginServer(),
       pluginSourcemap(),
-      pluginSwc(),
-      pluginTarget(),
     ]),
   ]
 }
