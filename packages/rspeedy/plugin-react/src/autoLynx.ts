@@ -6,16 +6,14 @@ import type { RsbuildContext, RsbuildPlugin } from '@rsbuild/core'
 
 import { isPluginLynxRegistered, pluginLynx } from '@lynx-js/rsbuild-plugin'
 
-// Rspeedy applies `pluginLynx` itself. With plain Rsbuild nothing does, so the
-// build engine is applied here.
+// Rspeedy applies `pluginLynx` itself. Nothing does with plain Rsbuild or
+// `rslib`, so the engine is applied here.
 export function pluginAutoLynx(): RsbuildPlugin {
   return {
     name: 'lynx:react:auto-lynx',
     async setup(api) {
-      // The callers that do not emit a Lynx template do not want the engine
-      // either. See the same condition in `applyEntry`.
-      const { callerName } = api.context
-      if (callerName === 'rslib' || callerName === 'rstest') {
+      // A test run has no bundle for the engine to configure.
+      if (api.context.callerName === 'rstest') {
         return
       }
 
