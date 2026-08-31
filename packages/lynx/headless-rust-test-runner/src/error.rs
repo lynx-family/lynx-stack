@@ -42,6 +42,10 @@ pub enum Error {
     "native Lynx is bound to process owner thread {owner}; LynxContainer::new was called from {current}"
   )]
   ThreadAffinity { owner: String, current: String },
+  #[error(
+    "native Lynx can only own one live LynxPage per process; drop the page and its ElementNode handles first"
+  )]
+  PageAlreadyOpen,
   #[error("CDP request error: {0}")]
   Cdp(String),
   #[error("operation timed out: {0}")]

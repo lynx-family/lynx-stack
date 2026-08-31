@@ -1,8 +1,9 @@
 //! A Rust-only headless Lynx test runner.
 //!
 //! The API is deliberately blocking. A [`LynxContainer`] owns the native Lynx
-//! state for the process owner thread and can host any number of [`LynxPage`]s;
-//! every page operation drives the native task pump inline on that thread.
+//! state for the process owner thread. The process hosts one live [`LynxPage`]
+//! at a time, and every page operation drives the native task pump inline on
+//! that thread.
 //! Higher-level consumers may run work concurrently before and after native
 //! capture, but native containers never move between owner threads.
 //!
@@ -31,6 +32,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -60,6 +62,8 @@ const DOM_RETRY_INTERVAL: Duration = Duration::from_millis(50);
 const TAP_SETTLE: Duration = Duration::from_millis(50);
 const APP_NAME: &str = "HeadlessRustTestRunner";
 const LYNX_CORE_JS_SDK_RELATIVE_PATH: &str = "resources/lynx_core.js";
+
+static PROCESS_PAGE_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 /// Settings for a [`LynxContainer`] and the pages it creates.
 #[derive(Clone, Debug)]
@@ -110,10 +114,11 @@ pub struct BoundingBox {
 
 /// The native Lynx state owned by the process owner thread.
 ///
-/// A container hosts any number of pages and drives all of them whenever any
-/// one of them waits. Every container in a process must be created on the same
-/// thread; the type is neither `Send` nor `Sync` because the pages and views it
-/// owns are bound to that owner.
+/// Containers create and destroy pages sequentially and drive their live page
+/// whenever they wait. A process may have only one live page across all of its
+/// containers, and every container must be created on the same thread. The type
+/// is neither `Send` nor `Sync` because the page and view it owns are bound to
+/// that owner.
 pub struct LynxContainer {
   shared: Rc<ContainerShared>,
 }
@@ -132,6 +137,26 @@ struct PageShared {
   tasks: SharedTasks,
   frames: FrameStore,
   resources: ResourceContext,
+  // Fields drop in declaration order. Keep this last so another page cannot
+  // acquire the process slot until the native view has been dropped.
+  _process_page_lease: ProcessPageLease,
+}
+
+struct ProcessPageLease;
+
+impl ProcessPageLease {
+  fn acquire() -> Result<Self> {
+    PROCESS_PAGE_ACTIVE
+      .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+      .map(|_| Self)
+      .map_err(|_| Error::PageAlreadyOpen)
+  }
+}
+
+impl Drop for ProcessPageLease {
+  fn drop(&mut self) {
+    PROCESS_PAGE_ACTIVE.store(false, Ordering::Release);
+  }
 }
 
 impl LynxContainer {
@@ -159,8 +184,11 @@ impl LynxContainer {
   /// Creates a page inside this container.
   ///
   /// [`LynxPage`] has no public constructor: a page only exists as part of the
-  /// container that owns its native view and drives its task queue.
+  /// container that owns its native view and drives its task queue. Drop the
+  /// process's current page and every [`ElementNode`] derived from it before
+  /// creating the next page, including through another container.
   pub fn new_page(&self) -> Result<LynxPage> {
+    let process_page_lease = ProcessPageLease::acquire()?;
     let options = &self.shared.options;
     let tasks = SharedTasks::new();
     let frames = FrameStore::default();
@@ -187,6 +215,7 @@ impl LynxContainer {
       tasks,
       frames,
       resources,
+      _process_page_lease: process_page_lease,
     });
     let mut pages = self.shared.pages.borrow_mut();
     pages.retain(|page| page.strong_count() > 0);
@@ -417,8 +446,8 @@ impl LynxPage {
 
   /// Returns this page's DevTools session, attaching on first use.
   ///
-  /// The session id comes from the page's own native view, so two pages that
-  /// loaded the same URL can never be confused for one another.
+  /// The session id comes from the page's own native view, so successive pages
+  /// that load the same URL cannot be confused for one another.
   fn attached_session(&mut self) -> Result<i64> {
     if let Some(session_id) = self.session_id {
       return Ok(session_id);
