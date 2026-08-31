@@ -2,7 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildContext, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  RsbuildConfig,
+  RsbuildContext,
+  RsbuildPlugin,
+} from '@rsbuild/core'
 
 import { PLUGIN_LYNX_NAME, pluginLynx } from '@lynx-js/rsbuild-plugin'
 
@@ -11,6 +15,19 @@ import { PLUGIN_LYNX_NAME, pluginLynx } from '@lynx-js/rsbuild-plugin'
 // instead. `Symbol.for` keeps the marker shared with any other copy of this
 // package, and with any other plugin that applies the engine the same way.
 const S_PLUGIN_LYNX_APPLIED = Symbol.for('@lynx-js/rsbuild-plugin:applied')
+
+// Without an environment, `isPluginExists` only reports the global plugins, so
+// an engine registered per environment — which is how `rslib` passes the
+// plugins of a lib entry along — would be applied a second time here.
+function isEngineRegistered(
+  api: Parameters<NonNullable<RsbuildPlugin['setup']>>[0],
+  original: RsbuildConfig,
+): boolean {
+  return api.isPluginExists(PLUGIN_LYNX_NAME)
+    || Object.keys(original.environments ?? {}).some(environment =>
+      api.isPluginExists(PLUGIN_LYNX_NAME, { environment })
+    )
+}
 
 // Rspeedy applies `pluginLynx` itself. With plain Rsbuild nothing does, so the
 // build engine is applied here to keep `pluginReactLynx` the only plugin a user
@@ -27,15 +44,15 @@ export function pluginAutoLynx(): RsbuildPlugin {
         return
       }
 
+      const original = api.getRsbuildConfig('original')
+
       if (
-        api.isPluginExists(PLUGIN_LYNX_NAME)
+        isEngineRegistered(api, original)
         || Object.hasOwn(api.context, S_PLUGIN_LYNX_APPLIED)
       ) {
         return
       }
       Object.defineProperty(api.context, S_PLUGIN_LYNX_APPLIED, { value: true })
-
-      const original = api.getRsbuildConfig('original')
 
       for (const plugin of pluginLynx()) {
         // `setup` is called directly instead of registering the plugins, since
