@@ -229,7 +229,6 @@ where
   let (result_sender, result_receiver) = tokio::sync::oneshot::channel();
   pool.spawn(move || {
     // The permit stays with the CPU work even if its async waiter is dropped.
-    let _permit = permit;
     let result =
       std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)).unwrap_or_else(|_| {
         Err(VisualEvaluationError::new(
@@ -238,6 +237,7 @@ where
           format!("Visual {operation} worker panicked."),
         ))
       });
+    drop(permit);
     let _ = result_sender.send(result);
   });
   result_receiver.await.map_err(|_| {

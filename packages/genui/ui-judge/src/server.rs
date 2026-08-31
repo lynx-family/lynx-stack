@@ -921,10 +921,6 @@ mod tests {
         .to_rgb8();
       assert_eq!(rgb.dimensions(), (800, 600));
     }
-    headless
-      .shutdown()
-      .expect("stop the single-owner headless worker");
-
     for bundle in bundles {
       std::fs::remove_file(bundle).expect("remove concurrent fixture copy");
     }

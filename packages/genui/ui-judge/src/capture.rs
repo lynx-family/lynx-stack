@@ -208,7 +208,7 @@ impl CaptureWorkers {
       let requeued = sender.try_send(queued);
       assert!(
         requeued.is_ok(),
-        "requeueing a drained live capture cannot exceed capacity"
+        "requeuing a drained live capture cannot exceed capacity"
       );
     }
     match sender.try_send(job) {
