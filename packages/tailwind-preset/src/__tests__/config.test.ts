@@ -27,6 +27,7 @@ function compilePresetCSS(): string {
     path.resolve(__dirname, 'styles.css'),
   ], {
     encoding: 'utf-8',
+    timeout: 30_000,
     // Progress and browserslist notices go to stderr, CSS goes to stdout.
     stdio: ['ignore', 'pipe', 'ignore'],
   });
