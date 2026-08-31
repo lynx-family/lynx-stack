@@ -7,6 +7,10 @@ import { cssChunksToMap } from '@lynx-js/css-serializer'
 import type { LynxStyleNode } from '@lynx-js/css-serializer'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+function sectionName(assetName: string, extension: string): string {
+  return assetName.slice(assetName.lastIndexOf('/') + 1, -extension.length)
+}
+
 /**
  * Provides the template lifecycle hooks, so the plugins that tap them run for
  * a bundle assembled outside `LynxTemplatePlugin`.
@@ -214,7 +218,7 @@ export class ExternalBundleWebpackPlugin {
             case 'javascript':
               return ({
                 ...prev,
-                [cur.name.replace(/\.js$/, '')]: {
+                [sectionName(cur.name, '.js')]: {
                   ...(enableJsBytecode
                       && this.options.mainThreadChunks?.includes(cur.name)
                     ? {
@@ -227,7 +231,10 @@ export class ExternalBundleWebpackPlugin {
             case 'extract-css':
               return ({
                 ...prev,
-                [`${cur.name.replace(/\.css$/, '')}:CSS`]: {
+                // A section is named after the entry it belongs to. The engine
+                // emits CSS into a directory of its own, so the name is taken
+                // from the file rather than from the path leading to it.
+                [`${sectionName(cur.name, '.css')}:CSS`]: {
                   'encoding': 'CSS',
                   content: {
                     ruleList: cssChunksToMap(

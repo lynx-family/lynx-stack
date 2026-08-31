@@ -68,6 +68,18 @@ describe('pluginLynx with a caller that assembles its own bundle', () => {
     expect(swcEnvIncludes(config)).toContain('transform-block-scoping')
   })
 
+  test('emits what a Lynx bundle can carry', async () => {
+    const config = await configForRslib()
+
+    // Lynx has no HTML, and a bundle has nowhere to link a license file to.
+    expect(
+      config?.plugins?.some(plugin =>
+        plugin?.constructor.name.includes('Html')
+      ),
+    ).toBe(false)
+    expect(config?.output?.environment?.const).toBe(false)
+  })
+
   test('leaves the bundle assembly to the caller', async () => {
     const config = await configForRslib()
 

@@ -86,13 +86,15 @@ export function pluginLynx(
     // bundle is lowered to it the same way.
     pluginSwc(),
     pluginTarget(),
+    // What the output may contain — no HTML, no license trailer, `var` in the
+    // bundler runtime — follows from the Lynx runtime, not from the caller.
+    pluginOutput(),
     ...onlyWhenTheEngineOwnsTheBuild([
       pluginChunkLoading(),
       pluginCssMinimizer(),
       pluginDev(),
       pluginMinify(),
       pluginOptimization(),
-      pluginOutput(),
       pluginServer(),
       pluginSourcemap(),
     ]),
