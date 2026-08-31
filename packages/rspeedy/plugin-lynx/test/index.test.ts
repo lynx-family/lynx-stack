@@ -23,6 +23,20 @@ describe('pluginLynx', () => {
   })
 })
 
+function swcEnvIncludes(config: unknown): string[] {
+  const includes: string[] = []
+  JSON.stringify(config, (key: string, value: unknown) => {
+    if (key === 'env' && value !== null && typeof value === 'object') {
+      const { include } = value as { include?: unknown }
+      if (Array.isArray(include)) {
+        includes.push(...include.map(String))
+      }
+    }
+    return value
+  })
+  return includes
+}
+
 async function configForRslib() {
   const rsbuild = await createRsbuild({
     callerName: 'rslib',
@@ -45,6 +59,13 @@ describe('pluginLynx with a caller that assembles its own bundle', () => {
     expect(config?.resolve?.conditionNames).toContain('lynx')
     expect(config?.resolve?.mainFields).toContain('lynx')
     expect(config?.resolve?.mainFiles).toContain('index.lynx')
+  })
+
+  test('lowers to the ES baseline the Lynx runtime parses', async () => {
+    const config = await configForRslib()
+
+    expect(config?.target).toContain('es2017')
+    expect(swcEnvIncludes(config)).toContain('transform-block-scoping')
   })
 
   test('leaves the bundle assembly to the caller', async () => {
