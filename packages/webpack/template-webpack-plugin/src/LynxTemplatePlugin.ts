@@ -321,6 +321,34 @@ export interface LynxTemplatePluginOptions {
   lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
 
   /**
+   * Assemble every chunk into a custom section, named by this strategy.
+   *
+   * @remarks
+   *
+   * A bundle assembled this way carries no `lepusCode`, and only the chunks
+   * left unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled
+   * this way by default, under the three section names its runtime resolves.
+   */
+  customSectionNaming?:
+    | ((compilation: Compilation) => CustomSectionNaming)
+    | undefined;
+
+  /**
+   * The kind of bundle to encode.
+   *
+   * @defaultValue `'DynamicComponent'` for a lazy bundle, `'card'` otherwise.
+   */
+  appType?: 'card' | 'DynamicComponent' | undefined;
+
+  /**
+   * Whether to compile the main thread sections to `JsBytecode`.
+   *
+   * @defaultValue Enabled outside of development and debug builds, which keeps
+   * the sections readable while debugging.
+   */
+  enableSectionBytecode?: boolean | undefined;
+
+  /**
    * plugins passed to parser
    */
   cssPlugins: CSS.Plugin[];
@@ -422,6 +450,9 @@ export class LynxTemplatePlugin {
   static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>> = Object
     .freeze<Required<LynxTemplatePluginOptions>>({
       filename: '[name].bundle',
+      customSectionNaming: undefined,
+      appType: undefined,
+      enableSectionBytecode: undefined,
       lazyBundleFilename: 'lazy-bundle/[name].[fullhash].bundle',
       intermediate: '.lynx',
       chunks: 'all',
@@ -507,11 +538,126 @@ const SECTION_MAIN_THREAD = 'main-thread';
 const SECTION_BACKGROUND = 'background';
 const SECTION_CSS = 'CSS';
 
-interface CustomSectionEntry {
+/**
+ * One custom section of a Lynx bundle.
+ *
+ * @public
+ */
+export interface CustomSectionEntry {
   type?: 'lazy';
   encoding?: 'JsBytecode' | 'CSS';
   content: string | Record<string, unknown>;
 }
+
+/**
+ * Names the custom section a chunk is emitted as.
+ *
+ * @remarks
+ *
+ * Returning `undefined` keeps a chunk out of the custom sections. A background
+ * chunk left out stays in the manifest, which is where the runtime looks for
+ * it.
+ *
+ * @public
+ */
+export interface CustomSectionNaming {
+  mainThread(assetName: string, index: number): string | undefined;
+  /**
+   * @param manifestKey - The key the chunk has in the manifest. A lazy bundle
+   * keys it by path (`/.rspeedy/lazy-bundle/…/background.js`), an external
+   * bundle by asset name.
+   */
+  background(manifestKey: string, index: number): string | undefined;
+  css(assetName: string, index: number): string | undefined;
+}
+
+/**
+ * Assemble the custom sections of a Lynx bundle.
+ *
+ * @param options - The chunks to assemble and how to name them.
+ *
+ * @returns The sections, and the manifest entries left unnamed.
+ *
+ * @public
+ */
+export function buildCustomSections(
+  {
+    mainThreadAssets,
+    manifest,
+    cssAssets,
+    enableBytecode,
+    naming,
+    cssPlugins,
+    enableCSSSelector,
+  }: {
+    mainThreadAssets: Asset[];
+    manifest: Record<string, string>;
+    cssAssets: Asset[];
+    enableBytecode: boolean;
+    naming: CustomSectionNaming;
+    cssPlugins: CSS.Plugin[];
+    enableCSSSelector: boolean;
+  },
+): {
+  sections: Record<string, CustomSectionEntry>;
+  remainingManifest: Record<string, string>;
+} {
+  const sections: Record<string, CustomSectionEntry> = {};
+
+  mainThreadAssets.forEach((asset, index) => {
+    const name = naming.mainThread(asset.name, index);
+    if (name === undefined) {
+      return;
+    }
+    sections[name] = {
+      ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
+      content: asset.source.source().toString(),
+    };
+  });
+
+  const remainingManifest: Record<string, string> = {};
+  let backgroundIndex = 0;
+  for (const [manifestKey, content] of Object.entries(manifest)) {
+    // The AMD wrapper entry is provided by the runtime, never by a section.
+    if (manifestKey === '/app-service.js') {
+      continue;
+    }
+    const name = naming.background(manifestKey, backgroundIndex++);
+    if (name === undefined) {
+      remainingManifest[manifestKey] = content;
+      continue;
+    }
+    sections[name] = { content };
+  }
+
+  cssAssets.forEach((asset, index) => {
+    const name = naming.css(asset.name, index);
+    if (name === undefined) {
+      return;
+    }
+    const ruleList = cssChunksToMap(
+      [asset.source.source().toString()],
+      cssPlugins,
+      enableCSSSelector,
+    ).cssMap[0] ?? [];
+    sections[name] = {
+      encoding: 'CSS',
+      content: { ruleList },
+    };
+  });
+
+  return { sections, remainingManifest };
+}
+
+// A lazy bundle is a single component: the runtime resolves these three
+// sections by name, and any other background chunk stays in the manifest.
+const LAZY_BUNDLE_SECTION_NAMING: CustomSectionNaming = {
+  mainThread: (_assetName, index) =>
+    index === 0 ? SECTION_MAIN_THREAD : undefined,
+  background: (_manifestKey, index) =>
+    index === 0 ? SECTION_BACKGROUND : undefined,
+  css: (_assetName, index) => index === 0 ? SECTION_CSS : undefined,
+};
 
 class LynxTemplatePluginImpl {
   name = 'LynxTemplatePlugin';
@@ -1034,7 +1180,8 @@ class LynxTemplatePluginImpl {
       },
       sourceContent: {
         dsl,
-        appType: isAsync ? 'DynamicComponent' : 'card',
+        appType: this.#options.appType
+          ?? (isAsync ? 'DynamicComponent' : 'card'),
         config: {
           lepusStrict: true,
           useNewSwiper: true,
@@ -1099,40 +1246,45 @@ class LynxTemplatePluginImpl {
 
     const isFetchBundleLazy = isAsync
       && this.#options.lazyBundleFetcher === 'FetchBundle';
-    // Default to bytecode for FetchBundle lazy main-thread sections. Skip
-    // in dev or when DEBUG matches rspeedy so the source stays debuggable.
-    const enableLazyBundleBytecode = isFetchBundleLazy && !isDev
-      && !isDebug();
-    const fetchBundleSplit = isFetchBundleLazy
-      ? this.#buildLazyBundleFetchBundleSections(
-        lepusCode.root,
-        encodeData.manifest,
-        encodeData.css.chunks,
-        enableLazyBundleBytecode,
-      )
+    const naming = this.#options.customSectionNaming
+      ?? (isFetchBundleLazy ? () => LAZY_BUNDLE_SECTION_NAMING : undefined);
+    // Default to bytecode for the main-thread sections. Skip in dev or when
+    // DEBUG matches rspeedy so the source stays debuggable.
+    const enableSectionBytecode = this.#options.enableSectionBytecode
+      ?? (!isDev && !isDebug());
+    const customSectionSplit = naming
+      ? buildCustomSections({
+        mainThreadAssets: lepusCode.root ? [lepusCode.root] : [],
+        manifest: encodeData.manifest,
+        cssAssets: encodeData.css.chunks,
+        enableBytecode: enableSectionBytecode,
+        naming: naming(compilation),
+        cssPlugins: this.#options.cssPlugins,
+        enableCSSSelector: this.#options.enableCSSSelector,
+      })
       : null;
 
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
       css: {
         ...css,
-        cssMap: fetchBundleSplit ? {} : css.cssMap,
-        cssSource: fetchBundleSplit ? {} : css.cssSource,
+        cssMap: customSectionSplit ? {} : css.cssMap,
+        cssSource: customSectionSplit ? {} : css.cssSource,
         chunks: undefined,
         contentMap: undefined,
       },
-      lepusCode: fetchBundleSplit ? undefined : {
+      lepusCode: customSectionSplit ? undefined : {
         // TODO: support multiple lepus chunks
         root: lepusCode.root?.source.source().toString(),
         lepusChunk,
         filename: lepusCode.filename,
       },
-      manifest: fetchBundleSplit
-        ? fetchBundleSplit.remainingManifest
+      manifest: customSectionSplit
+        ? customSectionSplit.remainingManifest
         : encodeData.manifest,
       customSections: {
         ...encodeData.customSections,
-        ...(fetchBundleSplit ? fetchBundleSplit.sections : {}),
+        ...(customSectionSplit ? customSectionSplit.sections : {}),
       },
     };
 
@@ -1205,58 +1357,6 @@ class LynxTemplatePluginImpl {
         compilation.errors.push(error as Error);
       }
     }
-  }
-
-  #buildLazyBundleFetchBundleSections(
-    mainThreadAsset: Asset | undefined,
-    manifest: Record<string, string>,
-    cssAssets: Asset[],
-    enableBytecode: boolean,
-  ): {
-    sections: Record<string, CustomSectionEntry>;
-    remainingManifest: Record<string, string>;
-  } {
-    const { cssPlugins, enableCSSSelector } = this.#options;
-    const sections: Record<string, CustomSectionEntry> = {};
-
-    if (mainThreadAsset) {
-      sections[SECTION_MAIN_THREAD] = {
-        ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
-        content: mainThreadAsset.source.source().toString(),
-      };
-    }
-
-    const remainingManifest: Record<string, string> = {};
-    let entryChunk: [string, string] | undefined;
-    for (const [name, content] of Object.entries(manifest)) {
-      if (name === '/app-service.js') {
-        continue;
-      }
-      if (!entryChunk) {
-        entryChunk = [name, content];
-        continue;
-      }
-      remainingManifest[name] = content;
-    }
-
-    if (entryChunk) {
-      sections[SECTION_BACKGROUND] = { content: entryChunk[1] };
-    }
-
-    const firstCss = cssAssets[0];
-    if (firstCss) {
-      const ruleList = cssChunksToMap(
-        [firstCss.source.source().toString()],
-        cssPlugins,
-        enableCSSSelector,
-      ).cssMap[0] ?? [];
-      sections[SECTION_CSS] = {
-        encoding: 'CSS',
-        content: { ruleList },
-      };
-    }
-
-    return { sections, remainingManifest };
   }
 
   /**
