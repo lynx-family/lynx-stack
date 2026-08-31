@@ -39,12 +39,12 @@ export type {
   LynxPluginOptions,
 } from './config.js'
 
-// `rslib` and `rstest` drive the build themselves: an external bundle is
-// assembled by `@lynx-js/lynx-bundle-rslib-config`, which emits its own
-// `.lynx.bundle`, and a test run emits nothing. They read the config all the
-// same, so it is applied for them, but the plugins below assemble a bundle of
-// their own and would rewrite what those callers emit.
-function onlyWhenTheEngineOwnsTheBuild(
+// What the engine puts in a bundle applies wherever it is assembled. How a
+// bundle is loaded and served does not: an external bundle is loaded by
+// `lynx_core.js` as sections of the template that embeds it, and a test run
+// loads nothing. `rslib` and `rstest` are the callers that assemble their own,
+// so the plugins below would describe a way of loading that is not theirs.
+function onlyWhenTheEngineLoadsTheBundle(
   plugins: RsbuildPlugin[],
 ): RsbuildPlugin[] {
   return plugins.map(plugin => ({
@@ -92,13 +92,16 @@ export function pluginLynx(
     // How far the output may be compressed is a property of the Lynx runtime
     // too: the module wrapper has to keep its IIFE and its return.
     pluginMinify(),
-    ...onlyWhenTheEngineOwnsTheBuild([
+    // The CSS minimizer is what makes the CSS options above take effect, and
+    // the source maps are the other half of what `pluginLynxDebugMetadata`
+    // collects, so both follow the bundle wherever it is assembled.
+    pluginCssMinimizer(),
+    pluginSourcemap(),
+    ...onlyWhenTheEngineLoadsTheBundle([
       pluginChunkLoading(),
-      pluginCssMinimizer(),
       pluginDev(),
       pluginOptimization(),
       pluginServer(),
-      pluginSourcemap(),
     ]),
   ]
 }

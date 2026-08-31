@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
+import type { RsbuildConfig, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
 import { pluginLynx } from '../src/index.js'
@@ -37,19 +38,24 @@ function swcEnvIncludes(config: unknown): string[] {
   return includes
 }
 
-async function configForRslib() {
+async function configForRslib(output: RsbuildConfig['output'] = {}) {
   const rsbuild = await createRsbuild({
     callerName: 'rslib',
     cwd: path.dirname(fileURLToPath(import.meta.url)),
     rsbuildConfig: {
       mode: 'production',
       environments: { lynx: {} },
+      output,
       plugins: [pluginLynx()],
     },
   })
 
   const [config] = await rsbuild.initConfigs()
   return config
+}
+
+function pluginNames(config: Rspack.Configuration | undefined): string[] {
+  return (config?.plugins ?? []).map(plugin => plugin?.constructor.name ?? '')
 }
 
 describe('pluginLynx with a caller that assembles its own bundle', () => {
@@ -80,7 +86,24 @@ describe('pluginLynx with a caller that assembles its own bundle', () => {
     expect(config?.output?.environment?.const).toBe(false)
   })
 
-  test('leaves the bundle assembly to the caller', async () => {
+  test('minifies the CSS it encodes', async () => {
+    const config = await configForRslib()
+
+    expect(
+      (config?.optimization?.minimizer ?? []).map(minimizer =>
+        (minimizer as { constructor?: { name?: string } })?.constructor?.name
+      ),
+    ).toContain('CssMinimizerPlugin')
+  })
+
+  test('emits the source maps the debug metadata is collected from', async () => {
+    const config = await configForRslib({ sourceMap: true })
+
+    expect(pluginNames(config)).toContain('SourceMapDevToolPlugin')
+    expect(pluginNames(config)).toContain('DropSourceMapAssetsPlugin')
+  })
+
+  test('leaves loading the bundle to the caller', async () => {
     const config = await configForRslib()
 
     expect(config?.output?.chunkLoading).toBeUndefined()
