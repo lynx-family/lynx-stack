@@ -25,22 +25,45 @@
   "files": [
     "bin",
     "dist",
+    "scripts",
     "templates",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc6 --project tsconfig.build.json",
-    "test": "rstest"
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc6 --project tsconfig.build.json && tsc6 --project tsconfig.playground.json && rsbuild build -c playground.rsbuild.config.ts",
+    "probe:agents": "node scripts/probe-playground-agents.mjs",
+    "probe:agents:real": "GENUI_RUN_REAL_AGENT_PROBES=1 node scripts/probe-playground-agents-real.mjs",
+    "probe:preview:isolation": "GENUI_RUN_PREVIEW_ISOLATION_PROBE=1 node scripts/probe-playground-preview-isolation.mjs",
+    "test": "rstest",
+    "test:playground:browser-security": "node scripts/test-playground-browser-security.mjs",
+    "test:playground:ui-conformance": "node scripts/playground-ui-conformance.mjs"
   },
   "dependencies": {
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/genui-a2ui-prompt": "workspace:*",
+    "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*"
   },
   "devDependencies": {
+    "@codemirror/lang-html": "^6.4.12",
+    "@lynx-js/lynx-core": "0.1.4",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@playwright/test": "^1.61.1",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "2.1.0",
     "@rstest/core": "catalog:rstest",
     "@types/node": "^24.13.3",
-    "typescript": "^6.0.3"
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@uiw/react-codemirror": "^4.25.11",
+    "lucide-react": "^1.28.0",
+    "qrcode": "^1.5.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "^6.0.3",
+    "vaul": "^1.1.2"
   },
   "engines": {
     "node": ">=22"

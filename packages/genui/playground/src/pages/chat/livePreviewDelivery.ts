@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { RENDER_NAVIGATION_TOKEN_QUERY_PARAM } from '../../utils/renderUrl.js';
+import { RENDER_NAVIGATION_TOKEN_QUERY_PARAM } from '../../utils/previewFrameProtocol.js';
 
 export type LivePreviewMessageType =
   | 'A2UI_ACTION_RESPONSE'

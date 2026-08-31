@@ -8,11 +8,28 @@
       "dependsOn": [
         "@lynx-js/genui-a2ui-catalog-extractor#build",
         "@lynx-js/genui-a2ui-prompt#build",
+        "@lynx-js/genui-lynx-xml#build",
+        "@lynx-js/web-core#build",
+        "@lynx-js/web-elements#build",
         "@lynx-js/genui-openui#build"
       ],
       "inputs": [
         "src/**",
+        "$TURBO_ROOT$/packages/genui/playground/src/shared-ui/**",
+        "$TURBO_ROOT$/packages/genui/playground/src/components/**",
+        "$TURBO_ROOT$/packages/genui/playground/src/hooks/**",
+        "$TURBO_ROOT$/packages/genui/playground/src/pages/chat/ChatPage.css",
+        "$TURBO_ROOT$/packages/genui/playground/src/pages/chat/ChatPresentation.tsx",
+        "$TURBO_ROOT$/packages/genui/playground/src/pages/chat/ChatWorkspace.tsx",
+        "$TURBO_ROOT$/packages/genui/playground/src/pages/chat/lynx-xml-presentation.ts",
+        "$TURBO_ROOT$/packages/genui/playground/src/pages/chat/type.ts",
+        "$TURBO_ROOT$/packages/genui/playground/src/pages/demos/**",
+        "$TURBO_ROOT$/packages/genui/playground/src/mock/lynx-xml/**",
+        "$TURBO_ROOT$/packages/genui/playground/src/styles.css",
+        "$TURBO_ROOT$/packages/genui/playground/src/utils/**",
+        "$TURBO_ROOT$/packages/genui/a2ui/styles/theme.css",
         "bin/**",
+        "playground.rsbuild.config.ts",
         "package.json",
         "tsconfig.build.json",
         "tsconfig.json"

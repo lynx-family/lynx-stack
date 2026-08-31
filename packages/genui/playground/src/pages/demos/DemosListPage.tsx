@@ -6,13 +6,31 @@ import { DemosList } from './DemosList.js';
 import { LYNX_XML_DEMOS_LIST_SOURCE } from './lynx-xml.js';
 import { MCP_APPS_DEMOS_LIST_SOURCE } from './mcp-apps.js';
 import { OPENUI_DEMOS_LIST_SOURCE } from './openui.js';
+import type { CreateLynxXmlPreviewFrame } from '../../components/LynxXmlPreviewRuntime.js';
 import type { Protocol } from '../../utils/protocol.js';
 
 export function DemosListPage(
-  props: { protocol: Protocol; theme: 'light' | 'dark' },
+  props: {
+    protocol: Protocol;
+    theme: 'light' | 'dark';
+    createLynxXmlPreviewFrame?: CreateLynxXmlPreviewFrame;
+  },
 ) {
   if (props.protocol.name === 'lynx-xml') {
-    return <DemosList {...props} source={LYNX_XML_DEMOS_LIST_SOURCE} />;
+    const createPreviewFrame = props.createLynxXmlPreviewFrame;
+    return (
+      <DemosList
+        {...props}
+        source={LYNX_XML_DEMOS_LIST_SOURCE}
+        createPreviewFrame={createPreviewFrame
+          ? (scenario) =>
+            createPreviewFrame({
+              source: scenario.source,
+              identity: `example-card:${scenario.id}`,
+            })
+          : undefined}
+      />
+    );
   }
 
   if (props.protocol.name === 'mcp-apps') {

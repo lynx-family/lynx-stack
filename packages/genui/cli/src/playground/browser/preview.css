@@ -1,0 +1,23 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+html,
+body,
+.preview-body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.preview-body {
+  overflow: hidden;
+}
+
+.isolated-lynx-view {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}

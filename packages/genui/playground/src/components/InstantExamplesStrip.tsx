@@ -4,8 +4,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
+import { HostedPreviewViewport as PreviewViewport } from './HostedPreviewViewport.js';
 import { ArrowRight, ICON_SIZE, Zap } from './Icon.js';
-import { PreviewViewport } from './PreviewViewport.js';
 import {
   EXTENDED_STATIC_DEMOS,
   OFFICIAL_STATIC_DEMOS,

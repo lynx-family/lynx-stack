@@ -1351,6 +1351,10 @@
   color: var(--geist-foreground);
 }
 
+.chatProviderSelectSlot {
+  display: contents;
+}
+
 /* chatSendBtn / chatSendIcon: replaced by <Button variant="primary" size="lg"
    iconBefore={Send}>. */
 
@@ -1636,6 +1640,159 @@
     padding: 0 14px;
     font-size: 13px;
     min-width: 0;
+  }
+}
+
+/* Local coding-Agent controls reuse the hosted Create layout. These are the
+   only local-only visual rules; all structural Playground classes remain
+   canonical shared UI. */
+
+.localAgentChatPage .chatPrivacyNotice {
+  margin-bottom: 10px;
+}
+
+.localAgentChatPage .chatProviderControl {
+  flex: 0 1 auto;
+  max-width: min(490px, calc(100% - 96px));
+  overflow: hidden;
+}
+
+.localAgentChatPage .chatProviderSelect {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.localAgentChatPage .chatProviderSelectSlot {
+  position: relative;
+  display: flex;
+  flex: 0 1 150px;
+  width: 150px;
+  min-width: 0;
+  max-width: 150px;
+}
+
+.localAgentChatPage .chatProviderSelectFade::after {
+  position: absolute;
+  z-index: 1;
+  top: 2px;
+  right: 20px;
+  bottom: 2px;
+  width: 28px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(
+      in srgb,
+      var(--geist-surface) 72%,
+      var(--geist-background)
+    ) 78%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.localAgentChatPage #localAgentAgent,
+.localAgentChatPage #localAgentModel,
+.localAgentChatPage #localAgentEffort {
+  width: 100%;
+  max-width: none;
+}
+
+.localAgentStop {
+  margin-left: auto;
+}
+
+.localAgentNotice {
+  max-width: 88%;
+  margin: 0 0 10px;
+  padding: 9px 11px;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--geist-error) 30%,
+      var(--geist-border)
+    );
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-error-light);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.localAgentApproval {
+  max-width: 80%;
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      #d99a00 55%,
+      var(--geist-border)
+    );
+  border-radius: var(--geist-radius-md);
+  background: color-mix(in srgb, #d99a00 9%, var(--geist-background));
+}
+
+.localAgentApproval p {
+  margin: 6px 0 10px;
+  color: var(--geist-secondary);
+  white-space: pre-wrap;
+}
+
+.localAgentApprovalActions {
+  display: flex;
+  gap: 8px;
+}
+
+.localAgentPreviewPending,
+.localAgentPreviewError {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  place-items: center;
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.localAgentPreviewError {
+  color: var(--geist-error);
+}
+
+.localAgentFatal {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  padding: 32px;
+  place-items: center;
+  background: var(--geist-background);
+  color: var(--geist-error);
+  font-family: var(--geist-font);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .localAgentChatPage .chatPrivacyNotice {
+    margin-bottom: 8px;
+  }
+
+  .localAgentChatPage .chatProviderControl {
+    max-width: calc(100% - 76px);
+    gap: 4px;
+    padding-right: 6px;
+    padding-left: 8px;
+  }
+
+  .localAgentChatPage .chatProviderSelect {
+    padding-right: 18px;
+    font-size: 11px;
+  }
+
+  .localAgentApproval,
+  .localAgentNotice {
+    max-width: 100%;
   }
 }
 

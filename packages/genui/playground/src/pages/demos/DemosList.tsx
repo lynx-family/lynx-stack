@@ -11,6 +11,7 @@ import {
 } from '../../components/ExamplePreviewCard.js';
 import type { ExamplePreviewScenario } from '../../components/ExamplePreviewCard.js';
 import { PageHeader } from '../../components/PageHeader.js';
+import type { PreviewFrameRenderer } from '../../components/PreviewViewport.js';
 import type { Protocol } from '../../utils/protocol.js';
 
 import './DemosPage.css';
@@ -59,8 +60,9 @@ export function DemosList<TScenario extends DemosListScenario>(props: {
   protocol: Protocol;
   source: DemosListSource<TScenario>;
   theme: 'light' | 'dark';
+  createPreviewFrame?: (scenario: TScenario) => PreviewFrameRenderer;
 }) {
-  const { protocol, source, theme } = props;
+  const { createPreviewFrame, protocol, source, theme } = props;
   const baseUrl = window.location.href.replace(/#.*$/u, '');
 
   const previewUrls = useMemo(
@@ -68,15 +70,17 @@ export function DemosList<TScenario extends DemosListScenario>(props: {
       new Map(
         source.scenarios.map((scenario) => [
           scenario.id,
-          source.createPreviewUrl({
-            scenario,
-            protocol,
-            theme,
-            baseUrl,
-          }),
+          createPreviewFrame
+            ? undefined
+            : source.createPreviewUrl({
+              scenario,
+              protocol,
+              theme,
+              baseUrl,
+            }),
         ]),
       ),
-    [baseUrl, protocol, source, theme],
+    [baseUrl, createPreviewFrame, protocol, source, theme],
   );
 
   const handleOpenExample = useCallback(
@@ -139,6 +143,7 @@ export function DemosList<TScenario extends DemosListScenario>(props: {
                     key={scenario.id}
                     scenario={scenario}
                     previewUrl={previewUrls.get(scenario.id)}
+                    frameRenderer={createPreviewFrame?.(scenario)}
                     badge={section.badge ?? scenario.badge}
                     onOpen={handleOpenExample}
                     onKeyDown={handleCardKeyDown}

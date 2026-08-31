@@ -5,12 +5,37 @@ import { useRef, useState } from 'react';
 
 import { Button } from './Button.js';
 import { MessageSquarePlus, Pencil, Share2, Trash2 } from './Icon.js';
-import type { ConversationMeta } from '../storage/types.js';
+
+export interface ConversationListItemViewModel {
+  id: string;
+  title: string;
+  updatedAt: number;
+  messageCount: number;
+  previewText?: string;
+}
+
+export interface ConversationListActions {
+  create: boolean;
+  switch: boolean;
+  share: boolean;
+  rename: boolean;
+  remove: boolean;
+}
+
+const DEFAULT_ACTIONS: ConversationListActions = {
+  create: true,
+  switch: true,
+  share: true,
+  rename: true,
+  remove: true,
+};
 
 interface ConversationListPanelProps {
-  conversations: ConversationMeta[];
+  conversations: ConversationListItemViewModel[];
   activeId: string | null;
   disabled?: boolean;
+  actions?: ConversationListActions;
+  createButtonId?: string;
   isPersistent: boolean;
   onCreate: () => void;
   onSwitch: (id: string) => void;
@@ -31,7 +56,9 @@ function formatTime(value: number): string {
 export function ConversationListPanel(props: ConversationListPanelProps) {
   const {
     activeId,
+    actions = DEFAULT_ACTIONS,
     conversations,
+    createButtonId,
     disabled = false,
     onCreate,
     onRemove,
@@ -43,7 +70,7 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
   const [draftTitle, setDraftTitle] = useState('');
   const cancelRenameRef = useRef(false);
 
-  const beginEdit = (conversation: ConversationMeta) => {
+  const beginEdit = (conversation: ConversationListItemViewModel) => {
     cancelRenameRef.current = false;
     setEditingId(conversation.id);
     setDraftTitle(conversation.title);
@@ -70,12 +97,13 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
     <aside className='conversationPanel'>
       <div className='conversationPanelHeader'>
         <Button
+          id={createButtonId}
           variant='secondary'
           size='lg'
           fullWidth
           responsiveIconOnly
           iconBefore={MessageSquarePlus}
-          disabled={disabled}
+          disabled={disabled || !actions.create}
           aria-label='New Chat'
           onClick={onCreate}
         >
@@ -90,6 +118,7 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
           return (
             <div
               key={conversation.id}
+              data-id={conversation.id}
               className={active
                 ? 'conversationListItem conversationListItem-active'
                 : 'conversationListItem'}
@@ -120,7 +149,7 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   <button
                     type='button'
                     className='conversationListItemMain'
-                    disabled={disabled}
+                    disabled={disabled || !actions.switch}
                     onClick={() => onSwitch(conversation.id)}
                   >
                     <>
@@ -149,8 +178,10 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   size='sm'
                   iconOnly
                   iconBefore={Share2}
-                  disabled={disabled || editing}
-                  title='Copy conversation link'
+                  disabled={disabled || editing || !actions.share}
+                  title={actions.share
+                    ? 'Copy conversation link'
+                    : 'Sharing is unavailable in local Agent mode'}
                   aria-label='Share conversation'
                   onClick={() => onShare(conversation.id)}
                 />
@@ -159,7 +190,7 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   size='sm'
                   iconOnly
                   iconBefore={Pencil}
-                  disabled={disabled || editing}
+                  disabled={disabled || editing || !actions.rename}
                   title='Rename'
                   aria-label='Rename conversation'
                   onClick={() => beginEdit(conversation)}
@@ -169,8 +200,11 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   size='sm'
                   iconOnly
                   iconBefore={Trash2}
-                  disabled={disabled || conversations.length <= 1}
-                  title='Delete'
+                  disabled={disabled || conversations.length <= 1
+                    || !actions.remove}
+                  title={actions.remove
+                    ? 'Delete'
+                    : 'Deleting is unavailable in local Agent mode'}
                   aria-label='Delete conversation'
                   onClick={() => onRemove(conversation.id)}
                 />

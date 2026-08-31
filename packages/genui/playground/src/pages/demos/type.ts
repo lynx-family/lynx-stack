@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { ReactCodeMirrorProps } from '@uiw/react-codemirror';
 
-import type { PreviewPanelSource } from '../../components/PreviewPanel.js';
+import type { PreviewPanelSource } from '../../components/PreviewPanelSource.js';
 import type { Protocol } from '../../utils/protocol.js';
 
 /** Shared contracts for the protocol-specific demos page sources. */

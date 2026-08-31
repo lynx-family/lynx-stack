@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "isolatedDeclarations": false,
+    "jsx": "react-jsx",
+    "rootDir": "..",
+    "types": ["node", "react", "react-dom", "@rsbuild/core/types"]
+  },
+  "include": [
+    "src/playground/browser",
+    "../playground/src/shared-ui/index.ts"
+  ],
+  "exclude": []
+}

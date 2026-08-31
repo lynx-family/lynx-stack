@@ -114,7 +114,10 @@ export function useResizablePanels(
     const startPrimarySize = primarySize;
 
     setIsResizing(true);
-    document.body.dataset.panelResize = compact ? 'vertical' : 'horizontal';
+    document.body.setAttribute(
+      'data-panel-resize',
+      compact ? 'vertical' : 'horizontal',
+    );
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       const containerRect = container.getBoundingClientRect();
@@ -155,7 +158,7 @@ export function useResizablePanels(
       if (updateState) {
         setIsResizing(false);
       }
-      delete document.body.dataset.panelResize;
+      document.body.removeAttribute('data-panel-resize');
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerStop);
       window.removeEventListener('pointercancel', handlePointerStop);

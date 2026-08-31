@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { runA2UICli } from './a2ui/index.js';
 import { runOpenUICli } from './openui.js';
+import { runPlaygroundCli } from './playground/index.js';
 import { printPackageVersion } from './utils.js';
 
 const usage = `Usage: genui <namespace> <command> [options]
@@ -10,12 +11,14 @@ const usage = `Usage: genui <namespace> <command> [options]
 Namespaces:
   a2ui    Generate A2UI catalog artifacts and system prompts.
   openui  Generate OpenUI system prompts.
+  playground  Run the local Lynx XML agent playground.
 
 Examples:
   genui a2ui create my-app
   genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
   genui a2ui generate prompt --out dist/a2ui-system-prompt.txt
   genui openui generate prompt --out dist/openui-system-prompt.txt
+  genui playground --no-open
 `;
 
 export interface CliOptions {
@@ -47,6 +50,9 @@ export async function runCli(
   }
   if (command === 'openui') {
     return await runOpenUICli(args.slice(1), cwd);
+  }
+  if (command === 'playground') {
+    return await runPlaygroundCli(args.slice(1), cwd);
   }
 
   throw new Error(`Unknown namespace: ${command}`);

@@ -16,22 +16,12 @@ import { MobileTabBar } from '../../components/MobileTabBar.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
-import { PreviewPanel } from '../../components/PreviewPanel.js';
 
 import './ChatPage.css';
 
 export type ChatWorkspaceConversationProps = ComponentProps<
   typeof ConversationListPanel
 >;
-
-export type ChatWorkspacePreviewProps =
-  & Omit<
-    ComponentProps<typeof PreviewPanel>,
-    'className' | 'style'
-  >
-  & {
-    className?: string;
-  };
 
 export type ChatWorkspaceResizeHandleProps = Pick<
   ComponentProps<typeof PanelResizeHandle>,
@@ -67,10 +57,9 @@ export interface ChatWorkspaceProps {
   onMessagesScroll?: UIEventHandler<HTMLDivElement>;
   messages: ReactNode;
   composer: ReactNode;
-  chatPanelStyle?: CSSProperties;
-  previewPanelStyle?: CSSProperties;
+  chatPanelStyle?: CSSProperties | undefined;
   resizeHandle: ChatWorkspaceResizeHandleProps;
-  preview: ChatWorkspacePreviewProps;
+  preview: ReactNode;
 }
 
 function joinClassNames(
@@ -98,15 +87,8 @@ export function ChatWorkspace(props: ChatWorkspaceProps) {
     pageClassName,
     pageRef,
     preview,
-    previewPanelStyle,
     resizeHandle,
   } = props;
-  const {
-    children: previewContent,
-    className: previewClassName,
-    ...previewPanelProps
-  } = preview;
-
   return (
     <div
       ref={pageRef}
@@ -159,13 +141,7 @@ export function ChatWorkspace(props: ChatWorkspaceProps) {
           isCompactLayout={isCompactLayout}
         />
 
-        <PreviewPanel
-          {...previewPanelProps}
-          className={joinClassNames('previewPanel', previewClassName)}
-          style={previewPanelStyle}
-        >
-          {previewContent}
-        </PreviewPanel>
+        {preview}
       </div>
 
       <MobileTabBar

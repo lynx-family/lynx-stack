@@ -3,12 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import type {
+  CSSProperties,
+  ComponentType,
+  ReactNode,
+  PointerEvent as ReactPointerEvent,
+} from 'react';
 
-import { A2UI_DEMOS_PAGE_SOURCE } from './a2ui.js';
-import { LYNX_XML_DEMOS_PAGE_SOURCE } from './lynx-xml.js';
-import { MCP_APPS_DEMOS_PAGE_SOURCE } from './mcp-apps.js';
-import { OPENUI_DEMOS_PAGE_SOURCE } from './openui.js';
 import type { DemoCommit, DemoPageScenario, DemosPageSource } from './type.js';
 import { Button } from '../../components/Button.js';
 import {
@@ -18,11 +19,14 @@ import {
   RotateCcw,
   X,
 } from '../../components/Icon.js';
+import type { CreateLynxXmlPreviewFrame } from '../../components/LynxXmlPreviewRuntime.js';
 import { MobileTabBar } from '../../components/MobileTabBar.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
-import { PreviewPanel } from '../../components/PreviewPanel.js';
+import { PreviewPanelShell } from '../../components/PreviewPanelShell.js';
+import type { PreviewPanelSource } from '../../components/PreviewPanelSource.js';
 import { PreviewViewport } from '../../components/PreviewViewport.js';
+import type { PreviewViewportProps } from '../../components/PreviewViewport.js';
 import { useResizablePanels } from '../../hooks/useResizablePanels.js';
 import type { Protocol } from '../../utils/protocol.js';
 
@@ -37,6 +41,21 @@ const COMPACT_CODE_MIN_HEIGHT = 220;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
 
+export interface DemosPreviewPanelRenderRequest {
+  className: string;
+  title: ReactNode;
+  showPreviewModeSwitch: boolean;
+  showSimulationBar: boolean;
+  speed: number;
+  onSpeedChange: (value: number) => void;
+  previewSource: PreviewPanelSource | undefined;
+  children: ReactNode;
+}
+
+export type DemosPreviewPanelRenderer = (
+  request: DemosPreviewPanelRenderRequest,
+) => ReactNode;
+
 const PLAYBACK_PANEL_IDLE_HEIGHT = 48;
 const PLAYBACK_PANEL_MIN_HEIGHT_ACTIVE = 200;
 const PLAYBACK_PANEL_ACTIVE_RATIO = 0.66;
@@ -46,7 +65,7 @@ function joinClassNames(...values: Array<string | undefined>): string {
   return values.filter(Boolean).join(' ');
 }
 
-function DemosPageContent<
+export function DemosPage<
   TScenario extends DemoPageScenario,
   TPreviewInput,
   TChunk,
@@ -56,8 +75,19 @@ function DemosPageContent<
   demoId?: string;
   theme: 'light' | 'dark';
   source: DemosPageSource<TScenario, TPreviewInput, TChunk, TMeta>;
+  createLynxXmlPreviewFrame?: CreateLynxXmlPreviewFrame;
+  PreviewViewportComponent?: ComponentType<PreviewViewportProps>;
+  renderPreviewPanel?: DemosPreviewPanelRenderer;
 }) {
-  const { demoId, protocol, source, theme } = props;
+  const {
+    createLynxXmlPreviewFrame,
+    demoId,
+    protocol,
+    renderPreviewPanel,
+    source,
+    theme,
+    PreviewViewportComponent = PreviewViewport,
+  } = props;
   const initialScenario = source.findScenario(demoId) ?? source.scenarios[0];
 
   const [scenarioId, setScenarioId] = useState(initialScenario?.id ?? '');
@@ -123,7 +153,7 @@ function DemosPageContent<
     () =>
       currentEditorView?.getValue({
         editorValue,
-        scenario: currentScenario,
+        ...(currentScenario ? { scenario: currentScenario } : {}),
       }) ?? editorValue,
     [currentEditorView, currentScenario, editorValue],
   );
@@ -195,6 +225,21 @@ function DemosPageContent<
       theme,
     });
   }, [isPlaybackActive, previewInput, protocol, source, theme]);
+  const isolatedPreviewFrame = useMemo(
+    () =>
+      createLynxXmlPreviewFrame && previewSource?.kind === 'lynx-xml'
+        ? createLynxXmlPreviewFrame({
+          source: previewSource.source,
+          identity: `example-detail:${scenarioId}:${previewRenderKey}`,
+        })
+        : undefined,
+    [
+      createLynxXmlPreviewFrame,
+      previewRenderKey,
+      previewSource,
+      scenarioId,
+    ],
+  );
 
   const handleSelectScenario = useCallback((id: string) => {
     window.location.hash = `#/${protocol.name}/examples/${id}`;
@@ -215,7 +260,7 @@ function DemosPageContent<
     const result = source.commit({
       editorValue,
       editorEdited,
-      scenario: currentScenario,
+      ...(currentScenario ? { scenario: currentScenario } : {}),
     });
     if ('error' in result) {
       setError(result.error);
@@ -408,7 +453,7 @@ function DemosPageContent<
         : PLAYBACK_PANEL_IDLE_HEIGHT;
 
       setIsPlaybackResizing(true);
-      document.body.dataset.panelResize = 'horizontal';
+      document.body.setAttribute('data-panel-resize', 'horizontal');
 
       const onMove = (moveEvent: PointerEvent) => {
         const delta = moveEvent.clientY - startY;
@@ -426,7 +471,7 @@ function DemosPageContent<
 
       const stop = () => {
         setIsPlaybackResizing(false);
-        delete document.body.dataset.panelResize;
+        document.body.removeAttribute('data-panel-resize');
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', stop);
         window.removeEventListener('pointercancel', stop);
@@ -718,26 +763,30 @@ function DemosPageContent<
                 <Button
                   variant='ghost'
                   size='sm'
-                  iconOnly={source.editor.iconOnlyActions}
+                  {...(source.editor.iconOnlyActions === undefined
+                    ? {}
+                    : { iconOnly: source.editor.iconOnlyActions })}
                   iconBefore={RotateCcw}
                   onClick={handleFillExample}
                   title='Reset to example'
-                  aria-label={source.editor.iconOnlyActions
-                    ? 'Reset to example'
-                    : undefined}
+                  {...(source.editor.iconOnlyActions
+                    ? { 'aria-label': 'Reset to example' }
+                    : {})}
                 >
                   Reset
                 </Button>
                 <Button
                   variant='ghost'
                   size='sm'
-                  iconOnly={source.editor.iconOnlyActions}
+                  {...(source.editor.iconOnlyActions === undefined
+                    ? {}
+                    : { iconOnly: source.editor.iconOnlyActions })}
                   iconBefore={X}
                   onClick={handleClear}
                   title='Clear editor'
-                  aria-label={source.editor.iconOnlyActions
-                    ? 'Clear editor'
-                    : undefined}
+                  {...(source.editor.iconOnlyActions
+                    ? { 'aria-label': 'Clear editor' }
+                    : {})}
                 >
                   Clear
                 </Button>
@@ -761,16 +810,22 @@ function DemosPageContent<
                 source.editor.editorClassName,
               )}
               value={displayedEditorValue}
-              extensions={source.editor.extensions}
-              onChange={editorIsEditable
-                ? (value) => {
-                  setEditorValue(value);
-                  setEditorEdited(true);
+              {...(source.editor.extensions
+                ? { extensions: source.editor.extensions }
+                : {})}
+              {...(editorIsEditable
+                ? {
+                  onChange: (value: string) => {
+                    setEditorValue(value);
+                    setEditorEdited(true);
+                  },
                 }
-                : undefined}
+                : {})}
               editable={editorIsEditable}
               theme='dark'
-              basicSetup={source.editor.basicSetup}
+              {...(source.editor.basicSetup === undefined
+                ? {}
+                : { basicSetup: source.editor.basicSetup })}
             />
             {error ? <div className='codeError'>{error}</div> : null}
           </div>
@@ -785,24 +840,42 @@ function DemosPageContent<
       />
 
       <div className='examplesPreviewWrap' style={previewPanelStyle}>
-        <PreviewPanel
-          className='previewPanel examplesPreviewPanel'
-          title='Lynx Preview'
-          showPreviewModeSwitch
-          showSimulationBar={playbackEnabled}
-          speed={playbackSpeed}
-          onSpeedChange={setPlaybackSpeed}
-          previewSource={previewSource}
-        >
-          <PreviewViewport
-            key={previewRenderKey}
-            iframeRef={iframeRef}
-            onLoad={handleIframeLoad}
-            retainPreviousFrame
-            emptyTitle={source.editor.emptyPreviewTitle}
-            emptySubTitle='Lynx rendering will appear here'
-          />
-        </PreviewPanel>
+        {(() => {
+          const children = (
+            <PreviewViewportComponent
+              key={previewRenderKey}
+              {...(isolatedPreviewFrame
+                ? { frameRenderer: isolatedPreviewFrame }
+                : {})}
+              iframeRef={iframeRef}
+              onLoad={handleIframeLoad}
+              retainPreviousFrame
+              emptyTitle={source.editor.emptyPreviewTitle}
+              emptySubTitle='Lynx rendering will appear here'
+            />
+          );
+          const panel = {
+            className: 'previewPanel examplesPreviewPanel',
+            title: 'Lynx Preview',
+            showPreviewModeSwitch: true,
+            showSimulationBar: playbackEnabled,
+            speed: playbackSpeed,
+            onSpeedChange: setPlaybackSpeed,
+            previewSource,
+            children,
+          } satisfies DemosPreviewPanelRenderRequest;
+          return renderPreviewPanel
+            ? renderPreviewPanel(panel)
+            : (
+              <PreviewPanelShell
+                className={panel.className}
+                title={panel.title}
+                showPreviewModeSwitch={panel.showPreviewModeSwitch}
+              >
+                {children}
+              </PreviewPanelShell>
+            );
+        })()}
       </div>
 
       <MobileTabBar
@@ -811,49 +884,5 @@ function DemosPageContent<
         editLabel='Code'
       />
     </div>
-  );
-}
-
-export function DemosPage(props: {
-  protocol: Protocol;
-  demoId?: string;
-  theme: 'light' | 'dark';
-}) {
-  if (props.protocol.name === 'lynx-xml') {
-    return (
-      <DemosPageContent
-        key='lynx-xml'
-        {...props}
-        source={LYNX_XML_DEMOS_PAGE_SOURCE}
-      />
-    );
-  }
-
-  if (props.protocol.name === 'mcp-apps') {
-    return (
-      <DemosPageContent
-        key='mcp-apps'
-        {...props}
-        source={MCP_APPS_DEMOS_PAGE_SOURCE}
-      />
-    );
-  }
-
-  if (props.protocol.name === 'openui') {
-    return (
-      <DemosPageContent
-        key='openui'
-        {...props}
-        source={OPENUI_DEMOS_PAGE_SOURCE}
-      />
-    );
-  }
-
-  return (
-    <DemosPageContent
-      key='a2ui'
-      {...props}
-      source={A2UI_DEMOS_PAGE_SOURCE}
-    />
   );
 }

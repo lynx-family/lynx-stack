@@ -5,10 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, RefObject } from 'react';
 
 import { PreviewViewport } from './PreviewViewport.js';
+import type { PreviewFrameRenderer } from './PreviewViewport.js';
 import { MountQueueProvider, useQueuedMount } from '../hooks/useMountQueue.js';
 import { PRIORITY } from '../utils/mountQueue.js';
 import type { Priority } from '../utils/mountQueue.js';
-import { LYNX_XML_RENDER_READY_MESSAGE_TYPE } from '../utils/renderUrl.js';
+import { LYNX_XML_RENDER_READY_MESSAGE_TYPE } from '../utils/previewFrameProtocol.js';
 
 const ROOT_MARGIN = '50% 0px';
 const RENDER_READY_TIMEOUT_MS = 5000;
@@ -83,11 +84,13 @@ function CardPreviewLoading(props: { title: string; revealed: boolean }) {
 export function ExamplePreviewCard(props: {
   scenario: ExamplePreviewScenario;
   previewUrl: string | undefined;
-  badge?: string;
+  frameRenderer?: PreviewFrameRenderer | undefined;
+  badge?: string | undefined;
   onOpen: (id: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>, id: string) => void;
 }) {
-  const { badge, onKeyDown, onOpen, previewUrl, scenario } = props;
+  const { badge, frameRenderer, onKeyDown, onOpen, previewUrl, scenario } =
+    props;
   const cardRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const readyRef = useRef(false);
@@ -178,6 +181,7 @@ export function ExamplePreviewCard(props: {
         >
           <PreviewViewport
             src={armed ? previewUrl : undefined}
+            frameRenderer={armed ? frameRenderer : undefined}
             iframeTitle={`${scenario.title} preview`}
             emptyTitle={scenario.title}
             displayMode='full'

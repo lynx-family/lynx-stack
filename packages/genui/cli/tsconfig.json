@@ -2,15 +2,20 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": ".",
+    "jsx": "react-jsx",
     "noEmit": true,
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022"],
+    "lib": ["DOM", "ES2022"],
     "types": ["node", "@rstest/core/globals"],
   },
-  "include": ["src", "test", "rstest.config.ts"],
+  "include": [
+    "src",
+    "test",
+    "playground.rsbuild.config.ts",
+    "rstest.config.ts",
+  ],
   "exclude": ["templates"],
   "references": [],
 }

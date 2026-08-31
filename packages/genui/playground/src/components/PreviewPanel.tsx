@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
-  createContext,
   useCallback,
   useEffect,
   useId,
@@ -20,13 +19,26 @@ import { Drawer } from 'vaul';
 import { Button } from './Button.js';
 import { CopyToast, useCopyToast } from './CopyToast.js';
 import { Maximize2, Minimize2, Smartphone } from './Icon.js';
+import {
+  PreviewPanelMetricsContext,
+  PreviewPanelPreviewModeContext,
+  PreviewPanelRenderContext,
+} from './PreviewPanelContext.js';
+import type {
+  PreviewMode,
+  PreviewPanelMetricsContextValue,
+  PreviewPanelRenderContextValue,
+} from './PreviewPanelContext.js';
+import type {
+  PreviewPanelSource,
+  PreviewQrItem,
+} from './PreviewPanelSource.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
-import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
 import type {
   LocalA2UIMessagesPayload,
@@ -48,105 +60,25 @@ import {
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
 
-export type PreviewMode = 'phone' | 'full';
+export {
+  PreviewPanelMetricsContext,
+  PreviewPanelPreviewModeContext,
+  PreviewPanelRenderContext,
+} from './PreviewPanelContext.js';
+export type {
+  PreviewMode,
+  PreviewPanelMetricsContextValue,
+  PreviewPanelPreviewModeContextValue,
+  PreviewPanelRenderContextValue,
+} from './PreviewPanelContext.js';
 
-export interface PreviewPanelPreviewModeContextValue {
-  mode: PreviewMode;
-  setMode: (mode: PreviewMode) => void;
-}
-
-export const PreviewPanelPreviewModeContext = createContext<
-  PreviewPanelPreviewModeContextValue | null
->(null);
-
-export interface PreviewPanelRenderContextValue {
-  htmlSource?: string;
-  lynxXmlSource?: string;
-  renderUrl: string;
-}
-
-export const PreviewPanelRenderContext = createContext<
-  PreviewPanelRenderContextValue | null
->(null);
-
-export interface PreviewPanelMetricsContextValue {
-  metricId: string;
-  onFrameSrcChange: (src: string) => void;
-}
-
-export const PreviewPanelMetricsContext = createContext<
-  PreviewPanelMetricsContextValue | null
->(null);
-
-export interface PreviewQrItem {
-  title: ReactNode;
-  description: ReactNode;
-  url?: string;
-  urlTitle?: string;
-  copyButtonTitle?: string;
-  variant?: 'default' | 'alt';
-  placeholder?: ReactNode;
-  errorDescription?: ReactNode;
-  showQrCode?: boolean;
-}
-
-interface A2UIPreviewSource {
-  kind: 'a2ui';
-  protocol: Protocol;
-  demoUrl: string;
-  theme: 'light' | 'dark';
-  messages: unknown;
-  messagesUrl?: string;
-  actionMocks?: Record<string, unknown>;
-  actionMocksUrl?: string;
-  demoId?: string;
-  liveAction?: boolean;
-  /**
-   * When true, build the render URL in playback mode so the Lynx app waits
-   * for `A2UI_PLAYBACK_PROGRESS` events instead of streaming on its own.
-   */
-  playbackMode?: boolean;
-}
-
-interface OpenUIPreviewSource {
-  kind: 'openui';
-  rawText: string;
-  theme?: 'light' | 'dark';
-  liveAction?: boolean;
-  playbackMode?: boolean;
-}
-
-export interface McpAppsPreviewSource {
-  kind: 'mcp-apps';
-  mcpAppData: unknown;
-  theme?: 'light' | 'dark';
-}
-
-export interface LynxXmlPreviewSource {
-  kind: 'lynx-xml';
-  source: string;
-  sourcePath?: string;
-  theme?: 'light' | 'dark';
-}
-
-export interface HtmlPreviewSource {
-  kind: 'html';
-  source: string;
-  theme?: 'light' | 'dark';
-}
-
-interface PlaceholderPreviewSource {
-  kind: 'placeholder';
-  item: PreviewQrItem;
-}
-
-export type PreviewPanelSource =
-  | A2UIPreviewSource
-  | OpenUIPreviewSource
-  | McpAppsPreviewSource
-  | LynxXmlPreviewSource
-  | HtmlPreviewSource
-  | PlaceholderPreviewSource;
+export type {
+  HtmlPreviewSource,
+  LynxXmlPreviewSource,
+  McpAppsPreviewSource,
+  PreviewPanelSource,
+  PreviewQrItem,
+} from './PreviewPanelSource.js';
 
 export interface PreviewQrCard {
   key: 'nativePreview' | 'webPreview';
