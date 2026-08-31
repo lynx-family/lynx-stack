@@ -11,8 +11,12 @@
 import { Plugins } from '@lynx-js/css-serializer';
 import * as CSS from '@lynx-js/css-serializer';
 
-export { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
+export {
+  buildCustomSections,
+  LynxTemplatePlugin,
+} from './LynxTemplatePlugin.js';
 export type {
+  CustomSectionEntry,
   CustomSectionNaming,
   LynxTemplatePluginOptions,
   TemplateHooks,

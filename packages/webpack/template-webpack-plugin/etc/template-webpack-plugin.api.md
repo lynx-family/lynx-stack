@@ -16,6 +16,20 @@ import { Plugins } from '@lynx-js/css-serializer';
 import { SyncWaterfallHook } from '@rspack/lite-tapable';
 import Tinypool from 'tinypool';
 
+// @public
+export function buildCustomSections(input: {
+    mainThreadAssets: Asset[];
+    manifest: Record<string, string>;
+    cssAssets: Asset[];
+    enableBytecode: boolean;
+    naming: CustomSectionNaming;
+    cssPlugins: CSS.Plugin[];
+    enableCSSSelector: boolean;
+}): {
+    sections: Record<string, CustomSectionEntry>;
+    remainingManifest: Record<string, string>;
+};
+
 export { CSS }
 
 // Warning: (ae-missing-release-tag) "CSSPlugins" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -24,6 +38,16 @@ export { CSS }
 export const CSSPlugins: {
     parserPlugins: typeof Plugins;
 };
+
+// @public
+export interface CustomSectionEntry {
+    // (undocumented)
+    content: string | Record<string, unknown>;
+    // (undocumented)
+    encoding?: 'JsBytecode' | 'CSS';
+    // (undocumented)
+    type?: 'lazy';
+}
 
 // @public
 export interface CustomSectionNaming {

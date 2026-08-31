@@ -3,12 +3,23 @@
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rslib/core'
 
-import { cssChunksToMap } from '@lynx-js/css-serializer'
-import type { LynxStyleNode } from '@lynx-js/css-serializer'
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import { buildCustomSections } from '@lynx-js/template-webpack-plugin'
+import type {
+  CustomSectionNaming,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin'
 
 function sectionName(assetName: string, extension: string): string {
   return assetName.slice(assetName.lastIndexOf('/') + 1, -extension.length)
+}
+
+// A section is named after the entry it belongs to. The engine emits CSS into
+// a directory of its own, so the name is taken from the file rather than from
+// the path leading to it.
+const EXTERNAL_BUNDLE_SECTION_NAMING: CustomSectionNaming = {
+  mainThread: assetName => sectionName(assetName, '.js'),
+  background: chunkName => sectionName(chunkName, '.js'),
+  css: assetName => `${sectionName(assetName, '.css')}:CSS`,
 }
 
 /**
@@ -205,52 +216,28 @@ export class ExternalBundleWebpackPlugin {
       >
       | undefined,
   ) {
-    const customSections = assets
-      .reduce<
-        Record<string, {
-          content: string | {
-            ruleList: LynxStyleNode[]
-          }
-        }>
-      >(
-        (prev, cur) => {
-          switch (cur.info.assetType) {
-            case 'javascript':
-              return ({
-                ...prev,
-                [sectionName(cur.name, '.js')]: {
-                  ...(enableJsBytecode
-                      && this.options.mainThreadChunks?.includes(cur.name)
-                    ? {
-                      'encoding': 'JsBytecode',
-                    }
-                    : {}),
-                  content: cur.source.source().toString(),
-                },
-              })
-            case 'extract-css':
-              return ({
-                ...prev,
-                // A section is named after the entry it belongs to. The engine
-                // emits CSS into a directory of its own, so the name is taken
-                // from the file rather than from the path leading to it.
-                [`${sectionName(cur.name, '.css')}:CSS`]: {
-                  'encoding': 'CSS',
-                  content: {
-                    ruleList: cssChunksToMap(
-                      [cur.source.source().toString()],
-                      [],
-                      true,
-                    ).cssMap[0] ?? [],
-                  },
-                },
-              })
-            default:
-              return prev
-          }
-        },
-        {},
-      )
+    const javascript = assets.filter(asset =>
+      asset.info.assetType === 'javascript'
+    )
+    const mainThreadChunks = this.options.mainThreadChunks ?? []
+
+    // Every chunk of an external bundle is a section: there is no manifest for
+    // the runtime to fall back to, so none of them is left unnamed.
+    const { sections: customSections } = buildCustomSections({
+      mainThreadAssets: javascript.filter(asset =>
+        mainThreadChunks.includes(asset.name)
+      ),
+      manifest: Object.fromEntries(
+        javascript
+          .filter(asset => !mainThreadChunks.includes(asset.name))
+          .map(asset => [asset.name, asset.source.source().toString()]),
+      ),
+      cssAssets: assets.filter(asset => asset.info.assetType === 'extract-css'),
+      enableBytecode: enableJsBytecode,
+      naming: EXTERNAL_BUNDLE_SECTION_NAMING,
+      cssPlugins: [],
+      enableCSSSelector: true,
+    })
 
     const compilerOptions: Record<string, unknown> = {
       enableFiberArch: true,

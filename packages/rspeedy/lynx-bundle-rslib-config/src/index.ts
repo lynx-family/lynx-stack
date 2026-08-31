@@ -25,6 +25,9 @@ export type {
   OutputConfig,
 } from './externalBundleRslibConfig.js'
 export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
-export type { ExternalBundleWebpackPluginOptions } from './webpack/ExternalBundleWebpackPlugin.js'
+export type {
+  ExternalBundleWebpackPluginOptions,
+  LynxTemplatePluginHooksProvider,
+} from './webpack/ExternalBundleWebpackPlugin.js'
 export { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
 export type { MainThreadRuntimeWrapperWebpackPluginOptions } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'

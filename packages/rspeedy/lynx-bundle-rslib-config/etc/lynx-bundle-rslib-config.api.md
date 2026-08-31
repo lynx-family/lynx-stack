@@ -50,7 +50,6 @@ export interface ExternalBundleWebpackPluginOptions {
         buffer: Buffer;
     }>;
     engineVersion?: string | undefined;
-    // Warning: (ae-forgotten-export) The symbol "LynxTemplatePluginHooksProvider" needs to be exported by the entry point index.d.ts
     LynxTemplatePlugin?: LynxTemplatePluginHooksProvider | undefined;
     mainThreadChunks?: string[] | undefined;
 }
@@ -82,6 +81,12 @@ export type ExternalsPresets = {
 export type ExternalsPresetValue = boolean | {
     async?: boolean;
 };
+
+// @public
+export interface LynxTemplatePluginHooksProvider {
+    // (undocumented)
+    getLynxTemplatePluginHooks: typeof LynxTemplatePlugin.getLynxTemplatePluginHooks;
+}
 
 // @public
 export class MainThreadRuntimeWrapperWebpackPlugin {

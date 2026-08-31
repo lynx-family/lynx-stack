@@ -507,7 +507,12 @@ const SECTION_MAIN_THREAD = 'main-thread';
 const SECTION_BACKGROUND = 'background';
 const SECTION_CSS = 'CSS';
 
-interface CustomSectionEntry {
+/**
+ * One custom section of a Lynx bundle.
+ *
+ * @public
+ */
+export interface CustomSectionEntry {
   type?: 'lazy';
   encoding?: 'JsBytecode' | 'CSS';
   content: string | Record<string, unknown>;
@@ -528,6 +533,87 @@ export interface CustomSectionNaming {
   mainThread(assetName: string, index: number): string | undefined;
   background(chunkName: string, index: number): string | undefined;
   css(assetName: string, index: number): string | undefined;
+}
+
+/**
+ * Assemble the custom sections of a Lynx bundle.
+ *
+ * @remarks
+ *
+ * A chunk that {@link CustomSectionNaming} leaves unnamed stays in
+ * `remainingManifest`, which is where the runtime already looks for it.
+ *
+ * @param options - The chunks to assemble and how to name them.
+ *
+ * @public
+ */
+export function buildCustomSections(
+  {
+    mainThreadAssets,
+    manifest,
+    cssAssets,
+    enableBytecode,
+    naming,
+    cssPlugins,
+    enableCSSSelector,
+  }: {
+    mainThreadAssets: Asset[];
+    manifest: Record<string, string>;
+    cssAssets: Asset[];
+    enableBytecode: boolean;
+    naming: CustomSectionNaming;
+    cssPlugins: CSS.Plugin[];
+    enableCSSSelector: boolean;
+  },
+): {
+  sections: Record<string, CustomSectionEntry>;
+  remainingManifest: Record<string, string>;
+} {
+  const sections: Record<string, CustomSectionEntry> = {};
+
+  mainThreadAssets.forEach((asset, index) => {
+    const name = naming.mainThread(asset.name, index);
+    if (name === undefined) {
+      return;
+    }
+    sections[name] = {
+      ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
+      content: asset.source.source().toString(),
+    };
+  });
+
+  const remainingManifest: Record<string, string> = {};
+  let backgroundIndex = 0;
+  for (const [chunkName, content] of Object.entries(manifest)) {
+    // The AMD wrapper entry is provided by the runtime, never by a section.
+    if (chunkName === '/app-service.js') {
+      continue;
+    }
+    const name = naming.background(chunkName, backgroundIndex++);
+    if (name === undefined) {
+      remainingManifest[chunkName] = content;
+      continue;
+    }
+    sections[name] = { content };
+  }
+
+  cssAssets.forEach((asset, index) => {
+    const name = naming.css(asset.name, index);
+    if (name === undefined) {
+      return;
+    }
+    const ruleList = cssChunksToMap(
+      [asset.source.source().toString()],
+      cssPlugins,
+      enableCSSSelector,
+    ).cssMap[0] ?? [];
+    sections[name] = {
+      encoding: 'CSS',
+      content: { ruleList },
+    };
+  });
+
+  return { sections, remainingManifest };
 }
 
 // A lazy bundle is a single component: the runtime resolves its three sections
@@ -1132,12 +1218,14 @@ class LynxTemplatePluginImpl {
     const enableLazyBundleBytecode = isFetchBundleLazy && !isDev
       && !isDebug();
     const fetchBundleSplit = isFetchBundleLazy
-      ? this.#buildCustomSections({
+      ? buildCustomSections({
         mainThreadAssets: lepusCode.root ? [lepusCode.root] : [],
         manifest: encodeData.manifest,
         cssAssets: encodeData.css.chunks,
         enableBytecode: enableLazyBundleBytecode,
         naming: LAZY_BUNDLE_SECTION_NAMING,
+        cssPlugins: this.#options.cssPlugins,
+        enableCSSSelector: this.#options.enableCSSSelector,
       })
       : null;
 
@@ -1234,66 +1322,6 @@ class LynxTemplatePluginImpl {
         compilation.errors.push(error as Error);
       }
     }
-  }
-
-  #buildCustomSections(
-    { mainThreadAssets, manifest, cssAssets, enableBytecode, naming }: {
-      mainThreadAssets: Asset[];
-      manifest: Record<string, string>;
-      cssAssets: Asset[];
-      enableBytecode: boolean;
-      naming: CustomSectionNaming;
-    },
-  ): {
-    sections: Record<string, CustomSectionEntry>;
-    remainingManifest: Record<string, string>;
-  } {
-    const { cssPlugins, enableCSSSelector } = this.#options;
-    const sections: Record<string, CustomSectionEntry> = {};
-
-    mainThreadAssets.forEach((asset, index) => {
-      const name = naming.mainThread(asset.name, index);
-      if (name === undefined) {
-        return;
-      }
-      sections[name] = {
-        ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
-        content: asset.source.source().toString(),
-      };
-    });
-
-    const remainingManifest: Record<string, string> = {};
-    let backgroundIndex = 0;
-    for (const [chunkName, content] of Object.entries(manifest)) {
-      // The AMD wrapper entry is provided by the runtime, never by a section.
-      if (chunkName === '/app-service.js') {
-        continue;
-      }
-      const name = naming.background(chunkName, backgroundIndex++);
-      if (name === undefined) {
-        remainingManifest[chunkName] = content;
-        continue;
-      }
-      sections[name] = { content };
-    }
-
-    cssAssets.forEach((asset, index) => {
-      const name = naming.css(asset.name, index);
-      if (name === undefined) {
-        return;
-      }
-      const ruleList = cssChunksToMap(
-        [asset.source.source().toString()],
-        cssPlugins,
-        enableCSSSelector,
-      ).cssMap[0] ?? [];
-      sections[name] = {
-        encoding: 'CSS',
-        content: { ruleList },
-      };
-    });
-
-    return { sections, remainingManifest };
   }
 
   /**
