@@ -61,6 +61,7 @@
     "**/expected/**",
     "**/rspack-expected/**",
     "packages/**/test/**/hotCases/**",
+    "packages/tailwind-preset/src/__tests__/output.css",
     "packages/web-platform/**/binary/**/*.d.ts",
   ],
   "plugins": [
