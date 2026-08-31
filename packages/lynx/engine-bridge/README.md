@@ -45,7 +45,8 @@ The bridge follows this runtime path:
 3. `WindowlessRenderer` and `GenericResourceFetcher` register Rust callbacks
    with the runtime.
 4. `HeadlessViewBuilder` binds the renderer, resource fetcher, optional
-   `LynxGroup`, viewport metrics, ICU path, and module registrations.
+   `LynxGroup`, viewport metrics, ICU path, JavaScript runtime setting, and
+   module registrations.
 5. `LynxView` owns the runtime view and exposes template loading, data
    updates, global events, viewport changes, and lifecycle methods.
 
