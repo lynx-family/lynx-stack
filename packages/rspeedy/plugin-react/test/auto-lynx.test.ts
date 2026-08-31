@@ -165,7 +165,8 @@ describe('pluginAutoLynx', () => {
     }
   })
 
-  test('does not apply the engine for the rslib caller', async () => {
+  test('applies the engine for the rslib caller, minus the bundle it does not own', async () => {
+    let lynxConfig: unknown
     const rsbuild = await createRsbuild({
       callerName: 'rslib',
       // eslint-disable-next-line n/no-unsupported-features/node-builtins
@@ -174,12 +175,25 @@ describe('pluginAutoLynx', () => {
         mode: 'production',
         environments: { lynx: {} },
         source: { entry: { main: './fixtures/basic.tsx' } },
-        plugins: [pluginReactLynx()],
+        plugins: [
+          pluginReactLynx(),
+          {
+            name: 'test:read-lynx-config',
+            setup(api) {
+              api.modifyBundlerChain(() => {
+                lynxConfig = api.useExposed(
+                  Symbol.for('@lynx-js/rsbuild-plugin:config'),
+                )
+              })
+            },
+          } satisfies RsbuildPlugin,
+        ],
       },
     })
 
     const [config] = await rsbuild.initConfigs()
 
+    expect(lynxConfig).toBeDefined()
     expect(
       config?.plugins?.some(plugin =>
         plugin?.constructor.name === 'LynxTemplatePlugin'
