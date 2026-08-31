@@ -36,11 +36,11 @@ export function pluginAutoLynx(): RsbuildPlugin {
   return {
     name: 'lynx:react:auto-lynx',
     async setup(api) {
-      // `rslib` and `rstest` drive the build themselves — an external bundle
-      // assembles its own `.lynx.bundle`, and a test run emits nothing — so
-      // the engine has nothing to add. See the same condition in `applyEntry`.
-      const { callerName } = api.context
-      if (callerName === 'rslib' || callerName === 'rstest') {
+      // A test run emits nothing, so the engine has nothing to add. `rslib`
+      // does emit a bundle and reads the engine config, so the engine is
+      // applied for it; `pluginLynx` leaves out the plugins that would rewrite
+      // what an external bundle assembles itself.
+      if (api.context.callerName === 'rstest') {
         return
       }
 

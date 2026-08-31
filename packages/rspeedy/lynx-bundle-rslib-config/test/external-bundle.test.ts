@@ -178,10 +178,14 @@ describe('with the engine config', () => {
     })
   }
 
-  it('emits the same bytes as a build without it', async () => {
-    // A local production build ships no debug metadata, so the engine adds
-    // nothing to the bundle here. The rstest harness sets `DEBUG=rspeedy` and
-    // CI sets `CI`, either of which would opt the build back into it.
+  it('emits the same bytes whether the engine is applied by hand or not', async () => {
+    // `pluginReactLynx` applies the engine, so adding `pluginLynx` on top of it
+    // has to be a no-op rather than a second copy.
+    //
+    // A local production build ships no debug metadata, which keeps the bytes
+    // free of the build paths that differ between the two. The rstest harness
+    // sets `DEBUG=rspeedy` and CI sets `CI`, either of which would opt the
+    // build back into it.
     const restore = new Map(
       ['DEBUG', 'CI', 'CI_REPO_NAME', 'BUILD_VERSION'].map(key => {
         const value = process.env[key]
@@ -191,7 +195,7 @@ describe('with the engine config', () => {
     )
     rstest.stubEnv('NODE_ENV', 'production')
     try {
-      await build(configFor('engine-off', []))
+      await build(configFor('engine-auto', []))
       await build(configFor('engine-on', pluginLynx()))
 
       expect(
@@ -200,7 +204,7 @@ describe('with the engine config', () => {
         ),
       ).toBe(
         sha256(
-          path.join(fixtureDir, 'dist/engine-off/engine-off.lynx.bundle'),
+          path.join(fixtureDir, 'dist/engine-auto/engine-auto.lynx.bundle'),
         ),
       )
     } finally {
@@ -211,8 +215,8 @@ describe('with the engine config', () => {
     }
   })
 
-  it('runs the plugins that tap the template hooks', async () => {
-    await build(configFor('engine-debug', pluginLynx()))
+  it('runs the plugins that tap the template hooks without being applied by hand', async () => {
+    await build(configFor('engine-debug', []))
 
     const decoded = await decodeTemplate(
       path.join(fixtureDir, 'dist/engine-debug/engine-debug.lynx.bundle'),

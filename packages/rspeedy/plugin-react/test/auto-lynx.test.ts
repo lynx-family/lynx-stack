@@ -77,7 +77,31 @@ describe('pluginAutoLynx', () => {
     expect(include).toStrictEqual([...new Set(include)])
   })
 
-  test('does not apply the engine for the rslib caller', async () => {
+  test('applies the engine for the rslib caller', async () => {
+    const rsbuild = await createRsbuild({
+      callerName: 'rslib',
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'development',
+        environments: { lynx: {} },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [pluginReactLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    // `pluginLynxDebugMetadata` taps the template hooks, which an external
+    // bundle drives itself, so the engine reaches it without assembling one.
+    expect(
+      config?.plugins?.some(plugin =>
+        plugin?.constructor.name === 'LynxDebugMetadataPlugin'
+      ),
+    ).toBe(true)
+  })
+
+  test('leaves out the plugins that assemble a bundle for the rslib caller', async () => {
     const rsbuild = await createRsbuild({
       callerName: 'rslib',
       // eslint-disable-next-line n/no-unsupported-features/node-builtins
@@ -97,6 +121,9 @@ describe('pluginAutoLynx', () => {
         plugin?.constructor.name === 'LynxTemplatePlugin'
       ),
     ).toBe(false)
+    // `pluginChunkLoading` loads a chunk the way a template does, which is not
+    // how an external bundle is consumed.
+    expect(config?.output?.chunkLoading).toBeUndefined()
   })
 
   test('honors the apply condition of the engine plugins', async () => {

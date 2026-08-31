@@ -87,8 +87,8 @@ export function applyEntry(
     const emitTemplate = api.context.callerName !== 'rslib'
       && api.context.callerName !== 'rstest'
     if (emitTemplate) {
-      // `pluginAutoLynx` applies the engine for the same callers, so the config
-      // is there whenever a template is emitted.
+      // `pluginAutoLynx` applies the engine for every caller that assembles a
+      // template here, so the config is there whenever one is emitted.
       if (!lynxConfig) {
         throw new Error(
           'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',
