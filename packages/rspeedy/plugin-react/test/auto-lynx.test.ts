@@ -59,6 +59,24 @@ describe('pluginAutoLynx', () => {
     expect(include).toStrictEqual([...new Set(include)])
   })
 
+  test('does not apply the engine again when it is registered per environment', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'production',
+        environments: { lynx: { plugins: [...pluginLynx()] } },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [pluginReactLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const include = swcInclude(config)
+    expect(include).toStrictEqual([...new Set(include)])
+  })
+
   test('does not apply the engine for the rslib caller', async () => {
     const rsbuild = await createRsbuild({
       callerName: 'rslib',
