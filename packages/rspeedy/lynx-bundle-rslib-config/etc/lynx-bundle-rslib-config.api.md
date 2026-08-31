@@ -33,26 +33,6 @@ export interface ExternalBundleLibConfig extends LibConfig {
 }
 
 // @public
-export class ExternalBundleWebpackPlugin {
-    constructor(options: ExternalBundleWebpackPluginOptions);
-    // (undocumented)
-    apply(compiler: Rspack.Compiler): void;
-}
-
-// @public
-export interface ExternalBundleWebpackPluginOptions {
-    bundleFileName: string;
-    enableJsBytecode?: boolean | undefined;
-    encode: (opts: unknown) => {
-        buffer: Buffer;
-    } | Promise<{
-        buffer: Buffer;
-    }>;
-    engineVersion?: string | undefined;
-    mainThreadChunks?: string[] | undefined;
-}
-
-// @public
 export interface ExternalObject {
     async?: boolean;
     libraryName: string | string[];

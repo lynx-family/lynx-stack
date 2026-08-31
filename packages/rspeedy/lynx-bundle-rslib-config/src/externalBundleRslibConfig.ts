@@ -6,9 +6,15 @@ import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
 import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+  WebEncodePlugin,
+} from '@lynx-js/template-webpack-plugin'
+import type { CustomSectionNaming } from '@lynx-js/template-webpack-plugin'
 
-import { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
+import { MarkMainThreadWebpackPlugin } from './webpack/MarkMainThreadWebpackPlugin.js'
 
 /**
  * The options for encoding the external bundle.
@@ -606,6 +612,38 @@ interface ExposedLayers {
   readonly MAIN_THREAD: string
 }
 
+// The consuming application loads a section by the name of the chunk it holds.
+// `__LoadStyleSheet` derives the `:CSS` one from that name.
+function sectionNaming(compilation: Rspack.Compilation): CustomSectionNaming {
+  const names = new Map<string, string>()
+
+  for (const chunk of compilation.chunks) {
+    if (chunk.name === undefined) {
+      continue
+    }
+    for (const file of [...chunk.files, ...chunk.auxiliaryFiles]) {
+      names.set(file, chunk.name)
+    }
+  }
+
+  // A manifest key is a path (`/utils.js`), an asset name is not.
+  const nameOf = (key: string): string => {
+    const name = names.get(key) ?? names.get(key.replace(/^\//, ''))
+    if (name === undefined) {
+      throw new Error(
+        `No chunk owns \`${key}\`, so the section it belongs to cannot be named.`,
+      )
+    }
+    return name
+  }
+
+  return {
+    mainThread: nameOf,
+    background: nameOf,
+    css: assetName => `${nameOf(assetName)}:CSS`,
+  }
+}
+
 /**
  * Rewrite user entries into explicit background/main-thread entries.
  *
@@ -665,17 +703,11 @@ const externalBundleRsbuildPlugin = ({
 
         const backgroundEntryName: string[] = []
         const mainThreadEntryName: string[] = []
-        const mainThreadChunks: string[] = []
 
         const addLayeredEntry = (
           entryName: string,
           entryValue: Rspack.EntryDescription,
         ) => {
-          const isMainThread = entryValue.layer === LAYERS.MAIN_THREAD
-          if (isMainThread) {
-            mainThreadChunks.push(entryName + '.js')
-          }
-
           chain
             .entry(entryName)
             .add(entryValue)
@@ -732,6 +764,13 @@ const externalBundleRsbuildPlugin = ({
             }
           }
         })
+        chain
+          .plugin(MarkMainThreadWebpackPlugin.name)
+          .use(MarkMainThreadWebpackPlugin, [{
+            entryNames: mainThreadEntryName,
+          }])
+          .end()
+
         const isWeb = target === 'web'
 
         // The native lynx_core module wrapper is added at build time only for
@@ -754,35 +793,26 @@ const externalBundleRsbuildPlugin = ({
           .end()
         }
 
-        let encode: (
-          opts: unknown,
-        ) => { buffer: Buffer } | Promise<{ buffer: Buffer }>
-        if (isWeb) {
-          const { getWebEncodeMode } = await import('./webpack/webEncode.js')
-          encode = getWebEncodeMode()
-        } else {
-          const { getEncodeMode } = await import('@lynx-js/tasm')
-          encode = getEncodeMode()
-        }
-
-        // dprint-ignore
         chain
-        .plugin(ExternalBundleWebpackPlugin.name)
-        .use(
-          ExternalBundleWebpackPlugin,
-          [
-            {
-              bundleFileName: `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
-              encode,
-              engineVersion,
-              mainThreadChunks,
-              // For web the `JsBytecode` tag is routing-only (sections stay
-              // raw JS), so it must survive regardless of the user option.
-              enableJsBytecode: isWeb ? true : enableJsBytecode,
-            },
-          ],
-        )
-        .end()
+          .plugin(isWeb ? WebEncodePlugin.name : LynxEncodePlugin.name)
+          .use(isWeb ? WebEncodePlugin : LynxEncodePlugin, [])
+          .end()
+          .plugin(LynxTemplatePlugin.name)
+          .use(LynxTemplatePlugin, [{
+            ...LynxTemplatePlugin.defaultOptions,
+            filename: `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+            chunks: [...mainThreadEntryName, ...backgroundEntryName],
+            customSectionNaming: sectionNaming,
+            appType: 'DynamicComponent',
+            // For web the `JsBytecode` tag only routes a section to the right
+            // slot, so it must survive regardless of the user option.
+            enableSectionBytecode: isWeb
+              || (enableJsBytecode
+                ?? process.env['NODE_ENV'] !== 'development'),
+            targetSdkVersion: engineVersion ?? '3.5',
+            debugInfoOutside: true,
+          }])
+          .end()
       },
     )
   },

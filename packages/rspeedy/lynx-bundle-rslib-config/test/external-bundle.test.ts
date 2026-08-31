@@ -7,7 +7,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
-import type { RslibConfig, rsbuild } from '@rslib/core'
+import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
 import {
   afterAll,
   afterEach,
@@ -19,12 +19,27 @@ import {
 } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 import { decodeTemplate } from './utils.js'
 import { defineExternalBundleRslibConfig } from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+async function inspectRspackConfig(
+  rslibConfig: RslibConfig,
+): Promise<Rspack.Configuration> {
+  // Resolving a config makes Rsbuild write the mode back to `NODE_ENV`.
+  const prevNodeEnv = process.env['NODE_ENV']
+  try {
+    const rslib = await createRslib({ config: rslibConfig, cwd: __dirname })
+    const { origin } = await rslib.inspectConfig()
+    return origin.bundlerConfigs[0]!
+  } finally {
+    process.env['NODE_ENV'] = prevNodeEnv
+  }
+}
 
 async function build(rslibConfig: RslibConfig) {
   const rslib = await createRslib({
@@ -75,6 +90,63 @@ describe('define config', () => {
         utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
       },
     })
+  })
+
+  it('should resolve with the Lynx conditions of the build engine', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    const { resolve } = await inspectRspackConfig(rslibConfig)
+
+    expect(resolve?.conditionNames).toContain('lynx')
+    expect(resolve?.mainFields).toContain('lynx')
+    expect(resolve?.mainFiles).toContain('index.lynx')
+  })
+
+  it('should compile with the SWC transforms of the build engine', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    const { module: mod } = await inspectRspackConfig(rslibConfig)
+
+    const swcOptions: { env?: { include?: string[] } }[] = []
+    const collect = (rule: unknown): void => {
+      if (!rule || typeof rule !== 'object') return
+      if (Array.isArray(rule)) {
+        for (const nested of rule) {
+          collect(nested)
+        }
+        return
+      }
+      const { use, oneOf, rules, loader, options } = rule as Record<
+        string,
+        unknown
+      >
+      collect(use)
+      collect(oneOf)
+      collect(rules)
+      if (typeof loader === 'string' && loader.includes('swc')) {
+        swcOptions.push(options as { env?: { include?: string[] } })
+      }
+    }
+    collect(mod?.rules)
+
+    expect(swcOptions.length).toBeGreaterThan(0)
+    for (const options of swcOptions) {
+      expect(options.env?.include).toContain('transform-block-scoping')
+    }
   })
 
   it('should override default lib config', () => {
@@ -299,7 +371,6 @@ describe('should build external bundle', () => {
       path.join(fixtureDir, 'dist', 'css-bundle.lynx.bundle'),
     )
 
-    // Check custom-sections for CSS keys
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'index',
       'index:CSS',
@@ -455,10 +526,12 @@ describe('debug mode artifacts', () => {
 
   const bundleId = 'utils-debug-flag'
 
-  const getFiles = () =>
-    fs.existsSync(distRoot)
-      ? fs.readdirSync(distRoot)
-      : []
+  // The template intermediates go into the `.lynx` directory, the same way an
+  // application build emits them.
+  const getFiles = () => {
+    const intermediate = path.join(distRoot, '.lynx')
+    return fs.existsSync(intermediate) ? fs.readdirSync(intermediate) : []
+  }
 
   const buildBundle = () => {
     return build(defineExternalBundleRslibConfig({
@@ -1000,6 +1073,7 @@ describe('DSL plugin without layer loaders', () => {
             api.expose(Symbol.for('LAYERS'), LAYERS)
           },
         } satisfies rsbuild.RsbuildPlugin,
+        ...pluginLynx(),
       ],
     })
 
@@ -1029,9 +1103,14 @@ describe('debug info outside', () => {
         plugins: [pluginReactLynx()],
       }))
       const tasmJson = JSON.parse(
-        fs.readFileSync(path.join(distRoot, 'tasm.json'), 'utf-8'),
-      ) as { compilerOptions: Record<string, unknown> }
+        fs.readFileSync(path.join(distRoot, '.lynx', 'tasm.json'), 'utf-8'),
+      ) as {
+        compilerOptions: Record<string, unknown>
+        sourceContent: Record<string, unknown>
+      }
       expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
+      // An external bundle is loaded by an application, not rendered as one.
+      expect(tasmJson.sourceContent['appType']).toBe('DynamicComponent')
     } finally {
       rstest.unstubAllEnvs()
     }
