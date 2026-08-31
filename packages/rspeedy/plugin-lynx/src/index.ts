@@ -74,6 +74,31 @@ export function isPluginLynxRegistered(
 export function pluginLynx(
   options: LynxPluginOptions = {},
 ): RsbuildPlugin[] {
+  // `rslib` assembles the bundle itself and `rstest` has none.
+  const bundlePlugins = [
+    pluginChunkLoading(),
+    pluginLynxDebugMetadata(),
+    pluginOutput(),
+    pluginResolve(),
+    pluginSwc(),
+    pluginCssMinimizer(),
+    pluginDev(),
+    pluginMinify(),
+    pluginOptimization(),
+    pluginServer(),
+    pluginSourcemap(),
+    pluginTarget(),
+  ].map((plugin): RsbuildPlugin => ({
+    ...plugin,
+    setup(api) {
+      const { callerName } = api.context
+      if (callerName === 'rslib' || callerName === 'rstest') {
+        return
+      }
+      return plugin.setup(api)
+    },
+  }))
+
   return [
     {
       name: PLUGIN_LYNX_NAME,
@@ -82,18 +107,7 @@ export function pluginLynx(
       },
     },
     pluginConfig(options),
-    pluginChunkLoading(),
-    pluginCssMinimizer(),
-    pluginDev(),
-    pluginLynxDebugMetadata(),
-    pluginMinify(),
-    pluginOptimization(),
-    pluginOutput(),
-    pluginResolve(),
-    pluginServer(),
-    pluginSourcemap(),
-    pluginSwc(),
-    pluginTarget(),
     pluginTemplate(),
+    ...bundlePlugins,
   ]
 }
