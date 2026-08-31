@@ -17,6 +17,13 @@ export interface BundleFilenameContext {
     platform: string;
 }
 
+// @public
+export function isPluginLynxRegistered(host: {
+    isPluginExists(name: string, options?: {
+        environment?: string;
+    }): boolean;
+}, environments: string[]): boolean;
+
 // @beta
 export interface LynxConfig {
     readonly output: LynxOutput;
