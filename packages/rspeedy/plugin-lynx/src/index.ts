@@ -77,7 +77,6 @@ export function pluginLynx(
   // `rslib` assembles the bundle itself and `rstest` has none.
   const bundlePlugins = [
     pluginChunkLoading(),
-    pluginLynxDebugMetadata(),
     pluginCssMinimizer(),
     pluginDev(),
     pluginMinify(),
@@ -104,6 +103,7 @@ export function pluginLynx(
       },
     },
     pluginConfig(options),
+    pluginLynxDebugMetadata(),
     pluginResolve(),
     pluginSwc(),
     pluginOutput(),

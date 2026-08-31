@@ -1115,6 +1115,24 @@ describe('DSL plugin without layer loaders', () => {
   })
 })
 
+describe('debug metadata', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+  const distRoot = path.join(fixtureDir, 'dist', 'debug-metadata')
+
+  it('emits the metadata a devtool remaps an external bundle with', async () => {
+    await build(defineExternalBundleRslibConfig({
+      source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+      id: 'utils-debug-metadata',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginReactLynx()],
+    }))
+
+    expect(
+      fs.existsSync(path.join(distRoot, '.lynx', 'debug-metadata.json')),
+    ).toBe(true)
+  })
+})
+
 describe('license comments', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
   const distRoot = path.join(fixtureDir, 'dist', 'license-comments')
