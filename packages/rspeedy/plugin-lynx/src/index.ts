@@ -79,7 +79,6 @@ export function pluginLynx(
     pluginChunkLoading(),
     pluginLynxDebugMetadata(),
     pluginOutput(),
-    pluginSwc(),
     pluginCssMinimizer(),
     pluginDev(),
     pluginMinify(),
@@ -107,6 +106,7 @@ export function pluginLynx(
     },
     pluginConfig(options),
     pluginResolve(),
+    pluginSwc(),
     pluginTemplate(),
     ...bundlePlugins,
   ]
