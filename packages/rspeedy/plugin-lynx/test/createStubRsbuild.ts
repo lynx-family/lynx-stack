@@ -14,6 +14,7 @@ import type {
 import { rstest } from '@rstest/core'
 
 import { pluginLynx } from '../src/index.js'
+import type { LynxPluginOptions } from '../src/index.js'
 
 interface RsbuildHelper {
   unwrapConfig(options?: InitConfigsOptions): Promise<Rspack.Configuration>
@@ -28,13 +29,14 @@ interface RsbuildHelper {
 export async function createStubRsbuild(
   rsbuildConfig: RsbuildConfig = {},
   cwd?: string,
+  lynxOptions?: LynxPluginOptions,
 ): Promise<RsbuildInstance & RsbuildHelper> {
   const rsbuild = await createRsbuild({
     cwd: cwd ?? path.dirname(fileURLToPath(import.meta.url)),
     rsbuildConfig: {
       environments: { lynx: {} },
       ...rsbuildConfig,
-      plugins: [pluginLynx(), ...(rsbuildConfig.plugins ?? [])],
+      plugins: [pluginLynx(lynxOptions), ...(rsbuildConfig.plugins ?? [])],
     },
   })
 

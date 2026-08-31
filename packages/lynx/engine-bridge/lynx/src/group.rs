@@ -1,23 +1,31 @@
 use crate::sys;
-use crate::{c_string, Env, Error, Result};
+use crate::{c_string, Error, LynxEnv, Result};
 use std::ffi::CString;
 use std::sync::Arc;
 
+/// An owned Lynx runtime group.
+///
+/// Ownership may move between threads, but a group cannot be shared between
+/// threads concurrently.
 pub struct LynxGroup {
   sys: Arc<sys::LoadedLibrary>,
   raw: *mut sys::lynx_group_t,
   preload_js_paths: Vec<CString>,
 }
 
+// SAFETY: `LynxGroup` uniquely owns its native handle. Moving that ownership
+// between threads is allowed, while the raw pointer keeps the wrapper `!Sync`.
+unsafe impl Send for LynxGroup {}
+
 impl LynxGroup {
-  pub fn new(env: &Env, name: &str) -> Result<Self> {
+  pub fn new(env: &LynxEnv, name: &str) -> Result<Self> {
     let name = c_string(name, "group_name")?;
     let sys = env.sys().clone();
     let raw = unsafe { (sys.lynx_group_create)(name.as_ptr()) };
     Self::from_raw(sys, raw, "create Lynx group")
   }
 
-  pub fn with_id(env: &Env, name: &str, id: &str) -> Result<Self> {
+  pub fn with_id(env: &LynxEnv, name: &str, id: &str) -> Result<Self> {
     let name = c_string(name, "group_name")?;
     let id = c_string(id, "group_id")?;
     let sys = env.sys().clone();
@@ -81,4 +89,12 @@ impl Drop for LynxGroup {
       self.raw = std::ptr::null_mut();
     }
   }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  static_assertions::assert_impl_all!(LynxGroup: Send);
+  static_assertions::assert_not_impl_any!(LynxGroup: Sync);
 }

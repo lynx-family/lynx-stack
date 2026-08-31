@@ -4,8 +4,28 @@
 
 import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 
+import type { LynxPluginOptions } from '@lynx-js/rsbuild-plugin'
+
 import type { Config } from '../config/index.js'
 import { debug, isDebug } from '../debug.js'
+
+function toLynxPluginOptions(config: Config): LynxPluginOptions {
+  const filename = config.output?.filename
+  const bundle = typeof filename === 'string'
+    ? filename
+    : filename?.bundle ?? filename?.template
+
+  const { profile } = config.performance ?? {}
+
+  return {
+    output: {
+      ...bundle === undefined ? {} : { filename: { bundle } },
+    },
+    performance: {
+      ...profile === undefined ? {} : { profile },
+    },
+  }
+}
 
 async function applyDebugPlugins(
   rsbuildInstance: RsbuildInstance,
@@ -41,8 +61,19 @@ export async function applyDefaultPlugins(
 
   const promises: Promise<void>[] = [
     Promise.all(defaultPlugins).then(async plugins => {
-      const { pluginLynx } = await import('@lynx-js/rsbuild-plugin')
-      rsbuildInstance.addPlugins([...pluginLynx(), ...plugins])
+      const { PLUGIN_LYNX_NAME, pluginLynx } = await import(
+        '@lynx-js/rsbuild-plugin'
+      )
+
+      // A user who needs to configure the build engine applies `pluginLynx`
+      // themselves. Applying it again here would build a second config from
+      // the Rspeedy options and overwrite theirs.
+      rsbuildInstance.addPlugins([
+        ...rsbuildInstance.isPluginExists(PLUGIN_LYNX_NAME)
+          ? []
+          : pluginLynx(toLynxPluginOptions(config)),
+        ...plugins,
+      ])
     }),
   ]
 

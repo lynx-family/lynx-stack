@@ -2,11 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ConsoleType, RsbuildConfig, SourceMap } from '@rsbuild/core'
+import type { ConsoleType, RsbuildConfig } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { toRsbuildEntry } from './entry.js'
-import { getFilename } from '../defaults.js'
 import type { Config } from '../index.js'
 
 // This is the default value from lynx-speedy.
@@ -20,15 +19,11 @@ export function toRsbuildConfig(
     dev: {
       assetPrefix: config.dev?.assetPrefix,
 
-      // TODO: move the Lynx-only `websocketTransport` to a Lynx-owned option.
-      client: config.dev?.client as NonNullable<RsbuildConfig['dev']>['client'],
-
       hmr: config.dev?.hmr ?? true,
       lazyCompilation: false,
       liveReload: config.dev?.liveReload ?? true,
       watchFiles: config.dev?.watchFiles,
-      // We expect to use different default writeToDisk with Rsbuild
-      writeToDisk: config.dev?.writeToDisk ?? true,
+      writeToDisk: config.dev?.writeToDisk,
 
       progressBar: config.dev?.progressBar ?? true,
     },
@@ -50,10 +45,8 @@ export function toRsbuildConfig(
 
       distPath: config.output?.distPath,
 
-      // The string form carries the same `bundle`/`template` meaning, so it is
-      // resolved here instead of being dropped.
       filename: typeof config.output?.filename === 'string'
-        ? getFilename(config.output.filename)
+        ? undefined
         : config.output?.filename,
 
       filenameHash: config.output?.filenameHash,
@@ -66,8 +59,7 @@ export function toRsbuildConfig(
 
       polyfill: 'off',
 
-      // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids`
-      sourceMap: config.output?.sourceMap as SourceMap,
+      sourceMap: config.output?.sourceMap,
     },
     resolve: {
       alias: toRsbuildAlias(config),

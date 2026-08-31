@@ -4,6 +4,8 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
 
+import { HtmlView } from './HtmlView.js';
+import { LynxXmlView } from './LynxXmlView.js';
 import {
   PreviewPanelMetricsContext,
   PreviewPanelPreviewModeContext,
@@ -17,6 +19,8 @@ import {
 
 interface PreviewViewportProps {
   src?: string;
+  htmlSource?: string;
+  lynxXmlSource?: string;
   iframeTitle?: string;
   iframeRef?: Ref<HTMLIFrameElement>;
   onLoad?: () => void;
@@ -93,8 +97,10 @@ export function PreviewViewport(props: PreviewViewportProps) {
     emptyIcon = '▶',
     emptySubTitle,
     emptyTitle,
+    htmlSource: htmlSourceProp,
     iframeTitle = 'preview',
     iframeRef,
+    lynxXmlSource: lynxXmlSourceProp,
     displayMode,
     onLoad,
     src,
@@ -107,6 +113,9 @@ export function PreviewViewport(props: PreviewViewportProps) {
   const previewRenderContext = useContext(PreviewPanelRenderContext);
   const previewMetricsContext = useContext(PreviewPanelMetricsContext);
   const mode: PreviewMode = displayMode ?? previewModeContext?.mode ?? 'phone';
+  const htmlSource = htmlSourceProp ?? previewRenderContext?.htmlSource;
+  const lynxXmlSource = lynxXmlSourceProp
+    ?? previewRenderContext?.lynxXmlSource;
   const rawResolvedSrc = src ?? previewRenderContext?.renderUrl ?? '';
   const metricId = previewMetricsContext?.metricId ?? '';
   const navigationToken = useMemo(
@@ -180,6 +189,36 @@ export function PreviewViewport(props: PreviewViewportProps) {
       onLoad={extraProps?.onLoad}
     />
   );
+
+  if (htmlSource !== undefined) {
+    const htmlView = (
+      <HtmlView
+        className={mode === 'phone' ? 'phoneIframe' : 'previewFullIframe'}
+        iframeRef={iframeRef}
+        source={htmlSource}
+        title={iframeTitle}
+        onLoad={onLoad}
+      />
+    );
+
+    return mode === 'phone'
+      ? <PhoneShell>{htmlView}</PhoneShell>
+      : <div className='previewFullFrame'>{htmlView}</div>;
+  }
+
+  if (lynxXmlSource) {
+    const lynxXmlView = (
+      <LynxXmlView
+        className={mode === 'phone' ? 'phoneIframe' : 'previewFullIframe'}
+        source={lynxXmlSource}
+        onLoad={onLoad}
+      />
+    );
+
+    return mode === 'phone'
+      ? <PhoneShell>{lynxXmlView}</PhoneShell>
+      : <div className='previewFullFrame'>{lynxXmlView}</div>;
+  }
 
   if (mode === 'phone') {
     if (!activeSrc) {

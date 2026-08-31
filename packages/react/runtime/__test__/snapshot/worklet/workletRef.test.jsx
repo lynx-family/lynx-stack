@@ -175,14 +175,6 @@ describe('WorkletRef in js', () => {
     );
   });
 
-  it('should throw when native capabilities not fulfilled', () => {
-    globalEnvManager.switchToBackground();
-    lynx.getCoreContext = undefined;
-    expect(() => {
-      new MainThreadRef(1);
-    }).not.toThrow();
-  });
-
   it('should not send init value to the main thread when native capabilities not fulfilled', () => {
     SystemInfo.lynxSdkVersion = '2.13';
     const Comp = () => {

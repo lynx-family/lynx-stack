@@ -68,10 +68,7 @@ export interface SourceMap {
    * })
    * ```
    */
-  js?:
-    | Rspack.DevTool
-    | undefined
-    | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`
+  js?: Rspack.DevTool | undefined
 
   /**
    * Whether to generate CSS source maps.

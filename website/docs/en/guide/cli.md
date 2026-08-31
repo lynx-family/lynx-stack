@@ -140,7 +140,7 @@ Options:
   -h, --help            display help for command
 ```
 
-When you run the command `rspeedy inspect` in the project root directory, the following files will be generated in the `dist/.rspeedy` directory of the project:
+When you run the command `rspeedy inspect` in the project root directory, the following files will be generated in the `dist/.lynx` directory of the project:
 
 - `rspeedy.config.js`: Represents the Rspeedy configuration used during the build.
 - `rsbuild.config.mjs`: Represents the Rsbuild configuration used during the build.

@@ -25,12 +25,52 @@ describe('app route hash', () => {
     expect(buildRouteHash('a2ui', 'create')).toBe('#/a2ui');
     expect(buildRouteHash('openui', 'create')).toBe('#/openui');
     expect(buildRouteHash('mcp-apps', 'create')).toBe('#/mcp-apps');
+    expect(buildRouteHash('lynx-xml', 'create')).toBe('#/lynx-xml');
+    expect(buildRouteHash('html', 'create')).toBe('#/html');
+  });
+
+  test('recognizes the HTML protocol root', () => {
+    expect(parseRouteHash('#/html')).toMatchObject({
+      protocol: { name: 'html', version: '5' },
+      tab: 'create',
+    });
+    expect(parseRouteHash('#/html/create')).toMatchObject({
+      protocol: { name: 'html' },
+      tab: 'create',
+    });
+  });
+
+  test('supports Lynx XML create and examples routes', () => {
+    expect(buildRouteHash('lynx-xml', 'examples')).toBe(
+      '#/lynx-xml/examples',
+    );
+    expect(parseRouteHash('#/lynx-xml')).toMatchObject({
+      protocol: { name: 'lynx-xml', version: '0.1' },
+      tab: 'create',
+    });
+    expect(parseRouteHash('#/lynx-xml/create')).toMatchObject({
+      protocol: { name: 'lynx-xml' },
+      tab: 'create',
+    });
+    expect(parseRouteHash('#/lynx-xml/examples/counter')).toMatchObject({
+      protocol: { name: 'lynx-xml' },
+      tab: 'examples',
+      demoId: 'counter',
+    });
   });
 
   test('recognizes the MCP Apps protocol root', () => {
     expect(parseRouteHash('#/mcp-apps')).toMatchObject({
       protocol: { name: 'mcp-apps', version: '2026-01-26' },
       tab: 'create',
+    });
+    expect(buildRouteHash('mcp-apps', 'examples')).toBe(
+      '#/mcp-apps/examples',
+    );
+    expect(parseRouteHash('#/mcp-apps/examples/weather')).toMatchObject({
+      protocol: { name: 'mcp-apps', version: '2026-01-26' },
+      tab: 'examples',
+      demoId: 'weather',
     });
   });
 

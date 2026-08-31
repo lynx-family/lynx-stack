@@ -1,9 +1,36 @@
 # GenUI Playground
 
 Interactive playground for the Lynx **GenUI** toolchain. Chat with an agent to
-generate A2UI / OpenUI surfaces, browse ready-made examples, and preview the
-result on the web or a real device — then rename, delete, or **share** any
-conversation as a durable preview link.
+generate A2UI / OpenUI surfaces or standalone HTML documents, browse ready-made
+examples (including zero-build Lynx XML artifacts), and preview the result on
+the web or a real device — then rename, delete, or **share** any conversation
+as a durable preview link.
+
+The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`
+and an **Examples** surface at `#/lynx-xml/examples`. Create calls the GenUI
+server's `/lynx-xml/stream` endpoint, shows the `.lynxml` source as it arrives,
+and loads the complete zero-build artifact in a directly mounted `<lynx-view>`.
+Generated XML never enters the A2UI/OpenUI renderer; the shared `render.html`
+entry selects the direct XML path through `protocol=lynx-xml`. Each example uses
+the same single-file format with Lynx CSS plus main-thread and, where needed,
+background-thread JavaScript.
+
+The bundled cases are Counter, Travel Plan, Product Card, Weather Card, and
+Todo List. Together they cover main-thread interaction, subtree re-rendering,
+background-thread computation, selection state, and dynamic-list updates
+without external media assets. Their cards use the same flow-grid arrangement
+and shared card styles as A2UI Playground Examples. The Element PAPI trees
+attach an explicitly styled business root directly to an unstyled `page`; each
+layout container enables Flex instead of relying on Lynx's default Linear
+layout. Examples that can exceed one viewport use that business root itself as
+a vertical scroll view.
+
+The HTML protocol exposes a **Create** surface at `#/html`. It calls the GenUI
+server's `/html/stream` endpoint, shows the standalone document source while it
+streams, and renders the complete HTML through a Web `iframe` `srcDoc`. The
+iframe uses `sandbox="allow-scripts"` without same-origin access, so generated
+interactions work without exposing the Playground DOM, cookies, or local
+storage. HTML never enters the Lynx renderer or native preview path.
 
 > Private development app; it is not published to npm. For the published library
 > see [`@lynx-js/genui`](../README.md).
@@ -58,6 +85,8 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 ?a2uiEndpoint=http://localhost:3060/a2ui/stream
 ?openuiEndpoint=http://localhost:3060/openui/stream
 ?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
+?lynx-xmlEndpoint=http://localhost:3060/lynx-xml/stream
+?htmlEndpoint=http://localhost:3060/html/stream
 ?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
 ```
 
@@ -98,14 +127,16 @@ configured explicitly. See the
 for model/endpoint setup.
 
 When `SEARCH_INFINITY_API_KEY` is configured, the A2UI agent can call the
-server-side `web_search` tool for current or explicitly requested public-web
-information. The key is never sent to the Playground. Each generation may
-perform at most three searches across the initial response and validation
-repairs; each search returns at most five normalized text results. Source links
-must come from the user input or the current request's search results. Search
-images are intentionally excluded from this first integration. The server uses
-the Custom web-search API so both subscription-plan and post-paid keys are
-supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
+server-side `web_search` and `image_search` tools. Web search retrieves current
+or explicitly requested public-web information; image search returns existing
+image URLs with source and quality metadata. The agent prefers image search
+before image generation unless the user explicitly requests original generated
+artwork. The key is never sent to the Playground. Each generation may perform
+at most three searches combined across the initial response and validation
+repairs; each call returns at most five normalized results. Source links and
+image URLs must come from the user input or the current request's trusted tool
+scope. The server uses the Custom search API so both subscription-plan and
+post-paid keys are supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
 and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 

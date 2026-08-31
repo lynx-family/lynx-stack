@@ -54,6 +54,21 @@ if(NOT DEFINED LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
   )
 endif()
 
+set(
+  LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE
+  ON
+  CACHE BOOL
+  "Register standard Node-API modules through weak-node-api"
+  FORCE
+)
+set(
+  LYNX_LIBRARY_MANUAL_NAPI_REGISTRATION
+  ON
+  CACHE BOOL
+  "Register standard Node-API modules from the Lynxtron entry"
+  FORCE
+)
+
 add_subdirectory(
   "${LYNX_LIBRARY_PACKAGE_ROOT}/shared"
   "${CMAKE_CURRENT_BINARY_DIR}/shared"
@@ -61,7 +76,7 @@ add_subdirectory(
 
 add_library(
   __ADDON_TARGET_NAME__
-  SHARED
+  MODULE
   "${CMAKE_CURRENT_SOURCE_DIR}/library_entry.cc"
 )
 
@@ -71,6 +86,15 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated_napi_registration.cc")
   )
   target_compile_definitions(__ADDON_TARGET_NAME__ PRIVATE
     LYNX_LIBRARY_HAS_NAPI_NATIVE_MODULES=1
+  )
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated_platform_registration.cc")
+  target_sources(__ADDON_TARGET_NAME__ PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/generated_platform_registration.cc"
+  )
+  target_compile_definitions(__ADDON_TARGET_NAME__ PRIVATE
+    LYNX_LIBRARY_HAS_PLATFORM_NATIVE_MODULES=1
   )
 endif()
 

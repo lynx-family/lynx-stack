@@ -5,12 +5,67 @@
 ```ts
 
 import type { RsbuildPlugin } from '@rsbuild/core';
+import type { Rspack } from '@rsbuild/core';
+
+// @public
+export type BundleFilename = string | ((context: BundleFilenameContext) => string);
+
+// @public
+export interface BundleFilenameContext {
+    entryName?: string | undefined;
+    lazyBundle: boolean;
+    platform: string;
+}
+
+// @beta
+export interface LynxConfig {
+    readonly output: LynxOutput;
+    readonly performance: LynxPerformance;
+    resolveBundleFilename(context: {
+        entryName: string;
+        platform: string;
+    }): string;
+    resolveIntermediateDir(context?: {
+        entryName?: string | undefined;
+    }): string;
+    resolveLazyBundleFilename(context: {
+        platform: string;
+    }): string | undefined;
+}
+
+// @public
+export interface LynxFilename {
+    bundle?: BundleFilename | undefined;
+}
+
+// @public
+export interface LynxMinify {
+    backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
+    mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
+}
+
+// @public
+export interface LynxOutput {
+    filename?: LynxFilename | undefined;
+    minify?: LynxMinify | undefined;
+}
+
+// @public
+export interface LynxPerformance {
+    profile?: boolean | undefined;
+}
+
+// @public
+export interface LynxPluginOptions {
+    output?: LynxOutput | undefined;
+    performance?: LynxPerformance | undefined;
+}
 
 // @public
 export const PLUGIN_LYNX_NAME = "lynx:rsbuild";
 
 // @public (undocumented)
-export function pluginLynx(): RsbuildPlugin[];
+export function pluginLynx(options?: LynxPluginOptions): RsbuildPlugin[];
 
 // (No @packageDocumentation comment for this package)
 

@@ -44,10 +44,13 @@ describe('Expose', () => {
           {
             name: 'pluginThatUsesTemplateHooks',
             setup(api) {
-              expose = api.useExposed<
-                { LynxTemplatePlugin: LynxTemplatePlugin }
-              >(Symbol.for('LynxTemplatePlugin'))
               api.modifyBundlerChain(chain => {
+                // `pluginLynx` exposes this, and Rspeedy applies the engine
+                // after the user plugins, so it is read in a hook rather than
+                // in `setup`.
+                expose = api.useExposed<
+                  { LynxTemplatePlugin: LynxTemplatePlugin }
+                >(Symbol.for('LynxTemplatePlugin'))
                 const PLUGIN_NAME = 'pluginThatUsesTemplateHooks'
                 chain.plugin(PLUGIN_NAME).use({
                   apply(compiler) {
@@ -101,7 +104,7 @@ describe('Expose', () => {
       .toMatchInlineSnapshot(`
       [
         "/app-service.js",
-        "/.rspeedy/main/background.js",
+        "/.lynx/main/background.js",
       ]
     `)
   })

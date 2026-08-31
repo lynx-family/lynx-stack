@@ -12,12 +12,14 @@ import { jsonWithCors } from '../../common/cors';
 function getA2UIHealth(req: Request) {
   const search = readDoubaoSearchConfig();
   const webSearchReady = search.ok && search.enabled;
+  const imageSearchReady = webSearchReady;
   const result = readModelConfig();
   if (!result.ok) {
     return jsonWithCors(req, {
       ok: false,
       provider: 'openai',
       hasKey: false,
+      imageSearchReady,
       webSearchReady,
       error: result.error,
     });
@@ -33,6 +35,7 @@ function getA2UIHealth(req: Request) {
       hasKey: Boolean(apiKey),
       modelName: defaultModel,
       imageGenerationReady: false,
+      imageSearchReady,
       webSearchReady,
       error: imageGeneration.error,
     });
@@ -44,6 +47,7 @@ function getA2UIHealth(req: Request) {
     hasKey: Boolean(apiKey),
     modelName: defaultModel,
     imageGenerationReady: true,
+    imageSearchReady,
     webSearchReady,
   });
 }

@@ -16,11 +16,14 @@ import '@lynx-js/web-core/client';
 import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
 
+import { LynxXmlView } from './components/LynxXmlView.js';
 import { lazyComponentDemo } from './mock/basic/lazy-component.js';
 import { mcpAppDemo } from './mock/basic/mcp-app.js';
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
+  LYNX_XML_RENDER_READY_MESSAGE_TYPE,
+  LYNX_XML_SOURCE_URL_QUERY_PARAM,
   RENDER_INIT_DATA_QUERY_PARAM,
   RENDER_METRIC_ID_QUERY_PARAM,
   RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
@@ -145,6 +148,12 @@ function readProtocol(value: unknown): InitData['protocol'] {
       || value === 'mcp-apps'
     ? value
     : undefined;
+}
+
+function readRenderProtocol(
+  value: unknown,
+): InitData['protocol'] | 'lynx-xml' {
+  return value === 'lynx-xml' ? value : readProtocol(value);
 }
 
 function readTheme(value: unknown): InitData['theme'] {
@@ -344,7 +353,44 @@ function isPlaybackControlMessage(
     && (payload.action === 'pause' || payload.action === 'resume');
 }
 
-function Render() {
+function DirectLynxXmlRender() {
+  const initial = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      sourceUrl: params.get(LYNX_XML_SOURCE_URL_QUERY_PARAM) ?? '',
+      theme: readTheme(params.get('theme')) ?? 'light',
+    };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = initial.theme;
+    document.documentElement.style.colorScheme = initial.theme;
+  }, [initial.theme]);
+
+  const handleLoad = useCallback(() => {
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage(
+      { type: LYNX_XML_RENDER_READY_MESSAGE_TYPE },
+      '*',
+    );
+  }, []);
+
+  return initial.sourceUrl
+    ? (
+      <LynxXmlView
+        className='lynxXmlRenderView'
+        sourceUrl={initial.sourceUrl}
+        onLoad={handleLoad}
+      />
+    )
+    : (
+      <div className='lynxXmlRenderError'>
+        Missing Lynx XML source URL.
+      </div>
+    );
+}
+
+function BundledProtocolRender() {
   const initial = useMemo(() => {
     const initData = parseInitDataFromQuery();
     const globalProps = parseGlobalPropsFromQuery();
@@ -887,15 +933,30 @@ function Render() {
   return createElement('lynx-view', {
     ref: lynxViewRef,
     className: 'renderLynx',
-    style: { height: '100%' },
     'thread-strategy': 'multi-thread',
     url: initData?.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
   });
+}
+
+function Render() {
+  const protocol = useMemo(
+    () =>
+      readRenderProtocol(
+        new URLSearchParams(window.location.search).get('protocol'),
+      ),
+    [],
+  );
+
+  return protocol === 'lynx-xml'
+    ? <DirectLynxXmlRender />
+    : <BundledProtocolRender />;
 }
 
 const container = document.getElementById('root');
 if (!container) {
   throw new Error('Missing #root element');
 }
+
+document.documentElement.dataset.playgroundEntry = 'render';
 
 ReactDOM.createRoot(container).render(<Render />);

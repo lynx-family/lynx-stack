@@ -14,17 +14,21 @@ export const SEARCH_INFINITY_ENDPOINT =
 
 const DEFAULT_SEARCH_REQUEST_TIMEOUT_MS = 10_000;
 const MAX_SEARCH_REQUEST_TIMEOUT_MS = 60_000;
-const SEARCH_DOCUMENT_COUNT = 5;
+const WEB_SEARCH_RESULT_COUNT = 5;
+const IMAGE_SEARCH_RESULT_COUNT = 5;
 const SEARCH_SNIPPET_LENGTH = 600;
-const SEARCH_TYPE = 'web';
+const WEB_SEARCH_TYPE = 'web';
+const IMAGE_SEARCH_TYPE = 'image';
 const SEARCH_RUN_STATE_KEY = 'a2ui:doubao-search-run-state' as const;
 const MAX_SEARCH_QUERY_LENGTH = 100;
 const MAX_SEARCH_TITLE_LENGTH = 500;
+const MAX_SEARCH_METADATA_LENGTH = 100;
 export const MAX_DOUBAO_SEARCH_CALLS_PER_RUN = 3;
 
 interface DoubaoSearchRunState {
   attemptedCalls: number;
   documentURLs: string[];
+  imageURLs: string[];
   maxCalls: number;
 }
 
@@ -59,6 +63,27 @@ export interface DoubaoSearchResult {
   query: string;
   totalDocCount: number;
   results: DoubaoSearchDocument[];
+}
+
+export interface DoubaoImageSearchItem {
+  rank: number;
+  title: string;
+  imageUrl: string;
+  sourceUrl?: string;
+  siteName?: string;
+  publishTime?: string;
+  width?: number;
+  height?: number;
+  shape?: string;
+  blurDescription?: string;
+  category?: string;
+  hasWatermark?: boolean;
+}
+
+export interface DoubaoImageSearchResult {
+  query: string;
+  totalImageCount: number;
+  results: DoubaoImageSearchItem[];
 }
 
 interface RequestContextScope {
@@ -155,6 +180,22 @@ function boundedText(value: unknown, maxLength: number): string {
   return value.trim().slice(0, maxLength);
 }
 
+function normalizedRank(value: unknown, fallback: number): number {
+  return typeof value === 'number'
+      && Number.isSafeInteger(value)
+      && value >= 0
+    ? value
+    : fallback;
+}
+
+function normalizedPositiveInteger(value: unknown): number | undefined {
+  return typeof value === 'number'
+      && Number.isSafeInteger(value)
+      && value > 0
+    ? value
+    : undefined;
+}
+
 function normalizeDocument(
   value: unknown,
   index: number,
@@ -166,17 +207,16 @@ function normalizeDocument(
   const snippet = boundedText(value.Summary, SEARCH_SNIPPET_LENGTH)
     || boundedText(value.Snippet, SEARCH_SNIPPET_LENGTH)
     || boundedText(value.Content, SEARCH_SNIPPET_LENGTH);
-  const rank = typeof value.SortId === 'number'
-      && Number.isSafeInteger(value.SortId)
-      && value.SortId >= 0
-    ? value.SortId
-    : index;
+  const rank = normalizedRank(value.SortId, index);
   const hostname = new URL(url).hostname;
-  const publishTime = boundedText(value.PublishTime, 100);
+  const publishTime = boundedText(
+    value.PublishTime,
+    MAX_SEARCH_METADATA_LENGTH,
+  );
   const authorityLevel = typeof value.AuthInfoLevel === 'number'
       && Number.isFinite(value.AuthInfoLevel)
     ? String(value.AuthInfoLevel)
-    : boundedText(value.AuthInfoDes, 100);
+    : boundedText(value.AuthInfoDes, MAX_SEARCH_METADATA_LENGTH);
   return {
     rank,
     title,
@@ -188,10 +228,57 @@ function normalizeDocument(
   };
 }
 
-function normalizeSearchResponse(
+function normalizedWatermark(value: unknown): boolean | undefined {
+  if (value === 1 || value === '1') return true;
+  if (value === 0 || value === '0') return false;
+  return undefined;
+}
+
+function normalizeImage(
   value: unknown,
-  query: string,
-): DoubaoSearchResult {
+  index: number,
+): DoubaoImageSearchItem | undefined {
+  if (!isRecord(value) || !isRecord(value.Image)) return undefined;
+  const imageUrl = normalizedHttpURL(value.Image.Url);
+  if (!imageUrl) return undefined;
+
+  const title = boundedText(value.Title, MAX_SEARCH_TITLE_LENGTH);
+  const sourceUrl = normalizedHttpURL(value.Url);
+  const siteName = boundedText(value.SiteName, MAX_SEARCH_METADATA_LENGTH);
+  const publishTime = boundedText(
+    value.PublishTime,
+    MAX_SEARCH_METADATA_LENGTH,
+  );
+  const width = normalizedPositiveInteger(value.Image.Width);
+  const height = normalizedPositiveInteger(value.Image.Height);
+  const shape = boundedText(value.Image.Shape, MAX_SEARCH_METADATA_LENGTH);
+  const blurDescription = boundedText(
+    value.Image.BlurDes,
+    MAX_SEARCH_METADATA_LENGTH,
+  );
+  const category = boundedText(
+    value.Image.Category,
+    MAX_SEARCH_METADATA_LENGTH,
+  );
+  const hasWatermark = normalizedWatermark(value.Image.Watermark);
+
+  return {
+    rank: normalizedRank(value.SortId, index),
+    title,
+    imageUrl,
+    ...(sourceUrl ? { sourceUrl } : {}),
+    ...(siteName ? { siteName } : {}),
+    ...(publishTime ? { publishTime } : {}),
+    ...(width ? { width } : {}),
+    ...(height ? { height } : {}),
+    ...(shape ? { shape } : {}),
+    ...(blurDescription ? { blurDescription } : {}),
+    ...(category ? { category } : {}),
+    ...(hasWatermark === undefined ? {} : { hasWatermark }),
+  };
+}
+
+function searchResultRecord(value: unknown): Record<string, unknown> {
   if (!isRecord(value)) {
     throw new Error('Doubao search returned an invalid response');
   }
@@ -211,20 +298,56 @@ function normalizeSearchResponse(
   if (!isRecord(value.Result)) {
     throw new Error('Doubao search returned an invalid response');
   }
-  const result = value.Result;
+  return value.Result;
+}
+
+function normalizedResultCount(
+  value: unknown,
+  fallback: number,
+): number {
+  return typeof value === 'number'
+      && Number.isSafeInteger(value)
+      && value >= 0
+    ? value
+    : fallback;
+}
+
+function normalizeSearchResponse(
+  value: unknown,
+  query: string,
+): DoubaoSearchResult {
+  const result = searchResultRecord(value);
   if (!Array.isArray(result.WebResults)) {
     throw new Error('Doubao search returned an invalid response');
   }
   const results = result.WebResults
     .map((document, index) => normalizeDocument(document, index))
     .filter((document): document is DoubaoSearchDocument => Boolean(document))
-    .slice(0, SEARCH_DOCUMENT_COUNT);
-  const totalDocCount = typeof result.ResultCount === 'number'
-      && Number.isSafeInteger(result.ResultCount)
-      && result.ResultCount >= 0
-    ? result.ResultCount
-    : results.length;
+    .slice(0, WEB_SEARCH_RESULT_COUNT);
+  const totalDocCount = normalizedResultCount(
+    result.ResultCount,
+    results.length,
+  );
   return { query, totalDocCount, results };
+}
+
+function normalizeImageSearchResponse(
+  value: unknown,
+  query: string,
+): DoubaoImageSearchResult {
+  const result = searchResultRecord(value);
+  if (!Array.isArray(result.ImageResults)) {
+    throw new Error('Doubao search returned an invalid response');
+  }
+  const results = result.ImageResults
+    .map((image, index) => normalizeImage(image, index))
+    .filter((image): image is DoubaoImageSearchItem => Boolean(image))
+    .slice(0, IMAGE_SEARCH_RESULT_COUNT);
+  const totalImageCount = normalizedResultCount(
+    result.ResultCount,
+    results.length,
+  );
+  return { query, totalImageCount, results };
 }
 
 function normalizedQuery(query: string): string {
@@ -251,14 +374,13 @@ function throwIfSearchAborted(
   }
 }
 
-export async function searchDoubao(
+async function requestDoubaoSearch(
   config: DoubaoSearchConfig,
-  query: string,
+  body: Record<string, unknown>,
   fetchImpl: typeof fetch = fetch,
   abortSignal?: AbortSignal,
-): Promise<DoubaoSearchResult> {
+): Promise<unknown> {
   abortSignal?.throwIfAborted();
-  const normalized = normalizedQuery(query);
   const controller = new AbortController();
   const onAbort = () => controller.abort(abortSignal?.reason);
   abortSignal?.addEventListener('abort', onAbort, { once: true });
@@ -276,16 +398,7 @@ export async function searchDoubao(
           Authorization: `Bearer ${config.apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          Query: normalized,
-          SearchType: SEARCH_TYPE,
-          Count: SEARCH_DOCUMENT_COUNT,
-          Filter: {
-            NeedContent: false,
-            NeedUrl: true,
-          },
-          ContentFormats: 'text',
-        }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
     } catch {
@@ -307,11 +420,56 @@ export async function searchDoubao(
       throw new Error('Doubao search returned invalid JSON');
     }
     throwIfSearchAborted(config, controller, abortSignal);
-    return normalizeSearchResponse(payload, normalized);
+    return payload;
   } finally {
     clearTimeout(timeout);
     abortSignal?.removeEventListener('abort', onAbort);
   }
+}
+
+export async function searchDoubao(
+  config: DoubaoSearchConfig,
+  query: string,
+  fetchImpl: typeof fetch = fetch,
+  abortSignal?: AbortSignal,
+): Promise<DoubaoSearchResult> {
+  const normalized = normalizedQuery(query);
+  const payload = await requestDoubaoSearch(
+    config,
+    {
+      Query: normalized,
+      SearchType: WEB_SEARCH_TYPE,
+      Count: WEB_SEARCH_RESULT_COUNT,
+      Filter: {
+        NeedContent: false,
+        NeedUrl: true,
+      },
+      ContentFormats: 'text',
+    },
+    fetchImpl,
+    abortSignal,
+  );
+  return normalizeSearchResponse(payload, normalized);
+}
+
+export async function searchDoubaoImages(
+  config: DoubaoSearchConfig,
+  query: string,
+  fetchImpl: typeof fetch = fetch,
+  abortSignal?: AbortSignal,
+): Promise<DoubaoImageSearchResult> {
+  const normalized = normalizedQuery(query);
+  const payload = await requestDoubaoSearch(
+    config,
+    {
+      Query: normalized,
+      SearchType: IMAGE_SEARCH_TYPE,
+      Count: IMAGE_SEARCH_RESULT_COUNT,
+    },
+    fetchImpl,
+    abortSignal,
+  );
+  return normalizeImageSearchResponse(payload, normalized);
 }
 
 function searchRequestContext(
@@ -336,6 +494,7 @@ function getOrCreateSearchRunState(
   const state: DoubaoSearchRunState = {
     attemptedCalls: 0,
     documentURLs: [],
+    imageURLs: [],
     maxCalls: MAX_DOUBAO_SEARCH_CALLS_PER_RUN,
   };
   requestContext.set(SEARCH_RUN_STATE_KEY, state);
@@ -352,6 +511,7 @@ export function initializeDoubaoSearchRunScope(
   searchRequestContext(scope).set(SEARCH_RUN_STATE_KEY, {
     attemptedCalls: 0,
     documentURLs: [],
+    imageURLs: [],
     maxCalls,
   });
 }
@@ -382,11 +542,30 @@ function recordSearchDocumentURLs(
   });
 }
 
+function recordSearchImageURLs(
+  scope: RequestContextScope,
+  urls: readonly string[],
+): void {
+  const requestContext = searchRequestContext(scope);
+  const state = getOrCreateSearchRunState(requestContext);
+  requestContext.set(SEARCH_RUN_STATE_KEY, {
+    ...state,
+    imageURLs: [...new Set([...state.imageURLs, ...urls])],
+  });
+}
+
 export function searchedDoubaoDocumentURLs(
   scope: RequestContextScope,
 ): readonly string[] {
   const state = readSearchRunState(searchRequestContext(scope));
   return state ? [...new Set(state.documentURLs)] : [];
+}
+
+export function searchedDoubaoImageURLs(
+  scope: RequestContextScope,
+): readonly string[] {
+  const state = readSearchRunState(searchRequestContext(scope));
+  return state ? [...new Set(state.imageURLs)] : [];
 }
 
 export async function searchDoubaoForRun(
@@ -410,6 +589,31 @@ export async function searchDoubaoForRun(
   return result;
 }
 
+export async function searchDoubaoImagesForRun(
+  scope: RequestContextScope,
+  config: DoubaoSearchConfig,
+  query: string,
+  fetchImpl: typeof fetch = fetch,
+  abortSignal?: AbortSignal,
+): Promise<DoubaoImageSearchResult> {
+  reserveSearchCall(scope);
+  const result = await searchDoubaoImages(
+    config,
+    query,
+    fetchImpl,
+    abortSignal,
+  );
+  recordSearchImageURLs(
+    scope,
+    result.results.map((image) => image.imageUrl),
+  );
+  recordSearchDocumentURLs(
+    scope,
+    result.results.flatMap((image) => image.sourceUrl ? [image.sourceUrl] : []),
+  );
+  return result;
+}
+
 const searchInputSchema = z.object({
   query: z.string().trim().min(1).max(MAX_SEARCH_QUERY_LENGTH).describe(
     'One focused web search query for current or externally verifiable information.',
@@ -429,7 +633,34 @@ const searchDocumentSchema = z.object({
 const searchOutputSchema = z.object({
   query: z.string(),
   totalDocCount: z.number().int().nonnegative(),
-  results: z.array(searchDocumentSchema).max(SEARCH_DOCUMENT_COUNT),
+  results: z.array(searchDocumentSchema).max(WEB_SEARCH_RESULT_COUNT),
+});
+
+const imageSearchInputSchema = z.object({
+  query: z.string().trim().min(1).max(MAX_SEARCH_QUERY_LENGTH).describe(
+    'One focused image search query describing the subject and desired visual.',
+  ),
+});
+
+const imageSearchItemSchema = z.object({
+  rank: z.number().int().nonnegative(),
+  title: z.string(),
+  imageUrl: z.url(),
+  sourceUrl: z.url().optional(),
+  siteName: z.string().optional(),
+  publishTime: z.string().optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  shape: z.string().optional(),
+  blurDescription: z.string().optional(),
+  category: z.string().optional(),
+  hasWatermark: z.boolean().optional(),
+});
+
+const imageSearchOutputSchema = z.object({
+  query: z.string(),
+  totalImageCount: z.number().int().nonnegative(),
+  results: z.array(imageSearchItemSchema).max(IMAGE_SEARCH_RESULT_COUNT),
 });
 
 export function createDoubaoSearchTool(
@@ -453,6 +684,27 @@ export function createDoubaoSearchTool(
   });
 }
 
+export function createDoubaoImageSearchTool(
+  config: DoubaoSearchConfig,
+  fetchImpl: typeof fetch = fetch,
+) {
+  return createTool({
+    id: 'image_search',
+    description:
+      'Search the public web for existing images. Returns trusted imageUrl values plus source and quality metadata. Copy a selected imageUrl exactly into Image.url. Prefer this tool before generate_image unless the user explicitly requests original generated artwork.',
+    inputSchema: imageSearchInputSchema,
+    outputSchema: imageSearchOutputSchema,
+    execute: ({ query }, context) =>
+      searchDoubaoImagesForRun(
+        { requestContext: context.requestContext },
+        config,
+        query,
+        fetchImpl,
+        context.abortSignal,
+      ),
+  });
+}
+
 export function createOptionalDoubaoSearchTool(
   enabled: boolean | undefined = true,
   environment: Environment = process.env,
@@ -463,4 +715,16 @@ export function createOptionalDoubaoSearchTool(
   if (!result.ok) return undefined;
   if (!result.enabled) return undefined;
   return createDoubaoSearchTool(result.config, fetchImpl);
+}
+
+export function createOptionalDoubaoImageSearchTool(
+  enabled: boolean | undefined = true,
+  environment: Environment = process.env,
+  fetchImpl: typeof fetch = fetch,
+) {
+  if (enabled === false) return undefined;
+  const result = readDoubaoSearchConfig(environment);
+  if (!result.ok) return undefined;
+  if (!result.enabled) return undefined;
+  return createDoubaoImageSearchTool(result.config, fetchImpl);
 }

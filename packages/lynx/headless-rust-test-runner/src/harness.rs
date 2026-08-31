@@ -1,20 +1,29 @@
+//! Native task and frame plumbing shared by every [`crate::LynxContainer`].
+//!
+//! Each container drives its own pages on its own OS thread. Renderer tasks are
+//! therefore per page, while the runtime's single process-wide UI task runner
+//! feeds one shared queue that any container thread may drain — one at a time,
+//! so global tasks keep the serialized execution the engine expects.
+
 use std::sync::{Arc, Mutex, OnceLock};
-#[cfg(not(target_os = "macos"))]
-use std::thread::{self, ThreadId};
 use std::time::{Duration, Instant};
 
 #[cfg(not(target_os = "macos"))]
-use lynx::{run_global_ui_task, set_global_ui_task_runner, GlobalUiTaskRunner};
-use lynx::{
-  Env, HeadlessView, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost, WindowlessRenderer,
-};
+use std::thread::{self, ThreadId};
 
-use crate::{Error, Result};
+#[cfg(not(target_os = "macos"))]
+use lynx::{run_global_ui_task, set_global_ui_task_runner, GlobalUiTaskRunner};
+use lynx::{LynxEnv, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost};
+
+#[cfg(not(target_os = "macos"))]
+use crate::Error;
+use crate::Result;
 
 #[cfg(target_os = "macos")]
 #[path = "macos_headless_display.rs"]
 mod macos_headless_display;
 
+/// A queue of native tasks waiting for their owner thread.
 #[derive(Clone)]
 pub(crate) struct SharedTasks {
   queue: Arc<Mutex<Vec<ScheduledTask>>>,
@@ -43,12 +52,7 @@ impl SharedTasks {
       .push(ScheduledTask { task, deadline });
   }
 
-  #[cfg(not(target_os = "macos"))]
-  fn push_ready(&self, task: Task) {
-    self.push(task, Duration::ZERO);
-  }
-
-  fn drain_ready(&self) -> Vec<Task> {
+  pub(crate) fn drain_ready(&self) -> Vec<Task> {
     let now = Instant::now();
     let mut queue = self.queue.lock().expect("task queue lock poisoned");
     drain_ready_at(&mut queue, now)
@@ -69,6 +73,8 @@ fn drain_ready_at(queue: &mut Vec<ScheduledTask>, now: Instant) -> Vec<Task> {
   ready
 }
 
+/// The windowless host that parks a page's renderer tasks until its container
+/// pumps them.
 pub(crate) struct QueueingHost {
   tasks: SharedTasks,
 }
@@ -87,25 +93,74 @@ impl WindowlessHost for QueueingHost {
   }
 }
 
+/// The threads that own a container, and so count as UI threads for the
+/// runtime. A handful of entries at most, which a linear scan handles better
+/// than a hashed set would.
 #[cfg(not(target_os = "macos"))]
-struct QueueingGlobalRunner {
+static CONTAINER_THREADS: Mutex<Vec<ThreadId>> = Mutex::new(Vec::new());
+
+#[cfg(not(target_os = "macos"))]
+struct SharedGlobalRunner {
   tasks: SharedTasks,
-  thread_id: ThreadId,
 }
 
 #[cfg(not(target_os = "macos"))]
-impl GlobalUiTaskRunner for QueueingGlobalRunner {
+impl GlobalUiTaskRunner for SharedGlobalRunner {
   fn runs_on_current_thread(&mut self) -> bool {
-    thread::current().id() == self.thread_id
+    let current = thread::current().id();
+    CONTAINER_THREADS
+      .lock()
+      .expect("container thread registry poisoned")
+      .contains(&current)
   }
 
   fn post_task(&mut self, task: Task, _target_time_nanos: u64) {
-    self.tasks.push_ready(task);
+    self.tasks.push(task, Duration::ZERO);
   }
 }
 
+/// Prepares the process for a container running on the calling thread.
+///
+/// Returns the queue of process-wide UI tasks the caller must drain. The
+/// registration itself happens once; every later container only records that
+/// its thread is a legitimate UI thread for the runtime.
+#[cfg(not(target_os = "macos"))]
+pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedTasks> {
+  static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
+  match PLATFORM.get_or_init(|| {
+    let tasks = SharedTasks::new();
+    let installed = set_global_ui_task_runner(
+      env,
+      SharedGlobalRunner {
+        tasks: tasks.clone(),
+      },
+    )
+    .map_err(|error| error.to_string())?;
+    if !installed {
+      return Err("failed to register Lynx global UI task runner".into());
+    }
+    Ok(tasks)
+  }) {
+    Ok(tasks) => {
+      let current = thread::current().id();
+      let mut threads = CONTAINER_THREADS
+        .lock()
+        .expect("container thread registry poisoned");
+      if !threads.contains(&current) {
+        threads.push(current);
+      }
+      Ok(tasks.clone())
+    }
+    Err(message) => Err(Error::Protocol(message.clone())),
+  }
+}
+
+/// Prepares the process for a container running on the calling thread.
+///
+/// macOS drives windowless frames through the Rust-only fake display link, so
+/// there is no global UI task queue to drain.
 #[cfg(target_os = "macos")]
-pub(crate) fn initialize_platform(_env: &Env) -> Result<SharedTasks> {
+pub(crate) fn register_container_thread(_env: &'static LynxEnv) -> Result<SharedTasks> {
   static PLATFORM: OnceLock<SharedTasks> = OnceLock::new();
   Ok(
     PLATFORM
@@ -117,29 +172,28 @@ pub(crate) fn initialize_platform(_env: &Env) -> Result<SharedTasks> {
   )
 }
 
+/// Runs the process-wide UI tasks that are ready, if no other container thread
+/// is already running them.
 #[cfg(not(target_os = "macos"))]
-pub(crate) fn initialize_platform(env: &Env) -> Result<SharedTasks> {
-  static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
-  match PLATFORM.get_or_init(|| {
-    let tasks = SharedTasks::new();
-    let installed = set_global_ui_task_runner(
-      env,
-      QueueingGlobalRunner {
-        tasks: tasks.clone(),
-        thread_id: thread::current().id(),
-      },
-    )
-    .map_err(|error| error.to_string())?;
-    if !installed {
-      return Err("failed to register Lynx global UI task runner".into());
-    }
-    Ok(tasks)
-  }) {
-    Ok(tasks) => Ok(tasks.clone()),
-    Err(message) => Err(Error::Protocol(message.clone())),
+pub(crate) fn run_ready_global_tasks(env: &'static LynxEnv, tasks: &SharedTasks) -> bool {
+  static RUNNING: Mutex<()> = Mutex::new(());
+  let Ok(_guard) = RUNNING.try_lock() else {
+    return false;
+  };
+  let mut ran_task = false;
+  for task in tasks.drain_ready() {
+    run_global_ui_task(env, task);
+    ran_task = true;
   }
+  ran_task
 }
 
+#[cfg(target_os = "macos")]
+pub(crate) fn run_ready_global_tasks(_env: &'static LynxEnv, _tasks: &SharedTasks) -> bool {
+  false
+}
+
+/// A presented software frame copied into owned storage once.
 #[derive(Clone, Debug)]
 pub(crate) struct CapturedFrame {
   pub width: usize,
@@ -154,6 +208,7 @@ struct FrameState {
   latest: Option<CapturedFrame>,
 }
 
+/// The presented-frame slot for one page.
 #[derive(Clone, Default)]
 pub(crate) struct FrameStore {
   state: Arc<Mutex<FrameState>>,
@@ -198,92 +253,9 @@ impl SoftwareRenderer for FrameStore {
   }
 }
 
-pub(crate) struct TaskPump {
-  renderer_tasks: SharedTasks,
-  #[cfg(not(target_os = "macos"))]
-  global_tasks: SharedTasks,
-  #[cfg(not(target_os = "macos"))]
-  env: Env,
-}
-
-impl TaskPump {
-  pub(crate) fn new(env: Env, renderer_tasks: SharedTasks, global_tasks: SharedTasks) -> Self {
-    #[cfg(target_os = "macos")]
-    {
-      let _ = (env, global_tasks);
-      Self { renderer_tasks }
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-      Self {
-        renderer_tasks,
-        global_tasks,
-        env,
-      }
-    }
-  }
-
-  pub(crate) async fn wait_for_frame(
-    &self,
-    view: &HeadlessView,
-    frames: &FrameStore,
-    after_sequence: u64,
-    timeout: Duration,
-  ) -> Result<CapturedFrame> {
-    let deadline = Instant::now() + timeout;
-    while Instant::now() < deadline {
-      self.pump_once(view);
-      if let Some(frame) = frames.latest() {
-        if frame.sequence > after_sequence {
-          return Ok(frame);
-        }
-      }
-      tokio::time::sleep(Duration::from_millis(1)).await;
-    }
-    Err(Error::Timeout("waiting for a rendered frame".into()))
-  }
-
-  pub(crate) async fn pump_for(&self, view: &HeadlessView, duration: Duration) {
-    let deadline = Instant::now() + duration;
-    while Instant::now() < deadline {
-      self.pump_once(view);
-      tokio::time::sleep(Duration::from_millis(1)).await;
-    }
-  }
-
-  pub(crate) fn pump_once(&self, view: &HeadlessView) {
-    let ran_renderer_task = self.run_renderer_tasks(view.renderer());
-    #[cfg(target_os = "macos")]
-    let ran_task = ran_renderer_task;
-    #[cfg(not(target_os = "macos"))]
-    let ran_task = {
-      let mut ran_task = ran_renderer_task;
-      for task in self.global_tasks.drain_ready() {
-        run_global_ui_task(&self.env, task);
-        ran_task = true;
-      }
-      ran_task
-    };
-    let max_wait = if ran_task {
-      Duration::ZERO
-    } else {
-      Duration::from_millis(1)
-    };
-    let _ = pump_platform_events(max_wait);
-  }
-
-  fn run_renderer_tasks(&self, renderer: &WindowlessRenderer) -> bool {
-    let mut ran_task = false;
-    for task in self.renderer_tasks.drain_ready() {
-      renderer.run_task(task);
-      ran_task = true;
-    }
-    ran_task
-  }
-}
-
+/// Gives the platform run loop a chance to deliver native events.
 #[cfg(target_os = "macos")]
-fn pump_platform_events(max_wait: Duration) -> bool {
+pub(crate) fn pump_platform_events(max_wait: Duration) -> bool {
   const RUN_HANDLED_SOURCE: i32 = 4;
   unsafe {
     CFRunLoopRunInMode(kCFRunLoopDefaultMode, max_wait.as_secs_f64(), true) == RUN_HANDLED_SOURCE
@@ -291,7 +263,10 @@ fn pump_platform_events(max_wait: Duration) -> bool {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn pump_platform_events(_max_wait: Duration) -> bool {
+pub(crate) fn pump_platform_events(max_wait: Duration) -> bool {
+  if !max_wait.is_zero() {
+    std::thread::sleep(max_wait);
+  }
   false
 }
 
@@ -312,8 +287,27 @@ mod tests {
   fn assert_send_sync<T: Send + Sync>() {}
 
   #[test]
-  fn captured_frames_can_cross_encoder_threads() {
+  fn captured_frames_can_cross_container_threads() {
     assert_send_sync::<CapturedFrame>();
     assert_send_sync::<FrameStore>();
+    assert_send_sync::<SharedTasks>();
+  }
+
+  #[test]
+  fn only_tasks_past_their_deadline_are_drained() {
+    let mut queue = Vec::new();
+    let now = Instant::now();
+    assert!(drain_ready_at(&mut queue, now).is_empty());
+    queue.push(ScheduledTask {
+      task: Task::from_raw(lynx::sys::lynx_task_t::default()),
+      deadline: now + Duration::from_secs(60),
+    });
+    assert!(drain_ready_at(&mut queue, now).is_empty());
+    assert_eq!(queue.len(), 1);
+    assert_eq!(
+      drain_ready_at(&mut queue, now + Duration::from_secs(61)).len(),
+      1
+    );
+    assert!(queue.is_empty());
   }
 }

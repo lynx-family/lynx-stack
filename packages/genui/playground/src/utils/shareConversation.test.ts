@@ -44,7 +44,16 @@ describe('publishConversation', () => {
     });
 
     try {
-      for (const protocol of [undefined, 'a2ui', 'openui', 'mcp-apps']) {
+      for (
+        const protocol of [
+          undefined,
+          'a2ui',
+          'openui',
+          'mcp-apps',
+          'lynx-xml',
+          'html',
+        ]
+      ) {
         await publishConversation(conversationDoc(protocol));
       }
 
@@ -57,6 +66,8 @@ describe('publishConversation', () => {
         { method: 'a2ui', type: 'conversation' },
         { method: 'openui', type: 'conversation' },
         { method: 'mcp-apps', type: 'conversation' },
+        { method: 'lynx-xml', type: 'conversation' },
+        { method: 'html', type: 'conversation' },
       ]);
     } finally {
       Object.defineProperty(globalThis, 'window', {

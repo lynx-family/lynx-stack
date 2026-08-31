@@ -12,6 +12,7 @@ import type {
   RspackChain,
 } from '@rsbuild/core'
 
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -19,11 +20,11 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
+const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
+
 const PLUGIN_NAME = 'lynx:vanilla'
 const VANILLA_WEBPACK_PLUGIN_NAME = 'VanillaLynxWebpackPlugin'
 const DEFAULT_ENGINE_VERSION = '3.5'
-const DEFAULT_BUNDLE_FILENAME = '[name].[platform].bundle'
-const INTERMEDIATE_DIR = '.rspeedy'
 
 /**
  * Rspack layers used by Vanilla Lynx entries.
@@ -138,14 +139,6 @@ export interface PluginVanillaLynxOptions {
   targetSdkVersion?: string | undefined
 }
 
-interface RspeedyExposure {
-  config?: {
-    output?: {
-      filename?: RspeedyFilename | undefined
-    } | undefined
-  } | undefined
-}
-
 interface LynxConfigExposure {
   config?: {
     targetSdkVersion?: string | undefined
@@ -158,13 +151,6 @@ interface ResolvedVanillaEntry {
   styleSource?: string | undefined
 }
 
-type RspeedyFilename =
-  | string
-  | {
-    bundle?: VanillaBundleFilename | undefined
-    template?: string | undefined
-  }
-
 interface ResolvedPluginVanillaLynxOptions {
   bundleFilename?: VanillaBundleFilename | undefined
   engineVersion: string
@@ -175,7 +161,7 @@ interface VanillaEntryContext {
   bundleFilename?: VanillaBundleFilename | undefined
   engineVersion: string
   platform: string
-  rspeedyFilename?: RspeedyFilename | undefined
+  lynxConfig: LynxConfig
 }
 
 interface VanillaEntryArtifacts {
@@ -231,12 +217,6 @@ function resolvePluginOptions(
 
 function exposeVanillaCapabilities(api: RsbuildPluginAPI): void {
   api.expose(Symbol.for('LAYERS'), LAYERS)
-  api.expose(Symbol.for('LynxTemplatePlugin'), {
-    LynxTemplatePlugin: {
-      getLynxTemplatePluginHooks: LynxTemplatePlugin
-        .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
-    },
-  })
 }
 
 function disableVanillaHotUpdates(api: RsbuildPluginAPI): void {
@@ -256,9 +236,15 @@ function setupVanillaBundler(
   options: ResolvedPluginVanillaLynxOptions,
 ): void {
   api.modifyBundlerChain((chain, { environment }) => {
-    const rspeedyFilename = api.useExposed<RspeedyExposure>(
-      Symbol.for('rspeedy.api'),
-    )?.config?.output?.filename
+    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+    const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
+
+    if (!lynxConfig) {
+      throw new Error(
+        'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',
+      )
+    }
+
     const platform = getVanillaPlatform(environment.name)
 
     if (!platform) {
@@ -274,7 +260,7 @@ function setupVanillaBundler(
       bundleFilename: options.bundleFilename,
       engineVersion: options.engineVersion,
       platform: environment.name,
-      rspeedyFilename,
+      lynxConfig,
     }
 
     chain.entryPoints.clear()
@@ -303,16 +289,11 @@ function addVanillaEntry(
 
   const backgroundEntry = `${entryName}__background`
   const mainThreadEntry = `${entryName}__main-thread`
-  const backgroundAsset = path.posix.join(
-    INTERMEDIATE_DIR,
+  const intermediateDir = context.lynxConfig.resolveIntermediateDir({
     entryName,
-    'background.js',
-  )
-  const mainThreadAsset = path.posix.join(
-    INTERMEDIATE_DIR,
-    entryName,
-    'main-thread.js',
-  )
+  })
+  const backgroundAsset = path.posix.join(intermediateDir, 'background.js')
+  const mainThreadAsset = path.posix.join(intermediateDir, 'main-thread.js')
 
   if (hasBackground) {
     chain.entry(backgroundEntry).add({
@@ -338,13 +319,13 @@ function addVanillaEntry(
         ? [backgroundEntry, mainThreadEntry]
         : [mainThreadEntry],
       dsl: 'react_nodiff',
-      filename: resolveBundleFilename(
-        context.rspeedyFilename,
+      filename: resolveVanillaBundleFilename(
+        context.lynxConfig,
         context.bundleFilename,
         entryName,
         context.platform,
       ),
-      intermediate: path.posix.join(INTERMEDIATE_DIR, entryName),
+      intermediate: intermediateDir,
       targetSdkVersion: context.engineVersion,
     }],
   )
@@ -547,31 +528,23 @@ function resolveOptionalSource(
     : undefined
 }
 
-function resolveBundleFilename(
-  rspeedyFilename:
-    | string
-    | {
-      bundle?: VanillaBundleFilename | undefined
-      template?: string | undefined
-    }
-    | undefined,
+function resolveVanillaBundleFilename(
+  lynxConfig: LynxConfig,
   option: VanillaBundleFilename | undefined,
   entryName: string,
   platform: string,
 ): string {
-  const configured = option
-    ?? (typeof rspeedyFilename === 'object'
-      ? rspeedyFilename.bundle ?? rspeedyFilename.template
-      : rspeedyFilename)
-    ?? DEFAULT_BUNDLE_FILENAME
   const context: VanillaBundleFilenameContext = {
     entryName,
     lazyBundle: false,
     platform,
   }
-  const filename = typeof configured === 'function'
-    ? configured(context)
-    : configured
+
+  if (option === undefined) {
+    return lynxConfig.resolveBundleFilename({ entryName, platform })
+  }
+
+  const filename = typeof option === 'function' ? option(context) : option
 
   return filename
     .replaceAll('[name]', entryName)

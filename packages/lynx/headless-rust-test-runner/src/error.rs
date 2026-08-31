@@ -14,29 +14,35 @@ pub enum Error {
   Json(#[from] serde_json::Error),
   #[error("URL error: {0}")]
   Url(#[from] url::ParseError),
-  #[error("PNG encoding error: {0}")]
-  Png(#[from] png::EncodingError),
-  #[error("missing lynx_core.js; set ConnectOptions::lynx_core_path or LYNX_CORE_JS_PATH")]
+  #[error("LynxML source at {url} is not valid UTF-8: {source}")]
+  InvalidLynxMlUtf8 {
+    url: String,
+    #[source]
+    source: std::str::Utf8Error,
+  },
+  #[error(
+    "GotoOptions::global_props_json is not supported for LynxML; the public LynxML load API does not accept global properties"
+  )]
+  UnsupportedLynxMlGlobalProps,
+  #[error(
+    "missing lynx_core.js; rebuild with automatic artifact downloads enabled, set ContainerOptions::lynx_core_path or LYNX_CORE_JS_PATH, or place it at $LYNX_SDK_DIR/resources/lynx_core.js"
+  )]
   MissingLynxCore,
   #[error("Lynx core resource does not exist: {0}")]
   LynxCoreNotFound(PathBuf),
   #[error("failed to fetch {url}: {message}")]
   Fetch { url: String, message: String },
-  #[error("no headless Rust test runner debug-router client found")]
-  ClientNotFound,
-  #[error("cannot find a debug session for URL: {0}")]
-  SessionNotFound(String),
+  #[error(
+    "the loaded Lynx runtime does not expose a DevTools target for this page; DOM APIs require a runtime with lynx_view_get_devtool_target"
+  )]
+  DevtoolTargetUnavailable,
   #[error("debug-router protocol error: {0}")]
   Protocol(String),
-  #[error(
-    "native Lynx pages are bound to owner thread {owner}; new_page was called from {current}"
-  )]
-  ThreadAffinity { owner: String, current: String },
   #[error("CDP request error: {0}")]
   Cdp(String),
   #[error("operation timed out: {0}")]
   Timeout(String),
-  #[error("page is not loaded; call goto().await first")]
+  #[error("page is not loaded; call goto() first")]
   PageNotLoaded,
   #[error("no rendered frame is available")]
   FrameNotAvailable,

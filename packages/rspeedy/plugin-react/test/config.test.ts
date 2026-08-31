@@ -1034,14 +1034,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.[contenthash:8].js",
+            "filename": ".lynx/main/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1078,28 +1078,28 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "bar": {
-            "filename": ".rspeedy/bar/background.[contenthash:8].js",
+            "filename": ".lynx/bar/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar/main-thread.js",
+            "filename": ".lynx/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo": {
-            "filename": ".rspeedy/foo/background.[contenthash:8].js",
+            "filename": ".lynx/foo/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo/main-thread.js",
+            "filename": ".lynx/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1136,28 +1136,28 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "foo/bar": {
-            "filename": ".rspeedy/foo/bar/background.[contenthash:8].js",
+            "filename": ".lynx/foo/bar/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/bar__main-thread": {
-            "filename": ".rspeedy/foo/bar/main-thread.js",
+            "filename": ".lynx/foo/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo/baz": {
-            "filename": ".rspeedy/foo/baz/background.[contenthash:8].js",
+            "filename": ".lynx/foo/baz/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz/main-thread.js",
+            "filename": ".lynx/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1200,42 +1200,42 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "bar": {
-            "filename": ".rspeedy/bar/background.js",
+            "filename": ".lynx/bar/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar/main-thread.js",
+            "filename": ".lynx/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo": {
-            "filename": ".rspeedy/foo/background.js",
+            "filename": ".lynx/foo/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz": {
-            "filename": ".rspeedy/foo/baz/background.js",
+            "filename": ".lynx/foo/baz/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz/main-thread.js",
+            "filename": ".lynx/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo/main-thread.js",
+            "filename": ".lynx/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1276,14 +1276,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/main/background.js",
+            "filename": ".lynx/main/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1327,42 +1327,42 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "bar": {
-            "filename": ".rspeedy/bar/background.js",
+            "filename": ".lynx/bar/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar/main-thread.js",
+            "filename": ".lynx/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo": {
-            "filename": ".rspeedy/foo/background.js",
+            "filename": ".lynx/foo/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz": {
-            "filename": ".rspeedy/foo/baz/background.js",
+            "filename": ".lynx/foo/baz/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz/main-thread.js",
+            "filename": ".lynx/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo/main-thread.js",
+            "filename": ".lynx/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1401,14 +1401,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1448,14 +1448,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1494,14 +1494,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.[contenthash].js",
+            "filename": ".lynx/main/background.[contenthash].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1540,14 +1540,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1583,7 +1583,7 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "@lynx-js/webpack-dev-transport/client",
               "@lynx-js/react/refresh",
@@ -1593,7 +1593,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
@@ -1633,7 +1633,7 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.[contenthash].js",
+            "filename": ".lynx/main/background.[contenthash].js",
             "import": [
               "@lynx-js/webpack-dev-transport/client",
               "@lynx-js/react/refresh",
@@ -1643,7 +1643,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
@@ -2254,7 +2254,7 @@ describe('Config', () => {
       const candidateOutputPaths = [
         path.join(
           rsbuild.context.distPath,
-          '.rspeedy',
+          '.lynx',
           entryName,
           'main-thread.js',
         ),
@@ -2335,13 +2335,13 @@ describe('Config', () => {
 
       const mainThreadPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy',
+        '.lynx',
         entryName,
         'main-thread.js',
       )
       const backgroundPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy',
+        '.lynx',
         entryName,
         'background.js',
       )
@@ -2405,7 +2405,7 @@ describe('Config', () => {
         "enableRemoveCSSScope": true,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
-        "intermediate": ".rspeedy/main",
+        "intermediate": ".lynx/main",
         "lazyBundleFetcher": "QueryComponent",
         "removeDescendantSelectorScope": true,
         "targetSdkVersion": "3.2",
@@ -2539,7 +2539,7 @@ describe('Config', () => {
         expect(config?.entry).toMatchInlineSnapshot(`
           {
             "main": {
-              "filename": ".rspeedy/main/background.[contenthash:8].js",
+              "filename": ".lynx/main/background.[contenthash:8].js",
               "import": [
                 "@lynx-js/webpack-dev-transport/client",
                 "@lynx-js/react/refresh",
@@ -2549,7 +2549,7 @@ describe('Config', () => {
               "layer": "react:background",
             },
             "main__main-thread": {
-              "filename": ".rspeedy/main/main-thread.js",
+              "filename": ".lynx/main/main-thread.js",
               "import": [
                 "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
                 "./src/index.js",
@@ -2562,14 +2562,14 @@ describe('Config', () => {
         expect(config?.entry).toMatchInlineSnapshot(`
           {
             "main": {
-              "filename": ".rspeedy/main/background.[contenthash:8].js",
+              "filename": ".lynx/main/background.[contenthash:8].js",
               "import": [
                 "./src/index.js",
               ],
               "layer": "react:background",
             },
             "main__main-thread": {
-              "filename": ".rspeedy/main/main-thread.js",
+              "filename": ".lynx/main/main-thread.js",
               "import": [
                 "./src/index.js",
               ],
@@ -2931,11 +2931,11 @@ describe('Config', () => {
 
       expect(configs[0]!.name).toBe('lynx')
       expect(configs[1]!.name).toBe('lynx-foo')
-      // only lynx output will be emitted to `.rspeedy`
+      // only lynx output will be emitted to `.lynx`
       expect(
         (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
           ?.filename,
-      ).toBe('.rspeedy/main/background.js')
+      ).toBe('.lynx/main/background.js')
     })
 
     test('web environment', async () => {
@@ -3138,8 +3138,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3204,8 +3204,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3313,8 +3313,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3379,8 +3379,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3446,8 +3446,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3519,9 +3519,9 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
-        ".rspeedy/baz/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
+        ".lynx/baz/main-thread.js",
       ]
     `)
   })

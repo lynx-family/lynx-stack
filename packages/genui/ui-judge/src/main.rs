@@ -14,25 +14,33 @@ fn main() -> Result<(), ui_judge::server::ServerError> {
 
 #[cfg(feature = "server")]
 fn configure_packaged_runtime() {
-  if std::env::var_os("LYNX_LIB_PATH").is_some() || std::env::var_os("LYNX_SDK_DIR").is_some() {
-    return;
-  }
-
   let Some(executable_dir) = std::env::current_exe()
     .ok()
     .and_then(|executable| executable.parent().map(ToOwned::to_owned))
   else {
     return;
   };
-  let runtime_name = if cfg!(target_os = "macos") {
-    "libLynx_clay.dylib"
+  let (runtime_name, lynx_core_path) = if cfg!(target_os = "macos") {
+    (
+      "libLynx_clay.dylib",
+      executable_dir.join("LynxResources.bundle/lynx_core.js"),
+    )
   } else if cfg!(target_os = "linux") {
-    "libLynx_clay.so"
+    ("libLynx_clay.so", executable_dir.join("lynx_core.js"))
   } else {
     return;
   };
-  let runtime_path = executable_dir.join("lib").join(runtime_name);
-  if runtime_path.is_file() {
-    std::env::set_var("LYNX_LIB_PATH", runtime_path);
+
+  if std::env::var_os("LYNX_LIB_PATH").is_none() && std::env::var_os("LYNX_SDK_DIR").is_none() {
+    let runtime_path = executable_dir.join("lib").join(runtime_name);
+    if runtime_path.is_file() {
+      std::env::set_var("LYNX_LIB_PATH", runtime_path);
+    }
+  }
+  if std::env::var_os("LYNX_CORE_JS_PATH").is_none()
+    && std::env::var_os("LYNX_SDK_DIR").is_none()
+    && lynx_core_path.is_file()
+  {
+    std::env::set_var("LYNX_CORE_JS_PATH", lynx_core_path);
   }
 }

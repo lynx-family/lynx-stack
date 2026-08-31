@@ -1,71 +1,121 @@
 # Lynx Headless Rust Test Runner
 
-`lynx-headless-rust-test-runner` drives a real Lynx runtime in-process through
-Tokio futures and Puppeteer-style page APIs. It combines the original
-windowless software-rendering harness with DOM inspection and interaction APIs:
+`lynx-headless-rust-test-runner` drives a real Lynx runtime in-process through a
+blocking, Puppeteer-style page API. It combines the original windowless
+software-rendering harness with DOM inspection and interaction:
 
-- `Lynx::connect` initializes the process-wide runtime and local DebugRouter.
-- `Lynx::new_page` creates a windowless `Page`.
-- `Page::goto`, `content`, and `locator` load and inspect Lynx bundles through
-  CDP.
-- `Page::goto_for_screenshot` loads a bundle without attaching a DOM session.
+- `LynxContainer::new` binds the native Lynx state to the calling thread and
+  prepares the process-wide runtime and local DebugRouter on first use.
+- `LynxContainer::new_page` creates a windowless `LynxPage`. One container can
+  host any number of pages, and every wait drives all of them.
+- `LynxPage::goto`, `content`, and `locator` load and inspect compiled Lynx
+  bundles or UTF-8 `.lynxml` source documents through CDP.
 - `ElementNode` reads attributes and computed styles and dispatches taps by
   native node id, without absolute coordinates or hit-testing.
-- `Page::screenshot` captures the software renderer directly as PNG.
-- A process-wide DebugRouter actor owns the TCP connection and routes concurrent
-  responses to callers.
-- Screenshot frames use shared RGBA storage, and a dedicated Rayon pool encodes
-  PNG data away from the native page owner thread.
+- `LynxPage::screenshot` captures the software renderer directly as a 32-bit
+  BMP; `decode_screenshot` reads that frame back.
+- A process-wide DebugRouter actor owns the TCP connection and routes responses
+  to callers by request id.
 
 ## Example
 
 ```rust
 use lynx_headless_rust_test_runner::{
-  ConnectOptions, GotoOptions, Lynx, ScreenshotOptions,
+  ContainerOptions, GotoOptions, LynxContainer, ScreenshotOptions,
 };
 
-let lynx = Lynx::connect(ConnectOptions {
+let container = LynxContainer::new(ContainerOptions {
   lynx_core_path: Some("/path/to/lynx_core.js".into()),
-  ..ConnectOptions::default()
-}).await?;
-let mut page = lynx.new_page()?;
-page.goto("/path/to/main.lynx.bundle", GotoOptions::default()).await?;
+  ..ContainerOptions::default()
+})?;
+let mut page = container.new_page()?;
+page.goto("/path/to/main.lynx.bundle", GotoOptions::default())?;
 
-let title = page.locator(".Title").await?.expect("title exists");
-assert_eq!(title.get_attribute("class").await?.as_deref(), Some("Title"));
-let png = page.screenshot(ScreenshotOptions::default()).await?;
+let title = page.locator(".Title")?.expect("title exists");
+assert_eq!(title.get_attribute("class")?.as_deref(), Some("Title"));
+let bmp = page.screenshot(ScreenshotOptions::default())?;
 # Ok::<(), lynx_headless_rust_test_runner::Error>(())
 ```
 
-`Lynx` is cloneable, `Send`, and `Sync`. Native pages are not. The first
-`new_page()` call selects the native owner thread; every later page must be
-created, used, and dropped on that thread. Run those futures on a Tokio
-current-thread runtime and use a `LocalSet` when several pages need to overlap.
+## Threading
 
-For screenshot-only work, call `goto_for_screenshot` instead of `goto`. It waits
-for a new rendered frame but skips DebugRouter session discovery and DOM setup.
-PNG encoding runs on the Rayon pool. Use regular `goto` when the caller also
-needs `content`, `locator`, or other DOM APIs.
+The API is blocking, and there is no async runtime anywhere in the crate.
+`LynxContainer`, `LynxPage`, and `ElementNode` are all `!Send` and `!Sync`
+because they own native handles bound to their creating thread. While a page
+waits — for a frame, a CDP reply, or a settle interval — it runs the container's
+native task queues inline on that same thread.
 
-The runtime needs `lynx_core.js` beside the executable on Linux or inside
-`LynxResources.bundle` beside it on macOS. Set `lynx_core_path` or
-`LYNX_CORE_JS_PATH`; the runner installs the file and also serves
-`ResourceType::LynxCoreJs` requests from that installed path.
+Concurrency comes from **one container per OS thread**. Several threads may each
+build their own container and render at the same time; nothing is serialized
+behind a single process-wide native owner. The runtime's one process-wide UI
+task runner is registered once, and any container thread may drain that shared
+queue, one at a time.
 
-## React fixture test
+## Navigation
 
-Build the shared fixture before running the runtime-backed test:
+Navigation chooses the native load API from the final URL path. Inputs ending
+in `.lynxml` are decoded as UTF-8 and loaded as LynxML source; all other inputs
+keep the compiled-template byte path. File paths, `file://` URLs, and HTTP(S)
+URLs are supported. `GotoOptions::initial_data_json` applies to both formats;
+`global_props_json` applies only to compiled templates. Passing it for LynxML
+returns an error because the public LynxML load API does not accept global
+properties.
+
+`goto` waits for a newly presented software frame and nothing more. The DOM
+session attaches lazily on the first `content` or `locator` call, so a
+screenshot-only caller never pays for DevTools setup and there is no separate
+screenshot-only navigation entry point.
+
+Each page resolves its **own** DevTools session from its native view through
+`lynx_view_get_devtool_target`, so two pages that loaded the same URL can never
+be confused for one another. Runtimes that predate that export return
+`Error::DevtoolTargetUnavailable` from the DOM APIs; navigation and screenshots
+still work.
+
+## Screenshots
+
+`screenshot` returns an uncompressed 32-bit BMP with a `BITMAPV4HEADER` and an
+explicit alpha mask. Writing one costs a header plus a channel swap, so capture
+needs no encoder threads, permits, or async plumbing. `decode_screenshot` reads
+that exact layout back into RGBA. Consumers that must ship a compressed image
+transcode it themselves.
+
+## Runtime resources
+
+The runner's `build.rs` downloads the default `lynx_core.js` with SHA-256
+verification. At runtime it installs the script beside the executable on Linux
+or inside `LynxResources.bundle` beside it on macOS and serves
+`ResourceType::LynxCoreJs` requests from that installed path. Set
+`lynx_core_path` or `LYNX_CORE_JS_PATH` to use a local override. Otherwise the
+runner checks `$LYNX_SDK_DIR/resources/lynx_core.js`; its build script downloads
+a missing script into that SDK location. Use `LYNX_CORE_JS_URL` with
+`LYNX_CORE_JS_SHA256` for a different build-time download.
+
+## Tests
+
+Build the shared fixture before running the runtime-backed React test:
 
 ```bash
 NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build --root packages/genui/ui-judge/tests/fixtures/react
+```
+
+```bash
 cargo test -p lynx-headless-rust-test-runner --all-targets
 ```
 
-The test uses the public page APIs to verify DOM content, attributes, computed
-styles, node-id tap state updates, PNG capture, and the original runner's visual
-pixel signals. Linux is the CI contract. On macOS, run the ignored integration
-test explicitly for diagnostics:
+`tests/react_fixture.rs` uses the public page APIs to verify DOM content,
+attributes, computed styles, node-id tap state updates, BMP capture, and the
+original runner's visual pixel signals. Linux is the CI contract. On macOS, run
+the ignored integration test explicitly for diagnostics:
 
 ```bash
 cargo test -p lynx-headless-rust-test-runner --test react_fixture -- --ignored
 ```
+
+`tests/lynxml_container.rs` and `tests/parallel_containers.rs` cover the
+container contract against a LynxML fixture: several pages inside one container,
+per-view DevTools sessions, and several containers rendering at once on separate
+threads. They report a skip when the configured runtime lacks the optional
+LynxML or DevTools-target exports. Each lives in its own test binary because
+native Lynx state is process-wide and thread-bound, and `libtest` runs every
+test on a fresh thread.

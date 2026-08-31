@@ -13,8 +13,20 @@ import type {
   RsbuildConfig,
   RsbuildPlugin,
 } from '@rsbuild/core'
+import { logger } from '@rsbuild/core'
 
 import { registerConsoleShortcuts } from './shortcuts.js'
+
+// Rsbuild resolves the promise of `devServer.listen()` only after awaiting the
+// server-started hooks, so throwing here leaves it unsettled and the server
+// hangs. A QR code that cannot be printed should not take the server down.
+function logShortcutError(error: unknown): void {
+  logger.error(
+    `[lynx:rsbuild:qrcode] ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  )
+}
 
 /**
  * {@inheritdoc PluginQRCodeOptions.schema}
@@ -150,10 +162,15 @@ export function pluginQRCode(
 
       api.onAfterStartPreviewServer(async ({ environments, routes, port }) => {
         unregisterPreviewShortcuts?.()
-        unregisterPreviewShortcuts = await main(
-          getEntriesFromRoutes(routes, environments),
-          port,
-        )
+
+        try {
+          unregisterPreviewShortcuts = await main(
+            getEntriesFromRoutes(routes, environments),
+            port,
+          )
+        } catch (error) {
+          logShortcutError(error)
+        }
       })
 
       api.onAfterStartDevServer(async ({ environments, routes, port }) => {
@@ -163,16 +180,20 @@ export function pluginQRCode(
           return
         }
 
-        const unregister = await registerConsoleShortcuts(
-          {
-            entries,
-            api,
-            port,
-            schema: effectiveSchema,
-          },
-        )
-        if (unregister) {
-          api.onCloseDevServer(unregister)
+        try {
+          const unregister = await registerConsoleShortcuts(
+            {
+              entries,
+              api,
+              port,
+              schema: effectiveSchema,
+            },
+          )
+          if (unregister) {
+            api.onCloseDevServer(unregister)
+          }
+        } catch (error) {
+          logShortcutError(error)
         }
       })
 

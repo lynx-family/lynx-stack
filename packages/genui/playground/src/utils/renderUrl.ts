@@ -7,6 +7,8 @@ import type { Protocol } from './protocol.js';
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
 export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
 export const RENDER_NAVIGATION_TOKEN_QUERY_PARAM = 'previewNavigationToken';
+export const LYNX_XML_RENDER_READY_MESSAGE_TYPE = 'LYNX_XML_RENDER_READY';
+export const LYNX_XML_SOURCE_URL_QUERY_PARAM = 'sourceUrl';
 export const A2UI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 
@@ -52,6 +54,11 @@ export interface McpAppsRenderInit {
   theme?: 'light' | 'dark';
 }
 
+export interface LynxXmlRenderInit {
+  sourceUrl: string;
+  theme?: 'light' | 'dark';
+}
+
 export function hasShareableA2UIRenderPayload(
   init: Pick<RenderInit, 'demoId' | 'messages' | 'messagesUrl'>,
 ): boolean {
@@ -87,6 +94,46 @@ interface ObjectURLRegistry {
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   createObjectURL(object: Blob): string;
   revokeObjectURL(url: string): void;
+}
+
+interface LocalBlobPayload {
+  url: string;
+  dispose: () => void;
+}
+
+function createLocalBlobPayload(
+  content: BlobPart,
+  type: string,
+  registry: ObjectURLRegistry,
+): LocalBlobPayload {
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  const url = registry.createObjectURL(new Blob([content], { type }));
+  let disposed = false;
+  return {
+    url,
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      registry.revokeObjectURL(url);
+    },
+  };
+}
+
+export interface LocalLynxXmlSourcePayload {
+  sourceUrl: string;
+  dispose: () => void;
+}
+
+export function createLocalLynxXmlSourcePayload(
+  source: string,
+  registry: ObjectURLRegistry = URL,
+): LocalLynxXmlSourcePayload {
+  const { url: sourceUrl, dispose } = createLocalBlobPayload(
+    source,
+    'application/xml;charset=utf-8',
+    registry,
+  );
+  return { sourceUrl, dispose };
 }
 
 export interface LocalA2UIMessagesPayload {
@@ -125,21 +172,12 @@ export function createLocalA2UIMessagesPayload(
   if (serialized === undefined) {
     throw new Error('A2UI messages must be JSON serializable');
   }
-  // eslint-disable-next-line n/no-unsupported-features/node-builtins
-  const messagesUrl = registry.createObjectURL(
-    // eslint-disable-next-line n/no-unsupported-features/node-builtins
-    new Blob([serialized], { type: 'application/json' }),
+  const { url: messagesUrl, dispose } = createLocalBlobPayload(
+    serialized,
+    'application/json',
+    registry,
   );
-  let disposed = false;
-  return {
-    messagesUrl,
-    dispose: () => {
-      if (disposed) return;
-      disposed = true;
-      // eslint-disable-next-line n/no-unsupported-features/node-builtins
-      registry.revokeObjectURL(messagesUrl);
-    },
-  };
+  return { messagesUrl, dispose };
 }
 
 /**
@@ -369,6 +407,17 @@ export function buildMcpAppsRenderUrl(
       ...(init.theme ? { theme: init.theme } : {}),
     })),
   );
+  if (init.theme) url.searchParams.set('theme', init.theme);
+  return url.toString();
+}
+
+export function buildLynxXmlRenderUrl(
+  init: LynxXmlRenderInit,
+  baseUrl: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'lynx-xml');
+  url.searchParams.set(LYNX_XML_SOURCE_URL_QUERY_PARAM, init.sourceUrl);
   if (init.theme) url.searchParams.set('theme', init.theme);
   return url.toString();
 }

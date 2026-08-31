@@ -23,7 +23,10 @@ import {
   generatedArkImageURLs,
   waitForPendingArkImageGeneration,
 } from '../agent/ark-image-generation-tool.js';
-import { searchedDoubaoDocumentURLs } from '../agent/doubao-search-tool.js';
+import {
+  searchedDoubaoDocumentURLs,
+  searchedDoubaoImageURLs,
+} from '../agent/doubao-search-tool.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -57,7 +60,7 @@ export interface A2UIChatOptions extends ChatOptions {
    * credentials in the shared provider cache.
    */
   disableAgentCache?: boolean | undefined;
-  /** Disable non-deterministic web search for controlled server-side runs. */
+  /** Disable non-deterministic web and image search for controlled runs. */
   enableWebSearch?: boolean | undefined;
   maxRepairAttempts?: number | undefined;
 }
@@ -252,12 +255,16 @@ export default class A2UIAgentService {
 
           try {
             while (true) {
+              let streamedPhaseText = '';
               for await (const chunk of toAsyncIterable(result.textStream)) {
+                streamedPhaseText += chunk;
                 yield chunk;
               }
 
               const metadata = await finalizeResult(result);
-              const phaseText = metadata.text ?? await extractText(result);
+              const phaseText = streamedPhaseText.trim()
+                ? streamedPhaseText
+                : metadata.text ?? await extractText(result);
               if (phaseText) phaseTexts.push(phaseText);
               if (!isSuspended(metadata.finishReason)) {
                 const completed = {
@@ -454,7 +461,10 @@ export default class A2UIAgentService {
         catalog,
         validationOptions?.existingDataModelBySurface,
       ],
-      () => generatedArkImageURLs(imageGenerationScope),
+      () => [
+        ...generatedArkImageURLs(imageGenerationScope),
+        ...searchedDoubaoImageURLs(imageGenerationScope),
+      ],
     );
     const callerImageSourcePolicy = validationOptions?.isImageSourceAllowed;
     const isImageSourceAllowed = callerImageSourcePolicy

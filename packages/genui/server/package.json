@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.30",
     "@hono/node-server": "^2.1.0",
+    "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@mastra/core": "1.56.0",

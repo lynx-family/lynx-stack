@@ -124,6 +124,8 @@ export function resolveSharedConversationProtocol(
     doc.protocol === 'a2ui'
     || doc.protocol === 'openui'
     || doc.protocol === 'mcp-apps'
+    || doc.protocol === 'lynx-xml'
+    || doc.protocol === 'html'
   ) {
     return doc.protocol;
   }

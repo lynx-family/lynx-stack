@@ -12,7 +12,8 @@ import type {
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
-import type { ExposedAPI, Filename } from '@lynx-js/rspeedy'
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
+import type { ExposedAPI } from '@lynx-js/rspeedy'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -23,12 +24,13 @@ import {
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
+const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
+
 const PLUGIN_NAME_REACT = 'lynx:react'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
 
-const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
 const DEFAULT_FILENAME_HASH = '.[contenthash:8]'
 const EMPTY_HASH = ''
 
@@ -77,14 +79,22 @@ export function applyEntry(
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
-    const bundleFilenameConfig = api.getRsbuildConfig('original').output
-      ?.filename as Filename | undefined
+    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+    const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
 
     // `rslib` builds libraries and `rstest` runs tests, neither of which emits
     // a Lynx template.
     const emitTemplate = api.context.callerName !== 'rslib'
       && api.context.callerName !== 'rstest'
     if (emitTemplate) {
+      // `pluginAutoLynx` applies the engine for the same callers, so the config
+      // is there whenever a template is emitted.
+      if (!lynxConfig) {
+        throw new Error(
+          'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',
+        )
+      }
+
       const entries = chain.entryPoints.entries() ?? {}
       const isLynx = environment.name === 'lynx'
         || environment.name.startsWith('lynx-')
@@ -99,36 +109,17 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const bundleFilename = bundleFilenameConfig?.bundle
-          ?? bundleFilenameConfig?.template
+        const templateFilename = lynxConfig.resolveBundleFilename({
+          entryName,
+          platform: environment.name,
+        })
 
-        let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.
         // Otherwise `LynxTemplatePlugin` keeps its default
         // (`lazy-bundle/[name].[fullhash].bundle`).
-        let lazyBundleFilename: string | undefined
-        if (typeof bundleFilename === 'function') {
-          // A single function controls both the main bundle and the lazy
-          // bundles via the `lazyBundle` flag, without a dedicated
-          // `lazyBundle` field.
-          templateFilename = bundleFilename({
-            lazyBundle: false,
-            entryName,
-            platform: environment.name,
-          })
-          lazyBundleFilename = bundleFilename({
-            lazyBundle: true,
-            // A lazy bundle name is resolved per async chunk, so there is no
-            // single entry name for it.
-            entryName: undefined,
-            platform: environment.name,
-          })
-            // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so
-            // we only resolve `[platform]` here.
-            .replaceAll('[platform]', environment.name)
-        } else {
-          templateFilename = bundleFilename ?? '[name].[platform].bundle'
-        }
+        const lazyBundleFilename = lynxConfig.resolveLazyBundleFilename({
+          platform: environment.name,
+        })
 
         // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
         // We would like to avoid adding `__background` to the output CSS filename.
@@ -136,8 +127,7 @@ export function applyEntry(
 
         const mainThreadName = path.posix.join(
           isLynx
-            // TODO: config intermediate
-            ? DEFAULT_DIST_PATH_INTERMEDIATE
+            ? lynxConfig.resolveIntermediateDir()
             // For non-Lynx environment, the entry is not deleted.
             // So we do not put it in the intermediate.
             : '',
@@ -146,8 +136,7 @@ export function applyEntry(
 
         const backgroundName = path.posix.join(
           isLynx
-            // TODO: config intermediate
-            ? DEFAULT_DIST_PATH_INTERMEDIATE
+            ? lynxConfig.resolveIntermediateDir()
             // For non-Lynx environment, the entry is not deleted.
             // So we do not put it in the intermediate.
             : '',
@@ -224,16 +213,9 @@ export function applyEntry(
           .use(LynxTemplatePlugin, [{
             dsl: 'react_nodiff',
             chunks: [mainThreadEntry, backgroundEntry],
-            filename: templateFilename.replaceAll('[name]', entryName)
-              .replaceAll(
-                '[platform]',
-                environment.name,
-              ),
+            filename: templateFilename,
             ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
-            intermediate: path.posix.join(
-              DEFAULT_DIST_PATH_INTERMEDIATE,
-              entryName,
-            ),
+            intermediate: lynxConfig.resolveIntermediateDir({ entryName }),
             customCSSInheritanceList,
             debugInfoOutside,
             defaultDisplayLinear,
@@ -346,7 +328,7 @@ export function applyEntry(
         return environmentProfile
       }
 
-      const userProfile = rspeedyConfig?.performance?.profile
+      const userProfile = lynxConfig?.performance.profile
       if (userProfile !== undefined) {
         return userProfile
       }
@@ -443,9 +425,9 @@ function getHash(
     return EMPTY_HASH
   } else if (isProd || experimental_isLazyBundle) {
     // In standalone lazy bundle mode, due to an internal bug of `lynx.requireModule`,
-    // it will cache module with same path (eg. `/.rspeedy/main/background.js`)
+    // it will cache module with same path (eg. `/.lynx/main/background.js`)
     // even they have different entryName (eg. `__Card__` and `http://[ip]:[port]/main/template.js`)
-    // we need add hash (`/.rspeedy/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
+    // we need add hash (`/.lynx/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
     return DEFAULT_FILENAME_HASH
   } else {
     return EMPTY_HASH

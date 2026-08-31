@@ -5,13 +5,25 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
-import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  RsbuildConfig,
+  RsbuildPlugin,
+  RsbuildPluginAPI,
+} from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
+import type { LynxPluginOptions } from '../src/index.js'
 
-function createDevStubRsbuild(rsbuildConfig: RsbuildConfig = {}) {
-  return createStubRsbuild({ mode: 'development', ...rsbuildConfig })
+function createDevStubRsbuild(
+  rsbuildConfig: RsbuildConfig = {},
+  lynxOptions?: LynxPluginOptions,
+) {
+  return createStubRsbuild(
+    { mode: 'development', ...rsbuildConfig },
+    undefined,
+    lynxOptions,
+  )
 }
 
 describe('pluginDev', () => {
@@ -700,21 +712,54 @@ describe('pluginDev', () => {
     )
   })
 
-  test('websocketTransport', async () => {
+  test('writeToDisk defaults to true', async () => {
+    let writeToDisk: unknown
+
     const rsbuild = await createDevStubRsbuild({
-      dev: {
-        client: {
-          websocketTransport: '/foo',
-        } as NonNullable<NonNullable<RsbuildConfig['dev']>['client']>,
-      },
+      plugins: [{
+        name: 'test:capture',
+        setup(api: RsbuildPluginAPI) {
+          api.modifyBundlerChain(() => {
+            writeToDisk = api.getNormalizedConfig().dev.writeToDisk
+          })
+        },
+      }],
     })
+
+    await rsbuild.unwrapConfig()
+
+    expect(writeToDisk).toBe(true)
+  })
+
+  test('writeToDisk keeps a user value', async () => {
+    let writeToDisk: unknown
+
+    const rsbuild = await createDevStubRsbuild({
+      dev: { writeToDisk: false },
+      plugins: [{
+        name: 'test:capture',
+        setup(api: RsbuildPluginAPI) {
+          api.modifyBundlerChain(() => {
+            writeToDisk = api.getNormalizedConfig().dev.writeToDisk
+          })
+        },
+      }],
+    })
+
+    await rsbuild.unwrapConfig()
+
+    expect(writeToDisk).toBe(false)
+  })
+
+  test('provides the WebSocket that HMR resolves', async () => {
+    const rsbuild = await createDevStubRsbuild({})
 
     await rsbuild.unwrapConfig()
 
     const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
 
     expect(ProvidePlugin).toHaveBeenCalledWith({
-      WebSocket: ['/foo', 'default'],
+      WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
     })
     expect(ProvidePlugin).toHaveBeenCalledWith({
       __webpack_dev_server_client__: [
@@ -988,20 +1033,19 @@ describe('pluginDev', () => {
     }
   })
 
-  test('output.filename.bundle is used for dev routes', async () => {
+  test('filename.bundle is used for dev routes', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
           main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
         },
       },
-      output: {
-        filename: {
-          bundle: '[name].[platform].custom.bundle',
-        } as NonNullable<NonNullable<RsbuildConfig['output']>['filename']>,
-      },
       server: {
         port: 8096,
+      },
+    }, {
+      output: {
+        filename: { bundle: '[name].[platform].custom.bundle' },
       },
     })
 

@@ -5,12 +5,20 @@
 import { TosClient } from '@volcengine/tos-sdk';
 
 const DEFAULT_A2UI_STORAGE_PREFIX = 'a2ui';
+const DEFAULT_HTML_STORAGE_PREFIX = 'html';
+const DEFAULT_LYNX_XML_STORAGE_PREFIX = 'lynx-xml';
 const DEFAULT_MCP_APPS_STORAGE_PREFIX = 'mcp-apps';
 const DEFAULT_OPENUI_STORAGE_PREFIX = 'openui';
 
 type StorageEnvironment = Readonly<Record<string, string | undefined>>;
 
-export const TOS_STORAGE_METHODS = ['a2ui', 'openui', 'mcp-apps'] as const;
+export const TOS_STORAGE_METHODS = [
+  'a2ui',
+  'openui',
+  'mcp-apps',
+  'lynx-xml',
+  'html',
+] as const;
 export type TosStorageMethod = typeof TOS_STORAGE_METHODS[number];
 
 export const TOS_STORAGE_TYPES = ['preview', 'conversation'] as const;
@@ -39,6 +47,8 @@ export interface TosStorageConfig {
   secure: boolean;
   securityToken?: string;
   a2uiPrefix: string;
+  htmlPrefix: string;
+  lynxXmlPrefix: string;
   mcpAppsPrefix: string;
   openuiPrefix: string;
 }
@@ -89,6 +99,12 @@ export function resolveTosStorageConfig(
     securityToken: readNonEmpty(environment, 'TOS_SECURITY_TOKEN'),
     a2uiPrefix: readNonEmpty(environment, 'TOS_STORAGE_PREFIX')
       ?? DEFAULT_A2UI_STORAGE_PREFIX,
+    htmlPrefix: readNonEmpty(environment, 'TOS_HTML_STORAGE_PREFIX')
+      ?? DEFAULT_HTML_STORAGE_PREFIX,
+    lynxXmlPrefix: readNonEmpty(
+      environment,
+      'TOS_LYNX_XML_STORAGE_PREFIX',
+    ) ?? DEFAULT_LYNX_XML_STORAGE_PREFIX,
     mcpAppsPrefix: readNonEmpty(environment, 'TOS_MCP_APPS_STORAGE_PREFIX')
       ?? DEFAULT_MCP_APPS_STORAGE_PREFIX,
     openuiPrefix: readNonEmpty(environment, 'TOS_OPENUI_STORAGE_PREFIX')
@@ -122,6 +138,10 @@ function storageMethodPrefix(
   switch (method) {
     case 'a2ui':
       return config.a2uiPrefix;
+    case 'html':
+      return config.htmlPrefix;
+    case 'lynx-xml':
+      return config.lynxXmlPrefix;
     case 'mcp-apps':
       return config.mcpAppsPrefix;
     case 'openui':

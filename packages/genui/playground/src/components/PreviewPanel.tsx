@@ -33,6 +33,7 @@ import type {
   LocalA2UIMessagesPayloadCache,
 } from '../utils/renderUrl.js';
 import {
+  buildLynxXmlRenderUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
@@ -59,6 +60,8 @@ export const PreviewPanelPreviewModeContext = createContext<
 >(null);
 
 export interface PreviewPanelRenderContextValue {
+  htmlSource?: string;
+  lynxXmlSource?: string;
   renderUrl: string;
 }
 
@@ -119,6 +122,19 @@ export interface McpAppsPreviewSource {
   theme?: 'light' | 'dark';
 }
 
+export interface LynxXmlPreviewSource {
+  kind: 'lynx-xml';
+  source: string;
+  sourcePath?: string;
+  theme?: 'light' | 'dark';
+}
+
+export interface HtmlPreviewSource {
+  kind: 'html';
+  source: string;
+  theme?: 'light' | 'dark';
+}
+
 interface PlaceholderPreviewSource {
   kind: 'placeholder';
   item: PreviewQrItem;
@@ -128,7 +144,93 @@ export type PreviewPanelSource =
   | A2UIPreviewSource
   | OpenUIPreviewSource
   | McpAppsPreviewSource
+  | LynxXmlPreviewSource
+  | HtmlPreviewSource
   | PlaceholderPreviewSource;
+
+export interface PreviewQrCard {
+  key: 'nativePreview' | 'webPreview';
+  item: PreviewQrItem;
+}
+
+export function createPreviewQrCards(
+  previewSource: PreviewPanelSource | undefined,
+  renderShareUrl: string,
+  lynxDevUrl: string,
+): PreviewQrCard[] {
+  if (!previewSource || previewSource.kind === 'placeholder') return [];
+
+  const showQrCode = previewSource.kind !== 'a2ui'
+    || hasShareableA2UIRenderPayload(previewSource);
+  const isLocalLynxXml = previewSource.kind === 'lynx-xml'
+    && !previewSource.sourcePath;
+  const cards: PreviewQrCard[] = [];
+
+  if (renderShareUrl) {
+    cards.push({
+      key: 'webPreview',
+      item: {
+        title: 'Web Preview',
+        description: 'Opens in any mobile browser via Lynx for Web.',
+        url: renderShareUrl,
+        urlTitle: renderShareUrl,
+        copyButtonTitle: 'Copy render URL',
+        showQrCode,
+      },
+    });
+  } else if (
+    previewSource.kind === 'a2ui'
+    && previewSource.liveAction === true
+  ) {
+    cards.push({
+      key: 'webPreview',
+      item: {
+        title: 'Web Preview',
+        description:
+          'This live preview stays in the current browser. Sharing requires a short published preview payload URL.',
+        placeholder: 'Share link unavailable',
+      },
+    });
+  } else if (isLocalLynxXml) {
+    cards.push({
+      key: 'webPreview',
+      item: {
+        title: 'Web Preview',
+        description:
+          'Edited Lynx XML is rendered only in the current browser. Reset to the example to restore its shareable URL.',
+        placeholder: 'QR unavailable for local edits',
+      },
+    });
+  }
+
+  if (lynxDevUrl) {
+    cards.push({
+      key: 'nativePreview',
+      item: {
+        title: 'Native Preview',
+        description: 'Opens in LynxExplorer for native rendering.',
+        url: lynxDevUrl,
+        urlTitle: lynxDevUrl,
+        copyButtonTitle: 'Copy Lynx dev bundle URL',
+        variant: 'alt',
+        showQrCode,
+      },
+    });
+  } else if (isLocalLynxXml) {
+    cards.push({
+      key: 'nativePreview',
+      item: {
+        title: 'Native Preview',
+        description:
+          'A browser-local edited source cannot be opened in LynxExplorer. Reset to the example to restore its native URL.',
+        placeholder: 'QR unavailable for local edits',
+        variant: 'alt',
+      },
+    });
+  }
+
+  return cards;
+}
 
 export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
 
@@ -488,10 +590,17 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
     return u.toString();
   }, [baseUrl, rspeedyDevUrl]);
-
   const renderContext = useMemo<PreviewPanelRenderContextValue>(
-    () => ({ renderUrl }),
-    [renderUrl],
+    () => ({
+      htmlSource: previewSource?.kind === 'html'
+        ? previewSource.source
+        : undefined,
+      lynxXmlSource: previewSource?.kind === 'lynx-xml'
+        ? previewSource.source
+        : undefined,
+      renderUrl,
+    }),
+    [previewSource, renderUrl],
   );
   const metricsContext = useMemo<PreviewPanelMetricsContextValue>(
     () => ({ metricId, onFrameSrcChange: handleMetricFrameSrcChange }),
@@ -851,6 +960,43 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     localMessagesPayloadCache.clear();
 
+    if (previewSource.kind === 'html') {
+      // PreviewViewport writes source directly to a sandboxed srcDoc iframe.
+      // Keep HTML out of the Lynx render bridge and native preview URLs.
+      setRenderUrl('');
+      setRenderShareUrl('');
+      setLynxDevUrl('');
+      return;
+    }
+
+    if (previewSource.kind === 'lynx-xml') {
+      // PreviewViewport mounts a real <lynx-view> for this source. Keep the
+      // iframe render URL empty so XML never enters the A2UI/OpenUI renderer.
+      setRenderUrl('');
+      if (!previewSource.source) {
+        setRenderShareUrl('');
+        setLynxDevUrl('');
+        return;
+      }
+
+      if (!previewSource.sourcePath) {
+        setRenderShareUrl('');
+        setLynxDevUrl('');
+        return;
+      }
+
+      const shareSourceUrl = new URL(
+        previewSource.sourcePath,
+        shareBaseUrl,
+      ).toString();
+      setRenderShareUrl(buildLynxXmlRenderUrl({
+        sourceUrl: shareSourceUrl,
+        theme: previewSource.theme,
+      }, shareBaseUrl));
+      setLynxDevUrl(shareSourceUrl);
+      return;
+    }
+
     if (previewSource.kind === 'mcp-apps') {
       setRenderUrl(buildMcpAppsRenderUrl({
         mcpAppData: previewSource.mcpAppData,
@@ -999,56 +1145,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
   }, [previewSource]);
 
   const previewQrCards = useMemo(() => {
-    if (!previewSource || previewSource.kind === 'placeholder') {
-      return [];
-    }
-
-    const showQrCode = previewSource.kind !== 'a2ui'
-      || hasShareableA2UIRenderPayload(previewSource);
-
-    const cards: Array<{ key: string; item: PreviewQrItem }> = [];
-    if (renderShareUrl) {
-      cards.push({
-        key: 'webPreview',
-        item: {
-          title: 'Web Preview',
-          description: 'Opens in any mobile browser via Lynx for Web.',
-          url: renderShareUrl,
-          urlTitle: renderShareUrl,
-          copyButtonTitle: 'Copy render URL',
-          showQrCode,
-        },
-      });
-    } else if (
-      previewSource.kind === 'a2ui'
-      && previewSource.liveAction === true
-    ) {
-      cards.push({
-        key: 'webPreview',
-        item: {
-          title: 'Web Preview',
-          description:
-            'This live preview stays in the current browser. Sharing requires a short published preview payload URL.',
-          placeholder: 'Share link unavailable',
-        },
-      });
-    }
-    if (lynxDevUrl) {
-      cards.push({
-        key: 'nativePreview',
-        item: {
-          title: 'Native Preview',
-          description: 'Opens in LynxExplorer for native rendering.',
-          url: lynxDevUrl,
-          urlTitle: lynxDevUrl,
-          copyButtonTitle: 'Copy Lynx dev bundle URL',
-          variant: 'alt',
-          showQrCode,
-        },
-      });
-    }
-
-    return cards;
+    return createPreviewQrCards(
+      previewSource,
+      renderShareUrl,
+      lynxDevUrl,
+    );
   }, [lynxDevUrl, previewSource, renderShareUrl]);
 
   const handleCopyUrl = (key: string, value: string) => {

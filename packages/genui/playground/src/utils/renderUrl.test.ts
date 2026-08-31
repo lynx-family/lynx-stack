@@ -8,6 +8,7 @@ import { PROTOCOLS } from './protocol.js';
 import {
   A2UI_INLINE_RENDER_URL_MAX_LENGTH,
   OPENUI_INLINE_RENDER_URL_MAX_LENGTH,
+  buildLynxXmlRenderUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
@@ -15,6 +16,7 @@ import {
   canInlineOpenUIRenderUrl,
   createLocalA2UIMessagesPayload,
   createLocalA2UIMessagesPayloadCache,
+  createLocalLynxXmlSourcePayload,
   hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
   isPortableA2UIMessagesUrl,
@@ -271,5 +273,77 @@ describe('MCP Apps render URLs', () => {
       mcpAppData,
       theme: 'dark',
     });
+  });
+});
+
+describe('Lynx XML render URLs', () => {
+  test('creates disposable XML-only Blob URLs for direct LynxView input', async () => {
+    const readBlobContents: Array<() => Promise<string>> = [];
+    const blobTypes: string[] = [];
+    const lifecycle: string[] = [];
+    let nextId = 0;
+    const registry = {
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      createObjectURL(blob: Blob) {
+        nextId += 1;
+        readBlobContents.push(() => blob.text());
+        blobTypes.push(blob.type);
+        lifecycle.push(`create:${nextId}`);
+        return `blob:https://lynx-stack.dev/lynx-xml-${nextId}`;
+      },
+      revokeObjectURL(url: string) {
+        lifecycle.push(`revoke:${url}`);
+      },
+    };
+
+    const firstSource = '<lynx id="first"></lynx>';
+    const first = createLocalLynxXmlSourcePayload(firstSource, registry);
+    const firstRenderUrl = new URL(buildLynxXmlRenderUrl({
+      sourceUrl: first.sourceUrl,
+    }, 'https://lynx-stack.dev/genui/'));
+
+    const secondSource = '<lynx id="second"></lynx>';
+    const second = createLocalLynxXmlSourcePayload(secondSource, registry);
+    const secondRenderUrl = new URL(buildLynxXmlRenderUrl({
+      sourceUrl: second.sourceUrl,
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(firstRenderUrl.searchParams.get('sourceUrl')).toBe(first.sourceUrl);
+    expect(secondRenderUrl.searchParams.get('sourceUrl')).toBe(
+      second.sourceUrl,
+    );
+    expect(second.sourceUrl).not.toBe(first.sourceUrl);
+    expect(lifecycle).toEqual(['create:1', 'create:2']);
+    expect(lifecycle).not.toContain(`revoke:${second.sourceUrl}`);
+    expect(blobTypes).toEqual([
+      'application/xml;charset=utf-8',
+      'application/xml;charset=utf-8',
+    ]);
+    expect(await Promise.all(readBlobContents.map((read) => read()))).toEqual([
+      firstSource,
+      secondSource,
+    ]);
+
+    first.dispose();
+    second.dispose();
+    expect(lifecycle.slice(-2)).toEqual([
+      `revoke:${first.sourceUrl}`,
+      `revoke:${second.sourceUrl}`,
+    ]);
+  });
+
+  test('loads the XML artifact URL directly in the Lynx runtime', () => {
+    const sourceUrl =
+      'https://lynx-stack.dev/genui/demos/lynx-xml/travel-plan.lynxml';
+    const url = new URL(buildLynxXmlRenderUrl({
+      sourceUrl,
+      theme: 'dark',
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(url.pathname).toBe('/genui/render.html');
+    expect(url.searchParams.get('protocol')).toBe('lynx-xml');
+    expect(url.searchParams.get('sourceUrl')).toBe(sourceUrl);
+    expect(url.searchParams.get('theme')).toBe('dark');
+    expect(url.searchParams.has('initData')).toBe(false);
   });
 });

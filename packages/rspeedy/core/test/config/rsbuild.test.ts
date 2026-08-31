@@ -73,13 +73,12 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
           "assetPrefix": undefined,
-          "client": undefined,
           "hmr": true,
           "lazyCompilation": false,
           "liveReload": true,
           "progressBar": true,
           "watchFiles": undefined,
-          "writeToDisk": true,
+          "writeToDisk": undefined,
         }
       `)
     })
@@ -527,16 +526,13 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.output?.filename).toHaveProperty('css', 'style.css')
     })
 
-    test('transform output.filename string', () => {
+    test('does not transform output.filename string', () => {
       const rsbuildConfig = toRsbuildConfig({
         output: {
           filename: 'main.bundle',
         },
       })
-      expect(rsbuildConfig.output?.filename).toStrictEqual({
-        bundle: 'main.bundle',
-        template: 'main.bundle',
-      })
+      expect(rsbuildConfig.output?.filename).toBeUndefined()
     })
 
     test('transform output.inlineScripts', () => {

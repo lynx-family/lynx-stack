@@ -6,10 +6,14 @@ import { Agent } from '@mastra/core/agent';
 
 import type { A2UICatalog } from './a2ui-catalog';
 import { loadBasicCatalog } from './a2ui-catalog';
+import { getA2UIMastra } from './a2ui-mastra.js';
 import { buildA2UISystemPrompt } from './a2ui-prompt';
 import type { ArkImageGenerationRunScope } from './ark-image-generation-tool.js';
 import { createArkImageGenerationTool } from './ark-image-generation-tool.js';
-import { createOptionalDoubaoSearchTool } from './doubao-search-tool.js';
+import {
+  createOptionalDoubaoImageSearchTool,
+  createOptionalDoubaoSearchTool,
+} from './doubao-search-tool.js';
 import { createLLMProvider } from './openai-provider';
 import type { OpenAIProviderOptions } from './openai-provider';
 
@@ -32,6 +36,21 @@ image-generation prompt in Image.url. Generate only the minimum number of
 distinct images needed and reuse a returned URL when appropriate. If the tool
 fails, replace or remove the pending image presentation using other catalog
 components; do not leave a permanent Loading component.`;
+
+const IMAGE_SEARCH_TOOL_INSTRUCTIONS = `## Image search tool
+
+When the UI needs or would materially benefit from an image, call image_search
+before generate_image. The only exception is when the user explicitly asks for
+new, original, generated artwork; in that case, call generate_image directly.
+Use one focused query that describes the subject and useful visual qualities.
+Prefer a relevant, clear, high-resolution result without a watermark when the
+returned metadata makes that choice possible.
+
+Copy the selected imageUrl exactly into Image.url or the bound data-model
+field. Use sourceUrl, when present, only for a related openUrl action. Never
+invent, rewrite, or proxy either URL. If image_search fails or returns no
+suitable result, fall back to generate_image. Reuse a suitable returned image
+instead of repeating the same search or generating a replacement.`;
 
 const WEB_SEARCH_TOOL_INSTRUCTIONS = `## Web search tool
 
@@ -81,8 +100,12 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
 
   const catalog = opts.catalog ?? await loadBasicCatalog();
   const webSearch = createOptionalDoubaoSearchTool(opts.enableWebSearch);
+  const imageSearch = createOptionalDoubaoImageSearchTool(
+    opts.enableWebSearch,
+  );
   const appendix = [
     opts.systemAppendix,
+    imageSearch ? IMAGE_SEARCH_TOOL_INSTRUCTIONS : undefined,
     IMAGE_GENERATION_TOOL_INSTRUCTIONS,
     webSearch ? WEB_SEARCH_TOOL_INSTRUCTIONS : undefined,
   ]
@@ -99,8 +122,10 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
     id: 'a2ui-agent',
     name: 'A2UIAgent',
     instructions,
+    mastra: getA2UIMastra(),
     model: buildModel(model),
     tools: {
+      ...(imageSearch ? { image_search: imageSearch } : {}),
       generate_image: generateImage,
       ...(webSearch ? { web_search: webSearch } : {}),
     },
