@@ -82,13 +82,11 @@ export function applyEntry(
     // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
     const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
 
-    // `rslib` builds libraries and `rstest` runs tests, neither of which emits
-    // a Lynx template.
-    const emitTemplate = api.context.callerName !== 'rslib'
+    // An external bundle assembles its own template and a test run has none,
+    // so the entries and template plugins below are an application's.
+    const isApplication = api.context.callerName !== 'rslib'
       && api.context.callerName !== 'rstest'
-    if (emitTemplate) {
-      // `pluginAutoLynx` applies the engine for the same callers, so the config
-      // is there whenever a template is emitted.
+    if (isApplication) {
       if (!lynxConfig) {
         throw new Error(
           'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',

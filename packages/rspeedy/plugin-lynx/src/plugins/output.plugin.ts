@@ -10,6 +10,12 @@ export function pluginOutput(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:output',
     setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         const original = api.getRsbuildConfig('original')
         const originalFilename = typeof original.output?.filename === 'object'
