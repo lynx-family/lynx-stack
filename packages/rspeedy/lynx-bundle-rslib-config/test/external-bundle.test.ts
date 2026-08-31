@@ -1115,6 +1115,38 @@ describe('DSL plugin without layer loaders', () => {
   })
 })
 
+describe('debug metadata', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+  const distRoot = path.join(fixtureDir, 'dist', 'debug-metadata')
+
+  it('emits the metadata a devtool remaps an external bundle with', async () => {
+    rstest.stubEnv('CI', '1')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+        id: 'utils-debug-metadata',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    expect(
+      fs.existsSync(path.join(distRoot, '.lynx', 'debug-metadata.json')),
+    ).toBe(true)
+
+    // The release banner has to sit inside the module wrapper, which is what
+    // `lynx.loadScript` takes the section's value from.
+    const mainThread = await fs.promises.readFile(
+      path.join(distRoot, 'utils__main-thread.js'),
+      'utf-8',
+    )
+    expect(mainThread).toMatch(/^\(function\s*\(\)\s*\{/)
+    expect(mainThread).toContain('debugmetadata:')
+  })
+})
+
 describe('license comments', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
   const distRoot = path.join(fixtureDir, 'dist', 'license-comments')
