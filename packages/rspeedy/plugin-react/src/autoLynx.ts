@@ -4,17 +4,10 @@
 
 import type { RsbuildContext, RsbuildPlugin } from '@rsbuild/core'
 
-import { PLUGIN_LYNX_NAME, pluginLynx } from '@lynx-js/rsbuild-plugin'
-
-// Calling `setup` does not register the plugins, so `PLUGIN_LYNX_NAME` cannot
-// be used to tell that the engine was applied this way. The context is marked
-// instead. `Symbol.for` keeps the marker shared with any other copy of this
-// package, and with any other plugin that applies the engine the same way.
-const S_PLUGIN_LYNX_APPLIED = Symbol.for('@lynx-js/rsbuild-plugin:applied')
+import { isPluginLynxRegistered, pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 // Rspeedy applies `pluginLynx` itself. With plain Rsbuild nothing does, so the
-// build engine is applied here to keep `pluginReactLynx` the only plugin a user
-// has to add.
+// build engine is applied here.
 export function pluginAutoLynx(): RsbuildPlugin {
   return {
     name: 'lynx:react:auto-lynx',
@@ -26,22 +19,16 @@ export function pluginAutoLynx(): RsbuildPlugin {
         return
       }
 
-      if (
-        api.isPluginExists(PLUGIN_LYNX_NAME)
-        || Object.hasOwn(api.context, S_PLUGIN_LYNX_APPLIED)
-      ) {
+      const { environments } = api.getRsbuildConfig('original')
+      if (isPluginLynxRegistered(api, Object.keys(environments ?? {}))) {
         return
       }
-      Object.defineProperty(api.context, S_PLUGIN_LYNX_APPLIED, { value: true })
 
       const original = api.getRsbuildConfig('original')
 
       for (const plugin of pluginLynx()) {
-        // `setup` is called directly instead of registering the plugins, since
-        // a plugin cannot add plugins. `apply` is honored here because Rsbuild
-        // only evaluates it for registered plugins.
-        // `action` is only set once a build or a server starts, and Rsbuild
-        // passes it along as-is, so it is passed along the same way here.
+        // A plugin cannot add plugins, so `setup` is called directly. That
+        // skips the `apply` Rsbuild would evaluate for a registered plugin.
         const { action } = api.context
         if (
           typeof plugin.apply === 'function'
