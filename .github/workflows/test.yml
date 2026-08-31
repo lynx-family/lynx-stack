@@ -71,12 +71,19 @@ jobs:
         run: pnpm turbo api-extractor
       - name: Changeset Check
         run: pnpm changeset status --since=origin/main --output .changeset-status.json
+      - name: Release Plan
+        run: |
+          # Without `--since` the whole plan is assembled, which is what the
+          # release publishes. It resolves `config.baseBranch` as a local ref,
+          # and a pull request checkout is detached, so point one at the base.
+          git branch -f main origin/main
+          pnpm changeset status --output .changeset-release-plan.json
       - name: Changeset Script Tests
         run: node --test .github/scripts/*.test.cjs
       - name: Major Bump Check
         run: node .github/scripts/check-no-major-changeset.cjs .changeset-status.json
       - name: Peer Dependency Range Check
-        run: node .github/scripts/check-peer-dependency-ranges.cjs .changeset-status.json
+        run: node .github/scripts/check-peer-dependency-ranges.cjs .changeset-release-plan.json
       - name: Changeset Heading Check
         run: node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json
       - name: Dependency Changeset Check
