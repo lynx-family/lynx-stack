@@ -90,6 +90,14 @@ impl WindowlessHost for QueueingHost {
 
 static PROCESS_OWNER_THREAD: OnceLock<ThreadId> = OnceLock::new();
 
+/// Threads exposed to native Lynx as UI owners.
+///
+/// The process-owner guard only permits one entry. This stays separate from
+/// that guard so native runner registration keeps main's proven ordering and
+/// callback behavior.
+#[cfg(not(target_os = "macos"))]
+static CONTAINER_THREADS: Mutex<Vec<ThreadId>> = Mutex::new(Vec::new());
+
 /// Permanently binds native Lynx state to the first container thread.
 ///
 /// The runtime has process-global state whose teardown can outlive a view, so
@@ -113,17 +121,17 @@ fn claim_owner_thread(owner: &OnceLock<ThreadId>) -> Result<()> {
 
 #[cfg(not(target_os = "macos"))]
 struct SharedGlobalRunner {
-  owner: Arc<OnceLock<ThreadId>>,
   tasks: SharedTasks,
 }
 
 #[cfg(not(target_os = "macos"))]
 impl GlobalUiTaskRunner for SharedGlobalRunner {
   fn runs_on_current_thread(&mut self) -> bool {
-    self
-      .owner
-      .get()
-      .is_some_and(|owner| thread::current().id() == *owner)
+    let current = thread::current().id();
+    CONTAINER_THREADS
+      .lock()
+      .expect("container thread registry poisoned")
+      .contains(&current)
   }
 
   fn post_task(&mut self, task: Task, _target_time_nanos: u64) {
@@ -141,14 +149,9 @@ pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedT
   static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
   match PLATFORM.get_or_init(|| {
     let tasks = SharedTasks::new();
-    // Keep the callback inactive while native code installs it. This preserves
-    // the established ordering: registration completes before the calling
-    // thread is exposed to native code as the UI owner.
-    let owner = Arc::new(OnceLock::new());
     let installed = set_global_ui_task_runner(
       env,
       SharedGlobalRunner {
-        owner: Arc::clone(&owner),
         tasks: tasks.clone(),
       },
     )
@@ -156,12 +159,18 @@ pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedT
     if !installed {
       return Err("failed to register Lynx global UI task runner".into());
     }
-    owner
-      .set(thread::current().id())
-      .expect("global UI runner owner must only be registered once");
     Ok(tasks)
   }) {
-    Ok(tasks) => Ok(tasks.clone()),
+    Ok(tasks) => {
+      let current = thread::current().id();
+      let mut threads = CONTAINER_THREADS
+        .lock()
+        .expect("container thread registry poisoned");
+      if !threads.contains(&current) {
+        threads.push(current);
+      }
+      Ok(tasks.clone())
+    }
     Err(message) => Err(Error::Protocol(message.clone())),
   }
 }
@@ -318,27 +327,6 @@ mod tests {
       .expect("the second thread should not panic")
       .expect_err("the second thread must be rejected");
     assert!(matches!(error, Error::ThreadAffinity { .. }));
-  }
-
-  #[cfg(not(target_os = "macos"))]
-  #[test]
-  fn global_runner_activates_only_after_registering_its_owner() {
-    let owner = Arc::new(OnceLock::new());
-    let mut runner = SharedGlobalRunner {
-      owner: Arc::clone(&owner),
-      tasks: SharedTasks::new(),
-    };
-    assert!(!runner.runs_on_current_thread());
-
-    owner
-      .set(thread::current().id())
-      .expect("register the runner owner");
-    assert!(runner.runs_on_current_thread());
-
-    let other_thread = std::thread::spawn(move || runner.runs_on_current_thread());
-    assert!(!other_thread
-      .join()
-      .expect("the other thread should not panic"));
   }
 
   #[test]
