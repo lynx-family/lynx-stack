@@ -47,6 +47,7 @@ pub struct HeadlessViewBuilder {
   height: f32,
   pixel_ratio: f32,
   font_scale: f32,
+  enable_js_runtime: bool,
   icu_data_path: Option<CString>,
   user_data: *mut c_void,
   resource_fetcher: Option<GenericResourceFetcher>,
@@ -89,6 +90,7 @@ impl HeadlessViewBuilder {
       height: 0.0,
       pixel_ratio: 1.0,
       font_scale: 1.0,
+      enable_js_runtime: true,
       icu_data_path: None,
       user_data: ptr::null_mut(),
       resource_fetcher: None,
@@ -108,6 +110,11 @@ impl HeadlessViewBuilder {
 
   pub fn font_scale(mut self, font_scale: f32) -> Self {
     self.font_scale = font_scale;
+    self
+  }
+
+  pub fn enable_js_runtime(mut self, enabled: bool) -> Self {
+    self.enable_js_runtime = enabled;
     self
   }
 
@@ -224,6 +231,7 @@ impl HeadlessViewBuilder {
       let origin = 0.0;
       (sys.lynx_view_builder_set_frame)(builder, &origin, &origin, &self.width, &self.height);
       (sys.lynx_view_builder_set_font_scale)(builder, &self.font_scale);
+      (sys.lynx_view_builder_set_enable_js_runtime)(builder, self.enable_js_runtime);
       if let Some(path) = &self.icu_data_path {
         (sys.lynx_view_builder_set_icu_data_path)(builder, path.as_ptr());
       }

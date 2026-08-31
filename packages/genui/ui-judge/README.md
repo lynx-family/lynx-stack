@@ -93,12 +93,12 @@ The public VLM `score` remains an integer from 0 through 5. The independent
 images are limited to 10 MiB compressed, 8192 pixels per dimension, and 8
 megapixels after decoding.
 
-The function internally creates the model client from the environment, hands the
-capture to the shared worker pool, and releases the page before the independent
-VLM and reference-image evaluations. Each worker owns one thread and one
-`LynxContainer`, and drives navigation, steps, and capture synchronously on that
-thread. Model, runner, page, screenshot-comparison, prompt, and fixture-helper
-types are implementation details and are not exported.
+The function internally creates the model client from the environment, hands
+capture to the bounded queue, and releases the page before the independent VLM
+and reference-image evaluations. One dedicated process-owner thread reuses one
+`LynxContainer` and drives navigation, steps, and capture synchronously. Model,
+runner, page, screenshot-comparison, prompt, and fixture-helper types are
+implementation details and are not exported.
 
 `judge_page` is safe to call concurrently from any runtime: native work never
 touches the caller's thread. The runner must have its standard runtime resources
@@ -255,15 +255,18 @@ shutdown, and is propagated as a server error after the worker is joined. Each
 uploaded comparison image is limited to 10 MiB. Request bodies are limited to
 20 MiB plus 64 KiB of multipart overhead.
 
-The server accepts connections concurrently. Native Lynx capture runs on four
-dedicated worker threads, each owning its own `LynxContainer`, because the
-renderer is thread-bound. After a judge capture completes, Tokio runs model
-scoring concurrently across judge requests and CPU-heavy image normalization,
-alignment, and comparison run on blocking tasks. The capture queue holds at most
-eight requests and reports backpressure synchronously, so a caller learns the
-queue is full without first waiting for a scheduler slot. Dropped queued
-requests release their request data, and SIGINT or SIGTERM triggers graceful
-HTTP shutdown before the headless workers are joined.
+The server accepts connections concurrently. Native Lynx capture runs
+sequentially on one dedicated process-owner thread with one reused
+`LynxContainer`. After a capture returns its owned BMP, Tokio runs model scoring
+concurrently across judge requests and a bounded Rayon pool runs BMP-to-JPEG
+transcoding, normalization, alignment, and comparison. This forms a pipeline: scoring an
+earlier capture can overlap the next native capture without creating another
+native owner. The capture queue holds at most eight requests and reports
+backpressure synchronously, so a caller learns the queue is full without first
+waiting for the owner. The library and server share the same process-wide
+capture broker. Cancelled jobs are purged before reporting a full queue; if the
+owner panics, admission closes and queued waiters are released before graceful
+HTTP shutdown joins the worker.
 
 ## Model configuration
 
@@ -325,5 +328,5 @@ cargo test -p ui_judge --lib --tests --all-features
 
 The generated `.generated/main.lynx.bundle` is ignored by Git. Runtime-backed
 headless coverage runs on Linux and macOS. The server test submits four distinct
-fixture bundles through the production capture worker pool and validates each
-result; it does not assert timing or throughput.
+fixture bundles concurrently through the production single-owner worker and
+validates each result; it does not assert timing or throughput.

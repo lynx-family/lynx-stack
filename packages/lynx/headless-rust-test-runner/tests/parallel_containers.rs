@@ -1,88 +1,95 @@
-//! Runtime-backed proof that containers are per thread, not per process.
+//! Runtime-backed proof that native Lynx has one process owner thread.
 //!
-//! This lives in its own test binary because native Lynx state is
-//! process-wide: a second test in the same process would observe the engine
-//! threads this one starts.
+//! This lives in its own test binary because the owner claim is permanent for
+//! the process. The first thread keeps its container alive while a second
+//! thread verifies that it is rejected before touching native state. A failed
+//! `lynx_core.js` path check must not claim that owner first.
 
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use lynx_headless_rust_test_runner::{
-  ContainerOptions, GotoOptions, LynxContainer, Result, ScreenshotOptions,
-};
-
-const CONTAINERS: usize = 4;
-
-fn fixture_url() -> String {
-  let fixture =
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/lynxml/counter.lynxml");
-  format!("file://{}", fixture.display())
-}
-
-fn render(index: usize) -> Result<(usize, usize, usize)> {
-  let container = LynxContainer::new(ContainerOptions {
-    width: 200 + index * 20,
-    height: 150,
-    ..ContainerOptions::default()
-  })?;
-  let mut page = container.new_page()?;
-  page.goto(&fixture_url(), GotoOptions::default())?;
-  let screenshot = page.screenshot(ScreenshotOptions {
-    settle: Duration::from_millis(32),
-    ..ScreenshotOptions::default()
-  })?;
-  let frame = lynx_headless_rust_test_runner::decode_screenshot(&screenshot)?;
-  let visible = frame
-    .rgba
-    .chunks_exact(4)
-    .filter(|pixel| pixel[3] != 0)
-    .count();
-  Ok((frame.width, frame.height, visible))
-}
+use lynx_headless_rust_test_runner::{ContainerOptions, Error, LynxContainer};
 
 #[test]
-fn independent_threads_each_drive_their_own_container() {
-  // Every worker stays alive until all of them have rendered, so this really
-  // exercises concurrent containers rather than a sequence of them.
-  let (ready_sender, ready) = mpsc::channel();
-  let (release_sender, release) = mpsc::channel::<()>();
-  let release = std::sync::Arc::new(std::sync::Mutex::new(release));
-  let workers = (0..CONTAINERS)
-    .map(|index| {
-      let ready_sender = ready_sender.clone();
-      let release = std::sync::Arc::clone(&release);
-      thread::spawn(move || {
-        let rendered = render(index);
-        ready_sender.send(()).expect("report readiness");
-        // Hold the container alive until the test releases every worker.
-        let _ = release
-          .lock()
-          .unwrap_or_else(|poisoned| poisoned.into_inner())
-          .recv();
-        rendered
-      })
-    })
-    .collect::<Vec<_>>();
-  drop(ready_sender);
-  for _ in 0..CONTAINERS {
-    ready.recv().expect("every worker must finish rendering");
-  }
-  for _ in 0..CONTAINERS {
-    release_sender.send(()).expect("release a worker");
-  }
-
-  let mut skipped = None;
-  for (index, worker) in workers.into_iter().enumerate() {
-    match worker.join().expect("worker thread must not panic") {
-      Ok((width, height, visible)) => {
-        assert_eq!((width, height), (200 + index * 20, 150));
-        assert!(visible > 0, "container {index} rendered nothing");
+fn a_second_os_thread_cannot_create_a_native_container() {
+  let missing_core =
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/lynx_core-that-does-not-exist.js");
+  assert!(
+    !missing_core.exists(),
+    "the invalid core path must stay absent"
+  );
+  let (invalid_ready_sender, invalid_ready) = mpsc::sync_channel(0);
+  let (invalid_release_sender, invalid_release) = mpsc::sync_channel(0);
+  let invalid = thread::spawn(move || {
+    match LynxContainer::new(ContainerOptions {
+      lynx_core_path: Some(missing_core.clone()),
+      ..ContainerOptions::default()
+    }) {
+      Err(Error::LynxCoreNotFound(path)) => assert_eq!(path, missing_core),
+      Err(error) => panic!("unexpected invalid-core error: {error}"),
+      Ok(container) => {
+        drop(container);
+        panic!("a nonexistent lynx_core.js path must be rejected");
       }
-      Err(error) => skipped = Some(error.to_string()),
     }
-  }
-  if let Some(error) = skipped {
-    eprintln!("skipping: the configured runtime could not render every container: {error}");
+    invalid_ready_sender
+      .send(())
+      .expect("report invalid core rejection");
+    invalid_release
+      .recv()
+      .expect("hold the non-owner thread alive");
+  });
+  invalid_ready
+    .recv()
+    .expect("the invalid core path must be rejected before owner claim");
+
+  let (ready_sender, ready) = mpsc::sync_channel(0);
+  let (release_sender, release) = mpsc::sync_channel(0);
+  let owner = thread::spawn(move || {
+    let container = LynxContainer::new(ContainerOptions {
+      timeout: Duration::from_secs(1),
+      ..ContainerOptions::default()
+    });
+    let affinity_error = matches!(&container, Err(Error::ThreadAffinity { .. }));
+    ready_sender
+      .send((
+        affinity_error,
+        container.as_ref().err().map(ToString::to_string),
+      ))
+      .expect("report owner initialization");
+    release.recv().expect("hold the owner thread");
+    drop(container);
+  });
+
+  let (owner_affinity_error, owner_error) = ready.recv().expect("wait for the process owner");
+  assert!(
+    !owner_affinity_error,
+    "an invalid lynx_core.js path must not claim the process owner"
+  );
+  let second = thread::spawn(|| match LynxContainer::new(ContainerOptions::default()) {
+    Err(Error::ThreadAffinity { .. }) => true,
+    Err(error) => panic!("unexpected second-owner error: {error}"),
+    Ok(container) => {
+      drop(container);
+      false
+    }
+  });
+  assert!(
+    second.join().expect("the second thread should not panic"),
+    "a second native owner must not be created"
+  );
+
+  release_sender.send(()).expect("release the owner thread");
+  owner.join().expect("the owner thread should not panic");
+  invalid_release_sender
+    .send(())
+    .expect("release the non-owner thread");
+  invalid
+    .join()
+    .expect("the invalid-core thread should not panic");
+  if let Some(error) = owner_error {
+    eprintln!("owner runtime initialization was unavailable: {error}");
   }
 }
