@@ -22,3 +22,34 @@ describe('pluginLynx', () => {
     await expect(rsbuild.initConfigs()).resolves.toBeDefined()
   })
 })
+
+async function configForRslib() {
+  const rsbuild = await createRsbuild({
+    callerName: 'rslib',
+    cwd: path.dirname(fileURLToPath(import.meta.url)),
+    rsbuildConfig: {
+      mode: 'production',
+      environments: { lynx: {} },
+      plugins: [pluginLynx()],
+    },
+  })
+
+  const [config] = await rsbuild.initConfigs()
+  return config
+}
+
+describe('pluginLynx with a caller that assembles its own bundle', () => {
+  test('resolves a module the way the Lynx runtime needs', async () => {
+    const config = await configForRslib()
+
+    expect(config?.resolve?.conditionNames).toContain('lynx')
+    expect(config?.resolve?.mainFields).toContain('lynx')
+    expect(config?.resolve?.mainFiles).toContain('index.lynx')
+  })
+
+  test('leaves the bundle assembly to the caller', async () => {
+    const config = await configForRslib()
+
+    expect(config?.output?.chunkLoading).toBeUndefined()
+  })
+})

@@ -79,6 +79,9 @@ export function pluginLynx(
     pluginTemplate(),
     // Taps the hooks above, so it covers an external bundle as well.
     pluginLynxDebugMetadata(),
+    // What a module resolves to is a property of the Lynx runtime, not of who
+    // assembles the bundle, so an external bundle resolves the same way.
+    pluginResolve(),
     ...onlyWhenTheEngineOwnsTheBuild([
       pluginChunkLoading(),
       pluginCssMinimizer(),
@@ -86,7 +89,6 @@ export function pluginLynx(
       pluginMinify(),
       pluginOptimization(),
       pluginOutput(),
-      pluginResolve(),
       pluginServer(),
       pluginSourcemap(),
       pluginSwc(),
