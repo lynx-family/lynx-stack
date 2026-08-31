@@ -133,7 +133,13 @@ export class ExternalBundleWebpackPlugin {
     compiler: Rspack.Compiler,
     compilation: Rspack.Compilation,
   ): Promise<void> {
-    const assets = compilation.getAssets()
+    // The custom sections are written in the order the assets come in, and
+    // `getAssets` orders them by however the compilation happened to emit
+    // them, which shifts with the plugins that took part. Sort them so the
+    // same input encodes to the same bytes.
+    const assets = compilation.getAssets().slice().sort((a, b) =>
+      a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
+    )
     // `rslib build` always compiles with rspack mode `production`, so the
     // development signal here is `NODE_ENV`, matching the `minify` default
     // of `DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG`.

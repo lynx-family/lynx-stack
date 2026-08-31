@@ -391,11 +391,12 @@ describe('should build external bundle', () => {
       path.join(fixtureDir, 'dist', 'css-bundle.lynx.bundle'),
     )
 
-    // Check custom-sections for CSS keys
-    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+    // Check custom-sections for CSS keys. The order is the one the assets sort
+    // in, so the same input always encodes to the same bytes.
+    expect(Object.keys(decodedResult['custom-sections'])).toEqual([
+      'index__main-thread',
       'index',
       'index:CSS',
-      'index__main-thread',
     ])
 
     expect(Array.isArray(decodedResult['custom-sections']['index:CSS'])).toBe(
