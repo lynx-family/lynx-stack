@@ -18,7 +18,7 @@ use crate::judge::{
 };
 use crate::model::{ModelClient, ModelError, ModelOptions};
 use crate::screenshot::{bmp_to_jpeg, jpeg_data_url};
-use crate::visual::compare_reference_image;
+use crate::visual::{compare_reference_image, transcode_captured_bmp};
 
 const MAX_ACTIONS_PER_STEP: usize = 8;
 const MAX_DOM_CHARS: usize = 40_000;
@@ -121,12 +121,14 @@ impl CapturedPage {
     }
   }
 
-  pub(crate) fn into_jpeg(self) -> Result<Vec<u8>, String> {
-    bmp_to_jpeg(&self.screenshot)
+  pub(crate) async fn into_jpeg(self) -> Result<Vec<u8>, String> {
+    transcode_captured_bmp(self.screenshot).await
   }
 
-  pub(crate) fn screenshot_data_url(&self) -> Result<String, String> {
-    bmp_to_jpeg(&self.screenshot).map(|jpeg| jpeg_data_url(&jpeg))
+  pub(crate) async fn screenshot_data_url(&self) -> Result<String, String> {
+    transcode_captured_bmp(self.screenshot.clone())
+      .await
+      .map(|jpeg| jpeg_data_url(&jpeg))
   }
 }
 
@@ -316,7 +318,7 @@ pub(crate) async fn score_captured_page(
   } = capture;
   // The model needs a format it can read; the comparison below keeps the
   // lossless capture.
-  let screenshot_data_url = match bmp_to_jpeg(&screenshot) {
+  let screenshot_data_url = match transcode_captured_bmp(screenshot.clone()).await {
     Ok(jpeg) => jpeg_data_url(&jpeg),
     Err(error) => {
       let mut result = request_error_result(request, url, error);

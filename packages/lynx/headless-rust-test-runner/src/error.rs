@@ -38,6 +38,10 @@ pub enum Error {
   DevtoolTargetUnavailable,
   #[error("debug-router protocol error: {0}")]
   Protocol(String),
+  #[error(
+    "native Lynx is bound to process owner thread {owner}; LynxContainer::new was called from {current}"
+  )]
+  ThreadAffinity { owner: String, current: String },
   #[error("CDP request error: {0}")]
   Cdp(String),
   #[error("operation timed out: {0}")]

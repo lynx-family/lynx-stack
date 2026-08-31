@@ -22,7 +22,7 @@ use tokio::net::TcpListener;
 use tokio::sync::{oneshot, watch};
 
 use crate::capture::{
-  CaptureError, CaptureResponse, CaptureWorkers, WorkerPanicked, CAPTURE_WORKERS,
+  shared_workers, CaptureError, CaptureResponse, CaptureWorkers, WorkerPanicked,
 };
 use crate::headless::{
   prepare_judge_page_request, prepare_page_request, score_captured_page, PageLoadOptions,
@@ -47,6 +47,8 @@ pub enum ServerError {
   InvalidPort { port: String, source: ParseIntError },
   #[error("UI Judge headless worker panicked")]
   HeadlessWorkerPanicked,
+  #[error("UI Judge headless worker is unavailable: {0}")]
+  HeadlessWorkerUnavailable(String),
   #[error("UI Judge server I/O failed: {0}")]
   Io(#[from] io::Error),
 }
@@ -225,14 +227,16 @@ impl IntoResponse for ApiError {
 }
 
 /// Runs the feature-gated UI Judge HTTP server on IPv4 and IPv6 unspecified
-/// addresses. Native Lynx capture runs on a fixed pool of container-owning
-/// worker threads behind a bounded queue, while completed captures are scored
-/// on the async runtime.
+/// addresses. Native Lynx capture runs on one container-owning worker behind a
+/// bounded queue, while completed captures are scored concurrently on the
+/// async runtime.
 pub async fn serve(port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
   let (ipv4_listener, ipv6_listener) = bind_listeners(port)?;
-  let headless = Arc::new(CaptureWorkers::new(CAPTURE_WORKERS)?);
-  let worker_failure = headless.take_failure_receiver();
+  let headless = shared_workers().map_err(ServerError::HeadlessWorkerUnavailable)?;
+  let worker_failure = headless
+    .take_failure_receiver()
+    .map_err(|error| ServerError::HeadlessWorkerUnavailable(error.to_string()))?;
   let state = AppState {
     headless: Arc::clone(&headless),
     model_name: configured_model_name().into(),
@@ -349,12 +353,15 @@ async fn judge(
   let client = client.expect("judge capture retains its model client");
   let (result, screenshot_data_url) = match capture {
     Ok(capture) => {
-      let screenshot_data_url = match include_screenshot
-        .then(|| capture.screenshot_data_url())
-        .transpose()
-      {
-        Ok(screenshot_data_url) => screenshot_data_url,
-        Err(error) => return Err(ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error)),
+      let screenshot_data_url = if include_screenshot {
+        Some(
+          capture
+            .screenshot_data_url()
+            .await
+            .map_err(|error| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error))?,
+        )
+      } else {
+        None
       };
       (
         score_captured_page(&client, &request, capture).await,
@@ -395,6 +402,7 @@ async fn screenshot(
     .map_err(capture_api_error)?;
   let jpeg = capture
     .into_jpeg()
+    .await
     .map_err(|error| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error))?;
   Ok(([(CONTENT_TYPE, "image/jpeg")], jpeg).into_response())
 }
@@ -516,7 +524,7 @@ mod tests {
   use std::io::Cursor;
   use std::path::Path;
   use std::sync::mpsc::Receiver;
-  use std::sync::{Mutex, MutexGuard};
+  use std::sync::{Barrier, Mutex, MutexGuard};
 
   use axum::body::Body;
   use axum::extract::FromRequest;
@@ -528,6 +536,8 @@ mod tests {
   use crate::capture::CaptureJob;
   use crate::headless::CapturedPage;
   use crate::model::ModelOptions;
+
+  const CONCURRENT_CAPTURE_REQUESTS: usize = 4;
 
   /// Serves a queue with one deterministic reply per job.
   fn scripted_workers<F>(reply: F) -> Arc<CaptureWorkers>
@@ -857,22 +867,20 @@ mod tests {
     not(target_os = "linux"),
     ignore = "the Linux runtime-backed test is the CI contract; run explicitly for local diagnostics"
   )]
-  fn the_worker_pool_renders_distinct_pages_concurrently() {
+  fn one_native_owner_renders_four_concurrent_requests() {
     let package_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source = package_dir.join("tests/fixtures/react/.generated/main.lynx.bundle");
     assert!(source.is_file(), "build the React fixture before this test");
-    // Distinct URLs prove the pool renders four different pages rather than
-    // reusing one loaded page.
-    let bundles = (0..CAPTURE_WORKERS)
+    // Distinct URLs prove the owner renders four different queued pages rather
+    // than reusing one loaded page.
+    let bundles = (0..CONCURRENT_CAPTURE_REQUESTS)
       .map(|index| {
         let bundle = source.with_file_name(format!("concurrent-{index}.lynx.bundle"));
         std::fs::copy(&source, &bundle).expect("copy concurrent fixture");
         bundle
       })
       .collect::<Vec<_>>();
-    let headless = Arc::new(
-      CaptureWorkers::new(CAPTURE_WORKERS).expect("start the concurrent headless workers"),
-    );
+    let headless = shared_workers().expect("start the process-wide headless worker");
     let runtime = tokio::runtime::Builder::new_multi_thread()
       .worker_threads(2)
       .enable_all()
@@ -898,11 +906,12 @@ mod tests {
         .expect("receive a concurrent capture")
         .capture
         .expect("render a concurrent page");
+      let screenshot_data_url = runtime
+        .block_on(capture.screenshot_data_url())
+        .expect("transcode the screenshot");
       let jpeg = BASE64_STANDARD
         .decode(
-          capture
-            .screenshot_data_url()
-            .expect("transcode the screenshot")
+          screenshot_data_url
             .strip_prefix("data:image/jpeg;base64,")
             .expect("screenshot data URL"),
         )
@@ -914,7 +923,7 @@ mod tests {
     }
     headless
       .shutdown()
-      .expect("stop the concurrent headless workers");
+      .expect("stop the single-owner headless worker");
 
     for bundle in bundles {
       std::fs::remove_file(bundle).expect("remove concurrent fixture copy");
@@ -1041,34 +1050,62 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn worker_panic_marks_health_unavailable_and_triggers_shutdown() {
+  async fn worker_panic_releases_queued_requests_and_triggers_shutdown() {
+    let received_first = Arc::new(Barrier::new(2));
+    let release_panic = Arc::new(Barrier::new(2));
+    let worker_received_first = Arc::clone(&received_first);
+    let worker_release_panic = Arc::clone(&release_panic);
     let headless = Arc::new(
-      CaptureWorkers::with_worker_main(1, |jobs: Arc<Mutex<Receiver<CaptureJob>>>| {
+      CaptureWorkers::with_worker_main(1, move |jobs: Arc<Mutex<Receiver<CaptureJob>>>| {
         let _job = jobs
           .lock()
           .unwrap_or_else(|poisoned| poisoned.into_inner())
           .recv()
           .expect("receive capture job");
+        worker_received_first.wait();
+        worker_release_panic.wait();
         panic!("intentional headless worker panic");
       })
       .expect("start a panicking headless worker"),
     );
-    let worker_failure = headless.take_failure_receiver();
+    let worker_failure = headless
+      .take_failure_receiver()
+      .expect("take the worker failure receiver");
     let (shutdown_sender, mut shutdown_receiver) = watch::channel(false);
     let failure_task = tokio::spawn(trigger_shutdown_on_worker_failure(
       worker_failure,
       shutdown_sender,
     ));
-    let request = http_request("file:///tmp/panic.lynx.bundle")
+    let first_request = http_request("file:///tmp/panic.lynx.bundle")
       .into_capture_request()
       .expect("valid panic request");
+    let first_response = headless
+      .submit(
+        first_request.request,
+        Some(test_client()),
+        first_request.load_options,
+      )
+      .expect("submit the active request");
+    received_first.wait();
+    let queued_request = http_request("file:///tmp/queued.lynx.bundle")
+      .into_capture_request()
+      .expect("valid queued request");
+    let queued_response = headless
+      .submit(
+        queued_request.request,
+        Some(test_client()),
+        queued_request.load_options,
+      )
+      .expect("submit a request behind the active capture");
+    release_panic.wait();
 
-    let error = match headless
-      .capture(request.request, Some(test_client()), request.load_options)
-      .await
-    {
+    let first_error = match first_response.await {
       Ok(_) => panic!("worker panic must fail the capture"),
-      Err(error) => error,
+      Err(_) => CaptureError::Stopped,
+    };
+    let queued_error = match queued_response.await {
+      Ok(_) => panic!("worker panic must release queued captures"),
+      Err(_) => CaptureError::Stopped,
     };
     shutdown_receiver
       .changed()
@@ -1076,11 +1113,23 @@ mod tests {
       .expect("worker panic must trigger shutdown");
     failure_task.await.expect("join worker failure monitor");
 
-    assert!(matches!(error, CaptureError::Stopped), "got {error:?}");
+    assert!(matches!(first_error, CaptureError::Stopped));
+    assert!(matches!(queued_error, CaptureError::Stopped));
     assert_eq!(
-      ApiError::from(error).status,
+      ApiError::from(first_error).status,
       StatusCode::SERVICE_UNAVAILABLE
     );
+    let late_request = http_request("file:///tmp/late.lynx.bundle")
+      .into_capture_request()
+      .expect("valid late request");
+    assert!(matches!(
+      headless.submit(
+        late_request.request,
+        Some(test_client()),
+        late_request.load_options
+      ),
+      Err(CaptureError::ShuttingDown)
+    ));
     assert!(*shutdown_receiver.borrow());
     assert!(!headless.is_healthy());
     let health_error = health(State(AppState {

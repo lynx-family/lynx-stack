@@ -4,8 +4,9 @@
 blocking, Puppeteer-style page API. It combines the original windowless
 software-rendering harness with DOM inspection and interaction:
 
-- `LynxContainer::new` binds the native Lynx state to the calling thread and
-  prepares the process-wide runtime and local DebugRouter on first use.
+- After non-native resource validation succeeds, the first
+  `LynxContainer::new` binds native Lynx state to a permanent process owner
+  thread and prepares the runtime and local DebugRouter on first use.
 - `LynxContainer::new_page` creates a windowless `LynxPage`. One container can
   host any number of pages, and every wait drives all of them.
 - `LynxPage::goto`, `content`, and `locator` load and inspect compiled Lynx
@@ -41,15 +42,15 @@ let bmp = page.screenshot(ScreenshotOptions::default())?;
 
 The API is blocking, and there is no async runtime anywhere in the crate.
 `LynxContainer`, `LynxPage`, and `ElementNode` are all `!Send` and `!Sync`
-because they own native handles bound to their creating thread. While a page
+because they own native handles bound to the process owner thread. While a page
 waits — for a frame, a CDP reply, or a settle interval — it runs the container's
 native task queues inline on that same thread.
 
-Concurrency comes from **one container per OS thread**. Several threads may each
-build their own container and render at the same time; nothing is serialized
-behind a single process-wide native owner. The runtime's one process-wide UI
-task runner is registered once, and any container thread may drain that shared
-queue, one at a time.
+Native page creation, rendering, and destruction are serialized on **one owner
+thread per process**. A second thread receives a thread-affinity error before it
+touches native state, and dropping all containers does not transfer ownership.
+Higher-level consumers can overlap request preparation and post-capture work
+after the owned BMP has left the native thread.
 
 ## Navigation
 
@@ -112,10 +113,8 @@ the ignored integration test explicitly for diagnostics:
 cargo test -p lynx-headless-rust-test-runner --test react_fixture -- --ignored
 ```
 
-`tests/lynxml_container.rs` and `tests/parallel_containers.rs` cover the
-container contract against a LynxML fixture: several pages inside one container,
-per-view DevTools sessions, and several containers rendering at once on separate
-threads. They report a skip when the configured runtime lacks the optional
-LynxML or DevTools-target exports. Each lives in its own test binary because
-native Lynx state is process-wide and thread-bound, and `libtest` runs every
-test on a fresh thread.
+`tests/lynxml_container.rs` covers several pages inside one container, per-view
+DevTools sessions, and BMP capture against a LynxML fixture.
+`tests/parallel_containers.rs` verifies that a second OS thread cannot become a
+native owner. Each lives in its own test binary because native Lynx state is
+process-wide and thread-bound, and `libtest` runs every test on a fresh thread.

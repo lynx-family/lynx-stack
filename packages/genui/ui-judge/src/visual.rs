@@ -3,13 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 use std::io::Cursor;
+use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
 use base64::prelude::{Engine, BASE64_STANDARD, BASE64_STANDARD_NO_PAD};
 use image::imageops::{self, FilterType};
 use image::{DynamicImage, GrayImage, ImageFormat, ImageReader, Limits, Rgba, RgbaImage};
+use rayon::{ThreadPool, ThreadPoolBuilder};
 use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use thiserror::Error;
+
+use crate::screenshot::bmp_to_jpeg;
 
 pub(crate) const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_DECODED_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
@@ -29,6 +33,7 @@ const DEFAULT_WINDOW_HEIGHT_RATIO: f64 = 0.28;
 const DEFAULT_BLOCK_SIZE: u32 = 32;
 const DEFAULT_PIXEL_TOLERANCE: f64 = 0.1;
 const DEFAULT_THRESHOLD: f64 = 0.1;
+const MAX_VISUAL_WORKERS: usize = 4;
 
 pub(crate) type VisualResult<T> = std::result::Result<T, VisualEvaluationError>;
 
@@ -150,22 +155,98 @@ struct BlockStats {
   pixels: u32,
 }
 
-/// Runs bounded, CPU-heavy image work off the async runtime.
-///
-/// Concurrency is already bounded upstream by the capture worker pool and the
-/// server's request queue, so this needs no pool or permits of its own.
+fn visual_worker_count() -> usize {
+  std::thread::available_parallelism()
+    .map(usize::from)
+    .unwrap_or(1)
+    .min(MAX_VISUAL_WORKERS)
+}
+
+fn visual_worker_slots() -> Arc<tokio::sync::Semaphore> {
+  static SLOTS: OnceLock<Arc<tokio::sync::Semaphore>> = OnceLock::new();
+  Arc::clone(SLOTS.get_or_init(|| Arc::new(tokio::sync::Semaphore::new(visual_worker_count()))))
+}
+
+fn visual_worker_pool() -> VisualResult<&'static ThreadPool> {
+  static POOL: OnceLock<std::result::Result<ThreadPool, String>> = OnceLock::new();
+  match POOL.get_or_init(|| {
+    ThreadPoolBuilder::new()
+      .num_threads(visual_worker_count())
+      .thread_name(|index| format!("ui-judge-visual-{index}"))
+      .build()
+      .map_err(|error| error.to_string())
+  }) {
+    Ok(pool) => Ok(pool),
+    Err(error) => Err(VisualEvaluationError::new(
+      500,
+      VisualEvaluationErrorCode::VisualEvaluationError,
+      format!("Visual worker pool is unavailable: {error}"),
+    )),
+  }
+}
+
+/// Runs CPU-heavy post-capture image work on a bounded Rayon pool.
 async fn run_visual_worker<T, F>(operation: &'static str, work: F) -> VisualResult<T>
 where
   T: Send + 'static,
   F: FnOnce() -> VisualResult<T> + Send + 'static,
 {
-  tokio::task::spawn_blocking(work).await.unwrap_or_else(|_| {
-    Err(VisualEvaluationError::new(
+  run_visual_worker_with_slots(visual_worker_slots(), operation, work).await
+}
+
+/// Transcodes an owned post-capture frame without occupying a Tokio worker.
+pub(crate) async fn transcode_captured_bmp(bmp: Vec<u8>) -> Result<Vec<u8>, String> {
+  run_visual_worker("screenshot transcoding", move || {
+    bmp_to_jpeg(&bmp).map_err(|message| {
+      VisualEvaluationError::new(
+        500,
+        VisualEvaluationErrorCode::VisualEvaluationError,
+        message,
+      )
+    })
+  })
+  .await
+  .map_err(|error| error.to_string())
+}
+
+async fn run_visual_worker_with_slots<T, F>(
+  slots: Arc<tokio::sync::Semaphore>,
+  operation: &'static str,
+  work: F,
+) -> VisualResult<T>
+where
+  T: Send + 'static,
+  F: FnOnce() -> VisualResult<T> + Send + 'static,
+{
+  let permit = slots.acquire_owned().await.map_err(|error| {
+    VisualEvaluationError::new(
+      500,
+      VisualEvaluationErrorCode::VisualEvaluationError,
+      format!("Visual {operation} worker pool is unavailable: {error}"),
+    )
+  })?;
+  let pool = visual_worker_pool()?;
+  let (result_sender, result_receiver) = tokio::sync::oneshot::channel();
+  pool.spawn(move || {
+    // The permit stays with the CPU work even if its async waiter is dropped.
+    let _permit = permit;
+    let result =
+      std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)).unwrap_or_else(|_| {
+        Err(VisualEvaluationError::new(
+          500,
+          VisualEvaluationErrorCode::VisualEvaluationError,
+          format!("Visual {operation} worker panicked."),
+        ))
+      });
+    let _ = result_sender.send(result);
+  });
+  result_receiver.await.map_err(|_| {
+    VisualEvaluationError::new(
       500,
       VisualEvaluationErrorCode::VisualEvaluationError,
       format!("Visual {operation} worker stopped before returning a result."),
-    ))
-  })
+    )
+  })?
 }
 
 pub(crate) async fn compare_reference_image(
@@ -1041,13 +1122,48 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn a_panicking_worker_becomes_an_error_instead_of_unwinding_the_caller() {
-    let error = run_visual_worker("test", || -> VisualResult<()> { panic!("worker failure") })
-      .await
-      .expect_err("worker panic must become an error");
+  async fn a_panicking_worker_becomes_an_error_and_releases_capacity() {
+    let slots = Arc::new(tokio::sync::Semaphore::new(1));
+    let error = run_visual_worker_with_slots(Arc::clone(&slots), "test", || -> VisualResult<()> {
+      panic!("worker failure")
+    })
+    .await
+    .expect_err("worker panic must become an error");
 
     assert_eq!(error.code, VisualEvaluationErrorCode::VisualEvaluationError);
-    assert!(error.message.contains("stopped before returning a result"));
+    assert!(error.message.contains("panicked"));
+    assert_eq!(slots.available_permits(), 1);
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn dropping_a_waiter_does_not_overbook_the_worker_pool() {
+    let slots = Arc::new(tokio::sync::Semaphore::new(1));
+    let (started_sender, started_receiver) = tokio::sync::oneshot::channel();
+    let (release_sender, release_receiver) = std::sync::mpsc::channel();
+    let first = tokio::spawn(run_visual_worker_with_slots(
+      Arc::clone(&slots),
+      "test",
+      move || {
+        let _ = started_sender.send(());
+        release_receiver.recv().expect("release the Rayon worker");
+        Ok(())
+      },
+    ));
+    started_receiver.await.expect("start the Rayon worker");
+
+    first.abort();
+    let _ = first.await;
+    assert!(
+      Arc::clone(&slots).try_acquire_owned().is_err(),
+      "the abandoned CPU job must retain its permit"
+    );
+
+    release_sender.send(()).expect("finish the Rayon worker");
+    let permit = tokio::time::timeout(Duration::from_secs(1), slots.acquire_owned())
+      .await
+      .expect("the worker must eventually release capacity")
+      .expect("the semaphore must stay open");
+    drop(permit);
   }
 
   fn sample_png(color: Rgba<u8>) -> Vec<u8> {

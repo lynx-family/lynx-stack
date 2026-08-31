@@ -1,23 +1,18 @@
 //! Native task and frame plumbing shared by every [`crate::LynxContainer`].
 //!
-//! Each container drives its own pages on its own OS thread. Renderer tasks are
-//! therefore per page, while the runtime's single process-wide UI task runner
-//! feeds one shared queue that any container thread may drain — one at a time,
-//! so global tasks keep the serialized execution the engine expects.
+//! All containers in the process stay on one owner thread. Renderer tasks are
+//! per page, while the runtime's process-wide UI task runner feeds one shared
+//! queue that only that owner drains.
 
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::{Duration, Instant};
-
-#[cfg(not(target_os = "macos"))]
 use std::thread::{self, ThreadId};
+use std::time::{Duration, Instant};
 
 #[cfg(not(target_os = "macos"))]
 use lynx::{run_global_ui_task, set_global_ui_task_runner, GlobalUiTaskRunner};
 use lynx::{LynxEnv, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost};
 
-#[cfg(not(target_os = "macos"))]
-use crate::Error;
-use crate::Result;
+use crate::{Error, Result};
 
 #[cfg(target_os = "macos")]
 #[path = "macos_headless_display.rs"]
@@ -93,25 +88,39 @@ impl WindowlessHost for QueueingHost {
   }
 }
 
-/// The threads that own a container, and so count as UI threads for the
-/// runtime. A handful of entries at most, which a linear scan handles better
-/// than a hashed set would.
-#[cfg(not(target_os = "macos"))]
-static CONTAINER_THREADS: Mutex<Vec<ThreadId>> = Mutex::new(Vec::new());
+static PROCESS_OWNER_THREAD: OnceLock<ThreadId> = OnceLock::new();
+
+/// Permanently binds native Lynx state to the first container thread.
+///
+/// The runtime has process-global state whose teardown can outlive a view, so
+/// dropping the last container does not make it safe to transfer ownership.
+pub(crate) fn claim_process_owner_thread() -> Result<()> {
+  claim_owner_thread(&PROCESS_OWNER_THREAD)
+}
+
+fn claim_owner_thread(owner: &OnceLock<ThreadId>) -> Result<()> {
+  let current = thread::current().id();
+  let owner = owner.get_or_init(|| current);
+  if *owner == current {
+    Ok(())
+  } else {
+    Err(Error::ThreadAffinity {
+      owner: format!("{owner:?}"),
+      current: format!("{current:?}"),
+    })
+  }
+}
 
 #[cfg(not(target_os = "macos"))]
 struct SharedGlobalRunner {
+  owner: ThreadId,
   tasks: SharedTasks,
 }
 
 #[cfg(not(target_os = "macos"))]
 impl GlobalUiTaskRunner for SharedGlobalRunner {
   fn runs_on_current_thread(&mut self) -> bool {
-    let current = thread::current().id();
-    CONTAINER_THREADS
-      .lock()
-      .expect("container thread registry poisoned")
-      .contains(&current)
+    thread::current().id() == self.owner
   }
 
   fn post_task(&mut self, task: Task, _target_time_nanos: u64) {
@@ -119,11 +128,11 @@ impl GlobalUiTaskRunner for SharedGlobalRunner {
   }
 }
 
-/// Prepares the process for a container running on the calling thread.
+/// Prepares the process for containers running on the owner thread.
 ///
 /// Returns the queue of process-wide UI tasks the caller must drain. The
-/// registration itself happens once; every later container only records that
-/// its thread is a legitimate UI thread for the runtime.
+/// registration itself happens once; every later container reuses it on the
+/// same owner thread.
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedTasks> {
   static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
@@ -132,6 +141,7 @@ pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedT
     let installed = set_global_ui_task_runner(
       env,
       SharedGlobalRunner {
+        owner: thread::current().id(),
         tasks: tasks.clone(),
       },
     )
@@ -141,16 +151,7 @@ pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedT
     }
     Ok(tasks)
   }) {
-    Ok(tasks) => {
-      let current = thread::current().id();
-      let mut threads = CONTAINER_THREADS
-        .lock()
-        .expect("container thread registry poisoned");
-      if !threads.contains(&current) {
-        threads.push(current);
-      }
-      Ok(tasks.clone())
-    }
+    Ok(tasks) => Ok(tasks.clone()),
     Err(message) => Err(Error::Protocol(message.clone())),
   }
 }
@@ -172,8 +173,7 @@ pub(crate) fn register_container_thread(_env: &'static LynxEnv) -> Result<Shared
   )
 }
 
-/// Runs the process-wide UI tasks that are ready, if no other container thread
-/// is already running them.
+/// Runs the process-wide UI tasks that are ready on the owner thread.
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn run_ready_global_tasks(env: &'static LynxEnv, tasks: &SharedTasks) -> bool {
   static RUNNING: Mutex<()> = Mutex::new(());
@@ -287,10 +287,27 @@ mod tests {
   fn assert_send_sync<T: Send + Sync>() {}
 
   #[test]
-  fn captured_frames_can_cross_container_threads() {
+  fn captured_state_can_cross_post_capture_threads() {
     assert_send_sync::<CapturedFrame>();
     assert_send_sync::<FrameStore>();
     assert_send_sync::<SharedTasks>();
+  }
+
+  #[test]
+  fn a_second_os_thread_cannot_claim_the_process_owner() {
+    let owner = Arc::new(OnceLock::new());
+    claim_owner_thread(&owner).expect("claim the first owner");
+    claim_owner_thread(&owner).expect("reuse the owner on the same thread");
+    let other_thread = std::thread::spawn({
+      let owner = Arc::clone(&owner);
+      move || claim_owner_thread(&owner)
+    });
+
+    let error = other_thread
+      .join()
+      .expect("the second thread should not panic")
+      .expect_err("the second thread must be rejected");
+    assert!(matches!(error, Error::ThreadAffinity { .. }));
   }
 
   #[test]
