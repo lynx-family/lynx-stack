@@ -13,12 +13,6 @@ export function pluginSwc(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:swc',
     setup(api) {
-      if (
-        api.context.callerName === 'rslib'
-        || api.context.callerName === 'rstest'
-      ) {
-        return
-      }
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
           tools: {
