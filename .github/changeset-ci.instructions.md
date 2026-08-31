@@ -2,11 +2,15 @@
 applyTo: "{.github/workflows/**,.github/scripts/**}"
 ---
 
-When validating changesets in CI, use `pnpm changeset status --since=origin/main --output <file>` and consume the JSON in a script for stable checks (for example, blocking `major` bumps) instead of parsing CLI text output.
+CI works from two release plans, because the checks ask two different questions.
 
-Changesets CLI v3 resolves `config.baseBranch` as a local Git ref when `status` is run without `--since`. Pull request checkouts are detached and may only have `origin/main`, so pass `--since=origin/main` explicitly in PR workflows; keep the default all-changesets behavior in release workflows that run from a checked-out local `main` branch.
+`pnpm changeset status --since=origin/main --output <file>` answers what the pull request itself introduces. Use it for checks about the branch: blocking `major` bumps, validating the Markdown of the changesets it adds, and pairing dependency changes with a changeset. It also fails when a change has no changeset at all, and that detection is what needs a Git ref — without `--since` it falls back to `config.baseBranch` as a local ref, which a detached pull request checkout may not have.
 
-When validating changeset Markdown files in CI, run `node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json` so the script resolves files from `changeset status` output, and fail the job if any listed changeset file contains H1 (`#`), H2 (`##`) or H3 (`###`) headings.
+`pnpm changeset status --output <file>` without `--since` answers what the next release publishes, because it assembles the plan from every changeset in `.changeset`. Use it for checks about the released versions, such as the peer dependency range check. It resolves `config.baseBranch` as a local Git ref, which a detached pull request checkout does not have, so point one at the base first with `git branch -f main origin/main`.
+
+Do not answer the second question with the first plan. `--since` scopes it to the changesets added since the ref, so a package another branch already queued for a release is planned at its current version rather than the one it will be published at, and a range check reads violations the release does not have. Do not answer the first question with the second plan either: it carries the changesets of every merged branch, so a pull request would be blocked by a `major` it did not introduce.
+
+When validating changeset Markdown files in CI, run `node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json` so the script resolves files from the pull request's own changesets, and fail the job if any listed changeset file contains H1 (`#`), H2 (`##`) or H3 (`###`) headings.
 
 When running `changeset status --since=origin/<base>` after `actions/checkout` with shallow history in pull request workflows, fetch and iteratively deepen both the base branch ref and the current pull request merge ref. Deepening only `origin/<base>` can leave `HEAD` shallow and make `git merge-base origin/<base> HEAD` fail even after repeated fetches.
 
