@@ -23,33 +23,13 @@ export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLib
 export interface EncodeOptions {
     enableJsBytecode?: boolean;
     engineVersion?: string;
-    target?: 'web' | 'tasm';
+    target?: 'web' | 'lynx';
 }
 
 // @public
 export interface ExternalBundleLibConfig extends LibConfig {
     // (undocumented)
     output?: OutputConfig;
-}
-
-// @public
-export class ExternalBundleWebpackPlugin {
-    constructor(options: ExternalBundleWebpackPluginOptions);
-    // (undocumented)
-    apply(compiler: Rspack.Compiler): void;
-}
-
-// @public
-export interface ExternalBundleWebpackPluginOptions {
-    bundleFileName: string;
-    enableJsBytecode?: boolean | undefined;
-    encode: (opts: unknown) => {
-        buffer: Buffer;
-    } | Promise<{
-        buffer: Buffer;
-    }>;
-    engineVersion?: string | undefined;
-    mainThreadChunks?: string[] | undefined;
 }
 
 // @public
