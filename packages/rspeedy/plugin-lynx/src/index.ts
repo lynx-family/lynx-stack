@@ -78,7 +78,6 @@ export function pluginLynx(
   const bundlePlugins = [
     pluginChunkLoading(),
     pluginLynxDebugMetadata(),
-    pluginOutput(),
     pluginCssMinimizer(),
     pluginDev(),
     pluginMinify(),
@@ -107,6 +106,7 @@ export function pluginLynx(
     pluginConfig(options),
     pluginResolve(),
     pluginSwc(),
+    pluginOutput(),
     pluginTemplate(),
     ...bundlePlugins,
   ]
