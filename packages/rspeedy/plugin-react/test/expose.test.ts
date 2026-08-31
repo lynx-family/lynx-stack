@@ -84,9 +84,8 @@ describe('Expose', () => {
     await rsbuild.initConfigs()
     expect(expose).toMatchInlineSnapshot(`
       {
-        "LynxTemplatePlugin": {
-          "getLynxTemplatePluginHooks": [Function],
-        },
+        "LynxEncodePlugin": [Function],
+        "LynxTemplatePlugin": [Function],
       }
     `)
 
