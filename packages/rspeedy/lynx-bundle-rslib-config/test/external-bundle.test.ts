@@ -9,15 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig, rsbuild } from '@rslib/core'
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  rstest,
-} from '@rstest/core'
+import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
@@ -86,77 +78,12 @@ describe('define config', () => {
     expect(rslibConfig.lib[0]?.syntax).toBe('es2019')
   })
 
-  it('should preserve default minify jsOptions when output.minify is true', () => {
-    const rslibConfig = defineExternalBundleRslibConfig({
-      output: {
-        minify: true,
-      },
-    })
+  it('leaves the minify options to the engine', () => {
+    const rslibConfig = defineExternalBundleRslibConfig({})
 
-    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
-      jsOptions: {
-        minimizerOptions: {
-          compress: {
-            negate_iife: false,
-            side_effects: false,
-          },
-        },
-      },
-    })
-  })
-})
-
-describe('REACT_DEVTOOL minify', () => {
-  const prevReactDevtool = process.env['REACT_DEVTOOL']
-
-  afterEach(() => {
-    if (prevReactDevtool === undefined) {
-      delete process.env['REACT_DEVTOOL']
-    } else {
-      process.env['REACT_DEVTOOL'] = prevReactDevtool
-    }
-    rstest.resetModules()
-  })
-
-  it('keeps function and class names when REACT_DEVTOOL is set', async () => {
-    process.env['REACT_DEVTOOL'] = '1'
-    rstest.resetModules()
-    const { defineExternalBundleRslibConfig } = await import('../src/index.js')
-
-    const rslibConfig = defineExternalBundleRslibConfig({
-      output: { minify: true },
-    })
-
-    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
-      jsOptions: {
-        minimizerOptions: {
-          compress: { keep_fnames: true, keep_classnames: true },
-          mangle: { keep_fnames: true, keep_classnames: true },
-        },
-      },
-    })
-  })
-
-  it('does not keep names when REACT_DEVTOOL is unset', async () => {
-    delete process.env['REACT_DEVTOOL']
-    rstest.resetModules()
-    const { defineExternalBundleRslibConfig } = await import('../src/index.js')
-
-    const rslibConfig = defineExternalBundleRslibConfig({
-      output: { minify: true },
-    })
-
-    const minify = rslibConfig.lib[0]?.output?.minify as {
-      jsOptions?: {
-        minimizerOptions?: {
-          compress?: { keep_fnames?: boolean }
-          mangle?: unknown
-        }
-      }
-    }
-    expect(minify.jsOptions?.minimizerOptions?.compress?.keep_fnames)
-      .toBeUndefined()
-    expect(minify.jsOptions?.minimizerOptions?.mangle).toBeUndefined()
+    // `pluginLynx` supplies them, so only whether to minify at all is decided
+    // here.
+    expect(rslibConfig.lib[0]?.output?.minify).toBe(true)
   })
 })
 

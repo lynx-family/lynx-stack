@@ -89,11 +89,13 @@ export function pluginLynx(
     // What the output may contain — no HTML, no license trailer, `var` in the
     // bundler runtime — follows from the Lynx runtime, not from the caller.
     pluginOutput(),
+    // How far the output may be compressed is a property of the Lynx runtime
+    // too: the module wrapper has to keep its IIFE and its return.
+    pluginMinify(),
     ...onlyWhenTheEngineOwnsTheBuild([
       pluginChunkLoading(),
       pluginCssMinimizer(),
       pluginDev(),
-      pluginMinify(),
       pluginOptimization(),
       pluginServer(),
       pluginSourcemap(),

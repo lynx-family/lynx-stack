@@ -56,38 +56,6 @@ export interface EncodeOptions {
   enableJsBytecode?: boolean
 }
 
-// When preact devtools is enabled (`REACT_DEVTOOL`), keep function and class
-// names. Devtools relies on them to resolve component names (`type.name`) and
-// to reconstruct the hook tree (it matches minified stack frames by function
-// name). Minification would otherwise mangle/inline those names away. Only
-// enabled with devtools since it slightly increases bundle size. Mirrors
-// `pluginMinify` in @lynx-js/rspeedy (lynx-family/lynx-stack#2880).
-const keepNames = Boolean(process.env['REACT_DEVTOOL'])
-
-const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
-  jsOptions: {
-    minimizerOptions: {
-      compress: {
-        /**
-         * the module wrapper iife need to be kept to provide the return value
-         * for the module loader in lynx_core.js
-         */
-        negate_iife: false,
-        // Allow return in module wrapper
-        side_effects: false,
-
-        // `mangle.keep_*` below preserves most names, but the compressor can
-        // still inline single-use functions (incl. one-shot components) into
-        // anonymity; `compress.keep_*` stops that. Cheap, so we keep both.
-        ...(keepNames ? { keep_fnames: true, keep_classnames: true } : {}),
-      },
-      ...(keepNames
-        ? { mangle: { keep_fnames: true, keep_classnames: true } }
-        : {}),
-    },
-  },
-}
-
 /**
  * The default lib config{@link LibConfig} for external bundle.
  *
@@ -107,9 +75,10 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
       dependencies: false,
       peerDependencies: false,
     },
-    minify: process.env['NODE_ENV'] === 'development'
-      ? false
-      : DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG,
+    // `rslib build` always compiles with rspack mode `production`, so the
+    // development signal here is `NODE_ENV`. What minification may do is
+    // `pluginLynx`'s to say.
+    minify: process.env['NODE_ENV'] !== 'development',
     target: 'web',
     dataUriLimit: Number.POSITIVE_INFINITY,
     distPath: {
@@ -571,10 +540,6 @@ export function defineExternalBundleRslibConfig(
   userLibConfig: ExternalBundleLibConfig,
   encodeOptions: EncodeOptions = {},
 ): RslibConfig {
-  const normalizedOutputMinify = userLibConfig.output?.minify === true
-    ? DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG
-    : userLibConfig.output?.minify
-
   return {
     lib: [
       rsbuild.mergeRsbuildConfig<LibConfig>(
@@ -583,7 +548,6 @@ export function defineExternalBundleRslibConfig(
           ...userLibConfig,
           output: {
             ...userLibConfig.output,
-            minify: normalizedOutputMinify,
             externals: transformExternals(
               userLibConfig.output?.externalsPresets,
               userLibConfig.output?.externals,
