@@ -1,6 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { Context } from 'preact';
+
 export * from '@lynx-js/react';
 
 /**
@@ -30,11 +32,30 @@ declare function startTransition(cb: () => void): void;
  * @public
  */
 declare function useTransition(): [false, typeof startTransition];
-export { startTransition, useTransition };
+
+/**
+ * Reads the value of a resource during render.
+ *
+ * Unlike the other hooks, `use` may be called conditionally and inside loops.
+ *
+ * - Given a promise, it returns the resolved value. While the promise is
+ *   pending it suspends, so the nearest `Suspense` boundary renders its
+ *   fallback; a rejected promise throws.
+ * - Given a context, it returns the current value, subscribing the component
+ *   to that context.
+ *
+ * @param resource - A promise or a context to read
+ * @returns The resolved value of the promise, or the current context value
+ *
+ * @public
+ */
+declare function use<T>(resource: Promise<T> | Context<T>): T;
+export { startTransition, use, useTransition };
 
 // type for the default export
 declare const _default: typeof import('@lynx-js/react') & {
   startTransition: typeof startTransition;
+  use: typeof use;
   useTransition: typeof useTransition;
 };
 export default _default;
