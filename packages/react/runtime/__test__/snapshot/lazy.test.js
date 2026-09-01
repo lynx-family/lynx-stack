@@ -163,8 +163,8 @@ describe('Lazy Exports', () => {
     const objectType = ReactMainThreadObjectExports.defineMainThreadObjectType(definition);
     expect(objectType).toMatchObject({ type: definition.type });
     expect(objectType).not.toHaveProperty('create');
-    expect(objectType.isHandle).toBeTypeOf('function');
-    expect(objectType.getInitialPayload).toBeTypeOf('function');
+    expect(objectType.downcast).toBeTypeOf('function');
+    expect(objectType.downcast({})).toBeUndefined();
     expect(() => ReactMainThreadObjectExports.useMainThreadObject(objectType, 1)).toThrow(
       'Cannot read properties of undefined (reading \'__H\')',
     );
@@ -213,7 +213,6 @@ describe('Lazy Exports', () => {
       expect(registerMainThreadObjectType).toHaveBeenCalledWith(
         '@test/lazy-module-evaluation',
         create,
-        undefined,
         1,
       );
     } finally {

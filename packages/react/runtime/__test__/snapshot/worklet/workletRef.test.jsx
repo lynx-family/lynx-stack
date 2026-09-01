@@ -369,19 +369,17 @@ describe('MainThreadObject', () => {
     expect(type.type).toBe('@test/counter');
     expect(type).not.toHaveProperty('create');
     expect(type).not.toHaveProperty('dispose');
-    expect(type.isHandle(counter)).toBe(true);
-    expect(type.getInitialPayload(counter)).toBe(42);
+    const counterHandle = type.downcast(counter);
+    expect(counterHandle).toBe(counter);
+    expect(counterHandle.creationPayload).toBe(42);
 
     const otherType = defineMainThreadObjectType({
       type: '@test/other-counter',
       create: value => ({ value }),
     });
-    expect(otherType.isHandle(counter)).toBe(false);
-    expect(otherType.isHandle(null)).toBe(false);
-    expect(otherType.isHandle(42)).toBe(false);
-    expect(() => otherType.getInitialPayload(counter)).toThrow(
-      'Value is not a MainThreadObject handle for type "@test/other-counter".',
-    );
+    expect(otherType.downcast(counter)).toBeUndefined();
+    expect(otherType.downcast(null)).toBeUndefined();
+    expect(otherType.downcast(42)).toBeUndefined();
     expect(() => counter.get()).toThrow(
       'MainThreadObject handle for "@test/counter" cannot access "get" in the background runtime. Use the object only inside a main-thread function.',
     );

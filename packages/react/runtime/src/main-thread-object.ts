@@ -3,4 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 export { defineMainThreadObjectType, useMainThreadObject } from './snapshot/worklet/ref/mainThreadObject.js';
-export type { MainThreadObjectType, MainThreadObjectTypeDefinition } from './snapshot/worklet/ref/mainThreadObject.js';
+export type {
+  MainThreadObjectHandle,
+  MainThreadObjectType,
+  MainThreadObjectTypeDefinition,
+} from './snapshot/worklet/ref/mainThreadObject.js';

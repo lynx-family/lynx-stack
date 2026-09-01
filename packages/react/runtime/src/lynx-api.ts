@@ -562,4 +562,8 @@ export { runOnBackground } from './core/background-function/run-on-background.js
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
 export { MainThreadRef, useMainThreadRef } from './core/main-thread-ref.js';
 export { defineMainThreadObjectType, useMainThreadObject } from './main-thread-object.js';
-export type { MainThreadObjectType, MainThreadObjectTypeDefinition } from './main-thread-object.js';
+export type {
+  MainThreadObjectHandle,
+  MainThreadObjectType,
+  MainThreadObjectTypeDefinition,
+} from './main-thread-object.js';

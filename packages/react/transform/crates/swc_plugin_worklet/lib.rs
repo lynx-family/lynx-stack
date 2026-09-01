@@ -108,12 +108,7 @@ impl VisitMut for WorkletVisitor {
       worklet_type,
       hash,
       self.cfg.target,
-      method
-        .key
-        .clone()
-        .ident()
-        .unwrap_or(Ident::dummy().into())
-        .into(),
+      Ident::dummy(),
       method.function.clone(),
       &mut collector,
       false,
@@ -1518,13 +1513,13 @@ let X = function (event) {
     ),
     should_transform_object_methods_lepus,
     r#"
-import { createValue } from './shared.js' with { runtime: "shared" };
+import { create } from './shared.js' with { runtime: "shared" };
 
 const valueType = defineMainThreadObjectType({
   type: '@test/value',
   create(initialValue: number) {
     "main thread";
-    return createValue(initialValue);
+    return create(initialValue);
   },
 });
     "#
@@ -1550,13 +1545,13 @@ const valueType = defineMainThreadObjectType({
     ),
     should_transform_object_methods_js,
     r#"
-import { createValue } from './shared.js' with { runtime: "shared" };
+import { create } from './shared.js' with { runtime: "shared" };
 
 const valueType = defineMainThreadObjectType({
   type: '@test/value',
   create(initialValue: number) {
     "main thread";
-    return createValue(initialValue);
+    return create(initialValue);
   },
 });
     "#

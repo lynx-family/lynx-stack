@@ -56,10 +56,12 @@ export interface MainThreadObjectTypeDefinition<I, O extends object> {
 export interface MainThreadObjectType<I, O extends object> {
   /** A globally unique and stable type key. */
   readonly type: string;
-  /** Return whether a value is a source-runtime handle of this exact type. */
-  readonly isHandle: (value: unknown) => value is O;
-  /** Read this type's initialization payload from one of its source handles. */
-  readonly getInitialPayload: (value: O) => I;
+  /**
+   * Narrow a value to a source-runtime handle of this exact type.
+   *
+   * This does not create or access the realized main-thread object.
+   */
+  readonly downcast: (value: unknown) => MainThreadObjectHandle<I, O> | undefined;
 }
 
 /**
@@ -71,15 +73,15 @@ export interface MainThreadObjectType<I, O extends object> {
  * background handle in a throwing guard solely to diagnose invalid access;
  * that guard never forwards operations between runtimes.
  *
- * @internal
+ * @public
  */
-abstract class MainThreadObjectHandle<O extends object> {
+export abstract class MainThreadObjectHandle<I, O extends object> {
   /** @internal */
   declare private readonly _mainThreadObjectTargetType: O;
   /** @internal */
   protected _wvid: number;
   /** @internal */
-  protected _initValue: unknown;
+  protected _initValue: I;
   /** @internal */
   protected _type: string;
   /** @internal */
@@ -88,7 +90,7 @@ abstract class MainThreadObjectHandle<O extends object> {
   protected _releaseObserver?: unknown;
 
   /** @internal */
-  protected constructor(initialValue: unknown, type: string) {
+  protected constructor(initialValue: I, type: string) {
     if (__DEV__ && __JS__) {
       assertSerializableMainThreadObjectPayload(initialValue, type);
     }
@@ -117,6 +119,11 @@ abstract class MainThreadObjectHandle<O extends object> {
     }
   }
 
+  /** The payload used to create the realized main-thread object. */
+  public get creationPayload(): I {
+    return this._initValue;
+  }
+
   /** @internal */
   toJSON(): Pick<WorkletRefImpl<unknown>, '_wvid' | '_initValue' | '_type' | '_mtoVersion'> {
     return {
@@ -128,7 +135,7 @@ abstract class MainThreadObjectHandle<O extends object> {
   }
 }
 
-class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHandle<O> {
+class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHandle<I, O> {
   constructor(initialValue: I, type: string) {
     super(initialValue, type);
   }
@@ -157,17 +164,11 @@ export function defineMainThreadObjectType<I, O extends object>(
   const type = definition.type;
   const objectType = Object.freeze({
     type,
-    isHandle(value: unknown): value is O {
-      return getMainThreadObjectHandleMetadata(value)?.type === type;
-    },
-    getInitialPayload(value: O): I {
+    downcast(value: unknown): MainThreadObjectHandle<I, O> | undefined {
       const metadata = getMainThreadObjectHandleMetadata(value);
-      if (metadata?.type !== type) {
-        throw new Error(
-          `Value is not a MainThreadObject handle for type "${type}".`,
-        );
-      }
-      return metadata.initialValue as I;
+      return metadata?.type === type
+        ? value as MainThreadObjectHandle<I, O>
+        : undefined;
     },
   });
   mainThreadObjectTypeDefinitions.set(
@@ -233,7 +234,7 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
 /** @internal */
 export function isMainThreadObjectHandle(
   value: unknown,
-): value is MainThreadObjectHandle<object> {
+): value is MainThreadObjectHandle<unknown, object> {
   return isRegisteredMainThreadObjectHandle(value);
 }
 
@@ -260,10 +261,10 @@ function assertCaptureFreeLifecycleFunction(
   }
 }
 
-function guardBackgroundMainThreadObjectAccess<O extends object>(
-  handle: MainThreadObjectHandle<O>,
+function guardBackgroundMainThreadObjectAccess<I, O extends object>(
+  handle: MainThreadObjectHandle<I, O>,
   type: string,
-): MainThreadObjectHandle<O> {
+): MainThreadObjectHandle<I, O> {
   if (!__DEV__ || !__JS__) {
     return handle;
   }
