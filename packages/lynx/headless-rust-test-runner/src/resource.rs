@@ -8,6 +8,22 @@ use url::Url;
 
 use crate::{Error, Result};
 
+// The pinned 0.0.4 runtime predates native LynxML background-script bundling
+// and still requests this fixed module from the host. This is
+// AddAppServiceWrapForJsContent("") from Lynx: the request path has a leading
+// slash, while the module id intentionally does not. Keep it in memory so a
+// main-thread-only document does not fall through to disk or network.
+const EMPTY_LYNX_ML_APP_SERVICE: &[u8] = br#"(function(){
+function __init_card_bundle__(lynxCoreInject){
+var tt = lynxCoreInject.tt;
+tt.define("app-service.js", function(require, module, exports, Card, setTimeout, setInterval, clearInterval, clearTimeout, NativeModules, tt, console, Component, TaroLynx, nativeAppId, Behavior, LynxJSBI, lynx, window, document, frames, self, location, navigator, localStorage, history, Caches, screen, alert, confirm, prompt, fetch, XMLHttpRequest, WebSocket, webkit, Reporter, print, global, requestAnimationFrame, cancelAnimationFrame){
+
+});
+tt.require("app-service.js");
+}
+return {init: __init_card_bundle__};
+})();"#;
+
 #[derive(Clone)]
 pub(crate) struct ResourceContext {
   navigation: Arc<Mutex<NavigationContext>>,
@@ -157,6 +173,17 @@ impl ResourceContext {
       .trim_start_matches('/');
     safe_join(root, relative).map(|path| (input.to_string(), path))
   }
+
+  fn is_lynx_ml_app_service_request(&self, request: &ResourceRequest) -> bool {
+    if request.resource_type != ResourceType::ExternalJsSource || request.url != "/app-service.js" {
+      return false;
+    }
+    let navigation = self
+      .navigation
+      .lock()
+      .expect("navigation context lock poisoned");
+    crate::is_lynx_ml_url(&navigation.base_url)
+  }
 }
 
 pub(crate) struct HostResourceFetcher {
@@ -167,6 +194,8 @@ impl ResourceFetcher for HostResourceFetcher {
   fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
     let result = if is_lynx_core_request(&request) {
       fs::read(&self.context.lynx_core_path).map_err(Error::from)
+    } else if self.context.is_lynx_ml_app_service_request(&request) {
+      Ok(EMPTY_LYNX_ML_APP_SERVICE.to_vec())
     } else {
       match self.context.resolve_url(&request.url) {
         Ok(ResolvedResource::Http(url)) => fetch_http(&url),
@@ -719,6 +748,53 @@ mod tests {
       Some(b"globalThis.loadCard = () => true;".as_slice())
     );
     let _ = fs::remove_file(core_path);
+  }
+
+  #[test]
+  fn old_runtimes_receive_the_fixed_lynx_ml_app_service_in_memory() {
+    let base = tempfile::tempdir().unwrap();
+    let context = resource_context();
+    context.set_navigation(
+      "zip:///index.lynxml",
+      Some(fs::canonicalize(base.path()).unwrap()),
+    );
+    let mut fetcher = context.fetcher();
+
+    let response = fetcher.fetch(ResourceRequest {
+      id: 1,
+      url: "/app-service.js".into(),
+      resource_type: ResourceType::ExternalJsSource,
+    });
+
+    assert_eq!(response.code, 0);
+    assert_eq!(response.data.as_deref(), Some(EMPTY_LYNX_ML_APP_SERVICE));
+    assert!(response.error_message.is_none());
+  }
+
+  #[test]
+  fn app_service_compatibility_does_not_bypass_other_resource_requests() {
+    let base = tempfile::tempdir().unwrap();
+    let context = resource_context();
+    let base_dir = Some(fs::canonicalize(base.path()).unwrap());
+    let request = |url: &str, resource_type| ResourceRequest {
+      id: 1,
+      url: url.into(),
+      resource_type,
+    };
+
+    context.set_navigation("zip:///main.lynx.bundle", base_dir.clone());
+    let mut fetcher = context.fetcher();
+    let compiled = fetcher.fetch(request("/app-service.js", ResourceType::ExternalJsSource));
+
+    context.set_navigation("zip:///index.lynxml", base_dir);
+    let generic = fetcher.fetch(request("/app-service.js", ResourceType::Generic));
+    let other_script = fetcher.fetch(request("/other.js", ResourceType::ExternalJsSource));
+
+    for response in [compiled, generic, other_script] {
+      assert_ne!(response.code, 0);
+      assert!(response.data.is_none());
+      assert!(response.error_message.is_some());
+    }
   }
 
   #[test]

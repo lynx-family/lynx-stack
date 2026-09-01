@@ -1320,9 +1320,6 @@ mod tests {
       __FlushElementTree();
     };
   </script>
-  <script thread="background">
-    globalThis.__zipImageFixtureReady = true;
-  </script>
 </lynx>"#;
     let upload = zip_upload(&[
       ("index.lynxml", index),

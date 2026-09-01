@@ -42,4 +42,6 @@ When `GotoOptions::base_dir` is set, treat it as a navigation sandbox: canonical
 
 Route UTF-8 inputs whose final URL path ends in `.lynxml` through the public `lynx_view_load_lynx_ml` API; keep all other navigation on the compiled-template byte path. The LynxML API accepts initial data but not global properties, so reject an explicit `GotoOptions::global_props_json` instead of silently dropping it.
 
+Preserve main-thread-only LynxML compatibility with packaged runtimes that predate native background-script bundling: only while the current navigation is `.lynxml`, answer an `ExternalJsSource` request whose URL is exactly `/app-service.js` with the official empty app-service wrapper held in memory. Do not broaden the URL or resource-type match, read this compatibility module from the navigation root, or apply it to compiled templates.
+
 Dispatch `ElementNode::tap` directly to the Lynx node id with the native `tap` event. Do not derive an absolute point from `DOM.getBoxModel` and do not add coordinate-based tap APIs, because overlay and stacking relationships can make coordinate hit-testing select a different node.
