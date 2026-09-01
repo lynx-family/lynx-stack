@@ -400,6 +400,11 @@ pub type cancel_fetch_func = unsafe extern "C" fn(
   fetcher: *mut lynx_generic_resource_fetcher_t,
   request_id: lynx_resource_request_id,
 );
+pub type lynx_resource_intercept_func = unsafe extern "C" fn(
+  url: *const c_char,
+  should_decode: bool,
+  user_data: *mut c_void,
+) -> *mut c_char;
 pub type lynx_windowless_renderer_finalizer =
   unsafe extern "C" fn(renderer: *mut lynx_windowless_renderer_t, user_data: *mut c_void);
 pub type lynx_generic_resource_fetcher_finalizer =

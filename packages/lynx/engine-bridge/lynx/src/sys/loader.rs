@@ -558,6 +558,15 @@ define_loaded_library! {
     optional {
     }
   }
+  header "lynx_memory_capi.h" {
+    required {
+      /// Duplicates a null-terminated string using the Lynx runtime allocator.
+      /// The returned string is released by the runtime with `lynx_free`.
+      lynx_strdup: unsafe extern "C" fn(*const c_char) -> *mut c_char;
+    }
+    optional {
+    }
+  }
   header "lynx_generic_resource_fetcher_capi.h" {
     required {
       /// Creates a new generic resource fetcher instance with a finalizer. This
@@ -586,6 +595,12 @@ define_loaded_library! {
       /// resource fetch request needs to be cancelled.
       lynx_generic_resource_fetcher_bind_cancel_fetch:
         unsafe extern "C" fn(*mut lynx_generic_resource_fetcher_t, Option<cancel_fetch_func>);
+      /// Binds a URL interception callback to a generic resource fetcher. The
+      /// callback transforms a URL before the corresponding resource request.
+      lynx_generic_resource_fetcher_bind_intercept_func: unsafe extern "C" fn(
+        *mut lynx_generic_resource_fetcher_t,
+        Option<lynx_resource_intercept_func>,
+      );
       /// Releases a generic resource fetcher instance. This function deallocates the
       /// memory used by the given generic resource fetcher instance and calls the
       /// finalizer function if one was set during creation. After calling this
@@ -843,7 +858,7 @@ mod tests {
     // Each manifest entry expands into exactly one field and one resolver. The
     // compiler rejects missing or duplicate struct fields; these assertions
     // additionally pin the expected public ABI surface and compatibility split.
-    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 111);
+    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 113);
 
     let mut names = HashSet::new();
     let mut required_count = 0;
@@ -861,7 +876,7 @@ mod tests {
     }
 
     optional_names.sort_unstable();
-    assert_eq!(required_count, 108);
+    assert_eq!(required_count, 110);
     assert_eq!(
       optional_names,
       [

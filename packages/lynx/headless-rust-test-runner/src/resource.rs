@@ -24,6 +24,8 @@ tt.require("app-service.js");
 return {init: __init_card_bundle__};
 })();"#;
 
+const BLOCKED_RESOURCE_URL: &str = "lynx-headless-blocked://resource";
+
 #[derive(Clone)]
 pub(crate) struct ResourceContext {
   navigation: Arc<Mutex<NavigationContext>>,
@@ -175,7 +177,12 @@ impl ResourceContext {
   }
 
   fn is_lynx_ml_app_service_request(&self, request: &ResourceRequest) -> bool {
-    if request.resource_type != ResourceType::ExternalJsSource || request.url != "/app-service.js" {
+    request.resource_type == ResourceType::ExternalJsSource
+      && self.is_lynx_ml_app_service_url(&request.url)
+  }
+
+  fn is_lynx_ml_app_service_url(&self, url: &str) -> bool {
+    if url != "/app-service.js" {
       return false;
     }
     let navigation = self
@@ -191,6 +198,27 @@ pub(crate) struct HostResourceFetcher {
 }
 
 impl ResourceFetcher for HostResourceFetcher {
+  fn intercept_url(&mut self, url: &str, _should_decode: bool) -> String {
+    // Route the runtime-owned core to its trusted installed file and preserve
+    // the in-memory app-service request. Keep every user-controlled file URL
+    // on the contained path below.
+    if is_lynx_core_url(url) {
+      return file_url(&self.context.lynx_core_path, url)
+        .unwrap_or_else(|_| BLOCKED_RESOURCE_URL.to_string());
+    }
+    if self.context.is_lynx_ml_app_service_url(url) {
+      return url.to_string();
+    }
+
+    match self.context.resolve_url(url) {
+      Ok(ResolvedResource::Http(url)) => url,
+      Ok(ResolvedResource::File(path)) => {
+        file_url(&path, url).unwrap_or_else(|_| BLOCKED_RESOURCE_URL.to_string())
+      }
+      Err(_) => BLOCKED_RESOURCE_URL.to_string(),
+    }
+  }
+
   fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
     let result = if is_lynx_core_request(&request) {
       fs::read(&self.context.lynx_core_path).map_err(Error::from)
@@ -218,11 +246,14 @@ fn is_lynx_core_request(request: &ResourceRequest) -> bool {
   if request.resource_type == ResourceType::LynxCoreJs {
     return true;
   }
-  request
-    .url
+  is_lynx_core_url(&request.url)
+}
+
+fn is_lynx_core_url(url: &str) -> bool {
+  url
     .split(['?', '#'])
     .next()
-    .unwrap_or(&request.url)
+    .unwrap_or(url)
     .trim_end_matches('/')
     .rsplit('/')
     .next()
@@ -518,6 +549,103 @@ mod tests {
       ),
       fs::canonicalize(bundle_dir.join("image.png")).unwrap()
     );
+  }
+
+  #[test]
+  fn sandbox_intercepts_relative_and_zip_images_as_contained_file_urls() {
+    let base = tempfile::tempdir().unwrap();
+    let images = base.path().join("images");
+    fs::create_dir(&images).unwrap();
+    fs::write(base.path().join("index.lynxml"), b"<lynx />").unwrap();
+    fs::write(images.join("relative.png"), b"relative").unwrap();
+    fs::write(images.join("absolute.png"), b"absolute").unwrap();
+    let canonical_base = fs::canonicalize(base.path()).unwrap();
+    let context = resource_context();
+    context.set_navigation("zip:///index.lynxml", Some(canonical_base));
+    let mut fetcher = context.fetcher();
+
+    assert_eq!(
+      fetcher.intercept_url("./images/relative.png", false),
+      as_file_url(&fs::canonicalize(images.join("relative.png")).unwrap())
+    );
+    assert_eq!(
+      fetcher.intercept_url("zip:///images/absolute.png", false),
+      as_file_url(&fs::canonicalize(images.join("absolute.png")).unwrap())
+    );
+  }
+
+  #[test]
+  fn sandbox_interception_fails_closed_without_reusing_untrusted_urls() {
+    let parent = tempfile::tempdir().unwrap();
+    let base = parent.path().join("base");
+    fs::create_dir(&base).unwrap();
+    fs::write(base.join("index.lynxml"), b"<lynx />").unwrap();
+    let outside = parent.path().join("outside.png");
+    fs::write(&outside, b"outside").unwrap();
+    let context = resource_context();
+    context.set_navigation(
+      "zip:///index.lynxml",
+      Some(fs::canonicalize(&base).unwrap()),
+    );
+    let mut fetcher = context.fetcher();
+
+    for input in [
+      as_file_url(&outside),
+      "zip:///%2e%2e/outside.png".to_string(),
+      "https://example.test/outside.png".to_string(),
+      "data:text/plain,secret".to_string(),
+    ] {
+      assert_eq!(
+        fetcher.intercept_url(&input, true),
+        BLOCKED_RESOURCE_URL,
+        "input should fail closed: {input}"
+      );
+    }
+  }
+
+  #[test]
+  fn interception_preserves_runtime_owned_resource_urls() {
+    let parent = tempfile::tempdir().unwrap();
+    let base = parent.path().join("base");
+    fs::create_dir(&base).unwrap();
+    let core_path = parent.path().join("lynx_core.js");
+    fs::write(&core_path, b"core").unwrap();
+    let context = ResourceContext::new(None, core_path.clone());
+    context.set_navigation(
+      "zip:///index.lynxml",
+      Some(fs::canonicalize(&base).unwrap()),
+    );
+    let mut fetcher = context.fetcher();
+
+    assert_eq!(
+      fetcher.intercept_url("/app-service.js", false),
+      "/app-service.js"
+    );
+    assert_eq!(
+      fetcher.intercept_url("file:///runtime/lynx_core.js", false),
+      as_file_url(&core_path)
+    );
+
+    context.set_navigation(
+      "zip:///main.lynx.bundle",
+      Some(fs::canonicalize(&base).unwrap()),
+    );
+    assert_eq!(
+      fetcher.intercept_url("/app-service.js", false),
+      BLOCKED_RESOURCE_URL
+    );
+
+    context.set_navigation(
+      "zip:///index.lynxml",
+      Some(fs::canonicalize(&base).unwrap()),
+    );
+    for url in ["/app-service.js?version=1", "./app-service.js"] {
+      assert_eq!(
+        fetcher.intercept_url(url, false),
+        BLOCKED_RESOURCE_URL,
+        "only the exact native app-service request may bypass URL resolution"
+      );
+    }
   }
 
   #[test]
