@@ -265,6 +265,7 @@ pub(crate) fn capture_with_container(
 
 fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOptions {
   GotoOptions {
+    base_dir: None,
     global_props_json: load_options.global_props_json.clone(),
     initial_data_json: load_options.initial_data_json.clone(),
     timeout: Some(timeout),

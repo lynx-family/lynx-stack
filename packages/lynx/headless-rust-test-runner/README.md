@@ -56,10 +56,12 @@ queue, one at a time.
 Navigation chooses the native load API from the final URL path. Inputs ending
 in `.lynxml` are decoded as UTF-8 and loaded as LynxML source; all other inputs
 keep the compiled-template byte path. File paths, `file://` URLs, and HTTP(S)
-URLs are supported. `GotoOptions::initial_data_json` applies to both formats;
-`global_props_json` applies only to compiled templates. Passing it for LynxML
-returns an error because the public LynxML load API does not accept global
-properties.
+URLs are supported. Setting `GotoOptions::base_dir` restricts the template and
+all local resources to that canonicalized directory, rejects HTTP(S), and
+enables `zip://` URLs relative to the directory. `GotoOptions::initial_data_json`
+applies to both formats; `global_props_json` applies only to compiled templates.
+Passing it for LynxML returns an error because the public LynxML load API does
+not accept global properties.
 
 `goto` waits for a newly presented software frame and nothing more. The DOM
 session attaches lazily on the first `content` or `locator` call, so a

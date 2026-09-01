@@ -33,6 +33,9 @@ use crate::visual::{
 };
 use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
 
+#[path = "zip/mod.rs"]
+pub mod zip;
+
 const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;

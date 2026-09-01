@@ -265,6 +265,41 @@ queue is full without first waiting for a scheduler slot. Dropped queued
 requests release their request data, and SIGINT or SIGTERM triggers graceful
 HTTP shutdown before the headless workers are joined.
 
+### Secure ZIP staging
+
+The `server` feature exposes `ui_judge::server::zip` for server adapters that
+accept user-supplied Lynx projects. It does not add an HTTP upload route or
+accept a caller-provided base directory. An adapter must stop buffering an
+upload at 10 MiB, then hand the bytes to the staging API. The module parses the
+content as ZIP regardless of its filename, rejects encrypted or overlapping
+archives, symbolic links, and entries other than regular files or directories,
+and extracts at most 100 entries, 50 MiB per file, and 100 MiB in total. Both
+declared and actually written data are subject to a 100:1 compression-ratio
+limit. Paths are enclosed and bounded by depth and byte length, output files use
+exclusive creation, and extraction streams through a fixed 64 KiB buffer. A
+strict classic outer EOCD and its structural central directory are validated
+before the ZIP library runs; ZIP64 metadata and ambiguous visible EOCD fallback
+records are rejected while EOCD bytes inside nested file data remain ordinary
+content.
+
+At most four extractions run concurrently, and excess work is rejected instead
+of queued while retaining another upload buffer. Synchronous ZIP work runs on
+Tokio's blocking pool with a ten-second deadline, and the blocking task retains its
+permit and temporary-directory guard until it really exits. The successful
+result also owns that guard; a future capture integration must move it into the
+queued capture job so cancellation cannot remove files while Lynx still uses
+them. Dropping the result removes the complete random staging directory, while
+failure paths explicitly attempt cleanup and report whether cleanup itself
+failed. Nested ZIP entries are left as ordinary files.
+
+Rust limits are only one layer of containment. Production deployments must run
+the process as a non-root user with a read-only root filesystem and put
+`TMPDIR` on a dedicated `noexec,nosuid,nodev` volume with an ephemeral-storage
+quota. Size that quota for four simultaneous 100 MiB extractions plus archive
+and filesystem overhead. Log the sanitized rejection kind and byte/count/timing
+statistics exposed by the module together with a trusted request ID; do not log
+archive entry names or the free-form judging task.
+
 ## Model configuration
 
 Set `UI_JUDGE_API_KEY` to authenticate model requests. The other model

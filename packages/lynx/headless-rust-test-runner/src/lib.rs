@@ -89,6 +89,12 @@ impl Default for ContainerOptions {
 
 #[derive(Clone, Debug, Default)]
 pub struct GotoOptions {
+  /// Restricts this navigation and all of its resources to this directory.
+  ///
+  /// When set, HTTP(S) resources are rejected and `zip://` URLs resolve
+  /// relative to the canonicalized directory. The directory must remain
+  /// private and unmodified until the page is finished using its resources.
+  pub base_dir: Option<PathBuf>,
   pub timeout: Option<Duration>,
   pub initial_data_json: Option<String>,
   pub global_props_json: Option<String>,
@@ -283,9 +289,12 @@ impl LynxPage {
   /// for DevTools setup.
   pub fn goto(&mut self, input: &str, options: GotoOptions) -> Result<()> {
     let timeout = options.timeout.unwrap_or(self.container.options.timeout);
-    let (url, bytes) = self.page.resources.read_template(input)?;
+    let (url, bytes, base_dir) = self
+      .page
+      .resources
+      .read_template(input, options.base_dir.as_deref())?;
     validate_navigation_options(&url, &options)?;
-    self.page.resources.set_base_url(&url);
+    self.page.resources.set_navigation(&url, base_dir);
     let previous_sequence = self.page.frames.sequence();
 
     let initial_data_json = options.initial_data_json.as_deref().or(Some("{}"));
