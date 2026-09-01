@@ -9,7 +9,7 @@ lynx = { path = "../engine-bridge/lynx" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = "2.0.19"
-ureq = "2.12.1"
+ureq = "3.4.0"
 url = "2.5.8"
 
 [dev-dependencies]
