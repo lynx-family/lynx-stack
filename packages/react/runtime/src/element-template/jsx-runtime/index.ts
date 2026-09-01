@@ -6,6 +6,7 @@ import { CHILDREN, COMPONENT, DIFF, DOM, FLAGS, INDEX, PARENT } from '../../shar
 
 type ComponentLike = ((...args: unknown[]) => unknown) & {
   defaultProps?: Record<string, unknown>;
+  prototype?: { render?: unknown };
 };
 
 interface ElementTemplateVNode {
@@ -44,7 +45,7 @@ function createVNode(
   } else if (typeof type === 'function') {
     let normalizedProps = props;
 
-    if (normalizedProps && 'ref' in normalizedProps) {
+    if (normalizedProps && 'ref' in normalizedProps && type.prototype?.render) {
       normalizedProps = {};
       for (const i in props) {
         if (i !== 'ref') {

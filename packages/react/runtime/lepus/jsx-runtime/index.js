@@ -38,13 +38,10 @@ function createVNode(type, props, _key) {
   } else if (typeof type === 'function') {
     let normalizedProps = props;
 
-    // let ref;
-    if ('ref' in normalizedProps) {
+    if ('ref' in normalizedProps && 'prototype' in type && type.prototype.render) {
       normalizedProps = {};
       for (let i in props) {
-        if (i == 'ref') {
-          // ref = props[i];
-        } else {
+        if (i != 'ref') {
           normalizedProps[i] = props[i];
         }
       }
