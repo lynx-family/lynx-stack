@@ -1,9 +1,9 @@
 //! Windows BMP encoding for presented software frames.
 //!
-//! The software renderer already hands us straight RGBA bytes, so a BMP is a
-//! header plus a channel swap. Writing it inline on the calling thread keeps
-//! screenshots free of the worker pool, permit accounting, and async plumbing
-//! that a compressing encoder needed.
+//! The frame store normalizes the software renderer's platform-native pixels
+//! to RGBA, so a BMP is a header plus a channel swap. Writing it inline on the
+//! calling thread keeps screenshots free of the worker pool, permit accounting,
+//! and async plumbing that a compressing encoder needed.
 
 use crate::{Error, Result};
 

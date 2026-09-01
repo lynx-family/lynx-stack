@@ -1771,31 +1771,34 @@ mod tests {
     let index: &[u8] = br#"<!doctype lynx>
 <lynx engine-version="4.2">
   <script thread="main">
-    globalThis.processData = function processData(data) {
-      return data;
-    };
+    var engine = lynx.getEngine();
+    var page = __CreatePage("0", 0);
+    var pageId = __GetElementUniqueID(page);
+    var rendered = false;
 
-    globalThis.renderPage = function renderPage() {
-      var page = __CreatePage("0", 0);
-      var pageId = __GetElementUniqueID(page);
+    function renderPage() {
+      if (rendered) return;
+      rendered = true;
       var root = __CreateView(pageId);
-      __SetInlineStyles(root, "width:100%;height:100%;display:flex;flex-direction:row;background-color:#000000;");
+      __SetInlineStyles(root, "width:800px;height:600px;flex-direction:row;background-color:#000000;");
 
       var relative = __CreateImage(pageId);
       __SetAttribute(relative, "src", "./images/relative.png");
       __SetAttribute(relative, "mode", "scaleToFill");
-      __SetInlineStyles(relative, "width:50%;height:100%;");
+      __SetInlineStyles(relative, "width:400px;height:600px;");
 
       var absolute = __CreateImage(pageId);
       __SetAttribute(absolute, "src", "zip:///images/absolute.png");
       __SetAttribute(absolute, "mode", "scaleToFill");
-      __SetInlineStyles(absolute, "width:50%;height:100%;");
+      __SetInlineStyles(absolute, "width:400px;height:600px;");
 
       __AppendElement(root, relative);
       __AppendElement(root, absolute);
       __AppendElement(page, root);
-      __FlushElementTree();
-    };
+      __FlushElementTree(page);
+    }
+
+    engine.addEventListener("__RenderPage", renderPage);
   </script>
 </lynx>"#;
     let render_zip = |relative_color, absolute_color| {

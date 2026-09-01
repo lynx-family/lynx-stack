@@ -80,10 +80,12 @@ still work.
 ## Screenshots
 
 `screenshot` returns an uncompressed 32-bit BMP with a `BITMAPV4HEADER` and an
-explicit alpha mask. Writing one costs a header plus a channel swap, so capture
-needs no encoder threads, permits, or async plumbing. `decode_screenshot` reads
-that exact layout back into RGBA. Consumers that must ship a compressed image
-transcode it themselves.
+explicit alpha mask. The frame store first normalizes Clay's platform-native
+N32 software pixels to RGBA (the pinned Linux runtime exposes BGRA; the pinned
+macOS runtime already exposes RGBA). Writing the BMP then costs a header plus
+one channel swap, with no encoder threads, permits, or async plumbing.
+`decode_screenshot` reads that exact layout back into RGBA. Consumers that must
+ship a compressed image transcode it themselves.
 
 ## Runtime resources
 
