@@ -97,7 +97,6 @@ const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
  */
 export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
   format: 'cjs',
-  syntax: 'es2015',
   autoExtension: false,
   shims: {
     cjs: {
