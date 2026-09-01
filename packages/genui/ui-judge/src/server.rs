@@ -2,15 +2,21 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+use std::future::Future;
 use std::io;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::num::{NonZeroU16, ParseIntError};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+use axum::body;
 use axum::extract::multipart::{Field, Multipart, MultipartError};
-use axum::extract::{DefaultBodyLimit, State};
-use axum::http::{header::CONTENT_TYPE, StatusCode};
+use axum::extract::{DefaultBodyLimit, Request, State};
+use axum::http::{
+  header::{CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE},
+  HeaderMap, StatusCode,
+};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -40,6 +46,9 @@ const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
+const ZIP_ENTRYPOINT_URL: &str = "zip:///index.lynxml";
+const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
+const ZIP_UPLOAD_TIMEOUT: Duration = Duration::from_secs(10);
 
 type PrepareJudgePageRequest =
   fn(JudgePageRequest) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>>;
@@ -150,6 +159,7 @@ impl HttpJudgePageRequest {
     Ok(HttpCaptureRequest {
       include_screenshot: self.include_screenshot,
       load_options: PageLoadOptions {
+        base_dir: None,
         global_props_json,
         initial_data_json,
       },
@@ -250,6 +260,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
     .route("/compare", post(compare))
     .route("/judge", post(judge))
     .route("/screenshot", post(screenshot))
+    .route("/screenshot/zip", post(screenshot_zip))
     .layer(DefaultBodyLimit::max(MAX_REQUEST_BYTES))
     .with_state(state);
   let (shutdown_sender, shutdown_receiver) = watch::channel(false);
@@ -410,6 +421,209 @@ async fn screenshot(
   Ok(([(CONTENT_TYPE, "image/jpeg")], jpeg).into_response())
 }
 
+async fn screenshot_zip(
+  State(state): State<AppState>,
+  request: Request,
+) -> Result<Response, ApiError> {
+  validate_zip_upload_headers(request.headers())?;
+  let reservation = zip::try_reserve_extraction().map_err(zip_api_error)?;
+  let (reservation, upload) = read_reserved_zip_upload(
+    reservation,
+    body::to_bytes(request.into_body(), zip::MAX_ZIP_UPLOAD_BYTES),
+    ZIP_UPLOAD_TIMEOUT,
+  )
+  .await?;
+  if upload.is_empty() {
+    return Err(ApiError::new(
+      StatusCode::BAD_REQUEST,
+      "ZIP upload must not be empty.",
+    ));
+  }
+
+  let extracted = reservation
+    .extract_uploaded_zip(upload.to_vec())
+    .await
+    .map_err(zip_api_error)?;
+  let extraction_stats = extracted.stats().clone();
+  let base_dir = match canonical_zip_base_dir(extracted.path()) {
+    Ok(base_dir) => base_dir,
+    Err(error) => {
+      log_zip_extraction("staging-unavailable", &extraction_stats, false);
+      return Err(error);
+    }
+  };
+  if !base_dir.join("index.lynxml").is_file() {
+    log_zip_extraction("missing-entrypoint", &extraction_stats, false);
+    return Err(ApiError::new(
+      StatusCode::UNPROCESSABLE_ENTITY,
+      "ZIP upload must contain a regular index.lynxml file at its root.",
+    ));
+  }
+  log_zip_extraction("accepted", &extraction_stats, false);
+
+  let capture_response = state
+    .headless
+    .capture_staged_zip(
+      JudgePageRequest {
+        include_geqi: false,
+        reference: None,
+        reference_image: None,
+        screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
+        steps: vec![],
+        task: "Render the uploaded ZIP".to_string(),
+        timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
+        url: ZIP_ENTRYPOINT_URL.to_string(),
+      },
+      PageLoadOptions {
+        base_dir: Some(base_dir),
+        ..PageLoadOptions::default()
+      },
+      extracted,
+    )
+    .await
+    .map_err(|error| {
+      log_zip_extraction("capture-rejected", &extraction_stats, false);
+      ApiError::from(error)
+    })?;
+  let capture = match capture_response.capture {
+    Ok(capture) => capture,
+    Err(_) => {
+      log_zip_extraction("render-failed", &extraction_stats, false);
+      return Err(ApiError::new(
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "The uploaded ZIP could not be rendered.",
+      ));
+    }
+  };
+  let jpeg = capture.into_jpeg().await.map_err(|_| {
+    ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "The uploaded ZIP screenshot could not be encoded.",
+    )
+  })?;
+  Ok(
+    (
+      [(CONTENT_TYPE, "image/jpeg"), (CACHE_CONTROL, "no-store")],
+      jpeg,
+    )
+      .into_response(),
+  )
+}
+
+async fn read_reserved_zip_upload<F>(
+  reservation: zip::ZipExtractionReservation,
+  read: F,
+  timeout: Duration,
+) -> Result<(zip::ZipExtractionReservation, body::Bytes), ApiError>
+where
+  F: Future<Output = Result<body::Bytes, axum::Error>>,
+{
+  match tokio::time::timeout(timeout, read).await {
+    Ok(Ok(upload)) => Ok((reservation, upload)),
+    Ok(Err(error)) => Err(zip_upload_body_error(error)),
+    Err(_) => Err(ApiError::new(
+      StatusCode::REQUEST_TIMEOUT,
+      "The ZIP request body timed out.",
+    )),
+  }
+}
+
+fn validate_zip_upload_headers(headers: &HeaderMap) -> Result<(), ApiError> {
+  let is_zip = headers
+    .get(CONTENT_TYPE)
+    .and_then(|value| value.to_str().ok())
+    .and_then(|value| value.split(';').next())
+    .is_some_and(|value| value.trim().eq_ignore_ascii_case("application/zip"));
+  if !is_zip {
+    return Err(ApiError::new(
+      StatusCode::UNSUPPORTED_MEDIA_TYPE,
+      "Content-Type must be application/zip.",
+    ));
+  }
+
+  if let Some(length) = headers.get(CONTENT_LENGTH) {
+    let length = length
+      .to_str()
+      .ok()
+      .and_then(|value| value.parse::<u64>().ok())
+      .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "Invalid Content-Length header."))?;
+    if length > zip::MAX_ZIP_UPLOAD_BYTES as u64 {
+      return Err(zip_upload_too_large());
+    }
+  }
+  Ok(())
+}
+
+fn zip_upload_body_error(error: axum::Error) -> ApiError {
+  let reached_limit = std::error::Error::source(&error)
+    .is_some_and(|source| source.is::<http_body_util::LengthLimitError>());
+  if reached_limit {
+    zip_upload_too_large()
+  } else {
+    ApiError::new(
+      StatusCode::BAD_REQUEST,
+      "The ZIP request body could not be read.",
+    )
+  }
+}
+
+fn zip_upload_too_large() -> ApiError {
+  ApiError::new(
+    StatusCode::PAYLOAD_TOO_LARGE,
+    format!(
+      "ZIP upload exceeds the {}-byte limit.",
+      zip::MAX_ZIP_UPLOAD_BYTES
+    ),
+  )
+}
+
+fn canonical_zip_base_dir(path: &std::path::Path) -> Result<PathBuf, ApiError> {
+  std::fs::canonicalize(path).map_err(|_| {
+    ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "The staged ZIP directory is unavailable.",
+    )
+  })
+}
+
+fn zip_api_error(error: zip::ZipExtractionError) -> ApiError {
+  log_zip_extraction(
+    error.kind.to_string().as_str(),
+    &error.stats,
+    error.cleanup_failed,
+  );
+  if error.cleanup_failed {
+    return ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "ZIP extraction failed and its staging directory could not be cleaned up.",
+    );
+  }
+  let status = match error.kind {
+    zip::ZipRejectionKind::UploadTooLarge
+    | zip::ZipRejectionKind::TooManyEntries
+    | zip::ZipRejectionKind::FileTooLarge
+    | zip::ZipRejectionKind::ArchiveTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
+    zip::ZipRejectionKind::ConcurrencyLimit => StatusCode::SERVICE_UNAVAILABLE,
+    zip::ZipRejectionKind::TimedOut => StatusCode::REQUEST_TIMEOUT,
+    zip::ZipRejectionKind::OutputCollision
+    | zip::ZipRejectionKind::OutputIo
+    | zip::ZipRejectionKind::WorkerFailed => StatusCode::INTERNAL_SERVER_ERROR,
+    _ => StatusCode::UNPROCESSABLE_ENTITY,
+  };
+  ApiError::new(status, format!("ZIP upload rejected: {}.", error.kind))
+}
+
+fn log_zip_extraction(outcome: &str, stats: &zip::ZipExtractionStats, cleanup_failed: bool) {
+  eprintln!(
+    "[ui-judge-server] zip outcome={outcome} archive_bytes={} entries={} declared_bytes={} actual_bytes={} elapsed_ms={} cleanup_failed={cleanup_failed}",
+    stats.archive_bytes,
+    stats.entry_count,
+    stats.declared_uncompressed_bytes,
+    stats.actual_uncompressed_bytes,
+    stats.elapsed.as_millis(),
+  );
+}
+
 fn capture_api_error(result: impl Into<Box<UiJudgeResult>>) -> ApiError {
   let result = result.into();
   let message = result
@@ -524,11 +738,13 @@ async fn shutdown_signal() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-  use std::io::Cursor;
+  use std::io::{Cursor, Write};
   use std::path::Path;
   use std::sync::mpsc::Receiver;
   use std::sync::{Barrier, Mutex, MutexGuard};
 
+  use ::zip::write::SimpleFileOptions;
+  use ::zip::{CompressionMethod, ZipWriter};
   use axum::body::Body;
   use axum::extract::FromRequest;
   use axum::http::Request;
@@ -629,6 +845,34 @@ mod tests {
 
   fn sample_png(color: Rgba<u8>) -> Vec<u8> {
     sample_image(ImageFormat::Png, color)
+  }
+
+  fn sample_png_with_dimensions(width: u32, height: u32, color: Rgba<u8>) -> Vec<u8> {
+    let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(width, height, color));
+    let mut bytes = Vec::new();
+    image
+      .write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)
+      .expect("encode the ZIP image");
+    bytes
+  }
+
+  fn zip_upload(entries: &[(&str, &[u8])]) -> Vec<u8> {
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+    for (name, contents) in entries {
+      writer
+        .start_file(*name, options)
+        .expect("add ZIP fixture file");
+      writer.write_all(contents).expect("write ZIP fixture file");
+    }
+    writer.finish().expect("finish ZIP fixture").into_inner()
+  }
+
+  fn zip_request(upload: Vec<u8>) -> Request<Body> {
+    Request::builder()
+      .header(CONTENT_TYPE, "application/zip")
+      .body(Body::from(upload))
+      .expect("build ZIP upload request")
   }
 
   async fn multipart(boundary: &str, fields: &[(&str, &[u8])]) -> Multipart {
@@ -792,6 +1036,126 @@ mod tests {
     headless.shutdown().expect("stop screenshot worker");
   }
 
+  #[tokio::test]
+  async fn zip_screenshot_stages_the_fixed_entrypoint_until_capture_finishes() {
+    let index = b"<!doctype lynx><lynx><script thread=\"main\"></script></lynx>";
+    let upload = zip_upload(&[("index.lynxml", index)]);
+    let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
+    let worker_staged_path = Arc::clone(&staged_path);
+    let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
+    let headless = scripted_workers(move |job| {
+      assert!(job.client.is_none());
+      assert_eq!(job.request.url, ZIP_ENTRYPOINT_URL);
+      let base_dir = job
+        .load_options
+        .base_dir
+        .as_ref()
+        .expect("ZIP capture has an internal base directory");
+      assert_eq!(std::fs::read(base_dir.join("index.lynxml")).unwrap(), index);
+      *worker_staged_path
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(base_dir.clone());
+      let _ = job.response.send(CaptureResponse {
+        capture: Ok(CapturedPage::from_bmp(bmp.clone())),
+        client: job.client,
+        request: job.request,
+      });
+    });
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
+      prepare_request: prepare_request_must_not_run,
+    };
+
+    let response = screenshot_zip(State(state), zip_request(upload))
+      .await
+      .expect("render uploaded ZIP");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
+    assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
+    let staged_path = staged_path
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .clone()
+      .expect("worker observed the staging directory");
+    headless.shutdown().expect("stop ZIP screenshot worker");
+    assert!(
+      !staged_path.exists(),
+      "the capture job drops the ZIP staging directory after capture"
+    );
+  }
+
+  #[tokio::test]
+  async fn zip_screenshot_rejects_invalid_media_type_and_oversized_content_length() {
+    let headless = scripted_workers(drop);
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
+      prepare_request: prepare_request_must_not_run,
+    };
+    let wrong_media_type = Request::builder()
+      .header(CONTENT_TYPE, "application/octet-stream")
+      .body(Body::empty())
+      .expect("build wrong-media-type request");
+    let error = screenshot_zip(State(state.clone()), wrong_media_type)
+      .await
+      .expect_err("reject a non-ZIP media type");
+    assert_eq!(error.status, StatusCode::UNSUPPORTED_MEDIA_TYPE);
+
+    let oversized = Request::builder()
+      .header(CONTENT_TYPE, "application/zip")
+      .header(CONTENT_LENGTH, zip::MAX_ZIP_UPLOAD_BYTES + 1)
+      .body(Body::empty())
+      .expect("build oversized request");
+    let error = screenshot_zip(State(state), oversized)
+      .await
+      .expect_err("reject an oversized ZIP before reading its body");
+    assert_eq!(error.status, StatusCode::PAYLOAD_TOO_LARGE);
+    headless.shutdown().expect("stop unused ZIP worker");
+  }
+
+  #[tokio::test]
+  async fn zip_upload_body_has_a_deadline() {
+    let reservation = zip::try_reserve_extraction().expect("reserve ZIP staging capacity");
+    let error = read_reserved_zip_upload(
+      reservation,
+      std::future::pending::<Result<body::Bytes, axum::Error>>(),
+      Duration::from_millis(1),
+    )
+    .await
+    .expect_err("reject a request body that never completes");
+
+    assert_eq!(error.status, StatusCode::REQUEST_TIMEOUT);
+  }
+
+  #[tokio::test]
+  async fn zip_screenshot_enforces_the_stream_limit_and_root_entrypoint() {
+    let headless = scripted_workers(|_| panic!("invalid ZIP uploads must not reach capture"));
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
+      prepare_request: prepare_request_must_not_run,
+    };
+    let lying_length = Request::builder()
+      .header(CONTENT_TYPE, "application/zip")
+      .header(CONTENT_LENGTH, 1)
+      .body(Body::from(vec![0; zip::MAX_ZIP_UPLOAD_BYTES + 1]))
+      .expect("build oversized streaming request");
+    let error = screenshot_zip(State(state.clone()), lying_length)
+      .await
+      .expect_err("enforce the body limit independently of Content-Length");
+    assert_eq!(error.status, StatusCode::PAYLOAD_TOO_LARGE);
+
+    let missing_entrypoint = zip_upload(&[("page.lynxml", b"<lynx></lynx>")]);
+    let error = screenshot_zip(State(state), zip_request(missing_entrypoint))
+      .await
+      .expect_err("require index.lynxml at the archive root");
+    assert_eq!(error.status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert!(!error.message.contains("page.lynxml"));
+    headless.shutdown().expect("stop unused ZIP worker");
+  }
+
   #[test]
   fn accepts_snake_case_page_data_aliases() {
     let request: HttpJudgePageRequest = serde_json::from_value(json!({
@@ -870,7 +1234,7 @@ mod tests {
     not(target_os = "linux"),
     ignore = "the Linux runtime-backed test is the CI contract; run explicitly for local diagnostics"
   )]
-  fn one_native_owner_renders_four_concurrent_requests() {
+  fn one_native_owner_renders_concurrent_requests_and_zip_images() {
     let package_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source = package_dir.join("tests/fixtures/react/.generated/main.lynx.bundle");
     assert!(source.is_file(), "build the React fixture before this test");
@@ -924,6 +1288,76 @@ mod tests {
         .to_rgb8();
       assert_eq!(rgb.dimensions(), (800, 600));
     }
+
+    let relative_png = sample_png_with_dimensions(64, 64, Rgba([255, 0, 0, 255]));
+    let absolute_png = sample_png_with_dimensions(64, 64, Rgba([0, 0, 255, 255]));
+    let index: &[u8] = br#"<!doctype lynx>
+<lynx>
+  <script thread="main">
+    var page = __CreatePage("0", 0);
+    var root = __CreateView(0);
+    __SetInlineStyles(root, "width:100%;height:100%;display:flex;flex-direction:row;background-color:#000000;");
+
+    var relative = __CreateImage(0);
+    __SetAttribute(relative, "src", "./images/relative.png");
+    __SetAttribute(relative, "mode", "scaleToFill");
+    __SetInlineStyles(relative, "width:50%;height:100%;");
+
+    var absolute = __CreateImage(0);
+    __SetAttribute(absolute, "src", "zip:///images/absolute.png");
+    __SetAttribute(absolute, "mode", "scaleToFill");
+    __SetInlineStyles(absolute, "width:50%;height:100%;");
+
+    __AppendElement(root, relative);
+    __AppendElement(root, absolute);
+    __AppendElement(page, root);
+    __FlushElementTree(page);
+  </script>
+</lynx>"#;
+    let upload = zip_upload(&[
+      ("index.lynxml", index),
+      ("images/relative.png", relative_png.as_slice()),
+      ("images/absolute.png", absolute_png.as_slice()),
+    ]);
+    let response = runtime
+      .block_on(screenshot_zip(
+        State(AppState {
+          headless: Arc::clone(&headless),
+          model_name: "judge-model".into(),
+          prepare_request: prepare_request_must_not_run,
+        }),
+        zip_request(upload),
+      ))
+      .expect("render ZIP image resources");
+    assert_eq!(response.status(), StatusCode::OK);
+    let jpeg = runtime
+      .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
+      .expect("read ZIP screenshot response");
+    let rgb = image::load_from_memory(&jpeg)
+      .expect("decode ZIP screenshot")
+      .to_rgb8();
+    assert_eq!(rgb.dimensions(), (800, 600));
+
+    let midpoint = rgb.width() / 2;
+    let mut left_red = 0;
+    let mut right_blue = 0;
+    for (x, _, pixel) in rgb.enumerate_pixels() {
+      let [red, green, blue] = pixel.0;
+      if x < midpoint && red > 200 && green < 70 && blue < 70 {
+        left_red += 1;
+      }
+      if x >= midpoint && blue > 200 && red < 70 && green < 70 {
+        right_blue += 1;
+      }
+    }
+    assert!(
+      left_red > 1_024,
+      "relative ZIP image did not paint the left half: {left_red} red pixels"
+    );
+    assert!(
+      right_blue > 1_024,
+      "absolute zip:/// image did not paint the right half: {right_blue} blue pixels"
+    );
     for bundle in bundles {
       std::fs::remove_file(bundle).expect("remove concurrent fixture copy");
     }
@@ -1035,6 +1469,7 @@ mod tests {
         (
           "file:///tmp/first.lynx.bundle".to_string(),
           PageLoadOptions {
+            base_dir: None,
             global_props_json: Some(r#"{"messages":[],"theme":"light"}"#.to_string()),
             initial_data_json: None,
           },

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use lynx_headless_rust_test_runner::{GotoOptions, LynxContainer, LynxPage, ScreenshotOptions};
@@ -134,6 +135,7 @@ impl CapturedPage {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PageLoadOptions {
+  pub(crate) base_dir: Option<PathBuf>,
   pub(crate) global_props_json: Option<String>,
   pub(crate) initial_data_json: Option<String>,
 }
@@ -267,7 +269,7 @@ pub(crate) fn capture_with_container(
 
 fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOptions {
   GotoOptions {
-    base_dir: None,
+    base_dir: load_options.base_dir.clone(),
     global_props_json: load_options.global_props_json.clone(),
     initial_data_json: load_options.initial_data_json.clone(),
     timeout: Some(timeout),
@@ -735,12 +737,17 @@ mod tests {
     let options = goto_options(
       timeout,
       &PageLoadOptions {
+        base_dir: Some(PathBuf::from("/tmp/staged-page")),
         global_props_json: Some(r#"{"messages":[]}"#.to_string()),
         initial_data_json: Some(r#"{"theme":"light"}"#.to_string()),
       },
     );
 
     assert_eq!(options.timeout, Some(timeout));
+    assert_eq!(
+      options.base_dir.as_deref(),
+      Some(std::path::Path::new("/tmp/staged-page"))
+    );
     assert_eq!(
       options.global_props_json.as_deref(),
       Some(r#"{"messages":[]}"#)
@@ -751,6 +758,7 @@ mod tests {
     );
 
     let defaults = goto_options(timeout, &PageLoadOptions::default());
+    assert!(defaults.base_dir.is_none());
     assert!(defaults.global_props_json.is_none());
     assert!(defaults.initial_data_json.is_none());
   }
@@ -982,6 +990,7 @@ mod tests {
     assert!(is_supported_page_url("http://localhost/ui.lynx.bundle"));
     assert!(is_supported_page_url("https://example.com/ui.lynx.bundle"));
     assert!(!is_supported_page_url("assets://ui.lynx.bundle"));
+    assert!(!is_supported_page_url("zip:///index.lynxml"));
     assert!(!is_supported_page_url("file://"));
     assert!(!is_supported_page_url("FILE:///tmp/ui.lynx.bundle"));
   }

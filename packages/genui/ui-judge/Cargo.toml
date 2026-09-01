@@ -14,6 +14,7 @@ crate-type = ["rlib"]
 default = []
 server = [
   "dep:axum",
+  "dep:http-body-util",
   "dep:socket2",
   "dep:tempfile",
   "dep:zip",
@@ -28,6 +29,7 @@ anyhow = "1.0.104"
 async-trait = "0.1.91"
 axum = { version = "0.8.9", optional = true, features = ["multipart"] }
 base64 = "0.23.0"
+http-body-util = { version = "0.1.4", optional = true }
 image = { version = "0.25.10", default-features = false, features = ["bmp", "jpeg", "png", "webp"] }
 lynx-headless-rust-test-runner = { path = "../../lynx/headless-rust-test-runner" }
 rayon = "1.12.0"

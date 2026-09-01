@@ -5167,6 +5167,7 @@ dependencies = [
  "base64 0.23.0",
  "fs2",
  "hex",
+ "http-body-util",
  "image",
  "lynx-headless-rust-test-runner",
  "rayon",

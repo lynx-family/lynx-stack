@@ -165,6 +165,8 @@ process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 non-secret configured model name, `POST /judge` to evaluate a page, and
 `POST /screenshot` to render a page without evaluating it. Use `POST /compare`
 to compare two uploaded images without rendering a page or calling the VLM.
+Use `POST /screenshot/zip` to render an uploaded Lynx project from its fixed
+`zip:///index.lynxml` entrypoint.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional. `initialData` and `globalProps` accept JSON
@@ -225,6 +227,26 @@ to perform the requested interactions before capture, but the route never
 scores the image or compares it with a reference image. A successful response is
 `200 image/jpeg` with the transcoded capture.
 
+To render an uploaded ZIP without scoring it, send the archive itself as the
+request body. The route does not accept a filename, URL, entrypoint, base
+directory, model options, or interaction steps:
+
+```bash
+curl --request POST http://127.0.0.1:8080/screenshot/zip \
+  --header 'content-type: application/zip' \
+  --data-binary '@/absolute/path/to/page.zip' \
+  --output screenshot.jpg
+```
+
+The archive must contain a regular `index.lynxml` at its root. That document
+may use paths relative to itself, such as `./images/logo.png`, or absolute
+archive URLs, such as `zip:///images/logo.png`. Both resolve only within the
+new private extraction directory created for that request. Network URLs and
+paths whose canonical targets leave the archive root are rejected by the
+sandboxed resource loader. A `file://` resource is accepted only when its
+canonical target remains inside that same root. A successful response is
+`200 image/jpeg` with `Cache-Control: no-store`.
+
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
 
@@ -247,21 +269,25 @@ The `/judge` response contains the JSON-encoded `UiJudgeResult`. When
 exact judged image as `screenshotDataUrl`; the field is omitted by default to
 avoid inflating ordinary responses. A completed evaluation returns HTTP `200`,
 including evaluation failures reported in the result's `error` field. Invalid
-HTTP input returns `400`, `413`, or `422`. `POST /screenshot` returns `422` with
-a JSON error when rendering cannot produce a frame. The server returns `503` when
-its bounded capture queue is full or the headless worker is no longer
-available. A headless-worker panic makes readiness return `503`, initiates graceful
-shutdown, and is propagated as a server error after the worker is joined. Each
-uploaded comparison image is limited to 10 MiB. Request bodies are limited to
-20 MiB plus 64 KiB of multipart overhead.
+HTTP input returns `400`, `413`, or `422`. `POST /screenshot` and
+`POST /screenshot/zip` return `422` with a JSON error when rendering cannot
+produce a frame. The ZIP route additionally returns `415` for a non-ZIP media
+type, `408` when body reading or extraction exceeds its own ten-second
+deadline, and `503` when all four ZIP staging slots are occupied. The server
+also returns `503` when its bounded capture queue is full or the headless worker
+is no longer available. A headless-worker panic makes readiness return `503`,
+initiates graceful shutdown, and is propagated as a server error after the
+worker is joined. Each ZIP upload and each uploaded comparison image is limited
+to 10 MiB. Other request bodies are limited to 20 MiB plus 64 KiB of multipart
+overhead.
 
 The server accepts connections concurrently. Native Lynx capture runs
 sequentially on one dedicated process-owner thread with one reused
 `LynxContainer`. After a capture returns its owned BMP, Tokio runs model scoring
 concurrently across judge requests and a bounded Rayon pool runs BMP-to-JPEG
-transcoding, normalization, alignment, and comparison. This forms a pipeline: scoring an
-earlier capture can overlap the next native capture without creating another
-native owner. The capture queue holds at most eight requests and reports
+transcoding, normalization, alignment, and comparison. This forms a pipeline:
+scoring an earlier capture can overlap the next native capture without creating
+another native owner. The capture queue holds at most eight requests and reports
 backpressure synchronously, so a caller learns the queue is full without first
 waiting for the owner. The library and server share the same process-wide
 capture broker. Cancelled jobs are purged before reporting a full queue; if the
@@ -271,29 +297,32 @@ HTTP shutdown joins the worker.
 ### Secure ZIP staging
 
 The `server` feature exposes `ui_judge::server::zip` for server adapters that
-accept user-supplied Lynx projects. It does not add an HTTP upload route or
-accept a caller-provided base directory. An adapter must stop buffering an
-upload at 10 MiB, then hand the bytes to the staging API. The module parses the
-content as ZIP regardless of its filename, rejects encrypted or overlapping
-archives, symbolic links, and entries other than regular files or directories,
-and extracts at most 100 entries, 50 MiB per file, and 100 MiB in total. Both
-declared and actually written data are subject to a 100:1 compression-ratio
-limit. Paths are enclosed and bounded by depth and byte length, output files use
-exclusive creation, and extraction streams through a fixed 64 KiB buffer. A
-strict classic outer EOCD and its structural central directory are validated
-before the ZIP library runs; ZIP64 metadata and ambiguous visible EOCD fallback
-records are rejected while EOCD bytes inside nested file data remain ordinary
-content.
+accept user-supplied Lynx projects and backs the fixed `POST /screenshot/zip`
+route. The route reserves extraction capacity before buffering the raw request
+body, stops at 10 MiB, and never accepts a caller-provided base directory. The
+module parses the content as ZIP regardless of its filename, rejects encrypted
+or overlapping archives, symbolic links, and entries other than regular files
+or directories, and extracts at most 100 entries, 50 MiB per file, and 100 MiB
+in total. Both declared and actually written data are subject to a 100:1
+compression-ratio limit. Paths are enclosed and bounded by depth and byte
+length, output files use exclusive creation, and extraction streams through a
+fixed 64 KiB buffer. A strict classic outer EOCD and its structural central
+directory are validated before the ZIP library runs; ZIP64 metadata and
+ambiguous visible EOCD fallback records are rejected while EOCD bytes inside
+nested file data remain ordinary content.
 
-At most four extractions run concurrently, and excess work is rejected instead
-of queued while retaining another upload buffer. Synchronous ZIP work runs on
-Tokio's blocking pool with a ten-second deadline, and the blocking task retains its
-permit and temporary-directory guard until it really exits. The successful
-result also owns that guard; a future capture integration must move it into the
-queued capture job so cancellation cannot remove files while Lynx still uses
-them. Dropping the result removes the complete random staging directory, while
-failure paths explicitly attempt cleanup and report whether cleanup itself
-failed. Nested ZIP entries are left as ordinary files.
+At most four ZIP jobs own staging capacity at once, and excess work is rejected
+instead of queued while retaining another upload buffer. Reading the complete
+request body has a ten-second deadline. Synchronous ZIP work then runs on
+Tokio's blocking pool with its own ten-second deadline, and the blocking task
+retains its permit and temporary-directory guard until it really exits. A
+successful result continues to own both the permit and the guard. The ZIP
+screenshot route moves that result into the queued capture job, so the four-job
+limit includes queued and active renders and cancellation cannot remove files
+while Lynx still uses them. Both are dropped only after native capture finishes
+or the queued job is discarded. Dropping the result removes the complete random
+staging directory, while failure paths explicitly attempt cleanup and report
+whether cleanup itself failed. Nested ZIP entries are left as ordinary files.
 
 Rust limits are only one layer of containment. Production deployments must run
 the process as a non-root user with a read-only root filesystem and put

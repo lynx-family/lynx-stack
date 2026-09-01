@@ -49,7 +49,25 @@ pub(crate) struct CaptureJob {
   pub(crate) client: Option<ModelClient>,
   pub(crate) load_options: PageLoadOptions,
   pub(crate) request: JudgePageRequest,
+  _resources: CaptureResources,
   pub(crate) response: oneshot::Sender<CaptureResponse>,
+}
+
+#[derive(Default)]
+struct CaptureResources {
+  // The extracted tree must outlive queued and active native work. Keeping its
+  // owner in the job also makes cancellation and queue purging clean it up.
+  #[cfg(feature = "server")]
+  _staged_zip: Option<crate::server::zip::ExtractedZip>,
+}
+
+impl CaptureResources {
+  #[cfg(feature = "server")]
+  fn staged_zip(staged_zip: crate::server::zip::ExtractedZip) -> Self {
+    Self {
+      _staged_zip: Some(staged_zip),
+    }
+  }
 }
 
 pub(crate) struct CaptureResponse {
@@ -158,11 +176,22 @@ impl CaptureWorkers {
     client: Option<ModelClient>,
     load_options: PageLoadOptions,
   ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
+    self.submit_with_resources(request, client, load_options, CaptureResources::default())
+  }
+
+  fn submit_with_resources(
+    &self,
+    request: JudgePageRequest,
+    client: Option<ModelClient>,
+    load_options: PageLoadOptions,
+    resources: CaptureResources,
+  ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
     let (response, response_receiver) = oneshot::channel();
     let job = CaptureJob {
       client,
       load_options,
       request,
+      _resources: resources,
       response,
     };
     let sender = self
@@ -226,6 +255,24 @@ impl CaptureWorkers {
   ) -> Result<CaptureResponse, CaptureError> {
     self
       .submit(request, client, load_options)?
+      .await
+      .map_err(|_| CaptureError::Stopped)
+  }
+
+  #[cfg(feature = "server")]
+  pub(crate) async fn capture_staged_zip(
+    &self,
+    request: JudgePageRequest,
+    load_options: PageLoadOptions,
+    staged_zip: crate::server::zip::ExtractedZip,
+  ) -> Result<CaptureResponse, CaptureError> {
+    self
+      .submit_with_resources(
+        request,
+        None,
+        load_options,
+        CaptureResources::staged_zip(staged_zip),
+      )?
       .await
       .map_err(|_| CaptureError::Stopped)
   }
