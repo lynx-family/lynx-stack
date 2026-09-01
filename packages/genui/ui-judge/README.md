@@ -273,7 +273,8 @@ HTTP input returns `400`, `413`, or `422`. `POST /screenshot` and
 `POST /screenshot/zip` return `422` with a JSON error when rendering cannot
 produce a frame. The ZIP route additionally returns `415` for a non-ZIP media
 type, `408` when body reading or extraction exceeds its own ten-second
-deadline, and `503` when all four ZIP staging slots are occupied. The server
+deadline or the isolated render exceeds its operation deadline, and `503` when
+all four ZIP staging slots are occupied. The server
 also returns `503` when its bounded capture queue is full or the headless worker
 is no longer available. A headless-worker panic makes readiness return `503`,
 initiates graceful shutdown, and is propagated as a server error after the
@@ -281,18 +282,30 @@ worker is joined. Each ZIP upload and each uploaded comparison image is limited
 to 10 MiB. Other request bodies are limited to 20 MiB plus 64 KiB of multipart
 overhead.
 
-The server accepts connections concurrently. Native Lynx capture runs
-sequentially on one dedicated process-owner thread with one reused
+The server accepts connections concurrently. Ordinary JSON and library capture
+runs sequentially on one dedicated process-owner thread with one reused
 `LynxContainer`. After a capture returns its owned BMP, Tokio runs model scoring
 concurrently across judge requests and a bounded Rayon pool runs BMP-to-JPEG
 transcoding, normalization, alignment, and comparison. This forms a pipeline:
-scoring an earlier capture can overlap the next native capture without creating
-another native owner. The capture queue holds at most eight requests and reports
-backpressure synchronously, so a caller learns the queue is full without first
-waiting for the owner. The library and server share the same process-wide
-capture broker. Cancelled jobs are purged before reporting a full queue; if the
-owner panics, admission closes and queued waiters are released before graceful
-HTTP shutdown joins the worker.
+scoring an earlier capture can overlap the next ordinary native capture without
+creating another owner in that process. The capture queue holds at most eight
+requests and reports backpressure synchronously, so a caller learns the queue is
+full without first waiting for the owner. The library and JSON server routes
+share that process-wide capture broker. Cancelled jobs are purged before
+reporting a full queue; if the owner panics, admission closes and queued waiters
+are released before graceful HTTP shutdown joins the worker.
+
+Uploaded ZIP pages are deliberately different. Each one is rendered by a fresh,
+short-lived `ui-judge-server` child process with its own `LynxContainer`, so
+native process-global image caches cannot return another upload's bytes. The
+child receives only the server-selected staging root and output path, inherits
+no model credentials, and sends no request output to stdout or stderr. A private
+stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
+kill and reap the child before its staging permit is released; graceful shutdown
+drains accepted children. Failure to confirm reaping exits the service without
+unwinding the staging guard after a fixed five-second reap grace so its supervisor
+can restart it. This fail-closed exit does not request a core dump. The same
+absolute deadline also covers output reading and JPEG transcoding.
 
 ### Secure ZIP staging
 
@@ -317,20 +330,25 @@ request body has a ten-second deadline. Synchronous ZIP work then runs on
 Tokio's blocking pool with its own ten-second deadline, and the blocking task
 retains its permit and temporary-directory guard until it really exits. A
 successful result continues to own both the permit and the guard. The ZIP
-screenshot route moves that result into the queued capture job, so the four-job
-limit includes queued and active renders and cancellation cannot remove files
-while Lynx still uses them. Both are dropped only after native capture finishes
-or the queued job is discarded. Dropping the result removes the complete random
-staging directory, while failure paths explicitly attempt cleanup and report
-whether cleanup itself failed. Nested ZIP entries are left as ordinary files.
+screenshot route moves that result into a one-shot child-process supervisor, so
+the four-job limit includes active renders and cancellation cannot remove files
+while Lynx still uses them. The supervisor first kills and reaps a cancelled or
+timed-out child, then drops the guard and permit. Graceful server shutdown waits
+for every supervisor. Dropping the result removes the complete random staging
+directory, while failure paths explicitly attempt cleanup and report whether
+cleanup itself failed. Nested ZIP entries are left as ordinary files.
 
 Rust limits are only one layer of containment. Production deployments must run
 the process as a non-root user with a read-only root filesystem and put
 `TMPDIR` on a dedicated `noexec,nosuid,nodev` volume with an ephemeral-storage
 quota. Size that quota for four simultaneous 100 MiB extractions plus archive
-and filesystem overhead. Log the sanitized rejection kind and byte/count/timing
-statistics exposed by the module together with a trusted request ID; do not log
-archive entry names or the free-form judging task.
+and filesystem overhead. Apply container or cgroup CPU, memory, and process
+limits to the server and its four possible renderer children; the Rust deadline
+does not prevent an allocation spike before it expires. Disable core dumps for
+the service account as defense in depth. Log the sanitized
+rejection kind, render outcome, and byte/count/timing statistics together with
+the server-generated process/job ID; do not log archive entry names or the
+free-form judging task.
 
 ## Model configuration
 

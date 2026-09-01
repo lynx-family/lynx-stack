@@ -4,11 +4,14 @@
 
 use std::future::Future;
 use std::io;
+use std::io::{Read, Write};
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::num::{NonZeroU16, ParseIntError};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
+use std::path::{Path, PathBuf};
+use std::process::Stdio;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 use axum::body;
 use axum::extract::multipart::{Field, Multipart, MultipartError};
@@ -20,12 +23,16 @@ use axum::http::{
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use lynx_headless_rust_test_runner::{
+  ContainerOptions, GotoOptions, LynxContainer, ScreenshotOptions,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use socket2::{Domain, Protocol, SockAddr, Socket, Type};
 use thiserror::Error;
 use tokio::net::TcpListener;
-use tokio::sync::{oneshot, watch};
+use tokio::process::{Child, Command};
+use tokio::sync::{oneshot, watch, Notify};
 
 use crate::capture::{
   shared_workers, CaptureError, CaptureResponse, CaptureWorkers, WorkerPanicked,
@@ -35,7 +42,8 @@ use crate::headless::{
 };
 use crate::model::{configured_model_name, ModelClient};
 use crate::visual::{
-  compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
+  compare_uploaded_images, transcode_captured_bmp, ReferenceImageComparison, VisualEvaluationError,
+  MAX_IMAGE_BYTES,
 };
 use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
 
@@ -47,11 +55,143 @@ const DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
 const ZIP_ENTRYPOINT_URL: &str = "zip:///index.lynxml";
+const ZIP_CAPTURE_CHILD_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_CHILD";
+const ZIP_CAPTURE_BASE_DIR_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_BASE_DIR";
+const ZIP_CAPTURE_OUTPUT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_OUTPUT";
+const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
+const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
 const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
 const ZIP_UPLOAD_TIMEOUT: Duration = Duration::from_secs(10);
+static NEXT_ZIP_JOB_ID: AtomicU64 = AtomicU64::new(1);
 
 type PrepareJudgePageRequest =
   fn(JudgePageRequest) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>>;
+
+#[derive(Clone, Copy)]
+enum ZipCaptureBackend {
+  IsolatedProcess,
+  #[cfg(test)]
+  SharedWorker,
+}
+
+#[derive(Clone)]
+struct ZipCaptureProcesses {
+  inner: Arc<ZipCaptureProcessInner>,
+}
+
+struct ZipCaptureProcessInner {
+  idle: Notify,
+  state: Mutex<ZipCaptureProcessState>,
+}
+
+struct ZipCaptureProcessState {
+  accepting: bool,
+  active: usize,
+}
+
+struct ZipCaptureProcessActivity {
+  inner: Arc<ZipCaptureProcessInner>,
+}
+
+impl ZipCaptureProcesses {
+  fn new() -> Self {
+    Self {
+      inner: Arc::new(ZipCaptureProcessInner {
+        idle: Notify::new(),
+        state: Mutex::new(ZipCaptureProcessState {
+          accepting: true,
+          active: 0,
+        }),
+      }),
+    }
+  }
+
+  fn begin(&self) -> Result<ZipCaptureProcessActivity, ApiError> {
+    let mut state = self
+      .inner
+      .state
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if !state.accepting {
+      return Err(ApiError::new(
+        StatusCode::SERVICE_UNAVAILABLE,
+        "The isolated ZIP renderer is shutting down.",
+      ));
+    }
+    state.active += 1;
+    Ok(ZipCaptureProcessActivity {
+      inner: Arc::clone(&self.inner),
+    })
+  }
+
+  async fn capture(
+    &self,
+    extracted: zip::ExtractedZip,
+    base_dir: PathBuf,
+    job_id: u64,
+  ) -> Result<Vec<u8>, ApiError> {
+    let started = Instant::now();
+    let activity = match self.begin() {
+      Ok(activity) => activity,
+      Err(error) => {
+        log_zip_render(job_id, "rejected", started.elapsed());
+        return Err(error);
+      }
+    };
+    let (mut reply, response) = oneshot::channel();
+    tokio::spawn(async move {
+      let result = supervise_zip_capture_process(&base_dir, &mut reply).await;
+      let outcome = if reply.is_closed() {
+        "cancelled"
+      } else {
+        zip_render_outcome(&result)
+      };
+      log_zip_render(job_id, outcome, started.elapsed());
+      let _ = reply.send(result);
+      drop(extracted);
+      drop(activity);
+    });
+    response.await.map_err(|_| isolated_zip_worker_error())?
+  }
+
+  async fn close_and_wait(&self) {
+    loop {
+      let notified = self.inner.idle.notified();
+      tokio::pin!(notified);
+      notified.as_mut().enable();
+      let is_idle = {
+        let mut state = self
+          .inner
+          .state
+          .lock()
+          .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.accepting = false;
+        state.active == 0
+      };
+      if is_idle {
+        return;
+      }
+      notified.await;
+    }
+  }
+}
+
+impl Drop for ZipCaptureProcessActivity {
+  fn drop(&mut self) {
+    let is_idle = {
+      let mut state = self
+        .inner
+        .state
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+      state.active = state.active.saturating_sub(1);
+      state.active == 0
+    };
+    if is_idle {
+      self.inner.idle.notify_waiters();
+    }
+  }
+}
 
 #[derive(Debug, Error)]
 pub enum ServerError {
@@ -63,6 +203,8 @@ pub enum ServerError {
   HeadlessWorkerUnavailable(String),
   #[error("UI Judge server I/O failed: {0}")]
   Io(#[from] io::Error),
+  #[error("isolated ZIP capture failed")]
+  IsolatedZipCapture,
 }
 
 impl From<WorkerPanicked> for ServerError {
@@ -76,6 +218,8 @@ struct AppState {
   headless: Arc<CaptureWorkers>,
   model_name: Arc<str>,
   prepare_request: PrepareJudgePageRequest,
+  zip_capture_backend: ZipCaptureBackend,
+  zip_capture_processes: ZipCaptureProcesses,
 }
 
 #[derive(Debug, Deserialize)]
@@ -239,10 +383,88 @@ impl IntoResponse for ApiError {
   }
 }
 
+/// Runs one internal ZIP capture child when the private mode marker is set.
+///
+/// The server executable calls this before creating Tokio or any shared native
+/// state. User-controlled ZIP pages therefore never share Clay's process-wide
+/// caches with another upload.
+#[doc(hidden)]
+pub fn run_zip_capture_child() -> Result<bool, ServerError> {
+  if std::env::var_os(ZIP_CAPTURE_CHILD_ENV).as_deref() != Some(std::ffi::OsStr::new("1")) {
+    return Ok(false);
+  }
+  arm_zip_capture_parent_lifeline()?;
+  let base_dir = std::env::var_os(ZIP_CAPTURE_BASE_DIR_ENV)
+    .map(PathBuf::from)
+    .ok_or(ServerError::IsolatedZipCapture)?;
+  let output = std::env::var_os(ZIP_CAPTURE_OUTPUT_ENV)
+    .map(PathBuf::from)
+    .ok_or(ServerError::IsolatedZipCapture)?;
+  let base_dir = std::fs::canonicalize(base_dir).map_err(|_| ServerError::IsolatedZipCapture)?;
+  let entrypoint = std::fs::symlink_metadata(base_dir.join("index.lynxml"))
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  let output_parent = output
+    .parent()
+    .and_then(|parent| std::fs::canonicalize(parent).ok())
+    .ok_or(ServerError::IsolatedZipCapture)?;
+  if !base_dir.is_dir() || !entrypoint.file_type().is_file() || !output_parent.is_dir() {
+    return Err(ServerError::IsolatedZipCapture);
+  }
+
+  let container = LynxContainer::new(ContainerOptions {
+    timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
+    ..ContainerOptions::default()
+  })
+  .map_err(|_| ServerError::IsolatedZipCapture)?;
+  let mut page = container
+    .new_page()
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  page
+    .goto(
+      ZIP_ENTRYPOINT_URL,
+      GotoOptions {
+        base_dir: Some(base_dir),
+        timeout: Some(Duration::from_millis(DEFAULT_TIMEOUT_MS)),
+        ..GotoOptions::default()
+      },
+    )
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  let bmp = page
+    .screenshot(ScreenshotOptions {
+      path: None,
+      settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
+    })
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  let mut output = std::fs::OpenOptions::new()
+    .write(true)
+    .create_new(true)
+    .open(&output)
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  output
+    .write_all(&bmp)
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  output
+    .flush()
+    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  Ok(true)
+}
+
+fn arm_zip_capture_parent_lifeline() -> Result<(), ServerError> {
+  std::thread::Builder::new()
+    .name("ui-judge-zip-parent-lifeline".into())
+    .spawn(|| {
+      let mut byte = [0_u8; 1];
+      let _ = std::io::stdin().read(&mut byte);
+      std::process::exit(75);
+    })
+    .map(|_| ())
+    .map_err(|_| ServerError::IsolatedZipCapture)
+}
+
 /// Runs the feature-gated UI Judge HTTP server on IPv4 and IPv6 unspecified
-/// addresses. Native Lynx capture runs on one container-owning worker behind a
-/// bounded queue, while completed captures are scored concurrently on the
-/// async runtime.
+/// addresses. Ordinary native capture runs on one container-owning worker
+/// behind a bounded queue; untrusted ZIPs use one fresh child process each.
+/// Completed captures are scored concurrently on the async runtime.
 pub async fn serve(port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
   let (ipv4_listener, ipv6_listener) = bind_listeners(port)?;
@@ -250,10 +472,13 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
   let worker_failure = headless
     .take_failure_receiver()
     .map_err(|error| ServerError::HeadlessWorkerUnavailable(error.to_string()))?;
+  let zip_capture_processes = ZipCaptureProcesses::new();
   let state = AppState {
     headless: Arc::clone(&headless),
     model_name: configured_model_name().into(),
     prepare_request: prepare_judge_page_request,
+    zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
+    zip_capture_processes: zip_capture_processes.clone(),
   };
   let app = Router::new()
     .route("/health", get(health))
@@ -284,6 +509,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
 
   signal_task.abort();
   let _ = signal_task.await;
+  zip_capture_processes.close_and_wait().await;
   let worker_result = headless.shutdown();
   let _ = worker_failure_task.await;
   worker_result?;
@@ -426,7 +652,8 @@ async fn screenshot_zip(
   request: Request,
 ) -> Result<Response, ApiError> {
   validate_zip_upload_headers(request.headers())?;
-  let reservation = zip::try_reserve_extraction().map_err(zip_api_error)?;
+  let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
+  let reservation = zip::try_reserve_extraction().map_err(|error| zip_api_error(error, job_id))?;
   let (reservation, upload) = read_reserved_zip_upload(
     reservation,
     body::to_bytes(request.into_body(), zip::MAX_ZIP_UPLOAD_BYTES),
@@ -443,64 +670,82 @@ async fn screenshot_zip(
   let extracted = reservation
     .extract_uploaded_zip(upload.to_vec())
     .await
-    .map_err(zip_api_error)?;
+    .map_err(|error| zip_api_error(error, job_id))?;
   let extraction_stats = extracted.stats().clone();
   let base_dir = match canonical_zip_base_dir(extracted.path()) {
     Ok(base_dir) => base_dir,
     Err(error) => {
-      log_zip_extraction("staging-unavailable", &extraction_stats, false);
+      log_zip_extraction(job_id, "staging-unavailable", &extraction_stats, false);
       return Err(error);
     }
   };
   if !base_dir.join("index.lynxml").is_file() {
-    log_zip_extraction("missing-entrypoint", &extraction_stats, false);
+    log_zip_extraction(job_id, "missing-entrypoint", &extraction_stats, false);
     return Err(ApiError::new(
       StatusCode::UNPROCESSABLE_ENTITY,
       "ZIP upload must contain a regular index.lynxml file at its root.",
     ));
   }
-  log_zip_extraction("accepted", &extraction_stats, false);
+  log_zip_extraction(job_id, "accepted", &extraction_stats, false);
 
-  let capture_response = state
-    .headless
-    .capture_staged_zip(
-      JudgePageRequest {
-        include_geqi: false,
-        reference: None,
-        reference_image: None,
-        screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
-        steps: vec![],
-        task: "Render the uploaded ZIP".to_string(),
-        timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-        url: ZIP_ENTRYPOINT_URL.to_string(),
-      },
-      PageLoadOptions {
-        base_dir: Some(base_dir),
-        ..PageLoadOptions::default()
-      },
-      extracted,
-    )
-    .await
-    .map_err(|error| {
-      log_zip_extraction("capture-rejected", &extraction_stats, false);
-      ApiError::from(error)
-    })?;
-  let capture = match capture_response.capture {
-    Ok(capture) => capture,
-    Err(_) => {
-      log_zip_extraction("render-failed", &extraction_stats, false);
-      return Err(ApiError::new(
-        StatusCode::UNPROCESSABLE_ENTITY,
-        "The uploaded ZIP could not be rendered.",
-      ));
+  let jpeg = match state.zip_capture_backend {
+    ZipCaptureBackend::IsolatedProcess => {
+      match state
+        .zip_capture_processes
+        .capture(extracted, base_dir, job_id)
+        .await
+      {
+        Ok(jpeg) => jpeg,
+        Err(error) => {
+          log_zip_extraction(job_id, "render-failed", &extraction_stats, false);
+          return Err(error);
+        }
+      }
+    }
+    #[cfg(test)]
+    ZipCaptureBackend::SharedWorker => {
+      let capture_response = state
+        .headless
+        .capture_staged_zip(
+          JudgePageRequest {
+            include_geqi: false,
+            reference: None,
+            reference_image: None,
+            screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
+            steps: vec![],
+            task: "Render the uploaded ZIP".to_string(),
+            timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
+            url: ZIP_ENTRYPOINT_URL.to_string(),
+          },
+          PageLoadOptions {
+            base_dir: Some(base_dir),
+            ..PageLoadOptions::default()
+          },
+          extracted,
+        )
+        .await
+        .map_err(|error| {
+          log_zip_extraction(job_id, "capture-rejected", &extraction_stats, false);
+          ApiError::from(error)
+        })?;
+      let capture = match capture_response.capture {
+        Ok(capture) => capture,
+        Err(_) => {
+          log_zip_extraction(job_id, "render-failed", &extraction_stats, false);
+          return Err(ApiError::new(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "The uploaded ZIP could not be rendered.",
+          ));
+        }
+      };
+      capture.into_jpeg().await.map_err(|_| {
+        ApiError::new(
+          StatusCode::INTERNAL_SERVER_ERROR,
+          "The uploaded ZIP screenshot could not be encoded.",
+        )
+      })?
     }
   };
-  let jpeg = capture.into_jpeg().await.map_err(|_| {
-    ApiError::new(
-      StatusCode::INTERNAL_SERVER_ERROR,
-      "The uploaded ZIP screenshot could not be encoded.",
-    )
-  })?;
   Ok(
     (
       [(CONTENT_TYPE, "image/jpeg"), (CACHE_CONTROL, "no-store")],
@@ -586,8 +831,183 @@ fn canonical_zip_base_dir(path: &std::path::Path) -> Result<PathBuf, ApiError> {
   })
 }
 
-fn zip_api_error(error: zip::ZipExtractionError) -> ApiError {
+async fn supervise_zip_capture_process(
+  base_dir: &Path,
+  reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
+) -> Result<Vec<u8>, ApiError> {
+  if reply.is_closed() {
+    return Err(isolated_zip_worker_error());
+  }
+  let deadline = tokio::time::Instant::now()
+    + Duration::from_millis(DEFAULT_TIMEOUT_MS)
+    + ZIP_CAPTURE_PROCESS_GRACE;
+  let output_dir = tempfile::tempdir().map_err(|_| isolated_zip_worker_error())?;
+  let output = output_dir.path().join("capture.bmp");
+  let executable = zip_capture_executable().map_err(|_| isolated_zip_worker_error())?;
+  let mut command = Command::new(executable);
+  command
+    .env_clear()
+    .env(ZIP_CAPTURE_CHILD_ENV, "1")
+    .env(ZIP_CAPTURE_BASE_DIR_ENV, base_dir)
+    .env(ZIP_CAPTURE_OUTPUT_ENV, &output)
+    .stdin(Stdio::piped())
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .kill_on_drop(true);
+  for name in [
+    "LLVM_PROFILE_FILE",
+    "LYNX_CORE_JS_PATH",
+    "LYNX_LIB_PATH",
+    "LYNX_SDK_DIR",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+  ] {
+    if let Some(value) = std::env::var_os(name) {
+      command.env(name, value);
+    }
+  }
+  let mut child = command.spawn().map_err(|_| isolated_zip_worker_error())?;
+  let Some(parent_lifeline) = child.stdin.take() else {
+    terminate_zip_capture_child_or_exit(&mut child).await;
+    return Err(isolated_zip_worker_error());
+  };
+  let status = tokio::select! {
+    biased;
+    _ = tokio::time::sleep_until(deadline) => {
+      terminate_zip_capture_child_or_exit(&mut child).await;
+      return Err(zip_render_timeout_error());
+    }
+    _ = reply.closed() => {
+      terminate_zip_capture_child_or_exit(&mut child).await;
+      return Err(isolated_zip_worker_error());
+    }
+    status = child.wait() => match status {
+      Ok(status) => status,
+      Err(_) => {
+        terminate_zip_capture_child_or_exit(&mut child).await;
+        return Err(isolated_zip_worker_error());
+      }
+    },
+  };
+  drop(parent_lifeline);
+  if !status.success() {
+    return Err(ApiError::new(
+      StatusCode::UNPROCESSABLE_ENTITY,
+      "The uploaded ZIP could not be rendered.",
+    ));
+  }
+  let postprocess = async move {
+    let bmp = tokio::task::spawn_blocking(move || {
+      // Keep the private output directory alive until this blocking read ends,
+      // even if its async waiter is cancelled.
+      let _output_dir = output_dir;
+      let metadata = std::fs::symlink_metadata(&output)?;
+      if !metadata.file_type().is_file()
+        || metadata.len() == 0
+        || metadata.len() > MAX_IMAGE_BYTES as u64
+      {
+        return Err(io::Error::new(
+          io::ErrorKind::InvalidData,
+          "isolated ZIP capture returned an invalid frame",
+        ));
+      }
+      std::fs::read(output)
+    })
+    .await
+    .map_err(|_| isolated_zip_worker_error())?
+    .map_err(|_| isolated_zip_worker_error())?;
+    if bmp.is_empty() || bmp.len() > MAX_IMAGE_BYTES {
+      return Err(isolated_zip_worker_error());
+    }
+    transcode_captured_bmp(bmp)
+      .await
+      .map_err(|_| isolated_zip_worker_error())
+  };
+  tokio::select! {
+    biased;
+    _ = tokio::time::sleep_until(deadline) => Err(zip_render_timeout_error()),
+    _ = reply.closed() => Err(isolated_zip_worker_error()),
+    result = postprocess => result,
+  }
+}
+
+async fn terminate_zip_capture_child_or_exit(child: &mut Child) {
+  let termination = tokio::time::timeout(
+    ZIP_CAPTURE_PROCESS_GRACE,
+    terminate_zip_capture_child(child),
+  )
+  .await;
+  if !matches!(termination, Ok(Ok(()))) {
+    // Releasing the extracted tree while its child may still be using it is
+    // unsafe. A process-control failure is unrecoverable, so leave guards
+    // intact and let the service supervisor restart this process. `exit` does
+    // not unwind Rust values and, unlike aborting, does not request a core dump.
+    std::process::exit(ZIP_CAPTURE_FATAL_EXIT_CODE);
+  }
+}
+
+async fn terminate_zip_capture_child(child: &mut Child) -> io::Result<()> {
+  if child.try_wait()?.is_some() {
+    return Ok(());
+  }
+  if let Err(kill_error) = child.start_kill() {
+    if child.try_wait()?.is_none() {
+      return Err(kill_error);
+    }
+  }
+  child.wait().await.map(|_| ())
+}
+
+fn zip_capture_executable() -> io::Result<PathBuf> {
+  let current = std::env::current_exe()?;
+  #[cfg(not(test))]
+  {
+    let expected = format!("ui-judge-server{}", std::env::consts::EXE_SUFFIX);
+    if current.file_name() == Some(std::ffi::OsStr::new(&expected)) {
+      Ok(current)
+    } else {
+      Err(io::Error::new(
+        io::ErrorKind::NotFound,
+        "isolated ZIP capture requires the ui-judge-server executable",
+      ))
+    }
+  }
+  #[cfg(test)]
+  {
+    let profile_dir = current
+      .parent()
+      .and_then(|deps| deps.parent())
+      .ok_or_else(|| io::Error::other("test executable has no Cargo profile directory"))?;
+    let candidate = profile_dir.join(format!("ui-judge-server{}", std::env::consts::EXE_SUFFIX));
+    if candidate.is_file() {
+      Ok(candidate)
+    } else {
+      Err(io::Error::new(
+        io::ErrorKind::NotFound,
+        "ui-judge-server test companion was not built",
+      ))
+    }
+  }
+}
+
+fn zip_render_timeout_error() -> ApiError {
+  ApiError::new(
+    StatusCode::REQUEST_TIMEOUT,
+    "The uploaded ZIP render timed out.",
+  )
+}
+
+fn isolated_zip_worker_error() -> ApiError {
+  ApiError::new(
+    StatusCode::INTERNAL_SERVER_ERROR,
+    "The isolated ZIP renderer is unavailable.",
+  )
+}
+
+fn zip_api_error(error: zip::ZipExtractionError, job_id: u64) -> ApiError {
   log_zip_extraction(
+    job_id,
     error.kind.to_string().as_str(),
     &error.stats,
     error.cleanup_failed,
@@ -613,15 +1033,40 @@ fn zip_api_error(error: zip::ZipExtractionError) -> ApiError {
   ApiError::new(status, format!("ZIP upload rejected: {}.", error.kind))
 }
 
-fn log_zip_extraction(outcome: &str, stats: &zip::ZipExtractionStats, cleanup_failed: bool) {
+fn log_zip_extraction(
+  job_id: u64,
+  outcome: &str,
+  stats: &zip::ZipExtractionStats,
+  cleanup_failed: bool,
+) {
   eprintln!(
-    "[ui-judge-server] zip outcome={outcome} archive_bytes={} entries={} declared_bytes={} actual_bytes={} elapsed_ms={} cleanup_failed={cleanup_failed}",
+    "[ui-judge-server] zip job_id={}-{} phase=extraction outcome={outcome} archive_bytes={} entries={} declared_bytes={} actual_bytes={} elapsed_ms={} cleanup_failed={cleanup_failed}",
+    std::process::id(),
+    job_id,
     stats.archive_bytes,
     stats.entry_count,
     stats.declared_uncompressed_bytes,
     stats.actual_uncompressed_bytes,
     stats.elapsed.as_millis(),
   );
+}
+
+fn log_zip_render(job_id: u64, outcome: &str, elapsed: Duration) {
+  eprintln!(
+    "[ui-judge-server] zip job_id={}-{} phase=render outcome={outcome} elapsed_ms={}",
+    std::process::id(),
+    job_id,
+    elapsed.as_millis(),
+  );
+}
+
+fn zip_render_outcome(result: &Result<Vec<u8>, ApiError>) -> &'static str {
+  match result {
+    Ok(_) => "rendered",
+    Err(error) if error.status == StatusCode::REQUEST_TIMEOUT => "timed-out",
+    Err(error) if error.status == StatusCode::UNPROCESSABLE_ENTITY => "rejected",
+    Err(_) => "failed",
+  }
 }
 
 fn capture_api_error(result: impl Into<Box<UiJudgeResult>>) -> ApiError {
@@ -1010,6 +1455,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_request_must_not_run,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     };
 
     let mut request = http_request("file:///tmp/screenshot.lynx.bundle");
@@ -1065,6 +1512,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_request_must_not_run,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     };
 
     let response = screenshot_zip(State(state), zip_request(upload))
@@ -1093,6 +1542,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_request_must_not_run,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     };
     let wrong_media_type = Request::builder()
       .header(CONTENT_TYPE, "application/octet-stream")
@@ -1136,6 +1587,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_request_must_not_run,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     };
     let lying_length = Request::builder()
       .header(CONTENT_TYPE, "application/zip")
@@ -1218,6 +1671,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_test_request,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     }))
     .await
     .expect("healthy worker must pass readiness");
@@ -1227,6 +1682,30 @@ mod tests {
       json!({ "model": "judge-model", "status": "ok" })
     );
     headless.shutdown().expect("stop mock headless worker");
+  }
+
+  #[tokio::test]
+  async fn zip_process_shutdown_waits_for_every_active_supervisor() {
+    let processes = ZipCaptureProcesses::new();
+    let first = processes.begin().expect("start first ZIP supervisor");
+    let second = processes.begin().expect("start second ZIP supervisor");
+    let shutdown_processes = processes.clone();
+    let shutdown = tokio::spawn(async move {
+      shutdown_processes.close_and_wait().await;
+    });
+
+    tokio::task::yield_now().await;
+    assert!(!shutdown.is_finished());
+    drop(first);
+    tokio::task::yield_now().await;
+    assert!(!shutdown.is_finished());
+    drop(second);
+    shutdown.await.expect("join ZIP process shutdown");
+
+    let Err(error) = processes.begin() else {
+      panic!("closed ZIP process broker must reject new work");
+    };
+    assert_eq!(error.status, StatusCode::SERVICE_UNAVAILABLE);
   }
 
   #[test]
@@ -1289,8 +1768,6 @@ mod tests {
       assert_eq!(rgb.dimensions(), (800, 600));
     }
 
-    let relative_png = sample_png_with_dimensions(64, 64, Rgba([255, 0, 0, 255]));
-    let absolute_png = sample_png_with_dimensions(64, 64, Rgba([0, 0, 255, 255]));
     let index: &[u8] = br#"<!doctype lynx>
 <lynx engine-version="4.2">
   <script thread="main">
@@ -1321,50 +1798,74 @@ mod tests {
     };
   </script>
 </lynx>"#;
-    let upload = zip_upload(&[
-      ("index.lynxml", index),
-      ("images/relative.png", relative_png.as_slice()),
-      ("images/absolute.png", absolute_png.as_slice()),
-    ]);
-    let response = runtime
-      .block_on(screenshot_zip(
-        State(AppState {
-          headless: Arc::clone(&headless),
-          model_name: "judge-model".into(),
-          prepare_request: prepare_request_must_not_run,
-        }),
-        zip_request(upload),
-      ))
-      .expect("render ZIP image resources");
-    assert_eq!(response.status(), StatusCode::OK);
-    let jpeg = runtime
-      .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
-      .expect("read ZIP screenshot response");
-    let rgb = image::load_from_memory(&jpeg)
-      .expect("decode ZIP screenshot")
-      .to_rgb8();
-    assert_eq!(rgb.dimensions(), (800, 600));
+    let render_zip = |relative_color, absolute_color| {
+      let relative_png = sample_png_with_dimensions(64, 64, Rgba(relative_color));
+      let absolute_png = sample_png_with_dimensions(64, 64, Rgba(absolute_color));
+      let upload = zip_upload(&[
+        ("index.lynxml", index),
+        ("images/relative.png", relative_png.as_slice()),
+        ("images/absolute.png", absolute_png.as_slice()),
+      ]);
+      let response = runtime
+        .block_on(screenshot_zip(
+          State(AppState {
+            headless: Arc::clone(&headless),
+            model_name: "judge-model".into(),
+            prepare_request: prepare_request_must_not_run,
+            zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
+            zip_capture_processes: ZipCaptureProcesses::new(),
+          }),
+          zip_request(upload),
+        ))
+        .expect("render ZIP image resources");
+      assert_eq!(response.status(), StatusCode::OK);
+      let jpeg = runtime
+        .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
+        .expect("read ZIP screenshot response");
+      let rgb = image::load_from_memory(&jpeg)
+        .expect("decode ZIP screenshot")
+        .to_rgb8();
+      assert_eq!(rgb.dimensions(), (800, 600));
+      rgb
+    };
+    let assert_split_colors =
+      |rgb: &image::RgbImage, left: [u8; 3], right: [u8; 3], description: &str| {
+        let midpoint = rgb.width() / 2;
+        let mut left_pixels = 0;
+        let mut right_pixels = 0;
+        for (x, _, pixel) in rgb.enumerate_pixels() {
+          let near = |expected: [u8; 3]| {
+            pixel
+              .0
+              .iter()
+              .zip(expected)
+              .all(|(actual, expected)| actual.abs_diff(expected) < 70)
+          };
+          if x < midpoint && near(left) {
+            left_pixels += 1;
+          }
+          if x >= midpoint && near(right) {
+            right_pixels += 1;
+          }
+        }
+        assert!(
+          left_pixels > 1_024,
+          "{description}: relative ZIP image painted only {left_pixels} matching pixels"
+        );
+        assert!(
+          right_pixels > 1_024,
+          "{description}: absolute zip:/// image painted only {right_pixels} matching pixels"
+        );
+      };
 
-    let midpoint = rgb.width() / 2;
-    let mut left_red = 0;
-    let mut right_blue = 0;
-    for (x, _, pixel) in rgb.enumerate_pixels() {
-      let [red, green, blue] = pixel.0;
-      if x < midpoint && red > 200 && green < 70 && blue < 70 {
-        left_red += 1;
-      }
-      if x >= midpoint && blue > 200 && red < 70 && green < 70 {
-        right_blue += 1;
-      }
-    }
-    assert!(
-      left_red > 1_024,
-      "relative ZIP image did not paint the left half: {left_red} red pixels"
-    );
-    assert!(
-      right_blue > 1_024,
-      "absolute zip:/// image did not paint the right half: {right_blue} blue pixels"
-    );
+    let first = render_zip([255, 0, 0, 255], [0, 0, 255, 255]);
+    assert_split_colors(&first, [255, 0, 0], [0, 0, 255], "first upload");
+
+    // Reuse the exact same archive paths with different bytes. Each untrusted
+    // upload must run in a fresh process so Clay's process-wide image cache
+    // cannot return pixels belonging to the previous request.
+    let second = render_zip([0, 255, 0, 255], [255, 255, 0, 255]);
+    assert_split_colors(&second, [0, 255, 0], [255, 255, 0], "second upload");
     for bundle in bundles {
       std::fs::remove_file(bundle).expect("remove concurrent fixture copy");
     }
@@ -1454,6 +1955,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_test_request,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     };
     let mut first_request = http_request("file:///tmp/first.lynx.bundle");
     first_request.global_props = Some(json!({ "messages": [], "theme": "light" }));
@@ -1577,6 +2080,8 @@ mod tests {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
       prepare_request: prepare_test_request,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
     }))
     .await
     .expect_err("unhealthy worker must fail readiness");

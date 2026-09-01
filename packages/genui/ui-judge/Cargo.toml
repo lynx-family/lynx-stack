@@ -19,6 +19,7 @@ server = [
   "dep:tempfile",
   "dep:zip",
   "tokio/net",
+  "tokio/process",
   "tokio/rt-multi-thread",
   "tokio/signal",
 ]

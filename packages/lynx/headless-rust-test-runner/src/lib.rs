@@ -803,11 +803,34 @@ fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
   if !source.is_file() {
     return Err(Error::LynxCoreNotFound(source));
   }
+  install_lynx_core_copy(&source, &destination)?;
+  Ok(destination)
+}
+
+fn install_lynx_core_copy(source: &Path, destination: &Path) -> Result<()> {
+  if source == destination
+    || (destination.exists()
+      && std::fs::canonicalize(source)? == std::fs::canonicalize(destination)?)
+  {
+    return Ok(());
+  }
   if let Some(parent) = destination.parent() {
     std::fs::create_dir_all(parent)?;
   }
-  std::fs::copy(source, &destination)?;
-  Ok(destination)
+  let parent = destination
+    .parent()
+    .ok_or_else(|| Error::Protocol("Lynx core destination has no parent".into()))?;
+  let mut staged = tempfile::NamedTempFile::new_in(parent)?;
+  let mut input = std::fs::File::open(source)?;
+  std::io::copy(&mut input, staged.as_file_mut())?;
+  staged
+    .as_file()
+    .set_permissions(std::fs::metadata(source)?.permissions())?;
+  staged.as_file().sync_all()?;
+  staged
+    .persist(destination)
+    .map_err(|error| Error::Io(error.error))?;
+  Ok(())
 }
 
 fn set_icu_data_path_if_available(env: &LynxEnv) -> Result<()> {
@@ -908,6 +931,31 @@ mod tests {
     .unwrap_err();
     assert!(error.to_string().contains("first/lynx_core.js"));
     assert!(error.to_string().contains("second/lynx_core.js"));
+  }
+
+  #[test]
+  fn installing_a_colocated_lynx_core_does_not_truncate_itself() {
+    let directory = tempfile::tempdir().unwrap();
+    let destination = directory.path().join("lynx_core.js");
+    std::fs::write(&destination, b"trusted core").unwrap();
+    let equivalent_source = directory.path().join(".").join("lynx_core.js");
+
+    install_lynx_core_copy(&equivalent_source, &destination).unwrap();
+
+    assert_eq!(std::fs::read(destination).unwrap(), b"trusted core");
+  }
+
+  #[test]
+  fn installing_a_lynx_core_atomically_replaces_the_destination() {
+    let directory = tempfile::tempdir().unwrap();
+    let source = directory.path().join("source.js");
+    let destination = directory.path().join("lynx_core.js");
+    std::fs::write(&source, b"new core").unwrap();
+    std::fs::write(&destination, b"old core").unwrap();
+
+    install_lynx_core_copy(&source, &destination).unwrap();
+
+    assert_eq!(std::fs::read(destination).unwrap(), b"new core");
   }
 
   #[test]

@@ -5,6 +5,9 @@
 #[cfg(feature = "server")]
 fn main() -> Result<(), ui_judge::server::ServerError> {
   configure_packaged_runtime();
+  if ui_judge::server::run_zip_capture_child()? {
+    return Ok(());
+  }
   let port = std::env::var("LYNX_USE_PORT").unwrap_or_else(|_| "8080".to_string());
   tokio::runtime::Builder::new_multi_thread()
     .enable_all()

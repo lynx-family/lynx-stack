@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
 use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use lynx::{FetchResponse, ResourceFetcher, ResourceRequest, ResourceType};
@@ -25,12 +27,29 @@ return {init: __init_card_bundle__};
 })();"#;
 
 const BLOCKED_RESOURCE_URL: &str = "lynx-headless-blocked://resource";
+const CONTAINED_RESOURCE_PREFIX: &str = "https://lynx-headless.invalid/resource/";
+const LYNX_CORE_RESOURCE_URL: &str = "assets://lynx_core.js";
+const PRIVATE_RESOURCE_HOST: &str = "lynx-headless.invalid";
+const MAX_CONTAINED_RESOURCE_REDIRECTS: usize = 4_096;
+static NEXT_CONTAINED_RESOURCE_ID: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone)]
 pub(crate) struct ResourceContext {
-  navigation: Arc<Mutex<NavigationContext>>,
   resources_path: Option<PathBuf>,
   lynx_core_path: PathBuf,
+  state: Arc<Mutex<ResourceState>>,
+}
+
+#[derive(Default)]
+struct ContainedRedirects {
+  by_path: HashMap<PathBuf, String>,
+  by_url: HashMap<String, PathBuf>,
+}
+
+#[derive(Default)]
+struct ResourceState {
+  contained_redirects: ContainedRedirects,
+  navigation: NavigationContext,
 }
 
 #[derive(Clone, Default)]
@@ -42,20 +61,19 @@ struct NavigationContext {
 impl ResourceContext {
   pub(crate) fn new(resources_path: Option<PathBuf>, lynx_core_path: PathBuf) -> Self {
     Self {
-      navigation: Arc::new(Mutex::new(NavigationContext::default())),
       resources_path,
       lynx_core_path,
+      state: Arc::new(Mutex::new(ResourceState::default())),
     }
   }
 
   pub(crate) fn set_navigation(&self, base_url: &str, base_dir: Option<PathBuf>) {
-    *self
-      .navigation
-      .lock()
-      .expect("navigation context lock poisoned") = NavigationContext {
+    let mut state = self.state.lock().expect("resource state lock poisoned");
+    state.navigation = NavigationContext {
       base_url: base_url.to_string(),
       base_dir,
     };
+    state.contained_redirects.clear();
   }
 
   pub(crate) fn fetcher(&self) -> HostResourceFetcher {
@@ -70,6 +88,11 @@ impl ResourceContext {
     base_dir: Option<&Path>,
   ) -> Result<(String, Vec<u8>, Option<PathBuf>)> {
     let base_dir = base_dir.map(canonicalize_base_dir).transpose()?;
+    if is_private_resource_url(input) {
+      return Err(Error::Protocol(
+        "unrecognized sandboxed resource redirect".into(),
+      ));
+    }
     if is_url_scheme(input, "http") || is_url_scheme(input, "https") {
       reject_network_in_sandbox(base_dir.as_deref())?;
       return Ok((input.to_string(), fetch_http(input)?, base_dir));
@@ -109,11 +132,13 @@ impl ResourceContext {
     Ok((url, fs::read(path)?, base_dir))
   }
 
+  #[cfg(test)]
   fn resolve_url(&self, input: &str) -> Result<ResolvedResource> {
     let navigation = self
-      .navigation
+      .state
       .lock()
-      .expect("navigation context lock poisoned")
+      .expect("resource state lock poisoned")
+      .navigation
       .clone();
     self.resolve_url_with_navigation(input, &navigation)
   }
@@ -123,6 +148,11 @@ impl ResourceContext {
     input: &str,
     navigation: &NavigationContext,
   ) -> Result<ResolvedResource> {
+    if is_private_resource_url(input) {
+      return Err(Error::Protocol(
+        "unrecognized sandboxed resource redirect".into(),
+      ));
+    }
     if is_url_scheme(input, "http") || is_url_scheme(input, "https") {
       reject_network_in_sandbox(navigation.base_dir.as_deref())?;
       return Ok(ResolvedResource::Http(input.to_string()));
@@ -185,11 +215,71 @@ impl ResourceContext {
     if url != "/app-service.js" {
       return false;
     }
-    let navigation = self
-      .navigation
-      .lock()
-      .expect("navigation context lock poisoned");
-    crate::is_lynx_ml_url(&navigation.base_url)
+    let state = self.state.lock().expect("resource state lock poisoned");
+    crate::is_lynx_ml_url(&state.navigation.base_url)
+  }
+
+  fn intercept_resource_url(&self, input: &str) -> Result<String> {
+    let mut state = self.state.lock().expect("resource state lock poisoned");
+    let sandboxed = state.navigation.base_dir.is_some();
+    match self.resolve_url_with_navigation(input, &state.navigation)? {
+      ResolvedResource::Http(url) => Ok(url),
+      ResolvedResource::File(path) if sandboxed => state.contained_redirects.register(path),
+      ResolvedResource::File(path) => file_url(&path, input),
+    }
+  }
+
+  fn read_registered_contained_file(&self, url: &str) -> Option<Result<Vec<u8>>> {
+    let state = self.state.lock().expect("resource state lock poisoned");
+    state
+      .contained_redirects
+      .by_url
+      .get(url)
+      .map(|path| fs::read(path).map_err(Error::from))
+  }
+
+  fn fetch_resource_url(&self, input: &str) -> Result<Vec<u8>> {
+    let state = self.state.lock().expect("resource state lock poisoned");
+    let sandboxed = state.navigation.base_dir.is_some();
+    let resolved = self.resolve_url_with_navigation(input, &state.navigation)?;
+    if sandboxed {
+      return match resolved {
+        ResolvedResource::File(path) => fs::read(path).map_err(Error::from),
+        ResolvedResource::Http(_) => Err(Error::Protocol(
+          "network resources are not allowed with GotoOptions::base_dir".into(),
+        )),
+      };
+    }
+    drop(state);
+    match resolved {
+      ResolvedResource::Http(url) => fetch_http(&url),
+      ResolvedResource::File(path) => fs::read(path).map_err(Error::from),
+    }
+  }
+}
+
+impl ContainedRedirects {
+  fn register(&mut self, path: PathBuf) -> Result<String> {
+    if let Some(url) = self.by_path.get(&path) {
+      return Ok(url.clone());
+    }
+    if self.by_url.len() >= MAX_CONTAINED_RESOURCE_REDIRECTS {
+      return Err(Error::Protocol(
+        "sandboxed resource redirect limit exceeded".into(),
+      ));
+    }
+    let id = NEXT_CONTAINED_RESOURCE_ID
+      .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |id| id.checked_add(1))
+      .map_err(|_| Error::Protocol("sandboxed resource redirect identifiers exhausted".into()))?;
+    let url = format!("{CONTAINED_RESOURCE_PREFIX}{id}");
+    self.by_path.insert(path.clone(), url.clone());
+    self.by_url.insert(url.clone(), path);
+    Ok(url)
+  }
+
+  fn clear(&mut self) {
+    self.by_path.clear();
+    self.by_url.clear();
   }
 }
 
@@ -199,37 +289,33 @@ pub(crate) struct HostResourceFetcher {
 
 impl ResourceFetcher for HostResourceFetcher {
   fn intercept_url(&mut self, url: &str, _should_decode: bool) -> String {
-    // Route the runtime-owned core to its trusted installed file and preserve
-    // the in-memory app-service request. Keep every user-controlled file URL
-    // on the contained path below.
-    if is_lynx_core_url(url) {
-      return file_url(&self.context.lynx_core_path, url)
-        .unwrap_or_else(|_| BLOCKED_RESOURCE_URL.to_string());
-    }
+    // Preserve the in-memory app-service request. Keep every user-controlled
+    // file URL on the contained path below; the runtime-owned core reaches the
+    // fetch callback as an exact assets:// request without interception.
     if self.context.is_lynx_ml_app_service_url(url) {
       return url.to_string();
     }
 
-    match self.context.resolve_url(url) {
-      Ok(ResolvedResource::Http(url)) => url,
-      Ok(ResolvedResource::File(path)) => {
-        file_url(&path, url).unwrap_or_else(|_| BLOCKED_RESOURCE_URL.to_string())
-      }
-      Err(_) => BLOCKED_RESOURCE_URL.to_string(),
-    }
+    self
+      .context
+      .intercept_resource_url(url)
+      .unwrap_or_else(|_| BLOCKED_RESOURCE_URL.to_string())
   }
 
   fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
-    let result = if is_lynx_core_request(&request) {
+    let registered_file = self.context.read_registered_contained_file(&request.url);
+    let result = if let Some(result) = registered_file {
+      result
+    } else if is_private_resource_url(&request.url) {
+      Err(Error::Protocol(
+        "unrecognized sandboxed resource redirect".into(),
+      ))
+    } else if is_lynx_core_request(&request) {
       fs::read(&self.context.lynx_core_path).map_err(Error::from)
     } else if self.context.is_lynx_ml_app_service_request(&request) {
       Ok(EMPTY_LYNX_ML_APP_SERVICE.to_vec())
     } else {
-      match self.context.resolve_url(&request.url) {
-        Ok(ResolvedResource::Http(url)) => fetch_http(&url),
-        Ok(ResolvedResource::File(path)) => fs::read(path).map_err(Error::from),
-        Err(error) => Err(error),
-      }
+      self.context.fetch_resource_url(&request.url)
     };
     match result {
       Ok(bytes) => FetchResponse::ok(bytes),
@@ -243,21 +329,22 @@ impl ResourceFetcher for HostResourceFetcher {
 }
 
 fn is_lynx_core_request(request: &ResourceRequest) -> bool {
-  if request.resource_type == ResourceType::LynxCoreJs {
-    return true;
-  }
-  is_lynx_core_url(&request.url)
+  request.url == LYNX_CORE_RESOURCE_URL
+    && matches!(
+      request.resource_type,
+      ResourceType::Assets | ResourceType::LynxCoreJs
+    )
 }
 
-fn is_lynx_core_url(url: &str) -> bool {
-  url
-    .split(['?', '#'])
-    .next()
-    .unwrap_or(url)
-    .trim_end_matches('/')
-    .rsplit('/')
-    .next()
-    == Some("lynx_core.js")
+fn is_private_resource_url(input: &str) -> bool {
+  Url::parse(input).is_ok_and(|url| {
+    matches!(url.scheme(), "http" | "https")
+      && url.host_str().is_some_and(|host| {
+        host
+          .trim_end_matches('.')
+          .eq_ignore_ascii_case(PRIVATE_RESOURCE_HOST)
+      })
+  })
 }
 
 #[derive(Debug)]
@@ -522,9 +609,12 @@ mod tests {
   fn zip_urls_treat_authority_as_a_path_below_base_dir() {
     let base = tempfile::tempdir().unwrap();
     let bundle_dir = base.path().join("site");
+    let reserved_name_dir = base.path().join(PRIVATE_RESOURCE_HOST);
     fs::create_dir(&bundle_dir).unwrap();
+    fs::create_dir(&reserved_name_dir).unwrap();
     fs::write(bundle_dir.join("main.lynx.bundle"), b"bundle").unwrap();
     fs::write(bundle_dir.join("image.png"), b"image").unwrap();
+    fs::write(reserved_name_dir.join("image.png"), b"reserved-name").unwrap();
     let context = resource_context();
 
     let (url, bytes, base_dir) = context
@@ -549,10 +639,18 @@ mod tests {
       ),
       fs::canonicalize(bundle_dir.join("image.png")).unwrap()
     );
+    assert_eq!(
+      resolved_file(
+        context
+          .resolve_url("zip://lynx-headless.invalid/image.png")
+          .unwrap()
+      ),
+      fs::canonicalize(reserved_name_dir.join("image.png")).unwrap()
+    );
   }
 
   #[test]
-  fn sandbox_intercepts_relative_and_zip_images_as_contained_file_urls() {
+  fn sandbox_routes_relative_and_zip_images_through_private_fetch_urls() {
     let base = tempfile::tempdir().unwrap();
     let images = base.path().join("images");
     fs::create_dir(&images).unwrap();
@@ -564,14 +662,37 @@ mod tests {
     context.set_navigation("zip:///index.lynxml", Some(canonical_base));
     let mut fetcher = context.fetcher();
 
+    let relative_url = fetcher.intercept_url("./images/relative.png", false);
+    let absolute_url = fetcher.intercept_url("zip:///images/absolute.png", false);
+    assert!(relative_url.starts_with(CONTAINED_RESOURCE_PREFIX));
+    assert!(absolute_url.starts_with(CONTAINED_RESOURCE_PREFIX));
+    assert_ne!(relative_url, absolute_url);
     assert_eq!(
       fetcher.intercept_url("./images/relative.png", false),
-      as_file_url(&fs::canonicalize(images.join("relative.png")).unwrap())
+      relative_url
     );
-    assert_eq!(
-      fetcher.intercept_url("zip:///images/absolute.png", false),
-      as_file_url(&fs::canonicalize(images.join("absolute.png")).unwrap())
+
+    for (url, expected) in [(&relative_url, b"relative"), (&absolute_url, b"absolute")] {
+      let response = fetcher.fetch(ResourceRequest {
+        id: 1,
+        url: url.clone(),
+        resource_type: ResourceType::Image,
+      });
+      assert_eq!(response.code, 0);
+      assert_eq!(response.data.as_deref(), Some(expected.as_slice()));
+    }
+
+    context.set_navigation(
+      "zip:///index.lynxml",
+      Some(fs::canonicalize(base.path()).unwrap()),
     );
+    let stale = fetcher.fetch(ResourceRequest {
+      id: 2,
+      url: relative_url,
+      resource_type: ResourceType::Image,
+    });
+    assert_ne!(stale.code, 0);
+    assert!(stale.data.is_none());
   }
 
   #[test]
@@ -593,6 +714,10 @@ mod tests {
       as_file_url(&outside),
       "zip:///%2e%2e/outside.png".to_string(),
       "https://example.test/outside.png".to_string(),
+      "https://example.test/lynx_core.js".to_string(),
+      "zip:///lynx_core.js".to_string(),
+      format!("{CONTAINED_RESOURCE_PREFIX}forged"),
+      "HTTPS://LYNX-HEADLESS.INVALID/resource/forged".to_string(),
       "data:text/plain,secret".to_string(),
     ] {
       assert_eq!(
@@ -604,10 +729,40 @@ mod tests {
   }
 
   #[test]
+  fn private_resource_origin_never_falls_through_to_network() {
+    let context = resource_context();
+    let entry_error = context
+      .read_template("https://lynx-headless.invalid/resource/unknown", None)
+      .unwrap_err();
+    assert!(entry_error
+      .to_string()
+      .contains("unrecognized sandboxed resource redirect"));
+    context.set_navigation("https://example.test/index.lynxml", None);
+    let mut fetcher = context.fetcher();
+
+    for input in [
+      "https://lynx-headless.invalid/resource/unknown",
+      "HTTPS://LYNX-HEADLESS.INVALID/scoped/unknown",
+      "http://lynx-headless.invalid/resource/unknown",
+      "http://lynx-headless.invalid./resource/unknown",
+    ] {
+      assert_eq!(fetcher.intercept_url(input, false), BLOCKED_RESOURCE_URL);
+      let response = fetcher.fetch(ResourceRequest {
+        id: 1,
+        url: input.into(),
+        resource_type: ResourceType::Image,
+      });
+      assert_ne!(response.code, 0);
+      assert!(response.data.is_none());
+    }
+  }
+
+  #[test]
   fn interception_preserves_runtime_owned_resource_urls() {
     let parent = tempfile::tempdir().unwrap();
     let base = parent.path().join("base");
     fs::create_dir(&base).unwrap();
+    fs::write(base.join("lynx_core.js"), b"user core").unwrap();
     let core_path = parent.path().join("lynx_core.js");
     fs::write(&core_path, b"core").unwrap();
     let context = ResourceContext::new(None, core_path.clone());
@@ -623,8 +778,16 @@ mod tests {
     );
     assert_eq!(
       fetcher.intercept_url("file:///runtime/lynx_core.js", false),
-      as_file_url(&core_path)
+      BLOCKED_RESOURCE_URL
     );
+    let user_core_url = fetcher.intercept_url("zip:///lynx_core.js", false);
+    assert!(user_core_url.starts_with(CONTAINED_RESOURCE_PREFIX));
+    let user_core = fetcher.fetch(ResourceRequest {
+      id: 1,
+      url: user_core_url,
+      resource_type: ResourceType::Generic,
+    });
+    assert_eq!(user_core.data.as_deref(), Some(b"user core".as_slice()));
 
     context.set_navigation(
       "zip:///main.lynx.bundle",
@@ -853,7 +1016,7 @@ mod tests {
   }
 
   #[test]
-  fn lynx_core_requests_use_the_installed_resource() {
+  fn exact_lynx_core_asset_requests_use_the_installed_resource() {
     let core_path = std::env::temp_dir().join(format!(
       "headless-rust-test-runner-lynx-core-{}-{}.js",
       std::process::id(),
@@ -865,16 +1028,23 @@ mod tests {
     fs::write(&core_path, b"globalThis.loadCard = () => true;").unwrap();
     let mut fetcher = ResourceContext::new(None, core_path.clone()).fetcher();
 
-    let response = fetcher.fetch(ResourceRequest {
-      id: 1,
+    for resource_type in [ResourceType::Assets, ResourceType::LynxCoreJs] {
+      let response = fetcher.fetch(ResourceRequest {
+        id: 1,
+        url: LYNX_CORE_RESOURCE_URL.into(),
+        resource_type,
+      });
+      assert_eq!(
+        response.data.as_deref(),
+        Some(b"globalThis.loadCard = () => true;".as_slice())
+      );
+    }
+    let spoofed = fetcher.fetch(ResourceRequest {
+      id: 2,
       url: "file:///unrelated/bundle/lynx_core.js".into(),
       resource_type: ResourceType::LynxCoreJs,
     });
-
-    assert_eq!(
-      response.data.as_deref(),
-      Some(b"globalThis.loadCard = () => true;".as_slice())
-    );
+    assert!(spoofed.data.is_none());
     let _ = fs::remove_file(core_path);
   }
 
@@ -926,7 +1096,7 @@ mod tests {
   }
 
   #[test]
-  fn lynx_core_url_fallback_requires_the_exact_filename() {
+  fn lynx_core_fallback_requires_the_exact_typed_asset_request() {
     let request = |url: &str, resource_type| ResourceRequest {
       id: 1,
       url: url.into(),
@@ -934,20 +1104,27 @@ mod tests {
     };
 
     assert!(is_lynx_core_request(&request(
-      "assets://lynx_core.js?version=1#resource",
-      ResourceType::Generic
+      LYNX_CORE_RESOURCE_URL,
+      ResourceType::Assets
     )));
     assert!(is_lynx_core_request(&request(
-      "assets://unrelated.js",
+      LYNX_CORE_RESOURCE_URL,
       ResourceType::LynxCoreJs
     )));
-    assert!(!is_lynx_core_request(&request(
-      "assets://app_lynx_core.js",
-      ResourceType::Generic
-    )));
-    assert!(!is_lynx_core_request(&request(
-      "assets://lynx_core.js.map",
-      ResourceType::Generic
-    )));
+    for (url, resource_type) in [
+      (LYNX_CORE_RESOURCE_URL, ResourceType::Generic),
+      ("assets://lynx_core.js?version=1", ResourceType::Assets),
+      ("assets://lynx_core.js#resource", ResourceType::Assets),
+      ("assets:///lynx_core.js", ResourceType::Assets),
+      ("assets://unrelated.js", ResourceType::LynxCoreJs),
+      ("file:///runtime/lynx_core.js", ResourceType::LynxCoreJs),
+      ("zip:///lynx_core.js", ResourceType::LynxCoreJs),
+      (
+        "https://example.test/lynx_core.js",
+        ResourceType::LynxCoreJs,
+      ),
+    ] {
+      assert!(!is_lynx_core_request(&request(url, resource_type)));
+    }
   }
 }

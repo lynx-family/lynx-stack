@@ -57,12 +57,12 @@ pub(crate) struct CaptureJob {
 struct CaptureResources {
   // The extracted tree must outlive queued and active native work. Keeping its
   // owner in the job also makes cancellation and queue purging clean it up.
-  #[cfg(feature = "server")]
+  #[cfg(all(feature = "server", test))]
   _staged_zip: Option<crate::server::zip::ExtractedZip>,
 }
 
 impl CaptureResources {
-  #[cfg(feature = "server")]
+  #[cfg(all(feature = "server", test))]
   fn staged_zip(staged_zip: crate::server::zip::ExtractedZip) -> Self {
     Self {
       _staged_zip: Some(staged_zip),
@@ -259,7 +259,7 @@ impl CaptureWorkers {
       .map_err(|_| CaptureError::Stopped)
   }
 
-  #[cfg(feature = "server")]
+  #[cfg(all(feature = "server", test))]
   pub(crate) async fn capture_staged_zip(
     &self,
     request: JudgePageRequest,
