@@ -32,7 +32,6 @@ describe('WorkletRef', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       () => value,
-      undefined,
       1,
     );
 
@@ -42,31 +41,27 @@ describe('WorkletRef', () => {
     removeValueFromWorkletRefMap(7);
   });
 
-  it('lazily resolves and caches Main Thread Function lifecycle descriptors', () => {
+  it('lazily resolves and caches Main Thread Function factory descriptors', () => {
     const create = vi.fn(value => ({ value }));
-    const dispose = vi.fn();
     const createDescriptor = { _wkltId: 'create-test-value' };
-    const disposeDescriptor = { _wkltId: 'dispose-test-value' };
     const resolveWorklet = vi.spyOn(
       globalThis.lynxWorkletImpl,
       '_resolveWorklet',
     );
 
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-      '@test/lazy-lifecycle',
+      '@test/lazy-factory',
       createDescriptor,
-      disposeDescriptor,
       1,
     );
 
     // Type definition evaluation happens before the compiler-appended
     // registerWorklet calls at the end of the MTS module.
     globalThis.registerWorklet('main-thread', 'create-test-value', create);
-    globalThis.registerWorklet('main-thread', 'dispose-test-value', dispose);
 
     updateWorkletRefInitValueChanges([
-      [71, 'first', '@test/lazy-lifecycle', 1],
-      [72, 'second', '@test/lazy-lifecycle', 1],
+      [71, 'first', '@test/lazy-factory', 1],
+      [72, 'second', '@test/lazy-factory', 1],
     ]);
     expect(getFromWorkletRefMap({ _wvid: 71 })).toMatchObject({ value: 'first' });
     expect(getFromWorkletRefMap({ _wvid: 72 })).toMatchObject({ value: 'second' });
@@ -75,15 +70,13 @@ describe('WorkletRef', () => {
 
     removeValueFromWorkletRefMap(71);
     removeValueFromWorkletRefMap(72);
-    expect(dispose).toHaveBeenCalledTimes(2);
-    expect(resolveWorklet).toHaveBeenCalledTimes(2);
+    expect(resolveWorklet).toHaveBeenCalledOnce();
   });
 
-  it('diagnoses a runtime without lifecycle worklet resolution', () => {
+  it('diagnoses a runtime without factory worklet resolution', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/missing-resolver',
       { _wkltId: 'missing-resolver' },
-      undefined,
       1,
     );
     delete globalThis.lynxWorkletImpl._resolveWorklet;
@@ -93,7 +86,7 @@ describe('WorkletRef', () => {
         [73, 'value', '@test/missing-resolver', 1],
       ]);
     }).toThrow(
-      'MainThreadObject lifecycle functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
+      'MainThreadObject factory functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
     );
   });
 
@@ -105,18 +98,15 @@ describe('WorkletRef', () => {
 
   it('rejects conflicting registrations for the same type key', () => {
     const create = value => ({ value });
-    const dispose = value => value.stop();
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       create,
-      undefined,
       1,
     );
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/value',
         value => ({ conflictingValue: value }),
-        undefined,
         1,
       );
     }).toThrow('Conflicting MainThreadObject registration for type "@test/value"');
@@ -124,37 +114,19 @@ describe('WorkletRef', () => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/value',
         create,
-        undefined,
         1,
       );
     }).not.toThrow();
 
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-      '@test/disposable-value',
-      create,
-      dispose,
-      1,
-    );
-    expect(() => {
-      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-        '@test/disposable-value',
-        create,
-        value => value.close(),
-        1,
-      );
-    }).toThrow('Conflicting MainThreadObject registration for type "@test/disposable-value"');
-
-    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/worklet-value',
       { _wkltId: 'stable-create' },
-      { _wkltId: 'stable-dispose' },
       1,
     );
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/worklet-value',
         { _wkltId: 'stable-create' },
-        { _wkltId: 'stable-dispose' },
         1,
       );
     }).not.toThrow();
@@ -162,7 +134,6 @@ describe('WorkletRef', () => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/worklet-value',
         { _wkltId: 'different-create' },
-        { _wkltId: 'stable-dispose' },
         1,
       );
     }).toThrow('Conflicting MainThreadObject registration for type "@test/worklet-value"');
@@ -170,24 +141,19 @@ describe('WorkletRef', () => {
 
   it('allows equivalent registrations from separately evaluated modules', () => {
     const createDefinition = () => value => ({ value });
-    const disposeDefinition = () => value => value.stop();
     const createA = createDefinition();
     const createB = createDefinition();
-    const disposeA = disposeDefinition();
-    const disposeB = disposeDefinition();
 
     expect(createA).not.toBe(createB);
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/lazy-duplicate',
       createA,
-      disposeA,
       1,
     );
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/lazy-duplicate',
         createB,
-        disposeB,
         1,
       );
     }).not.toThrow();
@@ -198,7 +164,6 @@ describe('WorkletRef', () => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/future',
         value => ({ value }),
-        undefined,
         2,
       );
     }).toThrow(
@@ -216,7 +181,6 @@ describe('WorkletRef', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/invalid',
       () => 42,
-      undefined,
       1,
     );
 
@@ -226,11 +190,9 @@ describe('WorkletRef', () => {
   });
 
   it('hydrates a used first-screen main-thread object into the background id', () => {
-    const dispose = vi.fn();
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ get: () => value }),
-      dispose,
       1,
     );
     const firstScreenWorklet = {
@@ -262,21 +224,51 @@ describe('WorkletRef', () => {
     expect(globalThis.runWorklet(firstScreenWorklet, [])).toBe(42);
     const firstScreenValue = firstScreenWorklet._c.value;
     updateWorkletRefInitValueChanges([[1, 42, '@test/value', 1]]);
+    const redundantValue = getFromWorkletRefMap({ _wvid: 1 });
+    expect(isHydratedWorkletValue(redundantValue)).toBe(true);
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
 
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenValue);
-    expect(dispose).toHaveBeenCalledTimes(1);
-    expect(dispose).not.toHaveBeenCalledWith(firstScreenValue);
+    expect(isHydratedWorkletValue(redundantValue)).toBe(false);
+    expect(isHydratedWorkletValue(firstScreenValue)).toBe(true);
 
     removeValueFromWorkletRefMap(1);
-    expect(dispose).toHaveBeenCalledWith(firstScreenValue);
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
+    expect(isHydratedWorkletValue(firstScreenValue)).toBe(false);
+  });
+
+  it('releases abandoned first-screen main-thread object metadata', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/abandoned',
+      value => ({ value }),
+      1,
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'abandoned-typed-value',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 42,
+          _type: '@test/abandoned',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'abandoned-typed-value', function() {
+      return this._c.value;
+    });
+
+    const value = globalThis.runWorklet(firstScreenWorklet, []);
+    expect(isHydratedWorkletValue(value)).toBe(true);
+
+    globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
+    expect(isHydratedWorkletValue(value)).toBe(false);
   });
 
   it('rejects different typed-object keys at the same hydration path', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/main-type',
       value => ({ value }),
-      undefined,
       1,
     );
     const firstScreenWorklet = {
@@ -318,7 +310,6 @@ describe('WorkletRef', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ value }),
-      undefined,
       1,
     );
     const firstScreenWorklet = {
@@ -358,7 +349,6 @@ describe('WorkletRef', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ value }),
-      undefined,
       1,
     );
     const firstScreenWorklet = {
@@ -399,7 +389,6 @@ describe('WorkletRef', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ value }),
-      undefined,
       1,
     );
     const firstScreenWorklet = {

@@ -42,18 +42,12 @@ export interface MainThreadObjectTypeDefinition<I, O extends object> {
    * function must come from shared-runtime modules.
    */
   readonly create: (initialValue: I) => O;
-  /**
-   * Dispose a realized object after its handle is released.
-   *
-   * This must be a capture-free Main Thread Function when provided.
-   */
-  readonly dispose?: (object: O) => void;
 }
 
 /**
  * An immutable MainThreadObject type token with source-handle inspection.
  *
- * The lifecycle functions belong to the input definition and are not exposed
+ * The factory function belongs to the input definition and is not exposed
  * by the returned token. In the background runtime they compile to opaque
  * Main Thread Function descriptors rather than bundling their implementation.
  *
@@ -91,7 +85,7 @@ abstract class MainThreadObjectHandle<O extends object> {
   /** @internal */
   protected _mtoVersion: number;
   /** @internal */
-  protected _lifecycleObserver?: unknown;
+  protected _releaseObserver?: unknown;
 
   /** @internal */
   protected constructor(initialValue: unknown, type: string) {
@@ -115,7 +109,7 @@ abstract class MainThreadObjectHandle<O extends object> {
       );
 
       const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
+      this._releaseObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
         lynx.getCoreContext?.().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: { id },
@@ -144,7 +138,7 @@ class MainThreadObjectHandleImpl<I, O extends object> extends MainThreadObjectHa
 /**
  * Define a main-thread object type for use by a library-provided hook.
  *
- * @param definition - Stable type key and target-object lifecycle functions.
+ * @param definition - Stable type key and target-object factory function.
  * @returns An immutable object type definition.
  * @public
  */
@@ -159,15 +153,7 @@ export function defineMainThreadObjectType<I, O extends object>(
       `MainThreadObject type "${definition.type}" must provide a create Main Thread Function.`,
     );
   }
-  if (definition.dispose !== undefined && !isMainThreadLifecycleFunction(definition.dispose)) {
-    throw new Error(
-      `MainThreadObject type "${definition.type}" has an invalid dispose Main Thread Function.`,
-    );
-  }
   assertCaptureFreeLifecycleFunction(definition.type, 'create', definition.create);
-  if (definition.dispose !== undefined) {
-    assertCaptureFreeLifecycleFunction(definition.type, 'dispose', definition.dispose);
-  }
 
   const type = definition.type;
   const objectType = Object.freeze({
@@ -241,7 +227,6 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
   registerMainThreadObjectType(
     definition.type,
     definition.create as ((initialValue: unknown) => object) | Worklet,
-    definition.dispose as (((object: object) => void) | Worklet | undefined),
     MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   );
 }
@@ -269,7 +254,7 @@ function isMainThreadLifecycleFunction(
 
 function assertCaptureFreeLifecycleFunction(
   type: string,
-  name: 'create' | 'dispose',
+  name: 'create',
   value: ((...args: never[]) => unknown) | Worklet,
 ): void {
   if (typeof value === 'function' || value._c === undefined) {

@@ -150,7 +150,6 @@ export interface MainThreadObjectType<I, O extends object> {
 // @public
 export interface MainThreadObjectTypeDefinition<I, O extends object> {
     readonly create: (initialValue: I) => O;
-    readonly dispose?: (object: O) => void;
     readonly type: string;
 }
 

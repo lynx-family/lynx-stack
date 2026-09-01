@@ -294,7 +294,6 @@ describe('Worklet', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/atomic-payload',
       create,
-      undefined,
       1,
     );
     globalThis.registerWorklet('main-thread', 'atomic-payload', function(value) {
@@ -324,7 +323,6 @@ describe('Worklet', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/repeated-parameter',
       create,
-      undefined,
       1,
     );
     globalThis.registerWorklet('main-thread', 'repeated-parameter', function(value) {
