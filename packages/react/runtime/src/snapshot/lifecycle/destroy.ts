@@ -8,14 +8,17 @@ import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
+import { withSyncEffectFlush } from '../../utils.js';
 
 function destroyBackground(): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::destroyBackground');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  render(null, __root as any);
+  withSyncEffectFlush(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    render(null, __root as any);
+  });
 
   globalCommitTaskMap.forEach(task => {
     task();

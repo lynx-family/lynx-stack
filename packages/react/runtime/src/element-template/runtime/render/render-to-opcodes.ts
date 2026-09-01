@@ -13,13 +13,14 @@
 import { Fragment, h, options } from 'preact';
 
 import {
+  BITS,
   CHILDREN,
   COMMIT,
   COMPONENT,
+  COMPONENT_DIRTY,
   DIFF,
   DIFF2,
   DIFFED,
-  DIRTY,
   NEXT_STATE,
   PARENT,
   RENDER,
@@ -86,7 +87,7 @@ export function renderToString(vnode: any, context: any): any[] {
 // Installed as setState/forceUpdate for function components
 /* v8 ignore start */
 function markAsDirty() {
-  this.__d = true;
+  this[BITS] |= COMPONENT_DIRTY;
 }
 /* v8 ignore stop */
 
@@ -123,7 +124,7 @@ function renderClassComponent(vnode, context) {
   c.props = vnode.props;
   c.context = context;
   // turn off stateful re-rendering:
-  c[DIRTY] = true;
+  c[BITS] |= COMPONENT_DIRTY;
 
   if (c.state == null) c.state = EMPTY_OBJ;
 
@@ -202,7 +203,7 @@ function renderComponentVNode(
         // silently drop state updates
         setState: markAsDirty,
         forceUpdate: markAsDirty,
-        __d: true,
+        __g: COMPONENT_DIRTY,
         // hooks
         __h: [],
       };
@@ -211,14 +212,14 @@ function renderComponentVNode(
       component.render = doRender;
 
       let count = 0;
-      while (component[DIRTY] && count++ < 25) {
-        component[DIRTY] = false;
+      while (component[BITS] & COMPONENT_DIRTY && count++ < 25) {
+        component[BITS] &= ~COMPONENT_DIRTY;
 
         if (renderHook) renderHook(vnode);
 
         rendered = component.render(props, component.state, cctx);
       }
-      component[DIRTY] = true;
+      component[BITS] |= COMPONENT_DIRTY;
     }
 
     if (component.getChildContext != null) {
@@ -236,7 +237,7 @@ function renderComponentVNode(
     if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c) {
       component.setState({ /* _suspended */ __a: true });
 
-      if (component[DIRTY]) {
+      if (component[BITS] & COMPONENT_DIRTY) {
         rendered = renderClassComponent(vnode, context);
         component = vnode[COMPONENT];
 

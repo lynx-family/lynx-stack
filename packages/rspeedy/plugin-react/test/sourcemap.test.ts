@@ -338,7 +338,7 @@ describe('Sourcemap', () => {
         {
           "function renderComponent": {
             "column": 0,
-            "line": 296,
+            "line": 316,
             "name": null,
             "source": "preact.mjs",
           },

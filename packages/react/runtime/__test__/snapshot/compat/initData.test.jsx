@@ -1,4 +1,5 @@
 import { Component, render } from 'preact';
+import { act } from 'preact/test-utils';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { setupBackgroundDocument } from '../../../src/document';
@@ -65,7 +66,9 @@ describe('initData', () => {
         "key1": "value1",
       }
     `);
-    render(null, scratch);
+    act(() => {
+      render(null, scratch);
+    });
     expect(lynx.getJSModule('GlobalEventEmitter').listeners['onDataChanged'].length).toMatchInlineSnapshot(`0`);
   });
 });

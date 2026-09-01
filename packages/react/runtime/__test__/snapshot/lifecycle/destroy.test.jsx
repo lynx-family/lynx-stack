@@ -1,3 +1,4 @@
+import { act } from 'preact/test-utils';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 describe('Destroy', () => {
@@ -36,9 +37,10 @@ describe('Destroy', () => {
     render(h(Comp), __root);
     await Promise.resolve().then(() => {});
 
-    expect(() => lynx.getApp().callDestroyLifetimeFun()).toThrow('???');
-
-    await Promise.resolve().then(() => {});
+    // Preact 11 defers passive-effect cleanups of unmounted components to the
+    // after-paint flush; act() drains that flush synchronously and rethrows
+    // the cleanup's error, so the assertion stays synchronous.
+    expect(() => act(() => lynx.getApp().callDestroyLifetimeFun())).toThrow('???');
     expect(callback).toHaveBeenCalledTimes(1);
     expect(removeEventListener).toHaveBeenCalledTimes(addEventListener.mock.calls.length);
   });

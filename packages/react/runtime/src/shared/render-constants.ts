@@ -23,8 +23,11 @@ export const FLAGS = '__u';
 
 // Component properties
 export const VNODE = '__v';
-export const DIRTY = '__d';
-export const FORCE = '__e';
+// Preact 11 merged the `_dirty` / `_force` / error booleans into a `_bits`
+// bitfield (`COMPONENT_DIRTY = 1 << 3`, `COMPONENT_FORCE = 1 << 2`).
+export const BITS = '__g';
+export const COMPONENT_DIRTY: number = 1 << 3;
+export const COMPONENT_FORCE: number = 1 << 2;
 export const NEXT_STATE = '__s';
 export const CHILD_DID_SUSPEND = '__c';
 export const RENDER_CALLBACKS = '__h';
