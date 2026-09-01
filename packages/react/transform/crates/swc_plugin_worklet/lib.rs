@@ -1526,10 +1526,6 @@ const valueType = defineMainThreadObjectType({
     "main thread";
     return createValue(initialValue);
   },
-  dispose(value) {
-    "main thread";
-    value.stop();
-  },
 });
     "#
   );
@@ -1561,10 +1557,6 @@ const valueType = defineMainThreadObjectType({
   create(initialValue: number) {
     "main thread";
     return createValue(initialValue);
-  },
-  dispose(value) {
-    "main thread";
-    value.stop();
   },
 });
     "#

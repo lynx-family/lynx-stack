@@ -19,7 +19,6 @@ interface RefImpl {
   registerMainThreadObjectType?(
     type: string,
     create: MainThreadObjectFactory | Worklet,
-    dispose: MainThreadObjectDisposer | Worklet | undefined,
     protocolVersion: number,
   ): void;
   clearFirstScreenWorkletRefMap(): void;
@@ -29,19 +28,15 @@ let impl: RefImpl | undefined;
 const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 
 type MainThreadObjectFactory = (initialValue: unknown) => object;
-type MainThreadObjectDisposer = (object: object) => void;
 interface MainThreadObjectDefinition {
   create: MainThreadObjectFactory | Worklet;
-  dispose: MainThreadObjectDisposer | Worklet | undefined;
   resolvedCreate?: MainThreadObjectFactory;
-  resolvedDispose?: MainThreadObjectDisposer;
 }
 
 const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
 interface MainThreadObjectMetadata {
   readonly type: string;
   readonly protocolVersion: number;
-  readonly definition: MainThreadObjectDefinition;
 }
 let realizedMainThreadObjectMetadata = new WeakMap<object, MainThreadObjectMetadata>();
 let firstScreenMainThreadObjects = new Set<object>();
@@ -83,67 +78,52 @@ const createWorkletRef = <T>(
 function registerMainThreadObjectType(
   type: string,
   create: MainThreadObjectFactory | Worklet,
-  dispose: MainThreadObjectDisposer | Worklet | undefined,
   protocolVersion: number,
 ): void {
   assertMainThreadObjectProtocolVersion(type, protocolVersion);
   const registered = mainThreadObjectDefinitions.get(type);
   if (registered) {
     if (
-      getLifecycleRegistrationIdentity(registered.create)
-        !== getLifecycleRegistrationIdentity(create)
-      || getLifecycleRegistrationIdentity(registered.dispose)
-        !== getLifecycleRegistrationIdentity(dispose)
+      getFactoryRegistrationIdentity(registered.create)
+        !== getFactoryRegistrationIdentity(create)
     ) {
       throw new Error(
-        `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create and dispose functions.`,
+        `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create function.`,
       );
     }
     return;
   }
-  mainThreadObjectDefinitions.set(type, { create, dispose });
+  mainThreadObjectDefinitions.set(type, { create });
 }
 
-function getLifecycleRegistrationIdentity(
-  lifecycle: MainThreadObjectFactory | MainThreadObjectDisposer | Worklet | undefined,
-): string | undefined {
-  if (lifecycle === undefined) {
-    return undefined;
+function getFactoryRegistrationIdentity(
+  factory: MainThreadObjectFactory | Worklet,
+): string {
+  if (typeof factory === 'function') {
+    return Function.prototype.toString.call(factory);
   }
-  if (typeof lifecycle === 'function') {
-    return Function.prototype.toString.call(lifecycle);
-  }
-  return `worklet:${lifecycle._wkltId}`;
+  return `worklet:${factory._wkltId}`;
 }
 
-function resolveLifecycleFunction<T extends MainThreadObjectFactory | MainThreadObjectDisposer>(
-  lifecycle: T | Worklet,
+function resolveFactoryFunction<T extends MainThreadObjectFactory>(
+  factory: T | Worklet,
 ): T {
-  if (typeof lifecycle === 'function') {
-    return lifecycle;
+  if (typeof factory === 'function') {
+    return factory;
   }
   const resolveWorklet = globalThis.lynxWorkletImpl?._resolveWorklet;
   if (typeof resolveWorklet !== 'function') {
     throw new Error(
-      'MainThreadObject lifecycle functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
+      'MainThreadObject factory functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
     );
   }
-  return resolveWorklet(lifecycle) as T;
+  return resolveWorklet(factory) as T;
 }
 
 function getMainThreadObjectFactory(
   definition: MainThreadObjectDefinition,
 ): MainThreadObjectFactory {
-  return definition.resolvedCreate ??= resolveLifecycleFunction(definition.create);
-}
-
-function getMainThreadObjectDisposer(
-  definition: MainThreadObjectDefinition,
-): MainThreadObjectDisposer | undefined {
-  if (definition.dispose === undefined) {
-    return undefined;
-  }
-  return definition.resolvedDispose ??= resolveLifecycleFunction(definition.dispose);
+  return definition.resolvedCreate ??= resolveFactoryFunction(definition.create);
 }
 
 function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
@@ -171,7 +151,6 @@ function createWorkletValue<T>(refImpl: WorkletRefImpl<T>): WorkletRef<T> {
   realizedMainThreadObjectMetadata.set(value, {
     type,
     protocolVersion: refImpl._mtoVersion!,
-    definition,
   });
   if (refImpl._wvid < 0) {
     firstScreenMainThreadObjects.add(value);
@@ -232,11 +211,8 @@ const getFromWorkletRefMap = <T>(
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
   if (__MAIN_THREAD_OBJECT__) {
-    try {
-      disposeMainThreadObject(impl!._workletRefMap[id]);
-    } finally {
-      delete impl!._workletRefMap[id];
-    }
+    releaseMainThreadObject(impl!._workletRefMap[id]);
+    delete impl!._workletRefMap[id];
     /* v8 ignore start -- exercised by the separately built core runtime */
   } else {
     delete impl!._workletRefMap[id];
@@ -256,7 +232,7 @@ function hydrateWorkletValue(
   assertCompatibleWorkletValue(handle, value, 'hydration');
   const previous = impl!._workletRefMap[handle._wvid];
   if (previous !== value) {
-    disposeMainThreadObject(previous);
+    releaseMainThreadObject(previous);
   }
   impl!._workletRefMap[handle._wvid] = value;
   firstScreenMainThreadObjects.delete(value);
@@ -308,17 +284,15 @@ function assertCompatibleWorkletValue(
   }
 }
 
-function disposeMainThreadObject(value: unknown): void {
+function releaseMainThreadObject(value: unknown): void {
   if (isMutableCell(value) || typeof value !== 'object' || value === null) {
     return;
   }
-  const metadata = realizedMainThreadObjectMetadata.get(value);
-  if (!metadata) {
+  if (!realizedMainThreadObjectMetadata.has(value)) {
     return;
   }
   firstScreenMainThreadObjects.delete(value);
   realizedMainThreadObjectMetadata.delete(value);
-  getMainThreadObjectDisposer(metadata.definition)?.(value);
 }
 
 /**
@@ -369,26 +343,9 @@ function clearFirstScreenWorkletRefMap(): void {
     impl!._firstScreenWorkletRefMap = {};
     return;
   }
-  let firstError: unknown;
-  let hasError = false;
-  try {
-    firstScreenMainThreadObjects.forEach(value => {
-      try {
-        disposeMainThreadObject(value);
-      } catch (error) {
-        if (!hasError) {
-          firstError = error;
-          hasError = true;
-        }
-      }
-    });
-  } finally {
-    firstScreenMainThreadObjects.clear();
-    impl!._firstScreenWorkletRefMap = {};
-  }
-  if (hasError) {
-    throw firstError;
-  }
+  firstScreenMainThreadObjects.forEach(value => releaseMainThreadObject(value));
+  firstScreenMainThreadObjects.clear();
+  impl!._firstScreenWorkletRefMap = {};
 }
 
 export {

@@ -7,9 +7,6 @@ const valueType = defineMainThreadObjectType({
     type: '@test/value',
     create: {
         _wkltId: "a77b:test:1"
-    },
-    dispose: {
-        _wkltId: "a77b:test:2"
     }
 });
 const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
@@ -17,9 +14,4 @@ __workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", 
     const create = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
     "main thread";
     return createValue(initialValue);
-});
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:2", function(value) {
-    const dispose = lynxWorkletImpl._workletMap["a77b:test:2"].bind(this);
-    "main thread";
-    value.stop();
 });

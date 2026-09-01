@@ -46,7 +46,6 @@ function updateWorkletRefInitValueChanges(
 function registerMainThreadObjectType(
   type: string,
   create: ((initialValue: unknown) => object) | Worklet,
-  dispose: ((object: object) => void) | Worklet | undefined,
   protocolVersion: number,
 ): void {
   const refImpl = globalThis.lynxWorkletImpl?._refImpl;
@@ -55,7 +54,7 @@ function registerMainThreadObjectType(
       'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
     );
   }
-  refImpl.registerMainThreadObjectType(type, create, dispose, protocolVersion);
+  refImpl.registerMainThreadObjectType(type, create, protocolVersion);
 }
 
 /**

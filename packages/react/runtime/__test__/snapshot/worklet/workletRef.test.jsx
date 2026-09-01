@@ -404,7 +404,6 @@ describe('MainThreadObject', () => {
     expect(register).toHaveBeenCalledWith(
       '@test/lazy-module-value',
       create,
-      undefined,
       1,
     );
     expect(type).not.toHaveProperty('create');
@@ -431,7 +430,6 @@ describe('MainThreadObject', () => {
     expect(register).toHaveBeenCalledWith(
       '@test/retained-module-value',
       create,
-      undefined,
       1,
     );
   });
@@ -486,16 +484,6 @@ describe('MainThreadObject', () => {
     );
     expect(() =>
       defineMainThreadObjectType({
-        type: '@test/invalid-dispose',
-        create: value => ({ value }),
-        dispose: true,
-      })
-    ).toThrow(
-      'MainThreadObject type "@test/invalid-dispose" has an invalid dispose Main Thread Function.',
-    );
-
-    expect(() =>
-      defineMainThreadObjectType({
         type: '@test/capturing-create',
         create: {
           _wkltId: 'capturing-create',
@@ -505,19 +493,6 @@ describe('MainThreadObject', () => {
     ).toThrow(
       'MainThreadObject create function for "@test/capturing-create" must not capture values. Import dependencies from a shared-runtime module instead.',
     );
-    expect(() =>
-      defineMainThreadObjectType({
-        type: '@test/capturing-dispose',
-        create: value => ({ value }),
-        dispose: {
-          _wkltId: 'capturing-dispose',
-          _c: { mutableValue: 1 },
-        },
-      })
-    ).toThrow(
-      'MainThreadObject dispose function for "@test/capturing-dispose" must not capture values. Import dependencies from a shared-runtime module instead.',
-    );
-
     const type = defineMainThreadObjectType({
       type: '@test/frozen',
       create: value => ({ value }),
