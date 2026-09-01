@@ -189,6 +189,26 @@ describe('WorkletRef', () => {
     }).toThrow('MainThreadObject type "@test/invalid" created a non-object value.');
   });
 
+  it('continues applying a patch after a MainThreadObject factory error', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/throws',
+      () => {
+        throw new Error('factory failed');
+      },
+      1,
+    );
+
+    expect(() => {
+      updateWorkletRefInitValueChanges([
+        [10, 42, '@test/throws', 1],
+        [11, 'unrelated MainThreadRef'],
+      ]);
+    }).toThrow('factory failed');
+    expect(getFromWorkletRefMap({ _wvid: 11 }).current).toBe(
+      'unrelated MainThreadRef',
+    );
+  });
+
   it('hydrates a used first-screen main-thread object into the background id', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',

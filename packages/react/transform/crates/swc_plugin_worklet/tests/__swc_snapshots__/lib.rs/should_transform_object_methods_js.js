@@ -1,4 +1,4 @@
-import { createValue } from './shared.js' with {
+import { create } from './shared.js' with {
     runtime: "shared"
 };
 const valueType = defineMainThreadObjectType({

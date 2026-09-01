@@ -53,17 +53,6 @@ function parseLepusChunk(
   return data.lepusCode.lepusChunk as Record<string, string>;
 }
 
-function countOccurrences(source: string, needle: string): number {
-  let count = 0;
-  let index = -1;
-
-  while ((index = source.indexOf(needle, index + 1)) !== -1) {
-    count += 1;
-  }
-
-  return count;
-}
-
 function extractRegisteredWorkletIds(source: string): string[] {
   const matches = source.matchAll(
     /registerWorkletInternal\((?:\\"|")main-thread(?:\\"|"),\s*(?:\\"|")([^\\"]+)(?:\\"|")/g,
@@ -171,11 +160,15 @@ describe('worklet-runtime bundler guardrails', () => {
       if (expectedChunkNames.length > 0) {
         expect(lepusChunk['worklet-runtime'].length).toBeGreaterThan(0);
         expect(
-          countOccurrences(
-            lepusChunk['worklet-runtime'],
-            'globalThis.lynxWorkletImpl = {',
-          ),
+          lepusChunk['worklet-runtime'].match(
+            /globalThis\.lynxWorkletImpl\s*=\s*\{/g,
+          )?.length ?? 0,
         ).toBe(expectedInitSignatureCount);
+        expect(
+          lepusChunk['worklet-runtime'].includes(
+            'registerMainThreadObjectType',
+          ),
+        ).toBe(expectedMainThreadObjectRuntime);
       } else {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
         expect(expectedInitSignatureCount).toBe(0);

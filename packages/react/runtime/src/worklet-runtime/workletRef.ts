@@ -296,20 +296,46 @@ function updateWorkletRefInitValueChanges(
   patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string, number])[],
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
+    /* v8 ignore start -- exercised by the separately built core runtime */
+    if (!__MAIN_THREAD_OBJECT__) {
+      patch.forEach(([id, value]) => {
+        if (!impl!._workletRefMap[id]) {
+          impl!._workletRefMap[id] = createWorkletRef(id, value);
+        }
+      });
+      return;
+    }
+    /* v8 ignore stop */
+    let firstError: unknown;
+    let hasError = false;
     patch.forEach(([id, value, type, protocolVersion]) => {
-      const handle = {
-        _wvid: id,
-        _initValue: value,
-        _type: type,
-        _mtoVersion: protocolVersion,
-      } as WorkletRefImpl<unknown>;
-      const existing = impl!._workletRefMap[id];
-      if (existing) {
-        assertCompatibleWorkletValue(handle, existing, 'initialization patch');
-      } else {
-        impl!._workletRefMap[id] = createWorkletValue(handle);
+      try {
+        const handle = {
+          _wvid: id,
+          _initValue: value,
+          _type: type,
+          _mtoVersion: protocolVersion,
+        } as WorkletRefImpl<unknown>;
+        const existing = impl!._workletRefMap[id];
+        if (existing) {
+          assertCompatibleWorkletValue(
+            handle,
+            existing,
+            'initialization patch',
+          );
+        } else {
+          impl!._workletRefMap[id] = createWorkletValue(handle);
+        }
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
       }
     });
+    if (hasError) {
+      throw firstError;
+    }
   });
 }
 

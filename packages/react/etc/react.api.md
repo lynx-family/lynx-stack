@@ -141,9 +141,13 @@ export interface Lynx {
 }
 
 // @public
+export abstract class MainThreadObjectHandle<I, O extends object> {
+    get creationPayload(): I;
+}
+
+// @public
 export interface MainThreadObjectType<I, O extends object> {
-    readonly getInitialPayload: (value: O) => I;
-    readonly isHandle: (value: unknown) => value is O;
+    readonly downcast: (value: unknown) => MainThreadObjectHandle<I, O> | undefined;
     readonly type: string;
 }
 
