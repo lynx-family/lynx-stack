@@ -697,6 +697,10 @@ describe('Template Manager', () => {
       '<script thread="background">globalThis.__bts = 1;</script>',
       '</lynx>',
     ].join('\n');
+    const mainOnlyMarkupSource = markupSource.replace(
+      '<script thread="background">globalThis.__bts = 1;</script>\n',
+      '',
+    );
 
     function serveBytes(bytes: Uint8Array, chunkSize = bytes.length) {
       const stream = new ReadableStream({
@@ -758,6 +762,19 @@ describe('Template Manager', () => {
         url,
         false,
       );
+      expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(url);
+    });
+
+    test('registers an empty app-service entry for a main-only card', async () => {
+      const url = 'http://example.com/main-only.xml';
+      serveText(mainOnlyMarkupSource);
+
+      await load(url);
+
+      const bundle = templateManager.getBundle(url);
+      expect(Object.keys(bundle?.backgroundCode ?? {})).toStrictEqual([
+        '/app-service.js',
+      ]);
       expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(url);
     });
 
