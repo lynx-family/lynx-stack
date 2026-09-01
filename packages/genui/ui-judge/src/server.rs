@@ -1292,26 +1292,36 @@ mod tests {
     let relative_png = sample_png_with_dimensions(64, 64, Rgba([255, 0, 0, 255]));
     let absolute_png = sample_png_with_dimensions(64, 64, Rgba([0, 0, 255, 255]));
     let index: &[u8] = br#"<!doctype lynx>
-<lynx>
+<lynx engine-version="4.2">
   <script thread="main">
-    var page = __CreatePage("0", 0);
-    var root = __CreateView(0);
-    __SetInlineStyles(root, "width:100%;height:100%;display:flex;flex-direction:row;background-color:#000000;");
+    globalThis.processData = function processData(data) {
+      return data;
+    };
 
-    var relative = __CreateImage(0);
-    __SetAttribute(relative, "src", "./images/relative.png");
-    __SetAttribute(relative, "mode", "scaleToFill");
-    __SetInlineStyles(relative, "width:50%;height:100%;");
+    globalThis.renderPage = function renderPage() {
+      var page = __CreatePage("0", 0);
+      var pageId = __GetElementUniqueID(page);
+      var root = __CreateView(pageId);
+      __SetInlineStyles(root, "width:100%;height:100%;display:flex;flex-direction:row;background-color:#000000;");
 
-    var absolute = __CreateImage(0);
-    __SetAttribute(absolute, "src", "zip:///images/absolute.png");
-    __SetAttribute(absolute, "mode", "scaleToFill");
-    __SetInlineStyles(absolute, "width:50%;height:100%;");
+      var relative = __CreateImage(pageId);
+      __SetAttribute(relative, "src", "./images/relative.png");
+      __SetAttribute(relative, "mode", "scaleToFill");
+      __SetInlineStyles(relative, "width:50%;height:100%;");
 
-    __AppendElement(root, relative);
-    __AppendElement(root, absolute);
-    __AppendElement(page, root);
-    __FlushElementTree(page);
+      var absolute = __CreateImage(pageId);
+      __SetAttribute(absolute, "src", "zip:///images/absolute.png");
+      __SetAttribute(absolute, "mode", "scaleToFill");
+      __SetInlineStyles(absolute, "width:50%;height:100%;");
+
+      __AppendElement(root, relative);
+      __AppendElement(root, absolute);
+      __AppendElement(page, root);
+      __FlushElementTree();
+    };
+  </script>
+  <script thread="background">
+    globalThis.__zipImageFixtureReady = true;
   </script>
 </lynx>"#;
     let upload = zip_upload(&[
