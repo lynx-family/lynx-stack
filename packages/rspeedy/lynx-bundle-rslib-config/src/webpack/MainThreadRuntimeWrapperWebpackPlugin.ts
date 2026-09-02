@@ -35,6 +35,7 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
     new BannerPlugin({
       test: this.options.test ?? /\.js$/,
       raw: true,
+      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
       banner: `(function () {
   // TODO: remove this after \`useModuleWrapper\` supports MTS
   var globDynamicComponentEntry = '__Card__';
@@ -44,6 +45,7 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
     new BannerPlugin({
       test: this.options.test ?? /\.js$/,
       raw: true,
+      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
       banner: `return module.exports
 })()`,
       footer: true,
