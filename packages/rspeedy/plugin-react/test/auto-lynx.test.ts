@@ -59,6 +59,111 @@ describe('pluginAutoLynx', () => {
     expect(include).toStrictEqual([...new Set(include)])
   })
 
+  test('does not apply the engine again when it is registered per environment', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'production',
+        environments: { lynx: { plugins: [...pluginLynx()] } },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [pluginReactLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const include = swcInclude(config)
+    expect(include).toStrictEqual([...new Set(include)])
+  })
+
+  test('does not apply the engine again when it is applied after it', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        mode: 'production',
+        environments: { lynx: {} },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        plugins: [pluginReactLynx(), ...pluginLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const include = swcInclude(config)
+    expect(include).toStrictEqual([...new Set(include)])
+  })
+
+  test('applies the engine once for each environment that has the DSL plugin', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        environments: {
+          lynx: { plugins: [pluginReactLynx()] },
+          web: { plugins: [pluginReactLynx()] },
+        },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+      },
+    })
+
+    const configs = await rsbuild.initConfigs()
+
+    expect(configs).toHaveLength(2)
+    for (const config of configs) {
+      const include = swcInclude(config)
+      expect(include).not.toHaveLength(0)
+      expect(include).toStrictEqual([...new Set(include)])
+    }
+  })
+
+  test('applies the engine for an environment that does not register it', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        environments: {
+          lynx: { plugins: [...pluginLynx(), pluginReactLynx()] },
+          web: { plugins: [pluginReactLynx()] },
+        },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+      },
+    })
+
+    const configs = await rsbuild.initConfigs()
+
+    expect(configs).toHaveLength(2)
+    for (const config of configs) {
+      const include = swcInclude(config)
+      expect(include).not.toHaveLength(0)
+      expect(include).toStrictEqual([...new Set(include)])
+    }
+  })
+
+  test('does not repeat the engine when every environment registers it', async () => {
+    const rsbuild = await createRsbuild({
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      cwd: import.meta.dirname,
+      rsbuildConfig: {
+        environments: {
+          lynx: { plugins: [...pluginLynx(), pluginReactLynx()] },
+          web: { plugins: [...pluginLynx(), pluginReactLynx()] },
+        },
+        source: { entry: { main: './fixtures/basic.tsx' } },
+      },
+    })
+
+    const configs = await rsbuild.initConfigs()
+
+    expect(configs).toHaveLength(2)
+    for (const config of configs) {
+      const include = swcInclude(config)
+      expect(include).not.toHaveLength(0)
+      expect(include).toStrictEqual([...new Set(include)])
+    }
+  })
+
   test('does not apply the engine for the rslib caller', async () => {
     const rsbuild = await createRsbuild({
       callerName: 'rslib',
