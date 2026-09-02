@@ -7,7 +7,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
-import type { RslibConfig, rsbuild } from '@rslib/core'
+import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
 import {
   afterAll,
   afterEach,
@@ -19,12 +19,27 @@ import {
 } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 import { decodeTemplate } from './utils.js'
 import { defineExternalBundleRslibConfig } from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+async function inspectRspackConfig(
+  rslibConfig: RslibConfig,
+): Promise<Rspack.Configuration> {
+  // Resolving a config makes Rsbuild write the mode back to `NODE_ENV`.
+  const prevNodeEnv = process.env['NODE_ENV']
+  try {
+    const rslib = await createRslib({ config: rslibConfig, cwd: __dirname })
+    const { origin } = await rslib.inspectConfig()
+    return origin.bundlerConfigs[0]!
+  } finally {
+    process.env['NODE_ENV'] = prevNodeEnv
+  }
+}
 
 async function build(rslibConfig: RslibConfig) {
   const rslib = await createRslib({
@@ -75,6 +90,63 @@ describe('define config', () => {
         utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
       },
     })
+  })
+
+  it('should resolve with the Lynx conditions of the build engine', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    const { resolve } = await inspectRspackConfig(rslibConfig)
+
+    expect(resolve?.conditionNames).toContain('lynx')
+    expect(resolve?.mainFields).toContain('lynx')
+    expect(resolve?.mainFiles).toContain('index.lynx')
+  })
+
+  it('should compile with the SWC transforms of the build engine', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    const { module: mod } = await inspectRspackConfig(rslibConfig)
+
+    const swcOptions: { env?: { include?: string[] } }[] = []
+    const collect = (rule: unknown): void => {
+      if (!rule || typeof rule !== 'object') return
+      if (Array.isArray(rule)) {
+        for (const nested of rule) {
+          collect(nested)
+        }
+        return
+      }
+      const { use, oneOf, rules, loader, options } = rule as Record<
+        string,
+        unknown
+      >
+      collect(use)
+      collect(oneOf)
+      collect(rules)
+      if (typeof loader === 'string' && loader.includes('swc')) {
+        swcOptions.push(options as { env?: { include?: string[] } })
+      }
+    }
+    collect(mod?.rules)
+
+    expect(swcOptions.length).toBeGreaterThan(0)
+    for (const options of swcOptions) {
+      expect(options.env?.include).toContain('transform-block-scoping')
+    }
   })
 
   it('should override default lib config', () => {
@@ -171,7 +243,7 @@ describe('should build external bundle', () => {
       id: 'utils-dual',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-dual'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -180,7 +252,7 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-dual.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'utils-dual', 'utils-dual.lynx.bundle'),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
@@ -201,7 +273,7 @@ describe('should build external bundle', () => {
       id: 'utils-m',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-m'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -210,7 +282,7 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-m.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'utils-m', 'utils-m.lynx.bundle'),
     )
     expect(Object.keys(decodedResult['custom-sections'])).toEqual([
       'utils',
@@ -232,7 +304,7 @@ describe('should build external bundle', () => {
       id: 'utils-b',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-b'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -241,7 +313,7 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-b.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'utils-b', 'utils-b.lynx.bundle'),
     )
     expect(Object.keys(decodedResult['custom-sections'])).toEqual([
       'utils',
@@ -260,7 +332,7 @@ describe('should build external bundle', () => {
       id: 'utils-engineVersion-35',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-engineVersion-35'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -271,7 +343,12 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-engineVersion-35.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-engineVersion-35',
+        'utils-engineVersion-35.lynx.bundle',
+      ),
     )
     expect(decodedResult['engine-version']).toBe('3.5')
   })
@@ -287,7 +364,7 @@ describe('should build external bundle', () => {
       id: 'css-bundle',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'css-bundle'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -296,10 +373,9 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist', 'css-bundle.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'css-bundle', 'css-bundle.lynx.bundle'),
     )
 
-    // Check custom-sections for CSS keys
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'index',
       'index:CSS',
@@ -346,14 +422,14 @@ describe('JsBytecode encoding', () => {
         id,
         output: {
           distPath: {
-            root: path.join(fixtureDir, 'dist'),
+            root: path.join(fixtureDir, 'dist', id),
           },
         },
         plugins: [pluginReactLynx()],
       }, encodeOptions)
       await build(rslibConfig)
       return await decodeTemplate(
-        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+        path.join(fixtureDir, 'dist', id, `${id}.lynx.bundle`),
       )
     } finally {
       process.env['NODE_ENV'] = prevNodeEnv
@@ -416,13 +492,13 @@ describe('NODE_ENV configuration', () => {
         },
         id,
         output: {
-          distPath: { root: path.join(fixtureDir, 'dist') },
+          distPath: { root: path.join(fixtureDir, 'dist', id) },
         },
         plugins: [pluginReactLynx()],
       })
       await build(config)
       return await decodeTemplate(
-        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+        path.join(fixtureDir, 'dist', id, `${id}.lynx.bundle`),
       )
     } finally {
       process.env['NODE_ENV'] = prevNodeEnv
@@ -455,10 +531,12 @@ describe('debug mode artifacts', () => {
 
   const bundleId = 'utils-debug-flag'
 
-  const getFiles = () =>
-    fs.existsSync(distRoot)
-      ? fs.readdirSync(distRoot)
-      : []
+  // The template intermediates go into the `.lynx` directory, the same way an
+  // application build emits them.
+  const getFiles = () => {
+    const intermediate = path.join(distRoot, '.lynx')
+    return fs.existsSync(intermediate) ? fs.readdirSync(intermediate) : []
+  }
 
   const buildBundle = () => {
     return build(defineExternalBundleRslibConfig({
@@ -513,7 +591,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx'),
         },
         externals: {
           '@lynx-js/react': ['ReactLynx', 'React'],
@@ -526,7 +604,12 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx',
+        'utils-reactlynx.lynx.bundle',
+      ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
@@ -553,7 +636,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-cjs2',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-cjs2'),
         },
         externals: {
           '@lynx-js/react': ['ReactLynx', 'React'],
@@ -566,7 +649,12 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx-cjs2.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx-cjs2',
+        'utils-reactlynx-cjs2.lynx.bundle',
+      ),
     )
     const backgroundSection = decodedResult['custom-sections']['utils']!
 
@@ -588,7 +676,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-preset',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-preset'),
         },
         externalsPresets: {
           reactlynx: true,
@@ -617,7 +705,9 @@ describe('mount externals library', () => {
     const decodedResult = await decodeTemplate(
       path.join(
         fixtureDir,
-        'dist/utils-reactlynx-preset.lynx.bundle',
+        'dist',
+        'utils-reactlynx-preset',
+        'utils-reactlynx-preset.lynx.bundle',
       ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
@@ -646,7 +736,11 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-preset-override',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(
+            fixtureDir,
+            'dist',
+            'utils-reactlynx-preset-override',
+          ),
         },
         externalsPresets: {
           reactlynx: true,
@@ -665,7 +759,9 @@ describe('mount externals library', () => {
     const decodedResult = await decodeTemplate(
       path.join(
         fixtureDir,
-        'dist/utils-reactlynx-preset-override.lynx.bundle',
+        'dist',
+        'utils-reactlynx-preset-override',
+        'utils-reactlynx-preset-override.lynx.bundle',
       ),
     )
     expect(decodedResult['custom-sections']['utils']).toContain(
@@ -692,7 +788,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-custom-extend',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-custom-extend'),
         },
         externalsPresets: {
           reactlynxPlus: true,
@@ -734,7 +830,7 @@ describe('mount externals library', () => {
       id: 'utils-custom-preset',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-custom-preset'),
         },
         externalsPresets: {
           lynxUi: true,
@@ -776,7 +872,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-globalThis',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-globalThis'),
         },
         externals: {
           '@lynx-js/react': ['ReactLynx', 'React'],
@@ -792,7 +888,9 @@ describe('mount externals library', () => {
     const decodedResult = await decodeTemplate(
       path.join(
         fixtureDir,
-        'dist/utils-reactlynx-globalThis.lynx.bundle',
+        'dist',
+        'utils-reactlynx-globalThis',
+        'utils-reactlynx-globalThis.lynx.bundle',
       ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
@@ -821,7 +919,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-async',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-async'),
         },
         externals: {
           // Multi-level subpath: every segment after the mount key must be
@@ -839,7 +937,12 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx-async.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx-async',
+        'utils-reactlynx-async.lynx.bundle',
+      ),
     )
     expect(decodedResult['custom-sections']['utils']).toContain(
       'Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"])'
@@ -854,9 +957,8 @@ describe('mount externals library', () => {
 
 describe('pluginReactLynx', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
-  const distRoot = path.join(fixtureDir, 'dist')
-
   const bundleId = 'utils-reactlynx'
+  const distRoot = path.join(fixtureDir, 'dist', bundleId)
 
   let rslib!: Awaited<ReturnType<typeof createRslib>>
   let decodedResult!: Awaited<ReturnType<typeof decodeTemplate>>
@@ -884,7 +986,12 @@ describe('pluginReactLynx', () => {
     })
     await rslib.build()
     decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx',
+        'utils-reactlynx.lynx.bundle',
+      ),
     )
   })
 
@@ -986,7 +1093,7 @@ describe('DSL plugin without layer loaders', () => {
       id: 'plain-no-layer-loaders',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'plain-no-layer-loaders'),
         },
       },
       plugins: [
@@ -1000,6 +1107,7 @@ describe('DSL plugin without layer loaders', () => {
             api.expose(Symbol.for('LAYERS'), LAYERS)
           },
         } satisfies rsbuild.RsbuildPlugin,
+        ...pluginLynx(),
       ],
     })
 
@@ -1013,7 +1121,7 @@ describe('debug info outside', () => {
   it('should keep bytecode debug info out of the tasm bundle', async () => {
     rstest.stubEnv('DEBUG', 'rspeedy')
     try {
-      const distRoot = path.join(fixtureDir, 'dist')
+      const distRoot = path.join(fixtureDir, 'dist', 'utils-dbg-outside')
       await build(defineExternalBundleRslibConfig({
         source: {
           entry: {
@@ -1029,9 +1137,16 @@ describe('debug info outside', () => {
         plugins: [pluginReactLynx()],
       }))
       const tasmJson = JSON.parse(
-        fs.readFileSync(path.join(distRoot, 'tasm.json'), 'utf-8'),
-      ) as { compilerOptions: Record<string, unknown> }
+        fs.readFileSync(path.join(distRoot, '.lynx', 'tasm.json'), 'utf-8'),
+      ) as {
+        compilerOptions: Record<string, unknown>
+        sourceContent: Record<string, unknown>
+      }
       expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
+      // The style sheet lands after the elements exist.
+      expect(tasmJson.compilerOptions['enableCSSInvalidation']).toBe(true)
+      // An external bundle is loaded by an application, not rendered as one.
+      expect(tasmJson.sourceContent['appType']).toBe('DynamicComponent')
     } finally {
       rstest.unstubAllEnvs()
     }
