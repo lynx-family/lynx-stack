@@ -2151,6 +2151,36 @@ describe('Element APIs', () => {
   });
 
   describe('Server Element APIs SSR Propagation', () => {
+    test('gesture detector PAPIs are supported as no-ops in SSR', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+        transformVW: false,
+        transformVH: false,
+        transformREM: false,
+      };
+      const { globalThisAPIs: api } = createServerElementAPI(
+        binding,
+        undefined,
+        '',
+        config,
+      );
+      const element = api.__CreateElement('view', 0);
+
+      expect(() => {
+        api.__SetGestureDetector(
+          element,
+          1,
+          0,
+          { callbacks: [] },
+          { waitFor: [], simultaneous: [], continueWith: [] },
+        );
+        api.__RemoveGestureDetector(element, 1);
+      }).not.toThrow();
+    });
+
     test('ssr __SetInlineStyles and __SetAttribute style transformations', () => {
       const binding: SSRBinding = { ssrResult: '' };
       const config = {
