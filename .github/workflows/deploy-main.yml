@@ -42,19 +42,15 @@ jobs:
         run: |
           corepack pnpm turbo --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: Build UI Judge bundle
+        env:
+          UI_JUDGE_OUTPUT_DIR: ${{ runner.temp }}/ui-judge-linux-amd64
         run: |
-          cargo build \
-            --locked \
-            --release \
-            --package ui_judge \
-            --features server \
-            --bin ui-judge-server \
-            --target x86_64-unknown-linux-gnu
+          packages/genui/ui-judge/build.sh
           tar \
             --create \
             --gzip \
             --file "$RUNNER_TEMP/ui-judge-linux-amd64.tar.gz" \
-            --directory target/x86_64-unknown-linux-gnu/release \
+            --directory "$UI_JUDGE_OUTPUT_DIR" \
             ui-judge-server \
             start.sh \
             lynx_core.js \
