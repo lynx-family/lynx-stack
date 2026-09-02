@@ -21,6 +21,10 @@ const emptySelection = (): SelectionChangeDetail => ({
   direction: 'forward',
 });
 
+/**
+ * Converts a selection boundary to an offset in the target's text. Using the
+ * range text length provides one offset space across nested text nodes.
+ */
 const getTextOffset = (
   root: HTMLElement,
   node: Node | null,
@@ -37,6 +41,10 @@ const getTextOffset = (
   return range.toString().length;
 };
 
+/**
+ * Returns offsets relative to the target text. A -1 offset means the selection
+ * is collapsed, unavailable, or outside the target.
+ */
 const getSelectionDetail = (dom: HTMLElement): SelectionChangeDetail => {
   const selection = dom.ownerDocument.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
@@ -68,7 +76,7 @@ export class XTextSelectionEvents
   readonly #dom: HTMLElement;
   #enabled = false;
   #connected = false;
-  #attached = false;
+  #attachedDocument?: Document;
   #lastSelectionSignature?: string;
 
   constructor(dom: HTMLElement) {
@@ -93,21 +101,22 @@ export class XTextSelectionEvents
   }
 
   #updateSelectionChangeListener() {
+    const document = this.#dom.ownerDocument;
     const shouldAttach = this.#enabled && this.#connected;
-    if (shouldAttach === this.#attached) return;
+    if (shouldAttach && this.#attachedDocument === document) return;
+    if (!shouldAttach && !this.#attachedDocument) return;
 
+    this.#attachedDocument?.removeEventListener(
+      'selectionchange',
+      this.#handleSelectionChange,
+    );
     if (shouldAttach) {
-      this.#dom.ownerDocument.addEventListener(
-        'selectionchange',
-        this.#handleSelectionChange,
-      );
-    } else {
-      this.#dom.ownerDocument.removeEventListener(
+      document.addEventListener(
         'selectionchange',
         this.#handleSelectionChange,
       );
     }
-    this.#attached = shouldAttach;
+    this.#attachedDocument = shouldAttach ? document : undefined;
   }
 
   #handleSelectionChange = () => {

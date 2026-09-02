@@ -110,6 +110,8 @@ test.describe('x-text selectionchange', () => {
       text.addEventListener('selectionchange', listener);
       (window as any).removeSelectionChangeListener = () =>
         text.removeEventListener('selectionchange', listener);
+      (window as any).addSelectionChangeListener = () =>
+        text.addEventListener('selectionchange', listener);
       (window as any).getSelectionChangeCount = () => count;
     });
 
@@ -118,5 +120,11 @@ test.describe('x-text selectionchange', () => {
     expect(
       await page.evaluate(() => (window as any).getSelectionChangeCount()),
     ).toBe(0);
+
+    await page.evaluate(() => (window as any).addSelectionChangeListener());
+    await selectInlineText(page, 1, 4);
+    await expect.poll(() =>
+      page.evaluate(() => (window as any).getSelectionChangeCount())
+    ).toBe(1);
   });
 });

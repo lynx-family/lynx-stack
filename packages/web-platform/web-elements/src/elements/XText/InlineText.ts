@@ -7,7 +7,7 @@ import { Component } from '../../element-reactive/index.js';
 import { XTextSelectionEvents } from './XTextSelectionEvents.js';
 
 /**
- * @deprecated you can use x-text instead in x-text.
+ * @deprecated Use x-text instead of inline-text.
  */
 @Component<typeof InlineText>('inline-text', [XTextSelectionEvents])
 export class InlineText extends HTMLElement {}
