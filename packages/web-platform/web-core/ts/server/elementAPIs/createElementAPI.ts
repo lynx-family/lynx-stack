@@ -520,8 +520,8 @@ export function createElementAPI(
       },
       // SSR does not recognize gestures, but gesture-bearing bundles still
       // need the PAPIs to exist while their main-thread code is evaluated.
-      __SetGestureDetector: () => {},
-      __RemoveGestureDetector: () => {},
+      __SetGestureDetector: () => undefined,
+      __RemoveGestureDetector: () => undefined,
     },
     wasmContext,
   };
