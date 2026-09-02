@@ -11,7 +11,7 @@ export const isDebug = (): boolean => {
   }
 
   const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
-  return ['rsbuild', 'rspeedy', '*'].some((key) => values.includes(key))
+  return ['lynx', 'rsbuild', 'rspeedy', '*'].some((key) => values.includes(key))
 }
 
 const label = color.bgCyan('lynx')

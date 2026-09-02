@@ -86,6 +86,12 @@ describe('pluginLynxDebugMetadata production gate', () => {
     expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
   })
 
+  test('emits on a local production build when DEBUG=lynx', () => {
+    vi.stubEnv('DEBUG', 'lynx')
+
+    expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
+  })
+
   test('emits on a dev build regardless of CI (the middleware serves it)', () => {
     expect(
       runChain({ environment: { name: 'lynx', entry: {} }, isProd: false }),

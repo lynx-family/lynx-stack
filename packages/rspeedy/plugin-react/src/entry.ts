@@ -348,7 +348,7 @@ export const isDebug = (): boolean => {
   }
 
   const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
-  return ['rspeedy', '*'].some((key) => values.includes(key))
+  return ['lynx', 'rspeedy', '*'].some((key) => values.includes(key))
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/037da7b9d92e20c7136c8b2efa21eef539fa2f88/packages/core/src/plugins/html.ts#L168

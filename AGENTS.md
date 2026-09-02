@@ -207,7 +207,7 @@ The CI runs these checks (replicate locally for confidence):
 CI=1                          # Enables CI mode
 TURBO_TELEMETRY_DISABLED=1    # Disables telemetry
 NODE_OPTIONS="--max-old-space-size=32768"  # For large builds
-DEBUG=rspeedy                 # Enable debug logging
+DEBUG=lynx                    # Enable debug logging (DEBUG=rspeedy still works)
 ```
 
 ## Trust These Instructions
