@@ -1728,7 +1728,7 @@ ${
     installNodeApiShim
       ? `  const loadResult = tryLoadNodeApiAddon();
   if ('addon' in loadResult && loadResult.addon !== undefined) {
-    return loadResult.addon as ${module.name}Spec;
+    return loadResult.addon as unknown as ${module.name}Spec;
   }
   if ('error' in loadResult) {
     throw loadResult.error;
@@ -1739,7 +1739,7 @@ ${
     supportsNodeApi && !installNodeApiShim
       ? `  const addon = loadNodeApiAddon();
   if (addon !== undefined) {
-    return addon as ${module.name}Spec;
+    return addon as unknown as ${module.name}Spec;
   }
 `
       : ''

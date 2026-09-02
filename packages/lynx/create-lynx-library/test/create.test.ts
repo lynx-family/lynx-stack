@@ -306,6 +306,9 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/example-lynx-button.podspec')).toContain(
       's.dependency \'LynxServiceAPI\'',
     );
+    expect(read(dir, 'ios/example-lynx-button.podspec')).toContain(
+      's.platform = :ios, \'10.0\'',
+    );
     expect(read(dir, 'types/index.d.ts')).toContain(
       'export * from \'./platform-native-module\';',
     );
@@ -1129,6 +1132,9 @@ describe('create-lynx-library', () => {
       'android',
     );
     expect(read(dir, 'ios/ios-library.podspec')).toContain('LynxServiceAPI');
+    expect(read(dir, 'ios/ios-library.podspec')).toContain(
+      's.platform = :ios, \'10.0\'',
+    );
     expect(read(dir, 'README.md')).toContain('`ios/`');
     expect(read(dir, 'README.md')).not.toContain('`android/`');
   });

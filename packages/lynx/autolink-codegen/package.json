@@ -34,6 +34,9 @@
     "dev": "rslib build --watch",
     "test": "vitest run"
   },
+  "devDependencies": {
+    "typescript": "catalog:"
+  },
   "engines": {
     "node": "^20 || ^22 || ^24"
   }
