@@ -19,6 +19,10 @@ import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '../../snapshot/snapshot.js';
 
+function createSnapshotInstance(type: string | null, id: number): void {
+  new SnapshotInstance(type ?? (null as unknown as string), id);
+}
+
 /**
  * Applies a patch of snapshot operations to the main thread.
  * This is the counterpart to the patch generation in the background thread.
@@ -26,12 +30,31 @@ import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '.
  */
 export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
   const length = snapshotPatch.length;
+  let createTypes: (string | null)[] | undefined;
   for (let i = 0; i < length; ++i) {
     switch (snapshotPatch[i]) {
       case SnapshotOperation.CreateElement: {
-        const type = snapshotPatch[++i] as string;
+        const type = snapshotPatch[++i] as string | null;
         const id = snapshotPatch[++i] as number;
-        new SnapshotInstance(type, id);
+        createTypes ??= [];
+        if (!createTypes.includes(type)) {
+          createTypes.push(type);
+        }
+        createSnapshotInstance(type, id);
+        break;
+      }
+      case SnapshotOperation.CreateElementByTypeIndex: {
+        const typeIndex = snapshotPatch[++i] as number;
+        const id = snapshotPatch[++i] as number;
+        if (
+          !Number.isInteger(typeIndex)
+          || typeIndex < 0
+          || !createTypes
+          || typeIndex >= createTypes.length
+        ) {
+          throw new Error('Invalid snapshot create type index');
+        }
+        createSnapshotInstance(createTypes[typeIndex]!, id);
         break;
       }
       case SnapshotOperation.InsertBefore: {

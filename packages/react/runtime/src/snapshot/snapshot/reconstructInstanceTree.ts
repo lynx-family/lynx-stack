@@ -16,7 +16,11 @@
  */
 
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
-import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import {
+  SnapshotOperation,
+  __globalSnapshotPatch,
+  pushCreateElementOperation,
+} from '../lifecycle/patch/snapshotPatch.js';
 
 export function reconstructInstanceTree(
   afters: BackgroundSnapshotInstance[],
@@ -25,7 +29,7 @@ export function reconstructInstanceTree(
 ): void {
   for (const child of afters) {
     const id = child.__id;
-    __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, child.type, id);
+    pushCreateElementOperation(child.type, id);
     const values = child.__values;
     if (values) {
       child.__values = undefined;

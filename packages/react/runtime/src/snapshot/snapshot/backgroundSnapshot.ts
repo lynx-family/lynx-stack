@@ -35,6 +35,7 @@ import {
   SnapshotOperation,
   __globalSnapshotPatch,
   initGlobalSnapshotPatch,
+  pushCreateElementOperation,
   takeGlobalSnapshotPatch,
 } from '../lifecycle/patch/snapshotPatch.js';
 import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
@@ -170,7 +171,7 @@ export class BackgroundSnapshotInstance {
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
 
-    __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, type, id);
+    pushCreateElementOperation(type, id);
   }
 
   __id: number;
