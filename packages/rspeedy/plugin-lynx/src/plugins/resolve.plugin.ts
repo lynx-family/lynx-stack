@@ -8,12 +8,6 @@ export function pluginResolve(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:resolve',
     setup(api) {
-      if (
-        api.context.callerName === 'rslib'
-        || api.context.callerName === 'rstest'
-      ) {
-        return
-      }
       api.modifyBundlerChain(chain => {
         // dprint-ignore
         chain
