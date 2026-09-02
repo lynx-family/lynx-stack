@@ -1,14 +1,14 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_04020ede3da7 = `${globDynamicComponentEntry}:${"_et_04020ede3da7"}`;
+const _et_49c2d60c49a6 = `${globDynamicComponentEntry}:${"_et_49c2d60c49a6"}`;
 function CustomComponent(props) {
-    return /*#__PURE__*/ _jsx(_et_04020ede3da7, {
+    return /*#__PURE__*/ _jsx(_et_49c2d60c49a6, {
         $0: props.children
     });
 }
 const _et_d33ba201dffe = `${globDynamicComponentEntry}:${"_et_d33ba201dffe"}`;
-const _et_d7c09654e316 = `${globDynamicComponentEntry}:${"_et_d7c09654e316"}`;
+const _et_955a06fee137 = `${globDynamicComponentEntry}:${"_et_955a06fee137"}`;
 export function App() {
-    return /*#__PURE__*/ _jsx(_et_d7c09654e316, {
+    return /*#__PURE__*/ _jsx(_et_955a06fee137, {
         $0: /*#__PURE__*/ _jsx(CustomComponent, {
             children: /*#__PURE__*/ _jsx(_et_d33ba201dffe, {})
         })

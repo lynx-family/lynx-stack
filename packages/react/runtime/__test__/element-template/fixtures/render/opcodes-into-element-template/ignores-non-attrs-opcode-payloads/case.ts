@@ -12,7 +12,7 @@ export function run() {
     ];
 
     const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
-    rootRefs.forEach(rootRef => __InsertNodeToElementTemplate(root as FiberElement, 0, rootRef, null));
+    rootRefs.forEach(rootRef => __InsertNodeToElementTemplate(root, 0, rootRef, null));
 
     return {
       output: {

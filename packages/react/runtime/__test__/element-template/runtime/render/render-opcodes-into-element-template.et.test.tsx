@@ -255,7 +255,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-2)).toBe(listRef);
   });
 
-  it('creates empty exact lists without logical children or typed attributes', () => {
+  it('creates an empty list', () => {
     const listRef = { kind: 'list-ref' };
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
@@ -292,10 +292,11 @@ describe('renderOpcodesIntoElementTemplate', () => {
     }]);
   });
 
-  it('installs Snapshot-aligned callbacks for first-screen typed list items', () => {
-    const itemARef = { kind: 'item-a-ref', __mockNativeId: 101 };
-    const itemBRef = { kind: 'item-b-ref', __mockNativeId: 102 };
-    const listRef = { kind: 'list-ref', __mockNativeId: 200 };
+  it('installs first-screen list callbacks', () => {
+    const itemARef = { kind: 'item-a-ref', __mockNativeId: 101 } as unknown as ElementTemplateHandle;
+    const itemBRef = { kind: 'item-b-ref', __mockNativeId: 102 } as unknown as ElementTemplateHandle;
+    const listRef = { kind: 'list-ref' } as unknown as ElementTemplateHandle;
+    const materializedListRef = { kind: 'materialized-list-ref', __mockNativeId: 300 } as unknown as FiberElement;
     createElementTemplate
       .mockReturnValueOnce(itemARef)
       .mockReturnValueOnce(itemBRef);
@@ -322,8 +323,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const componentAtIndex = attrs['component-at-index']!;
     const componentAtIndexes = attrs['component-at-indexes']!;
     const enqueueComponent = attrs['enqueue-component']!;
-    const materializedListRef = { kind: 'materialized-list-ref', __mockNativeId: 300 };
-
     expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(102);
     expect(insertNodeToElementTemplate).toHaveBeenLastCalledWith(
       listRef,
@@ -661,7 +660,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(ref).not.toHaveBeenCalled();
   });
 
-  it('throws when text is emitted outside of an element slot', () => {
+  it('throws when text is emitted outside of a child slot', () => {
     expect(() =>
       renderOpcodesIntoElementTemplate([
         __OpBegin,
@@ -670,10 +669,10 @@ describe('renderOpcodesIntoElementTemplate', () => {
         'hello',
         __OpEnd,
       ])
-    ).toThrow('Template \'_et_parent\' received a text child outside of any element slot.');
+    ).toThrow('Template \'_et_parent\' received a text child outside of any child slot.');
   });
 
-  it('throws when an element child is emitted outside of an element slot', () => {
+  it('throws when an element child is emitted outside of a child slot', () => {
     expect(() =>
       renderOpcodesIntoElementTemplate([
         __OpBegin,
@@ -685,7 +684,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
         __OpEnd,
         __OpEnd,
       ])
-    ).toThrow('Template \'_et_parent\' received a child outside of any element slot.');
+    ).toThrow('Template \'_et_parent\' received a child outside of any child slot.');
   });
 
   it('throws on unknown opcodes', () => {

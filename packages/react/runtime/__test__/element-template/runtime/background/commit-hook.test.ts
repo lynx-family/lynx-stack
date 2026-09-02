@@ -468,7 +468,7 @@ describe('ElementTemplate commit hook', () => {
         page: {
           tag: 'page',
           attributes: null,
-          elementSlots: [[]],
+          childSlots: [[]],
           uid: 0,
         },
         reloadVersion: getReloadVersion(),

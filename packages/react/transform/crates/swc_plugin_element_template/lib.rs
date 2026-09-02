@@ -511,14 +511,14 @@ where
     }
 
     let mut dynamic_attr_slot_cursor: usize = 0;
-    let mut element_slot_index: i32 = 0;
+    let mut child_slot_index: i32 = 0;
     // Attribute slot indices come from ElementTemplateExtractor so runtime
     // values and Template Definition descriptors share one compile-time source.
     let template_expr = self.element_template_from_jsx_element(
       node,
       &dynamic_attr_slots,
       &mut dynamic_attr_slot_cursor,
-      &mut element_slot_index,
+      &mut child_slot_index,
     );
     assert_eq!(
       dynamic_attr_slot_cursor,

@@ -31,15 +31,15 @@ const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 
 export interface MainThreadCreateResult {
   pageAttributes: TypedElementAttributesCommand | null;
-  rootRefs: ElementRef[];
+  rootRefs: ElementTemplateHandle[];
 }
 
 function appendChildToParent(
   parentTemplateKey: string | null,
-  parentActiveElementSlot: ElementRef[] | undefined,
+  parentActiveChildSlot: ElementTemplateHandle[] | undefined,
   parentListItemUids: number[] | undefined,
-  rootRefs: ElementRef[],
-  elementRef: ElementRef,
+  rootRefs: ElementTemplateHandle[],
+  elementRef: ElementTemplateHandle,
   uid: number,
 ): void {
   if (parentTemplateKey === null) {
@@ -47,26 +47,26 @@ function appendChildToParent(
     return;
   }
 
-  if (__DEV__ && !parentActiveElementSlot) {
-    throw new Error(`Template '${parentTemplateKey}' received a child outside of any element slot.`);
+  if (__DEV__ && !parentActiveChildSlot) {
+    throw new Error(`Template '${parentTemplateKey}' received a child outside of any child slot.`);
   }
 
-  parentActiveElementSlot!.push(elementRef);
+  parentActiveChildSlot!.push(elementRef);
   parentListItemUids?.push(uid);
 }
 
 export function renderOpcodesIntoElementTemplate(
   opcodes: unknown[],
 ): MainThreadCreateResult {
-  const rootRefs: ElementRef[] = [];
+  const rootRefs: ElementTemplateHandle[] = [];
   let pageAttributes: TypedElementAttributesCommand | null | undefined;
   let isInsideAuthoredPage = false;
   const typeStack: Array<string | null> = [null];
   const attributeSlotsStack: Array<SerializableValue[] | undefined> = [undefined];
   const typedAttributesStack: Array<RuntimeTypedElementAttributes | undefined> = [undefined];
-  const elementSlotsStack: Array<Array<Array<ElementRef>> | undefined> = [undefined];
+  const childSlotsStack: Array<Array<Array<ElementTemplateHandle>> | undefined> = [undefined];
   const listItemUidsStack: Array<number[] | undefined> = [undefined];
-  const activeElementSlotStack: Array<ElementRef[] | undefined> = [undefined];
+  const activeChildSlotStack: Array<ElementTemplateHandle[] | undefined> = [undefined];
   const activeListItemUidsStack: Array<number[] | undefined> = [undefined];
   const listItemPlatformInfoStack: Array<ETListItemPlatformInfo | undefined> = [undefined];
   const deferredListItemMarkerStack: boolean[] = [false];
@@ -85,9 +85,9 @@ export function renderOpcodesIntoElementTemplate(
         typeStack[stackTop] = vnode.type;
         attributeSlotsStack[stackTop] = undefined;
         typedAttributesStack[stackTop] = undefined;
-        elementSlotsStack[stackTop] = undefined;
+        childSlotsStack[stackTop] = undefined;
         listItemUidsStack[stackTop] = undefined;
-        activeElementSlotStack[stackTop] = undefined;
+        activeChildSlotStack[stackTop] = undefined;
         activeListItemUidsStack[stackTop] = undefined;
         listItemPlatformInfoStack[stackTop] = props?.['__listItemPlatformInfo'] as ETListItemPlatformInfo | undefined;
         deferredListItemMarkerStack[stackTop] = props?.['isReady'] !== undefined;
@@ -102,7 +102,7 @@ export function renderOpcodesIntoElementTemplate(
         const type = typeStack[stackTop];
         const attributeSlots = attributeSlotsStack[stackTop];
         const typedAttributes = typedAttributesStack[stackTop];
-        const elementSlots = elementSlotsStack[stackTop];
+        const childSlots = childSlotsStack[stackTop];
         const listItemUids = listItemUidsStack[stackTop];
         const listItemPlatformInfo = listItemPlatformInfoStack[stackTop];
         const deferredListItemMarker = deferredListItemMarkerStack[stackTop];
@@ -111,11 +111,11 @@ export function renderOpcodesIntoElementTemplate(
         const concreteType = type!;
 
         const parentTemplateKey = stackTop === 0 ? null : typeStack[stackTop]!;
-        const parentActiveElementSlot = activeElementSlotStack[stackTop];
+        const parentActiveChildSlot = activeChildSlotStack[stackTop];
         const parentListItemUids = activeListItemUidsStack[stackTop];
 
         if (concreteType === TYPED_LIST_HOST_TYPE) {
-          const listChildren = elementSlots?.[0] ?? [];
+          const listChildren = childSlots?.[0] ?? [];
           const handleId = reserveElementTemplateId();
           const preparedTypedAttributes = prepareTypedElementAttributes(
             handleId,
@@ -139,7 +139,7 @@ export function renderOpcodesIntoElementTemplate(
           registerElementTemplateListState(handleId, listState, true, elementRef);
           appendChildToParent(
             parentTemplateKey,
-            parentActiveElementSlot,
+            parentActiveChildSlot,
             parentListItemUids,
             rootRefs,
             elementRef,
@@ -180,7 +180,7 @@ export function renderOpcodesIntoElementTemplate(
           nativeTemplate.templateKey,
           nativeTemplate.bundleUrl,
           preparedAttributeSlots,
-          elementSlots ?? null,
+          childSlots ?? null,
         );
         if (listItemPlatformInfo !== undefined) {
           registerElementTemplateListItem(handleId, elementRef, {
@@ -193,7 +193,7 @@ export function renderOpcodesIntoElementTemplate(
         }
         appendChildToParent(
           parentTemplateKey,
-          parentActiveElementSlot,
+          parentActiveChildSlot,
           parentListItemUids,
           rootRefs,
           elementRef,
@@ -241,9 +241,9 @@ export function renderOpcodesIntoElementTemplate(
         if (__DEV__ && typeStack[stackTop] === TYPED_LIST_HOST_TYPE && slotId !== 0) {
           throw new Error('Element Template typed list only supports logical slot $0.');
         }
-        const elementSlots = elementSlotsStack[stackTop] ?? (elementSlotsStack[stackTop] = []);
-        const activeElementSlot = elementSlots[slotId] = [];
-        activeElementSlotStack[stackTop] = activeElementSlot;
+        const childSlots = childSlotsStack[stackTop] ?? (childSlotsStack[stackTop] = []);
+        const activeChildSlot = childSlots[slotId] = [];
+        activeChildSlotStack[stackTop] = activeChildSlot;
         if (typeStack[stackTop] === TYPED_LIST_HOST_TYPE && slotId === 0) {
           const activeListItemUids = listItemUidsStack[stackTop] = [];
           activeListItemUidsStack[stackTop] = activeListItemUids;
@@ -273,11 +273,11 @@ export function renderOpcodesIntoElementTemplate(
         if (parentTemplateKey === null) {
           rootRefs.push(textRef);
         } else {
-          const activeElementSlot = activeElementSlotStack[stackTop];
-          if (__DEV__ && !activeElementSlot) {
-            throw new Error(`Template '${parentTemplateKey}' received a text child outside of any element slot.`);
+          const activeChildSlot = activeChildSlotStack[stackTop];
+          if (__DEV__ && !activeChildSlot) {
+            throw new Error(`Template '${parentTemplateKey}' received a text child outside of any child slot.`);
           }
-          activeElementSlot!.push(textRef);
+          activeChildSlot!.push(textRef);
         }
         i += 2;
         break;

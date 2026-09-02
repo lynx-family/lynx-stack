@@ -93,7 +93,7 @@ export function setupPatchContext(): PatchContext {
   envManager.switchToBackground();
 
   const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
@@ -125,7 +125,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
   installElementTemplateHydrationListener();
   installElementTemplateCommitHook();
   const onHydrate = (event: HydrateEvent) => {
-    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

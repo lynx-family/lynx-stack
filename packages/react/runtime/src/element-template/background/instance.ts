@@ -16,6 +16,7 @@ import type {
   RuntimeOptionsCommand,
   SerializableValue,
   TypedElementAttributesCommand,
+  TypedListOptionsCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
 import type { AuthoredPageAttributes } from '../runtime/page/authored-page.js';
@@ -83,14 +84,14 @@ export class BackgroundElementTemplateInstance {
     return nodes;
   }
 
-  get elementSlots(): BackgroundElementTemplateInstance[][] {
-    const elementSlots: BackgroundElementTemplateInstance[][] = [];
+  get childSlots(): BackgroundElementTemplateInstance[][] {
+    const childSlots: BackgroundElementTemplateInstance[][] = [];
     let child = this.firstChild;
     while (child) {
-      (elementSlots[child.__slotIndex] ??= []).push(child);
+      (childSlots[child.__slotIndex] ??= []).push(child);
       child = child.nextSibling;
     }
-    return elementSlots;
+    return childSlots;
   }
 
   public nodeType: number;
@@ -124,7 +125,7 @@ export class BackgroundElementTemplateInstance {
     this.restoreManagerRegistration();
 
     // Walk the linked-list children once to build the slot-indexed handle list
-    // for the createTemplate op. Going via `this.elementSlots` would allocate
+    // for the createTemplate op. Going via `this.childSlots` would allocate
     // the full `Instance[][]` intermediate just to throw it away here.
     const serializedSlots: ElementTemplateHandleSlotsCommand = [];
     let child = this.firstChild;
@@ -544,7 +545,7 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
       this.instanceId,
       this.type,
       this.getTypedAttributesForCreate(),
-      this.getElementSlotsForCreate(),
+      this.getChildSlotsForCreate(),
       this.getRuntimeOptionsForCreate(),
     );
     this.isMaterializedOnMainThread = true;
@@ -566,7 +567,7 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
     return TYPED_ELEMENT_ATTR_PLAN;
   }
 
-  protected getElementSlotsForCreate(): ElementTemplateHandleSlotsCommand | null {
+  protected getChildSlotsForCreate(): ElementTemplateHandleSlotsCommand | null {
     return null;
   }
 
@@ -625,7 +626,7 @@ export class BackgroundListElementTemplateInstance extends BackgroundTypedElemen
     super('list');
   }
 
-  protected override getRuntimeOptionsForCreate(): RuntimeOptionsCommand {
+  protected override getRuntimeOptionsForCreate(): TypedListOptionsCommand {
     const listChildren: UpdateTypedListItemCommand[] = [];
     let child = this.firstChild;
     while (child) {

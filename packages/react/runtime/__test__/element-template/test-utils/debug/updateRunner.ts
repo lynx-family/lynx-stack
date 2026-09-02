@@ -36,14 +36,14 @@ type FormattedUpdateEntry =
     id: number;
     template: string;
     attributeSlots: unknown;
-    elementSlots: unknown;
+    childSlots: unknown;
   }
   | {
     type: 'createTypedElement';
     id: number;
     elementType: string;
     attributes: unknown;
-    elementSlots: unknown;
+    childSlots: unknown;
     options: unknown;
   }
   | {
@@ -72,14 +72,14 @@ type FormattedUpdateEntry =
   | {
     type: 'insertNode';
     id: number;
-    elementSlotIndex: number;
+    childSlotIndex: number;
     child: unknown;
     reference: unknown;
   }
   | {
     type: 'removeNode';
     id: number;
-    elementSlotIndex: number;
+    childSlotIndex: number;
     child: unknown;
     removedSubtreeHandleIds: unknown;
   }
@@ -117,7 +117,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         id: entry.handleId,
         template: entry.templateKey,
         attributeSlots: entry.attributeSlots,
-        elementSlots: entry.elementSlots,
+        childSlots: entry.childSlots,
       };
 
     case 'createTypedElement':
@@ -126,7 +126,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         id: entry.handleId,
         elementType: entry.type,
         attributes: entry.attributes,
-        elementSlots: entry.elementSlots,
+        childSlots: entry.childSlots,
         options: entry.options,
       };
 
@@ -165,7 +165,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
       return {
         type: 'insertNode',
         id: entry.targetId,
-        elementSlotIndex: entry.elementSlotIndex,
+        childSlotIndex: entry.childSlotIndex,
         child: entry.childId,
         reference: entry.referenceId,
       };
@@ -174,7 +174,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
       return {
         type: 'removeNode',
         id: entry.targetId,
-        elementSlotIndex: entry.elementSlotIndex,
+        childSlotIndex: entry.childSlotIndex,
         child: entry.childId,
         removedSubtreeHandleIds: entry.removedSubtreeHandleIds,
       };
@@ -212,7 +212,7 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
   const onHydrate = (event: { data: ElementTemplateHydrateCommitContext }) => {
-    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

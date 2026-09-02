@@ -185,7 +185,7 @@ describe('Background Preact render', () => {
         templateKey: '_et_list_item',
         bundleUrl: null,
         attributeSlots: [],
-        elementSlots: [],
+        childSlots: [],
       },
       {
         op: 'insertTypedListItem',
@@ -249,16 +249,16 @@ describe('Background Preact render', () => {
       markElementTemplateHydrated();
 
       const initialHost = (__root as BackgroundElementTemplateInstance).firstChild!;
-      const initialChild = initialHost.elementSlots[from]?.[0];
+      const initialChild = initialHost.childSlots[from]?.[0];
       expect(initialChild?.type).toBe('_et_child');
 
       root.render(createElement('_et_host', { [`$${to}`]: moved }));
 
       const host = (__root as BackgroundElementTemplateInstance).firstChild!;
-      const movedChild = host.elementSlots[to]?.[0];
+      const movedChild = host.childSlots[to]?.[0];
       expect(movedChild?.type).toBe('_et_child');
       expect(movedChild).not.toBe(initialChild);
-      expect(host.elementSlots[from] ?? []).toEqual([]);
+      expect(host.childSlots[from] ?? []).toEqual([]);
     });
   }
 });

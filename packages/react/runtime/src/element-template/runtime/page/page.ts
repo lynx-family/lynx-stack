@@ -4,18 +4,18 @@
 
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from '../../protocol/page.js';
 
-export let __page: ElementRef;
+export let __page: ElementTemplateHandle;
 
-export function createElementTemplatePage(): ElementRef {
+export function createElementTemplatePage(): ElementTemplateHandle {
   return __CreateTypedElementTemplate(
     ELEMENT_TEMPLATE_PAGE_TYPE,
     null,
     null,
-    String(ELEMENT_TEMPLATE_PAGE_HANDLE_ID),
+    ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
     null,
   );
 }
 
-export function setupPage(page: ElementRef): void {
+export function setupPage(page: ElementTemplateHandle): void {
   __page = page;
 }
