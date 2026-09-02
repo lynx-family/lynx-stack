@@ -165,13 +165,33 @@ process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 non-secret configured model name. Use `POST /compare` to compare two uploaded
 images without rendering a page or calling the VLM. Use `POST /screenshot/zip`
 to render an uploaded Lynx project from the `zip://` URL supplied in its `url`
-query parameter.
+query parameter. Use `POST /screenshot/lynxml` to render one raw UTF-8 LynXML
+document.
 
 The server does not allow direct `file://`, `http://`, or `https://` page
 navigation. `POST /judge` and `POST /screenshot` reject those URL forms with
 HTTP `403` before model initialization or headless capture. Use the default
 library build for trusted direct-URL judging, or upload an untrusted project to
 `POST /screenshot/zip`.
+
+To render a LynXML string without auxiliary local files, send it directly as
+the request body. The endpoint accepts `application/xml`, `text/xml`, and
+`text/plain`, buffers at most 10 MiB, and returns `image/jpeg` with
+`Cache-Control: no-store`:
+
+```bash
+curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
+  --header 'content-type: application/xml; charset=utf-8' \
+  --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
+  --output screenshot.jpg
+```
+
+The server stages the source as an internal `zip:///index.lynxml` navigation in
+a fresh private directory and renders it in the same isolated process pool as
+ZIP uploads. HTTP(S) resources with domain hosts remain available, while
+`file://`, IP-hosted HTTP(S), and paths outside that private directory remain
+blocked. Use the ZIP endpoint when the document needs relative image or script
+files.
 
 To render an uploaded ZIP without scoring it, send the archive itself as the
 request body and pass its entrypoint as a `zip://` URL. The route does not
@@ -212,12 +232,13 @@ perform VLM scoring.
 
 `POST /judge` and `POST /screenshot` return `403` for direct `file://` or
 HTTP(S) page URLs. `POST /screenshot/zip` returns `422` with a JSON error when
-rendering cannot produce a frame. The ZIP route additionally returns `415` for
-a non-ZIP media type, `408` when body reading or extraction exceeds its own
-ten-second deadline, or when waiting for capture capacity or the isolated render
-exceeds its operation deadline. A busy bounded queue keeps the HTTP callback
-pending until capacity becomes available or that deadline expires; eager load
-shedding belongs in an outer middleware. The server returns `503` when the
+rendering cannot produce a frame. `POST /screenshot/lynxml` likewise returns
+`422` when its UTF-8 source cannot be rendered. Both upload routes return `413`
+when their body exceeds 10 MiB, `415` for an unsupported media type, and `408`
+when body reading or isolated rendering exceeds its deadline; the ZIP route
+also applies its ten-second extraction deadline. A busy bounded queue keeps the
+HTTP callback pending until capacity becomes available or that deadline
+expires; eager load shedding belongs in an outer middleware. The server returns `503` when the
 headless worker is shutting down or no longer available. A headless-worker panic
 makes readiness return `503`, initiates graceful shutdown, and is propagated as
 a server error after the worker is joined. Each ZIP upload and each uploaded

@@ -52,6 +52,9 @@ pub mod zip;
 
 const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
+const LYNXML_ENTRYPOINT_URL: &str = "zip:///index.lynxml";
+const LYNXML_UPLOAD_TIMEOUT: Duration = Duration::from_secs(10);
+const MAX_LYNXML_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
 const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
 const ZIP_CAPTURE_CHILD_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_CHILD";
@@ -156,10 +159,10 @@ impl ZipCaptureProcesses {
     })
   }
 
-  async fn capture(
+  async fn capture<T: Send + 'static>(
     &self,
     activity: ZipCaptureProcessActivity,
-    extracted: zip::ExtractedZip,
+    staging_guard: T,
     base_dir: PathBuf,
     url: String,
     job_id: u64,
@@ -176,7 +179,7 @@ impl ZipCaptureProcesses {
       };
       log_zip_render(job_id, outcome, started.elapsed());
       let _ = reply.send(result);
-      drop(extracted);
+      drop(staging_guard);
       drop(activity);
     });
     response.await.map_err(|_| isolated_zip_worker_error())?
@@ -422,11 +425,11 @@ impl IntoResponse for ApiError {
   }
 }
 
-/// Runs one internal ZIP capture child when the private mode marker is set.
+/// Runs one internal staged-source capture child when the private mode marker is set.
 ///
 /// The server executable calls this before creating Tokio or any shared native
-/// state. User-controlled ZIP pages therefore never share Clay's process-wide
-/// caches with another upload.
+/// state. User-controlled ZIP and LynXML pages therefore never share Clay's
+/// process-wide caches with another upload.
 #[doc(hidden)]
 pub fn run_zip_capture_child() -> Result<bool, ServerError> {
   if std::env::var_os(ZIP_CAPTURE_CHILD_ENV).as_deref() != Some(std::ffi::OsStr::new("1")) {
@@ -504,7 +507,7 @@ fn arm_zip_capture_parent_lifeline() -> Result<(), ServerError> {
 
 /// Runs the feature-gated UI Judge HTTP server on IPv4 and IPv6 unspecified
 /// addresses. Ordinary native capture runs on one container-owning worker
-/// behind a bounded queue; untrusted ZIPs use one fresh child process each.
+/// behind a bounded queue; untrusted uploads use one fresh child process each.
 /// Completed captures are scored concurrently on the async runtime.
 pub async fn serve(port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
@@ -526,6 +529,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
     .route("/compare", post(compare))
     .route("/judge", post(judge))
     .route("/screenshot", post(screenshot))
+    .route("/screenshot/lynxml", post(screenshot_lynxml))
     .route("/screenshot/zip", post(screenshot_zip))
     .layer(DefaultBodyLimit::max(MAX_REQUEST_BYTES))
     .with_state(state);
@@ -704,6 +708,122 @@ fn reject_direct_page_url(url: &str) -> Result<(), ApiError> {
   Ok(())
 }
 
+async fn screenshot_lynxml(
+  State(state): State<AppState>,
+  request: Request,
+) -> Result<Response, ApiError> {
+  validate_lynxml_upload_headers(request.headers())?;
+  let source = read_lynxml_upload(
+    body::to_bytes(request.into_body(), MAX_LYNXML_UPLOAD_BYTES),
+    LYNXML_UPLOAD_TIMEOUT,
+  )
+  .await?;
+  if source.is_empty() {
+    return Err(ApiError::new(
+      StatusCode::BAD_REQUEST,
+      "LynXML source must not be empty.",
+    ));
+  }
+  if std::str::from_utf8(&source).is_err() {
+    return Err(ApiError::new(
+      StatusCode::BAD_REQUEST,
+      "LynXML source must be valid UTF-8.",
+    ));
+  }
+
+  let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
+  let zip_process_activity = match state.zip_capture_backend {
+    ZipCaptureBackend::IsolatedProcess => {
+      let deadline = tokio::time::Instant::now()
+        + Duration::from_millis(DEFAULT_TIMEOUT_MS)
+        + ZIP_CAPTURE_PROCESS_GRACE;
+      Some(
+        state
+          .zip_capture_processes
+          .begin(deadline)
+          .await
+          .map_err(lynxml_render_api_error)?,
+      )
+    }
+    #[cfg(test)]
+    ZipCaptureBackend::SharedWorker => None,
+  };
+
+  let staging_deadline = zip_process_activity
+    .as_ref()
+    .map(|activity| activity.deadline);
+  let staging = stage_lynxml(source, zip_process_activity);
+  let (staged, zip_process_activity) = match staging_deadline {
+    Some(deadline) => match tokio::time::timeout_at(deadline, staging).await {
+      Ok(result) => result?,
+      Err(_) => return Err(lynxml_render_timeout_error()),
+    },
+    None => match tokio::time::timeout(LYNXML_UPLOAD_TIMEOUT, staging).await {
+      Ok(result) => result?,
+      Err(_) => return Err(lynxml_render_timeout_error()),
+    },
+  };
+  let base_dir = std::fs::canonicalize(staged.path()).map_err(|_| {
+    ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "The staged LynXML directory is unavailable.",
+    )
+  })?;
+
+  let jpeg = match state.zip_capture_backend {
+    ZipCaptureBackend::IsolatedProcess => {
+      let activity = zip_process_activity
+        .expect("isolated LynXML capture must acquire render capacity before staging");
+      state
+        .zip_capture_processes
+        .capture(
+          activity,
+          staged,
+          base_dir,
+          LYNXML_ENTRYPOINT_URL.to_string(),
+          job_id,
+        )
+        .await
+        .map_err(lynxml_render_api_error)?
+    }
+    #[cfg(test)]
+    ZipCaptureBackend::SharedWorker => {
+      let capture_response = state
+        .headless
+        .capture(
+          staged_screenshot_request(LYNXML_ENTRYPOINT_URL, "Render the uploaded LynXML"),
+          None,
+          PageLoadOptions {
+            base_dir: Some(base_dir),
+            ..PageLoadOptions::default()
+          },
+        )
+        .await?;
+      let capture = capture_response.capture.map_err(|_| {
+        ApiError::new(
+          StatusCode::UNPROCESSABLE_ENTITY,
+          "The LynXML source could not be rendered.",
+        )
+      })?;
+      let jpeg = capture.into_jpeg().await.map_err(|_| {
+        ApiError::new(
+          StatusCode::INTERNAL_SERVER_ERROR,
+          "The LynXML screenshot could not be encoded.",
+        )
+      })?;
+      drop(staged);
+      jpeg
+    }
+  };
+  Ok(
+    (
+      [(CONTENT_TYPE, "image/jpeg"), (CACHE_CONTROL, "no-store")],
+      jpeg,
+    )
+      .into_response(),
+  )
+}
+
 async fn screenshot_zip(
   State(state): State<AppState>,
   Query(query): Query<ZipScreenshotQuery>,
@@ -798,16 +918,7 @@ async fn screenshot_zip(
       let capture_response = state
         .headless
         .capture_staged_zip(
-          JudgePageRequest {
-            include_geqi: false,
-            reference: None,
-            reference_image: None,
-            screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
-            steps: vec![],
-            task: "Render the uploaded ZIP".to_string(),
-            timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-            url: query.url,
-          },
+          staged_screenshot_request(&query.url, "Render the uploaded ZIP"),
           PageLoadOptions {
             base_dir: Some(base_dir),
             ..PageLoadOptions::default()
@@ -844,6 +955,140 @@ async fn screenshot_zip(
     )
       .into_response(),
   )
+}
+
+#[cfg(test)]
+fn staged_screenshot_request(url: &str, task: &str) -> JudgePageRequest {
+  JudgePageRequest {
+    include_geqi: false,
+    reference: None,
+    reference_image: None,
+    screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
+    steps: vec![],
+    task: task.to_string(),
+    timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
+    url: url.to_string(),
+  }
+}
+
+async fn stage_lynxml(
+  source: body::Bytes,
+  activity: Option<ZipCaptureProcessActivity>,
+) -> Result<(tempfile::TempDir, Option<ZipCaptureProcessActivity>), ApiError> {
+  tokio::task::spawn_blocking(move || -> io::Result<_> {
+    let directory = tempfile::Builder::new()
+      .prefix("ui-judge-lynxml-")
+      .tempdir()?;
+    let path = directory.path().join("index.lynxml");
+    let mut file = std::fs::OpenOptions::new()
+      .write(true)
+      .create_new(true)
+      .open(path)?;
+    file.write_all(&source)?;
+    file.flush()?;
+    Ok((directory, activity))
+  })
+  .await
+  .map_err(|_| {
+    ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "The LynXML staging worker failed.",
+    )
+  })?
+  .map_err(|_| {
+    ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "The LynXML source could not be staged.",
+    )
+  })
+}
+
+async fn read_lynxml_upload<F>(read: F, timeout: Duration) -> Result<body::Bytes, ApiError>
+where
+  F: Future<Output = Result<body::Bytes, axum::Error>>,
+{
+  match tokio::time::timeout(timeout, read).await {
+    Ok(Ok(source)) => Ok(source),
+    Ok(Err(error)) => Err(lynxml_upload_body_error(error)),
+    Err(_) => Err(ApiError::new(
+      StatusCode::REQUEST_TIMEOUT,
+      "The LynXML request body timed out.",
+    )),
+  }
+}
+
+fn validate_lynxml_upload_headers(headers: &HeaderMap) -> Result<(), ApiError> {
+  let media_type = headers
+    .get(CONTENT_TYPE)
+    .and_then(|value| value.to_str().ok())
+    .and_then(|value| value.split(';').next())
+    .map(str::trim);
+  let is_lynxml = media_type.is_some_and(|value| {
+    value.eq_ignore_ascii_case("application/xml")
+      || value.eq_ignore_ascii_case("text/xml")
+      || value.eq_ignore_ascii_case("text/plain")
+  });
+  if !is_lynxml {
+    return Err(ApiError::new(
+      StatusCode::UNSUPPORTED_MEDIA_TYPE,
+      "Content-Type must be application/xml, text/xml, or text/plain.",
+    ));
+  }
+
+  if let Some(length) = headers.get(CONTENT_LENGTH) {
+    let length = length
+      .to_str()
+      .ok()
+      .and_then(|value| value.parse::<u64>().ok())
+      .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "Invalid Content-Length header."))?;
+    if length > MAX_LYNXML_UPLOAD_BYTES as u64 {
+      return Err(lynxml_upload_too_large());
+    }
+  }
+  Ok(())
+}
+
+fn lynxml_upload_body_error(error: axum::Error) -> ApiError {
+  let reached_limit = std::error::Error::source(&error)
+    .is_some_and(|source| source.is::<http_body_util::LengthLimitError>());
+  if reached_limit {
+    lynxml_upload_too_large()
+  } else {
+    ApiError::new(
+      StatusCode::BAD_REQUEST,
+      "The LynXML request body could not be read.",
+    )
+  }
+}
+
+fn lynxml_upload_too_large() -> ApiError {
+  ApiError::new(
+    StatusCode::PAYLOAD_TOO_LARGE,
+    format!("LynXML source exceeds the {MAX_LYNXML_UPLOAD_BYTES}-byte limit."),
+  )
+}
+
+fn lynxml_render_timeout_error() -> ApiError {
+  ApiError::new(StatusCode::REQUEST_TIMEOUT, "The LynXML render timed out.")
+}
+
+fn lynxml_render_api_error(error: ApiError) -> ApiError {
+  match error.status {
+    StatusCode::REQUEST_TIMEOUT => lynxml_render_timeout_error(),
+    StatusCode::UNPROCESSABLE_ENTITY => ApiError::new(
+      StatusCode::UNPROCESSABLE_ENTITY,
+      "The LynXML source could not be rendered.",
+    ),
+    StatusCode::INTERNAL_SERVER_ERROR => ApiError::new(
+      StatusCode::INTERNAL_SERVER_ERROR,
+      "The isolated LynXML renderer is unavailable.",
+    ),
+    StatusCode::SERVICE_UNAVAILABLE => ApiError::new(
+      StatusCode::SERVICE_UNAVAILABLE,
+      "The isolated LynXML renderer is shutting down.",
+    ),
+    _ => error,
+  }
 }
 
 async fn read_zip_upload<F>(read: F, timeout: Duration) -> Result<body::Bytes, ApiError>
@@ -1413,6 +1658,13 @@ mod tests {
       .expect("build ZIP upload request")
   }
 
+  fn lynxml_request(source: &[u8]) -> Request<Body> {
+    Request::builder()
+      .header(CONTENT_TYPE, "application/xml; charset=utf-8")
+      .body(Body::from(source.to_vec()))
+      .expect("build LynXML request")
+  }
+
   fn zip_query(url: &str) -> Query<ZipScreenshotQuery> {
     Query(ZipScreenshotQuery {
       url: url.to_string(),
@@ -1561,6 +1813,124 @@ mod tests {
     assert_eq!(error.status, StatusCode::FORBIDDEN);
     assert!(error.message.contains("POST /screenshot/zip"));
     headless.shutdown().expect("stop screenshot worker");
+  }
+
+  #[tokio::test]
+  async fn lynxml_screenshot_stages_source_and_cleans_it_up() {
+    let source: &'static [u8] = b"<!doctype lynx><lynx><script thread=\"main\"></script></lynx>";
+    let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
+    let worker_staged_path = Arc::clone(&staged_path);
+    let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
+    let headless = scripted_workers(move |job| {
+      assert!(job.client.is_none());
+      assert_eq!(job.request.url, LYNXML_ENTRYPOINT_URL);
+      let base_dir = job
+        .load_options
+        .base_dir
+        .as_ref()
+        .expect("LynXML capture has an internal base directory");
+      assert_eq!(
+        std::fs::read(base_dir.join("index.lynxml")).unwrap(),
+        source
+      );
+      *worker_staged_path
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(base_dir.clone());
+      let _ = job.response.send(CaptureResponse {
+        capture: Ok(CapturedPage::from_bmp(bmp.clone())),
+        client: job.client,
+        request: job.request,
+      });
+    });
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
+      prepare_request: prepare_request_must_not_run,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
+    };
+
+    let response = screenshot_lynxml(State(state), lynxml_request(source))
+      .await
+      .expect("render LynXML source");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
+    assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
+    let staged_path = staged_path
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .clone()
+      .expect("worker observed the staging directory");
+    headless.shutdown().expect("stop LynXML screenshot worker");
+    assert!(
+      !staged_path.exists(),
+      "the request drops the LynXML staging directory after capture"
+    );
+  }
+
+  #[tokio::test]
+  async fn lynxml_screenshot_rejects_invalid_inputs_before_capture() {
+    let headless = scripted_workers(|_| panic!("invalid LynXML must not reach capture"));
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
+      prepare_request: prepare_request_must_not_run,
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
+    };
+
+    let wrong_media_type = Request::builder()
+      .header(CONTENT_TYPE, "application/json")
+      .body(Body::from("{}"))
+      .expect("build wrong-media-type request");
+    let error = screenshot_lynxml(State(state.clone()), wrong_media_type)
+      .await
+      .expect_err("reject a non-XML media type");
+    assert_eq!(error.status, StatusCode::UNSUPPORTED_MEDIA_TYPE);
+
+    let oversized = Request::builder()
+      .header(CONTENT_TYPE, "text/plain")
+      .header(CONTENT_LENGTH, MAX_LYNXML_UPLOAD_BYTES + 1)
+      .body(Body::empty())
+      .expect("build oversized request");
+    let error = screenshot_lynxml(State(state.clone()), oversized)
+      .await
+      .expect_err("reject oversized LynXML before reading its body");
+    assert_eq!(error.status, StatusCode::PAYLOAD_TOO_LARGE);
+
+    let lying_length = Request::builder()
+      .header(CONTENT_TYPE, "text/xml")
+      .header(CONTENT_LENGTH, 1)
+      .body(Body::from(vec![0; MAX_LYNXML_UPLOAD_BYTES + 1]))
+      .expect("build oversized streaming LynXML request");
+    let error = screenshot_lynxml(State(state.clone()), lying_length)
+      .await
+      .expect_err("enforce the LynXML body limit independently of Content-Length");
+    assert_eq!(error.status, StatusCode::PAYLOAD_TOO_LARGE);
+
+    let error = screenshot_lynxml(State(state.clone()), lynxml_request(b""))
+      .await
+      .expect_err("reject empty LynXML");
+    assert_eq!(error.status, StatusCode::BAD_REQUEST);
+
+    let error = screenshot_lynxml(State(state), lynxml_request(&[0xff]))
+      .await
+      .expect_err("reject non-UTF-8 LynXML");
+    assert_eq!(error.status, StatusCode::BAD_REQUEST);
+    headless.shutdown().expect("stop unused LynXML worker");
+  }
+
+  #[tokio::test]
+  async fn lynxml_upload_body_has_a_deadline() {
+    let error = read_lynxml_upload(
+      std::future::pending::<Result<body::Bytes, axum::Error>>(),
+      Duration::from_millis(1),
+    )
+    .await
+    .expect_err("reject a LynXML request body that never completes");
+
+    assert_eq!(error.status, StatusCode::REQUEST_TIMEOUT);
   }
 
   #[tokio::test]
@@ -1918,6 +2288,44 @@ mod tests {
         .to_rgb8();
       assert_eq!(rgb.dimensions(), (800, 600));
     }
+
+    let lynxml: &[u8] = br#"<!doctype lynx>
+<lynx engine-version="4.2">
+  <script thread="main">
+    var engine = lynx.getEngine();
+    var page = __CreatePage("0", 0);
+    var pageId = __GetElementUniqueID(page);
+    engine.addEventListener("__RenderPage", function() {
+      var root = __CreateView(pageId);
+      __SetInlineStyles(root, "width:800px;height:600px;background-color:#00ff00;");
+      __AppendElement(page, root);
+      __FlushElementTree(page);
+    });
+  </script>
+</lynx>"#;
+    let response = runtime
+      .block_on(screenshot_lynxml(
+        State(AppState {
+          headless: Arc::clone(&headless),
+          model_name: "judge-model".into(),
+          prepare_request: prepare_request_must_not_run,
+          zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
+          zip_capture_processes: ZipCaptureProcesses::new(),
+        }),
+        lynxml_request(lynxml),
+      ))
+      .expect("render raw LynXML source");
+    let jpeg = runtime
+      .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
+      .expect("read LynXML screenshot response");
+    let rgb = image::load_from_memory(&jpeg)
+      .expect("decode LynXML screenshot")
+      .to_rgb8();
+    assert_eq!(rgb.dimensions(), (800, 600));
+    assert!(
+      rgb.get_pixel(400, 300)[1] > 200,
+      "raw LynXML paints the expected green view"
+    );
 
     let index: &[u8] = br#"<!doctype lynx>
 <lynx engine-version="4.2">
