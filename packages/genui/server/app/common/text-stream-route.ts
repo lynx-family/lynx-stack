@@ -154,6 +154,9 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
+      let resultMetadata:
+        | { finishReason: unknown; usage: unknown }
+        | undefined;
       const enqueue = (event: string, data: unknown) => {
         if (closed) return false;
         try {
@@ -205,10 +208,28 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           });
 
           const { text, usage, finishReason } = await finalize();
+          resultMetadata = { finishReason, usage };
           generationController.signal.throwIfAborted();
           const rawFinalText = text ?? streamedText;
-          const finalText = config.normalizeFinalText?.(rawFinalText)
-            ?? rawFinalText;
+          log('upstream.result.finalized', {
+            rawFinalTextLength: rawFinalText.length,
+            finishReason,
+            usage,
+          });
+          let finalText: string;
+          try {
+            finalText = config.normalizeFinalText?.(rawFinalText)
+              ?? rawFinalText;
+          } catch (error) {
+            if (finishReason === 'length') {
+              const validationError = errorMessage(error).message;
+              throw new Error(
+                'Model output reached its token limit before producing a '
+                  + `valid final artifact: ${validationError}`,
+              );
+            }
+            throw error;
+          }
           log('done.enqueued', {
             finalTextLength: finalText.length,
             finishReason,
@@ -223,7 +244,10 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           });
         } catch (error: unknown) {
           if (!closed && !generationController.signal.aborted) {
-            const payload = errorMessage(error);
+            const payload = {
+              ...errorMessage(error),
+              ...(resultMetadata ?? {}),
+            };
             log('error.enqueued', payload);
             enqueue('error', payload);
           }

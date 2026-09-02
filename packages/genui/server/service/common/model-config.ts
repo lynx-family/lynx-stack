@@ -28,6 +28,7 @@ export interface ConfiguredModel {
   model: string;
   api?: 'chat' | 'responses';
   default?: true;
+  maxOutputTokens?: number;
   reasoningEffort?: OpenAIReasoningEffort;
 }
 
@@ -97,6 +98,21 @@ function parseConfiguredModel(
   if (isDefault !== undefined && typeof isDefault !== 'boolean') {
     throw new Error(`model ${JSON.stringify(name)} default must be a boolean`);
   }
+  const maxOutputTokens = value.maxOutputTokens;
+  if (
+    maxOutputTokens !== undefined
+    && (
+      typeof maxOutputTokens !== 'number'
+      || !Number.isSafeInteger(maxOutputTokens)
+      || maxOutputTokens <= 0
+    )
+  ) {
+    throw new Error(
+      `model ${
+        JSON.stringify(name)
+      } maxOutputTokens must be a positive safe integer`,
+    );
+  }
   const reasoningEffort = value.reasoningEffort;
   if (
     reasoningEffort !== undefined
@@ -113,6 +129,7 @@ function parseConfiguredModel(
     model,
     ...(api === undefined ? {} : { api }),
     ...(isDefault === true ? { default: true as const } : {}),
+    ...(maxOutputTokens === undefined ? {} : { maxOutputTokens }),
     ...(reasoningEffort === undefined
       ? {}
       : { reasoningEffort: reasoningEffort as OpenAIReasoningEffort }),
