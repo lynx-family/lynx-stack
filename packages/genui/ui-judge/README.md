@@ -162,31 +162,25 @@ from the caller's environment. Linux hosts must also provide the
 ### Docker
 
 The package Dockerfile puts a prebuilt Linux AMD64 server bundle and its system
-dependencies into an Ubuntu runtime image. Build the bundle with Cargo first.
-The crate's `build.rs` writes the server, Lynx runtime, `lynx_core.js`, and
-launcher into the target release directory:
+dependencies into an Ubuntu runtime image. Build the bundle with the package
+script first. It invokes Cargo, verifies the output from `build.rs`, and copies
+the server, Lynx runtime, `lynx_core.js`, and launcher into `dist/linux-amd64`:
 
 ```bash
-cargo build \
-  --locked \
-  --release \
-  --package ui_judge \
-  --features server \
-  --bin ui-judge-server \
-  --target x86_64-unknown-linux-gnu
+packages/genui/ui-judge/build.sh
 
 docker buildx build \
   --platform linux/amd64 \
   --file packages/genui/ui-judge/Dockerfile \
   --tag ui-judge:local \
   --load \
-  target/x86_64-unknown-linux-gnu/release
+  packages/genui/ui-judge/dist/linux-amd64
 ```
 
-The deploy workflow runs the same Cargo build on its native Ubuntu runner and
-uploads the four-file bundle as a tar artifact. The publishing job waits for
-the Rust tests, downloads that exact artifact, and puts it into the image
-without compiling Rust again.
+The deploy workflow runs the same build script on its native Ubuntu runner and
+uploads the verified four-file bundle as a tar artifact. The publishing job
+waits for the Rust tests, downloads that exact artifact, and puts it into the
+image without compiling Rust again.
 
 Pass model credentials only when starting the container. Production containers
 should use a read-only root filesystem and mount the configured `TMPDIR` as a
