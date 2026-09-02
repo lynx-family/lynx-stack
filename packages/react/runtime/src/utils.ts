@@ -92,16 +92,31 @@ export function hook<T, K extends keyof T>(
  * flush. Page destroy is the one path with no later turn to run them in:
  * `callDestroyLifetimeFun` returns and native tears the runtime down, so a
  * deferred cleanup would never run at all.
+ *
+ * In addition to redirecting future `requestAnimationFrame` scheduling to run
+ * synchronously, this also drains any effect flush already queued before the
+ * page is destroyed.
  */
 export function withSyncEffectFlush<T>(fn: () => T): T {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const previousRequestAnimationFrame = options.requestAnimationFrame;
-  options.requestAnimationFrame = cb => {
-    cb();
+  // Store the most recently scheduled callback so we can drain it after `fn()` returns.
+  // This is needed because `render(null, __root)` queues passive-effect cleanups
+  // during the call but schedules them via `requestAnimationFrame` after the
+  // call completes. By then we have restored the original scheduler, so we
+  // invoke the stored callback explicitly to drain the queue.
+  let pendingCallback: (() => void) | undefined;
+  options.requestAnimationFrame = (callback: () => void) => {
+    pendingCallback = callback;
+    // Immediately invoke the callback to make scheduling synchronous.
+    callback();
   };
   try {
     return fn();
   } finally {
+    // Drain any effect flushes that were queued by `fn()` but scheduled
+    // via `requestAnimationFrame` after `fn()` returned.
+    pendingCallback?.();
     if (previousRequestAnimationFrame) {
       options.requestAnimationFrame = previousRequestAnimationFrame;
     } else {
