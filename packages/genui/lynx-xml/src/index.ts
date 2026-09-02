@@ -5,6 +5,8 @@
 export {
   buildLynxXmlSystemPrompt,
   LYNX_XML_ENGINE_VERSION,
+  LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
+  LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT,
   LYNX_XML_SYSTEM_PROMPT,
 } from './prompt.js';
 export type { BuildLynxXmlSystemPromptOptions } from './prompt.js';

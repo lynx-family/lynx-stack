@@ -60,6 +60,15 @@ __SetAttribute(node4, "value", "42");
 __AppendElement(page, node4);`);
   });
 
+  test('preserves meaningful text whitespace and ignores whitespace-only nodes', () => {
+    const javascript = generateMainThreadScript(
+      '<text>  spaced text  </text><view>   </view>',
+    );
+
+    expect(javascript).toContain('__CreateRawText("  spaced text  ")');
+    expect(javascript).not.toContain('__CreateRawText("   ")');
+  });
+
   test('escapes closing script sequences in generated JavaScript', () => {
     expect(generateMainThreadScript('<text>&lt;/script&gt;</text>')).toContain(
       '__CreateRawText("<\\/script>")',
@@ -75,6 +84,11 @@ __AppendElement(page, node4);`);
     );
     expect(() => generateMainThreadScript('<script />')).toThrow(
       'Element <script> is not allowed',
+    );
+
+    const overlyDeepFragment = `${'<view>'.repeat(65)}${'</view>'.repeat(65)}`;
+    expect(() => generateMainThreadScript(overlyDeepFragment)).toThrow(
+      'XML fragment must not exceed 64 levels of element nesting',
     );
   });
 

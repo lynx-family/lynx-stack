@@ -29,6 +29,9 @@ deterministic initial-tree conversion. Parse well-formed fragments in source
 order, emit Element PAPI creation, literal property, and append calls that assume
 `page` and `pageId` already exist, and leave state, event handlers, updates,
 lifecycle registration, cleanup, and CSS to the agent-authored artifact.
+Bound element nesting before recursive emission, ignore whitespace-only text
+nodes, and preserve the original text of every non-empty node. Cover both
+limits with converter regression tests.
 Maintain mobile-specific defaults in `src/mobile-design.ts`: start from a
 narrow portrait, single-primary-scroll layout; use responsive units and a
 consistent semantic palette; consume each safe-area edge once; reserve space

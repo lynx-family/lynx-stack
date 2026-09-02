@@ -7,6 +7,7 @@ import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { z } from 'zod';
 
 const FRAGMENT_ROOT = 'genui-fragment';
+const MAX_XML_FRAGMENT_DEPTH = 64;
 const MAX_XML_FRAGMENT_LENGTH = 100_000;
 const TEXT_NODE_NAME = '#text';
 const ATTRIBUTE_NODE_NAME = ':@';
@@ -43,6 +44,7 @@ interface GeneratorState {
 
 type OrderedXmlNode = Record<string, unknown>;
 
+/** Escape a value for safe inclusion in an inline main-thread script. */
 function javascriptString(value: string): string {
   return JSON.stringify(value).replace(
     /<\/script/giu,
@@ -50,6 +52,7 @@ function javascriptString(value: string): string {
   );
 }
 
+/** Return the Element PAPI expression that creates one XML element. */
 function createElementExpression(tagName: string): string {
   const factory = ELEMENT_FACTORIES[tagName];
   return factory
@@ -57,20 +60,18 @@ function createElementExpression(tagName: string): string {
     : `__CreateElement(${javascriptString(tagName)}, pageId)`;
 }
 
+/** Emit a non-empty text node while preserving its original whitespace. */
 function appendText(
   text: string,
   parent: string,
   parentTagName: string | undefined,
   state: GeneratorState,
 ): void {
-  const value = text.trim();
-  if (!value) return;
+  if (!text.trim()) return;
 
   if (parentTagName === 'text') {
     state.lines.push(
-      `__AppendElement(${parent}, __CreateRawText(${
-        javascriptString(value)
-      }));`,
+      `__AppendElement(${parent}, __CreateRawText(${javascriptString(text)}));`,
     );
     return;
   }
@@ -78,11 +79,12 @@ function appendText(
   const node = `node${state.nextNodeIndex++}`;
   state.lines.push(
     `const ${node} = __CreateText(pageId);`,
-    `__AppendElement(${node}, __CreateRawText(${javascriptString(value)}));`,
+    `__AppendElement(${node}, __CreateRawText(${javascriptString(text)}));`,
     `__AppendElement(${parent}, ${node});`,
   );
 }
 
+/** Emit the Element PAPI call for one literal XML attribute. */
 function appendAttribute(
   node: string,
   name: string,
@@ -107,11 +109,13 @@ function appendAttribute(
   }
 }
 
+/** Emit one parsed XML node and its depth-bounded descendants. */
 function appendParsedNode(
   parsedNode: OrderedXmlNode,
   parent: string,
   parentTagName: string | undefined,
   state: GeneratorState,
+  depth: number,
 ): void {
   const entries = Object.entries(parsedNode).filter(
     ([name]) => name !== ATTRIBUTE_NODE_NAME,
@@ -124,6 +128,11 @@ function appendParsedNode(
   if (tagName === TEXT_NODE_NAME) {
     appendText(String(children), parent, parentTagName, state);
     return;
+  }
+  if (depth > MAX_XML_FRAGMENT_DEPTH) {
+    throw new Error(
+      `XML fragment must not exceed ${MAX_XML_FRAGMENT_DEPTH} levels of element nesting`,
+    );
   }
   if (!/^[a-z][a-z0-9-]*$/u.test(tagName)) {
     throw new Error(`Unsupported XML element: ${tagName}`);
@@ -149,7 +158,7 @@ function appendParsedNode(
     if (!child || typeof child !== 'object' || Array.isArray(child)) {
       throw new Error(`Invalid parsed child in <${tagName}>`);
     }
-    appendParsedNode(child as OrderedXmlNode, node, tagName, state);
+    appendParsedNode(child as OrderedXmlNode, node, tagName, state, depth + 1);
   }
   state.lines.push(`__AppendElement(${parent}, ${node});`);
 }
@@ -184,7 +193,7 @@ export function generateMainThreadScript(xmlFragment: string): string {
     if (!child || typeof child !== 'object' || Array.isArray(child)) {
       throw new Error('XML fragment contains an unsupported node');
     }
-    appendParsedNode(child as OrderedXmlNode, 'page', undefined, state);
+    appendParsedNode(child as OrderedXmlNode, 'page', undefined, state, 1);
   }
   if (state.lines.length === 0) {
     throw new Error('XML fragment must contain visible content');
@@ -204,6 +213,7 @@ const outputSchema = z.object({
   ),
 });
 
+/** Create the Mastra tool that converts XML fragments into Element PAPI code. */
 export function createHtmlFragmentToMainThreadScriptTool() {
   return createTool({
     id: 'html_fragment_to_main_thread_script',

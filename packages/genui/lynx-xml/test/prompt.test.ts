@@ -6,6 +6,8 @@ import { describe, expect, test } from '@rstest/core';
 
 import {
   LYNX_XML_ENGINE_VERSION,
+  LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
+  LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT,
   LYNX_XML_SYSTEM_PROMPT,
   buildLynxXmlSystemPrompt,
 } from '../src/index.js';
@@ -15,6 +17,20 @@ describe('buildLynxXmlSystemPrompt', () => {
   test('builds the exported default prompt', () => {
     expect(LYNX_XML_ENGINE_VERSION).toBe('4.2');
     expect(LYNX_XML_SYSTEM_PROMPT).toBe(buildLynxXmlSystemPrompt());
+  });
+
+  test('builds the prompt for agents with the fragment conversion tool', () => {
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toBe(
+      buildLynxXmlSystemPrompt({
+        appendix: LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
+      }),
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
+      'html_fragment_to_main_thread_script',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'html_fragment_to_main_thread_script',
+    );
   });
 
   test('composes guidance from the Vanilla Lynx skill dependency', () => {
