@@ -40,6 +40,8 @@ export function isDebug(): boolean {
 
   const values = process.env['DEBUG'].toLocaleLowerCase().split(',');
   return [
+    'lynx:*',
+    'lynx:template',
     'rspeedy:*',
     'rspeedy:template',
   ].some(value => values.includes(value));
