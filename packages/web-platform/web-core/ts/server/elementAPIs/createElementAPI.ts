@@ -7,6 +7,7 @@
 import { MainThreadServerContext, StyleSheetResource } from '../wasm.js';
 
 import {
+  HTML_TAG_TO_LYNX_TAG_MAP,
   LYNX_TAG_TO_HTML_TAG_MAP,
   uniqueIdSymbol,
   lynxDefaultDisplayLinearAttribute,
@@ -168,15 +169,7 @@ export function createElementAPI(
       __GetTag: ((element: HTMLElement) => {
         const el = element as ServerElement;
         const tag = wasmContext.get_tag(el[uniqueIdSymbol]) ?? '';
-        // Reverse-map HTML tag to Lynx tag (consistent with CSR `__GetTag` behavior)
-        for (
-          const [lynxTag, htmlTag] of Object.entries(LYNX_TAG_TO_HTML_TAG_MAP)
-        ) {
-          if (tag === htmlTag) {
-            return lynxTag;
-          }
-        }
-        return tag;
+        return HTML_TAG_TO_LYNX_TAG_MAP[tag] ?? tag;
       }) as GetTagPAPI,
       __GetAttributes: ((element: HTMLElement) => {
         const el = element as ServerElement;
