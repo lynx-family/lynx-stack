@@ -1,12 +1,9 @@
 use crate::sys;
 use crate::{buffer::CByteBuffer, c_str_to_string, Error, LynxEnv, Result};
 use std::collections::HashMap;
-use std::ffi::{c_char, c_void, CStr, CString};
+use std::ffi::{c_void, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{Arc, Mutex, OnceLock};
-
-const INERT_RESOURCE_URL: &str = "lynx-resource-intercept://blocked";
-const MIN_INTERCEPT_URL_CAPACITY: usize = 1024;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceRequest {
@@ -96,14 +93,6 @@ pub trait ResourceFetcher: Send + 'static {
     self.fetch(request)
   }
 
-  /// Transforms a resource URL before the runtime selects its loader.
-  ///
-  /// Return an inert, unsupported URL to reject a request. The default
-  /// preserves the original URL.
-  fn intercept_url(&mut self, url: &str, _should_decode: bool) -> String {
-    url.to_owned()
-  }
-
   fn cancel(&mut self, _request_id: sys::lynx_resource_request_id) {}
 }
 
@@ -162,7 +151,6 @@ impl GenericResourceFetcher {
       (sys.lynx_generic_resource_fetcher_bind_fetch_resource)(raw, Some(fetch_resource));
       (sys.lynx_generic_resource_fetcher_bind_fetch_resource_path)(raw, Some(fetch_path));
       (sys.lynx_generic_resource_fetcher_bind_cancel_fetch)(raw, Some(cancel_fetch));
-      (sys.lynx_generic_resource_fetcher_bind_intercept_func)(raw, Some(intercept_url));
     }
 
     Ok(Self { sys, raw })
@@ -234,53 +222,6 @@ unsafe extern "C" fn cancel_fetch(
       fetcher.cancel(request_id);
     }
   }));
-}
-
-unsafe extern "C" fn intercept_url(
-  url: *const c_char,
-  should_decode: bool,
-  user_data: *mut c_void,
-) -> *mut c_char {
-  // `GenericResourceFetcher::new` creates the native fetcher with a non-null
-  // `Arc::into_raw` pointer, and the C API promises to pass that exact pointer
-  // until its finalizer releases the Arc. Without that runtime context there
-  // is no allocator with which to construct a valid return value.
-  let Some(context) = user_data.cast::<ResourceFetcherContext>().as_ref() else {
-    return std::ptr::null_mut();
-  };
-  let url = if url.is_null() {
-    None
-  } else {
-    CStr::from_ptr(url).to_str().ok()
-  };
-  let intercepted = intercepted_url(&context.fetcher, url, should_decode);
-  (context.sys.lynx_strdup)(intercepted.as_ptr())
-}
-
-fn intercepted_url(
-  fetcher: &Mutex<Box<dyn ResourceFetcher>>,
-  url: Option<&str>,
-  should_decode: bool,
-) -> CString {
-  // Clay copies the redirect into a buffer sized to the larger of the
-  // original URL and 1024 bytes. Reject redirects that its adapter would
-  // truncate, since a truncated canonical file URL is no longer guaranteed to
-  // remain beneath the path that the embedder validated.
-  let max_redirect_len = url.map(|url| url.len().max(MIN_INTERCEPT_URL_CAPACITY));
-  let intercepted = url.and_then(|url| {
-    catch_unwind(AssertUnwindSafe(|| {
-      fetcher
-        .lock()
-        .expect("resource fetcher lock poisoned")
-        .intercept_url(url, should_decode)
-    }))
-    .ok()
-  });
-
-  intercepted
-    .filter(|url| max_redirect_len.is_some_and(|max_len| url.len() <= max_len))
-    .and_then(|url| CString::new(url).ok())
-    .unwrap_or_else(|| CString::new(INERT_RESOURCE_URL).expect("inert resource URL is valid"))
 }
 
 unsafe fn complete_fetch(
@@ -436,59 +377,6 @@ mod tests {
     });
 
     assert_eq!(response.data, Some(b"memory://asset".to_vec()));
-    assert_eq!(
-      fetcher.intercept_url("memory://asset", false),
-      "memory://asset"
-    );
     fetcher.cancel(7);
-  }
-
-  #[test]
-  fn resource_interception_fails_closed() {
-    struct RejectingFetcher;
-
-    impl ResourceFetcher for RejectingFetcher {
-      fn fetch(&mut self, _request: ResourceRequest) -> FetchResponse {
-        FetchResponse::empty_ok()
-      }
-
-      fn intercept_url(&mut self, url: &str, _should_decode: bool) -> String {
-        match url {
-          "reject" => "caller-blocked://resource".into(),
-          "long" => "x".repeat(MIN_INTERCEPT_URL_CAPACITY + 1),
-          "nul" => "bad\0url".into(),
-          "panic" => panic!("interceptor panic"),
-          _ => format!("safe://{url}"),
-        }
-      }
-    }
-
-    let fetcher: Mutex<Box<dyn ResourceFetcher>> = Mutex::new(Box::new(RejectingFetcher));
-    assert_eq!(
-      intercepted_url(&fetcher, Some("asset"), true).to_str(),
-      Ok("safe://asset")
-    );
-    assert_eq!(
-      intercepted_url(&fetcher, Some("reject"), false).to_str(),
-      Ok("caller-blocked://resource")
-    );
-    assert_eq!(
-      intercepted_url(&fetcher, Some("nul"), false).to_str(),
-      Ok(INERT_RESOURCE_URL)
-    );
-    assert_eq!(
-      intercepted_url(&fetcher, Some("long"), false).to_str(),
-      Ok(INERT_RESOURCE_URL)
-    );
-    assert_eq!(
-      intercepted_url(&fetcher, None, false).to_str(),
-      Ok(INERT_RESOURCE_URL)
-    );
-
-    let panicking_fetcher: Mutex<Box<dyn ResourceFetcher>> = Mutex::new(Box::new(RejectingFetcher));
-    assert_eq!(
-      intercepted_url(&panicking_fetcher, Some("panic"), false).to_str(),
-      Ok(INERT_RESOURCE_URL)
-    );
   }
 }
