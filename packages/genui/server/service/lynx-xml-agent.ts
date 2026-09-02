@@ -2,6 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  createHtmlFragmentScriptRunScope,
+  resolveHtmlFragmentScriptPlaceholders,
+} from '../agent/html-fragment-to-main-thread-script-tool.js';
+import type { HtmlFragmentScriptRunScope } from '../agent/html-fragment-to-main-thread-script-tool.js';
 import { createLynxXmlAgent } from '../agent/lynx-xml-agent.js';
 import type { LynxXmlAgent } from '../agent/lynx-xml-agent.js';
 import {
@@ -49,6 +54,33 @@ export function buildLynxXmlRunOptions(
   };
 }
 
+/** Add the request-scoped fragment registry to one agent invocation. */
+function buildLynxXmlScopedRunOptions(
+  opts: LynxXmlChatOptions,
+  abortSignal: AbortSignal | undefined,
+  scope: HtmlFragmentScriptRunScope,
+) {
+  return {
+    ...buildLynxXmlRunOptions(opts, abortSignal),
+    requestContext: scope.requestContext,
+  };
+}
+
+/** Track streamed text so final placeholder expansion has a fallback value. */
+function trackTextStream(
+  source: AsyncIterable<string>,
+  onChunk: (chunk: string) => void,
+): AsyncIterable<string> {
+  return {
+    [Symbol.asyncIterator]: async function*() {
+      for await (const chunk of source) {
+        onChunk(chunk);
+        yield chunk;
+      }
+    },
+  };
+}
+
 export default class LynxXmlAgentService {
   private readonly agentCache = new ProviderAgentCache<LynxXmlAgent>();
 
@@ -59,10 +91,11 @@ export default class LynxXmlAgentService {
     return this.agentCache.get(opts, createAgent);
   }
 
-  public async stream(
+  private async streamWithScope(
     messages: ChatMessage[],
-    opts: LynxXmlChatOptions = {},
-    abortSignal?: AbortSignal,
+    opts: LynxXmlChatOptions,
+    abortSignal: AbortSignal | undefined,
+    scope: HtmlFragmentScriptRunScope,
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
@@ -76,7 +109,11 @@ export default class LynxXmlAgentService {
     });
 
     const streamStartedAt = performance.now();
-    const runOptions = buildLynxXmlRunOptions(opts, abortSignal);
+    const runOptions = buildLynxXmlScopedRunOptions(
+      opts,
+      abortSignal,
+      scope,
+    );
     opts.onPerformanceEvent?.('agent.stream.invoke.started', {
       maxOutputTokens: runOptions.modelSettings.maxOutputTokens,
     });
@@ -89,6 +126,19 @@ export default class LynxXmlAgentService {
       hasTextStream: Boolean(result.textStream),
     });
     return result;
+  }
+
+  public stream(
+    messages: ChatMessage[],
+    opts: LynxXmlChatOptions = {},
+    abortSignal?: AbortSignal,
+  ): Promise<MastraStreamResult> {
+    return this.streamWithScope(
+      messages,
+      opts,
+      abortSignal,
+      createHtmlFragmentScriptRunScope(),
+    );
   }
 
   public async streamAsAsyncIterable(
@@ -114,14 +164,29 @@ export default class LynxXmlAgentService {
       preparedContentChars: sumContentChars(preparedMessages),
     });
 
-    const streamResult = await this.stream(
+    const scope = createHtmlFragmentScriptRunScope();
+    const streamResult = await this.streamWithScope(
       preparedMessages,
       opts,
       abortSignal,
+      scope,
     );
+    let streamedText = '';
     return {
-      textStream: toAsyncIterable(streamResult.textStream),
-      finalize: () => finalizeResult(streamResult),
+      textStream: trackTextStream(
+        toAsyncIterable(streamResult.textStream),
+        (chunk) => {
+          streamedText += chunk;
+        },
+      ),
+      finalize: async () => {
+        const result = await finalizeResult(streamResult);
+        const rawText = result.text ?? streamedText;
+        return {
+          ...result,
+          text: resolveHtmlFragmentScriptPlaceholders(scope, rawText),
+        };
+      },
     };
   }
 
@@ -134,11 +199,16 @@ export default class LynxXmlAgentService {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
+    const scope = createHtmlFragmentScriptRunScope();
     const result = await agent.generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
-      buildLynxXmlRunOptions(opts, abortSignal),
+      buildLynxXmlScopedRunOptions(opts, abortSignal, scope),
     ) as MastraResult;
-    return extractGenerationResult(result);
+    const generated = await extractGenerationResult(result);
+    return {
+      ...generated,
+      text: resolveHtmlFragmentScriptPlaceholders(scope, generated.text),
+    };
   }
 }
 

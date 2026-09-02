@@ -7,6 +7,7 @@ import { Agent } from '@mastra/core/agent';
 import { LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT } from '@lynx-js/genui-lynx-xml';
 
 import { createHtmlFragmentToMainThreadScriptTool } from './html-fragment-to-main-thread-script-tool.js';
+import type { HtmlFragmentScriptRunScope } from './html-fragment-to-main-thread-script-tool.js';
 import { createLLMProvider } from './openai-provider.js';
 import type { OpenAIProviderOptions } from './openai-provider.js';
 
@@ -15,6 +16,7 @@ interface LynxXmlAgentRunOptions {
   modelSettings?: {
     maxOutputTokens?: number | undefined;
   } | undefined;
+  requestContext: HtmlFragmentScriptRunScope['requestContext'];
   resourceId?: string | undefined;
 }
 

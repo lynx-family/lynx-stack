@@ -31,6 +31,15 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
       'html_fragment_to_main_thread_script',
     );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'opaque placeholder comment',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'bindings map',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'It does not return the generated JavaScript',
+    );
   });
 
   test('composes guidance from the Vanilla Lynx skill dependency', () => {

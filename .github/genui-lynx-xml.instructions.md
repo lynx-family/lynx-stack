@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/{lynx-xml-agent,html-fragment-to-main-thread-script-tool}.ts"
+applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/{lynx-xml-agent,html-fragment-to-main-thread-script-tool}.ts,packages/genui/server/service/lynx-xml-agent.ts"
 ---
 
 Keep Lynx XML prompt construction in `packages/genui/lynx-xml`; the server
@@ -32,6 +32,11 @@ lifecycle registration, cleanup, and CSS to the agent-authored artifact.
 Bound element nesting before recursive emission, ignore whitespace-only text
 nodes, and preserve the original text of every non-empty node. Cover both
 limits with converter regression tests.
+Keep generated fragment JavaScript in a Mastra `RequestContext` registry scoped
+to one agent run. Return only an opaque placeholder plus XML-id node bindings to
+the model, require the placeholder exactly once on its own line, and expand it
+before final artifact validation and delivery. Never store generated scripts on
+the cached Agent or in a process-global registry.
 Maintain mobile-specific defaults in `src/mobile-design.ts`: start from a
 narrow portrait, single-primary-scroll layout; use responsive units and a
 consistent semantic palette; consume each safe-area edge once; reserve space

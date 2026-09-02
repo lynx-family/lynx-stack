@@ -21,8 +21,10 @@ const ENGINE_VERSION_PATTERN = /^\d+(?:\.\d+)*$/u;
 /** Tool-specific guidance for converting initial XML element fragments. */
 export const LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS =
   `Initial tree conversion tool:
-- Draft the initial static Lynx element tree as one well-formed XML fragment, then call html_fragment_to_main_thread_script with that fragment.
-- Use the returned JavaScript inside renderPage(). It assumes page and pageId already exist and appends every top-level fragment node to page.
+- Draft the initial static Lynx element tree as one well-formed XML fragment, then call html_fragment_to_main_thread_script exactly once with that fragment. Give every node needed by event handlers or dynamic updates a unique id attribute.
+- The tool returns an opaque placeholder comment and a bindings map from XML ids to generated node variable names. It does not return the generated JavaScript.
+- Copy the placeholder exactly, without quoting or rewriting it, onto its own line inside renderPage() after page and pageId exist. The server replaces it with the generated Element PAPI statements after model generation.
+- Write event handlers and dynamic updates after the placeholder. Refer to generated nodes only through the returned bindings and do not redeclare those node variable names.
 - The tool handles element creation, literal text, classes, IDs, inline styles, datasets, attributes, and child order. Write state, event handlers, dynamic updates, lifecycle registration, and cleanup yourself.
 - Do not put style, script, lynx, page, or raw-text elements in the fragment. Keep CSS in the artifact's style block and bind events in main-thread JavaScript.`;
 
