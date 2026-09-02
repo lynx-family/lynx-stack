@@ -13,6 +13,7 @@ import {
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import {
   collectElementTemplateSubtreeHandleIds,
+  collectMainThreadRefSubtreeHandleIds,
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
@@ -173,6 +174,7 @@ describe('Compiled background Preact updates', () => {
           SLOT_ID,
           moved.instanceId,
           first.instanceId,
+          collectMainThreadRefSubtreeHandleIds(moved),
         ]);
         envManager.switchToBackground();
         expect(getSlotChildren(host)).toEqual([moved, first, second]);
@@ -257,6 +259,7 @@ describe('Compiled background Preact updates', () => {
             SLOT_ID,
             current.instanceId,
             0,
+            collectMainThreadRefSubtreeHandleIds(current),
           ]);
           envManager.switchToBackground();
 

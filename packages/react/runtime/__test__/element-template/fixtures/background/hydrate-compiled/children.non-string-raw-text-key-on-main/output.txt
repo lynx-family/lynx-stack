@@ -11,6 +11,7 @@ Object {
       "templateKey": "_et_builtin_raw_text",
     },
     Object {
+      "attachedSubtreeHandleIds": null,
       "childId": 3,
       "elementSlotIndex": 0,
       "op": "insertNode",

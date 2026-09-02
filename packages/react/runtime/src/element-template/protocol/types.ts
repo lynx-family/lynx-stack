@@ -48,6 +48,7 @@ export interface ElementTemplateHandleRefCommandValue {
 export interface UpdateTypedListItemCommand extends ElementTemplateHandleRefCommandValue {
   type: string;
   platformInfo: Record<string, SerializableValue>;
+  subtreeHandleIds: number[];
 }
 
 // Typed list create carries logical item records here, and MTS resolves their
@@ -115,12 +116,27 @@ export type SetAttributeCommand = [
   value: SerializableValue | null,
 ];
 
+export type SetMainThreadEventCommand = [
+  typeof ElementTemplateUpdateOps.setMainThreadEvent,
+  targetHandleId: number,
+  attrSlotIndex: number,
+  value: SerializableValue | null,
+];
+
+export type SetMainThreadRefCommand = [
+  typeof ElementTemplateUpdateOps.setMainThreadRef,
+  targetHandleId: number,
+  attrSlotIndex: number,
+  value: SerializableValue | null,
+];
+
 export type InsertNodeCommand = [
   typeof ElementTemplateUpdateOps.insertNode,
   targetHandleId: number,
   elementSlotIndex: number,
   childHandleId: number,
   referenceHandleId: number,
+  attachedSubtreeHandleIds: number[] | null,
 ];
 
 export type RemoveNodeCommand = [
@@ -163,6 +179,8 @@ export type UpdateTypedListItemInfoCommand = [
 export type ElementTemplateUpdateCommand =
   | CreateTemplateCommand
   | SetAttributeCommand
+  | SetMainThreadEventCommand
+  | SetMainThreadRefCommand
   | InsertNodeCommand
   | RemoveNodeCommand
   | CreateTypedElementCommand

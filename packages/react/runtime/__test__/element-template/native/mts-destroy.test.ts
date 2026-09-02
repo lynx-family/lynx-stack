@@ -8,6 +8,7 @@ import {
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
 import {
+  attachMainThreadDynamicAttrRefsForSubtree,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
@@ -15,6 +16,7 @@ import {
 import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
+  adaptMTRefAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { elementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
@@ -92,19 +94,47 @@ describe('mts-destroy', () => {
 
   it('clears the element template registry on destruction', () => {
     const registryRef = {} as ElementRef;
+    const mtRef = { _wvid: 7 };
+    const updateWorkletRef = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: {
+        updateWorkletRef,
+      },
+    } as typeof globalThis.lynxWorkletImpl;
     elementTemplateRegistry.set(-1, registryRef);
-    __etAttrPlanMap._et_destroy = [0, adaptMTEventAttrSlot];
-    initializeMainThreadDynamicAttrSlots(-1, '_et_destroy', [{
-      type: 'worklet',
-      value: { _wkltId: 'tap' },
-    }]);
-    expect(elementTemplateRegistry.get(-1)).toBe(registryRef);
-    expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
+    __etAttrPlanMap._et_destroy = [0, adaptMTEventAttrSlot, 1, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(
+      -1,
+      '_et_destroy',
+      [
+        {
+          type: 'worklet',
+          value: { _wkltId: 'tap' },
+        },
+        {
+          type: 'main-thread-ref',
+          value: mtRef,
+        },
+      ],
+    );
+    attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: registryRef }]);
 
-    onMtsDestruction();
+    try {
+      expect(elementTemplateRegistry.get(-1)).toBe(registryRef);
+      expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
+      expect(getMainThreadDynamicAttrState(-1, 1)).toBeDefined();
 
-    expect(elementTemplateRegistry.get(-1)).toBeUndefined();
-    expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+      onMtsDestruction();
+
+      expect(elementTemplateRegistry.get(-1)).toBeUndefined();
+      expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+      expect(getMainThreadDynamicAttrState(-1, 1)).toBeUndefined();
+      expect(updateWorkletRef).toHaveBeenCalledWith(mtRef, null);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
   });
 
   it('clears delayed runOnBackground tasks on destruction', () => {

@@ -461,6 +461,7 @@ describe('render transform contract', () => {
         __etHandleRef: serializedChildren[0]!.uid,
         type: serializedChildren[0]!.templateKey,
         platformInfo: { 'item-key': 'first' },
+        subtreeHandleIds: [],
       },
       ElementTemplateUpdateOps.updateTypedListItem,
       serialized.uid,
@@ -468,6 +469,7 @@ describe('render transform contract', () => {
         __etHandleRef: serializedChildren[1]!.uid,
         type: serializedChildren[1]!.templateKey,
         platformInfo: { 'item-key': 'second' },
+        subtreeHandleIds: [],
       },
     ]);
 

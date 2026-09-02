@@ -31,6 +31,54 @@ export type EtAttrPlanMap = Record<
 
 export const __etAttrPlanMap = Object.create(null) as EtAttrPlanMap;
 
+export type MainThreadDynamicAttrKind = 'mt-event' | 'mt-ref';
+
+const mainThreadDynamicAttrSlotKinds = new Map<
+  string,
+  ReadonlyMap<number, MainThreadDynamicAttrKind> | null
+>();
+
+export function getMainThreadDynamicAttrSlotKinds(
+  templateType: string,
+): ReadonlyMap<number, MainThreadDynamicAttrKind> | undefined {
+  const cached = mainThreadDynamicAttrSlotKinds.get(templateType);
+  if (cached !== undefined) {
+    return cached ?? undefined;
+  }
+
+  const attrPlan = __etAttrPlanMap[templateType];
+  let slotKinds: Map<number, MainThreadDynamicAttrKind> | undefined;
+  if (attrPlan) {
+    for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
+      const adapter = attrPlan[planIndex + 1];
+      let kind: MainThreadDynamicAttrKind | undefined;
+      if (adapter === adaptMTEventAttrSlot) {
+        kind = 'mt-event';
+      } else if (adapter === adaptMTRefAttrSlot) {
+        kind = 'mt-ref';
+      }
+      if (kind) {
+        (slotKinds ??= new Map()).set(attrPlan[planIndex] as number, kind);
+      }
+    }
+  }
+  mainThreadDynamicAttrSlotKinds.set(templateType, slotKinds ?? null);
+  return slotKinds;
+}
+
+export function hasMainThreadRefAttrSlot(templateType: string): boolean {
+  const slotKinds = getMainThreadDynamicAttrSlotKinds(templateType);
+  if (!slotKinds) {
+    return false;
+  }
+  for (const kind of slotKinds.values()) {
+    if (kind === 'mt-ref') {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function adaptEventAttrSlot(
   handleId: number,
   attrSlotIndex: number,
@@ -101,4 +149,5 @@ export function clearEtAttrPlanMap(): void {
   for (const templateKey in __etAttrPlanMap) {
     delete __etAttrPlanMap[templateKey];
   }
+  mainThreadDynamicAttrSlotKinds.clear();
 }

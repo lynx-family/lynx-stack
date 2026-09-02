@@ -322,6 +322,7 @@ describe('Compiled authored ET page fixtures', () => {
         elementSlotIndex: 0,
         childId: 3,
         referenceId: 0,
+        attachedSubtreeHandleIds: null,
       },
     ]);
     expect(serializeToJSX(pageModule.__page)).toContain('without page');
@@ -374,6 +375,7 @@ describe('Compiled authored ET page fixtures', () => {
         elementSlotIndex: 0,
         childId: 4,
         referenceId: 0,
+        attachedSubtreeHandleIds: null,
       },
     ]);
     expect(serializeToJSX(pageModule.__page)).toContain('child');
