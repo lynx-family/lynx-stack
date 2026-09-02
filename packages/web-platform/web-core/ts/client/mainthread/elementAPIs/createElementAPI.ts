@@ -628,6 +628,10 @@ export function createElementAPI(
     __InvokeUIMethod: mtsBinding.lynxViewInstance.invokeUIMethod,
     __QuerySelector,
     __QuerySelectorAll,
+    // Gesture recognition is not implemented on web yet. Keep these PAPIs as
+    // no-ops so ReactLynx bundles using `main-thread:gesture` can still render.
+    __SetGestureDetector: () => {},
+    __RemoveGestureDetector: () => {},
     __FlushElementTree: (_, options) => {
       const pipelineId = options?.pipelineOptions?.pipelineID;
       const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;

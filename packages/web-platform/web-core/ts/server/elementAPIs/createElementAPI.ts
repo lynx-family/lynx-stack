@@ -518,6 +518,10 @@ export function createElementAPI(
       __QuerySelectorAll: () => {
         throw new Error('Not yet Implemented');
       },
+      // SSR does not recognize gestures, but gesture-bearing bundles still
+      // need the PAPIs to exist while their main-thread code is evaluated.
+      __SetGestureDetector: () => {},
+      __RemoveGestureDetector: () => {},
     },
     wasmContext,
   };

@@ -139,6 +139,21 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
 
+  test('gesture detector PAPIs are supported as no-ops', () => {
+    const element = mtsGlobalThis.__CreateElement('view', 0);
+
+    expect(() => {
+      mtsGlobalThis.__SetGestureDetector(
+        element,
+        1,
+        0,
+        { callbacks: [] },
+        { waitFor: [], simultaneous: [], continueWith: [] },
+      );
+      mtsGlobalThis.__RemoveGestureDetector(element, 1);
+    }).not.toThrow();
+  });
+
   test('createElement maps input to x-input', () => {
     // `input` is created as the `x-input` custom element so Lynx event
     // forwarding wires up (matches native behavior on web).
