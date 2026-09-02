@@ -15,6 +15,12 @@ export function pluginSourcemap(): RsbuildPlugin {
     name: 'lynx:rsbuild:sourcemap',
     pre: ['lynx:rsbuild:dev'],
     setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       api.modifyBundlerChain((chain, { isDev, environment }) => {
         const { dev, output, server } = api.getRsbuildConfig('current')
 

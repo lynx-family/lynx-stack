@@ -139,6 +139,12 @@ export function pluginMinify(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:minify',
     setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         const userMinify = config.output?.minify
 

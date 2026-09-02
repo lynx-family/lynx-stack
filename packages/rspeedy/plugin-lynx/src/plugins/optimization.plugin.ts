@@ -8,6 +8,12 @@ export function pluginOptimization(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:optimization',
     setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       api.modifyBundlerChain((chain, { CHAIN_ID, isProd }) => {
         const jsRule = chain.module
           .rule(CHAIN_ID.RULE.JS)

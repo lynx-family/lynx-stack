@@ -8,6 +8,12 @@ export function pluginCssMinimizer(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:css-minimizer',
     async setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       // If no `@rsbuild/plugin-css-minimizer` is applied, apply it
       const { pluginCssMinimizer, PLUGIN_CSS_MINIMIZER_NAME } = await import(
         '@rsbuild/plugin-css-minimizer'

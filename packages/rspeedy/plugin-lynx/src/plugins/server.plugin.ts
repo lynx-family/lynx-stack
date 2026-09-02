@@ -10,6 +10,12 @@ export function pluginServer(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:server',
     setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       api.modifyRsbuildConfig({
         handler: (config, { mergeRsbuildConfig }) => {
           if (api.getRsbuildConfig('original').server?.host !== undefined) {

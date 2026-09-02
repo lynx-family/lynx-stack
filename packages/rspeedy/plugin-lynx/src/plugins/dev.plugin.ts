@@ -30,6 +30,12 @@ export function pluginDev(): RsbuildPlugin {
       return action === 'dev' || config.mode === 'development'
     },
     async setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       // The dev URLs always point at the main bundle of an entry.
       function getResolveBundleName() {
         const lynxConfig = getLynxConfig(api)
