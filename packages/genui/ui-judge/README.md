@@ -161,18 +161,32 @@ from the caller's environment. Linux hosts must also provide the
 
 ### Docker
 
-The package Dockerfile builds the Linux AMD64 server bundle and includes its
-Lynx runtime assets and system dependencies. Use the repository root as the
-build context so Cargo can resolve the workspace-local crates:
+The package Dockerfile puts a prebuilt Linux AMD64 server bundle and its system
+dependencies into an Ubuntu runtime image. Build the bundle with Cargo first.
+The crate's `build.rs` writes the server, Lynx runtime, `lynx_core.js`, and
+launcher into the target release directory:
 
 ```bash
+cargo build \
+  --locked \
+  --release \
+  --package ui_judge \
+  --features server \
+  --bin ui-judge-server \
+  --target x86_64-unknown-linux-gnu
+
 docker buildx build \
   --platform linux/amd64 \
   --file packages/genui/ui-judge/Dockerfile \
   --tag ui-judge:local \
   --load \
-  .
+  target/x86_64-unknown-linux-gnu/release
 ```
+
+The deploy workflow runs the same Cargo build on its native Ubuntu runner and
+uploads the four-file bundle as a tar artifact. The publishing job waits for
+the Rust tests, downloads that exact artifact, and puts it into the image
+without compiling Rust again.
 
 Pass model credentials only when starting the container. Production containers
 should use a read-only root filesystem and mount the configured `TMPDIR` as a

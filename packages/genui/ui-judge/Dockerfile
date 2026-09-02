@@ -1,17 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# The downloaded Lynx runtime currently supports Linux AMD64 only. Use the
-# repository root as the build context so Cargo can resolve workspace crates.
-ARG RUST_VERSION=1.97.1
-
-FROM --platform=linux/amd64 rust:${RUST_VERSION}-bookworm AS builder
-
-WORKDIR /workspace
-COPY . .
-
-RUN packages/genui/ui-judge/build.sh
-
-FROM --platform=linux/amd64 debian:bookworm-slim AS runtime
+FROM --platform=linux/amd64 ubuntu:26.04
 
 RUN apt-get update \
   && apt-get install --yes --no-install-recommends \
@@ -22,7 +11,9 @@ RUN apt-get update \
   && mkdir --parents /tmp/ui-judge \
   && chmod 1777 /tmp/ui-judge
 
-COPY --from=builder /workspace/packages/genui/ui-judge/dist/linux-amd64/ /opt/ui-judge/
+WORKDIR /opt/ui-judge
+COPY ui-judge-server start.sh lynx_core.js ./
+COPY lib/libLynx_clay.so ./lib/libLynx_clay.so
 
 ENV LYNX_USE_PORT=8080 \
     TMPDIR=/tmp/ui-judge
@@ -32,4 +23,4 @@ STOPSIGNAL SIGTERM
 
 USER 65532:65532
 
-ENTRYPOINT ["/opt/ui-judge/start.sh"]
+ENTRYPOINT ["./start.sh"]
