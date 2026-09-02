@@ -601,6 +601,7 @@ async fn judge(
   State(state): State<AppState>,
   Json(request): Json<HttpJudgePageRequest>,
 ) -> Result<Json<HttpJudgePageResponse>, ApiError> {
+  reject_direct_page_url(&request.url)?;
   let HttpCaptureRequest {
     include_screenshot,
     load_options,
@@ -653,6 +654,7 @@ async fn screenshot(
   State(state): State<AppState>,
   Json(request): Json<HttpJudgePageRequest>,
 ) -> Result<Response, ApiError> {
+  reject_direct_page_url(&request.url)?;
   let HttpCaptureRequest {
     load_options,
     request,
@@ -678,6 +680,20 @@ async fn screenshot(
     .await
     .map_err(|error| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error))?;
   Ok(([(CONTENT_TYPE, "image/jpeg")], jpeg).into_response())
+}
+
+fn reject_direct_page_url(url: &str) -> Result<(), ApiError> {
+  let url = url.trim();
+  if ["file://", "http://", "https://"]
+    .iter()
+    .any(|scheme| url.starts_with(scheme))
+  {
+    return Err(ApiError::new(
+      StatusCode::FORBIDDEN,
+      "Direct file:// and HTTP(S) page URLs are disabled by the UI Judge server; use POST /screenshot/zip.",
+    ));
+  }
+  Ok(())
 }
 
 async fn screenshot_zip(
@@ -1501,17 +1517,11 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn screenshot_returns_raw_png_without_model_evaluation() {
-    let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
-    let worker_bmp = bmp.clone();
-    let headless = scripted_workers(move |job| {
-      assert!(job.client.is_none());
-      let _ = job.response.send(CaptureResponse {
-        capture: Ok(CapturedPage::from_bmp(worker_bmp.clone())),
-        client: job.client,
-        request: job.request,
-      });
-    });
+  async fn screenshot_rejects_direct_file_page_access() {
+    let headless = Arc::new(
+      CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
+        .expect("create an idle headless pool"),
+    );
     let state = AppState {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
@@ -1521,26 +1531,13 @@ mod tests {
     };
 
     let mut request = http_request("file:///tmp/screenshot.lynx.bundle");
-    request.steps = vec!["   ".to_string()];
-    let response = screenshot(State(state), Json(request))
+    request.timeout_ms = Some(1);
+    let error = screenshot(State(state), Json(request))
       .await
-      .expect("capture screenshot");
+      .expect_err("the server must reject direct file access");
 
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
-    let body = axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES)
-      .await
-      .expect("read screenshot body");
-    // The route transcodes the capture instead of forwarding the raw frame.
-    assert_eq!(&body[0..2], &[0xFF, 0xD8], "JPEG start-of-image marker");
-    assert_eq!(
-      image::load_from_memory(&body)
-        .expect("decode the screenshot response")
-        .to_rgb8()
-        .dimensions(),
-      (8, 8)
-    );
-    assert_ne!(body.as_ref(), bmp.as_slice());
+    assert_eq!(error.status, StatusCode::FORBIDDEN);
+    assert!(error.message.contains("POST /screenshot/zip"));
     headless.shutdown().expect("stop screenshot worker");
   }
 
@@ -2052,60 +2049,31 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn handles_independent_http_requests_concurrently() {
-    let executed_requests = Arc::new(Mutex::new(Vec::new()));
-    let worker_requests = Arc::clone(&executed_requests);
-    let headless = scripted_workers(move |job| {
-      let url = job.request.url.clone();
-      worker_requests
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-        .push((url.clone(), job.load_options.clone()));
-      let _ = job.response.send(CaptureResponse {
-        capture: Err(completed_result(url)),
-        client: job.client,
-        request: job.request,
-      });
-    });
+  async fn judge_rejects_direct_http_page_access() {
+    let headless = Arc::new(
+      CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
+        .expect("create an idle headless pool"),
+    );
     let state = AppState {
       headless: Arc::clone(&headless),
       model_name: "judge-model".into(),
-      prepare_request: prepare_test_request,
+      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
-    let mut first_request = http_request("file:///tmp/first.lynx.bundle");
-    first_request.global_props = Some(json!({ "messages": [], "theme": "light" }));
-    let first = judge(State(state.clone()), Json(first_request));
-    let second = judge(
-      State(state),
-      Json(http_request("file:///tmp/second.lynx.bundle")),
-    );
-    let (first, second) = tokio::join!(first, second);
-    let first_result = first.expect("first response").0;
-    let second_result = second.expect("second response").0;
 
-    assert_eq!(first_result.result.url, "file:///tmp/first.lynx.bundle");
-    assert_eq!(second_result.result.url, "file:///tmp/second.lynx.bundle");
-    assert_eq!(
-      *executed_requests
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner()),
-      vec![
-        (
-          "file:///tmp/first.lynx.bundle".to_string(),
-          PageLoadOptions {
-            base_dir: None,
-            global_props_json: Some(r#"{"messages":[],"theme":"light"}"#.to_string()),
-            initial_data_json: None,
-          },
-        ),
-        (
-          "file:///tmp/second.lynx.bundle".to_string(),
-          PageLoadOptions::default(),
-        ),
-      ]
-    );
+    for url in [
+      "http://127.0.0.1/private.lynx.bundle",
+      "https://example.test/page.lynx.bundle",
+    ] {
+      let mut request = http_request(url);
+      request.timeout_ms = Some(1);
+      let error = judge(State(state.clone()), Json(request))
+        .await
+        .expect_err("the server must reject direct HTTP access");
+      assert_eq!(error.status, StatusCode::FORBIDDEN);
+      assert!(error.message.contains("POST /screenshot/zip"));
+    }
     headless.shutdown().expect("stop mock headless worker");
   }
 

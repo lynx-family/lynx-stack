@@ -417,24 +417,16 @@ fn canonicalize_base_dir(base_dir: &Path) -> Result<PathBuf> {
 }
 
 fn resolve_file_url(input: &str, base_dir: Option<&Path>) -> Result<PathBuf> {
-  let url = Url::parse(input)?;
-  if base_dir.is_some() && url.host_str().is_some() {
+  if base_dir.is_some() {
     return Err(Error::Protocol(
-      "file URL hosts are not allowed with GotoOptions::base_dir".into(),
+      "file resources are not allowed with GotoOptions::base_dir".into(),
     ));
   }
+  let url = Url::parse(input)?;
   let path = url
     .to_file_path()
     .map_err(|_| Error::Protocol(format!("invalid file URL: {input}")))?;
-  match base_dir {
-    Some(base_dir) => {
-      let relative = path
-        .strip_prefix(base_dir)
-        .map_err(|_| resource_escape_error())?;
-      resolve_beneath(base_dir, relative)
-    }
-    None => Ok(path),
-  }
+  Ok(path)
 }
 
 fn resolve_virtual_url(
@@ -701,6 +693,7 @@ mod tests {
     let base = parent.path().join("base");
     fs::create_dir(&base).unwrap();
     fs::write(base.join("index.lynxml"), b"<lynx />").unwrap();
+    fs::write(base.join("inside.png"), b"inside").unwrap();
     let outside = parent.path().join("outside.png");
     fs::write(&outside, b"outside").unwrap();
     let context = resource_context();
@@ -711,6 +704,7 @@ mod tests {
     let mut fetcher = context.fetcher();
 
     for input in [
+      as_file_url(&base.join("inside.png")),
       as_file_url(&outside),
       "zip:///%2e%2e/outside.png".to_string(),
       "https://example.test/outside.png".to_string(),
@@ -812,17 +806,16 @@ mod tests {
   }
 
   #[test]
-  fn sandbox_rejects_file_urls_outside_base_dir() {
-    let parent = tempfile::tempdir().unwrap();
-    let base = parent.path().join("base");
-    fs::create_dir(&base).unwrap();
-    let outside = parent.path().join("outside.lynx.bundle");
+  fn sandbox_rejects_file_urls_even_inside_base_dir() {
+    let base = tempfile::tempdir().unwrap();
+    let inside = base.path().join("inside.lynx.bundle");
+    fs::write(&inside, b"bundle").unwrap();
 
     let error = resource_context()
-      .read_template(&as_file_url(&outside), Some(&base))
+      .read_template(&as_file_url(&inside), Some(base.path()))
       .unwrap_err();
 
-    assert!(error.to_string().contains("escapes GotoOptions::base_dir"));
+    assert!(error.to_string().contains("file resources are not allowed"));
   }
 
   #[test]
@@ -878,7 +871,7 @@ mod tests {
   }
 
   #[test]
-  fn sandbox_rejects_file_url_hosts() {
+  fn sandbox_rejects_file_url_hosts_without_parsing_them() {
     let base = tempfile::tempdir().unwrap();
 
     let error = resource_context()
@@ -888,19 +881,16 @@ mod tests {
       )
       .unwrap_err();
 
-    assert!(error.to_string().contains("file URL hosts are not allowed"));
+    assert!(error.to_string().contains("file resources are not allowed"));
   }
 
   #[test]
   fn sandbox_rejects_relative_traversal_outside_base_dir() {
     let parent = tempfile::tempdir().unwrap();
     let base = parent.path().join("base");
-    let nested = base.join("nested");
-    fs::create_dir_all(&nested).unwrap();
-    let entry = nested.join("main.lynx.bundle");
-    fs::write(&entry, b"bundle").unwrap();
+    fs::create_dir_all(&base).unwrap();
     let context = resource_context();
-    context.set_navigation(&as_file_url(&entry), Some(fs::canonicalize(&base).unwrap()));
+    context.set_navigation("", Some(fs::canonicalize(&base).unwrap()));
 
     let initial_error = resource_context()
       .read_template("../outside.png", Some(&base))

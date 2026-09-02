@@ -95,9 +95,10 @@ impl Default for ContainerOptions {
 pub struct GotoOptions {
   /// Restricts this navigation and all of its resources to this directory.
   ///
-  /// When set, HTTP(S) resources are rejected and `zip://` URLs resolve
-  /// relative to the canonicalized directory. The directory must remain
-  /// private and unmodified until the page is finished using its resources.
+  /// When set, explicit `file://` and HTTP(S) resources are rejected, while
+  /// `zip://` URLs and relative paths resolve beneath the canonicalized
+  /// directory. The directory must remain private and unmodified until the
+  /// page is finished using its resources.
   pub base_dir: Option<PathBuf>,
   pub timeout: Option<Duration>,
   pub initial_data_json: Option<String>,
