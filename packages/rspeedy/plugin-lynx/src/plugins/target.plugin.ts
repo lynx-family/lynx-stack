@@ -10,12 +10,6 @@ export function pluginTarget(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:target',
     setup(api) {
-      if (
-        api.context.callerName === 'rslib'
-        || api.context.callerName === 'rstest'
-      ) {
-        return
-      }
       api.modifyBundlerChain((options) => {
         options.target([getESVersionTarget()])
       })
