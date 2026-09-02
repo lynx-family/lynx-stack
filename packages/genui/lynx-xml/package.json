@@ -26,7 +26,7 @@
     "test": "rstest"
   },
   "dependencies": {
-    "@lynx-js/skill-vanilla-lynx": "0.1.5"
+    "@lynx-js/skill-vanilla-lynx": "0.2.0"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",

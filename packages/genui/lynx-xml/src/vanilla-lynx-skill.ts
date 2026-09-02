@@ -4,6 +4,7 @@
 
 import backgroundReference from '@lynx-js/skill-vanilla-lynx/references/background.md?raw';
 import eventReference from '@lynx-js/skill-vanilla-lynx/references/event.md?raw';
+import lynxXmlReference from '@lynx-js/skill-vanilla-lynx/references/lynxml.md?raw';
 import mainThreadReference from '@lynx-js/skill-vanilla-lynx/references/main-thread.md?raw';
 import styleReference from '@lynx-js/skill-vanilla-lynx/references/style.md?raw';
 import vanillaLynxSkill from '@lynx-js/skill-vanilla-lynx/SKILL.md?raw';
@@ -26,6 +27,16 @@ const REFERENCE_SELECTIONS: SkillReferenceSelection[] = [
     omitListItemStartingWith: 'Keep external bundle',
   },
   {
+    file: 'references/lynxml.md',
+    markdown: lynxXmlReference,
+    sections: [
+      'Document Contract',
+      'Assemble the Artifact',
+      'Pre-delivery Check',
+    ],
+    omitLineContaining: 'external-build.md',
+  },
+  {
     file: 'references/main-thread.md',
     markdown: mainThreadReference,
     sections: [
@@ -33,7 +44,9 @@ const REFERENCE_SELECTIONS: SkillReferenceSelection[] = [
       'Element PAPI Surface',
       'Build the Tree',
       'Bind Element Events',
-      'Render and Update Drivers',
+      'Render',
+      'Update',
+      'Lifecycle Cleanup',
     ],
     omitLineContaining: 'processData',
   },
@@ -64,8 +77,12 @@ const REFERENCE_SELECTIONS: SkillReferenceSelection[] = [
     markdown: styleReference,
     sections: [
       'Runtime Style Application',
-      'Lynx-Specific Rules',
+      'Strict Authoring Rules',
+      'Web Margin Collapse Migration — High Priority',
+      'Runtime Transform Geometry',
+      'CSS Property Allowlist',
       'Responsive Sizing',
+      'Images',
     ],
   },
 ];

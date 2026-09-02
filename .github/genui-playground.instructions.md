@@ -12,6 +12,8 @@ When sharing GenUI playground code between web preview and native Lynx execution
 
 When runtime code needs to distinguish Lynx for Web from native Lynx, prefer `SystemInfo.platform === 'web'` over `typeof window !== 'undefined'`. Native Lynx environments may expose browser-like globals, while Web Core explicitly sets `SystemInfo.platform` to `web`.
 
+Keep `transform-vw` and `transform-vh` enabled on every Web `<lynx-view>` used for playground previews, including both the bundled-protocol render entry and the direct Lynx XML preview. Set the attributes before assigning the preview URL so Web Core decodes viewport units relative to the preview LynxView container rather than the browser window.
+
 ### Playback Synchronization
 
 When wiring playback state between the Lynx app and the web preview, prefer `NativeModules.bridge.call('A2UI_PLAYBACK_SYNC', state, callback)` on the Lynx side and `lynxView.onNativeModulesCall` on the web preview side. Keep `window.postMessage` only as a compatibility fallback for older bundles. Do not add new playback sync paths that bypass the NativeModules bridge.
