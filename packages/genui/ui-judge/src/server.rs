@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 
 use axum::body;
 use axum::extract::multipart::{Field, Multipart, MultipartError};
-use axum::extract::{DefaultBodyLimit, Request, State};
+use axum::extract::{DefaultBodyLimit, Query, Request, State};
 use axum::http::{
   header::{CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE},
   HeaderMap, StatusCode,
@@ -54,10 +54,10 @@ const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
-const ZIP_ENTRYPOINT_URL: &str = "zip:///index.lynxml";
 const ZIP_CAPTURE_CHILD_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_CHILD";
 const ZIP_CAPTURE_BASE_DIR_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_BASE_DIR";
 const ZIP_CAPTURE_OUTPUT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_OUTPUT";
+const ZIP_CAPTURE_URL_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_URL";
 const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
 const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
@@ -161,13 +161,14 @@ impl ZipCaptureProcesses {
     activity: ZipCaptureProcessActivity,
     extracted: zip::ExtractedZip,
     base_dir: PathBuf,
+    url: String,
     job_id: u64,
   ) -> Result<Vec<u8>, ApiError> {
     let deadline = activity.deadline;
     let started = activity.started;
     let (mut reply, response) = oneshot::channel();
     tokio::spawn(async move {
-      let result = supervise_zip_capture_process(&base_dir, &mut reply, deadline).await;
+      let result = supervise_zip_capture_process(&base_dir, &url, &mut reply, deadline).await;
       let outcome = if reply.is_closed() {
         "cancelled"
       } else {
@@ -280,6 +281,11 @@ struct HttpCaptureRequest {
   include_screenshot: bool,
   load_options: PageLoadOptions,
   request: JudgePageRequest,
+}
+
+#[derive(Deserialize)]
+struct ZipScreenshotQuery {
+  url: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -430,17 +436,19 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
   let base_dir = std::env::var_os(ZIP_CAPTURE_BASE_DIR_ENV)
     .map(PathBuf::from)
     .ok_or(ServerError::IsolatedZipCapture)?;
+  let url = std::env::var(ZIP_CAPTURE_URL_ENV).map_err(|_| ServerError::IsolatedZipCapture)?;
+  if !is_zip_url(&url) {
+    return Err(ServerError::IsolatedZipCapture);
+  }
   let output = std::env::var_os(ZIP_CAPTURE_OUTPUT_ENV)
     .map(PathBuf::from)
     .ok_or(ServerError::IsolatedZipCapture)?;
   let base_dir = std::fs::canonicalize(base_dir).map_err(|_| ServerError::IsolatedZipCapture)?;
-  let entrypoint = std::fs::symlink_metadata(base_dir.join("index.lynxml"))
-    .map_err(|_| ServerError::IsolatedZipCapture)?;
   let output_parent = output
     .parent()
     .and_then(|parent| std::fs::canonicalize(parent).ok())
     .ok_or(ServerError::IsolatedZipCapture)?;
-  if !base_dir.is_dir() || !entrypoint.file_type().is_file() || !output_parent.is_dir() {
+  if !base_dir.is_dir() || !output_parent.is_dir() {
     return Err(ServerError::IsolatedZipCapture);
   }
 
@@ -454,7 +462,7 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
     .map_err(|_| ServerError::IsolatedZipCapture)?;
   page
     .goto(
-      ZIP_ENTRYPOINT_URL,
+      &url,
       GotoOptions {
         base_dir: Some(base_dir),
         timeout: Some(Duration::from_millis(DEFAULT_TIMEOUT_MS)),
@@ -698,8 +706,15 @@ fn reject_direct_page_url(url: &str) -> Result<(), ApiError> {
 
 async fn screenshot_zip(
   State(state): State<AppState>,
+  Query(query): Query<ZipScreenshotQuery>,
   request: Request,
 ) -> Result<Response, ApiError> {
+  if !is_zip_url(&query.url) {
+    return Err(ApiError::new(
+      StatusCode::BAD_REQUEST,
+      "url must use the zip:// scheme.",
+    ));
+  }
   validate_zip_upload_headers(request.headers())?;
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   let upload = read_zip_upload(
@@ -760,13 +775,6 @@ async fn screenshot_zip(
       return Err(error);
     }
   };
-  if !base_dir.join("index.lynxml").is_file() {
-    log_zip_extraction(job_id, "missing-entrypoint", &extraction_stats, false);
-    return Err(ApiError::new(
-      StatusCode::UNPROCESSABLE_ENTITY,
-      "ZIP upload must contain a regular index.lynxml file at its root.",
-    ));
-  }
   log_zip_extraction(job_id, "accepted", &extraction_stats, false);
 
   let jpeg = match state.zip_capture_backend {
@@ -775,7 +783,7 @@ async fn screenshot_zip(
         .expect("isolated ZIP capture must acquire render capacity before extraction");
       match state
         .zip_capture_processes
-        .capture(activity, extracted, base_dir, job_id)
+        .capture(activity, extracted, base_dir, query.url, job_id)
         .await
       {
         Ok(jpeg) => jpeg,
@@ -798,7 +806,7 @@ async fn screenshot_zip(
             steps: vec![],
             task: "Render the uploaded ZIP".to_string(),
             timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-            url: ZIP_ENTRYPOINT_URL.to_string(),
+            url: query.url,
           },
           PageLoadOptions {
             base_dir: Some(base_dir),
@@ -912,6 +920,7 @@ fn canonical_zip_base_dir(path: &std::path::Path) -> Result<PathBuf, ApiError> {
 
 async fn supervise_zip_capture_process(
   base_dir: &Path,
+  url: &str,
   reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
   deadline: tokio::time::Instant,
 ) -> Result<Vec<u8>, ApiError> {
@@ -927,6 +936,7 @@ async fn supervise_zip_capture_process(
     .env(ZIP_CAPTURE_CHILD_ENV, "1")
     .env(ZIP_CAPTURE_BASE_DIR_ENV, base_dir)
     .env(ZIP_CAPTURE_OUTPUT_ENV, &output)
+    .env(ZIP_CAPTURE_URL_ENV, url)
     .stdin(Stdio::piped())
     .stdout(Stdio::null())
     .stderr(Stdio::null())
@@ -1007,6 +1017,12 @@ async fn supervise_zip_capture_process(
     _ = reply.closed() => Err(isolated_zip_worker_error()),
     result = postprocess => result,
   }
+}
+
+fn is_zip_url(url: &str) -> bool {
+  url
+    .split_once("://")
+    .is_some_and(|(scheme, path)| scheme.eq_ignore_ascii_case("zip") && !path.is_empty())
 }
 
 async fn terminate_zip_capture_child_or_exit(child: &mut Child) {
@@ -1397,6 +1413,12 @@ mod tests {
       .expect("build ZIP upload request")
   }
 
+  fn zip_query(url: &str) -> Query<ZipScreenshotQuery> {
+    Query(ZipScreenshotQuery {
+      url: url.to_string(),
+    })
+  }
+
   async fn multipart(boundary: &str, fields: &[(&str, &[u8])]) -> Multipart {
     let mut body = Vec::new();
     for (name, bytes) in fields {
@@ -1542,21 +1564,24 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn zip_screenshot_stages_the_fixed_entrypoint_until_capture_finishes() {
+  async fn zip_screenshot_uses_the_requested_entrypoint_until_capture_finishes() {
     let index = b"<!doctype lynx><lynx><script thread=\"main\"></script></lynx>";
-    let upload = zip_upload(&[("index.lynxml", index)]);
+    let upload = zip_upload(&[("pages/index.lynxml", index)]);
     let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
     let worker_staged_path = Arc::clone(&staged_path);
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
     let headless = scripted_workers(move |job| {
       assert!(job.client.is_none());
-      assert_eq!(job.request.url, ZIP_ENTRYPOINT_URL);
+      assert_eq!(job.request.url, "zip:///pages/index.lynxml");
       let base_dir = job
         .load_options
         .base_dir
         .as_ref()
         .expect("ZIP capture has an internal base directory");
-      assert_eq!(std::fs::read(base_dir.join("index.lynxml")).unwrap(), index);
+      assert_eq!(
+        std::fs::read(base_dir.join("pages/index.lynxml")).unwrap(),
+        index
+      );
       *worker_staged_path
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(base_dir.clone());
@@ -1574,9 +1599,13 @@ mod tests {
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
 
-    let response = screenshot_zip(State(state), zip_request(upload))
-      .await
-      .expect("render uploaded ZIP");
+    let response = screenshot_zip(
+      State(state),
+      zip_query("zip:///pages/index.lynxml"),
+      zip_request(upload),
+    )
+    .await
+    .expect("render uploaded ZIP");
 
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
@@ -1607,9 +1636,13 @@ mod tests {
       .header(CONTENT_TYPE, "application/octet-stream")
       .body(Body::empty())
       .expect("build wrong-media-type request");
-    let error = screenshot_zip(State(state.clone()), wrong_media_type)
-      .await
-      .expect_err("reject a non-ZIP media type");
+    let error = screenshot_zip(
+      State(state.clone()),
+      zip_query("zip:///index.lynxml"),
+      wrong_media_type,
+    )
+    .await
+    .expect_err("reject a non-ZIP media type");
     assert_eq!(error.status, StatusCode::UNSUPPORTED_MEDIA_TYPE);
 
     let oversized = Request::builder()
@@ -1617,7 +1650,7 @@ mod tests {
       .header(CONTENT_LENGTH, zip::MAX_ZIP_UPLOAD_BYTES + 1)
       .body(Body::empty())
       .expect("build oversized request");
-    let error = screenshot_zip(State(state), oversized)
+    let error = screenshot_zip(State(state), zip_query("zip:///index.lynxml"), oversized)
       .await
       .expect_err("reject an oversized ZIP before reading its body");
     assert_eq!(error.status, StatusCode::PAYLOAD_TOO_LARGE);
@@ -1637,7 +1670,7 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn zip_screenshot_enforces_the_stream_limit_and_root_entrypoint() {
+  async fn zip_screenshot_enforces_the_stream_limit_and_zip_url_scheme() {
     let headless = scripted_workers(|_| panic!("invalid ZIP uploads must not reach capture"));
     let state = AppState {
       headless: Arc::clone(&headless),
@@ -1651,17 +1684,25 @@ mod tests {
       .header(CONTENT_LENGTH, 1)
       .body(Body::from(vec![0; zip::MAX_ZIP_UPLOAD_BYTES + 1]))
       .expect("build oversized streaming request");
-    let error = screenshot_zip(State(state.clone()), lying_length)
-      .await
-      .expect_err("enforce the body limit independently of Content-Length");
+    let error = screenshot_zip(
+      State(state.clone()),
+      zip_query("zip:///index.lynxml"),
+      lying_length,
+    )
+    .await
+    .expect_err("enforce the body limit independently of Content-Length");
     assert_eq!(error.status, StatusCode::PAYLOAD_TOO_LARGE);
 
-    let missing_entrypoint = zip_upload(&[("page.lynxml", b"<lynx></lynx>")]);
-    let error = screenshot_zip(State(state), zip_request(missing_entrypoint))
-      .await
-      .expect_err("require index.lynxml at the archive root");
-    assert_eq!(error.status, StatusCode::UNPROCESSABLE_ENTITY);
-    assert!(!error.message.contains("page.lynxml"));
+    let upload = zip_upload(&[("page.lynxml", b"<lynx></lynx>")]);
+    let error = screenshot_zip(
+      State(state),
+      zip_query("https://example.test/page.lynxml"),
+      zip_request(upload),
+    )
+    .await
+    .expect_err("require a zip:// entrypoint URL");
+    assert_eq!(error.status, StatusCode::BAD_REQUEST);
+    assert_eq!(error.message, "url must use the zip:// scheme.");
     headless.shutdown().expect("stop unused ZIP worker");
   }
 
@@ -1928,6 +1969,7 @@ mod tests {
             zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
             zip_capture_processes: ZipCaptureProcesses::new(),
           }),
+          zip_query("zip:///index.lynxml"),
           zip_request(upload),
         ))
         .expect("render ZIP image resources");

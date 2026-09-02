@@ -164,8 +164,8 @@ process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 `[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
 non-secret configured model name. Use `POST /compare` to compare two uploaded
 images without rendering a page or calling the VLM. Use `POST /screenshot/zip`
-to render an uploaded Lynx project from its fixed `zip:///index.lynxml`
-entrypoint.
+to render an uploaded Lynx project from the `zip://` URL supplied in its `url`
+query parameter.
 
 The server does not allow direct `file://`, `http://`, or `https://` page
 navigation. `POST /judge` and `POST /screenshot` reject those URL forms with
@@ -174,23 +174,24 @@ library build for trusted direct-URL judging, or upload an untrusted project to
 `POST /screenshot/zip`.
 
 To render an uploaded ZIP without scoring it, send the archive itself as the
-request body. The route does not accept a filename, URL, entrypoint, base
-directory, model options, or interaction steps:
+request body and pass its entrypoint as a `zip://` URL. The route does not
+accept a caller-supplied base directory, model options, or interaction steps:
 
 ```bash
-curl --request POST http://127.0.0.1:8080/screenshot/zip \
+curl --request POST 'http://127.0.0.1:8080/screenshot/zip?url=zip%3A%2F%2F%2Findex.lynxml' \
   --header 'content-type: application/zip' \
   --data-binary '@/absolute/path/to/page.zip' \
   --output screenshot.jpg
 ```
 
-The archive must contain a regular `index.lynxml` at its root. That document
-may use paths relative to itself, such as `./images/logo.png`, or absolute
-archive URLs, such as `zip:///images/logo.png`. Both resolve only within the
-new private extraction directory created for that request. Network URLs and
-explicit `file://` URLs are rejected by the sandboxed resource loader, as are
-paths whose canonical targets leave the archive root. A successful response is
-`200 image/jpeg` with `Cache-Control: no-store`.
+The URL must use the `zip://` scheme and select an entry inside the archive,
+for example `zip:///pages/index.lynxml`. That document may use paths relative
+to itself, such as `./images/logo.png`, or archive-root URLs such as
+`zip:///images/logo.png`. Local paths resolve only within the new private
+extraction directory created for that request. Explicit `file://` URLs and
+HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
+hosts remain available. A successful response is `200 image/jpeg` with
+`Cache-Control: no-store`.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:

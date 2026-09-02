@@ -4,7 +4,7 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use lynx::{FetchResponse, ResourceFetcher, ResourceRequest, ResourceType};
-use url::Url;
+use url::{Host, Url};
 
 use crate::{Error, Result};
 
@@ -71,7 +71,7 @@ impl ResourceContext {
   ) -> Result<(String, Vec<u8>, Option<PathBuf>)> {
     let base_dir = base_dir.map(canonicalize_base_dir).transpose()?;
     if is_url_scheme(input, "http") || is_url_scheme(input, "https") {
-      reject_network_in_sandbox(base_dir.as_deref())?;
+      reject_network_navigation_in_sandbox(base_dir.as_deref())?;
       return Ok((input.to_string(), fetch_http(input)?, base_dir));
     }
     if is_url_scheme(input, "file") {
@@ -124,7 +124,7 @@ impl ResourceContext {
     navigation: &NavigationContext,
   ) -> Result<ResolvedResource> {
     if is_url_scheme(input, "http") || is_url_scheme(input, "https") {
-      reject_network_in_sandbox(navigation.base_dir.as_deref())?;
+      validate_network_resource_in_sandbox(input, navigation.base_dir.as_deref())?;
       return Ok(ResolvedResource::Http(input.to_string()));
     }
     if is_url_scheme(input, "file") {
@@ -282,13 +282,26 @@ fn reject_unsupported_url_scheme(input: &str) -> Result<()> {
   )))
 }
 
-fn reject_network_in_sandbox(base_dir: Option<&Path>) -> Result<()> {
+fn reject_network_navigation_in_sandbox(base_dir: Option<&Path>) -> Result<()> {
   if base_dir.is_some() {
     return Err(Error::Protocol(
-      "network resources are not allowed with GotoOptions::base_dir".into(),
+      "network navigation is not allowed with GotoOptions::base_dir".into(),
     ));
   }
   Ok(())
+}
+
+fn validate_network_resource_in_sandbox(input: &str, base_dir: Option<&Path>) -> Result<()> {
+  if base_dir.is_none() {
+    return Ok(());
+  }
+  let url = Url::parse(input)?;
+  match url.host() {
+    Some(Host::Domain(_)) => Ok(()),
+    _ => Err(Error::Protocol(
+      "HTTP(S) resource hosts must be domain names with GotoOptions::base_dir".into(),
+    )),
+  }
 }
 
 fn canonicalize_base_dir(base_dir: &Path) -> Result<PathBuf> {
@@ -562,7 +575,8 @@ mod tests {
       as_file_url(&base.join("inside.png")),
       as_file_url(&outside),
       "zip:///%2e%2e/outside.png".to_string(),
-      "https://example.test/outside.png".to_string(),
+      "http://127.0.0.1/outside.png".to_string(),
+      "http://[::1]/outside.png".to_string(),
       "data:text/plain,secret".to_string(),
     ] {
       let response = fetcher.fetch(ResourceRequest {
@@ -572,6 +586,34 @@ mod tests {
       });
       assert_ne!(response.code, 0, "input should be rejected: {input}");
       assert!(response.data.is_none());
+    }
+  }
+
+  #[test]
+  fn sandbox_allows_http_domains_but_rejects_ip_hosts() {
+    let base = tempfile::tempdir().unwrap();
+    let context = resource_context();
+    context.set_navigation(
+      "zip:///index.lynxml",
+      Some(fs::canonicalize(base.path()).unwrap()),
+    );
+
+    for input in [
+      "https://example.test/image.png",
+      "http://assets.example.test/image.png",
+    ] {
+      let ResolvedResource::Http(resolved) = context.resolve_url(input).unwrap() else {
+        panic!("domain URL must remain an HTTP resource");
+      };
+      assert_eq!(resolved, input);
+    }
+    for input in [
+      "http://127.0.0.1/image.png",
+      "http://[::1]/image.png",
+      "https://2130706433/image.png",
+    ] {
+      let error = context.resolve_url(input).unwrap_err();
+      assert!(error.to_string().contains("hosts must be domain names"));
     }
   }
 
@@ -737,26 +779,24 @@ mod tests {
   }
 
   #[test]
-  fn sandbox_rejects_http_templates_and_resources() {
+  fn sandbox_rejects_http_navigation_and_ip_resources() {
     let base = tempfile::tempdir().unwrap();
     let context = resource_context();
     let template_error = context
-      .read_template("https://example.test/main.lynx.bundle", Some(base.path()))
+      .read_template("https://127.0.0.1/main.lynx.bundle", Some(base.path()))
       .unwrap_err();
     context.set_navigation(
       "zip:///main.lynx.bundle",
       Some(fs::canonicalize(base.path()).unwrap()),
     );
-    let resource_error = context
-      .resolve_url("HTTP://example.test/image.png")
-      .unwrap_err();
+    let resource_error = context.resolve_url("HTTP://[::1]/image.png").unwrap_err();
 
     assert!(template_error
       .to_string()
-      .contains("network resources are not allowed"));
+      .contains("network navigation is not allowed"));
     assert!(resource_error
       .to_string()
-      .contains("network resources are not allowed"));
+      .contains("hosts must be domain names"));
   }
 
   #[test]

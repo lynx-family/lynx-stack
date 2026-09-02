@@ -61,8 +61,10 @@ in `.lynxml` are decoded as UTF-8 and loaded as LynxML source; all other inputs
 keep the compiled-template byte path. File paths, `file://` URLs, and HTTP(S)
 URLs are supported without a sandbox. Setting `GotoOptions::base_dir` restricts
 the template and all local resources to that canonicalized directory, rejects
-explicit `file://` and HTTP(S) URLs, and enables relative and `zip://` URLs
-beneath the directory. `GotoOptions::initial_data_json`
+explicit `file://` and HTTP(S) navigation, and enables relative and `zip://`
+URLs beneath the directory. Nested HTTP(S) resources whose host is a domain
+name remain available; IP address hosts are rejected.
+`GotoOptions::initial_data_json`
 applies to both formats; `global_props_json` applies only to compiled templates.
 Passing it for LynxML returns an error because the public LynxML load API does
 not accept global properties.
