@@ -4,9 +4,10 @@ import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
-  registerElementTemplateListItem,
+  registerElementTemplateListItem as registerElementTemplateListItemInternal,
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
+import type { ETListItemMeta } from '../../../src/element-template/runtime/list/list.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
   clearMainThreadDynamicAttrState,
@@ -29,6 +30,17 @@ type LynxWithNative = typeof globalThis & {
     };
   };
 };
+
+function registerElementTemplateListItem(
+  uid: number,
+  ref: ElementRef,
+  meta: Omit<ETListItemMeta, 'subtreeHandles'> & Partial<Pick<ETListItemMeta, 'subtreeHandles'>>,
+): void {
+  registerElementTemplateListItemInternal(uid, ref, {
+    ...meta,
+    subtreeHandles: meta.subtreeHandles ?? [],
+  });
+}
 
 describe('mts-destroy', () => {
   afterEach(() => {

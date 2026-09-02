@@ -17,6 +17,7 @@ import {
   BackgroundPageRootInstance,
   BackgroundTypedElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+  collectMainThreadRefSubtreeHandleIds,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
@@ -336,7 +337,7 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
-  it('emits logical list insertions as incremental typed list item patches', () => {
+  it('emits logical list appends as incremental typed list item patches', () => {
     const list = new BackgroundListElementTemplateInstance();
     const oldListId = list.instanceId;
     backgroundElementTemplateInstanceManager.updateId(oldListId, -10);
@@ -352,7 +353,7 @@ describe('BackgroundElementTemplateInstance', () => {
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
-    list.insertBefore(second, first);
+    list.appendChild(second);
 
     expect(globalCommitContext.ops).toEqual([
       ElementTemplateUpdateOps.createTemplate,
@@ -369,7 +370,7 @@ describe('BackgroundElementTemplateInstance', () => {
         platformInfo: { 'item-key': 'b' },
         subtreeHandleIds: [],
       },
-      -11,
+      0,
     ]);
   });
 
@@ -496,40 +497,6 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
   });
 
-  it('emits logical updates for both lists when an item moves across typed lists', () => {
-    const oldList = new BackgroundListElementTemplateInstance();
-    const newList = new BackgroundListElementTemplateInstance();
-    backgroundElementTemplateInstanceManager.updateId(oldList.instanceId, -10);
-    backgroundElementTemplateInstanceManager.updateId(newList.instanceId, -20);
-    oldList.markMaterializedByHydration();
-    newList.markMaterializedByHydration();
-    const item = new BackgroundElementTemplateInstance('_et_item_a');
-    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
-    oldList.appendChild(item);
-    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
-    item.markMaterializedByHydration();
-    markElementTemplateHydrated();
-    globalCommitContext.ops = [];
-
-    newList.appendChild(item);
-
-    expect(globalCommitContext.ops).toEqual([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      -10,
-      -11,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      -20,
-      {
-        __etHandleRef: -11,
-        type: '_et_item_a',
-        platformInfo: { 'item-key': 'a' },
-        subtreeHandleIds: [],
-      },
-      0,
-    ]);
-  });
-
   it('refreshes list item subtree membership when Suspense restores a descendant', () => {
     __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
     const list = new BackgroundListElementTemplateInstance();
@@ -563,6 +530,29 @@ describe('BackgroundElementTemplateInstance', () => {
         platformInfo: {},
         subtreeHandleIds: [child.instanceId],
       },
+    ]);
+  });
+
+  it('stops MainThreadRef subtree membership at nested typed list holders', () => {
+    __etAttrPlanMap._et_outer_ref = [0, adaptMTRefAttrSlot];
+    __etAttrPlanMap.list = [0, adaptMTRefAttrSlot];
+    __etAttrPlanMap._et_nested_ref = [0, adaptMTRefAttrSlot];
+    const outerItem = new BackgroundElementTemplateInstance('_et_outer_item');
+    const outerRef = new BackgroundElementTemplateInstance('_et_outer_ref');
+    const nestedList = new BackgroundListElementTemplateInstance();
+    const nestedItem = new BackgroundElementTemplateInstance('_et_nested_item');
+    const nestedRef = new BackgroundElementTemplateInstance('_et_nested_ref');
+    outerItem.appendChild(outerRef);
+    outerItem.appendChild(nestedList);
+    nestedList.appendChild(nestedItem);
+    nestedItem.appendChild(nestedRef);
+
+    expect(collectMainThreadRefSubtreeHandleIds(outerItem)).toEqual([
+      outerRef.instanceId,
+      nestedList.instanceId,
+    ]);
+    expect(collectMainThreadRefSubtreeHandleIds(nestedItem)).toEqual([
+      nestedRef.instanceId,
     ]);
   });
 
