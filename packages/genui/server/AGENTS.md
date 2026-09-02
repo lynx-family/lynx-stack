@@ -31,7 +31,8 @@ export GENUI_MODEL_CONFIG_JSON='{
     "apiKey": "...",
     "baseURL": "https://api.openai.com/v1",
     "api": "responses",
-    "default": true
+    "default": true,
+    "maxOutputTokens": 16384
   }
 }'
 ```
@@ -41,6 +42,9 @@ export GENUI_MODEL_CONFIG_JSON='{
   independent upstream ids, credentials, and endpoints.
 - `api` is optional and accepts `chat` or `responses`.
 - `default: true` is optional. When omitted, the first entry is the default.
+- `maxOutputTokens` is an optional positive integer describing the provider's
+  supported output ceiling. Lynx XML requests target 16384 tokens and use the
+  lower of that target and the configured model ceiling.
 - `reasoningEffort` is optional per model.
 
 `GET /models` exposes only the top-level names and default selection. It must
@@ -134,7 +138,9 @@ credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
 `POST /lynx-xml/stream` uses a dedicated Vanilla Lynx agent and the shared text
 SSE route infrastructure. Stream raw model deltas so the Playground can show
 source growth, but normalize and validate the final document envelope before
-sending `done`. The final artifact must start with lowercase
+sending `done`. Preserve usage and finish-reason metadata when validation
+fails, and report `length` as an exhausted model output budget rather than only
+as a missing XML tag. The final artifact must start with lowercase
 `<!doctype lynx>`, use `<lynx engine-version="4.2">`, include exactly one main
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.

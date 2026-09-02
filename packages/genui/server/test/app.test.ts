@@ -52,6 +52,7 @@ describe('Hono application', () => {
         model: 'doubao-seed-upstream',
         api: 'chat',
         default: true,
+        maxOutputTokens: 16384,
       },
       'Doubao Pro': {
         apiKey: 'pro-secret',

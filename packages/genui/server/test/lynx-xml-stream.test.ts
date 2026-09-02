@@ -75,4 +75,49 @@ describe('Lynx XML stream route', () => {
       global.__LYNX_XML_AGENT_SERVICE__ = previous;
     }
   });
+
+  test('reports token-limit metadata when the final artifact is incomplete', async () => {
+    const global = globalThis as GlobalWithLynxXmlService;
+    const previous = global.__LYNX_XML_AGENT_SERVICE__;
+    const incompleteArtifact = ARTIFACT.slice(0, -'</lynx>'.length);
+    global.__LYNX_XML_AGENT_SERVICE__ = {
+      streamAsAsyncIterable() {
+        return Promise.resolve({
+          textStream: Readable.from([incompleteArtifact]),
+          finalize: () =>
+            Promise.resolve({
+              text: incompleteArtifact,
+              usage: { inputTokens: 100, outputTokens: 4096 },
+              finishReason: 'length',
+            }),
+        });
+      },
+    };
+
+    try {
+      const response = await app.request('/lynx-xml/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.48',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: 'Create a dashboard' }],
+        }),
+      });
+      const body = await response.text();
+      expect(body).toContain('event: delta');
+      expect(body).toContain('event: error');
+      expect(body).toContain(
+        'Model output reached its token limit before producing a valid final artifact',
+      );
+      expect(body).toContain('"finishReason":"length"');
+      expect(body).toContain(
+        '"usage":{"inputTokens":100,"outputTokens":4096}',
+      );
+      expect(body).not.toContain('event: done');
+    } finally {
+      global.__LYNX_XML_AGENT_SERVICE__ = previous;
+    }
+  });
 });

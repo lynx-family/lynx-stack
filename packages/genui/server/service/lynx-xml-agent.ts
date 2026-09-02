@@ -13,6 +13,7 @@ import {
   ProviderAgentCache,
   buildResourceRunOptions,
   pickProviderConfig,
+  resolveModelOutputTokenBudget,
 } from './common/provider.js';
 import {
   extractGenerationResult,
@@ -30,6 +31,22 @@ import type {
 export interface LynxXmlChatOptions extends ChatOptions {
   /** Do not retain request-scoped provider credentials in the shared cache. */
   disableAgentCache?: boolean | undefined;
+}
+
+export const LYNX_XML_MAX_OUTPUT_TOKENS = 16_384;
+
+export function buildLynxXmlRunOptions(
+  opts: LynxXmlChatOptions,
+  abortSignal?: AbortSignal,
+) {
+  const maxOutputTokens = resolveModelOutputTokenBudget(
+    opts,
+    LYNX_XML_MAX_OUTPUT_TOKENS,
+  );
+  return {
+    ...buildResourceRunOptions(opts, abortSignal),
+    modelSettings: { maxOutputTokens },
+  };
 }
 
 export default class LynxXmlAgentService {
@@ -59,10 +76,13 @@ export default class LynxXmlAgentService {
     });
 
     const streamStartedAt = performance.now();
-    opts.onPerformanceEvent?.('agent.stream.invoke.started');
+    const runOptions = buildLynxXmlRunOptions(opts, abortSignal);
+    opts.onPerformanceEvent?.('agent.stream.invoke.started', {
+      maxOutputTokens: runOptions.modelSettings.maxOutputTokens,
+    });
     const result = await agent.stream(
       modelMessages,
-      buildResourceRunOptions(opts, abortSignal),
+      runOptions,
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -116,7 +136,7 @@ export default class LynxXmlAgentService {
     abortSignal?.throwIfAborted();
     const result = await agent.generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
-      buildResourceRunOptions(opts, abortSignal),
+      buildLynxXmlRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

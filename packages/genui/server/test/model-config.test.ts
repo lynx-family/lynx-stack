@@ -23,6 +23,7 @@ const CONFIG = {
     model: 'doubao-seed-upstream',
     api: 'chat',
     default: true,
+    maxOutputTokens: 8192,
     reasoningEffort: 'medium',
   },
   'Doubao Pro': {
@@ -58,6 +59,21 @@ describe('GenUI model configuration', () => {
         'Doubao Pro': { ...CONFIG['Doubao Pro'], default: true },
       }))
     ).toThrow('only one configured model may be marked as default');
+  });
+
+  test('rejects invalid model output token limits', () => {
+    for (const maxOutputTokens of [0, -1, 1.5, '8192']) {
+      expect(() =>
+        parseModelConfig(JSON.stringify({
+          Doubao: {
+            apiKey: 'server-secret',
+            baseURL: 'https://example.com/v1',
+            model: 'doubao-seed',
+            maxOutputTokens,
+          },
+        }))
+      ).toThrow('maxOutputTokens must be a positive safe integer');
+    }
   });
 
   test('resolves a model name to its independent upstream configuration', () => {

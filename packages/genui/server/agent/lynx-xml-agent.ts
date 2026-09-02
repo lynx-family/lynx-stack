@@ -15,6 +15,9 @@ export {
 
 interface LynxXmlAgentRunOptions {
   abortSignal?: AbortSignal | undefined;
+  modelSettings?: {
+    maxOutputTokens?: number | undefined;
+  } | undefined;
   resourceId?: string | undefined;
 }
 
