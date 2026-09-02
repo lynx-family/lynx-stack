@@ -165,6 +165,7 @@ interface VanillaEntryContext {
 }
 
 interface VanillaEntryArtifacts {
+  backgroundAsset: string | undefined
   hasBackground: boolean
   mainThreadAsset: string
 }
@@ -330,7 +331,11 @@ function addVanillaEntry(
     }],
   )
 
-  return { hasBackground, mainThreadAsset }
+  return {
+    backgroundAsset: hasBackground ? backgroundAsset : undefined,
+    hasBackground,
+    mainThreadAsset,
+  }
 }
 
 function addVanillaBundlerPlugins(
@@ -353,7 +358,11 @@ function addVanillaBundlerPlugins(
       RuntimeWrapperWebpackPlugin,
       [{
         targetSdkVersion: engineVersion,
-        test: /^\.rspeedy\/.+\/background\.js$/,
+        test: artifacts.flatMap(artifact =>
+          artifact.backgroundAsset === undefined
+            ? []
+            : [artifact.backgroundAsset]
+        ),
       }],
     )
   }

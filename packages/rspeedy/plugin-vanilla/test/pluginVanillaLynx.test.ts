@@ -18,6 +18,7 @@ import { afterAll, describe, expect, test } from '@rstest/core'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
+import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
 import * as vanilla from '../src/index.js'
 
@@ -609,5 +610,28 @@ describe('pluginVanillaLynx configuration', () => {
     expect(() => plugin.apply(compiler)).toThrow(
       '[pluginVanillaLynx] Main-thread asset was not emitted: .lynx/main/main-thread.js',
     )
+  })
+})
+
+describe('pluginVanillaLynx runtime wrapper', () => {
+  test('wraps exactly the background assets the plugin emits', async () => {
+    const result = await runPluginHarness({
+      rawEntries: {
+        card: { values: () => [fixturePath('main-thread.ts')] },
+        solo: { values: () => ['virtual-main-thread'] },
+      },
+    })
+
+    const backgroundEntry = result.entries.get('card__background') as {
+      filename: string
+    }
+    expect(backgroundEntry.filename).toBe('.lynx/card/background.js')
+    expect(result.entries.has('solo__background')).toBe(false)
+
+    const wrapper = result.plugins.get('lynx:vanilla:runtime-wrapper')
+    expect(wrapper?.plugin).toBe(RuntimeWrapperWebpackPlugin)
+    expect((wrapper?.args?.[0] as { test: unknown }).test).toEqual([
+      backgroundEntry.filename,
+    ])
   })
 })
