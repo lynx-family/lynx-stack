@@ -85,8 +85,40 @@ export function hook<T, K extends keyof T>(
   } as T[K];
 }
 
+let pendingEffectFlushes: (() => void)[] = [];
+
 /**
- * Runs `fn` with Preact's after-paint scheduler switched to synchronous.
+ * Preact's after-paint scheduler, deferred to a microtask.
+ *
+ * The scheduled callbacks are also tracked so that {@link withSyncEffectFlush}
+ * can run the ones still outstanding: switching `options.requestAnimationFrame`
+ * only redirects future scheduling, and Preact reschedules an already-queued
+ * flush solely when a later `afterPaint` call observes the swap.
+ */
+export const deferEffectFlush: (cb: () => void) => void = cb => {
+  pendingEffectFlushes.push(cb);
+  lynxQueueMicrotask(() => {
+    const index = pendingEffectFlushes.indexOf(cb);
+    if (index !== -1) {
+      pendingEffectFlushes.splice(index, 1);
+      cb();
+    }
+  });
+};
+
+function drainPendingEffectFlushes(): void {
+  // Runs after the scheduler swap above, so anything these callbacks schedule
+  // is invoked synchronously instead of landing back in the queue.
+  const callbacks = pendingEffectFlushes;
+  pendingEffectFlushes = [];
+  callbacks.forEach(cb => {
+    cb();
+  });
+}
+
+/**
+ * Runs `fn` with Preact's after-paint scheduler switched to synchronous, after
+ * draining the flushes already scheduled for a later microtask.
  *
  * Preact 11 defers passive-effect cleanups of unmounted components to that
  * flush. Page destroy is the one path with no later turn to run them in:
@@ -100,6 +132,7 @@ export function withSyncEffectFlush<T>(fn: () => T): T {
     cb();
   };
   try {
+    drainPendingEffectFlushes();
     return fn();
   } finally {
     if (previousRequestAnimationFrame) {

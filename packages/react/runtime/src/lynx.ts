@@ -22,7 +22,7 @@ import { initTimingAPI } from './snapshot/lynx/performance.js';
 import { injectPrepareLazyBundleMTS } from './snapshot/lynx/prepareLazyBundleMTS.js';
 import { injectTt } from './snapshot/lynx/tt.js';
 import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
-import { lynxQueueMicrotask } from './utils.js';
+import { deferEffectFlush } from './utils.js';
 
 export { runWithForce } from './snapshot/lynx/runWithForce.js';
 
@@ -72,7 +72,7 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
-  options.requestAnimationFrame = lynxQueueMicrotask;
+  options.requestAnimationFrame = deferEffectFlush;
   setupBackgroundDocument();
   injectTt();
   addCtxNotFoundEventListener();
