@@ -15,7 +15,7 @@ use ::zip::read::{ArchiveOffset, Config};
 use ::zip::ZipArchive;
 use tempfile::{Builder, TempDir};
 use thiserror::Error;
-use tokio::sync::{OwnedSemaphorePermit, Semaphore, TryAcquireError};
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 /// Maximum accepted ZIP upload size. HTTP upload code must enforce this while
 /// streaming the request body, before allocating the `Vec` passed to
@@ -89,7 +89,6 @@ pub enum ZipRejectionKind {
   OutputCollision,
   OutputIo,
   IntegrityCheckFailed,
-  ConcurrencyLimit,
   TimedOut,
   WorkerFailed,
 }
@@ -115,7 +114,6 @@ impl fmt::Display for ZipRejectionKind {
       Self::OutputCollision => "output-collision",
       Self::OutputIo => "output-io",
       Self::IntegrityCheckFailed => "integrity-check-failed",
-      Self::ConcurrencyLimit => "concurrency-limit",
       Self::TimedOut => "timed-out",
       Self::WorkerFailed => "worker-failed",
     })
@@ -138,10 +136,6 @@ pub struct ZipExtractionError {
 #[derive(Debug)]
 pub struct ExtractedZip {
   directory: TempDir,
-  // A successful server extraction keeps its capacity reservation for the
-  // entire staged-tree lifetime. This bounds queued and active ZIP captures,
-  // not only the shorter blocking extraction step, to four trees on disk.
-  _permit: Option<OwnedSemaphorePermit>,
   stats: ZipExtractionStats,
 }
 
@@ -153,14 +147,6 @@ impl ExtractedZip {
   pub fn stats(&self) -> &ZipExtractionStats {
     &self.stats
   }
-}
-
-/// Reserves one of the process-wide ZIP extraction slots before an HTTP
-/// adapter starts buffering an upload.
-#[derive(Debug)]
-#[must_use = "dropping the reservation releases the extraction slot"]
-pub struct ZipExtractionReservation {
-  permit: OwnedSemaphorePermit,
 }
 
 #[derive(Debug)]
@@ -270,96 +256,52 @@ impl Seek for MetadataIsolatingReader {
   }
 }
 
-/// Immediately reserves one of the four process-wide extraction slots. HTTP
-/// adapters should call this before reading a request body so rejected work
-/// does not consume upload memory or bandwidth.
-pub fn try_reserve_extraction() -> Result<ZipExtractionReservation, ZipExtractionError> {
-  let progress = ExtractionProgress::new(0);
-  try_reserve_extraction_with_progress(&progress)
-}
-
-fn try_reserve_extraction_with_progress(
-  progress: &ExtractionProgress,
-) -> Result<ZipExtractionReservation, ZipExtractionError> {
-  try_reserve_from(Arc::clone(&EXTRACTION_PERMITS), progress)
-}
-
-fn try_reserve_from(
+async fn acquire_extraction_slot(
   permits: Arc<Semaphore>,
+  deadline: Instant,
   progress: &ExtractionProgress,
-) -> Result<ZipExtractionReservation, ZipExtractionError> {
-  let permit = match permits.try_acquire_owned() {
-    Ok(permit) => permit,
-    Err(TryAcquireError::NoPermits) => {
-      return Err(progress.reject(ZipRejectionKind::ConcurrencyLimit));
-    }
-    Err(TryAcquireError::Closed) => {
-      return Err(progress.reject(ZipRejectionKind::WorkerFailed));
-    }
-  };
-  Ok(ZipExtractionReservation { permit })
-}
-
-impl ZipExtractionReservation {
-  /// Validates and extracts one reserved, untrusted upload on the blocking
-  /// pool. The returned guard owns a fresh private temporary directory;
-  /// dropping it removes the complete extraction. A timed-out blocking task
-  /// retains this reservation until it actually exits.
-  pub async fn extract_uploaded_zip(
-    self,
-    upload: Vec<u8>,
-  ) -> Result<ExtractedZip, ZipExtractionError> {
-    let progress = Arc::new(ExtractionProgress::new(upload.len()));
-    if upload.len() > PRODUCTION_LIMITS.max_upload_bytes {
-      return Err(progress.reject(ZipRejectionKind::UploadTooLarge));
-    }
-    self
-      .extract_uploaded_zip_with_progress(upload, progress)
-      .await
-  }
-
-  async fn extract_uploaded_zip_with_progress(
-    self,
-    upload: Vec<u8>,
-    progress: Arc<ExtractionProgress>,
-  ) -> Result<ExtractedZip, ZipExtractionError> {
-    let Self { permit } = self;
-    let deadline = Instant::now() + EXTRACTION_TIMEOUT;
-    let tokio_deadline = tokio::time::Instant::from_std(deadline);
-    let worker_progress = Arc::clone(&progress);
-    let mut worker = tokio::task::spawn_blocking(move || {
-      let mut extracted =
-        extract_zip_sync(upload, PRODUCTION_LIMITS, deadline, worker_progress, None)?;
-      extracted._permit = Some(permit);
-      Ok(extracted)
-    });
-
-    match tokio::time::timeout_at(tokio_deadline, &mut worker).await {
-      Ok(Ok(result)) => result,
-      Ok(Err(_)) => Err(progress.reject(ZipRejectionKind::WorkerFailed)),
-      Err(_) => {
-        // This cancels a queued blocking task. A task that has already started
-        // cannot be force-cancelled; it owns the permit and checks the same
-        // absolute deadline between entries, reads, and writes.
-        worker.abort();
-        Err(progress.reject(ZipRejectionKind::TimedOut))
-      }
-    }
+) -> Result<OwnedSemaphorePermit, ZipExtractionError> {
+  match tokio::time::timeout_at(
+    tokio::time::Instant::from_std(deadline),
+    permits.acquire_owned(),
+  )
+  .await
+  {
+    Ok(Ok(permit)) => Ok(permit),
+    Ok(Err(_)) => Err(progress.reject(ZipRejectionKind::WorkerFailed)),
+    Err(_) => Err(progress.reject(ZipRejectionKind::TimedOut)),
   }
 }
 
-/// Validates and extracts one untrusted upload on the blocking pool. This
-/// compatibility entry point reserves a slot after the upload has already been
-/// buffered; HTTP adapters should use [`try_reserve_extraction`] first.
+/// Validates and extracts one untrusted upload on the blocking pool. At most
+/// four extractions run concurrently; additional callers wait asynchronously
+/// within the same ten-second extraction deadline.
 pub async fn extract_uploaded_zip(upload: Vec<u8>) -> Result<ExtractedZip, ZipExtractionError> {
   let progress = Arc::new(ExtractionProgress::new(upload.len()));
   if upload.len() > PRODUCTION_LIMITS.max_upload_bytes {
     return Err(progress.reject(ZipRejectionKind::UploadTooLarge));
   }
-  let reservation = try_reserve_extraction_with_progress(&progress)?;
-  reservation
-    .extract_uploaded_zip_with_progress(upload, progress)
-    .await
+  let deadline = Instant::now() + EXTRACTION_TIMEOUT;
+  let permit =
+    acquire_extraction_slot(Arc::clone(&EXTRACTION_PERMITS), deadline, &progress).await?;
+  let tokio_deadline = tokio::time::Instant::from_std(deadline);
+  let worker_progress = Arc::clone(&progress);
+  let mut worker = tokio::task::spawn_blocking(move || {
+    let _permit = permit;
+    extract_zip_sync(upload, PRODUCTION_LIMITS, deadline, worker_progress, None)
+  });
+
+  match tokio::time::timeout_at(tokio_deadline, &mut worker).await {
+    Ok(Ok(result)) => result,
+    Ok(Err(_)) => Err(progress.reject(ZipRejectionKind::WorkerFailed)),
+    Err(_) => {
+      // This cancels a queued blocking task. A task that has already started
+      // cannot be force-cancelled; it owns the permit and checks the same
+      // absolute deadline between entries, reads, and writes.
+      worker.abort();
+      Err(progress.reject(ZipRejectionKind::TimedOut))
+    }
+  }
 }
 
 fn extract_zip_sync(
@@ -538,7 +480,6 @@ fn finish_staged_extraction(
   match extraction {
     Ok(()) => Ok(ExtractedZip {
       directory,
-      _permit: None,
       stats: progress.snapshot(),
     }),
     Err(mut error) => {
@@ -1375,37 +1316,50 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn reservations_apply_backpressure_before_upload_buffering() {
+  async fn extraction_slots_wait_for_capacity_within_the_deadline() {
     // Use a private semaphore so this capacity test cannot race other ZIP
     // endpoint tests running in parallel on the process-wide pool.
-    let permits = Arc::new(Semaphore::new(MAX_CONCURRENT_EXTRACTIONS));
-    let progress = ExtractionProgress::new(0);
-    let reserve = || try_reserve_from(Arc::clone(&permits), &progress);
-    let mut reservations = (0..MAX_CONCURRENT_EXTRACTIONS)
-      .map(|_| reserve().expect("reserve every extraction slot"))
-      .collect::<Vec<_>>();
+    let permits = Arc::new(Semaphore::new(1));
+    let occupied = Arc::clone(&permits)
+      .acquire_owned()
+      .await
+      .expect("occupy the only extraction slot");
+    let waiting_permits = Arc::clone(&permits);
+    let waiting = tokio::spawn(async move {
+      let progress = ExtractionProgress::new(0);
+      acquire_extraction_slot(
+        waiting_permits,
+        Instant::now() + Duration::from_secs(1),
+        &progress,
+      )
+      .await
+    });
 
-    let error = reserve().expect_err("reject a fifth reservation immediately");
-    assert_eq!(error.kind, ZipRejectionKind::ConcurrencyLimit);
+    tokio::task::yield_now().await;
+    assert!(!waiting.is_finished());
+    drop(occupied);
+    let acquired = waiting
+      .await
+      .expect("join the waiting extraction")
+      .expect("acquire the released slot");
+    drop(acquired);
+  }
+
+  #[tokio::test]
+  async fn extraction_slot_wait_respects_the_deadline() {
+    let permits = Arc::new(Semaphore::new(0));
+    let progress = ExtractionProgress::new(0);
+    let error = acquire_extraction_slot(
+      permits,
+      Instant::now() + Duration::from_millis(1),
+      &progress,
+    )
+    .await
+    .expect_err("time out while every extraction slot is occupied");
+
+    assert_eq!(error.kind, ZipRejectionKind::TimedOut);
     assert_eq!(error.stats.archive_bytes, 0);
     assert_eq!(error.stats.entry_count, 0);
-
-    let upload = make_archive(&[TestEntry::File("page.lynx", b"bundle")]);
-    drop(reservations.pop());
-    let reservation = reserve().expect("reuse a released extraction slot");
-    let extracted = reservation
-      .extract_uploaded_zip(upload)
-      .await
-      .expect("extract through the reservation");
-    assert_eq!(
-      fs::read(extracted.path().join("page.lynx")).expect("read the extracted file"),
-      b"bundle"
-    );
-    let error = reserve().expect_err("the staged extraction keeps its capacity reservation");
-    assert_eq!(error.kind, ZipRejectionKind::ConcurrencyLimit);
-
-    drop(extracted);
-    let _reclaimed = reserve().expect("dropping the staged extraction releases capacity");
   }
 
   #[test]

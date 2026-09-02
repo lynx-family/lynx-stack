@@ -32,7 +32,7 @@ use socket2::{Domain, Protocol, SockAddr, Socket, Type};
 use thiserror::Error;
 use tokio::net::TcpListener;
 use tokio::process::{Child, Command};
-use tokio::sync::{oneshot, watch, Notify};
+use tokio::sync::{oneshot, watch, Notify, OwnedSemaphorePermit, Semaphore};
 
 use crate::capture::{
   shared_workers, CaptureError, CaptureResponse, CaptureWorkers, WorkerPanicked,
@@ -60,6 +60,7 @@ const ZIP_CAPTURE_BASE_DIR_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_BASE_DIR";
 const ZIP_CAPTURE_OUTPUT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_OUTPUT";
 const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
+const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
 const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
 const ZIP_UPLOAD_TIMEOUT: Duration = Duration::from_secs(10);
 static NEXT_ZIP_JOB_ID: AtomicU64 = AtomicU64::new(1);
@@ -81,6 +82,7 @@ struct ZipCaptureProcesses {
 
 struct ZipCaptureProcessInner {
   idle: Notify,
+  render_slots: Arc<Semaphore>,
   state: Mutex<ZipCaptureProcessState>,
 }
 
@@ -90,14 +92,22 @@ struct ZipCaptureProcessState {
 }
 
 struct ZipCaptureProcessActivity {
+  deadline: tokio::time::Instant,
   inner: Arc<ZipCaptureProcessInner>,
+  _render_slot: OwnedSemaphorePermit,
+  started: Instant,
 }
 
 impl ZipCaptureProcesses {
   fn new() -> Self {
+    Self::with_capacity(MAX_CONCURRENT_ZIP_RENDERERS)
+  }
+
+  fn with_capacity(capacity: usize) -> Self {
     Self {
       inner: Arc::new(ZipCaptureProcessInner {
         idle: Notify::new(),
+        render_slots: Arc::new(Semaphore::new(capacity)),
         state: Mutex::new(ZipCaptureProcessState {
           accepting: true,
           active: 0,
@@ -106,7 +116,26 @@ impl ZipCaptureProcesses {
     }
   }
 
-  fn begin(&self) -> Result<ZipCaptureProcessActivity, ApiError> {
+  async fn begin(
+    &self,
+    deadline: tokio::time::Instant,
+  ) -> Result<ZipCaptureProcessActivity, ApiError> {
+    let started = Instant::now();
+    let render_slot = match tokio::time::timeout_at(
+      deadline,
+      Arc::clone(&self.inner.render_slots).acquire_owned(),
+    )
+    .await
+    {
+      Ok(Ok(render_slot)) => render_slot,
+      Ok(Err(_)) => {
+        return Err(ApiError::new(
+          StatusCode::SERVICE_UNAVAILABLE,
+          "The isolated ZIP renderer is shutting down.",
+        ))
+      }
+      Err(_) => return Err(zip_render_timeout_error()),
+    };
     let mut state = self
       .inner
       .state
@@ -120,27 +149,25 @@ impl ZipCaptureProcesses {
     }
     state.active += 1;
     Ok(ZipCaptureProcessActivity {
+      deadline,
       inner: Arc::clone(&self.inner),
+      _render_slot: render_slot,
+      started,
     })
   }
 
   async fn capture(
     &self,
+    activity: ZipCaptureProcessActivity,
     extracted: zip::ExtractedZip,
     base_dir: PathBuf,
     job_id: u64,
   ) -> Result<Vec<u8>, ApiError> {
-    let started = Instant::now();
-    let activity = match self.begin() {
-      Ok(activity) => activity,
-      Err(error) => {
-        log_zip_render(job_id, "rejected", started.elapsed());
-        return Err(error);
-      }
-    };
+    let deadline = activity.deadline;
+    let started = activity.started;
     let (mut reply, response) = oneshot::channel();
     tokio::spawn(async move {
-      let result = supervise_zip_capture_process(&base_dir, &mut reply).await;
+      let result = supervise_zip_capture_process(&base_dir, &mut reply, deadline).await;
       let outcome = if reply.is_closed() {
         "cancelled"
       } else {
@@ -166,6 +193,7 @@ impl ZipCaptureProcesses {
           .lock()
           .unwrap_or_else(|poisoned| poisoned.into_inner());
         state.accepting = false;
+        self.inner.render_slots.close();
         state.active == 0
       };
       if is_idle {
@@ -353,7 +381,12 @@ impl ApiError {
 
 impl From<CaptureError> for ApiError {
   fn from(error: CaptureError) -> Self {
-    Self::new(StatusCode::SERVICE_UNAVAILABLE, error.to_string())
+    let status = if matches!(error, CaptureError::TimedOut) {
+      StatusCode::REQUEST_TIMEOUT
+    } else {
+      StatusCode::SERVICE_UNAVAILABLE
+    };
+    Self::new(status, error.to_string())
   }
 }
 
@@ -653,9 +686,7 @@ async fn screenshot_zip(
 ) -> Result<Response, ApiError> {
   validate_zip_upload_headers(request.headers())?;
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
-  let reservation = zip::try_reserve_extraction().map_err(|error| zip_api_error(error, job_id))?;
-  let (reservation, upload) = read_reserved_zip_upload(
-    reservation,
+  let upload = read_zip_upload(
     body::to_bytes(request.into_body(), zip::MAX_ZIP_UPLOAD_BYTES),
     ZIP_UPLOAD_TIMEOUT,
   )
@@ -667,10 +698,44 @@ async fn screenshot_zip(
     ));
   }
 
-  let extracted = reservation
-    .extract_uploaded_zip(upload.to_vec())
-    .await
-    .map_err(|error| zip_api_error(error, job_id))?;
+  // Wait in this request future instead of rejecting a busy renderer. An
+  // outer middleware is responsible for any eager admission control.
+  let zip_process_activity = match state.zip_capture_backend {
+    ZipCaptureBackend::IsolatedProcess => {
+      let render_wait_started = Instant::now();
+      let deadline = tokio::time::Instant::now()
+        + Duration::from_millis(DEFAULT_TIMEOUT_MS)
+        + ZIP_CAPTURE_PROCESS_GRACE;
+      match state.zip_capture_processes.begin(deadline).await {
+        Ok(activity) => Some(activity),
+        Err(error) => {
+          let outcome = if error.status == StatusCode::REQUEST_TIMEOUT {
+            "timed-out"
+          } else {
+            "rejected"
+          };
+          log_zip_render(job_id, outcome, render_wait_started.elapsed());
+          return Err(error);
+        }
+      }
+    }
+    #[cfg(test)]
+    ZipCaptureBackend::SharedWorker => None,
+  };
+
+  let extraction = zip::extract_uploaded_zip(upload.to_vec());
+  let extracted = match zip_process_activity.as_ref() {
+    Some(activity) => match tokio::time::timeout_at(activity.deadline, extraction).await {
+      Ok(result) => result.map_err(|error| zip_api_error(error, job_id))?,
+      Err(_) => {
+        log_zip_render(job_id, "timed-out", activity.started.elapsed());
+        return Err(zip_render_timeout_error());
+      }
+    },
+    None => extraction
+      .await
+      .map_err(|error| zip_api_error(error, job_id))?,
+  };
   let extraction_stats = extracted.stats().clone();
   let base_dir = match canonical_zip_base_dir(extracted.path()) {
     Ok(base_dir) => base_dir,
@@ -690,9 +755,11 @@ async fn screenshot_zip(
 
   let jpeg = match state.zip_capture_backend {
     ZipCaptureBackend::IsolatedProcess => {
+      let activity = zip_process_activity
+        .expect("isolated ZIP capture must acquire render capacity before extraction");
       match state
         .zip_capture_processes
-        .capture(extracted, base_dir, job_id)
+        .capture(activity, extracted, base_dir, job_id)
         .await
       {
         Ok(jpeg) => jpeg,
@@ -755,16 +822,12 @@ async fn screenshot_zip(
   )
 }
 
-async fn read_reserved_zip_upload<F>(
-  reservation: zip::ZipExtractionReservation,
-  read: F,
-  timeout: Duration,
-) -> Result<(zip::ZipExtractionReservation, body::Bytes), ApiError>
+async fn read_zip_upload<F>(read: F, timeout: Duration) -> Result<body::Bytes, ApiError>
 where
   F: Future<Output = Result<body::Bytes, axum::Error>>,
 {
   match tokio::time::timeout(timeout, read).await {
-    Ok(Ok(upload)) => Ok((reservation, upload)),
+    Ok(Ok(upload)) => Ok(upload),
     Ok(Err(error)) => Err(zip_upload_body_error(error)),
     Err(_) => Err(ApiError::new(
       StatusCode::REQUEST_TIMEOUT,
@@ -834,13 +897,11 @@ fn canonical_zip_base_dir(path: &std::path::Path) -> Result<PathBuf, ApiError> {
 async fn supervise_zip_capture_process(
   base_dir: &Path,
   reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
+  deadline: tokio::time::Instant,
 ) -> Result<Vec<u8>, ApiError> {
   if reply.is_closed() {
     return Err(isolated_zip_worker_error());
   }
-  let deadline = tokio::time::Instant::now()
-    + Duration::from_millis(DEFAULT_TIMEOUT_MS)
-    + ZIP_CAPTURE_PROCESS_GRACE;
   let output_dir = tempfile::tempdir().map_err(|_| isolated_zip_worker_error())?;
   let output = output_dir.path().join("capture.bmp");
   let executable = zip_capture_executable().map_err(|_| isolated_zip_worker_error())?;
@@ -1023,7 +1084,6 @@ fn zip_api_error(error: zip::ZipExtractionError, job_id: u64) -> ApiError {
     | zip::ZipRejectionKind::TooManyEntries
     | zip::ZipRejectionKind::FileTooLarge
     | zip::ZipRejectionKind::ArchiveTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
-    zip::ZipRejectionKind::ConcurrencyLimit => StatusCode::SERVICE_UNAVAILABLE,
     zip::ZipRejectionKind::TimedOut => StatusCode::REQUEST_TIMEOUT,
     zip::ZipRejectionKind::OutputCollision
     | zip::ZipRejectionKind::OutputIo
@@ -1215,7 +1275,8 @@ mod tests {
             jobs.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
           jobs.recv()
         };
-        let Ok(job) = job else { return };
+        let Ok(mut job) = job else { return };
+        job.release_queue_slot();
         reply(job);
       })
       .expect("start a deterministic headless worker"),
@@ -1568,9 +1629,7 @@ mod tests {
 
   #[tokio::test]
   async fn zip_upload_body_has_a_deadline() {
-    let reservation = zip::try_reserve_extraction().expect("reserve ZIP staging capacity");
-    let error = read_reserved_zip_upload(
-      reservation,
+    let error = read_zip_upload(
       std::future::pending::<Result<body::Bytes, axum::Error>>(),
       Duration::from_millis(1),
     )
@@ -1685,10 +1744,61 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn zip_render_queue_waits_until_capacity_is_available() {
+    let processes = ZipCaptureProcesses::with_capacity(1);
+    let first = processes
+      .begin(tokio::time::Instant::now() + Duration::from_secs(1))
+      .await
+      .expect("occupy the only ZIP render slot");
+    let waiting_processes = processes.clone();
+    let waiting = tokio::spawn(async move {
+      waiting_processes
+        .begin(tokio::time::Instant::now() + Duration::from_secs(1))
+        .await
+    });
+
+    tokio::task::yield_now().await;
+    assert!(!waiting.is_finished());
+    drop(first);
+    let second = waiting
+      .await
+      .expect("join the waiting ZIP renderer")
+      .expect("start after render capacity is available");
+    drop(second);
+    processes.close_and_wait().await;
+  }
+
+  #[tokio::test]
+  async fn zip_render_queue_wait_respects_the_deadline() {
+    let processes = ZipCaptureProcesses::with_capacity(1);
+    let active = processes
+      .begin(tokio::time::Instant::now() + Duration::from_secs(1))
+      .await
+      .expect("occupy the only ZIP render slot");
+    let Err(error) = processes
+      .begin(tokio::time::Instant::now() + Duration::from_millis(1))
+      .await
+    else {
+      panic!("time out while the ZIP render queue is full");
+    };
+
+    assert_eq!(error.status, StatusCode::REQUEST_TIMEOUT);
+    drop(active);
+    processes.close_and_wait().await;
+  }
+
+  #[tokio::test]
   async fn zip_process_shutdown_waits_for_every_active_supervisor() {
     let processes = ZipCaptureProcesses::new();
-    let first = processes.begin().expect("start first ZIP supervisor");
-    let second = processes.begin().expect("start second ZIP supervisor");
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(1);
+    let first = processes
+      .begin(deadline)
+      .await
+      .expect("start first ZIP supervisor");
+    let second = processes
+      .begin(deadline)
+      .await
+      .expect("start second ZIP supervisor");
     let shutdown_processes = processes.clone();
     let shutdown = tokio::spawn(async move {
       shutdown_processes.close_and_wait().await;
@@ -1702,7 +1812,10 @@ mod tests {
     drop(second);
     shutdown.await.expect("join ZIP process shutdown");
 
-    let Err(error) = processes.begin() else {
+    let Err(error) = processes
+      .begin(tokio::time::Instant::now() + Duration::from_secs(1))
+      .await
+    else {
       panic!("closed ZIP process broker must reject new work");
     };
     assert_eq!(error.status, StatusCode::SERVICE_UNAVAILABLE);
@@ -2032,6 +2145,7 @@ mod tests {
         Some(test_client()),
         first_request.load_options,
       )
+      .await
       .expect("submit the active request");
     received_first.wait();
     let queued_request = http_request("file:///tmp/queued.lynx.bundle")
@@ -2043,6 +2157,7 @@ mod tests {
         Some(test_client()),
         queued_request.load_options,
       )
+      .await
       .expect("submit a request behind the active capture");
     release_panic.wait();
 
@@ -2070,11 +2185,13 @@ mod tests {
       .into_capture_request()
       .expect("valid late request");
     assert!(matches!(
-      headless.submit(
-        late_request.request,
-        Some(test_client()),
-        late_request.load_options
-      ),
+      headless
+        .submit(
+          late_request.request,
+          Some(test_client()),
+          late_request.load_options
+        )
+        .await,
       Err(CaptureError::ShuttingDown)
     ));
     assert!(*shutdown_receiver.borrow());

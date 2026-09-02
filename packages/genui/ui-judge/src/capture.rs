@@ -13,12 +13,12 @@ use std::io;
 use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
-use std::sync::{Arc, Mutex, OnceLock, TryLockError};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 
 use lynx_headless_rust_test_runner::{ContainerOptions, LynxContainer};
 use thiserror::Error;
-use tokio::sync::oneshot;
+use tokio::sync::{oneshot, OwnedSemaphorePermit, Semaphore};
 
 use crate::headless::{capture_with_container, CapturedPage, PageLoadOptions};
 use crate::model::ModelClient;
@@ -31,8 +31,8 @@ const MAX_QUEUED_CAPTURES: usize = 8;
 
 #[derive(Debug, Error)]
 pub(crate) enum CaptureError {
-  #[error("The UI Judge capture queue is full; retry the request later.")]
-  QueueFull,
+  #[error("The UI Judge capture queue wait timed out.")]
+  TimedOut,
   #[error("The UI Judge headless worker is unavailable.")]
   Unavailable,
   #[error("The UI Judge headless worker is shutting down.")]
@@ -50,7 +50,14 @@ pub(crate) struct CaptureJob {
   pub(crate) load_options: PageLoadOptions,
   pub(crate) request: JudgePageRequest,
   _resources: CaptureResources,
+  queue_slot: Option<OwnedSemaphorePermit>,
   pub(crate) response: oneshot::Sender<CaptureResponse>,
+}
+
+impl CaptureJob {
+  pub(crate) fn release_queue_slot(&mut self) {
+    drop(self.queue_slot.take());
+  }
 }
 
 #[derive(Default)]
@@ -83,10 +90,10 @@ pub(crate) struct CaptureResponse {
 pub(crate) struct CaptureWorkers {
   failure_receiver: Mutex<Option<oneshot::Receiver<()>>>,
   healthy: Arc<AtomicBool>,
-  // Retained so a fatal worker failure can drop every queued response before
-  // the server waits for in-flight handlers during graceful shutdown.
+  #[cfg(test)]
   jobs: Arc<Mutex<Receiver<CaptureJob>>>,
   sender: Arc<Mutex<Option<SyncSender<CaptureJob>>>>,
+  queue_slots: Arc<Semaphore>,
   workers: Mutex<Vec<JoinHandle<()>>>,
 }
 
@@ -106,6 +113,7 @@ impl CaptureWorkers {
     let (sender, receiver) = mpsc::sync_channel(MAX_QUEUED_CAPTURES);
     let receiver = Arc::new(Mutex::new(receiver));
     let sender = Arc::new(Mutex::new(Some(sender)));
+    let queue_slots = Arc::new(Semaphore::new(MAX_QUEUED_CAPTURES));
     let (failure_sender, failure_receiver) = oneshot::channel();
     let failure_sender = Arc::new(Mutex::new(Some(failure_sender)));
     let healthy = Arc::new(AtomicBool::new(true));
@@ -117,6 +125,7 @@ impl CaptureWorkers {
       let worker_healthy = Arc::clone(&healthy);
       let failure_sender = Arc::clone(&failure_sender);
       let worker_sender = Arc::clone(&sender);
+      let worker_queue_slots = Arc::clone(&queue_slots);
       workers.push(
         thread::Builder::new()
           .name(format!("ui-judge-headless-{index}"))
@@ -127,6 +136,7 @@ impl CaptureWorkers {
               // native owner. Stop admission and release every queued waiter
               // before asking the HTTP server to drain.
               worker_healthy.store(false, Ordering::Release);
+              worker_queue_slots.close();
               close_and_discard_queue(&worker_sender, &receiver);
               if let Some(sender) = failure_sender
                 .lock()
@@ -144,8 +154,10 @@ impl CaptureWorkers {
     Ok(Self {
       failure_receiver: Mutex::new(Some(failure_receiver)),
       healthy,
-      jobs: receiver,
+      #[cfg(test)]
+      jobs: Arc::clone(&receiver),
       sender,
+      queue_slots,
       workers: Mutex::new(workers),
     })
   }
@@ -166,32 +178,44 @@ impl CaptureWorkers {
     self.healthy.load(Ordering::Acquire)
   }
 
-  /// Enqueues a capture and returns the channel its worker will reply on.
-  ///
-  /// Enqueueing is synchronous on purpose: backpressure is reported the moment
-  /// a caller asks, not whenever a future first happens to be polled.
-  pub(crate) fn submit(
+  /// Waits for bounded queue capacity, enqueues a capture, and returns the
+  /// channel its worker will reply on. HTTP request futures provide the
+  /// backpressure; any eager load shedding belongs at the middleware layer.
+  pub(crate) async fn submit(
     &self,
     request: JudgePageRequest,
     client: Option<ModelClient>,
     load_options: PageLoadOptions,
   ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
-    self.submit_with_resources(request, client, load_options, CaptureResources::default())
+    self
+      .submit_with_resources(request, client, load_options, CaptureResources::default())
+      .await
   }
 
-  fn submit_with_resources(
+  async fn submit_with_resources(
     &self,
     request: JudgePageRequest,
     client: Option<ModelClient>,
     load_options: PageLoadOptions,
     resources: CaptureResources,
   ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
+    let queue_slot = match tokio::time::timeout(
+      request.timeout,
+      Arc::clone(&self.queue_slots).acquire_owned(),
+    )
+    .await
+    {
+      Ok(Ok(queue_slot)) => queue_slot,
+      Ok(Err(_)) => return Err(CaptureError::ShuttingDown),
+      Err(_) => return Err(CaptureError::TimedOut),
+    };
     let (response, response_receiver) = oneshot::channel();
     let job = CaptureJob {
       client,
       load_options,
       request,
       _resources: resources,
+      queue_slot: Some(queue_slot),
       response,
     };
     let sender = self
@@ -203,46 +227,10 @@ impl CaptureWorkers {
     };
     match sender.try_send(job) {
       Ok(()) => Ok(response_receiver),
-      Err(TrySendError::Full(job)) => {
-        self.retry_after_dropping_cancelled(sender, job)?;
-        Ok(response_receiver)
-      }
-      Err(TrySendError::Disconnected(_)) => Err(CaptureError::Unavailable),
-    }
-  }
-
-  /// Reclaims queue slots whose async receivers were already dropped.
-  ///
-  /// The capture worker releases this mutex while it renders, which lets a
-  /// concurrent submit purge cancelled jobs without waiting for that native
-  /// operation to finish. Live jobs are put back in FIFO order before the new
-  /// job is retried.
-  fn retry_after_dropping_cancelled(
-    &self,
-    sender: &SyncSender<CaptureJob>,
-    job: CaptureJob,
-  ) -> Result<(), CaptureError> {
-    let jobs = match self.jobs.try_lock() {
-      Ok(jobs) => jobs,
-      Err(TryLockError::Poisoned(poisoned)) => poisoned.into_inner(),
-      Err(TryLockError::WouldBlock) => return Err(CaptureError::QueueFull),
-    };
-    let mut live_jobs = Vec::new();
-    while let Ok(queued) = jobs.try_recv() {
-      if !queued.response.is_closed() {
-        live_jobs.push(queued);
-      }
-    }
-    for queued in live_jobs {
-      let requeued = sender.try_send(queued);
-      assert!(
-        requeued.is_ok(),
-        "requeuing a drained live capture cannot exceed capacity"
-      );
-    }
-    match sender.try_send(job) {
-      Ok(()) => Ok(()),
-      Err(TrySendError::Full(_)) => Err(CaptureError::QueueFull),
+      // Every queued job owns one slot, and the worker releases that slot as
+      // soon as it dequeues the job. Acquiring a slot therefore guarantees
+      // space in this channel.
+      Err(TrySendError::Full(_)) => Err(CaptureError::Unavailable),
       Err(TrySendError::Disconnected(_)) => Err(CaptureError::Unavailable),
     }
   }
@@ -254,7 +242,8 @@ impl CaptureWorkers {
     load_options: PageLoadOptions,
   ) -> Result<CaptureResponse, CaptureError> {
     self
-      .submit(request, client, load_options)?
+      .submit(request, client, load_options)
+      .await?
       .await
       .map_err(|_| CaptureError::Stopped)
   }
@@ -272,7 +261,8 @@ impl CaptureWorkers {
         None,
         load_options,
         CaptureResources::staged_zip(staged_zip),
-      )?
+      )
+      .await?
       .await
       .map_err(|_| CaptureError::Stopped)
   }
@@ -280,6 +270,7 @@ impl CaptureWorkers {
   pub(crate) fn shutdown(&self) -> Result<(), WorkerPanicked> {
     // Closing the only sender lets every worker drain and exit.
     self.healthy.store(false, Ordering::Release);
+    self.queue_slots.close();
     let sender = self
       .sender
       .lock()
@@ -346,7 +337,8 @@ fn run_capture_worker(jobs: Arc<Mutex<Receiver<CaptureJob>>>) {
       let jobs = jobs.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
       jobs.recv()
     };
-    let Ok(job) = job else { return };
+    let Ok(mut job) = job else { return };
+    job.release_queue_slot();
     if job.response.is_closed() {
       continue;
     }
@@ -396,60 +388,84 @@ mod tests {
     assert_send_sync::<CaptureWorkers>();
   }
 
-  #[test]
-  fn a_full_queue_is_reported_instead_of_blocking_the_caller() {
+  #[tokio::test]
+  async fn a_full_queue_waits_until_the_request_timeout() {
     // A pool with no workers never dequeues, so the queue reaches exactly its
-    // bound and the next submission has nowhere to go.
+    // bound and the next submission waits asynchronously for capacity.
     let workers = CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
       .expect("start a pool with no workers");
 
-    let accepted = (0..MAX_QUEUED_CAPTURES)
-      .map(|_| {
+    let mut accepted = Vec::with_capacity(MAX_QUEUED_CAPTURES);
+    for _ in 0..MAX_QUEUED_CAPTURES {
+      accepted.push(
         workers
           .submit(
             request("file:///tmp/queued.lynx.bundle"),
             None,
             PageLoadOptions::default(),
           )
-          .expect("the queue must accept this job")
-      })
-      .collect::<Vec<_>>();
-    let overflow = workers.submit(
-      request("file:///tmp/overflow.lynx.bundle"),
-      None,
-      PageLoadOptions::default(),
-    );
+          .await
+          .expect("the queue must accept this job"),
+      );
+    }
+    let mut overflow_request = request("file:///tmp/overflow.lynx.bundle");
+    overflow_request.timeout = std::time::Duration::from_millis(1);
+    let overflow = workers
+      .submit(overflow_request, None, PageLoadOptions::default())
+      .await;
 
     assert_eq!(accepted.len(), MAX_QUEUED_CAPTURES);
-    assert!(matches!(overflow, Err(CaptureError::QueueFull)));
+    assert!(matches!(overflow, Err(CaptureError::TimedOut)));
     workers.shutdown().expect("stop the idle pool");
   }
 
-  #[test]
-  fn cancelled_jobs_release_queue_capacity_before_the_owner_dequeues_them() {
-    let workers = CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
-      .expect("start a pool with no workers");
-    let cancelled = (0..MAX_QUEUED_CAPTURES)
-      .map(|_| {
+  #[tokio::test]
+  async fn a_waiting_request_is_enqueued_when_the_owner_dequeues() {
+    let workers = Arc::new(
+      CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
+        .expect("start a pool with no workers"),
+    );
+    let mut accepted = Vec::with_capacity(MAX_QUEUED_CAPTURES);
+    for _ in 0..MAX_QUEUED_CAPTURES {
+      accepted.push(
         workers
           .submit(
-            request("file:///tmp/cancelled.lynx.bundle"),
+            request("file:///tmp/queued.lynx.bundle"),
             None,
             PageLoadOptions::default(),
           )
-          .expect("fill the capture queue")
-      })
-      .collect::<Vec<_>>();
-    drop(cancelled);
+          .await
+          .expect("fill the capture queue"),
+      );
+    }
 
-    let replacement = workers
-      .submit(
-        request("file:///tmp/replacement.lynx.bundle"),
-        None,
-        PageLoadOptions::default(),
-      )
-      .expect("cancelled jobs must release their queue slots");
+    let waiting_workers = Arc::clone(&workers);
+    let waiting = tokio::spawn(async move {
+      waiting_workers
+        .submit(
+          request("file:///tmp/waiting.lynx.bundle"),
+          None,
+          PageLoadOptions::default(),
+        )
+        .await
+    });
+    tokio::task::yield_now().await;
+    assert!(!waiting.is_finished());
+
+    let mut dequeued = workers
+      .jobs
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .try_recv()
+      .expect("dequeue one capture");
+    dequeued.release_queue_slot();
+    drop(dequeued);
+    let replacement = waiting
+      .await
+      .expect("join the waiting request")
+      .expect("enqueue after capacity is available");
     drop(replacement);
+    drop(accepted);
     workers.shutdown().expect("stop the idle pool");
   }
 

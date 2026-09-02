@@ -273,10 +273,11 @@ HTTP input returns `400`, `413`, or `422`. `POST /screenshot` and
 `POST /screenshot/zip` return `422` with a JSON error when rendering cannot
 produce a frame. The ZIP route additionally returns `415` for a non-ZIP media
 type, `408` when body reading or extraction exceeds its own ten-second
-deadline or the isolated render exceeds its operation deadline, and `503` when
-all four ZIP staging slots are occupied. The server
-also returns `503` when its bounded capture queue is full or the headless worker
-is no longer available. A headless-worker panic makes readiness return `503`,
+deadline, or when waiting for capture capacity or the isolated render exceeds
+its operation deadline. A busy bounded queue keeps the HTTP callback pending
+until capacity becomes available or that deadline expires; eager load shedding
+belongs in an outer middleware. The server returns `503` when the headless
+worker is shutting down or no longer available. A headless-worker panic makes readiness return `503`,
 initiates graceful shutdown, and is propagated as a server error after the
 worker is joined. Each ZIP upload and each uploaded comparison image is limited
 to 10 MiB. Other request bodies are limited to 20 MiB plus 64 KiB of multipart
@@ -289,11 +290,11 @@ concurrently across judge requests and a bounded Rayon pool runs BMP-to-JPEG
 transcoding, normalization, alignment, and comparison. This forms a pipeline:
 scoring an earlier capture can overlap the next ordinary native capture without
 creating another owner in that process. The capture queue holds at most eight
-requests and reports backpressure synchronously, so a caller learns the queue is
-full without first waiting for the owner. The library and JSON server routes
-share that process-wide capture broker. Cancelled jobs are purged before
-reporting a full queue; if the owner panics, admission closes and queued waiters
-are released before graceful HTTP shutdown joins the worker.
+requests. When it is full, the caller waits asynchronously within its request
+timeout, without blocking a Tokio worker thread. The library and JSON server
+routes share that process-wide capture broker. If the owner panics, admission
+closes and queued or capacity-waiting handlers are released before graceful HTTP
+shutdown joins the worker.
 
 Uploaded ZIP pages are deliberately different. Each one is rendered by a fresh,
 short-lived `ui-judge-server` child process with its own `LynxContainer`, so
@@ -301,7 +302,7 @@ native process-global image caches cannot return another upload's bytes. The
 child receives only the server-selected staging root and output path, inherits
 no model credentials, and sends no request output to stdout or stderr. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
-kill and reap the child before its staging permit is released; graceful shutdown
+kill and reap the child before its render slot and staged tree are released; graceful shutdown
 drains accepted children. Failure to confirm reaping exits the service without
 unwinding the staging guard after a fixed five-second reap grace so its supervisor
 can restart it. This fail-closed exit does not request a core dump. The same
@@ -311,8 +312,9 @@ absolute deadline also covers output reading and JPEG transcoding.
 
 The `server` feature exposes `ui_judge::server::zip` for server adapters that
 accept user-supplied Lynx projects and backs the fixed `POST /screenshot/zip`
-route. The route reserves extraction capacity before buffering the raw request
-body, stops at 10 MiB, and never accepts a caller-provided base directory. The
+route. The route buffers the raw request body with a ten-second deadline, stops
+at 10 MiB, and never accepts a caller-provided base directory. It then waits
+asynchronously for isolated-render capacity before extracting. The
 module parses the content as ZIP regardless of its filename, rejects encrypted
 or overlapping archives, symbolic links, and entries other than regular files
 or directories, and extracts at most 100 entries, 50 MiB per file, and 100 MiB
@@ -324,16 +326,18 @@ directory are validated before the ZIP library runs; ZIP64 metadata and
 ambiguous visible EOCD fallback records are rejected while EOCD bytes inside
 nested file data remain ordinary content.
 
-At most four ZIP jobs own staging capacity at once, and excess work is rejected
-instead of queued while retaining another upload buffer. Reading the complete
-request body has a ten-second deadline. Synchronous ZIP work then runs on
-Tokio's blocking pool with its own ten-second deadline, and the blocking task
-retains its permit and temporary-directory guard until it really exits. A
-successful result continues to own both the permit and the guard. The ZIP
-screenshot route moves that result into a one-shot child-process supervisor, so
-the four-job limit includes active renders and cancellation cannot remove files
-while Lynx still uses them. The supervisor first kills and reaps a cancelled or
-timed-out child, then drops the guard and permit. Graceful server shutdown waits
+At most four ZIP requests may pass the isolated-render capacity gate at once.
+When every slot is busy, the HTTP callback waits until a slot becomes available
+or its operation deadline expires; an outer middleware must implement any
+earlier load shedding. Acquiring the slot before extraction keeps staged trees
+within the same four-job bound. Synchronous ZIP work runs on Tokio's blocking
+pool with a separate four-permit semaphore and its own ten-second absolute
+deadline. A blocking extraction retains its permit until it really exits, while
+a successful result owns its temporary-directory guard. The ZIP screenshot
+route moves that guard and the render slot into a one-shot child-process
+supervisor, so cancellation cannot remove files while Lynx still uses them. The
+supervisor first kills and reaps a cancelled or timed-out child, then drops the
+guard and render slot. Graceful server shutdown waits
 for every supervisor. Dropping the result removes the complete random staging
 directory, while failure paths explicitly attempt cleanup and report whether
 cleanup itself failed. Nested ZIP entries are left as ordinary files.
