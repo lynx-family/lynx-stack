@@ -159,6 +159,40 @@ configuration, credentials, and Lynx runtime configuration continue to come
 from the caller's environment. Linux hosts must also provide the
 `libepoxy.so.0` system dependency.
 
+### Docker
+
+The package Dockerfile builds the Linux AMD64 server bundle and includes its
+Lynx runtime assets and system dependencies. Use the repository root as the
+build context so Cargo can resolve the workspace-local crates:
+
+```bash
+docker buildx build \
+  --platform linux/amd64 \
+  --file packages/genui/ui-judge/Dockerfile \
+  --tag ui-judge:local \
+  --load \
+  .
+```
+
+Pass model credentials only when starting the container. Production containers
+should use a read-only root filesystem and mount the configured `TMPDIR` as a
+dedicated `noexec,nosuid,nodev` temporary volume:
+
+```bash
+docker run --rm \
+  --read-only \
+  --tmpfs /tmp/ui-judge:rw,noexec,nosuid,nodev,size=512m,mode=1777 \
+  --publish 8080:8080 \
+  --env UI_JUDGE_API_KEY \
+  ui-judge:local
+```
+
+The image runs as UID/GID `65532`, listens on port `8080`, and keeps credentials
+out of its layers. Override the port with `LYNX_USE_PORT` and publish the same
+container port when a different port is required. A `file://` page URL refers
+to a file inside the container, so mount local bundles read-only or use an HTTP
+or HTTPS URL.
+
 `LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
 process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 `[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
