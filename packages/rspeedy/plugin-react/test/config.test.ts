@@ -11,7 +11,11 @@ import { fileURLToPath } from 'node:url'
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
-import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+import type {
+  ReactWebpackPlugin,
+  ReactWebpackPluginOptions,
+} from '@lynx-js/react-webpack-plugin'
+import type { RuntimeConfigWebpackPlugin } from '@lynx-js/runtime-config-webpack-plugin'
 import type {
   LynxEncodePlugin,
   LynxTemplatePlugin,
@@ -340,7 +344,6 @@ describe('Config', () => {
     )
   })
 
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   const getBackgroundLayerOptions = async (rsbuild: RsbuildInstance) => {
     const [config] = await rsbuild.initConfigs()
 
@@ -461,12 +464,116 @@ describe('Config', () => {
     expect(
       (
         reactWebpackPlugin as unknown as {
-          options?: {
-            experimental_transformBuiltinAttributeNames?: unknown
-          }
+          options?: ReactWebpackPluginOptions
         }
-      ).options?.experimental_transformBuiltinAttributeNames,
-    ).toEqual(transformConfig)
+      ).options,
+    ).not.toHaveProperty('experimental_transformBuiltinAttributeNames')
+
+    const runtimeConfigWebpackPlugin = config?.plugins?.find(
+      (plugin): plugin is RuntimeConfigWebpackPlugin =>
+        plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+    )
+
+    expect(runtimeConfigWebpackPlugin).toBeDefined()
+    expect(
+      (
+        runtimeConfigWebpackPlugin as unknown as {
+          options?: unknown
+        }
+      ).options,
+    ).toEqual({
+      transformBuiltinAttributeNames: transformConfig,
+    })
+  })
+
+  test.each([
+    {
+      name: 'host bundle',
+      callerName: 'rspeedy',
+      pluginOptions: {
+        experimental_transformBuiltinAttributeNames: true,
+      },
+      expectedRuntimeConfig: {
+        transformBuiltinAttributeNames: true,
+      },
+    },
+    {
+      name: 'lazy bundle',
+      callerName: 'rspeedy',
+      pluginOptions: {
+        experimental_isLazyBundle: true,
+        experimental_transformBuiltinAttributeNames: true,
+      },
+      expectedRuntimeConfig: undefined,
+    },
+    {
+      name: 'external bundle',
+      callerName: 'rslib',
+      pluginOptions: {
+        experimental_transformBuiltinAttributeNames: true,
+      },
+      expectedRuntimeConfig: undefined,
+    },
+  ])('only injects runtime config into the host: $name', async ({
+    callerName,
+    expectedRuntimeConfig,
+    pluginOptions,
+  }) => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      callerName,
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(pluginOptions),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const runtimeConfigWebpackPlugin = config?.plugins?.find(
+      (plugin): plugin is RuntimeConfigWebpackPlugin =>
+        plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+    )
+
+    if (expectedRuntimeConfig === undefined) {
+      expect(runtimeConfigWebpackPlugin).toBeUndefined()
+      return
+    }
+
+    expect(runtimeConfigWebpackPlugin).toBeDefined()
+    expect(
+      (
+        runtimeConfigWebpackPlugin as unknown as {
+          options?: unknown
+        }
+      ).options,
+    ).toEqual(expectedRuntimeConfig)
+  })
+
+  test('does not apply the runtime config plugin when all runtime configs are disabled', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_transformBuiltinAttributeNames: false,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(
+      config?.plugins?.find(
+        plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+      ),
+    ).toBeUndefined()
   })
 
   test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {

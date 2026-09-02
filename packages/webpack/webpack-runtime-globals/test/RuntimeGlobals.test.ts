@@ -7,6 +7,12 @@ import { describe, expect, test } from '@rstest/core';
 import { RuntimeGlobals } from '../src/index.js';
 
 describe('RuntimeGlobals', () => {
+  test('mounts runtime config on the page-scoped lynx object', () => {
+    expect(RuntimeGlobals.lynxRuntimeConfig).toBe(
+      'lynx.__runtime_configs__',
+    );
+  });
+
   test('not overlap with Rspack', async () => {
     const rspack = await import('@rspack/core');
     Object.keys(RuntimeGlobals).forEach(lynxRuntimeRequirement => {

@@ -14,6 +14,8 @@ import type { UndefinedOnPartialDeep } from 'type-fest'
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { RuntimeConfigWebpackPlugin } from '@lynx-js/runtime-config-webpack-plugin'
+import type { RuntimeConfigWebpackPluginOptions } from '@lynx-js/runtime-config-webpack-plugin'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -27,6 +29,7 @@ import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
 
 const PLUGIN_NAME_REACT = 'lynx:react'
+const PLUGIN_NAME_RUNTIME_CONFIG = 'lynx:runtime-config'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
@@ -61,6 +64,12 @@ export function applyEntry(
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
+  const runtimeConfig: RuntimeConfigWebpackPluginOptions = {}
+
+  if (experimental_transformBuiltinAttributeNames) {
+    runtimeConfig['transformBuiltinAttributeNames'] =
+      experimental_transformBuiltinAttributeNames
+  }
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
@@ -309,13 +318,23 @@ export function applyEntry(
         experimental_isLazyBundle,
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
-        experimental_transformBuiltinAttributeNames,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
         ),
         lazyBundleFetcher,
       }])
+
+    // Runtime config belongs to the page host. Standalone lazy bundles and
+    // rslib products (including external bundles) reuse the host-injected
+    // `lynx.__runtime_configs__` instead of contributing their own values.
+    const isHostEnvironment = emitTemplate && !experimental_isLazyBundle
+    if (isHostEnvironment && Object.keys(runtimeConfig).length > 0) {
+      chain
+        .plugin(PLUGIN_NAME_RUNTIME_CONFIG)
+        .after(PLUGIN_NAME_REACT)
+        .use(RuntimeConfigWebpackPlugin, [runtimeConfig])
+    }
 
     function getDefaultProfile(): boolean | undefined {
       // rsbuild v1
