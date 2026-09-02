@@ -82,6 +82,11 @@ export function applyEntry(
     // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
     const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
 
+    const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-')
+    const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-')
+
     // An external bundle assembles its own template and a test run has none,
     // so the entries and template plugins below are an application's.
     const isApplication = api.context.callerName !== 'rslib'
@@ -94,10 +99,6 @@ export function applyEntry(
       }
 
       const entries = chain.entryPoints.entries() ?? {}
-      const isLynx = environment.name === 'lynx'
-        || environment.name.startsWith('lynx-')
-      const isWeb = environment.name === 'web'
-        || environment.name.startsWith('web-')
       const { hmr, liveReload } = environment.config.dev ?? {}
       const enabledHMR = isDev && hmr !== false
       const enabledLiveReload = isDev && liveReload !== false
@@ -233,51 +234,51 @@ export function applyEntry(
           }])
           .end()
       })
+    }
 
-      if (isLynx) {
-        let inlineScripts
-        if (experimental_isLazyBundle) {
-          // TODO: support inlineScripts in lazyBundle
-          inlineScripts = true
-        } else {
-          inlineScripts = environment.config.output?.inlineScripts
-            ?? !enableChunkSplitting
-        }
-
-        chain
-          .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
-          .use(RuntimeWrapperWebpackPlugin, [{
-            injectVars(vars) {
-              const UNUSED_VARS = new Set([
-                'Card',
-                'Component',
-                'ReactLynx',
-                'Behavior',
-              ])
-              return vars.map(name => {
-                if (UNUSED_VARS.has(name)) {
-                  return `__${name}`
-                }
-                return name
-              })
-            },
-            targetSdkVersion,
-            // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
-            test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
-            experimental_isLazyBundle,
-          }])
-          .end()
-          .plugin(`${LynxEncodePlugin.name}`)
-          .use(LynxEncodePlugin, [{ inlineScripts }])
-          .end()
+    if (isLynx) {
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts
+          ?? !enableChunkSplitting
       }
 
-      if (isWeb) {
-        chain
-          .plugin(PLUGIN_NAME_WEB)
-          .use(WebEncodePlugin, [])
-          .end()
-      }
+      chain
+        .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
+        .use(RuntimeWrapperWebpackPlugin, [{
+          injectVars(vars) {
+            const UNUSED_VARS = new Set([
+              'Card',
+              'Component',
+              'ReactLynx',
+              'Behavior',
+            ])
+            return vars.map(name => {
+              if (UNUSED_VARS.has(name)) {
+                return `__${name}`
+              }
+              return name
+            })
+          },
+          targetSdkVersion,
+          // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
+          test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
+          experimental_isLazyBundle,
+        }])
+        .end()
+        .plugin(`${LynxEncodePlugin.name}`)
+        .use(LynxEncodePlugin, [{ inlineScripts }])
+        .end()
+    }
+
+    if (isWeb) {
+      chain
+        .plugin(PLUGIN_NAME_WEB)
+        .use(WebEncodePlugin, [])
+        .end()
     }
 
     let extractStr = originalExtractStr

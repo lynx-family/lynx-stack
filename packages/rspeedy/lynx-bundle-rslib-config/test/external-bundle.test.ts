@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { decodeTemplate } from './utils.js'
 import { defineExternalBundleRslibConfig } from '../src/index.js'
@@ -1051,6 +1052,10 @@ describe('DSL plugin without layer loaders', () => {
           name: 'test:dsl-without-layer-loaders',
           setup(api) {
             api.expose(Symbol.for('LAYERS'), LAYERS)
+            // A DSL plugin registers the encoder, the way `pluginReactLynx` does.
+            api.modifyBundlerChain(chain => {
+              chain.plugin(LynxEncodePlugin.name).use(LynxEncodePlugin, [])
+            })
           },
         } satisfies rsbuild.RsbuildPlugin,
         ...pluginLynx(),
