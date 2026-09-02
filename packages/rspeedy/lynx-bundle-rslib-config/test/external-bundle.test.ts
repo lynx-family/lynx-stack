@@ -1115,6 +1115,24 @@ describe('DSL plugin without layer loaders', () => {
   })
 })
 
+describe('license comments', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+  const distRoot = path.join(fixtureDir, 'dist', 'license-comments')
+
+  it('does not emit a license file a Lynx bundle cannot link to', async () => {
+    await build(defineExternalBundleRslibConfig({
+      source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+      id: 'utils-legal-comments',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginReactLynx()],
+    }))
+
+    const emitted = await fs.promises.readdir(distRoot)
+
+    expect(emitted.filter(name => name.includes('LICENSE'))).toEqual([])
+  })
+})
+
 describe('debug info outside', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
 
