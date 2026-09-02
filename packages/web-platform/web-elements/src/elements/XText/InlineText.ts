@@ -4,9 +4,10 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { Component } from '../../element-reactive/index.js';
+import { XTextSelectionEvents } from './XTextSelectionEvents.js';
 
 /**
  * @deprecated you can use x-text instead in x-text.
  */
-@Component<typeof InlineText>('inline-text', [])
+@Component<typeof InlineText>('inline-text', [XTextSelectionEvents])
 export class InlineText extends HTMLElement {}

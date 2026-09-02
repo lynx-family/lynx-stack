@@ -2715,6 +2715,34 @@ test.describe('reactlynx3 tests', () => {
         });
       });
 
+      test(
+        'basic-element-text-bindselectionchange',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          const inlineText = page.locator('#inline-target');
+          await expect(inlineText).toBeAttached();
+          await wait(200);
+          await inlineText.evaluate((inlineText) => {
+            const textNode = inlineText.querySelector('raw-text')?.firstChild;
+            if (!textNode) throw new Error('Missing inline text node');
+            document.getSelection()?.setBaseAndExtent(
+              textNode,
+              1,
+              textNode,
+              4,
+            );
+            document.dispatchEvent(new Event('selectionchange'));
+          });
+
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-forward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-forward',
+          );
+        },
+      );
+
       test('basic-element-text-maxline', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(100);
