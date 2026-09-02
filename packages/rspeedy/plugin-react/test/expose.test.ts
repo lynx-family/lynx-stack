@@ -84,7 +84,6 @@ describe('Expose', () => {
     await rsbuild.initConfigs()
     expect(expose).toMatchInlineSnapshot(`
       {
-        "LynxEncodePlugin": [Function],
         "LynxTemplatePlugin": [Function],
       }
     `)

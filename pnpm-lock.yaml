@@ -1667,19 +1667,6 @@ importers:
         version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
 
   packages/rspeedy/lynx-bundle-rslib-config:
-    dependencies:
-      '@lynx-js/css-serializer':
-        specifier: workspace:*
-        version: link:../../tools/css-serializer
-      '@lynx-js/runtime-wrapper-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../webpack/runtime-wrapper-webpack-plugin
-      '@lynx-js/tasm':
-        specifier: 0.0.49
-        version: 0.0.49
-      '@lynx-js/web-core':
-        specifier: workspace:*
-        version: link:../../web-platform/web-core
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -1690,6 +1677,9 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-lynx
+      '@lynx-js/tasm':
+        specifier: 0.0.49
+        version: 0.0.49
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin

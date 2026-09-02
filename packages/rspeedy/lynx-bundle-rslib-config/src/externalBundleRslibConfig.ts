@@ -5,16 +5,13 @@
 import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
-import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import type {
   CustomSectionNaming,
-  LynxEncodePlugin as LynxEncodePluginClass,
   LynxTemplatePlugin as LynxTemplatePluginClass,
 } from '@lynx-js/template-webpack-plugin'
 
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
 import { MarkMainThreadWebpackPlugin } from './webpack/MarkMainThreadWebpackPlugin.js'
-import { WebExternalBundleEncodePlugin } from './webpack/WebExternalBundleEncodePlugin.js'
 
 /**
  * The options for encoding the external bundle.
@@ -674,7 +671,6 @@ const externalBundleRsbuildPlugin = ({
     }
 
     const exposed = api.useExposed<{
-      LynxEncodePlugin: typeof LynxEncodePluginClass
       LynxTemplatePlugin: typeof LynxTemplatePluginClass
     }>(Symbol.for('LynxTemplatePlugin'))
 
@@ -684,7 +680,7 @@ const externalBundleRsbuildPlugin = ({
       )
     }
 
-    const { LynxEncodePlugin, LynxTemplatePlugin } = exposed
+    const { LynxTemplatePlugin } = exposed
 
     api.modifyBundlerChain(
       async (chain, { CHAIN_ID }) => {
@@ -796,23 +792,6 @@ const externalBundleRsbuildPlugin = ({
             test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
           }])
           .end()
-          .plugin(BackgroundRuntimeWrapperWebpackPlugin.name)
-          .use(BackgroundRuntimeWrapperWebpackPlugin, [{
-            test: backgroundEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
-          }])
-          .end()
-        }
-
-        if (isWeb) {
-          chain
-            .plugin(WebExternalBundleEncodePlugin.name)
-            .use(WebExternalBundleEncodePlugin, [{ LynxTemplatePlugin }])
-            .end()
-        } else {
-          chain
-            .plugin(LynxEncodePlugin.name)
-            .use(LynxEncodePlugin, [])
-            .end()
         }
 
         chain

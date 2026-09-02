@@ -3,19 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import {
-  LynxEncodePlugin,
-  LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin'
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 export function pluginTemplate(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:template',
     setup(api) {
-      api.expose(Symbol.for('LynxTemplatePlugin'), {
-        LynxEncodePlugin,
-        LynxTemplatePlugin,
-      })
+      api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin })
     },
   }
 }
