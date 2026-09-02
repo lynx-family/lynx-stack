@@ -541,7 +541,14 @@ export declare class StorageNapiModule {
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
       )?.content,
-    ).toContain('#include "napi.h"');
+    ).toContain('#include <LynxWeakNodeAPI/headers/napi.h>');
+    expect(
+      files.find((file) =>
+        file.path === 'shared/nativeModule/StorageNapiModule.cc'
+      )?.content,
+    ).toMatch(
+      /#if __has_include\(<LynxWeakNodeAPI\/headers\/napi\.h>\)[\s\S]*#else[\s\S]*#include "napi\.h"[\s\S]*#endif/,
+    );
     expect(
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
@@ -553,6 +560,14 @@ export declare class StorageNapiModule {
           === 'shared/nativeModule/generated/StorageNapiModuleRegistration.cc'
       )?.content,
     ).toContain('napi_module_register(&g_module)');
+    expect(
+      files.find((file) =>
+        file.path
+          === 'shared/nativeModule/generated/StorageNapiModuleRegistration.cc'
+      )?.content,
+    ).toMatch(
+      /#if __has_include\(<LynxWeakNodeAPI\/headers\/napi\.h>\)[\s\S]*#else[\s\S]*#include "napi\.h"[\s\S]*#endif/,
+    );
     expect(
       files.find((file) =>
         file.path
