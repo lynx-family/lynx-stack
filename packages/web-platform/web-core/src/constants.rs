@@ -31,15 +31,51 @@ lazy_static::lazy_static! {
     ("wrapper", "lynx-wrapper"),
     ("list", "x-list"),
     ("page", "div"),
+    ("input", "x-input"),
+    ("x-input-ng", "x-input"),
     ("textarea", "x-textarea"),
+    ("x-textarea-ng", "x-textarea"),
+    ("viewpager", "x-viewpager-ng"),
+    ("viewpager-item", "x-viewpager-item-ng"),
+    ("webview", "x-webview"),
+    ("overlay", "x-overlay-ng"),
+    ("refresh", "x-refresh-view"),
+    ("refresh-header", "x-refresh-header"),
+    ("blur-view", "x-blur-view"),
+    ("scroll-coordinator", "x-foldview-ng"),
+    ("scroll-coordinator-header", "x-foldview-header-ng"),
+    ("scroll-coordinator-slot", "x-foldview-slot-ng"),
+    ("scroll-coordinator-slot-drag", "x-foldview-slot-drag-ng"),
+    ("scroll-coordinator-toolbar", "x-foldview-toolbar-ng"),
     ("svg", "x-svg"),
     ("frame", "lynx-view"),
   ]);
 
-  pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
-    .iter()
-    .map(|(k, v)| (*v, *k))
-  );
+  pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<&'static str, &'static str> = {
+    let mut map = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
+      .iter()
+      .map(|(k, v)| (*v, *k))
+    );
+    // Keep canonical Lynx-facing names deterministic when aliases share an
+    // HTML tag and align them with client-side Web behavior.
+    map.extend([
+      ("x-input", "x-input-ng"),
+      ("x-textarea", "textarea"),
+      ("x-viewpager-ng", "x-viewpager-ng"),
+      ("x-viewpager-item-ng", "x-viewpager-item-ng"),
+      ("x-webview", "x-webview"),
+      ("x-overlay-ng", "x-overlay-ng"),
+      ("x-refresh-view", "x-refresh-view"),
+      ("x-refresh-header", "x-refresh-header"),
+      ("x-blur-view", "x-blur-view"),
+      ("x-foldview-ng", "x-foldview-ng"),
+      ("x-foldview-header-ng", "x-foldview-header-ng"),
+      ("x-foldview-slot-ng", "x-foldview-slot-ng"),
+      ("x-foldview-slot-drag-ng", "x-foldview-slot-drag-ng"),
+      ("x-foldview-toolbar-ng", "x-foldview-toolbar-ng"),
+    ]);
+    map
+  };
 
   /**
    * See packages/web-platform/web-core/ts/client/webElementsDynamicLoader.ts

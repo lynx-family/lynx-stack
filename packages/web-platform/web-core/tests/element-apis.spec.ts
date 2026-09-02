@@ -20,6 +20,35 @@ import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainTh
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
+const X_ELEMENT_ALIAS_CASES = [
+  ['viewpager', 'x-viewpager-ng', 'x-viewpager-ng'],
+  ['viewpager-item', 'x-viewpager-item-ng', 'x-viewpager-item-ng'],
+  ['webview', 'x-webview', 'x-webview'],
+  ['overlay', 'x-overlay-ng', 'x-overlay-ng'],
+  ['refresh', 'x-refresh-view', 'x-refresh-view'],
+  ['refresh-header', 'x-refresh-header', 'x-refresh-header'],
+  ['blur-view', 'x-blur-view', 'x-blur-view'],
+  ['scroll-coordinator', 'x-foldview-ng', 'x-foldview-ng'],
+  [
+    'scroll-coordinator-header',
+    'x-foldview-header-ng',
+    'x-foldview-header-ng',
+  ],
+  ['scroll-coordinator-slot', 'x-foldview-slot-ng', 'x-foldview-slot-ng'],
+  [
+    'scroll-coordinator-slot-drag',
+    'x-foldview-slot-drag-ng',
+    'x-foldview-slot-drag-ng',
+  ],
+  [
+    'scroll-coordinator-toolbar',
+    'x-foldview-toolbar-ng',
+    'x-foldview-toolbar-ng',
+  ],
+  ['x-input-ng', 'x-input', 'x-input-ng'],
+  ['x-textarea-ng', 'x-textarea', 'textarea'],
+] as const;
+
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
@@ -125,6 +154,16 @@ describe('Element APIs', () => {
     expect(element.tagName.toLowerCase()).toBe('x-textarea');
     expect(mtsGlobalThis.__GetTag(element)).toBe('textarea');
   });
+
+  test.each(X_ELEMENT_ALIAS_CASES)(
+    '__CreateElement maps %s to <%s>',
+    (lynxTag, htmlTag, canonicalLynxTag) => {
+      const element = mtsGlobalThis.__CreateElement(lynxTag, 0);
+
+      expect(element.tagName.toLowerCase()).toBe(htmlTag);
+      expect(mtsGlobalThis.__GetTag(element)).toBe(canonicalLynxTag);
+    },
+  );
 
   test('createCrossThreadEvent properly sets touch detail x and y', async () => {
     const { createCrossThreadEvent } = await import(
