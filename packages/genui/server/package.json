@@ -21,6 +21,7 @@
     "@mastra/core": "1.56.0",
     "@openuidev/lang-core": "^0.2.11",
     "@volcengine/tos-sdk": "^2.9.1",
+    "fast-xml-parser": "^5.11.1",
     "hono": "4.13.0",
     "zod": "^4.4.3"
   },

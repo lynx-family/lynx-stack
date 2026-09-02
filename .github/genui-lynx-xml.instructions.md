@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/lynx-xml-agent.ts"
+applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/{lynx-xml-agent,html-fragment-to-main-thread-script-tool}.ts"
 ---
 
 Keep Lynx XML prompt construction in `packages/genui/lynx-xml`; the server
@@ -24,6 +24,11 @@ Keep numeric component ids separate from Element PAPI node references. Both
 arguments to `__AppendElement` must be nodes, append helpers must receive the
 parent node rather than its id, and `pageId` is reserved for page-owned element
 creation APIs.
+Keep the Lynx XML agent's `html_fragment_to_main_thread_script` tool limited to
+deterministic initial-tree conversion. Parse well-formed fragments in source
+order, emit Element PAPI creation, literal property, and append calls that assume
+`page` and `pageId` already exist, and leave state, event handlers, updates,
+lifecycle registration, cleanup, and CSS to the agent-authored artifact.
 Maintain mobile-specific defaults in `src/mobile-design.ts`: start from a
 narrow portrait, single-primary-scroll layout; use responsive units and a
 consistent semantic palette; consume each safe-area edge once; reserve space
