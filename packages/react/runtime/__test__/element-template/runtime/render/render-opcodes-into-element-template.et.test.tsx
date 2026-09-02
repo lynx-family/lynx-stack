@@ -14,10 +14,15 @@ import { elementTemplateRegistry } from '../../../../src/element-template/runtim
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+} from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import {
   __OpAttr,
   __OpBegin,
@@ -58,12 +63,14 @@ describe('renderOpcodesIntoElementTemplate', () => {
     vi.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
+    clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
     resetTemplateId();
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
   });
 
@@ -398,6 +405,73 @@ describe('renderOpcodesIntoElementTemplate', () => {
         listID: 9,
       }],
     ]);
+  });
+
+  it('defers first-screen list item subtree MTRef attach until native requests the item', () => {
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const updateWorkletRef = vi.fn();
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: {
+        updateWorkletRef,
+      },
+    };
+    const listRef = { kind: 'list-ref', __mockNativeId: 400 };
+    const itemRef = { kind: 'item-ref', __mockNativeId: 401 };
+    const childRef = { kind: 'child-ref', __mockNativeId: 402 };
+    const ref = { _wvid: 77 };
+    __etAttrPlanMap['__Card__:_et_ref_child'] = [0, adaptMTRefAttrSlot];
+    createElementTemplate
+      .mockReturnValueOnce(childRef)
+      .mockReturnValueOnce(itemRef);
+    createTypedElementTemplate.mockReturnValueOnce(listRef);
+
+    try {
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: 'list' },
+        __OpSlot,
+        0,
+        __OpBegin,
+        { type: '_et_item', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
+        __OpSlot,
+        0,
+        __OpBegin,
+        { type: '__Card__:_et_ref_child' },
+        __OpAttr,
+        'attributeSlots',
+        [ref],
+        __OpEnd,
+        __OpEnd,
+        __OpEnd,
+      ]);
+
+      expect(createElementTemplate.mock.calls[0]).toEqual([
+        '_et_ref_child',
+        null,
+        [null],
+        null,
+        -1,
+      ]);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+        kind: 'mt-ref',
+        value: ref,
+      });
+
+      const attrs = createTypedElementTemplate.mock.calls[0]![1] as Record<string, (...args: unknown[]) => unknown>;
+      const componentAtIndex = attrs['component-at-index']!;
+
+      expect(componentAtIndex(listRef, 9, 0, 72, true)).toBe(401);
+
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, childRef);
+      expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+        kind: 'mt-ref',
+        value: ref,
+      });
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
   });
 
   it('rejects non-list-item roots in typed list logical children', () => {
