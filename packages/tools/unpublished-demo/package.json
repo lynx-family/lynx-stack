@@ -1,0 +1,13 @@
+{
+  "name": "@lynx-js/unpublished-demo",
+  "version": "0.0.0",
+  "description": "Demo package that exists nowhere on npm, to exercise the unpublished-package check.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/tools/unpublished-demo"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "index.js"
+}
