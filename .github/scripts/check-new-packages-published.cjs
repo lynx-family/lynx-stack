@@ -13,6 +13,9 @@ const { readFileSync } = require('node:fs');
 const { join, relative } = require('node:path');
 
 const REGISTRY = 'https://registry.npmjs.org/';
+const TRUSTED_REPO = 'lynx-family/lynx-stack';
+const TRUSTED_WORKFLOW = 'deploy-main.yml';
+const PLACEHOLDER_VERSION = '0.0.0-rc.0';
 
 function readWorkspacePackages(cwd = process.cwd()) {
   const raw = execFileSync(
@@ -103,15 +106,41 @@ async function main() {
     process.stderr.write(`- ${path}: ${missing.join(', ')}\n`);
   }
   process.stderr.write(
-    '\nnpm trusted publishing cannot create a package, so `canary-publish` and'
-      + ' the release would fail on main. Publish a placeholder version of each'
-      + ' name listed above by hand (`npm publish` from a maintainer account),'
-      + ' enable trusted publishing for it on npmjs.com, then re-run this check.\n',
+    `\n${remediation(unpublished.flatMap(({ missing }) => missing))}`,
   );
   throw new Error('Unpublished packages detected.');
 }
 
-module.exports = { findUnpublishedPackages, publishedNames };
+// npm trusted publishing (OIDC) cannot create a package, so a maintainer has to
+// publish a placeholder by hand and then grant the workflow publish rights.
+// Every command takes the same npm OTP, which expires after about 30 seconds.
+function remediation(names) {
+  return [
+    'npm trusted publishing cannot create a package, so `canary-publish` and the',
+    'release would fail on main. A maintainer has to publish a placeholder for',
+    'each missing name and grant the workflow publish rights. Run this with a',
+    'fresh npm OTP (it expires after about 30 seconds; on `EOTP`, re-run only the',
+    'command that failed):',
+    '',
+    '  REG=https://registry.npmjs.org',
+    '  OTP=<otp>',
+    `  for PKG in ${names.join(' ')}; do`,
+    '    (',
+    '      mkdir -p "/tmp/npm-placeholder/$PKG" && cd "/tmp/npm-placeholder/$PKG"',
+    `      printf '{"name":"%s","version":"${PLACEHOLDER_VERSION}"}\\n' "$PKG" > package.json`,
+    '      npm publish --access public --registry=$REG --otp=$OTP',
+    '    )',
+    '    npm access set mfa=publish "$PKG" --registry=$REG --otp=$OTP',
+    `    npx -y npm@latest trust github "$PKG" --repo=${TRUSTED_REPO} --file=${TRUSTED_WORKFLOW} \\`,
+    '      --allow-publish --allow-stage-publish --yes --registry=$REG --otp=$OTP',
+    '  done',
+    '',
+    'Then re-run this check.',
+    '',
+  ].join('\n');
+}
+
+module.exports = { findUnpublishedPackages, publishedNames, remediation };
 
 if (require.main === module) {
   main().catch((error) => {
