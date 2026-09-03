@@ -17,17 +17,16 @@ let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
 export function addMainThreadRefInitValue(
   id: number,
   value: unknown,
-  type?: string,
-  mainThreadObjectProtocolVersion?: number,
+  mainThreadObject?: { readonly type: string; readonly protocolVersion: number },
 ): void {
   if (!isMtsEnabled()) {
     return;
   }
 
   mainThreadRefInitValuePatch.push(
-    type === undefined
+    mainThreadObject === undefined
       ? [id, value]
-      : [id, value, type, mainThreadObjectProtocolVersion!],
+      : [id, value, mainThreadObject.type, mainThreadObject.protocolVersion],
   );
 }
 

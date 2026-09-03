@@ -51,7 +51,7 @@ function hydrateCtxImpl(
   if (__MAIN_THREAD_OBJECT__ && typeof ctxObj['_wvid'] === 'number') {
     hydrateWorkletValueHandle(
       ctxObj as unknown as WorkletRefImpl<unknown>,
-      firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
+      firstScreenCtxObj,
     );
     return;
   }
