@@ -773,7 +773,7 @@ const externalBundleRsbuildPlugin = ({
         chain
           .plugin(MarkMainThreadWebpackPlugin.name)
           .use(MarkMainThreadWebpackPlugin, [{
-            entryNames: mainThreadEntryName,
+            layer: LAYERS.MAIN_THREAD,
           }])
           .end()
 
