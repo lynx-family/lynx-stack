@@ -1234,12 +1234,19 @@ class LynxTemplatePluginImpl {
       compilation,
     );
 
+    const isFetchBundleLazy = isAsync
+      && this.#options.lazyBundleFetcher === 'FetchBundle';
+    const naming = this.#options.customSectionNaming
+      ?? (isFetchBundleLazy ? () => LAZY_BUNDLE_SECTION_NAMING : undefined);
+
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
       filenameTemplate,
       chunkGroups,
       intermediate,
-      intermediateAssets: [],
+      intermediateAssets: naming
+        ? assetsInfoByGroups.mainThread.map(asset => asset.name)
+        : [],
     });
 
     const { lepusCode, css } = encodeData;
@@ -1249,18 +1256,13 @@ class LynxTemplatePluginImpl {
         return [asset.name, asset.source.source().toString()];
       }),
     );
-
-    const isFetchBundleLazy = isAsync
-      && this.#options.lazyBundleFetcher === 'FetchBundle';
-    const naming = this.#options.customSectionNaming
-      ?? (isFetchBundleLazy ? () => LAZY_BUNDLE_SECTION_NAMING : undefined);
     // Default to bytecode for the main-thread sections. Skip in dev or when
     // DEBUG matches rspeedy so the source stays debuggable.
     const enableSectionBytecode = this.#options.enableSectionBytecode
       ?? (!isDev && !isDebug());
     const customSectionSplit = naming
       ? buildCustomSections({
-        mainThreadAssets: lepusCode.root ? [lepusCode.root] : [],
+        mainThreadAssets: assetsInfoByGroups.mainThread,
         manifest: encodeData.manifest,
         cssAssets: encodeData.css.chunks,
         enableBytecode: enableSectionBytecode,
@@ -1343,8 +1345,10 @@ class LynxTemplatePluginImpl {
         ...(cssDiagnostics === undefined ? {} : { cssDiagnostics }),
         template: buffer,
         outputName: filename,
-        mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
-          .filter(i => i !== undefined),
+        mainThreadAssets: customSectionSplit
+          ? assetsInfoByGroups.mainThread
+          : [lepusCode.root, ...encodeData.lepusCode.chunks]
+            .filter(i => i !== undefined),
         cssChunks: assetsInfoByGroups.css,
         chunkGroups,
       });
