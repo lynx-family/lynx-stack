@@ -42,31 +42,12 @@ afterEach(() => {
   backgroundSnapshotInstanceManager.nextId = 0;
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
-  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
+  lynx.__runtime_configs__ = { transformBuiltinAttributeNames: false };
 });
 
 describe('spreadUpdate', () => {
-  it('preserves spread attribute names when the compile-time config is unavailable', () => {
-    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
-
-    expect(
-      transformSpread(
-        { __id: 6 },
-        1,
-        {
-          __spread: true,
-          textMaxline: 2,
-          onClick: vi.fn(),
-        },
-      ),
-    ).toEqual({
-      textMaxline: 2,
-      onClick: '6:1:onClick',
-    });
-  });
-
   it('transforms builtin attribute names and preserves event handler lookup keys', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     expect(
       transformSpread(
@@ -93,11 +74,13 @@ describe('spreadUpdate', () => {
   });
 
   it('transforms only after identifying special spread attributes', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
-      rename: {
-        className: 'renamed-class',
-        ref: 'renamed-ref',
-        textMaxline: 'custom-maxline',
+    lynx.__runtime_configs__ = {
+      transformBuiltinAttributeNames: {
+        rename: {
+          className: 'renamed-class',
+          ref: 'renamed-ref',
+          textMaxline: 'custom-maxline',
+        },
       },
     };
 
@@ -120,7 +103,7 @@ describe('spreadUpdate', () => {
   });
 
   it('renders camel-case spread attributes with transformed element state', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     function Comp() {
       const attributes = {
