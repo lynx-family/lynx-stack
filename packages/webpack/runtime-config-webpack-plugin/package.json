@@ -1,0 +1,49 @@
+{
+  "name": "@lynx-js/runtime-config-webpack-plugin",
+  "version": "0.0.0",
+  "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
+  "keywords": [
+    "webpack",
+    "Lynx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/runtime-config-webpack-plugin"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Qingyu Wang",
+    "email": "colinwang.0616@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "@lynx-js/webpack-runtime-globals": "workspace:^"
+  },
+  "devDependencies": {
+    "@lynx-js/test-tools": "workspace:*",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

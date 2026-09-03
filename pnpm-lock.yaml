@@ -1879,6 +1879,9 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-lynx
+      '@lynx-js/runtime-config-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/runtime-config-webpack-plugin
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/runtime-wrapper-webpack-plugin
@@ -2659,6 +2662,22 @@ importers:
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.47(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
+
+  packages/webpack/runtime-config-webpack-plugin:
+    dependencies:
+      '@lynx-js/webpack-runtime-globals':
+        specifier: workspace:^
+        version: link:../webpack-runtime-globals
+    devDependencies:
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../test-tools
+      '@rspack/core':
+        specifier: 2.1.7
+        version: 2.1.7(@swc/helpers@0.5.23)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
 
   packages/webpack/runtime-wrapper-webpack-plugin:
     dependencies:

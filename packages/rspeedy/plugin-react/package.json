@@ -42,6 +42,7 @@
     "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/runtime-config-webpack-plugin": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/use-sync-external-store": "workspace:*",
