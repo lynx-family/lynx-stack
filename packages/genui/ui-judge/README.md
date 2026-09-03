@@ -162,68 +162,56 @@ from the caller's environment. Linux hosts must also provide the
 `LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
 process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 `[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
-non-secret configured model name, `POST /judge` to evaluate a page, and
-`POST /screenshot` to render a page without evaluating it. Use `POST /compare`
-to compare two uploaded images without rendering a page or calling the VLM.
+non-secret configured model name. Use `POST /compare` to compare two uploaded
+images without rendering a page or calling the VLM. Use `POST /screenshot/zip`
+to render an uploaded Lynx project from the `zip://` URL supplied in its `url`
+query parameter. Use `POST /screenshot/lynxml` to render one raw UTF-8 LynXML
+document.
 
-The following request evaluates a local bundle. `url` and `task` are required.
-The other fields are optional. `initialData` and `globalProps` accept JSON
-objects and are forwarded only by the HTTP server to the headless Lynx
-navigation request; `null` is treated as omitted. `initialData` also applies to
-`.lynxml` pages, but `globalProps` does not because the public LynxML load API
-does not accept global properties. The Rust library's public `JudgePageRequest`
-remains unchanged.
+The server does not allow direct `file://`, `http://`, or `https://` page
+navigation. `POST /judge` and `POST /screenshot` reject those URL forms with
+HTTP `403` before model initialization or headless capture. Use the default
+library build for trusted direct-URL judging, or upload an untrusted project to
+`POST /screenshot/zip`.
 
-```bash
-curl --request POST http://127.0.0.1:8080/judge \
-  --header 'content-type: application/json' \
-  --data '{
-    "url": "file:///absolute/path/to/dist/main.lynx.bundle",
-    "task": "The saved state should be clear and visually correct",
-    "globalProps": {
-      "messages": [],
-      "instant": true,
-      "theme": "light"
-    },
-    "includeGeqi": true,
-    "reference": null,
-    "referenceImage": null,
-    "includeScreenshot": true,
-    "steps": ["Tap the Save button"],
-    "screenshotSettleMs": 16,
-    "timeoutMs": 60000
-  }'
-```
-
-To capture the same page without scoring it, send the same JSON request to
-`POST /screenshot`. The response body contains the JPEG, so save it directly to
-a file:
+To render a LynXML string without auxiliary local files, send it directly as
+the request body. The endpoint accepts `application/xml`, `text/xml`, and
+`text/plain`, buffers at most 10 MiB, and returns `image/jpeg` with
+`Cache-Control: no-store`:
 
 ```bash
-curl --request POST http://127.0.0.1:8080/screenshot \
-  --header 'content-type: application/json' \
-  --data '{
-    "url": "file:///absolute/path/to/dist/main.lynx.bundle",
-    "task": "Capture the rendered page",
-    "globalProps": {
-      "messages": [],
-      "instant": true,
-      "theme": "light"
-    },
-    "screenshotSettleMs": 16,
-    "timeoutMs": 60000
-  }' \
+curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
+  --header 'content-type: application/xml; charset=utf-8' \
+  --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
   --output screenshot.jpg
 ```
 
-`POST /screenshot` accepts the same request fields and aliases as
-`POST /judge`. It uses `url`, `initialData`, `globalProps`, `steps`,
-`screenshotSettleMs`, and `timeoutMs` for rendering. It ignores
-`includeScreenshot`, `includeGeqi`, `reference`, and `referenceImage`. Empty
-`steps` do not initialize or call a model. Non-empty `steps` still use Agent SDK
-to perform the requested interactions before capture, but the route never
-scores the image or compares it with a reference image. A successful response is
-`200 image/jpeg` with the transcoded capture.
+The server stages the source as an internal `zip:///index.lynxml` navigation in
+a fresh private directory and renders it in the same isolated process pool as
+ZIP uploads. HTTP(S) resources with domain hosts remain available, while
+`file://`, IP-hosted HTTP(S), and paths outside that private directory remain
+blocked. Use the ZIP endpoint when the document needs relative image or script
+files.
+
+To render an uploaded ZIP without scoring it, send the archive itself as the
+request body and pass its entrypoint as a `zip://` URL. The route does not
+accept a caller-supplied base directory, model options, or interaction steps:
+
+```bash
+curl --request POST 'http://127.0.0.1:8080/screenshot/zip?url=zip%3A%2F%2F%2Findex.lynxml' \
+  --header 'content-type: application/zip' \
+  --data-binary '@/absolute/path/to/page.zip' \
+  --output screenshot.jpg
+```
+
+The URL must use the `zip://` scheme and select an entry inside the archive,
+for example `zip:///pages/index.lynxml`. That document may use paths relative
+to itself, such as `./images/logo.png`, or archive-root URLs such as
+`zip:///images/logo.png`. Local paths resolve only within the new private
+extraction directory created for that request. Explicit `file://` URLs and
+HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
+hosts remain available. A successful response is `200 image/jpeg` with
+`Cache-Control: no-store`.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
@@ -242,66 +230,88 @@ content. It normalizes and compares the uploads on a blocking task; it does not
 enqueue headless capture, initialize a model client, render a Lynx page, or
 perform VLM scoring.
 
-The `/judge` response contains the JSON-encoded `UiJudgeResult`. When
-`includeScreenshot` is true and capture succeeds, it additionally contains the
-exact judged image as `screenshotDataUrl`; the field is omitted by default to
-avoid inflating ordinary responses. A completed evaluation returns HTTP `200`,
-including evaluation failures reported in the result's `error` field. Invalid
-HTTP input returns `400`, `413`, or `422`. `POST /screenshot` returns `422` with
-a JSON error when rendering cannot produce a frame. The server returns `503` when
-its bounded capture queue is full or the headless worker is no longer
-available. A headless-worker panic makes readiness return `503`, initiates graceful
-shutdown, and is propagated as a server error after the worker is joined. Each
-uploaded comparison image is limited to 10 MiB. Request bodies are limited to
-20 MiB plus 64 KiB of multipart overhead.
+`POST /judge` and `POST /screenshot` return `403` for direct `file://` or
+HTTP(S) page URLs. `POST /screenshot/zip` returns `422` with a JSON error when
+rendering cannot produce a frame. `POST /screenshot/lynxml` likewise returns
+`422` when its UTF-8 source cannot be rendered. Both upload routes return `413`
+when their body exceeds 10 MiB, `415` for an unsupported media type, and `408`
+when body reading or isolated rendering exceeds its deadline; the ZIP route
+also applies its ten-second extraction deadline. A busy bounded queue keeps the
+HTTP callback pending until capacity becomes available or that deadline
+expires; eager load shedding belongs in an outer middleware. The server returns `503` when the
+headless worker is shutting down or no longer available. A headless-worker panic
+makes readiness return `503`, initiates graceful shutdown, and is propagated as
+a server error after the worker is joined. Each ZIP upload and each uploaded
+comparison image is limited to 10 MiB. Other request bodies are limited to 20
+MiB plus 64 KiB of multipart overhead.
 
-The server accepts connections concurrently. Native Lynx capture runs
-sequentially on one dedicated process-owner thread with one reused
-`LynxContainer`. After a capture returns its owned BMP, Tokio runs model scoring
-concurrently across judge requests and a bounded Rayon pool runs BMP-to-JPEG
-transcoding, normalization, alignment, and comparison. This forms a pipeline: scoring an
-earlier capture can overlap the next native capture without creating another
-native owner. The capture queue holds at most eight requests and reports
-backpressure synchronously, so a caller learns the queue is full without first
-waiting for the owner. The library and server share the same process-wide
-capture broker. Cancelled jobs are purged before reporting a full queue; if the
-owner panics, admission closes and queued waiters are released before graceful
-HTTP shutdown joins the worker.
+Trusted library captures run sequentially on one dedicated process-owner thread
+with one reused `LynxContainer`. After a capture returns its owned BMP, Tokio can
+run model scoring concurrently while the bounded Rayon pool handles BMP-to-JPEG
+transcoding, normalization, alignment, and comparison. The capture queue holds
+at most eight requests. When it is full, the caller waits asynchronously within
+its request timeout, without blocking a Tokio worker thread. If the owner panics,
+admission closes and queued or capacity-waiting callers are released before the
+worker is joined.
+
+Uploaded ZIP pages are deliberately different. Each one is rendered by a fresh,
+short-lived `ui-judge-server` child process with its own `LynxContainer`, so
+native process-global image caches cannot return another upload's bytes. The
+child receives only the server-selected staging root and output path, inherits
+no model credentials, and sends no request output to stdout or stderr. A private
+stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
+kill and reap the child before its render slot and staged tree are released;
+graceful shutdown drains accepted children. Failure to confirm reaping exits the
+service without unwinding the staging guard after a fixed five-second reap grace
+so its supervisor can restart it. This fail-closed exit does not request a core
+dump. The same absolute deadline also covers output reading and JPEG
+transcoding.
 
 ### Secure ZIP staging
 
 The `server` feature exposes `ui_judge::server::zip` for server adapters that
-accept user-supplied Lynx projects. It does not add an HTTP upload route or
-accept a caller-provided base directory. An adapter must stop buffering an
-upload at 10 MiB, then hand the bytes to the staging API. The module parses the
-content as ZIP regardless of its filename, rejects encrypted or overlapping
-archives, symbolic links, and entries other than regular files or directories,
-and extracts at most 100 entries, 50 MiB per file, and 100 MiB in total. Both
-declared and actually written data are subject to a 100:1 compression-ratio
-limit. Paths are enclosed and bounded by depth and byte length, output files use
-exclusive creation, and extraction streams through a fixed 64 KiB buffer. A
-strict classic outer EOCD and its structural central directory are validated
-before the ZIP library runs; ZIP64 metadata and ambiguous visible EOCD fallback
-records are rejected while EOCD bytes inside nested file data remain ordinary
-content.
+accept user-supplied Lynx projects and backs the fixed `POST /screenshot/zip`
+route. The route buffers the raw request body with a ten-second deadline, stops
+at 10 MiB, and never accepts a caller-provided base directory. It then waits
+asynchronously for isolated-render capacity before extracting. The
+module parses the content as ZIP regardless of its filename, rejects encrypted
+or overlapping archives, symbolic links, and entries other than regular files
+or directories, and extracts at most 100 entries, 50 MiB per file, and 100 MiB
+in total. Both declared and actually written data are subject to a 100:1
+compression-ratio limit. Paths are enclosed and bounded by depth and byte
+length, output files use exclusive creation, and extraction streams through a
+fixed 64 KiB buffer. A strict classic outer EOCD and its structural central
+directory are validated before the ZIP library runs; ZIP64 metadata and
+ambiguous visible EOCD fallback records are rejected while EOCD bytes inside
+nested file data remain ordinary content.
 
-At most four extractions run concurrently, and excess work is rejected instead
-of queued while retaining another upload buffer. Synchronous ZIP work runs on
-Tokio's blocking pool with a ten-second deadline, and the blocking task retains its
-permit and temporary-directory guard until it really exits. The successful
-result also owns that guard; a future capture integration must move it into the
-queued capture job so cancellation cannot remove files while Lynx still uses
-them. Dropping the result removes the complete random staging directory, while
-failure paths explicitly attempt cleanup and report whether cleanup itself
-failed. Nested ZIP entries are left as ordinary files.
+At most four ZIP requests may pass the isolated-render capacity gate at once.
+When every slot is busy, the HTTP callback waits until a slot becomes available
+or its operation deadline expires; an outer middleware must implement any
+earlier load shedding. Acquiring the slot before extraction keeps staged trees
+within the same four-job bound. Synchronous ZIP work runs on Tokio's blocking
+pool with a separate four-permit semaphore and its own ten-second absolute
+deadline. A blocking extraction retains its permit until it really exits, while
+a successful result owns its temporary-directory guard. The ZIP screenshot
+route moves that guard and the render slot into a one-shot child-process
+supervisor, so cancellation cannot remove files while Lynx still uses them. The
+supervisor first kills and reaps a cancelled or timed-out child, then drops the
+guard and render slot. Graceful server shutdown waits
+for every supervisor. Dropping the result removes the complete random staging
+directory, while failure paths explicitly attempt cleanup and report whether
+cleanup itself failed. Nested ZIP entries are left as ordinary files.
 
 Rust limits are only one layer of containment. Production deployments must run
 the process as a non-root user with a read-only root filesystem and put
 `TMPDIR` on a dedicated `noexec,nosuid,nodev` volume with an ephemeral-storage
 quota. Size that quota for four simultaneous 100 MiB extractions plus archive
-and filesystem overhead. Log the sanitized rejection kind and byte/count/timing
-statistics exposed by the module together with a trusted request ID; do not log
-archive entry names or the free-form judging task.
+and filesystem overhead. Apply container or cgroup CPU, memory, and process
+limits to the server and its four possible renderer children; the Rust deadline
+does not prevent an allocation spike before it expires. Disable core dumps for
+the service account as defense in depth. Log the sanitized
+rejection kind, render outcome, and byte/count/timing statistics together with
+the server-generated process/job ID; do not log archive entry names or the
+free-form judging task.
 
 ## Model configuration
 

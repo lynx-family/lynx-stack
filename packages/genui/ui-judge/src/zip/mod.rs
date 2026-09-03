@@ -15,7 +15,7 @@ use ::zip::read::{ArchiveOffset, Config};
 use ::zip::ZipArchive;
 use tempfile::{Builder, TempDir};
 use thiserror::Error;
-use tokio::sync::{Semaphore, TryAcquireError};
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 /// Maximum accepted ZIP upload size. HTTP upload code must enforce this while
 /// streaming the request body, before allocating the `Vec` passed to
@@ -89,7 +89,6 @@ pub enum ZipRejectionKind {
   OutputCollision,
   OutputIo,
   IntegrityCheckFailed,
-  ConcurrencyLimit,
   TimedOut,
   WorkerFailed,
 }
@@ -115,7 +114,6 @@ impl fmt::Display for ZipRejectionKind {
       Self::OutputCollision => "output-collision",
       Self::OutputIo => "output-io",
       Self::IntegrityCheckFailed => "integrity-check-failed",
-      Self::ConcurrencyLimit => "concurrency-limit",
       Self::TimedOut => "timed-out",
       Self::WorkerFailed => "worker-failed",
     })
@@ -258,28 +256,34 @@ impl Seek for MetadataIsolatingReader {
   }
 }
 
-/// Validates and extracts one untrusted upload on the blocking pool. The
-/// returned guard owns a fresh private temporary directory; dropping it removes
-/// the complete extraction. A timed-out blocking task retains its concurrency
-/// permit until it actually exits. Server adapters should apply immediate
-/// request backpressure before buffering uploads as well; this function rejects
-/// rather than queues when all four extraction permits are occupied.
+async fn acquire_extraction_slot(
+  permits: Arc<Semaphore>,
+  deadline: Instant,
+  progress: &ExtractionProgress,
+) -> Result<OwnedSemaphorePermit, ZipExtractionError> {
+  match tokio::time::timeout_at(
+    tokio::time::Instant::from_std(deadline),
+    permits.acquire_owned(),
+  )
+  .await
+  {
+    Ok(Ok(permit)) => Ok(permit),
+    Ok(Err(_)) => Err(progress.reject(ZipRejectionKind::WorkerFailed)),
+    Err(_) => Err(progress.reject(ZipRejectionKind::TimedOut)),
+  }
+}
+
+/// Validates and extracts one untrusted upload on the blocking pool. At most
+/// four extractions run concurrently; additional callers wait asynchronously
+/// within the same ten-second extraction deadline.
 pub async fn extract_uploaded_zip(upload: Vec<u8>) -> Result<ExtractedZip, ZipExtractionError> {
   let progress = Arc::new(ExtractionProgress::new(upload.len()));
   if upload.len() > PRODUCTION_LIMITS.max_upload_bytes {
     return Err(progress.reject(ZipRejectionKind::UploadTooLarge));
   }
-
-  let permit = match Arc::clone(&EXTRACTION_PERMITS).try_acquire_owned() {
-    Ok(permit) => permit,
-    Err(TryAcquireError::NoPermits) => {
-      return Err(progress.reject(ZipRejectionKind::ConcurrencyLimit));
-    }
-    Err(TryAcquireError::Closed) => {
-      return Err(progress.reject(ZipRejectionKind::WorkerFailed));
-    }
-  };
   let deadline = Instant::now() + EXTRACTION_TIMEOUT;
+  let permit =
+    acquire_extraction_slot(Arc::clone(&EXTRACTION_PERMITS), deadline, &progress).await?;
   let tokio_deadline = tokio::time::Instant::from_std(deadline);
   let worker_progress = Arc::clone(&progress);
   let mut worker = tokio::task::spawn_blocking(move || {
@@ -1312,21 +1316,50 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn rejects_immediately_when_four_extractions_are_already_active() {
-    let permits = (0..MAX_CONCURRENT_EXTRACTIONS)
-      .map(|_| {
-        Arc::clone(&EXTRACTION_PERMITS)
-          .try_acquire_owned()
-          .expect("reserve every extraction permit")
-      })
-      .collect::<Vec<_>>();
-    let upload = make_archive(&[TestEntry::File("page.lynx", b"bundle")]);
-    let error = extract_uploaded_zip(upload)
+  async fn extraction_slots_wait_for_capacity_within_the_deadline() {
+    // Use a private semaphore so this capacity test cannot race other ZIP
+    // endpoint tests running in parallel on the process-wide pool.
+    let permits = Arc::new(Semaphore::new(1));
+    let occupied = Arc::clone(&permits)
+      .acquire_owned()
       .await
-      .expect_err("report immediate extraction backpressure");
-    assert_eq!(error.kind, ZipRejectionKind::ConcurrencyLimit);
+      .expect("occupy the only extraction slot");
+    let waiting_permits = Arc::clone(&permits);
+    let waiting = tokio::spawn(async move {
+      let progress = ExtractionProgress::new(0);
+      acquire_extraction_slot(
+        waiting_permits,
+        Instant::now() + Duration::from_secs(1),
+        &progress,
+      )
+      .await
+    });
+
+    tokio::task::yield_now().await;
+    assert!(!waiting.is_finished());
+    drop(occupied);
+    let acquired = waiting
+      .await
+      .expect("join the waiting extraction")
+      .expect("acquire the released slot");
+    drop(acquired);
+  }
+
+  #[tokio::test]
+  async fn extraction_slot_wait_respects_the_deadline() {
+    let permits = Arc::new(Semaphore::new(0));
+    let progress = ExtractionProgress::new(0);
+    let error = acquire_extraction_slot(
+      permits,
+      Instant::now() + Duration::from_millis(1),
+      &progress,
+    )
+    .await
+    .expect_err("time out while every extraction slot is occupied");
+
+    assert_eq!(error.kind, ZipRejectionKind::TimedOut);
+    assert_eq!(error.stats.archive_bytes, 0);
     assert_eq!(error.stats.entry_count, 0);
-    drop(permits);
   }
 
   #[test]

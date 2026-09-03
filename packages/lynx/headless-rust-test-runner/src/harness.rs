@@ -260,12 +260,25 @@ impl SoftwareRenderer for FrameStore {
     if !frame.row_bytes.is_multiple_of(4) {
       return false;
     }
+    // Clay's software surface uses a build-specific native N32 layout. The
+    // pinned Linux runtime exposes BGRA, while the pinned macOS runtime already
+    // exposes RGBA. Keep the runner's public screenshot contract canonical.
+    #[cfg(target_os = "linux")]
+    let rgba = {
+      let mut rgba = bytes.to_vec();
+      for pixel in rgba.chunks_exact_mut(4) {
+        pixel.swap(0, 2);
+      }
+      rgba
+    };
+    #[cfg(not(target_os = "linux"))]
+    let rgba = bytes.to_vec();
     let mut state = self.state.lock().expect("frame store lock poisoned");
     state.sequence += 1;
     state.latest = Some(CapturedFrame {
       width: frame.row_bytes / 4,
       height: frame.height,
-      rgba: Arc::from(bytes),
+      rgba: Arc::from(rgba),
       sequence: state.sequence,
     });
     true
@@ -310,6 +323,31 @@ mod tests {
     assert_send_sync::<CapturedFrame>();
     assert_send_sync::<FrameStore>();
     assert_send_sync::<SharedTasks>();
+  }
+
+  #[test]
+  fn software_frames_are_normalized_to_rgba() {
+    #[cfg(target_os = "linux")]
+    let native_pixels: [u8; 8] = [
+      0, 0, 255, 255, // red
+      255, 0, 0, 255, // blue
+    ];
+    #[cfg(not(target_os = "linux"))]
+    let native_pixels: [u8; 8] = [
+      255, 0, 0, 255, // red
+      0, 0, 255, 255, // blue
+    ];
+    let mut frames = FrameStore::default();
+    assert!(frames.present(SoftwareFrame {
+      allocation: native_pixels.as_ptr().cast(),
+      row_bytes: native_pixels.len(),
+      height: 1,
+    }));
+
+    let frame = frames.latest().expect("capture normalized frame");
+    assert_eq!(frame.width, 2);
+    assert_eq!(frame.height, 1);
+    assert_eq!(frame.rgba.as_ref(), [255, 0, 0, 255, 0, 0, 255, 255]);
   }
 
   #[test]

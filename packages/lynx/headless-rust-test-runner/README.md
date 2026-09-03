@@ -59,9 +59,12 @@ BMP has left the native thread.
 Navigation chooses the native load API from the final URL path. Inputs ending
 in `.lynxml` are decoded as UTF-8 and loaded as LynxML source; all other inputs
 keep the compiled-template byte path. File paths, `file://` URLs, and HTTP(S)
-URLs are supported. Setting `GotoOptions::base_dir` restricts the template and
-all local resources to that canonicalized directory, rejects HTTP(S), and
-enables `zip://` URLs relative to the directory. `GotoOptions::initial_data_json`
+URLs are supported without a sandbox. Setting `GotoOptions::base_dir` restricts
+the template and all local resources to that canonicalized directory, rejects
+explicit `file://` and HTTP(S) navigation, and enables relative and `zip://`
+URLs beneath the directory. Nested HTTP(S) resources whose host is a domain
+name remain available; IP address hosts are rejected.
+`GotoOptions::initial_data_json`
 applies to both formats; `global_props_json` applies only to compiled templates.
 Passing it for LynxML returns an error because the public LynxML load API does
 not accept global properties.
@@ -80,10 +83,12 @@ still work.
 ## Screenshots
 
 `screenshot` returns an uncompressed 32-bit BMP with a `BITMAPV4HEADER` and an
-explicit alpha mask. Writing one costs a header plus a channel swap, so capture
-needs no encoder threads, permits, or async plumbing. `decode_screenshot` reads
-that exact layout back into RGBA. Consumers that must ship a compressed image
-transcode it themselves.
+explicit alpha mask. The frame store first normalizes Clay's platform-native
+N32 software pixels to RGBA (the pinned Linux runtime exposes BGRA; the pinned
+macOS runtime already exposes RGBA). Writing the BMP then costs a header plus
+one channel swap, with no encoder threads, permits, or async plumbing.
+`decode_screenshot` reads that exact layout back into RGBA. Consumers that must
+ship a compressed image transcode it themselves.
 
 ## Runtime resources
 
