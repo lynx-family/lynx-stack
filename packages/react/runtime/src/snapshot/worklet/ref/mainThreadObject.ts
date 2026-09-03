@@ -91,20 +91,18 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
 
   /** @internal */
   protected constructor(initialValue: I, type: string) {
-    if (__DEV__ && __JS__) {
-      assertSerializableMainThreadObjectPayload(initialValue, type);
-    }
+    const creationPayload = snapshotMainThreadObjectPayload(initialValue, type);
 
     this._wvid = allocateMainThreadRefId();
-    this._initValue = initialValue;
+    this._initValue = creationPayload;
     this._type = type;
     this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
-    registerMainThreadObjectHandle(this, type, initialValue);
+    registerMainThreadObjectHandle(this, type, creationPayload);
 
     if (__JS__) {
       addMainThreadRefInitValue(
         this._wvid,
-        initialValue,
+        creationPayload,
         {
           type,
           protocolVersion: MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
@@ -121,8 +119,8 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
     }
   }
 
-  /** The payload used to create the realized main-thread object. */
-  public get creationPayload(): I {
+  /** A deeply immutable snapshot of the payload used to create the realized object. */
+  public get creationPayload(): Readonly<I> {
     return this._initValue;
   }
 
@@ -253,10 +251,28 @@ function assertCaptureFreeLifecycleFunction(
   name: 'create',
   value: ((...args: never[]) => unknown) | Worklet,
 ): void {
-  if (typeof value === 'function' || value._c === undefined) {
+  if (typeof value === 'function') {
     return;
   }
-  if (Object.keys(value._c).length !== 0) {
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const hasCaptures = Reflect.ownKeys(descriptors).some(key => {
+    if (typeof key !== 'string') {
+      return true;
+    }
+    if (key === '_wkltId' || key === '_workletType' || key === '_lepusWorkletHash') {
+      return false;
+    }
+    if (key === '_c') {
+      const descriptor = descriptors[key]!;
+      const closure = 'value' in descriptor ? descriptor.value : undefined;
+      return !('value' in descriptor)
+        || (closure !== undefined
+          && (typeof closure !== 'object' || closure === null
+            || Reflect.ownKeys(closure).length !== 0));
+    }
+    return true;
+  });
+  if (hasCaptures) {
     throw new Error(
       `MainThreadObject ${name} function for "${type}" must not capture values. Import dependencies from a shared-runtime module instead.`,
     );
@@ -278,6 +294,13 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
     get(target, property, receiver): unknown {
       if (property in target) {
         return Reflect.get(target, property, receiver) as unknown;
+      }
+      if (
+        typeof property === 'symbol'
+        || property === 'then'
+        || property === '$$typeof'
+      ) {
+        return undefined;
       }
       throw new Error(
         `MainThreadObject handle for "${type}" cannot access "${
@@ -307,20 +330,25 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
   return guardedHandle;
 }
 
-function assertSerializableMainThreadObjectPayload(value: unknown, type: string): void {
-  const invalidPath = findNonSerializablePath(value, '$', new Set<object>());
-  if (invalidPath !== undefined) {
+type PayloadSnapshotResult =
+  | { valid: true; value: unknown }
+  | { valid: false; invalidPath: string };
+
+function snapshotMainThreadObjectPayload<T>(value: T, type: string): T {
+  const result = snapshotSerializableValue(value, '$', new Set<object>());
+  if (!result.valid) {
     throw new Error(
-      `MainThreadObject initial value for "${type}" must be JSON-serializable; invalid value at ${invalidPath}.`,
+      `MainThreadObject initial value for "${type}" must be JSON-serializable; invalid value at ${result.invalidPath}.`,
     );
   }
+  return result.value as T;
 }
 
-function findNonSerializablePath(
+function snapshotSerializableValue(
   value: unknown,
   path: string,
   ancestors: Set<object>,
-): string | undefined {
+): PayloadSnapshotResult {
   if (
     value === undefined
     || typeof value === 'function'
@@ -328,31 +356,51 @@ function findNonSerializablePath(
     || typeof value === 'bigint'
     || (typeof value === 'number' && !Number.isFinite(value))
   ) {
-    return path;
+    return { valid: false, invalidPath: path };
   }
   if (value === null || typeof value !== 'object') {
-    return undefined;
+    return { valid: true, value };
   }
   if (ancestors.has(value)) {
-    return path;
+    return { valid: false, invalidPath: path };
   }
 
   const prototype = Object.getPrototypeOf(value) as object | null;
   if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
-    return path;
+    return { valid: false, invalidPath: path };
   }
 
   ancestors.add(value);
-  const entries = Array.isArray(value)
-    ? value.map((item, index) => [String(index), item] as const)
-    : Object.entries(value);
-  for (const [key, item] of entries) {
-    const invalidPath = findNonSerializablePath(item, `${path}.${key}`, ancestors);
-    if (invalidPath !== undefined) {
-      ancestors.delete(value);
-      return invalidPath;
+  let snapshot: unknown[] | Record<string, unknown>;
+  if (Array.isArray(value)) {
+    snapshot = [];
+    snapshot.length = value.length;
+  } else {
+    snapshot = Object.create(prototype) as Record<string, unknown>;
+  }
+  const entries: [string, unknown][] = [];
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index++) {
+      if (Object.prototype.hasOwnProperty.call(value, index)) {
+        entries.push([String(index), value[index]]);
+      }
     }
+  } else {
+    entries.push(...Object.entries(value));
+  }
+  for (const [key, item] of entries) {
+    const result = snapshotSerializableValue(item, `${path}.${key}`, ancestors);
+    if (!result.valid) {
+      ancestors.delete(value);
+      return result;
+    }
+    Object.defineProperty(snapshot, key, {
+      configurable: false,
+      enumerable: true,
+      value: result.value,
+      writable: false,
+    });
   }
   ancestors.delete(value);
-  return undefined;
+  return { valid: true, value: Object.freeze(snapshot) };
 }
