@@ -98,8 +98,8 @@ or inside `LynxResources.bundle` beside it on macOS and serves
 `ResourceType::LynxCoreJs` requests from that installed path. Set
 `lynx_core_path` or `LYNX_CORE_JS_PATH` to use a local override. Otherwise the
 runner checks `$LYNX_SDK_DIR/resources/lynx_core.js`; its build script downloads
-a missing script into that SDK location. Use `LYNX_CORE_JS_URL` with
-`LYNX_CORE_JS_SHA256` for a different build-time download.
+a missing script into that SDK location. Use `CUSTOM_LYNX_CORE_JS_URL` with
+`CUSTOM_LYNX_CORE_JS_SHA256` for a different build-time download.
 
 ## Tests
 
