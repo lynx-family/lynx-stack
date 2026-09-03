@@ -12,6 +12,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { generate, parseNativeModules, runCodegen } from '../src/index.js';
 
 const tempDirs: string[] = [];
+const lynxtronArtifacts = {
+  binaries: [
+    {
+      os: 'darwin',
+      arch: 'arm64',
+      path: 'dist/native.node',
+    },
+  ],
+};
 
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) {
@@ -161,7 +170,7 @@ export declare class FormattedModule {
             packageName: 'com.example.scanner',
             nodeApiAddons: [{ name: 'ScannerModule' }],
           },
-          lynxtron: { path: 'dist' },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -433,9 +442,7 @@ export declare class StorageModule {
           ios: {
             sourceDir: 'ios',
           },
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -856,9 +863,7 @@ export declare class StorageNapiModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -899,9 +904,7 @@ export declare class ScannerModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -934,9 +937,7 @@ export declare class SecondModule {
             packageName: 'com.example.storage',
           },
           ios: {},
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -1012,9 +1013,7 @@ export declare class StorageNapiModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -1086,9 +1085,7 @@ export declare class StorageModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -1273,12 +1270,16 @@ export declare class StorageModule {
       manifest: {
         platforms: {
           lynxtron: {
-            path: 'dist',
             binaries: [
               {
                 os: 'darwin',
                 arch: 'arm64',
                 path: 'dist/darwin/arm64/canvas.dylib',
+              },
+              {
+                os: 'win32',
+                arch: 'x64',
+                path: 'dist/win32/x64/canvas.dll',
               },
             ],
             frameworks: [
@@ -1295,6 +1296,23 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).not.toThrow();
+  });
+
+  it('rejects opaque Lynxtron artifact roots', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            path: 'dist',
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /does not support.*lynxtron\.path.*binaries.*frameworks/,
+    );
   });
 
   it('rejects singular Lynxtron binary declarations', () => {

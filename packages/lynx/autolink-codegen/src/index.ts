@@ -97,7 +97,6 @@ export interface LynxtronRuntimeArtifact {
 }
 
 export interface LynxtronPlatformManifest {
-  path?: string | string[];
   binaries?: LynxtronRuntimeArtifact[];
   frameworks?: LynxtronRuntimeArtifact[];
 }
@@ -1470,21 +1469,18 @@ function readLynxtronPlatform(
   manifestPath: string,
 ): LynxtronPlatformManifest {
   const normalized: LynxtronPlatformManifest = {};
-  const artifactRoot = value['path'];
   const binaries = value['binaries'];
   const frameworks = value['frameworks'];
+
+  if ('path' in value) {
+    throw new Error(
+      `${manifestPath} does not support "platforms.lynxtron.path"; declare "platforms.lynxtron.binaries" and "platforms.lynxtron.frameworks" explicitly`,
+    );
+  }
 
   if ('binary' in value) {
     throw new Error(
       `${manifestPath} does not support "platforms.lynxtron.binary"; use "platforms.lynxtron.binaries"`,
-    );
-  }
-
-  if (artifactRoot !== undefined) {
-    normalized.path = readStringPaths(
-      artifactRoot,
-      manifestPath,
-      'platforms.lynxtron.path',
     );
   }
 
@@ -1501,6 +1497,14 @@ function readLynxtronPlatform(
       frameworks,
       manifestPath,
       'platforms.lynxtron.frameworks',
+    );
+  }
+
+  if (
+    normalized.binaries === undefined && normalized.frameworks === undefined
+  ) {
+    throw new Error(
+      `${manifestPath} must define "platforms.lynxtron.binaries" or "platforms.lynxtron.frameworks"`,
     );
   }
 
