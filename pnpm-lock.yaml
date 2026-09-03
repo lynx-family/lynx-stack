@@ -24,8 +24,8 @@ catalogs:
       specifier: 5.0.1-20260827072047-5f77e12
       version: 5.0.1-20260827072047-5f77e12
     preact:
-      specifier: npm:@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4
-      version: 11.0.0-rc.1-20260827072551-a63bfa4
+      specifier: npm:@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a
+      version: 11.0.0-rc.1-20260903085447-f95471a
   rsbuild:
     '@rsbuild/core':
       specifier: 2.1.10
@@ -1324,7 +1324,7 @@ importers:
     dependencies:
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
     devDependencies:
       '@lynx-js/types':
         specifier: 4.1.0
@@ -1340,7 +1340,7 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^2.9.4
-        version: 2.11.0(@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4)
+        version: 2.11.0(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
@@ -1353,7 +1353,7 @@ importers:
         version: 1.0.0-beta.3(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
   packages/react-umd:
     devDependencies:
@@ -1380,13 +1380,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.10
-        version: 1.5.10(@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4)
+        version: 1.5.10(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
   packages/react/runtime:
     devDependencies:
@@ -1443,7 +1443,7 @@ importers:
         version: 7.0.0(@testing-library/dom@10.4.1)
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
   packages/react/transform:
     devDependencies:
@@ -4384,10 +4384,10 @@ packages:
       '@lynx-js/react': workspace:*
       '@lynx-js/types': '*'
 
-  '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4':
-    resolution: {integrity: sha512-4lNnn4Zjgb/LgS3qVeYOhdR0e3vq5BsKEMyb0605p70JzOiNTj8x6VY2LId2alBvURJNFGciBcFmasZgBZLqmw==}
+  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a':
+    resolution: {integrity: sha512-RsU+km8Ulg+HVEJpx1/lq/38GUB+KtJKypB80gbumAtswd+og0RpVppy8bZTBVZY7jSjxx2GHYPTjT61+HDPaw==}
     peerDependencies:
-      preact-render-to-string: '>=5'
+      preact-render-to-string: '>=6.7.0'
     peerDependenciesMeta:
       preact-render-to-string:
         optional: true
@@ -14031,7 +14031,7 @@ snapshots:
       '@lynx-js/react': link:packages/react
       '@lynx-js/types': 4.1.0
 
-  '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4': {}
+  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a': {}
 
   '@lynx-js/luna-styles@0.2.1': {}
 
@@ -14975,14 +14975,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.0(@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4)':
+  '@preact/signals@2.11.0(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4'
+      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
-  '@prefresh/core@1.5.10(@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4)':
+  '@prefresh/core@1.5.10(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
     dependencies:
-      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260827072551-a63bfa4'
+      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
   '@prefresh/utils@1.2.1': {}
 
