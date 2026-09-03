@@ -1375,7 +1375,23 @@ function platformManifestEntries(context: TemplateContext): string {
 
   if (hasLynxtronTarget(context)) {
     entries.push(`    "lynxtron": {
-      "path": "dist"
+      "targets": [
+        {
+          "os": "darwin",
+          "arch": "arm64",
+          "binaries": ["dist/darwin/arm64/${context.addonBinaryName}.node"]
+        },
+        {
+          "os": "darwin",
+          "arch": "x64",
+          "binaries": ["dist/darwin/x64/${context.addonBinaryName}.node"]
+        },
+        {
+          "os": "win32",
+          "arch": "x64",
+          "binaries": ["dist/win32/x64/${context.addonBinaryName}.node"]
+        }
+      ]
     }`);
     entries.push(`    "macos": {
       "sourceDir": "shared"

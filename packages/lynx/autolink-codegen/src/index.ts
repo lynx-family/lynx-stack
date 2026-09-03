@@ -90,15 +90,15 @@ export interface NativeModuleObjectSpec {
   properties: NativeModuleObjectProperty[];
 }
 
-export interface LynxtronRuntimeArtifact {
+export interface LynxtronRuntimeTarget {
   os: string;
   arch: string;
-  path: string | string[];
+  binaries?: string[];
+  frameworks?: string[];
 }
 
 export interface LynxtronPlatformManifest {
-  binaries?: LynxtronRuntimeArtifact[];
-  frameworks?: LynxtronRuntimeArtifact[];
+  targets: LynxtronRuntimeTarget[];
 }
 
 interface LynxLibJson {
@@ -1468,87 +1468,38 @@ function readLynxtronPlatform(
   value: Record<string, unknown>,
   manifestPath: string,
 ): LynxtronPlatformManifest {
-  const normalized: LynxtronPlatformManifest = {};
-  const binaries = value['binaries'];
-  const frameworks = value['frameworks'];
+  const targets = value['targets'];
 
   if ('path' in value) {
     throw new Error(
-      `${manifestPath} does not support "platforms.lynxtron.path"; declare "platforms.lynxtron.binaries" and "platforms.lynxtron.frameworks" explicitly`,
+      `${manifestPath} does not support "platforms.lynxtron.path"; declare "platforms.lynxtron.targets" explicitly`,
     );
   }
 
-  if ('binary' in value) {
+  if ('binary' in value || 'binaries' in value || 'frameworks' in value) {
     throw new Error(
-      `${manifestPath} does not support "platforms.lynxtron.binary"; use "platforms.lynxtron.binaries"`,
+      `${manifestPath} requires binaries and frameworks inside "platforms.lynxtron.targets"`,
     );
   }
 
-  if (binaries !== undefined) {
-    normalized.binaries = readLynxtronArtifactArray(
-      binaries,
-      manifestPath,
-      'platforms.lynxtron.binaries',
-    );
-  }
-
-  if (frameworks !== undefined) {
-    normalized.frameworks = readLynxtronArtifactArray(
-      frameworks,
-      manifestPath,
-      'platforms.lynxtron.frameworks',
-    );
-  }
-
-  if (
-    normalized.binaries === undefined && normalized.frameworks === undefined
-  ) {
+  if (!Array.isArray(targets) || targets.length === 0) {
     throw new Error(
-      `${manifestPath} must define "platforms.lynxtron.binaries" or "platforms.lynxtron.frameworks"`,
+      `${manifestPath} must define non-empty array "platforms.lynxtron.targets"`,
     );
   }
 
-  return normalized;
-}
-
-/**
- * Reads a required array of platform-selected Lynxtron artifacts.
- */
-function readLynxtronArtifactArray(
-  value: unknown,
-  manifestPath: string,
-  displayPath: string,
-): LynxtronRuntimeArtifact[] {
-  if (!Array.isArray(value) || value.length === 0) {
-    throw new Error(
-      `${manifestPath} must define non-empty array "${displayPath}"`,
-    );
-  }
-
-  return readLynxtronArtifacts(value, manifestPath, displayPath);
-}
-
-/**
- * Validates a list of platform-selected Lynxtron artifacts.
- */
-function readLynxtronArtifacts(
-  entries: unknown[],
-  manifestPath: string,
-  displayPath: string,
-): LynxtronRuntimeArtifact[] {
-  if (entries.length === 0) {
-    throw new Error(
-      `${manifestPath} must define at least one entry in "${displayPath}"`,
-    );
-  }
-
-  return entries.map((entry, index) => {
-    const entryPath = `${displayPath}[${index}]`;
+  const normalizedTargets = targets.map((entry, index) => {
+    const entryPath = `platforms.lynxtron.targets[${index}]`;
     if (!isRecord(entry)) {
       throw new Error(`${manifestPath} must define object "${entryPath}"`);
     }
 
-    const os = readRequiredString(entry, 'os', manifestPath, `${entryPath}.os`);
+    const os = readRequiredString(
+      entry,
+      'os',
+      manifestPath,
+      `${entryPath}.os`,
+    );
     const arch = readRequiredString(
       entry,
       'arch',
@@ -1562,26 +1513,55 @@ function readLynxtronArtifacts(
       );
     }
 
-    const artifactPath = readStringPaths(
-      entry['path'],
+    const binaries = readOptionalStringPaths(
+      entry['binaries'],
       manifestPath,
-      `${entryPath}.path`,
+      `${entryPath}.binaries`,
+    );
+    const frameworks = readOptionalStringPaths(
+      entry['frameworks'],
+      manifestPath,
+      `${entryPath}.frameworks`,
     );
 
-    return { os, arch, path: artifactPath };
+    if (binaries === undefined && frameworks === undefined) {
+      throw new Error(
+        `${manifestPath} must define "${entryPath}.binaries" or "${entryPath}.frameworks"`,
+      );
+    }
+
+    return {
+      os,
+      arch,
+      ...(binaries === undefined ? {} : { binaries }),
+      ...(frameworks === undefined ? {} : { frameworks }),
+    };
   });
+  const targetKeys = new Set<string>();
+
+  for (const target of normalizedTargets) {
+    const targetKey = `${target.os}/${target.arch}`;
+    if (targetKeys.has(targetKey)) {
+      throw new Error(
+        `${manifestPath} defines duplicate Lynxtron target "${targetKey}"`,
+      );
+    }
+    targetKeys.add(targetKey);
+  }
+
+  return { targets: normalizedTargets };
 }
 
 /**
- * Reads one or more non-empty relative artifact paths.
+ * Reads optional non-empty relative artifact paths.
  */
-function readStringPaths(
+function readOptionalStringPaths(
   value: unknown,
   manifestPath: string,
   displayPath: string,
-): string | string[] {
-  if (typeof value === 'string' && value.trim().length > 0) {
-    return value;
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
   }
 
   if (
@@ -1595,7 +1575,7 @@ function readStringPaths(
   }
 
   throw new Error(
-    `${manifestPath} must define non-empty string or string array "${displayPath}"`,
+    `${manifestPath} must define non-empty string array "${displayPath}"`,
   );
 }
 

@@ -17,6 +17,28 @@ import {
 
 const tempDirs: string[] = [];
 
+function lynxtronManifest(binaryName: string): Record<string, unknown> {
+  return {
+    targets: [
+      {
+        os: 'darwin',
+        arch: 'arm64',
+        binaries: [`dist/darwin/arm64/${binaryName}.node`],
+      },
+      {
+        os: 'darwin',
+        arch: 'x64',
+        binaries: [`dist/darwin/x64/${binaryName}.node`],
+      },
+      {
+        os: 'win32',
+        arch: 'x64',
+        binaries: [`dist/win32/x64/${binaryName}.node`],
+      },
+    ],
+  };
+}
+
 function execNpm(args: string[], options: { cwd: string }): string {
   const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   return execFileSync(npmCommand, args, {
@@ -248,9 +270,7 @@ describe('create-lynx-library', () => {
       harmony: {
         packageDir: 'harmony',
       },
-      'lynxtron': {
-        path: 'dist',
-      },
+      'lynxtron': lynxtronManifest('lynx-button'),
       macos: {
         sourceDir: 'shared',
       },
@@ -467,7 +487,9 @@ describe('create-lynx-library', () => {
     expect(manifest.platforms.android?.nodeApiAddons).toBeUndefined();
     expect(manifest.platforms.ios?.nodeApiAddons).toBeUndefined();
     expect(manifest.platforms.harmony?.nodeApiAddons).toBeUndefined();
-    expect(manifest.platforms.lynxtron).toEqual({ path: 'dist' });
+    expect(manifest.platforms.lynxtron).toEqual(
+      lynxtronManifest('platform-library'),
+    );
   });
 
   it('uses the NAPI Native Module on every selected target', () => {
@@ -777,13 +799,13 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/.npmignore')).toContain('third_party/');
     fs.mkdirSync(path.join(dir, 'shared/third_party'), { recursive: true });
     fs.writeFileSync(path.join(dir, 'shared/third_party/cache.txt'), 'cache');
-    fs.mkdirSync(path.join(dir, 'dist/macos/arm64'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'dist/macos/arm64/addon.node'), 'addon');
+    fs.mkdirSync(path.join(dir, 'dist/darwin/arm64'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'dist/darwin/arm64/addon.node'), 'addon');
     const packResult = JSON.parse(
       execNpm(['pack', '--dry-run', '--json'], { cwd: dir }),
     ) as Array<{ files: Array<{ path: string }> }>;
     const packedPaths = packResult[0]?.files.map((file) => file.path) ?? [];
-    expect(packedPaths).toContain('dist/macos/arm64/addon.node');
+    expect(packedPaths).toContain('dist/darwin/arm64/addon.node');
     expect(packedPaths).not.toContain('shared/third_party/cache.txt');
     expect(read(dir, 'android/build.gradle.kts')).toContain(
       'rootProject.findProperty("lynx.primjs.version")?.toString() ?: "4.+"',
@@ -966,9 +988,7 @@ describe('create-lynx-library', () => {
       '"build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"',
     );
     expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
-      'lynxtron': {
-        path: 'dist',
-      },
+      'lynxtron': lynxtronManifest('lynxtron-library'),
       macos: {
         sourceDir: 'shared',
       },
@@ -980,11 +1000,19 @@ describe('create-lynx-library', () => {
       '${LYNX_LIBRARY_PACKAGE_ROOT}/shared',
     );
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'set(LYNX_LIBRARY_PLATFORM "darwin")',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'set(LYNX_LIBRARY_PLATFORM "win32")',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
     );
     expect(read(dir, 'lynxtron/index.cjs')).toContain(
       'nativeBinding.initialize = function initialize() {};',
     );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain('process.platform');
+    expect(read(dir, 'lynxtron/index.cjs')).not.toContain('normalizePlatform');
     expect(read(dir, 'lynxtron/library_entry.cc')).toContain(
       'LynxAutolinkRegisterPlatformNativeModules',
     );
@@ -1235,9 +1263,7 @@ describe('create-lynx-library', () => {
     );
     expect(JSON.parse(read(dir, 'lynx.lib.json'))).toMatchObject({
       platforms: {
-        'lynxtron': {
-          path: 'dist',
-        },
+        'lynxtron': lynxtronManifest('view-library'),
         macos: {
           sourceDir: 'shared',
         },

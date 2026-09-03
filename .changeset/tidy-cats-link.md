@@ -1,7 +1,8 @@
 ---
 "@lynx-js/autolink-codegen": minor
+"create-lynx-library": patch
 ---
 
-Type and validate platform-selected `binaries` and `frameworks` declarations
-for Lynxtron library manifests. Remove the opaque top-level `path` form from
-the prerelease schema.
+Type and validate platform-selected Lynxtron `targets`, with each target
+declaring its `binaries` and optional `frameworks`. Generate the same manifest
+shape and `dist/<os>/<arch>` output layout in new Lynxtron library projects.

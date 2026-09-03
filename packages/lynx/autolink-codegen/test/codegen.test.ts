@@ -13,11 +13,11 @@ import { generate, parseNativeModules, runCodegen } from '../src/index.js';
 
 const tempDirs: string[] = [];
 const lynxtronArtifacts = {
-  binaries: [
+  targets: [
     {
       os: 'darwin',
       arch: 'arm64',
-      path: 'dist/native.node',
+      binaries: ['dist/native.node'],
     },
   ],
 };
@@ -1265,28 +1265,22 @@ export declare class StorageModule {
     );
   });
 
-  it('accepts plural Lynxtron binary and framework declarations', () => {
+  it('accepts Lynxtron runtime target declarations', () => {
     const root = createFixture({
       manifest: {
         platforms: {
           lynxtron: {
-            binaries: [
+            targets: [
               {
                 os: 'darwin',
                 arch: 'arm64',
-                path: 'dist/darwin/arm64/canvas.dylib',
+                binaries: ['dist/darwin/arm64/canvas.dylib'],
+                frameworks: ['dist/darwin/arm64/frameworks'],
               },
               {
                 os: 'win32',
                 arch: 'x64',
-                path: 'dist/win32/x64/canvas.dll',
-              },
-            ],
-            frameworks: [
-              {
-                os: 'darwin',
-                arch: 'arm64',
-                path: 'dist/darwin/arm64/frameworks',
+                binaries: ['dist/win32/x64/canvas.dll'],
               },
             ],
           },
@@ -1311,11 +1305,11 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /does not support.*lynxtron\.path.*binaries.*frameworks/,
+      /does not support.*lynxtron\.path.*lynxtron\.targets/,
     );
   });
 
-  it('rejects singular Lynxtron binary declarations', () => {
+  it('rejects Lynxtron artifacts outside targets', () => {
     const root = createFixture({
       manifest: {
         platforms: {
@@ -1332,7 +1326,7 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /does not support.*lynxtron\.binary.*lynxtron\.binaries/,
+      /requires binaries and frameworks inside.*lynxtron\.targets/,
     );
   });
 
@@ -1341,12 +1335,12 @@ export declare class StorageModule {
       manifest: {
         platforms: {
           lynxtron: {
-            binaries: [
+            targets: [
               {
                 os: 'darwin',
                 arch: 'arm64',
                 arc: 'arm64',
-                path: 'dist/darwin/arm64/canvas.dylib',
+                binaries: ['dist/darwin/arm64/canvas.dylib'],
               },
             ],
           },
@@ -1356,7 +1350,7 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /does not support.*lynxtron\.binaries\[0\]\.arc.*arch/,
+      /does not support.*lynxtron\.targets\[0\]\.arc.*arch/,
     );
   });
 
@@ -1365,10 +1359,10 @@ export declare class StorageModule {
       manifest: {
         platforms: {
           lynxtron: {
-            frameworks: [
+            targets: [
               {
                 os: 'darwin',
-                path: 'dist/darwin/arm64/frameworks',
+                frameworks: ['dist/darwin/arm64/frameworks'],
               },
             ],
           },
@@ -1378,7 +1372,35 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /platforms\.lynxtron\.frameworks\[0\]\.arch/,
+      /platforms\.lynxtron\.targets\[0\]\.arch/,
+    );
+  });
+
+  it('rejects duplicate Lynxtron runtime targets', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                binaries: ['dist/first.node'],
+              },
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                binaries: ['dist/second.node'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /duplicate Lynxtron target "darwin\/arm64"/,
     );
   });
 
