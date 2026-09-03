@@ -41,27 +41,6 @@ jobs:
       - name: build
         run: |
           corepack pnpm turbo --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
-      - name: Build UI Judge bundle
-        env:
-          UI_JUDGE_OUTPUT_DIR: ${{ runner.temp }}/ui-judge-linux-amd64
-        run: |
-          packages/genui/ui-judge/build.sh
-          tar \
-            --create \
-            --gzip \
-            --file "$RUNNER_TEMP/ui-judge-linux-amd64.tar.gz" \
-            --directory "$UI_JUDGE_OUTPUT_DIR" \
-            ui-judge-server \
-            start.sh \
-            lynx_core.js \
-            lib/libLynx_clay.so
-      - name: Upload UI Judge bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: ui-judge-linux-amd64-${{ github.sha }}
-          path: ${{ runner.temp }}/ui-judge-linux-amd64.tar.gz
-          if-no-files-found: error
-          retention-days: 1
       - name: Save Turbo Result
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -122,7 +101,7 @@ jobs:
   publish-ui-judge-image:
     name: Publish UI Judge image
     needs: [build, test-rust]
-    runs-on: ubuntu-26.04
+    runs-on: lynx-ubuntu-26.04-xlarge
     timeout-minutes: 60
     if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
@@ -135,19 +114,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Download UI Judge bundle
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
         with:
-          name: ui-judge-linux-amd64-${{ github.sha }}
-          path: ${{ runner.temp }}/ui-judge-artifact
-      - name: Extract UI Judge bundle
-        run: |
-          mkdir --parents "$RUNNER_TEMP/ui-judge-image"
-          tar \
-            --extract \
-            --gzip \
-            --file "$RUNNER_TEMP/ui-judge-artifact/ui-judge-linux-amd64.tar.gz" \
-            --directory "$RUNNER_TEMP/ui-judge-image"
+          key: ui-judge-image
+          save-if: ${{ github.ref_name == 'main' }}
+      - name: Build UI Judge bundle
+        env:
+          UI_JUDGE_OUTPUT_DIR: ${{ runner.temp }}/ui-judge-linux-amd64
+        run: packages/genui/ui-judge/build.sh
       - name: Generate image metadata
         id: metadata
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
@@ -168,7 +143,7 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
-          context: ${{ runner.temp }}/ui-judge-image
+          context: ${{ runner.temp }}/ui-judge-linux-amd64
           file: ${{ github.workspace }}/packages/genui/ui-judge/Dockerfile
           labels: ${{ steps.metadata.outputs.labels }}
           platforms: linux/amd64

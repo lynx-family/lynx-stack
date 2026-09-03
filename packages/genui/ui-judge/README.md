@@ -177,10 +177,8 @@ docker buildx build \
   packages/genui/ui-judge/dist/linux-amd64
 ```
 
-The deploy workflow runs the same build script on its native Ubuntu runner and
-uploads the verified four-file bundle as a tar artifact. The publishing job
-waits for the Rust tests, downloads that exact artifact, and puts it into the
-image without compiling Rust again.
+The deploy workflow waits for the Rust tests, then runs the same build script
+and publishes the resulting image on a Lynx-hosted Ubuntu runner.
 
 Pass model credentials only when starting the container. Production containers
 should use a read-only root filesystem and mount the configured `TMPDIR` as a
