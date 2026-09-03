@@ -1268,6 +1268,104 @@ export declare class StorageModule {
     );
   });
 
+  it('accepts plural Lynxtron binary and framework declarations', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            path: 'dist',
+            binaries: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                path: 'dist/darwin/arm64/canvas.dylib',
+              },
+            ],
+            frameworks: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                path: 'dist/darwin/arm64/frameworks',
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).not.toThrow();
+  });
+
+  it('accepts the legacy singular Lynxtron binary declaration', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            binary: {
+              os: 'darwin',
+              arc: 'arm64',
+              path: 'dist/darwin/arm64/canvas.dylib',
+            },
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).not.toThrow();
+  });
+
+  it('rejects ambiguous singular and plural Lynxtron binaries', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            binary: {
+              os: 'darwin',
+              arch: 'arm64',
+              path: 'dist/darwin/arm64/legacy.dylib',
+            },
+            binaries: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                path: 'dist/darwin/arm64/current.dylib',
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /cannot define both.*lynxtron\.binary.*lynxtron\.binaries/,
+    );
+  });
+
+  it('rejects malformed Lynxtron framework declarations', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            frameworks: [
+              {
+                os: 'darwin',
+                path: 'dist/darwin/arm64/frameworks',
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /platforms\.lynxtron\.frameworks\[0\]\.arch/,
+    );
+  });
+
   it('fails clearly for unsupported native module types', () => {
     expect(() =>
       parseNativeModules(

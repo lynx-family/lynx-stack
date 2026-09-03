@@ -90,6 +90,27 @@ export interface NativeModuleObjectSpec {
   properties: NativeModuleObjectProperty[];
 }
 
+export interface LynxtronRuntimeArtifact {
+  os: string;
+  arch: string;
+  path: string | string[];
+}
+
+export interface LynxtronLegacyBinaryArtifact {
+  os: string;
+  arch?: string;
+  arc?: string;
+  path: string | string[];
+}
+
+export interface LynxtronPlatformManifest {
+  path?: string | string[];
+  /** @deprecated Use `binaries` instead. */
+  binary?: LynxtronLegacyBinaryArtifact | LynxtronLegacyBinaryArtifact[];
+  binaries?: LynxtronRuntimeArtifact[];
+  frameworks?: LynxtronRuntimeArtifact[];
+}
+
 interface LynxLibJson {
   platforms: {
     android?: {
@@ -102,7 +123,7 @@ interface LynxLibJson {
     harmony?: {
       packageDir: string;
     };
-    lynxtron?: Record<string, unknown>;
+    lynxtron?: LynxtronPlatformManifest;
   };
 }
 
@@ -1439,12 +1460,191 @@ function readManifest(root: string): LynxLibJson {
   }
 
   if (lynxtron !== undefined) {
-    normalizedPlatforms.lynxtron = lynxtron;
+    normalizedPlatforms.lynxtron = readLynxtronPlatform(
+      lynxtron,
+      manifestPath,
+    );
   }
 
   return {
     platforms: normalizedPlatforms,
   };
+}
+
+/**
+ * Reads and validates the Lynxtron native artifact declarations.
+ */
+function readLynxtronPlatform(
+  value: Record<string, unknown>,
+  manifestPath: string,
+): LynxtronPlatformManifest {
+  const normalized: LynxtronPlatformManifest = {};
+  const artifactRoot = value['path'];
+  const legacyBinary = value['binary'];
+  const binaries = value['binaries'];
+  const frameworks = value['frameworks'];
+
+  if (artifactRoot !== undefined) {
+    normalized.path = readStringPaths(
+      artifactRoot,
+      manifestPath,
+      'platforms.lynxtron.path',
+    );
+  }
+
+  if (legacyBinary !== undefined && binaries !== undefined) {
+    throw new Error(
+      `${manifestPath} cannot define both "platforms.lynxtron.binary" and "platforms.lynxtron.binaries"`,
+    );
+  }
+
+  if (legacyBinary !== undefined) {
+    const entries = Array.isArray(legacyBinary)
+      ? legacyBinary
+      : [legacyBinary];
+    normalized.binary = readLynxtronArtifacts(
+      entries,
+      manifestPath,
+      'platforms.lynxtron.binary',
+      true,
+    );
+  }
+
+  if (binaries !== undefined) {
+    normalized.binaries = readLynxtronArtifactArray(
+      binaries,
+      manifestPath,
+      'platforms.lynxtron.binaries',
+    );
+  }
+
+  if (frameworks !== undefined) {
+    normalized.frameworks = readLynxtronArtifactArray(
+      frameworks,
+      manifestPath,
+      'platforms.lynxtron.frameworks',
+    );
+  }
+
+  return normalized;
+}
+
+/**
+ * Reads a required array of platform-selected Lynxtron artifacts.
+ */
+function readLynxtronArtifactArray(
+  value: unknown,
+  manifestPath: string,
+  displayPath: string,
+): LynxtronRuntimeArtifact[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(
+      `${manifestPath} must define non-empty array "${displayPath}"`,
+    );
+  }
+
+  return readLynxtronArtifacts(value, manifestPath, displayPath, false);
+}
+
+/**
+ * Validates a list of platform-selected Lynxtron artifacts.
+ */
+function readLynxtronArtifacts(
+  entries: unknown[],
+  manifestPath: string,
+  displayPath: string,
+  allowLegacyArc: false,
+): LynxtronRuntimeArtifact[];
+function readLynxtronArtifacts(
+  entries: unknown[],
+  manifestPath: string,
+  displayPath: string,
+  allowLegacyArc: true,
+): LynxtronLegacyBinaryArtifact[];
+function readLynxtronArtifacts(
+  entries: unknown[],
+  manifestPath: string,
+  displayPath: string,
+  allowLegacyArc: boolean,
+): Array<LynxtronRuntimeArtifact | LynxtronLegacyBinaryArtifact> {
+  if (entries.length === 0) {
+    throw new Error(
+      `${manifestPath} must define at least one entry in "${displayPath}"`,
+    );
+  }
+
+  return entries.map((entry, index) => {
+    const entryPath = `${displayPath}[${index}]`;
+    if (!isRecord(entry)) {
+      throw new Error(`${manifestPath} must define object "${entryPath}"`);
+    }
+
+    const os = readRequiredString(entry, 'os', manifestPath, `${entryPath}.os`);
+    const arch = readOptionalString(
+      entry,
+      'arch',
+      manifestPath,
+      `${entryPath}.arch`,
+    );
+    const arc = allowLegacyArc
+      ? readOptionalString(
+        entry,
+        'arc',
+        manifestPath,
+        `${entryPath}.arc`,
+      )
+      : undefined;
+
+    if (arch === undefined && arc === undefined) {
+      throw new Error(
+        `${manifestPath} must define string "${entryPath}.arch"`,
+      );
+    }
+    if (arch !== undefined && arc !== undefined) {
+      throw new Error(
+        `${manifestPath} cannot define both "${entryPath}.arch" and "${entryPath}.arc"`,
+      );
+    }
+
+    const artifactPath = readStringPaths(
+      entry['path'],
+      manifestPath,
+      `${entryPath}.path`,
+    );
+
+    if (arch !== undefined) {
+      return { os, arch, path: artifactPath };
+    }
+
+    return { os, arc: arc!, path: artifactPath };
+  });
+}
+
+/**
+ * Reads one or more non-empty relative artifact paths.
+ */
+function readStringPaths(
+  value: unknown,
+  manifestPath: string,
+  displayPath: string,
+): string | string[] {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value;
+  }
+
+  if (
+    Array.isArray(value) && value.length > 0
+    && value.every(
+      (item: unknown): item is string =>
+        typeof item === 'string' && item.trim().length > 0,
+    )
+  ) {
+    return value;
+  }
+
+  throw new Error(
+    `${manifestPath} must define non-empty string or string array "${displayPath}"`,
+  );
 }
 
 /**
