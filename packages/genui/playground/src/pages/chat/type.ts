@@ -140,6 +140,8 @@ export interface ChatSettingsAdapter<TSettings> {
   ) => Promise<TSettings>;
   controls: (value: TSettings) => readonly ChatSettingControl[];
   update: (value: TSettings, id: string, next: string) => TSettings;
+  validate?: (value: TSettings) => string | undefined;
+  validateRequest?: (value: TSettings, target: string) => void;
   badge: (value: TSettings) => string;
 }
 

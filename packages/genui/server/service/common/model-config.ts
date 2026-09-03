@@ -206,7 +206,10 @@ function addSensitiveVariants(values: Set<string>, value: string): void {
   }
 }
 
-export function redactModelConfigSecrets(message: string): string {
+export function redactModelConfigSecrets(
+  message: string,
+  additionalSecrets: readonly (string | undefined)[] = [],
+): string {
   const sensitiveValues = new Set<string>();
   const result = readModelConfig();
   if (result.ok) {
@@ -231,6 +234,9 @@ export function redactModelConfigSecrets(message: string): string {
   }
   for (const name of PRIVATE_PROVIDER_ENV_NAMES) {
     const value = process.env[name]?.trim();
+    if (value) addSensitiveVariants(sensitiveValues, value);
+  }
+  for (const value of additionalSecrets) {
     if (value) addSensitiveVariants(sensitiveValues, value);
   }
 

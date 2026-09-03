@@ -8,7 +8,6 @@ import { normalizeBenchJobRequest } from '../../../../service/a2ui-bench-request
 import { startBenchJob } from '../../../../service/a2ui-bench-runner';
 import { getBenchJobStore } from '../../../../service/a2ui-bench-store';
 import { jsonWithCors } from '../../../common/cors';
-import { clientOverridesAllowed } from '../../../common/provider-options';
 import {
   checkRateLimit,
   rateLimitJsonResponse,
@@ -31,7 +30,7 @@ async function postA2UIBenchJob(req: Request) {
   }
 
   const normalized = normalizeBenchJobRequest(parsed.body, {
-    clientOverrideAccepted: clientOverridesAllowed(),
+    clientOverrideAccepted: true,
   });
   if (!normalized.ok) {
     return jsonWithCors(

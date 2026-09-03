@@ -13,11 +13,18 @@ import {
 } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import {
+  CHAT_PROVIDER_SETTINGS_ADAPTER,
+  CUSTOM_PROVIDER_BASE_URL,
+  CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+  CUSTOM_PROVIDER_ID,
+  CUSTOM_PROVIDER_MODEL,
   compactProviderLabel,
   createDefaultProviderSettings,
   getModelsEndpoint,
+  getProviderSettingsValidationError,
   loadProviderSettings,
   parseStoredProviderSettings,
+  serializeProviderSettings,
   toProviderRequestOptions,
 } from './shared.js';
 import { PRODUCT_API_NAME } from '../../../lynx-src/mcp-apps/product/api.js';
@@ -49,7 +56,10 @@ describe('chat protocol adapters', () => {
   test('starts with an unloaded server-backed model list', () => {
     const settings = createDefaultProviderSettings();
     expect(settings).toEqual({
-      model: '',
+      provider: '',
+      apiKey: '',
+      baseURL: CUSTOM_PROVIDER_BASE_URL,
+      model: CUSTOM_PROVIDER_MODEL,
       models: [],
       status: 'idle',
     });
@@ -61,6 +71,19 @@ describe('chat protocol adapters', () => {
       baseURL: 'https://api.openai.com/v1',
       model: 'gpt-5.5',
     }))).toEqual(settings);
+
+    expect(parseStoredProviderSettings(JSON.stringify({
+      preset: 'custom',
+      apiKey: 'legacy-api-key',
+      baseURL: 'https://example.com/v1',
+      model: 'custom-model',
+    }))).toEqual({
+      ...settings,
+      provider: CUSTOM_PROVIDER_ID,
+      apiKey: '',
+      baseURL: CUSTOM_PROVIDER_BASE_URL,
+      model: CUSTOM_PROVIDER_MODEL,
+    });
   });
 
   test('loads the model list and default model from the server', async () => {
@@ -98,7 +121,10 @@ describe('chat protocol adapters', () => {
       expect(fetchModels).toHaveBeenCalledTimes(1);
       expect(fetchModels.mock.calls[0]?.[0]).toBe(modelsEndpoint);
       expect(settings).toEqual({
-        model: 'Doubao Seed',
+        provider: 'Doubao Seed',
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
         models: [
           { id: 'Doubao Seed', label: 'Doubao Seed' },
           { id: 'Doubao Pro', label: 'Doubao Pro' },
@@ -108,6 +134,81 @@ describe('chat protocol adapters', () => {
       expect(compactProviderLabel(settings)).toBe('Doubao Seed');
       expect(toProviderRequestOptions(settings)).toEqual({
         model: 'Doubao Seed',
+      });
+
+      let customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        settings,
+        'provider',
+        CUSTOM_PROVIDER_ID,
+      );
+      expect(
+        CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings).map(
+          (control) => control.id,
+        ),
+      ).toEqual(['provider', 'model', 'apiKey', 'baseURL']);
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings)[3])
+        .toMatchObject({
+          kind: 'select',
+          options: CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+        });
+      expect(compactProviderLabel(customSettings)).toBe(CUSTOM_PROVIDER_MODEL);
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.validate(customSettings)).toBe(
+        'Enter a provider API key to use Custom API key.',
+      );
+      expect(() => toProviderRequestOptions(customSettings)).toThrow(
+        'Enter a provider API key to use Custom API key.',
+      );
+      expect(getProviderSettingsValidationError({
+        ...customSettings,
+        apiKey: '   ',
+        model: '   ',
+      })).toBe(
+        'Enter a provider model and API key to use Custom API key.',
+      );
+      expect(getProviderSettingsValidationError({
+        ...customSettings,
+        apiKey: 'sk-user',
+        model: '   ',
+      })).toBe('Enter a provider model to use Custom API key.');
+      customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'apiKey',
+        '  sk-user  ',
+      );
+      customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'model',
+        '  custom-model  ',
+      );
+      customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'baseURL',
+        'https://generativelanguage.googleapis.com/v1beta/openai',
+      );
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.validate(customSettings))
+        .toBeUndefined();
+      expect(toProviderRequestOptions(customSettings)).toEqual({
+        apiKey: 'sk-user',
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai',
+        model: 'gemini-3.7-flash',
+      });
+      for (const option of CUSTOM_PROVIDER_BASE_URL_OPTIONS) {
+        expect(CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+          { ...customSettings, model: 'manually-edited-model' },
+          'baseURL',
+          option.value,
+        )).toMatchObject({
+          baseURL: option.value,
+          model: option.model,
+        });
+      }
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'baseURL',
+        'https://example.com/v1',
+      )).toBe(customSettings);
+      expect(serializeProviderSettings(customSettings)).toEqual({
+        provider: CUSTOM_PROVIDER_ID,
       });
     } finally {
       Object.defineProperty(globalThis, 'window', {
@@ -142,11 +243,78 @@ describe('chat protocol adapters', () => {
         host,
         new AbortController().signal,
       )).resolves.toEqual({
-        model: '',
+        provider: '',
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
         models: [],
         status: 'error',
         error: 'Model service unavailable',
       });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
+
+  test('opens custom provider settings when server model config is absent', async () => {
+    const host = {
+      origin: 'http://localhost:3000',
+      hostname: 'localhost',
+      protocol: 'http:',
+      search: '',
+      baseUrl: 'http://localhost:3000/',
+    };
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        fetch: rs.fn(async () => ({
+          ok: false,
+          json: async () => ({
+            error: 'GENUI_MODEL_CONFIG_JSON is required',
+          }),
+        })),
+      },
+    });
+
+    try {
+      const settings = await loadProviderSettings(
+        createDefaultProviderSettings(),
+        host,
+        new AbortController().signal,
+      );
+      expect(settings).toEqual({
+        provider: CUSTOM_PROVIDER_ID,
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
+        models: [],
+        status: 'ready',
+      });
+      expect(
+        CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).map(
+          (control) => control.id,
+        ),
+      ).toEqual(['provider', 'model', 'apiKey', 'baseURL']);
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings)[0])
+        .toMatchObject(
+          {
+            disabled: false,
+            options: [{
+              value: CUSTOM_PROVIDER_ID,
+              label: 'Custom API key',
+            }],
+          },
+        );
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.validate(settings)).toBe(
+        'Enter a provider API key to use Custom API key.',
+      );
+      expect(() => toProviderRequestOptions(settings)).toThrow(
+        'Enter a provider API key to use Custom API key.',
+      );
     } finally {
       Object.defineProperty(globalThis, 'window', {
         configurable: true,
@@ -183,7 +351,10 @@ describe('chat protocol adapters', () => {
         host,
         new AbortController().signal,
       )).resolves.toEqual({
-        model: '',
+        provider: '',
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
         models: [],
         status: 'error',
         error: 'The model list response is invalid',
@@ -596,7 +767,8 @@ describe('chat protocol adapters', () => {
         prompt: 'Weather in Hangzhou',
         conversation: { history: [], dataModel: {} },
         settings: {
-          model: 'gpt-5.5',
+          ...createDefaultProviderSettings(),
+          provider: 'gpt-5.5',
           models: [{ id: 'gpt-5.5', label: 'gpt5.5' }],
           status: 'ready',
         },

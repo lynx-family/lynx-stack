@@ -13,6 +13,8 @@ import type {
   BenchSettings,
   BenchVariable,
 } from './a2ui-bench-types';
+import { assertAllowedCustomProviderBaseURL } from '../agent/custom-provider-security.js';
+import { configuredModelName } from './common/model-config.js';
 
 const MAX_GROUPS = 8;
 const MAX_SCENARIOS = 20;
@@ -144,6 +146,7 @@ function normalizeSettings(value: unknown): BenchSettings {
 function normalizeGroups(
   value: unknown,
   clientOverrideAccepted: boolean,
+  customProviderAccepted = false,
 ): BenchGroupRequest[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -153,9 +156,13 @@ function normalizeGroups(
       const id = readString(item.id, `group-${index + 1}`, 120);
       const name = readString(item.name, `Group ${index + 1}`, 120);
       if (!id || !name) return null;
-      const model = clientOverrideAccepted
-        ? readOptionalString(item.model, 240)
-        : undefined;
+      const requestedModel = readOptionalString(item.model, 240);
+      let model: string | undefined;
+      if (clientOverrideAccepted) {
+        model = customProviderAccepted
+          ? requestedModel
+          : configuredModelName(requestedModel);
+      }
       const protocol = readProtocol(item.protocol);
       const profile = readProfile(item.profile, protocol);
       return {
@@ -229,10 +236,13 @@ export function normalizeBenchJobRequest(
   }
 
   const providerRecord = isRecord(value.provider) ? value.provider : {};
+  const requestedApiKey = readOptionalString(providerRecord.apiKey, 8_000);
+  const requestedBaseURL = readOptionalString(providerRecord.baseURL, 500);
+  const requestedModel = readOptionalString(providerRecord.model, 240);
   const requestedProviderOverride = Boolean(
-    readOptionalString(providerRecord.apiKey, 8_000)
-      ?? readOptionalString(providerRecord.baseURL, 500)
-      ?? readOptionalString(providerRecord.model, 240)
+    requestedApiKey
+      ?? requestedBaseURL
+      ?? requestedModel
       ?? providerRecord.api,
   );
   const clientOverrideAccepted = options.clientOverrideAccepted;
@@ -244,22 +254,45 @@ export function normalizeBenchJobRequest(
     providerRecord.api === 'chat' || providerRecord.api === 'responses'
       ? providerRecord.api
       : undefined;
-  const provider: BenchJobRequest['provider'] = clientOverrideAccepted
-    ? {
-      ...(readOptionalString(providerRecord.apiKey, 8_000)
-        ? { apiKey: readOptionalString(providerRecord.apiKey, 8_000) }
-        : {}),
-      ...(readOptionalString(providerRecord.baseURL, 500)
-        ? { baseURL: readOptionalString(providerRecord.baseURL, 500) }
-        : {}),
-      ...(readOptionalString(providerRecord.model, 240)
-        ? { model: readOptionalString(providerRecord.model, 240) }
-        : {}),
-      ...(api ? { api } : {}),
+  const hasCompleteCustomProvider = clientOverrideAccepted
+    && requestedApiKey !== undefined
+    && requestedBaseURL !== undefined
+    && requestedModel !== undefined;
+  let allowedCustomBaseURL: string | undefined;
+  if (hasCompleteCustomProvider) {
+    try {
+      allowedCustomBaseURL = assertAllowedCustomProviderBaseURL(
+        requestedBaseURL,
+      );
+    } catch (error) {
+      return {
+        ok: false,
+        status: 400,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
-    : {};
+  }
+  const configuredProviderModel = clientOverrideAccepted
+      && !hasCompleteCustomProvider
+    ? configuredModelName(requestedModel)
+    : undefined;
+  let provider: BenchJobRequest['provider'] = {};
+  if (hasCompleteCustomProvider) {
+    provider = {
+      apiKey: requestedApiKey,
+      baseURL: allowedCustomBaseURL,
+      model: requestedModel,
+      ...(api ? { api } : {}),
+    };
+  } else if (configuredProviderModel) {
+    provider = { model: configuredProviderModel };
+  }
 
-  const groups = normalizeGroups(value.groups, clientOverrideAccepted);
+  const groups = normalizeGroups(
+    value.groups,
+    clientOverrideAccepted,
+    hasCompleteCustomProvider,
+  );
   const enabledGroups = groups.filter((group) => group.enabled);
   if (enabledGroups.length === 0) {
     return {
@@ -320,6 +353,17 @@ export function normalizeBenchJobRequest(
   ) {
     warnings.push(
       'Client provider overrides are disabled by server policy; using server environment provider settings.',
+    );
+  }
+  if (
+    clientOverrideAccepted
+    && !hasCompleteCustomProvider
+    && (requestedApiKey !== undefined
+      || requestedBaseURL !== undefined
+      || api !== undefined)
+  ) {
+    warnings.push(
+      'Incomplete custom provider settings were ignored; using only server-configured model selections.',
     );
   }
 

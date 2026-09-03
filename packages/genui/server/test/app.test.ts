@@ -203,6 +203,30 @@ describe('Hono application', () => {
     }
   });
 
+  test('reports absent server models for the custom-provider fallback', async () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    delete process.env[GENUI_MODEL_CONFIG_ENV];
+    try {
+      const response = await app.request('/models', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      expect(response.status).toBe(503);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+        'http://localhost:3000',
+      );
+      await expect(response.json()).resolves.toEqual({
+        ok: false,
+        error: 'GENUI_MODEL_CONFIG_JSON is required',
+      });
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
+      } else {
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+      }
+    }
+  });
+
   test('allows IPv6 loopback origins during local development', async () => {
     const response = await app.request('/a2ui/health', {
       headers: { Origin: 'http://[::1]:3000' },

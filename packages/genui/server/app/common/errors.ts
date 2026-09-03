@@ -4,14 +4,21 @@
 
 import { redactModelConfigSecrets } from '../../service/common/model-config.js';
 
+export interface ErrorMessageOptions {
+  secrets?: readonly (string | undefined)[];
+}
+
 export function errorMessage(
   err: unknown,
+  options: ErrorMessageOptions = {},
 ): { message: string; name?: string } {
+  const redact = (value: string) =>
+    redactModelConfigSecrets(value, options.secrets);
   if (err instanceof Error) {
     return {
-      message: redactModelConfigSecrets(err.message),
-      name: redactModelConfigSecrets(err.name),
+      message: redact(err.message),
+      name: redact(err.name),
     };
   }
-  return { message: redactModelConfigSecrets(String(err)) };
+  return { message: redact(String(err)) };
 }

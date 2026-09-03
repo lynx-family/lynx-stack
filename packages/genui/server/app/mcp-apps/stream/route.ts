@@ -74,6 +74,7 @@ async function postMcpAppsStream(req: Request) {
 
   const registry = validatedRegistry.registry;
   const opts = pickProviderOptions(parsed.body);
+  const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
   const service = getMcpAppsAgentService();
   const modelMessages = [
     {
@@ -158,7 +159,7 @@ async function postMcpAppsStream(req: Request) {
           });
         } catch (error) {
           if (!closed && !generationController.signal.aborted) {
-            enqueue('error', errorMessage(error));
+            enqueue('error', errorMessage(error, errorOptions));
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

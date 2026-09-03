@@ -291,7 +291,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
     return {
-      url: getChatEndpoint('lynx-xml', host),
+      url: getChatEndpoint('lynx-xml', host, settings),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

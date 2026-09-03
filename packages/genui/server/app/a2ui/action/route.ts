@@ -115,7 +115,9 @@ async function postA2UIAction(req: Request) {
     );
     return jsonWithCors(req, validated);
   } catch (err: unknown) {
-    const { message, name } = errorMessage(err);
+    const { message, name } = errorMessage(err, {
+      secrets: [body.apiKey, opts.apiKey],
+    });
     return jsonWithCors(req, { ok: false, error: message, name });
   }
 }
