@@ -3,7 +3,7 @@
 }
 
 .Page {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f5f7fb;
   display: flex;
   flex-direction: column;
@@ -73,6 +73,12 @@
 }
 
 .CheckList {
+  flex: 1;
+  min-height: 0;
+}
+
+.CheckListContent {
+  display: flex;
   flex-direction: column;
 }
 
@@ -145,4 +151,92 @@
 
 .CheckActual--small {
   font-size: 12px;
+}
+
+.RefTarget {
+  align-items: center;
+  background-color: #f7e6cc;
+  border-color: #d08b2c;
+  border-radius: 6px;
+  border-width: 1px;
+  height: 46px;
+  justify-content: center;
+  margin-bottom: 7px;
+}
+
+.RefTarget--callback {
+  background-color: #e9f7f8;
+  border-color: #27838b;
+}
+
+.RefTargetText {
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.RefPlaceholder {
+  align-items: center;
+  background-color: #f3f4f6;
+  border-color: #cbd5e1;
+  border-radius: 6px;
+  border-width: 1px;
+  height: 46px;
+  justify-content: center;
+  margin-bottom: 7px;
+}
+
+.RefPlaceholderText {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ListScrollAction {
+  align-items: center;
+  background-color: #e2e8f0;
+  border-radius: 6px;
+  height: 40px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.ListScrollActionText {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ListScrollAction--disabled {
+  opacity: 0.6;
+}
+
+.SmokeList {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  border-radius: 6px;
+  border-width: 1px;
+  height: 188px;
+  margin-top: 8px;
+}
+
+.SmokeListItem {
+  background-color: #ffffff;
+  border-bottom-color: #e2e8f0;
+  border-bottom-width: 1px;
+  height: 64px;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.SmokeListItemTitle {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.SmokeListItemMeta {
+  color: #64748b;
+  font-size: 11px;
+  margin-top: 3px;
 }
