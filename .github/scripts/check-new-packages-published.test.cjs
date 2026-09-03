@@ -78,8 +78,11 @@ test('remediation publishes a placeholder and sets up trust for each name', () =
 
 test('remediation is valid shell', () => {
   const text = remediation(['@lynx-js/a', '@lynx-js/a-canary']);
-  const snippet = text.split('\n').filter((line) => line.startsWith('  '))
-    .join('\n');
+  const snippet = text
+    .split('\n')
+    .filter((line) => line.startsWith('  '))
+    .join('\n')
+    .replace('<otp>', '123456');
   execFileSync('bash', ['-n'], {
     input: snippet,
     stdio: ['pipe', 'pipe', 'pipe'],
