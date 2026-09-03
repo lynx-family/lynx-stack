@@ -4,6 +4,7 @@
 import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
+import { OPENUI_GAP_VALUES } from '../../shared/layout.js';
 import {
   GAP_CLASS,
   asArray,
@@ -28,7 +29,7 @@ const rowPropsSchema = z.object({
     'stretch',
   ]).optional(),
   align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
-  gap: z.enum(['none', 'xs', 's', 'm', 'l', 'xl']).optional(),
+  gap: z.enum(OPENUI_GAP_VALUES).optional(),
   wrap: z.boolean().optional(),
 });
 
@@ -43,7 +44,7 @@ export const Row = defineComponent({
       'OpenUIStack',
       'OpenUIStackRow',
       props.wrap ? 'OpenUIStackWrap' : '',
-      GAP_CLASS[gap] ?? GAP_CLASS['m'],
+      GAP_CLASS[gap] ?? GAP_CLASS.m,
       getAlignClass(props.align ?? 'center'),
       getJustifyClass(props.justify ?? 'start'),
     ]
