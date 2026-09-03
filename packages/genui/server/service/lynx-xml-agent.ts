@@ -28,10 +28,7 @@ import type {
   MastraStreamResult,
 } from './common/types.js';
 
-export interface LynxXmlChatOptions extends ChatOptions {
-  /** Do not retain request-scoped provider credentials in the shared cache. */
-  disableAgentCache?: boolean | undefined;
-}
+export type LynxXmlChatOptions = ChatOptions;
 
 export const LYNX_XML_MAX_OUTPUT_TOKENS = 16_384;
 

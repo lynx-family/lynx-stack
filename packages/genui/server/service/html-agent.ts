@@ -27,10 +27,7 @@ import type {
   MastraStreamResult,
 } from './common/types.js';
 
-export interface HtmlChatOptions extends ChatOptions {
-  /** Do not retain request-scoped provider credentials in the shared cache. */
-  disableAgentCache?: boolean | undefined;
-}
+export type HtmlChatOptions = ChatOptions;
 
 export default class HtmlAgentService {
   private readonly agentCache = new ProviderAgentCache<HtmlAgent>();

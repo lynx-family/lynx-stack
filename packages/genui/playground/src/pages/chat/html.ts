@@ -271,7 +271,7 @@ export const HTML_CHAT_ADAPTER = {
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
     return {
-      url: getChatEndpoint('html', host),
+      url: getChatEndpoint('html', host, settings),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

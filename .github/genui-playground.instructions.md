@@ -31,11 +31,17 @@ When serving the playground's native Lynx bundles as static Android test fixture
 Use the build-time `GENUI_SERVER_URL` environment variable as the single
 default GenUI server origin for Chat, Bench, health checks, and preview payload
 publishing. Keep its fallback at `http://localhost:3060`, validate it as a
-credential-free HTTP(S) origin in the playground build configuration, and do
-not reintroduce separate hosted-server constants in individual frontend
-modules. URL query endpoint overrides may remain available for diagnosis.
+credential-free HTTPS origin in the playground build configuration, allowing
+HTTP only for loopback development, and do not reintroduce separate
+hosted-server constants in individual frontend modules. URL query endpoint
+overrides may remain available for diagnosis only for server-owned model
+requests. When a request carries a custom API key, ignore endpoint overrides,
+require the request target to match the configured GenUI server origin, and
+disable redirect following so credentials cannot move to another origin.
 
-Load Create-tab model choices from the GenUI server's `GET /models` endpoint. Keep provider credentials, upstream model ids, and upstream base URLs out of playground state, persistence, controls, and request bodies; persist only the selected server-approved model name.
+Load Create-tab server-owned model choices from the GenUI server's `GET /models` endpoint. Also provide a custom-provider control with model and API key fields plus a fixed selector containing the server-approved OpenAI-compatible base URLs; do not accept an arbitrary custom-provider URL in the playground. Store each endpoint's default model in the same option mapping and replace the model field with that default whenever the endpoint changes. When the endpoint reports that `GENUI_MODEL_CONFIG_JSON` is absent, select that custom provider instead of blocking the Create tab. Persist only the non-sensitive provider selection in browser local storage. Keep model, API key, and base URL only in current-page memory so they survive protocol switches; after a refresh, clear the API key and restore the built-in model and base URL defaults. Never restore custom-provider fields left by older persisted formats so the next settings write removes them. Keep the API key input visually masked. Send custom provider values only in model request bodies, and continue sending only the public model name for ordinary server-owned selections.
+
+Expose custom-provider completeness through the shared settings adapter validation hook. Disable Create submission and reject preview action requests when Custom API key lacks either a non-empty model or API key, and enforce the same invariant while building provider request options so alternate call paths cannot send incomplete credentials.
 
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 

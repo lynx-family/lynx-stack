@@ -5,6 +5,7 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { normalizeBenchJobRequest } from '../service/a2ui-bench-request.js';
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 function body(groups: unknown[]) {
   return {
@@ -100,38 +101,133 @@ describe('A2UI Bench request protocol groups', () => {
     );
   });
 
-  test('keeps group model overrides when client overrides are enabled', () => {
+  test('keeps arbitrary group models with a complete allowed provider', () => {
+    const request = body([
+      {
+        id: 'a2ui',
+        role: 'control',
+        name: 'A2UI',
+        variable: 'model',
+        enabled: true,
+        protocol: 'a2ui',
+        profile: 'matched-core',
+        model: 'model-a',
+      },
+      {
+        id: 'openui',
+        role: 'experiment',
+        name: 'OpenUI',
+        variable: 'model',
+        enabled: true,
+        protocol: 'openui',
+        model: 'model-b',
+      },
+    ]);
     const normalized = normalizeBenchJobRequest(
-      body([
-        {
-          id: 'a2ui',
-          role: 'control',
-          name: 'A2UI',
-          variable: 'model',
-          enabled: true,
-          protocol: 'a2ui',
-          profile: 'matched-core',
-          model: 'model-a',
+      {
+        ...request,
+        provider: {
+          apiKey: 'client-secret',
+          baseURL: 'https://openrouter.ai/api/v1/',
+          model: 'default-model',
+          api: 'chat',
         },
-        {
-          id: 'openui',
-          role: 'experiment',
-          name: 'OpenUI',
-          variable: 'model',
-          enabled: true,
-          protocol: 'openui',
-          model: 'model-b',
-        },
-      ]),
+      },
       { clientOverrideAccepted: true },
     );
 
     expect(normalized.ok).toBe(true);
     if (!normalized.ok) return;
+    expect(normalized.request.provider).toEqual({
+      apiKey: 'client-secret',
+      baseURL: 'https://openrouter.ai/api/v1',
+      model: 'default-model',
+      api: 'chat',
+    });
     expect(normalized.request.groups).toEqual([
       expect.objectContaining({ model: 'model-a' }),
       expect.objectContaining({ model: 'model-b' }),
     ]);
+  });
+
+  test('drops partial provider fields and unconfigured group models', () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
+      'Configured Model': {
+        apiKey: 'server-secret',
+        baseURL: 'https://server.example.com/v1',
+        model: 'server-model',
+      },
+    });
+    try {
+      const normalized = normalizeBenchJobRequest(
+        {
+          ...body([
+            {
+              id: 'configured',
+              name: 'Configured',
+              enabled: true,
+              model: 'Configured Model',
+            },
+            {
+              id: 'unconfigured',
+              name: 'Unconfigured',
+              enabled: true,
+              model: 'attacker-model',
+            },
+          ]),
+          provider: {
+            baseURL: 'https://attacker.example/v1',
+            model: 'Configured Model',
+          },
+        },
+        { clientOverrideAccepted: true },
+      );
+
+      expect(normalized.ok).toBe(true);
+      if (!normalized.ok) return;
+      expect(normalized.request.provider).toEqual({
+        model: 'Configured Model',
+      });
+      expect(normalized.request.groups[0]).toMatchObject({
+        model: 'Configured Model',
+      });
+      expect(normalized.request.groups[1]).not.toHaveProperty('model');
+      expect(normalized.warnings).toContain(
+        'Incomplete custom provider settings were ignored; using only server-configured model selections.',
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
+      } else {
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+      }
+    }
+  });
+
+  test('rejects a complete provider outside the base URL allow-list', () => {
+    const normalized = normalizeBenchJobRequest(
+      {
+        ...body([{
+          id: 'group',
+          name: 'Group',
+          enabled: true,
+        }]),
+        provider: {
+          apiKey: 'client-secret',
+          baseURL: 'https://attacker.example/v1',
+          model: 'attacker-model',
+        },
+      },
+      { clientOverrideAccepted: true },
+    );
+
+    expect(normalized).toEqual({
+      ok: false,
+      status: 400,
+      error:
+        'Custom provider baseURL must be one of the supported provider URLs: https://api.openai.com/v1, https://generativelanguage.googleapis.com/v1beta/openai, https://openrouter.ai/api/v1',
+    });
   });
 
   test('rejects an unsupported OpenUI native arm', () => {

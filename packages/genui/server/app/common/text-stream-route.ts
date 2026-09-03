@@ -119,6 +119,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
       log(event, details);
     },
   };
+  const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
   const service = config.getService();
 
   log('request.accepted', {
@@ -245,7 +246,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
         } catch (error: unknown) {
           if (!closed && !generationController.signal.aborted) {
             const payload = {
-              ...errorMessage(error),
+              ...errorMessage(error, errorOptions),
               ...(resultMetadata ?? {}),
             };
             log('error.enqueued', payload);

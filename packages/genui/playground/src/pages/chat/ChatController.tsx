@@ -21,13 +21,13 @@ import {
   EMPTY_CHAT_TOKEN_USAGE,
   addTokenUsage,
   createChatHost,
+  createChatRequestInit,
   formatTokenCount,
   parseSseFrame,
   targetOriginForUrl,
 } from './shared.js';
 import type {
   ChatArtifact,
-  ChatHttpRequest,
   ChatMessageIcon,
   ChatMessageModel,
   ChatProtocolAdapter,
@@ -139,27 +139,6 @@ function payloadToChunks(value: unknown): unknown[] {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function requestInit(
-  request: ChatHttpRequest,
-  signal: AbortSignal,
-): RequestInit {
-  const body = request.body === undefined
-    ? undefined
-    : (typeof request.body === 'string'
-      ? request.body
-      : JSON.stringify(request.body));
-  return {
-    method: request.method ?? 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream',
-      ...request.headers,
-    },
-    body,
-    signal,
-  };
 }
 
 async function consumeResponse<TState, TOutput>(
@@ -506,11 +485,15 @@ function previewMetricPatch(
   return { renderMs: value };
 }
 
+const volatileSettingsByAdapter = new WeakMap<object, unknown>();
+
 function readInitialSettings<TSettings>(
   adapter: { settings?: ChatSettingsAdapter<TSettings> },
 ): TSettings {
   const settings = adapter.settings;
   if (!settings) return undefined as TSettings;
+  const volatileSettings = volatileSettingsByAdapter.get(settings);
+  if (volatileSettings !== undefined) return volatileSettings as TSettings;
   try {
     for (const key of settings.storageKeys) {
       const raw = window.localStorage.getItem(key);
@@ -647,6 +630,7 @@ export function ChatController<
   });
 
   const busy = isGenerating || isActionRunning;
+  const settingsValidationError = adapter.settings?.validate?.(settings);
 
   const setCurrentOutput = useCallback((next: TOutput | null) => {
     outputRef.current = next;
@@ -715,6 +699,7 @@ export function ChatController<
   useEffect(() => {
     const settingsAdapter = adapter.settings;
     if (!settingsAdapter) return;
+    volatileSettingsByAdapter.set(settingsAdapter, settings);
     try {
       const serialized = JSON.stringify(settingsAdapter.serialize(settings));
       for (const key of settingsAdapter.storageKeys) {
@@ -1046,7 +1031,13 @@ export function ChatController<
 
   const handleSend = useCallback(() => {
     const prompt = inputValue.trim();
-    if (!isReady || !prompt || busy) return;
+    const validationError = adapter.settings?.validate?.(
+      settingsRef.current,
+    );
+    if (
+      !isReady || !prompt || busy
+      || validationError !== undefined
+    ) return;
     abortOperations();
     const runId = ++runIdRef.current;
     const controller = new AbortController();
@@ -1076,16 +1067,18 @@ export function ChatController<
 
     void (async () => {
       try {
+        const requestSettings = settingsRef.current;
         const request = await adapter.createRequest({
           prompt,
           conversation: requestConversation,
-          settings: settingsRef.current,
+          settings: requestSettings,
           host,
           signal: controller.signal,
         });
+        adapter.settings?.validateRequest?.(requestSettings, request.url);
         const response = await window.fetch(
           request.url,
-          requestInit(request, controller.signal),
+          createChatRequestInit(request, controller.signal),
         );
         if (!response.ok) {
           const payload: unknown = await response.json().catch(() => ({}));
@@ -1335,6 +1328,21 @@ export function ChatController<
       if (generationAbortRef.current !== null) return;
       const action = actionAdapter.parseWindowMessage(event.data);
       if (action === null) return;
+      const validationError = adapter.settings?.validate?.(
+        settingsRef.current,
+      );
+      if (validationError !== undefined) {
+        setMessages((current) => [
+          ...current,
+          {
+            kind: 'status',
+            tone: 'error',
+            icon: 'error',
+            text: validationError,
+          },
+        ]);
+        return;
+      }
 
       actionAbortRef.current?.abort();
       const controller = new AbortController();
@@ -1372,15 +1380,17 @@ export function ChatController<
 
       void (async () => {
         try {
+          const requestSettings = settingsRef.current;
           const request = actionAdapter.request({
             action,
             conversation: requestConversation,
-            settings: settingsRef.current,
+            settings: requestSettings,
             host,
           });
+          adapter.settings?.validateRequest?.(requestSettings, request.url);
           const response = await window.fetch(
             request.url,
-            requestInit(request, controller.signal),
+            createChatRequestInit(request, controller.signal),
           );
           if (!response.ok) {
             const payload: unknown = await response.json().catch(() => ({}));
@@ -1751,14 +1761,34 @@ export function ChatController<
                         : 'chatProviderInputField'}
                       aria-label={control.label}
                       type={control.kind}
+                      autoComplete={control.kind === 'password'
+                        ? 'off'
+                        : undefined}
                       placeholder={control.placeholder}
                       value={control.value}
                       disabled={busy || control.disabled}
+                      aria-invalid={settingsValidationError !== undefined
+                        && control.value.trim().length === 0}
+                      aria-describedby={settingsValidationError
+                          && control.value.trim().length === 0
+                        ? 'chatProviderValidationError'
+                        : undefined}
                       onChange={(event) =>
                         updateSetting(control.id, event.target.value)}
                     />
                   ))}
                 </div>
+              )
+              : null}
+            {settingsValidationError
+              ? (
+                <p
+                  id='chatProviderValidationError'
+                  className='chatProviderValidation'
+                  role='alert'
+                >
+                  {settingsValidationError}
+                </p>
               )
               : null}
             <div className='chatComposerFooter'>
@@ -1785,7 +1815,9 @@ export function ChatController<
                 variant='primary'
                 size='lg'
                 iconBefore={Send}
-                disabled={!isReady || busy || inputValue.trim().length === 0}
+                disabled={!isReady || busy || inputValue.trim().length === 0
+                  || settingsValidationError !== undefined}
+                title={settingsValidationError}
                 onClick={handleSend}
               >
                 {isGenerating ? 'Generating' : 'Send'}
