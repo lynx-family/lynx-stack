@@ -207,6 +207,37 @@ describe('should build external bundle', () => {
     ])
   })
 
+  it('should build every main-thread entry into external bundle', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-multi')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          a: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+          b: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-multi',
+      output: {
+        distPath: {
+          root: distRoot,
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-multi.lynx.bundle'),
+    )
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'a',
+      'a__main-thread',
+      'b',
+      'b__main-thread',
+    ])
+  })
+
   it('should only build main-thread code into external bundle', async () => {
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
