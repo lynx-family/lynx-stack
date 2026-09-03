@@ -10,23 +10,23 @@ let onTapLepus = {
     _wkltId: "a123:test:1",
     ...{
         aaaa: this.aaaa,
-        bbbb: captureMainThreadObject(this.bbbb) ?? {
-            cccc: {
-                dddd: this.bbbb.cccc.dddd
-            }
-        },
+        bbbb: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                cccc: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        dddd: __mainThreadObjectSource.dddd
+                    })(__mainThreadObjectSource.cccc)
+            })(this.bbbb),
         eeee: this.eeee,
         ffff: this.ffff,
-        hhhh: captureMainThreadObject(this.hhhh) ?? {
-            'iiii': this.hhhh['iiii'],
-            kkkk: this.hhhh.kkkk
-        },
+        hhhh: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                'iiii': __mainThreadObjectSource['iiii'],
+                kkkk: __mainThreadObjectSource.kkkk
+            })(this.hhhh),
         llll: this.llll,
-        mmmm: captureMainThreadObject(this.mmmm) ?? {
-            nnnn: {
-                'oooo': this.mmmm.nnnn['oooo']
-            }
-        }
+        mmmm: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                nnnn: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        'oooo': __mainThreadObjectSource['oooo']
+                    })(__mainThreadObjectSource.nnnn)
+            })(this.mmmm)
     }
 };
 const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);

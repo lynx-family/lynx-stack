@@ -4,8 +4,10 @@ use crate::worklet_type::WorkletType;
 use crate::TransformMode;
 use std::collections::HashSet;
 use std::vec;
-use swc_core::common::DUMMY_SP;
+use swc_core::common::{EqIgnoreSpan, DUMMY_SP};
 use swc_core::ecma::ast::*;
+use swc_core::ecma::utils::private_ident;
+use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
 use swc_core::{quote, quote_expr};
 use swc_plugins_shared::target::TransformTarget;
 
@@ -15,6 +17,23 @@ pub struct StmtGen {}
 enum CaptureRoot {
   Ident,
   ThisMember,
+}
+
+struct CaptureRootReplacer {
+  source: Expr,
+  replacement: Ident,
+}
+
+impl VisitMut for CaptureRootReplacer {
+  noop_visit_mut_type!();
+
+  fn visit_mut_expr(&mut self, expr: &mut Expr) {
+    if expr.eq_ignore_span(&self.source) {
+      *expr = Expr::Ident(self.replacement.clone());
+      return;
+    }
+    expr.visit_mut_children_with(self);
+  }
 }
 
 struct RegisterWorkletParams<'a> {
@@ -234,27 +253,108 @@ impl StmtGen {
       let Some(source) = source else {
         continue;
       };
-
-      let fallback = key_value.value.clone();
-      let captured = CallExpr {
-        ctxt: Default::default(),
-        span: DUMMY_SP,
-        args: vec![source.into()],
-        callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
-        type_args: None,
-      }
-      .into();
-      key_value.value = BinExpr {
-        span: DUMMY_SP,
-        op: BinaryOp::NullishCoalescing,
-        left: captured,
-        right: fallback,
-      }
-      .into();
-      wrapped = true;
+      wrapped |= StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, source);
     }
 
     wrapped
+  }
+
+  fn wrap_main_thread_object_candidate(value: &mut Box<Expr>, source: Expr) -> bool {
+    let Some(object) = value.as_mut_object() else {
+      return false;
+    };
+
+    for prop in &mut object.props {
+      let Some(prop) = prop.as_mut_prop() else {
+        continue;
+      };
+      let Prop::KeyValue(key_value) = prop.as_mut() else {
+        continue;
+      };
+      if !key_value.value.is_object() {
+        continue;
+      }
+      let child_source = StmtGen::append_member(source.clone(), &key_value.key);
+      StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, child_source);
+    }
+
+    let mut fallback = value.clone();
+    let source_argument = source.clone();
+    let capture_argument = if source.is_ident() {
+      source
+    } else {
+      let capture_source = private_ident!("__mainThreadObjectSource");
+      fallback.visit_mut_with(&mut CaptureRootReplacer {
+        source,
+        replacement: capture_source.clone(),
+      });
+      Expr::Ident(capture_source)
+    };
+    let captured = CallExpr {
+      ctxt: Default::default(),
+      span: DUMMY_SP,
+      args: vec![capture_argument.clone().into()],
+      callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
+      type_args: None,
+    }
+    .into();
+    let captured_or_fallback: Expr = BinExpr {
+      span: DUMMY_SP,
+      op: BinaryOp::NullishCoalescing,
+      left: captured,
+      right: fallback,
+    }
+    .into();
+    *value = if source_argument.is_ident() {
+      captured_or_fallback.into()
+    } else {
+      CallExpr {
+        ctxt: Default::default(),
+        span: DUMMY_SP,
+        callee: Callee::Expr(
+          ArrowExpr {
+            ctxt: Default::default(),
+            span: DUMMY_SP,
+            params: vec![Pat::Ident(capture_argument.expect_ident().into())],
+            body: Box::new(BlockStmtOrExpr::Expr(captured_or_fallback.into())),
+            is_async: false,
+            is_generator: false,
+            type_params: None,
+            return_type: None,
+          }
+          .into(),
+        ),
+        args: vec![source_argument.into()],
+        type_args: None,
+      }
+      .into()
+    };
+    true
+  }
+
+  fn append_member(source: Expr, property: &PropName) -> Expr {
+    let property = match property {
+      PropName::Ident(ident) => MemberProp::Ident(ident.clone()),
+      PropName::Str(value) => MemberProp::Computed(ComputedPropName {
+        span: DUMMY_SP,
+        expr: Expr::Lit(Lit::Str(value.clone())).into(),
+      }),
+      PropName::Num(value) => MemberProp::Computed(ComputedPropName {
+        span: DUMMY_SP,
+        expr: Expr::Lit(Lit::Num(value.clone())).into(),
+      }),
+      PropName::BigInt(value) => MemberProp::Computed(ComputedPropName {
+        span: DUMMY_SP,
+        expr: Expr::Lit(Lit::BigInt(value.clone())).into(),
+      }),
+      PropName::Computed(value) => MemberProp::Computed(value.clone()),
+    };
+    MemberExpr {
+      span: DUMMY_SP,
+      obj: source.into(),
+      prop: property,
+    }
+    .into()
   }
 
   fn find_root_ident(expr: &Expr) -> Option<Ident> {

@@ -8,10 +8,15 @@ class App extends Component {
         return {
             _wkltId: "a123:test:1",
             ...{
-                value: captureMainThreadObject(this.value) ?? {
-                    "get": this.value["get"],
-                    set: this.value.set
-                },
+                value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        "get": __mainThreadObjectSource["get"],
+                        set: __mainThreadObjectSource.set
+                    })(this.value),
+                props: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                                get: __mainThreadObjectSource.get
+                            })(__mainThreadObjectSource.value)
+                    })(this.props),
                 ref: this.ref
             }
         };
@@ -20,18 +25,18 @@ class App extends Component {
         return {
             _wkltId: "a123:test:2",
             ...{
-                value: captureMainThreadObject(this.value) ?? {
-                    get: this.value.get
-                }
+                value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        get: __mainThreadObjectSource.get
+                    })(this.value)
             }
         };
     }
     static onStatic = {
         _wkltId: "a123:test:3",
         ...{
-            value: captureMainThreadObject(this.value) ?? {
-                get: this.value.get
-            }
+            value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    get: __mainThreadObjectSource.get
+                })(this.value)
         }
     };
 }

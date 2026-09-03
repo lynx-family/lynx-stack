@@ -1066,6 +1066,7 @@ class App extends Component {
   onTap() {
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
@@ -1113,6 +1114,7 @@ class App extends Component {
   onTap() {
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
@@ -2049,7 +2051,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );
@@ -2079,7 +2081,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );
