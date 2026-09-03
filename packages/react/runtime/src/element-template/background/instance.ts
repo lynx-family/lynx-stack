@@ -684,11 +684,11 @@ export class BackgroundListElementTemplateInstance extends BackgroundTypedElemen
     beforeChild: BackgroundElementTemplateInstance | null,
     silent?: boolean,
   ): void {
-    const previousParent = child.parent;
+    const isSameListMove = child.parent === this;
     super.insertBefore(child, beforeChild, true);
     if (!silent) {
-      if (previousParent instanceof BackgroundListElementTemplateInstance) {
-        previousParent.emitTypedListItemRemove(child, EMPTY_REMOVED_SUBTREE_HANDLE_IDS);
+      if (isSameListMove) {
+        this.emitTypedListItemRemove(child, EMPTY_REMOVED_SUBTREE_HANDLE_IDS);
       }
       this.emitTypedListItemInsert(child, beforeChild);
     }
@@ -788,6 +788,11 @@ function collectMainThreadRefSubtreeHandleIdsImpl(
   if (hasMainThreadRefAttrSlot(instance.type)) {
     handles ??= [];
     handles.push(instance.instanceId);
+  }
+  // The nested list holder belongs to this subtree, while its logical children
+  // are materialized and owned by that list's own holder callbacks.
+  if (instance instanceof BackgroundListElementTemplateInstance) {
+    return handles;
   }
   let child = instance.firstChild;
   while (child) {

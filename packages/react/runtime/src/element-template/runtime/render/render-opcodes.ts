@@ -210,6 +210,7 @@ export function renderOpcodesIntoElementTemplate(
             // update path (`resolveTypedListItem`) stays consistent with it.
             templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
             platformInfo: listItemPlatformInfo,
+            subtreeHandles: materializationHandles,
           });
         }
         appendChildToParent(

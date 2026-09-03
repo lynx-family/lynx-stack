@@ -8,6 +8,12 @@ import type {
   RuntimeTypedElementAttributes,
   SerializableValue,
 } from '../../protocol/types.js';
+import { insertElementTemplateSubtree } from '../template/handle.js';
+import {
+  attachMainThreadDynamicAttrRefsForSubtree,
+  detachMainThreadDynamicAttrRefsForSubtree,
+} from '../template/main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
 
 const LIST_ELEMENT_SLOT_INDEX = 0;
 const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
@@ -19,6 +25,7 @@ export type ETListItemPlatformInfo = Record<string, SerializableValue>;
 export interface ETListItemMeta {
   templateKey: string;
   platformInfo: ETListItemPlatformInfo;
+  subtreeHandles: readonly MainThreadDynamicAttrSubtreeHandle[];
 }
 
 interface ETListItemRecord extends ETListItemMeta {
@@ -27,21 +34,26 @@ interface ETListItemRecord extends ETListItemMeta {
   uid: number;
   // Native item root ref. The root can exist detached until native requests it.
   ref: ElementRef;
+  // All ET handles in this item subtree. Direct MTRefs can live below the item
+  // root, but their lifecycle still follows native holder ownership.
+  subtreeHandles: MainThreadDynamicAttrSubtreeHandle[];
   // True after `component-at-index(es)` has inserted this item root into the
   // list's native slot.
   attached: boolean;
   // Same-list reorder keeps the item attached, but the next callback must still
   // call insert so native moves the existing child to the new sibling position.
   needsAttachMove: boolean;
-  // Native may enqueue the old cell after an attached item has already moved to
-  // the new position. Skipping that one detach preserves Snapshot move ordering.
-  skipNextEnqueue: boolean;
 }
 
 interface ETListCallbacks {
   componentAtIndex: ComponentAtIndexCallback;
   componentAtIndexes: ComponentAtIndexesCallback;
   enqueueComponent: EnqueueComponentCallback;
+}
+
+interface AttachedETListItem {
+  item: ETListItemRecord;
+  sign: number;
 }
 
 export interface ETListState {
@@ -56,7 +68,7 @@ export interface ETListState {
   // callbacks observe the latest committed-by-JS list shape.
   items: ETListItemRecord[];
   // Native sign -> item lookup for list callbacks. This is not the attached
-  // item set: removed visible items stay addressable until native enqueues the
+  // item set: removed materialized items stay addressable until native enqueues the
   // old sign while applying the final `update-list-info`.
   callbackItemBySign: Map<number, ETListItemRecord>;
   // Holder teardown keeps callbacks Snapshot-safe for late native calls.
@@ -64,6 +76,10 @@ export interface ETListState {
   // True while one or more currently attached items need same-list placement.
   // The next list callback reorders attached refs once, from right to left.
   hasAttachedMoves: boolean;
+  // Native releases a moved holder before requesting its replacement. Keep its
+  // MTRefs attached across that pair, but remember which failed inserts need
+  // holder cleanup.
+  releasedMoveItemUids: Set<number>;
   // Latest typed slot 0 attrs excluding list callbacks and transient
   // `update-list-info`; final list flush composes these with stable callbacks.
   attributes: RuntimeTypedElementAttributes;
@@ -75,6 +91,7 @@ export interface ETListState {
 export interface ETListUpdateItem extends ETListItemMeta {
   uid: number;
   ref: ElementRef;
+  subtreeHandles: MainThreadDynamicAttrSubtreeHandle[];
 }
 
 export interface ETListUpdateInfo {
@@ -110,6 +127,7 @@ interface PendingETListUpdate {
 
 const listItemByUid = /* @__PURE__ */ new Map<number, ETListItemRecord>();
 const listStateByUid = /* @__PURE__ */ new Map<number, ETListState>();
+const attachedListItemByUid = /* @__PURE__ */ new Map<number, AttachedETListItem>();
 const pendingInitialListUpdateUids = /* @__PURE__ */ new Set<number>();
 const pendingListUpdates = /* @__PURE__ */ new Map<number, PendingETListUpdate>();
 
@@ -123,9 +141,9 @@ export function registerElementTemplateListItem(
     ref,
     templateKey: meta.templateKey,
     platformInfo: meta.platformInfo,
+    subtreeHandles: Array.from(meta.subtreeHandles),
     attached: false,
     needsAttachMove: false,
-    skipNextEnqueue: false,
   });
 }
 
@@ -171,9 +189,9 @@ export function createElementTemplateListStateFromItems(
       ref: item.ref,
       templateKey: item.templateKey,
       platformInfo: item.platformInfo,
+      subtreeHandles: item.subtreeHandles,
       attached: false,
       needsAttachMove: false,
-      skipNextEnqueue: false,
     });
   }
 
@@ -191,6 +209,7 @@ function createElementTemplateListStateWithRecords(
     callbackItemBySign: new Map(),
     destroyed: false,
     hasAttachedMoves: false,
+    releasedMoveItemUids: new Set(),
     attributes: attributes ?? {},
     callbacks: null as unknown as ETListCallbacks,
   };
@@ -222,7 +241,17 @@ export function markElementTemplateListDestroyed(uid: number): number[] | undefi
     return undefined;
   }
   state.destroyed = true;
+  for (const item of state.callbackItemBySign.values()) {
+    if (item.attached) {
+      const attachedItem = attachedListItemByUid.get(item.uid)!;
+      detachMainThreadDynamicAttrRefsForSubtree(attachedItem.item.subtreeHandles);
+      attachedListItemByUid.delete(item.uid);
+      attachedItem.item.attached = false;
+      attachedItem.item.needsAttachMove = false;
+    }
+  }
   state.callbackItemBySign.clear();
+  state.releasedMoveItemUids.clear();
   listStateByUid.delete(uid);
   pendingInitialListUpdateUids.delete(uid);
   const pendingUpdate = pendingListUpdates.get(uid);
@@ -237,6 +266,7 @@ export function destroyAllElementTemplateListStates(): void {
   }
   listStateByUid.clear();
   listItemByUid.clear();
+  attachedListItemByUid.clear();
   pendingInitialListUpdateUids.clear();
   pendingListUpdates.clear();
 }
@@ -269,9 +299,9 @@ export function insertElementTemplateListItem(
     ref: item.ref,
     templateKey: item.templateKey,
     platformInfo: item.platformInfo,
+    subtreeHandles: item.subtreeHandles,
     attached: previousRecord?.attached ?? false,
     needsAttachMove,
-    skipNextEnqueue: previousRecord?.skipNextEnqueue ?? false,
   };
   if (needsAttachMove) {
     state.hasAttachedMoves = true;
@@ -307,23 +337,63 @@ export function updateElementTemplateListItem(
   const previous = state.items[index]!;
   const hasCurrentChange = previous.templateKey !== item.templateKey
     || !isDirectOrDeepEqual(previous.platformInfo, item.platformInfo);
-  if (!hasCurrentChange) {
+  let hasSubtreeHandlesChange = previous.subtreeHandles.length !== item.subtreeHandles.length;
+  for (
+    let handleIndex = 0;
+    !hasSubtreeHandlesChange && handleIndex < previous.subtreeHandles.length;
+    handleIndex += 1
+  ) {
+    hasSubtreeHandlesChange = previous.subtreeHandles[handleIndex]!.uid !== item.subtreeHandles[handleIndex]!.uid;
+  }
+  if (!hasCurrentChange && !hasSubtreeHandlesChange) {
     // Hydrate emits retained item refreshes without serialized platformInfo, so
     // unchanged items must not dirty the list or trigger an empty final flush.
+    return;
+  }
+  if (hasSubtreeHandlesChange) {
+    const attachedItem = attachedListItemByUid.get(item.uid)?.item;
+    const lifecycleItem = attachedItem ?? previous;
+    const previousHandleUids = new Set<number>();
+    for (let handleIndex = 0; handleIndex < lifecycleItem.subtreeHandles.length; handleIndex += 1) {
+      previousHandleUids.add(lifecycleItem.subtreeHandles[handleIndex]!.uid);
+    }
+    const addedHandles: MainThreadDynamicAttrSubtreeHandle[] = [];
+    for (let handleIndex = 0; handleIndex < item.subtreeHandles.length; handleIndex += 1) {
+      const handle = item.subtreeHandles[handleIndex]!;
+      if (!previousHandleUids.has(handle.uid)) {
+        addedHandles.push(handle);
+      }
+    }
+    if (addedHandles.length > 0) {
+      if (lifecycleItem.attached) {
+        attachMainThreadDynamicAttrRefsForSubtree(addedHandles);
+      } else {
+        detachMainThreadDynamicAttrRefsForSubtree(addedHandles);
+      }
+    }
+    lifecycleItem.subtreeHandles = item.subtreeHandles;
+  }
+  if (!hasCurrentChange) {
+    previous.subtreeHandles = item.subtreeHandles;
     return;
   }
   if (!pendingListUpdates.has(uid)) {
     markPendingListUpdate(uid, state);
   }
-  state.items[index] = {
+  const next: ETListItemRecord = {
     uid: item.uid,
     ref: item.ref,
     templateKey: item.templateKey,
     platformInfo: item.platformInfo,
+    subtreeHandles: item.subtreeHandles,
     attached: previous.attached,
     needsAttachMove: previous.needsAttachMove,
-    skipNextEnqueue: previous.skipNextEnqueue,
   };
+  state.items[index] = next;
+  const attachedItem = attachedListItemByUid.get(item.uid);
+  if (attachedItem?.item === previous) {
+    attachedItem.item = next;
+  }
 }
 
 export function flushPendingElementTemplateListUpdates(): ETListFlushResult[] {
@@ -549,24 +619,22 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
       }
       return;
     }
-    if (item.skipNextEnqueue) {
-      item.skipNextEnqueue = false;
+    if (item.needsAttachMove) {
+      state.releasedMoveItemUids.add(item.uid);
       if (shouldLog) {
         logListCallbackAlog('enqueue-component returned', {
           listHandleId: state.listHandleId,
           listID,
           sign,
           itemHandleId: item.uid,
-          reason: 'skip-next-enqueue',
+          reason: 'same-list-move-rebind',
         });
       }
       return;
     }
 
-    __RemoveNodeFromElementTemplate(state.holderRef!, LIST_ELEMENT_SLOT_INDEX, item.ref);
-    item.attached = false;
-    item.needsAttachMove = false;
-    state.callbackItemBySign.delete(sign);
+    const attachedItem = attachedListItemByUid.get(item.uid)!;
+    detachListItemFromHolder(state, item, attachedItem);
     if (shouldLog) {
       logListCallbackAlog('enqueue-component detached', {
         listHandleId: state.listHandleId,
@@ -609,12 +677,27 @@ function attachListItemAtIndex(
     });
   }
   moveAttachedListItemsIntoFinalOrder(state, list);
-  if (!item.attached) {
+  let sign: number;
+  if (item.attached) {
+    const attachedItem = attachedListItemByUid.get(item.uid)!;
+    attachedItem.item = item;
+    sign = attachedItem.sign;
+    state.callbackItemBySign.set(sign, item);
+  } else {
     const referenceItem = findNextAttachedItem(state, cellIndex);
     const referenceRef = referenceItem?.ref ?? null;
-    __InsertNodeToElementTemplate(list, LIST_ELEMENT_SLOT_INDEX, item.ref, referenceRef);
+    insertElementTemplateSubtree(
+      list,
+      LIST_ELEMENT_SLOT_INDEX,
+      item.ref,
+      referenceRef,
+      item.subtreeHandles,
+    );
     item.attached = true;
     item.needsAttachMove = false;
+    sign = __GetElementUniqueID(item.ref);
+    attachedListItemByUid.set(item.uid, { item, sign });
+    state.callbackItemBySign.set(sign, item);
     if (shouldLog) {
       logListCallbackAlog('attach-list-item inserted', {
         listHandleId: state.listHandleId,
@@ -625,9 +708,6 @@ function attachListItemAtIndex(
       });
     }
   }
-
-  const sign = __GetElementUniqueID(item.ref);
-  state.callbackItemBySign.set(sign, item);
   if (shouldLog) {
     logListCallbackAlog('attach-list-item sign', {
       listHandleId: state.listHandleId,
@@ -691,21 +771,51 @@ function moveAttachedListItemsIntoFinalOrder(
     return;
   }
 
-  let referenceRef: ElementRef | null = null;
-  for (let index = state.items.length - 1; index >= 0; index -= 1) {
-    const item = state.items[index]!;
-    if (!item.attached) {
-      item.needsAttachMove = false;
-      continue;
+  try {
+    let referenceRef: ElementRef | null = null;
+    for (let index = state.items.length - 1; index >= 0; index -= 1) {
+      const item = state.items[index]!;
+      if (!item.attached) {
+        item.needsAttachMove = false;
+        continue;
+      }
+      if (item.needsAttachMove) {
+        __InsertNodeToElementTemplate(list, LIST_ELEMENT_SLOT_INDEX, item.ref, referenceRef);
+        item.needsAttachMove = false;
+        state.releasedMoveItemUids.delete(item.uid);
+      }
+      referenceRef = item.ref;
     }
-    if (item.needsAttachMove) {
-      __InsertNodeToElementTemplate(list, LIST_ELEMENT_SLOT_INDEX, item.ref, referenceRef);
-      item.needsAttachMove = false;
-      item.skipNextEnqueue = true;
+    state.hasAttachedMoves = false;
+  } catch (error) {
+    for (const item of state.items) {
+      if (item.needsAttachMove && state.releasedMoveItemUids.has(item.uid)) {
+        detachListItemFromHolder(
+          state,
+          item,
+          attachedListItemByUid.get(item.uid)!,
+        );
+      }
     }
-    referenceRef = item.ref;
+    state.hasAttachedMoves = state.items.some((item) => item.needsAttachMove);
+    throw error;
   }
-  state.hasAttachedMoves = false;
+}
+
+function detachListItemFromHolder(
+  state: ETListState,
+  item: ETListItemRecord,
+  attachedItem: AttachedETListItem,
+): void {
+  __RemoveNodeFromElementTemplate(state.holderRef!, LIST_ELEMENT_SLOT_INDEX, item.ref);
+  detachMainThreadDynamicAttrRefsForSubtree(attachedItem.item.subtreeHandles);
+  attachedListItemByUid.delete(item.uid);
+  attachedItem.item.attached = false;
+  attachedItem.item.needsAttachMove = false;
+  item.attached = false;
+  item.needsAttachMove = false;
+  state.releasedMoveItemUids.delete(item.uid);
+  state.callbackItemBySign.delete(attachedItem.sign);
 }
 
 function findNextAttachedItem(
