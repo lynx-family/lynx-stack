@@ -522,10 +522,10 @@ describe('JsBytecode encoding', () => {
 
     expect(marked).toStrictEqual({
       'shared-mt.js': true,
-      'utils__main-thread.js': true,
-      'helpers__main-thread.js': true,
-      'utils.js': false,
-      'helpers.js': false,
+      '.lynx/utils-shared-mt/utils__main-thread.js': true,
+      '.lynx/utils-shared-mt/helpers__main-thread.js': true,
+      '.lynx/utils-shared-mt/utils.js': false,
+      '.lynx/utils-shared-mt/helpers.js': false,
     })
   })
 
@@ -616,7 +616,7 @@ describe('debug mode artifacts', () => {
   // The template intermediates go into the `.lynx` directory, the same way an
   // application build emits them.
   const getFiles = () => {
-    const intermediate = path.join(distRoot, '.lynx')
+    const intermediate = path.join(distRoot, '.lynx', bundleId)
     return fs.existsSync(intermediate) ? fs.readdirSync(intermediate) : []
   }
 
@@ -1219,13 +1219,25 @@ describe('debug metadata', () => {
     }
 
     expect(
-      fs.existsSync(path.join(distRoot, '.lynx', 'debug-metadata.json')),
+      fs.existsSync(
+        path.join(
+          distRoot,
+          '.lynx',
+          'utils-debug-metadata',
+          'debug-metadata.json',
+        ),
+      ),
     ).toBe(true)
 
     // The release banner has to sit inside the module wrapper, which is what
     // `lynx.loadScript` takes the section's value from.
     const mainThread = await fs.promises.readFile(
-      path.join(distRoot, 'utils__main-thread.js'),
+      path.join(
+        distRoot,
+        '.lynx',
+        'utils-debug-metadata',
+        'utils__main-thread.js',
+      ),
       'utf-8',
     )
     expect(mainThread).toMatch(/^\(function\s*\(\)\s*\{/)
@@ -1273,7 +1285,10 @@ describe('debug info outside', () => {
         plugins: [pluginReactLynx()],
       }))
       const tasmJson = JSON.parse(
-        fs.readFileSync(path.join(distRoot, '.lynx', 'tasm.json'), 'utf-8'),
+        fs.readFileSync(
+          path.join(distRoot, '.lynx', 'utils-dbg-outside', 'tasm.json'),
+          'utf-8',
+        ),
       ) as {
         compilerOptions: Record<string, unknown>
         sourceContent: Record<string, unknown>
@@ -1286,5 +1301,47 @@ describe('debug info outside', () => {
     } finally {
       rstest.unstubAllEnvs()
     }
+  })
+})
+
+describe('intermediate directory', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  // A `development` build (`DEBUG` unset — `lynxRstestConfig` otherwise sets
+  // `DEBUG=rspeedy`) is the case that used to leak: `LynxEncodePlugin` skips
+  // its own cleanup for `NODE_ENV=development`, so the raw entry chunks stay
+  // on disk. Their directory is what this test checks.
+  it('keeps the raw entry chunks out of dist root, the way a page build does', async () => {
+    const debug = process.env['DEBUG']
+    const nodeEnv = process.env['NODE_ENV']
+    delete process.env['DEBUG']
+    process.env['NODE_ENV'] = 'development'
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-intermediate-dir')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+        id: 'utils-intermediate-dir',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }))
+    } finally {
+      if (debug === undefined) delete process.env['DEBUG']
+      else process.env['DEBUG'] = debug
+      if (nodeEnv === undefined) delete process.env['NODE_ENV']
+      else process.env['NODE_ENV'] = nodeEnv
+    }
+
+    const rootEntries = await fs.promises.readdir(distRoot)
+    expect(rootEntries.sort()).toStrictEqual([
+      '.lynx',
+      'utils-intermediate-dir.lynx.bundle',
+    ])
+    expect(
+      await fs.promises.readdir(
+        path.join(distRoot, '.lynx', 'utils-intermediate-dir'),
+      ),
+    ).toStrictEqual(
+      expect.arrayContaining(['utils.js', 'utils__main-thread.js']),
+    )
   })
 })
