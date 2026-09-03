@@ -327,7 +327,7 @@ export function applyEntry(
     // Runtime config belongs to the page host. Standalone lazy bundles and
     // rslib products (including external bundles) reuse the host-injected
     // `lynx.__runtime_configs__` instead of contributing their own values.
-    const isHostEnvironment = emitTemplate && !experimental_isLazyBundle
+    const isHostEnvironment = isApplication && !experimental_isLazyBundle
     if (isHostEnvironment && Object.keys(runtimeConfig).length > 0) {
       chain
         .plugin(PLUGIN_NAME_RUNTIME_CONFIG)
