@@ -4,6 +4,7 @@
 import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
+import { OPENUI_GAP_VALUES } from '../../shared/layout.js';
 import { GAP_CLASS, asArray } from '../utils.js';
 
 import '../../../styles/catalog/Card.css';
@@ -43,7 +44,7 @@ export const Card = defineComponent({
     variant: z.enum(['card', 'sunk', 'clear']).optional(),
     direction: z.enum(['row', 'column']).optional(),
     wrap: z.boolean().optional(),
-    gap: z.enum(['none', 'xs', 's', 'm', 'l', 'xl']).optional(),
+    gap: z.enum(OPENUI_GAP_VALUES).optional(),
     align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
     justify: z.enum(['start', 'center', 'end', 'between']).optional(),
   }),
@@ -66,7 +67,7 @@ export const Card = defineComponent({
     const layoutClassName = [
       direction === 'row' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
       props.wrap ? 'OpenUIStackWrap' : '',
-      GAP_CLASS[gap] ?? GAP_CLASS['m'],
+      GAP_CLASS[gap] ?? GAP_CLASS.m,
       getAlignClass(align),
       getJustifyClass(justify),
     ]

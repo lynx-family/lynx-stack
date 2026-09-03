@@ -7,6 +7,7 @@ import { Fragment } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
 import { defineComponent } from '../../core/library.jsx';
+import { OPENUI_GAP_VALUES } from '../../shared/layout.js';
 import {
   GAP_CLASS,
   asArray,
@@ -24,7 +25,7 @@ const listPropsSchema = z.object({
   items: listChildrenSchema.optional(),
   direction: z.enum(['vertical', 'horizontal']).optional(),
   align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
-  gap: z.enum(['none', 'xs', 's', 'm', 'l', 'xl']).optional(),
+  gap: z.enum(OPENUI_GAP_VALUES).optional(),
   divider: z.boolean().optional(),
 });
 
@@ -59,7 +60,7 @@ export const List = defineComponent({
     const className = [
       'OpenUIList',
       direction === 'horizontal' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
-      GAP_CLASS[gap] ?? GAP_CLASS['m'],
+      GAP_CLASS[gap] ?? GAP_CLASS.m,
       getAlignClass(props.align ?? 'stretch'),
     ]
       .filter(Boolean)

@@ -36,10 +36,10 @@ signatures include exact argument types and allowed enum values.
 
 ## Layout
 
-- `Stack(children: any[], direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xs" | "s" | "m" | "l" | "xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
-- `Row(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl", wrap?: boolean)`
-- `Column(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl")`
-- `List(children?: any[] | TemplateChildren, items?: any[] | TemplateChildren, direction?: "vertical" | "horizontal", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl", divider?: boolean)`
+- `Stack(children: any[], direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
+- `Row(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", wrap?: boolean)`
+- `Column(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl")`
+- `List(children?: any[] | TemplateChildren, items?: any[] | TemplateChildren, direction?: "vertical" | "horizontal", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", divider?: boolean)`
 - `Separator()`
 - `Divider(axis?: "horizontal" | "vertical")`
 - `Modal(trigger: any, content: any, title?: StringLike, closeOnAction?: boolean)`
@@ -52,7 +52,7 @@ currently renders a diagnostic hint rather than expanding content.
 
 ## Content
 
-- `Card(children: any[], variant?: "card" | "sunk" | "clear", direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xs" | "s" | "m" | "l" | "xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
+- `Card(children: any[], variant?: "card" | "sunk" | "clear", direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
 - `CardHeader(title: string, subtitle?: string)`
 - `Text(text: StringLike, variant?: "h1" | "h2" | "h3" | "h4" | "h5" | "caption" | "body")`
 - `TextContent(text: string | number | boolean, size?: "small" | "default" | "large" | "small-heavy" | "large-heavy")`
