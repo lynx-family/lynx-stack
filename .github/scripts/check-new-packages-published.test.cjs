@@ -4,6 +4,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
 const test = require('node:test');
 
 const { findUnpublishedPackages, publishedNames, remediation } = require(
@@ -73,4 +74,14 @@ test('remediation publishes a placeholder and sets up trust for each name', () =
     text,
     /npm@latest trust github "\$PKG" --repo=lynx-family\/lynx-stack --file=deploy-main\.yml/,
   );
+});
+
+test('remediation is valid shell', () => {
+  const text = remediation(['@lynx-js/a', '@lynx-js/a-canary']);
+  const snippet = text.split('\n').filter((line) => line.startsWith('  '))
+    .join('\n');
+  execFileSync('bash', ['-n'], {
+    input: snippet,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
 });
