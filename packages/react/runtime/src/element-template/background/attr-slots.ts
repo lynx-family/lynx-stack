@@ -3,8 +3,15 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
+import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import type { SerializableValue } from '../protocol/types.js';
-import { __etAttrPlanMap, adaptRefAttrSlot, adaptSpreadAttrSlot } from '../runtime/template/attr-slot-plan.js';
+import {
+  __etAttrPlanMap,
+  adaptRefAttrSlot,
+  adaptSpreadAttrSlot,
+  getMainThreadDynamicAttrSlotKinds,
+} from '../runtime/template/attr-slot-plan.js';
 import type { EtAttrAdapter, EtAttrAdapterContext, EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
 
 export interface PrepareAttributeSlotsOptions {
@@ -108,4 +115,18 @@ export function queueRefAttributeSlotUpdates(
   }
 
   queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, nextRawSlots);
+}
+
+export function getAttributeSlotUpdateOp(
+  templateType: string,
+  attrSlotIndex: number,
+): ElementTemplateUpdateOp {
+  const kind = getMainThreadDynamicAttrSlotKinds(templateType)?.get(attrSlotIndex);
+  if (kind === 'mt-event') {
+    return ElementTemplateUpdateOps.setMainThreadEvent;
+  }
+  if (kind === 'mt-ref') {
+    return ElementTemplateUpdateOps.setMainThreadRef;
+  }
+  return ElementTemplateUpdateOps.setAttribute;
 }

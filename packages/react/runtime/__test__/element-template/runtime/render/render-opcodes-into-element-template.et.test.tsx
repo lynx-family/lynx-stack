@@ -81,6 +81,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
     expect(result.rootRefs).toEqual([rootTextRef]);
     expect(result.pageAttributes).toBeNull();
+    expect(result.rootSubtreeHandles).toEqual([[]]);
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_builtin_raw_text',
       null,
@@ -102,6 +103,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(result).toEqual({
       pageAttributes: attributes,
       rootRefs: [],
+      rootSubtreeHandles: [],
     });
   });
 
@@ -151,6 +153,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(result).toEqual({
       pageAttributes: attributes,
       rootRefs: [firstRootRef, secondRootRef],
+      rootSubtreeHandles: [[], []],
     });
   });
 
@@ -212,6 +215,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     ]);
 
     expect(result.rootRefs).toEqual([listRef]);
+    expect(result.rootSubtreeHandles).toEqual([[]]);
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_item',
       null,
@@ -266,6 +270,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     ]);
 
     expect(result.rootRefs).toEqual([listRef]);
+    expect(result.rootSubtreeHandles).toEqual([[]]);
     expect(createTypedElementTemplate).toHaveBeenCalledWith(
       'list',
       {

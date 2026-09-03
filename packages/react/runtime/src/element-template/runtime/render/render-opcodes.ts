@@ -16,13 +16,14 @@ import {
   registerElementTemplateListState,
 } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
-import { __etAttrPlanMap } from '../template/attr-slot-plan.js';
+import { __etAttrPlanMap, hasMainThreadRefAttrSlot } from '../template/attr-slot-plan.js';
 import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
 import {
   createElementTemplateWithReservedHandle,
   createTypedElementTemplateWithReservedHandle,
   reserveElementTemplateId,
 } from '../template/handle.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
 import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
@@ -32,6 +33,7 @@ const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 export interface MainThreadCreateResult {
   pageAttributes: TypedElementAttributesCommand | null;
   rootRefs: ElementRef[];
+  rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][];
 }
 
 function appendChildToParent(
@@ -39,11 +41,14 @@ function appendChildToParent(
   parentActiveElementSlot: ElementRef[] | undefined,
   parentListItemUids: number[] | undefined,
   rootRefs: ElementRef[],
+  rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][],
   elementRef: ElementRef,
   uid: number,
+  subtreeHandles: MainThreadDynamicAttrSubtreeHandle[],
 ): void {
   if (parentTemplateKey === null) {
     rootRefs.push(elementRef);
+    rootSubtreeHandles.push(subtreeHandles);
     return;
   }
 
@@ -59,6 +64,7 @@ export function renderOpcodesIntoElementTemplate(
   opcodes: unknown[],
 ): MainThreadCreateResult {
   const rootRefs: ElementRef[] = [];
+  const rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][] = [];
   let pageAttributes: TypedElementAttributesCommand | null | undefined;
   let isInsideAuthoredPage = false;
   const typeStack: Array<string | null> = [null];
@@ -66,6 +72,7 @@ export function renderOpcodesIntoElementTemplate(
   const typedAttributesStack: Array<RuntimeTypedElementAttributes | undefined> = [undefined];
   const elementSlotsStack: Array<Array<Array<ElementRef>> | undefined> = [undefined];
   const listItemUidsStack: Array<number[] | undefined> = [undefined];
+  const materializationHandlesStack: Array<MainThreadDynamicAttrSubtreeHandle[] | undefined> = [undefined];
   const activeElementSlotStack: Array<ElementRef[] | undefined> = [undefined];
   const activeListItemUidsStack: Array<number[] | undefined> = [undefined];
   const listItemPlatformInfoStack: Array<ETListItemPlatformInfo | undefined> = [undefined];
@@ -81,12 +88,16 @@ export function renderOpcodesIntoElementTemplate(
         }
         const vnode = opcodes[i + 1] as { type: string; props?: Record<string, unknown> };
         const props = vnode.props;
+        const parentType = typeStack[stackTop];
         stackTop += 1;
         typeStack[stackTop] = vnode.type;
         attributeSlotsStack[stackTop] = undefined;
         typedAttributesStack[stackTop] = undefined;
         elementSlotsStack[stackTop] = undefined;
         listItemUidsStack[stackTop] = undefined;
+        materializationHandlesStack[stackTop] = stackTop === 1 || parentType === TYPED_LIST_HOST_TYPE
+          ? []
+          : materializationHandlesStack[stackTop - 1];
         activeElementSlotStack[stackTop] = undefined;
         activeListItemUidsStack[stackTop] = undefined;
         listItemPlatformInfoStack[stackTop] = props?.['__listItemPlatformInfo'] as ETListItemPlatformInfo | undefined;
@@ -104,6 +115,7 @@ export function renderOpcodesIntoElementTemplate(
         const typedAttributes = typedAttributesStack[stackTop];
         const elementSlots = elementSlotsStack[stackTop];
         const listItemUids = listItemUidsStack[stackTop];
+        const materializationHandles = materializationHandlesStack[stackTop]!;
         const listItemPlatformInfo = listItemPlatformInfoStack[stackTop];
         const deferredListItemMarker = deferredListItemMarkerStack[stackTop];
         stackTop -= 1;
@@ -142,8 +154,10 @@ export function renderOpcodesIntoElementTemplate(
             parentActiveElementSlot,
             parentListItemUids,
             rootRefs,
+            rootSubtreeHandles,
             elementRef,
             handleId,
+            [],
           );
 
           i += 1;
@@ -175,6 +189,7 @@ export function renderOpcodesIntoElementTemplate(
           }
         }
         const nativeTemplate = parseElementTemplateType(concreteType);
+        const hasMainThreadRef = hasMainThreadRefAttrSlot(concreteType);
         const elementRef = createElementTemplateWithReservedHandle(
           handleId,
           nativeTemplate.templateKey,
@@ -182,6 +197,12 @@ export function renderOpcodesIntoElementTemplate(
           preparedAttributeSlots,
           elementSlots ?? null,
         );
+        if (hasMainThreadRef) {
+          materializationHandles.push({
+            uid: handleId,
+            ref: elementRef,
+          });
+        }
         if (listItemPlatformInfo !== undefined) {
           registerElementTemplateListItem(handleId, elementRef, {
             // The native list identifies items by the same identity the template
@@ -196,8 +217,10 @@ export function renderOpcodesIntoElementTemplate(
           parentActiveElementSlot,
           parentListItemUids,
           rootRefs,
+          rootSubtreeHandles,
           elementRef,
           handleId,
+          materializationHandles,
         );
 
         i += 1;
@@ -272,6 +295,7 @@ export function renderOpcodesIntoElementTemplate(
         );
         if (parentTemplateKey === null) {
           rootRefs.push(textRef);
+          rootSubtreeHandles.push([]);
         } else {
           const activeElementSlot = activeElementSlotStack[stackTop];
           if (__DEV__ && !activeElementSlot) {
@@ -289,5 +313,6 @@ export function renderOpcodesIntoElementTemplate(
   return {
     pageAttributes: pageAttributes ?? null,
     rootRefs,
+    rootSubtreeHandles,
   };
 }

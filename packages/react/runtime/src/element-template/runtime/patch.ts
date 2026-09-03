@@ -2,9 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { hydrateWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
-import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
-
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListStateFromItems,
@@ -18,6 +15,7 @@ import {
   updateElementTemplateListItem,
 } from './list/list.js';
 import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
+import { insertElementTemplateSubtree } from './template/handle.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
@@ -42,9 +40,11 @@ import type {
 import {
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
-  updateMainThreadDynamicAttrSlot,
+  prepareMainThreadDynamicAttrSlotsForNative,
+  updateMainThreadEventAttrSlot,
+  updateMainThreadRefAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
-import type { MainThreadDynamicAttrHydrateHandoff } from './template/main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -81,7 +81,12 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
 
-        const nativeAttributeSlots = normalizeAttributeSlots(attributeSlots);
+        const preparedAttributeSlots = normalizeAttributeSlots(attributeSlots);
+        const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
+        const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(
+          templateType,
+          preparedAttributeSlots,
+        );
         const nativeRef = __CreateElementTemplate(
           templateKey,
           bundleUrl,
@@ -94,8 +99,8 @@ export function applyElementTemplateUpdateCommands(
           elementTemplateRegistry.set(handleId, nativeRef);
           initializeMainThreadDynamicAttrSlots(
             handleId,
-            elementTemplateTypeTag(templateKey, bundleUrl),
-            nativeAttributeSlots,
+            templateType,
+            preparedAttributeSlots,
           );
         }
         break;
@@ -120,15 +125,31 @@ export function applyElementTemplateUpdateCommands(
           }
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
-        const hydrateHandoff = updateMainThreadDynamicAttrSlot(
-          targetId,
-          attrSlotIndex,
-          value,
-          isHydration,
-        );
-        if (isHydration) {
-          hydrateMTEventCtxIfNeeded(hydrateHandoff);
+        break;
+      }
+
+      case ElementTemplateUpdateOps.setMainThreadEvent: {
+        const targetId = stream[i++] as number;
+        const attrSlotIndex = stream[i++] as number;
+        const value = stream[i++] as SerializableValue | null;
+        const nativeRef = resolveTargetHandle(targetId, 'target');
+        if (!nativeRef) {
+          continue;
         }
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
+        updateMainThreadEventAttrSlot(targetId, attrSlotIndex, value, isHydration);
+        break;
+      }
+
+      case ElementTemplateUpdateOps.setMainThreadRef: {
+        const targetId = stream[i++] as number;
+        const attrSlotIndex = stream[i++] as number;
+        const value = stream[i++] as SerializableValue | null;
+        const nativeRef = resolveTargetHandle(targetId, 'target');
+        if (!nativeRef) {
+          continue;
+        }
+        updateMainThreadRefAttrSlot(targetId, attrSlotIndex, value, nativeRef, isHydration);
         break;
       }
 
@@ -251,16 +272,30 @@ export function applyElementTemplateUpdateCommands(
         const elementSlotIndex = stream[i++] as number;
         const childId = stream[i++] as number;
         const referenceId = stream[i++] as number;
+        const attachedSubtreeHandleIds = stream[i++] as number[] | null;
         const nativeRef = resolveTargetHandle(targetId, 'target');
         const childRef = resolveTargetHandle(childId, 'child');
-        if (!nativeRef || !childRef) {
+        const attachedSubtreeHandles = attachedSubtreeHandleIds === null
+          ? null
+          : resolveSubtreeHandles(attachedSubtreeHandleIds, 'insert subtree');
+        if (
+          !nativeRef
+          || !childRef
+          || (attachedSubtreeHandleIds !== null && attachedSubtreeHandles === null)
+        ) {
           continue;
         }
         const referenceRef = referenceId === 0 ? null : resolveTargetHandle(referenceId, 'reference');
         if (referenceId !== 0 && !referenceRef) {
           continue;
         }
-        __InsertNodeToElementTemplate(nativeRef, elementSlotIndex, childRef, referenceRef);
+        insertElementTemplateSubtree(
+          nativeRef,
+          elementSlotIndex,
+          childRef,
+          referenceRef,
+          attachedSubtreeHandles,
+        );
         break;
       }
 
@@ -324,16 +359,6 @@ function releaseRemovedSubtreeHandles(
       releaseRemovedSubtreeHandles(pendingRemovedSubtreeHandleIds);
     }
   }
-}
-
-function hydrateMTEventCtxIfNeeded(handoff: MainThreadDynamicAttrHydrateHandoff | undefined): void {
-  if (!handoff) {
-    return;
-  }
-  hydrateWorkletCtx(
-    handoff.nextValue as Worklet,
-    handoff.previousNativeHeldValue as Worklet,
-  );
 }
 
 function resolveElementSlots(
@@ -424,6 +449,22 @@ function resolveTypedListItem(
     templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
     platformInfo: item.platformInfo,
   };
+}
+
+function resolveSubtreeHandles(
+  subtreeHandleIds: readonly number[],
+  role: string,
+): MainThreadDynamicAttrSubtreeHandle[] | null {
+  const subtreeHandles: MainThreadDynamicAttrSubtreeHandle[] = [];
+  for (let index = 0; index < subtreeHandleIds.length; index += 1) {
+    const uid = subtreeHandleIds[index]!;
+    const ref = resolveTargetHandle(uid, role);
+    if (!ref) {
+      return null;
+    }
+    subtreeHandles.push({ uid, ref });
+  }
+  return subtreeHandles;
 }
 
 function isTypedListElementSlotsEmpty(elementSlots: ElementTemplateHandleSlotsCommand | null | undefined): boolean {

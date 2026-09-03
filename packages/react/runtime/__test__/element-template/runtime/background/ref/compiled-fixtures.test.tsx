@@ -303,7 +303,7 @@ describe('Compiled ordinary ref background updates', () => {
     }));
   });
 
-  it('hydrates compiled direct MTRefs while dropping unsupported worklet refs', async () => {
+  it('hydrates and updates compiled direct MTRefs while dropping unsupported worklet refs', async () => {
     const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<UnsupportedFixtureProps>>(
       NAMESPACED_REF_FIXTURE,
     );
@@ -318,5 +318,22 @@ describe('Compiled ordinary ref background updates', () => {
 
     expect(host.attributeSlots).toEqual([{ type: 'main-thread-ref', value: mainThreadRef }, null]);
     expect(workletRef).not.toHaveBeenCalled();
+
+    flushAndClearUpdateEvents();
+    const nextMainThreadRef = { _wvid: 8 };
+    renderOnBackground(backgroundModule, {
+      mainThreadRef: nextMainThreadRef,
+      workletRef,
+    });
+
+    envManager.switchToMainThread();
+    expect(updateEvents.at(-1)?.ops).toEqual([
+      ElementTemplateUpdateOps.setMainThreadRef,
+      host.instanceId,
+      0,
+      { type: 'main-thread-ref', value: nextMainThreadRef },
+    ]);
+    envManager.switchToBackground();
+    expect(host.attributeSlots).toEqual([{ type: 'main-thread-ref', value: nextMainThreadRef }, null]);
   });
 });

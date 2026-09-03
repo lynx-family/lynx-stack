@@ -31,6 +31,12 @@ export type FormattedElementTemplateUpdateCommand =
     value: unknown;
   }
   | {
+    op: 'setMainThreadEvent' | 'setMainThreadRef';
+    targetId: number;
+    attrSlotIndex: number;
+    value: unknown;
+  }
+  | {
     op: 'insertTypedListItem';
     targetId: number;
     item: unknown;
@@ -53,6 +59,7 @@ export type FormattedElementTemplateUpdateCommand =
     elementSlotIndex: number;
     childId: number;
     referenceId: number;
+    attachedSubtreeHandleIds: number[] | null;
   }
   | {
     op: 'removeNode';
@@ -81,7 +88,7 @@ export function formatElementTemplateUpdateCommands(
     const op = stream[index++] as ElementTemplateUpdateOp;
 
     switch (op) {
-      case ElementTemplateUpdateOps.createTemplate:
+      case ElementTemplateUpdateOps.createTemplate: {
         result.push({
           op: 'createTemplate',
           handleId: stream[index++] as number,
@@ -91,10 +98,23 @@ export function formatElementTemplateUpdateCommands(
           elementSlots: stream[index++],
         });
         break;
+      }
 
       case ElementTemplateUpdateOps.setAttribute:
         result.push({
           op: 'setAttribute',
+          targetId: stream[index++] as number,
+          attrSlotIndex: stream[index++] as number,
+          value: stream[index++],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.setMainThreadEvent:
+      case ElementTemplateUpdateOps.setMainThreadRef:
+        result.push({
+          op: op === ElementTemplateUpdateOps.setMainThreadEvent
+            ? 'setMainThreadEvent'
+            : 'setMainThreadRef',
           targetId: stream[index++] as number,
           attrSlotIndex: stream[index++] as number,
           value: stream[index++],
@@ -145,6 +165,7 @@ export function formatElementTemplateUpdateCommands(
           elementSlotIndex: stream[index++] as number,
           childId: stream[index++] as number,
           referenceId: stream[index++] as number,
+          attachedSubtreeHandleIds: stream[index++] as number[] | null,
         });
         break;
 
