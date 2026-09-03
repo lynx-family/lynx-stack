@@ -115,7 +115,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup Rust
-        uses: ./.github/actions/rustup
+        uses: $/.github/actions/rustup
         with:
           key: ui-judge-image
           save-if: ${{ github.ref_name == 'main' }}
