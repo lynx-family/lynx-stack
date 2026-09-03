@@ -16,6 +16,7 @@ const REGISTRY = 'https://registry.npmjs.org/';
 const TRUSTED_REPO = 'lynx-family/lynx-stack';
 const TRUSTED_WORKFLOW = 'deploy-main.yml';
 const PLACEHOLDER_VERSION = '0.0.0-rc.0';
+const NPM_VERSION = '12';
 
 function readWorkspacePackages(cwd = process.cwd()) {
   const raw = execFileSync(
@@ -113,27 +114,30 @@ async function main() {
 
 // npm trusted publishing (OIDC) cannot create a package, so a maintainer has to
 // publish a placeholder by hand and then grant the workflow publish rights.
-// Every command takes the same npm OTP, which expires after about 30 seconds.
+// `npm trust` exists from npm 12, which needs Node 24; every command takes the
+// same npm OTP, which expires after about 30 seconds.
 function remediation(names) {
   return [
     'npm trusted publishing cannot create a package, so `canary-publish` and the',
     'release would fail on main. A maintainer has to publish a placeholder for',
     'each missing name and grant the workflow publish rights. Run this with a',
-    'fresh npm OTP (it expires after about 30 seconds). The loop stops at the',
-    'first failure; on `EOTP`, re-run from the command that failed:',
+    'fresh npm OTP (it expires after about 30 seconds) on Node 24. The loop',
+    'stops at the first failure; on `EOTP`, re-run from the command that failed:',
     '',
     '  REG=https://registry.npmjs.org',
     '  OTP=<otp>',
+    '  ROOT=$(mktemp -d)',
     `  for PKG in ${names.join(' ')}; do`,
     '    (',
-    '      mkdir -p "/tmp/npm-placeholder/$PKG" && cd "/tmp/npm-placeholder/$PKG" &&',
+    '      mkdir -p "$ROOT/$PKG" && cd "$ROOT/$PKG" &&',
     `        printf '{"name":"%s","version":"${PLACEHOLDER_VERSION}"}\\n' "$PKG" > package.json &&`,
     '        npm publish --access public --registry=$REG --otp=$OTP',
     '    ) || break',
     '    npm access set mfa=publish "$PKG" --registry=$REG --otp=$OTP || break',
-    `    npx -y npm@latest trust github "$PKG" --repo=${TRUSTED_REPO} --file=${TRUSTED_WORKFLOW} \\`,
+    `    npx -y npm@${NPM_VERSION} trust github "$PKG" --repo=${TRUSTED_REPO} --file=${TRUSTED_WORKFLOW} \\`,
     '      --allow-publish --allow-stage-publish --yes --registry=$REG --otp=$OTP || break',
     '  done',
+    '  rm -rf "$ROOT"',
     '',
     'Then re-run this check.',
     '',

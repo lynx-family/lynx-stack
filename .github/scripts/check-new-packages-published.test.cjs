@@ -68,11 +68,12 @@ test('ignores unchanged and private packages', async () => {
 test('remediation publishes a placeholder and sets up trust for each name', () => {
   const text = remediation(['@lynx-js/a', '@lynx-js/a-canary']);
   assert.match(text, /for PKG in @lynx-js\/a @lynx-js\/a-canary; do/);
+  assert.match(text, /ROOT=\$\(mktemp -d\)/);
   assert.match(text, /npm publish --access public/);
   assert.match(text, /npm access set mfa=publish .* \|\| break/);
   assert.match(
     text,
-    /npm@latest trust github "\$PKG" --repo=lynx-family\/lynx-stack --file=deploy-main\.yml/,
+    /npm@12 trust github "\$PKG" --repo=lynx-family\/lynx-stack --file=deploy-main\.yml/,
   );
 });
 
