@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { boostedQueueMicrotask } from '../../element-reactive/index.js';
 import type {
   AttributeReactiveClass,
   WebComponentClass,
@@ -34,7 +35,10 @@ interface DragState {
   chain: ScrollChain;
   document: Document;
   dragging: boolean;
+  pendingDeltaX: number;
+  pendingDeltaY: number;
   pointerId: number;
+  scrollUpdateQueued: boolean;
   startClientX: number;
   startClientY: number;
   previousUserSelect?: string;
@@ -210,7 +214,10 @@ class ScrollViewMouseDrag
       chain,
       document,
       dragging: false,
+      pendingDeltaX: 0,
+      pendingDeltaY: 0,
       pointerId: event.pointerId,
+      scrollUpdateQueued: false,
       startClientX: event.clientX,
       startClientY: event.clientY,
     };
@@ -254,13 +261,27 @@ class ScrollViewMouseDrag
     if (event.cancelable) {
       event.preventDefault();
     }
-    if (state.activeAxes?.x) {
-      applyScrollDelta(state.chain.x, -deltaX, 'x');
-    }
-    if (state.activeAxes?.y) {
-      applyScrollDelta(state.chain.y, -deltaY, 'y');
+    state.pendingDeltaX = -deltaX;
+    state.pendingDeltaY = -deltaY;
+    if (!state.scrollUpdateQueued) {
+      state.scrollUpdateQueued = true;
+      boostedQueueMicrotask(() => this.#flushScrollUpdate(state));
     }
   };
+
+  #flushScrollUpdate(state: DragState) {
+    if (!state.scrollUpdateQueued) {
+      return;
+    }
+
+    state.scrollUpdateQueued = false;
+    if (state.activeAxes?.x) {
+      applyScrollDelta(state.chain.x, state.pendingDeltaX, 'x');
+    }
+    if (state.activeAxes?.y) {
+      applyScrollDelta(state.chain.y, state.pendingDeltaY, 'y');
+    }
+  }
 
   #handlePointerUp = (event: PointerEvent) => {
     if (event.pointerId !== this.#dragState?.pointerId) {
@@ -305,6 +326,7 @@ class ScrollViewMouseDrag
     }
 
     const { document } = state;
+    this.#flushScrollUpdate(state);
     document.removeEventListener('pointermove', this.#handlePointerMove, true);
     document.removeEventListener('pointerup', this.#handlePointerUp, true);
     document.removeEventListener(

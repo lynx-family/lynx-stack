@@ -73,6 +73,71 @@ test.describe('scroll-view mouse drag', () => {
     expect(Math.abs((await scrollOffset(rtl)).left)).toBeGreaterThan(0);
   });
 
+  test('coalesces pointer moves and flushes the latest position on pointerup', async ({ page }) => {
+    const result = await page.locator('#vertical').evaluate(
+      async (element: HTMLElement) => {
+        const pointerId = 42;
+        let scrollCalls = 0;
+        const originalScrollTo = element.scrollTo;
+        Object.defineProperties(element, {
+          hasPointerCapture: { value: () => false },
+          releasePointerCapture: { value: () => undefined },
+          scrollTo: {
+            value: (...args: unknown[]) => {
+              scrollCalls++;
+              Reflect.apply(originalScrollTo, element, args);
+            },
+          },
+          setPointerCapture: { value: () => undefined },
+        });
+        const dispatchPointer = (
+          type: string,
+          clientY: number,
+          buttons: number,
+        ) => {
+          element.dispatchEvent(
+            new PointerEvent(type, {
+              bubbles: true,
+              button: 0,
+              buttons,
+              cancelable: true,
+              clientX: 10,
+              clientY,
+              composed: true,
+              isPrimary: true,
+              pointerId,
+              pointerType: 'mouse',
+            }),
+          );
+        };
+
+        dispatchPointer('pointerdown', 100, 1);
+        dispatchPointer('pointermove', 80, 1);
+        dispatchPointer('pointermove', 60, 1);
+        dispatchPointer('pointermove', 40, 1);
+        const callsBeforePointerUp = scrollCalls;
+
+        dispatchPointer('pointerup', 40, 0);
+        const callsAfterPointerUp = scrollCalls;
+        await Promise.resolve();
+
+        return {
+          callsAfterMicrotask: scrollCalls,
+          callsAfterPointerUp,
+          callsBeforePointerUp,
+          scrollTop: element.scrollTop,
+        };
+      },
+    );
+
+    expect(result).toEqual({
+      callsAfterMicrotask: 1,
+      callsAfterPointerUp: 1,
+      callsBeforePointerUp: 0,
+      scrollTop: 60,
+    });
+  });
+
   test('does not drag when scrolling is disabled', async ({ page }) => {
     const disabled = page.locator('#disabled');
     await drag(page, disabled, { x: 0, y: -80 });
