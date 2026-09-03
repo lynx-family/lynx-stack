@@ -202,6 +202,9 @@ async function postA2UIStream(req: Request) {
             durationMs: performance.now() - connectStartedAt,
           });
           const protocolParser = new A2UIProtocolMessageStreamParser({
+            hasLoadingComponent: catalog.components.some((component) =>
+              component.name === 'Loading'
+            ),
             isImageSourceAllowed,
             isOpenUrlAllowed,
           });

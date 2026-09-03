@@ -173,8 +173,9 @@ export function normalizePayloadToMessages(
 
 /**
  * Tag messages with the given messageId and report whether any of them
- * carries a non-empty `updateComponents`. Also dedupes `createSurface`
- * messages against the set of currently-active surfaces.
+ * carries non-empty components (in `updateComponents` or an inline v1.0
+ * `createSurface`). Also dedupes `createSurface` messages against the set of
+ * currently-active surfaces.
  */
 export function prepareMessagesForProcessing(
   rawMessages: ServerToClientMessage[],
@@ -199,7 +200,14 @@ export function prepareMessagesForProcessing(
     }
 
     if (
-      ((msg as { updateComponents?: { components?: unknown[] } })
+      ((msg as { createSurface?: { components?: unknown[] } }).createSurface
+        && Array.isArray(
+          (msg as { createSurface?: { components?: unknown[] } })
+            .createSurface?.components,
+        )
+        && (((msg as { createSurface?: { components: unknown[] } })
+          .createSurface?.components ?? []).length > 0))
+      || ((msg as { updateComponents?: { components?: unknown[] } })
         .updateComponents
         && Array.isArray(
           (msg as { updateComponents?: { components?: unknown[] } })

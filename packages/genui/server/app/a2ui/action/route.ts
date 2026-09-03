@@ -17,8 +17,9 @@ import { readJsonBodyWithLimit } from '../../common/request';
 import { pickA2UIChatOptions, validateAction } from '../_shared';
 
 interface A2UIActionBody {
+  version?: unknown;
   conversation?: unknown;
-  surfaceId?: string;
+  surfaceId?: unknown;
   action?: unknown;
   resourceId?: string;
   model?: string;
@@ -44,23 +45,15 @@ async function postA2UIAction(req: Request) {
   }
   const body = parsed.body;
 
-  const validatedAction = validateAction(body.action);
+  const validatedAction = validateAction(body.action, {
+    version: body.version,
+    surfaceId: body.surfaceId,
+  });
   if (!validatedAction.ok) {
     return jsonWithCors(
       req,
       { ok: false, error: validatedAction.error },
       { status: validatedAction.status },
-    );
-  }
-
-  if (!body.surfaceId) {
-    return jsonWithCors(
-      req,
-      {
-        ok: false,
-        error: 'surfaceId is required for action responses',
-      },
-      { status: 400 },
     );
   }
 
@@ -75,7 +68,7 @@ async function postA2UIAction(req: Request) {
 
   const service = getA2UIAgentService();
   const payload = {
-    surfaceId: body.surfaceId,
+    version: 'v1.0',
     action: validatedAction.action,
   };
   const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
@@ -103,13 +96,11 @@ async function postA2UIAction(req: Request) {
       validatedConversation.conversation,
       {
         requireCreateSurface: false,
-        existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
-        existingDataModelBySurface: body.surfaceId
-          ? {
-            [body.surfaceId]: validatedConversation.conversation?.dataModel
-              ?? {},
-          }
-          : {},
+        existingSurfaceIds: [validatedAction.action.surfaceId],
+        existingDataModelBySurface: {
+          [validatedAction.action.surfaceId]: validatedConversation
+            .conversation?.dataModel ?? {},
+        },
       },
       req.signal,
     );

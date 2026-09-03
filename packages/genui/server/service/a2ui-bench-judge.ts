@@ -103,6 +103,13 @@ const RESOURCE_COMPONENTS = new Set([
   'McpApp',
   'PieChart',
 ]);
+type A2UIUpdateComponentsMessage = Extract<
+  A2UIMessage,
+  { updateComponents: unknown }
+>;
+type A2UIComponent = A2UIUpdateComponentsMessage['updateComponents'][
+  'components'
+][number];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -169,13 +176,11 @@ function sanitizeMessagesForHeadless(
   messages: A2UIMessage[],
 ): { error?: string; messages: A2UIMessage[]; warnings: string[] } {
   const replacements = new Map<string, number>();
-  const sanitized = messages.map((message): A2UIMessage => {
-    if (!('updateComponents' in message) || !message.updateComponents) {
-      return message;
-    }
-
+  const sanitizeComponents = (
+    input: A2UIComponent[],
+  ): { changed: boolean; components: A2UIComponent[] } => {
     let changed = false;
-    const components = message.updateComponents.components.map((component) => {
+    const components = input.map((component) => {
       if (RESOURCE_COMPONENTS.has(component.component)) {
         changed = true;
         replacements.set(
@@ -201,6 +206,36 @@ function sanitizeMessagesForHeadless(
       }
       return component;
     });
+    return { changed, components };
+  };
+
+  const sanitized = messages.map((message): A2UIMessage => {
+    if (
+      'createSurface' in message
+      && message.createSurface
+      && message.createSurface.components
+    ) {
+      const { changed, components } = sanitizeComponents(
+        message.createSurface.components,
+      );
+      return changed
+        ? {
+          ...message,
+          createSurface: {
+            ...message.createSurface,
+            components,
+          },
+        }
+        : message;
+    }
+
+    if (!('updateComponents' in message) || !message.updateComponents) {
+      return message;
+    }
+
+    const { changed, components } = sanitizeComponents(
+      message.updateComponents.components,
+    );
 
     return changed
       ? {

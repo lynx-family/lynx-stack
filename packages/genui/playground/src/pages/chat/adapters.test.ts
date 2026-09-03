@@ -535,6 +535,34 @@ describe('chat protocol adapters', () => {
     })).toBeNull();
   });
 
+  test('posts A2UI actions in the v1.0 action envelope', () => {
+    const action = {
+      name: 'refresh',
+      surfaceId: 'main',
+      sourceComponentId: 'refresh-button',
+      timestamp: '2026-08-19T00:00:00.000Z',
+      context: {},
+    };
+    const request = A2UI_CHAT_ADAPTER.action.request({
+      action: { action, surfaceId: 'main' },
+      conversation: { history: [], dataModel: {} },
+      settings: createDefaultProviderSettings(),
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: 'http://localhost:3000/',
+      },
+    });
+
+    expect(request.body).toEqual({
+      version: 'v1.0',
+      action,
+      conversation: { history: [], dataModel: {} },
+    });
+  });
+
   test('parses OpenUI action bridge messages and preserves form context', () => {
     const event = {
       type: 'submit',

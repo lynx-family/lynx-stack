@@ -1,7 +1,9 @@
 # a2ui (packages/genui/a2ui)
 
-This package (`@lynx-js/genui/a2ui`) is a **headless** ReactLynx
-renderer for the A2UI v0.9 protocol.
+This package (`@lynx-js/genui/a2ui`) is a **headless** ReactLynx renderer for
+the A2UI v1.0 core rendering protocol. It also reads legacy v0.9 rendering
+messages. Keep new emitted messages on v1.0; do not expand the compatibility
+path into a second state machine.
 
 ## How It Works (High Level)
 
@@ -17,8 +19,8 @@ The package is split into three independently composable layers:
   `defineCatalog` API consumers use to compose their per-instance
   catalog (no global registry).
 
-In short: the developer's IO module pushes raw v0.9 messages into a
-`MessageStore`. `<A2UI>` subscribes, owns a `MessageProcessor` that
+In short: the developer's IO module pushes raw v1.0 or legacy v0.9 messages into
+a `MessageStore`. `<A2UI>` subscribes, owns a `MessageProcessor` that
 turns the stream into surface state, and renders via the catalog the
 consumer provided.
 
@@ -38,7 +40,9 @@ Core pieces:
     `deleteSurface` into surface state.
   - Emits typed update events (`beginRendering`, `surfaceUpdate`,
     `deleteSurface`) consumed by the React layer.
-  - `dispatch({ userAction })` fans out to `onEvent` listeners.
+  - `dispatch({ action })` fans out to `onEvent` listeners. The React bridge may
+    still read the old internal `{ userAction }` shape for compatibility, but
+    new renderer-to-agent events use the v1.0 `{ version, action }` envelope.
 - `Resource` (`src/store/Resource.ts`)
   - `pending` / `success` / `error` state machine. Snapshot reference
     changes on every transition so `useSyncExternalStore` doesn't bail
@@ -100,13 +104,13 @@ model changes.
 
 ## Action Dispatch
 
-User interactions are reported as `userAction` events:
+User interactions are reported as v1.0 `action` events:
 
 - Catalog components call `sendAction(action)` (passed in through the
   internal renderer plumbing).
 - `useAction` (`src/react/useAction.ts`) resolves dynamic values
   (bindings / function calls) against `Surface.store`, builds a
-  `UserActionPayload`, and calls `processor.dispatch({ userAction })`.
+  action payload, and calls `processor.dispatch({ action })`.
 - `<A2UI>` listens to `processor.onEvent` and forwards to the
   developer's `onAction` prop. Responses (if any) come back as new
   protocol messages the developer pushes into the same `MessageStore`.

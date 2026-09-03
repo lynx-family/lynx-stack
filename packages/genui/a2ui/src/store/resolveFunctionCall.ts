@@ -1,8 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
-
 import { functionRegistry } from './FunctionRegistry.js';
 import type {
   FunctionCallContext,
@@ -13,6 +11,7 @@ import type { MessageProcessor } from './MessageProcessor.js';
 import { resolveDynamicValue } from './resolveDynamic.js';
 import { createResolvedSignal } from './signalResolution.js';
 import { setInStore } from './SignalStore.js';
+import type { A2UIFunctionCall } from './types.js';
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 
 /**
@@ -113,7 +112,7 @@ export type ExecuteFunctionCall = typeof executeFunctionCall;
  */
 export function executeFunctionCall(
   processor: MessageProcessor,
-  fn: v0_9.FunctionCall,
+  fn: A2UIFunctionCall,
   surfaceId: string,
   dataContextPath?: string,
   options: ResolveFunctionOptions = {},

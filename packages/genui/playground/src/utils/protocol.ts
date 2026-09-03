@@ -15,7 +15,7 @@ export interface Protocol {
 }
 
 export const PROTOCOLS: Record<ProtocolName, Protocol> = {
-  a2ui: { name: 'a2ui', version: '0.9' },
+  a2ui: { name: 'a2ui', version: '1.0' },
   openui: { name: 'openui', version: '0.5' },
   'mcp-apps': { name: 'mcp-apps', version: '2026-01-26' },
   'lynx-xml': { name: 'lynx-xml', version: '0.1' },

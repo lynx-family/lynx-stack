@@ -30,6 +30,16 @@ const ComponentBase = z
     component: z.string().min(1),
   })
   .passthrough();
+const ComponentsList = z.array(ComponentBase).min(1);
+const ExtensionKey = z.string().regex(
+  /^[\p{XID_Start}_]\p{XID_Continue}*$/u,
+  'extension keys must be Unicode identifiers',
+);
+export const A2UIExtensionsMetadataSchema = z
+  .object({
+    extensions: z.record(ExtensionKey, z.unknown()).optional(),
+  })
+  .strict();
 type A2UIComponent = z.infer<typeof ComponentBase> & {
   action?: unknown;
   child?: unknown;
@@ -40,56 +50,70 @@ type A2UIComponent = z.infer<typeof ComponentBase> & {
 };
 
 const CreateSurfaceMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.literal('v1.0'),
   createSurface: z
     .object({
       surfaceId: z.string().min(1),
       catalogId: z.string().min(1),
-      theme: z.record(z.string(), z.any()).optional(),
       sendDataModel: z.boolean().optional(),
+      components: ComponentsList.optional(),
+      dataModel: z.record(z.string(), z.unknown()).optional(),
+      metadata: A2UIExtensionsMetadataSchema.optional(),
     })
-    .passthrough(),
+    .strict(),
 }).strict();
 
 const UpdateComponentsMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.literal('v1.0'),
   updateComponents: z
     .object({
       surfaceId: z.string().min(1),
-      components: z.array(ComponentBase).min(1),
+      components: ComponentsList,
     })
-    .passthrough(),
+    .strict(),
 }).strict();
 
 const UpdateDataModelMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.literal('v1.0'),
   updateDataModel: z
     .object({
       surfaceId: z.string().min(1),
       path: z.string().optional(),
-      value: z.any().optional(),
+      value: z.unknown(),
     })
-    .passthrough(),
+    .strict()
+    .superRefine((update, context) => {
+      if (
+        !Object.prototype.hasOwnProperty.call(update, 'value')
+        || update.value === undefined
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message: 'value is required and must be defined',
+          path: ['value'],
+        });
+      }
+    }),
 }).strict();
 
 const DeleteSurfaceMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.literal('v1.0'),
   deleteSurface: z
     .object({
       surfaceId: z.string().min(1),
     })
-    .passthrough(),
+    .strict(),
 }).strict();
 
-const A2UIMessage = z.union([
+export const A2UIMessageSchema = z.union([
   CreateSurfaceMessage,
   UpdateComponentsMessage,
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
 ]);
 
-export const A2UIMessageArray = z.array(A2UIMessage).min(1);
-export type A2UIMessage = z.infer<typeof A2UIMessage>;
+export const A2UIMessageArray = z.array(A2UIMessageSchema).min(1);
+export type A2UIMessage = z.infer<typeof A2UIMessageSchema>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -312,22 +336,15 @@ export function validateA2UIOutput(
     && 'createSurface' in firstMessage
     && firstMessage.createSurface;
   const requireCreateSurface = options.requireCreateSurface ?? true;
-  if (firstIsCreate) {
-    const catalogId = firstMessage.createSurface.catalogId;
-    if (catalogId !== catalog.id) {
-      errors.push(
-        `createSurface.catalogId must equal "${catalog.id}"; received "${catalogId}".`,
-      );
-    }
-  } else if (requireCreateSurface) {
+  if (!firstIsCreate && requireCreateSurface) {
     errors.push('The first message MUST be a createSurface.');
   }
 
-  const surfaces = new Set<string>(options.existingSurfaceIds ?? []);
+  const activeSurfaces = new Set<string>(options.existingSurfaceIds ?? []);
+  const everSeenSurfaces = new Set(activeSurfaces);
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
   const dataModelBySurface = new Map<string, unknown>();
   const allPaths: { surfaceId: string; path: string }[] = [];
-  const providedPaths: { surfaceId: string; path: string }[] = [];
   const templatePaths: { surfaceId: string; path: string }[] = [];
 
   for (
@@ -336,109 +353,164 @@ export function validateA2UIOutput(
     )
   ) {
     dataModelBySurface.set(surfaceId, dataModel);
-    for (const path of flattenProvidedPaths('/', dataModel)) {
-      providedPaths.push({ surfaceId, path });
-    }
   }
 
-  for (const msg of messages) {
-    if ('createSurface' in msg && msg.createSurface) {
-      surfaces.add(msg.createSurface.surfaceId);
-    } else if ('updateComponents' in msg && msg.updateComponents) {
-      const sId = msg.updateComponents.surfaceId;
-      if (!surfaces.has(sId)) {
-        errors.push(
-          `updateComponents references surfaceId "${sId}" before createSurface.`,
-        );
-      }
-      const bucket = componentsBySurface.get(sId)
-        ?? new Map<string, A2UIComponent>();
-      const idsInMessage = new Set<string>();
-      for (const rawComponent of msg.updateComponents.components) {
-        const comp = rawComponent as A2UIComponent;
-        for (const fn of collectFunctionCalls(comp, `component.${comp.id}`)) {
-          if (!knownFunctions.has(fn.name)) {
-            const allowed = knownFunctions.size > 0
-              ? [...knownFunctions].join(', ')
-              : '<none>';
-            errors.push(
-              `Unknown function "${fn.name}" at ${fn.path}. Allowed functions: ${allowed}.`,
-            );
-          } else if (
-            fn.name === 'openUrl'
-            && options.isOpenUrlAllowed
-            && (
-              typeof fn.args.url !== 'string'
-              || !options.isOpenUrlAllowed(fn.args.url)
-            )
-          ) {
-            errors.push(
-              `Function "openUrl" at ${fn.path} has untrusted url ${
-                JSON.stringify(fn.args.url)
-              }. Use a URL supplied by the request or returned by web_search or image_search.`,
-            );
-          }
-        }
-        if (knownComponents.has(comp.component)) {
-          validateComponentAgainstCatalog(
-            comp,
-            componentSpecs.get(comp.component)!,
-            errors,
-            warnings,
-          );
-          validateRendererSemantics(
-            comp,
-            errors,
-            options.isImageSourceAllowed,
-          );
-        } else {
+  const validateComponentsForSurface = (
+    surfaceId: string,
+    rawComponents: A2UIComponent[],
+    messageKind: 'createSurface' | 'updateComponents',
+  ): void => {
+    const bucket = componentsBySurface.get(surfaceId)
+      ?? new Map<string, A2UIComponent>();
+    const idsInMessage = new Set<string>();
+    for (const comp of rawComponents) {
+      for (const fn of collectFunctionCalls(comp, `component.${comp.id}`)) {
+        if (fn.hasLegacyReturnType) {
           errors.push(
-            `Unknown component "${comp.component}" (id=${comp.id}). Allowed: ${
-              [...knownComponents].join(', ')
+            `Function call at ${fn.path} must not include legacy "returnType" in v1.0.`,
+          );
+        }
+        if (fn.invalidArgs) {
+          errors.push(
+            `Function call at ${fn.path} must use an object for "args" when it is present.`,
+          );
+        }
+        if (
+          fn.catalogId !== undefined
+          && fn.catalogId !== catalog.id
+        ) {
+          errors.push(
+            `Function call at ${fn.path} references catalogId ${
+              JSON.stringify(fn.catalogId)
+            }, but this server only supports the active catalog ${
+              JSON.stringify(catalog.id)
             }.`,
           );
         }
-        if (idsInMessage.has(comp.id)) {
+        if (!knownFunctions.has(fn.name)) {
+          const allowed = knownFunctions.size > 0
+            ? [...knownFunctions].join(', ')
+            : '<none>';
           errors.push(
-            `Duplicate component id "${comp.id}" in one updateComponents message for surface "${sId}".`,
+            `Unknown function "${fn.name}" at ${fn.path}. Allowed functions: ${allowed}.`,
+          );
+        } else if (
+          fn.name === 'openUrl'
+          && options.isOpenUrlAllowed
+          && (
+            typeof fn.args.url !== 'string'
+            || !options.isOpenUrlAllowed(fn.args.url)
+          )
+        ) {
+          errors.push(
+            `Function "openUrl" at ${fn.path} has untrusted url ${
+              JSON.stringify(fn.args.url)
+            }. Use a URL supplied by the request or returned by web_search or image_search.`,
           );
         }
-        idsInMessage.add(comp.id);
-        bucket.set(comp.id, comp);
-        const componentPaths: string[] = [];
-        collectPaths(comp, componentPaths);
-        for (const path of componentPaths) {
-          if (isCurrentItemPath(path)) {
-            errors.push(
-              `Path "${path}" in component "${comp.id}" is not supported; use object array items and bind a relative field path like "label" inside template children.`,
-            );
-            continue;
-          }
-          if (hasWildcardSegment(path)) {
-            errors.push(
-              `Path "${path}" in component "${comp.id}" uses "*", but A2UI collection item bindings must use relative paths like "item" inside template children.`,
-            );
-            continue;
-          }
-          allPaths.push({ surfaceId: sId, path });
-        }
-        for (const path of collectTemplatePaths(comp)) {
-          if (!path.startsWith('/')) {
-            errors.push(
-              `Template collection path "${path}" in component "${comp.id}" on surface "${sId}" must be absolute and start with "/".`,
-            );
-            continue;
-          }
-          templatePaths.push({ surfaceId: sId, path });
-        }
       }
-      componentsBySurface.set(sId, bucket);
+      if (knownComponents.has(comp.component)) {
+        validateComponentAgainstCatalog(
+          comp,
+          componentSpecs.get(comp.component)!,
+          errors,
+          warnings,
+        );
+        validateRendererSemantics(
+          comp,
+          errors,
+          options.isImageSourceAllowed,
+        );
+      } else {
+        errors.push(
+          `Unknown component "${comp.component}" (id=${comp.id}). Allowed: ${
+            [...knownComponents].join(', ')
+          }.`,
+        );
+      }
+      if (idsInMessage.has(comp.id)) {
+        errors.push(
+          `Duplicate component id "${comp.id}" in one ${messageKind} components list for surface "${surfaceId}".`,
+        );
+      }
+      idsInMessage.add(comp.id);
+      bucket.set(comp.id, comp);
+      const componentPaths: string[] = [];
+      collectPaths(comp, componentPaths);
+      for (const path of componentPaths) {
+        if (isCurrentItemPath(path)) {
+          errors.push(
+            `Path "${path}" in component "${comp.id}" is not supported; use object array items and bind a relative field path like "label" inside template children.`,
+          );
+          continue;
+        }
+        if (hasWildcardSegment(path)) {
+          errors.push(
+            `Path "${path}" in component "${comp.id}" uses "*", but A2UI collection item bindings must use relative paths like "item" inside template children.`,
+          );
+          continue;
+        }
+        allPaths.push({ surfaceId, path });
+      }
+      for (const path of collectTemplatePaths(comp)) {
+        if (!path.startsWith('/')) {
+          errors.push(
+            `Template collection path "${path}" in component "${comp.id}" on surface "${surfaceId}" must be absolute and start with "/".`,
+          );
+          continue;
+        }
+        templatePaths.push({ surfaceId, path });
+      }
+    }
+    componentsBySurface.set(surfaceId, bucket);
+  };
+
+  for (const msg of messages) {
+    if ('createSurface' in msg && msg.createSurface) {
+      const createSurface = msg.createSurface;
+      const surfaceId = createSurface.surfaceId;
+      if (createSurface.catalogId !== catalog.id) {
+        errors.push(
+          `createSurface for surface "${surfaceId}" requested catalogId "${createSurface.catalogId}", but this server only supports the active catalog "${catalog.id}".`,
+        );
+      }
+      if (everSeenSurfaces.has(surfaceId)) {
+        errors.push(
+          `createSurface cannot reuse surfaceId "${surfaceId}" after it has been created.`,
+        );
+      }
+      everSeenSurfaces.add(surfaceId);
+      activeSurfaces.add(surfaceId);
+      if (createSurface.dataModel !== undefined) {
+        dataModelBySurface.set(surfaceId, createSurface.dataModel);
+      }
+      if (createSurface.components !== undefined) {
+        validateComponentsForSurface(
+          surfaceId,
+          createSurface.components as A2UIComponent[],
+          'createSurface',
+        );
+      }
+    } else if ('updateComponents' in msg && msg.updateComponents) {
+      const sId = msg.updateComponents.surfaceId;
+      if (!activeSurfaces.has(sId)) {
+        errors.push(
+          `updateComponents references inactive surfaceId "${sId}".`,
+        );
+        continue;
+      }
+      validateComponentsForSurface(
+        sId,
+        msg.updateComponents.components as A2UIComponent[],
+        'updateComponents',
+      );
     } else if ('updateDataModel' in msg && msg.updateDataModel) {
       const sId = msg.updateDataModel.surfaceId;
-      if (!surfaces.has(sId)) {
+      if (!activeSurfaces.has(sId)) {
         errors.push(
-          `updateDataModel references surfaceId "${sId}" before createSurface.`,
+          `updateDataModel references inactive surfaceId "${sId}".`,
         );
+        continue;
       }
       const updateDataModel = msg.updateDataModel as
         & typeof msg.updateDataModel
@@ -460,16 +532,19 @@ export function validateA2UIOutput(
           updateDataModel.value,
         ),
       );
-      for (
-        const p of flattenProvidedPaths(
-          basePath,
-          updateDataModel.value,
-        )
-      ) {
-        providedPaths.push({ surfaceId: sId, path: p });
-      }
     } else if ('deleteSurface' in msg && msg.deleteSurface) {
-      surfaces.delete(msg.deleteSurface.surfaceId);
+      const surfaceId = msg.deleteSurface.surfaceId;
+      if (!activeSurfaces.has(surfaceId)) {
+        errors.push(
+          `deleteSurface references inactive surfaceId "${surfaceId}".`,
+        );
+        continue;
+      }
+      activeSurfaces.delete(surfaceId);
+      componentsBySurface.delete(surfaceId);
+      dataModelBySurface.delete(surfaceId);
+      removeSurfaceEntries(allPaths, surfaceId);
+      removeSurfaceEntries(templatePaths, surfaceId);
     }
   }
 
@@ -494,11 +569,11 @@ export function validateA2UIOutput(
 
   // path references -> data model coverage -------------------------------
   const providedBySurface = new Map<string, Set<string>>();
-  for (const provided of providedPaths) {
-    const bucket = providedBySurface.get(provided.surfaceId)
-      ?? new Set<string>();
-    bucket.add(provided.path);
-    providedBySurface.set(provided.surfaceId, bucket);
+  for (const [surfaceId, dataModel] of dataModelBySurface) {
+    providedBySurface.set(
+      surfaceId,
+      new Set(flattenProvidedPaths('/', dataModel)),
+    );
   }
   for (const referenced of allPaths) {
     const providedSet = providedBySurface.get(referenced.surfaceId)
@@ -511,7 +586,7 @@ export function validateA2UIOutput(
     );
     if (!hasMatch) {
       errors.push(
-        `Path "${referenced.path}" is referenced by a component in surface "${referenced.surfaceId}" but not populated by any updateDataModel message for that surface.`,
+        `Path "${referenced.path}" is referenced by a component in surface "${referenced.surfaceId}" but not populated by createSurface.dataModel or updateDataModel for that surface.`,
       );
     }
   }
@@ -594,6 +669,15 @@ function joinPath(...parts: string[]): string {
   return `/${segments.join('/')}`;
 }
 
+function removeSurfaceEntries<T extends { surfaceId: string }>(
+  entries: T[],
+  surfaceId: string,
+): void {
+  for (let index = entries.length - 1; index >= 0; index--) {
+    if (entries[index]?.surfaceId === surfaceId) entries.splice(index, 1);
+  }
+}
+
 function collectPaths(node: unknown, acc: string[]): void {
   if (!isRecord(node) && !Array.isArray(node)) return;
   if (Array.isArray(node)) {
@@ -611,7 +695,14 @@ function collectPaths(node: unknown, acc: string[]): void {
 function collectFunctionCalls(
   node: unknown,
   path = '<root>',
-): { name: string; path: string; args: Record<string, unknown> }[] {
+): {
+  name: string;
+  path: string;
+  args: Record<string, unknown>;
+  catalogId?: unknown;
+  hasLegacyReturnType: boolean;
+  invalidArgs: boolean;
+}[] {
   if (!isRecord(node) && !Array.isArray(node)) return [];
   if (Array.isArray(node)) {
     return node.flatMap((item, index) =>
@@ -624,9 +715,24 @@ function collectFunctionCalls(
     name: string;
     path: string;
     args: Record<string, unknown>;
+    catalogId?: unknown;
+    hasLegacyReturnType: boolean;
+    invalidArgs: boolean;
   }[] = [];
-  if (typeof record.call === 'string' && isRecord(record.args)) {
-    calls.push({ name: record.call, path, args: record.args });
+  if (typeof record.call === 'string') {
+    calls.push({
+      name: record.call,
+      path,
+      args: isRecord(record.args) ? record.args : {},
+      ...(Object.prototype.hasOwnProperty.call(record, 'catalogId')
+        ? { catalogId: record.catalogId }
+        : {}),
+      hasLegacyReturnType: Object.prototype.hasOwnProperty.call(
+        record,
+        'returnType',
+      ),
+      invalidArgs: record.args !== undefined && !isRecord(record.args),
+    });
   }
 
   for (const [key, value] of Object.entries(record)) {
@@ -1032,7 +1138,6 @@ function setDataModelValue(
   if (segments.length === 0) return value;
 
   const setAt = (container: unknown, index: number): unknown => {
-    if (index === segments.length) return value;
     const segment = segments[index]!;
     let nextContainer: Record<string, unknown> | unknown[];
     if (Array.isArray(container)) {
@@ -1043,6 +1148,20 @@ function setDataModelValue(
     } else {
       nextContainer = {};
     }
+
+    if (index === segments.length - 1) {
+      if (value === null) {
+        if (Array.isArray(nextContainer) && /^\d+$/u.test(segment)) {
+          nextContainer.splice(Number(segment), 1);
+        } else {
+          delete (nextContainer as Record<string, unknown>)[segment];
+        }
+      } else {
+        (nextContainer as Record<string, unknown>)[segment] = value;
+      }
+      return nextContainer;
+    }
+
     const child = (nextContainer as Record<string, unknown>)[segment];
     (nextContainer as Record<string, unknown>)[segment] = setAt(
       child,

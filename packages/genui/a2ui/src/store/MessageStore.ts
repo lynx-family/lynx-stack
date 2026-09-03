@@ -5,7 +5,7 @@ import type { ServerToClientMessage } from './types.js';
 
 /**
  * A pure append-only buffer of raw protocol messages produced by the
- * developer's IO module. The store knows nothing about the v0.9 protocol —
+ * developer's IO module. The store knows nothing about A2UI versions or semantics —
  * it does not parse, process, or interpret messages. It only:
  *
  *  1. Stores them in arrival order.

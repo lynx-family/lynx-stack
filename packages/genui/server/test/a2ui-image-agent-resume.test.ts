@@ -32,15 +32,14 @@ const config = {
 
 const initialText = JSON.stringify([
   {
-    version: 'v0.9',
+    version: 'v1.0',
     createSurface: {
       surfaceId: 'main',
       catalogId: catalog.id,
-      theme: { mode: 'light' },
     },
   },
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [{ id: 'root', component: 'Loading', variant: 'block' }],
@@ -50,7 +49,7 @@ const initialText = JSON.stringify([
 
 const patchText = JSON.stringify([
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [{

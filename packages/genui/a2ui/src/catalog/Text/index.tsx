@@ -1,7 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  GenericComponentProps,
+  V1FunctionCall,
+} from '../../store/types.js';
 import '../../../styles/catalog/Text.css';
 
 /**
@@ -11,18 +14,7 @@ import '../../../styles/catalog/Text.css';
  */
 export interface TextProps extends GenericComponentProps {
   /** Literal text, path binding, or function call. */
-  text: string | { path: string } | {
-    call: string;
-    args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
-  };
+  text: string | { path: string } | V1FunctionCall;
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body' | 'markdown';
   emphasis?: 'medium' | 'strong';
 }

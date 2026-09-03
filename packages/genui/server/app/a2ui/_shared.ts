@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { z } from 'zod';
+
 import type { A2UICatalog } from '../../agent/a2ui-catalog';
+import { A2UIExtensionsMetadataSchema } from '../../agent/a2ui-validator';
 import type { A2UIChatOptions } from '../../service/a2ui-agent';
 import type { OpenAIReasoningEffort } from '../../service/common/types';
 import { pickProviderOptions } from '../common/provider-options';
@@ -23,13 +26,32 @@ export interface A2UIChatBody {
 
 export interface A2UIActionRequest {
   name: string;
-  context?: Record<string, unknown>;
+  surfaceId: string;
+  sourceComponentId: string;
+  timestamp: string;
+  context: Record<string, unknown>;
+  userMessage?: string;
+  metadata?: {
+    extensions?: Record<string, unknown>;
+  };
 }
+
+const V1ActionSchema = z
+  .object({
+    name: z.string().min(1),
+    surfaceId: z.string().min(1),
+    sourceComponentId: z.string().min(1),
+    timestamp: z.iso.datetime({ offset: true }),
+    context: z.record(z.string(), z.unknown()),
+    userMessage: z.string().optional(),
+    metadata: A2UIExtensionsMetadataSchema.optional(),
+  })
+  .strict();
 
 export interface ValidatedAction {
   ok: true;
   action: A2UIActionRequest;
-  kind: 'event' | 'functionCall';
+  kind: 'v1.0' | 'legacy';
   name: string;
 }
 
@@ -45,10 +67,23 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function validateAction(value: unknown):
+export function validateAction(
+  value: unknown,
+  envelope: {
+    version?: unknown;
+    surfaceId?: unknown;
+  } = {},
+):
   | ValidatedAction
   | { ok: false; status: number; error: string }
 {
+  if (envelope.version !== undefined && envelope.version !== 'v1.0') {
+    return {
+      ok: false,
+      status: 400,
+      error: 'version must be "v1.0"',
+    };
+  }
   if (!isRecord(value)) {
     return {
       ok: false,
@@ -57,86 +92,63 @@ export function validateAction(value: unknown):
     };
   }
 
-  if (typeof value.name === 'string' && value.name.length > 0) {
-    const action: A2UIActionRequest = { name: value.name };
-    if ('context' in value) {
-      if (!isRecord(value.context)) {
-        return {
-          ok: false,
-          status: 400,
-          error: 'action.context must be an object',
-        };
-      }
-      action.context = value.context;
-    }
-    return {
-      ok: true,
-      action,
-      kind: 'event',
-      name: value.name,
-    };
-  }
-
-  const hasEvent = 'event' in value;
-  const hasFunctionCall = 'functionCall' in value;
-
-  if (hasEvent && hasFunctionCall) {
+  if (typeof value.name !== 'string' || value.name.length === 0) {
     return {
       ok: false,
       status: 400,
-      error: 'exactly one of action.event or action.functionCall is required',
+      error: 'action.name is required',
     };
   }
 
-  if (hasEvent && isRecord(value.event)) {
-    const name = value.event.name;
-    if (typeof name === 'string' && name.length > 0) {
-      const action: A2UIActionRequest = { name };
-      if ('context' in value.event) {
-        if (!isRecord(value.event.context)) {
-          return {
-            ok: false,
-            status: 400,
-            error: 'action.event.context must be an object',
-          };
-        }
-        action.context = value.event.context;
-      }
+  if (envelope.version === 'v1.0') {
+    const parsed = V1ActionSchema.safeParse(value);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      const path = issue !== undefined && issue.path.length > 0
+        ? `action.${issue.path.join('.')}`
+        : 'action';
       return {
-        ok: true,
-        action,
-        kind: 'event',
-        name,
+        ok: false,
+        status: 400,
+        error: `${path}: ${issue?.message ?? 'invalid v1.0 action'}`,
       };
     }
+    return {
+      ok: true,
+      action: parsed.data,
+      kind: 'v1.0',
+      name: parsed.data.name,
+    };
   }
 
-  if (hasFunctionCall && isRecord(value.functionCall)) {
-    const call = value.functionCall.call;
-    if (typeof call === 'string' && call.length > 0) {
-      const action: A2UIActionRequest = { name: call };
-      if ('args' in value.functionCall) {
-        if (!isRecord(value.functionCall.args)) {
-          return {
-            ok: false,
-            status: 400,
-            error: 'action.functionCall.args must be an object',
-          };
-        }
-        action.context = value.functionCall.args;
-      }
-      return {
-        ok: true,
-        action,
-        kind: 'functionCall',
-        name: call,
-      };
-    }
+  if (
+    typeof envelope.surfaceId !== 'string' || envelope.surfaceId.length === 0
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'surfaceId is required for legacy action responses',
+    };
+  }
+  if ('context' in value && !isRecord(value.context)) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'action.context must be an object',
+    };
   }
 
+  const action: A2UIActionRequest = {
+    name: value.name,
+    surfaceId: envelope.surfaceId,
+    sourceComponentId: 'legacy',
+    timestamp: new Date().toISOString(),
+    context: isRecord(value.context) ? value.context : {},
+  };
   return {
-    ok: false,
-    status: 400,
-    error: 'action.name is required',
+    ok: true,
+    action,
+    kind: 'legacy',
+    name: value.name,
   };
 }

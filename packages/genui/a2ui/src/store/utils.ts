@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type * as v0_9 from '@a2ui/web_core/v0_9';
+import type { A2UIDataBinding, A2UIFunctionCall } from './types.js';
 
 /**
  * Return whether a value is a non-array object record.
@@ -16,14 +16,14 @@ export function isObject(value: unknown): value is Record<string, unknown> {
 /**
  * Return whether a value matches the A2UI data-binding shape.
  */
-export function isDataBinding(value: unknown): value is v0_9.DataBinding {
+export function isDataBinding(value: unknown): value is A2UIDataBinding {
   return isObject(value) && 'path' in value;
 }
 
 /**
  * Return whether a value matches the A2UI function-call shape.
  */
-export function isFunctionCall(value: unknown): value is v0_9.FunctionCall {
+export function isFunctionCall(value: unknown): value is A2UIFunctionCall {
   return isObject(value) && 'call' in value;
 }
 

@@ -1,8 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as v0_9 from '@a2ui/web_core/v0_9';
-
 import {
   memo,
   useEffect,
@@ -26,11 +24,6 @@ import type {
   ResourceInfo,
   UserActionPayload,
 } from '../store/types.js';
-
-// Mark v0_9 used so the namespace import doesn't get pruned. Kept around so
-// future enhancements (typed protocol message guards) don't need a fresh
-// import diff.
-void v0_9;
 
 /**
  * Props for the all-in-one A2UI ReactLynx renderer.
@@ -214,13 +207,14 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       // Empty resolve — there is no "response" channel from the renderer
       // back into the protocol. Responses arrive via the buffer.
       resolve([]);
-      if (
-        typeof message === 'object' && message !== null
-        && 'userAction' in message
-        && (message as { userAction: unknown }).userAction
-      ) {
-        const action =
-          (message as { userAction: UserActionPayload }).userAction;
+      if (typeof message === 'object' && message !== null) {
+        let action: UserActionPayload | undefined;
+        if ('action' in message) {
+          action = (message as { action?: UserActionPayload }).action;
+        } else if ('userAction' in message) {
+          action = (message as { userAction?: UserActionPayload }).userAction;
+        }
+        if (!action) return;
         try {
           onActionRef.current?.(action);
         } catch (e) {

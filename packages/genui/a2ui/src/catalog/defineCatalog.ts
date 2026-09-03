@@ -124,7 +124,10 @@ export interface Catalog {
   readonly functions: readonly CatalogFunctionEntry[];
 }
 
-/** The serialized payload sent to the agent during channel handshake. */
+/**
+ * Legacy catalog handshake shape. This is not the official v1.0 catalog
+ * schema, whose components and functions are keyed objects.
+ */
 export interface SerializedCatalog {
   version: '0.9';
   components: Array<{ name: string; schema?: CatalogSchema }>;
