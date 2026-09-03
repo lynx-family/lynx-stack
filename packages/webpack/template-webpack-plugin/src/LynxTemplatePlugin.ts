@@ -988,8 +988,14 @@ class LynxTemplatePluginImpl {
         LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
       )
     ) {
+      const derived = chunkGroups.every(cg =>
+        cg.name === null || cg.name === undefined
+      );
       for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
-        if (chunk.id !== null && chunk.id !== undefined) {
+        if (chunk.id === null || chunk.id === undefined) {
+          continue;
+        }
+        if (derived || !lazyBundleNames.has(chunk.id)) {
           lazyBundleNames.set(chunk.id, filename);
         }
       }
