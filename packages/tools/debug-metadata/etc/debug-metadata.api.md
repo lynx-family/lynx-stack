@@ -19,7 +19,7 @@ export interface Artifact {
 export function assertUiNode(value: unknown, path?: string): asserts value is UiNode;
 
 // @public
-export function buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, 'repo'>>;
+export function buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, 'repo' | 'remoteUrl' | 'commit'>>;
 
 // @public
 export interface BytecodeDebugInfoSource {
@@ -139,7 +139,11 @@ export interface RemappedUiNode extends UiNode {
     // (undocumented)
     column?: number;
     // (undocumented)
+    commit?: string | null;
+    // (undocumented)
     line?: number;
+    // (undocumented)
+    remoteUrl?: string | null;
     // (undocumented)
     repo?: string | null;
     // (undocumented)
@@ -213,7 +217,9 @@ export interface UiNode {
 // @public
 export interface UiSourceLocation {
     column: number;
+    commit: string | null;
     line: number;
+    remoteUrl: string | null;
     repo: string | null;
     source: string | null;
 }
