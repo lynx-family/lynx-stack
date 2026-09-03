@@ -49,6 +49,7 @@ export default defineConfig({
   },
   reporters,
   projects: [
+    'examples/react-debug-metadata/error-remapping/rstest.config.ts',
     'packages/genui/a2ui/rstest.config.ts',
     'packages/genui/a2ui-catalog-extractor/rstest.config.ts',
     'packages/genui/cli/rstest.config.ts',
@@ -57,9 +58,25 @@ export default defineConfig({
     'packages/genui/openui/rstest.config.ts',
     'packages/genui/playground/rstest.config.ts',
     'packages/genui/server/rstest.config.ts',
+    'packages/i18n/*/rstest.config.ts',
+    'packages/lynx/*/rstest.config.ts',
+    'packages/motion/rstest.config.ts',
+    'packages/react/*/rstest.config.ts',
+    'packages/react/testing-library/rstest.3.1.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
+    'packages/tailwind-preset/rstest.config.ts',
+    // `kitten-lynx` is deliberately absent: it drives a real Android
+    // emulator and runs in its own CI job.
+    'packages/testing-library/testing-environment/rstest.config.ts',
+    'packages/testing-library/examples/basic/rstest.config.ts',
+    'packages/testing-library/examples/library/rstest.config.ts',
+    // The `react-compiler` example runs the same suite twice, with the React
+    // Compiler on and off; its own `rstest.config.ts` only aggregates these.
+    'packages/testing-library/examples/react-compiler/rstest.config.compiler-enabled.ts',
+    'packages/testing-library/examples/react-compiler/rstest.config.compiler-disabled.ts',
+    'packages/tools/*/rstest.config.ts',
+    'packages/use-sync-external-store/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',
-    'examples/react-debug-metadata/error-remapping/rstest.config.ts',
   ],
 });

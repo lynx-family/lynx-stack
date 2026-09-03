@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { h } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 import {
@@ -31,14 +31,14 @@ import {
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 
 describe('renderOpcodesIntoElementTemplate', () => {
-  const createElementTemplate = vi.fn();
-  const createTypedElementTemplate = vi.fn();
-  const getElementUniqueID = vi.fn();
-  const insertNodeToElementTemplate = vi.fn();
-  const removeNodeFromElementTemplate = vi.fn();
-  const flushElementTree = vi.fn();
-  const addEvent = vi.fn();
-  const onLifecycleEvent = vi.fn();
+  const createElementTemplate = rs.fn();
+  const createTypedElementTemplate = rs.fn();
+  const getElementUniqueID = rs.fn();
+  const insertNodeToElementTemplate = rs.fn();
+  const removeNodeFromElementTemplate = rs.fn();
+  const flushElementTree = rs.fn();
+  const addEvent = rs.fn();
+  const onLifecycleEvent = rs.fn();
 
   beforeEach(() => {
     createElementTemplate.mockReset();
@@ -50,14 +50,14 @@ describe('renderOpcodesIntoElementTemplate', () => {
     addEvent.mockReset();
     onLifecycleEvent.mockReset();
     getElementUniqueID.mockImplementation((node: { __mockNativeId?: number }) => node.__mockNativeId);
-    vi.stubGlobal('__CreateElementTemplate', createElementTemplate);
-    vi.stubGlobal('__CreateTypedElementTemplate', createTypedElementTemplate);
-    vi.stubGlobal('__GetElementUniqueID', getElementUniqueID);
-    vi.stubGlobal('__InsertNodeToElementTemplate', insertNodeToElementTemplate);
-    vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNodeFromElementTemplate);
-    vi.stubGlobal('__FlushElementTree', flushElementTree);
-    vi.stubGlobal('__AddEvent', addEvent);
-    vi.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
+    rs.stubGlobal('__CreateElementTemplate', createElementTemplate);
+    rs.stubGlobal('__CreateTypedElementTemplate', createTypedElementTemplate);
+    rs.stubGlobal('__GetElementUniqueID', getElementUniqueID);
+    rs.stubGlobal('__InsertNodeToElementTemplate', insertNodeToElementTemplate);
+    rs.stubGlobal('__RemoveNodeFromElementTemplate', removeNodeFromElementTemplate);
+    rs.stubGlobal('__FlushElementTree', flushElementTree);
+    rs.stubGlobal('__AddEvent', addEvent);
+    rs.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
     clearEtAttrPlanMap();
@@ -65,7 +65,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
     clearEtAttrPlanMap();
   });
 
@@ -193,7 +193,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
   it('creates exact list through typed native create with slot-0 refs as listChildren', () => {
     const itemRef = { kind: 'item-ref' };
     const listRef = { kind: 'list-ref' };
-    const handler = vi.fn();
+    const handler = rs.fn();
     const attributes = {
       bindtap: handler,
       className: 'feed',
@@ -264,7 +264,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const itemRef = { kind: 'item-ref' };
     const listRef = { kind: 'list-ref' };
     const parentRef = { kind: 'parent-ref' };
-    const handleTap = vi.fn();
+    const handleTap = rs.fn();
     const parentAttributes = [handleTap, 'parent'];
     const itemAttributes = ['item'];
     const listAttributes = { id: 'feed', bindtap: handleTap };
@@ -573,7 +573,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares direct event slots before native create', () => {
     const rootRef = { kind: 'root-ref' };
-    const handleTap = vi.fn();
+    const handleTap = rs.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_event = [
       0,
@@ -675,7 +675,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares direct ref values before native create', () => {
     const rootRef = { kind: 'root-ref' };
-    const ref = vi.fn();
+    const ref = rs.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
@@ -699,7 +699,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares spread event values before native create', () => {
     const rootRef = { kind: 'root-ref' };
-    const handleTap = vi.fn();
+    const handleTap = rs.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
@@ -730,7 +730,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares spread ref values before native create without leaking unsupported ref-like props', () => {
     const rootRef = { kind: 'root-ref' };
-    const ref = vi.fn();
+    const ref = rs.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
@@ -741,8 +741,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
       [{
         id: 'cta',
         ref,
-        'main-thread:ref': vi.fn(),
-        'worklet:ref': vi.fn(),
+        'main-thread:ref': rs.fn(),
+        'worklet:ref': rs.fn(),
       }],
       __OpEnd,
     ]);

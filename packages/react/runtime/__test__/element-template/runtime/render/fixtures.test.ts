@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe } from 'vitest';
+import { describe } from '@rstest/core';
 
 import { runRenderFixtureTests } from '../../test-utils/debug/renderFixtureRunner.js';
 

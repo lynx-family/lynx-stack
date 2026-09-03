@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 beforeEach(() => {
   lynxTestingEnv.reset();
@@ -9,7 +9,7 @@ beforeEach(() => {
 // event is delivered locally on that proxy and never crosses threads.
 describe('ContextProxy routing', () => {
   it('main thread getJSContext().dispatchEvent reaches background getCoreContext() listeners', () => {
-    const listener = vi.fn();
+    const listener = rs.fn();
 
     lynxTestingEnv.switchToBackgroundThread();
     lynx.getCoreContext().addEventListener('ping', listener);
@@ -25,7 +25,7 @@ describe('ContextProxy routing', () => {
   });
 
   it('background getCoreContext().dispatchEvent reaches main thread getJSContext() listeners', () => {
-    const listener = vi.fn();
+    const listener = rs.fn();
 
     lynxTestingEnv.switchToMainThread();
     lynx.getJSContext().addEventListener('pong', listener);
@@ -41,8 +41,8 @@ describe('ContextProxy routing', () => {
   });
 
   it('main thread getCoreContext().dispatchEvent is a self-loop and never reaches the background thread', () => {
-    const backgroundListener = vi.fn();
-    const mainThreadListener = vi.fn();
+    const backgroundListener = rs.fn();
+    const mainThreadListener = rs.fn();
 
     lynxTestingEnv.switchToBackgroundThread();
     lynx.getCoreContext().addEventListener('ping', backgroundListener);
@@ -56,8 +56,8 @@ describe('ContextProxy routing', () => {
   });
 
   it('background getJSContext().dispatchEvent is a self-loop and never reaches the main thread', () => {
-    const mainThreadListener = vi.fn();
-    const backgroundListener = vi.fn();
+    const mainThreadListener = rs.fn();
+    const backgroundListener = rs.fn();
 
     lynxTestingEnv.switchToMainThread();
     lynx.getJSContext().addEventListener('pong', mainThreadListener);
@@ -86,7 +86,7 @@ describe('ContextProxy routing', () => {
   });
 
   it('removeEventListener detaches a listener', () => {
-    const listener = vi.fn();
+    const listener = rs.fn();
 
     lynxTestingEnv.switchToBackgroundThread();
     lynx.getCoreContext().addEventListener('ping', listener);

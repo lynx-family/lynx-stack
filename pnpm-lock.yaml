@@ -69,9 +69,6 @@ importers:
       '@changesets/cli':
         specifier: ^3.0.1
         version: 3.0.1
-      '@codspeed/vitest-plugin':
-        specifier: ^5.7.1
-        version: 5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vitest@3.2.7)
       '@eslint/js':
         specifier: ^9.39.5
         version: 9.39.5
@@ -114,15 +111,6 @@ importers:
       '@typescript/typescript6':
         specifier: 6.0.2
         version: 6.0.2
-      '@vitest/coverage-v8':
-        specifier: ^3.2.7
-        version: 3.2.7(supports-color@10.2.2)(vitest@3.2.7)
-      '@vitest/eslint-plugin':
-        specifier: ^1.6.27
-        version: 1.6.27(@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vitest@3.2.7)
-      '@vitest/ui':
-        specifier: ^3.2.7
-        version: 3.2.7(vitest@3.2.7)
       core-js:
         specifier: ^3.50.0
         version: 3.50.0
@@ -186,9 +174,6 @@ importers:
       typescript-eslint:
         specifier: ^8.67.0
         version: 8.67.0(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
-      vitest:
-        specifier: ^3.2.7
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
@@ -316,9 +301,15 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
+      expect-type:
+        specifier: ^1.4.0
+        version: 1.4.0
 
   examples/react-compiler:
     dependencies:
@@ -845,6 +836,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -1408,6 +1402,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rspack/core':
+        specifier: 2.2.2
+        version: 2.2.2(@swc/helpers@0.5.23)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1453,9 +1450,15 @@ importers:
       preact:
         specifier: catalog:lynxjs
         version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+      vitest:
+        specifier: ^3.2.7
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
 
   packages/react/transform:
     devDependencies:
+      '@codspeed/tinybench-plugin':
+        specifier: ^5.7.1
+        version: 5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)
       '@emnapi/core':
         specifier: ^1.7.1
         version: 1.11.1
@@ -1471,6 +1474,9 @@ importers:
       tiny-glob:
         specifier: 0.2.9
         version: 0.2.9
+      tinybench:
+        specifier: ^6.1.2
+        version: 6.1.2
 
   packages/react/transform/rspack-napi:
     dependencies:
@@ -2204,6 +2210,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -2222,9 +2231,6 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
-      vitest:
-        specifier: ^3.2.7
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
 
   packages/testing-library/testing-environment:
     devDependencies:
@@ -2237,6 +2243,9 @@ importers:
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.3(core-js@3.50.0))
+      vitest:
+        specifier: ^3.2.7
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
 
   packages/tools/canary-release:
     dependencies:
@@ -2280,6 +2289,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
 
   packages/web-platform/playwright-fixtures:
     dependencies:
@@ -2345,12 +2357,18 @@ importers:
       jsdom:
         specifier: ^27.4.0
         version: 27.4.0(supports-color@10.2.2)
+      tinybench:
+        specifier: ^6.1.2
+        version: 6.1.2
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
 
   packages/web-platform/web-core-e2e:
     devDependencies:
+      '@codspeed/tinybench-plugin':
+        specifier: ^5.7.1
+        version: 5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)
       '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-external-bundle
@@ -2393,9 +2411,9 @@ importers:
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
-      vitest:
-        specifier: ^3.2.7
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+      tinybench:
+        specifier: ^6.1.2
+        version: 6.1.2
 
   packages/web-platform/web-elements:
     dependencies:
@@ -2481,7 +2499,7 @@ importers:
         version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
       '@types/loader-utils':
         specifier: ^3.0.0
-        version: 3.0.0(lightningcss@1.33.0)
+        version: 3.0.0
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -3025,10 +3043,6 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@ampproject/remapping@2.3.0':
-    resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
-    engines: {node: '>=6.0.0'}
-
   '@asamuzakjp/css-color@4.1.1':
     resolution: {integrity: sha512-B0Hv6G3gWGMn0xKJ0txEi/jM5iFpT3MfDxmhZFb4W047GvytCf1DHQ1D69W3zHI4yWe2aTZAA0JnbMZ7Xc8DuQ==}
 
@@ -3424,10 +3438,6 @@ packages:
     resolution: {integrity: sha512-eY+Yn3dCqTGmyiq2QRU66lA5FL8lqqqvecHt0fF3uHONIa7ToYsaCiWV8lOKqAs0Rb2SjixiKFROngnulPtt2g==}
     engines: {node: ^22.18.0 || >=24.11.0}
 
-  '@bcoe/v8-coverage@1.0.2':
-    resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
-    engines: {node: '>=18'}
-
   '@biomejs/biome@1.9.4':
     resolution: {integrity: sha512-1rkd7G70+o9KkTn5KLmDYXihGoTaIGO9PIIN2ZB7UJxFrWw04CZHPYiMRjYsaDvVV7hP1dYNRLxSANLaBFGpog==}
     engines: {node: '>=14.21.3'}
@@ -3603,12 +3613,10 @@ packages:
   '@codspeed/core@5.7.1':
     resolution: {integrity: sha512-7mrFkqaY14rXu3XHv3o7bK3btLK0LFRxfeK3bQC8dLduI/Ty9eq8Hv8rx04FAY/onQbRTx3rUUQg5xprYHpATQ==}
 
-  '@codspeed/vitest-plugin@5.7.1':
-    resolution: {integrity: sha512-yKNqaYVxZZPJYkhVHpz30Oem4TUgcI+/IRDD9YHvcAgi0P42CL6TB/+qYjuFOWghFzTPrm3TUbNFoBsevSTbUA==}
+  '@codspeed/tinybench-plugin@5.7.1':
+    resolution: {integrity: sha512-4YZvqqbic55rJrjqawB8wHnKkCklFlHlrTfnLB8/w2EXEJ7XwkFpRDSGYQxV30K4K6llRLc0aYvYy1WwgCqVBw==}
     peerDependencies:
-      tinybench: '>=2.9.0'
-      vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
-      vitest: ^3.2 || ^4
+      tinybench: '>=4.0.1'
 
   '@croct/json5-parser@0.2.2':
     resolution: {integrity: sha512-0NJMLrbeLbQ0eCVj3UoH/kG2QckUgOASfwmfDTjyW1xAYPyTNJXcWVT/dssJdTJd0pRchW+qF0VFWQHcxs1OVw==}
@@ -6901,31 +6909,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vitest/coverage-v8@3.2.7':
-    resolution: {integrity: sha512-NEGWJS2XNu2PfRLQwOO3CTKj1tTETxNBdk454vDxVBhxJYhPaA/eS0nAI0c+1El1P7a60z8+i+ZrQoGESweGKg==}
-    peerDependencies:
-      '@vitest/browser': 3.2.7
-      vitest: 3.2.7
-    peerDependenciesMeta:
-      '@vitest/browser':
-        optional: true
-
-  '@vitest/eslint-plugin@1.6.27':
-    resolution: {integrity: sha512-X1RCAfwbatG4GFbJ/1PIHP9MSZMt0JJThqbYID+vS4L783k6QGlLPe421wQE8dHXuGCcenVLsydiM4qzsYWxhg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@typescript-eslint/eslint-plugin': '*'
-      eslint: '>=8.57.0'
-      typescript: '>=5.0.0'
-      vitest: '*'
-    peerDependenciesMeta:
-      '@typescript-eslint/eslint-plugin':
-        optional: true
-      typescript:
-        optional: true
-      vitest:
-        optional: true
-
   '@vitest/expect@3.2.7':
     resolution: {integrity: sha512-E8eBXaKibuvH2pSZErOjdVb5vF4PbKYcrnluBTYxEk1l/VhhwZg1kZQsdtjq+CsF5CFydf2Rdkz7jDHKSisi3w==}
 
@@ -7219,9 +7202,6 @@ packages:
 
   ast-metadata-inferer@0.8.1:
     resolution: {integrity: sha512-ht3Dm6Zr7SXv6t1Ra6gFo0+kLDglHGrEbYihTkcycrbHw7WCcuhBzPlJYHEsIpycaUwzsJHje+vUcxXUX4ztTA==}
-
-  ast-v8-to-istanbul@0.3.12:
-    resolution: {integrity: sha512-BRRC8VRZY2R4Z4lFIL35MwNXmwVqBityvOIwETtsCSwvjl0IdgFsy9NhdaA6j74nUdtJJlIypeRhpDam19Wq3g==}
 
   astring@1.9.0:
     resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
@@ -9652,9 +9632,6 @@ packages:
   magic-string@1.1.0:
     resolution: {integrity: sha512-kS3VHe0nEPST2saQV4Rbkchcd3UBRkVTQHo1D3h/ZTwFDhai/mfKkmtPAtD129EOI7K3HlHIsFOt0WrI2/oU9g==}
 
-  magicast@0.3.5:
-    resolution: {integrity: sha512-L0WhttDl+2BOsybvEOLK7fW3UA0OQ0IQ2d6Zl2x/a6vVRs3bAY0ECOSHHeL5jD+SbOpOCUEi0y1DgHEn9Qn1AQ==}
-
   make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
@@ -11797,10 +11774,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  test-exclude@7.0.2:
-    resolution: {integrity: sha512-u9E6A+ZDYdp7a4WnarkXPZOx8Ilz46+kby6p1yZ8zsGTz9gYa6FIS7lj2oezzNKmtdyyJNNmmXDppga5GB7kSw==}
-    engines: {node: '>=18'}
-
   test-exclude@8.0.0:
     resolution: {integrity: sha512-ZOffsNrXYggvU1mDGHk54I96r26P8SyMjO5slMKSc7+IWmtB/MQKnEC2fP51imB3/pT6YK5cT5E8f+Dd9KdyOQ==}
     engines: {node: 20 || >=22}
@@ -12637,11 +12610,6 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@ampproject/remapping@2.3.0':
-    dependencies:
-      '@jridgewell/gen-mapping': 0.3.13
-      '@jridgewell/trace-mapping': 0.3.31
-
   '@asamuzakjp/css-color@4.1.1':
     dependencies:
       '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
@@ -13131,8 +13099,6 @@ snapshots:
       '@babel/helper-string-parser': 8.0.0
       '@babel/helper-validator-identifier': 8.0.4
 
-  '@bcoe/v8-coverage@1.0.2': {}
-
   '@biomejs/biome@1.9.4':
     optionalDependencies:
       '@biomejs/cli-darwin-arm64': 1.9.4
@@ -13395,12 +13361,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@codspeed/vitest-plugin@5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vitest@3.2.7)':
+  '@codspeed/tinybench-plugin@5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)':
     dependencies:
       '@codspeed/core': 5.7.1(debug@4.4.3(supports-color@10.2.2))
       tinybench: 6.1.2
-      vite: 7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0)
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - debug
 
@@ -15118,7 +15082,8 @@ snapshots:
 
   '@pnpm/deps.graph-sequencer@1100.0.1': {}
 
-  '@polka/url@1.0.0-next.25': {}
+  '@polka/url@1.0.0-next.25':
+    optional: true
 
   '@posthog/core@1.49.2':
     dependencies:
@@ -16693,10 +16658,10 @@ snapshots:
 
   '@types/linkify-it@5.0.0': {}
 
-  '@types/loader-utils@3.0.0(lightningcss@1.33.0)':
+  '@types/loader-utils@3.0.0':
     dependencies:
       '@types/node': 24.13.3
-      webpack: 5.109.2(lightningcss@1.33.0)
+      webpack: 5.109.2
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -17078,37 +17043,6 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@vitest/coverage-v8@3.2.7(supports-color@10.2.2)(vitest@3.2.7)':
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@bcoe/v8-coverage': 1.0.2
-      ast-v8-to-istanbul: 0.3.12
-      debug: 4.4.3(supports-color@10.2.2)
-      istanbul-lib-coverage: 3.2.2
-      istanbul-lib-report: 3.0.1
-      istanbul-lib-source-maps: 5.0.6(supports-color@10.2.2)
-      istanbul-reports: 3.2.0
-      magic-string: 0.30.21
-      magicast: 0.3.5
-      std-env: 3.10.0
-      test-exclude: 7.0.2
-      tinyrainbow: 2.0.0
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  '@vitest/eslint-plugin@1.6.27(@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vitest@3.2.7)':
-    dependencies:
-      '@typescript-eslint/scope-manager': 8.67.0
-      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
-      eslint: 9.39.5(jiti@2.7.0)(supports-color@10.2.2)
-    optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
-      typescript: 6.0.3
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
-    transitivePeerDependencies:
-      - supports-color
-
   '@vitest/expect@3.2.7':
     dependencies:
       '@types/chai': 5.2.3
@@ -17155,6 +17089,7 @@ snapshots:
       tinyglobby: 0.2.17
       tinyrainbow: 2.0.0
       vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+    optional: true
 
   '@vitest/utils@3.2.7':
     dependencies:
@@ -17485,12 +17420,6 @@ snapshots:
   ast-metadata-inferer@0.8.1:
     dependencies:
       '@mdn/browser-compat-data': 5.7.6
-
-  ast-v8-to-istanbul@0.3.12:
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      estree-walker: 3.0.3
-      js-tokens: 10.0.0
 
   astring@1.9.0: {}
 
@@ -18858,7 +18787,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.5
 
-  fflate@0.8.2: {}
+  fflate@0.8.2:
+    optional: true
 
   figures@3.2.0:
     dependencies:
@@ -20146,12 +20076,6 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  magicast@0.3.5:
-    dependencies:
-      '@babel/parser': 7.29.7
-      '@babel/types': 7.29.7
-      source-map-js: 1.2.1
-
   make-dir@3.1.0:
     dependencies:
       semver: 6.3.1
@@ -20799,15 +20723,13 @@ snapshots:
       lightningcss: 1.33.0
       postcss: 8.5.25
 
-  minimizer-webpack-plugin@5.6.1(lightningcss@1.33.0)(webpack@5.109.2(lightningcss@1.33.0)):
+  minimizer-webpack-plugin@5.6.1(webpack@5.109.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       terser: 5.48.0
-      webpack: 5.109.2(lightningcss@1.33.0)
-    optionalDependencies:
-      lightningcss: 1.33.0
+      webpack: 5.109.2
 
   minipass@7.1.3: {}
 
@@ -20844,7 +20766,8 @@ snapshots:
 
   mri@1.2.0: {}
 
-  mrmime@2.0.0: {}
+  mrmime@2.0.0:
+    optional: true
 
   ms@2.0.0:
     optional: true
@@ -22297,6 +22220,7 @@ snapshots:
       '@polka/url': 1.0.0-next.25
       mrmime: 2.0.0
       totalist: 3.0.1
+    optional: true
 
   sisteransi@1.0.5: {}
 
@@ -22650,12 +22574,6 @@ snapshots:
       commander: 2.20.3
       source-map-support: 0.5.21
 
-  test-exclude@7.0.2:
-    dependencies:
-      '@istanbuljs/schema': 0.1.3
-      glob: 10.4.5
-      minimatch: 10.2.5
-
   test-exclude@8.0.0:
     dependencies:
       '@istanbuljs/schema': 0.1.3
@@ -22728,7 +22646,8 @@ snapshots:
 
   tos-crc64-js@0.0.1: {}
 
-  totalist@3.0.1: {}
+  totalist@3.0.1:
+    optional: true
 
   tough-cookie@6.0.2:
     dependencies:
@@ -23239,7 +23158,7 @@ snapshots:
 
   webpack-sources@3.5.1: {}
 
-  webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25):
+  webpack@5.109.2:
     dependencies:
       '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
@@ -23255,7 +23174,7 @@ snapshots:
       events: 3.3.0
       graceful-fs: 4.2.11
       mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.6.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
+      minimizer-webpack-plugin: 5.6.1(webpack@5.109.2)
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3
@@ -23275,7 +23194,7 @@ snapshots:
       - postcss
       - uglify-js
 
-  webpack@5.109.2(lightningcss@1.33.0):
+  webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25):
     dependencies:
       '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
@@ -23291,7 +23210,7 @@ snapshots:
       events: 3.3.0
       graceful-fs: 4.2.11
       mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.6.1(lightningcss@1.33.0)(webpack@5.109.2(lightningcss@1.33.0))
+      minimizer-webpack-plugin: 5.6.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3

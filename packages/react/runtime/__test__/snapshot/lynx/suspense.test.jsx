@@ -5,7 +5,7 @@
 import { render, Component } from 'preact';
 import { createElement } from 'preact/compat';
 import { Suspense, lazy, useState } from '../../../src/index';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -32,13 +32,13 @@ beforeAll(() => {
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
-  vi.useFakeTimers({ toFake: ['setTimeout'] });
+  rs.useFakeTimers({ toFake: ['setTimeout'] });
 });
 
 afterEach(() => {
-  vi.runAllTimers();
-  vi.useRealTimers();
-  vi.restoreAllMocks();
+  rs.runAllTimers();
+  rs.useRealTimers();
+  rs.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -121,7 +121,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -155,7 +155,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -243,7 +243,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -313,7 +313,7 @@ describe('suspense', () => {
           },
         ]
       `);
-      vi.runAllTimers();
+      rs.runAllTimers();
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -342,7 +342,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -417,7 +417,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -427,7 +427,7 @@ describe('suspense', () => {
       lynx.getNativeApp().callLepusMethod.mockClear();
       await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-      vi.runAllTimers();
+      rs.runAllTimers();
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -456,7 +456,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           2,
@@ -496,7 +496,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
       expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           4,
@@ -568,7 +568,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -578,7 +578,7 @@ describe('suspense', () => {
       lynx.getNativeApp().callLepusMethod.mockClear();
       await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
-      vi.runAllTimers();
+      rs.runAllTimers();
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -607,7 +607,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // remove suspense
@@ -633,7 +633,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // add suspense back
@@ -671,7 +671,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -749,7 +749,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -760,7 +760,7 @@ describe('suspense', () => {
       await Promise.resolve().then(() => {});
       expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(1);
       const data = JSON.parse(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).patchList[0].snapshotPatch;
-      vi.runAllTimers();
+      rs.runAllTimers();
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -789,7 +789,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -902,7 +902,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children 1
@@ -945,7 +945,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children 2
@@ -988,7 +988,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -1083,7 +1083,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -1121,7 +1121,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -1199,7 +1199,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -1289,7 +1289,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -1371,7 +1371,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // render children
@@ -1405,7 +1405,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
 
     // Update to the second element
@@ -1439,7 +1439,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 
@@ -1506,7 +1506,7 @@ describe('suspense', () => {
       // rLynxChange callback
       globalEnvManager.switchToBackground();
       rLynxChange[2]();
-      vi.runAllTimers();
+      rs.runAllTimers();
     }
   });
 

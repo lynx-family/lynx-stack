@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { jsx } from '@lynx-js/react/element-template/jsx-runtime';
 import { jsxDEV } from '@lynx-js/react/element-template/jsx-dev-runtime';

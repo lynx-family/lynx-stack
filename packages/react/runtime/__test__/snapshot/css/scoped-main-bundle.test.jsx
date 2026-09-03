@@ -5,7 +5,7 @@
  * @jsxCSSId 1000
  */
 
-import { expect, it } from 'vitest';
+import { expect, it } from '@rstest/core';
 
 import { SnapshotInstance } from '../../../src/snapshot';
 

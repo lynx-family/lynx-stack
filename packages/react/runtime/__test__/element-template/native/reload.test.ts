@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { increaseReloadVersion } from '../../../src/core/reload-version.js';
 import { setupBackgroundElementTemplateDocument } from '../../../src/element-template/background/document.js';
@@ -31,78 +31,80 @@ import { render as mockRender } from '../../../src/element-template/runtime/rend
 import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../src/element-template/runtime/render/render-opcodes.js';
 import { render as preactRender } from 'preact';
 
-const mockedState = vi.hoisted(() => ({
+const mockedState = rs.hoisted(() => ({
   page: undefined as unknown,
   root: {} as { __jsx?: unknown; stale?: boolean },
 }));
 
-vi.mock('../../../src/core/reload-version.js', () => ({
-  getReloadVersion: vi.fn(() => 1),
-  increaseReloadVersion: vi.fn(),
+rs.mock('../../../src/core/reload-version.js', () => ({
+  getReloadVersion: rs.fn(() => 1),
+  increaseReloadVersion: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
+rs.mock('../../../src/element-template/runtime/page/page.js', () => ({
   get __page() {
     return mockedState.page;
   },
-  setupPage: vi.fn((page: unknown) => {
+  setupPage: rs.fn((page: unknown) => {
     mockedState.page = page;
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
+rs.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
   get __root() {
     return mockedState.root;
   },
-  setRoot: vi.fn((root: typeof mockedState.root) => {
+  setRoot: rs.fn((root: typeof mockedState.root) => {
     mockedState.root = root;
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
-  render: vi.fn(),
-  registerSlot: vi.fn(),
+rs.mock('../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
+  render: rs.fn(),
+  registerSlot: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-opcodes.js', () => ({
-  renderOpcodesIntoElementTemplate: vi.fn(),
+rs.mock('../../../src/element-template/runtime/render/render-opcodes.js', () => ({
+  renderOpcodesIntoElementTemplate: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/template/registry.js', () => ({
+rs.mock('../../../src/element-template/runtime/template/registry.js', () => ({
   elementTemplateRegistry: {
-    clear: vi.fn(),
-    delete: vi.fn(),
-    get: vi.fn(),
+    clear: rs.fn(),
+    delete: rs.fn(),
+    get: rs.fn(),
   },
 }));
 
-vi.mock('../../../src/element-template/runtime/template/handle.js', async importOriginal => ({
-  ...await importOriginal(),
-  resetTemplateId: vi.fn(),
+rs.mock('../../../src/element-template/runtime/template/handle.js', () => ({
+  ...rs.requireActual<
+    typeof import('../../../src/element-template/runtime/template/handle.js')
+  >('../../../src/element-template/runtime/template/handle.js'),
+  resetTemplateId: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/list/list.js', () => ({
-  destroyAllElementTemplateListStates: vi.fn(),
-  flushInitialElementTemplateListUpdates: vi.fn(() => []),
+rs.mock('../../../src/element-template/runtime/list/list.js', () => ({
+  destroyAllElementTemplateListStates: rs.fn(),
+  flushInitialElementTemplateListUpdates: rs.fn(() => []),
 }));
 
-vi.mock('../../../src/element-template/background/destroy.js', () => ({
-  destroyElementTemplateBackgroundRuntime: vi.fn(),
+rs.mock('../../../src/element-template/background/destroy.js', () => ({
+  destroyElementTemplateBackgroundRuntime: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/document.js', () => ({
-  setupBackgroundElementTemplateDocument: vi.fn(),
+rs.mock('../../../src/element-template/background/document.js', () => ({
+  setupBackgroundElementTemplateDocument: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/hydration-listener.js', () => ({
-  installElementTemplateHydrationListener: vi.fn(),
+rs.mock('../../../src/element-template/background/hydration-listener.js', () => ({
+  installElementTemplateHydrationListener: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/prop-adapters/event.js', () => ({
-  resetEventStateForRuntime: vi.fn(),
+rs.mock('../../../src/element-template/prop-adapters/event.js', () => ({
+  resetEventStateForRuntime: rs.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/instance.js', () => {
+rs.mock('../../../src/element-template/background/instance.js', () => {
   class BackgroundElementTemplateInstance {
     constructor(public type: string) {}
   }
@@ -116,29 +118,29 @@ vi.mock('../../../src/element-template/background/instance.js', () => {
   };
 });
 
-vi.mock('../../../src/element-template/debug/profile.js', () => ({
-  profileEnd: vi.fn(),
-  profileStart: vi.fn(),
+rs.mock('../../../src/element-template/debug/profile.js', () => ({
+  profileEnd: rs.fn(),
+  profileStart: rs.fn(),
 }));
 
-vi.mock('preact', () => ({
-  render: vi.fn(),
+rs.mock('preact', () => ({
+  render: rs.fn(),
 }));
 
 describe('ElementTemplate reloadMainThread', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     mockedState.page = { type: 'page', id: '0', children: [] };
     mockedState.root = {};
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
-    vi.stubGlobal('__PROFILE__', false);
-    vi.stubGlobal('__FlushElementTree', vi.fn());
-    vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
-    vi.stubGlobal('__RemoveNodeFromElementTemplate', vi.fn());
-    vi.stubGlobal('__SerializeElementTemplate', vi.fn());
-    vi.stubGlobal('__SetAttributeOfElementTemplate', vi.fn());
-    vi.mocked(__SerializeElementTemplate).mockReturnValue({
+    rs.stubGlobal('__PROFILE__', false);
+    rs.stubGlobal('__FlushElementTree', rs.fn());
+    rs.stubGlobal('__InsertNodeToElementTemplate', rs.fn());
+    rs.stubGlobal('__RemoveNodeFromElementTemplate', rs.fn());
+    rs.stubGlobal('__SerializeElementTemplate', rs.fn());
+    rs.stubGlobal('__SetAttributeOfElementTemplate', rs.fn());
+    rs.mocked(__SerializeElementTemplate).mockReturnValue({
       tag: 'page',
       attributes: null,
       elementSlots: [[]],
@@ -147,15 +149,15 @@ describe('ElementTemplate reloadMainThread', () => {
     globalThis.lynx = {
       ...(globalThis.lynx ?? {}),
       __initData: {},
-      reportError: vi.fn(),
-      getJSContext: vi.fn(() => ({
-        dispatchEvent: vi.fn(),
+      reportError: rs.fn(),
+      getJSContext: rs.fn(() => ({
+        dispatchEvent: rs.fn(),
       })),
     } as typeof lynx;
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('rebuilds main-thread ET state and flushes the current page', () => {
@@ -195,9 +197,9 @@ describe('ElementTemplate reloadMainThread', () => {
       elementSlots: [[serializedRoot]],
       uid: 0,
     };
-    const dispatchEvent = vi.fn();
+    const dispatchEvent = rs.fn();
     const mtRef = { _wvid: 7 };
-    const updateWorkletRef = vi.fn();
+    const updateWorkletRef = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -224,35 +226,35 @@ describe('ElementTemplate reloadMainThread', () => {
       attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: oldRootRef }]);
       expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
       expect(getMainThreadDynamicAttrState(-1, 1)).toBeDefined();
-      vi.mocked(mockRender).mockReturnValueOnce(['old-opcode']);
-      vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValueOnce({
+      rs.mocked(mockRender).mockReturnValueOnce(['old-opcode']);
+      rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValueOnce({
         pageAttributes: { id: 'background' },
         rootRefs: [oldRootRef],
         rootSubtreeHandles: [[]],
       });
-      vi.mocked(__SerializeElementTemplate).mockReturnValueOnce(
+      rs.mocked(__SerializeElementTemplate).mockReturnValueOnce(
         oldSerializedPage as ReturnType<typeof __SerializeElementTemplate>,
       );
       (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
-        .getJSContext = vi.fn(() => ({
+        .getJSContext = rs.fn(() => ({
           dispatchEvent,
         }));
       renderMainThread();
 
-      vi.mocked(__InsertNodeToElementTemplate).mockClear();
-      vi.mocked(__SetAttributeOfElementTemplate).mockClear();
-      vi.mocked(__SerializeElementTemplate).mockClear();
-      vi.mocked(mockRender).mockClear();
-      vi.mocked(mockRenderOpcodesIntoElementTemplate).mockClear();
+      rs.mocked(__InsertNodeToElementTemplate).mockClear();
+      rs.mocked(__SetAttributeOfElementTemplate).mockClear();
+      rs.mocked(__SerializeElementTemplate).mockClear();
+      rs.mocked(mockRender).mockClear();
+      rs.mocked(mockRenderOpcodesIntoElementTemplate).mockClear();
       dispatchEvent.mockClear();
-      vi.mocked(mockRender).mockReturnValue(opcodes);
-      vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      rs.mocked(mockRender).mockReturnValue(opcodes);
+      rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
         pageAttributes: null,
         rootRefs: [rootRef],
         rootSubtreeHandles: [[]],
       });
-      vi.mocked(elementTemplateRegistry.get).mockReturnValue(oldRootRef);
-      vi.mocked(__SerializeElementTemplate)
+      rs.mocked(elementTemplateRegistry.get).mockReturnValue(oldRootRef);
+      rs.mocked(__SerializeElementTemplate)
         .mockReturnValueOnce(oldSerializedPage as ReturnType<typeof __SerializeElementTemplate>)
         .mockReturnValueOnce(serializedPage as ReturnType<typeof __SerializeElementTemplate>);
 
@@ -262,19 +264,19 @@ describe('ElementTemplate reloadMainThread', () => {
       expect(lynx.__initData).toBe(initData);
       expect(lynx.__initData).toEqual({ msg: 'reload', stable: true });
       expect(destroyAllElementTemplateListStates).toHaveBeenCalledTimes(1);
-      expect(vi.mocked(destroyAllElementTemplateListStates).mock.invocationCallOrder[0]!).toBeLessThan(
-        vi.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
+      expect(rs.mocked(destroyAllElementTemplateListStates).mock.invocationCallOrder[0]!).toBeLessThan(
+        rs.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
       );
       expect(elementTemplateRegistry.clear).toHaveBeenCalledTimes(1);
       expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
       expect(getMainThreadDynamicAttrState(-1, 1)).toBeUndefined();
       expect(updateWorkletRef).toHaveBeenCalledWith(mtRef, null);
       expect(resetTemplateId).toHaveBeenCalledTimes(1);
-      expect(vi.mocked(setupPage)).not.toHaveBeenCalled();
+      expect(rs.mocked(setupPage)).not.toHaveBeenCalled();
       expect(elementTemplateRegistry.get).toHaveBeenCalledWith(-1);
       expect(__RemoveNodeFromElementTemplate).toHaveBeenCalledWith(page, 0, oldRootRef);
       expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(page, 0, null, null);
-      expect(vi.mocked(setRoot)).toHaveBeenCalledTimes(1);
+      expect(rs.mocked(setRoot)).toHaveBeenCalledTimes(1);
       expect(__root).not.toBe(oldRoot);
       expect(__root.__jsx).toBe(jsx);
       expect(__root).not.toHaveProperty('stale');
@@ -284,14 +286,14 @@ describe('ElementTemplate reloadMainThread', () => {
       expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
       expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(1, page);
       expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(2, page);
-      expect(vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-        vi.mocked(__RemoveNodeFromElementTemplate).mock.invocationCallOrder[0]!,
+      expect(rs.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+        rs.mocked(__RemoveNodeFromElementTemplate).mock.invocationCallOrder[0]!,
       );
-      expect(vi.mocked(__RemoveNodeFromElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-        vi.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
+      expect(rs.mocked(__RemoveNodeFromElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+        rs.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
       );
-      expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-        vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[1]!,
+      expect(rs.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+        rs.mocked(__SerializeElementTemplate).mock.invocationCallOrder[1]!,
       );
       expect(dispatchEvent).toHaveBeenCalledWith({
         type: 'rLynxElementTemplateHydrate',
@@ -308,13 +310,13 @@ describe('ElementTemplate reloadMainThread', () => {
 
   it('rebuilds when the physical page has no root slot', () => {
     mockedState.root = { __jsx: null };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    rs.mocked(mockRender).mockReturnValue([]);
+    rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
     });
-    vi.mocked(__SerializeElementTemplate)
+    rs.mocked(__SerializeElementTemplate)
       .mockReturnValueOnce({
         tag: 'page',
         attributes: null,
@@ -336,19 +338,19 @@ describe('ElementTemplate reloadMainThread', () => {
   });
 
   it('clears delayed runOnBackground tasks during main-thread reload', () => {
-    const delayedBackgroundFunctionArray = [{ task: vi.fn() }];
+    const delayedBackgroundFunctionArray = [{ task: rs.fn() }];
     globalThis.lynxWorkletImpl = {
       ...(globalThis.lynxWorkletImpl ?? {}),
       _runOnBackgroundDelayImpl: {
         delayedBackgroundFunctionArray,
-        clearDelayedBackgroundFunctions: vi.fn(() => {
+        clearDelayedBackgroundFunctions: rs.fn(() => {
           delayedBackgroundFunctionArray.length = 0;
         }),
       },
     } as typeof globalThis.lynxWorkletImpl;
     mockedState.root = { __jsx: null };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    rs.mocked(mockRender).mockReturnValue([]);
+    rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -369,8 +371,8 @@ describe('ElementTemplate reloadMainThread', () => {
     mockedState.page = { type: 'page', id: '0', children: [] };
     const ctx = { _wkltId: 'new' };
     const rootRef = { type: 'ref-a' } as unknown as ElementRef;
-    vi.mocked(mockRender).mockReturnValue(['opcode']);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
+    rs.mocked(mockRender).mockReturnValue(['opcode']);
+    rs.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
       __etAttrPlanMap._et_reload = [0, adaptMTEventAttrSlot];
       initializeMainThreadDynamicAttrSlots(
         -2,
@@ -382,7 +384,7 @@ describe('ElementTemplate reloadMainThread', () => {
       );
       return { pageAttributes: null, rootRefs: [rootRef], rootSubtreeHandles: [[]] };
     });
-    vi.mocked(__FlushElementTree).mockImplementationOnce(() => {
+    rs.mocked(__FlushElementTree).mockImplementationOnce(() => {
       throw new Error('flush failed');
     });
 
@@ -399,7 +401,7 @@ describe('ElementTemplate reloadMainThread', () => {
     const firstMTRef = { _wvid: 1 };
     const firstChildMTRef = { _wvid: 2 };
     const secondMTRef = { _wvid: 3 };
-    const updateWorkletRef = vi.fn();
+    const updateWorkletRef = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -436,8 +438,8 @@ describe('ElementTemplate reloadMainThread', () => {
         [-3, secondRootRef],
         [-4, firstListRef],
       ]);
-      vi.mocked(elementTemplateRegistry.get).mockImplementation(id => nativeRefs.get(id));
-      vi.mocked(__SerializeElementTemplate).mockReturnValueOnce({
+      rs.mocked(elementTemplateRegistry.get).mockImplementation(id => nativeRefs.get(id));
+      rs.mocked(__SerializeElementTemplate).mockReturnValueOnce({
         tag: 'page',
         attributes: null,
         elementSlots: [[
@@ -462,7 +464,7 @@ describe('ElementTemplate reloadMainThread', () => {
         ]],
         uid: 0,
       } as ReturnType<typeof __SerializeElementTemplate>);
-      vi.mocked(__RemoveNodeFromElementTemplate).mockImplementation((_parent, _slot, child) => {
+      rs.mocked(__RemoveNodeFromElementTemplate).mockImplementation((_parent, _slot, child) => {
         if (child === secondRootRef) {
           throw new Error('remove second root failed');
         }
@@ -494,8 +496,8 @@ describe('ElementTemplate reloadMainThread', () => {
     mockedState.root = { __jsx: { type: 'App' } };
     lynx.__initData = { stale: true, msg: 'init' };
     mockedState.page = { type: 'page', id: '0', children: [] };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    rs.mocked(mockRender).mockReturnValue([]);
+    rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -507,10 +509,10 @@ describe('ElementTemplate reloadMainThread', () => {
   });
 
   it('profiles main-thread reload when profiling is enabled', () => {
-    vi.stubGlobal('__PROFILE__', true);
+    rs.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    rs.mocked(mockRender).mockReturnValue([]);
+    rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -525,19 +527,19 @@ describe('ElementTemplate reloadMainThread', () => {
 
 describe('ElementTemplate reloadBackground', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     mockedState.root = {};
     globalThis.lynx = {
       ...(globalThis.lynx ?? {}),
       __initData: {},
-      reportError: vi.fn(),
-      getJSContext: vi.fn(),
+      reportError: rs.fn(),
+      getJSContext: rs.fn(),
     } as typeof lynx;
-    vi.stubGlobal('__PROFILE__', false);
+    rs.stubGlobal('__PROFILE__', false);
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('destroys old background state, rebuilds root state and renders saved JSX', () => {
@@ -554,7 +556,7 @@ describe('ElementTemplate reloadBackground', () => {
     expect(increaseReloadVersion).toHaveBeenCalledTimes(1);
     expect(lynx.__initData).not.toBe(initData);
     expect(lynx.__initData).toEqual({ msg: 'reload', stable: true });
-    expect(vi.mocked(setRoot)).toHaveBeenCalledWith(expect.any(BackgroundPageRootInstance));
+    expect(rs.mocked(setRoot)).toHaveBeenCalledWith(expect.any(BackgroundPageRootInstance));
     expect(__root).toBeInstanceOf(BackgroundPageRootInstance);
     expect(__root).not.toBe(oldRoot);
     expect(__root.__jsx).toBe(jsx);
@@ -566,7 +568,7 @@ describe('ElementTemplate reloadBackground', () => {
   });
 
   it('profiles background reload with the Snapshot reload label', () => {
-    vi.stubGlobal('__PROFILE__', true);
+    rs.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
 
     reloadBackground(undefined);

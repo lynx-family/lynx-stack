@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
-vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', async () => {
-  const actual = await vi.importActual('../../../../src/element-template/runtime/render/render-to-opcodes.js');
+rs.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => {
   return {
-    ...actual,
-    render: vi.fn(),
+    ...rs.requireActual(
+      '../../../../src/element-template/runtime/render/render-to-opcodes.js',
+    ),
+    render: rs.fn(),
   };
 });
 
@@ -60,20 +61,20 @@ describe('renderMainThread contract', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
-    vi.unstubAllGlobals();
+    rs.clearAllMocks();
+    rs.unstubAllGlobals();
     clearTemplates();
     elementTemplateRegistry.clear();
     resetTemplateId();
   });
 
   it('creates serializable root refs through the real ET create path', () => {
-    const dispatchEvent = vi.fn();
+    const dispatchEvent = rs.fn();
     (globalThis.lynx as typeof lynx & {
       getJSContext?: () => { dispatchEvent: typeof dispatchEvent };
-    }).getJSContext = vi.fn(() => ({ dispatchEvent }));
+    }).getJSContext = rs.fn(() => ({ dispatchEvent }));
 
-    vi.mocked(mockRender).mockReturnValue([
+    rs.mocked(mockRender).mockReturnValue([
       __OpBegin,
       { type: '_et_contract_root' },
       __OpAttr,

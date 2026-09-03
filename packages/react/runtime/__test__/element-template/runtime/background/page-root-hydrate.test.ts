@@ -2,10 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
-vi.mock('../../../../src/element-template/background/hydrate.js', () => ({
-  hydrateRootChildrenIntoContext: vi.fn(),
+rs.mock('../../../../src/element-template/background/hydrate.js', () => ({
+  hydrateRootChildrenIntoContext: rs.fn(),
 }));
 
 import { hydrateRootChildrenIntoContext } from '../../../../src/element-template/background/hydrate.js';
@@ -14,14 +14,14 @@ import { hydratePageRootIntoContext } from '../../../../src/element-template/bac
 import type { SerializedElementTemplate, SerializedPageRoot } from '../../../../src/element-template/protocol/types.js';
 
 describe('hydratePageRootIntoContext', () => {
-  const reconcileAuthoredPageAttributesOnHydration = vi.fn();
+  const reconcileAuthoredPageAttributesOnHydration = rs.fn();
   const root = {
     reconcileAuthoredPageAttributesOnHydration,
   } as unknown as BackgroundPageRootInstance;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(hydrateRootChildrenIntoContext).mockReturnValue(true);
+    rs.clearAllMocks();
+    rs.mocked(hydrateRootChildrenIntoContext).mockReturnValue(true);
   });
 
   it('hydrates slot-0 roots before reconciling page attributes', () => {
@@ -44,13 +44,13 @@ describe('hydratePageRootIntoContext', () => {
     expect(reconcileAuthoredPageAttributesOnHydration).toHaveBeenCalledWith({
       id: 'main-thread',
     });
-    expect(vi.mocked(hydrateRootChildrenIntoContext).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(reconcileAuthoredPageAttributesOnHydration).mock.invocationCallOrder[0]!,
+    expect(rs.mocked(hydrateRootChildrenIntoContext).mock.invocationCallOrder[0]).toBeLessThan(
+      rs.mocked(reconcileAuthoredPageAttributesOnHydration).mock.invocationCallOrder[0]!,
     );
   });
 
   it('does not reconcile page attributes when child hydration fails', () => {
-    vi.mocked(hydrateRootChildrenIntoContext).mockReturnValue(false);
+    rs.mocked(hydrateRootChildrenIntoContext).mockReturnValue(false);
     const page = {
       tag: 'page',
       attributes: { id: 'main-thread' },

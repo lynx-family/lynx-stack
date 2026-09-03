@@ -2,36 +2,36 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { expect, vi } from 'vitest';
+import { expect, rs } from '@rstest/core';
 
 export const performance = {
   __functionCallHistory: [],
-  _generatePipelineOptions: vi.fn(() => {
+  _generatePipelineOptions: rs.fn(() => {
     performance.__functionCallHistory.push(['_generatePipelineOptions']);
     return {
       pipelineID: 'pipelineID',
       needTimestamps: false,
     };
   }),
-  _onPipelineStart: vi.fn((id, options) => {
+  _onPipelineStart: rs.fn((id, options) => {
     if (typeof options === 'undefined') {
       performance.__functionCallHistory.push(['_onPipelineStart', id]);
     } else {
       performance.__functionCallHistory.push(['_onPipelineStart', id, options]);
     }
   }),
-  _markTiming: vi.fn((id, key) => {
+  _markTiming: rs.fn((id, key) => {
     performance.__functionCallHistory.push(['_markTiming', id, key]);
   }),
-  _bindPipelineIdWithTimingFlag: vi.fn((id, flag) => {
+  _bindPipelineIdWithTimingFlag: rs.fn((id, flag) => {
     performance.__functionCallHistory.push(['_bindPipelineIdWithTimingFlag', id, flag]);
   }),
 
-  profileStart: vi.fn(),
-  profileEnd: vi.fn(),
-  profileMark: vi.fn(),
-  profileFlowId: vi.fn(() => 666),
-  isProfileRecording: vi.fn(() => true),
+  profileStart: rs.fn(),
+  profileEnd: rs.fn(),
+  profileMark: rs.fn(),
+  profileFlowId: rs.fn(() => 666),
+  isProfileRecording: rs.fn(() => true),
 };
 
 export function installPerformanceGlobals() {
@@ -40,8 +40,8 @@ export function installPerformanceGlobals() {
   }
   globalThis.lynx.performance = performance;
 
-  console.profile = vi.fn();
-  console.profileEnd = vi.fn();
+  console.profile = rs.fn();
+  console.profileEnd = rs.fn();
 }
 
 export function resetPerformanceMocks() {

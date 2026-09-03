@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs, beforeAll } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -30,35 +30,35 @@ const App = ({ fn, attr }) => {
 const MTFQueue = [];
 
 beforeAll(() => {
-  vi.stubGlobal(
+  rs.stubGlobal(
     'runWorklet',
-    vi.fn((worklet, args) => {
+    rs.fn((worklet, args) => {
       MTFQueue.push({ api: 'runWorklet', worklet, args });
     }),
   );
-  vi.stubGlobal('lynxWorkletImpl', {
-    _runRunOnMainThreadTask: vi.fn((worklet, args) => {
+  rs.stubGlobal('lynxWorkletImpl', {
+    _runRunOnMainThreadTask: rs.fn((worklet, args) => {
       MTFQueue.push({ api: '_runRunOnMainThreadTask', worklet, args });
     }),
     _runOnBackgroundDelayImpl: {
-      runDelayedBackgroundFunctions: vi.fn(),
+      runDelayedBackgroundFunctions: rs.fn(),
     },
     _eomImpl: {
-      setShouldFlush: vi.fn((value) => {
+      setShouldFlush: rs.fn((value) => {
         MTFQueue.push({ api: 'setShouldFlush', value });
       }),
     },
     _refImpl: {
-      clearFirstScreenWorkletRefMap: vi.fn(),
+      clearFirstScreenWorkletRefMap: rs.fn(),
     },
     _eventDelayImpl: {
-      clearDelayedWorklets: vi.fn(),
-      runDelayedWorklet: vi.fn(),
+      clearDelayedWorklets: rs.fn(),
+      runDelayedWorklet: rs.fn(),
     },
   });
-  vi.stubGlobal(
+  rs.stubGlobal(
     '__FlushElementTree',
-    vi.fn(() => {
+    rs.fn(() => {
       MTFQueue.push({ api: '__FlushElementTree' });
     }),
   );
@@ -74,7 +74,7 @@ beforeEach(() => {
 afterEach(() => {
   globalEnvManager.switchToBackground();
   destroyWorklet();
-  vi.resetAllMocks();
+  rs.resetAllMocks();
   MTFQueue.length = 0;
 });
 
@@ -106,7 +106,7 @@ describe('runOnMainThread', () => {
       _wkltId: '835d:450ef:2',
       _jsFn: {
         onDone: {
-          _fn: vi.fn(),
+          _fn: rs.fn(),
           _jsFnId: 7,
         },
       },
@@ -136,7 +136,7 @@ describe('runOnMainThread', () => {
 
   it('drops only discarded return ids without breaking unrelated return listeners', async () => {
     globalEnvManager.switchToBackground();
-    const discardedResolve = vi.fn();
+    const discardedResolve = rs.fn();
     const discardedResolveId = onFunctionCall(discardedResolve);
     let keptResolveId = 0;
     const keptPromise = new Promise(resolve => {
@@ -169,7 +169,7 @@ describe('runOnMainThread', () => {
     expect(lynx.getCoreContext().removeEventListener).not.toHaveBeenCalled();
 
     globalEnvManager.switchToBackground();
-    const finalResolveId = onFunctionCall(vi.fn());
+    const finalResolveId = onFunctionCall(rs.fn());
     dropFunctionCallReturnIds([finalResolveId]);
     expect(lynx.getCoreContext().removeEventListener).toHaveBeenCalledWith(
       WorkletEvents.FunctionCallRet,

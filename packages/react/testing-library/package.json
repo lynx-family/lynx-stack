@@ -8,9 +8,8 @@
     "dev": "rslib build --watch",
     "rstest": "rstest",
     "test": "npm run test:base && npm run test:3.1",
-    "test:3.1": "vitest --config vitest.3.1.config.ts",
-    "test:base": "vitest",
-    "test:ui": "vitest --ui"
+    "test:3.1": "rstest run --config rstest.3.1.config.ts",
+    "test:base": "rstest run"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
@@ -23,6 +22,7 @@
     "@rstest/core": "catalog:rstest",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
-    "preact": "catalog:lynxjs"
+    "preact": "catalog:lynxjs",
+    "vitest": "^3.2.7"
   }
 }

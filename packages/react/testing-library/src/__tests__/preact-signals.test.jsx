@@ -4,7 +4,7 @@
 import '@testing-library/jest-dom';
 
 import { batch, computed, signal, useComputed, useSignal } from '@lynx-js/react-signals';
-import { expect, it, vi } from 'vitest';
+import { expect, it, rs } from '@rstest/core';
 
 import { act, fireEvent, render } from '../index.jsx';
 
@@ -12,7 +12,7 @@ it('rerenders when signals read during render change', () => {
   const firstName = signal('Lynx');
   const lastName = signal('Stack');
   const fullName = computed(() => `${firstName.value} ${lastName.value}`);
-  const renderSpy = vi.fn();
+  const renderSpy = rs.fn();
 
   function Greeting() {
     renderSpy();

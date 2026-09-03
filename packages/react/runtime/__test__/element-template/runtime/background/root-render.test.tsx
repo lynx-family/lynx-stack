@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
@@ -35,7 +35,7 @@ describe('ElementTemplate root render timing', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     clearEtAttrPlanMap();
     clearRefState();
     resetElementTemplateCommitState();

@@ -1,8 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { vi } from 'vitest';
-import type { Mock } from 'vitest';
+import { rs } from '@rstest/core';
+import type { Mock } from '@rstest/core';
 
 import type { PluginAPI } from '../../types/tailwind-types.js';
 
@@ -34,15 +34,15 @@ export function mockPluginAPI(
   themeVals: Record<string, unknown> = {},
 ): RuntimePluginAPI {
   const base: RuntimePluginAPI = {
-    matchUtilities: vi.fn(),
-    matchComponents: vi.fn(),
-    addUtilities: vi.fn(),
-    addComponents: vi.fn(),
-    addBase: vi.fn(),
-    addVariant: vi.fn(),
-    matchVariant: vi.fn(),
-    corePlugins: vi.fn().mockReturnValue(true),
-    config: vi.fn((_key: string, def?: unknown) => def),
+    matchUtilities: rs.fn(),
+    matchComponents: rs.fn(),
+    addUtilities: rs.fn(),
+    addComponents: rs.fn(),
+    addBase: rs.fn(),
+    addVariant: rs.fn(),
+    matchVariant: rs.fn(),
+    corePlugins: rs.fn().mockReturnValue(true),
+    config: rs.fn((_key: string, def?: unknown) => def),
     theme: (<T = unknown>(path?: string, defaultValue?: T): T => {
       if (!path) return defaultValue as T;
       const keys = path.split('.');

@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 import { render, fireEvent } from '../..';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { useState } from 'preact/hooks';
 
 test('single static text should be set by `__SetAttribute`', () => {
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateRawText');
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateRawText');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
 
   function App() {
     return (
@@ -62,9 +62,9 @@ test('single static text should be set by `__SetAttribute`', () => {
 });
 
 test('dynamic text should be created by `__CreateRawText`', () => {
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateRawText');
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateRawText');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
 
   function App() {
     const [content, setContent] = useState('Hello from App');

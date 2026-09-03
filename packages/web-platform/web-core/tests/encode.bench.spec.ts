@@ -1,5 +1,5 @@
 import './jsdom.js';
-import { bench, describe } from 'vitest';
+import { describeBench } from './benchRunner.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import * as CSS from '@lynx-js/css-serializer';
 import {
@@ -7,7 +7,7 @@ import {
   decode_style_info,
 } from '../binary/encode/encode.js';
 
-describe('Encode/Decode Benchmarks', () => {
+describeBench('Encode/Decode Benchmarks', (bench) => {
   // 1. Setup Data
   const SMALL_CSS = `
         .foo {
@@ -82,37 +82,26 @@ describe('Encode/Decode Benchmarks', () => {
   const decodedMedium = decode_style_info(bufferMedium, undefined, true);
   const decodedLarge = decode_style_info(bufferLarge, undefined, true);
 
-  describe('Decode Performance (decode_style_info)', () => {
-    bench('Small CSS', () => {
-      decode_style_info(bufferSmall, undefined, true);
-    });
+  const groups = {
+    'Decode Performance (decode_style_info)': {
+      'Small CSS': () => decode_style_info(bufferSmall, undefined, true),
+      'Medium CSS': () => decode_style_info(bufferMedium, undefined, true),
+      'Large CSS': () => decode_style_info(bufferLarge, undefined, true),
+    },
+    'Generate Performance (get_style_content)': {
+      'Small CSS': () => get_style_content(decodedSmall),
+      'Medium CSS': () => get_style_content(decodedMedium),
+      'Large CSS': () => get_style_content(decodedLarge),
+    },
+    'Full Roundtrip (Decode + Generate)': {
+      'Medium CSS': () =>
+        get_style_content(decode_style_info(bufferMedium, undefined, true)),
+    },
+  };
 
-    bench('Medium CSS', () => {
-      decode_style_info(bufferMedium, undefined, true);
-    });
-
-    bench('Large CSS', () => {
-      decode_style_info(bufferLarge, undefined, true);
-    });
-  });
-
-  describe('Generate Performance (get_style_content)', () => {
-    bench('Small CSS', () => {
-      get_style_content(decodedSmall);
-    });
-
-    bench('Medium CSS', () => {
-      get_style_content(decodedMedium);
-    });
-
-    bench('Large CSS', () => {
-      get_style_content(decodedLarge);
-    });
-  });
-
-  describe('Full Roundtrip (Decode + Generate)', () => {
-    bench('Medium CSS', () => {
-      get_style_content(decode_style_info(bufferMedium, undefined, true));
-    });
-  });
+  for (const [group, tasks] of Object.entries(groups)) {
+    for (const [taskName, task] of Object.entries(tasks)) {
+      bench(`${group} > ${taskName}`, task);
+    }
+  }
 });

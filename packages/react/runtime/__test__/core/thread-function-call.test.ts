@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { WorkletEvents, type RunWorkletCtxData } from '../../src/worklet-runtime/bindings/events.js';
 import {
@@ -16,19 +16,19 @@ import { clearMtsConfigCacheForTesting } from '../../src/core/mts-capability.js'
 
 function createLynxMock() {
   const coreContext = {
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    addEventListener: rs.fn(),
+    removeEventListener: rs.fn(),
+    dispatchEvent: rs.fn(),
   };
   const jsContext = {
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    addEventListener: rs.fn(),
+    removeEventListener: rs.fn(),
+    dispatchEvent: rs.fn(),
   };
 
   globalThis.lynx = {
-    getCoreContext: vi.fn(() => coreContext),
-    getJSContext: vi.fn(() => jsContext),
+    getCoreContext: rs.fn(() => coreContext),
+    getJSContext: rs.fn(() => jsContext),
   } as unknown as typeof lynx;
 
   return { coreContext, jsContext };
@@ -36,8 +36,8 @@ function createLynxMock() {
 
 describe('thread-function-call main-thread primitives', () => {
   beforeEach(() => {
-    vi.stubGlobal('__JS__', true);
-    vi.stubGlobal('__LEPUS__', false);
+    rs.stubGlobal('__JS__', true);
+    rs.stubGlobal('__LEPUS__', false);
     globalThis.SystemInfo = {
       lynxSdkVersion: '999.999',
     } as SystemInfo;
@@ -48,7 +48,7 @@ describe('thread-function-call main-thread primitives', () => {
     takeDelayedRunOnMainThreadData();
     resetFunctionCallReturnListener();
     clearMtsConfigCacheForTesting();
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('keeps delayed main-thread data in a live shared queue', () => {
@@ -98,7 +98,7 @@ describe('thread-function-call main-thread primitives', () => {
       _wkltId: 'main-thread-function-with-background-function',
       _jsFn: {
         onDone: {
-          _fn: vi.fn(),
+          _fn: rs.fn(),
           _jsFnId: 7,
         },
       },
@@ -132,7 +132,7 @@ describe('thread-function-call main-thread primitives', () => {
 
   it('drops only selected function return ids', async () => {
     const { coreContext } = createLynxMock();
-    const droppedResolve = vi.fn();
+    const droppedResolve = rs.fn();
     const droppedId = onFunctionCall(droppedResolve);
     let keptId = 0;
     const keptPromise = new Promise(resolve => {
@@ -157,7 +157,7 @@ describe('thread-function-call main-thread primitives', () => {
     expect(droppedResolve).not.toHaveBeenCalled();
     await expect(keptPromise).resolves.toBe('kept');
 
-    const finalId = onFunctionCall(vi.fn());
+    const finalId = onFunctionCall(rs.fn());
     dropFunctionCallReturnIds([finalId]);
     expect(coreContext.removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
   });

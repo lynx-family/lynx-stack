@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { createContext, createPortal, createRef, useContext, useEffect, useRef, useState } from '@lynx-js/react';
 import { act } from 'preact/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rs } from '@rstest/core';
 import { fireEvent, render } from '..';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 
@@ -68,7 +68,7 @@ describe('createPortal (useRef + useEffect)', () => {
   // preact has no ReactDOM-style synthetic event system, so events do not
   // bubble through the React tree across the portal boundary.
   it('does NOT bubble events through the React tree across the portal boundary', () => {
-    const onTapInReactParent = vi.fn();
+    const onTapInReactParent = rs.fn();
     const portaledRef = createRef();
 
     function App() {
@@ -96,7 +96,7 @@ describe('createPortal (useRef + useEffect)', () => {
   });
 
   it('bubbles events to the physical host element in the element tree', () => {
-    const onTapInHost = vi.fn();
+    const onTapInHost = rs.fn();
     const portaledRef = createRef();
 
     function App() {
@@ -184,7 +184,7 @@ describe('createPortal (useRef + useEffect)', () => {
   });
 
   it('removes portal children and fires cleanup on unmount', () => {
-    const cleanup = vi.fn();
+    const cleanup = rs.fn();
     function Child() {
       useEffect(() => cleanup, []);
       return <text>child</text>;
@@ -401,7 +401,7 @@ describe('createPortal (idiomatic ref={setState})', () => {
   });
 
   it('removes portal children and fires cleanup on unmount', () => {
-    const cleanup = vi.fn();
+    const cleanup = rs.fn();
     function Child() {
       useEffect(() => cleanup, []);
       return <text>child</text>;
@@ -458,7 +458,7 @@ describe('createPortal (idiomatic ref={setState})', () => {
 
 describe('createPortal cleanup ordering', () => {
   it('does not throw when portal container is removed before portaled children', () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     function App() {
@@ -765,7 +765,7 @@ describe('createPortal with list-item reuse', () => {
       );
     };
 
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const { container, getByTestId } = render(<Comp />);
@@ -897,7 +897,7 @@ describe('createPortal with list-item reuse', () => {
     const uid5 = elementTree.enterListItemAtIndex(list, 5);
     expect(uid5).toBe(uid1);
 
-    const __RemoveElement = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__RemoveElement');
+    const __RemoveElement = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__RemoveElement');
 
     // Remove the element 3
     act(() => {
@@ -1042,9 +1042,9 @@ describe('createPortal with list-item reuse', () => {
       </page>
     `);
 
-    const __CreateElement = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
-    const __SetAttribute = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
-    const __FlushElementTree = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__FlushElementTree');
+    const __CreateElement = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
+    const __SetAttribute = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
+    const __FlushElementTree = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__FlushElementTree');
 
     // Remove action is generated
     expect(JSON.parse(list.getAttribute('update-list-info'))[1].removeAction)
@@ -1256,7 +1256,7 @@ describe('portal unmount', () => {
    * spy on here).
    */
   it('destroys portaled <list> native callbacks when the portal is unmounted', () => {
-    const updateCallbacks = vi.spyOn(
+    const updateCallbacks = rs.spyOn(
       lynxTestingEnv.mainThread.globalThis,
       '__UpdateListCallbacks',
     );

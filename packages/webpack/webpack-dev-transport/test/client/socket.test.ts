@@ -32,21 +32,21 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @vitest-environment jsdom
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 describe('socket', () => {
   beforeEach(() => {
-    vi.resetAllMocks();
-    vi.resetModules();
+    rs.resetAllMocks();
+    rs.resetModules();
   });
 
   it('should default to LynxTransportClient when no __webpack_dev_server_client__ set', async () => {
-    vi.mock('../../client/transport.js');
+    rs.mock('../../client/transport.js');
 
     const { default: socket } = await import('../../client/socket.js');
     const { LynxTransportClient } = await import('../../client/transport.js');
 
-    const mockHandler = vi.fn();
+    const mockHandler = rs.fn();
 
     socket('my.url', {
       example: mockHandler,
@@ -75,14 +75,12 @@ describe('socket', () => {
   });
 
   it('should use __webpack_dev_server_client__ when set', async () => {
-    vi.mock('../../client/clients/WebSocketClient');
-
     const { default: socket } = await import('../../client/socket.js');
 
     const { LynxTransportClient } = await import('../../client/transport.js');
     global.__webpack_dev_server_client__ = LynxTransportClient;
 
-    const mockHandler = vi.fn();
+    const mockHandler = rs.fn();
 
     socket('my.url', {
       example: mockHandler,

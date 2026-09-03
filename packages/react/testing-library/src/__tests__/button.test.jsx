@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, it, vi } from 'vitest';
+import { expect, it, rs } from '@rstest/core';
 import { render, fireEvent, screen } from '../pure';
 
 it('basic', async function() {
@@ -9,7 +9,7 @@ it('basic', async function() {
   }) => {
     return <view bindtap={onClick}>{children}</view>;
   };
-  const onClick = vi.fn(() => {
+  const onClick = rs.fn(() => {
   });
 
   const { container } = render(

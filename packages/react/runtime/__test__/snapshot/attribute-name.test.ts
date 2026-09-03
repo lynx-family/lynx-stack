@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from '@rstest/core';
 
 import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../src/shared/attribute-name.js';
 

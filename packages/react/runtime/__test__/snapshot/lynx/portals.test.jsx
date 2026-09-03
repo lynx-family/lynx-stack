@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { createContext, createPortal, useContext, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
@@ -40,7 +40,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -199,7 +199,7 @@ describe('createPortal', () => {
     // `child.parentNode.removeChild(child)` → our `fakeRoot.removeChild` →
     // `nodesRefRemoveChild` patch op. Apply that patch back on main thread
     // to exercise the `nodesRefRemoveChild` apply branch + `__RemoveElement`.
-    vi.useFakeTimers();
+    rs.useFakeTimers();
     const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     render(null, __root);
@@ -215,8 +215,8 @@ describe('createPortal', () => {
     // drain. This catches both the regular tree teardown AND the portal
     // subtree (via `fakeRoot.removeChild` enqueueing into
     // `globalBackgroundSnapshotInstancesToRemove`).
-    vi.advanceTimersByTime(10000);
-    vi.useRealTimers();
+    rs.advanceTimersByTime(10000);
+    rs.useRealTimers();
 
     // back to baseline (only the root SI on each side).
     expect(snapshotInstanceManager.values.size).toBe(1);
@@ -328,7 +328,7 @@ describe('createPortal', () => {
     // Now unmount the portal via state change. `fakeRoot.removeChild` should
     // queue the portal child's BSI id into the cleanup list, which commit
     // captures and drains via a debounced 10s `tearDown`.
-    vi.useFakeTimers();
+    rs.useFakeTimers();
     before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     setShow(false);
@@ -337,8 +337,8 @@ describe('createPortal', () => {
     // Drive the debounced commit cleanup. Without the bg-side enqueue in
     // `fakeRoot.removeChild`, this advance is a no-op and the portal
     // child BSI stays in the manager.
-    vi.advanceTimersByTime(10000);
-    vi.useRealTimers();
+    rs.advanceTimersByTime(10000);
+    rs.useRealTimers();
 
     expect(backgroundSnapshotInstanceManager.values.size).toBe(sizeBeforeMount);
   });

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
 import {
@@ -35,16 +35,16 @@ describe('mts-destroy', () => {
     elementTemplateRegistry.clear();
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
-    vi.doUnmock('../../../src/element-template/native/patch-listener.js');
-    vi.doUnmock('../../../src/element-template/runtime/template/registry.js');
-    vi.unstubAllGlobals();
+    rs.doUnmock('../../../src/element-template/native/patch-listener.js');
+    rs.doUnmock('../../../src/element-template/runtime/template/registry.js');
+    rs.unstubAllGlobals();
   });
 
   it('registers and unregisters destruction listener when native exists', () => {
     const g = globalThis as LynxWithNative;
     const originalGetNative = g.lynx.getNative;
-    const addEventListener = vi.fn();
-    const removeEventListener = vi.fn();
+    const addEventListener = rs.fn();
+    const removeEventListener = rs.fn();
 
     g.lynx.getNative = () => ({ addEventListener, removeEventListener });
 
@@ -78,10 +78,10 @@ describe('mts-destroy', () => {
     };
     const originalGetNative = g.lynx.getNative;
     const originalPerformance = g.lynx.performance;
-    const removeEventListener = vi.fn();
+    const removeEventListener = rs.fn();
 
     try {
-      g.lynx.getNative = () => ({ addEventListener: vi.fn(), removeEventListener });
+      g.lynx.getNative = () => ({ addEventListener: rs.fn(), removeEventListener });
       g.lynx.performance = {};
 
       expect(() => onMtsDestruction()).not.toThrow();
@@ -95,7 +95,7 @@ describe('mts-destroy', () => {
   it('clears the element template registry on destruction', () => {
     const registryRef = {} as ElementRef;
     const mtRef = { _wvid: 7 };
-    const updateWorkletRef = vi.fn();
+    const updateWorkletRef = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -138,12 +138,12 @@ describe('mts-destroy', () => {
   });
 
   it('clears delayed runOnBackground tasks on destruction', () => {
-    const delayedBackgroundFunctionArray = [{ task: vi.fn() }];
+    const delayedBackgroundFunctionArray = [{ task: rs.fn() }];
     globalThis.lynxWorkletImpl = {
       ...(globalThis.lynxWorkletImpl ?? {}),
       _runOnBackgroundDelayImpl: {
         delayedBackgroundFunctionArray,
-        clearDelayedBackgroundFunctions: vi.fn(() => {
+        clearDelayedBackgroundFunctions: rs.fn(() => {
           delayedBackgroundFunctionArray.length = 0;
         }),
       },
@@ -160,12 +160,12 @@ describe('mts-destroy', () => {
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {
     const listRef = { __isNativeRef: true, id: 'list', __mockNativeId: 100 } as unknown as ElementRef;
     const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 101 } as unknown as ElementRef;
-    const insertNode = vi.fn();
-    const removeNode = vi.fn();
-    const flush = vi.fn();
-    vi.stubGlobal('__InsertNodeToElementTemplate', insertNode);
-    vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNode);
-    vi.stubGlobal('__FlushElementTree', flush);
+    const insertNode = rs.fn();
+    const removeNode = rs.fn();
+    const flush = rs.fn();
+    rs.stubGlobal('__InsertNodeToElementTemplate', insertNode);
+    rs.stubGlobal('__RemoveNodeFromElementTemplate', removeNode);
+    rs.stubGlobal('__FlushElementTree', flush);
     elementTemplateRegistry.set(100, listRef);
     elementTemplateRegistry.set(101, itemRef);
     registerElementTemplateListItem(101, itemRef, {
@@ -188,26 +188,26 @@ describe('mts-destroy', () => {
   });
 
   it('clears registry and removes native listener even when patch listener reset throws', async () => {
-    vi.resetModules();
+    rs.resetModules();
     const resetError = new Error('patch listener reset failed');
-    const clear = vi.fn();
-    const removeEventListener = vi.fn();
+    const clear = rs.fn();
+    const removeEventListener = rs.fn();
     const g = globalThis as LynxWithNative;
     const originalGetNative = g.lynx.getNative;
 
-    vi.doMock('../../../src/element-template/native/patch-listener.js', () => ({
-      resetElementTemplatePatchListener: vi.fn(() => {
+    rs.doMock('../../../src/element-template/native/patch-listener.js', () => ({
+      resetElementTemplatePatchListener: rs.fn(() => {
         throw resetError;
       }),
     }));
-    vi.doMock('../../../src/element-template/runtime/template/registry.js', () => ({
+    rs.doMock('../../../src/element-template/runtime/template/registry.js', () => ({
       elementTemplateRegistry: {
         clear,
       },
     }));
 
     try {
-      g.lynx.getNative = () => ({ addEventListener: vi.fn(), removeEventListener });
+      g.lynx.getNative = () => ({ addEventListener: rs.fn(), removeEventListener });
       const { onMtsDestruction: onMtsDestructionWithThrowingReset } = await import(
         '../../../src/element-template/native/mts-destroy.js'
       );

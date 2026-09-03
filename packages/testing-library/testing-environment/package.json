@@ -60,11 +60,12 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "rstest": "rstest",
-    "test": "vitest"
+    "test": "rstest run"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.0",
     "@types/jsdom": "^28.0.3",
-    "rsbuild-plugin-publint": "1.0.0"
+    "rsbuild-plugin-publint": "1.0.0",
+    "vitest": "^3.2.7"
   }
 }

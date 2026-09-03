@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
@@ -39,14 +39,14 @@ export async function runCompiledHydrationScenario(
     sourcePath,
   } = options;
 
-  vi.clearAllMocks();
+  rs.clearAllMocks();
   const mockNative = installMockNativePapi({ clearTemplatesOnCleanup: true });
   const envManager = new ElementTemplateEnvManager();
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
 
   const hydrationData: SerializedEtNode[] = [];
-  const onHydrate = vi.fn().mockImplementation((event: { data: ElementTemplateHydrateCommitContext }) => {
+  const onHydrate = rs.fn().mockImplementation((event: { data: ElementTemplateHydrateCommitContext }) => {
     hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);

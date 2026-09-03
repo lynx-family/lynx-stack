@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { options, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { setupDocument } from '../../../src/document';
 import { setupVNodeSourceHook } from '../../../src/snapshot/debug/vnodeSource';

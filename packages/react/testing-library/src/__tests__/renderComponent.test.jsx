@@ -1,13 +1,13 @@
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { Component, useState } from '@lynx-js/react';
 
 import { render, act } from '..';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 
 test('setState generates insertBefore operation', async () => {
-  vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+  rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
   const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
   let setList;
@@ -156,9 +156,9 @@ test('setState generates insertBefore operation', async () => {
 });
 
 test('setState triggered renderComponent should have correct slotIndex', async () => {
-  vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+  rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
   const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
   const Parent = ({ children }) => {

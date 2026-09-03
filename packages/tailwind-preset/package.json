@@ -32,8 +32,8 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "rstest run",
+    "test:coverage": "rstest run --coverage"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

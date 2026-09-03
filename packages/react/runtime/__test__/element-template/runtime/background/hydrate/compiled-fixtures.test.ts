@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { beforeEach, describe } from 'vitest';
+import { beforeEach, describe } from '@rstest/core';
 
 import { formatElementTemplateUpdateCommands } from '../../../../../src/element-template/debug/alog.js';
 import { clearTemplates } from '../../../test-utils/debug/registry.js';

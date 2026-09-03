@@ -4,7 +4,6 @@
 
 import js from '@eslint/js';
 import markdown from '@eslint/markdown';
-import vitest from '@vitest/eslint-plugin';
 import headers from 'eslint-plugin-headers';
 import importPlugin from 'eslint-plugin-import';
 import nodePlugin from 'eslint-plugin-n';
@@ -63,11 +62,20 @@ export default tseslint.config(
 
       // Configs
       'eslint.config.js',
-      'vitest.config.ts',
       '**/rslib.config.ts',
 
+      // Rstest project configs in packages that cannot list them in a
+      // `tsconfig.json` (no tsconfig at all, `files: []`, or a `rootDir` that
+      // excludes the repo-root-level file). The Vitest configs they replaced
+      // were ignored here for the same reason.
+      'packages/lynx/autolink-codegen/rstest.config.ts',
+      'packages/lynx/create-lynx-library/rstest.config.ts',
+      'packages/lynx/gesture-runtime/rstest.config.ts',
+      'packages/motion/rstest.config.ts',
+      'packages/react/runtime/rstest.config.ts',
+      'packages/react/transform/rstest.config.ts',
+
       // Ignored packages
-      'packages/**/vitest.config.ts',
       'packages/genui/cli/templates/**',
       'packages/react/runtime/compat/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
@@ -183,7 +191,7 @@ export default tseslint.config(
       'n/file-extension-in-import': ['error', 'always'],
       'n/prefer-node-protocol': 'error',
       'n/no-extraneous-import': ['error', {
-        allowModules: ['vitest', 'preact'],
+        allowModules: ['@rstest/core', 'preact'],
       }],
       'n/no-unpublished-import': 'off',
       'n/no-missing-import': 'off',
@@ -304,8 +312,10 @@ export default tseslint.config(
           allowDefaultProject: [
             '*.js',
             'rslib.config.ts',
-            'vitest.config.ts',
             'rstest.config.ts',
+            // `web-core` builds from `ts/` only, so its bench config cannot go
+            // in that package's `tsconfig.json` include list.
+            'rstest.bench.config.ts',
             'packages/genui/index.ts',
           ],
           defaultProject: './tsconfig.json',
@@ -364,34 +374,6 @@ export default tseslint.config(
         },
         jsxPragma: null,
         tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-  // Vitest-related
-  {
-    files: ['**/*.test.ts', '**/*.test-d.ts'],
-    plugins: {
-      vitest,
-    },
-    rules: {
-      ...vitest.configs.recommended.rules,
-      // These rules are newly introduced in vitest's recommended set and have
-      // significant existing violations across the repo. Keep them disabled for
-      // now to avoid churn when updating linting deps.
-      'vitest/no-conditional-expect': 'off',
-      'vitest/no-interpolation-in-snapshots': 'off',
-      // `expect.poll(cb, { timeout })` legitimately passes an options argument;
-      // allow up to 2 arguments so the newer plugin does not flag it.
-      'vitest/valid-expect': ['error', { maxArgs: 2 }],
-    },
-    settings: {
-      vitest: {
-        typecheck: true,
-      },
-    },
-    languageOptions: {
-      globals: {
-        ...vitest.environments.env.globals,
       },
     },
   },

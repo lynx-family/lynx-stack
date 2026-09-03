@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { hydrationMap } from '../../../../src/element-template/hydration-map.js';
 import {
@@ -33,7 +33,7 @@ describe('ElementTemplate ref prop adapter', () => {
   });
 
   it('attaches function refs with an ET selector proxy', () => {
-    const ref = vi.fn();
+    const ref = rs.fn();
 
     queueRefAttrUpdate(null, ref, -2, 0);
     flushPendingRefs();
@@ -45,8 +45,8 @@ describe('ElementTemplate ref prop adapter', () => {
   });
 
   it('detaches function refs through cleanup when the callback returned one', () => {
-    const cleanup = vi.fn();
-    const ref = vi.fn(() => cleanup);
+    const cleanup = rs.fn();
+    const ref = rs.fn(() => cleanup);
 
     queueRefAttrUpdate(null, ref, -2, 0);
     flushPendingRefs();
@@ -60,7 +60,7 @@ describe('ElementTemplate ref prop adapter', () => {
   });
 
   it('detaches function refs with null when there is no cleanup', () => {
-    const ref = vi.fn();
+    const ref = rs.fn();
 
     queueRefAttrUpdate(null, ref, -2, 0);
     flushPendingRefs();
@@ -93,14 +93,14 @@ describe('ElementTemplate ref prop adapter', () => {
   });
 
   it('delays NodesRef methods until hydration binds the stable handle', () => {
-    const exec = vi.fn();
-    const setNativeProps = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ setNativeProps }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
-    vi.stubGlobal('lynx', { createSelectorQuery });
+    const exec = rs.fn();
+    const setNativeProps = rs.fn(() => ({ exec }));
+    const select = rs.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = rs.fn(() => ({ select }));
+    rs.stubGlobal('lynx', { createSelectorQuery });
 
     try {
-      const ref = vi.fn();
+      const ref = rs.fn();
       queueRefAttrUpdate(null, ref, -2, 0);
       flushPendingRefs();
 
@@ -122,19 +122,19 @@ describe('ElementTemplate ref prop adapter', () => {
       expect(setNativeProps).toHaveBeenCalledWith({ opacity: 2 });
       expect(exec).toHaveBeenCalledTimes(1);
     } finally {
-      vi.unstubAllGlobals();
+      rs.unstubAllGlobals();
     }
   });
 
   it('resolves delayed selectors through hydrated handle ids', () => {
-    const exec = vi.fn();
-    const setNativeProps = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ setNativeProps }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
-    vi.stubGlobal('lynx', { createSelectorQuery });
+    const exec = rs.fn();
+    const setNativeProps = rs.fn(() => ({ exec }));
+    const select = rs.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = rs.fn(() => ({ select }));
+    rs.stubGlobal('lynx', { createSelectorQuery });
 
     try {
-      const ref = vi.fn();
+      const ref = rs.fn();
       queueRefAttrUpdate(null, ref, 1, 0);
       flushPendingRefs();
 
@@ -146,7 +146,7 @@ describe('ElementTemplate ref prop adapter', () => {
       expect(setNativeProps).toHaveBeenCalledWith({ opacity: 1 });
       expect(exec).toHaveBeenCalledTimes(1);
     } finally {
-      vi.unstubAllGlobals();
+      rs.unstubAllGlobals();
     }
   });
 });

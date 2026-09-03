@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createServer } from 'node:http'
 
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, rs, test } from '@rstest/core'
 import { WebSocketServer } from 'ws'
 import type { WebSocket } from 'ws'
 
@@ -18,7 +18,7 @@ describe('WebSocket', () => {
   )
 
   beforeEach(() => {
-    vi
+    rs
       .stubGlobal('lynx', stubLynx)
       .stubGlobal('NativeModules', {
         LynxWebSocketModule,
@@ -26,7 +26,7 @@ describe('WebSocket', () => {
       .clearAllMocks()
 
     return () => {
-      vi.unstubAllGlobals()
+      rs.unstubAllGlobals()
     }
   })
 
@@ -50,12 +50,17 @@ describe('WebSocket', () => {
   })
 
   describe.each([
-    { name: 'builtin', impl: import('../src/index.js') },
+    {
+      name: 'builtin',
+      // Deferred: `src/WebSocketImpl.ts` reads the `lynx` global at module
+      // scope, and `beforeEach` only stubs it once collection has finished.
+      impl: () => import('../src/index.js'),
+    },
   ])(
     `with $name impl`,
     ({ name, impl }) => {
       async function createWebSocket(protocol?: string | string[]) {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
 
         const address = server.address()
 
@@ -97,7 +102,7 @@ describe('WebSocket', () => {
       })
 
       test('connect', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
 
         const ws = await createWebSocket()
 
@@ -113,8 +118,8 @@ describe('WebSocket', () => {
       test.runIf(name === 'builtin')(
         'connect without WebSocketModule',
         async () => {
-          const { WebSocket } = await impl
-          vi.stubGlobal('NativeModules', {})
+          const { WebSocket } = await impl()
+          rs.stubGlobal('NativeModules', {})
 
           const ws = new WebSocket('ws://localhost:3000')
 
@@ -129,7 +134,7 @@ describe('WebSocket', () => {
       )
 
       test('send', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
         const ws = await createWebSocket()
 
         const messages: string[] = []
@@ -154,7 +159,7 @@ describe('WebSocket', () => {
       })
 
       test('send before connect', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
 
         const address = server.address()
 
@@ -183,8 +188,8 @@ describe('WebSocket', () => {
       })
 
       test('send after close', async () => {
-        const send = vi.spyOn(LynxWebSocketModule, 'send')
-        const { WebSocket } = await impl
+        const send = rs.spyOn(LynxWebSocketModule, 'send')
+        const { WebSocket } = await impl()
         const ws = await createWebSocket()
 
         ws.close()
@@ -202,7 +207,7 @@ describe('WebSocket', () => {
       })
 
       test('ping', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
         const ws = await createWebSocket()
 
         const messages: string[] = []
@@ -227,7 +232,7 @@ describe('WebSocket', () => {
       })
 
       test('ping before connect', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
 
         const address = server.address()
 
@@ -256,8 +261,8 @@ describe('WebSocket', () => {
       })
 
       test('ping after close', async () => {
-        const ping = vi.spyOn(StubWebSocketModule.prototype, 'ping')
-        const { WebSocket } = await impl
+        const ping = rs.spyOn(StubWebSocketModule.prototype, 'ping')
+        const { WebSocket } = await impl()
         const ws = await createWebSocket()
 
         ws.close()
@@ -275,8 +280,8 @@ describe('WebSocket', () => {
       })
 
       test('close multiple times', async () => {
-        const { WebSocket } = await impl
-        const close = vi.spyOn(StubWebSocketModule.prototype, 'close')
+        const { WebSocket } = await impl()
+        const close = rs.spyOn(StubWebSocketModule.prototype, 'close')
         const ws = await createWebSocket()
 
         ws.close()
@@ -292,7 +297,7 @@ describe('WebSocket', () => {
       })
 
       test('close with code and reason', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
 
         const connPromise = new Promise<WebSocket>((resolve) =>
           wss.once('connection', (socket) => resolve(socket))
@@ -318,7 +323,7 @@ describe('WebSocket', () => {
       })
 
       test('addEventListener', async () => {
-        const { WebSocket } = await impl
+        const { WebSocket } = await impl()
         const ws = await createWebSocket()
 
         const messages: string[] = []

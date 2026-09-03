@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { setupPage } from '../../src/snapshot';
@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   globalEnvManager.resetEnv();
   elementTree.clear();
 });
@@ -249,7 +249,7 @@ describe('clone element', () => {
   });
 
   it('cannot clone view with children', () => {
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleWarn = rs.spyOn(console, 'warn').mockImplementation(() => {});
     const original = <view className='a'></view>;
     const clone = cloneElement(original, {
       className: 'b',

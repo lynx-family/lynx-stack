@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { RuntimePluginAPI } from './mock-api.js';
 import { mockPluginAPI } from './mock-api.js';
@@ -52,17 +52,17 @@ export function runPlugin(
   /* Build the API: start with mockPluginAPI, then layer spies / helpers on top */
   const api: RuntimePluginAPI = mockPluginAPI({
     /* spies for assertions */
-    matchUtilities: vi.fn(),
-    matchComponents: vi.fn(),
-    addUtilities: vi.fn(),
-    addBase: vi.fn(),
-    addComponents: vi.fn(),
-    addVariant: vi.fn(),
-    matchVariant: vi.fn(),
-    corePlugins: vi.fn().mockReturnValue(true),
+    matchUtilities: rs.fn(),
+    matchComponents: rs.fn(),
+    addUtilities: rs.fn(),
+    addBase: rs.fn(),
+    addComponents: rs.fn(),
+    addVariant: rs.fn(),
+    matchVariant: rs.fn(),
+    corePlugins: rs.fn().mockReturnValue(true),
 
     /* config + theme tailored for this invocation */
-    config: vi.fn().mockImplementation(
+    config: rs.fn().mockImplementation(
       (_key: string, def?: unknown): unknown => cfg[_key] ?? def,
     ),
     /* prefix that honours cfg.prefix */

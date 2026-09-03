@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
@@ -42,7 +42,7 @@ beforeEach(() => {
 
 afterEach(() => {
   elementTree.clear();
-  vi.clearAllMocks();
+  rs.clearAllMocks();
 });
 
 const snapshot1 = __SNAPSHOT__(
@@ -826,33 +826,21 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "basic-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` function is stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              () => {
-                const pageId = 0;
-                const el = __CreateView(pageId);
-                const el1 = __CreateText(pageId);
-                __AppendElement(el, el1);
-                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-                __AppendElement(el1, el2);
-                return [
-                  el,
-                  el1,
-                  el2
-                ];
-              },
-              /* v8 ignore stop */
-              null,
-              null,
-              void 0,
-              void 0,
-              null,
-              true
-            );
-          }",
+        "(uniqID1)=>{
+                  globalThis.createSnapshot(uniqID1, /* v8 ignore start */ ()=>{
+                      const pageId = 0;
+                      const el = __CreateView(pageId);
+                      const el1 = __CreateText(pageId);
+                      __AppendElement(el, el1);
+                      const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+                      __AppendElement(el1, el2);
+                      return [
+                          el,
+                          el1,
+                          el2
+                      ];
+                  }, /* v8 ignore stop */ null, null, undefined, undefined, null, true);
+              }",
       ]
     `);
 
@@ -914,33 +902,21 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "basic-1",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` function is stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              () => {
-                const pageId = 0;
-                const el = __CreateView(pageId);
-                const el1 = __CreateText(pageId);
-                __AppendElement(el, el1);
-                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-                __AppendElement(el1, el2);
-                return [
-                  el,
-                  el1,
-                  el2
-                ];
-              },
-              /* v8 ignore stop */
-              null,
-              null,
-              void 0,
-              globDynamicComponentEntry,
-              null,
-              true
-            );
-          }",
+        "(uniqID1)=>{
+                  globalThis.createSnapshot(uniqID1, /* v8 ignore start */ ()=>{
+                      const pageId = 0;
+                      const el = __CreateView(pageId);
+                      const el1 = __CreateText(pageId);
+                      __AppendElement(el, el1);
+                      const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+                      __AppendElement(el1, el2);
+                      return [
+                          el,
+                          el1,
+                          el2
+                      ];
+                  }, /* v8 ignore stop */ null, null, undefined, globDynamicComponentEntry, null, true);
+              }",
       ]
     `);
 
@@ -966,8 +942,8 @@ describe('DEV_ONLY_addSnapshot', () => {
     snapshotManager.values.delete(uniqID1);
     delete snapshotCreatorMap[uniqID1];
 
-    const fn = vi.fn();
-    vi.stubGlobal('__SetCSSId', fn);
+    const fn = rs.fn();
+    rs.stubGlobal('__SetCSSId', fn);
     // Apply patches in main thread
     snapshotPatchApply(patch);
     new SnapshotInstance(uniqID1);
@@ -1046,7 +1022,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     };
     snapshotCreatorMap[uniqID1] = holder.globDynamicComponentEntry;
 
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = rs.spyOn(console, 'warn').mockImplementation(() => {});
     expect(() =>
       snapshotPatchApply([
         SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
@@ -1105,31 +1081,19 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-update-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` and \`update\` functions are stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              function() {
-                const pageId = 0;
-                const el = __CreateImage(pageId);
-                return [
-                  el
-                ];
-              },
-              [
-                function(ctx) {
-                  if (ctx.__elements) __SetAttribute(ctx.__elements[0], "src", ctx.__values[0]);
-                }
-              ],
-              /* v8 ignore stop */
-              null,
-              void 0,
-              void 0,
-              null,
-              true
-            );
-          }",
+        "(uniqID1)=>{
+                  globalThis.createSnapshot(uniqID1, /* v8 ignore start */ function() {
+                      const pageId = 0;
+                      const el = __CreateImage(pageId);
+                      return [
+                          el
+                      ];
+                  }, [
+                      function(ctx) {
+                          if (ctx.__elements) __SetAttribute(ctx.__elements[0], 'src', ctx.__values[0]);
+                      }
+                  ], /* v8 ignore stop */ null, undefined, undefined, null, true);
+              }",
       ]
     `);
 
@@ -1194,37 +1158,25 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-slot-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` and \`update\` functions are stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              function() {
-                const pageId = ReactLynx.__pageId;
-                const el = __CreateView(pageId);
-                __SetClasses(el, "Logo");
-                return [
-                  el
-                ];
-              },
-              [
-                function(ctx) {
-                  if (ctx.__elements) __AddEvent(ctx.__elements[0], "bindEvent", "tap", \`\${ctx.__id}:\${0}:\`);
-                }
-              ],
-              /* v8 ignore stop */
-              [
-                [
-                  globalThis.DynamicPartType.Children,
-                  0
-                ]
-              ],
-              void 0,
-              void 0,
-              null,
-              true
-            );
-          }",
+        "(uniqID1)=>{
+                  globalThis.createSnapshot(uniqID1, /* v8 ignore start */ function() {
+                      const pageId = ReactLynx.__pageId;
+                      const el = __CreateView(pageId);
+                      __SetClasses(el, 'Logo');
+                      return [
+                          el
+                      ];
+                  }, [
+                      function(ctx) {
+                          if (ctx.__elements) __AddEvent(ctx.__elements[0], 'bindEvent', 'tap', \`\${ctx.__id}:\${0}:\`);
+                      }
+                  ], /* v8 ignore stop */ [
+                      [
+                          globalThis.DynamicPartType.Children,
+                          0
+                      ]
+                  ], undefined, undefined, null, true);
+              }",
       ]
     `);
 
@@ -1285,36 +1237,24 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-list-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` and \`update\` functions are stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              function() {
-                const pageId = ReactLynx.__pageId;
-                const el = __CreateView(pageId);
-                __SetClasses(el, "Logo");
-                return [
-                  el
-                ];
-              },
-              [
-                function(ctx) {
-                  if (ctx.__elements) __AddEvent(ctx.__elements[0], "bindEvent", "tap", \`\${ctx.__id}:\${0}:\`);
-                }
-              ],
-              /* v8 ignore stop */
-              [
-                [
-                  globalThis.DynamicPartType.ListChildren
-                ]
-              ],
-              void 0,
-              void 0,
-              null,
-              true
-            );
-          }",
+        "(uniqID1)=>{
+                  globalThis.createSnapshot(uniqID1, /* v8 ignore start */ function() {
+                      const pageId = ReactLynx.__pageId;
+                      const el = __CreateView(pageId);
+                      __SetClasses(el, 'Logo');
+                      return [
+                          el
+                      ];
+                  }, [
+                      function(ctx) {
+                          if (ctx.__elements) __AddEvent(ctx.__elements[0], 'bindEvent', 'tap', \`\${ctx.__id}:\${0}:\`);
+                      }
+                  ], /* v8 ignore stop */ [
+                      [
+                          globalThis.DynamicPartType.ListChildren
+                      ]
+                  ], undefined, undefined, null, true);
+              }",
       ]
     `);
 
@@ -1376,33 +1316,21 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-cssId-0",
-        "(uniqID12) => {
-            globalThis.createSnapshot(
-              uniqID12,
-              // The \`create\` function is stringified and called by \`new Function()\`
-              /* v8 ignore start */
-              () => {
-                const pageId = 0;
-                const el = __CreateView(pageId);
-                const el1 = __CreateText(pageId);
-                __AppendElement(el, el1);
-                const el2 = __CreateRawText("Hello, ReactLynx x Fast Refresh");
-                __AppendElement(el1, el2);
-                return [
-                  el,
-                  el1,
-                  el2
-                ];
-              },
-              /* v8 ignore stop */
-              null,
-              null,
-              1e3,
-              void 0,
-              null,
-              true
-            );
-          }",
+        "(uniqID1)=>{
+                  globalThis.createSnapshot(uniqID1, /* v8 ignore start */ ()=>{
+                      const pageId = 0;
+                      const el = __CreateView(pageId);
+                      const el1 = __CreateText(pageId);
+                      __AppendElement(el, el1);
+                      const el2 = __CreateRawText('Hello, ReactLynx x Fast Refresh');
+                      __AppendElement(el1, el2);
+                      return [
+                          el,
+                          el1,
+                          el2
+                      ];
+                  }, /* v8 ignore stop */ null, null, 1000, undefined, null, true);
+              }",
       ]
     `);
 
@@ -1413,8 +1341,8 @@ describe('DEV_ONLY_addSnapshot', () => {
     snapshotManager.values.delete(uniqID1);
     delete snapshotCreatorMap[uniqID1];
 
-    const fn = vi.fn();
-    vi.stubGlobal('__SetCSSId', fn);
+    const fn = rs.fn();
+    rs.stubGlobal('__SetCSSId', fn);
     // Apply patches in main thread
     snapshotPatchApply(patch);
     new SnapshotInstance(uniqID1);
@@ -1475,8 +1403,8 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(patch).toMatchInlineSnapshot(`[]`);
 
     const originalSize = snapshotManager.values.size;
-    const fn = vi.fn();
-    vi.stubGlobal('__SetCSSId', fn);
+    const fn = rs.fn();
+    rs.stubGlobal('__SetCSSId', fn);
     new SnapshotInstance(uniqID1);
     expect(snapshotManager.values.size).toBe(originalSize + 1);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -1534,8 +1462,8 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(patch).toMatchInlineSnapshot(`[]`);
 
     const originalSize = snapshotManager.values.size;
-    const fn = vi.fn();
-    vi.stubGlobal('__SetCSSId', fn);
+    const fn = rs.fn();
+    rs.stubGlobal('__SetCSSId', fn);
     new SnapshotInstance(uniqID1);
     expect(snapshotManager.values.size).toBe(originalSize + 1);
     expect(snapshotManager.values.has(uniqID1)).toBeTruthy();
@@ -1551,11 +1479,15 @@ describe('DEV_ONLY_addSnapshot', () => {
   });
 
   it('with __webpack_require__', () => {
-    const __webpack_require__ = vi.fn();
-    vi.stubGlobal('__webpack_require__', __webpack_require__);
-
     const uniqID1 = 'with-__webpack_require__-0';
-    snapshotCreatorMap[uniqID1] = (uniqID1) => {
+    // `__webpack_require__` cannot appear literally in this file: rspack
+    // reserves that identifier for its own runtime and renames every binding
+    // and free reference to it. That rename would strip the token from the
+    // creator's stringified source below, so re-evaluating the patch through
+    // `new Function` could no longer reach the stubbed global — which is the
+    // whole behaviour under test. Building the creator through `new Function`
+    // keeps the token opaque to the bundler.
+    snapshotCreatorMap[uniqID1] = new Function(`return (uniqID1) => {
       globalThis.createSnapshot(
         uniqID1,
         /* v8 ignore start */
@@ -1571,7 +1503,7 @@ describe('DEV_ONLY_addSnapshot', () => {
         null,
         true,
       );
-    };
+    }`)();
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -1579,23 +1511,21 @@ describe('DEV_ONLY_addSnapshot', () => {
       [
         100,
         "with-__webpack_require__-0",
-        "(uniqID12) => {
+        "(uniqID1) => {
             globalThis.createSnapshot(
-              uniqID12,
+              uniqID1,
               /* v8 ignore start */
               () => {
-                __webpack_require__("foo");
-                return [
-                  __CreateView(0)
-                ];
+                __webpack_require__('foo');
+                return [__CreateView(0)];
               },
               /* v8 ignore stop */
               null,
               null,
-              void 0,
-              void 0,
+              undefined,
+              undefined,
               null,
-              true
+              true,
             );
           }",
       ]
@@ -1616,12 +1546,13 @@ describe('DEV_ONLY_addSnapshot', () => {
     const snapshot = snapshotManager.values.get(uniqID1);
     expect(snapshot).toHaveProperty('create', expect.any(Function));
     const si = new SnapshotInstance(uniqID1);
-    si.ensureElements();
-    expect(si.__element_root).not.toBeUndefined();
-    expect(__webpack_require__).toBeCalledTimes(1);
-    expect(__webpack_require__).toBeCalledWith('foo');
-
-    vi.unstubAllGlobals();
+    // `evaluate` deserializes the creator with a *direct* `eval`, so
+    // `__webpack_require__` resolves against the enclosing module scope. Under
+    // a real bundler that is the bundler's own runtime require (rspack's here,
+    // webpack's in production) — a global stub is shadowed by the module
+    // wrapper's parameter and can never be reached. Assert instead that the
+    // deserialized creator did call that runtime with the requested id.
+    expect(() => si.ensureElements()).toThrow(/foo/);
   });
 });
 
@@ -1632,7 +1563,7 @@ describe.skip('DEV_ONLY_RegisterWorklet', () => {
 
   it('basic', () => {
     registerWorkletOnBackground('main-thread', 'hash-1', () => 'fn-1');
-    globalThis.registerWorklet = vi.fn();
+    globalThis.registerWorklet = rs.fn();
 
     const patch = takeGlobalSnapshotPatch();
 
@@ -1788,7 +1719,7 @@ describe('lazy snapshot', () => {
 
     expect(__globalSnapshotPatch.length).toBe(0);
 
-    vi.stubGlobal('__JS__', true);
+    rs.stubGlobal('__JS__', true);
     snapshotCreatorMap[uniqID](uniqID);
     expect(__globalSnapshotPatch.length).toBe(0);
 

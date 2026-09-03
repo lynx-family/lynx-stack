@@ -2,19 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
 
 /* global lynx */
 
 const TIMEOUT_SECONDS = 5;
 
 beforeEach(() => {
-  vi.resetModules();
-  vi.unstubAllGlobals().stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle');
+  rs.resetModules();
+  rs.unstubAllGlobals().stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle');
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  rs.unstubAllGlobals();
 });
 
 describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
@@ -25,12 +25,12 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
   let adoptStyleSheet;
 
   beforeEach(() => {
-    waitMock = vi.fn();
-    fetchBundle = vi.fn(() => ({ wait: waitMock }));
-    loadScript = vi.fn();
-    loadStyleSheet = vi.fn();
-    adoptStyleSheet = vi.fn();
-    vi
+    waitMock = rs.fn();
+    fetchBundle = rs.fn(() => ({ wait: waitMock }));
+    loadScript = rs.fn();
+    loadStyleSheet = rs.fn();
+    adoptStyleSheet = rs.fn();
+    rs
       .stubGlobal('__LEPUS__', true)
       .stubGlobal('__MAIN_THREAD__', true)
       .stubGlobal('lynx', { fetchBundle, loadScript })
@@ -42,7 +42,7 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'cached-url' });
     // The main-thread bundle is wrapped as `(globDynamicComponentEntry) => exports`;
     // the loader invokes it with the bundle's own `source`.
-    const mtEval = vi.fn(() => ({ default: 'MTChunk' }));
+    const mtEval = rs.fn(() => ({ default: 'MTChunk' }));
     loadScript.mockReturnValueOnce(mtEval);
     loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
 
@@ -193,12 +193,12 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
   let getNativeApp;
 
   beforeEach(() => {
-    waitMock = vi.fn();
-    fetchBundle = vi.fn(() => ({ wait: waitMock }));
-    loadScript = vi.fn();
-    callLepusMethod = vi.fn();
-    getNativeApp = vi.fn(() => ({ callLepusMethod }));
-    vi
+    waitMock = rs.fn();
+    fetchBundle = rs.fn(() => ({ wait: waitMock }));
+    loadScript = rs.fn();
+    callLepusMethod = rs.fn();
+    getNativeApp = rs.fn(() => ({ callLepusMethod }));
+    rs
       .stubGlobal('__LEPUS__', false)
       .stubGlobal('__MAIN_THREAD__', false)
       .stubGlobal('__BACKGROUND__', true)
@@ -399,8 +399,8 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
 
 describe('loadLazyBundle (FetchBundle) — unreachable', () => {
   test('throws when neither MT nor JS', async () => {
-    vi.resetModules();
-    vi.unstubAllGlobals()
+    rs.resetModules();
+    rs.unstubAllGlobals()
       .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle')
       .stubGlobal('__MAIN_THREAD__', false)
       .stubGlobal('__LEPUS__', false)
@@ -421,12 +421,12 @@ describe('loadLazyBundle (FetchBundle) — background async (cb-as-readiness)', 
   let getNativeApp;
 
   beforeEach(() => {
-    thenMock = vi.fn();
-    fetchBundle = vi.fn(() => ({ then: thenMock }));
-    loadScript = vi.fn();
-    callLepusMethod = vi.fn();
-    getNativeApp = vi.fn(() => ({ callLepusMethod }));
-    vi
+    thenMock = rs.fn();
+    fetchBundle = rs.fn(() => ({ then: thenMock }));
+    loadScript = rs.fn();
+    callLepusMethod = rs.fn();
+    getNativeApp = rs.fn(() => ({ callLepusMethod }));
+    rs
       .stubGlobal('__LEPUS__', false)
       .stubGlobal('__MAIN_THREAD__', false)
       .stubGlobal('__BACKGROUND__', true)
@@ -620,17 +620,17 @@ describe('loadLazyBundle (FetchBundle) — background async (cb-as-readiness)', 
 
 describe('mode + QueryComponent — dev throw', () => {
   beforeEach(() => {
-    vi
+    rs
       .stubGlobal('__LEPUS__', false)
       .stubGlobal('__MAIN_THREAD__', false)
       .stubGlobal('__BACKGROUND__', true)
       .stubGlobal('__JS__', true)
       .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'QueryComponent')
-      .stubGlobal('lynx', { QueryComponent: vi.fn(), getApp: () => ({ getDynamicComponentExports: vi.fn() }) });
+      .stubGlobal('lynx', { QueryComponent: rs.fn(), getApp: () => ({ getDynamicComponentExports: rs.fn() }) });
   });
 
   test('__DEV__ + mode set → throws', async () => {
-    vi.stubGlobal('__DEV__', true);
+    rs.stubGlobal('__DEV__', true);
     const { loadLazyBundle } = await import(
       '../../../src/core/lynx/lazy-bundle'
     );
@@ -640,7 +640,7 @@ describe('mode + QueryComponent — dev throw', () => {
   });
 
   test('prod (__DEV__: false) + mode set → no throw, falls through to QueryComponent', async () => {
-    vi.stubGlobal('__DEV__', false);
+    rs.stubGlobal('__DEV__', false);
     const { loadLazyBundle } = await import(
       '../../../src/core/lynx/lazy-bundle'
     );
@@ -650,7 +650,7 @@ describe('mode + QueryComponent — dev throw', () => {
   });
 
   test('__DEV__ + no mode → no throw', async () => {
-    vi.stubGlobal('__DEV__', true);
+    rs.stubGlobal('__DEV__', true);
     const { loadLazyBundle } = await import(
       '../../../src/core/lynx/lazy-bundle'
     );

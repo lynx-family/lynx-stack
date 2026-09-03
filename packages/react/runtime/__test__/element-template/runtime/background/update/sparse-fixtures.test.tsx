@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { createElement } from 'preact';
 
 import {
@@ -90,7 +90,7 @@ describe('Sparse element slot updates', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     resetElementTemplateCommitState();
     clearEtAttrPlanMap();
     updateEvents = [];
@@ -144,7 +144,7 @@ describe('Sparse element slot updates', () => {
 
   it('walks sparse element slots when alog prints the background tree during hydration', async () => {
     globalThis.__ALOG__ = true;
-    const alogSpy = vi.fn();
+    const alogSpy = rs.fn();
     (console as { alog?: (message: string) => void }).alog = alogSpy;
 
     const { backgroundModule, mainModule } = await loadFixture();

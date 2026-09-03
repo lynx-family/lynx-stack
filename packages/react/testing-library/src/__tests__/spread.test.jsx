@@ -1,15 +1,15 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 import { act, render } from '..';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { useState } from 'preact/hooks';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 import { BackgroundSnapshotInstance } from '@lynx-js/react/internal';
 
 test('re-render with same style should not generate patch without spread', () => {
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetInlineStyles');
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-  vi.spyOn(BackgroundSnapshotInstance.prototype, 'setAttribute');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetInlineStyles');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(BackgroundSnapshotInstance.prototype, 'setAttribute');
   const setInlineStylesCalls = lynxTestingEnv.mainThread.globalThis.__SetInlineStyles.mock.calls;
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
   const bsiSetAttributeCalls = BackgroundSnapshotInstance.prototype.setAttribute.mock.calls;
@@ -95,9 +95,9 @@ test('re-render with same style should not generate patch without spread', () =>
 });
 
 test('re-render with same style should not generate patch with spread', () => {
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetInlineStyles');
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-  vi.spyOn(BackgroundSnapshotInstance.prototype, 'setAttribute');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetInlineStyles');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(BackgroundSnapshotInstance.prototype, 'setAttribute');
   const setInlineStylesCalls = lynxTestingEnv.mainThread.globalThis.__SetInlineStyles.mock.calls;
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
   const bsiSetAttributeCalls = BackgroundSnapshotInstance.prototype.setAttribute.mock.calls;

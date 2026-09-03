@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { test } from 'vitest';
+import { test } from '@rstest/core';
 import { renderHook } from '@lynx-js/react/testing-library';
 import { createContext, useContext } from '@lynx-js/react';
 
