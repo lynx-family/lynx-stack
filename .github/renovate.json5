@@ -39,10 +39,16 @@
   "prConcurrentLimit": 20,
   "prHourlyLimit": 4,
 
-  // Auto-generate a changeset for the dependency bump (see the script). No-op
-  // unless the command is allow-listed in the self-hosted `allowedCommands`.
+  // Auto-generate a changeset for the dependency bump (see the script). Renovate
+  // only updates lockfiles and never installs the repo's dependencies, so install
+  // the root package first: the script needs `yaml` from the root devDependencies.
+  // No-op unless both commands are allow-listed in the self-hosted
+  // `allowedCommands`.
   "postUpgradeTasks": {
-    "commands": ["node .github/scripts/generate-renovate-changeset.cjs"],
+    "commands": [
+      "pnpm install --filter . --frozen-lockfile --ignore-scripts",
+      "node .github/scripts/generate-renovate-changeset.cjs",
+    ],
     "fileFilters": [".changeset/renovate-*.md"],
     "executionMode": "branch",
   },
