@@ -8,5 +8,5 @@
     "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
   },
   "include": ["src"],
-  "exclude": ["test", "templates"],
+  "exclude": ["test", "templates", "src/playground/browser"],
 }

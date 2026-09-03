@@ -5,9 +5,11 @@ import { encodeBase64Url } from './base64url.js';
 import type { Protocol } from './protocol.js';
 
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
-export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
-export const RENDER_NAVIGATION_TOKEN_QUERY_PARAM = 'previewNavigationToken';
-export const LYNX_XML_RENDER_READY_MESSAGE_TYPE = 'LYNX_XML_RENDER_READY';
+export {
+  LYNX_XML_RENDER_READY_MESSAGE_TYPE,
+  RENDER_METRIC_ID_QUERY_PARAM,
+  RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
+} from './previewFrameProtocol.js';
 export const LYNX_XML_SOURCE_URL_QUERY_PARAM = 'sourceUrl';
 export const A2UI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;

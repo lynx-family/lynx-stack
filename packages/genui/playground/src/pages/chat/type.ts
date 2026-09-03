@@ -2,16 +2,34 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
-import type { PreviewPanelSource } from '../../components/PreviewPanel.js';
+import type { PreviewPanelSource } from '../../components/PreviewPanelSource.js';
 import type {
   ConversationContext,
   ModelChatMessage,
 } from '../../hooks/useConversation.js';
 import type {
+  ChatArtifact,
+  ChatMessageModel,
+  ChatSettingControl,
+  ChatTurnPersistence,
+} from '../../shared-ui/types.js';
+import type {
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
-} from '../../storage/types.js';
+} from '../../utils/previewTypes.js';
 import type { Protocol, ProtocolName } from '../../utils/protocol.js';
+
+export type {
+  ChatArtifact,
+  ChatArtifactView,
+  ChatMessageIcon,
+  ChatMessageKind,
+  ChatMessageModel,
+  ChatMessageTone,
+  ChatSettingControl,
+  ChatSettingOption,
+  ChatTurnPersistence,
+} from '../../shared-ui/types.js';
 
 export interface ChatHost {
   origin: string;
@@ -32,43 +50,6 @@ export interface ChatTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
-}
-
-export type ChatMessageKind =
-  | 'user'
-  | 'assistant'
-  | 'status'
-  | 'action'
-  | 'output';
-
-export type ChatMessageTone = 'info' | 'pending' | 'success' | 'error';
-
-export type ChatMessageIcon = 'spinner' | 'sparkles' | 'zap' | 'error';
-
-export interface ChatMessageModel {
-  id?: string;
-  kind: ChatMessageKind;
-  side?: 'left' | 'right';
-  tone?: ChatMessageTone;
-  text: string;
-  code?: string;
-  icon?: ChatMessageIcon;
-  payload?: unknown;
-  payloadLayout?: 'single' | 'chunks';
-  metrics?: PreviewPerformanceMetrics;
-}
-
-export interface ChatArtifactView {
-  id: string;
-  label: string;
-  text: string;
-  language: 'text' | 'json';
-}
-
-export interface ChatArtifact {
-  title: string;
-  meta?: string;
-  views: readonly ChatArtifactView[];
 }
 
 export type ChatStreamEmission<TOutput> =
@@ -99,33 +80,10 @@ export interface ChatStreamAdapter<TState, TOutput> {
   error: (payload: unknown) => string;
 }
 
-export interface ChatTurnPersistence {
-  assistantContent: string;
-  a2uiMessages: unknown[];
-  previewMessages: unknown[];
-  previewPayloadUrls?: PreviewPayloadUrls | null;
-  snapshotPreviewPayloadUrls?: PreviewPayloadUrls | null;
-}
-
 export interface ChatHydration<TOutput> {
   messages: ChatMessageModel[];
   output: TOutput | null;
   metrics?: PreviewPerformanceMetrics;
-}
-
-export interface ChatSettingOption {
-  value: string;
-  label: string;
-}
-
-export interface ChatSettingControl {
-  id: string;
-  label: string;
-  value: string;
-  kind: 'select' | 'text' | 'password';
-  disabled?: boolean;
-  placeholder?: string;
-  options?: readonly ChatSettingOption[];
 }
 
 export interface ChatSettingsAdapter<TSettings> {

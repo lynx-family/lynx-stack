@@ -2,6 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type {
+  PreviewPayloadUrls,
+  PreviewPerformanceMetrics,
+} from '../utils/previewTypes.js';
+
 export type ConversationProtocol =
   | 'a2ui'
   | 'openui'
@@ -19,18 +24,10 @@ export interface ConversationMeta {
   previewText: string;
 }
 
-export interface PreviewPayloadUrls {
-  messagesUrl: string;
-  actionMocksUrl?: string;
-}
-
-export interface PreviewPerformanceMetrics {
-  fcpMs?: number;
-  fmpMs?: number;
-  ttiMs?: number;
-  agentOutputMs?: number;
-  renderMs?: number;
-}
+export type {
+  PreviewPayloadUrls,
+  PreviewPerformanceMetrics,
+} from '../utils/previewTypes.js';
 
 export interface PersistedMessage {
   conversationId: string;

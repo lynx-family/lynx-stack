@@ -11,7 +11,7 @@ interface CopyToastState {
 
 export function useCopyToast(timeoutMs = 1400) {
   const [toast, setToast] = useState<CopyToastState | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const showCopyToast = useCallback(
     (ok: boolean) => {

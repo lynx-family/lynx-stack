@@ -3,6 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  LYNX_XML_PRESENTATION,
+  LYNX_XML_WELCOME_MESSAGE,
+  createGeneratedLynxXmlStatus,
+  createLocalLynxXmlExampleStatus,
+  createLynxXmlArtifact,
+  formatLynxXmlCharacterCount,
+  persistLynxXmlOutput,
+  readLocalLynxXmlExampleTitle,
+} from './lynx-xml-presentation.js';
+import type { LynxXmlOutput } from './lynx-xml-presentation.js';
+import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   getChatEndpoint,
   parseTokenUsage,
@@ -10,22 +21,17 @@ import {
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
 import type {
-  ChatArtifact,
   ChatHydration,
   ChatMessageModel,
   ChatProtocolAdapter,
   ChatStreamEmission,
   ChatStreamStep,
-  ChatTurnPersistence,
 } from './type.js';
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import type { PreviewPerformanceMetrics } from '../../storage/types.js';
-import { LYNX_XML_SCENARIOS } from '../demos/lynx-xml.js';
 import type { LynxXmlScenario } from '../demos/lynx-xml.js';
 
-export interface LynxXmlOutput {
-  source: string;
-}
+export type { LynxXmlOutput } from './lynx-xml-presentation.js';
 
 export interface LynxXmlStreamState {
   generatedText: string;
@@ -35,31 +41,6 @@ export interface LynxXmlStreamState {
 const DOCTYPE = '<!doctype lynx>';
 const ROOT_END = '</lynx>';
 const MAIN_THREAD_START = '<script thread="main">';
-const LOCAL_EXAMPLE_PROMPT_PREFIX = 'Load local Lynx XML example: ';
-
-const WELCOME_MESSAGE: ChatMessageModel = {
-  kind: 'assistant',
-  text:
-    'Describe the interface you want. I will stream a complete zero-build .lynxml artifact and render it directly in Lynx Preview.',
-};
-
-const SUGGESTIONS = [
-  {
-    label: '🌤️ Weather dashboard',
-    text:
-      'Create an interactive weather dashboard for Shanghai with current conditions, a five-day forecast, and a unit toggle. Use only self-contained data and Lynx-native shapes.',
-  },
-  {
-    label: '✅ Habit tracker',
-    text:
-      'Create a polished daily habit tracker with progress, four tappable habits, and a reset action. Make it responsive and keep all interaction on the main thread.',
-  },
-  {
-    label: '🎵 Music player',
-    text:
-      'Create a compact music-player interface with a self-contained album-art treatment, track metadata, progress, and working previous, play/pause, and next controls.',
-  },
-] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -179,35 +160,6 @@ export const LYNX_XML_STREAM = {
   error: normalizeError,
 };
 
-function formatCharacterCount(source: string): string {
-  return `${source.length.toLocaleString()} chars`;
-}
-
-function generatedStatus(output: LynxXmlOutput): ChatMessageModel {
-  return {
-    kind: 'status',
-    tone: 'success',
-    icon: 'sparkles',
-    text: `Generated a complete Lynx XML artifact (${
-      formatCharacterCount(output.source)
-    }). Lynx Preview is rendering it now.`,
-  };
-}
-
-function localExampleStatus(title: string): ChatMessageModel {
-  return {
-    kind: 'status',
-    tone: 'success',
-    icon: 'zap',
-    text: `Loaded local Lynx XML example ${title}. No API call was made.`,
-  };
-}
-
-function localExampleTitle(content: string): string | null {
-  if (!content.startsWith(LOCAL_EXAMPLE_PROMPT_PREFIX)) return null;
-  return content.slice(LOCAL_EXAMPLE_PROMPT_PREFIX.length).trim() || null;
-}
-
 function lastMetrics(
   history: readonly ModelChatMessage[],
 ): PreviewPerformanceMetrics | undefined {
@@ -222,15 +174,15 @@ function hydrate(
   history: readonly ModelChatMessage[],
 ): ChatHydration<LynxXmlOutput> {
   if (history.length === 0) {
-    return { messages: [{ ...WELCOME_MESSAGE }], output: null };
+    return { messages: [{ ...LYNX_XML_WELCOME_MESSAGE }], output: null };
   }
 
-  const messages: ChatMessageModel[] = [{ ...WELCOME_MESSAGE }];
+  const messages: ChatMessageModel[] = [{ ...LYNX_XML_WELCOME_MESSAGE }];
   let output: LynxXmlOutput | null = null;
   let pendingLocalTitle: string | null = null;
   for (const message of history) {
     if (message.role === 'user') {
-      pendingLocalTitle = localExampleTitle(message.content);
+      pendingLocalTitle = readLocalLynxXmlExampleTitle(message.content);
       messages.push({ kind: 'user', text: message.content });
       continue;
     }
@@ -240,8 +192,8 @@ function hydrate(
     output = { source };
     messages.push(
       pendingLocalTitle
-        ? localExampleStatus(pendingLocalTitle)
-        : generatedStatus(output),
+        ? createLocalLynxXmlExampleStatus(pendingLocalTitle)
+        : createGeneratedLynxXmlStatus(output),
     );
     pendingLocalTitle = null;
   }
@@ -254,40 +206,14 @@ function hydrate(
   };
 }
 
-function createArtifact(output: LynxXmlOutput): ChatArtifact {
-  return {
-    title: 'Generated Lynx XML Artifact',
-    meta: `.lynxml · ${formatCharacterCount(output.source)}`,
-    views: [{
-      id: 'source',
-      label: 'Source',
-      text: output.source,
-      language: 'text',
-    }],
-  };
-}
-
-function persistOutput(output: LynxXmlOutput): ChatTurnPersistence {
-  return {
-    assistantContent: output.source,
-    a2uiMessages: [],
-    previewMessages: [],
-  };
-}
-
 export const LYNX_XML_CHAT_ADAPTER = {
   id: 'lynx-xml',
   copy: {
-    description:
-      'Describe a Vanilla Lynx interface, watch its .lynxml source stream in real time, and render the complete zero-build artifact in Lynx Preview.',
-    inputAriaLabel: 'Describe the Lynx XML interface to generate',
-    inputPlaceholder:
-      'Describe the layout, data, visual style, and interactions for your Lynx XML artifact...',
-    agentLabel: 'Lynx XML Agent',
+    ...LYNX_XML_PRESENTATION.copy,
     progressLabel: 'Streaming Lynx XML from the GenUI server...',
     failurePrefix: 'Lynx XML generation failed',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: LYNX_XML_PRESENTATION.suggestions,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
     return {
@@ -310,7 +236,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
     return hydrate(history);
   },
   persist(output) {
-    return persistOutput(output);
+    return persistLynxXmlOutput(output);
   },
   transcript: {
     pending() {
@@ -327,12 +253,12 @@ export const LYNX_XML_CHAT_ADAPTER = {
         tone: 'pending',
         icon: 'spinner',
         text: `Streaming Lynx XML from the GenUI server... ${
-          formatCharacterCount(text)
+          formatLynxXmlCharacterCount(text)
         }`,
       };
     },
     success(output) {
-      return [generatedStatus(output)];
+      return [createGeneratedLynxXmlStatus(output)];
     },
     failure(error) {
       return {
@@ -344,7 +270,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
     },
   },
   examples: {
-    items: LYNX_XML_SCENARIOS,
+    items: LYNX_XML_PRESENTATION.examples.items,
     item(scenario: LynxXmlScenario) {
       return {
         id: scenario.id,
@@ -353,18 +279,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
       };
     },
     load(scenario: LynxXmlScenario) {
-      const output = { source: scenario.source };
-      const userText = `${LOCAL_EXAMPLE_PROMPT_PREFIX}${scenario.title}`;
-      return {
-        userText,
-        messages: [
-          { ...WELCOME_MESSAGE },
-          { kind: 'user', text: userText },
-          localExampleStatus(scenario.title),
-        ],
-        output,
-        persistence: persistOutput(output),
-      };
+      return LYNX_XML_PRESENTATION.examples.load(scenario);
     },
   },
   preview: {
@@ -378,16 +293,11 @@ export const LYNX_XML_CHAT_ADAPTER = {
         }
         : undefined;
     },
-    artifact: createArtifact,
+    artifact: createLynxXmlArtifact,
     merge(_current, next) {
       return next;
     },
-    emptyTitle: 'Send a prompt to generate Lynx XML',
-    emptySubtitle: 'The complete .lynxml artifact will render here',
-    generatingHint:
-      'The .lynxml source is streaming into the artifact panel. Preview starts as soon as the complete document arrives.',
-    emptyHint:
-      'No Lynx XML artifact yet. Send a prompt or load a local example to begin.',
+    ...LYNX_XML_PRESENTATION.preview,
   },
 } satisfies ChatProtocolAdapter<
   LynxXmlOutput,

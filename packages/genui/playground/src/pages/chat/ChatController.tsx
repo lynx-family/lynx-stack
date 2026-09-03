@@ -4,6 +4,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
+import {
+  ArtifactViewer,
+  ChatTranscript,
+  PromptComposer,
+} from './ChatPresentation.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
   isA2UIRuntimeReadyMessage,
@@ -26,9 +31,7 @@ import {
   targetOriginForUrl,
 } from './shared.js';
 import type {
-  ChatArtifact,
   ChatHttpRequest,
-  ChatMessageIcon,
   ChatMessageModel,
   ChatProtocolAdapter,
   ChatSettingsAdapter,
@@ -36,15 +39,15 @@ import type {
   ChatStreamEmission,
   ChatTokenUsage,
 } from './type.js';
-import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
+import { HostedPreviewViewport as PreviewViewport } from '../../components/HostedPreviewViewport.js';
+import { Sparkles } from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
   PreviewPanelMetricItem,
 } from '../../components/PreviewPanel.js';
-import { PreviewViewport } from '../../components/PreviewViewport.js';
+import { PreviewPanel } from '../../components/PreviewPanel.js';
 import { useConversation } from '../../hooks/useConversation.js';
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import { useResizablePanels } from '../../hooks/useResizablePanels.js';
@@ -109,32 +112,6 @@ function createMessageId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${
     Math.random().toString(36).slice(2)
   }`;
-}
-
-function safeStringifyPayload(value: unknown): string {
-  if (typeof value === 'string') {
-    try {
-      return JSON.stringify(JSON.parse(value), null, 2);
-    } catch {
-      return value;
-    }
-  }
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
-function payloadToChunks(value: unknown): unknown[] {
-  if (Array.isArray(value)) return value;
-  if (typeof value !== 'string') return [value];
-  try {
-    const parsed = JSON.parse(value) as unknown;
-    return Array.isArray(parsed) ? parsed : [parsed];
-  } catch {
-    return [value];
-  }
 }
 
 function getErrorMessage(error: unknown): string {
@@ -223,257 +200,6 @@ async function consumeResponse<TState, TOutput>(
     throw new Error(stream.error({ message: 'The agent returned no output' }));
   }
   return output;
-}
-
-function JsonPayloadViewer(props: {
-  payload: unknown;
-  layout?: 'single' | 'chunks';
-  onCopy: (text: string) => void;
-}) {
-  const { layout = 'chunks', onCopy, payload } = props;
-  if (layout === 'single') {
-    const text = safeStringifyPayload(payload);
-    return (
-      <div className='chatMessagePayload'>
-        <div className='chatMessageSingleChunk'>
-          <div className='chatMessageChunkHeader'>
-            <span className='chatMessageChunkIndex'>Request</span>
-            <button
-              type='button'
-              className='chatJsonCopyButton'
-              onClick={() => onCopy(text)}
-            >
-              Copy
-            </button>
-          </div>
-          <pre className='chatMessageChunkJson'>{text}</pre>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className='chatMessagePayload'>
-      <div className='chatMessageChunks'>
-        {payloadToChunks(payload).map((chunk, index) => {
-          const text = safeStringifyPayload(chunk);
-          return (
-            <div className='chatMessageChunk' key={index}>
-              <div className='chatMessageChunkHeader'>
-                <span className='chatMessageChunkIndex'>#{index + 1}</span>
-                <button
-                  type='button'
-                  className='chatJsonCopyButton'
-                  onClick={() => onCopy(text)}
-                >
-                  Copy
-                </button>
-              </div>
-              <pre className='chatMessageChunkJson'>{text}</pre>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function MessageStatusIcon(props: { icon: ChatMessageIcon | undefined }) {
-  switch (props.icon) {
-    case 'spinner':
-      return <span className='chatMessageActionSpinner' aria-hidden='true' />;
-    case 'sparkles':
-      return (
-        <span className='chatMessageStatusIcon' aria-hidden='true'>
-          <Sparkles size={13} strokeWidth={2} />
-        </span>
-      );
-    case 'zap':
-      return (
-        <span className='chatMessageStatusIcon' aria-hidden='true'>
-          <Zap size={13} strokeWidth={2} />
-        </span>
-      );
-    case 'error':
-      return (
-        <span className='chatMessageStatusIcon' aria-hidden='true'>
-          !
-        </span>
-      );
-    default:
-      return null;
-  }
-}
-
-function formatMetricValue(value: number | undefined): string {
-  return typeof value === 'number' ? `${Math.round(value)}ms` : '...';
-}
-
-function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
-  const items = [
-    { key: 'fcpMs', label: 'FCP', value: props.metrics.fcpMs },
-    { key: 'fmpMs', label: 'FMP', value: props.metrics.fmpMs },
-    { key: 'ttiMs', label: 'TTI', value: props.metrics.ttiMs },
-    {
-      key: 'agentOutputMs',
-      label: 'Agent',
-      value: props.metrics.agentOutputMs,
-    },
-    { key: 'renderMs', label: 'Render', value: props.metrics.renderMs },
-  ].filter((item) => typeof item.value === 'number');
-  if (items.length === 0) return null;
-  return (
-    <div className='chatMessageMetrics' aria-label='Metrics'>
-      {items.map((item) => (
-        <span className='chatMessageMetricItem' key={item.key}>
-          <span className='chatMessageMetricName'>{item.label}</span>
-          <span className='chatMessageMetricValue'>
-            {formatMetricValue(item.value)}
-          </span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function MessageList(props: {
-  messages: readonly ChatMessageModel[];
-  onCopy: (text: string) => void;
-}) {
-  const { messages, onCopy } = props;
-  return (
-    <>
-      {messages.map((message, index) => {
-        const roleClassName = (() => {
-          if (message.kind === 'user') return 'chatMessageUser';
-          if (message.kind === 'action') {
-            return message.payload === undefined
-              ? 'chatMessageAction'
-              : 'chatMessageAction chatMessageActionExpanded';
-          }
-          if (message.kind === 'output') return 'chatMessageJson';
-          if (message.kind === 'status') {
-            return `chatMessageStatus chatMessageStatus-${
-              message.tone ?? 'info'
-            }`;
-          }
-          return 'chatMessageAI';
-        })();
-        const payloadText = message.payload === undefined
-          ? ''
-          : safeStringifyPayload(message.payload);
-        return (
-          <div
-            className={`chatMessage ${roleClassName}${
-              message.side === 'right' ? ' chatMessageRight' : ''
-            }`}
-            key={message.id ?? index}
-          >
-            <div className='chatMessageBody'>
-              <MessageStatusIcon icon={message.icon} />
-              <span>
-                {message.text}
-                {message.code
-                  ? (
-                    <>
-                      {' '}
-                      <code className='chatMessageStatusInline'>
-                        {message.code}
-                      </code>
-                    </>
-                  )
-                  : null}
-              </span>
-              {message.payload === undefined
-                ? null
-                : (
-                  <button
-                    type='button'
-                    className='chatJsonCopyButton'
-                    onClick={() => onCopy(payloadText)}
-                  >
-                    Copy all
-                  </button>
-                )}
-            </div>
-            {message.payload === undefined
-              ? null
-              : (
-                <JsonPayloadViewer
-                  payload={message.payload}
-                  layout={message.payloadLayout}
-                  onCopy={onCopy}
-                />
-              )}
-            {message.metrics
-              ? <MessageMetrics metrics={message.metrics} />
-              : null}
-          </div>
-        );
-      })}
-    </>
-  );
-}
-
-function ArtifactViewer(props: {
-  artifact: ChatArtifact;
-  onCopy: (text: string) => void;
-}) {
-  const { artifact, onCopy } = props;
-  const [activeViewId, setActiveViewId] = useState(
-    () => artifact.views[0]?.id ?? '',
-  );
-  const activeView = artifact.views.find((view) => view.id === activeViewId)
-    ?? artifact.views[0];
-
-  useEffect(() => {
-    if (artifact.views.some((view) => view.id === activeViewId)) return;
-    setActiveViewId(artifact.views[0]?.id ?? '');
-  }, [activeViewId, artifact.views]);
-
-  if (!activeView) return null;
-  return (
-    <div className='chatGeneratedJson chatArtifact'>
-      <div className='chatGeneratedJsonTitle chatArtifactHeader'>
-        <div className='chatArtifactTitle'>
-          <span>{artifact.title}</span>
-          {artifact.meta
-            ? <span className='chatArtifactMeta'>{artifact.meta}</span>
-            : null}
-        </div>
-        <div className='chatArtifactActions'>
-          {artifact.views.length > 1
-            ? (
-              <div className='previewModeSwitch chatArtifactSwitch'>
-                {artifact.views.map((view) => (
-                  <button
-                    key={view.id}
-                    type='button'
-                    className={view.id === activeView.id
-                      ? 'previewModeBtn active'
-                      : 'previewModeBtn'}
-                    onClick={() => setActiveViewId(view.id)}
-                  >
-                    {view.label}
-                  </button>
-                ))}
-              </div>
-            )
-            : null}
-          <button
-            type='button'
-            className='chatJsonCopyButton'
-            onClick={() => onCopy(activeView.text)}
-          >
-            Copy
-          </button>
-        </div>
-      </div>
-      <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
-        {activeView.text}
-      </pre>
-    </div>
-  );
 }
 
 function mergeMetrics(
@@ -1508,12 +1234,6 @@ export function ChatController<
   ]);
 
   const settingsControls = adapter.settings?.controls(settings) ?? [];
-  const selectControls = settingsControls.filter((item) =>
-    item.kind === 'select'
-  );
-  const fieldControls = settingsControls.filter((item) =>
-    item.kind !== 'select'
-  );
   const updateSetting = (id: string, value: string) => {
     const settingsAdapter = adapter.settings;
     if (!settingsAdapter) return;
@@ -1642,173 +1362,68 @@ export function ChatController<
       onMessagesScroll={handleChatScroll}
       messages={
         <>
-          <MessageList messages={messages} onCopy={handleCopyText} />
+          <ChatTranscript messages={messages} onCopy={handleCopyText} />
           {artifact
             ? <ArtifactViewer artifact={artifact} onCopy={handleCopyText} />
             : null}
         </>
       }
       composer={
-        <>
-          {showStarterContent
-            ? (
-              <>
-                <div className='promptSuggestions'>
-                  <div className='promptSuggestionsHeader'>
-                    <span className='promptSuggestionsLabel'>
-                      <span
-                        className='promptSuggestionsLabelDot'
-                        aria-hidden='true'
-                      />
-                      Describe with a prompt
-                      <span className='promptSuggestionsLabelHint'>
-                        · uses online agent
-                      </span>
-                    </span>
-                  </div>
-                  <div className='promptSuggestionsRail'>
-                    {adapter.suggestions.map((suggestion) => (
-                      <button
-                        key={suggestion.label}
-                        type='button'
-                        className='chatSuggestionChip'
-                        disabled={!isReady || busy}
-                        onClick={() => setInputValue(suggestion.text)}
-                      >
-                        {suggestion.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {adapter.examples.items.length > 0
-                  ? (
-                    <div className='promptSuggestions'>
-                      <div className='promptSuggestionsHeader'>
-                        <span className='promptSuggestionsLabel'>
-                          <Zap size={13} strokeWidth={2} aria-hidden='true' />
-                          Load a local example
-                          <span className='promptSuggestionsLabelHint'>
-                            · no API call
-                          </span>
-                        </span>
-                      </div>
-                      <div className='promptSuggestionsRail'>
-                        {adapter.examples.items.map((example) => {
-                          const item = adapter.examples.item(example);
-                          return (
-                            <button
-                              key={item.id}
-                              type='button'
-                              className='chatSuggestionChip'
-                              title={item.description}
-                              disabled={!isReady || busy}
-                              onClick={() => handleLoadExample(example)}
-                            >
-                              {item.title}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )
-                  : null}
-              </>
-            )
-            : null}
-          <aside className='chatPrivacyNotice' aria-label='Privacy notice'>
-            <TriangleAlert
-              className='chatPrivacyNoticeIcon'
-              size={16}
-              strokeWidth={2}
-              aria-hidden='true'
-            />
-            <p className='chatPrivacyNoticeText'>
+        <PromptComposer
+          showStarterContent={showStarterContent}
+          suggestions={adapter.suggestions.map((suggestion) => ({
+            id: suggestion.label,
+            label: suggestion.label,
+            onSelect: () => setInputValue(suggestion.text),
+          }))}
+          examples={adapter.examples.items.map((example) => {
+            const item = adapter.examples.item(example);
+            return {
+              id: item.id,
+              label: item.title,
+              title: item.description,
+              onSelect: () => handleLoadExample(example),
+            };
+          })}
+          promptHint='· uses online agent'
+          examplesHint='· no API call'
+          privacyNotice={
+            <>
               <strong>Privacy notice:</strong>{' '}
               Conversations in this playground are public and will be
               transmitted to mainland China for processing. Do not include
               personal, confidential, or sensitive information.
-            </p>
-          </aside>
-          <div className='chatComposer'>
-            <textarea
-              className='chatInput'
-              aria-label={adapter.copy.inputAriaLabel}
-              placeholder={adapter.copy.inputPlaceholder}
-              value={inputValue}
-              rows={3}
-              disabled={!isReady || busy}
-              onChange={(event) => setInputValue(event.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            {fieldControls.length > 0
-              ? (
-                <div className='chatProviderConfig'>
-                  {fieldControls.map((control) => (
-                    <input
-                      key={control.id}
-                      className={control.id === 'baseURL'
-                        ? 'chatProviderInputField chatProviderInputFieldUrl'
-                        : 'chatProviderInputField'}
-                      aria-label={control.label}
-                      type={control.kind}
-                      placeholder={control.placeholder}
-                      value={control.value}
-                      disabled={busy || control.disabled}
-                      onChange={(event) =>
-                        updateSetting(control.id, event.target.value)}
-                    />
-                  ))}
-                </div>
-              )
-              : null}
-            <div className='chatComposerFooter'>
-              <div className='chatProviderControl'>
-                {selectControls.map((control) => (
-                  <select
-                    key={control.id}
-                    className='chatProviderSelect'
-                    aria-label={control.label}
-                    value={control.value}
-                    disabled={busy || control.disabled}
-                    onChange={(event) =>
-                      updateSetting(control.id, event.target.value)}
-                  >
-                    {control.options?.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ))}
-              </div>
-              <Button
-                variant='primary'
-                size='lg'
-                iconBefore={Send}
-                disabled={!isReady || busy || inputValue.trim().length === 0}
-                onClick={handleSend}
-              >
-                {isGenerating ? 'Generating' : 'Send'}
-              </Button>
-            </div>
-          </div>
-        </>
+            </>
+          }
+          inputAriaLabel={adapter.copy.inputAriaLabel}
+          inputPlaceholder={adapter.copy.inputPlaceholder}
+          value={inputValue}
+          disabled={!isReady || busy}
+          controls={settingsControls}
+          onValueChange={setInputValue}
+          onKeyDown={handleKeyDown}
+          onControlChange={updateSetting}
+          onSubmit={handleSend}
+          submitLabel={isGenerating ? 'Generating' : 'Send'}
+        />
       }
       chatPanelStyle={chatPanelStyle}
-      previewPanelStyle={previewPanelStyle}
       resizeHandle={{
         ariaLabel: 'Resize Create and preview panels',
         onPointerDown: handlePanelResizeStart,
       }}
-      preview={{
-        title: protocol.name === 'html' ? 'Web Preview' : 'Lynx Preview',
-        showPreviewModeSwitch: true,
-        showSimulationBar: false,
-        previewSource,
-        previewInfoHint,
-        extraMetrics,
-        onPreviewMetric: handlePreviewMetric,
-        children: (
+      preview={
+        <PreviewPanel
+          className='previewPanel'
+          style={previewPanelStyle}
+          title={protocol.name === 'html' ? 'Web Preview' : 'Lynx Preview'}
+          showPreviewModeSwitch
+          showSimulationBar={false}
+          previewSource={previewSource}
+          previewInfoHint={previewInfoHint}
+          extraMetrics={extraMetrics}
+          onPreviewMetric={handlePreviewMetric}
+        >
           <PreviewViewport
             key={previewRevision}
             iframeTitle={protocol.name === 'html'
@@ -1821,8 +1436,8 @@ export function ChatController<
             emptyTitle={adapter.preview.emptyTitle}
             emptySubTitle={adapter.preview.emptySubtitle}
           />
-        ),
-      }}
+        </PreviewPanel>
+      }
     />
   );
 }

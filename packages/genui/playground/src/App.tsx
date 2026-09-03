@@ -9,8 +9,8 @@ import {
   useState,
 } from 'react';
 
-import { Button } from './components/Button.js';
-import { Moon, Sun } from './components/Icon.js';
+import { PlaygroundChrome } from './components/PlaygroundChrome.js';
+import type { PlaygroundChromeTab } from './components/PlaygroundChrome.js';
 import {
   readBenchLocale,
   writeBenchLocale,
@@ -23,7 +23,7 @@ import { PhaseTwoReportPage } from './pages/bench/PhaseTwoReportPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
-import { DemosPage } from './pages/demos/DemosPage.js';
+import { ProtocolDemosPage as DemosPage } from './pages/demos/ProtocolDemosPage.js';
 import type { Route, Tab } from './utils/appRoute.js';
 import {
   DEFAULT_ROUTE_HASH,
@@ -40,24 +40,19 @@ const LYNX_LIGHT_LOGO =
 const LYNX_DARK_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
 
-interface TabDef {
-  id: Tab;
-  label: string;
-}
-
-const GENUI_TABS: TabDef[] = [
+const GENUI_TABS: Array<PlaygroundChromeTab & { id: Tab }> = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'catalog', label: 'Catalog' },
   { id: 'bench', label: 'Bench' },
 ];
 
-const CREATE_EXAMPLES_TABS: TabDef[] = [
+const CREATE_EXAMPLES_TABS: Array<PlaygroundChromeTab & { id: Tab }> = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
 ];
 
-const CREATE_ONLY_TABS: TabDef[] = [
+const CREATE_ONLY_TABS: Array<PlaygroundChromeTab & { id: Tab }> = [
   { id: 'create', label: 'Create' },
 ];
 
@@ -365,75 +360,34 @@ export function App() {
     handleThemeToggle,
   ]);
 
-  const protocolVersionControl = (
-    <div className='protocolControl'>
-      <div className='protocolLabel'>Protocol</div>
-      <select
-        className='protocolSelect'
-        value={protocol.name}
-        onChange={(e) => handleProtocolSelect(e.target.value as ProtocolName)}
-      >
-        <option value='a2ui'>A2UI v{PROTOCOLS.a2ui.version}</option>
-        <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
-        <option value='mcp-apps'>
-          MCP Apps v{PROTOCOLS['mcp-apps'].version}
-        </option>
-        <option value='lynx-xml'>
-          Lynx XML v{PROTOCOLS['lynx-xml'].version}
-        </option>
-        <option value='html'>HTML v{PROTOCOLS.html.version}</option>
-      </select>
-    </div>
-  );
-
   return (
-    <div className={embedded ? 'appShell appShellEmbedded' : 'appShell'}>
-      {embedded || route.tab === 'bench' ? null : (
-        <div className='topBar'>
-          <div className='brandGroup'>
-            <img
-              className='brandLogo'
-              src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
-              alt='Lynx'
-            />
-            <span className='brand'>Lynx GenUI Playground</span>
-          </div>
-
-          <nav className='tabNav'>
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type='button'
-                className={route.tab === t.id
-                  ? 'tabNavItem active'
-                  : 'tabNavItem'}
-                onClick={() => handleTabClick(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className='spacer' />
-
-          {protocolVersionControl}
-
-          <Button
-            variant='ghost'
-            size='sm'
-            iconOnly
-            iconBefore={theme === 'dark' ? Sun : Moon}
-            className='themeToggle'
-            onClick={handleThemeToggle}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          />
-        </div>
-      )}
-
-      <div className='appBody'>
-        {page}
-      </div>
-    </div>
+    <PlaygroundChrome
+      embedded={embedded}
+      showTopBar={!embedded && route.tab !== 'bench'}
+      theme={theme}
+      lightLogoSrc={LYNX_LIGHT_LOGO}
+      darkLogoSrc={LYNX_DARK_LOGO}
+      tabs={tabs}
+      activeTab={route.tab}
+      onTabSelect={(id) => handleTabClick(id as Tab)}
+      protocolValue={protocol.name}
+      protocolOptions={[
+        { value: 'a2ui', label: `A2UI v${PROTOCOLS.a2ui.version}` },
+        { value: 'openui', label: `OpenUI v${PROTOCOLS.openui.version}` },
+        {
+          value: 'mcp-apps',
+          label: `MCP Apps v${PROTOCOLS['mcp-apps'].version}`,
+        },
+        {
+          value: 'lynx-xml',
+          label: `Lynx XML v${PROTOCOLS['lynx-xml'].version}`,
+        },
+        { value: 'html', label: `HTML v${PROTOCOLS.html.version}` },
+      ]}
+      onProtocolSelect={(value) => handleProtocolSelect(value as ProtocolName)}
+      onThemeToggle={handleThemeToggle}
+    >
+      {page}
+    </PlaygroundChrome>
   );
 }

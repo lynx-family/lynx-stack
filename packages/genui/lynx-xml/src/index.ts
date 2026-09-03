@@ -8,3 +8,4 @@ export {
   LYNX_XML_SYSTEM_PROMPT,
 } from './prompt.js';
 export type { BuildLynxXmlSystemPromptOptions } from './prompt.js';
+export { extractLynxXmlArtifact, normalizeLynxXmlArtifact } from './output.js';

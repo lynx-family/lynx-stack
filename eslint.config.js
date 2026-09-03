@@ -367,6 +367,14 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ['packages/genui/cli/src/playground/browser/**/*.{ts,tsx}'],
+    languageOptions: { globals: globals.browser },
+    rules: {
+      'n/no-unsupported-features/node-builtins': 'off',
+      'n/no-unsupported-features/node-globals': 'off',
+    },
+  },
   // Vitest-related
   {
     files: ['**/*.test.ts', '**/*.test-d.ts'],

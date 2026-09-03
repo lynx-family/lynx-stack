@@ -979,19 +979,70 @@ importers:
       '@lynx-js/genui-a2ui-prompt':
         specifier: workspace:*
         version: link:../a2ui-prompt
+      '@lynx-js/genui-lynx-xml':
+        specifier: workspace:*
+        version: link:../lynx-xml
       '@lynx-js/genui-openui':
         specifier: workspace:*
         version: link:../openui
     devDependencies:
+      '@codemirror/lang-html':
+        specifier: ^6.4.12
+        version: 6.4.12
+      '@lynx-js/lynx-core':
+        specifier: 0.1.4
+        version: 0.1.4
+      '@lynx-js/web-core':
+        specifier: workspace:*
+        version: link:../../web-platform/web-core
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../../web-platform/web-elements
+      '@playwright/test':
+        specifier: ^1.61.1
+        version: 1.61.1
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.10(core-js@3.50.0)
+      '@rsbuild/plugin-react':
+        specifier: 2.1.0
+        version: 2.1.0(@rsbuild/core@2.1.10(core-js@3.50.0))(@rspack/core@2.1.7(@swc/helpers@0.5.23))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
+      '@types/qrcode':
+        specifier: ^1.5.6
+        version: 1.5.6
+      '@types/react':
+        specifier: npm:@types/react@^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.4
+        version: 19.2.4(@types/react@19.2.18)
+      '@uiw/react-codemirror':
+        specifier: ^4.25.11
+        version: 4.25.11(@babel/runtime@7.29.2)(@codemirror/autocomplete@6.20.1)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/theme-one-dark@6.1.3)(@codemirror/view@6.41.1)(codemirror@6.0.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      lucide-react:
+        specifier: ^1.28.0
+        version: 1.28.0(react@19.2.8)
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
   packages/genui/lynx-xml:
     dependencies:

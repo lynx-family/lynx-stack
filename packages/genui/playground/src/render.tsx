@@ -23,10 +23,12 @@ import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
   LYNX_XML_RENDER_READY_MESSAGE_TYPE,
-  LYNX_XML_SOURCE_URL_QUERY_PARAM,
-  RENDER_INIT_DATA_QUERY_PARAM,
   RENDER_METRIC_ID_QUERY_PARAM,
   RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
+} from './utils/previewFrameProtocol.js';
+import {
+  LYNX_XML_SOURCE_URL_QUERY_PARAM,
+  RENDER_INIT_DATA_QUERY_PARAM,
 } from './utils/renderUrl.js';
 
 interface InitData {

@@ -56,14 +56,14 @@ export function parseRouteHash(hash: string): Route {
     return {
       protocol,
       tab: 'examples',
-      demoId: rest[1],
+      ...(rest[1] ? { demoId: rest[1] } : {}),
     };
   }
   if (rest[0] === 'components' || rest[0] === 'catalog') {
     return {
       protocol,
       tab: 'catalog',
-      componentName: rest[1],
+      ...(rest[1] ? { componentName: rest[1] } : {}),
     };
   }
   if (rest[0] === 'chat' || rest[0] === 'create') {

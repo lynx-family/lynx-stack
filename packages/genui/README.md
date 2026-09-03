@@ -189,6 +189,16 @@ Before publishing, verify the package contents:
 pnpm -C packages/genui pack --dry-run
 ```
 
+## Local agent playground
+
+The `genui playground` command starts a local, daemon-backed Lynx XML workflow
+using supported coding agents installed on the machine. It reuses the hosted
+Playground's UI and CSS while replacing only the transport and local Agent
+controls; generated Lynx XML still runs on a credential-free isolated Preview
+origin. See
+[`cli/README.md`](./cli/README.md#local-lynx-xml-agent-playground) for commands,
+security boundaries, persistence, and supported adapters.
+
 ## License
 
 Apache-2.0
