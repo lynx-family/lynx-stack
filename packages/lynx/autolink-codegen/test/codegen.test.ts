@@ -1297,14 +1297,14 @@ export declare class StorageModule {
     expect(() => generate({ root })).not.toThrow();
   });
 
-  it('accepts the legacy singular Lynxtron binary declaration', () => {
+  it('rejects singular Lynxtron binary declarations', () => {
     const root = createFixture({
       manifest: {
         platforms: {
           lynxtron: {
             binary: {
               os: 'darwin',
-              arc: 'arm64',
+              arch: 'arm64',
               path: 'dist/darwin/arm64/canvas.dylib',
             },
           },
@@ -1313,24 +1313,22 @@ export declare class StorageModule {
       types: '',
     });
 
-    expect(() => generate({ root })).not.toThrow();
+    expect(() => generate({ root })).toThrow(
+      /does not support.*lynxtron\.binary.*lynxtron\.binaries/,
+    );
   });
 
-  it('rejects ambiguous singular and plural Lynxtron binaries', () => {
+  it('rejects misspelled Lynxtron architecture selectors', () => {
     const root = createFixture({
       manifest: {
         platforms: {
           lynxtron: {
-            binary: {
-              os: 'darwin',
-              arch: 'arm64',
-              path: 'dist/darwin/arm64/legacy.dylib',
-            },
             binaries: [
               {
                 os: 'darwin',
                 arch: 'arm64',
-                path: 'dist/darwin/arm64/current.dylib',
+                arc: 'arm64',
+                path: 'dist/darwin/arm64/canvas.dylib',
               },
             ],
           },
@@ -1340,7 +1338,7 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /cannot define both.*lynxtron\.binary.*lynxtron\.binaries/,
+      /does not support.*lynxtron\.binaries\[0\]\.arc.*arch/,
     );
   });
 
