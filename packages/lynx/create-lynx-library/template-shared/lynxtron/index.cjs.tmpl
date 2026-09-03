@@ -1,15 +1,29 @@
 'use strict';
 
 const path = require('node:path');
+const manifest = require('../lynx.lib.json');
 
-const nativeBinding = require(path.join(
-  __dirname,
-  '..',
-  'dist',
-  process.platform,
-  process.arch,
-  '__ADDON_BINARY_NAME__.node',
-));
+const target = manifest.platforms.lynxtron.targets.find(
+  ({ os, arch }) => os === process.platform && arch === process.arch,
+);
+
+if (!target) {
+  throw new Error(
+    '__PACKAGE_NAME__ does not provide a Lynxtron target for '
+      + `${process.platform}/${process.arch}`,
+  );
+}
+
+if (!Array.isArray(target.binaries) || target.binaries.length !== 1) {
+  throw new Error(
+    '__PACKAGE_NAME__ expected exactly one Lynxtron binary for '
+      + `${process.platform}/${process.arch}`,
+  );
+}
+
+const nativeBinding = require(
+  path.resolve(__dirname, '..', target.binaries[0]),
+);
 
 if (typeof nativeBinding.initialize !== 'function') {
   nativeBinding.initialize = function initialize() {};

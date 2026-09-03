@@ -1011,6 +1011,12 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'lynxtron/index.cjs')).toContain(
       'nativeBinding.initialize = function initialize() {};',
     );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'require(\'../lynx.lib.json\')',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'manifest.platforms.lynxtron.targets.find',
+    );
     expect(read(dir, 'lynxtron/index.cjs')).toContain('process.platform');
     expect(read(dir, 'lynxtron/index.cjs')).not.toContain('normalizePlatform');
     expect(read(dir, 'lynxtron/library_entry.cc')).toContain(
