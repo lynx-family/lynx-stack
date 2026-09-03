@@ -25,6 +25,7 @@ import {
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
+import { getUserSplitChunks } from './splitChunks.js'
 
 const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
 
@@ -75,14 +76,15 @@ export function applyEntry(
     const mainThreadChunks: string[] = []
     const entryPairs: Array<{ mainThread: string, background: string }> = []
 
-    const rsbuildConfig = api.getRsbuildConfig()
-    const userConfig = api.getRsbuildConfig('original')
-    const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
-    const enableChunkSplitting = userConfig.splitChunks === undefined
+    const { splitChunks, chunkSplitStrategy } = getUserSplitChunks(
+      api.getRsbuildConfig('original'),
+      environment.name,
+    )
+    const enableChunkSplitting = splitChunks === undefined
       ? (chunkSplitStrategy
         ? chunkSplitStrategy !== 'all-in-one'
-        : rsbuildConfig.splitChunks !== false)
-      : rsbuildConfig.splitChunks !== false
+        : environment.config.splitChunks !== false)
+      : environment.config.splitChunks !== false
     const rspeedyConfig = api.context.callerName === 'rspeedy'
       // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config

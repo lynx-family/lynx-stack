@@ -1,7 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
+import type {
+  EnvironmentContext,
+  RsbuildPluginAPI,
+  Rspack,
+} from '@rsbuild/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
@@ -29,12 +33,10 @@ const MAIN_THREAD_ENV_INCLUDE = [
 const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
 
 function getLoaderOptions(
-  api: RsbuildPluginAPI,
+  output: EnvironmentContext['config']['output'],
   options: Required<PluginReactLynxOptions>,
   isMainThread = false,
 ) {
-  const { output } = api.getRsbuildConfig()
-
   const inlineSourcesContent: boolean = output?.sourceMap === true || !(
     // `false`
     output?.sourceMap === false
@@ -80,7 +82,7 @@ export function applyTestingLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
-  api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+  api.modifyBundlerChain((chain, { CHAIN_ID, environment }) => {
     const rule = chain.module
       .rule(CHAIN_ID.RULE.JS)
       .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
@@ -88,7 +90,7 @@ export function applyTestingLoaders(
     rule
       .use(TESTING_RULE_NAME)
       .loader(ReactWebpackPlugin.loaders.TESTING)
-      .options(getLoaderOptions(api, options))
+      .options(getLoaderOptions(environment.config.output, options))
       .end()
   })
 }
@@ -97,7 +99,7 @@ export function applyLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
-  api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+  api.modifyBundlerChain((chain, { CHAIN_ID, environment }) => {
     const rule = chain.module.rule(CHAIN_ID.RULE.JS)
     const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
     const type = jsMainRule.get('type') as string | undefined
@@ -120,7 +122,7 @@ export function applyLoaders(
       .end()
       .use(LAYERS.BACKGROUND)
         .loader(ReactWebpackPlugin.loaders.BACKGROUND)
-        .options(getLoaderOptions(api, options))
+        .options(getLoaderOptions(environment.config.output, options))
       .end()
 
     const mainThreadRule = jsMainRule.oneOf(LAYERS.MAIN_THREAD)
@@ -167,7 +169,7 @@ export function applyLoaders(
       })
       .use(LAYERS.MAIN_THREAD)
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
-        .options(getLoaderOptions(api, options, true))
+        .options(getLoaderOptions(environment.config.output, options, true))
       .end()
   })
 }

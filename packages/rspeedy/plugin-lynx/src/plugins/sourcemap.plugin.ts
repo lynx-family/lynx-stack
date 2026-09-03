@@ -32,7 +32,8 @@ export function pluginSourcemap(): RsbuildPlugin {
       })
 
       api.modifyBundlerChain((chain, { isDev, environment }) => {
-        const { dev, output, server } = api.getRsbuildConfig('current')
+        const { dev, output } = environment.config
+        const { server } = api.getRsbuildConfig('current')
 
         const publicPath = isDev ? dev?.assetPrefix : output?.assetPrefix
 
