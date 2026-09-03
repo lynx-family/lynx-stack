@@ -2917,6 +2917,11 @@ describe('Config', () => {
       'workletRuntimePath',
       require.resolve('@lynx-js/react/worklet-runtime'),
     )
+    // @ts-expect-error private property
+    expect(reactWebpackPluginInstance.options).toHaveProperty(
+      'workletCoreRuntimePath',
+      require.resolve('@lynx-js/react/worklet-core-runtime'),
+    )
   })
 
   test('worklet runtime (mode: development)', async () => {
@@ -2946,6 +2951,11 @@ describe('Config', () => {
     // @ts-expect-error private property
     expect(reactWebpackPluginInstance.options).toHaveProperty(
       'workletRuntimePath',
+      require.resolve('@lynx-js/react/worklet-dev-runtime'),
+    )
+    // @ts-expect-error private property
+    expect(reactWebpackPluginInstance.options).toHaveProperty(
+      'workletCoreRuntimePath',
       require.resolve('@lynx-js/react/worklet-dev-runtime'),
     )
   })
@@ -2980,6 +2990,11 @@ describe('Config', () => {
     expect(reactWebpackPluginInstance.options).toHaveProperty(
       'workletRuntimePath',
       require.resolve('@lynx-js/react/worklet-runtime'),
+    )
+    // @ts-expect-error private property
+    expect(reactWebpackPluginInstance.options).toHaveProperty(
+      'workletCoreRuntimePath',
+      require.resolve('@lynx-js/react/worklet-core-runtime'),
     )
   })
 

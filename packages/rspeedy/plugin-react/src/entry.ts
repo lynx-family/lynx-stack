@@ -322,9 +322,9 @@ export function applyEntry(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
         ),
         workletCoreRuntimePath: await resolve(
-          `@lynx-js/react/${
-            isDev ? 'worklet-dev-runtime' : 'worklet-core-runtime'
-          }`,
+          isDev
+            ? '@lynx-js/react/worklet-dev-runtime'
+            : '@lynx-js/react/worklet-core-runtime',
         ),
         lazyBundleFetcher,
       }])
