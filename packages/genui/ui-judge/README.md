@@ -163,16 +163,25 @@ from the caller's environment. Linux hosts must also provide the
 process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 `[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
 non-secret configured model name. Use `POST /compare` to compare two uploaded
-images without rendering a page or calling the VLM. Use `POST /screenshot/zip`
-to render an uploaded Lynx project from the `zip://` URL supplied in its `url`
-query parameter. Use `POST /screenshot/lynxml` to render one raw UTF-8 LynXML
-document.
+images without rendering a page or calling the VLM. Screenshot capture uses
+four source-specific routes:
+
+- `POST /screenshot/zip/upload` accepts a raw ZIP body.
+- `POST /screenshot/zip/url` fetches a ZIP from the HTTP(S) URL in its
+  `text/plain` body.
+- `POST /screenshot/lynxml` accepts a raw UTF-8 LynXML body.
+- `POST /screenshot/template/url` fetches a compiled `template.js` from the
+  HTTP(S) URL in its `text/plain` body.
+
+Every screenshot route requires the same `entry` query parameter. It may be a
+relative staged path such as `pages/index.lynxml` or the equivalent
+`zip:///pages/index.lynxml` URL. The server does not expose the former generic
+`POST /screenshot` route.
 
 The server does not allow direct `file://`, `http://`, or `https://` page
-navigation. `POST /judge` and `POST /screenshot` reject those URL forms with
-HTTP `403` before model initialization or headless capture. Use the default
-library build for trusted direct-URL judging, or upload an untrusted project to
-`POST /screenshot/zip`.
+navigation. `POST /judge` rejects those URL forms with HTTP `403` before model
+initialization or headless capture. Use the default library build for trusted
+direct-URL judging, or one of the source-specific screenshot routes.
 
 To render a LynXML string without auxiliary local files, send it directly as
 the request body. The endpoint accepts `application/xml`, `text/xml`, and
@@ -180,38 +189,53 @@ the request body. The endpoint accepts `application/xml`, `text/xml`, and
 `Cache-Control: no-store`:
 
 ```bash
-curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
+curl --request POST 'http://127.0.0.1:8080/screenshot/lynxml?entry=pages%2Findex.lynxml' \
   --header 'content-type: application/xml; charset=utf-8' \
   --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
   --output screenshot.jpg
 ```
 
-The server stages the source as an internal `zip:///index.lynxml` navigation in
-a fresh private directory and renders it in the same isolated process pool as
-ZIP uploads. HTTP(S) resources with domain hosts remain available, while
-`file://`, IP-hosted HTTP(S), and paths outside that private directory remain
-blocked. Use the ZIP endpoint when the document needs relative image or script
-files.
+The server stages the source at the requested entry in a fresh private
+directory and renders it through the equivalent internal `zip:///` URL in the
+same isolated process pool as ZIP inputs. HTTP(S) resources with domain hosts
+remain available, while `file://`, IP-hosted HTTP(S), and paths outside that
+private directory remain blocked. Use a ZIP endpoint when the document needs
+relative image or script files.
 
 To render an uploaded ZIP without scoring it, send the archive itself as the
-request body and pass its entrypoint as a `zip://` URL. The route does not
-accept a caller-supplied base directory, model options, or interaction steps:
+request body and pass its entrypoint through `entry`. The route does not accept
+a caller-supplied base directory, model options, or interaction steps:
 
 ```bash
-curl --request POST 'http://127.0.0.1:8080/screenshot/zip?url=zip%3A%2F%2F%2Findex.lynxml' \
+curl --request POST 'http://127.0.0.1:8080/screenshot/zip/upload?entry=index.lynxml' \
   --header 'content-type: application/zip' \
   --data-binary '@/absolute/path/to/page.zip' \
   --output screenshot.jpg
 ```
 
-The URL must use the `zip://` scheme and select an entry inside the archive,
-for example `zip:///pages/index.lynxml`. That document may use paths relative
-to itself, such as `./images/logo.png`, or archive-root URLs such as
+The entry must be a safe relative file path inside the archive. That document
+may use paths relative to itself, such as `./images/logo.png`, or archive-root URLs such as
 `zip:///images/logo.png`. Local paths resolve only within the new private
 extraction directory created for that request. Explicit `file://` URLs and
 HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
 hosts remain available. A successful response is `200 image/jpeg` with
 `Cache-Control: no-store`.
+
+To fetch the same ZIP remotely, send its URL as the plain-text request body:
+
+```bash
+curl --request POST 'http://127.0.0.1:8080/screenshot/zip/url?entry=index.lynxml' \
+  --header 'content-type: text/plain; charset=utf-8' \
+  --data-binary 'https://cdn.example.com/page.zip' \
+  --output screenshot.jpg
+```
+
+The template URL route uses the same request shape, with an entry such as
+`main/template.js`. Both URL routes use the shared SSRF-safe downloader. It
+accepts only HTTP(S) URLs without credentials, disables redirects and ambient
+proxies, resolves DNS before connecting, pins the validated addresses for the
+request, and rejects any host that resolves to a non-public address. Remote
+responses are limited to 10 MiB; URL request bodies are limited to 8 KiB.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
@@ -230,12 +254,12 @@ content. It normalizes and compares the uploads on a blocking task; it does not
 enqueue headless capture, initialize a model client, render a Lynx page, or
 perform VLM scoring.
 
-`POST /judge` and `POST /screenshot` return `403` for direct `file://` or
-HTTP(S) page URLs. `POST /screenshot/zip` returns `422` with a JSON error when
-rendering cannot produce a frame. `POST /screenshot/lynxml` likewise returns
-`422` when its UTF-8 source cannot be rendered. Both upload routes return `413`
-when their body exceeds 10 MiB, `415` for an unsupported media type, and `408`
-when body reading or isolated rendering exceeds its deadline; the ZIP route
+`POST /judge` returns `403` for direct `file://` or HTTP(S) page URLs. The
+source-specific screenshot routes return `422` with a JSON error when rendering
+cannot produce a frame. Uploads and remote responses return `413` when they
+exceed 10 MiB. Invalid upload media types return `415`, while a rejected remote
+network target returns `403`. Body reading and isolated rendering return `408`
+when they exceed their deadlines; remote fetches return `504`. ZIP processing
 also applies its ten-second extraction deadline. A busy bounded queue keeps the
 HTTP callback pending until capacity becomes available or that deadline
 expires; eager load shedding belongs in an outer middleware. The server returns `503` when the
@@ -270,10 +294,11 @@ transcoding.
 ### Secure ZIP staging
 
 The `server` feature exposes `ui_judge::server::zip` for server adapters that
-accept user-supplied Lynx projects and backs the fixed `POST /screenshot/zip`
-route. The route buffers the raw request body with a ten-second deadline, stops
-at 10 MiB, and never accepts a caller-provided base directory. It then waits
-asynchronously for isolated-render capacity before extracting. The
+accept user-supplied Lynx projects and backs both ZIP screenshot routes. The
+upload route buffers the raw request body with a ten-second deadline, stops at
+10 MiB, and never accepts a caller-provided base directory. The URL route
+applies the same byte limit before passing the response to the staging module.
+It then waits asynchronously for isolated-render capacity before extracting. The
 module parses the content as ZIP regardless of its filename, rejects encrypted
 or overlapping archives, symbolic links, and entries other than regular files
 or directories, and extracts at most 100 entries, 50 MiB per file, and 100 MiB
