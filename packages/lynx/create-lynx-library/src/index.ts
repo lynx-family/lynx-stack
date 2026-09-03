@@ -1390,6 +1390,11 @@ function platformManifestEntries(context: TemplateContext): string {
           "os": "win32",
           "arch": "x64",
           "binaries": ["dist/win32/x64/${context.addonBinaryName}.node"]
+        },
+        {
+          "os": "linux",
+          "arch": "x64",
+          "binaries": ["dist/linux/x64/${context.addonBinaryName}.node"]
         }
       ]
     }`);

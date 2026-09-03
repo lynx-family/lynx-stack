@@ -35,6 +35,11 @@ function lynxtronManifest(binaryName: string): Record<string, unknown> {
         arch: 'x64',
         binaries: [`dist/win32/x64/${binaryName}.node`],
       },
+      {
+        os: 'linux',
+        arch: 'x64',
+        binaries: [`dist/linux/x64/${binaryName}.node`],
+      },
     ],
   };
 }
