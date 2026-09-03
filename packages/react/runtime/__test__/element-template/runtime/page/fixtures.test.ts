@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe } from 'vitest';
+import { describe } from '@rstest/core';
 
 import { runCaseModuleFixtureTests } from '../../test-utils/debug/fixtureRunner.js';
 

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,
@@ -129,7 +129,7 @@ describe('Compiled background Preact updates', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     resetElementTemplateCommitState();
     clearEtAttrPlanMap();
     updateEvents = [];
@@ -194,7 +194,7 @@ describe('Compiled background Preact updates', () => {
         const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
         updateEvents = [];
 
-        vi.useFakeTimers();
+        rs.useFakeTimers();
         try {
           renderCompiledOnBackground(backgroundModule, ['keep']);
 
@@ -209,13 +209,13 @@ describe('Compiled background Preact updates', () => {
           envManager.switchToBackground();
           expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBe(removed);
 
-          vi.advanceTimersByTime(9999);
+          rs.advanceTimersByTime(9999);
           expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBe(removed);
 
-          vi.advanceTimersByTime(1);
+          rs.advanceTimersByTime(1);
           expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBeUndefined();
         } finally {
-          vi.useRealTimers();
+          rs.useRealTimers();
         }
       },
     });
@@ -234,7 +234,7 @@ describe('Compiled background Preact updates', () => {
         const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
         updateEvents = [];
 
-        vi.useFakeTimers();
+        rs.useFakeTimers();
         try {
           renderCompiledOnBackground(backgroundModule, ['keep']);
           envManager.switchToMainThread();
@@ -263,13 +263,13 @@ describe('Compiled background Preact updates', () => {
           ]);
           envManager.switchToBackground();
 
-          vi.advanceTimersByTime(10000);
+          rs.advanceTimersByTime(10000);
 
           expect(backgroundElementTemplateInstanceManager.get(current.instanceId)).toBe(current);
           expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBeUndefined();
           expect(getSlotChildren(host)).toEqual([keep, current]);
         } finally {
-          vi.useRealTimers();
+          rs.useRealTimers();
         }
       },
     });

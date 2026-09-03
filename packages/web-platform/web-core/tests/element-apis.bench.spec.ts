@@ -1,36 +1,38 @@
 import './jsdom.js';
-import { bench, describe, vi } from 'vitest';
+import { rs } from '@rstest/core';
+
+import { describeBench } from './benchRunner.js';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 
-describe('Element APIs Benchmarks', () => {
+describeBench('Element APIs Benchmarks', (bench) => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
 
   const setup = () => {
-    vi.resetAllMocks();
+    rs.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
-      vi.mockObject({
+      rs.mockObject({
         rootDom,
-        backgroundThread: vi.mockObject({
-          publicComponentEvent: vi.fn(),
-          publishEvent: vi.fn(),
-          postTimingFlags: vi.fn(),
-          markTiming: vi.fn(),
-          flushTimingInfo: vi.fn(),
-          jsContext: vi.mockObject({
-            dispatchEvent: vi.fn(),
+        backgroundThread: rs.mockObject({
+          publicComponentEvent: rs.fn(),
+          publishEvent: rs.fn(),
+          postTimingFlags: rs.fn(),
+          markTiming: rs.fn(),
+          flushTimingInfo: rs.fn(),
+          jsContext: rs.mockObject({
+            dispatchEvent: rs.fn(),
           }),
         } as any),
-        exposureServices: vi.mockObject({
-          updateExposureStatus: vi.fn(),
+        exposureServices: rs.mockObject({
+          updateExposureStatus: rs.fn(),
         }) as any,
-        mainThreadGlobalThis: vi.mockObject({}) as any,
+        mainThreadGlobalThis: rs.mockObject({}) as any,
       }),
     );
     mtsGlobalThis = createElementAPI(
@@ -44,7 +46,8 @@ describe('Element APIs Benchmarks', () => {
 
   setup();
 
-  describe('Style Transformation E2E', () => {
+  // Style Transformation E2E
+  {
     let view: any;
     const viewSetup = () => {
       view = mtsGlobalThis.__CreateView(0);
@@ -70,9 +73,12 @@ describe('Element APIs Benchmarks', () => {
             border-style: solid;
             border-color: rgba(0,0,0,0.1);
         `;
-    bench('__SetInlineStyles (Complex String with rpx)', () => {
-      mtsGlobalThis.__SetInlineStyles(view, COMPLEX_STYLE_STRING);
-    });
+    bench(
+      'Style Transformation E2E > __SetInlineStyles (Complex String with rpx)',
+      () => {
+        mtsGlobalThis.__SetInlineStyles(view, COMPLEX_STYLE_STRING);
+      },
+    );
 
     // 2. Benchmark: Large Style Payload (Many properties)
     // This tests throughput for large strings.
@@ -80,9 +86,12 @@ describe('Element APIs Benchmarks', () => {
       .map((_, i) => `--custom-prop-${i}: ${i}rpx;`)
       .join(' ');
 
-    bench('__SetInlineStyles (Large Payload - 100 props)', () => {
-      mtsGlobalThis.__SetInlineStyles(view, LARGE_STYLE_STRING);
-    });
+    bench(
+      'Style Transformation E2E > __SetInlineStyles (Large Payload - 100 props)',
+      () => {
+        mtsGlobalThis.__SetInlineStyles(view, LARGE_STYLE_STRING);
+      },
+    );
 
     // 3. Benchmark: Key-Value Object (No string parsing, but map transformation)
     // This tests the overhead when styles are passed as an object.
@@ -103,20 +112,29 @@ describe('Element APIs Benchmarks', () => {
       'border-style': 'solid',
       'border-color': 'rgba(0,0,0,0.1)',
     };
-    bench('__SetInlineStyles (Object Payload)', () => {
-      mtsGlobalThis.__SetInlineStyles(view, STYLE_OBJECT);
-    });
+    bench(
+      'Style Transformation E2E > __SetInlineStyles (Object Payload)',
+      () => {
+        mtsGlobalThis.__SetInlineStyles(view, STYLE_OBJECT);
+      },
+    );
 
     // 4. Benchmark: Single Property Addition via __AddInlineStyle
     // Tests the overhead of modifying a single property, which might trigger re-parsing or lighter logic.
-    bench('__AddInlineStyle (Single rpx Property)', () => {
-      mtsGlobalThis.__AddInlineStyle(view, 'width', '375rpx');
-    });
+    bench(
+      'Style Transformation E2E > __AddInlineStyle (Single rpx Property)',
+      () => {
+        mtsGlobalThis.__AddInlineStyle(view, 'width', '375rpx');
+      },
+    );
 
     // 5. Benchmark: Single Property Addition via __AddInlineStyle with ID (enum optimization)
     // Assuming 26 is a valid CSS Property ID (checked from earlier existing tests)
-    bench('__AddInlineStyle (Single ID Property)', () => {
-      mtsGlobalThis.__AddInlineStyle(view, 26, '100px');
-    });
-  });
+    bench(
+      'Style Transformation E2E > __AddInlineStyle (Single ID Property)',
+      () => {
+        mtsGlobalThis.__AddInlineStyle(view, 26, '100px');
+      },
+    );
+  }
 });

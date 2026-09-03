@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "bench": "vitest bench --config vitest.bench.config.ts",
+    "bench": "node ./bench/server.bench.js",
     "build": "pnpm dlx premove dist && pnpm run --stream \"/^build:.*/\"",
     "build:csr": "node ./scripts/generate-build-command.js",
     "build:external-libs": "rslib build --config ./external-libs/greeting/rslib.config.ts",
@@ -20,6 +20,7 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "devDependencies": {
+    "@codspeed/tinybench-plugin": "^5.7.1",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/playwright-fixtures": "workspace:*",
@@ -34,6 +35,6 @@
     "@rstest/core": "catalog:rstest",
     "nyc": "^18.0.0",
     "prettier": "^3.9.6",
-    "vitest": "^3.2.7"
+    "tinybench": "^6.1.2"
   }
 }

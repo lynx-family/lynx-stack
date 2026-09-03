@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import {
   elementTemplateRegistry,
   setElementTemplateNativeRef,
@@ -28,18 +28,18 @@ import { resetTemplateId } from '../../../../src/element-template/runtime/templa
 describe('ElementTemplateHandle', () => {
   const mockNativeRef = { __isNativeRef: true };
   const mockCreatedNativeRef = { __isTemplateRef: true };
-  const mockCreateCompiledElementTemplate = vi.fn();
-  const mockCreateTypedElementTemplate = vi.fn();
-  // const mockReleaseElement = vi.fn();
+  const mockCreateCompiledElementTemplate = rs.fn();
+  const mockCreateTypedElementTemplate = rs.fn();
+  // const mockReleaseElement = rs.fn();
 
   beforeEach(() => {
     mockCreateCompiledElementTemplate.mockReset();
     mockCreateCompiledElementTemplate.mockReturnValue(mockCreatedNativeRef);
     mockCreateTypedElementTemplate.mockReset();
     mockCreateTypedElementTemplate.mockReturnValue(mockCreatedNativeRef);
-    vi.stubGlobal('__CreateElementTemplate', mockCreateCompiledElementTemplate);
-    vi.stubGlobal('__CreateTypedElementTemplate', mockCreateTypedElementTemplate);
-    // vi.stubGlobal('__ReleaseElement', mockReleaseElement);
+    rs.stubGlobal('__CreateElementTemplate', mockCreateCompiledElementTemplate);
+    rs.stubGlobal('__CreateTypedElementTemplate', mockCreateTypedElementTemplate);
+    // rs.stubGlobal('__ReleaseElement', mockReleaseElement);
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
     elementTemplateRegistry.clear();
@@ -47,7 +47,7 @@ describe('ElementTemplateHandle', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('should reserve and bind a handle separately', () => {
@@ -123,7 +123,7 @@ describe('ElementTemplateHandle', () => {
   it('initializes object MTRef detached after reserved-handle create and strips the native slot payload', () => {
     const id = reserveElementTemplateId();
     const ref = { _wvid: 7 };
-    const updateWorkletRef = vi.fn();
+    const updateWorkletRef = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,

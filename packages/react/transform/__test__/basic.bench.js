@@ -2,79 +2,96 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { bench, describe } from 'vitest';
+import { withCodSpeed } from '@codspeed/tinybench-plugin';
+import { Bench } from 'tinybench';
 
 import { transformReactLynx } from '../main.js';
 
-describe('Basic', () => {
-  const largeInputContent = `
+const config = {
+  pluginName: '',
+  filename: '',
+  sourcemap: false,
+  cssScope: false,
+  jsx: true,
+  directiveDCE: false,
+  defineDCE: false,
+  shake: true,
+  compat: false,
+  worklet: false,
+  refresh: false,
+};
+
+function repeat(line, count = 1000) {
+  return Array.from({ length: count }, () => line).join('\n      ');
+}
+
+// `skip: true` entries are kept disabled, as they were under `bench.skip`.
+const cases = [
+  {
+    name: 'transform 1000 view elements',
+    skip: false,
+    source: `
 import { useState } from "@lynx-js/react";
 
 export function App() {
   return (
     <view>
-      ${Array.from({ length: 1000 }, () => '<view/>').join('\n      ')}
+      ${repeat('<view/>')}
     </view>
   );
-}`;
-
-  const config = {
-    pluginName: '',
-    filename: '',
-    sourcemap: false,
-    cssScope: false,
-    jsx: true,
-    directiveDCE: false,
-    defineDCE: false,
-    shake: true,
-    compat: false,
-    worklet: false,
-    refresh: false,
-  };
-
-  bench('transform 1000 view elements', async () => {
-    await transformReactLynx(largeInputContent, config);
-  });
-
-  const largeInputContentWithEvent = `
+}`,
+  },
+  {
+    name: 'transform 1000 view elements with event',
+    skip: true,
+    source: `
 export function App() {
   return (
     <view>
-      ${Array.from({ length: 1000 }, () => '<view bindtap={() => void 0} />').join('\n      ')}
+      ${repeat('<view bindtap={() => void 0} />')}
     </view>
   );
-}`;
-
-  bench.skip('transform 1000 view elements with event', async () => {
-    await transformReactLynx(largeInputContentWithEvent, config);
-  });
-
-  const largeInputContentWithChildren = `
+}`,
+  },
+  {
+    name: 'transform 1000 view elements with Children',
+    skip: true,
+    source: `
 export function App() {
   return (
     <view>
-      ${Array.from({ length: 1000 }, () => '<view>{content}</view>').join('\n      ')}
+      ${repeat('<view>{content}</view>')}
     </view>
   );
-}`;
-
-  bench.skip('transform 1000 view elements with Children', async () => {
-    await transformReactLynx(largeInputContentWithChildren, config);
-  });
-
-  const largeInputContentWithEffect = `
+}`,
+  },
+  {
+    name: 'transform 1000 effects',
+    skip: true,
+    source: `
 import { useEffect } from '@lynx-js/react';
 
 export function App() {
-  ${Array.from({ length: 1000 }, () => 'useEffect(() => { console.log("effect") })').join('\n    ')}
+  ${repeat('useEffect(() => { console.log("effect") })')}
   return (
     <view>
       <view />
     </view>
   );
-}`;
+}`,
+  },
+];
 
-  bench.skip('transform 1000 effects', async () => {
-    await transformReactLynx(largeInputContentWithEffect, config);
+const bench = withCodSpeed(new Bench({ name: 'Basic' }));
+
+for (const { name, skip, source } of cases) {
+  if (skip) {
+    continue;
+  }
+  bench.add(name, async () => {
+    await transformReactLynx(source, config);
   });
-});
+}
+
+await bench.run();
+console.table(bench.table());

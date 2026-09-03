@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { MainThreadRef, clearMainThreadRefLastIdForTesting, isMainThreadRef } from '../../src/core/main-thread-ref.js';
 import { takeMainThreadRefInitValuePatch } from '../../src/core/main-thread-ref-init-value.js';
@@ -6,16 +6,16 @@ import { clearMtsConfigCacheForTesting } from '../../src/core/mts-capability.js'
 
 describe('core/main-thread-ref primitive', () => {
   beforeEach(() => {
-    vi.stubGlobal('__DEV__', true);
-    vi.stubGlobal('__JS__', true);
-    vi.stubGlobal('__LEPUS__', false);
-    vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
-    vi.stubGlobal('lynx', {
-      getNativeApp: vi.fn(() => ({
-        createJSObjectDestructionObserver: vi.fn(),
+    rs.stubGlobal('__DEV__', true);
+    rs.stubGlobal('__JS__', true);
+    rs.stubGlobal('__LEPUS__', false);
+    rs.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
+    rs.stubGlobal('lynx', {
+      getNativeApp: rs.fn(() => ({
+        createJSObjectDestructionObserver: rs.fn(),
       })),
-      getCoreContext: vi.fn(() => ({
-        dispatchEvent: vi.fn(),
+      getCoreContext: rs.fn(() => ({
+        dispatchEvent: rs.fn(),
       })),
     });
     clearMtsConfigCacheForTesting();
@@ -25,7 +25,7 @@ describe('core/main-thread-ref primitive', () => {
 
   afterEach(() => {
     takeMainThreadRefInitValuePatch();
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('allocates background ids and records init value patches', () => {
@@ -42,8 +42,8 @@ describe('core/main-thread-ref primitive', () => {
   });
 
   it('allocates first-screen main-thread ids without init value patches', () => {
-    vi.stubGlobal('__JS__', false);
-    vi.stubGlobal('__LEPUS__', true);
+    rs.stubGlobal('__JS__', false);
+    rs.stubGlobal('__LEPUS__', true);
 
     const ref = new MainThreadRef('first-screen');
 
@@ -52,7 +52,7 @@ describe('core/main-thread-ref primitive', () => {
   });
 
   it('does not record init value patches below the MTS sdk gate', () => {
-    vi.stubGlobal('SystemInfo', { lynxSdkVersion: '2.13' });
+    rs.stubGlobal('SystemInfo', { lynxSdkVersion: '2.13' });
     clearMtsConfigCacheForTesting();
 
     new MainThreadRef('unsupported');
@@ -62,14 +62,14 @@ describe('core/main-thread-ref primitive', () => {
 
   it('dispatches release event from the destruction observer', () => {
     let release: (() => void) | undefined;
-    const dispatchEvent = vi.fn();
-    const createJSObjectDestructionObserver = vi.fn((callback: () => void) => {
+    const dispatchEvent = rs.fn();
+    const createJSObjectDestructionObserver = rs.fn((callback: () => void) => {
       release = callback;
       return {};
     });
-    vi.stubGlobal('lynx', {
-      getNativeApp: vi.fn(() => ({ createJSObjectDestructionObserver })),
-      getCoreContext: vi.fn(() => ({ dispatchEvent })),
+    rs.stubGlobal('lynx', {
+      getNativeApp: rs.fn(() => ({ createJSObjectDestructionObserver })),
+      getCoreContext: rs.fn(() => ({ dispatchEvent })),
     });
 
     new MainThreadRef('value');

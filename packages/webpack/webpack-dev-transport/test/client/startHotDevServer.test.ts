@@ -1,33 +1,33 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { reloadPage } from '../../client/reloadApp.js';
 import { startHotDevServer } from '../../client/startHotDevServer.js';
 
-vi.mock('../../client/reloadApp.js', () => ({
-  default: vi.fn(),
-  reloadPage: vi.fn(),
+rs.mock('../../client/reloadApp.js', () => ({
+  default: rs.fn(),
+  reloadPage: rs.fn(),
 }));
 
-vi.mock('@rspack/core/hot/log.js', () => ({
-  log: vi.fn(),
+rs.mock('@rspack/core/hot/log.js', () => ({
+  log: rs.fn(),
   formatError: (error: unknown) => String(error),
 }));
 
-vi.mock('@rspack/core/hot/log-apply-result.js', () => ({
-  logApplyResult: vi.fn(),
+rs.mock('@rspack/core/hot/log-apply-result.js', () => ({
+  logApplyResult: rs.fn(),
 }));
 
 describe('startHotDevServer', () => {
-  const check = vi.fn();
-  const status = vi.fn<() => string>();
+  const check = rs.fn();
+  const status = rs.fn<() => string>();
   let onHotUpdate: (hash: string) => void;
 
   const start = () => {
     const hotEmitter = {
-      on: vi.fn((_event: string, callback: (...args: unknown[]) => void) => {
+      on: rs.fn((_event: string, callback: (...args: unknown[]) => void) => {
         onHotUpdate = callback as (hash: string) => void;
       }),
     };
@@ -39,7 +39,7 @@ describe('startHotDevServer', () => {
   };
 
   beforeEach(() => {
-    vi.mocked(reloadPage).mockClear();
+    rs.mocked(reloadPage).mockClear();
     check.mockReset();
     status.mockReset();
     status.mockReturnValue('idle');
@@ -54,7 +54,7 @@ describe('startHotDevServer', () => {
 
       start();
       onHotUpdate('next-hash');
-      await vi.waitFor(() => {
+      await rs.waitFor(() => {
         expect(reloadPage).toBeCalledTimes(1);
       });
     },
@@ -65,7 +65,7 @@ describe('startHotDevServer', () => {
 
     start();
     onHotUpdate('next-hash');
-    await vi.waitFor(() => {
+    await rs.waitFor(() => {
       expect(reloadPage).toBeCalledTimes(1);
     });
   });
@@ -76,7 +76,7 @@ describe('startHotDevServer', () => {
 
     start();
     onHotUpdate('next-hash');
-    await vi.waitFor(() => {
+    await rs.waitFor(() => {
       expect(check).toBeCalled();
     });
     expect(reloadPage).not.toBeCalled();

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { createElement } from 'preact';
 
 import {
@@ -93,7 +93,7 @@ describe('Background Preact render', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     resetElementTemplateCommitState();
     envManager.resetEnv('background');
   });

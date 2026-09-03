@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { __page } from '../../src/snapshot';
 import { globalEnvManager } from './utils/envManager';
@@ -21,7 +21,7 @@ beforeEach(() => {
 afterEach(async () => {
   // Ensure preach/hooks global variable `afterPaintEffects` is safely cleared, avoid preact internal state error
   // otherwise, previous case will pollute the next case
-  vi.clearAllMocks();
+  rs.clearAllMocks();
   await Promise.resolve().then(() => {
     //
   });
@@ -94,7 +94,7 @@ describe('support <page /> element attributes', () => {
   it('should report error when having multiple <page /> elements', async () => {
     let errors = [];
     // mock lynx.reportError
-    vi.spyOn(lynx, 'reportError').mockImplementation((...args) => {
+    rs.spyOn(lynx, 'reportError').mockImplementation((...args) => {
       errors.push(args[0]);
     });
     function Comp() {
@@ -145,7 +145,7 @@ describe('support <page /> element attributes', () => {
         [Error: Attempt to render more than one \`<page />\`, which is not supported.],
       ]
     `);
-    vi.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('should support switch <page /> element', async () => {
@@ -293,7 +293,7 @@ describe('support <page /> element attributes', () => {
     // background render
     {
       globalEnvManager.switchToBackground();
-      vi.spyOn(lynx, 'reportError').mockImplementation((...args) => {
+      rs.spyOn(lynx, 'reportError').mockImplementation((...args) => {
         errors.push(args[0]);
       });
 
@@ -310,7 +310,7 @@ describe('support <page /> element attributes', () => {
         [Error: Attempt to render more than one \`<page />\`, which is not supported.],
       ]
     `);
-    vi.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('should support switch <page /> to other element', async () => {

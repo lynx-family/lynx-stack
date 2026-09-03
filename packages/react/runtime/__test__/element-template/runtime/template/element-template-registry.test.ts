@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';

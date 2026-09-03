@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { useState } from '@lynx-js/react';
 
 import { fireEvent, render, act } from '..';
@@ -23,7 +23,7 @@ function spyElementApi() {
   const ops = [];
   const wrap = (name, formatter) => {
     const original = g[name];
-    vi.spyOn(g, name).mockImplementation((...args) => {
+    rs.spyOn(g, name).mockImplementation((...args) => {
       ops.push(formatter(args));
       return original.apply(g, args);
     });
@@ -51,7 +51,7 @@ function spyElementApi() {
 }
 
 test('setState changes jsx', async () => {
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
   const jsx0 = <text>Hello 0</text>;
@@ -379,8 +379,8 @@ test('cross-slot keyed move: E is placed before A with correct beforeId in patch
   const tE = <text key='E'>E</text>;
   const tD = <text key='D'>D</text>;
   const tN = <text key='N'>N</text>;
-  vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
   const Comp = () => {

@@ -8,23 +8,23 @@
  * @vitest-environment jsdom
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 describe('reconnect', () => {
   let hash = 0;
   beforeEach(() => {
-    vi.stubGlobal('RSPEEDY_COMPILATION_ID', 'test-compilation-id');
-    vi.resetAllMocks();
-    vi.resetModules();
+    rs.stubGlobal('RSPEEDY_COMPILATION_ID', 'test-compilation-id');
+    rs.resetAllMocks();
+    rs.resetModules();
 
     hash++;
 
-    vi.stubGlobal('__webpack_hash__', String(hash));
-    vi.stubGlobal(
+    rs.stubGlobal('__webpack_hash__', String(hash));
+    rs.stubGlobal(
       '__resourceQuery',
       '?hostname=example.com&port=8080&protocol=ws',
     );
-    vi.stubGlobal('__webpack_require__', {
+    rs.stubGlobal('__webpack_require__', {
       h() {
         return String(hash);
       },
@@ -32,12 +32,12 @@ describe('reconnect', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('should not reloadApp at start up', async () => {
-    vi.mock('../../client/transport.js');
-    vi.mock('../../client/reloadApp.js');
+    rs.mock('../../client/transport.js');
+    rs.mock('../../client/reloadApp.js');
 
     const { default: reloadApp } = await import('../../client/reloadApp.js');
 
@@ -87,8 +87,8 @@ describe('reconnect', () => {
   });
 
   it('should reloadApp when restart dev-server', async () => {
-    vi.mock('../../client/transport.js');
-    vi.mock('../../client/reloadApp.js');
+    rs.mock('../../client/transport.js');
+    rs.mock('../../client/reloadApp.js');
 
     const { default: reloadApp } = await import('../../client/reloadApp.js');
 

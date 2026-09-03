@@ -5,7 +5,7 @@
  * @vitest-environment jsdom
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { parseURL } from '../../client/parseURL.js';
 

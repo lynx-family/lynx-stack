@@ -1,8 +1,10 @@
-import { assertType, describe, test } from 'vitest';
+import { describe, test } from '@rstest/core';
 
 import { App } from '@/App.js';
 import { cn } from '@/utils.js';
 import type { JSX } from '@lynx-js/react';
+
+import { assertType } from './assertType.js';
 
 const handler = (prev: boolean): boolean => !prev;
 

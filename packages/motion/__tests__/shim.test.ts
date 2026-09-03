@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rs,
+} from '@rstest/core';
 
 describe('Shim', () => {
   // Store original values
@@ -20,7 +27,7 @@ describe('Shim', () => {
   const origSystemInfo = (globalThis as any).SystemInfo;
 
   beforeEach(() => {
-    vi.resetModules();
+    rs.resetModules();
     // Reset globals to test shimming
     // @ts-expect-error
     delete globalThis.document;
@@ -53,7 +60,7 @@ describe('Shim', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rs.restoreAllMocks();
     // Restore original globals
     globalThis.document = origDocument;
     globalThis.performance = origPerformance;

@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from '@rstest/core';
 
 import { testClasses, unsupportedClasses } from './test-content.js';
 

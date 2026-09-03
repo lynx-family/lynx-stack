@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, expectTypeOf, test } from 'vitest';
+import { expect, expectTypeOf, test } from '@rstest/core';
 import { fireEvent, render } from '@lynx-js/react/testing-library';
 
 test('render basic component', () => {

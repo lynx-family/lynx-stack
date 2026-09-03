@@ -1,16 +1,16 @@
 import { createRef, Component, useState, useEffect, useRef } from '@lynx-js/react';
 import { render } from '..';
-import { expect, vi, describe, it } from 'vitest';
+import { expect, rs, describe, it } from '@rstest/core';
 import { act } from 'preact/test-utils';
 
 describe('component ref', () => {
   it('basic', async () => {
-    const cleanup = vi.fn();
-    const ref1 = vi.fn(() => {
+    const cleanup = rs.fn();
+    const ref1 = rs.fn(() => {
       return cleanup;
     });
     const ref2 = createRef();
-    const ref3 = vi.fn();
+    const ref3 = rs.fn();
     const ref4 = createRef();
     let _setShow;
 
@@ -102,7 +102,7 @@ describe('component ref', () => {
 
 describe('element ref', () => {
   it('basic', async () => {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
 
     class Comp extends Component {
@@ -154,7 +154,7 @@ describe('element ref', () => {
   });
 
   it('insert', async () => {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
     let _setShow;
 
@@ -218,7 +218,7 @@ describe('element ref', () => {
   });
 
   it('remove', async () => {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
     let _setShow;
 
@@ -298,11 +298,11 @@ describe('element ref', () => {
   });
 
   it('remove with cleanup function', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(0);
 
-    const cleanup = vi.fn();
-    const ref1 = vi.fn(() => {
+    const cleanup = rs.fn();
+    const ref1 = rs.fn(() => {
       return cleanup;
     });
     let _setShow;
@@ -371,15 +371,15 @@ describe('element ref', () => {
       ]
     `);
     expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(2);
-    vi.resetAllMocks();
+    rs.resetAllMocks();
   });
 
   it('unmount', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(0);
 
-    const cleanup = vi.fn();
-    const ref1 = vi.fn(() => {
+    const cleanup = rs.fn();
+    const ref1 = rs.fn(() => {
       return cleanup;
     });
     const ref2 = createRef();
@@ -458,7 +458,7 @@ describe('element ref', () => {
       ]
     `);
     expect(lynx.getNativeApp().callLepusMethod).toBeCalledTimes(2);
-    vi.resetAllMocks();
+    rs.resetAllMocks();
   });
 
   it('spread undefined ref should work', () => {
@@ -486,7 +486,7 @@ describe('element ref', () => {
 
 describe('applyRef before hydration', () => {
   it('rerender with same ref callback should not invoke ref callback', () => {
-    const refCallback = vi.fn();
+    const refCallback = rs.fn();
     let bump;
 
     function App() {
@@ -515,8 +515,8 @@ describe('applyRef before hydration', () => {
   forms.forEach((key) => {
     forms.forEach((key2) => {
       it(`rerender when ref is changed from ${key} to ${key2}`, () => {
-        const oldCb = vi.fn();
-        const newCb = vi.fn();
+        const oldCb = rs.fn();
+        const newCb = rs.fn();
         let bump;
 
         function App() {
@@ -555,7 +555,7 @@ describe('applyRef before hydration', () => {
   });
 
   it('useRef + useEffect + setState host capture is stable (portal-host pattern)', () => {
-    const seenHosts = vi.fn();
+    const seenHosts = rs.fn();
 
     function App() {
       const hostRef = useRef(null);

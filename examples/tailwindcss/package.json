@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rsbuild build",
     "dev": "rsbuild dev",
-    "test:type": "vitest --typecheck.only"
+    "test:type": "tsc6 --noEmit"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",
@@ -21,6 +21,7 @@
     "@lynx-js/tailwind-preset": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/core": "catalog:rstest",
     "@types/react": "^19.2.18",
     "rsbuild-plugin-tailwindcss": "0.2.4",
     "tailwindcss": "^3.4.19"

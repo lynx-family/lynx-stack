@@ -1,9 +1,9 @@
-import { expect, vi } from 'vitest';
+import { expect, rs } from '@rstest/core';
 import { render, cleanup } from '..';
 import { Component } from '@lynx-js/react';
 
 test('clean up the document', () => {
-  const spy = vi.fn();
+  const spy = rs.fn();
   const viewId = 'my-view';
 
   class Test extends Component {

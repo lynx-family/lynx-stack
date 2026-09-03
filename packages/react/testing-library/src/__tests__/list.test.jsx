@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { act } from 'preact/test-utils';
-import { describe, expect, vi } from 'vitest';
+import { describe, expect, rs } from '@rstest/core';
 
 import { Component, useState } from '@lynx-js/react';
 
@@ -236,9 +236,9 @@ describe('list', () => {
       setListVal(initListVal.filter((x) => x !== 3));
     });
 
-    const __CreateElement = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
-    const __SetAttribute = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
-    const __FlushElementTree = vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__FlushElementTree');
+    const __CreateElement = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
+    const __SetAttribute = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__SetAttribute');
+    const __FlushElementTree = rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__FlushElementTree');
 
     // Remove action is generated
     expect(JSON.parse(list.getAttribute('update-list-info'))[1].removeAction)
@@ -718,8 +718,8 @@ describe('list - deferred <list-item/> should render as normal', () => {
       }
     }
 
-    const unmounts = [vi.fn(), vi.fn(), vi.fn()];
-    const renders = [vi.fn(), vi.fn(), vi.fn()];
+    const unmounts = [rs.fn(), rs.fn(), rs.fn()];
+    const renders = [rs.fn(), rs.fn(), rs.fn()];
 
     function App() {
       const [defers, setDefers] = useState([true, true, false]);
@@ -785,7 +785,7 @@ describe('list - deferred <list-item/> should render as normal', () => {
       }
     }
 
-    const unmounts = [vi.fn(), vi.fn(), vi.fn()];
+    const unmounts = [rs.fn(), rs.fn(), rs.fn()];
 
     function App() {
       return (
@@ -890,9 +890,9 @@ describe('list - deferred <list-item/> should render as normal', () => {
   });
 
   it('spread props inside list-item should not trigger redundant snapshot patch', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const useThemeColor = () => 'red';

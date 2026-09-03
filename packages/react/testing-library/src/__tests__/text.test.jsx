@@ -1,15 +1,15 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 import { render, fireEvent } from '..';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { useState } from 'preact/hooks';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 
 describe('should only render text when it is not empty', () => {
   it('empty text should not be rendered', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const { container } = render(
@@ -63,9 +63,9 @@ describe('should only render text when it is not empty', () => {
     }
   });
   it('non-empty text should be rendered', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const { container } = render(

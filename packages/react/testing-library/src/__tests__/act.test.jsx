@@ -1,16 +1,16 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
-import { test } from 'vitest';
+import { rs } from '@rstest/core';
+import { test } from '@rstest/core';
 import { render, fireEvent } from '..';
 import { useEffect, useState } from 'preact/hooks';
 import { createRef } from 'preact';
 import { Component } from 'preact';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { __globalSnapshotPatch } from '../../../runtime/lib/snapshot/lifecycle/patch/snapshotPatch.js';
 import { snapshotInstanceManager } from '../../../runtime/lib/snapshot/index.js';
 
 test('render calls useEffect immediately', async () => {
-  const cb = vi.fn();
+  const cb = rs.fn();
   function Comp() {
     useEffect(() => {
       cb(`__MAIN_THREAD__: ${__MAIN_THREAD__}`);
@@ -78,7 +78,7 @@ test('render calls useEffect immediately', async () => {
 });
 
 test('render calls componentDidMount immediately', async () => {
-  const cb = vi.fn();
+  const cb = rs.fn();
   class Comp extends Component {
     componentDidMount() {
       cb(`__MAIN_THREAD__: ${__MAIN_THREAD__}`);
@@ -152,11 +152,11 @@ test('findByTestId returns the element', async () => {
 test('fireEvent triggers useEffect calls', async () => {
   expect(__globalSnapshotPatch).toMatchInlineSnapshot(`undefined`);
   // mock lynx.getNativeApp().callLepusMethod
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
   expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
-  const cb = vi.fn();
-  const onTap = vi.fn();
+  const cb = rs.fn();
+  const onTap = rs.fn();
   function Counter() {
     const [count, setCount] = useState(0);
     useEffect(() => cb(count));
@@ -344,5 +344,5 @@ test('fireEvent triggers useEffect calls', async () => {
     ]
   `);
 
-  vi.clearAllMocks();
+  rs.clearAllMocks();
 });

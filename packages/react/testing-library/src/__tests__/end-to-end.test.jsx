@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { Component } from 'preact';
-import { expect, vi } from 'vitest';
+import { expect, rs } from '@rstest/core';
 import { render, screen, waitForElementToBeRemoved } from '..';
 import { snapshotInstanceManager } from '../../../runtime/lib/snapshot/index.js';
 
@@ -38,7 +38,7 @@ class ComponentWithLoader extends Component {
 }
 
 test('state change will cause re-render', async () => {
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   expect(snapshotInstanceManager.values).toMatchInlineSnapshot(`
     Map {
       -1 => {

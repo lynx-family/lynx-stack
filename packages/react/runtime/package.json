@@ -17,15 +17,16 @@
   "scripts": {
     "build": "tsc6 --build",
     "test": "pnpm run test:snapshot && pnpm run test:core && pnpm run test:et",
-    "test:core": "vitest run __test__/core",
-    "test:et": "vitest run -c __test__/element-template/vitest.config.ts --coverage",
-    "test:snapshot": "vitest run --coverage __test__/snapshot __test__/worklet-runtime __test__/guardrails"
+    "test:core": "rstest run __test__/core",
+    "test:et": "rstest run -c __test__/element-template/rstest.config.ts --coverage",
+    "test:snapshot": "rstest run --coverage __test__/snapshot __test__/worklet-runtime __test__/guardrails"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rspack/core": "catalog:rspack",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "pretty-format": "^30.4.1"

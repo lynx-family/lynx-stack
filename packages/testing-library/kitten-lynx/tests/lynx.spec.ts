@@ -7,7 +7,7 @@ import { AdbServerClient, type Adb } from '@yume-chan/adb';
 import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
 import { execa } from 'execa';
 import jpeg from 'jpeg-js';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from '@rstest/core';
 
 import { Lynx } from '../src/Lynx.js';
 import type { KittenLynxView } from '../src/KittenLynxView.js';

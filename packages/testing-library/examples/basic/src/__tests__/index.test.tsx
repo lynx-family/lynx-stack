@@ -13,7 +13,7 @@ let fn;
 if (typeof rstest !== 'undefined') {
   fn = rstest.fn;
 } else {
-  fn = vi.fn;
+  fn = rs.fn;
 }
 
 test('App', async () => {
