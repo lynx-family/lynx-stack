@@ -2,9 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import type {
   CustomSectionNaming,
   LynxTemplatePlugin as LynxTemplatePluginClass,
@@ -682,6 +685,22 @@ const externalBundleRsbuildPlugin = ({
 
     const { LynxTemplatePlugin } = exposed
 
+    const lynxConfig = api.useExposed<LynxConfig>(
+      Symbol.for('@lynx-js/rsbuild-plugin:config'),
+    )
+
+    if (!lynxConfig) {
+      throw new Error(
+        'lynx-bundle-rslib-config requires an exposed Lynx config. Please apply `pluginLynx` from `@lynx-js/rsbuild-plugin`, which a DSL plugin such as `pluginReactLynx` does for you.',
+      )
+    }
+
+    // The raw per-thread chunks are only ingredients for the encoded bundle,
+    // the way a page's are — keep them out of `dist` alongside it.
+    const intermediateDir = lynxConfig.resolveIntermediateDir({
+      entryName: bundleName,
+    })
+
     api.modifyBundlerChain(
       async (chain, { CHAIN_ID }) => {
         // Mark the react loaders as building an external bundle.
@@ -716,7 +735,10 @@ const externalBundleRsbuildPlugin = ({
         ) => {
           chain
             .entry(entryName)
-            .add(entryValue)
+            .add({
+              ...entryValue,
+              filename: path.posix.join(intermediateDir, `${entryName}.js`),
+            })
             .end()
         }
 
@@ -799,6 +821,7 @@ const externalBundleRsbuildPlugin = ({
           .use(LynxTemplatePlugin, [{
             ...LynxTemplatePlugin.defaultOptions,
             filename: `${bundleName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+            intermediate: intermediateDir,
             chunks: [...mainThreadEntryName, ...backgroundEntryName],
             customSectionNaming: sectionNaming,
             appType: 'DynamicComponent',
