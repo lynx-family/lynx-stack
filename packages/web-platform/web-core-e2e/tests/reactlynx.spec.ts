@@ -2722,23 +2722,37 @@ test.describe('reactlynx3 tests', () => {
           const inlineText = page.locator('#inline-target');
           await expect(inlineText).toBeAttached();
           await wait(200);
-          await inlineText.evaluate((inlineText) => {
-            const textNode = inlineText.querySelector('raw-text')?.firstChild;
-            if (!textNode) throw new Error('Missing inline text node');
-            document.getSelection()?.setBaseAndExtent(
-              textNode,
-              1,
-              textNode,
-              4,
-            );
-            document.dispatchEvent(new Event('selectionchange'));
-          });
+          const selectInlineText = (
+            anchorOffset: number,
+            focusOffset: number,
+          ) =>
+            inlineText.evaluate((inlineText, { anchorOffset, focusOffset }) => {
+              const textNode = inlineText.querySelector('raw-text')?.firstChild;
+              if (!textNode) throw new Error('Missing inline text node');
+              document.getSelection()?.setBaseAndExtent(
+                textNode,
+                anchorOffset,
+                textNode,
+                focusOffset,
+              );
+              document.dispatchEvent(new Event('selectionchange'));
+            }, { anchorOffset, focusOffset });
+
+          await selectInlineText(1, 4);
 
           await expect(page.locator('.text-result')).toHaveText(
             '7-10-forward',
           );
           await expect(page.locator('.inline-text-result')).toHaveText(
             '1-4-forward',
+          );
+
+          await selectInlineText(4, 1);
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-backward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-backward',
           );
         },
       );

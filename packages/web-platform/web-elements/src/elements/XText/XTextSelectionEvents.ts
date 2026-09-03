@@ -47,7 +47,7 @@ const getTextOffset = (
  */
 const getSelectionDetail = (dom: HTMLElement): SelectionChangeDetail => {
   const selection = dom.ownerDocument.getSelection();
-  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+  if (!selection || selection.rangeCount === 0) {
     return emptySelection();
   }
 
@@ -57,14 +57,35 @@ const getSelectionDetail = (dom: HTMLElement): SelectionChangeDetail => {
     selection.anchorOffset,
   );
   const focus = getTextOffset(dom, selection.focusNode, selection.focusOffset);
-  if (anchor === null || focus === null || anchor === focus) {
-    return emptySelection();
+  if (anchor !== null && focus !== null && anchor !== focus) {
+    return {
+      start: Math.min(anchor, focus),
+      end: Math.max(anchor, focus),
+      direction: anchor < focus ? 'forward' : 'backward',
+    };
   }
 
+  // WebKit retargets selection endpoints outside a shadow tree. Ask for the
+  // composed range to recover the actual text nodes in that case.
+  const shadowRoots: ShadowRoot[] = [];
+  let root = dom.getRootNode();
+  while (root instanceof ShadowRoot) {
+    shadowRoots.push(root);
+    root = root.host.getRootNode();
+  }
+  const [range] = selection.getComposedRanges?.({ shadowRoots }) ?? [];
+  const start = range
+    ? getTextOffset(dom, range.startContainer, range.startOffset)
+    : null;
+  const end = range
+    ? getTextOffset(dom, range.endContainer, range.endOffset)
+    : null;
+  if (start === null || end === null || start === end) return emptySelection();
+
   return {
-    start: Math.min(anchor, focus),
-    end: Math.max(anchor, focus),
-    direction: anchor < focus ? 'forward' : 'backward',
+    start,
+    end,
+    direction: selection.direction === 'backward' ? 'backward' : 'forward',
   };
 };
 
