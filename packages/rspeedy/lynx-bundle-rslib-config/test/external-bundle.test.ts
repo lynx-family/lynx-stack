@@ -394,6 +394,110 @@ describe('JsBytecode encoding', () => {
     expect(decodedResult['custom-sections']['utils']).toBeTypeOf('string')
   })
 
+  it('should not wrap a main-thread entry with the background runtime wrapper', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: {
+            import: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+            layer: LAYERS.MAIN_THREAD,
+          },
+        },
+      },
+      id: 'utils-m-plain',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist', 'utils-m-plain'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-m-plain',
+        'utils-m-plain.lynx.bundle',
+      ),
+    )
+    const mainThreadSection = decodedResult['custom-sections']['utils']
+    expect(mainThreadSection).toBeTypeOf('string')
+    expect(mainThreadSection).not.toContain('.define(')
+  })
+
+  it('should mark a chunk by its main-thread modules rather than its name', async () => {
+    const marked: Record<string, boolean> = {}
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(fixtureDir, 'index.ts'),
+          helpers: path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'utils-shared-mt',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist', 'utils-shared-mt'),
+        },
+      },
+      tools: {
+        rspack: {
+          optimization: {
+            splitChunks: {
+              chunks: 'all',
+              minSize: 0,
+              cacheGroups: {
+                default: false,
+                defaultVendors: false,
+                mainThread: {
+                  name: 'shared-mt',
+                  test: (module: { layer?: string | null }) =>
+                    module.layer === LAYERS.MAIN_THREAD,
+                  enforce: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      plugins: [
+        pluginReactLynx(),
+        {
+          name: 'test:read-marks',
+          setup(api) {
+            api.processAssets(
+              { stage: 'report' },
+              ({ compilation }) => {
+                for (const asset of compilation.getAssets()) {
+                  if (asset.name.endsWith('.js')) {
+                    marked[asset.name] = asset.info['lynx:main-thread'] === true
+                  }
+                }
+              },
+            )
+          },
+        } satisfies rsbuild.RsbuildPlugin,
+      ],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    expect(marked).toStrictEqual({
+      'shared-mt.js': true,
+      'utils__main-thread.js': true,
+      'helpers__main-thread.js': true,
+      'utils.js': false,
+      'helpers.js': false,
+    })
+  })
+
   it('should not compile main thread chunks to bytecode in development by default', async () => {
     const decodedResult = await buildAndDecode(
       'utils-dev-no-bytecode',

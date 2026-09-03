@@ -6,15 +6,15 @@ import type { Rspack } from '@rslib/core'
 const PLUGIN_NAME = 'MarkMainThreadWebpackPlugin'
 
 /**
- * Marks the assets of the given entries as main thread ones, the way a page
- * build marks its own. A DSL plugin marks whatever else it compiles for the
- * main thread, so the two add up.
+ * Marks the assets of every chunk holding main-thread modules, the way a page
+ * build marks its own, so the encoder and the runtime wrapper tell the threads
+ * apart by the same mark.
  */
 export class MarkMainThreadWebpackPlugin {
-  constructor(private options: { entryNames: string[] }) {}
+  constructor(private options: { layer: string }) {}
 
   apply(compiler: Rspack.Compiler): void {
-    const entryNames = new Set(this.options.entryNames)
+    const { layer } = this.options
 
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
       compilation.hooks.processAssets.tap(
@@ -23,8 +23,25 @@ export class MarkMainThreadWebpackPlugin {
           stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
         () => {
+          const entryChunks = new Set<Rspack.Chunk>()
+          for (const [name, { options }] of compilation.entries) {
+            if (options.layer !== layer) {
+              continue
+            }
+            for (
+              const chunk of compilation.entrypoints.get(name)?.chunks ?? []
+            ) {
+              entryChunks.add(chunk)
+            }
+          }
           for (const chunk of compilation.chunks) {
-            if (chunk.name === undefined || !entryNames.has(chunk.name)) {
+            const modules = compilation.chunkGraph.getChunkModulesIterable(
+              chunk,
+            )
+            if (
+              !entryChunks.has(chunk)
+              && !Array.from(modules).some((module) => module.layer === layer)
+            ) {
               continue
             }
             for (const file of chunk.files) {
