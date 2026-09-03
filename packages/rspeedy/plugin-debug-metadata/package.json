@@ -31,7 +31,7 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "dependencies": {
     "@lynx-js/debug-metadata": "workspace:^"

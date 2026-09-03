@@ -1,15 +1,15 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 import { render, fireEvent } from '..';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { useState, useEffect } from 'preact/hooks';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 
 describe('should not reuse cross slot index', () => {
   it('raw text should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const Comp = () => {
@@ -165,9 +165,9 @@ describe('should not reuse cross slot index', () => {
   });
 
   it('raw text in the middle should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const Comp = () => {
@@ -356,9 +356,9 @@ describe('should not reuse cross slot index', () => {
   });
 
   it('text node should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const Comp = () => {
@@ -509,9 +509,9 @@ describe('should not reuse cross slot index', () => {
   });
 
   it('keyed text node should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const Comp = () => {
@@ -662,9 +662,9 @@ describe('should not reuse cross slot index', () => {
   });
 
   it('function component should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const CompA = () => {
@@ -816,9 +816,9 @@ describe('should not reuse cross slot index', () => {
   });
 
   it('keyed function component should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const CompA = () => {
@@ -970,9 +970,9 @@ describe('should not reuse cross slot index', () => {
   });
 
   it('keyed function component in Fragment should not be reused', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     const log = [];
@@ -1290,8 +1290,8 @@ describe('should not reuse cross slot index', () => {
 
 describe('should reuse dom', () => {
   it('keyed list reorder inside Fragment should still work', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     let setState;
@@ -1369,8 +1369,8 @@ describe('should reuse dom', () => {
 
   it('keyed host replacement updates content without crashing during snapshot patch apply', () => {
     // https://github.com/lynx-family/lynx-stack/issues/2435
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
 
     const App = () => {
       const [tab, setTab] = useState('a');
@@ -1420,8 +1420,8 @@ describe('should reuse dom', () => {
   });
 
   it('slot 1 component hooks state must be preserved when slot 0 type changes', () => {
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
 
     const Comp = () => <text>Comp</text>;
 

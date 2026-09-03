@@ -5,9 +5,9 @@
 */
 
 // This suite is compiled with the legacy children + wrapper codegen
-// (`compat.legacySlot`, see vitest.config.ts) and asserts that the current
+// (`compat.legacySlot`, see rstest.config.ts) and asserts that the current
 // runtime renders/updates legacy-slot snapshots correctly.
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { elementTree } from './utils/nativeMethod';
 import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';

@@ -1,6 +1,6 @@
 import { cloneElement, Component, render } from 'preact';
 import { Suspense, lazy } from 'preact/compat';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { setupBackgroundDocument, setupDocument } from '../../src/document';
 import { globalBackgroundSnapshotInstancesToRemove } from '../../src/snapshot/lifecycle/patch/commit';
@@ -528,21 +528,21 @@ describe('document - background', () => {
   it('basic - update event', async function() {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
 
-    render(jsx(vi.fn()), scratch);
+    render(jsx(rs.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_17
-          0={[MockFunction spy]}
+          0={[MockFunction rstest.fn()]}
         />
       </root>
     `);
 
     initGlobalSnapshotPatch();
-    render(jsx(vi.fn()), scratch);
+    render(jsx(rs.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_17
-          0={[MockFunction spy]}
+          0={[MockFunction rstest.fn()]}
         />
       </root>
     `);
@@ -555,7 +555,7 @@ describe('document - background', () => {
   it('runWithForce', async function() {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
 
-    let f = vi.fn();
+    let f = rs.fn();
     const data = {};
     class Pure extends Component {
       shouldComponentUpdate() {

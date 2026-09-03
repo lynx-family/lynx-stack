@@ -1,12 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, rs } from '@rstest/core';
 
 import { createSnapshot, SnapshotInstance } from '../../../src/snapshot';
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  rs.unstubAllGlobals();
 });
 
 it('legacy createSnapshot', function() {
@@ -152,7 +152,7 @@ it('FetchBundle drops the entryName CSS scope in ensureElements', function() {
   );
   // With FetchBundle the entryName is intentionally removed, so `__SetCSSId`
   // uses the default entry scope (no `BAR:` prefix) and no `lazy-bundle-url`.
-  vi.stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle');
+  rs.stubGlobal('__LAZY_BUNDLE_FETCHER__', 'FetchBundle');
   const a = new SnapshotInstance(snapshot);
   a.ensureElements();
 

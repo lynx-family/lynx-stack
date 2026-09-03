@@ -1,12 +1,12 @@
 import { act } from 'preact/test-utils';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, rs } from '@rstest/core';
 
 describe('Destroy', () => {
-  const addEventListener = vi.fn();
-  const removeEventListener = vi.fn();
+  const addEventListener = rs.fn();
+  const removeEventListener = rs.fn();
 
   beforeAll(() => {
-    lynx.getCoreContext = vi.fn(() => {
+    lynx.getCoreContext = rs.fn(() => {
       return {
         addEventListener,
         removeEventListener,
@@ -15,7 +15,7 @@ describe('Destroy', () => {
   });
 
   test('should remove event listener when throw in cleanup', async function() {
-    vi.resetModules();
+    rs.resetModules();
     await import('../../../src/lynx');
 
     expect(addEventListener).toHaveBeenCalled();
@@ -25,7 +25,7 @@ describe('Destroy', () => {
     const { useEffect } = await import('../../../src/index');
     const { __root } = await import('../../../src/root');
 
-    const callback = vi.fn().mockImplementation(() => {
+    const callback = rs.fn().mockImplementation(() => {
       throw '???';
     });
 

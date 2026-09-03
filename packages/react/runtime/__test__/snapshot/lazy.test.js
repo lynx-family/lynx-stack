@@ -1,6 +1,6 @@
 import '../../lazy/import.js';
 
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test, rs } from '@rstest/core';
 import * as ReactExports from '../../lazy/react.js';
 import * as ReactCompatExports from '../../lazy/compat.js';
 import * as ReactLepusExports from '../../lazy/react-lepus.js';
@@ -137,21 +137,21 @@ describe('Lazy Exports', () => {
   });
 
   test('target background', async () => {
-    vi.resetModules();
+    rs.resetModules();
 
     const lynx = {};
-    vi.stubGlobal('lynx', lynx);
-    onTestFinished(() => vi.unstubAllGlobals());
-    vi.stubGlobal('__LEPUS__', false);
+    rs.stubGlobal('lynx', lynx);
+    onTestFinished(() => rs.unstubAllGlobals());
+    rs.stubGlobal('__LEPUS__', false);
 
     const { target } = await import('../../lazy/target.js');
     expect(target).toBe(lynx);
   });
 
   test('target main-thread', async () => {
-    vi.resetModules();
+    rs.resetModules();
 
-    vi.stubGlobal('__LEPUS__', true);
+    rs.stubGlobal('__LEPUS__', true);
 
     const { target } = await import('../../lazy/target.js');
     expect(target).toBe(globalThis);
@@ -190,7 +190,7 @@ describe('Lazy Exports', () => {
 
   test('throws when an ET runtime marker imports the Snapshot standalone lazy entry', async () => {
     await withRuntimeBackend(undefined, async () => {
-      vi.resetModules();
+      rs.resetModules();
 
       await import('../../src/element-template/runtime-backend-marker.ts');
       expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_ELEMENT_TEMPLATE);

@@ -1,11 +1,11 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 import { render, fireEvent } from '..';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
 test('raw-text should be created by `__CreateRawText`', async () => {
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateRawText');
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateRawText');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__CreateElement');
 
   function App() {
     return (

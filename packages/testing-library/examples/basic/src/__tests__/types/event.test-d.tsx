@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import '@testing-library/jest-dom';
-import { expect, it, vi } from 'vitest';
+import { expect, it, rs } from '@rstest/core';
 import type { JSX } from '@lynx-js/react';
 import { render, fireEvent, screen } from '@lynx-js/react/testing-library';
 
@@ -12,7 +12,7 @@ it('basic', async function() {
   ) => {
     return <view bindtap={onClick}>{children}</view>;
   };
-  const onClick = vi.fn(() => {});
+  const onClick = rs.fn(() => {});
 
   // ARRANGE
   const { container } = render(

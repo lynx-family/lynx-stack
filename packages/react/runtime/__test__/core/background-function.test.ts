@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import {
   createBackgroundFunctionHandle,
@@ -17,32 +17,32 @@ function createCrossThreadLynxMock() {
   const jsListeners = new Map<string, (event: RuntimeProxy.Event) => void>();
 
   const coreContext = {
-    addEventListener: vi.fn((type: string, listener: (event: RuntimeProxy.Event) => void) => {
+    addEventListener: rs.fn((type: string, listener: (event: RuntimeProxy.Event) => void) => {
       coreListeners.set(type, listener);
     }),
-    removeEventListener: vi.fn((type: string) => {
+    removeEventListener: rs.fn((type: string) => {
       coreListeners.delete(type);
     }),
-    dispatchEvent: vi.fn((event: RuntimeProxy.Event) => {
+    dispatchEvent: rs.fn((event: RuntimeProxy.Event) => {
       jsListeners.get(event.type)?.(event);
     }),
   };
 
   const jsContext = {
-    addEventListener: vi.fn((type: string, listener: (event: RuntimeProxy.Event) => void) => {
+    addEventListener: rs.fn((type: string, listener: (event: RuntimeProxy.Event) => void) => {
       jsListeners.set(type, listener);
     }),
-    removeEventListener: vi.fn((type: string) => {
+    removeEventListener: rs.fn((type: string) => {
       jsListeners.delete(type);
     }),
-    dispatchEvent: vi.fn((event: RuntimeProxy.Event) => {
+    dispatchEvent: rs.fn((event: RuntimeProxy.Event) => {
       coreListeners.get(event.type)?.(event);
     }),
   };
 
   globalThis.lynx = {
-    getCoreContext: vi.fn(() => coreContext),
-    getJSContext: vi.fn(() => jsContext),
+    getCoreContext: rs.fn(() => coreContext),
+    getJSContext: rs.fn(() => jsContext),
   } as unknown as typeof lynx;
 
   return { coreContext, jsContext };
@@ -50,7 +50,7 @@ function createCrossThreadLynxMock() {
 
 describe('background-function core primitives', () => {
   beforeEach(() => {
-    vi.stubGlobal('__JS__', false);
+    rs.stubGlobal('__JS__', false);
     globalThis.SystemInfo = {
       lynxSdkVersion: '999.999',
     } as SystemInfo;
@@ -60,11 +60,11 @@ describe('background-function core primitives', () => {
   afterEach(() => {
     resetBackgroundFunctionRuntime();
     resetFunctionCallReturnListener();
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('creates background function handles with stable JSON behavior', () => {
-    const fn = vi.fn();
+    const fn = rs.fn();
 
     const first = createBackgroundFunctionHandle(fn);
     const second = createBackgroundFunctionHandle(fn);
@@ -101,7 +101,7 @@ describe('background-function core primitives', () => {
 
   it('dispatches a background function call and resolves the returned value', async () => {
     const { coreContext, jsContext } = createCrossThreadLynxMock();
-    const fn = vi.fn((value: string) => `${value}-from-background`);
+    const fn = rs.fn((value: string) => `${value}-from-background`);
     const ctx = {
       _wkltId: 'ctx',
       _jsFn: {

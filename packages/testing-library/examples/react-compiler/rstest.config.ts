@@ -1,19 +1,13 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from '@rstest/core';
-import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  extends: withLynxConfig({
-    configPath: './lynx.enable.config.ts',
-  }),
-  resolve: {
-    alias: {
-      // not necessary in real projects, just for compatibility with vitest tests in this repo
-      vitest: require.resolve('./vitest-polyfill.cjs'),
-    },
-  },
-  source: {
-    define: {
-      __FORGET__: 'true',
-    },
-  },
+  projects: [
+    path.join(root, 'rstest.config.compiler-enabled.ts'),
+    path.join(root, 'rstest.config.compiler-disabled.ts'),
+  ],
 });

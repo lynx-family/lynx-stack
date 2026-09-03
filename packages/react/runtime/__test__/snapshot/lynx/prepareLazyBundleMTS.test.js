@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
 
 /* global lynx */
 
@@ -22,19 +22,19 @@ describe('prepareLazyBundleMTS handler', () => {
   let injectPrepareLazyBundleMTS;
 
   beforeEach(async () => {
-    vi.resetModules();
-    vi.unstubAllGlobals();
+    rs.resetModules();
+    rs.unstubAllGlobals();
 
-    thenMock = vi.fn();
-    fetchBundle = vi.fn(() => ({ then: thenMock }));
+    thenMock = rs.fn();
+    fetchBundle = rs.fn(() => ({ then: thenMock }));
     // The main-thread bundle is wrapped as `(globDynamicComponentEntry) => exports`;
     // `loadScript` returns that function and the handler invokes it with the url.
-    loadScript = vi.fn(() => () => ({ chunk: 'x' }));
-    loadStyleSheet = vi.fn();
-    adoptStyleSheet = vi.fn();
-    processEvalResult = vi.fn();
+    loadScript = rs.fn(() => () => ({ chunk: 'x' }));
+    loadStyleSheet = rs.fn();
+    adoptStyleSheet = rs.fn();
+    processEvalResult = rs.fn();
 
-    vi
+    rs
       .stubGlobal('lynx', { fetchBundle, loadScript })
       .stubGlobal('__LoadStyleSheet', loadStyleSheet)
       .stubGlobal('__AdoptStyleSheet', adoptStyleSheet)
@@ -49,7 +49,7 @@ describe('prepareLazyBundleMTS handler', () => {
 
   afterEach(() => {
     delete globalThis.rLynxPrepareLazyBundleMTS;
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   function invoke(url, host = HOST) {
@@ -58,7 +58,7 @@ describe('prepareLazyBundleMTS handler', () => {
 
   test('happy path: loadScript(main-thread) → evaluate(url) → host handler → CSS adopt', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
-    const evaluate = vi.fn(() => ({ chunk: 'x' }));
+    const evaluate = rs.fn(() => ({ chunk: 'x' }));
     loadScript.mockReturnValueOnce(evaluate);
     loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
 
@@ -78,8 +78,8 @@ describe('prepareLazyBundleMTS handler', () => {
 
   test('routes to the loading host, not another host', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
-    const other = vi.fn();
-    vi.stubGlobal('processEvalResultByHost', {
+    const other = rs.fn();
+    rs.stubGlobal('processEvalResultByHost', {
       [HOST]: processEvalResult,
       B: other,
     });

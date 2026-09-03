@@ -14,14 +14,15 @@ const config: RstestConfig = defineConfig({
   name: 'web-worker-rpc',
   include: ['test/**/*.test.ts'],
   testTimeout: 10_000,
-  dev: {
-    writeToDisk: true,
-  },
-  tools: {
-    rspack: {
-      module: {
-        parser: { javascript: { url: false } },
-      },
+  // `test/rpc.test.ts` starts a real `node:worker_threads` Worker. Point it at
+  // the on-disk source rather than a bundled chunk: `test/worker.js` and the
+  // `test/endpoints.js` it pulls in are plain ESM over the built `dist`, so
+  // Node loads them as-is. Relying on the emitted chunk instead would require
+  // `dev.writeToDisk`, which is silently dropped once enough projects share a
+  // single Rsbuild instance under the root config.
+  source: {
+    define: {
+      __WORKER_ENTRY__: JSON.stringify(path.join(root, 'test', 'worker.js')),
     },
   },
 });

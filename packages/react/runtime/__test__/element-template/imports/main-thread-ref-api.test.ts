@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { MainThreadRef, useMainThreadRef } from '@lynx-js/react/element-template';
 

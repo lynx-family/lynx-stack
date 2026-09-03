@@ -1,7 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { assertType, describe, expectTypeOf, test } from 'vitest';
+import { describe, test } from '@rstest/core';
+import { expectTypeOf } from 'expect-type';
 
 import {
   Component,
@@ -14,6 +15,8 @@ import {
 } from '@lynx-js/react';
 import type { FC, JSX, ReactNode } from '@lynx-js/react';
 import type { MainThread, NodesRef, Target, TouchEvent } from '@lynx-js/types';
+
+import { assertType } from './assertType.js';
 
 describe('JSX Runtime Types', () => {
   test('should support basic JSX element', () => {

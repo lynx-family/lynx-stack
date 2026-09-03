@@ -8,6 +8,6 @@
     "index.d.ts",
     "src",
     "test",
-    "vitest.config.ts",
+    "rstest.config.ts",
   ],
 }

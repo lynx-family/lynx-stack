@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import * as ElementTemplateRuntime from '../../../src/element-template/index.js';
 import * as ElementTemplateInternal from '../../../src/element-template/internal.js';

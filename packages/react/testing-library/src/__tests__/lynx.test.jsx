@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rs } from '@rstest/core';
 import { render } from '..';
 import { prettyFormatSnapshotPatch } from '../../../runtime/lib/snapshot/debug/formatPatch';
 import {
@@ -9,7 +9,7 @@ import {
 
 describe('lynx global API', () => {
   it('getJSModule should work', () => {
-    const cb = vi.fn();
+    const cb = rs.fn();
     lynx.getJSModule('GlobalEventEmitter')
       .addListener('onDataChanged', cb);
 
@@ -33,7 +33,7 @@ describe('lynx global API', () => {
   });
   it('background ctxNotFoundEventListener works', () => {
     const oldCallLepusMethod = lynx.getNativeApp().callLepusMethod;
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod').mockImplementation((...args) => {
+    rs.spyOn(lynx.getNativeApp(), 'callLepusMethod').mockImplementation((...args) => {
       if (args[0] === 'rLynxChange' && args[1].patchOptions.isHydration) {
         const data = JSON.parse(args[1].data);
         data.patchList[0].snapshotPatch.push(
@@ -49,7 +49,7 @@ describe('lynx global API', () => {
     });
     const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
-    vi.spyOn(lynxTestingEnv.backgroundThread.lynx, 'reportError');
+    rs.spyOn(lynxTestingEnv.backgroundThread.lynx, 'reportError');
     const reportErrorCalls = lynxTestingEnv.backgroundThread.lynx.reportError.mock.calls;
 
     expect(() => render(<view />)).toThrowErrorMatchingInlineSnapshot(

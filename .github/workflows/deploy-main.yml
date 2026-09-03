@@ -111,10 +111,7 @@ jobs:
         --testTimeout=50000
         --hookTimeout=50000
         --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
         --coverage
-        --no-cache
         --logHeapUsage
         --silent
   coverage-web-elements:

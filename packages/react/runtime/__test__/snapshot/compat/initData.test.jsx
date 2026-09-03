@@ -1,6 +1,6 @@
 import { Component, render } from 'preact';
 import { act } from 'preact/test-utils';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { setupBackgroundDocument } from '../../../src/document';
 import {
@@ -156,9 +156,9 @@ describe('withInitDataInState', () => {
   it('resets initData and strips timing flag before emitting data changes', () => {
     const tt = lynx.getApp();
     const emitter = lynx.getJSModule('GlobalEventEmitter');
-    const listener = vi.fn();
+    const listener = rs.fn();
     const originalReportError = lynx.reportError;
-    lynx.reportError = vi.fn();
+    lynx.reportError = rs.fn();
     lynx.__initData = {
       stale: true,
       key4: 'old',

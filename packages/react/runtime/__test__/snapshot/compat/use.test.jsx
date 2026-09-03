@@ -4,7 +4,7 @@
 
 import { render } from 'preact';
 import { Suspense } from 'preact/compat';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { createContext } from '../../../src/index';
 import { use } from '../../../compat';
