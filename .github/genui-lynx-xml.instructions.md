@@ -24,11 +24,14 @@ Keep numeric component ids separate from Element PAPI node references. Both
 arguments to `__AppendElement` must be nodes, append helpers must receive the
 parent node rather than its id, and `pageId` is reserved for page-owned element
 creation APIs.
-Keep the Lynx XML agent's `html_fragment_to_main_thread_script` tool limited to
-deterministic initial-tree conversion. Parse well-formed fragments in source
-order, emit Element PAPI creation, literal property, and append calls that assume
-`page` and `pageId` already exist, and leave state, event handlers, updates,
-lifecycle registration, cleanup, and CSS to the agent-authored artifact.
+Keep XML fragment parsing and deterministic Element PAPI generation in
+`packages/genui/lynx-xml` and export those headless utilities from its package
+entry point. Keep the server's `html_fragment_to_main_thread_script` module
+limited to Mastra tool and request-scope wiring. Parse well-formed fragments in
+source order, emit Element PAPI creation, literal property, and append calls
+that assume `page` and `pageId` already exist, and leave state, event handlers,
+updates, lifecycle registration, cleanup, and CSS to the agent-authored
+artifact.
 Bound element nesting before recursive emission, ignore whitespace-only text
 nodes, and preserve the original text of every non-empty node. Cover both
 limits with converter regression tests.

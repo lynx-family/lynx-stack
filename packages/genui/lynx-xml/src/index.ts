@@ -10,3 +10,9 @@ export {
   LYNX_XML_SYSTEM_PROMPT,
 } from './prompt.js';
 export type { BuildLynxXmlSystemPromptOptions } from './prompt.js';
+export {
+  generateMainThreadScript,
+  generateMainThreadScriptResult,
+  MAX_XML_FRAGMENT_LENGTH,
+} from './html-fragment.js';
+export type { GeneratedMainThreadScript } from './html-fragment.js';
