@@ -54,6 +54,8 @@ minimumReleaseAgeExclude:
   # First-party Rstack toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
+  - "@rslib/*"
+  - "rsbuild-plugin-dts"
   - "@rstest/*"
   - "@rstackjs/create-toolkit"
   # Changesets v3 packages were released as one coordinated set.
@@ -127,7 +129,7 @@ catalogs:
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0-beta.3"
+    "@rslib/core": "1.0.0"
 
   # Rspack monorepo packages
   rspack:
