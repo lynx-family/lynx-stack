@@ -7,27 +7,32 @@ class App extends Component {
     onTap = {
         _wkltId: "a123:test:1",
         ...{
-            value: captureMainThreadObject(this.value) ?? {
-                "get": this.value["get"],
-                set: this.value.set
-            },
+            value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    "get": __mainThreadObjectSource["get"],
+                    set: __mainThreadObjectSource.set
+                })(this.value),
+            props: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                            get: __mainThreadObjectSource.get
+                        })(__mainThreadObjectSource.value)
+                })(this.props),
             ref: this.ref
         }
     };
     onMove = {
         _wkltId: "a123:test:2",
         ...{
-            value: captureMainThreadObject(this.value) ?? {
-                get: this.value.get
-            }
+            value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    get: __mainThreadObjectSource.get
+                })(this.value)
         }
     };
     static onStatic = {
         _wkltId: "a123:test:3",
         ...{
-            value: captureMainThreadObject(this.value) ?? {
-                get: this.value.get
-            }
+            value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    get: __mainThreadObjectSource.get
+                })(this.value)
         }
     };
 }
@@ -36,6 +41,7 @@ __workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", 
     this["onTap"] = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
