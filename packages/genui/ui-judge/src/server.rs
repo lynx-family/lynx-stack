@@ -50,6 +50,12 @@ use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
 pub mod zip;
 
 const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
+const DEFAULT_SCREENSHOT_WIDTH: usize = 800;
+const DEFAULT_SCREENSHOT_HEIGHT: usize = 600;
+const MAX_SCREENSHOT_DIMENSION: usize = 8_192;
+const MAX_SCREENSHOT_PIXELS: usize = MAX_IMAGE_BYTES / 4;
+// The runner's lossless BMP adds a small fixed header to the RGBA pixel buffer.
+const MAX_CAPTURE_BMP_BYTES: usize = MAX_IMAGE_BYTES + 1_024;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const LYNXML_UPLOAD_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_LYNXML_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
@@ -61,6 +67,8 @@ const ZIP_CAPTURE_CHILD_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_CHILD";
 const ZIP_CAPTURE_BASE_DIR_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_BASE_DIR";
 const ZIP_CAPTURE_OUTPUT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_OUTPUT";
 const ZIP_CAPTURE_URL_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_URL";
+const ZIP_CAPTURE_WIDTH_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_WIDTH";
+const ZIP_CAPTURE_HEIGHT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_HEIGHT";
 const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
 const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
@@ -165,13 +173,15 @@ impl ZipCaptureProcesses {
     staging_guard: T,
     base_dir: PathBuf,
     url: String,
+    viewport: ScreenshotViewport,
     job_id: u64,
   ) -> Result<Vec<u8>, ApiError> {
     let deadline = activity.deadline;
     let started = activity.started;
     let (mut reply, response) = oneshot::channel();
     tokio::spawn(async move {
-      let result = supervise_zip_capture_process(&base_dir, &url, &mut reply, deadline).await;
+      let result =
+        supervise_zip_capture_process(&base_dir, &url, viewport, &mut reply, deadline).await;
       let outcome = if reply.is_closed() {
         "cancelled"
       } else {
@@ -289,6 +299,55 @@ struct HttpCaptureRequest {
 #[derive(Deserialize)]
 struct ScreenshotQuery {
   entry: String,
+  #[serde(default)]
+  height: Option<usize>,
+  #[serde(default)]
+  width: Option<usize>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ScreenshotViewport {
+  height: usize,
+  width: usize,
+}
+
+impl ScreenshotQuery {
+  fn viewport(&self) -> Result<ScreenshotViewport, ApiError> {
+    ScreenshotViewport::new(
+      self.width.unwrap_or(DEFAULT_SCREENSHOT_WIDTH),
+      self.height.unwrap_or(DEFAULT_SCREENSHOT_HEIGHT),
+    )
+  }
+}
+
+impl ScreenshotViewport {
+  fn new(width: usize, height: usize) -> Result<Self, ApiError> {
+    if width == 0 || height == 0 {
+      return Err(ApiError::new(
+        StatusCode::BAD_REQUEST,
+        "width and height must be greater than zero.",
+      ));
+    }
+    let pixels = width
+      .checked_mul(height)
+      .ok_or_else(invalid_screenshot_dimensions)?;
+    if width > MAX_SCREENSHOT_DIMENSION
+      || height > MAX_SCREENSHOT_DIMENSION
+      || pixels > MAX_SCREENSHOT_PIXELS
+    {
+      return Err(invalid_screenshot_dimensions());
+    }
+    Ok(Self { height, width })
+  }
+}
+
+fn invalid_screenshot_dimensions() -> ApiError {
+  ApiError::new(
+    StatusCode::BAD_REQUEST,
+    format!(
+      "width and height must each be at most {MAX_SCREENSHOT_DIMENSION} and describe no more than {MAX_SCREENSHOT_PIXELS} pixels.",
+    ),
+  )
 }
 
 #[derive(Debug)]
@@ -578,6 +637,16 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
   if !is_zip_url(&url) {
     return Err(ServerError::IsolatedZipCapture);
   }
+  let width = std::env::var(ZIP_CAPTURE_WIDTH_ENV)
+    .ok()
+    .and_then(|value| value.parse().ok())
+    .ok_or(ServerError::IsolatedZipCapture)?;
+  let height = std::env::var(ZIP_CAPTURE_HEIGHT_ENV)
+    .ok()
+    .and_then(|value| value.parse().ok())
+    .ok_or(ServerError::IsolatedZipCapture)?;
+  let viewport =
+    ScreenshotViewport::new(width, height).map_err(|_| ServerError::IsolatedZipCapture)?;
   let output = std::env::var_os(ZIP_CAPTURE_OUTPUT_ENV)
     .map(PathBuf::from)
     .ok_or(ServerError::IsolatedZipCapture)?;
@@ -591,6 +660,8 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
   }
 
   let container = LynxContainer::new(ContainerOptions {
+    width: viewport.width,
+    height: viewport.height,
     timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
     ..ContainerOptions::default()
   })
@@ -817,6 +888,7 @@ async fn screenshot_lynxml(
   Query(query): Query<ScreenshotQuery>,
   request: Request,
 ) -> Result<Response, ApiError> {
+  let viewport = query.viewport()?;
   let entry = ScreenshotEntry::parse(&query.entry)?;
   if !entry.path.to_string_lossy().ends_with(".lynxml") {
     return Err(ApiError::new(
@@ -842,7 +914,14 @@ async fn screenshot_lynxml(
       "LynXML source must be valid UTF-8.",
     ));
   }
-  render_staged_source(&state, entry, source.to_vec(), StagedSourceKind::Lynxml).await
+  render_staged_source(
+    &state,
+    entry,
+    source.to_vec(),
+    StagedSourceKind::Lynxml,
+    viewport,
+  )
+  .await
 }
 
 async fn screenshot_template_url(
@@ -850,6 +929,7 @@ async fn screenshot_template_url(
   Query(query): Query<ScreenshotQuery>,
   request: Request,
 ) -> Result<Response, ApiError> {
+  let viewport = query.viewport()?;
   let entry = ScreenshotEntry::parse(&query.entry)?;
   if !entry.path.to_string_lossy().ends_with(".js") {
     return Err(ApiError::new(
@@ -867,7 +947,14 @@ async fn screenshot_template_url(
       "The remote template is empty.",
     ));
   }
-  render_staged_source(&state, entry, resource.bytes, StagedSourceKind::Template).await
+  render_staged_source(
+    &state,
+    entry,
+    resource.bytes,
+    StagedSourceKind::Template,
+    viewport,
+  )
+  .await
 }
 
 async fn screenshot_zip_upload(
@@ -875,6 +962,7 @@ async fn screenshot_zip_upload(
   Query(query): Query<ScreenshotQuery>,
   request: Request,
 ) -> Result<Response, ApiError> {
+  let viewport = query.viewport()?;
   let entry = ScreenshotEntry::parse(&query.entry)?;
   validate_zip_upload_headers(request.headers())?;
   let upload = read_zip_upload(
@@ -882,7 +970,7 @@ async fn screenshot_zip_upload(
     ZIP_UPLOAD_TIMEOUT,
   )
   .await?;
-  render_zip(&state, entry, upload.to_vec()).await
+  render_zip(&state, entry, upload.to_vec(), viewport).await
 }
 
 async fn screenshot_zip_url(
@@ -890,18 +978,20 @@ async fn screenshot_zip_url(
   Query(query): Query<ScreenshotQuery>,
   request: Request,
 ) -> Result<Response, ApiError> {
+  let viewport = query.viewport()?;
   let entry = ScreenshotEntry::parse(&query.entry)?;
   let url = read_remote_url(request).await?;
   let resource = fetch_http_resource(&url, zip::MAX_ZIP_UPLOAD_BYTES, REMOTE_FETCH_TIMEOUT)
     .await
     .map_err(remote_fetch_api_error)?;
-  render_zip(&state, entry, resource.bytes).await
+  render_zip(&state, entry, resource.bytes, viewport).await
 }
 
 async fn render_zip(
   state: &AppState,
   entry: ScreenshotEntry,
   upload: Vec<u8>,
+  viewport: ScreenshotViewport,
 ) -> Result<Response, ApiError> {
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   if upload.is_empty() {
@@ -965,7 +1055,7 @@ async fn render_zip(
         .expect("isolated ZIP capture must acquire render capacity before extraction");
       match state
         .zip_capture_processes
-        .capture(activity, extracted, base_dir, entry.url, job_id)
+        .capture(activity, extracted, base_dir, entry.url, viewport, job_id)
         .await
       {
         Ok(jpeg) => jpeg,
@@ -1024,6 +1114,7 @@ async fn render_staged_source(
   entry: ScreenshotEntry,
   source: Vec<u8>,
   kind: StagedSourceKind,
+  viewport: ScreenshotViewport,
 ) -> Result<Response, ApiError> {
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   let zip_process_activity = match state.zip_capture_backend {
@@ -1068,7 +1159,7 @@ async fn render_staged_source(
         .expect("isolated source capture must acquire render capacity before staging");
       state
         .zip_capture_processes
-        .capture(activity, staged, base_dir, entry.url, job_id)
+        .capture(activity, staged, base_dir, entry.url, viewport, job_id)
         .await
         .map_err(|error| staged_source_render_api_error(kind, error))?
     }
@@ -1410,6 +1501,7 @@ fn canonical_zip_base_dir(path: &std::path::Path) -> Result<PathBuf, ApiError> {
 async fn supervise_zip_capture_process(
   base_dir: &Path,
   url: &str,
+  viewport: ScreenshotViewport,
   reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
   deadline: tokio::time::Instant,
 ) -> Result<Vec<u8>, ApiError> {
@@ -1424,8 +1516,10 @@ async fn supervise_zip_capture_process(
     .env_clear()
     .env(ZIP_CAPTURE_CHILD_ENV, "1")
     .env(ZIP_CAPTURE_BASE_DIR_ENV, base_dir)
+    .env(ZIP_CAPTURE_HEIGHT_ENV, viewport.height.to_string())
     .env(ZIP_CAPTURE_OUTPUT_ENV, &output)
     .env(ZIP_CAPTURE_URL_ENV, url)
+    .env(ZIP_CAPTURE_WIDTH_ENV, viewport.width.to_string())
     .stdin(Stdio::piped())
     .stdout(Stdio::null())
     .stderr(Stdio::null())
@@ -1481,7 +1575,7 @@ async fn supervise_zip_capture_process(
       let metadata = std::fs::symlink_metadata(&output)?;
       if !metadata.file_type().is_file()
         || metadata.len() == 0
-        || metadata.len() > MAX_IMAGE_BYTES as u64
+        || metadata.len() > MAX_CAPTURE_BMP_BYTES as u64
       {
         return Err(io::Error::new(
           io::ErrorKind::InvalidData,
@@ -1493,7 +1587,7 @@ async fn supervise_zip_capture_process(
     .await
     .map_err(|_| isolated_zip_worker_error())?
     .map_err(|_| isolated_zip_worker_error())?;
-    if bmp.is_empty() || bmp.len() > MAX_IMAGE_BYTES {
+    if bmp.is_empty() || bmp.len() > MAX_CAPTURE_BMP_BYTES {
       return Err(isolated_zip_worker_error());
     }
     transcode_captured_bmp(bmp)
@@ -1903,6 +1997,20 @@ mod tests {
   fn screenshot_query(entry: &str) -> Query<ScreenshotQuery> {
     Query(ScreenshotQuery {
       entry: entry.to_string(),
+      height: None,
+      width: None,
+    })
+  }
+
+  fn screenshot_query_with_viewport(
+    entry: &str,
+    width: usize,
+    height: usize,
+  ) -> Query<ScreenshotQuery> {
+    Query(ScreenshotQuery {
+      entry: entry.to_string(),
+      height: Some(height),
+      width: Some(width),
     })
   }
 
@@ -1973,6 +2081,46 @@ mod tests {
       "https://example.com/index.lynxml",
     ] {
       assert!(ScreenshotEntry::parse(input).is_err(), "{input}");
+    }
+  }
+
+  #[test]
+  fn screenshot_viewport_defaults_to_800_by_600() {
+    let viewport = screenshot_query("index.lynxml")
+      .0
+      .viewport()
+      .expect("default screenshot viewport");
+
+    assert_eq!(
+      viewport,
+      ScreenshotViewport {
+        width: 800,
+        height: 600
+      }
+    );
+  }
+
+  #[test]
+  fn screenshot_viewport_accepts_custom_dimensions() {
+    let viewport = screenshot_query_with_viewport("index.lynxml", 375, 812)
+      .0
+      .viewport()
+      .expect("custom screenshot viewport");
+
+    assert_eq!(
+      viewport,
+      ScreenshotViewport {
+        width: 375,
+        height: 812
+      }
+    );
+  }
+
+  #[test]
+  fn screenshot_viewport_rejects_unsafe_dimensions() {
+    for (width, height) in [(0, 600), (800, 0), (8_193, 1), (2_000, 2_000)] {
+      let error = ScreenshotViewport::new(width, height).expect_err("reject unsafe viewport");
+      assert_eq!(error.status, StatusCode::BAD_REQUEST);
     }
   }
 
@@ -2635,7 +2783,7 @@ mod tests {
     var pageId = __GetElementUniqueID(page);
     engine.addEventListener("__RenderPage", function() {
       var root = __CreateView(pageId);
-      __SetInlineStyles(root, "width:800px;height:600px;background-color:#00ff00;");
+      __SetInlineStyles(root, "width:375px;height:812px;background-color:#00ff00;");
       __AppendElement(page, root);
       __FlushElementTree(page);
     });
@@ -2650,7 +2798,7 @@ mod tests {
           zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
           zip_capture_processes: ZipCaptureProcesses::new(),
         }),
-        screenshot_query("index.lynxml"),
+        screenshot_query_with_viewport("index.lynxml", 375, 812),
         lynxml_request(lynxml),
       ))
       .expect("render raw LynXML source");
@@ -2660,9 +2808,9 @@ mod tests {
     let rgb = image::load_from_memory(&jpeg)
       .expect("decode LynXML screenshot")
       .to_rgb8();
-    assert_eq!(rgb.dimensions(), (800, 600));
+    assert_eq!(rgb.dimensions(), (375, 812));
     assert!(
-      rgb.get_pixel(400, 300)[1] > 200,
+      rgb.get_pixel(187, 406)[1] > 200,
       "raw LynXML paints the expected green view"
     );
 
