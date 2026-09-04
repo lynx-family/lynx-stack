@@ -5,12 +5,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
-import { act, render } from '@lynx-js/react/testing-library';
+import { act, fireEvent, render } from '@lynx-js/react/testing-library';
 
 import {
   useMotionValueRef,
   useMotionValueRefEvent,
 } from '../src/mini/index.js';
+import { useMotionValue } from '../src/index.js';
 import { noop } from '../src/utils/noop.js';
 
 describe('Hooks', () => {
@@ -96,6 +97,75 @@ describe('Hooks', () => {
 
       expect(numberRef).toHaveBeenCalled();
       expect(stringRef).toHaveBeenCalled();
+    });
+  });
+
+  describe('useMotionValue', () => {
+    test('creates a typed main-thread value handle', () => {
+      let value: unknown;
+      const App = () => {
+        value = useMotionValue(42);
+        return <view />;
+      };
+
+      render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      expect(
+        (value as { toJSON(): { _initValue: number; _type: string } }).toJSON(),
+      ).toMatchObject({
+        _initValue: 42,
+        _type: '@lynx-js/motion/MotionValue',
+      });
+    });
+
+    test('preserves one realized MotionValue across handlers', () => {
+      const App = () => {
+        const value = useMotionValue(42);
+        const remember = () => {
+          'main thread';
+          (globalThis as { __motionValueIdentity?: unknown })
+            .__motionValueIdentity = value;
+          value.set(43);
+        };
+        const compare = () => {
+          'main thread';
+          const state = globalThis as {
+            __motionValueIdentity?: unknown;
+            __motionValueIdentityMatches?: boolean;
+            __motionValueResult?: number;
+          };
+          state.__motionValueIdentityMatches = state.__motionValueIdentity
+            === value;
+          state.__motionValueResult = value.get();
+        };
+        return (
+          <view>
+            <view data-testid='remember' main-thread:bindtap={remember} />
+            <view data-testid='compare' main-thread:bindtap={compare} />
+          </view>
+        );
+      };
+      const { getByTestId } = render(<App />, {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      });
+
+      fireEvent.tap(getByTestId('remember'));
+      fireEvent.tap(getByTestId('compare'));
+
+      const state = globalThis as {
+        __motionValueIdentity?: unknown;
+        __motionValueIdentityMatches?: boolean;
+        __motionValueResult?: number;
+      };
+      expect(state.__motionValueIdentityMatches).toBe(true);
+      expect(state.__motionValueResult).toBe(43);
+      delete state.__motionValueIdentity;
+      delete state.__motionValueIdentityMatches;
+      delete state.__motionValueResult;
     });
   });
 
