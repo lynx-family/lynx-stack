@@ -930,11 +930,15 @@ async function probeJudgeCapabilities(
   const uniqueGroups = new Map(
     groups.map((group) => [judgeCapabilityKey(group), group]),
   );
+  const serverUrl = request.playground?.uiJudgeServerUrl;
   await Promise.all([...uniqueGroups.entries()].map(async ([key, group]) => {
     const capability = protocolForGroup(group) === 'a2ui'
         && profileForGroup(group) === 'native'
-      ? await probeBenchUiJudge()
-      : await probeGenuiBenchUiJudge(protocolForGroup(group));
+      ? await probeBenchUiJudge({ ...(serverUrl ? { serverUrl } : {}) })
+      : await probeGenuiBenchUiJudge(
+        protocolForGroup(group),
+        { ...(serverUrl ? { serverUrl } : {}) },
+      );
     capabilities.set(key, capability);
   }));
   return capabilities;

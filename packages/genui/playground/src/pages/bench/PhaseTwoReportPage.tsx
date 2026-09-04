@@ -4,11 +4,10 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DEFAULT_BENCH_LOCALE } from './benchLocale.js';
-import type { BenchLocale } from './benchLocale.js';
 import { PHASE_TWO_PUBLISHED_REPORT } from './phaseTwoPublishedReport.js';
 import './PhaseTwoReportPage.css';
 
+type BenchLocale = 'en-US' | 'zh-CN';
 type PublishedReport = typeof PHASE_TWO_PUBLISHED_REPORT;
 type PublishedMetrics = PublishedReport['summary'];
 type PublishedPair = PublishedReport['pairs'][number];
@@ -17,6 +16,7 @@ type PublishedRun = NonNullable<PublishedPair['runs']['a2ui']>;
 type PublishedSource = PublishedReport['sources'][number];
 const FORMAL_SCREENSHOT_PREFIX = '/bench/phase-two/screenshots';
 const SAFE_FORMAL_RUN_ID = /^\w[\w.-]{0,159}$/u;
+const DEFAULT_BENCH_LOCALE: BenchLocale = 'zh-CN';
 
 export interface FormalScreenshotEvidenceItem {
   id: string;
