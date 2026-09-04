@@ -580,7 +580,7 @@ describe('MainThreadObject', () => {
     expect(() => renderTestMainThreadObject([1, { value: 2 }])).not.toThrow();
   });
 
-  it('owns an immutable snapshot of the creation payload', () => {
+  it('exposes the readonly-typed creation payload without a runtime copy', () => {
     globalEnvManager.switchToBackground();
     const initialValue = { nested: { value: 1 }, values: [2, 3] };
     const value = renderTestMainThreadObject(initialValue);
@@ -591,18 +591,12 @@ describe('MainThreadObject', () => {
     initialValue.nested.value = 4;
     initialValue.values.push(5);
 
-    expect(handle.creationPayload).toEqual({ nested: { value: 1 }, values: [2, 3] });
-    expect(handle.creationPayload).not.toBe(initialValue);
-    expect(handle.creationPayload.nested).not.toBe(initialValue.nested);
-    expect(Object.isFrozen(handle.creationPayload)).toBe(true);
-    expect(Object.isFrozen(handle.creationPayload.nested)).toBe(true);
-    expect(Object.isFrozen(handle.creationPayload.values)).toBe(true);
-    expect(() => {
-      handle.creationPayload.nested.value = 6;
-    }).toThrow();
+    expect(handle.creationPayload).toBe(initialValue);
+    expect(Object.isFrozen(handle.creationPayload)).toBe(false);
+    expect(handle.creationPayload).toEqual({ nested: { value: 4 }, values: [2, 3, 5] });
     expect(JSON.parse(JSON.stringify(value))._initValue).toEqual({
-      nested: { value: 1 },
-      values: [2, 3],
+      nested: { value: 4 },
+      values: [2, 3, 5],
     });
   });
 
