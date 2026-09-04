@@ -106,7 +106,8 @@ fn take_fallback(el: &mut JSXElement) -> Option<Box<Expr>> {
 fn is_layout_only(child: &JSXElementChild) -> bool {
   match child {
     JSXElementChild::JSXText(text) => {
-      text.value.contains('\n') && text.value.chars().all(char::is_whitespace)
+      let value = text.value.to_string_lossy();
+      value.contains('\n') && value.chars().all(char::is_whitespace)
     }
     JSXElementChild::JSXExprContainer(JSXExprContainer {
       expr: JSXExpr::JSXEmptyExpr(..),

@@ -1054,9 +1054,9 @@ where
             None => vec![],
           },
           decorators: vec![],
+          this_param: None,
           span: DUMMY_SP,
-          body: Some(BlockStmt {
-            ctxt: SyntaxContext::default(),
+          body: Some(FunctionBody {
             span: DUMMY_SP,
             stmts: self
               .static_stmts

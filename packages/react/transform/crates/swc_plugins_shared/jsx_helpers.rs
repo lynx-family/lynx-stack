@@ -7,7 +7,7 @@ use swc_core::{
   common::{errors::HANDLER, iter::IdentifyLast, Spanned, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
-    atoms::{atom, Atom},
+    atoms::{atom, Atom, Wtf8Atom},
   },
 };
 
@@ -147,11 +147,12 @@ pub fn jsx_props_to_obj(jsx: &JSXElement) -> Option<ObjectLit> {
   Some(obj)
 }
 
-pub fn jsx_text_to_str(t: &Atom) -> Atom {
+// `JSXText::value` is a `Wtf8Atom` from swc_core 77 on.
+pub fn jsx_text_to_str(t: &Wtf8Atom) -> Atom {
   static SPACE_START: Lazy<Regex> = Lazy::new(|| Regex::new("^[ ]+").unwrap());
   static SPACE_END: Lazy<Regex> = Lazy::new(|| Regex::new("[ ]+$").unwrap());
   let mut buf = String::new();
-  let replaced = t.replace('\t', " ");
+  let replaced = t.to_string_lossy().replace('\t', " ");
 
   for (is_last, (i, line)) in replaced.lines().enumerate().identify_last() {
     if line.is_empty() {
