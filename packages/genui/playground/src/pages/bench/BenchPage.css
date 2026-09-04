@@ -17,18 +17,6 @@
   );
 }
 
-.benchPageAccessibleTitle {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .benchHeader {
   background: color-mix(
     in srgb,
@@ -39,15 +27,185 @@
 
 .benchBody {
   --bench-report-width: 440px;
+  --bench-history-width: 240px;
 
   flex: 1;
   min-width: 0;
   min-height: 0;
   display: grid;
   grid-template-columns:
-    minmax(620px, 1fr) 10px
+    minmax(220px, var(--bench-history-width)) minmax(620px, 1fr) 10px
     minmax(360px, var(--bench-report-width));
   overflow: hidden;
+}
+
+.benchHistoryRail {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--geist-border);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 76%,
+    var(--geist-surface)
+  );
+}
+
+.benchHistoryRailCreate {
+  padding: 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 72%,
+    transparent
+  );
+}
+
+.benchHistoryRailHeader {
+  padding: 12px 12px 6px;
+  border: 0;
+  background: transparent;
+}
+
+.benchHistoryRailHeader .pageHeaderTop {
+  justify-content: space-between;
+}
+
+.benchHistoryRailHeader .pageHeaderTitle,
+.benchHistoryRailHeader .pageHeaderTopContent {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.benchHistoryRailList {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  overflow-y: auto;
+}
+
+.benchHistoryRailItem {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  padding: 9px 7px 9px 11px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-background);
+}
+
+.benchHistoryRailItem::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 4px;
+  width: 2px;
+  background: transparent;
+  content: "";
+}
+
+.benchHistoryRailItem[data-active="true"]::before {
+  background: var(--geist-foreground);
+}
+
+.benchHistoryRailItemMain {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.benchHistoryRailItemMain:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.benchHistoryRailItemMain strong,
+.benchHistoryRailItemMain span,
+.benchHistoryRailItemMain small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchHistoryRailItemMain strong {
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.benchHistoryRailItemMain span,
+.benchHistoryRailItemMain small {
+  color: var(--geist-secondary);
+  font-size: 10px;
+}
+
+.benchHistoryRailItemActions {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.benchHistoryRailItem:hover .benchHistoryRailItemActions,
+.benchHistoryRailItem:focus-within .benchHistoryRailItemActions,
+.benchHistoryRailItem[data-active="true"] .benchHistoryRailItemActions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.benchHistoryRailEmpty {
+  min-height: 140px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  text-align: center;
+}
+
+.benchHistoryRailEmpty svg {
+  width: 20px;
+  height: 20px;
+}
+
+.benchHistoryRailClear {
+  margin: 8px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--geist-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+}
+
+.benchHistoryRailClear:hover:not(:disabled) {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.benchHistoryRailClear:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .benchReportPane {
@@ -61,84 +219,58 @@
   );
 }
 
-.benchResizeHandle {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-right: 1px solid var(--geist-border);
-  border-left: 1px solid var(--geist-border);
-  background: color-mix(
-    in srgb,
-    var(--geist-background) 78%,
-    var(--geist-surface)
-  );
-  cursor: col-resize;
-  touch-action: none;
-  transition:
-    background var(--geist-transition),
-    border-color var(--geist-transition);
-}
-
-.benchResizeHandle span {
-  width: 2px;
-  height: 34px;
-  border-radius: 999px;
-  background: color-mix(
-    in srgb,
-    var(--geist-secondary) 48%,
-    transparent
-  );
-  transition:
-    background var(--geist-transition),
-    height var(--geist-transition);
-}
-
-.benchResizeHandle:hover,
-.benchResizeHandle:focus-visible,
-.benchBody[data-report-resizing="true"] .benchResizeHandle {
-  border-color: color-mix(
-    in srgb,
-    var(--geist-foreground) 28%,
-    var(--geist-border)
-  );
-  background: color-mix(
-    in srgb,
-    var(--geist-foreground) 5%,
-    var(--geist-surface)
-  );
-}
-
-.benchResizeHandle:hover span,
-.benchResizeHandle:focus-visible span,
-.benchBody[data-report-resizing="true"] .benchResizeHandle span {
-  height: 52px;
-  background: color-mix(
-    in srgb,
-    var(--geist-foreground) 42%,
-    var(--geist-secondary)
-  );
-}
-
-.benchResizeHandle:focus-visible {
-  outline: 2px solid
-    color-mix(in srgb, var(--geist-foreground) 22%, transparent);
-  outline-offset: -2px;
-}
-
 .benchMain {
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 16px;
+}
+
+.benchWorkflow {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.benchWorkflowScroll {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.benchWorkflowScroll > .benchSetupSection,
+.benchWorkflowScroll > .benchGroupsSection,
+.benchWorkflowScroll > .benchRunSection {
+  padding: 20px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.benchWorkflowScroll > .benchGroupsSection,
+.benchWorkflowScroll > .benchRunSection {
+  border-top: 1px solid var(--geist-border);
 }
 
 .benchSection,
 .benchGroupsSection,
-.benchOverviewBand {
+.benchRunSection {
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
   background: var(--geist-background);
@@ -151,8 +283,8 @@
 }
 
 .benchSectionHeader,
-.benchReportHeader,
-.benchGroupsHeader {
+.benchGroupsHeader,
+.benchInlineConfigHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -162,7 +294,14 @@
 }
 
 .benchReportHeader {
-  align-items: center;
+  padding: 0 0 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: transparent;
+}
+
+.benchReportHeader .pageHeaderTop {
+  justify-content: space-between;
 }
 
 .benchReportActions {
@@ -223,6 +362,21 @@
   text-transform: uppercase;
 }
 
+.benchFieldHint,
+.benchFieldError {
+  margin: 7px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.benchFieldHint {
+  color: var(--geist-secondary);
+}
+
+.benchFieldError {
+  color: var(--geist-error, #d93025);
+}
+
 .benchInput,
 .benchSelect,
 .benchTextarea,
@@ -273,6 +427,10 @@
   );
   box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--geist-foreground) 8%, transparent);
+}
+
+.benchInput[aria-invalid="true"] {
+  border-color: var(--geist-error, #d93025);
 }
 
 .benchSelect {
@@ -401,8 +559,7 @@
 }
 
 .benchRunnerGrid,
-.benchGroupFields,
-.benchScenarioMetaRow {
+.benchGroupFields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -432,14 +589,40 @@
 
 .benchRunActions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   margin-top: 14px;
 }
 
+.benchRunActionsBottom {
+  align-self: stretch;
+  margin-top: 0;
+}
+
+.benchRunFooter {
+  z-index: 2;
+  min-width: 0;
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 200px);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px 12px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--geist-border) 75%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--geist-background) 92%, transparent) 18px
+    ),
+    var(--geist-background);
+  box-shadow: 0 -8px 20px
+    color-mix(in srgb, var(--geist-foreground) 5%, transparent);
+}
+
 .benchProgressTrack {
-  height: 6px;
-  margin-top: 12px;
+  height: 4px;
   overflow: hidden;
   border-radius: 999px;
   background: color-mix(
@@ -461,11 +644,13 @@
 }
 
 .benchRunMeta {
-  margin-top: 7px;
+  min-width: 0;
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 600;
-  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .benchRunMeta[data-tone="failed"],
@@ -475,6 +660,12 @@
 
 .benchRunMeta[data-tone="cancelled"] {
   color: var(--geist-secondary);
+}
+
+.benchRunProgress {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
 }
 
 .benchScenarioList {
@@ -508,19 +699,8 @@
   background: var(--geist-background);
 }
 
-.benchOverviewBand {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  background:
-    radial-gradient(
-      circle at 92% 8%,
-      color-mix(in srgb, var(--geist-foreground) 7%, transparent),
-      transparent 34%
-    ),
-    var(--geist-background);
+.benchRunSection {
+  order: 3;
 }
 
 .benchEyebrow {
@@ -549,65 +729,58 @@
 }
 
 .benchRunPanel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-md);
-  background: color-mix(
-    in srgb,
-    var(--geist-background) 88%,
-    var(--geist-surface)
-  );
+  display: contents;
+}
+
+.benchInlineRunConfig {
+  min-width: 0;
 }
 
 .benchPlanSummary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.benchPlanItem {
   min-width: 0;
-  padding: 11px 12px;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-md);
-  background: color-mix(
-    in srgb,
-    var(--geist-background) 82%,
-    var(--geist-surface)
-  );
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.benchPlanItem span {
-  display: block;
-  color: var(--geist-secondary);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.benchPlanSummary::-webkit-scrollbar {
+  display: none;
 }
 
-.benchPlanItem strong {
-  display: block;
-  margin-top: 5px;
+.benchPlanSummary > span {
+  min-width: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0 12px;
+  border-left: 1px solid var(--geist-border);
+  white-space: nowrap;
+}
+
+.benchPlanSummary > span:first-child {
+  max-width: 42%;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.benchPlanSummary strong {
+  min-width: 0;
   overflow: hidden;
   color: var(--geist-foreground);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.benchPlanItem small {
-  display: block;
-  margin-top: 3px;
-  overflow: hidden;
+.benchPlanSummary small {
   color: var(--geist-secondary);
-  font-size: 11px;
-  line-height: 1.3;
-  text-overflow: ellipsis;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -652,100 +825,64 @@
   margin-bottom: 16px;
 }
 
-.benchHeaderActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
+.benchPlanSection[data-read-only="true"] {
+  user-select: text;
 }
 
-.benchTemplateMenu {
-  position: relative;
-  z-index: 4;
+.benchPlanSection[data-read-only="true"] input[readonly],
+.benchPlanSection[data-read-only="true"] textarea[readonly] {
+  cursor: text;
+  user-select: text;
 }
 
-.benchTemplateMenu > summary {
-  min-height: 32px;
-  display: inline-flex;
+.benchGroupsSection {
+  order: 2;
+}
+
+.benchSetupSection {
+  order: 1;
+}
+
+.benchSetupHeader {
   align-items: center;
-  gap: 8px;
-  padding: 0 11px;
-  border: 1px solid var(--geist-border);
-  background: var(--geist-background);
-  color: var(--geist-foreground);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 650;
-  list-style: none;
 }
 
-.benchTemplateMenu > summary::-webkit-details-marker {
-  display: none;
+.benchSetupHeading {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 
-.benchTemplateMenu > summary::after {
-  width: 5px;
-  height: 5px;
-  border-right: 1px solid currentcolor;
-  border-bottom: 1px solid currentcolor;
-  content: "";
-  transform: translateY(-2px) rotate(45deg);
+.benchSetupHeading > div {
+  min-width: 0;
 }
 
-.benchTemplateMenu[open] > summary {
-  border-color: var(--geist-foreground);
-}
-
-.benchTemplateMenu > div {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  width: 230px;
-  display: grid;
-  padding: 5px;
-  border: 1px solid var(--geist-border);
-  background: var(--geist-background);
-  box-shadow: var(--geist-shadow-md);
-}
-
-.benchTemplateMenu button {
-  min-height: 46px;
-  display: grid;
-  align-content: center;
-  gap: 2px;
-  padding: 7px 9px;
-  border: 0;
-  background: transparent;
-  color: var(--geist-foreground);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 650;
-  text-align: left;
-}
-
-.benchTemplateMenu button:hover,
-.benchTemplateMenu button:focus-visible {
-  background: var(--geist-surface);
-}
-
-.benchTemplateMenu button small {
-  color: var(--geist-secondary);
+.benchStepNumber {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--geist-foreground);
+  background: var(--geist-foreground);
+  color: var(--geist-background);
+  font-family: var(--geist-mono);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 700;
 }
 
-.benchGroupGrid {
+.benchScenarioSelectionGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
+.benchScenarioChoice,
+.benchInlineConfigGroup,
 .benchGroupCard {
-  display: flex;
   min-width: 0;
-  flex-direction: column;
-  gap: 10px;
   padding: 13px;
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
@@ -760,9 +897,94 @@
     box-shadow var(--geist-transition);
 }
 
+.benchScenarioChoice:hover,
 .benchGroupCard:hover {
   border-color: var(--geist-border-hover);
   box-shadow: var(--geist-shadow-md);
+}
+
+.benchScenarioChoice .benchScenarioTop {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.benchScenarioIndex {
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.benchDirectionPicker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(96px, 1fr));
+  gap: 6px;
+}
+
+.benchDirectionPicker button {
+  min-width: 0;
+  min-height: 46px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 7px 11px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color var(--geist-transition),
+    background var(--geist-transition);
+}
+
+.benchDirectionPicker button:hover,
+.benchDirectionPicker button:focus-visible {
+  border-color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.benchDirectionPicker strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.benchDirectionPicker span {
+  color: var(--geist-secondary);
+  font-size: 10px;
+}
+
+.benchInlineConfigGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.benchInlineConfigGroup h4 {
+  margin: 0 0 10px;
+  color: var(--geist-foreground);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.benchInlineToggles {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.benchGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.benchGroupCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .benchGroupCard[data-disabled="true"] {
@@ -1434,21 +1656,31 @@
   z-index: 4;
   display: flex;
   width: 12px;
+  height: auto;
+  border: 0;
+  background: transparent;
   cursor: ew-resize;
   justify-content: center;
   outline: none;
 }
 
-.benchScreenshotResizeHandle span {
+.benchScreenshotResizeHandle::before {
+  top: 14px;
+  right: auto;
+  bottom: 14px;
+  left: 50%;
   width: 2px;
-  margin: 14px 0;
+  height: auto;
   border-radius: 999px;
   background: transparent;
+  opacity: 1;
+  transform: translateX(-50%);
 }
 
-.benchScreenshotDialog[data-resizing="true"] .benchScreenshotResizeHandle span,
-.benchScreenshotResizeHandle:focus-visible span,
-.benchScreenshotResizeHandle:hover span {
+.benchScreenshotResizeHandle.active::before,
+.benchScreenshotResizeHandle:focus-visible::before,
+.benchScreenshotResizeHandle:hover::before {
+  height: auto;
   background: var(--geist-border);
 }
 
@@ -1478,202 +1710,6 @@
   color: color-mix(in srgb, var(--geist-error) 72%, var(--geist-foreground));
   font-size: 12px;
   line-height: 1.45;
-}
-
-.benchHistoryDialog {
-  width: min(900px, 100%);
-}
-
-.benchHistoryBody {
-  min-height: 0;
-  overflow: auto;
-  padding: 18px;
-}
-
-.benchHistoryList {
-  display: grid;
-  gap: 12px;
-}
-
-.benchHistoryCard {
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-md);
-  background: color-mix(
-    in srgb,
-    var(--geist-background) 90%,
-    var(--geist-surface)
-  );
-}
-
-.benchHistoryCardHeader,
-.benchHistoryActions {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.benchHistoryActions {
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.benchHistorySecondaryActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.benchHistoryCard h3 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: var(--geist-foreground);
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.benchHistoryCard p {
-  margin: 4px 0 0;
-  color: var(--geist-secondary);
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.benchHistoryStatus {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  height: 24px;
-  padding: 0 9px;
-  border: 1px solid var(--geist-border);
-  border-radius: 999px;
-  background: var(--geist-surface);
-  color: var(--geist-secondary);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.benchHistoryStatus[data-tone="ok"] {
-  border-color: color-mix(
-    in srgb,
-    var(--geist-success, #0070f3) 26%,
-    var(--geist-border)
-  );
-  color: color-mix(
-    in srgb,
-    var(--geist-success, #0070f3) 72%,
-    var(--geist-foreground)
-  );
-}
-
-.benchHistoryStatus[data-tone="warn"] {
-  border-color: color-mix(
-    in srgb,
-    var(--geist-warning, #b7791f) 30%,
-    var(--geist-border)
-  );
-  color: color-mix(
-    in srgb,
-    var(--geist-warning, #b7791f) 78%,
-    var(--geist-foreground)
-  );
-}
-
-.benchHistoryStats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.benchHistoryStats div {
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid color-mix(in srgb, var(--geist-border) 76%, transparent);
-  border-radius: var(--geist-radius-sm);
-  background: var(--geist-background);
-}
-
-.benchHistoryStats span,
-.benchHistorySnapshot span {
-  display: block;
-  color: var(--geist-secondary);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.benchHistoryStats strong,
-.benchHistorySnapshot strong {
-  display: block;
-  margin-top: 5px;
-  overflow: hidden;
-  color: var(--geist-foreground);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.benchHistoryConfig {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.benchHistoryConfig span {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  padding: 5px 8px;
-  border: 1px solid var(--geist-border);
-  border-radius: 999px;
-  background: var(--geist-surface);
-  color: var(--geist-secondary);
-  font-size: 11px;
-  font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.benchHistoryDetails {
-  border-top: 1px solid
-    color-mix(in srgb, var(--geist-border) 72%, transparent);
-  padding-top: 10px;
-}
-
-.benchHistoryDetails summary {
-  cursor: pointer;
-  color: var(--geist-foreground);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.benchHistorySnapshot {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.benchHistorySnapshot div {
-  min-width: 0;
-}
-
-.benchHistorySnapshot strong {
-  overflow-wrap: anywhere;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-.benchHistoryEmpty {
-  min-height: 300px;
 }
 
 .benchConfigOverlay {
@@ -1902,9 +1938,68 @@
 @media (max-width: 1240px) {
   .benchBody {
     grid-template-columns: minmax(0, 1fr);
+    overflow: auto;
   }
 
-  .benchResizeHandle {
+  .benchHistoryRail {
+    min-height: 72px;
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) auto;
+    align-items: stretch;
+    border-right: 0;
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .benchHistoryRailCreate {
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--geist-border);
+    border-bottom: 0;
+  }
+
+  .benchHistoryRailHeader {
+    display: none;
+  }
+
+  .benchHistoryRailList {
+    min-width: 0;
+    flex-direction: row;
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .benchHistoryRailItem {
+    width: 260px;
+    flex: 0 0 auto;
+  }
+
+  .benchHistoryRailEmpty {
+    min-width: 220px;
+    min-height: 54px;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  .benchHistoryRailClear {
+    align-self: center;
+  }
+
+  .benchReportPane {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .benchMain {
+    height: clamp(520px, calc(100dvh - 190px), 820px);
+    min-height: 520px;
+    overflow: hidden;
+  }
+
+  .benchBody > .panelResizeHandle {
     display: none;
   }
 
@@ -1920,19 +2015,12 @@
   }
 }
 
-@media (min-width: 1500px) {
-  .benchOverviewBand {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (max-width: 980px) {
   .benchBody {
     display: block;
     overflow: auto;
   }
 
-  .benchMain,
   .benchReportPane {
     overflow: visible;
   }
@@ -1945,16 +2033,43 @@
     padding: 14px;
   }
 
-  .benchOverviewBand {
-    grid-template-columns: 1fr;
+  .benchRunFooter {
+    grid-template-columns: minmax(0, 1fr) minmax(136px, 168px);
+    gap: 12px;
+    padding: 9px 14px 11px;
   }
 
   .benchConfigBody {
     grid-template-columns: 1fr;
   }
+
+  .benchInlineConfigGrid,
+  .benchGroupGrid,
+  .benchScenarioSelectionGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
+  .benchHistoryRail {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .benchHistoryRailCreate {
+    border-right: 0;
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .benchHistoryRailList {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .benchHistoryRailClear {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
   .benchMain,
   .benchReportPane {
     padding: 12px;
@@ -1969,8 +2084,7 @@
   .benchHistoryStats,
   .benchRunnerGrid,
   .benchScreenshotSummaryGrid,
-  .benchGroupFields,
-  .benchScenarioMetaRow {
+  .benchGroupFields {
     grid-template-columns: 1fr;
   }
 
@@ -1991,42 +2105,34 @@
     display: none;
   }
 
-  .benchHeaderActions {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .benchHeaderActions .btn {
-    flex: 1;
-  }
-
-  .benchHistoryCardHeader,
-  .benchHistoryActions,
   .benchReportActions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .benchHistorySecondaryActions {
-    width: 100%;
-    margin-left: 0;
+  .benchSectionHeader,
+  .benchInlineConfigHeader {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .benchHistorySecondaryActions .btn {
-    flex: 1;
+  .benchDirectionPicker {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .benchPlanSummary {
+  .benchRunFooter {
+    grid-template-columns: minmax(0, 1fr) 128px;
+    gap: 8px;
+    padding: 8px 10px 10px;
+  }
+
+  .benchPlanSummary > span {
+    padding: 0 8px;
+  }
+
+  .benchDirectionPicker {
     grid-template-columns: 1fr;
-  }
-
-  .benchRunActions {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .benchRunActions > :first-child {
-    grid-column: 1 / -1;
   }
 }

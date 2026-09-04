@@ -29,9 +29,7 @@ async function postA2UIBenchJob(req: Request) {
     );
   }
 
-  const normalized = normalizeBenchJobRequest(parsed.body, {
-    clientOverrideAccepted: true,
-  });
+  const normalized = normalizeBenchJobRequest(parsed.body);
   if (!normalized.ok) {
     return jsonWithCors(
       req,

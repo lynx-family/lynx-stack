@@ -114,7 +114,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
 
-The Create tab loads its model selector from the server's `GET /models`
+The Create tab and Bench runner load their model selectors from the server's `GET /models`
 endpoint. Server-owned provider credentials, upstream model ids, and upstream
 API URLs remain server-only. The selector also exposes a `Custom API key`
 option with model and API key fields plus an approved-provider endpoint
@@ -166,7 +166,24 @@ post-paid keys are supported. See the [Doubao Search Custom API documentation](h
 and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 
-Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
+Bench is a regular GenUI top-level tab. Its Create-style history rail keeps
+drafts and completed runs in browser storage. New Bench immediately creates
+and selects the first draft item; completion updates that item in place.
+Completed entries restore their configuration and report as read-only, so a
+new run starts from a new Bench draft instead of rerunning history. Runner
+presents three default editable scenarios (with custom scenario append),
+comparison groups created by Protocol, Model, or Prompt direction, and inline
+run configuration in one scrollable workflow surface. A compact fixed footer
+shows the live plan next to Start run, then switches to real-time progress next
+to Pause while a job is active. Bench is English-only until the Playground
+adopts site-wide localization; it has no page-local locale prop or translation
+layer and does not expose separate Runner, History, or language-switching
+views.
+
+Bench can override `UI_JUDGE_SERVER_URL` in its inline run configuration. A valid HTTP(S) URL
+without credentials is stored in browser local storage and restored on later
+visits; leaving it empty falls back to the server environment. Bench probes
+the selected `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
 enabled only when that sidecar is ready. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
 startup and model environment.

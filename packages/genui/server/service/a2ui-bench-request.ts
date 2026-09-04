@@ -13,7 +13,6 @@ import type {
   BenchSettings,
   BenchVariable,
 } from './a2ui-bench-types';
-import { assertAllowedCustomProviderBaseURL } from '../agent/custom-provider-security.js';
 import { configuredModelName } from './common/model-config.js';
 
 const MAX_GROUPS = 8;
@@ -145,8 +144,6 @@ function normalizeSettings(value: unknown): BenchSettings {
 
 function normalizeGroups(
   value: unknown,
-  clientOverrideAccepted: boolean,
-  customProviderAccepted = false,
 ): BenchGroupRequest[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -157,12 +154,7 @@ function normalizeGroups(
       const name = readString(item.name, `Group ${index + 1}`, 120);
       if (!id || !name) return null;
       const requestedModel = readOptionalString(item.model, 240);
-      let model: string | undefined;
-      if (clientOverrideAccepted) {
-        model = customProviderAccepted
-          ? requestedModel
-          : configuredModelName(requestedModel);
-      }
+      const model = configuredModelName(requestedModel);
       const protocol = readProtocol(item.protocol);
       const profile = readProfile(item.profile, protocol);
       return {
@@ -213,15 +205,50 @@ function normalizeScenarios(value: unknown): BenchScenarioRequest[] {
 
 function normalizePlayground(
   value: unknown,
-): BenchJobRequest['playground'] {
-  if (!isRecord(value)) return undefined;
+):
+  | { ok: true; value?: BenchJobRequest['playground'] }
+  | { ok: false; error: string }
+{
+  if (!isRecord(value)) return { ok: true };
   const baseUrl = readOptionalString(value.baseUrl, 500);
-  return baseUrl ? { baseUrl } : undefined;
+  const requestedUiJudgeServerUrl = readOptionalString(
+    value.uiJudgeServerUrl,
+    500,
+  );
+  let uiJudgeServerUrl: string | undefined;
+  if (requestedUiJudgeServerUrl) {
+    try {
+      const url = new URL(requestedUiJudgeServerUrl);
+      if (
+        (url.protocol !== 'http:' && url.protocol !== 'https:')
+        || url.username
+        || url.password
+      ) {
+        throw new Error('invalid UI Judge URL');
+      }
+      url.hash = '';
+      url.search = '';
+      if (!url.pathname.endsWith('/')) url.pathname = `${url.pathname}/`;
+      uiJudgeServerUrl = url.toString();
+    } catch {
+      return {
+        ok: false,
+        error:
+          'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
+      };
+    }
+  }
+  const normalized = {
+    ...(baseUrl ? { baseUrl } : {}),
+    ...(uiJudgeServerUrl ? { uiJudgeServerUrl } : {}),
+  };
+  return Object.keys(normalized).length > 0
+    ? { ok: true, value: normalized }
+    : { ok: true };
 }
 
 export function normalizeBenchJobRequest(
   value: unknown,
-  options: { clientOverrideAccepted: boolean },
 ):
   | {
     ok: true;
@@ -239,60 +266,17 @@ export function normalizeBenchJobRequest(
   const requestedApiKey = readOptionalString(providerRecord.apiKey, 8_000);
   const requestedBaseURL = readOptionalString(providerRecord.baseURL, 500);
   const requestedModel = readOptionalString(providerRecord.model, 240);
-  const requestedProviderOverride = Boolean(
-    requestedApiKey
-      ?? requestedBaseURL
-      ?? requestedModel
-      ?? providerRecord.api,
-  );
-  const clientOverrideAccepted = options.clientOverrideAccepted;
-  const requestedGroupModelOverride = Array.isArray(value.groups)
-    && value.groups.some((group) =>
-      isRecord(group) && readOptionalString(group.model, 240) !== undefined
-    );
   const api =
     providerRecord.api === 'chat' || providerRecord.api === 'responses'
       ? providerRecord.api
       : undefined;
-  const hasCompleteCustomProvider = clientOverrideAccepted
-    && requestedApiKey !== undefined
-    && requestedBaseURL !== undefined
-    && requestedModel !== undefined;
-  let allowedCustomBaseURL: string | undefined;
-  if (hasCompleteCustomProvider) {
-    try {
-      allowedCustomBaseURL = assertAllowedCustomProviderBaseURL(
-        requestedBaseURL,
-      );
-    } catch (error) {
-      return {
-        ok: false,
-        status: 400,
-        error: error instanceof Error ? error.message : String(error),
-      };
-    }
-  }
-  const configuredProviderModel = clientOverrideAccepted
-      && !hasCompleteCustomProvider
-    ? configuredModelName(requestedModel)
-    : undefined;
+  const configuredProviderModel = configuredModelName(requestedModel);
   let provider: BenchJobRequest['provider'] = {};
-  if (hasCompleteCustomProvider) {
-    provider = {
-      apiKey: requestedApiKey,
-      baseURL: allowedCustomBaseURL,
-      model: requestedModel,
-      ...(api ? { api } : {}),
-    };
-  } else if (configuredProviderModel) {
+  if (configuredProviderModel) {
     provider = { model: configuredProviderModel };
   }
 
-  const groups = normalizeGroups(
-    value.groups,
-    clientOverrideAccepted,
-    hasCompleteCustomProvider,
-  );
+  const groups = normalizeGroups(value.groups);
   const enabledGroups = groups.filter((group) => group.enabled);
   if (enabledGroups.length === 0) {
     return {
@@ -348,32 +332,25 @@ export function normalizeBenchJobRequest(
     );
   }
   if (
-    !clientOverrideAccepted
-    && (requestedProviderOverride || requestedGroupModelOverride)
+    requestedApiKey !== undefined
+    || requestedBaseURL !== undefined
+    || api !== undefined
   ) {
     warnings.push(
-      'Client provider overrides are disabled by server policy; using server environment provider settings.',
-    );
-  }
-  if (
-    clientOverrideAccepted
-    && !hasCompleteCustomProvider
-    && (requestedApiKey !== undefined
-      || requestedBaseURL !== undefined
-      || api !== undefined)
-  ) {
-    warnings.push(
-      'Incomplete custom provider settings were ignored; using only server-configured model selections.',
+      'Custom provider settings are unsupported for Bench; using only server-configured model selections.',
     );
   }
 
   const playground = normalizePlayground(value.playground);
+  if (!playground.ok) {
+    return { ok: false, status: 400, error: playground.error };
+  }
 
   return {
     ok: true,
     request: {
       provider,
-      ...(playground ? { playground } : {}),
+      ...(playground.value ? { playground: playground.value } : {}),
       settings,
       groups,
       scenarios,

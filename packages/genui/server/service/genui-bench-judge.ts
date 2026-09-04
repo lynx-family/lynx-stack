@@ -18,7 +18,6 @@ const DEFAULT_OPENUI_BUNDLE_URL = 'https://lynx-stack.dev/genui/openui.lynx.js';
 const DEFAULT_UI_JUDGE_ATTEMPT_COUNT = 2;
 const DEFAULT_UI_JUDGE_RETRY_DELAY_MS = 5_000;
 const SCREENSHOT_SETTLE_MS = 1_000;
-const UI_JUDGE_MODEL = 'gpt-5.5-2026-04-24';
 const UNSAFE_OPENUI_RESOURCE_URL =
   /(?:^|[\s("'=])(?:data|file|https?):(?:\/\/)?/iu;
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
@@ -145,6 +144,7 @@ export async function probeGenuiBenchUiJudge(
   options: {
     env?: NodeJS.ProcessEnv;
     fetch?: FetchLike;
+    serverUrl?: string;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
@@ -153,12 +153,11 @@ export async function probeGenuiBenchUiJudge(
       ?? env.UI_JUDGE_BUNDLE_URL?.trim()
     : env.UI_JUDGE_OPENUI_BUNDLE_URL?.trim()
       ?? DEFAULT_OPENUI_BUNDLE_URL;
-
   return await probeBenchUiJudge({
     ...(bundleUrl ? { bundleUrl } : {}),
     env,
-    expectedModel: UI_JUDGE_MODEL,
     ...(options.fetch ? { fetch: options.fetch } : {}),
+    ...(options.serverUrl ? { serverUrl: options.serverUrl } : {}),
   });
 }
 
