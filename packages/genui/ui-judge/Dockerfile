@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=linux/amd64 ubuntu:26.04
+FROM --platform=linux/amd64 ubuntu:26.04@sha256:2260313b31c8c011cd2eebe728008efac1b3982be73eb71348ea2648d2c0e09b
 
 RUN apt-get update \
   && apt-get install --yes --no-install-recommends \
