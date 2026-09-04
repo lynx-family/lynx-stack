@@ -578,6 +578,12 @@ describe('MainThreadObject', () => {
       'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.',
     );
     expect(() => renderTestMainThreadObject([1, { value: 2 }])).not.toThrow();
+    const sparseArray = Array(2);
+    sparseArray[1] = 1;
+    expect(() => renderTestMainThreadObject(sparseArray)).not.toThrow();
+    expect(() => renderTestMainThreadObject([undefined, 1])).toThrow(
+      'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.0.',
+    );
   });
 
   it('exposes the readonly-typed creation payload without a runtime copy', () => {

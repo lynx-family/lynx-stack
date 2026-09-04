@@ -372,8 +372,8 @@ function findNonSerializablePath(
   }
 
   ancestors.add(value);
-  const entries = Array.isArray(value)
-    ? value.map((item, index) => [String(index), item] as const)
+  const entries: ReadonlyArray<readonly [string, unknown]> = Array.isArray(value)
+    ? value.flatMap((item, index) => [[String(index), item] as const])
     : Object.entries(value);
   for (const [key, item] of entries) {
     const invalidPath = findNonSerializablePath(item, `${path}.${key}`, ancestors);
