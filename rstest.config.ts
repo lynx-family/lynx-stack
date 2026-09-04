@@ -61,19 +61,30 @@ export default defineConfig({
     'packages/i18n/*/rstest.config.ts',
     'packages/lynx/*/rstest.config.ts',
     'packages/motion/rstest.config.ts',
-    'packages/react/*/rstest.config.ts',
-    'packages/react/testing-library/rstest.3.1.config.ts',
+    // Only `runtime` and `transform`, not the `packages/react/*` glob: that
+    // would also sweep in `react/testing-library`'s own suite, which cannot
+    // join this aggregator (see the note below).
+    'packages/react/runtime/rstest.config.ts',
+    'packages/react/transform/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/tailwind-preset/rstest.config.ts',
     // `kitten-lynx` is deliberately absent: it drives a real Android
     // emulator and runs in its own CI job.
     'packages/testing-library/testing-environment/rstest.config.ts',
-    'packages/testing-library/examples/basic/rstest.config.ts',
     'packages/testing-library/examples/library/rstest.config.ts',
-    // The `react-compiler` example runs the same suite twice, with the React
-    // Compiler on and off; its own `rstest.config.ts` only aggregates these.
-    'packages/testing-library/examples/react-compiler/rstest.config.compiler-enabled.ts',
-    'packages/testing-library/examples/react-compiler/rstest.config.compiler-disabled.ts',
+    // `react/testing-library` (both engine variants), `testing-library/
+    // examples/basic`, and `testing-library/examples/react-compiler` (both
+    // variants) are deliberately absent. Each wires `@lynx-js/react-rsbuild-
+    // plugin`'s alias resolution (directly, or through `withLynxConfig`,
+    // which uses it too) — via `pluginReactLynx()` or the app's own
+    // `lynx.config.ts`. That plugin cannot find `@lynx-js/react` when Rstest
+    // runs it as one entry of a `projects` list: `Cannot find module
+    // '@lynx-js/react/jsx-runtime'`, reproducible even with a single such
+    // project wrapped in `projects: [...]` and gone the moment the same
+    // config runs as a standalone `-c <path>` invocation. They run standalone
+    // in CI instead (`test-react` job), matching how this repo already runs
+    // `react/runtime` and `react/transform` next to, not inside, this
+    // aggregator.
     'packages/tools/*/rstest.config.ts',
     'packages/use-sync-external-store/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',

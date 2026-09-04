@@ -2,14 +2,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from '@rstest/core';
-
 import { withDefaultConfig } from './src/rstest-config.ts';
+import { reactLynxPreactSingletonAlias, reactLynxSelfTestTransform } from './src/internal/rstest-test-transform.ts';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   extends: withDefaultConfig({
-    rootPath: root,
     modifyRstestConfig(config) {
       return {
         ...config,
@@ -22,6 +21,17 @@ export default defineConfig({
             },
           },
         },
+        plugins: [
+          ...(config.plugins || []),
+          reactLynxSelfTestTransform(root),
+        ],
+        resolve: {
+          ...config.resolve,
+          alias: {
+            ...config.resolve?.alias,
+            ...reactLynxPreactSingletonAlias(),
+          },
+        },
         source: {
           ...config.source,
           define: {
@@ -29,6 +39,7 @@ export default defineConfig({
             __ALOG__: 'true',
           },
         },
+        include: ['src/**/*.test.{js,jsx,ts,tsx}', '!src/__tests__/3.1/**/*.{js,jsx,ts,tsx}'],
       };
     },
   }),
@@ -39,8 +50,4 @@ export default defineConfig({
   // restore spies between tests to give them the isolation they assume.
   restoreMocks: true,
   name: 'react/testing-library',
-  include: [
-    'src/**/*.test.{js,jsx,ts,tsx}',
-    '!src/__tests__/3.1/**/*.{js,jsx,ts,tsx}',
-  ],
 });
