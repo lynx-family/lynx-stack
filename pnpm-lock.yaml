@@ -1382,8 +1382,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@prefresh/core':
-        specifier: ^1.5.10
-        version: 1.5.10(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
+        specifier: ^1.5.11
+        version: 1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -4846,8 +4846,8 @@ packages:
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
-  '@prefresh/core@1.5.10':
-    resolution: {integrity: sha512-7yPTFbG56sutaFu8krp3B4a200KOFUvrtlllKWRuLjsYXo9UUucHOZRcer+gtgMkFTpv6ob8TGcTwA32bSwa1w==}
+  '@prefresh/core@1.5.11':
+    resolution: {integrity: sha512-Ml00PP8jeHaADxfQqxUs4+M5JS+T5J26UnvPVfsrmlpGw2I3e9XtM0DMeuzkmvg+Tn7VdHSMpLBrDPG0iHoDqQ==}
     peerDependencies:
       preact: ^10.0.0 || ^11.0.0-0
 
@@ -15023,7 +15023,7 @@ snapshots:
       '@preact/signals-core': 1.14.4
       preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
-  '@prefresh/core@1.5.10(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
+  '@prefresh/core@1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
     dependencies:
       preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
