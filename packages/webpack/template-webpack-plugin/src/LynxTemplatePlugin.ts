@@ -601,14 +601,19 @@ export function buildCustomSections(
 ): {
   sections: Record<string, CustomSectionEntry>;
   remainingManifest: Record<string, string>;
+  // The asset each section was assembled from, so its recorded location can
+  // follow it out of `lepusCode` / `manifest`.
+  sectionByAsset: Map<string, string>;
 } {
   const sections: Record<string, CustomSectionEntry> = {};
+  const sectionByAsset = new Map<string, string>();
 
   mainThreadAssets.forEach((asset, index) => {
     const name = naming.mainThread(asset.name, index);
     if (name === undefined) {
       return;
     }
+    sectionByAsset.set(asset.name, name);
     sections[name] = {
       ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
       content: asset.source.source().toString(),
@@ -627,6 +632,7 @@ export function buildCustomSections(
       remainingManifest[manifestKey] = content;
       continue;
     }
+    sectionByAsset.set(manifestKey.replace(/^\//, ''), name);
     sections[name] = { content };
   }
 
@@ -635,6 +641,7 @@ export function buildCustomSections(
     if (name === undefined) {
       return;
     }
+    sectionByAsset.set(asset.name, name);
     const ruleList = cssChunksToMap(
       [asset.source.source().toString()],
       cssPlugins,
@@ -646,7 +653,7 @@ export function buildCustomSections(
     };
   });
 
-  return { sections, remainingManifest };
+  return { sections, remainingManifest, sectionByAsset };
 }
 
 // A lazy bundle is a single component: the runtime resolves these three
@@ -1271,6 +1278,19 @@ class LynxTemplatePluginImpl {
         enableCSSSelector: this.#options.enableCSSSelector,
       })
       : null;
+
+    // `LynxEncodePlugin` records where each asset sits in `tasm.json` before
+    // the split runs, so the ones that move into a section are restamped here.
+    if (customSectionSplit) {
+      for (const [assetName, section] of customSectionSplit.sectionByAsset) {
+        const asset = compilation.getAsset(assetName);
+        if (!asset) continue;
+        compilation.updateAsset(asset.name, asset.source, {
+          ...asset.info,
+          'lynx:tasm-section': ['customSections', section],
+        });
+      }
+    }
 
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
