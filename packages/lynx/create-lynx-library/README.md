@@ -175,22 +175,16 @@ under `shared/`, a Lynxtron loader under `lynxtron/`, and a `build:lynxtron`
 script. The script writes the current OS/architecture `.node` artifact to
 `dist/<platform>/<arch>/`. The shared CMake entry lives at
 `shared/CMakeLists.txt`; generated packages do not create a top-level
-`CMakeLists.txt`. Requiring `./lynxtron` loads the dynamic library and runs the
-registration entry for each selected feature; the require result continues to
-expose `initialize()` without exposing the BTS module API.
+`CMakeLists.txt`. The generated `./lynxtron` entry loads the dynamic library and
+runs the registration entry for each selected feature.
 
 Build `dist/<platform>/<arch>/` on every Lynxtron OS/architecture that the npm
 package supports before publishing. `npm pack` and `npm publish` do not compile
-native artifacts. The Node.js main thread requires the Lynxtron subpath and
-calls `initialize()`:
-
-<!-- eslint-disable-next-line n/no-missing-require -->
-
-```cjs
-const addon = require('@example/storage-library/lynxtron');
-
-addon.initialize();
-```
+native artifacts. Install the published package as a normal application
+dependency. A Lynxtron host configured with `pluginLynxtron()` discovers its
+manifest, stages the matching target, and loads `./lynxtron` automatically.
+Application code does not import that subpath, copy native artifacts, or add
+per-library packaging rules.
 
 Lynxtron BTS imports the package root like the other platforms and calls the
 registered runtime module directly:

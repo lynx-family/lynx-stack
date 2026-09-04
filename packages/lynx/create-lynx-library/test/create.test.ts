@@ -1075,6 +1075,12 @@ describe('create-lynx-library', () => {
       '`npm pack` and `npm publish` do not build native artifacts',
     );
     expect(read(dir, 'README.md')).toContain(
+      'host configured with `pluginLynxtron()` discovers the manifest',
+    );
+    expect(read(dir, 'README.md')).toContain(
+      'code must not import that subpath, copy native artifacts',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
       `require('@example/lynxtron-library/lynxtron')`,
     );
     expect(read(dir, 'README.md')).toContain(

@@ -1310,12 +1310,11 @@ Run it on each OS/architecture you want to publish. The package also exposes
 \`npm pack\` and \`npm publish\` do not build native artifacts, so collect every
 supported platform/architecture under \`dist/\` before publishing.
 
-In the Lynxtron Node.js main thread:
-
-\`\`\`cjs
-const addon = require('${context.packageName}/lynxtron');
-addon.initialize();
-\`\`\`
+Install the published package as a normal application dependency. A Lynxtron
+host configured with \`pluginLynxtron()\` discovers the manifest, stages the
+matching package target, and loads \`./lynxtron\` automatically. Application
+code must not import that subpath, copy native artifacts, or add per-library
+packaging rules.
 ${nativeModuleUsage}${napiBtsUsage}
 `;
 }
