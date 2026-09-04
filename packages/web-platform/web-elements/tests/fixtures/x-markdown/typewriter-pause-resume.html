@@ -13,14 +13,14 @@
     </x-view>
     <script>
     const el = document.getElementById('markdown');
-      window._animationSteps = [];
-      el.addEventListener('bindanimationStep', (event) => {
-        window._animationSteps.push(event.detail.animationStep);
-      });
-      el.setAttribute('content', 'pause resume animation');
-      el.setAttribute('animation-type', 'typewriter');
-      el.setAttribute('animation-velocity', '10');
-      el.setAttribute('content-complete', 'true');
+    window._animationSteps = [];
+    el.addEventListener('bindanimationStep', (event) => {
+      window._animationSteps.push(event.detail.animationStep);
+    });
+    el.setAttribute('content', 'pause resume animation');
+    el.setAttribute('animation-type', 'typewriter');
+    el.setAttribute('animation-velocity', '10');
+    el.setAttribute('content-complete', 'true');
     </script>
   </body>
 </html>

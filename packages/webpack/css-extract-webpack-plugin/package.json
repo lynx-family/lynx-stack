@@ -3,20 +3,28 @@
   "version": "0.10.1",
   "description": "This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS.",
   "keywords": [
-    "webpack",
-    "Lynx"
+    "Lynx",
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/webpack/css-extract-webpack-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/css-extract-webpack-plugin"
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "runtime",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -32,14 +40,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib",
-    "!lib/**/*.js.map",
-    "runtime",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "test": "rstest"

@@ -8,13 +8,13 @@
     "react",
     "swc-plugin"
   ],
-  "type": "module",
-  "main": "./swc_plugin_reactlynx.wasm",
-  "types": "./index.d.ts",
   "files": [
     "swc_plugin_reactlynx.wasm",
     "index.d.ts"
   ],
+  "type": "module",
+  "main": "./swc_plugin_reactlynx.wasm",
+  "types": "./index.d.ts",
   "scripts": {
     "build": "node ./build.js",
     "test:cargo": "cargo test"

@@ -21,8 +21,12 @@
   background: var(--bench-study-paper);
   color: var(--bench-study-ink);
   font-family:
-    var(--bench-font), -apple-system, BlinkMacSystemFont, "PingFang SC",
-    "Microsoft YaHei", sans-serif;
+    var(--bench-font),
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -310,9 +314,9 @@
   display: grid;
   grid-template-columns:
     minmax(190px, 0.9fr) minmax(280px, 1.65fr) minmax(
-    132px,
-    0.45fr
-  );
+      132px,
+      0.45fr
+    );
   gap: clamp(24px, 4vw, 56px);
   align-items: center;
   padding: 24px 0;
@@ -566,9 +570,9 @@
   display: grid;
   grid-template-columns:
     minmax(190px, 0.75fr) minmax(240px, 1fr) minmax(
-    240px,
-    1fr
-  );
+      240px,
+      1fr
+    );
   gap: clamp(24px, 4vw, 48px);
   padding: 24px 32px 26px;
   border-top: 1px solid var(--bench-study-line);
@@ -909,9 +913,9 @@
   display: grid;
   grid-template-columns:
     minmax(220px, 0.85fr) minmax(300px, 1.4fr) minmax(
-    130px,
-    0.45fr
-  );
+      130px,
+      0.45fr
+    );
   gap: clamp(24px, 4vw, 56px);
   align-items: center;
   padding: 25px 0;

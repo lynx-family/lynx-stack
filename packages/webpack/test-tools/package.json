@@ -4,9 +4,9 @@
   "private": true,
   "description": "A test runner for testing Lynx-related rspack & webpack plugins",
   "keywords": [
+    "Lynx",
     "rspack",
-    "webpack",
-    "Lynx"
+    "webpack"
   ],
   "license": "Apache-2.0",
   "author": {
@@ -14,6 +14,9 @@
     "email": "colinwang.0616@gmail.com"
   },
   "type": "module",
+  "main": "lib/index.js",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -35,9 +38,6 @@
     "./update.js": "./update.js",
     "./package.json": "./package.json"
   },
-  "main": "lib/index.js",
-  "module": "lib/index.js",
-  "types": "lib/index.d.ts",
   "scripts": {},
   "devDependencies": {
     "@rspack/core": "catalog:rspack",

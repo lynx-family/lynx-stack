@@ -29,24 +29,24 @@
     </x-view>
     <script>
     const content =
-        `### Hello <span class="mark-red other" style="color: red" onclick="noop()">World</span>
+      `### Hello <span class="mark-red other" style="color: red" onclick="noop()">World</span>
 
 <p class="mark-help" style="font-size: 12px">Paragraph</p>
 
 <div class="not-allowed">Not allowed</div>`;
 
-      const style = {
-        '.mark-red': {
-          color: 'ff0000',
-        },
-        '.mark-help': {
-          color: '00aa00',
-        },
-      };
+    const style = {
+      '.mark-red': {
+        color: 'ff0000',
+      },
+      '.mark-help': {
+        color: '00aa00',
+      },
+    };
 
-      const markdown = document.getElementById('markdown');
-      markdown.setAttribute('content', content);
-      markdown.setAttribute('markdown-style', JSON.stringify(style));
+    const markdown = document.getElementById('markdown');
+    markdown.setAttribute('content', content);
+    markdown.setAttribute('markdown-style', JSON.stringify(style));
     </script>
   </body>
 </html>

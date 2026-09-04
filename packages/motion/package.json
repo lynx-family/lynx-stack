@@ -4,22 +4,31 @@
   "private": false,
   "description": "This is a motion adapter for Lynx.js",
   "keywords": [
-    "react",
+    "framer-motion",
     "lynx",
     "motion",
-    "framer-motion"
+    "react"
   ],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/motion"
   },
-  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "README.md",
+    "NOTICE",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
   "sideEffects": [
     "./dist/polyfill/shim.js",
     "./dist/mini/polyfill.js"
   ],
-  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -32,15 +41,6 @@
       "default": "./dist/mini/index.js"
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "NOTICE",
-    "LICENSE",
-    "CHANGELOG.md"
-  ],
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",

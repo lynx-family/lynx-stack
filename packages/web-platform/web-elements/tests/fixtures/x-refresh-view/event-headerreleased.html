@@ -27,9 +27,7 @@
       background-color: green;
       --lynx-display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(
-        --lynx-linear-orientation-vertical
-      );
+      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
     }
 
     .refresh-header {
@@ -46,9 +44,7 @@
       height: 100%;
       display: linear;
       --lynx-linear-orientation: vertical;
-      --lynx-linear-orientation-toggle: var(
-        --lynx-linear-orientation-vertical
-      );
+      --lynx-linear-orientation-toggle: var(--lynx-linear-orientation-vertical);
       background-color: yellow;
     }
 
@@ -73,11 +69,11 @@
     <script src="/main.js" defer></script>
     <script type="module">
     const content = document.getElementById('content');
-      const refreshView = document.querySelector('x-refresh-view');
-      const refreshFooter = document.querySelector('x-refresh-footer');
-      refreshView.addEventListener('headerreleased', () => {
-        content.style.backgroundColor = 'chartreuse';
-      });
+    const refreshView = document.querySelector('x-refresh-view');
+    const refreshFooter = document.querySelector('x-refresh-footer');
+    refreshView.addEventListener('headerreleased', () => {
+      content.style.backgroundColor = 'chartreuse';
+    });
     </script>
     <x-refresh-view
       class="refresh-view"

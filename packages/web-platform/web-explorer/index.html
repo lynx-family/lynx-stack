@@ -63,8 +63,16 @@
       transition: opacity 0.3s;
       pointer-events: none;
       font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-        Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Oxygen,
+        Ubuntu,
+        Cantarell,
+        "Open Sans",
+        "Helvetica Neue",
+        sans-serif;
       text-align: center;
       max-width: 80vw;
       width: max-content;
@@ -120,42 +128,42 @@
     </button>
     <script>
     window.addEventListener('load', () => {
-        let deferredPrompt;
-        const addBtn = document.getElementById('install-button');
+      let deferredPrompt;
+      const addBtn = document.getElementById('install-button');
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-          e.preventDefault();
-          deferredPrompt = e;
-          addBtn.style.display = 'block';
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        addBtn.style.display = 'block';
 
-          // Add timeout to hide the button
+        // Add timeout to hide the button
+        setTimeout(() => {
+          addBtn.classList.add('fade-out');
           setTimeout(() => {
-            addBtn.classList.add('fade-out');
-            setTimeout(() => {
-              addBtn.style.display = 'none';
-            }, 500);
-          }, 5000);
-
-          addBtn.addEventListener('click', () => {
             addBtn.style.display = 'none';
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-              if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-              } else {
-                console.log('User dismissed the install prompt');
-              }
-              deferredPrompt = null;
-            });
+          }, 500);
+        }, 5000);
+
+        addBtn.addEventListener('click', () => {
+          addBtn.style.display = 'none';
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('User accepted the install prompt');
+            } else {
+              console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
           });
         });
-
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-          console.log('PWA is installed');
-        } else {
-          console.log('PWA is not installed');
-        }
       });
+
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('PWA is installed');
+      } else {
+        console.log('PWA is not installed');
+      }
+    });
     </script>
   </body>
 </html>

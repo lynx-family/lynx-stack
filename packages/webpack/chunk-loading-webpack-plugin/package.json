@@ -4,20 +4,26 @@
   "private": false,
   "description": "A webpack plugin to generate chunk loading runtime for Lynx.",
   "keywords": [
-    "webpack",
-    "Lynx"
+    "Lynx",
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/webpack/chunk-loading-webpack-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/chunk-loading-webpack-plugin"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -25,12 +31,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "docs:update": "api-extractor run --local",

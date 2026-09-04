@@ -10,4 +10,4 @@ path = "lib.rs"
 swc_core = { workspace = true, features = ["ecma_ast", "ecma_parser", "ecma_utils", "ecma_visit", "testing_transform"] }
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(swc_ast_unknown)"] }

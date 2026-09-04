@@ -2,14 +2,26 @@
   "name": "@lynx-js/web-elements",
   "version": "0.12.9",
   "private": false,
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-elements"
   },
-  "license": "Apache-2.0",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md",
+    "index.css",
+    "**/*.css"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "@lynx-js/source-field": "./src/elements/index.ts",
@@ -121,18 +133,6 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "!dist/**/*.js.map",
-    "LICENSE.txt",
-    "Notice.txt",
-    "CHANGELOG.md",
-    "README.md",
-    "index.css",
-    "**/*.css"
-  ],
   "scripts": {
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
     "serve": "pnpm rsbuild dev",

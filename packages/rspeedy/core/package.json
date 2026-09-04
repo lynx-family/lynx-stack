@@ -3,22 +3,33 @@
   "version": "0.16.5",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
-    "webpack",
-    "rspack",
     "Lynx",
-    "ReactLynx"
+    "ReactLynx",
+    "rspack",
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/core"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/core"
+  },
+  "bin": {
+    "rspeedy": "./bin/rspeedy-for-dev.js"
+  },
+  "files": [
+    "bin/rspeedy.js",
+    "dist",
+    "client.d.ts",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "imports": {
     "#register": {
       "types": "./register/index.d.ts",
@@ -35,17 +46,29 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "bin": {
-    "rspeedy": "./bin/rspeedy-for-dev.js"
+  "publishConfig": {
+    "access": "public",
+    "bin": {
+      "rspeedy": "./bin/rspeedy.js"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./client": {
+        "types": "./client.d.ts"
+      },
+      "./package.json": "./package.json"
+    },
+    "imports": {
+      "#register": {
+        "types": "./dist/register/index.d.ts",
+        "import": "./dist/register/index.js"
+      }
+    },
+    "types": "./dist/index.d.ts"
   },
-  "files": [
-    "bin/rspeedy.js",
-    "dist",
-    "client.d.ts",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
@@ -88,29 +111,6 @@
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "bin": {
-      "rspeedy": "./bin/rspeedy.js"
-    },
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      },
-      "./client": {
-        "types": "./client.d.ts"
-      },
-      "./package.json": "./package.json"
-    },
-    "imports": {
-      "#register": {
-        "types": "./dist/register/index.d.ts",
-        "import": "./dist/register/index.js"
-      }
-    },
-    "types": "./dist/index.d.ts"
   },
   "tsdocMetadata": "./lib/tsdoc-metadata.json"
 }

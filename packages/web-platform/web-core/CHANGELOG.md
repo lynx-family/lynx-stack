@@ -619,19 +619,19 @@
   For the following code
 
   ```html
-  <view style="height:1rpx"></view>
+  <view style="height: 1rpx"></view>
   ```
 
   it will be transformed to
 
   ```html
-  <view style="height:calc(1 * var(--rpx-unit))"></view>
+  <view style="height: calc(1 * var(--rpx-unit))"></view>
   ```
 
   Therefore you could use any `<length>` value to replace the unit, for example:
 
   ```html
-  <lynx-view style="--rpx-unit:1px"></lynx-view>
+  <lynx-view style="--rpx-unit: 1px"></lynx-view>
   ```
 
   By default, the --rpx-unit value is `1cqw`
@@ -643,19 +643,19 @@
   For the following code
 
   ```html
-  <view style="height:1vw"></view>
+  <view style="height: 1vw"></view>
   ```
 
   If the `transform-vw` is enabled `<lynx-view transform-vw="true">`, it will be transformed to
 
   ```html
-  <view style="height:calc(1 * var(--vw-unit))"></view>
+  <view style="height: calc(1 * var(--vw-unit))"></view>
   ```
 
   Therefore you could use any `<length>` value to replace the unit, for example:
 
   ```html
-  <lynx-view style="--vw-unit:1px"></lynx-view>
+  <lynx-view style="--vw-unit: 1px"></lynx-view>
   ```
 
 ### Patch Changes
@@ -2330,7 +2330,7 @@
     url="https://path/to/main-thread.js"
     rawData="{}"
     globalProps="{}"
-    style="height:300px;width:300px"
+    style="height: 300px; width: 300px"
   >
   </lynx-view>
   ```

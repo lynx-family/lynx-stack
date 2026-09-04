@@ -38,17 +38,17 @@
     <script src="/main.js" defer></script>
     <script type="module">
     document.querySelector('x-list').addEventListener(
-        'scrolltoupper',
-        (e) => {
-          console.log(e);
-        },
-      );
-      document.querySelector('x-list').addEventListener(
-        'scrolltolower',
-        (e) => {
-          console.log(e);
-        },
-      );
+      'scrolltoupper',
+      (e) => {
+        console.log(e);
+      },
+    );
+    document.querySelector('x-list').addEventListener(
+      'scrolltolower',
+      (e) => {
+        console.log(e);
+      },
+    );
     </script>
     <x-view class="page" style="flex-direction: column">
       <x-list list-type="waterfall" span-count="2">

@@ -6,7 +6,11 @@
   --bench-surface: #fff;
   --bench-max-width: 1480px;
   --bench-font-sans:
-    "Avenir Next", Avenir, "PingFang SC", "Hiragino Sans GB", "Segoe UI",
+    "Avenir Next",
+    Avenir,
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Segoe UI",
     sans-serif;
   --bench-font: var(--bench-font-sans);
   --bench-mono: var(--geist-mono);

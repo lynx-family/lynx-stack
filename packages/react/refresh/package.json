@@ -2,13 +2,13 @@
   "name": "@lynx-js/react-refresh",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./src/index.ts",
   "files": [
     "dist",
     "src"
   ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
   "scripts": {
     "build": "rslib build"
   },

@@ -3,21 +3,27 @@
   "version": "0.0.2",
   "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
   "keywords": [
-    "rsbuild",
+    "Element PAPI",
     "Lynx",
     "Vanilla Lynx",
-    "Element PAPI"
+    "rsbuild"
   ],
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Lynx Authors"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/rspeedy/plugin-vanilla"
   },
-  "license": "Apache-2.0",
-  "author": {
-    "name": "Lynx Authors"
-  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -25,12 +31,17 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "dist",
-    "CHANGELOG.md",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
     "build": "rslib build",
     "test": "rstest",
@@ -61,16 +72,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "./package.json": "./package.json"
-    },
-    "types": "./dist/index.d.ts"
   }
 }

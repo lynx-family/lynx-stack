@@ -13,11 +13,11 @@ hero:
       link: /api/rspeedy
 
 features:
-  - title: '基于Rstack'
+  - title: "基于Rstack"
     details: 使用 Rspack 和 Rsbuild 带来终极开发体验。
     icon: 🦀
     span: 6
-  - title: '文档完善'
+  - title: "文档完善"
     details: 所有公共 API 都附带 TypeScript 定义和文档。
     icon: 📄
     span: 6

@@ -3,20 +3,41 @@
   "version": "0.4.0",
   "description": "A webpack dev-server transport implementation for Lynx",
   "keywords": [
-    "webpack",
-    "Lynx"
+    "Lynx",
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/webpack/webpack-dev-transport"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/webpack-dev-transport"
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md",
+    "tsdoc-metadata.json"
+  ],
   "type": "module",
+  "types": "./lib/client/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "client": [
+        "lib/client/index.d.ts"
+      ],
+      "hotDevServer": [
+        "lib/client/hotDevServer.d.ts"
+      ],
+      "reloadApp": [
+        "lib/client/reloadApp.d.ts"
+      ]
+    }
+  },
   "exports": {
     "./client": {
       "types": "./lib/client/index.d.ts",
@@ -39,27 +60,6 @@
       "import": "./lib/client/index.js"
     }
   },
-  "types": "./lib/client/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "client": [
-        "lib/client/index.d.ts"
-      ],
-      "hotDevServer": [
-        "lib/client/hotDevServer.d.ts"
-      ],
-      "reloadApp": [
-        "lib/client/reloadApp.d.ts"
-      ]
-    }
-  },
-  "files": [
-    "lib",
-    "!lib/**/*.js.map",
-    "CHANGELOG.md",
-    "README.md",
-    "tsdoc-metadata.json"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "test": "vitest"

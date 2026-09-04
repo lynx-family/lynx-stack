@@ -4,19 +4,25 @@
   "description": "A testing framework executing the Lynx explorer Android application",
   "keywords": [
     "Lynx",
-    "testing",
     "android",
-    "emulator"
+    "emulator",
+    "testing"
   ],
+  "author": {
+    "name": "lynx-stack"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/testing-library/kitten-lynx"
   },
-  "author": {
-    "name": "lynx-stack"
-  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -25,12 +31,6 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "CHANGELOG.md"
-  ],
   "scripts": {
     "build": "rslib build",
     "build:fixture": "rspeedy build",

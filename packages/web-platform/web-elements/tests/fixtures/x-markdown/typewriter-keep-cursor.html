@@ -15,30 +15,30 @@
     </x-view>
     <script>
     const el = document.getElementById('markdown');
-      el.addEventListener(
-        'binddrawStart',
-        () => (window._drawStart = true),
-      );
-      el.addEventListener('bindanimationStep', (e) => {
-        if (e.detail.animationStep >= e.detail.maxAnimationStep) {
-          window._animationComplete = true;
-        }
-      });
-      el.setAttribute(
-        'content',
-        `# Title\n\nthis is **bold** and *italic*.`,
-      );
-      el.setAttribute('animation-type', 'typewriter');
-      el.setAttribute('animation-velocity', '20');
-      el.setAttribute('content-complete', 'false');
-      el.setAttribute(
-        'markdown-style',
-        JSON.stringify({
-          typewriterCursor: {
-            customCursor: 'cursor',
-          },
-        }),
-      );
+    el.addEventListener(
+      'binddrawStart',
+      () => (window._drawStart = true),
+    );
+    el.addEventListener('bindanimationStep', (e) => {
+      if (e.detail.animationStep >= e.detail.maxAnimationStep) {
+        window._animationComplete = true;
+      }
+    });
+    el.setAttribute(
+      'content',
+      `# Title\n\nthis is **bold** and *italic*.`,
+    );
+    el.setAttribute('animation-type', 'typewriter');
+    el.setAttribute('animation-velocity', '20');
+    el.setAttribute('content-complete', 'false');
+    el.setAttribute(
+      'markdown-style',
+      JSON.stringify({
+        typewriterCursor: {
+          customCursor: 'cursor',
+        },
+      }),
+    );
     </script>
   </body>
 </html>

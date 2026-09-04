@@ -3,11 +3,23 @@
 </p>
 
 <p>
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/@lynx-js/react-rsbuild-plugin">
-    <img alt="" src="https://img.shields.io/npm/v/@lynx-js/react-rsbuild-plugin?logo=npm">
+  <a
+    aria-label="NPM version"
+    href="https://www.npmjs.com/package/@lynx-js/react-rsbuild-plugin"
+  >
+    <img
+      alt=""
+      src="https://img.shields.io/npm/v/@lynx-js/react-rsbuild-plugin?logo=npm"
+    >
   </a>
-  <a aria-label="License" href="https://www.npmjs.com/package/@lynx-js/react-rsbuild-plugin">
-    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="license" />
+  <a
+    aria-label="License"
+    href="https://www.npmjs.com/package/@lynx-js/react-rsbuild-plugin"
+  >
+    <img
+      src="https://img.shields.io/badge/License-Apache--2.0-blue"
+      alt="license"
+    />
   </a>
 </p>
 

@@ -3,17 +3,32 @@
   "version": "0.0.4",
   "description": "A WebSocket implementation for Lynx",
   "keywords": [
-    "webpack",
     "Lynx",
-    "WebSocket"
+    "WebSocket",
+    "webpack"
   ],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/rspeedy/websocket"
   },
-  "license": "Apache-2.0",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md",
+    "tsdoc-metadata.json"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "package.json": [
+        "package.json"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "import": "./lib/index.js",
@@ -25,21 +40,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "package.json": [
-        "package.json"
-      ]
-    }
-  },
-  "files": [
-    "lib",
-    "!lib/**/*.js.map",
-    "CHANGELOG.md",
-    "README.md",
-    "tsdoc-metadata.json"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose"
   },

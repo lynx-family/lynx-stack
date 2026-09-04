@@ -29,17 +29,17 @@
     </x-view>
     <script>
     window._bindlink_detail = null;
-      window._bindimage_detail = null;
-      const content =
-        `this is [link](https://example.com).\n\n![img](/tests/fixtures/resources/firefox-logo.png)`;
-      const markdown = document.getElementById('markdown');
-      markdown.addEventListener('bindlink', (event) => {
-        window._bindlink_detail = event.detail;
-      });
-      markdown.addEventListener('bindimageTap', (event) => {
-        window._bindimage_detail = event.detail;
-      });
-      markdown.setAttribute('content', content);
+    window._bindimage_detail = null;
+    const content =
+      `this is [link](https://example.com).\n\n![img](/tests/fixtures/resources/firefox-logo.png)`;
+    const markdown = document.getElementById('markdown');
+    markdown.addEventListener('bindlink', (event) => {
+      window._bindlink_detail = event.detail;
+    });
+    markdown.addEventListener('bindimageTap', (event) => {
+      window._bindimage_detail = event.detail;
+    });
+    markdown.setAttribute('content', content);
     </script>
   </body>
 </html>

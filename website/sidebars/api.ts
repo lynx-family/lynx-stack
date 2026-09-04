@@ -143,7 +143,7 @@ function transform(
         link: link!,
         collapsed: depth < 3,
         // Force non-collapsible when no children
-        collapsible: (depth >= 2 && items.length > 0),
+        collapsible: depth >= 2 && items.length > 0,
         items,
       };
     })

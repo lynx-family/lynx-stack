@@ -3,21 +3,27 @@
   "version": "0.19.1",
   "description": "A rsbuild plugin for making alias in ReactLynx",
   "keywords": [
-    "rsbuild",
     "Lynx",
-    "ReactLynx"
+    "ReactLynx",
+    "rsbuild"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/plugin-react-alias"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/plugin-react-alias"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -25,12 +31,17 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "dist",
-    "CHANGELOG.md",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
@@ -62,16 +73,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      },
-      "./package.json": "./package.json"
-    },
-    "types": "./dist/index.d.ts"
   }
 }

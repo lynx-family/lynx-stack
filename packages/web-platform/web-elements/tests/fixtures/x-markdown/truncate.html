@@ -13,13 +13,13 @@
     </x-view>
     <script>
     const text =
-        'This is a very very very very very long line that should wrap to multiple lines for testing.';
-      const content = `# Title\n\n${text}`;
-      const style = { truncation: { content: 'Read more' } };
-      const el = document.getElementById('markdown');
-      el.setAttribute('content', content);
-      el.setAttribute('markdown-style', JSON.stringify(style));
-      el.setAttribute('text-maxline', '1');
+      'This is a very very very very very long line that should wrap to multiple lines for testing.';
+    const content = `# Title\n\n${text}`;
+    const style = { truncation: { content: 'Read more' } };
+    const el = document.getElementById('markdown');
+    el.setAttribute('content', content);
+    el.setAttribute('markdown-style', JSON.stringify(style));
+    el.setAttribute('text-maxline', '1');
     </script>
   </body>
 </html>

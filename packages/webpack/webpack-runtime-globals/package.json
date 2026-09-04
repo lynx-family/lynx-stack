@@ -3,20 +3,27 @@
   "version": "0.0.7",
   "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
   "keywords": [
-    "webpack",
-    "Lynx"
+    "Lynx",
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/webpack/webpack-runtime-globals"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/webpack-runtime-globals"
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -24,13 +31,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib",
-    "!lib/**/*.js.map",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "test": "rstest"

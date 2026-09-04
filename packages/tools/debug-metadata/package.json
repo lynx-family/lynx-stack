@@ -5,26 +5,15 @@
   "keywords": [
     "Lynx",
     "debug",
-    "sourcemap",
-    "schema"
+    "schema",
+    "sourcemap"
   ],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/tools/debug-metadata"
   },
-  "license": "Apache-2.0",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": {
     "debug-metadata": "./dist/cli.js"
   },
@@ -34,6 +23,17 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "test": "vitest run"

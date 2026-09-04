@@ -13,11 +13,11 @@ hero:
       link: /api/rspeedy
 
 features:
-  - title: 'Rstack-based'
+  - title: "Rstack-based"
     details: Using Rspack and Rsbuild to bring you the ultimate development experience.
     icon: 🦀
     span: 6
-  - title: 'Well Documented'
+  - title: "Well Documented"
     details: All the public APIs are shipped with TypeScript definition and documentation.
     icon: 📄
     span: 6
