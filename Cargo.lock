@@ -3658,9 +3658,9 @@ dependencies = [
 
 [[package]]
 name = "swc_core"
-version = "76.0.0"
+version = "76.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52af5f6afc54b2746e92dab457951e2b4621c7b3bf8c96d2ee66358e124b81aa"
+checksum = "a7e986137a8ee9e95eba2381c0084f05167d5ee974a2a208100df8876c168759"
 dependencies = [
  "swc",
  "swc_allocator",
@@ -4232,9 +4232,9 @@ dependencies = [
 
 [[package]]
 name = "swc_ecma_transforms_optimization"
-version = "51.0.0"
+version = "51.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5afbe52092d7b1b929156762f986294a559bba0221ef80a1017e806b1d8f9c34"
+checksum = "4893abf0398e23f41a63fb17f1850c46b1c6ba1a9f4f94b01a750f8e5df59172"
 dependencies = [
  "bytes-str",
  "dashmap",
