@@ -4,13 +4,16 @@
 import { startTransition, use, useTransition } from 'preact/compat';
 
 /* eslint-disable-next-line import/default */
-import ReactLynx from '@lynx-js/react';
+import ReactLynx, { useEffect } from '@lynx-js/react';
+
+const useInsertionEffect = useEffect;
 
 export default /*#__PURE__*/ Object.assign({}, ReactLynx, {
   startTransition,
   use,
+  useInsertionEffect,
   useTransition,
 });
 
 export * from '@lynx-js/react';
-export { startTransition, use, useTransition };
+export { startTransition, use, useInsertionEffect, useTransition };
