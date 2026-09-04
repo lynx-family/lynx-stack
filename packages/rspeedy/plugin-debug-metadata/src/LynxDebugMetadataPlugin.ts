@@ -16,7 +16,10 @@ import type {
 } from '@lynx-js/template-webpack-plugin'
 
 import { collectArtifacts } from './collectors/artifacts.js'
-import { parseLepusNGDebugInfo } from './collectors/bytecode-debug-info.js'
+import {
+  parseDebugInfoUnits,
+  takeDebugInfoUnit,
+} from './collectors/bytecode-debug-info.js'
 import {
   collectEntryPathMap,
   collectLazyBundleEntryResources,
@@ -275,17 +278,17 @@ export class LynxDebugMetadataPluginImpl {
             if (section) artifact.tasmSection = section
           }
 
-          const lepusNG = parseLepusNGDebugInfo(args.debugInfo)
-          if (lepusNG) {
-            const target = metadata.artifacts.find(a =>
-              a.kind === 'main-thread'
-              && a.tasmSection?.[0] === 'lepusCode'
-              && a.tasmSection?.[1] === 'root'
-            ) ?? metadata.artifacts.find(a => a.kind === 'main-thread')
-            if (target) {
-              target.debugSources.unshift({
+          // The artifact already names the script, so every unit keeps the
+          // `lepusNG_debug_info` key a card's debug info uses.
+          const units = parseDebugInfoUnits(args.debugInfo)
+          if (units) {
+            for (const artifact of metadata.artifacts) {
+              if (artifact.kind !== 'main-thread') continue
+              const body = takeDebugInfoUnit(artifact, units)
+              if (!body) continue
+              artifact.debugSources.unshift({
                 kind: 'bytecode-debug-info',
-                debugInfo: lepusNG,
+                debugInfo: { lepusNG_debug_info: body },
               })
             }
           }
