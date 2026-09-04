@@ -69,7 +69,7 @@ const ZIP_CAPTURE_OUTPUT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_OUTPUT";
 const ZIP_CAPTURE_URL_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_URL";
 const ZIP_CAPTURE_WIDTH_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_WIDTH";
 const ZIP_CAPTURE_HEIGHT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_HEIGHT";
-const ZIP_CAPTURE_CONFIG_FILE: &str = "capture.json";
+const ISOLATED_CAPTURE_CONFIG_ARG: &str = "--ui-judge-isolated-capture-config";
 const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
 const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
@@ -93,7 +93,7 @@ enum IsolatedCaptureOutput {
   Jpeg,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct IsolatedCaptureConfig {
   global_props_json: Option<String>,
@@ -743,16 +743,7 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
   if !base_dir.is_dir() || !output_parent.is_dir() {
     return Err(ServerError::IsolatedZipCapture);
   }
-  let config_path = output_parent.join(ZIP_CAPTURE_CONFIG_FILE);
-  let config_metadata =
-    std::fs::symlink_metadata(&config_path).map_err(|_| ServerError::IsolatedZipCapture)?;
-  if !config_metadata.file_type().is_file() || config_metadata.len() > MAX_REQUEST_BYTES as u64 {
-    return Err(ServerError::IsolatedZipCapture);
-  }
-  let config: IsolatedCaptureConfig = serde_json::from_slice(
-    &std::fs::read(config_path).map_err(|_| ServerError::IsolatedZipCapture)?,
-  )
-  .map_err(|_| ServerError::IsolatedZipCapture)?;
+  let config = isolated_capture_config_from_args()?;
   if config.timeout_ms == 0 {
     return Err(ServerError::IsolatedZipCapture);
   }
@@ -796,6 +787,28 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
     .flush()
     .map_err(|_| ServerError::IsolatedZipCapture)?;
   Ok(true)
+}
+
+fn isolated_capture_config_from_args() -> Result<IsolatedCaptureConfig, ServerError> {
+  parse_isolated_capture_config_args(std::env::args_os().skip(1))
+}
+
+fn parse_isolated_capture_config_args(
+  args: impl IntoIterator<Item = std::ffi::OsString>,
+) -> Result<IsolatedCaptureConfig, ServerError> {
+  let mut args = args.into_iter();
+  let flag = args.next().ok_or(ServerError::IsolatedZipCapture)?;
+  if flag != std::ffi::OsStr::new(ISOLATED_CAPTURE_CONFIG_ARG) {
+    return Err(ServerError::IsolatedZipCapture);
+  }
+  let config = args
+    .next()
+    .and_then(|value| value.into_string().ok())
+    .ok_or(ServerError::IsolatedZipCapture)?;
+  if args.next().is_some() {
+    return Err(ServerError::IsolatedZipCapture);
+  }
+  serde_json::from_str(&config).map_err(|_| ServerError::IsolatedZipCapture)
 }
 
 fn arm_zip_capture_parent_lifeline() -> Result<(), ServerError> {
@@ -1765,22 +1778,12 @@ async fn supervise_zip_capture_process(
   }
   let output_dir = tempfile::tempdir().map_err(|_| isolated_zip_worker_error())?;
   let output = output_dir.path().join("capture.bmp");
-  let config_path = output_dir.path().join(ZIP_CAPTURE_CONFIG_FILE);
-  let config_bytes = serde_json::to_vec(&config).map_err(|_| isolated_zip_worker_error())?;
-  tokio::task::spawn_blocking(move || -> io::Result<()> {
-    let mut file = std::fs::OpenOptions::new()
-      .write(true)
-      .create_new(true)
-      .open(config_path)?;
-    file.write_all(&config_bytes)?;
-    file.flush()
-  })
-  .await
-  .map_err(|_| isolated_zip_worker_error())?
-  .map_err(|_| isolated_zip_worker_error())?;
+  let config = serde_json::to_string(&config).map_err(|_| isolated_zip_worker_error())?;
   let executable = zip_capture_executable().map_err(|_| isolated_zip_worker_error())?;
   let mut command = Command::new(executable);
   command
+    .arg(ISOLATED_CAPTURE_CONFIG_ARG)
+    .arg(config)
     .env_clear()
     .env(ZIP_CAPTURE_CHILD_ENV, "1")
     .env(ZIP_CAPTURE_BASE_DIR_ENV, base_dir)
@@ -2329,6 +2332,25 @@ mod tests {
     );
     assert_eq!(capture_request.request.timeout, Duration::from_secs(60));
     assert_eq!(capture_request.load_options, PageLoadOptions::default());
+  }
+
+  #[test]
+  fn isolated_capture_config_is_parsed_from_startup_arguments() {
+    let expected = IsolatedCaptureConfig {
+      global_props_json: Some(r#"{"messages":[]}"#.to_string()),
+      initial_data_json: Some(r#"{"ready":true}"#.to_string()),
+      screenshot_settle_ms: 25,
+      timeout_ms: 2_000,
+    };
+    let encoded = serde_json::to_string(&expected).expect("encode isolated capture config");
+
+    let actual = parse_isolated_capture_config_args([
+      std::ffi::OsString::from(ISOLATED_CAPTURE_CONFIG_ARG),
+      std::ffi::OsString::from(encoded),
+    ])
+    .expect("parse isolated capture startup arguments");
+
+    assert_eq!(actual, expected);
   }
 
   #[test]
