@@ -1,5 +1,22 @@
 # create-lynx-library
 
+## 0.6.0
+
+### Minor Changes
+
+- Keep `native-module` and `napi-native-module` as separate features, add ([#3646](https://github.com/lynx-family/lynx-stack/pull/3646))
+  HarmonyOS source scaffolding for NAPI addons, and generate a Lynxtron Node-API
+  adapter for platform native modules.
+
+  When both module features are selected, the NAPI module uses the `Napi` suffix
+  and both modules are available through `NativeModules`.
+
+### Patch Changes
+
+- Fix strict TypeScript checks for generated Node-API facades and scope generated podspecs to iOS. ([#3733](https://github.com/lynx-family/lynx-stack/pull/3733))
+- Updated dependencies [[`3449187`](https://github.com/lynx-family/lynx-stack/commit/3449187a04a81a5c46a114d23cc2d24634082177), [`f7ba7e1`](https://github.com/lynx-family/lynx-stack/commit/f7ba7e116b885f21dd6cc239a37abe28c9a4daff), [`5ce8fe3`](https://github.com/lynx-family/lynx-stack/commit/5ce8fe37d3c1b8f900f24f785a972841355fd855)]:
+  - @lynx-js/autolink-codegen@0.5.0
+
 ## 0.5.2
 
 ### Patch Changes

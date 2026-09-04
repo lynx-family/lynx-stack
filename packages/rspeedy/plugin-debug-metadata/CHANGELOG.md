@@ -1,5 +1,15 @@
 # @lynx-js/debug-metadata-rsbuild-plugin
 
+## 0.2.2
+
+### Patch Changes
+
+- Accept `DEBUG=lynx` (and `lynx:*`, `lynx:template`) for the Lynx debug output and intermediates. It is the recommended form now that the plugins also run under Rslib and Rsbuild; `DEBUG=rspeedy` keeps working. ([#3735](https://github.com/lynx-family/lynx-stack/pull/3735))
+
+- Declare the build host as an optional peer dependency. `@rsbuild/core` covers a plain Rsbuild build, and `@lynx-js/rspeedy` covers an Rspeedy one, so whichever host is installed is version-checked. ([#3678](https://github.com/lynx-family/lynx-stack/pull/3678))
+
+- File each main thread chunk's bytecode debug info under the artifact it was compiled from, and name that artifact after the section carrying it. A bundle whose main thread code lives in `JsBytecode` custom sections had every unit the encoder produced piled onto its first main thread artifact, keyed by section name, while the other entries got none; each artifact was also reported as the file it was assembled from, `<name>.js`, rather than the `<name>` a stack frame carries. ([#3776](https://github.com/lynx-family/lynx-stack/pull/3776))
+
 ## 0.2.1
 
 ### Patch Changes

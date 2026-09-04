@@ -1,5 +1,35 @@
 # @lynx-js/rspeedy
 
+## 0.17.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Remove `dev.client`. `websocketTransport` predates `LynxWebSocketModule`, the native module Lynx has shipped since 2.16, so HMR always resolves `@lynx-js/websocket` — the binding to it. ([#3684](https://github.com/lynx-family/lynx-stack/pull/3684))
+
+- Add `performance` to the `pluginLynx` options, alongside `output`, and expose it on the config `pluginLynx` provides. Rspeedy maps its `performance.profile` onto it, so a plugin can read the option from the build engine instead of requiring Rspeedy to be the caller. `pluginReactLynx` reads it from there instead of requiring Rspeedy. ([#3691](https://github.com/lynx-family/lynx-stack/pull/3691))
+
+- Update the Rstack toolchain: Rspack 2.2.2, Rsbuild 2.2.3, Rslib 1.0.0 and Rstest 0.11.12. ([#3793](https://github.com/lynx-family/lynx-stack/pull/3793))
+
+- **BREAKING CHANGE**: Emit the intermediate files into `.lynx` instead of `.rspeedy`, since the directory is written by the Lynx build engine rather than by Rspeedy. The directory is no longer configurable: `output.distPath.intermediate` was documented as never read, and nothing else reads it now either. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+### Patch Changes
+
+- Do not apply the Lynx build engine again when `pluginLynx` is registered on an environment rather than globally, which silently replaced the options it was given. ([#3695](https://github.com/lynx-family/lynx-stack/pull/3695))
+
+- Enable `output.sourceMap.css` by default only in Lynx environments, so web builds no longer emit unused CSS `.map` files into the intermediate directory. ([#3747](https://github.com/lynx-family/lynx-stack/pull/3747))
+
+- Accept `DEBUG=lynx` (and `lynx:*`, `lynx:template`) for the Lynx debug output and intermediates. It is the recommended form now that the plugins also run under Rslib and Rsbuild; `DEBUG=rspeedy` keeps working. ([#3735](https://github.com/lynx-family/lynx-stack/pull/3735))
+
+- Honor `output.distPath.intermediate`. The Lynx build engine now resolves the intermediate directory, so the option is no longer ignored by the plugins that emit a Lynx bundle. ([#3676](https://github.com/lynx-family/lynx-stack/pull/3676))
+
+- Write the bundle to disk during `dev` by default. A Lynx client reads it from disk as often as it reads it from the dev server, so the Lynx build engine now carries the default that only Rspeedy used to apply. ([#3680](https://github.com/lynx-family/lynx-stack/pull/3680))
+
+- Use the Rspack `DevTool` type for `output.sourceMap.js`. It already covers the `'-debugids'` suffix, so Rspeedy no longer restates it. ([#3664](https://github.com/lynx-family/lynx-stack/pull/3664))
+
+- Skip the built-in `pluginLynx` when one is already applied, so a user who needs to configure the Lynx build engine can apply `pluginLynx` themselves and have their options win. `@lynx-js/rspeedy` becomes an optional peer dependency of `pluginReactLynx` and `pluginQRCode`. ([#3661](https://github.com/lynx-family/lynx-stack/pull/3661))
+- Updated dependencies [[`643a52d`](https://github.com/lynx-family/lynx-stack/commit/643a52d9aefb327ca5a090cb052fd9b08cefbba6), [`b854dec`](https://github.com/lynx-family/lynx-stack/commit/b854dec62d48a09f60abc0632ba541bbdffda31f), [`f743e12`](https://github.com/lynx-family/lynx-stack/commit/f743e123e058d8f97720b1ce8c4a3d6601c8f7be), [`9bbfe5d`](https://github.com/lynx-family/lynx-stack/commit/9bbfe5d6e5367fbbaacc0129559e7b1d823038ad), [`754ed35`](https://github.com/lynx-family/lynx-stack/commit/754ed35f8063c9333b75a7a7bbb264cb19c5cc51), [`ab041b7`](https://github.com/lynx-family/lynx-stack/commit/ab041b72bc0d93e22f542b5963e221b6bd3f39e8), [`0a52438`](https://github.com/lynx-family/lynx-stack/commit/0a524389500421bb07e6a69366879e453d5d1d09), [`c6f971a`](https://github.com/lynx-family/lynx-stack/commit/c6f971a31fc0c54b98458c01f8c39a0828fe198c), [`0c47383`](https://github.com/lynx-family/lynx-stack/commit/0c4738342365ed4670ec659df5ede683e5aa2529), [`b3c6045`](https://github.com/lynx-family/lynx-stack/commit/b3c604544f84f1c600fb42468b05f7d73c120ad3), [`08a36e3`](https://github.com/lynx-family/lynx-stack/commit/08a36e39a5ba336946335d55a29efba1750e65ad), [`abab087`](https://github.com/lynx-family/lynx-stack/commit/abab087d0a4ce2e993c2417ce7bbf17e585ac972), [`7850e1e`](https://github.com/lynx-family/lynx-stack/commit/7850e1edb6f02ef2d332b756cd6e1a6ae6584368), [`3ab5ba3`](https://github.com/lynx-family/lynx-stack/commit/3ab5ba3fb738c368cfca6b6a5fc8c4ea323de124), [`eaefef6`](https://github.com/lynx-family/lynx-stack/commit/eaefef64d9874a8236d99b8abe17978d803a02da), [`e2ac811`](https://github.com/lynx-family/lynx-stack/commit/e2ac811c48535672bb14e4662f38dbebf0276167), [`3d63331`](https://github.com/lynx-family/lynx-stack/commit/3d63331dc861bf3180f975ca54d4e7d9afd5eb70), [`32ba734`](https://github.com/lynx-family/lynx-stack/commit/32ba7347d1733eb4b2e19e95d7b7415ae78e23d2)]:
+  - @lynx-js/rsbuild-plugin@0.1.0
+
 ## 0.16.5
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.7.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` `^0.17.0` in the plugins that read the build engine config through `Symbol.for('@lynx-js/rsbuild-plugin:config')`, since the engine that ships with `0.16` does not expose it. The plugins that do not touch the engine keep their existing range and add `^0.17.0` to it. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+### Patch Changes
+
+- Declare the build host as an optional peer dependency. `@rsbuild/core` covers a plain Rsbuild build, and `@lynx-js/rspeedy` covers an Rspeedy one, so whichever host is installed is version-checked. ([#3678](https://github.com/lynx-family/lynx-stack/pull/3678))
+
+- Stop `rspeedy preview` from repeating the bundle path in the URLs it prints. The bundle path is now resolved once, in `server.printUrls`, instead of being written into the server routes that Rsbuild appends to every printed URL. ([#3779](https://github.com/lynx-family/lynx-stack/pull/3779))
+
+- Resolve the bundle filename through `getLynxConfig(api).resolveBundleFilename()` instead of reading `output.filename` out of the Rspeedy config. A configured filename is now honored when the plugins are used with Rsbuild directly. ([#3651](https://github.com/lynx-family/lynx-stack/pull/3651))
+
+- Skip the built-in `pluginLynx` when one is already applied, so a user who needs to configure the Lynx build engine can apply `pluginLynx` themselves and have their options win. `@lynx-js/rspeedy` becomes an optional peer dependency of `pluginReactLynx` and `pluginQRCode`. ([#3661](https://github.com/lynx-family/lynx-stack/pull/3661))
+
 ## 0.6.0
 
 ### Minor Changes

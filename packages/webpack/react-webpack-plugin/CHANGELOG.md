@@ -1,5 +1,20 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.11.2
+
+### Patch Changes
+
+- Move runtime attribute-name configuration to the page-scoped `lynx` object and ([#3718](https://github.com/lynx-family/lynx-stack/pull/3718))
+  inject it from the host compilation through a standalone webpack plugin. Lazy
+  and external bundles reuse the host-injected configuration without applying
+  the plugin themselves. The runtime-config webpack plugin is published through
+  its own DSL-neutral package entry and accepts arbitrary runtime configuration
+  keys without depending on ReactLynx. The merged top-level configuration is
+  shallow-frozen to prevent accidental mutation after host initialization.
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` `^0.17.0` in the plugins that read the build engine config through `Symbol.for('@lynx-js/rsbuild-plugin:config')`, since the engine that ships with `0.16` does not expose it. The plugins that do not touch the engine keep their existing range and add `^0.17.0` to it. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+- Updated dependencies [[`76126fc`](https://github.com/lynx-family/lynx-stack/commit/76126fcad0f16e649c372d22c013e90ad88640df)]:
+  - @lynx-js/webpack-runtime-globals@0.0.8
+
 ## 0.11.1
 
 ### Patch Changes

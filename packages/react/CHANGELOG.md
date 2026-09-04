@@ -1,5 +1,52 @@
 # @lynx-js/react
 
+## 0.126.0
+
+### Minor Changes
+
+- Export `useInsertionEffect` from `@lynx-js/react/compat`, currently an alias of `useEffect`. ([#3784](https://github.com/lynx-family/lynx-stack/pull/3784))
+
+- Export `use` from `@lynx-js/react/compat`. ([#3672](https://github.com/lynx-family/lynx-stack/pull/3672))
+
+- Upgrade the bundled Preact fork to Preact 11 (`@lynx-js/internal-preact` ([#3450](https://github.com/lynx-family/lynx-stack/pull/3450))
+  based on `11.0.0-rc.1`).
+
+  **Breaking:** `useEffect` cleanups of unmounted components no longer run
+  synchronously during unmount. They run in the after-paint flush instead,
+  matching React. This applies to `useLayoutEffect` too, which ReactLynx
+  exports as an alias of `useEffect`. Page destroy is unaffected — it drains
+  them synchronously, so cleanups that release native resources still run
+  before the runtime goes away. Code that assumed a cleanup had already run
+  right after a re-render removed the component needs to await a flush;
+  ReactLynx does not currently export a hook whose cleanup stays inside the
+  unmount commit.
+
+  Other runtime-visible changes:
+
+  - Context consumers no longer double-render on provider updates
+    (preactjs/preact#4724), so fewer `rLynxChange` flushes are emitted and
+    patches merge into the first flush.
+  - List reorders use Preact 11's longest-increasing-subsequence diff, which
+    may pick an equivalent-but-different minimal set of moves.
+
+### Patch Changes
+
+- Reach lynx-core's app object through `lynx.getApp()` instead of the ([#3553](https://github.com/lynx-family/lynx-stack/pull/3553))
+  `lynxCoreInject` global the AMD wrapper injects. It is the same instance, so
+  behavior is unchanged, and resolving it through `lynx` also stays correct once
+  several cards share a runtime chunk. `@lynx-js/testing-environment` now exposes
+  `lynx.getApp()` alongside the object it already provided.
+- Move runtime attribute-name configuration to the page-scoped `lynx` object and ([#3718](https://github.com/lynx-family/lynx-stack/pull/3718))
+  inject it from the host compilation through a standalone webpack plugin. Lazy
+  and external bundles reuse the host-injected configuration without applying
+  the plugin themselves. The runtime-config webpack plugin is published through
+  its own DSL-neutral package entry and accepts arbitrary runtime configuration
+  keys without depending on ReactLynx. The merged top-level configuration is
+  shallow-frozen to prevent accidental mutation after host initialization.
+- Keep `ref` in props for function components on the main thread, matching the background thread. ([#3688](https://github.com/lynx-family/lynx-stack/pull/3688))
+
+- Update `swc_core` to 77 in the transform. ([#3793](https://github.com/lynx-family/lynx-stack/pull/3793))
+
 ## 0.125.0
 
 ### Minor Changes
