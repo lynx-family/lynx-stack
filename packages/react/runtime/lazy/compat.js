@@ -52,6 +52,7 @@ export const {
   // compat
   startTransition,
   use,
+  useInsertionEffect,
   useTransition,
 } = target[sExportsReactCompat];
 
