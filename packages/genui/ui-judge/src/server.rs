@@ -87,12 +87,6 @@ enum ZipCaptureBackend {
   SharedWorker,
 }
 
-#[derive(Clone, Copy)]
-enum IsolatedCaptureOutput {
-  Bmp,
-  Jpeg,
-}
-
 #[derive(Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct IsolatedCaptureConfig {
@@ -203,7 +197,8 @@ impl ZipCaptureProcesses {
     viewport: ScreenshotViewport,
     job_id: u64,
   ) -> Result<Vec<u8>, ApiError> {
-    self
+    let deadline = activity.deadline;
+    let bmp = self
       .capture_with_options(
         activity,
         staging_guard,
@@ -212,9 +207,12 @@ impl ZipCaptureProcesses {
         viewport,
         job_id,
         IsolatedCaptureConfig::default(),
-        IsolatedCaptureOutput::Jpeg,
       )
+      .await?;
+    tokio::time::timeout_at(deadline, transcode_captured_bmp(bmp))
       .await
+      .map_err(|_| zip_render_timeout_error())?
+      .map_err(|_| isolated_zip_worker_error())
   }
 
   async fn capture_bmp<T: Send + 'static>(
@@ -236,12 +234,10 @@ impl ZipCaptureProcesses {
         viewport,
         job_id,
         config,
-        IsolatedCaptureOutput::Bmp,
       )
       .await
   }
 
-  #[allow(clippy::too_many_arguments)]
   async fn capture_with_options<T: Send + 'static>(
     &self,
     activity: ZipCaptureProcessActivity,
@@ -251,7 +247,6 @@ impl ZipCaptureProcesses {
     viewport: ScreenshotViewport,
     job_id: u64,
     config: IsolatedCaptureConfig,
-    output: IsolatedCaptureOutput,
   ) -> Result<Vec<u8>, ApiError> {
     let deadline = activity.deadline;
     let started = activity.started;
@@ -262,7 +257,6 @@ impl ZipCaptureProcesses {
         &url,
         viewport,
         config,
-        output,
         &mut reply,
         deadline,
       )
@@ -1769,7 +1763,6 @@ async fn supervise_zip_capture_process(
   url: &str,
   viewport: ScreenshotViewport,
   config: IsolatedCaptureConfig,
-  output_kind: IsolatedCaptureOutput,
   reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
   deadline: tokio::time::Instant,
 ) -> Result<Vec<u8>, ApiError> {
@@ -1861,12 +1854,7 @@ async fn supervise_zip_capture_process(
     if bmp.is_empty() || bmp.len() > MAX_CAPTURE_BMP_BYTES {
       return Err(isolated_zip_worker_error());
     }
-    match output_kind {
-      IsolatedCaptureOutput::Bmp => Ok(bmp),
-      IsolatedCaptureOutput::Jpeg => transcode_captured_bmp(bmp)
-        .await
-        .map_err(|_| isolated_zip_worker_error()),
-    }
+    Ok(bmp)
   };
   tokio::select! {
     biased;
