@@ -121,6 +121,11 @@ impl VisitMut for WorkletVisitor {
       key: method.key.clone(),
       value: worklet_object_expr,
     });
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.saw_shared_identifiers(),
+    );
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
