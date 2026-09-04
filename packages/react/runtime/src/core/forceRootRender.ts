@@ -26,6 +26,7 @@ export function runWithForceRootRender(
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldDiff = preactOptions[DIFF2];
   preactOptions[DIFF2] = (vnode: VNode, oldVNode: VNode) => {
     /* v8 ignore start */

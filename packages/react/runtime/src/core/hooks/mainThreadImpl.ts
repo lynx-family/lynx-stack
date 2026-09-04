@@ -51,10 +51,12 @@ function installMainThreadHooks(): void {
     return;
   }
   hooksInstalled = true;
+  /* eslint-disable @typescript-eslint/unbound-method */
   oldBeforeDiff = options[DIFF];
   oldBeforeRender = options[RENDER];
   oldAfterDiff = options[DIFFED];
   oldRoot = options[ROOT];
+  /* eslint-enable @typescript-eslint/unbound-method */
 
   options[DIFF] = function(vnode) {
     currentComponent = null;

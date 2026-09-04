@@ -106,6 +106,7 @@ function shimGlobals() {
 
   // Only shim getComputedStyle if it doesn't exist and window.getComputedStyle is available
   if (!globalThis.getComputedStyle && globalThis.window?.getComputedStyle) {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     globalThis.getComputedStyle = globalThis.window.getComputedStyle;
   }
 
