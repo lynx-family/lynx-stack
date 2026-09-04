@@ -14,7 +14,6 @@ export function run() {
       __OpBegin,
       { type: '_et_foo', props: {} },
       __OpAttr,
-      'attributeSlots',
       ['test'],
       __OpSlot,
       1,
