@@ -934,6 +934,171 @@ describe('pluginDev', () => {
     })
   })
 
+  test('server.printUrls with per-environment entries', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          rootMain: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8098,
+      },
+      environments: {
+        lynx: {
+          source: {
+            entry: {
+              lynxMain: path.resolve(
+                __dirname,
+                './fixtures/hello-world/index.js',
+              ),
+            },
+          },
+        },
+        web: {
+          source: {
+            entry: {
+              webMain: path.resolve(
+                __dirname,
+                './fixtures/hello-world/index.js',
+              ),
+            },
+          },
+        },
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8098/lynxMain.lynx.bundle',
+    })
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8098/webMain.web.bundle',
+    })
+
+    // A root entry is merged into every environment, not replaced by an
+    // environment's own.
+    expect(printedUrls).toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8098/rootMain.lynx.bundle',
+    })
+
+    expect(printedUrls).toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8098/rootMain.web.bundle',
+    })
+
+    // Never cross an environment's own entry with another environment.
+    expect(printedUrls).not.toContainEqual({
+      'label': 'Web',
+      'url': 'http://example.com:8098/lynxMain.web.bundle',
+    })
+
+    expect(printedUrls).not.toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8098/webMain.lynx.bundle',
+    })
+  })
+
+  test('server.printUrls with a per-environment dev.assetPrefix', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8000/',
+      },
+      server: {
+        port: 8099,
+      },
+      environments: {
+        lynx: {},
+        web: {
+          dev: {
+            assetPrefix: 'http://web.example.com:<port>/',
+          },
+        },
+      },
+    })
+
+    let printedUrls: undefined | (string | { url: string, label?: string })[] =
+      undefined
+
+    rsbuild.modifyRsbuildConfig({
+      handler: (config, { mergeRsbuildConfig }) => {
+        if (typeof config.server?.printUrls === 'function') {
+          const originalPrintUrls = config.server.printUrls
+          return mergeRsbuildConfig(config, {
+            server: {
+              printUrls: (...args) => {
+                const result = originalPrintUrls(...args)
+                printedUrls = result ?? undefined
+                return result
+              },
+            },
+          })
+        }
+        return config
+      },
+      order: 'post',
+    })
+
+    await using server = await rsbuild.usingDevServer()
+
+    await server.waitDevCompileDone()
+
+    // `lynx` keeps the root `dev.assetPrefix`.
+    expect(printedUrls).toContainEqual({
+      'label': 'Lynx',
+      'url': 'http://example.com:8099/main.lynx.bundle',
+    })
+
+    // `web` overrides `dev.assetPrefix` on its own environment.
+    expect(printedUrls).toContainEqual({
+      'label': 'Web',
+      'url': 'http://web.example.com:8099/main.web.bundle',
+    })
+
+    expect(printedUrls).toContainEqual({
+      'label': '∟ Preview',
+      'url':
+        'http://web.example.com:8099/__web_preview?casename=main.web.bundle',
+    })
+  })
+
   test('onAfterStartDevServer routes contains bundle entries', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
