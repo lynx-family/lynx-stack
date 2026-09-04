@@ -328,10 +328,23 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-26.04-medium
+      # These packages cannot join the root `rstest.config.ts` aggregator:
+      # `@lynx-js/reactlynx-testing-library`, `testing-library-example-basic`,
+      # and `testing-library-example-react-compiler` all wire
+      # `@lynx-js/react-rsbuild-plugin`'s alias resolution (directly via
+      # `pluginReactLynx()`, or through `withLynxConfig`, which uses it too),
+      # and that plugin cannot find `@lynx-js/react` once Rstest runs the
+      # config as one entry of a `projects` list — reproducible even with a
+      # single such project wrapped in `projects: [...]`, and gone the moment
+      # the same config runs as a standalone `-c <path>` invocation (which is
+      # what each package's own `test` script does).
       run: >
         pnpm
         --filter @lynx-js/react-runtime
         --filter @lynx-js/react-transform
+        --filter @lynx-js/reactlynx-testing-library
+        --filter @lynx-js/testing-library-example-basic
+        --filter @lynx-js/testing-library-example-react-compiler
         run test
         --reporter=github-actions
         --reporter=dot

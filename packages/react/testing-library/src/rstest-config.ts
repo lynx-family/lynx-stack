@@ -2,8 +2,6 @@ import type { ExtendConfig, ExtendConfigFn } from '@rstest/core';
 import { createRequire } from 'node:module';
 import type { RsbuildConfig } from '@rsbuild/core';
 
-import { reactLynxTestAlias, reactLynxTestTransform } from './rstest-transform.js';
-
 export interface LynxConfigOptions {
   /**
    * The root path of the project.
@@ -21,24 +19,6 @@ export interface LynxConfigOptions {
 }
 
 export interface RstestConfigOptions {
-  /**
-   * The engine version passed to the ReactLynx transform.
-   *
-   * @default `''`
-   */
-  engineVersion?: string;
-
-  /**
-   * Enable experimental React Compiler support.
-   *
-   * Requires `@babel/core`, `babel-plugin-react-compiler`,
-   * `@babel/plugin-syntax-jsx` and `@babel/plugin-syntax-typescript` in your
-   * project root.
-   *
-   * @default `false`
-   */
-  experimental_enableReactCompiler?: boolean;
-
   /**
    * Customize the generated rstest config.
    */
@@ -79,37 +59,11 @@ async function applyRstestConfigModifier(
 }
 
 export function withDefaultConfig(
-  options?: LynxRstestConfigOptions,
+  options?: RstestConfigOptions,
 ): ExtendConfigFn {
-  const transformOptions = {
-    ...(options?.rootPath ? { rootPath: options.rootPath } : {}),
-    ...(options?.engineVersion ? { engineVersion: options.engineVersion } : {}),
-    ...(options?.experimental_enableReactCompiler
-      ? { experimental_enableReactCompiler: true as const }
-      : {}),
-  };
   return async () => {
     return await applyRstestConfigModifier(
-      {
-        ...createDefaultRstestConfig(),
-        // Compile test code with the ReactLynx transform. Deliberately not via
-        // `@lynx-js/react-rsbuild-plugin`: that transitively depends on
-        // `use-sync-external-store`, which would make a Turbo build cycle out
-        // of that package's own tests. It also builds the two threads as
-        // separate layers, whereas the testing library needs one `MIXED`
-        // bundle driving both.
-        plugins: [reactLynxTestTransform(transformOptions)],
-        // Project-scoped on purpose. Rstest builds every project of a root
-        // `projects` list in one Rsbuild instance, so setting these from a
-        // plugin would rewrite the other projects' module resolution too.
-        //
-        // Only applied here: `withLynxConfig` derives its own `resolve` from
-        // the project's Lynx config, which must not be overwritten.
-        resolve: {
-          dedupe: ['preact'],
-          alias: reactLynxTestAlias(transformOptions),
-        },
-      },
+      createDefaultRstestConfig(),
       options?.modifyRstestConfig,
     );
   };
@@ -140,11 +94,6 @@ export function withLynxConfig(
     const mergedConfig: ExtendConfig = {
       ...rstestConfig,
       ...defaultConfig,
-      // Pin the Rsbuild root to the project. When this config runs as one
-      // entry of a root `projects` list, Rsbuild would otherwise be rooted at
-      // the workspace root, where `pluginReactLynx`'s alias resolution cannot
-      // find `@lynx-js/react`.
-      ...(options?.rootPath ? { root: options.rootPath } : {}),
       plugins: [
         ...(rstestConfig.plugins || []),
         {

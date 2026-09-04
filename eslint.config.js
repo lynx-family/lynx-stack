@@ -71,7 +71,9 @@ export default tseslint.config(
       'packages/lynx/autolink-codegen/rstest.config.ts',
       'packages/lynx/create-lynx-library/rstest.config.ts',
       'packages/lynx/gesture-runtime/rstest.config.ts',
+      'packages/lynx/gesture-runtime/rstest-transform.ts',
       'packages/motion/rstest.config.ts',
+      'packages/motion/rstest-transform.ts',
       'packages/react/runtime/rstest.config.ts',
       'packages/react/transform/rstest.config.ts',
 

@@ -14,7 +14,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 // Explicitly typed: the package compiles with `--isolatedDeclarations`, which
 // cannot infer default-export types.
 const config: RstestConfig = defineConfig({
-  extends: withDefaultConfig({ rootPath: root }),
+  extends: withDefaultConfig(),
   root,
   name: 'use-sync-external-store',
   include: ['test/**/*.test.{js,jsx,ts,tsx}'],

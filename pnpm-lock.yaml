@@ -1257,6 +1257,12 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.10(core-js@3.50.0)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
       '@testing-library/jest-dom':
         specifier: ^7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)
@@ -1316,6 +1322,12 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.10(core-js@3.50.0)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.6(core-js@3.50.0)(jsdom@27.4.0(supports-color@10.2.2))
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.3(core-js@3.50.0))
