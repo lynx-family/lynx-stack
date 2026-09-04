@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.53",
-    "@hono/node-server": "^2.1.0",
+    "@hono/node-server": "^2.1.1",
     "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
