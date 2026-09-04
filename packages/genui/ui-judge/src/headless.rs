@@ -113,6 +113,7 @@ pub(crate) struct CapturedPage {
 }
 
 impl CapturedPage {
+  #[cfg(feature = "server")]
   pub(crate) fn from_staged_bmp(screenshot: Vec<u8>, url: String) -> Self {
     Self {
       screenshot,
