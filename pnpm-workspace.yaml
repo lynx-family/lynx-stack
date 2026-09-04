@@ -54,6 +54,8 @@ minimumReleaseAgeExclude:
   # First-party Rstack toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
+  - "@rslib/*"
+  - "rsbuild-plugin-dts"
   - "@rstest/*"
   - "@rstackjs/create-toolkit"
   # Changesets v3 packages were released as one coordinated set.
@@ -123,24 +125,24 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.1.10"
+    "@rsbuild/core": "2.2.3"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0-beta.3"
+    "@rslib/core": "1.0.0"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.1.7"
-    "@rspack/core": "2.1.7"
-    "@rspack/dev-server": "2.1.0"
-    "@rspack/test-tools": "2.1.3"
+    "@rspack/cli": "2.2.2"
+    "@rspack/core": "2.2.2"
+    "@rspack/dev-server": "2.2.1"
+    "@rspack/test-tools": "2.2.2"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.6"
-    "@rstest/coverage-istanbul": "0.11.6"
-    "@rstest/core": "0.11.6"
+    "@rstest/adapter-rsbuild": "0.11.12"
+    "@rstest/coverage-istanbul": "0.11.12"
+    "@rstest/core": "0.11.12"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
