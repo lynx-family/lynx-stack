@@ -2,9 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRef, WorkletRefImpl } from './bindings/index.js';
+import type { ClosureValueType, JsFnHandle, Worklet } from './bindings/index.js';
 import { profile } from './utils/profile.js';
-import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -53,25 +52,6 @@ function hydrateCtxImpl(
       hydrateCtxImpl(ctxObj[key], firstScreenValue, execId);
     }
   }
-}
-
-/**
- * Hydrates a worklet value handle on the main thread.
- * This maps the positive-ID background handle to the compatible target realized
- * from the first-screen main-thread handle.
- *
- * @param handle The positive-ID background handle to hydrate.
- * @param value The realized first-screen target.
- */
-function hydrateWorkletValueHandle(
-  handle: WorkletRefImpl<unknown>,
-  value: object,
-) {
-  if (!isHydratedWorkletValue(value)) {
-    // The ref has not been accessed yet.
-    return;
-  }
-  hydrateWorkletValue(handle, value as WorkletRef<unknown>);
 }
 
 /**

@@ -95,19 +95,20 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
       assertSerializableMainThreadObjectPayload(initialValue, type);
     }
 
-    this._wvid = allocateWorkletValueId();
+    this._wvid = allocateMainThreadRefId();
     this._initValue = initialValue;
     this._type = type;
     this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
-    mainThreadObjectHandles.add(this);
-    mainThreadObjectHandleMetadata.set(this, { initialValue, type });
+    registerMainThreadObjectHandle(this, type, initialValue);
 
     if (__JS__) {
       addMainThreadRefInitValue(
         this._wvid,
         initialValue,
-        type,
-        MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
+        {
+          type,
+          protocolVersion: MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
+        },
       );
 
       const id = this._wvid;
