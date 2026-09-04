@@ -1,4 +1,4 @@
-<!DOCTYPE lynx>
+<!doctype lynx>
 <lynx engine-version="4.2">
   <style>/*
     Card-wide custom properties are declared on the page's own class. `:root`
