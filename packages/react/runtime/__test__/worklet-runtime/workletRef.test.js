@@ -257,6 +257,72 @@ describe('WorkletRef', () => {
     expect(isHydratedWorkletValue(firstScreenValue)).toBe(false);
   });
 
+  it('does not hydrate an unused first-screen main-thread object', () => {
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/unused-value',
+      value => ({ value }),
+      1,
+    );
+    const firstScreenWorklet = {
+      _wkltId: 'unused-typed-value',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 42,
+          _type: '@test/unused-value',
+          _mtoVersion: 1,
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'unused-typed-value',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 42,
+          _type: '@test/unused-value',
+          _mtoVersion: 1,
+        },
+      },
+    };
+
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
+  });
+
+  it('hydrates a compatible mutable worklet value through the typed path', () => {
+    const firstScreenWorklet = {
+      _wkltId: 'typed-mutable-value',
+      _c: {
+        value: {
+          _wvid: -1,
+          _initValue: 42,
+          _type: 'main-thread',
+        },
+      },
+    };
+    const worklet = {
+      _wkltId: 'typed-mutable-value',
+      _c: {
+        value: {
+          _wvid: 1,
+          _initValue: 42,
+          _type: 'main-thread',
+        },
+      },
+    };
+    globalThis.registerWorklet('main-thread', 'typed-mutable-value', function() {
+      return this._c.value.current;
+    });
+
+    globalThis.runWorklet(firstScreenWorklet, []);
+    const firstScreenValue = firstScreenWorklet._c.value;
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenValue);
+  });
+
   it('releases abandoned first-screen main-thread object metadata', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/abandoned',

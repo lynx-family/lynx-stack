@@ -2,8 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet } from './bindings/index.js';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  Worklet,
+  WorkletRef,
+  WorkletRefId,
+  WorkletRefImpl,
+} from './bindings/index.js';
 import { profile } from './utils/profile.js';
+import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -37,9 +45,26 @@ function hydrateCtxImpl(
     return;
   }
 
+  // MainThreadObject descriptors are atomic. Their `_initValue` belongs to
+  // the user and must not be traversed as a nested worklet context. Legacy
+  // MainThreadRef descriptors do not carry the object protocol metadata and
+  // continue through the existing `_wvid` path below.
+  if (isMainThreadObjectDescriptor(ctxObj)) {
+    hydrateWorkletValueHandle(
+      ctxObj as unknown as WorkletRefImpl<unknown>,
+      firstScreenCtxObj,
+    );
+    return;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
-    if (key === '_jsFn') {
+    if (key === '_wvid') {
+      hydrateMainThreadRef(
+        ctxObj[key] as WorkletRefId,
+        firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
+      );
+    } else if (key === '_jsFn') {
       hydrateDelayRunOnBackgroundTasks(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,
@@ -52,6 +77,46 @@ function hydrateCtxImpl(
       hydrateCtxImpl(ctxObj[key], firstScreenValue, execId);
     }
   }
+}
+
+function isMainThreadObjectDescriptor(
+  value: ClosureValueType,
+): boolean {
+  const descriptor = value as unknown as Partial<WorkletRefImpl<unknown>>;
+  return typeof value === 'object'
+    && value !== null
+    && typeof descriptor._wvid === 'number'
+    && typeof descriptor._type === 'string';
+}
+
+/**
+ * Hydrates a WorkletRef on the main thread.
+ * This maps the positive-ID background handle to the target realized during
+ * first-screen rendering, while leaving an unused first-screen handle alone.
+ */
+function hydrateMainThreadRef(
+  refId: WorkletRefId,
+  value: WorkletRefImpl<unknown>,
+): void {
+  if ('_initValue' in value) {
+    return;
+  }
+  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value as WorkletRef<unknown>;
+}
+
+/**
+ * Hydrates a MainThreadObject handle on the main thread.
+ * The target is the object realized from the matching first-screen handle.
+ */
+function hydrateWorkletValueHandle(
+  handle: WorkletRefImpl<unknown>,
+  value: ClosureValueType,
+): void {
+  if (!isHydratedWorkletValue(value)) {
+    // The handle was not accessed during first-screen rendering.
+    return;
+  }
+  hydrateWorkletValue(handle, value as WorkletRef<unknown>);
 }
 
 /**
