@@ -101,7 +101,9 @@ impl VisitMut for WorkletVisitor {
     method.visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
+    let collect_main_thread = self.defines_collector.is_some();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
+    let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type,
       hash,
@@ -112,6 +114,7 @@ impl VisitMut for WorkletVisitor {
       false,
       &mut self.named_imports,
       self.worklet_runtime_loaded_ident.clone(),
+      collect_main_thread,
     );
 
     *n = Prop::KeyValue(KeyValueProp {

@@ -5,10 +5,12 @@
 let lastIdBG = 0;
 let lastIdMT = 0;
 
-export function allocateWorkletValueId(): number {
+/** @internal */
+export function allocateMainThreadRefId(): number {
   return __JS__ ? ++lastIdBG : --lastIdMT;
 }
 
-export function clearWorkletValueIdsForTesting(): void {
+/** @internal */
+export function clearMainThreadRefIdsForTesting(): void {
   lastIdBG = lastIdMT = 0;
 }

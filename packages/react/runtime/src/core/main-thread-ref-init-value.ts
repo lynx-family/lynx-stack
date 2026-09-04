@@ -4,7 +4,15 @@
 
 import { isMtsEnabled } from './mts-capability.js';
 
-export type MainThreadRefInitValuePatch = [id: number, value: unknown][];
+export type MainThreadRefInitValuePatch = (
+  | [id: number, value: unknown]
+  | [
+    id: number,
+    value: unknown,
+    type: string,
+    mainThreadObjectProtocolVersion: number,
+  ]
+)[];
 
 let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
 

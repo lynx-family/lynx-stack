@@ -306,9 +306,6 @@ export function testingLibraryPlugin(
         };
       },
       config: () => ({
-        define: {
-          __MAIN_THREAD_OBJECT__: 'true',
-        },
         test: {
           environment: require.resolve(
             `${runtimeOSSDir}/testing-library/dist/env/vitest`,

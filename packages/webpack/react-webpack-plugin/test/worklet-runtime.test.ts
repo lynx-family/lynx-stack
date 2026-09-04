@@ -164,11 +164,6 @@ describe('worklet-runtime bundler guardrails', () => {
             /globalThis\.lynxWorkletImpl\s*=\s*\{/g,
           )?.length ?? 0,
         ).toBe(expectedInitSignatureCount);
-        expect(
-          lepusChunk['worklet-runtime'].includes(
-            'registerMainThreadObjectType',
-          ),
-        ).toBe(expectedMainThreadObjectRuntime);
       } else {
         expect(lepusChunk['worklet-runtime']).toBeUndefined();
         expect(expectedInitSignatureCount).toBe(0);

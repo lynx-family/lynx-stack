@@ -40,12 +40,7 @@ function hydrateCtxImpl(
 
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
-    if (key === '_wvid') {
-      hydrateWorkletValueHandle(
-        ctxObj as unknown as WorkletRefImpl<unknown>,
-        firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
-      );
-    } else if (key === '_jsFn') {
+    if (key === '_jsFn') {
       hydrateDelayRunOnBackgroundTasks(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,

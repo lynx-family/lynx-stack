@@ -296,16 +296,6 @@ function updateWorkletRefInitValueChanges(
   patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string, number])[],
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
-    /* v8 ignore start -- exercised by the separately built core runtime */
-    if (!__MAIN_THREAD_OBJECT__) {
-      patch.forEach(([id, value]) => {
-        if (!impl!._workletRefMap[id]) {
-          impl!._workletRefMap[id] = createWorkletRef(id, value);
-        }
-      });
-      return;
-    }
-    /* v8 ignore stop */
     let firstError: unknown;
     let hasError = false;
     patch.forEach(([id, value, type, protocolVersion]) => {

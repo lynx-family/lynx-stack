@@ -9,18 +9,18 @@ import {
 } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { addWorkletRefInitValue } from './workletRefPool.js';
-import { allocateWorkletValueId } from './workletValueId.js';
+import {
+  getMainThreadObjectHandleMetadata,
+  isMainThreadObjectHandle as isRegisteredMainThreadObjectHandle,
+  registerMainThreadObjectHandle,
+} from './mainThreadObjectHandleRegistry.js';
 import { useMemo } from '../../../core/hooks/react.js';
+import { allocateMainThreadRefId } from '../../../core/main-thread-ref-id.js';
+import { addMainThreadRefInitValue } from '../../../core/main-thread-ref-init-value.js';
 
 /** @internal */
 export const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 
-const mainThreadObjectHandles = new WeakSet<object>();
-const mainThreadObjectHandleMetadata = new WeakMap<
-  object,
-  { readonly initialValue: unknown; readonly type: string }
->();
 const mainThreadObjectTypeDefinitions = new WeakMap<
   object,
   MainThreadObjectTypeDefinition<unknown, object>
@@ -103,7 +103,7 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
     mainThreadObjectHandleMetadata.set(this, { initialValue, type });
 
     if (__JS__) {
-      addWorkletRefInitValue(
+      addMainThreadRefInitValue(
         this._wvid,
         initialValue,
         type,
@@ -233,11 +233,7 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
 }
 
 /** @internal */
-export function isMainThreadObjectHandle(value: unknown): value is MainThreadObjectHandle<object> {
-  return typeof value === 'object' && value !== null && mainThreadObjectHandles.has(value);
-}
-
-function getMainThreadObjectHandleMetadata(
+export function isMainThreadObjectHandle(
   value: unknown,
 ): value is MainThreadObjectHandle<unknown, object> {
   return isRegisteredMainThreadObjectHandle(value);
@@ -299,10 +295,13 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
       );
     },
   });
-  mainThreadObjectHandles.add(guardedHandle);
-  const metadata = mainThreadObjectHandleMetadata.get(handle);
-  if (metadata) {
-    mainThreadObjectHandleMetadata.set(guardedHandle, metadata);
+  const metadata = getMainThreadObjectHandleMetadata(handle);
+  if (metadata !== undefined) {
+    registerMainThreadObjectHandle(
+      guardedHandle,
+      metadata.type,
+      metadata.initialValue,
+    );
   }
   return guardedHandle;
 }
