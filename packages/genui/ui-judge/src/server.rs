@@ -229,15 +229,9 @@ impl ZipCaptureProcesses {
     let started = activity.started;
     let (mut reply, response) = oneshot::channel();
     tokio::spawn(async move {
-      let result = supervise_zip_capture_process(
-        &base_dir,
-        &url,
-        viewport,
-        config,
-        &mut reply,
-        deadline,
-      )
-      .await;
+      let result =
+        supervise_zip_capture_process(&base_dir, &url, viewport, config, &mut reply, deadline)
+          .await;
       let outcome = if reply.is_closed() {
         "cancelled"
       } else {
@@ -1012,14 +1006,19 @@ async fn judge_remote_template(
 
 fn is_http_page_url(url: &str) -> bool {
   let url = url.trim();
-  ["http://", "https://"]
-    .iter()
-    .any(|scheme| url.starts_with(scheme))
+  ["http://", "https://"].iter().any(|scheme| {
+    url
+      .get(..scheme.len())
+      .is_some_and(|prefix| prefix.eq_ignore_ascii_case(scheme))
+  })
 }
 
 fn reject_direct_page_url(url: &str) -> Result<(), ApiError> {
   let url = url.trim();
-  if url.starts_with("file://") {
+  if url
+    .get(.."file://".len())
+    .is_some_and(|prefix| prefix.eq_ignore_ascii_case("file://"))
+  {
     return Err(ApiError::new(
       StatusCode::FORBIDDEN,
       "Direct file:// page URLs are disabled by the UI Judge server; use a source-specific screenshot endpoint.",
@@ -1084,14 +1083,7 @@ async fn screenshot_template_url(
   }
   let url = read_remote_url(request).await?;
   let source = fetch_remote_template(&url).await?;
-  render_staged_source(
-    &state,
-    entry,
-    source,
-    StagedSourceKind::Template,
-    viewport,
-  )
-  .await
+  render_staged_source(&state, entry, source, StagedSourceKind::Template, viewport).await
 }
 
 async fn fetch_remote_template(url: &str) -> Result<Vec<u8>, ApiError> {
@@ -3286,16 +3278,21 @@ mod tests {
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
 
-    let mut request = http_request("file:///tmp/private.lynx.bundle");
-    request.global_props = Some(json!(["invalid page data"]));
-    request.timeout_ms = Some(1);
-    let error = judge(State(state.clone()), Json(request))
-      .await
-      .expect_err("the server must reject direct file access");
-    assert_eq!(error.status, StatusCode::FORBIDDEN);
-    assert!(error
-      .message
-      .contains("source-specific screenshot endpoint"));
+    for url in [
+      "file:///tmp/private.lynx.bundle",
+      "FILE:///tmp/private.lynx.bundle",
+    ] {
+      let mut request = http_request(url);
+      request.global_props = Some(json!(["invalid page data"]));
+      request.timeout_ms = Some(1);
+      let error = judge(State(state.clone()), Json(request))
+        .await
+        .expect_err("the server must reject direct file access");
+      assert_eq!(error.status, StatusCode::FORBIDDEN);
+      assert!(error
+        .message
+        .contains("source-specific screenshot endpoint"));
+    }
     headless.shutdown().expect("stop mock headless worker");
   }
 
@@ -3312,6 +3309,7 @@ mod tests {
 
     for url in [
       "http://127.0.0.1/private.lynx.js",
+      "HTTP://127.0.0.1/private.lynx.js",
       "http://[::1]/private.lynx.js",
     ] {
       let error = judge(State(state.clone()), Json(http_request(url)))

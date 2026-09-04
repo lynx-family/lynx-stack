@@ -131,6 +131,7 @@ impl CapturedPage {
     }
   }
 
+  #[cfg(any(feature = "server", test))]
   pub(crate) async fn into_jpeg(self) -> Result<Vec<u8>, String> {
     transcode_captured_bmp(self.screenshot).await
   }
