@@ -2,14 +2,12 @@
   "name": "@lynx-js/web-explorer",
   "version": "0.0.17",
   "private": false,
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-explorer"
   },
-  "license": "Apache-2.0",
-  "type": "module",
-  "main": "index.html",
   "files": [
     "!**/*.js.map",
     "!**/*.ts",
@@ -18,6 +16,8 @@
     "preinstalled",
     "manifest.json"
   ],
+  "type": "module",
+  "main": "index.html",
   "scripts": {
     "build": "rsbuild build",
     "build:rsdoctor": "RSDOCTOR=true rsbuild build",

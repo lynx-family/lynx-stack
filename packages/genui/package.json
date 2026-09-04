@@ -2,16 +2,50 @@
   "name": "@lynx-js/genui",
   "version": "0.3.1",
   "description": "Generative UI for Lynx.",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/genui"
   },
-  "license": "Apache-2.0",
+  "bin": {
+    "a2ui-catalog-extractor": "./a2ui-catalog-extractor/bin/a2ui-catalog-extractor.js",
+    "a2ui-cli": "./cli/bin/cli.js",
+    "genui": "./cli/bin/cli.js",
+    "genui-cli": "./cli/bin/cli.js"
+  },
+  "files": [
+    "index.ts",
+    "dist",
+    "a2ui/dist",
+    "a2ui/styles",
+    "a2ui/*.md",
+    "a2ui/docs/*.md",
+    "a2ui/src/catalog/*.md",
+    "cli/bin",
+    "cli/dist",
+    "cli/README.md",
+    "cli/templates",
+    "a2ui-prompt/dist",
+    "a2ui-prompt/README.md",
+    "a2ui-catalog-extractor/bin",
+    "a2ui-catalog-extractor/dist",
+    "a2ui-catalog-extractor/skills",
+    "a2ui-catalog-extractor/README.md",
+    "lynx-xml/dist",
+    "lynx-xml/README.md",
+    "openui/dist",
+    "openui/styles",
+    "openui/*.md",
+    "openui/docs/*.md",
+    "mcp-apps/dist"
+  ],
+  "type": "module",
   "sideEffects": [
     "**/*.css"
   ],
-  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -201,40 +235,9 @@
     "./mcp-apps/render/styles.css": "./mcp-apps/dist/render/styles.css",
     "./mcp-apps/styles.css": "./mcp-apps/dist/render/styles.css"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "bin": {
-    "a2ui-catalog-extractor": "./a2ui-catalog-extractor/bin/a2ui-catalog-extractor.js",
-    "a2ui-cli": "./cli/bin/cli.js",
-    "genui": "./cli/bin/cli.js",
-    "genui-cli": "./cli/bin/cli.js"
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "index.ts",
-    "dist",
-    "a2ui/dist",
-    "a2ui/styles",
-    "a2ui/*.md",
-    "a2ui/docs/*.md",
-    "a2ui/src/catalog/*.md",
-    "cli/bin",
-    "cli/dist",
-    "cli/README.md",
-    "cli/templates",
-    "a2ui-prompt/dist",
-    "a2ui-prompt/README.md",
-    "a2ui-catalog-extractor/bin",
-    "a2ui-catalog-extractor/dist",
-    "a2ui-catalog-extractor/skills",
-    "a2ui-catalog-extractor/README.md",
-    "lynx-xml/dist",
-    "lynx-xml/README.md",
-    "openui/dist",
-    "openui/styles",
-    "openui/*.md",
-    "openui/docs/*.md",
-    "mcp-apps/dist"
-  ],
   "scripts": {
     "build": "pnpm run clean && tsc6 --project tsconfig.build.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
@@ -270,8 +273,5 @@
   },
   "engines": {
     "node": ">=22"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -26,12 +26,12 @@
     <script src="/main.js" defer></script>
     <script type="module">
     document.querySelector('#target').addEventListener(
-        'layoutchange',
-        (ev) => {
-          console.log('layoutchange', ev.detail);
-          Object.assign(globalThis, { detail: ev.detail });
-        },
-      );
+      'layoutchange',
+      (ev) => {
+        console.log('layoutchange', ev.detail);
+        Object.assign(globalThis, { detail: ev.detail });
+      },
+    );
     </script>
     <x-view class="page">
       <x-overlay-ng

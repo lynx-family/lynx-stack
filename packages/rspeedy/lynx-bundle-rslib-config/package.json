@@ -3,27 +3,20 @@
   "version": "0.7.1",
   "description": "The rsbuild config for building Lynx bundle",
   "keywords": [
-    "Rsbuild",
-    "Rspeedy",
     "Lynx",
-    "Rslib"
+    "Rsbuild",
+    "Rslib",
+    "Rspeedy"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/lynx-bundle-rslib-config"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Hengchang Lu",
     "email": "luhengchang228@gmail.com"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./lib/index.d.ts",
-      "default": "./lib/index.js"
-    }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/lynx-bundle-rslib-config"
   },
   "files": [
     "lib",
@@ -31,6 +24,13 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "test": "rstest"

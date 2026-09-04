@@ -19,15 +19,15 @@
     <x-webview id="webview" src="https://example.com"></x-webview>
     <script>
     const webview = document.getElementById('webview');
-      webview.addEventListener('bindload', (e) => {
-        console.log('bindload fired', e.detail);
-        window._bindload_fired = true;
-      });
-      webview.addEventListener('bindmessage', (e) => {
-        console.log('bindmessage fired', e.detail);
-        window._bindmessage_fired = true;
-        window._bindmessage_data = e.detail;
-      });
+    webview.addEventListener('bindload', (e) => {
+      console.log('bindload fired', e.detail);
+      window._bindload_fired = true;
+    });
+    webview.addEventListener('bindmessage', (e) => {
+      console.log('bindmessage fired', e.detail);
+      window._bindmessage_fired = true;
+      window._bindmessage_data = e.detail;
+    });
     </script>
   </body>
 </html>

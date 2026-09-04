@@ -3,21 +3,27 @@
   "version": "0.2.2",
   "description": "An rsbuild plugin for config Lynx Config defined by @lynx-js/type-config.",
   "keywords": [
-    "rsbuild",
+    "Config",
     "Lynx",
-    "Config"
+    "rsbuild"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/plugin-config"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Yiming Li",
     "email": "yimingli.cs@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/plugin-config"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -25,12 +31,16 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "dist",
-    "CHANGELOG.md",
-    "README.md"
-  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
     "api-extractor": "node scripts/api-extractor.mjs",
     "build": "rslib build",
@@ -70,15 +80,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "./package.json": "./package.json"
-    },
-    "types": "./dist/index.d.ts"
   }
 }

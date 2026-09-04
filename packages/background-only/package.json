@@ -3,16 +3,23 @@
   "version": "0.0.1",
   "description": "This is a marker package to indicate that a module can only be used in the Background Thread.",
   "keywords": [
-    "react",
-    "lynx"
+    "lynx",
+    "react"
   ],
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/background-only"
   },
-  "license": "MIT",
+  "files": [
+    "error.js",
+    "empty.js",
+    "index.d.ts"
+  ],
   "type": "module",
+  "main": "empty.js",
+  "types": "index.d.ts",
   "exports": {
     ".": {
       "lepus": {
@@ -24,12 +31,5 @@
         "default": "./empty.js"
       }
     }
-  },
-  "main": "empty.js",
-  "types": "index.d.ts",
-  "files": [
-    "error.js",
-    "empty.js",
-    "index.d.ts"
-  ]
+  }
 }

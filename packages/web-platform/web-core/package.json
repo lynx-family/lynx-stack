@@ -2,14 +2,27 @@
   "name": "@lynx-js/web-core",
   "version": "0.25.0",
   "description": "The Web Platform of Lynx / Lynx for Web",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-core"
   },
-  "license": "Apache-2.0",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "binary",
+    "css",
+    "!dist/**/*.map",
+    "*.d.ts",
+    "*.js",
+    "LICENSE.txt",
+    "Notice.txt",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "main": "./dist/client/index.js",
   "exports": {
     "./animax": {
       "types": "./dist/animax.d.ts",
@@ -44,32 +57,10 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/client/index.js",
-  "files": [
-    "dist",
-    "binary",
-    "css",
-    "!dist/**/*.map",
-    "*.d.ts",
-    "*.js",
-    "LICENSE.txt",
-    "Notice.txt",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "build": "rsbuild build && rslib build",
     "build:wasm": "node ./scripts/build.js",
     "test": "rstest"
-  },
-  "browserslist": {
-    "production": [
-      "Chrome >= 92",
-      "Safari >= 16.4"
-    ],
-    "development": [
-      "last 1 chrome version"
-    ]
   },
   "dependencies": {
     "@lynx-js/css-serializer": "workspace:*",
@@ -107,5 +98,14 @@
     "tslib": {
       "optional": true
     }
+  },
+  "browserslist": {
+    "production": [
+      "Chrome >= 92",
+      "Safari >= 16.4"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
   }
 }

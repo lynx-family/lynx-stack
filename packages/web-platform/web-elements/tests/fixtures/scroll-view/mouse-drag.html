@@ -147,20 +147,20 @@ LICENSE file in the root directory of this source tree. -->
 
     <script>
     const clickTarget = document.querySelector('#click-target');
-      const clickCount = document.querySelector('#click-count');
-      const documentClickCount = document.querySelector(
-        '#document-click-count',
+    const clickCount = document.querySelector('#click-count');
+    const documentClickCount = document.querySelector(
+      '#document-click-count',
+    );
+    document.addEventListener('click', () => {
+      documentClickCount.textContent = String(
+        Number(documentClickCount.textContent) + 1,
       );
-      document.addEventListener('click', () => {
-        documentClickCount.textContent = String(
-          Number(documentClickCount.textContent) + 1,
-        );
-      }, true);
-      clickTarget.addEventListener('click', () => {
-        clickCount.textContent = String(
-          Number(clickCount.textContent) + 1,
-        );
-      });
+    }, true);
+    clickTarget.addEventListener('click', () => {
+      clickCount.textContent = String(
+        Number(clickCount.textContent) + 1,
+      );
+    });
     </script>
   </body>
 </html>

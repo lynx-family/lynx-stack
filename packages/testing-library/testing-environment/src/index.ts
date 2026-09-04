@@ -180,33 +180,33 @@ function createPolyfills() {
       }
     },
     markTiming: () => {},
-    createJSObjectDestructionObserver: (() => {
+    createJSObjectDestructionObserver: () => {
       return {};
-    }),
+    },
   };
 
   const performance = {
     __functionCallHistory: [] as any[],
-    _generatePipelineOptions: (() => {
+    _generatePipelineOptions: () => {
       performance.__functionCallHistory.push(['_generatePipelineOptions']);
       return {
         pipelineID: 'pipelineID',
         needTimestamps: false,
       };
-    }),
-    _onPipelineStart: ((id) => {
+    },
+    _onPipelineStart: (id) => {
       performance.__functionCallHistory.push(['_onPipelineStart', id]);
-    }),
-    _markTiming: ((id, key) => {
+    },
+    _markTiming: (id, key) => {
       performance.__functionCallHistory.push(['_markTiming', id, key]);
-    }),
-    _bindPipelineIdWithTimingFlag: ((id, flag) => {
+    },
+    _bindPipelineIdWithTimingFlag: (id, flag) => {
       performance.__functionCallHistory.push([
         '_bindPipelineIdWithTimingFlag',
         id,
         flag,
       ]);
-    }),
+    },
   };
 
   // Model the engine's ContextProxy routing
@@ -371,27 +371,27 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   const native = {
     _listeners: {} as Record<string, ((event: any) => void)[]>,
     onTriggerEvent: undefined as ((event: any) => void) | undefined,
-    postMessage: ((_message: any) => {}),
-    addEventListener: ((type: string, listener: (event: any) => void) => {
+    postMessage: (_message: any) => {},
+    addEventListener: (type: string, listener: (event: any) => void) => {
       if (!native._listeners[type]) {
         native._listeners[type] = [];
       }
       native._listeners[type].push(listener);
-    }),
-    removeEventListener: ((type: string, listener: (event: any) => void) => {
+    },
+    removeEventListener: (type: string, listener: (event: any) => void) => {
       if (native._listeners[type]) {
         native._listeners[type] = native._listeners[type].filter(l =>
           l !== listener
         );
       }
-    }),
-    dispatchEvent: ((event: { type: string; data?: any }) => {
+    },
+    dispatchEvent: (event: { type: string; data?: any }) => {
       const listeners = native._listeners[event.type];
       if (listeners) {
         listeners.forEach(listener => listener(event));
       }
       return { canceled: false };
-    }),
+    },
   };
 
   target.lynx = {
@@ -410,8 +410,8 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
     (dispatching on getCoreContext() from the main thread is a self-loop
     and never reaches the background thread, same as the real engine)
     */
-    getCoreContext: (() => mainThreadContexts.CoreContext),
-    getJSContext: (() => mainThreadContexts.JsContext),
+    getCoreContext: () => mainThreadContexts.CoreContext,
+    getJSContext: () => mainThreadContexts.JsContext,
     reportError: (e: Error) => {
       throw e;
     },
@@ -522,7 +522,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     getApp: () => target.lynxCoreInject.tt,
     getNativeApp: () => app,
     performance,
-    createSelectorQuery: (() => {
+    createSelectorQuery: () => {
       return {
         selectUniqueID: function(uniqueId: number) {
           return new NodesRef({}, {
@@ -549,7 +549,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
           });
         },
       };
-    }),
+    },
     /*
     receive events dispatched from the main thread:
     lynx.getCoreContext().addEventListener("message", (e: Event) => {
@@ -563,8 +563,8 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     (dispatching on getJSContext() from the background thread is a self-loop
     and never reaches the main thread, same as the real engine)
     */
-    getCoreContext: (() => backgroundThreadContexts.CoreContext),
-    getJSContext: (() => backgroundThreadContexts.JsContext),
+    getCoreContext: () => backgroundThreadContexts.CoreContext,
+    getJSContext: () => backgroundThreadContexts.JsContext,
     getJSModule: (moduleName) => {
       if (moduleName === 'GlobalEventEmitter') {
         return globalEventEmitter;

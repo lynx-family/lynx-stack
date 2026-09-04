@@ -17,4 +17,4 @@ swc_core = { workspace = true, features = ["ecma_parser", "ecma_visit", "testing
 swc_plugins_shared = { path = "../swc_plugins_shared" }
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(swc_ast_unknown)"] }

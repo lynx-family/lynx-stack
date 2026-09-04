@@ -3,12 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "description": "TypeDoc-driven A2UI catalog extractor for TypeScript interfaces.",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/genui/a2ui-catalog-extractor"
   },
-  "license": "Apache-2.0",
+  "bin": {
+    "a2ui-catalog-extractor": "./bin/a2ui-catalog-extractor.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "skills",
+    "README.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -22,15 +31,6 @@
     "./skill": "./skills/a2ui-catalog-extractor/SKILL.md",
     "./package.json": "./package.json"
   },
-  "bin": {
-    "a2ui-catalog-extractor": "./bin/a2ui-catalog-extractor.js"
-  },
-  "files": [
-    "bin",
-    "dist",
-    "skills",
-    "README.md"
-  ],
   "scripts": {
     "build": "tsc6 --project tsconfig.build.json",
     "build:api": "tsc6 --project tsconfig.build.json",

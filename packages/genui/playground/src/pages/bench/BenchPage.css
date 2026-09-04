@@ -1411,9 +1411,9 @@
   grid-template-columns:
     minmax(150px, 0.7fr)
     repeat(
-    var(--bench-screenshot-scenario-count, 1),
-    minmax(220px, 1fr)
-  );
+      var(--bench-screenshot-scenario-count, 1),
+      minmax(220px, 1fr)
+    );
   min-width: 100%;
 }
 

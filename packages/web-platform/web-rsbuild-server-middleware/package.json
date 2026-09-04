@@ -4,15 +4,12 @@
   "private": false,
   "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
   "keywords": [],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-rsbuild-server-middleware"
   },
-  "license": "Apache-2.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
@@ -22,6 +19,9 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "type": "module",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rsbuild build",
     "test": "rstest"

@@ -3,11 +3,17 @@
 </p>
 
 <p>
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/@lynx-js/rspeedy">
+  <a
+    aria-label="NPM version"
+    href="https://www.npmjs.com/package/@lynx-js/rspeedy"
+  >
     <img alt="" src="https://img.shields.io/npm/v/@lynx-js/rspeedy?logo=npm">
   </a>
   <a aria-label="License" href="https://www.npmjs.com/package/@lynx-js/rspeedy">
-    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="license" />
+    <img
+      src="https://img.shields.io/badge/License-Apache--2.0-blue"
+      alt="license"
+    />
   </a>
 </p>
 

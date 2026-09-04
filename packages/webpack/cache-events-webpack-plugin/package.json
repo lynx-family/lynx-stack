@@ -3,20 +3,27 @@
   "version": "0.2.0",
   "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
   "keywords": [
-    "webpack",
-    "Lynx"
+    "Lynx",
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/webpack/cache-events-webpack-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Yiming Li",
     "email": "yimingli.cs@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/webpack/cache-events-webpack-plugin"
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -24,13 +31,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib",
-    "!lib/**/*.js.map",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "test": "rstest"

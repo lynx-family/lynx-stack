@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
+  "type": "module",
   "sideEffects": [
     "**/*.css"
   ],
-  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     "./styles/theme.css": "./styles/theme.css",
     "./styles/material-icons.css": "./styles/material-icons.css",
@@ -152,8 +154,6 @@
       "default": "./dist/functions/index.js"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc6 --project tsconfig.build.json && npm run build:catalog",
     "build:api": "tsc6 --project tsconfig.build.json",

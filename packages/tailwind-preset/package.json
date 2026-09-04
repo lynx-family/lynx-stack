@@ -12,7 +12,16 @@
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/tailwind-preset"
   },
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "!dist/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "main": "./dist/lynx.js",
+  "types": "./dist/lynx.d.ts",
   "exports": {
     ".": {
       "types": "./dist/lynx.d.ts",
@@ -21,15 +30,6 @@
       "default": "./dist/lynx.js"
     }
   },
-  "main": "./dist/lynx.js",
-  "types": "./dist/lynx.d.ts",
-  "files": [
-    "dist",
-    "!dist/__tests__",
-    "!dist/**/*.js.map",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "build": "rslib build",
     "test": "vitest",

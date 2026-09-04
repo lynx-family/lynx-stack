@@ -13,14 +13,14 @@
     </x-view>
     <script>
     const el = document.getElementById('markdown');
-      el.addEventListener('binddrawEnd', () => (window._drawEnd = true));
-      el.setAttribute(
-        'content',
-        `# Title\n\nthis is **bold** and *i`,
-      );
-      el.setAttribute('animation-type', 'typewriter');
-      el.setAttribute('animation-velocity', '20');
-      el.setAttribute('content-complete', 'false');
+    el.addEventListener('binddrawEnd', () => (window._drawEnd = true));
+    el.setAttribute(
+      'content',
+      `# Title\n\nthis is **bold** and *i`,
+    );
+    el.setAttribute('animation-type', 'typewriter');
+    el.setAttribute('animation-velocity', '20');
+    el.setAttribute('content-complete', 'false');
     </script>
   </body>
 </html>

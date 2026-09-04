@@ -58,6 +58,9 @@ minimumReleaseAgeExclude:
   - "@rstackjs/create-toolkit"
   # Changesets v3 packages were released as one coordinated set.
   - "@changesets/*"
+  # dprint toolchain — trusted, upgraded deliberately.
+  - "dprint"
+  - "@dprint/*"
 minimumReleaseAgeExcludePrune: true
 # Some registry metadata omits the `time` field. Skip only those packages;
 # otherwise fail rather than falling back to a release younger than three days.

@@ -1,16 +1,12 @@
 {
   "name": "@lynx-js/css-serializer",
   "version": "0.1.9",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/tools/css-serializer"
   },
-  "license": "Apache-2.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
@@ -19,6 +15,10 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "vitest"
   },

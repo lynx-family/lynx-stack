@@ -3,18 +3,24 @@
   "version": "0.2.1",
   "description": "An rsbuild plugin that emits Lynx debug metadata (debug-metadata.json) alongside template builds.",
   "keywords": [
-    "rsbuild",
     "Lynx",
     "debug",
+    "rsbuild",
     "sourcemap"
   ],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/rspeedy/plugin-debug-metadata"
   },
-  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -22,12 +28,17 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "dist",
-    "CHANGELOG.md",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
@@ -52,16 +63,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      },
-      "./package.json": "./package.json"
-    },
-    "types": "./dist/index.d.ts"
   }
 }

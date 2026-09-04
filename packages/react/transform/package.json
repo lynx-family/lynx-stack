@@ -2,7 +2,17 @@
   "name": "@lynx-js/react-transform",
   "version": "0.2.0",
   "private": true,
+  "files": [
+    "index.d.ts",
+    "main.js",
+    "main.cjs",
+    "cjs",
+    "dist",
+    "!dist/*.node"
+  ],
   "type": "module",
+  "main": "./main.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -15,16 +25,6 @@
       }
     }
   },
-  "main": "./main.js",
-  "types": "./index.d.ts",
-  "files": [
-    "index.d.ts",
-    "main.js",
-    "main.cjs",
-    "cjs",
-    "dist",
-    "!dist/*.node"
-  ],
   "scripts": {
     "bench": "vitest bench",
     "build:debug": "napi build --platform --js index.cjs",

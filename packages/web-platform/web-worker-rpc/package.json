@@ -4,22 +4,12 @@
   "private": false,
   "description": "",
   "keywords": [],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/web-platform/web-worker-rpc"
   },
-  "license": "Apache-2.0",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "@lynx-js/source-field": "./src/index.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.js.map",
@@ -28,6 +18,16 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "type": "module",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "@lynx-js/source-field": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "test": "rstest"
   },

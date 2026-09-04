@@ -3,24 +3,22 @@
   "version": "0.16.5",
   "description": "Create Rspeedy-powered ReactLynx apps with one command",
   "keywords": [
-    "webpack",
+    "Lynx",
+    "ReactLynx",
     "rspack",
     "rspeedy",
-    "Lynx",
-    "ReactLynx"
+    "webpack"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/create-rspeedy"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Qingyu Wang",
     "email": "colinwang.0616@gmail.com"
   },
-  "type": "module",
-  "exports": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/create-rspeedy"
+  },
   "bin": {
     "create-rspeedy": "./dist/index.js"
   },
@@ -30,6 +28,8 @@
     "CHANGELOG.md",
     "README.md"
   ],
+  "type": "module",
+  "exports": null,
   "scripts": {
     "build": "rslib build",
     "test": "vitest"

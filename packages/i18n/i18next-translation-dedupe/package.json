@@ -5,16 +5,23 @@
   "keywords": [
     "Lynx",
     "i18next",
-    "rspeedy",
-    "rsbuild"
+    "rsbuild",
+    "rspeedy"
   ],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/i18n/i18next-translation-dedupe"
   },
-  "license": "Apache-2.0",
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "type": "module",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -22,13 +29,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib",
-    "!lib/**/*.js.map",
-    "CHANGELOG.md",
-    "README.md"
-  ],
   "scripts": {
     "test": "vitest run"
   },

@@ -7,17 +7,34 @@
     "ReactLynx",
     "testing"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/testing-library/test-environment"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "Yiming Li",
     "email": "yimingli.cs@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/testing-library/test-environment"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "env/vitest": [
+        "./dist/env/vitest/index.d.ts"
+      ],
+      "env/rstest": [
+        "./dist/env/rstest/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -38,23 +55,6 @@
       "default": "./dist/env/rstest/index.js"
     }
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "env/vitest": [
-        "./dist/env/vitest/index.d.ts"
-      ],
-      "env/rstest": [
-        "./dist/env/rstest/index.d.ts"
-      ]
-    }
-  },
-  "files": [
-    "dist",
-    "CHANGELOG.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",

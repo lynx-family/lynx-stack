@@ -3,23 +3,15 @@
   "version": "0.4.1",
   "description": "Lynx library code generator",
   "keywords": [
-    "Lynx",
     "Autolink",
+    "Lynx",
     "codegen"
   ],
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/lynx/autolink-codegen"
-  },
-  "license": "Apache-2.0",
-  "sideEffects": false,
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   },
   "bin": {
     "lynx-autolink-codegen": "./dist/cli.js"
@@ -29,6 +21,14 @@
     "README.md",
     "dist"
   ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",

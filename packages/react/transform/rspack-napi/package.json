@@ -5,11 +5,11 @@
   "description": "Rspack transform NAPI with swc-plugin-reactlynx & swc-plugin-reactlynx-compat",
   "keywords": [
     "lynx",
-    "react",
-    "transform",
-    "rspack",
     "napi",
-    "swc"
+    "react",
+    "rspack",
+    "swc",
+    "transform"
   ],
   "type": "module",
   "main": "lib/index.js",

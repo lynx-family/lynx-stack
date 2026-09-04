@@ -3,8 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
 
-import { sortPackageJson } from 'sort-package-json';
-
 const REPOSITORY_TYPE = 'git';
 const REPOSITORY_URL = 'https://github.com/lynx-family/lynx-stack.git';
 
@@ -44,13 +42,13 @@ export default function createLynxStackMetaUpdateOptions(workspaceDir) {
   return {
     'package.json': (manifest, options) => {
       if (manifest?.private === true || manifest?.repository != null) {
-        return sortPackageJson(manifest);
+        return manifest;
       }
 
-      return sortPackageJson({
+      return {
         ...manifest,
         repository: createRepository(options, workspaceDir),
-      });
+      };
     },
   };
 }

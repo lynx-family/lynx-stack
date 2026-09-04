@@ -29,23 +29,23 @@
     </x-view>
     <script>
     const content =
-        `this is [link](https://example.com).\n\ninline code: \`code\`.`;
-      const style = {
-        normalText: {
-          fontSize: 20,
-        },
-        link: {
-          color: 'ff0000',
-          lineHeight: 24,
-        },
-        inlineCode: {
-          color: '0000ff',
-          backgroundColor: 'eeeeee',
-        },
-      };
-      const markdown = document.getElementById('markdown');
-      markdown.setAttribute('content', content);
-      markdown.setAttribute('markdown-style', JSON.stringify(style));
+      `this is [link](https://example.com).\n\ninline code: \`code\`.`;
+    const style = {
+      normalText: {
+        fontSize: 20,
+      },
+      link: {
+        color: 'ff0000',
+        lineHeight: 24,
+      },
+      inlineCode: {
+        color: '0000ff',
+        backgroundColor: 'eeeeee',
+      },
+    };
+    const markdown = document.getElementById('markdown');
+    markdown.setAttribute('content', content);
+    markdown.setAttribute('markdown-style', JSON.stringify(style));
     </script>
   </body>
 </html>

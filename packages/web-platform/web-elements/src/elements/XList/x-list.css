@@ -119,8 +119,7 @@ x-list[sticky="true"] > lynx-wrapper > list-item[sticky-bottom] {
 
 x-list[sticky="true"][scroll-orientation="horizontal"] > list-item[sticky-top],
 x-list[sticky="true"][scroll-orientation="horizontal"]
-  > lynx-wrapper
-  > list-item[sticky-top] {
+  > lynx-wrapper > list-item[sticky-top] {
   top: unset;
   left: var(--list-item-sticky-offset);
 }
@@ -128,8 +127,7 @@ x-list[sticky="true"][scroll-orientation="horizontal"]
 x-list[sticky="true"][scroll-orientation="horizontal"]
   > list-item[sticky-bottom],
 x-list[sticky="true"][scroll-orientation="horizontal"]
-  > lynx-wrapper
-  > list-item[sticky-bottom] {
+  > lynx-wrapper > list-item[sticky-bottom] {
   bottom: unset;
   right: var(--list-item-sticky-offset);
 }

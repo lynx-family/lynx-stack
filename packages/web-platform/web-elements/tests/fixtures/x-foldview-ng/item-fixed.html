@@ -32,14 +32,14 @@ LICENSE file in the root directory of this source tree. -->
     <script src="/main.js" defer></script>
     <script type="module">
     document.querySelector('x-foldview-ng').addEventListener(
-        'scroll',
-        e => {
-          if (document.querySelector('x-foldview-ng').scrollTop === 200) {
-            document.querySelector('#target').style.position = 'fixed';
-            document.querySelector('#target').style.bottom = '0';
-          }
-        },
-      );
+      'scroll',
+      e => {
+        if (document.querySelector('x-foldview-ng').scrollTop === 200) {
+          document.querySelector('#target').style.position = 'fixed';
+          document.querySelector('#target').style.bottom = '0';
+        }
+      },
+    );
     </script>
     <x-view
       style="height: 100vh; width: 100vw; display: flex; --lynx-display: flex; --lynx-display-toggle: var(--lynx-display-flex); flex-direction: row"

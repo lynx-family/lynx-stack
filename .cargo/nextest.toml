@@ -92,7 +92,6 @@ leak-timeout = "100ms"
 # However sometimes extra non-standard files are required.
 # To address this, "archive.include" specifies additional paths that will be included in the archive.
 archive.include = [
-
   # Examples:
   #
   # { path = "application-data", relative-to = "target" },

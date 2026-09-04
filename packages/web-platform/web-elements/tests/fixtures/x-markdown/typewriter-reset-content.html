@@ -13,48 +13,48 @@
     </x-view>
     <script>
     const el = document.getElementById('markdown');
-      const getRootText = () =>
-        el.shadowRoot?.querySelector('#markdown-root')?.textContent ?? '';
+    const getRootText = () =>
+      el.shadowRoot?.querySelector('#markdown-root')?.textContent ?? '';
 
-      window._newAnimationSteps = [];
-      window._reassigned = false;
-      window._textAfterReassign = null;
+    window._newAnimationSteps = [];
+    window._reassigned = false;
+    window._textAfterReassign = null;
 
-      let didResetContent = false;
+    let didResetContent = false;
 
-      el.addEventListener('bindanimationStep', (event) => {
-        if (window._reassigned) {
-          window._newAnimationSteps.push(event.detail.animationStep);
-        }
+    el.addEventListener('bindanimationStep', (event) => {
+      if (window._reassigned) {
+        window._newAnimationSteps.push(event.detail.animationStep);
+      }
 
-        if (didResetContent || event.detail.animationStep < 3) {
-          return;
-        }
+      if (didResetContent || event.detail.animationStep < 3) {
+        return;
+      }
 
-        didResetContent = true;
-        el.setAttribute('content', '');
+      didResetContent = true;
+      el.setAttribute('content', '');
 
-        setTimeout(() => {
-          el.setAttribute('content', 'zebra');
-          window._reassigned = true;
-          queueMicrotask(() => {
-            window._textAfterReassign = getRootText();
-          });
-        }, 0);
-      });
+      setTimeout(() => {
+        el.setAttribute('content', 'zebra');
+        window._reassigned = true;
+        queueMicrotask(() => {
+          window._textAfterReassign = getRootText();
+        });
+      }, 0);
+    });
 
-      el.setAttribute('content', 'initial typing content');
-      el.setAttribute(
-        'markdown-style',
-        JSON.stringify({
-          typewriterCursor: {
-            customCursor: 'none',
-          },
-        }),
-      );
-      el.setAttribute('animation-type', 'typewriter');
-      el.setAttribute('animation-velocity', '20');
-      el.setAttribute('content-complete', 'true');
+    el.setAttribute('content', 'initial typing content');
+    el.setAttribute(
+      'markdown-style',
+      JSON.stringify({
+        typewriterCursor: {
+          customCursor: 'none',
+        },
+      }),
+    );
+    el.setAttribute('animation-type', 'typewriter');
+    el.setAttribute('animation-velocity', '20');
+    el.setAttribute('content-complete', 'true');
     </script>
   </body>
 </html>

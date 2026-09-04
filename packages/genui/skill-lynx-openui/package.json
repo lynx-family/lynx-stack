@@ -2,22 +2,22 @@
   "name": "@lynx-js/skill-lynx-openui",
   "version": "0.0.2",
   "description": "Generate Lynx OpenUI v0.5 programs for @lynx-js/genui.",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/genui/skill-lynx-openui"
   },
-  "license": "Apache-2.0",
-  "type": "module",
   "files": [
     "SKILL.md",
     "agents",
     "references"
   ],
-  "engines": {
-    "node": ">=18"
-  },
+  "type": "module",
   "publishConfig": {
     "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

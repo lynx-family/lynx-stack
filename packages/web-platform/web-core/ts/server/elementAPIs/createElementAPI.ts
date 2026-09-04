@@ -496,11 +496,11 @@ export function createElementAPI(
 
       __ElementAnimate: () => {},
 
-      __FlushElementTree: (() => {
+      __FlushElementTree: () => {
         if (pageElementId !== undefined) {
           mtsBinding.ssrResult = wasmContext.generate_html(pageElementId);
         }
-      }),
+      },
 
       __SetID: ((element: HTMLElement, id: string | null) => {
         wasmContext.set_attribute(

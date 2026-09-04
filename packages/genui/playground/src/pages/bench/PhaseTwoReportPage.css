@@ -22,10 +22,18 @@
     var(--phase-report-paper)
   );
   --phase-report-data:
-    var(--geist-mono), "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    var(--geist-mono),
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
   --phase-report-body:
-    var(--bench-font), -apple-system, BlinkMacSystemFont, "PingFang SC",
-    "Microsoft YaHei", sans-serif;
+    var(--bench-font),
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
   --phase-report-gutter: clamp(20px, 4vw, 56px);
   --phase-report-content: 1120px;
 
@@ -854,8 +862,12 @@
   box-shadow: 0 18px 44px rgb(0 0 0 / 16%), 0 2px 8px rgb(0 0 0 / 8%);
   color: var(--geist-foreground, #171717);
   font-family:
-    var(--bench-font), -apple-system, BlinkMacSystemFont, "PingFang SC",
-    "Microsoft YaHei", sans-serif;
+    var(--bench-font),
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
   transform-origin: var(--radix-select-content-transform-origin);
   animation: phaseTwoReportSelectEnter 120ms ease-out;
 }

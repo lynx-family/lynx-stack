@@ -7,7 +7,88 @@
     "url": "https://github.com/lynx-family/lynx-stack.git",
     "directory": "packages/react"
   },
+  "files": [
+    "components",
+    "refresh/*",
+    "runtime",
+    "transform",
+    "types",
+    "docs",
+    "testing-library",
+    "CHANGELOG.md",
+    "internal.js",
+    "README.md",
+    "README.zh.md"
+  ],
   "type": "module",
+  "types": "./types/react.d.ts",
+  "typesVersions": {
+    "*": {
+      "compat": [
+        "./runtime/compat/index.d.ts"
+      ],
+      "experimental/lazy/import": [
+        "./runtime/lazy/import.d.ts"
+      ],
+      "hooks": [
+        "./runtime/lib/core/hooks/react.d.ts"
+      ],
+      "lepus/hooks": [
+        "./runtime/lib/core/hooks/react.d.ts"
+      ],
+      "internal": [
+        "./runtime/lib/internal.d.ts"
+      ],
+      "internal/document": [
+        "./runtime/lib/document.d.ts"
+      ],
+      "element-template": [
+        "./runtime/lib/element-template/index.d.ts"
+      ],
+      "element-template/internal": [
+        "./runtime/lib/element-template/internal.d.ts"
+      ],
+      "element-template/jsx-runtime": [
+        "./runtime/lib/element-template/jsx-runtime/index.d.ts"
+      ],
+      "element-template/jsx-dev-runtime": [
+        "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts"
+      ],
+      "jsx-runtime": [
+        "./runtime/jsx-runtime/index.d.ts"
+      ],
+      "jsx-dev-runtime": [
+        "./runtime/jsx-dev-runtime/index.d.ts"
+      ],
+      "lepus/jsx-runtime": [
+        "./runtime/jsx-runtime/index.d.ts"
+      ],
+      "lepus/jsx-dev-runtime": [
+        "./runtime/jsx-dev-runtime/index.d.ts"
+      ],
+      "lepus": [
+        "./runtime/lepus/index.d.ts"
+      ],
+      "refresh": [
+        "./refresh/src/index.ts"
+      ],
+      "runtime-components": [
+        "./components/lib/index.d.ts"
+      ],
+      "worklet-runtime": [
+        "./runtime/lib/worklet-runtime/index.d.ts"
+      ],
+      "worklet-dev-runtime": [
+        "./runtime/lib/worklet-runtime/index.d.ts"
+      ],
+      "worklet-runtime/bindings": [
+        "./runtime/lib/worklet-runtime/bindings/index.d.ts"
+      ],
+      "legacy-react-runtime": [
+        "./runtime/lib/core/compat/legacy-react-runtime.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./types/react.d.ts",
@@ -138,87 +219,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./types/react.d.ts",
-  "typesVersions": {
-    "*": {
-      "compat": [
-        "./runtime/compat/index.d.ts"
-      ],
-      "experimental/lazy/import": [
-        "./runtime/lazy/import.d.ts"
-      ],
-      "hooks": [
-        "./runtime/lib/core/hooks/react.d.ts"
-      ],
-      "lepus/hooks": [
-        "./runtime/lib/core/hooks/react.d.ts"
-      ],
-      "internal": [
-        "./runtime/lib/internal.d.ts"
-      ],
-      "internal/document": [
-        "./runtime/lib/document.d.ts"
-      ],
-      "element-template": [
-        "./runtime/lib/element-template/index.d.ts"
-      ],
-      "element-template/internal": [
-        "./runtime/lib/element-template/internal.d.ts"
-      ],
-      "element-template/jsx-runtime": [
-        "./runtime/lib/element-template/jsx-runtime/index.d.ts"
-      ],
-      "element-template/jsx-dev-runtime": [
-        "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts"
-      ],
-      "jsx-runtime": [
-        "./runtime/jsx-runtime/index.d.ts"
-      ],
-      "jsx-dev-runtime": [
-        "./runtime/jsx-dev-runtime/index.d.ts"
-      ],
-      "lepus/jsx-runtime": [
-        "./runtime/jsx-runtime/index.d.ts"
-      ],
-      "lepus/jsx-dev-runtime": [
-        "./runtime/jsx-dev-runtime/index.d.ts"
-      ],
-      "lepus": [
-        "./runtime/lepus/index.d.ts"
-      ],
-      "refresh": [
-        "./refresh/src/index.ts"
-      ],
-      "runtime-components": [
-        "./components/lib/index.d.ts"
-      ],
-      "worklet-runtime": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
-      ],
-      "worklet-dev-runtime": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
-      ],
-      "worklet-runtime/bindings": [
-        "./runtime/lib/worklet-runtime/bindings/index.d.ts"
-      ],
-      "legacy-react-runtime": [
-        "./runtime/lib/core/compat/legacy-react-runtime.d.ts"
-      ]
-    }
-  },
-  "files": [
-    "components",
-    "refresh/*",
-    "runtime",
-    "transform",
-    "types",
-    "docs",
-    "testing-library",
-    "CHANGELOG.md",
-    "internal.js",
-    "README.md",
-    "README.zh.md"
-  ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build"

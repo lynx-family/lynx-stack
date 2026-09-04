@@ -103,22 +103,18 @@
   [lynx-computed-display="linear"][lynx-linear-orientation="vertical"] > *,
   [lynx-computed-display="linear"][lynx-linear-orientation="vertical-reverse"],
   [lynx-computed-display="linear"][lynx-linear-orientation="vertical"]
-    > lynx-wrapper
-    > *,
+    > lynx-wrapper > *,
   [lynx-computed-display="linear"][lynx-linear-orientation="vertical-reverse"]
-    > lynx-wrapper
-    > * {
+    > lynx-wrapper > * {
     align-self: var(--align-self-column);
   }
 
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal"] > *,
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal-reverse"],
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal"]
-    > lynx-wrapper
-    > *,
+    > lynx-wrapper > *,
   [lynx-computed-display="linear"][lynx-linear-orientation="horizontal-reverse"]
-    > lynx-wrapper
-    > * {
+    > lynx-wrapper > * {
     align-self: var(--align-self-row);
   }
 }

@@ -26,15 +26,15 @@
     <script src="/main.js" defer></script>
     <script type="module">
     document.querySelector('#target').addEventListener(
-        'error',
-        (ev) => {
-          ev.target.style.setProperty('background-color', 'green');
-        },
-      );
-      document.querySelector('#target').setAttribute(
-        'src',
-        '/unknown/path',
-      );
+      'error',
+      (ev) => {
+        ev.target.style.setProperty('background-color', 'green');
+      },
+    );
+    document.querySelector('#target').setAttribute(
+      'src',
+      '/unknown/path',
+    );
     </script>
     <x-view class="page">
       <x-image

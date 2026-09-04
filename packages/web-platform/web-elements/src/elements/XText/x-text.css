@@ -171,8 +171,7 @@ x-text[text-selection] > lynx-wrapper > inline-truncation {
 
 x-text[x-text-clipped] > [x-text-clipped]:not(inline-truncation),
 x-text[x-text-clipped]
-  > lynx-wrapper
-  > [x-text-clipped]:not(inline-truncation) {
+  > lynx-wrapper > [x-text-clipped]:not(inline-truncation) {
   display: none !important;
 }
 

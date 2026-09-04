@@ -1,17 +1,32 @@
 <p align="center">
   <a aria-label="ReactLynx banner" href="https://lynxjs.org/react/">
-    <img alt="@lynx-js/react" src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/react-lynx-banner.png" />
+    <img
+      alt="@lynx-js/react"
+      src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/react-lynx-banner.png"
+    />
   </a>
 </p>
 
 # ReactLynx
 
 <p>
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/@lynx-js/react">
-    <img alt="@lynx-js/react" src="https://img.shields.io/npm/v/@lynx-js/react?logo=npm" />
+  <a
+    aria-label="NPM version"
+    href="https://www.npmjs.com/package/@lynx-js/react"
+  >
+    <img
+      alt="@lynx-js/react"
+      src="https://img.shields.io/npm/v/@lynx-js/react?logo=npm"
+    />
   </a>
-  <a aria-label="License" href="https://github.com/lynx-family/lynx-stack/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="license" />
+  <a
+    aria-label="License"
+    href="https://github.com/lynx-family/lynx-stack/blob/main/LICENSE"
+  >
+    <img
+      src="https://img.shields.io/badge/License-Apache--2.0-blue"
+      alt="license"
+    />
   </a>
 </p>
 
