@@ -173,10 +173,13 @@ four source-specific routes:
 - `POST /screenshot/template/url` fetches a compiled `template.js` from the
   HTTP(S) URL in its `text/plain` body.
 
-Every screenshot route requires the same `entry` query parameter. It may be a
-relative staged path such as `pages/index.lynxml` or the equivalent
-`zip:///pages/index.lynxml` URL. The server does not expose the former generic
-`POST /screenshot` route.
+Every screenshot route uses the same query parameters. `entry` is required and
+may be a relative staged path such as `pages/index.lynxml` or the equivalent
+`zip:///pages/index.lynxml` URL. Optional `width` and `height` parameters set the
+viewport dimensions; omitted values default to `800` and `600`, respectively.
+Both dimensions must be between 1 and 8192, and `width × height` must not exceed
+2,621,440 pixels. The server does not expose the former generic screenshot
+route, `POST /screenshot`.
 
 The server does not allow direct `file://`, `http://`, or `https://` page
 navigation. `POST /judge` rejects those URL forms with HTTP `403` before model
@@ -189,7 +192,7 @@ the request body. The endpoint accepts `application/xml`, `text/xml`, and
 `Cache-Control: no-store`:
 
 ```bash
-curl --request POST 'http://127.0.0.1:8080/screenshot/lynxml?entry=pages%2Findex.lynxml' \
+curl --request POST 'http://127.0.0.1:8080/screenshot/lynxml?entry=pages%2Findex.lynxml&width=375&height=812' \
   --header 'content-type: application/xml; charset=utf-8' \
   --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
   --output screenshot.jpg
