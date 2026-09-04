@@ -1,0 +1,1 @@
+import '@lynx-js/animax';
