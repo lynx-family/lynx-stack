@@ -1218,16 +1218,37 @@ describe('debug metadata', () => {
       rstest.unstubAllEnvs()
     }
 
-    expect(
-      fs.existsSync(
-        path.join(
-          distRoot,
-          '.lynx',
-          'utils-debug-metadata',
-          'debug-metadata.json',
-        ),
-      ),
-    ).toBe(true)
+    const metadataPath = path.join(
+      distRoot,
+      '.lynx',
+      'utils-debug-metadata',
+      'debug-metadata.json',
+    )
+    expect(fs.existsSync(metadataPath)).toBe(true)
+
+    // A devtool looks an artifact up by the name a stack frame carries, which
+    // for a bundle assembled from custom sections is the section name.
+    const metadata = JSON.parse(
+      await fs.promises.readFile(metadataPath, 'utf-8'),
+    ) as {
+      artifacts: {
+        kind: string
+        filename: string
+        path: string
+        tasmSection?: string[]
+      }[]
+    }
+    const mainThreadArtifact = metadata.artifacts.find(a =>
+      a.kind === 'main-thread'
+    )
+    expect(mainThreadArtifact?.tasmSection).toEqual([
+      'customSections',
+      'utils__main-thread',
+    ])
+    expect(mainThreadArtifact?.filename).toBe('utils__main-thread')
+    expect(mainThreadArtifact?.path).toBe(
+      '.lynx/utils-debug-metadata/utils__main-thread.js',
+    )
 
     // The release banner has to sit inside the module wrapper, which is what
     // `lynx.loadScript` takes the section's value from.

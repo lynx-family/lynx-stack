@@ -199,6 +199,10 @@ export interface Artifact {
    * - `css` — extracted CSS chunk (lives in the `css` section).
    */
   kind: 'main-thread' | 'background' | 'css';
+  /**
+   * The name this artifact is addressed by: the emitted file's basename, or
+   * the section name when the bundle carries it as a custom section.
+   */
   filename: string;
   /**
    * Bundler-relative path of the emitted asset itself (e.g.

@@ -275,7 +275,13 @@ export class LynxDebugMetadataPluginImpl {
 
           for (const artifact of metadata.artifacts) {
             const section = readTasmSection(compilation, artifact.path)
-            if (section) artifact.tasmSection = section
+            if (!section) continue
+            artifact.tasmSection = section
+            // A custom section is addressed by its own name, which is the name
+            // a stack frame carries, not the file it was assembled from.
+            if (section[0] === 'customSections' && section[1] !== undefined) {
+              artifact.filename = section[1]
+            }
           }
 
           // The artifact already names the script, so every unit keeps the
