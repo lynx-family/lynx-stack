@@ -6,11 +6,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { logger } from '@rsbuild/core'
-import type {
-  EnvironmentContext,
-  RsbuildConfig,
-  RsbuildPlugin,
-} from '@rsbuild/core'
+import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 import color from 'picocolors'
 
 import { getLynxConfig } from '../config.js'
@@ -42,42 +38,6 @@ export function pluginDev(): RsbuildPlugin {
         return (entry: string, platform: string): string =>
           lynxConfig.resolveBundleFilename({ entryName: entry, platform })
       }
-
-      function appendBundleRoutes({
-        routes,
-        environments,
-      }: {
-        routes: { entryName: string, pathname: string }[]
-        environments: Record<string, EnvironmentContext>
-      }) {
-        const resolveName = getResolveBundleName()
-        for (
-          const [environmentName, environmentContext] of Object.entries(
-            environments,
-          )
-        ) {
-          for (const entryName of Object.keys(environmentContext.entry)) {
-            routes.push({
-              entryName,
-              pathname: `/${resolveName(entryName, environmentName)}`,
-            })
-          }
-        }
-      }
-
-      // Rsbuild's getRoutes() only includes environments that produce HTML
-      // files (htmlPaths). Lynx environments produce .bundle files instead,
-      // so we populate dev/preview routes with the correct bundle pathnames
-      // before any user plugin runs, using order: 'pre'.
-      api.onAfterStartDevServer({
-        handler: appendBundleRoutes,
-        order: 'pre',
-      })
-
-      api.onAfterStartPreviewServer({
-        handler: appendBundleRoutes,
-        order: 'pre',
-      })
 
       api.onBeforeStartDevServer(async ({ environments, server }) => {
         if (environments['web']) {
@@ -199,6 +159,13 @@ export function pluginDev(): RsbuildPlugin {
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (param) => {
+                // Rsbuild renders one line per (url, route) pair as
+                // `url + route.pathname`. Nothing here writes to `routes`, and
+                // a Lynx build emits no HTML for `getRoutes` to collect, so the
+                // bundle path is resolved once — here. Should an environment
+                // emit HTML after all, Rsbuild has routes of its own to append
+                // and only the base URL belongs here.
+                const routesSupplyPathname = param.routes.length > 0
                 const finalUrls: { label: string, url: string }[] = []
                 for (
                   const [environmentName, entries] of entriesByEnvironment
@@ -216,6 +183,15 @@ export function pluginDev(): RsbuildPlugin {
                       ? assetPrefix
                       : `http://${hostname}:<port>/`
                   ).replaceAll('<port>', String(param.port))
+
+                  if (routesSupplyPathname) {
+                    finalUrls.push({
+                      label: environmentName,
+                      url: baseForUrls,
+                    })
+                    continue
+                  }
+
                   for (const entry of entries) {
                     const pathname = resolveName(entry, environmentName)
                     finalUrls.push({

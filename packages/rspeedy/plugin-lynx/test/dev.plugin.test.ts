@@ -26,6 +26,49 @@ function createDevStubRsbuild(
   )
 }
 
+interface PrintedUrl {
+  url: string
+  label?: string | undefined
+}
+
+interface PrintedUrls {
+  urls: PrintedUrl[]
+  routes: { entryName: string, pathname: string }[]
+}
+
+function capturePrintUrls(
+  rsbuild: Awaited<ReturnType<typeof createStubRsbuild>>,
+): PrintedUrls {
+  const printed: PrintedUrls = { urls: [], routes: [] }
+
+  rsbuild.modifyRsbuildConfig({
+    handler: (config, { mergeRsbuildConfig }) => {
+      if (typeof config.server?.printUrls !== 'function') {
+        return config
+      }
+      const originalPrintUrls = config.server.printUrls
+      return mergeRsbuildConfig(config, {
+        server: {
+          printUrls: (param) => {
+            printed.routes = param.routes.map(({ entryName, pathname }) => ({
+              entryName,
+              pathname,
+            }))
+            const result = originalPrintUrls(param)
+            printed.urls = (result ?? []).map(entry =>
+              typeof entry === 'string' ? { url: entry } : entry
+            )
+            return result
+          },
+        },
+      })
+    },
+    order: 'post',
+  })
+
+  return printed
+}
+
 describe('pluginDev', () => {
   beforeEach(async () => {
     rstest.mock('../src/webpack/ProvidePlugin.js', { mock: true })
@@ -1099,39 +1142,45 @@ describe('pluginDev', () => {
     })
   })
 
-  test('onAfterStartDevServer routes contains bundle entries', async () => {
+  test('dev prints the bundle URL without writing to routes', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
           main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
         },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8093/',
       },
       server: {
         port: 8093,
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartDevServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     await using server = await rsbuild.usingDevServer()
     await server.waitDevCompileDone()
 
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.lynx.bundle',
+    // Rsbuild appends `route.pathname` to whatever is returned here, so the
+    // bundle path may only be resolved once, and only while nothing else
+    // supplies it.
+    expect(printed.routes).toStrictEqual([])
+    expect(printed.urls).toContainEqual({
+      label: 'Lynx',
+      url: 'http://example.com:8093/main.lynx.bundle',
     })
   })
 
-  test('onAfterStartDevServer routes contains multiple environment entries', async () => {
+  test('dev prints one URL per environment', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
           main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
         },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8094/',
       },
       server: {
         port: 8094,
@@ -1142,31 +1191,31 @@ describe('pluginDev', () => {
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartDevServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     await using server = await rsbuild.usingDevServer()
     await server.waitDevCompileDone()
 
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.lynx.bundle',
+    expect(printed.routes).toStrictEqual([])
+    expect(printed.urls).toContainEqual({
+      label: 'Lynx',
+      url: 'http://example.com:8094/main.lynx.bundle',
     })
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.web.bundle',
+    expect(printed.urls).toContainEqual({
+      label: 'Web',
+      url: 'http://example.com:8094/main.web.bundle',
     })
   })
 
-  test('onAfterStartPreviewServer routes contains bundle entries', async () => {
+  test('preview prints the bundle path exactly once', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
           main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
         },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8095/',
       },
       server: {
         port: 8095,
@@ -1177,33 +1226,68 @@ describe('pluginDev', () => {
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartPreviewServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
     try {
-      expect(receivedRoutes).toContainEqual({
-        entryName: 'main',
-        pathname: '/main.lynx.bundle',
-      })
-      expect(receivedRoutes).toContainEqual({
-        entryName: 'main',
-        pathname: '/main.web.bundle',
+      // The preview server fills `routes` before printing, so a plugin that
+      // writes to them would have Rsbuild append the bundle path a second
+      // time.
+      expect(printed.routes).toStrictEqual([])
+      expect(printed.urls).toContainEqual({
+        label: 'Lynx',
+        url: 'http://example.com:8095/main.lynx.bundle',
       })
     } finally {
       await server.close()
     }
   })
 
-  test('filename.bundle is used for dev routes', async () => {
+  test('preview prints base URLs when another plugin supplies routes', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
         entry: {
           main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
         },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8097/',
+      },
+      server: {
+        port: 8097,
+      },
+    })
+
+    rsbuild.onAfterStartPreviewServer(({ routes }) => {
+      routes.push({ entryName: 'main', pathname: '/main.lynx.bundle' })
+    })
+
+    const printed = capturePrintUrls(rsbuild)
+
+    const { server } = await rsbuild.preview({ checkDistDir: false })
+    try {
+      expect(printed.routes).toStrictEqual([
+        { entryName: 'main', pathname: '/main.lynx.bundle' },
+      ])
+      // Rsbuild appends the pathname of every route, so only the base URL
+      // belongs here.
+      expect(printed.urls).toStrictEqual([
+        { label: 'Lynx', url: 'http://example.com:8097/' },
+      ])
+    } finally {
+      await server.close()
+    }
+  })
+
+  test('filename.bundle is used for the printed URL', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8096/',
       },
       server: {
         port: 8096,
@@ -1214,18 +1298,14 @@ describe('pluginDev', () => {
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartDevServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     await using server = await rsbuild.usingDevServer()
     await server.waitDevCompileDone()
 
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.lynx.custom.bundle',
+    expect(printed.urls).toContainEqual({
+      label: 'Lynx',
+      url: 'http://example.com:8096/main.lynx.custom.bundle',
     })
   })
 })
