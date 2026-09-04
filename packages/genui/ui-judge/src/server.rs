@@ -188,7 +188,7 @@ impl ZipCaptureProcesses {
     })
   }
 
-  async fn capture<T: Send + 'static>(
+  async fn capture_jpeg<T: Send + 'static>(
     &self,
     activity: ZipCaptureProcessActivity,
     staging_guard: T,
@@ -199,7 +199,7 @@ impl ZipCaptureProcesses {
   ) -> Result<Vec<u8>, ApiError> {
     let deadline = activity.deadline;
     let bmp = self
-      .capture_with_options(
+      .capture(
         activity,
         staging_guard,
         base_dir,
@@ -215,30 +215,7 @@ impl ZipCaptureProcesses {
       .map_err(|_| isolated_zip_worker_error())
   }
 
-  async fn capture_bmp<T: Send + 'static>(
-    &self,
-    activity: ZipCaptureProcessActivity,
-    staging_guard: T,
-    base_dir: PathBuf,
-    url: String,
-    viewport: ScreenshotViewport,
-    job_id: u64,
-    config: IsolatedCaptureConfig,
-  ) -> Result<Vec<u8>, ApiError> {
-    self
-      .capture_with_options(
-        activity,
-        staging_guard,
-        base_dir,
-        url,
-        viewport,
-        job_id,
-        config,
-      )
-      .await
-  }
-
-  async fn capture_with_options<T: Send + 'static>(
+  async fn capture<T: Send + 'static>(
     &self,
     activity: ZipCaptureProcessActivity,
     staging_guard: T,
@@ -510,7 +487,6 @@ impl StagedSourceKind {
     }
   }
 
-  #[cfg(test)]
   fn task(self) -> &'static str {
     match self {
       Self::Lynxml => "Render the uploaded LynXML",
@@ -926,15 +902,18 @@ async fn judge(
   State(state): State<AppState>,
   Json(request): Json<HttpJudgePageRequest>,
 ) -> Result<Json<HttpJudgePageResponse>, ApiError> {
+  let is_remote_template = is_http_page_url(&request.url);
+  if !is_remote_template {
+    reject_direct_page_url(&request.url)?;
+  }
   let HttpCaptureRequest {
     include_screenshot,
     load_options,
     request,
   } = request.into_capture_request()?;
-  if is_http_page_url(&request.url) {
+  if is_remote_template {
     return judge_remote_template(&state, include_screenshot, load_options, request).await;
   }
-  reject_direct_page_url(&request.url)?;
   let (request, client) = match (state.prepare_request)(request) {
     Ok(prepared) => prepared,
     Err(result) => {
@@ -1013,17 +992,29 @@ async fn judge_remote_template(
       }))
     }
   };
-  let capture = capture_staged_template_for_judge(state, source, &load_options, &request).await?;
+  let entry = ScreenshotEntry::parse("template.js")
+    .expect("the server-selected template entry is always safe");
+  let capture = capture_staged_source(
+    state,
+    entry,
+    source,
+    StagedSourceKind::Template,
+    ScreenshotViewport {
+      width: DEFAULT_SCREENSHOT_WIDTH,
+      height: DEFAULT_SCREENSHOT_HEIGHT,
+    },
+    &load_options,
+    &request,
+  )
+  .await?;
   finish_judge(include_screenshot, request, client, Ok(capture)).await
 }
 
 fn is_http_page_url(url: &str) -> bool {
   let url = url.trim();
-  ["http://", "https://"].iter().any(|scheme| {
-    url
-      .get(..scheme.len())
-      .is_some_and(|prefix| prefix.eq_ignore_ascii_case(scheme))
-  })
+  ["http://", "https://"]
+    .iter()
+    .any(|scheme| url.starts_with(scheme))
 }
 
 fn reject_direct_page_url(url: &str) -> Result<(), ApiError> {
@@ -1214,7 +1205,7 @@ async fn render_zip(
         .expect("isolated ZIP capture must acquire render capacity before extraction");
       match state
         .zip_capture_processes
-        .capture(activity, extracted, base_dir, entry.url, viewport, job_id)
+        .capture_jpeg(activity, extracted, base_dir, entry.url, viewport, job_id)
         .await
       {
         Ok(jpeg) => jpeg,
@@ -1275,82 +1266,27 @@ async fn render_staged_source(
   kind: StagedSourceKind,
   viewport: ScreenshotViewport,
 ) -> Result<Response, ApiError> {
-  let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
-  let zip_process_activity = match state.zip_capture_backend {
-    ZipCaptureBackend::IsolatedProcess => {
-      let deadline = tokio::time::Instant::now()
-        + Duration::from_millis(DEFAULT_TIMEOUT_MS)
-        + ZIP_CAPTURE_PROCESS_GRACE;
-      Some(
-        state
-          .zip_capture_processes
-          .begin(deadline)
-          .await
-          .map_err(|error| staged_source_render_api_error(kind, error))?,
+  let request = staged_screenshot_request(&entry.url, kind.task());
+  let deadline = tokio::time::Instant::now() + request.timeout + ZIP_CAPTURE_PROCESS_GRACE;
+  let capture = capture_staged_source(
+    state,
+    entry,
+    source,
+    kind,
+    viewport,
+    &PageLoadOptions::default(),
+    &request,
+  )
+  .await?;
+  let jpeg = tokio::time::timeout_at(deadline, capture.into_jpeg())
+    .await
+    .map_err(|_| staged_source_timeout_error(kind))?
+    .map_err(|_| {
+      ApiError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        format!("The {} screenshot could not be encoded.", kind.label()),
       )
-    }
-    #[cfg(test)]
-    ZipCaptureBackend::SharedWorker => None,
-  };
-  let staging_deadline = zip_process_activity
-    .as_ref()
-    .map(|activity| activity.deadline);
-  let staging = stage_source(source, entry.path, kind, zip_process_activity);
-  let (staged, zip_process_activity) = match staging_deadline {
-    Some(deadline) => match tokio::time::timeout_at(deadline, staging).await {
-      Ok(result) => result?,
-      Err(_) => return Err(staged_source_timeout_error(kind)),
-    },
-    None => match tokio::time::timeout(LYNXML_UPLOAD_TIMEOUT, staging).await {
-      Ok(result) => result?,
-      Err(_) => return Err(staged_source_timeout_error(kind)),
-    },
-  };
-  let base_dir = std::fs::canonicalize(staged.path()).map_err(|_| {
-    ApiError::new(
-      StatusCode::INTERNAL_SERVER_ERROR,
-      format!("The staged {} directory is unavailable.", kind.label()),
-    )
-  })?;
-  let jpeg = match state.zip_capture_backend {
-    ZipCaptureBackend::IsolatedProcess => {
-      let activity = zip_process_activity
-        .expect("isolated source capture must acquire render capacity before staging");
-      state
-        .zip_capture_processes
-        .capture(activity, staged, base_dir, entry.url, viewport, job_id)
-        .await
-        .map_err(|error| staged_source_render_api_error(kind, error))?
-    }
-    #[cfg(test)]
-    ZipCaptureBackend::SharedWorker => {
-      let capture_response = state
-        .headless
-        .capture(
-          staged_screenshot_request(&entry.url, kind.task()),
-          None,
-          PageLoadOptions {
-            base_dir: Some(base_dir),
-            ..PageLoadOptions::default()
-          },
-        )
-        .await?;
-      let capture = capture_response.capture.map_err(|_| {
-        ApiError::new(
-          StatusCode::UNPROCESSABLE_ENTITY,
-          format!("The {} could not be rendered.", kind.label()),
-        )
-      })?;
-      let jpeg = capture.into_jpeg().await.map_err(|_| {
-        ApiError::new(
-          StatusCode::INTERNAL_SERVER_ERROR,
-          format!("The {} screenshot could not be encoded.", kind.label()),
-        )
-      })?;
-      drop(staged);
-      jpeg
-    }
-  };
+    })?;
   Ok(
     (
       [(CONTENT_TYPE, "image/jpeg"), (CACHE_CONTROL, "no-store")],
@@ -1360,15 +1296,15 @@ async fn render_staged_source(
   )
 }
 
-async fn capture_staged_template_for_judge(
+async fn capture_staged_source(
   state: &AppState,
+  entry: ScreenshotEntry,
   source: Vec<u8>,
+  kind: StagedSourceKind,
+  viewport: ScreenshotViewport,
   load_options: &PageLoadOptions,
   request: &JudgePageRequest,
 ) -> Result<crate::headless::CapturedPage, ApiError> {
-  let kind = StagedSourceKind::Template;
-  let entry = ScreenshotEntry::parse("template.js")
-    .expect("the server-selected template entry is always safe");
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   let zip_process_activity = match state.zip_capture_backend {
     ZipCaptureBackend::IsolatedProcess => {
@@ -1401,14 +1337,14 @@ async fn capture_staged_template_for_judge(
   let base_dir = std::fs::canonicalize(staged.path()).map_err(|_| {
     ApiError::new(
       StatusCode::INTERNAL_SERVER_ERROR,
-      "The staged remote template directory is unavailable.",
+      format!("The staged {} directory is unavailable.", kind.label()),
     )
   })?;
 
   match state.zip_capture_backend {
     ZipCaptureBackend::IsolatedProcess => {
       let activity = zip_process_activity
-        .expect("isolated template judging must acquire render capacity before staging");
+        .expect("isolated source capture must acquire render capacity before staging");
       let config = IsolatedCaptureConfig {
         global_props_json: load_options.global_props_json.clone(),
         initial_data_json: load_options.initial_data_json.clone(),
@@ -1417,13 +1353,9 @@ async fn capture_staged_template_for_judge(
         timeout_ms: u64::try_from(request.timeout.as_millis())
           .expect("HTTP timeout originates from u64 milliseconds"),
       };
-      let viewport = ScreenshotViewport {
-        width: DEFAULT_SCREENSHOT_WIDTH,
-        height: DEFAULT_SCREENSHOT_HEIGHT,
-      };
       let bmp = state
         .zip_capture_processes
-        .capture_bmp(
+        .capture(
           activity, staged, base_dir, entry.url, viewport, job_id, config,
         )
         .await
@@ -1452,7 +1384,7 @@ async fn capture_staged_template_for_judge(
       let capture = capture_response.capture.map_err(|_| {
         ApiError::new(
           StatusCode::UNPROCESSABLE_ENTITY,
-          "The remote template could not be rendered.",
+          format!("The {} could not be rendered.", kind.label()),
         )
       })?;
       drop(staged);
@@ -1461,7 +1393,6 @@ async fn capture_staged_template_for_judge(
   }
 }
 
-#[cfg(test)]
 fn staged_screenshot_request(url: &str, task: &str) -> JudgePageRequest {
   JudgePageRequest {
     include_geqi: false,
@@ -2342,31 +2273,6 @@ mod tests {
   }
 
   #[test]
-  fn remote_template_judge_preserves_page_options() {
-    assert!(is_http_page_url(" HTTPS://example.com/template.js "));
-
-    let mut request = http_request(" https://example.com/template.js ");
-    request.global_props = Some(json!({"messages": []}));
-    request.initial_data = Some(json!({"ready": true}));
-    let capture_request = request
-      .into_capture_request()
-      .expect("build a remote template judge request");
-
-    assert_eq!(
-      capture_request.request.url,
-      " https://example.com/template.js "
-    );
-    assert_eq!(
-      capture_request.load_options.global_props_json.as_deref(),
-      Some(r#"{"messages":[]}"#)
-    );
-    assert_eq!(
-      capture_request.load_options.initial_data_json.as_deref(),
-      Some(r#"{"ready":true}"#)
-    );
-  }
-
-  #[test]
   fn screenshot_entry_accepts_relative_paths_and_zip_urls() {
     for input in ["pages/index.lynxml", "zip:///pages/index.lynxml"] {
       let entry = ScreenshotEntry::parse(input).expect("parse screenshot entry");
@@ -2683,9 +2589,15 @@ mod tests {
       .into_capture_request()
       .expect("build remote template request");
 
-    let capture = capture_staged_template_for_judge(
+    let capture = capture_staged_source(
       &state,
+      ScreenshotEntry::parse("template.js").expect("parse staged template entry"),
       source.to_vec(),
+      StagedSourceKind::Template,
+      ScreenshotViewport {
+        width: DEFAULT_SCREENSHOT_WIDTH,
+        height: DEFAULT_SCREENSHOT_HEIGHT,
+      },
       &capture_request.load_options,
       &capture_request.request,
     )
@@ -3375,6 +3287,7 @@ mod tests {
     };
 
     let mut request = http_request("file:///tmp/private.lynx.bundle");
+    request.global_props = Some(json!(["invalid page data"]));
     request.timeout_ms = Some(1);
     let error = judge(State(state.clone()), Json(request))
       .await
