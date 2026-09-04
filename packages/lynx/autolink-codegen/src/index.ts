@@ -95,6 +95,7 @@ export interface LynxtronRuntimeTarget {
   arch: string;
   files?: string[];
   frameworks?: string[];
+  appBundles?: string[];
 }
 
 export interface LynxtronPlatformManifest {
@@ -1482,9 +1483,10 @@ function readLynxtronPlatform(
     || 'files' in value
     || 'resources' in value
     || 'frameworks' in value
+    || 'appBundles' in value
   ) {
     throw new Error(
-      `${manifestPath} requires files and frameworks inside "platforms.lynxtron.targets"`,
+      `${manifestPath} requires files, frameworks, and appBundles inside "platforms.lynxtron.targets"`,
     );
   }
 
@@ -1535,11 +1537,45 @@ function readLynxtronPlatform(
       manifestPath,
       `${entryPath}.frameworks`,
     );
+    const appBundles = readOptionalStringPaths(
+      entry['appBundles'],
+      manifestPath,
+      `${entryPath}.appBundles`,
+    );
 
-    if (files === undefined && frameworks === undefined) {
+    if (frameworks !== undefined) {
+      if (os !== 'darwin') {
+        throw new Error(
+          `${manifestPath} only supports "${entryPath}.frameworks" for darwin targets`,
+        );
+      }
+      if (frameworks.some((framework) => !framework.endsWith('.framework'))) {
+        throw new Error(
+          `${manifestPath} requires every "${entryPath}.frameworks" path to end in .framework`,
+        );
+      }
+    }
+
+    if (
+      files === undefined && frameworks === undefined
+      && appBundles === undefined
+    ) {
       throw new Error(
-        `${manifestPath} must define "${entryPath}.files" or "${entryPath}.frameworks"`,
+        `${manifestPath} must define "${entryPath}.files", "${entryPath}.frameworks", or "${entryPath}.appBundles"`,
       );
+    }
+
+    if (appBundles !== undefined) {
+      if (os !== 'darwin') {
+        throw new Error(
+          `${manifestPath} only supports "${entryPath}.appBundles" for darwin targets`,
+        );
+      }
+      if (appBundles.some((appBundle) => !appBundle.endsWith('.app'))) {
+        throw new Error(
+          `${manifestPath} requires every "${entryPath}.appBundles" path to end in .app`,
+        );
+      }
     }
 
     return {
@@ -1547,6 +1583,7 @@ function readLynxtronPlatform(
       arch,
       ...(files === undefined ? {} : { files }),
       ...(frameworks === undefined ? {} : { frameworks }),
+      ...(appBundles === undefined ? {} : { appBundles }),
     };
   });
   const targetKeys = new Set<string>();

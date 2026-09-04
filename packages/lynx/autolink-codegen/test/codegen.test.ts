@@ -1275,7 +1275,12 @@ export declare class StorageModule {
                 os: 'darwin',
                 arch: 'arm64',
                 files: ['dist/darwin/arm64/canvas.dylib'],
-                frameworks: ['dist/darwin/arm64/frameworks'],
+                frameworks: [
+                  'dist/darwin/arm64/Canvas.framework',
+                ],
+                appBundles: [
+                  'dist/darwin/arm64/Canvas Helper.app',
+                ],
               },
               {
                 os: 'win32',
@@ -1290,6 +1295,52 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).not.toThrow();
+  });
+
+  it('rejects Lynxtron app bundles outside darwin targets', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'win32',
+                arch: 'x64',
+                appBundles: ['dist/win32/x64/Canvas Helper.app'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /only supports.*appBundles.*darwin targets/,
+    );
+  });
+
+  it('rejects malformed Lynxtron app bundle paths', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                appBundles: ['dist/darwin/arm64/Canvas Helper'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /appBundles.*path to end in \.app/,
+    );
   });
 
   it.each(['binaries', 'resources'])(
@@ -1352,7 +1403,7 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /requires files and frameworks inside.*lynxtron\.targets/,
+      /requires files, frameworks, and appBundles inside.*lynxtron\.targets/,
     );
   });
 
@@ -1399,6 +1450,29 @@ export declare class StorageModule {
 
     expect(() => generate({ root })).toThrow(
       /platforms\.lynxtron\.targets\[0\]\.arch/,
+    );
+  });
+
+  it('requires Lynxtron framework paths to identify macOS bundles', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                frameworks: ['dist/darwin/arm64/frameworks'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /frameworks.*path to end in \.framework/,
     );
   });
 
