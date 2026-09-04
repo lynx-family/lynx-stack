@@ -89,6 +89,46 @@ function fixturePath(name: string): string {
   return fileURLToPath(new URL(`./fixtures/basic/${name}`, import.meta.url))
 }
 
+type TemplateEncodeArgs = Parameters<
+  Parameters<vanilla.TemplateHooks['beforeEncode']['tap']>[1]
+>[0]
+
+// Taps the template hook the encoders run on, which is the only place the
+// final source of every emitted chunk is visible at once.
+function observeTemplateEncodeData(): {
+  getEncodeData: () => TemplateEncodeArgs['encodeData'] | undefined
+  observeTemplate: RsbuildPlugin
+} {
+  let captured: TemplateEncodeArgs | undefined
+  const name = 'test:observe-vanilla-encode-data'
+
+  const observeTemplate: RsbuildPlugin = {
+    name,
+    setup(api) {
+      api.modifyBundlerChain(chain => {
+        const exposed = api.useExposed<{
+          LynxTemplatePlugin: vanilla.LynxTemplatePlugin
+        }>(Symbol.for('LynxTemplatePlugin'))
+        const plugin: Rspack.RspackPluginInstance = {
+          apply(compiler) {
+            compiler.hooks.thisCompilation.tap(name, compilation => {
+              const hooks = exposed!.LynxTemplatePlugin
+                .getLynxTemplatePluginHooks(compilation)
+              hooks.beforeEncode.tap(name, args => {
+                captured = args
+                return args
+              })
+            })
+          },
+        }
+        chain.plugin(name).use(plugin)
+      })
+    },
+  }
+
+  return { getEncodeData: () => captured?.encodeData, observeTemplate }
+}
+
 async function runPluginHarness(
   options: HarnessOptions = {},
 ): Promise<HarnessResult> {
@@ -633,5 +673,55 @@ describe('pluginVanillaLynx runtime wrapper', () => {
     expect((wrapper?.args?.[0] as { test: unknown }).test).toEqual([
       backgroundEntry.filename,
     ])
+  })
+
+  // The `test` above only states which asset the wrapper is aimed at. A path
+  // that stops matching what the build emits leaves the background chunk bare,
+  // and Lynx then evaluates it without `lynx` in scope: the card dies with
+  // `ReferenceError: lynx is not defined` on the device while every unit test
+  // still passes. Assert the emitted source itself.
+  test('emits a background chunk the Lynx runtime can evaluate', async () => {
+    const outputRoot = await mkdtemp(
+      path.join(tmpdir(), 'rspeedy-vanilla-wrapper-test-'),
+    )
+    tempDirs.push(outputRoot)
+
+    const { getEncodeData, observeTemplate } = observeTemplateEncodeData()
+
+    const rspeedy = await createRspeedy({
+      rspeedyConfig: {
+        output: {
+          distPath: { root: outputRoot },
+          filename: '[name].bundle',
+        },
+        plugins: [
+          vanilla.pluginVanillaLynx({
+            entries: {
+              card: {
+                mainThread: fixturePath('main-thread.ts'),
+              },
+            },
+          }),
+          observeTemplate,
+        ],
+      },
+    })
+
+    await rspeedy.build()
+
+    const manifest = getEncodeData()?.manifest ?? {}
+    const background = manifest['/.lynx/card/background.js']
+
+    expect(background).toBeTypeOf('string')
+    // `bundleSupportLoadScript` and `__bundle__holder` are the globals the
+    // wrapper talks to, so they survive minification and say the banner is
+    // really there.
+    expect(background).toContain('bundleSupportLoadScript')
+    expect(background).toContain('__bundle__holder')
+
+    // The main thread runs outside that runtime and must stay unwrapped.
+    expect(
+      getEncodeData()?.lepusCode.root?.source.source().toString(),
+    ).not.toContain('__bundle__holder')
   })
 })
