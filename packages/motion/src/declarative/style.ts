@@ -45,8 +45,9 @@ const transformKeys = new Set([
 ]);
 
 function resolveStyleValue(value: unknown): unknown {
-  if (motionValueType.isHandle(value)) {
-    return motionValueType.getInitialPayload(value);
+  const handle = motionValueType.downcast(value);
+  if (handle !== undefined) {
+    return handle.creationPayload;
   }
   if (Array.isArray(value)) {
     return value.find(item => item !== null && item !== undefined);
@@ -156,7 +157,7 @@ export function collectMotionValues(
   const values: Record<string, MotionValue<string | number>> = {};
   for (const key in style) {
     const value = style[key as keyof MotionStyle] as MotionStyleValue;
-    if (motionValueType.isHandle(value)) {
+    if (motionValueType.downcast(value) !== undefined) {
       values[key] = value as MotionValue<string | number>;
     }
   }

@@ -22,10 +22,6 @@ export const motionValueType = defineMainThreadObjectType<
     'main thread';
     return motionValue(initialValue);
   },
-  dispose(value) {
-    'main thread';
-    value.stop();
-  },
 });
 
 /**
