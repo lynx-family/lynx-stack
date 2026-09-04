@@ -91,18 +91,20 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
 
   /** @internal */
   protected constructor(initialValue: I, type: string) {
-    const creationPayload = snapshotMainThreadObjectPayload(initialValue, type);
+    if (__DEV__ && __JS__) {
+      assertSerializableMainThreadObjectPayload(initialValue, type);
+    }
 
     this._wvid = allocateMainThreadRefId();
-    this._initValue = creationPayload;
+    this._initValue = initialValue;
     this._type = type;
     this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
-    registerMainThreadObjectHandle(this, type, creationPayload);
+    registerMainThreadObjectHandle(this, type, initialValue);
 
     if (__JS__) {
       addMainThreadRefInitValue(
         this._wvid,
-        creationPayload,
+        initialValue,
         {
           type,
           protocolVersion: MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
@@ -119,7 +121,11 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
     }
   }
 
-  /** A deeply immutable snapshot of the payload used to create the realized object. */
+  /**
+   * The payload used to create the realized object.
+   *
+   * Readonly is a TypeScript contract; the value is not frozen at runtime.
+   */
   public get creationPayload(): Readonly<I> {
     return this._initValue;
   }
@@ -330,25 +336,20 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
   return guardedHandle;
 }
 
-type PayloadSnapshotResult =
-  | { valid: true; value: unknown }
-  | { valid: false; invalidPath: string };
-
-function snapshotMainThreadObjectPayload<T>(value: T, type: string): T {
-  const result = snapshotSerializableValue(value, '$', new Set<object>());
-  if (!result.valid) {
+function assertSerializableMainThreadObjectPayload(value: unknown, type: string): void {
+  const invalidPath = findNonSerializablePath(value, '$', new Set<object>());
+  if (invalidPath !== undefined) {
     throw new Error(
-      `MainThreadObject initial value for "${type}" must be JSON-serializable; invalid value at ${result.invalidPath}.`,
+      `MainThreadObject initial value for "${type}" must be JSON-serializable; invalid value at ${invalidPath}.`,
     );
   }
-  return result.value as T;
 }
 
-function snapshotSerializableValue(
+function findNonSerializablePath(
   value: unknown,
   path: string,
   ancestors: Set<object>,
-): PayloadSnapshotResult {
+): string | undefined {
   if (
     value === undefined
     || typeof value === 'function'
@@ -356,51 +357,31 @@ function snapshotSerializableValue(
     || typeof value === 'bigint'
     || (typeof value === 'number' && !Number.isFinite(value))
   ) {
-    return { valid: false, invalidPath: path };
+    return path;
   }
   if (value === null || typeof value !== 'object') {
-    return { valid: true, value };
+    return undefined;
   }
   if (ancestors.has(value)) {
-    return { valid: false, invalidPath: path };
+    return path;
   }
 
   const prototype = Object.getPrototypeOf(value) as object | null;
   if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
-    return { valid: false, invalidPath: path };
+    return path;
   }
 
   ancestors.add(value);
-  let snapshot: unknown[] | Record<string, unknown>;
-  if (Array.isArray(value)) {
-    snapshot = [];
-    snapshot.length = value.length;
-  } else {
-    snapshot = Object.create(prototype) as Record<string, unknown>;
-  }
-  const entries: [string, unknown][] = [];
-  if (Array.isArray(value)) {
-    for (let index = 0; index < value.length; index++) {
-      if (Object.prototype.hasOwnProperty.call(value, index)) {
-        entries.push([String(index), value[index]]);
-      }
-    }
-  } else {
-    entries.push(...Object.entries(value));
-  }
+  const entries = Array.isArray(value)
+    ? value.map((item, index) => [String(index), item] as const)
+    : Object.entries(value);
   for (const [key, item] of entries) {
-    const result = snapshotSerializableValue(item, `${path}.${key}`, ancestors);
-    if (!result.valid) {
+    const invalidPath = findNonSerializablePath(item, `${path}.${key}`, ancestors);
+    if (invalidPath !== undefined) {
       ancestors.delete(value);
-      return result;
+      return invalidPath;
     }
-    Object.defineProperty(snapshot, key, {
-      configurable: false,
-      enumerable: true,
-      value: result.value,
-      writable: false,
-    });
   }
   ancestors.delete(value);
-  return { valid: true, value: Object.freeze(snapshot) };
+  return undefined;
 }
