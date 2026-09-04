@@ -1,4 +1,5 @@
 import '../../src/compat/LinearContainer/LinearContainer.js';
+import '@lynx-js/web-elements/plugins/scroll-view-mouse-drag';
 import '../../src/elements/all.js';
 import '../../index.css';
 import '@lynx-js/playwright-fixtures/common.css';

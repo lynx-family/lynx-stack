@@ -207,6 +207,13 @@ export class BackgroundElementTemplateInstance {
     if (!this.needsMainThreadCreate()) {
       return;
     }
+    // New descendants materialize at their own insert boundary, and lifetime
+    // removal clears this flag recursively before a subtree is reattached.
+    let child = this.firstChild;
+    while (child) {
+      child.emitMainThreadCreateIfNeeded();
+      child = child.nextSibling;
+    }
     // An unmaterialized subtree may receive attr updates before it is inserted;
     // prepare here so its materializing insert attaches the latest ref value.
     this.prepareAttributeSlotsForNative();
@@ -301,7 +308,7 @@ export class BackgroundElementTemplateInstance {
     const beforeId = (beforeChild && beforeChild.__slotIndex === child.__slotIndex) ? beforeChild.instanceId : 0;
     const containingListItem = getContainingListItem(child);
     const movedMainThreadRefHandleIds = collectMainThreadRefSubtreeHandleIds(child);
-    emitMainThreadCreateRecursive(child);
+    child.emitMainThreadCreateIfNeeded();
     pushOp(
       ElementTemplateUpdateOps.insertNode,
       this.instanceId,
@@ -718,7 +725,7 @@ export class BackgroundListElementTemplateInstance extends BackgroundTypedElemen
       return;
     }
 
-    emitMainThreadCreateRecursive(child);
+    child.emitMainThreadCreateIfNeeded();
     pushOp(
       ElementTemplateUpdateOps.insertTypedListItem,
       this.instanceId,
@@ -809,22 +816,4 @@ function collectElementTemplateSubtreeHandleIdsImpl(
     collectElementTemplateSubtreeHandleIdsImpl(child, handles);
     child = child.nextSibling;
   }
-}
-
-function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstance): void {
-  if (
-    !isElementTemplateHydrated()
-    || instance.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID
-  ) {
-    return;
-  }
-
-  // Walk children in linked-list order; the slot-grouped view would just be
-  // discarded here since we recurse into every child regardless of slot.
-  let child = instance.firstChild;
-  while (child) {
-    emitMainThreadCreateRecursive(child);
-    child = child.nextSibling;
-  }
-  instance.emitMainThreadCreateIfNeeded();
 }

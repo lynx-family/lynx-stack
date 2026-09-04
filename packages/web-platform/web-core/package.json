@@ -34,6 +34,11 @@
       "import": "./dist/client/index.js",
       "default": "./dist/client/index.js"
     },
+    "./plugins/scroll-view-mouse-drag": {
+      "types": "./dist/client/plugins/scroll-view-mouse-drag.d.ts",
+      "import": "./dist/client/plugins/scroll-view-mouse-drag.js",
+      "default": "./dist/client/plugins/scroll-view-mouse-drag.js"
+    },
     "./server": {
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server_prod/index.js",
