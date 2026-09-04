@@ -2024,6 +2024,43 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     expect(instance.attributeSlots).toEqual(slots);
   });
 
+  it.each([false, true])('does not serialize attributes before materialization (hydrated=%s)', (isHydrated) => {
+    const instance = new BackgroundElementTemplateInstance('view', [{ id: 'before' }]);
+    if (isHydrated) {
+      markElementTemplateHydrated();
+    }
+    const nextSlots = [{ id: 'after' }];
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      instance.setAttribute('attributeSlots', nextSlots);
+
+      expect(stringify).not.toHaveBeenCalled();
+    } finally {
+      stringify.mockRestore();
+    }
+    expect(instance.attributeSlots).toEqual(nextSlots);
+    expect(globalCommitContext.ops).toEqual([]);
+
+    const root = new BackgroundPageRootInstance();
+    markElementTemplateHydrated();
+    root.appendChild(instance);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      instance.instanceId,
+      'view',
+      null,
+      nextSlots,
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      instance.instanceId,
+      0,
+      null,
+    ]);
+  });
+
   it('keeps raw initial planned attribute slots for later native prepare', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view', [true]);

@@ -491,15 +491,15 @@ export class BackgroundElementTemplateInstance {
         );
       }
       this.rawAttributeSlots = nextSlots === value ? undefined : value;
-      const maxLength = Math.max(previousSlots.length, nextSlots.length);
       this.attributeSlots = nextSlots;
+      if (!canEmitUpdatePatch) {
+        return;
+      }
+      const maxLength = Math.max(previousSlots.length, nextSlots.length);
       for (let slotIndex = 0; slotIndex < maxLength; slotIndex += 1) {
         const previousValue = previousSlots[slotIndex];
         const nextValue = nextSlots[slotIndex];
         if (isDirectOrDeepEqual(previousValue, nextValue)) {
-          continue;
-        }
-        if (!canEmitUpdatePatch) {
           continue;
         }
         pushOp(
