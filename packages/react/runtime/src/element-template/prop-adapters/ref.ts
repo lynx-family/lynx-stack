@@ -118,13 +118,14 @@ export function prepareSpreadRefAttrValue(
 }
 
 export function queueRefAttrUpdate(
-  oldValue: unknown,
-  newValue: unknown,
+  oldRef: EtRef | null,
+  newRef: EtRef | null,
   handleId: number,
   attrSlotIndex: number,
 ): void {
-  const oldRef = getRefFromValue(oldValue);
-  const newRef = getRefFromValue(newValue);
+  if (oldRef === newRef) {
+    return;
+  }
   refEffectQueue.queue(oldRef, newRef, [handleId, attrSlotIndex]);
 }
 

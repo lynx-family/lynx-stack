@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
+import { getRefFromValue, getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import type { SerializableValue } from '../protocol/types.js';
@@ -20,6 +20,10 @@ export interface PrepareAttributeSlotsOptions {
   attributePlan?: EtAttrPlan | undefined;
 }
 
+type RefAttrPlan = (number | typeof getSpreadRefFromValue)[];
+
+const refAttrPlans = new WeakMap<EtAttrPlan, RefAttrPlan>();
+
 function normalizeAttributeSlots(rawSlots: readonly unknown[]): SerializableValue[] {
   let normalizedSlots: SerializableValue[] | undefined;
   for (let slotIndex = 0; slotIndex < rawSlots.length; slotIndex += 1) {
@@ -35,37 +39,19 @@ function normalizeAttributeSlots(rawSlots: readonly unknown[]): SerializableValu
 
 function queuePlannedRefAttributeSlotUpdates(
   handleId: number,
-  attrPlan: readonly (number | EtAttrAdapter)[],
+  refAttrPlan: RefAttrPlan,
   previousRawSlots?: readonly unknown[],
   nextRawSlots?: readonly unknown[],
 ): void {
-  for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
-    const attrSlotIndex = attrPlan[planIndex] as number;
-    const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
-
-    if (adapter === adaptRefAttrSlot) {
-      queueRefAttrUpdate(
-        previousRawSlots?.[attrSlotIndex],
-        nextRawSlots?.[attrSlotIndex],
-        handleId,
-        attrSlotIndex,
-      );
-      continue;
-    }
-
-    if (adapter === adaptSpreadAttrSlot) {
-      const previousSpreadRef = getSpreadRefFromValue(previousRawSlots?.[attrSlotIndex]);
-      const nextSpreadRef = getSpreadRefFromValue(nextRawSlots?.[attrSlotIndex]);
-      if (previousSpreadRef === undefined && nextSpreadRef === undefined) {
-        continue;
-      }
-      queueRefAttrUpdate(
-        previousSpreadRef,
-        nextSpreadRef ?? null,
-        handleId,
-        attrSlotIndex,
-      );
-    }
+  for (let planIndex = 0; planIndex < refAttrPlan.length; planIndex += 2) {
+    const attrSlotIndex = refAttrPlan[planIndex] as number;
+    const readRef = refAttrPlan[planIndex + 1] as typeof getSpreadRefFromValue;
+    queueRefAttrUpdate(
+      readRef(previousRawSlots?.[attrSlotIndex]) ?? null,
+      readRef(nextRawSlots?.[attrSlotIndex]) ?? null,
+      handleId,
+      attrSlotIndex,
+    );
   }
 }
 
@@ -114,7 +100,24 @@ export function queueRefAttributeSlotUpdates(
     return;
   }
 
-  queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, nextRawSlots);
+  let refAttrPlan = refAttrPlans.get(attrPlan);
+  if (!refAttrPlan) {
+    refAttrPlan = [];
+    for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
+      const adapter = attrPlan[planIndex + 1];
+      if (adapter === adaptRefAttrSlot || adapter === adaptSpreadAttrSlot) {
+        refAttrPlan.push(
+          attrPlan[planIndex] as number,
+          adapter === adaptRefAttrSlot ? getRefFromValue : getSpreadRefFromValue,
+        );
+      }
+    }
+    // Compiled plans are static. Keying by their identity also keeps replacement
+    // and registry teardown from retaining a stale plan for a template name.
+    refAttrPlans.set(attrPlan, refAttrPlan);
+  }
+
+  queuePlannedRefAttributeSlotUpdates(handleId, refAttrPlan, previousRawSlots, nextRawSlots);
 }
 
 export function getAttributeSlotUpdateOp(

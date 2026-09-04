@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { OrdinaryRefEffectQueue } from '../../../../src/core/ref.js';
 import { hydrationMap } from '../../../../src/element-template/hydration-map.js';
 import {
   clearRefState,
@@ -70,6 +71,17 @@ describe('ElementTemplate ref prop adapter', () => {
     flushPendingRefs();
 
     expect(ref).toHaveBeenCalledWith(null);
+  });
+
+  it('skips unchanged refs before allocating an effect queue token', () => {
+    const queue = vi.spyOn(OrdinaryRefEffectQueue.prototype, 'queue');
+    const ref = { current: null };
+
+    queueRefAttrUpdate(ref, ref, -2, 0);
+    queueRefAttrUpdate(null, null, -2, 0);
+
+    expect(queue).not.toHaveBeenCalled();
+    queue.mockRestore();
   });
 
   it('updates object refs and skips unchanged identities', () => {
