@@ -18,7 +18,7 @@
     "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
-    "@mastra/core": "1.56.0",
+    "@mastra/core": "1.63.2",
     "@openuidev/lang-core": "^0.2.11",
     "@volcengine/tos-sdk": "^2.9.1",
     "hono": "4.13.0",
