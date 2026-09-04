@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.11.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Emit the intermediate files into `.lynx` instead of `.rspeedy`, since the directory is written by the Lynx build engine rather than by Rspeedy. The directory is no longer configurable: `output.distPath.intermediate` was documented as never read, and nothing else reads it now either. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
 ## 0.10.1
 
 ### Patch Changes

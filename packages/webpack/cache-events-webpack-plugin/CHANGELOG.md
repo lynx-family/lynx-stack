@@ -1,5 +1,17 @@
 # @lynx-js/cache-events-webpack-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- Reach lynx-core's app object through `lynx.getApp()` instead of the ([#3553](https://github.com/lynx-family/lynx-stack/pull/3553))
+  `lynxCoreInject` global the AMD wrapper injects. It is the same instance, so
+  behavior is unchanged, and resolving it through `lynx` also stays correct once
+  several cards share a runtime chunk. `@lynx-js/testing-environment` now exposes
+  `lynx.getApp()` alongside the object it already provided.
+- Updated dependencies [[`76126fc`](https://github.com/lynx-family/lynx-stack/commit/76126fcad0f16e649c372d22c013e90ad88640df)]:
+  - @lynx-js/webpack-runtime-globals@0.0.8
+
 ## 0.2.0
 
 ### Minor Changes

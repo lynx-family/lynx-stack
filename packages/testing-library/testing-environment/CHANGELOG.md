@@ -1,5 +1,22 @@
 # @lynx-js/testing-environment
 
+## 0.3.4
+
+### Patch Changes
+
+- Reach lynx-core's app object through `lynx.getApp()` instead of the ([#3553](https://github.com/lynx-family/lynx-stack/pull/3553))
+  `lynxCoreInject` global the AMD wrapper injects. It is the same instance, so
+  behavior is unchanged, and resolving it through `lynx` also stays correct once
+  several cards share a runtime chunk. `@lynx-js/testing-environment` now exposes
+  `lynx.getApp()` alongside the object it already provided.
+- Move runtime attribute-name configuration to the page-scoped `lynx` object and ([#3718](https://github.com/lynx-family/lynx-stack/pull/3718))
+  inject it from the host compilation through a standalone webpack plugin. Lazy
+  and external bundles reuse the host-injected configuration without applying
+  the plugin themselves. The runtime-config webpack plugin is published through
+  its own DSL-neutral package entry and accepts arbitrary runtime configuration
+  keys without depending on ReactLynx. The merged top-level configuration is
+  shallow-frozen to prevent accidental mutation after host initialization.
+
 ## 0.3.3
 
 ### Patch Changes

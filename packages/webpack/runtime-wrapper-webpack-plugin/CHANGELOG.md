@@ -1,5 +1,13 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.2.4
+
+### Patch Changes
+
+- Skip the background runtime wrapper on any asset marked `lynx:main-thread` instead of matching filenames, and mark the main-thread assets of an external bundle by the layer of their modules, so a main-thread entry an external bundle names itself is no longer wrapped. ([#3751](https://github.com/lynx-family/lynx-stack/pull/3751))
+- Updated dependencies [[`76126fc`](https://github.com/lynx-family/lynx-stack/commit/76126fcad0f16e649c372d22c013e90ad88640df)]:
+  - @lynx-js/webpack-runtime-globals@0.0.8
+
 ## 0.2.3
 
 ### Patch Changes
