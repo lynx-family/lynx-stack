@@ -58,6 +58,13 @@ import '@lynx-js/web-core/client';
 The plugin only changes `<scroll-view>` and leaves native touch scrolling
 unchanged.
 
+To enable `<animax-view>`, install `@lynx-js/animax` and import the opt-in
+side-effect entry:
+
+```javascript
+import '@lynx-js/web-core/animax';
+```
+
 ## Document
 
 See our website for more information.

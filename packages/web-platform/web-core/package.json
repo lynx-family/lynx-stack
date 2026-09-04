@@ -24,6 +24,11 @@
   "sideEffects": true,
   "main": "./dist/client/index.js",
   "exports": {
+    "./animax": {
+      "types": "./dist/animax.d.ts",
+      "import": "./dist/animax.js",
+      "default": "./dist/animax.js"
+    },
     "./encode": {
       "types": "./dist/encode/index.d.ts",
       "import": "./dist/encode_prod/index.js",
@@ -64,6 +69,7 @@
     "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
+    "@lynx-js/animax": "0.1.0-alpha.0",
     "@lynx-js/lynx-core": "0.1.4",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-eslint": "1.3.0",
@@ -78,10 +84,14 @@
     "tslib": "^2.8.1"
   },
   "peerDependencies": {
+    "@lynx-js/animax": "0.1.0-alpha.0",
     "@lynx-js/lynx-core": "0.1.4",
     "tslib": "^2.5.0"
   },
   "peerDependenciesMeta": {
+    "@lynx-js/animax": {
+      "optional": true
+    },
     "@lynx-js/lynx-core": {
       "optional": true
     },

@@ -112,24 +112,30 @@ describe('hydrate', () => {
     }
   });
 
-  it('forces direct MTEvent hydrate slot updates even when wrappers are deep-equal', () => {
+  it('hydrates direct MTEvent slots without serializing deep-equal wrappers', () => {
     __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
-    const ctx = { _wkltId: 'tap' };
+    const ctx = { _wkltId: 'tap', _c: { items: [1, 2], label: 'same' } };
     const root = new BackgroundElementTemplateInstance('root', [ctx]);
+    const serialized = createHydrationTemplate(root.instanceId, 'root', {
+      attributeSlots: [{
+        type: 'worklet',
+        value: { _wkltId: 'tap', _c: { items: [1, 2], label: 'same' } },
+      }],
+    });
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      const stream = hydrate(serialized, root);
 
-    const stream = hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
-      }),
-      root,
-    );
-
-    expect(stream).toEqual([
-      ElementTemplateUpdateOps.setMainThreadEvent,
-      root.instanceId,
-      0,
-      { type: 'worklet', value: ctx },
-    ]);
+      expect(stringify).not.toHaveBeenCalled();
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.setMainThreadEvent,
+        root.instanceId,
+        0,
+        { type: 'worklet', value: ctx },
+      ]);
+    } finally {
+      stringify.mockRestore();
+    }
   });
 
   it('keeps deep-equal hydrate wrappers skipped without a direct MTEvent attr plan', () => {
@@ -162,25 +168,31 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('forces callback MTRef hydrate slot updates when wrappers are deep-equal', () => {
+  it('hydrates callback MTRef slots without serializing deep-equal wrappers', () => {
     __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
-    const callback = { _wkltId: 'ref-callback' };
+    const callback = { _wkltId: 'ref-callback', _c: { items: [1, 2], label: 'same' } };
     const root = new BackgroundElementTemplateInstance('root');
     root.attributeSlots = [{ type: 'main-thread-ref', value: callback }];
+    const serialized = createHydrationTemplate(root.instanceId, 'root', {
+      attributeSlots: [{
+        type: 'main-thread-ref',
+        value: { _wkltId: 'ref-callback', _c: { items: [1, 2], label: 'same' } },
+      }],
+    });
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      const stream = hydrate(serialized, root);
 
-    const stream = hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [{ type: 'main-thread-ref', value: { _wkltId: 'ref-callback' } }],
-      }),
-      root,
-    );
-
-    expect(stream).toEqual([
-      ElementTemplateUpdateOps.setMainThreadRef,
-      root.instanceId,
-      0,
-      { type: 'main-thread-ref', value: callback },
-    ]);
+      expect(stringify).not.toHaveBeenCalled();
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.setMainThreadRef,
+        root.instanceId,
+        0,
+        { type: 'main-thread-ref', value: callback },
+      ]);
+    } finally {
+      stringify.mockRestore();
+    }
   });
 
   it('keeps deep-equal object MTRef hydrate wrappers skipped', () => {

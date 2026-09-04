@@ -17,6 +17,49 @@ import {
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
+interface PrintedUrl {
+  url: string
+  label?: string | undefined
+}
+
+interface PrintedUrls {
+  urls: PrintedUrl[]
+  routes: { entryName: string, pathname: string }[]
+}
+
+function capturePrintUrls(
+  rsbuild: Awaited<ReturnType<typeof createStubRspeedy>>,
+): PrintedUrls {
+  const printed: PrintedUrls = { urls: [], routes: [] }
+
+  rsbuild.modifyRsbuildConfig({
+    handler: (config, { mergeRsbuildConfig }) => {
+      if (typeof config.server?.printUrls !== 'function') {
+        return config
+      }
+      const originalPrintUrls = config.server.printUrls
+      return mergeRsbuildConfig(config, {
+        server: {
+          printUrls: (param) => {
+            printed.routes = param.routes.map(({ entryName, pathname }) => ({
+              entryName,
+              pathname,
+            }))
+            const result = originalPrintUrls(param)
+            printed.urls = (result ?? []).map(entry =>
+              typeof entry === 'string' ? { url: entry } : entry
+            )
+            return result
+          },
+        },
+      })
+    },
+    order: 'post',
+  })
+
+  return printed
+}
+
 describe('Plugins - Dev', () => {
   beforeEach(async () => {
     rstest.stubEnv('NODE_ENV', 'development')
@@ -778,35 +821,40 @@ describe('Plugins - Dev', () => {
     })
   })
 
-  test('onAfterStartDevServer routes contains bundle entries', async () => {
+  test('dev prints the bundle URL without writing to routes', async () => {
     const rsbuild = await createStubRspeedy({
       source: {
         entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8080/',
       },
       server: {
         port: 8080,
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartDevServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     await using server = await rsbuild.usingDevServer()
     await server.waitDevCompileDone()
 
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.lynx.bundle',
+    // Rsbuild appends `route.pathname` to whatever is returned from
+    // `printUrls`, so the bundle path is resolved in exactly one of the two.
+    expect(printed.routes).toStrictEqual([])
+    expect(printed.urls).toContainEqual({
+      label: 'Lynx',
+      url: 'http://example.com:8080/main.lynx.bundle',
     })
   })
 
-  test('onAfterStartDevServer routes contains multiple environment entries', async () => {
+  test('dev prints one URL per environment', async () => {
     const rsbuild = await createStubRspeedy({
       source: {
         entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8080/',
       },
       server: {
         port: 8080,
@@ -817,29 +865,28 @@ describe('Plugins - Dev', () => {
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartDevServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     await using server = await rsbuild.usingDevServer()
     await server.waitDevCompileDone()
 
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.lynx.bundle',
+    expect(printed.urls).toContainEqual({
+      label: 'Lynx',
+      url: 'http://example.com:8080/main.lynx.bundle',
     })
-    expect(receivedRoutes).toContainEqual({
-      entryName: 'main',
-      pathname: '/main.web.bundle',
+    expect(printed.urls).toContainEqual({
+      label: 'Web',
+      url: 'http://example.com:8080/main.web.bundle',
     })
   })
 
-  test('onAfterStartPreviewServer routes contains bundle entries', async () => {
+  test('preview prints the bundle path exactly once', async () => {
     const rsbuild = await createStubRspeedy({
       source: {
         entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      dev: {
+        assetPrefix: 'http://example.com:8080/',
       },
       server: {
         port: 8080,
@@ -850,21 +897,16 @@ describe('Plugins - Dev', () => {
       },
     })
 
-    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
-
-    rsbuild.onAfterStartPreviewServer(({ routes }) => {
-      receivedRoutes = [...routes]
-    })
+    const printed = capturePrintUrls(rsbuild)
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
     try {
-      expect(receivedRoutes).toContainEqual({
-        entryName: 'main',
-        pathname: '/main.lynx.bundle',
-      })
-      expect(receivedRoutes).toContainEqual({
-        entryName: 'main',
-        pathname: '/main.web.bundle',
+      // The preview server fills `routes` before printing, so writing the
+      // bundle path to them would have Rsbuild append it a second time.
+      expect(printed.routes).toStrictEqual([])
+      expect(printed.urls).toContainEqual({
+        label: 'Lynx',
+        url: 'http://example.com:8080/main.lynx.bundle',
       })
     } finally {
       await server.close()

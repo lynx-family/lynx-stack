@@ -36,7 +36,6 @@ describe('A2UI Bench request protocol groups', () => {
         enabled: true,
         catalog: 'Core Catalog',
       }]),
-      { clientOverrideAccepted: false },
     );
 
     expect(normalized.ok).toBe(true);
@@ -48,7 +47,7 @@ describe('A2UI Bench request protocol groups', () => {
     });
   });
 
-  test('removes group model overrides when client overrides are disabled', () => {
+  test('drops group models that are not configured by the server', () => {
     const normalized = normalizeBenchJobRequest(
       body([
         {
@@ -71,7 +70,6 @@ describe('A2UI Bench request protocol groups', () => {
           model: 'model-b',
         },
       ]),
-      { clientOverrideAccepted: false },
     );
 
     expect(normalized.ok).toBe(true);
@@ -96,61 +94,9 @@ describe('A2UI Bench request protocol groups', () => {
     expect(normalized.warnings).toContain(
       'Mixed-protocol jobs run one sample at a time so benchmark arms remain paired; settings.parallelism was set to 1.',
     );
-    expect(normalized.warnings).toContain(
-      'Client provider overrides are disabled by server policy; using server environment provider settings.',
-    );
   });
 
-  test('keeps arbitrary group models with a complete allowed provider', () => {
-    const request = body([
-      {
-        id: 'a2ui',
-        role: 'control',
-        name: 'A2UI',
-        variable: 'model',
-        enabled: true,
-        protocol: 'a2ui',
-        profile: 'matched-core',
-        model: 'model-a',
-      },
-      {
-        id: 'openui',
-        role: 'experiment',
-        name: 'OpenUI',
-        variable: 'model',
-        enabled: true,
-        protocol: 'openui',
-        model: 'model-b',
-      },
-    ]);
-    const normalized = normalizeBenchJobRequest(
-      {
-        ...request,
-        provider: {
-          apiKey: 'client-secret',
-          baseURL: 'https://openrouter.ai/api/v1/',
-          model: 'default-model',
-          api: 'chat',
-        },
-      },
-      { clientOverrideAccepted: true },
-    );
-
-    expect(normalized.ok).toBe(true);
-    if (!normalized.ok) return;
-    expect(normalized.request.provider).toEqual({
-      apiKey: 'client-secret',
-      baseURL: 'https://openrouter.ai/api/v1',
-      model: 'default-model',
-      api: 'chat',
-    });
-    expect(normalized.request.groups).toEqual([
-      expect.objectContaining({ model: 'model-a' }),
-      expect.objectContaining({ model: 'model-b' }),
-    ]);
-  });
-
-  test('drops partial provider fields and unconfigured group models', () => {
+  test('ignores custom provider settings and unconfigured group models', () => {
     const previous = process.env[GENUI_MODEL_CONFIG_ENV];
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
       'Configured Model': {
@@ -177,11 +123,12 @@ describe('A2UI Bench request protocol groups', () => {
             },
           ]),
           provider: {
-            baseURL: 'https://attacker.example/v1',
+            apiKey: 'client-secret',
+            baseURL: 'https://openrouter.ai/api/v1',
             model: 'Configured Model',
+            api: 'chat',
           },
         },
-        { clientOverrideAccepted: true },
       );
 
       expect(normalized.ok).toBe(true);
@@ -194,7 +141,7 @@ describe('A2UI Bench request protocol groups', () => {
       });
       expect(normalized.request.groups[1]).not.toHaveProperty('model');
       expect(normalized.warnings).toContain(
-        'Incomplete custom provider settings were ignored; using only server-configured model selections.',
+        'Custom provider settings are unsupported for Bench; using only server-configured model selections.',
       );
     } finally {
       if (previous === undefined) {
@@ -203,31 +150,6 @@ describe('A2UI Bench request protocol groups', () => {
         process.env[GENUI_MODEL_CONFIG_ENV] = previous;
       }
     }
-  });
-
-  test('rejects a complete provider outside the base URL allow-list', () => {
-    const normalized = normalizeBenchJobRequest(
-      {
-        ...body([{
-          id: 'group',
-          name: 'Group',
-          enabled: true,
-        }]),
-        provider: {
-          apiKey: 'client-secret',
-          baseURL: 'https://attacker.example/v1',
-          model: 'attacker-model',
-        },
-      },
-      { clientOverrideAccepted: true },
-    );
-
-    expect(normalized).toEqual({
-      ok: false,
-      status: 400,
-      error:
-        'Custom provider baseURL must be one of the supported provider URLs: https://api.openai.com/v1, https://generativelanguage.googleapis.com/v1beta/openai, https://openrouter.ai/api/v1',
-    });
   });
 
   test('rejects an unsupported OpenUI native arm', () => {
@@ -241,7 +163,6 @@ describe('A2UI Bench request protocol groups', () => {
         protocol: 'openui',
         profile: 'native',
       }]),
-      { clientOverrideAccepted: true },
     );
 
     expect(normalized).toEqual({
@@ -268,9 +189,7 @@ describe('A2UI Bench request protocol groups', () => {
       type: 'Information',
     }));
 
-    const legacyResult = normalizeBenchJobRequest(legacy, {
-      clientOverrideAccepted: false,
-    });
+    const legacyResult = normalizeBenchJobRequest(legacy);
     expect(legacyResult.ok).toBe(true);
 
     const judgedLegacy = {
@@ -280,9 +199,7 @@ describe('A2UI Bench request protocol groups', () => {
         judgeEnabled: true,
       },
     };
-    expect(normalizeBenchJobRequest(judgedLegacy, {
-      clientOverrideAccepted: false,
-    })).toEqual({
+    expect(normalizeBenchJobRequest(judgedLegacy)).toEqual({
       ok: false,
       status: 422,
       error:
@@ -301,13 +218,54 @@ describe('A2UI Bench request protocol groups', () => {
         profile: 'matched-core',
       }],
     };
-    expect(normalizeBenchJobRequest(matched, {
-      clientOverrideAccepted: false,
-    })).toEqual({
+    expect(normalizeBenchJobRequest(matched)).toEqual({
       ok: false,
       status: 422,
       error:
         'benchmark workload exceeds the 120 planned generation-attempt limit',
+    });
+  });
+
+  test('normalizes a request-scoped UI Judge server URL', () => {
+    const normalized = normalizeBenchJobRequest(
+      {
+        ...body([{
+          id: 'group',
+          name: 'Group',
+          enabled: true,
+        }]),
+        playground: {
+          baseUrl: 'https://playground.example/',
+          uiJudgeServerUrl: 'http://judge.test/internal?token=ignored#health',
+        },
+      },
+    );
+
+    expect(normalized.ok).toBe(true);
+    if (!normalized.ok) return;
+    expect(normalized.request.playground).toEqual({
+      baseUrl: 'https://playground.example/',
+      uiJudgeServerUrl: 'http://judge.test/internal/',
+    });
+  });
+
+  test('rejects an invalid request-scoped UI Judge server URL', () => {
+    expect(normalizeBenchJobRequest(
+      {
+        ...body([{
+          id: 'group',
+          name: 'Group',
+          enabled: true,
+        }]),
+        playground: {
+          uiJudgeServerUrl: 'file:///tmp/ui-judge.sock',
+        },
+      },
+    )).toEqual({
+      ok: false,
+      status: 400,
+      error:
+        'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
     });
   });
 });

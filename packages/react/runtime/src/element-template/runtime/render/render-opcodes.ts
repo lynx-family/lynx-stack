@@ -30,6 +30,8 @@ const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 const TYPED_LIST_HOST_TYPE = 'list';
 const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 
+type RenderAttributes = SerializableValue[] | RuntimeTypedElementAttributes | undefined;
+
 export interface MainThreadCreateResult {
   pageAttributes: TypedElementAttributesCommand | null;
   rootRefs: ElementRef[];
@@ -68,8 +70,8 @@ export function renderOpcodesIntoElementTemplate(
   let pageAttributes: TypedElementAttributesCommand | null | undefined;
   let isInsideAuthoredPage = false;
   const typeStack: Array<string | null> = [null];
-  const attributeSlotsStack: Array<SerializableValue[] | undefined> = [undefined];
-  const typedAttributesStack: Array<RuntimeTypedElementAttributes | undefined> = [undefined];
+  // The host type determines whether its payload is compiled slots or typed attributes.
+  const attributesStack: RenderAttributes[] = [undefined];
   const elementSlotsStack: Array<Array<Array<ElementRef>> | undefined> = [undefined];
   const listItemUidsStack: Array<number[] | undefined> = [undefined];
   const materializationHandlesStack: Array<MainThreadDynamicAttrSubtreeHandle[] | undefined> = [undefined];
@@ -91,8 +93,7 @@ export function renderOpcodesIntoElementTemplate(
         const parentType = typeStack[stackTop];
         stackTop += 1;
         typeStack[stackTop] = vnode.type;
-        attributeSlotsStack[stackTop] = undefined;
-        typedAttributesStack[stackTop] = undefined;
+        attributesStack[stackTop] = undefined;
         elementSlotsStack[stackTop] = undefined;
         listItemUidsStack[stackTop] = undefined;
         materializationHandlesStack[stackTop] = stackTop === 1 || parentType === TYPED_LIST_HOST_TYPE
@@ -111,8 +112,7 @@ export function renderOpcodesIntoElementTemplate(
         }
 
         const type = typeStack[stackTop];
-        const attributeSlots = attributeSlotsStack[stackTop];
-        const typedAttributes = typedAttributesStack[stackTop];
+        const attributes = attributesStack[stackTop];
         const elementSlots = elementSlotsStack[stackTop];
         const listItemUids = listItemUidsStack[stackTop];
         const materializationHandles = materializationHandlesStack[stackTop]!;
@@ -131,7 +131,7 @@ export function renderOpcodesIntoElementTemplate(
           const handleId = reserveElementTemplateId();
           const preparedTypedAttributes = prepareTypedElementAttributes(
             handleId,
-            typedAttributes,
+            attributes as RuntimeTypedElementAttributes | undefined,
           );
           const listState = createElementTemplateListState(
             listItemUids ?? EMPTY_LIST_ITEM_UIDS,
@@ -175,6 +175,7 @@ export function renderOpcodesIntoElementTemplate(
 
         const attrPlan = __etAttrPlanMap[concreteType];
         const handleId = reserveElementTemplateId();
+        const attributeSlots = attributes as SerializableValue[] | undefined;
         let preparedAttributeSlots = attributeSlots ?? null;
         if (attrPlan !== undefined) {
           preparedAttributeSlots = attributeSlots?.slice() ?? [];
@@ -227,14 +228,8 @@ export function renderOpcodesIntoElementTemplate(
         break;
       }
       case __OpAttr: {
-        const name = opcodes[i + 1] as string;
-        const value = opcodes[i + 2] as SerializableValue | null;
-        if (name === 'attributeSlots') {
-          attributeSlotsStack[stackTop] = value as SerializableValue[];
-        } else if (name === 'typedAttributes') {
-          typedAttributesStack[stackTop] = value as RuntimeTypedElementAttributes;
-        }
-        i += 3;
+        attributesStack[stackTop] = opcodes[i + 1] as RenderAttributes;
+        i += 2;
         break;
       }
       case __OpPageStart: {
