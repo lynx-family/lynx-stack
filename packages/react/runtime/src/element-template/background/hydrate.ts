@@ -26,6 +26,7 @@ import type {
   SerializedTypedNode,
 } from '../protocol/types.js';
 import { getMainThreadDynamicAttrSlotKinds } from '../runtime/template/attr-slot-plan.js';
+import type { MainThreadDynamicAttrKind } from '../runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
 import type { MTRefNativeWrapper } from '../runtime/template/main-thread-ref-ctx.js';
 
@@ -568,12 +569,13 @@ function hydrateAttributeSlots(
   afterSlots: SerializableValue[],
 ): void {
   const slotCount = Math.max(beforeSlots.length, afterSlots.length);
+  const slotKinds = getMainThreadDynamicAttrSlotKinds(templateType);
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex += 1) {
     const beforeValue = beforeSlots[slotIndex];
     const afterValue = afterSlots[slotIndex];
     if (
-      isDirectOrDeepEqual(beforeValue, afterValue)
-      && !shouldForceMainThreadHydrateSlot(templateType, slotIndex, afterValue)
+      !shouldForceMainThreadHydrateSlot(slotKinds?.get(slotIndex), afterValue)
+      && isDirectOrDeepEqual(beforeValue, afterValue)
     ) {
       continue;
     }
@@ -591,11 +593,9 @@ function hydrateAttributeSlots(
 }
 
 function shouldForceMainThreadHydrateSlot(
-  templateType: string,
-  attrSlotIndex: number,
+  slotKind: MainThreadDynamicAttrKind | undefined,
   value: SerializableValue | undefined,
 ): boolean {
-  const slotKind = getMainThreadDynamicAttrSlotKinds(templateType)?.get(attrSlotIndex);
   if (slotKind === 'mt-event') {
     return isMTEventNativeWrapper(value);
   }
