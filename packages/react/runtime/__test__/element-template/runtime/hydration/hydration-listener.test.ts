@@ -647,7 +647,7 @@ describe('ElementTemplate hydration listener', () => {
       expect(() => envManager.switchToBackground()).not.toThrow();
       expect(reportError).toHaveBeenCalledWith(serializeError);
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       expect(takeMainThreadRefInitValuePatch()).toEqual([]);
       expect(takeDelayedRunOnMainThreadData()).toEqual([]);
       expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
