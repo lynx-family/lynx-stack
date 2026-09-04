@@ -183,22 +183,40 @@ export function pluginDev(): RsbuildPlugin {
           config.server?.printUrls === undefined
           || config.server?.printUrls === true
         ) {
-          const environmentNames = Object.keys(config.environments ?? {})
+          // A root entry is merged into every environment (the way Rsbuild
+          // itself resolves entries), not replaced by an environment's own.
+          const entriesByEnvironment = Object.entries(
+            config.environments ?? {},
+          ).map(([environmentName, environmentConfig]) =>
+            [
+              environmentName,
+              Object.keys({
+                ...config.source?.entry,
+                ...environmentConfig.source?.entry,
+              }),
+            ] as const
+          )
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (param) => {
-                const currentConfig = api.getRsbuildConfig('current')
-                const assetPrefix = currentConfig.dev?.assetPrefix
-                const hostname = currentConfig.dev?.client?.host
-                  ?? formatHostname(currentConfig.server?.host)
                 const finalUrls: { label: string, url: string }[] = []
-                const baseForUrls = (
-                  typeof assetPrefix === 'string'
-                    ? assetPrefix
-                    : `http://${hostname}:<port>/`
-                ).replaceAll('<port>', String(param.port))
-                for (const entry of Object.keys(config.source?.entry ?? {})) {
-                  for (const environmentName of environmentNames) {
+                for (
+                  const [environmentName, entries] of entriesByEnvironment
+                ) {
+                  // `dev.assetPrefix`/`dev.client.host` can be set per
+                  // environment, so each environment gets its own base URL.
+                  const environmentConfig = api.getNormalizedConfig({
+                    environment: environmentName,
+                  })
+                  const assetPrefix = environmentConfig.dev.assetPrefix
+                  const hostname = environmentConfig.dev.client.host
+                    ?? formatHostname(environmentConfig.server.host)
+                  const baseForUrls = (
+                    typeof assetPrefix === 'string'
+                      ? assetPrefix
+                      : `http://${hostname}:<port>/`
+                  ).replaceAll('<port>', String(param.port))
+                  for (const entry of entries) {
                     const pathname = resolveName(entry, environmentName)
                     finalUrls.push({
                       label: environmentName,
