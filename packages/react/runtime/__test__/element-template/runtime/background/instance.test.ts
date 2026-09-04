@@ -1372,6 +1372,65 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   describe('removeChild', () => {
+    it.each(['ordinary', 'list-item', 'list-descendant', 'list-descendant-without-MTRef'])(
+      'visits each removed instance once for %s lifetime cleanup',
+      (kind) => {
+        const list = new BackgroundListElementTemplateInstance();
+        const parent = kind === 'list-item' ? list : new BackgroundElementTemplateInstance('_et_parent');
+        if (kind.startsWith('list-descendant')) {
+          list.appendChild(parent);
+        }
+        const removed = new BackgroundElementTemplateInstance('_et_removed');
+        const first = new BackgroundElementTemplateInstance('_et_first');
+        const nested = new BackgroundElementTemplateInstance('_et_nested');
+        const last = createTextNode('last');
+        removed.appendChild(first);
+        first.appendChild(nested);
+        removed.appendChild(last);
+        parent.appendChild(removed);
+        if (kind !== 'list-descendant-without-MTRef') {
+          __etAttrPlanMap._et_nested = [0, adaptMTRefAttrSlot];
+        }
+        const nodes = [removed, first, nested, last];
+        for (const node of [list, parent, ...nodes]) {
+          node.markMaterializedByHydration();
+        }
+        markElementTemplateHydrated();
+        globalCommitContext.ops = [];
+        const childrenReads = nodes.map(node => {
+          const firstChild = node.firstChild;
+          const read = vi.fn(() => firstChild);
+          Object.defineProperty(node, 'firstChild', { configurable: true, get: read });
+          return { node, firstChild, read };
+        });
+
+        parent.removeChild(removed);
+
+        for (const { node, firstChild, read } of childrenReads) {
+          expect(read).toHaveBeenCalledTimes(1);
+          Object.defineProperty(node, 'firstChild', { configurable: true, writable: true, value: firstChild });
+        }
+        const removedIds = nodes.map(node => node.instanceId);
+        expect(globalCommitContext.ops).toEqual([
+          ...(kind === 'list-item'
+            ? [ElementTemplateUpdateOps.removeTypedListItem, parent.instanceId, removed.instanceId, removedIds]
+            : [ElementTemplateUpdateOps.removeNode, parent.instanceId, 0, removed.instanceId, removedIds]),
+          ...(kind === 'list-descendant'
+            ? [ElementTemplateUpdateOps.updateTypedListItem, list.instanceId, {
+              __etHandleRef: parent.instanceId,
+              type: '_et_parent',
+              platformInfo: {},
+              subtreeHandleIds: [],
+            }]
+            : []),
+        ]);
+        expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([removed]);
+        for (const node of nodes) {
+          expect(backgroundElementTemplateInstanceManager.get(node.instanceId)).toBe(node);
+        }
+      },
+    );
+
     it('should remove child correctly', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('text');
@@ -1541,27 +1600,37 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('queues nested direct and spread ref cleanup when removing a hydrated subtree', () => {
-      const childCleanup = vi.fn();
+      const cleanupOrder: string[] = [];
+      const childCleanup = vi.fn(() => cleanupOrder.push('child'));
       const childRef = vi.fn(() => childCleanup);
-      const directGrandchildRef = vi.fn();
-      const grandchildCleanup = vi.fn();
+      const directGrandchildRef = vi.fn(value => {
+        if (value === null) cleanupOrder.push('grandchild-direct');
+      });
+      const grandchildCleanup = vi.fn(() => cleanupOrder.push('grandchild-spread'));
       const grandchildSpreadRef = vi.fn(() => grandchildCleanup);
+      const siblingRef = vi.fn(value => {
+        if (value === null) cleanupOrder.push('sibling');
+      });
       __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
       const grandchild = new BackgroundElementTemplateInstance('view');
+      const sibling = new BackgroundElementTemplateInstance('view');
       child.appendChild(grandchild);
+      child.appendChild(sibling);
       parent.appendChild(child);
 
       markElementTemplateHydrated();
       parent.markMaterializedByHydration();
       child.markMaterializedByHydration();
       grandchild.markMaterializedByHydration();
+      sibling.markMaterializedByHydration();
       child.setAttribute('attributeSlots', [childRef]);
       grandchild.setAttribute('attributeSlots', [
         directGrandchildRef,
         { ref: grandchildSpreadRef },
       ]);
+      sibling.setAttribute('attributeSlots', [siblingRef]);
       flushPendingRefs();
       expect(childRef).toHaveBeenCalledTimes(1);
       expect(directGrandchildRef).toHaveBeenCalledTimes(1);
@@ -1572,6 +1641,7 @@ describe('BackgroundElementTemplateInstance', () => {
       globalCommitContext.ops = [];
 
       parent.removeChild(child);
+      expect(cleanupOrder).toEqual([]);
       flushPendingRefs();
 
       expect(globalCommitContext.ops).toEqual([
@@ -1579,13 +1649,14 @@ describe('BackgroundElementTemplateInstance', () => {
         parent.instanceId,
         0,
         child.instanceId,
-        [child.instanceId, grandchild.instanceId],
+        [child.instanceId, grandchild.instanceId, sibling.instanceId],
       ]);
       expect(childCleanup).toHaveBeenCalledTimes(1);
       expect(grandchildCleanup).toHaveBeenCalledTimes(1);
       expect(childRef).not.toHaveBeenCalled();
       expect(grandchildSpreadRef).not.toHaveBeenCalled();
       expect(directGrandchildRef).toHaveBeenCalledWith(null);
+      expect(cleanupOrder).toEqual(['child', 'grandchild-direct', 'grandchild-spread', 'sibling']);
     });
 
     it('does not repeat direct function ref cleanup for detached subtrees on destroy', () => {

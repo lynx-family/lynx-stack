@@ -158,15 +158,26 @@ export class BackgroundElementTemplateInstance {
     return undefined;
   }
 
-  private markSubtreeDetachedFromMainThread(): void {
+  private detachSubtreeFromMainThread(
+    removedSubtreeHandleIds: number[],
+    checkForMainThreadRefs: boolean,
+  ): boolean {
     if (this.instanceId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
+      removedSubtreeHandleIds.push(this.instanceId);
       this.isMaterializedOnMainThread = false;
     }
+    this.queueRefCleanup();
+    let hasMainThreadRef = checkForMainThreadRefs && hasMainThreadRefAttrSlot(this.type);
     let child = this.firstChild;
     while (child) {
-      child.markSubtreeDetachedFromMainThread();
+      const childHasMainThreadRef = child.detachSubtreeFromMainThread(
+        removedSubtreeHandleIds,
+        checkForMainThreadRefs && !hasMainThreadRef,
+      );
+      hasMainThreadRef ||= childHasMainThreadRef;
       child = child.nextSibling;
     }
+    return hasMainThreadRef;
   }
 
   releaseDetachedSubtreeFromManager(): void {
@@ -226,15 +237,17 @@ export class BackgroundElementTemplateInstance {
 
   protected cleanupDetachedChildForLifetimeRemoval(
     child: BackgroundElementTemplateInstance,
-    canEmitUpdatePatch: boolean,
-  ): void {
-    if (canEmitUpdatePatch) {
-      child.markSubtreeDetachedFromMainThread();
+    removedSubtreeHandleIds: number[] | null,
+    checkForMainThreadRefs = false,
+  ): boolean {
+    if (removedSubtreeHandleIds) {
+      // Registry cleanup, materialization state, and ref effects share the same
+      // preorder walk. Ref callbacks still run after the remove is dispatched.
+      const hasMainThreadRef = child.detachSubtreeFromMainThread(removedSubtreeHandleIds, checkForMainThreadRefs);
       // The removed JS object graph may outlive the detach until GC, so keep
       // it pending and tear it down on the Snapshot-aligned delayed boundary.
       markRemovedSubtreeForPostDispatchTeardown(child);
-      child.queueRefCleanupForSubtree();
-      return;
+      return hasMainThreadRef;
     }
 
     // Mirrors `shouldQueueRefEffects` in `setAttribute`: pre-hydration
@@ -254,6 +267,7 @@ export class BackgroundElementTemplateInstance {
       // can be released from the background manager without delayed cleanup.
       child.tearDown();
     }
+    return false;
   }
 
   // DOM API for Preact
@@ -354,20 +368,25 @@ export class BackgroundElementTemplateInstance {
       return;
     }
     const canEmitUpdatePatch = this.canEmitUpdatePatch();
-    if (canEmitUpdatePatch) {
+    const removedSubtreeHandleIds: number[] | null = canEmitUpdatePatch ? [] : null;
+    if (removedSubtreeHandleIds) {
       pushOp(
         ElementTemplateUpdateOps.removeNode,
         this.instanceId,
         slotId,
         child.instanceId,
-        collectElementTemplateSubtreeHandleIds(child),
+        removedSubtreeHandleIds,
       );
     }
-    this.cleanupDetachedChildForLifetimeRemoval(child, canEmitUpdatePatch);
+    const removedMainThreadRefs = this.cleanupDetachedChildForLifetimeRemoval(
+      child,
+      removedSubtreeHandleIds,
+      containingListItem !== undefined,
+    );
     if (
       canEmitUpdatePatch
       && containingListItem
-      && collectMainThreadRefSubtreeHandleIds(child) !== null
+      && removedMainThreadRefs
     ) {
       notifyListItemSubtreeUpdated(containingListItem);
     }
@@ -398,7 +417,7 @@ export class BackgroundElementTemplateInstance {
     }
   }
 
-  queueRefCleanupForSubtree(): void {
+  private queueRefCleanup(): void {
     if (this.rawAttributeSlots) {
       queueRefAttributeSlotUpdates(
         this.type,
@@ -408,7 +427,10 @@ export class BackgroundElementTemplateInstance {
         this.getAttributeSlotPlan(),
       );
     }
+  }
 
+  private queueRefCleanupForSubtree(): void {
+    this.queueRefCleanup();
     let child = this.firstChild;
     while (child) {
       child.queueRefCleanupForSubtree();
@@ -705,11 +727,9 @@ export class BackgroundListElementTemplateInstance extends BackgroundTypedElemen
     super.removeChild(child, true);
     if (!silent) {
       const canEmitUpdatePatch = this.canEmitUpdatePatch();
-      const removedSubtreeHandleIds = canEmitUpdatePatch
-        ? collectElementTemplateSubtreeHandleIds(child)
-        : EMPTY_REMOVED_SUBTREE_HANDLE_IDS;
-      this.cleanupDetachedChildForLifetimeRemoval(child, canEmitUpdatePatch);
-      this.emitTypedListItemRemove(child, removedSubtreeHandleIds);
+      const removedSubtreeHandleIds = canEmitUpdatePatch ? [] : null;
+      this.cleanupDetachedChildForLifetimeRemoval(child, removedSubtreeHandleIds);
+      this.emitTypedListItemRemove(child, removedSubtreeHandleIds ?? EMPTY_REMOVED_SUBTREE_HANDLE_IDS);
     }
   }
 
@@ -774,14 +794,6 @@ export function toUpdateTypedListItemCommand(
   };
 }
 
-export function collectElementTemplateSubtreeHandleIds(
-  root: BackgroundElementTemplateInstance,
-): number[] {
-  const handles: number[] = [];
-  collectElementTemplateSubtreeHandleIdsImpl(root, handles);
-  return handles;
-}
-
 export function collectMainThreadRefSubtreeHandleIds(
   root: BackgroundElementTemplateInstance,
 ): number[] | null {
@@ -802,18 +814,4 @@ function collectMainThreadRefSubtreeHandleIdsImpl(
     child = child.nextSibling;
   }
   return handles;
-}
-
-function collectElementTemplateSubtreeHandleIdsImpl(
-  instance: BackgroundElementTemplateInstance,
-  handles: number[],
-): void {
-  if (instance.instanceId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
-    handles.push(instance.instanceId);
-  }
-  let child = instance.firstChild;
-  while (child) {
-    collectElementTemplateSubtreeHandleIdsImpl(child, handles);
-    child = child.nextSibling;
-  }
 }

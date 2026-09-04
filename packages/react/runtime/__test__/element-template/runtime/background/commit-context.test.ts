@@ -10,11 +10,7 @@ import {
   resetGlobalCommitContext,
   takeRemovedSubtreesForPostDispatchTeardown,
 } from '../../../../src/element-template/background/commit-context.js';
-import {
-  BackgroundElementTemplateInstance,
-  BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-  collectElementTemplateSubtreeHandleIds,
-} from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 
 describe('ElementTemplate commit context', () => {
@@ -53,19 +49,5 @@ describe('ElementTemplate commit context', () => {
     resetGlobalCommitContext();
 
     expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
-  });
-
-  it('collects only handles that are registered in the main-thread registry', () => {
-    const root = new BackgroundElementTemplateInstance('root');
-    const child = new BackgroundElementTemplateInstance('child');
-    const rawText = new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, ['text']);
-    child.appendChild(rawText);
-    root.appendChild(child);
-
-    expect(collectElementTemplateSubtreeHandleIds(root)).toEqual([
-      root.instanceId,
-      child.instanceId,
-      rawText.instanceId,
-    ]);
   });
 });
