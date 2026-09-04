@@ -14,6 +14,8 @@ Follow a Let it crash style in engine-bridge Rust code. Prefer one documented ru
 
 Keep Rust integration coverage for the `lynx` library crate under `packages/lynx/engine-bridge/lynx/tests/`. These tests should cover public API behavior, and runtime-backed cases should load the configured dylib/so rather than using mocks. Do not add screenshot or image-golden tests to the engine bridge workspace unless product requirements need visual regression coverage.
 
+Runtime-backed API smoke tests that do not drive the windowless task queue should disable JavaScript runtime creation through `HeadlessViewBuilder::enable_js_runtime(false)`. Keep JavaScript enabled by default for real page-loading hosts; do not replace task pumping or native teardown synchronization with sleeps.
+
 Keep the safe API surface tied to exercised workflows. `LoadedLibrary` is a capability-focused symbol table: eagerly load the exports required by implemented bridge capabilities, but do not mechanically import every service or subsystem declared by the SDK. Do not add view-client lifecycle wrappers, callback glue, or extra dylib symbols unless a committed integration path uses them or a task explicitly requires synchronizing the bridge with newer public C headers; keep raw callback and platform-handle wrappers unsafe.
 
 Keep public CAPI functions without a Rust consumer out of `LoadedLibrary`. Preserve their checked signatures as comments grouped by declaring header, and move them into the active manifest only when an implementation path actually calls them.

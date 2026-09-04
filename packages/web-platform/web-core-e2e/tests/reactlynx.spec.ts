@@ -2715,6 +2715,48 @@ test.describe('reactlynx3 tests', () => {
         });
       });
 
+      test(
+        'basic-element-text-bindselectionchange',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          const inlineText = page.locator('#inline-target');
+          await expect(inlineText).toBeAttached();
+          await wait(200);
+          const selectInlineText = (
+            anchorOffset: number,
+            focusOffset: number,
+          ) =>
+            inlineText.evaluate((inlineText, { anchorOffset, focusOffset }) => {
+              const textNode = inlineText.querySelector('raw-text')?.firstChild;
+              if (!textNode) throw new Error('Missing inline text node');
+              document.getSelection()?.setBaseAndExtent(
+                textNode,
+                anchorOffset,
+                textNode,
+                focusOffset,
+              );
+              document.dispatchEvent(new Event('selectionchange'));
+            }, { anchorOffset, focusOffset });
+
+          await selectInlineText(1, 4);
+
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-forward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-forward',
+          );
+
+          await selectInlineText(4, 1);
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-backward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-backward',
+          );
+        },
+      );
+
       test('basic-element-text-maxline', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(100);

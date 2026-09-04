@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildConfig, Rspack } from '@rsbuild/core'
-import { describe, expect, test } from '@rstest/core'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
 
@@ -176,5 +176,52 @@ describe('pluginMinify', () => {
     )
     expect(serialized).toContain('from.rsbuild-config')
     expect(serialized).toContain('from.lynx-config')
+  })
+
+  test('keeps its options when an environment turns minify on', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      environments: { lynx: { output: { minify: true } } },
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const options = findJsMinimizers(config)[0]?._args[0]?.minimizerOptions
+
+    // A boolean on the environment would otherwise replace the options the
+    // plugin merged into the global config.
+    expect(options?.compress).toMatchObject({ negate_iife: false })
+  })
+
+  test('keeps function and class names when REACT_DEVTOOL is set', async () => {
+    rstest.stubEnv('REACT_DEVTOOL', '1')
+    try {
+      const rsbuild = await createStubRsbuild({ mode: 'production' })
+      const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+      const options = findJsMinimizers(config)[0]?._args[0]?.minimizerOptions
+
+      // Devtools resolves component names from `type.name` and matches
+      // minified stack frames by function name.
+      expect(options?.compress).toMatchObject({
+        keep_fnames: true,
+        keep_classnames: true,
+      })
+      expect(options?.mangle).toMatchObject({
+        keep_fnames: true,
+        keep_classnames: true,
+      })
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+  })
+
+  test('does not keep names when REACT_DEVTOOL is unset', async () => {
+    const rsbuild = await createStubRsbuild({ mode: 'production' })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const options = findJsMinimizers(config)[0]?._args[0]?.minimizerOptions
+
+    expect(options?.compress).not.toHaveProperty('keep_fnames')
+    expect(options?.mangle).not.toHaveProperty('keep_fnames')
   })
 })

@@ -137,18 +137,21 @@ describe('pluginConfig', () => {
     })).toBe('lazy/[name].lynx.bundle')
   })
 
-  test('resolveIntermediateDir defaults to .rspeedy', async () => {
+  test('performance defaults to empty', async () => {
     const lynx = await usingLynxConfig()
 
-    expect(lynx.resolveIntermediateDir()).toBe('.rspeedy')
-    expect(lynx.resolveIntermediateDir({ entryName: 'main' }))
-      .toBe('.rspeedy/main')
+    expect(lynx.performance).toEqual({})
+    expect(lynx.performance.profile).toBeUndefined()
   })
 
-  test('resolveIntermediateDir uses output.distPath.intermediate', async () => {
-    const lynx = await usingLynxConfig({
-      output: { distPath: { intermediate: '.lynx' } },
-    })
+  test('exposes performance.profile', async () => {
+    const lynx = await usingLynxConfig({ performance: { profile: true } })
+
+    expect(lynx.performance.profile).toBe(true)
+  })
+
+  test('resolveIntermediateDir defaults to .lynx', async () => {
+    const lynx = await usingLynxConfig()
 
     expect(lynx.resolveIntermediateDir()).toBe('.lynx')
     expect(lynx.resolveIntermediateDir({ entryName: 'main' }))

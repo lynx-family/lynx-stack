@@ -26,6 +26,16 @@ export const CSSPlugins: {
 };
 
 // @public
+export interface CustomSectionNaming {
+    // (undocumented)
+    background(manifestKey: string, index: number): string | undefined;
+    // (undocumented)
+    css(assetName: string, index: number): string | undefined;
+    // (undocumented)
+    mainThread(assetName: string, index: number): string | undefined;
+}
+
+// @public
 export interface EncodeOptions {
     // (undocumented)
     [k: string]: unknown;
@@ -86,9 +96,11 @@ export class LynxTemplatePlugin {
 
 // @public
 export interface LynxTemplatePluginOptions {
+    appType?: 'card' | 'DynamicComponent' | undefined;
     chunks?: 'all' | string[];
     cssPlugins: CSS.Plugin[];
     customCSSInheritanceList: string[] | undefined;
+    customSectionNaming?: ((compilation: Compilation) => CustomSectionNaming) | undefined;
     debugInfoOutside: boolean;
     defaultDisplayLinear: boolean;
     defaultOverflowVisible?: boolean;
@@ -100,6 +112,7 @@ export interface LynxTemplatePluginOptions {
     enableCSSSelector: boolean;
     enableNewGesture: boolean;
     enableRemoveCSSScope: boolean;
+    enableSectionBytecode?: boolean | undefined;
     excludeChunks?: string[];
     // @alpha
     experimental_isLazyBundle?: boolean;

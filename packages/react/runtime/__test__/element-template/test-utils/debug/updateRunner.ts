@@ -70,11 +70,18 @@ type FormattedUpdateEntry =
     value: unknown;
   }
   | {
+    type: 'setMainThreadEvent' | 'setMainThreadRef';
+    id: number;
+    attrSlotIndex: number;
+    value: unknown;
+  }
+  | {
     type: 'insertNode';
     id: number;
     elementSlotIndex: number;
     child: unknown;
     reference: unknown;
+    attachedSubtreeHandleIds: unknown;
   }
   | {
     type: 'removeNode';
@@ -111,7 +118,7 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
 
 function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): FormattedUpdateEntry {
   switch (entry.op) {
-    case 'createTemplate':
+    case 'createTemplate': {
       return {
         type: 'create',
         id: entry.handleId,
@@ -119,6 +126,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         attributeSlots: entry.attributeSlots,
         elementSlots: entry.elementSlots,
       };
+    }
 
     case 'createTypedElement':
       return {
@@ -133,6 +141,15 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
     case 'setAttribute':
       return {
         type: 'setAttribute',
+        id: entry.targetId,
+        attrSlotIndex: entry.attrSlotIndex,
+        value: entry.value,
+      };
+
+    case 'setMainThreadEvent':
+    case 'setMainThreadRef':
+      return {
+        type: entry.op,
         id: entry.targetId,
         attrSlotIndex: entry.attrSlotIndex,
         value: entry.value,
@@ -168,6 +185,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         elementSlotIndex: entry.elementSlotIndex,
         child: entry.childId,
         reference: entry.referenceId,
+        attachedSubtreeHandleIds: entry.attachedSubtreeHandleIds,
       };
 
     case 'removeNode':

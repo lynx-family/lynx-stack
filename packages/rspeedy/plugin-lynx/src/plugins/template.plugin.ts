@@ -9,15 +9,7 @@ export function pluginTemplate(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:template',
     setup(api) {
-      // Only `getLynxTemplatePluginHooks` is exposed, so the rest of
-      // `LynxTemplatePlugin` stays free to change without breaking the
-      // plugins that tap its hooks.
-      api.expose(Symbol.for('LynxTemplatePlugin'), {
-        LynxTemplatePlugin: {
-          getLynxTemplatePluginHooks: LynxTemplatePlugin
-            .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
-        },
-      })
+      api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin })
     },
   }
 }

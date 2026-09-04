@@ -7,7 +7,10 @@ import {
   BackgroundPageRootInstance,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import { installElementTemplateRenderScopeHooks } from '../../../../src/element-template/background/render-scope.js';
+import {
+  installElementTemplateRenderScopeHooks,
+  isElementTemplateRendering,
+} from '../../../../src/element-template/background/render-scope.js';
 import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { root, useState } from '../../../../src/element-template/index.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
@@ -177,6 +180,17 @@ describe('ElementTemplate root render timing', () => {
     callDestroyLifetimeFun();
 
     expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toBeNull();
+  });
+
+  it('resets the render-in-progress flag when a render never commits', async () => {
+    installElementTemplateRenderScopeHooks();
+    const { options: preactOptions } = await import('preact');
+    // Fire the renderComponent hook without a following commit (a render that
+    // throws or suspends): the generation microtask must clear the flag.
+    preactOptions!['renderComponent']!(<view />, null);
+    expect(isElementTemplateRendering()).toBe(true);
+    await Promise.resolve();
+    expect(isElementTemplateRendering()).toBe(false);
   });
 
   it('cleans direct refs through root unmount on background destroy', () => {

@@ -1265,7 +1265,7 @@
 .chatProviderConfig {
   display: grid;
   grid-template-columns:
-    minmax(180px, 1.3fr) minmax(120px, 0.8fr) minmax(160px, 1fr);
+    minmax(120px, 0.8fr) minmax(160px, 1fr) minmax(180px, 1.3fr);
   gap: 8px;
 }
 
@@ -1291,6 +1291,17 @@
 
 .chatProviderInputField:focus {
   border-color: var(--geist-foreground);
+}
+
+.chatProviderInputField[aria-invalid="true"] {
+  border-color: color-mix(in srgb, #dc2626 58%, var(--geist-border));
+}
+
+.chatProviderValidation {
+  margin: -4px 2px 0;
+  color: color-mix(in srgb, #dc2626 76%, var(--geist-foreground));
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .chatComposerFooter {

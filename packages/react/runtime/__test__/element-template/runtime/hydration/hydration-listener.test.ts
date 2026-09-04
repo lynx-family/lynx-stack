@@ -482,6 +482,7 @@ describe('ElementTemplate hydration listener', () => {
           0,
           afterLocalId,
           0,
+          null,
         ],
       });
       expect(backgroundElementTemplateInstanceManager.get(afterLocalId)).toBe(after);
@@ -526,6 +527,7 @@ describe('ElementTemplate hydration listener', () => {
         0,
         afterLocalId,
         0,
+        null,
       ],
     });
   });

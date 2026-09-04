@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use lynx_headless_rust_test_runner::{GotoOptions, LynxContainer, LynxPage, ScreenshotOptions};
@@ -18,7 +19,7 @@ use crate::judge::{
 };
 use crate::model::{ModelClient, ModelError, ModelOptions};
 use crate::screenshot::{bmp_to_jpeg, jpeg_data_url};
-use crate::visual::compare_reference_image;
+use crate::visual::{compare_reference_image, transcode_captured_bmp};
 
 const MAX_ACTIONS_PER_STEP: usize = 8;
 const MAX_DOM_CHARS: usize = 40_000;
@@ -121,17 +122,21 @@ impl CapturedPage {
     }
   }
 
-  pub(crate) fn into_jpeg(self) -> Result<Vec<u8>, String> {
-    bmp_to_jpeg(&self.screenshot)
+  #[cfg(test)]
+  pub(crate) async fn into_jpeg(self) -> Result<Vec<u8>, String> {
+    transcode_captured_bmp(self.screenshot).await
   }
 
-  pub(crate) fn screenshot_data_url(&self) -> Result<String, String> {
-    bmp_to_jpeg(&self.screenshot).map(|jpeg| jpeg_data_url(&jpeg))
+  pub(crate) async fn screenshot_data_url(&self) -> Result<String, String> {
+    transcode_captured_bmp(self.screenshot.clone())
+      .await
+      .map(|jpeg| jpeg_data_url(&jpeg))
   }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PageLoadOptions {
+  pub(crate) base_dir: Option<PathBuf>,
   pub(crate) global_props_json: Option<String>,
   pub(crate) initial_data_json: Option<String>,
 }
@@ -265,6 +270,7 @@ pub(crate) fn capture_with_container(
 
 fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOptions {
   GotoOptions {
+    base_dir: load_options.base_dir.clone(),
     global_props_json: load_options.global_props_json.clone(),
     initial_data_json: load_options.initial_data_json.clone(),
     timeout: Some(timeout),
@@ -316,7 +322,7 @@ pub(crate) async fn score_captured_page(
   } = capture;
   // The model needs a format it can read; the comparison below keeps the
   // lossless capture.
-  let screenshot_data_url = match bmp_to_jpeg(&screenshot) {
+  let screenshot_data_url = match transcode_captured_bmp(screenshot.clone()).await {
     Ok(jpeg) => jpeg_data_url(&jpeg),
     Err(error) => {
       let mut result = request_error_result(request, url, error);
@@ -732,12 +738,17 @@ mod tests {
     let options = goto_options(
       timeout,
       &PageLoadOptions {
+        base_dir: Some(PathBuf::from("/tmp/staged-page")),
         global_props_json: Some(r#"{"messages":[]}"#.to_string()),
         initial_data_json: Some(r#"{"theme":"light"}"#.to_string()),
       },
     );
 
     assert_eq!(options.timeout, Some(timeout));
+    assert_eq!(
+      options.base_dir.as_deref(),
+      Some(std::path::Path::new("/tmp/staged-page"))
+    );
     assert_eq!(
       options.global_props_json.as_deref(),
       Some(r#"{"messages":[]}"#)
@@ -748,6 +759,7 @@ mod tests {
     );
 
     let defaults = goto_options(timeout, &PageLoadOptions::default());
+    assert!(defaults.base_dir.is_none());
     assert!(defaults.global_props_json.is_none());
     assert!(defaults.initial_data_json.is_none());
   }
@@ -979,6 +991,7 @@ mod tests {
     assert!(is_supported_page_url("http://localhost/ui.lynx.bundle"));
     assert!(is_supported_page_url("https://example.com/ui.lynx.bundle"));
     assert!(!is_supported_page_url("assets://ui.lynx.bundle"));
+    assert!(!is_supported_page_url("zip:///index.lynxml"));
     assert!(!is_supported_page_url("file://"));
     assert!(!is_supported_page_url("FILE:///tmp/ui.lynx.bundle"));
   }

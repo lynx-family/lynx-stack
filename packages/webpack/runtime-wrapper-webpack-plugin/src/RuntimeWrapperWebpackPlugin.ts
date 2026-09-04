@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BannerPluginArgument, Compiler } from '@rspack/core';
+import type { BannerPluginArgument, Chunk, Compiler } from '@rspack/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -141,7 +141,6 @@ class RuntimeWrapperWebpackPluginImpl {
     public options: RuntimeWrapperWebpackPluginOptions,
   ) {
     const { targetSdkVersion, test, experimental_isLazyBundle } = options;
-    const { BannerPlugin } = compiler.webpack;
 
     const isDev = process.env['NODE_ENV'] === 'development'
       || compiler.options.mode === 'development';
@@ -153,54 +152,76 @@ class RuntimeWrapperWebpackPluginImpl {
     }
     const iife = compiler.options.output.iife ?? true;
 
-    // banner
-    new BannerPlugin({
-      test: test!,
-      raw: true,
-      // Wrap at PROCESS_ASSETS_STAGE_NONE (0), after the release BannerPlugins
-      // the legacy source-map plugin + debug-metadata, at/around ADDITIONS
-      // (-100) so the wrapper stays outermost and their `_SetSourceMapRelease`
-      // runtimes land INSIDE it, yet still before DEV_TOOLING so the source map
-      // accounts for it.
-      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
-      banner: ({ chunk, filename }) => {
-        const banner = this.#getBannerType(filename) === 'script'
-          ? loadScriptBanner()
-          : loadBundleBanner();
+    const wrapperHeader = (
+      { chunk, filename }: { chunk: Chunk; filename: string },
+    ) => {
+      const banner = this.#getBannerType(filename) === 'script'
+        ? loadScriptBanner()
+        : loadBundleBanner();
 
-        return banner
-          + amdBanner({
-            // TODO: config
-            injectStr,
-            overrideRuntimePromise: true,
-            moduleId: '[name].js',
-            targetSdkVersion,
-            iife,
-          })
-          // In standalone lazy bundle mode, the lazy bundle will
-          // also has chunk.id "main", it will be conflict with the
-          // consumer project.
-          // We disable it for standalone lazy bundle since we do not
-          // support HMR for standalone lazy bundle now.
-          + (isDev && !experimental_isLazyBundle
-            ? lynxChunkEntries(JSON.stringify(chunk.id))
-            : '');
-      },
-    }).apply(compiler);
+      return banner
+        + amdBanner({
+          // TODO: config
+          injectStr,
+          overrideRuntimePromise: true,
+          moduleId: '[name].js',
+          targetSdkVersion,
+          iife,
+        })
+        // In standalone lazy bundle mode, the lazy bundle will
+        // also has chunk.id "main", it will be conflict with the
+        // consumer project.
+        // We disable it for standalone lazy bundle since we do not
+        // support HMR for standalone lazy bundle now.
+        + (isDev && !experimental_isLazyBundle
+          ? lynxChunkEntries(JSON.stringify(chunk.id))
+          : '');
+    };
 
-    // footer
-    new BannerPlugin({
-      test: test!,
-      footer: true,
-      raw: true,
-      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
-      banner: ({ filename }) => {
-        const footer = this.#getBannerType(filename) === 'script'
-          ? loadScriptFooter
-          : loadBundleFooter;
-        return amdFooter('[name].js', iife) + footer;
-      },
-    }).apply(compiler);
+    const wrapperFooter = (filename: string) => {
+      const footer = this.#getBannerType(filename) === 'script'
+        ? loadScriptFooter
+        : loadBundleFooter;
+      return amdFooter('[name].js', iife) + footer;
+    };
+
+    compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+      const { ModuleFilenameHelpers, sources: { ConcatSource } } =
+        compiler.webpack;
+      compilation.hooks.processAssets.tap(
+        {
+          name: this.name,
+          // Wrap at PROCESS_ASSETS_STAGE_NONE (0), after the release BannerPlugins
+          // the legacy source-map plugin + debug-metadata, at/around ADDITIONS
+          // (-100) so the wrapper stays outermost and their `_SetSourceMapRelease`
+          // runtimes land INSIDE it, yet still before DEV_TOOLING so the source map
+          // accounts for it.
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
+        },
+        () => {
+          for (const chunk of compilation.chunks) {
+            for (const filename of chunk.files) {
+              if (
+                !ModuleFilenameHelpers.matchObject({ test: test! }, filename)
+              ) {
+                continue;
+              }
+              if (compilation.getAsset(filename)?.info['lynx:main-thread']) {
+                continue;
+              }
+              const data = { chunk, filename };
+              const header = compilation.getPath(wrapperHeader(data), data);
+              const footer = compilation.getPath(wrapperFooter(filename), data);
+              compilation.updateAsset(
+                filename,
+                (source) =>
+                  new ConcatSource(header, '\n', source, '\n', footer),
+              );
+            }
+          }
+        },
+      );
+    });
   }
 
   #getBannerType(filename: string) {

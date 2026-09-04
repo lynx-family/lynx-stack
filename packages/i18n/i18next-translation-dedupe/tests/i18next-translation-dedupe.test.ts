@@ -78,7 +78,7 @@ describe('i18next translation dedupe integration', () => {
     const result = await rspeedy.build();
     await result.close();
 
-    const rspeedyDir = path.join(distRoot, '.rspeedy/main');
+    const rspeedyDir = path.join(distRoot, '.lynx/main');
     const tasmPath = path.join(rspeedyDir, 'tasm.json');
     const mainThreadPath = path.join(rspeedyDir, 'main-thread.js');
     const backgroundPath = readDirBackgroundBundle(rspeedyDir);

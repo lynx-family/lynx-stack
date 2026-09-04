@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT, SnapshotInstance } from '@lynx-js/react/internal';
+import { CHILDREN, COMPONENT, DIFF, DOM, FLAGS, INDEX, PARENT, SnapshotInstance } from '@lynx-js/react/internal';
 
 // Kept in sync with `REACT_ELEMENT_TYPE` in preact/compat, whose `isValidElement`
 // compares against it. Inlined rather than imported so the main thread does not
@@ -29,7 +29,6 @@ function createVNode(type, props, _key) {
     r[PARENT] = null;
     r[DIFF] = 0;
     r[DOM] = null;
-    r[DIRTY] = undefined;
     r[COMPONENT] = null;
     // r.__v = --vnodeId;
     r[INDEX] = -1;
@@ -39,13 +38,10 @@ function createVNode(type, props, _key) {
   } else if (typeof type === 'function') {
     let normalizedProps = props;
 
-    // let ref;
-    if ('ref' in normalizedProps) {
+    if ('ref' in normalizedProps && 'prototype' in type && type.prototype.render) {
       normalizedProps = {};
       for (let i in props) {
-        if (i == 'ref') {
-          // ref = props[i];
-        } else {
+        if (i != 'ref') {
           normalizedProps[i] = props[i];
         }
       }
@@ -68,7 +64,6 @@ function createVNode(type, props, _key) {
       [PARENT]: null,
       [DIFF]: 0,
       [DOM]: null,
-      [DIRTY]: void 0,
       [COMPONENT]: null,
       constructor: void 0,
       // __v: --vnodeId,

@@ -21,7 +21,7 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(findCssExtractFilename(config.plugins)).toBe(
-      '.rspeedy/[name]/[name].css',
+      '.lynx/[name]/[name].css',
     )
   })
 
@@ -48,7 +48,7 @@ describe('pluginOutput', () => {
     })
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
-    expect(findCssExtractFilename(config.plugins)).toBe('.rspeedy/style.css')
+    expect(findCssExtractFilename(config.plugins)).toBe('.lynx/style.css')
   })
 
   test('lowers const/let to var via output.environment', async () => {
@@ -76,5 +76,52 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(config.output?.environment?.const).toBe(true)
+  })
+
+  test('honors output.filename.css set on an environment', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      environments: {
+        lynx: { output: { filename: { css: 'lynx-[name].css' } } },
+        web: { output: { filename: { css: 'web-[name].css' } } },
+      },
+    })
+    const [lynx, web] = await rsbuild.initConfigs({ action: 'build' })
+    expect(findCssExtractFilename(lynx?.plugins)).toBe('.lynx/lynx-[name].css')
+    expect(findCssExtractFilename(web?.plugins)).toBe('.lynx/web-[name].css')
+  })
+
+  test('prefers output.distPath.css of the environment over the root', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      output: { distPath: { css: 'root-css' } },
+      environments: {
+        lynx: { output: { distPath: { css: 'lynx-css' } } },
+        web: {},
+      },
+    })
+    const [lynx, web] = await rsbuild.initConfigs({ action: 'build' })
+    expect(findCssExtractFilename(lynx?.plugins)).toBe(
+      'lynx-css/[name]/[name].css',
+    )
+    expect(findCssExtractFilename(web?.plugins)).toBe(
+      'root-css/[name]/[name].css',
+    )
+  })
+
+  test('honors output.legalComments set on an environment', async () => {
+    const rsbuild = await createStubRsbuild({
+      environments: {
+        lynx: { output: { legalComments: 'inline' } },
+        web: {},
+      },
+    })
+    await rsbuild.initConfigs()
+    expect(
+      rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.legalComments,
+    ).toBe('inline')
+    expect(
+      rsbuild.getNormalizedConfig({ environment: 'web' }).output.legalComments,
+    ).toBe('none')
   })
 })

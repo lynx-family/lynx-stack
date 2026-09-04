@@ -1,23 +1,18 @@
 //! Native task and frame plumbing shared by every [`crate::LynxContainer`].
 //!
-//! Each container drives its own pages on its own OS thread. Renderer tasks are
-//! therefore per page, while the runtime's single process-wide UI task runner
-//! feeds one shared queue that any container thread may drain — one at a time,
-//! so global tasks keep the serialized execution the engine expects.
+//! All containers in the process stay on one owner thread. Renderer tasks are
+//! per page, while the runtime's process-wide UI task runner feeds one shared
+//! queue that only that owner drains.
 
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::{Duration, Instant};
-
-#[cfg(not(target_os = "macos"))]
 use std::thread::{self, ThreadId};
+use std::time::{Duration, Instant};
 
 #[cfg(not(target_os = "macos"))]
 use lynx::{run_global_ui_task, set_global_ui_task_runner, GlobalUiTaskRunner};
 use lynx::{LynxEnv, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost};
 
-#[cfg(not(target_os = "macos"))]
-use crate::Error;
-use crate::Result;
+use crate::{Error, Result};
 
 #[cfg(target_os = "macos")]
 #[path = "macos_headless_display.rs"]
@@ -93,11 +88,36 @@ impl WindowlessHost for QueueingHost {
   }
 }
 
-/// The threads that own a container, and so count as UI threads for the
-/// runtime. A handful of entries at most, which a linear scan handles better
-/// than a hashed set would.
+static PROCESS_OWNER_THREAD: OnceLock<ThreadId> = OnceLock::new();
+
+/// Threads exposed to native Lynx as UI owners.
+///
+/// The process-owner guard only permits one entry. This stays separate from
+/// that guard so native runner registration keeps main's proven ordering and
+/// callback behavior.
 #[cfg(not(target_os = "macos"))]
 static CONTAINER_THREADS: Mutex<Vec<ThreadId>> = Mutex::new(Vec::new());
+
+/// Permanently binds native Lynx state to the first container thread.
+///
+/// The runtime has process-global state whose teardown can outlive a view, so
+/// dropping the last container does not make it safe to transfer ownership.
+pub(crate) fn claim_process_owner_thread() -> Result<()> {
+  claim_owner_thread(&PROCESS_OWNER_THREAD)
+}
+
+fn claim_owner_thread(owner: &OnceLock<ThreadId>) -> Result<()> {
+  let current = thread::current().id();
+  let owner = owner.get_or_init(|| current);
+  if *owner == current {
+    Ok(())
+  } else {
+    Err(Error::ThreadAffinity {
+      owner: format!("{owner:?}"),
+      current: format!("{current:?}"),
+    })
+  }
+}
 
 #[cfg(not(target_os = "macos"))]
 struct SharedGlobalRunner {
@@ -119,11 +139,11 @@ impl GlobalUiTaskRunner for SharedGlobalRunner {
   }
 }
 
-/// Prepares the process for a container running on the calling thread.
+/// Prepares the process for containers running on the owner thread.
 ///
 /// Returns the queue of process-wide UI tasks the caller must drain. The
-/// registration itself happens once; every later container only records that
-/// its thread is a legitimate UI thread for the runtime.
+/// registration itself happens once; every later container reuses it on the
+/// same owner thread.
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn register_container_thread(env: &'static LynxEnv) -> Result<SharedTasks> {
   static PLATFORM: OnceLock<std::result::Result<SharedTasks, String>> = OnceLock::new();
@@ -172,8 +192,7 @@ pub(crate) fn register_container_thread(_env: &'static LynxEnv) -> Result<Shared
   )
 }
 
-/// Runs the process-wide UI tasks that are ready, if no other container thread
-/// is already running them.
+/// Runs the process-wide UI tasks that are ready on the owner thread.
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn run_ready_global_tasks(env: &'static LynxEnv, tasks: &SharedTasks) -> bool {
   static RUNNING: Mutex<()> = Mutex::new(());
@@ -241,12 +260,25 @@ impl SoftwareRenderer for FrameStore {
     if !frame.row_bytes.is_multiple_of(4) {
       return false;
     }
+    // Clay's software surface uses a build-specific native N32 layout. The
+    // pinned Linux runtime exposes BGRA, while the pinned macOS runtime already
+    // exposes RGBA. Keep the runner's public screenshot contract canonical.
+    #[cfg(target_os = "linux")]
+    let rgba = {
+      let mut rgba = bytes.to_vec();
+      for pixel in rgba.chunks_exact_mut(4) {
+        pixel.swap(0, 2);
+      }
+      rgba
+    };
+    #[cfg(not(target_os = "linux"))]
+    let rgba = bytes.to_vec();
     let mut state = self.state.lock().expect("frame store lock poisoned");
     state.sequence += 1;
     state.latest = Some(CapturedFrame {
       width: frame.row_bytes / 4,
       height: frame.height,
-      rgba: Arc::from(bytes),
+      rgba: Arc::from(rgba),
       sequence: state.sequence,
     });
     true
@@ -287,10 +319,52 @@ mod tests {
   fn assert_send_sync<T: Send + Sync>() {}
 
   #[test]
-  fn captured_frames_can_cross_container_threads() {
+  fn captured_state_can_cross_post_capture_threads() {
     assert_send_sync::<CapturedFrame>();
     assert_send_sync::<FrameStore>();
     assert_send_sync::<SharedTasks>();
+  }
+
+  #[test]
+  fn software_frames_are_normalized_to_rgba() {
+    #[cfg(target_os = "linux")]
+    let native_pixels: [u8; 8] = [
+      0, 0, 255, 255, // red
+      255, 0, 0, 255, // blue
+    ];
+    #[cfg(not(target_os = "linux"))]
+    let native_pixels: [u8; 8] = [
+      255, 0, 0, 255, // red
+      0, 0, 255, 255, // blue
+    ];
+    let mut frames = FrameStore::default();
+    assert!(frames.present(SoftwareFrame {
+      allocation: native_pixels.as_ptr().cast(),
+      row_bytes: native_pixels.len(),
+      height: 1,
+    }));
+
+    let frame = frames.latest().expect("capture normalized frame");
+    assert_eq!(frame.width, 2);
+    assert_eq!(frame.height, 1);
+    assert_eq!(frame.rgba.as_ref(), [255, 0, 0, 255, 0, 0, 255, 255]);
+  }
+
+  #[test]
+  fn a_second_os_thread_cannot_claim_the_process_owner() {
+    let owner = Arc::new(OnceLock::new());
+    claim_owner_thread(&owner).expect("claim the first owner");
+    claim_owner_thread(&owner).expect("reuse the owner on the same thread");
+    let other_thread = std::thread::spawn({
+      let owner = Arc::clone(&owner);
+      move || claim_owner_thread(&owner)
+    });
+
+    let error = other_thread
+      .join()
+      .expect("the second thread should not panic")
+      .expect_err("the second thread must be rejected");
+    assert!(matches!(error, Error::ThreadAffinity { .. }));
   }
 
   #[test]

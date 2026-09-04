@@ -49,32 +49,6 @@ describe('createRspeedy', () => {
     expect.assertions(1)
   })
 
-  test('dev.client.websocketTransport reaches the Lynx config', async () => {
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        dev: { client: { websocketTransport: '/transport' } },
-        plugins: [
-          {
-            name: 'test',
-            setup(api: RsbuildPluginAPI) {
-              api.modifyBundlerChain(() => {
-                expect(
-                  api.useExposed<LynxConfig>(
-                    Symbol.for('@lynx-js/rsbuild-plugin:config'),
-                  )?.dev.client?.websocketTransport,
-                ).toBe('/transport')
-              })
-            },
-          },
-        ],
-      },
-    })
-
-    await rspeedy.initConfigs()
-
-    expect.assertions(1)
-  })
-
   test('a user-applied pluginLynx replaces the Rspeedy one', async () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
@@ -105,10 +79,10 @@ describe('createRspeedy', () => {
     expect.assertions(1)
   })
 
-  test('output.distPath.intermediate reaches the Lynx config', async () => {
+  test('maps performance.profile onto the engine config', async () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
-        output: { distPath: { intermediate: '.lynx' } },
+        performance: { profile: true },
         plugins: [
           {
             name: 'test',
@@ -117,8 +91,8 @@ describe('createRspeedy', () => {
                 expect(
                   api.useExposed<LynxConfig>(
                     Symbol.for('@lynx-js/rsbuild-plugin:config'),
-                  )?.resolveIntermediateDir({ entryName: 'main' }),
-                ).toBe('.lynx/main')
+                  )?.performance.profile,
+                ).toBe(true)
               })
             },
           },

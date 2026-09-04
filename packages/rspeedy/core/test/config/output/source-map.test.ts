@@ -6,14 +6,12 @@ import { describe, expect, test } from '@rstest/core'
 import { createRspeedy } from '../../../src/index.js'
 
 describe('output.sourceMap', () => {
-  test('defaults css source map to true', async () => {
+  test('does not set css source map by default', async () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {},
     })
 
-    expect(rspeedy.getRspeedyConfig().output?.sourceMap).toEqual({
-      css: true,
-    })
+    expect(rspeedy.getRspeedyConfig().output?.sourceMap).toBeUndefined()
   })
 
   test('respects output.sourceMap false', async () => {
@@ -44,7 +42,7 @@ describe('output.sourceMap', () => {
     })
   })
 
-  test('merges css default with user js source map config', async () => {
+  test('keeps user js source map config', async () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
         output: {
@@ -56,7 +54,6 @@ describe('output.sourceMap', () => {
     })
 
     expect(rspeedy.getRspeedyConfig().output?.sourceMap).toEqual({
-      css: true,
       js: 'source-map',
     })
   })

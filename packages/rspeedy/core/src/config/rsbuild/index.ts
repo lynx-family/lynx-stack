@@ -23,8 +23,7 @@ export function toRsbuildConfig(
       lazyCompilation: false,
       liveReload: config.dev?.liveReload ?? true,
       watchFiles: config.dev?.watchFiles,
-      // We expect to use different default writeToDisk with Rsbuild
-      writeToDisk: config.dev?.writeToDisk ?? true,
+      writeToDisk: config.dev?.writeToDisk,
 
       progressBar: config.dev?.progressBar ?? true,
     },

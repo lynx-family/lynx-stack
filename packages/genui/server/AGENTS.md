@@ -19,10 +19,10 @@ For multi-instance deployments, place a shared rate limiter (e.g. an API
 gateway or Redis-backed limiter) in front of this server when global rate
 limits are required.
 
-## Required Model Configuration
+## Model Configuration
 
-Before starting this server, provide the provider credentials, endpoint, and
-model list through one JSON environment variable:
+To provide server-owned model choices, configure the provider credentials,
+endpoint, and model list through one JSON environment variable:
 
 ```bash
 export GENUI_MODEL_CONFIG_JSON='{
@@ -31,7 +31,8 @@ export GENUI_MODEL_CONFIG_JSON='{
     "apiKey": "...",
     "baseURL": "https://api.openai.com/v1",
     "api": "responses",
-    "default": true
+    "default": true,
+    "maxOutputTokens": 16384
   }
 }'
 ```
@@ -41,7 +42,18 @@ export GENUI_MODEL_CONFIG_JSON='{
   independent upstream ids, credentials, and endpoints.
 - `api` is optional and accepts `chat` or `responses`.
 - `default: true` is optional. When omitted, the first entry is the default.
+- `maxOutputTokens` is an optional positive integer describing the provider's
+  supported output ceiling. Lynx XML requests target 16384 tokens and use the
+  lower of that target and the configured model ceiling.
 - `reasoningEffort` is optional per model.
+
+`GENUI_MODEL_CONFIG_JSON` is optional when the request supplies a complete
+custom provider with `model`, `apiKey`, and `baseURL`. Partial custom provider
+values are ignored rather than inheriting a server-owned credential. A
+request-scoped custom `baseURL` must exactly match one of the public
+OpenAI-compatible provider URLs in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS` (an
+optional trailing slash is normalized). Server-owned model configuration
+remains the trusted path for private, HTTP, or deployment-specific endpoints.
 
 `GET /models` exposes only the top-level names and default selection. It must
 never expose `model`, `apiKey`, or `baseURL` to the playground.
@@ -134,7 +146,9 @@ credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
 `POST /lynx-xml/stream` uses a dedicated Vanilla Lynx agent and the shared text
 SSE route infrastructure. Stream raw model deltas so the Playground can show
 source growth, but normalize and validate the final document envelope before
-sending `done`. The final artifact must start with lowercase
+sending `done`. Preserve usage and finish-reason metadata when validation
+fails, and report `length` as an exhausted model output budget rather than only
+as a missing XML tag. The final artifact must start with lowercase
 `<!doctype lynx>`, use `<lynx engine-version="4.2">`, include exactly one main
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
@@ -182,22 +196,17 @@ export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
 
 ## Security
 
-By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-`/a2ui/action`, `/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and
-`/html/stream` **cannot** override `apiKey` or `baseURL`. This
-prevents an unauthenticated client from turning the server into an open
-proxy that uses arbitrary keys against arbitrary OpenAI-compatible
-endpoints.
+Request bodies submitted to `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
+`/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream`
+may provide a complete custom `model`, `apiKey`, and `baseURL`. Incomplete
+overrides are ignored and ordinary model names resolve only through
+`GENUI_MODEL_CONFIG_JSON`.
 
-For trusted local development workflows where overriding is desirable
-(e.g. the playground swapping providers), opt in explicitly:
-
-```bash
-export A2UI_ALLOW_CLIENT_OVERRIDE="1"
-```
-
-Do **not** enable this flag on a publicly reachable deployment unless
-authentication and an allow-list are added in front of the server.
+Request-scoped custom providers accept only the exact HTTPS base URLs in
+`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`; reject alternate origins, ports, paths,
+credentials, query strings, and fragments. Add a provider only when its
+official OpenAI-compatible endpoint is documented and covered by tests. Do not
+expose these routes publicly without authentication.
 
 ## Rate Limiting
 

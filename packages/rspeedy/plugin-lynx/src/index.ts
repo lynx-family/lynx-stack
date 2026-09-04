@@ -32,14 +32,41 @@ export type {
   BundleFilename,
   BundleFilenameContext,
   LynxConfig,
-  LynxClient,
-  LynxDev,
-  LynxDistPath,
   LynxFilename,
   LynxMinify,
   LynxOutput,
+  LynxPerformance,
   LynxPluginOptions,
 } from './config.js'
+
+/**
+ * Whether the Lynx build engine is already registered.
+ *
+ * @remarks
+ *
+ * The engine is a global one. `isPluginExists` without an environment only
+ * reports the global plugins, so it misses an engine a caller — `rslib`, for
+ * one — registered on an environment instead.
+ *
+ * @param host - The Rsbuild instance or plugin API to look it up on.
+ * @param environments - The names of the configured environments.
+ *
+ * @public
+ */
+export function isPluginLynxRegistered(
+  host: {
+    isPluginExists(
+      name: string,
+      options?: { environment?: string },
+    ): boolean
+  },
+  environments: string[],
+): boolean {
+  return host.isPluginExists(PLUGIN_LYNX_NAME)
+    || environments.some(environment =>
+      host.isPluginExists(PLUGIN_LYNX_NAME, { environment })
+    )
+}
 
 /**
  * @public
@@ -55,18 +82,18 @@ export function pluginLynx(
       },
     },
     pluginConfig(options),
-    pluginChunkLoading(),
-    pluginCssMinimizer(),
-    pluginDev(),
     pluginLynxDebugMetadata(),
-    pluginMinify(),
-    pluginOptimization(),
-    pluginOutput(),
     pluginResolve(),
-    pluginServer(),
-    pluginSourcemap(),
     pluginSwc(),
     pluginTarget(),
+    pluginOutput(),
+    pluginMinify(),
+    pluginCssMinimizer(),
+    pluginSourcemap(),
     pluginTemplate(),
+    pluginChunkLoading(),
+    pluginDev(),
+    pluginOptimization(),
+    pluginServer(),
   ]
 }

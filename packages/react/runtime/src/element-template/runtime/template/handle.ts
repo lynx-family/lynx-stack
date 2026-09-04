@@ -3,9 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  attachMainThreadDynamicAttrRefsForSubtree,
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
 } from './main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from './main-thread-dynamic-attr-state.js';
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
 import { elementTemplateTypeTag } from '../../protocol/template-type.js';
 import type {
@@ -30,10 +33,12 @@ export function createElementTemplateWithReservedHandle(
   attributeSlots: SerializableValue[] | null | undefined,
   elementSlots: RuntimeElementSlots | null | undefined,
 ): ElementRef {
+  const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
+  const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(templateType, attributeSlots);
   const nativeRef = __CreateElementTemplate(
     templateKey,
     bundleUrl,
-    attributeSlots,
+    nativeAttributeSlots,
     elementSlots,
     handleId,
   );
@@ -41,7 +46,7 @@ export function createElementTemplateWithReservedHandle(
     setElementTemplateNativeRef(handleId, nativeRef);
     initializeMainThreadDynamicAttrSlots(
       handleId,
-      elementTemplateTypeTag(templateKey, bundleUrl),
+      templateType,
       attributeSlots,
     );
   }
@@ -64,6 +69,19 @@ export function createTypedElementTemplateWithReservedHandle(
   );
   setElementTemplateNativeRef(handleId, nativeRef);
   return nativeRef;
+}
+
+export function insertElementTemplateSubtree(
+  targetRef: ElementRef,
+  elementSlotIndex: number,
+  childRef: ElementRef,
+  referenceRef: ElementRef | null,
+  subtreeHandles: readonly MainThreadDynamicAttrSubtreeHandle[] | null,
+): void {
+  __InsertNodeToElementTemplate(targetRef, elementSlotIndex, childRef, referenceRef);
+  if (subtreeHandles !== null) {
+    attachMainThreadDynamicAttrRefsForSubtree(subtreeHandles);
+  }
 }
 
 export function resetTemplateId(): void {

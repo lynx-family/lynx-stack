@@ -178,11 +178,12 @@ async function postA2UIActionStream(req: Request) {
       log(event, details);
     },
   };
+  const errorOptions = { secrets: [body.apiKey, opts.apiKey] };
   let catalog: A2UICatalog;
   try {
     catalog = opts.catalog ?? await loadBasicCatalog();
   } catch (err: unknown) {
-    const error = errorMessage(err);
+    const error = errorMessage(err, errorOptions);
     log('catalog.load.failed', error);
     return jsonWithCors(req, { ok: false, error }, { status: 502 });
   }
@@ -428,7 +429,7 @@ async function postA2UIActionStream(req: Request) {
                 };
               }
             } catch (err: unknown) {
-              const repairError = errorMessage(err).message;
+              const repairError = errorMessage(err, errorOptions).message;
               repair = {
                 attempted: true,
                 sourceErrors: v.errors,
@@ -479,7 +480,7 @@ async function postA2UIActionStream(req: Request) {
           });
         } catch (err: unknown) {
           if (!closed && !generationController.signal.aborted) {
-            const error = errorMessage(err);
+            const error = errorMessage(err, errorOptions);
             log('error.enqueued', error);
             enqueue('error', error);
           }

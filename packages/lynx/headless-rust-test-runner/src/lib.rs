@@ -1,10 +1,11 @@
 //! A Rust-only headless Lynx test runner.
 //!
 //! The API is deliberately blocking. A [`LynxContainer`] owns the native Lynx
-//! state for the OS thread that created it and can host any number of
-//! [`LynxPage`]s; every page operation drives the native task pump inline on
-//! that thread. Concurrency comes from running one container per thread, not
-//! from multiplexing futures over a single native owner.
+//! state for the process owner thread. The process hosts one live [`LynxPage`]
+//! at a time, and every page operation drives the native task pump inline on
+//! that thread.
+//! Higher-level consumers may run work concurrently before and after native
+//! capture, but native containers never move between owner threads.
 //!
 //! ```no_run
 //! use lynx_headless_rust_test_runner::{ContainerOptions, GotoOptions, LynxContainer, ScreenshotOptions};
@@ -31,13 +32,14 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use debug_router::{DebugRouter, PendingRequest};
 use harness::{
-  pump_platform_events, register_container_thread, run_ready_global_tasks, FrameStore,
-  QueueingHost, SharedTasks,
+  claim_process_owner_thread, pump_platform_events, register_container_thread,
+  run_ready_global_tasks, FrameStore, QueueingHost, SharedTasks,
 };
 use lynx::{LynxEnv, LynxView, WindowlessRenderer};
 use resource::ResourceContext;
@@ -60,6 +62,8 @@ const DOM_RETRY_INTERVAL: Duration = Duration::from_millis(50);
 const TAP_SETTLE: Duration = Duration::from_millis(50);
 const APP_NAME: &str = "HeadlessRustTestRunner";
 const LYNX_CORE_JS_SDK_RELATIVE_PATH: &str = "resources/lynx_core.js";
+
+static PROCESS_PAGE_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 /// Settings for a [`LynxContainer`] and the pages it creates.
 #[derive(Clone, Debug)]
@@ -89,6 +93,14 @@ impl Default for ContainerOptions {
 
 #[derive(Clone, Debug, Default)]
 pub struct GotoOptions {
+  /// Restricts this navigation and all of its resources to this directory.
+  ///
+  /// When set, explicit `file://` and HTTP(S) navigation is rejected. `zip://`
+  /// URLs and relative paths resolve beneath the canonicalized directory;
+  /// nested HTTP(S) resources may use domain hosts but not IP address hosts.
+  /// The directory must remain private and unmodified until the page is
+  /// finished using its resources.
+  pub base_dir: Option<PathBuf>,
   pub timeout: Option<Duration>,
   pub initial_data_json: Option<String>,
   pub global_props_json: Option<String>,
@@ -108,12 +120,13 @@ pub struct BoundingBox {
   pub height: f64,
 }
 
-/// The native Lynx state owned by one OS thread.
+/// The native Lynx state owned by the process owner thread.
 ///
-/// A container hosts any number of pages and drives all of them whenever any
-/// one of them waits. Create one container per thread; the type is neither
-/// `Send` nor `Sync` because the pages and views it owns are bound to their
-/// creating thread.
+/// Containers create and destroy pages sequentially and drive their live page
+/// whenever they wait. A process may have only one live page across all of its
+/// containers, and every container must be created on the same thread. The type
+/// is neither `Send` nor `Sync` because the page and view it owns are bound to
+/// that owner.
 pub struct LynxContainer {
   shared: Rc<ContainerShared>,
 }
@@ -132,14 +145,35 @@ struct PageShared {
   tasks: SharedTasks,
   frames: FrameStore,
   resources: ResourceContext,
+  // Fields drop in declaration order. Keep this last so another page cannot
+  // acquire the process slot until the native view has been dropped.
+  _process_page_lease: ProcessPageLease,
+}
+
+struct ProcessPageLease;
+
+impl ProcessPageLease {
+  fn acquire() -> Result<Self> {
+    PROCESS_PAGE_ACTIVE
+      .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+      .map(|_| Self)
+      .map_err(|_| Error::PageAlreadyOpen)
+  }
+}
+
+impl Drop for ProcessPageLease {
+  fn drop(&mut self) {
+    PROCESS_PAGE_ACTIVE.store(false, Ordering::Release);
+  }
 }
 
 impl LynxContainer {
-  /// Prepares the process-wide Lynx runtime if needed and binds a container to
-  /// the calling thread.
+  /// Prepares the process-wide Lynx runtime if needed and binds its first
+  /// container as the permanent process owner.
   pub fn new(options: ContainerOptions) -> Result<Self> {
     let lynx_core_source = resolve_lynx_core_source(options.lynx_core_path.as_deref());
     let lynx_core_path = process_lynx_core_path(lynx_core_source.as_deref())?;
+    claim_process_owner_thread()?;
     let env = process_env(&options)?;
     let debug_router = process_debug_router(options.timeout)?;
     let global_tasks = register_container_thread(env)?;
@@ -158,8 +192,11 @@ impl LynxContainer {
   /// Creates a page inside this container.
   ///
   /// [`LynxPage`] has no public constructor: a page only exists as part of the
-  /// container that owns its native view and drives its task queue.
+  /// container that owns its native view and drives its task queue. Drop the
+  /// process's current page and every [`ElementNode`] derived from it before
+  /// creating the next page, including through another container.
   pub fn new_page(&self) -> Result<LynxPage> {
+    let process_page_lease = ProcessPageLease::acquire()?;
     let options = &self.shared.options;
     let tasks = SharedTasks::new();
     let frames = FrameStore::default();
@@ -186,6 +223,7 @@ impl LynxContainer {
       tasks,
       frames,
       resources,
+      _process_page_lease: process_page_lease,
     });
     let mut pages = self.shared.pages.borrow_mut();
     pages.retain(|page| page.strong_count() > 0);
@@ -283,9 +321,12 @@ impl LynxPage {
   /// for DevTools setup.
   pub fn goto(&mut self, input: &str, options: GotoOptions) -> Result<()> {
     let timeout = options.timeout.unwrap_or(self.container.options.timeout);
-    let (url, bytes) = self.page.resources.read_template(input)?;
+    let (url, bytes, base_dir) = self
+      .page
+      .resources
+      .read_template(input, options.base_dir.as_deref())?;
     validate_navigation_options(&url, &options)?;
-    self.page.resources.set_base_url(&url);
+    self.page.resources.set_navigation(&url, base_dir);
     let previous_sequence = self.page.frames.sequence();
 
     let initial_data_json = options.initial_data_json.as_deref().or(Some("{}"));
@@ -416,8 +457,8 @@ impl LynxPage {
 
   /// Returns this page's DevTools session, attaching on first use.
   ///
-  /// The session id comes from the page's own native view, so two pages that
-  /// loaded the same URL can never be confused for one another.
+  /// The session id comes from the page's own native view, so successive pages
+  /// that load the same URL cannot be confused for one another.
   fn attached_session(&mut self) -> Result<i64> {
     if let Some(session_id) = self.session_id {
       return Ok(session_id);
@@ -764,11 +805,34 @@ fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
   if !source.is_file() {
     return Err(Error::LynxCoreNotFound(source));
   }
+  install_lynx_core_copy(&source, &destination)?;
+  Ok(destination)
+}
+
+fn install_lynx_core_copy(source: &Path, destination: &Path) -> Result<()> {
+  if source == destination
+    || (destination.exists()
+      && std::fs::canonicalize(source)? == std::fs::canonicalize(destination)?)
+  {
+    return Ok(());
+  }
   if let Some(parent) = destination.parent() {
     std::fs::create_dir_all(parent)?;
   }
-  std::fs::copy(source, &destination)?;
-  Ok(destination)
+  let parent = destination
+    .parent()
+    .ok_or_else(|| Error::Protocol("Lynx core destination has no parent".into()))?;
+  let mut staged = tempfile::NamedTempFile::new_in(parent)?;
+  let mut input = std::fs::File::open(source)?;
+  std::io::copy(&mut input, staged.as_file_mut())?;
+  staged
+    .as_file()
+    .set_permissions(std::fs::metadata(source)?.permissions())?;
+  staged.as_file().sync_all()?;
+  staged
+    .persist(destination)
+    .map_err(|error| Error::Io(error.error))?;
+  Ok(())
 }
 
 fn set_icu_data_path_if_available(env: &LynxEnv) -> Result<()> {
@@ -869,6 +933,31 @@ mod tests {
     .unwrap_err();
     assert!(error.to_string().contains("first/lynx_core.js"));
     assert!(error.to_string().contains("second/lynx_core.js"));
+  }
+
+  #[test]
+  fn installing_a_colocated_lynx_core_does_not_truncate_itself() {
+    let directory = tempfile::tempdir().unwrap();
+    let destination = directory.path().join("lynx_core.js");
+    std::fs::write(&destination, b"trusted core").unwrap();
+    let equivalent_source = directory.path().join(".").join("lynx_core.js");
+
+    install_lynx_core_copy(&equivalent_source, &destination).unwrap();
+
+    assert_eq!(std::fs::read(destination).unwrap(), b"trusted core");
+  }
+
+  #[test]
+  fn installing_a_lynx_core_atomically_replaces_the_destination() {
+    let directory = tempfile::tempdir().unwrap();
+    let source = directory.path().join("source.js");
+    let destination = directory.path().join("lynx_core.js");
+    std::fs::write(&source, b"new core").unwrap();
+    std::fs::write(&destination, b"old core").unwrap();
+
+    install_lynx_core_copy(&source, &destination).unwrap();
+
+    assert_eq!(std::fs::read(destination).unwrap(), b"new core");
   }
 
   #[test]

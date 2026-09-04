@@ -567,7 +567,7 @@ export const MCP_APPS_CHAT_ADAPTER = {
   suggestions: SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   async createRequest({ prompt, conversation, settings, host, signal }) {
-    const url = getChatEndpoint('mcp-apps', host);
+    const url = getChatEndpoint('mcp-apps', host, settings);
     const registration = await fetchRegistration(url, signal);
     const provider = toProviderRequestOptions(settings);
     return {

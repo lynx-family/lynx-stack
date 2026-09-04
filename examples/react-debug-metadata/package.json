@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:producer && pnpm run build:consumer",
-    "build:consumer": "cross-env DEBUG=rspeedy,rsbuild rspeedy build --config lynx.config.consumer.js",
-    "build:producer": "cross-env DEBUG=rspeedy,rsbuild rspeedy build --config lynx.config.producer.js",
+    "build:consumer": "cross-env DEBUG=lynx,rsbuild rspeedy build --config lynx.config.consumer.js",
+    "build:producer": "cross-env DEBUG=lynx,rsbuild rspeedy build --config lynx.config.producer.js",
     "dev": "node scripts/serve.mjs dev",
     "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
     "dev:producer": "rspeedy dev --config lynx.config.producer.js",
@@ -20,7 +20,7 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

@@ -13,6 +13,47 @@ rstest.mock('../css/in_shadow.css?inline', () => ({
 import { createElementAPI, type SSRBinding } from '../ts/server/index.js';
 import { MainThreadServerContext } from '../ts/server/wasm.js';
 
+const X_ELEMENT_TEST_CONFIG = {
+  enableCSSSelector: true,
+  defaultOverflowVisible: false,
+  defaultDisplayLinear: true,
+  transformVW: false,
+  transformVH: false,
+  transformREM: false,
+};
+
+const X_ELEMENT_COMPATIBLE_TAGS = [
+  ['viewpager', 'x-viewpager-ng', 'x-viewpager-ng'],
+  ['viewpager-item', 'x-viewpager-item-ng', 'x-viewpager-item-ng'],
+  ['webview', 'x-webview', 'x-webview'],
+  ['overlay', 'x-overlay-ng', 'x-overlay-ng'],
+  ['refresh', 'x-refresh-view', 'x-refresh-view'],
+  ['refresh-header', 'x-refresh-header', 'x-refresh-header'],
+  ['blur-view', 'x-blur-view', 'x-blur-view'],
+  ['scroll-coordinator', 'x-foldview-ng', 'x-foldview-ng'],
+  [
+    'scroll-coordinator-header',
+    'x-foldview-header-ng',
+    'x-foldview-header-ng',
+  ],
+  ['scroll-coordinator-slot', 'x-foldview-slot-ng', 'x-foldview-slot-ng'],
+  [
+    'scroll-coordinator-slot-drag',
+    'x-foldview-slot-drag-ng',
+    'x-foldview-slot-drag-ng',
+  ],
+  [
+    'scroll-coordinator-toolbar',
+    'x-foldview-toolbar-ng',
+    'x-foldview-toolbar-ng',
+  ],
+  ['input', 'x-input', 'x-input-ng'],
+  ['x-input-ng', 'x-input', 'x-input-ng'],
+  ['textarea', 'x-textarea', 'textarea'],
+  ['x-textarea-ng', 'x-textarea', 'textarea'],
+  ['x-textarea', 'x-textarea', 'textarea'],
+] as const;
+
 describe('Server SSR', () => {
   it('should generate html correctly', () => {
     const binding: SSRBinding = {
@@ -86,6 +127,45 @@ describe('Server SSR', () => {
     expect(html).toContain('src="http://example.com/img.png"');
     expect(html).toContain('width:100px;');
     expect(html).toContain('height:100px;');
+  });
+
+  it.each(X_ELEMENT_COMPATIBLE_TAGS)(
+    'should map %s to <%s>',
+    (lynxTag, htmlTag, canonicalLynxTag) => {
+      const binding: SSRBinding = {
+        ssrResult: '',
+      };
+      const { globalThisAPIs: api, wasmContext } = createElementAPI(
+        binding,
+        undefined,
+        '',
+        X_ELEMENT_TEST_CONFIG,
+      );
+
+      const element = api.__CreateElement(lynxTag, 0);
+      const uid = api.__GetElementUniqueID(element);
+
+      expect(api.__GetTag(element)).toBe(canonicalLynxTag);
+      expect(wasmContext.generate_html(uid)).toContain(`<${htmlTag}>`);
+    },
+  );
+
+  it('should include the x-webview shadow template for its alias', () => {
+    const binding: SSRBinding = {
+      ssrResult: '',
+    };
+    const { globalThisAPIs: api, wasmContext } = createElementAPI(
+      binding,
+      undefined,
+      '',
+      X_ELEMENT_TEST_CONFIG,
+    );
+
+    const element = api.__CreateElement('webview', 0);
+    const html = wasmContext.generate_html(api.__GetElementUniqueID(element));
+
+    expect(html).toContain('<x-webview>');
+    expect(html).toContain('<iframe id="webview" part="webview"></iframe>');
   });
 
   it('should transform styles', () => {

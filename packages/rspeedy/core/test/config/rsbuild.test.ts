@@ -78,7 +78,7 @@ describe('Config - toRsBuildConfig', () => {
           "liveReload": true,
           "progressBar": true,
           "watchFiles": undefined,
-          "writeToDisk": true,
+          "writeToDisk": undefined,
         }
       `)
     })

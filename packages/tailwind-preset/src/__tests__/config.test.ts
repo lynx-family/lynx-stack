@@ -1,31 +1,55 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { beforeAll, describe, expect, test } from 'vitest';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
+/**
+ * Compiles the test config with the real Tailwind CSS v3 CLI.
+ *
+ * The CLI is resolved from the `tailwindcss` devDependency instead of
+ * `node_modules/.bin`, because `postcss` is not hoisted into this package
+ * and the bin link depends on the installer layout.
+ */
+function compilePresetCSS(): string {
+  return execFileSync(process.execPath, [
+    require.resolve('tailwindcss/lib/cli.js'),
+    '--config',
+    path.resolve(__dirname, 'tailwind.config.ts'),
+    '--input',
+    path.resolve(__dirname, 'styles.css'),
+  ], {
+    encoding: 'utf-8',
+    timeout: 30_000,
+    // Progress and browserslist notices go to stderr, CSS goes to stdout.
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+}
+
+// This compile is what timed out on Windows in #1125, back when CI passed
+// `--hook-timeout` and vitest silently ignored it, leaving hooks at the 10s
+// default. #1121 corrected the flag to `--hookTimeout`, so the 50s ceiling
+// now actually applies.
 describe('Lynx Tailwind Preset', () => {
   let compiledCSS = '';
   let usedProperties = new Set<string>();
 
   beforeAll(() => {
-    try {
-      const outputPath = path.resolve(__dirname, 'output.css');
+    compiledCSS = compilePresetCSS();
+    usedProperties = extractPropertiesFromCSS(compiledCSS);
+  });
 
-      // Read the generated CSS
-      compiledCSS = fs.readFileSync(outputPath, 'utf-8');
-
-      // Extract classes and properties
-      usedProperties = extractPropertiesFromCSS(compiledCSS);
-    } catch (error) {
-      console.error('Failed to read output.css:', error);
-      throw error;
-    }
+  test('compiles the preset without changing its output', async () => {
+    await expect(compiledCSS).toMatchFileSnapshot(
+      path.resolve(__dirname, 'output.css'),
+    );
   });
 
   describe('Test against allowed CSS Properties', () => {

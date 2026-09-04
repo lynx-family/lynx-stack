@@ -79,5 +79,7 @@ export function LynxXmlView(props: LynxXmlViewProps) {
     ref: lynxViewRef,
     className,
     'thread-strategy': 'multi-thread',
+    'transform-vh': 'true',
+    'transform-vw': 'true',
   });
 }

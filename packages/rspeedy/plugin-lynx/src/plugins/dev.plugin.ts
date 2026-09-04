@@ -30,6 +30,12 @@ export function pluginDev(): RsbuildPlugin {
       return action === 'dev' || config.mode === 'development'
     },
     async setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       // The dev URLs always point at the main bundle of an entry.
       function getResolveBundleName() {
         const lynxConfig = getLynxConfig(api)
@@ -158,6 +164,10 @@ export function pluginDev(): RsbuildPlugin {
                 host: hostname,
                 port: '<port>',
               },
+              // A Lynx client reads the bundle from disk as often as it reads
+              // it from the dev server, so the default is the opposite of
+              // Rsbuild's.
+              writeToDisk: original.dev?.writeToDisk ?? true,
             },
             // When using `rspeedy dev --mode production`
             // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`
@@ -313,11 +323,7 @@ export function pluginDev(): RsbuildPlugin {
         if (isLynx(environment)) {
           chain.plugin('lynx.hmr.provide.websocket')
             .use(ProvidePlugin, [{
-              WebSocket: [
-                getLynxConfig(api).dev.client?.websocketTransport
-                  ?? require.resolve('@lynx-js/websocket'),
-                'default',
-              ],
+              WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
             }])
             .end()
         }

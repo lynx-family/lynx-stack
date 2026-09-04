@@ -9,6 +9,16 @@ import {
 } from '../../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
+import {
+  __etAttrPlanMap,
+  adaptMTRefAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+  initializeMainThreadDynamicAttrSlots,
+} from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
 vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
@@ -48,12 +58,20 @@ describe('renderMainThread', () => {
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ pageAttributes: null, rootRefs: [] });
+    clearMainThreadDynamicAttrState();
+    clearEtAttrPlanMap();
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [],
+      rootSubtreeHandles: [],
+    });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     destroyAllElementTemplateListStates();
+    clearMainThreadDynamicAttrState();
+    clearEtAttrPlanMap();
   });
 
   it('should report error when renderToOpcodes fails', () => {
@@ -116,6 +134,7 @@ describe('renderMainThread', () => {
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       pageAttributes: null,
       rootRefs: [rootRefA, rootRefB],
+      rootSubtreeHandles: [[], []],
     });
     (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
       .getJSContext = vi.fn(() => ({
@@ -179,6 +198,7 @@ describe('renderMainThread', () => {
         bindtap: '0:0:bindtap',
       },
       rootRefs: [rootRef],
+      rootSubtreeHandles: [[]],
     });
     vi.mocked(__SerializeElementTemplate).mockReturnValue(
       {
@@ -234,6 +254,7 @@ describe('renderMainThread', () => {
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       pageAttributes: null,
       rootRefs: [rootRef],
+      rootSubtreeHandles: [[]],
     });
     vi.mocked(__SerializeElementTemplate).mockReturnValue(
       serializedPage as unknown as ReturnType<typeof __SerializeElementTemplate>,
@@ -270,5 +291,89 @@ describe('renderMainThread', () => {
     expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[1]).toBeLessThan(
       vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
     );
+  });
+
+  it('attaches root MTRef state only after page insertion succeeds', () => {
+    const rootRef = { type: 'root-ref' } as unknown as ElementRef;
+    const ref = { _wvid: 80 };
+    const updateWorkletRef = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: { updateWorkletRef },
+    } as typeof globalThis.lynxWorkletImpl;
+    __etAttrPlanMap._et_ref = [0, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(
+      -1,
+      '_et_ref',
+      [{ type: 'main-thread-ref', value: ref }],
+    );
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [rootRef],
+      rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]],
+    });
+    vi.mocked(__SerializeElementTemplate).mockReturnValue({
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[{
+        templateKey: '_et_ref',
+        uid: -1,
+      }]],
+      uid: 0,
+    } as ReturnType<typeof __SerializeElementTemplate>);
+
+    try {
+      renderMainThread();
+
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, rootRef);
+      expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+        updateWorkletRef.mock.invocationCallOrder[0]!,
+      );
+      expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+        kind: 'mt-ref',
+        value: ref,
+      });
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('keeps root MTRef state blocked when page insertion throws', () => {
+    const rootRef = { type: 'root-ref' } as unknown as ElementRef;
+    const ref = { _wvid: 81 };
+    const updateWorkletRef = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: { updateWorkletRef },
+    } as typeof globalThis.lynxWorkletImpl;
+    __etAttrPlanMap._et_ref = [0, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(
+      -1,
+      '_et_ref',
+      [{ type: 'main-thread-ref', value: ref }],
+    );
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [rootRef],
+      rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]],
+    });
+    vi.mocked(__InsertNodeToElementTemplate).mockImplementationOnce(() => {
+      throw new Error('insert root failed');
+    });
+
+    try {
+      expect(() => renderMainThread()).toThrow('insert root failed');
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+        kind: 'mt-ref',
+        value: ref,
+      });
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
   });
 });

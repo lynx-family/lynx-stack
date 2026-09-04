@@ -18,14 +18,16 @@ export interface BundleFilenameContext {
 }
 
 // @public
-export interface LynxClient {
-    websocketTransport?: string | undefined;
-}
+export function isPluginLynxRegistered(host: {
+    isPluginExists(name: string, options?: {
+        environment?: string;
+    }): boolean;
+}, environments: string[]): boolean;
 
 // @beta
 export interface LynxConfig {
-    readonly dev: LynxDev;
     readonly output: LynxOutput;
+    readonly performance: LynxPerformance;
     resolveBundleFilename(context: {
         entryName: string;
         platform: string;
@@ -36,16 +38,6 @@ export interface LynxConfig {
     resolveLazyBundleFilename(context: {
         platform: string;
     }): string | undefined;
-}
-
-// @public
-export interface LynxDev {
-    client?: LynxClient | undefined;
-}
-
-// @public
-export interface LynxDistPath {
-    intermediate?: string | undefined;
 }
 
 // @public
@@ -61,15 +53,19 @@ export interface LynxMinify {
 
 // @public
 export interface LynxOutput {
-    distPath?: LynxDistPath | undefined;
     filename?: LynxFilename | undefined;
     minify?: LynxMinify | undefined;
 }
 
 // @public
+export interface LynxPerformance {
+    profile?: boolean | undefined;
+}
+
+// @public
 export interface LynxPluginOptions {
-    dev?: LynxDev | undefined;
     output?: LynxOutput | undefined;
+    performance?: LynxPerformance | undefined;
 }
 
 // @public

@@ -175,6 +175,8 @@ describe('Background Preact render', () => {
 
     const ops = updateEvents.at(-1)?.ops ?? [];
     const formatted = formatElementTemplateUpdateCommands(ops);
+    // Preact 11's LIS-based children diff moves `c` in front of the kept `a`
+    // (v10 moved `a` behind `c`); the resulting list state is identical.
     expect(formatted).toEqual([
       { op: 'removeTypedListItem', targetId: listId, itemId: bId, removedSubtreeHandleIds: [bId] },
       {
@@ -192,6 +194,7 @@ describe('Background Preact render', () => {
           __etHandleRef: expect.any(Number),
           type: '_et_list_item',
           platformInfo: { 'item-key': 'd', 'full-span': true },
+          subtreeHandleIds: [],
         },
         beforeId: aId,
       },
@@ -202,7 +205,20 @@ describe('Background Preact render', () => {
           __etHandleRef: cId,
           type: '_et_list_item',
           platformInfo: { 'item-key': 'c', 'full-span': true },
+          subtreeHandleIds: [],
         },
+      },
+      { op: 'removeTypedListItem', targetId: listId, itemId: cId, removedSubtreeHandleIds: [] },
+      {
+        op: 'insertTypedListItem',
+        targetId: listId,
+        item: {
+          __etHandleRef: cId,
+          type: '_et_list_item',
+          platformInfo: { 'item-key': 'c', 'full-span': true },
+          subtreeHandleIds: [],
+        },
+        beforeId: aId,
       },
       {
         op: 'updateTypedListItem',
@@ -211,18 +227,8 @@ describe('Background Preact render', () => {
           __etHandleRef: aId,
           type: '_et_list_item',
           platformInfo: { 'item-key': 'a', 'full-span': true },
+          subtreeHandleIds: [],
         },
-      },
-      { op: 'removeTypedListItem', targetId: listId, itemId: aId, removedSubtreeHandleIds: [] },
-      {
-        op: 'insertTypedListItem',
-        targetId: listId,
-        item: {
-          __etHandleRef: aId,
-          type: '_et_list_item',
-          platformInfo: { 'item-key': 'a', 'full-span': true },
-        },
-        beforeId: 0,
       },
     ]);
     expect(

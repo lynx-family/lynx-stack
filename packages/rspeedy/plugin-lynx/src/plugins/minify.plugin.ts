@@ -3,7 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import { mergeRsbuildConfig } from '@rsbuild/core'
-import type { RsbuildConfig, RsbuildPlugin, Rspack } from '@rsbuild/core'
+import type {
+  MergedEnvironmentConfig,
+  RsbuildConfig,
+  RsbuildPlugin,
+  Rspack,
+} from '@rsbuild/core'
 
 import { getLynxConfig } from '../config.js'
 import { debug } from '../debug.js'
@@ -139,7 +144,9 @@ export function pluginMinify(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:minify',
     setup(api) {
-      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+      // Per environment, so a `minify` set on one is normalized the same way
+      // and cannot replace the options merged into the global config.
+      api.modifyEnvironmentConfig((config) => {
         const userMinify = config.output?.minify
 
         // Disable minification
@@ -150,15 +157,20 @@ export function pluginMinify(): RsbuildPlugin {
 
         if (typeof userMinify === 'object') {
           debug(`merging minification options`)
-          return mergeRsbuildConfig(defaultConfig, config)
+          return mergeRsbuildConfig<RsbuildConfig>(
+            defaultConfig,
+            config,
+          ) as MergedEnvironmentConfig
         }
 
-        return mergeRsbuildConfig(config, defaultConfig)
+        return mergeRsbuildConfig<RsbuildConfig>(
+          config,
+          defaultConfig,
+        ) as MergedEnvironmentConfig
       })
 
-      api.modifyBundlerChain((chain, { rspack, CHAIN_ID }) => {
-        const currentConfig = api.getRsbuildConfig('normalized')
-        const minify = currentConfig.output?.minify as
+      api.modifyBundlerChain((chain, { rspack, CHAIN_ID, environment }) => {
+        const minify = environment.config.output?.minify as
           | Minify
           | boolean
           | undefined

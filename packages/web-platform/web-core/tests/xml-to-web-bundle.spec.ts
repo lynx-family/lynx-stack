@@ -220,17 +220,25 @@ describe('XML markup document to web bundle', () => {
     expect(css).toContain('.a:not([l-e-name])');
   });
 
-  test('omits the sections an XML document cannot fill', () => {
+  test('synthesizes the required empty background entry when omitted', () => {
     // No `<style>` and no background script: the encoder must still frame a
-    // readable bundle rather than emit an empty or malformed section.
+    // readable bundle and satisfy Lynx Core's fixed app-service load without a
+    // network fallback.
     const { buffer } = build(xml());
     const { sections } = readBundle(buffer);
     expect(readStringMap(sections.get(TemplateSectionLabel.Manifest)!))
-      .toStrictEqual({});
+      .toStrictEqual({ '/app-service.js': '' });
     expect(
       readJSONSection(sections.get(TemplateSectionLabel.CustomSections)!),
     ).toStrictEqual({});
     expect(sections.has(TemplateSectionLabel.ElementTemplates)).toBe(false);
+  });
+
+  test('preserves an explicitly empty background script', () => {
+    const { buffer } = build(xml({ background: '' }));
+    const { sections } = readBundle(buffer);
+    expect(readStringMap(sections.get(TemplateSectionLabel.Manifest)!))
+      .toStrictEqual({ '/app-service.js': '' });
   });
 
   /**

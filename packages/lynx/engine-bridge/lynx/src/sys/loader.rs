@@ -287,6 +287,9 @@ define_loaded_library! {
       /// example, a value of 1.5 will increase the text size by 50%, while 0.8 will
       /// reduce it by 20%.
       lynx_view_builder_set_font_scale: unsafe extern "C" fn(*mut lynx_view_builder_t, *const f32);
+      /// Controls whether the LynxView creates and runs a JavaScript runtime.
+      lynx_view_builder_set_enable_js_runtime:
+        unsafe extern "C" fn(*mut lynx_view_builder_t, bool);
       /// Sets the ICU data path for the LynxView being built. This function allows you
       /// to specify the path to the ICU (International Components for Unicode) data
       /// file that the LynxView will use for Unicode-related operations such as text
@@ -840,7 +843,7 @@ mod tests {
     // Each manifest entry expands into exactly one field and one resolver. The
     // compiler rejects missing or duplicate struct fields; these assertions
     // additionally pin the expected public ABI surface and compatibility split.
-    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 110);
+    assert_eq!(LOADED_LIBRARY_SYMBOLS.len(), 111);
 
     let mut names = HashSet::new();
     let mut required_count = 0;
@@ -858,7 +861,7 @@ mod tests {
     }
 
     optional_names.sort_unstable();
-    assert_eq!(required_count, 107);
+    assert_eq!(required_count, 108);
     assert_eq!(
       optional_names,
       [

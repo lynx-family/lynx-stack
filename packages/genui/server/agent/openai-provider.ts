@@ -5,6 +5,10 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import type { AgentConfig } from '@mastra/core/agent';
 
+import {
+  assertAllowedCustomProviderBaseURL,
+  createCustomProviderFetch,
+} from './custom-provider-security.js';
 import { isOfficialOpenAIBaseURL } from './openai-utils';
 import { resolveModelConfig } from '../service/common/model-config.js';
 import type { ChatMessage } from '../service/common/types';
@@ -34,10 +38,10 @@ interface CompatRequestBody {
   messages?: CompatChatMessage[];
 }
 
-function createCompatFetch(): typeof fetch {
+function createCompatFetch(fetchImpl: typeof fetch = fetch): typeof fetch {
   return async (input, init) => {
     if (!init || !init.body || typeof init.body !== 'string') {
-      return fetch(input, init);
+      return fetchImpl(input, init);
     }
     let body = init.body;
     try {
@@ -56,29 +60,52 @@ function createCompatFetch(): typeof fetch {
     } catch {
       // body is not JSON, leave as-is
     }
-    return fetch(input, { ...init, body });
+    return fetchImpl(input, { ...init, body });
   };
 }
 
 export function createLLMProvider(
   opts: OpenAIProviderOptions = {},
 ): LLMProvider {
-  const resolved = resolveModelConfig(opts.model);
-  const apiKey = opts.apiKey ?? resolved.config.apiKey;
-  const baseURL = opts.baseURL ?? resolved.config.baseURL;
-  const model = opts.model && opts.model !== resolved.name
-    ? opts.model
-    : resolved.config.model;
+  const directOverride = typeof opts.apiKey === 'string'
+      && opts.apiKey.trim().length > 0
+      && typeof opts.baseURL === 'string'
+      && opts.baseURL.trim().length > 0
+      && typeof opts.model === 'string'
+      && opts.model.trim().length > 0
+    ? {
+      apiKey: opts.apiKey.trim(),
+      baseURL: assertAllowedCustomProviderBaseURL(opts.baseURL.trim()),
+      model: opts.model.trim(),
+      api: opts.api,
+    }
+    : undefined;
+  const providerOptions = directOverride ?? (() => {
+    const resolved = resolveModelConfig(opts.model);
+    return {
+      apiKey: resolved.config.apiKey,
+      baseURL: resolved.config.baseURL,
+      model: resolved.config.model,
+      api: resolved.config.api,
+    };
+  })();
+  const { apiKey, baseURL, model } = providerOptions;
 
   const isOfficial = isOfficialOpenAIBaseURL(baseURL);
-  const api = opts.api
-    ?? resolved.config.api
+  const api = providerOptions.api
     ?? (isOfficial ? 'responses' : 'chat');
+
+  const customProviderFetch = directOverride
+    ? createCustomProviderFetch()
+    : undefined;
+  const providerFetch = isOfficial
+    ? customProviderFetch
+    : createCompatFetch(customProviderFetch);
 
   const providerSettings = {
     apiKey,
     baseURL,
-    ...(isOfficial ? {} : { fetch: createCompatFetch() }),
+    ...(providerFetch ? { fetch: providerFetch } : {}),
   };
   const provider = createOpenAI(providerSettings);
   const buildModel = (id: string) =>

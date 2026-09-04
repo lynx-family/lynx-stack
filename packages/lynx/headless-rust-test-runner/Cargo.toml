@@ -8,12 +8,10 @@ publish = false
 lynx = { path = "../engine-bridge/lynx" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+tempfile = "3.27.0"
 thiserror = "2.0.19"
 ureq = "2.12.1"
 url = "2.5.8"
-
-[dev-dependencies]
-static_assertions = "1.1.0"
 
 [build-dependencies]
 fs2 = "0.4.3"
@@ -21,6 +19,9 @@ hex = { workspace = true }
 reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "rustls"] }
 sha2 = { workspace = true }
 tempfile = "3.27.0"
+
+[dev-dependencies]
+static_assertions = "1.1.0"
 
 [[bin]]
 name = "lynx-headless-rust-test-runner"

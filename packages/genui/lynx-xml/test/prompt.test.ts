@@ -6,6 +6,8 @@ import { describe, expect, test } from '@rstest/core';
 
 import {
   LYNX_XML_ENGINE_VERSION,
+  LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
+  LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT,
   LYNX_XML_SYSTEM_PROMPT,
   buildLynxXmlSystemPrompt,
 } from '../src/index.js';
@@ -17,11 +19,35 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toBe(buildLynxXmlSystemPrompt());
   });
 
+  test('builds the prompt for agents with the fragment conversion tool', () => {
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toBe(
+      buildLynxXmlSystemPrompt({
+        appendix: LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
+      }),
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
+      'html_fragment_to_main_thread_script',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'html_fragment_to_main_thread_script',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'opaque placeholder comment',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'bindings map',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'It does not return the generated JavaScript',
+    );
+  });
+
   test('composes guidance from the Vanilla Lynx skill dependency', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'bundled from @lynx-js/skill-vanilla-lynx',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('### SKILL.md');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('### references/lynxml.md');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       '### references/main-thread.md',
     );
@@ -31,11 +57,10 @@ describe('buildLynxXmlSystemPrompt', () => {
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('### references/style.md');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'All four `__AddEventListener(element, eventName, handler, options)` arguments are mandatory',
+      '`options` is required even though its `capture`',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      '`__SetDataset` and `__AddDataset`',
-    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('`__SetDataset');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('`__AddDataset');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('`__ElementIsEqual`');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'Main-thread local event loop',
@@ -44,12 +69,34 @@ describe('buildLynxXmlSystemPrompt', () => {
       'Do not echo first-screen data back to main thread',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'The default `box-sizing` is `auto`',
+      'Treat the default box model as `border-box`',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Treat `ElementRef` as an opaque main-thread handle',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'keep `__DestroyLifetime` reserved for the Engine lifecycle',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Keep JavaScript and CSS source text raw',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Deliver the complete `.lynxml` document',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'must already have a non-zero layout box',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'set a viewport-based root font size with `vw`',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Set explicit `width` and `height` on every image',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('```');
     expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
       'Keep external bundle building and loading separate',
     );
+    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('external-build.md');
     expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
       'globalThis.processData',
     );
@@ -70,7 +117,7 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('__DestroyLifetime');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('__FlushElementTree()');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      '__AddEventListener(element, eventName, handler, options)',
+      '__AddEventListener(node: ElementRef, eventName: string',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('lynx.getJSContext()');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('lynx.getCoreContext()');
@@ -78,37 +125,36 @@ describe('buildLynxXmlSystemPrompt', () => {
 
   test('keeps node references separate from ids when appending elements', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      '__AppendElement(parentNode, childNode)',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'both arguments must be node references',
+      'every __AppendElement argument',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /never pass pageId,\s+__GetElementUniqueID\(\.\.\.\), or any other number/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'pass the parent node reference into the helper, not its id',
+      /append helper's parent must be a node/u,
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /Use pageId\s+only as the parent component id/u,
+      /never append\s+pageId,\s+__GetElementUniqueID\(\.\.\.\), or another number/u,
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
+      /Use pageId\s+only as the first argument\s+to page-owned element creation APIs/u,
     );
   });
 
   test('overrides the imported layout guidance for Lynx XML', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('white-space: normal');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'CSS `@media` rules do not take effect at runtime',
+      'Do not use `@media`, `@supports`, `@layer`, `@keyframes`',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
       /Use calc\(\) only\s+for length-valued properties/u,
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('flex-shrink: 0');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'every node that lays out Element children must explicitly',
+      'every container that lays out Element children',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('set display: flex');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Explicitly set flex-direction: column or flex-direction: row',
+      'Apply a class with display: flex',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'an explicit row or column flex-direction',
     );
     expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
       'Prefer it for simple columns',
@@ -120,25 +166,37 @@ describe('buildLynxXmlSystemPrompt', () => {
 
   test('adds the concrete long-page scroll-view contract to the XML adaptation', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'The page root is not a scroll container',
+      'Append the first business node directly to it',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'the first business node appended directly to the page must be created',
+    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
+      /append\s+__CreateScrollView\(pageId\) directly to/u,
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('__CreateScrollView(pageId)');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'never below a business view',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'scroll-orientation to "vertical" with',
+    );
     expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /do not\s+wrap it in a business __CreateView/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'scroll-orientation attribute to "vertical" with',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Do not nest vertical scroll views',
+      /Do not nest\s+vertical scroll\s+views/u,
     );
   });
 
   test('adds provider-neutral mobile-first design constraints', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('Mobile design contract:');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Viewport and structure:');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Responsive scale and spacing:',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Visual hierarchy, typography, and color:',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Interaction, forms, and state:',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Media and motion:');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Override boundary:');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('from 320px to 430px');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'Do not default to a centered desktop canvas',
@@ -146,29 +204,72 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'one outer page-level vertical scrolling surface',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'env(safe-area-inset-top)',
+    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
+      /host or\s+initialization data explicitly supplies them/u,
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('exactly once per exposed edge');
+    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
+      /Never\s+derive safe-area insets from Web CSS environment variables/u,
+    );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'font-size: calc(100vw / 23.4375)',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('semantic token set');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('small semantic palette');
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('at least 44px by 44px');
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /Never make\s+hover the only indication of interactivity/u,
-    );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'scrolling content must reserve',
+      'Do not depend on hover feedback',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
+      /scrolling content must\s+reserve/u,
     );
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'avoid card-inside-card layouts',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'Never rely on color alone',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('placeholder text');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'must not be the only label',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'loading, empty, error, offline, success, disabled, and selected states',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
+      /Meaning and state must remain clear\s+in\s+a\s+static presentation/u,
     );
     expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
       '__CreateScrollView',
     );
     expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
       'scroll-orientation',
+    );
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('CSS variables');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('aria-label');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('aspectFit');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('aspectFill');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('@media');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('container query');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('clamp(');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('srcset');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
+      'Core Web Vitals',
+    );
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('semantic HTML');
+    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
+      'prefers-reduced-motion',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('env(');
+  });
+
+  test('maps provider-neutral accessibility intent to Lynx attributes', () => {
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'accessibility-element to true',
+    );
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('accessibility-label');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain('accessibility-traits');
+    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
+      'never use Web aria-label',
     );
   });
 
@@ -178,8 +279,12 @@ describe('buildLynxXmlSystemPrompt', () => {
       appendix: '  Prefer a compact information hierarchy.  ',
     });
 
-    expect(prompt).toContain('<lynx engine-version="5.1">');
-    expect(prompt).not.toContain('<lynx engine-version="4.2">');
+    expect(prompt).toContain(
+      'Set the <lynx> root\'s engine-version to "5.1".',
+    );
+    expect(prompt).not.toContain(
+      'Set the <lynx> root\'s engine-version to "4.2".',
+    );
     expect(prompt.endsWith('Prefer a compact information hierarchy.')).toBe(
       true,
     );

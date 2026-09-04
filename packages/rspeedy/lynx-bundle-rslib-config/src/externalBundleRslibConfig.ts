@@ -2,13 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
-import { RuntimeWrapperWebpackPlugin as BackgroundRuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
+import type {
+  CustomSectionNaming,
+  LynxTemplatePlugin as LynxTemplatePluginClass,
+} from '@lynx-js/template-webpack-plugin'
 
-import { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
+import { MarkMainThreadWebpackPlugin } from './webpack/MarkMainThreadWebpackPlugin.js'
 
 /**
  * The options for encoding the external bundle.
@@ -26,15 +32,15 @@ export interface EncodeOptions {
   /**
    * The output format of the encoded bundle.
    *
-   * - `'tasm'`: the native TASM bundle via `@lynx-js/tasm`.
+   * - `'lynx'`: the native bundle a Lynx engine loads, via `@lynx-js/tasm`.
    * - `'web'`: a web binary bundle via `@lynx-js/web-core/encode`, decodable by
    *   the web platform. Sections are emitted as raw JS (the web runtime wraps
    *   them at `lynx.loadScript` time), and CSS is folded into the StyleInfo
    *   section.
    *
-   * @defaultValue 'tasm'
+   * @defaultValue 'lynx'
    */
-  target?: 'web' | 'tasm'
+  target?: 'web' | 'lynx'
 
   /**
    * Whether to compile main thread chunks to JsBytecode in the emitted bundle.
@@ -43,45 +49,13 @@ export interface EncodeOptions {
    * When disabled, main thread chunks are encoded as plain JavaScript source,
    * which keeps them readable for debugging and speeds up encoding.
    *
-   * Only takes effect for the `'tasm'` target. For the `'web'` target the
+   * Only takes effect for the `'lynx'` target. For the `'web'` target the
    * `JsBytecode` tag only routes main thread chunks to the correct bundle
    * slot (the chunk is never bytecode-compiled), so it is always kept.
    *
    * @defaultValue `false` when `NODE_ENV` is `'development'`, otherwise `true`
    */
   enableJsBytecode?: boolean
-}
-
-// When preact devtools is enabled (`REACT_DEVTOOL`), keep function and class
-// names. Devtools relies on them to resolve component names (`type.name`) and
-// to reconstruct the hook tree (it matches minified stack frames by function
-// name). Minification would otherwise mangle/inline those names away. Only
-// enabled with devtools since it slightly increases bundle size. Mirrors
-// `pluginMinify` in @lynx-js/rspeedy (lynx-family/lynx-stack#2880).
-const keepNames = Boolean(process.env['REACT_DEVTOOL'])
-
-const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
-  jsOptions: {
-    minimizerOptions: {
-      compress: {
-        /**
-         * the module wrapper iife need to be kept to provide the return value
-         * for the module loader in lynx_core.js
-         */
-        negate_iife: false,
-        // Allow return in module wrapper
-        side_effects: false,
-
-        // `mangle.keep_*` below preserves most names, but the compressor can
-        // still inline single-use functions (incl. one-shot components) into
-        // anonymity; `compress.keep_*` stops that. Cheap, so we keep both.
-        ...(keepNames ? { keep_fnames: true, keep_classnames: true } : {}),
-      },
-      ...(keepNames
-        ? { mangle: { keep_fnames: true, keep_classnames: true } }
-        : {}),
-    },
-  },
 }
 
 /**
@@ -91,7 +65,6 @@ const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
  */
 export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
   format: 'cjs',
-  syntax: 'es2015',
   autoExtension: false,
   shims: {
     cjs: {
@@ -104,9 +77,10 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
       dependencies: false,
       peerDependencies: false,
     },
-    minify: process.env['NODE_ENV'] === 'development'
-      ? false
-      : DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG,
+    // `rslib build` always compiles with rspack mode `production`, so the
+    // development signal here is `NODE_ENV`. What minification may do is
+    // `pluginLynx`'s to say.
+    minify: process.env['NODE_ENV'] !== 'development',
     target: 'web',
     dataUriLimit: Number.POSITIVE_INFINITY,
     distPath: {
@@ -426,6 +400,23 @@ function toAsyncExternals(externals: Externals): Externals {
   )
 }
 
+// The persistent cache is keyed by the environment name, which no longer
+// tells two bundles apart now that it follows the target. The bundle name
+// keeps each one in its own cache bucket.
+function withBundleCacheDigest(
+  buildCache: Required<LibConfig>['performance']['buildCache'],
+  bundleName: string,
+): NonNullable<Required<LibConfig>['performance']['buildCache']> {
+  if (buildCache === false) {
+    return false
+  }
+  const options = typeof buildCache === 'object' ? buildCache : {}
+  return {
+    ...options,
+    cacheDigest: [bundleName, ...options.cacheDigest ?? []],
+  }
+}
+
 function transformExternals(
   externalsPresets?: ExternalsPresets,
   externals?: Externals,
@@ -568,9 +559,8 @@ export function defineExternalBundleRslibConfig(
   userLibConfig: ExternalBundleLibConfig,
   encodeOptions: EncodeOptions = {},
 ): RslibConfig {
-  const normalizedOutputMinify = userLibConfig.output?.minify === true
-    ? DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG
-    : userLibConfig.output?.minify
+  // Taken before `id` is overridden below, which names the environment.
+  const bundleName = userLibConfig.id ?? 'index'
 
   return {
     lib: [
@@ -578,9 +568,19 @@ export function defineExternalBundleRslibConfig(
         DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG,
         {
           ...userLibConfig,
+          // The environment is named after the target, the way an application
+          // build names its own, so a plugin keyed on that name treats a
+          // library the same way. `id` names the bundle instead.
+          id: encodeOptions.target ?? 'lynx',
+          performance: {
+            ...userLibConfig.performance,
+            buildCache: withBundleCacheDigest(
+              userLibConfig.performance?.buildCache,
+              bundleName,
+            ),
+          },
           output: {
             ...userLibConfig.output,
-            minify: normalizedOutputMinify,
             externals: transformExternals(
               userLibConfig.output?.externalsPresets,
               userLibConfig.output?.externals,
@@ -593,6 +593,7 @@ export function defineExternalBundleRslibConfig(
     ],
     plugins: [
       externalBundleRsbuildPlugin({
+        bundleName,
         engineVersion: encodeOptions.engineVersion,
         target: encodeOptions.target,
         enableJsBytecode: encodeOptions.enableJsBytecode,
@@ -606,6 +607,38 @@ interface ExposedLayers {
   readonly MAIN_THREAD: string
 }
 
+// The consuming application loads a section by the name of the chunk it holds.
+// `__LoadStyleSheet` derives the `:CSS` one from that name.
+function sectionNaming(compilation: Rspack.Compilation): CustomSectionNaming {
+  const names = new Map<string, string>()
+
+  for (const chunk of compilation.chunks) {
+    if (chunk.name === undefined) {
+      continue
+    }
+    for (const file of [...chunk.files, ...chunk.auxiliaryFiles]) {
+      names.set(file, chunk.name)
+    }
+  }
+
+  // A manifest key is a path (`/utils.js`), an asset name is not.
+  const nameOf = (key: string): string => {
+    const name = names.get(key) ?? names.get(key.replace(/^\//, ''))
+    if (name === undefined) {
+      throw new Error(
+        `No chunk owns \`${key}\`, so the section it belongs to cannot be named.`,
+      )
+    }
+    return name
+  }
+
+  return {
+    mainThread: nameOf,
+    background: nameOf,
+    css: assetName => `${nameOf(assetName)}:CSS`,
+  }
+}
+
 /**
  * Rewrite user entries into explicit background/main-thread entries.
  *
@@ -615,12 +648,14 @@ interface ExposedLayers {
  * - `<name>__main-thread` for main thread
  */
 const externalBundleRsbuildPlugin = ({
+  bundleName,
   engineVersion,
   target,
   enableJsBytecode,
 }: {
+  bundleName: string
   engineVersion: string | undefined
-  target: 'web' | 'tasm' | undefined
+  target: 'web' | 'lynx' | undefined
   enableJsBytecode: boolean | undefined
 }): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle',
@@ -638,8 +673,36 @@ const externalBundleRsbuildPlugin = ({
       )
     }
 
+    const exposed = api.useExposed<{
+      LynxTemplatePlugin: typeof LynxTemplatePluginClass
+    }>(Symbol.for('LynxTemplatePlugin'))
+
+    if (!exposed) {
+      throw new Error(
+        'lynx-bundle-rslib-config requires exposed `LynxTemplatePlugin`. Please apply `pluginLynx` from `@lynx-js/rsbuild-plugin`, which a DSL plugin such as `pluginReactLynx` does for you.',
+      )
+    }
+
+    const { LynxTemplatePlugin } = exposed
+
+    const lynxConfig = api.useExposed<LynxConfig>(
+      Symbol.for('@lynx-js/rsbuild-plugin:config'),
+    )
+
+    if (!lynxConfig) {
+      throw new Error(
+        'lynx-bundle-rslib-config requires an exposed Lynx config. Please apply `pluginLynx` from `@lynx-js/rsbuild-plugin`, which a DSL plugin such as `pluginReactLynx` does for you.',
+      )
+    }
+
+    // The raw per-thread chunks are only ingredients for the encoded bundle,
+    // the way a page's are — keep them out of `dist` alongside it.
+    const intermediateDir = lynxConfig.resolveIntermediateDir({
+      entryName: bundleName,
+    })
+
     api.modifyBundlerChain(
-      async (chain, { CHAIN_ID, environment: { name: libName } }) => {
+      async (chain, { CHAIN_ID }) => {
         // Mark the react loaders as building an external bundle.
         const jsMainRule = chain.module
           .rule(CHAIN_ID.RULE.JS)
@@ -665,20 +728,17 @@ const externalBundleRsbuildPlugin = ({
 
         const backgroundEntryName: string[] = []
         const mainThreadEntryName: string[] = []
-        const mainThreadChunks: string[] = []
 
         const addLayeredEntry = (
           entryName: string,
           entryValue: Rspack.EntryDescription,
         ) => {
-          const isMainThread = entryValue.layer === LAYERS.MAIN_THREAD
-          if (isMainThread) {
-            mainThreadChunks.push(entryName + '.js')
-          }
-
           chain
             .entry(entryName)
-            .add(entryValue)
+            .add({
+              ...entryValue,
+              filename: path.posix.join(intermediateDir, `${entryName}.js`),
+            })
             .end()
         }
 
@@ -732,6 +792,13 @@ const externalBundleRsbuildPlugin = ({
             }
           }
         })
+        chain
+          .plugin(MarkMainThreadWebpackPlugin.name)
+          .use(MarkMainThreadWebpackPlugin, [{
+            layer: LAYERS.MAIN_THREAD,
+          }])
+          .end()
+
         const isWeb = target === 'web'
 
         // The native lynx_core module wrapper is added at build time only for
@@ -747,42 +814,29 @@ const externalBundleRsbuildPlugin = ({
             test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
           }])
           .end()
-          .plugin(BackgroundRuntimeWrapperWebpackPlugin.name)
-          .use(BackgroundRuntimeWrapperWebpackPlugin, [{
-            test: backgroundEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
+        }
+
+        chain
+          .plugin(LynxTemplatePlugin.name)
+          .use(LynxTemplatePlugin, [{
+            ...LynxTemplatePlugin.defaultOptions,
+            filename: `${bundleName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+            intermediate: intermediateDir,
+            chunks: [...mainThreadEntryName, ...backgroundEntryName],
+            customSectionNaming: sectionNaming,
+            appType: 'DynamicComponent',
+            // For web the `JsBytecode` tag only routes a section to the right
+            // slot, so it must survive regardless of the user option.
+            enableSectionBytecode: isWeb
+              || (enableJsBytecode
+                ?? process.env['NODE_ENV'] !== 'development'),
+            targetSdkVersion: engineVersion ?? '3.5',
+            debugInfoOutside: true,
+            // The style sheet is adopted after the elements exist, so they
+            // have to be restyled once it lands.
+            enableCSSInvalidation: true,
           }])
           .end()
-        }
-
-        let encode: (
-          opts: unknown,
-        ) => { buffer: Buffer } | Promise<{ buffer: Buffer }>
-        if (isWeb) {
-          const { getWebEncodeMode } = await import('./webpack/webEncode.js')
-          encode = getWebEncodeMode()
-        } else {
-          const { getEncodeMode } = await import('@lynx-js/tasm')
-          encode = getEncodeMode()
-        }
-
-        // dprint-ignore
-        chain
-        .plugin(ExternalBundleWebpackPlugin.name)
-        .use(
-          ExternalBundleWebpackPlugin,
-          [
-            {
-              bundleFileName: `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
-              encode,
-              engineVersion,
-              mainThreadChunks,
-              // For web the `JsBytecode` tag is routing-only (sections stay
-              // raw JS), so it must survive regardless of the user option.
-              enableJsBytecode: isWeb ? true : enableJsBytecode,
-            },
-          ],
-        )
-        .end()
       },
     )
   },

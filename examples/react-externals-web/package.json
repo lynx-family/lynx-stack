@@ -16,7 +16,7 @@
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/lynx-core": "0.1.4",
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-umd": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

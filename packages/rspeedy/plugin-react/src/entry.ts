@@ -14,6 +14,8 @@ import type { UndefinedOnPartialDeep } from 'type-fest'
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import type { ExposedAPI } from '@lynx-js/rspeedy'
+import { RuntimeConfigWebpackPlugin } from '@lynx-js/runtime-config-webpack-plugin'
+import type { RuntimeConfigWebpackPluginOptions } from '@lynx-js/runtime-config-webpack-plugin'
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
@@ -23,10 +25,12 @@ import {
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
+import { getUserSplitChunks } from './splitChunks.js'
 
 const S_LYNX_CONFIG = Symbol.for('@lynx-js/rsbuild-plugin:config')
 
 const PLUGIN_NAME_REACT = 'lynx:react'
+const PLUGIN_NAME_RUNTIME_CONFIG = 'lynx:runtime-config'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
@@ -61,34 +65,44 @@ export function applyEntry(
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
+  const runtimeConfig: RuntimeConfigWebpackPluginOptions = {}
+
+  if (experimental_transformBuiltinAttributeNames) {
+    runtimeConfig['transformBuiltinAttributeNames'] =
+      experimental_transformBuiltinAttributeNames
+  }
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
     const entryPairs: Array<{ mainThread: string, background: string }> = []
 
-    const rsbuildConfig = api.getRsbuildConfig()
-    const userConfig = api.getRsbuildConfig('original')
-    const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
-    const enableChunkSplitting = userConfig.splitChunks === undefined
+    const { splitChunks, chunkSplitStrategy } = getUserSplitChunks(
+      api.getRsbuildConfig('original'),
+      environment.name,
+    )
+    const enableChunkSplitting = splitChunks === undefined
       ? (chunkSplitStrategy
         ? chunkSplitStrategy !== 'all-in-one'
-        : rsbuildConfig.splitChunks !== false)
-      : rsbuildConfig.splitChunks !== false
+        : environment.config.splitChunks !== false)
+      : environment.config.splitChunks !== false
     const rspeedyConfig = api.context.callerName === 'rspeedy'
       // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
       ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
       : undefined
 
-    // `rslib` builds libraries and `rstest` runs tests, neither of which emits
-    // a Lynx template.
-    const emitTemplate = api.context.callerName !== 'rslib'
-      && api.context.callerName !== 'rstest'
-    if (emitTemplate) {
-      // `pluginAutoLynx` applies the engine for the same callers, so the config
-      // is there whenever a template is emitted.
-      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
-      const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
+    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+    const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
 
+    const isLynx = environment.name === 'lynx'
+      || environment.name.startsWith('lynx-')
+    const isWeb = environment.name === 'web'
+      || environment.name.startsWith('web-')
+
+    // An external bundle assembles its own template and a test run has none,
+    // so the entries and template plugins below are an application's.
+    const isApplication = api.context.callerName !== 'rslib'
+      && api.context.callerName !== 'rstest'
+    if (isApplication) {
       if (!lynxConfig) {
         throw new Error(
           'No Lynx config exposed. `pluginLynx` has to be applied for the Lynx build engine to be configured.',
@@ -96,10 +110,6 @@ export function applyEntry(
       }
 
       const entries = chain.entryPoints.entries() ?? {}
-      const isLynx = environment.name === 'lynx'
-        || environment.name.startsWith('lynx-')
-      const isWeb = environment.name === 'web'
-        || environment.name.startsWith('web-')
       const { hmr, liveReload } = environment.config.dev ?? {}
       const enabledHMR = isDev && hmr !== false
       const enabledLiveReload = isDev && liveReload !== false
@@ -235,51 +245,49 @@ export function applyEntry(
           }])
           .end()
       })
+    }
 
-      if (isLynx) {
-        let inlineScripts
-        if (experimental_isLazyBundle) {
-          // TODO: support inlineScripts in lazyBundle
-          inlineScripts = true
-        } else {
-          inlineScripts = environment.config.output?.inlineScripts
-            ?? !enableChunkSplitting
-        }
-
-        chain
-          .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
-          .use(RuntimeWrapperWebpackPlugin, [{
-            injectVars(vars) {
-              const UNUSED_VARS = new Set([
-                'Card',
-                'Component',
-                'ReactLynx',
-                'Behavior',
-              ])
-              return vars.map(name => {
-                if (UNUSED_VARS.has(name)) {
-                  return `__${name}`
-                }
-                return name
-              })
-            },
-            targetSdkVersion,
-            // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
-            test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
-            experimental_isLazyBundle,
-          }])
-          .end()
-          .plugin(`${LynxEncodePlugin.name}`)
-          .use(LynxEncodePlugin, [{ inlineScripts }])
-          .end()
+    if (isLynx) {
+      let inlineScripts
+      if (experimental_isLazyBundle) {
+        // TODO: support inlineScripts in lazyBundle
+        inlineScripts = true
+      } else {
+        inlineScripts = environment.config.output?.inlineScripts
+          ?? !enableChunkSplitting
       }
 
-      if (isWeb) {
-        chain
-          .plugin(PLUGIN_NAME_WEB)
-          .use(WebEncodePlugin, [])
-          .end()
-      }
+      chain
+        .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
+        .use(RuntimeWrapperWebpackPlugin, [{
+          injectVars(vars) {
+            const UNUSED_VARS = new Set([
+              'Card',
+              'Component',
+              'ReactLynx',
+              'Behavior',
+            ])
+            return vars.map(name => {
+              if (UNUSED_VARS.has(name)) {
+                return `__${name}`
+              }
+              return name
+            })
+          },
+          targetSdkVersion,
+          experimental_isLazyBundle,
+        }])
+        .end()
+        .plugin(`${LynxEncodePlugin.name}`)
+        .use(LynxEncodePlugin, [{ inlineScripts }])
+        .end()
+    }
+
+    if (isWeb) {
+      chain
+        .plugin(PLUGIN_NAME_WEB)
+        .use(WebEncodePlugin, [])
+        .end()
     }
 
     let extractStr = originalExtractStr
@@ -309,13 +317,23 @@ export function applyEntry(
         experimental_isLazyBundle,
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
-        experimental_transformBuiltinAttributeNames,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
         ),
         lazyBundleFetcher,
       }])
+
+    // Runtime config belongs to the page host. Standalone lazy bundles and
+    // rslib products (including external bundles) reuse the host-injected
+    // `lynx.__runtime_configs__` instead of contributing their own values.
+    const isHostEnvironment = isApplication && !experimental_isLazyBundle
+    if (isHostEnvironment && Object.keys(runtimeConfig).length > 0) {
+      chain
+        .plugin(PLUGIN_NAME_RUNTIME_CONFIG)
+        .after(PLUGIN_NAME_REACT)
+        .use(RuntimeConfigWebpackPlugin, [runtimeConfig])
+    }
 
     function getDefaultProfile(): boolean | undefined {
       // rsbuild v1
@@ -328,7 +346,7 @@ export function applyEntry(
         return environmentProfile
       }
 
-      const userProfile = rspeedyConfig?.performance?.profile
+      const userProfile = lynxConfig?.performance.profile
       if (userProfile !== undefined) {
         return userProfile
       }
@@ -348,7 +366,7 @@ export const isDebug = (): boolean => {
   }
 
   const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
-  return ['rspeedy', '*'].some((key) => values.includes(key))
+  return ['lynx', 'rspeedy', '*'].some((key) => values.includes(key))
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/037da7b9d92e20c7136c8b2efa21eef539fa2f88/packages/core/src/plugins/html.ts#L168
@@ -425,9 +443,9 @@ function getHash(
     return EMPTY_HASH
   } else if (isProd || experimental_isLazyBundle) {
     // In standalone lazy bundle mode, due to an internal bug of `lynx.requireModule`,
-    // it will cache module with same path (eg. `/.rspeedy/main/background.js`)
+    // it will cache module with same path (eg. `/.lynx/main/background.js`)
     // even they have different entryName (eg. `__Card__` and `http://[ip]:[port]/main/template.js`)
-    // we need add hash (`/.rspeedy/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
+    // we need add hash (`/.lynx/main/background.[hash].js`) to avoid module conflict with the lazy bundle consumer.
     return DEFAULT_FILENAME_HASH
   } else {
     return EMPTY_HASH

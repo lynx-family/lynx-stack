@@ -15,18 +15,15 @@ function toLynxPluginOptions(config: Config): LynxPluginOptions {
     ? filename
     : filename?.bundle ?? filename?.template
 
-  const intermediate = config.output?.distPath?.intermediate
-
-  const websocketTransport = config.dev?.client?.websocketTransport
+  const { profile } = config.performance ?? {}
 
   return {
     output: {
-      ...intermediate === undefined ? {} : { distPath: { intermediate } },
       ...bundle === undefined ? {} : { filename: { bundle } },
     },
-    ...websocketTransport === undefined
-      ? {}
-      : { dev: { client: { websocketTransport } } },
+    performance: {
+      ...profile === undefined ? {} : { profile },
+    },
   }
 }
 
@@ -64,7 +61,7 @@ export async function applyDefaultPlugins(
 
   const promises: Promise<void>[] = [
     Promise.all(defaultPlugins).then(async plugins => {
-      const { PLUGIN_LYNX_NAME, pluginLynx } = await import(
+      const { isPluginLynxRegistered, pluginLynx } = await import(
         '@lynx-js/rsbuild-plugin'
       )
 
@@ -72,7 +69,10 @@ export async function applyDefaultPlugins(
       // themselves. Applying it again here would build a second config from
       // the Rspeedy options and overwrite theirs.
       rsbuildInstance.addPlugins([
-        ...rsbuildInstance.isPluginExists(PLUGIN_LYNX_NAME)
+        ...isPluginLynxRegistered(
+            rsbuildInstance,
+            Object.keys(config.environments ?? {}),
+          )
           ? []
           : pluginLynx(toLynxPluginOptions(config)),
         ...plugins,

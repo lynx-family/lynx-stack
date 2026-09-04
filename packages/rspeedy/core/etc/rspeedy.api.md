@@ -173,7 +173,6 @@ export function defineConfig(config: (params: ConfigParams) => Promise<Config>):
 // @public
 export interface Dev {
     assetPrefix?: string | boolean | undefined;
-    client?: DevClient | undefined;
     hmr?: boolean | undefined;
     liveReload?: boolean | undefined;
     progressBar?: boolean | {
@@ -181,17 +180,6 @@ export interface Dev {
     } | undefined;
     watchFiles?: WatchFiles | WatchFiles[] | undefined;
     writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
-}
-
-// @public
-export interface DevClient {
-    websocketTransport?: string | undefined;
-}
-
-// @public
-export interface DistPath extends DistPathConfig {
-    // @deprecated
-    intermediate?: string | undefined;
 }
 
 // @public
@@ -265,7 +253,7 @@ export interface Output {
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
     dataUriLimit?: number | DataUriLimit | undefined;
-    distPath?: DistPath | undefined;
+    distPath?: DistPathConfig | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
     inlineScripts?: InlineChunkConfig | undefined;

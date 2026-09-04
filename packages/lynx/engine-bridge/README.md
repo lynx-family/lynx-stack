@@ -45,7 +45,8 @@ The bridge follows this runtime path:
 3. `WindowlessRenderer` and `GenericResourceFetcher` register Rust callbacks
    with the runtime.
 4. `HeadlessViewBuilder` binds the renderer, resource fetcher, optional
-   `LynxGroup`, viewport metrics, ICU path, and module registrations.
+   `LynxGroup`, viewport metrics, ICU path, JavaScript runtime setting, and
+   module registrations.
 5. `LynxView` owns the runtime view and exposes template loading, data
    updates, global events, viewport changes, and lifecycle methods.
 
@@ -106,13 +107,13 @@ Use these build-time variables to change the default behavior:
 
 - `LYNX_DOWNLOAD_RUNTIME=0` disables automatic runtime and `lynx_core.js`
   downloads.
-- `LYNX_RUNTIME_URL` downloads a different runtime artifact.
-- `LYNX_RUNTIME_SHA256` is required when `LYNX_RUNTIME_URL` points to a
+- `CUSTOM_LYNX_RUNTIME_URL` downloads a different runtime artifact.
+- `CUSTOM_LYNX_RUNTIME_SHA256` is required when `CUSTOM_LYNX_RUNTIME_URL` points to a
   non-default artifact.
 - `LYNX_CORE_JS_PATH` uses a local core script instead of the SDK core script
   or a download.
-- `LYNX_CORE_JS_URL` downloads a different core script.
-- `LYNX_CORE_JS_SHA256` is required when `LYNX_CORE_JS_URL` points to a
+- `CUSTOM_LYNX_CORE_JS_URL` downloads a different core script.
+- `CUSTOM_LYNX_CORE_JS_SHA256` is required when `CUSTOM_LYNX_CORE_JS_URL` points to a
   non-default artifact.
 - `LYNX_SKIP_ADHOC_SIGN=1` skips ad-hoc signing on macOS.
 

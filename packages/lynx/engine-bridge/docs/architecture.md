@@ -37,7 +37,8 @@ the JavaScript group-thread toggle.
 
 `lynx/src/view.rs` creates and owns the view. `HeadlessViewBuilder`
 binds the renderer, optional resource fetcher, optional group, viewport metrics,
-ICU path, and module registrations before it calls `lynx_view_create`.
+ICU path, JavaScript runtime setting, and module registrations before it calls
+`lynx_view_create`.
 `LynxView` loads templates, updates data, sends global events, forwards
 viewport changes, and enters foreground or background state.
 

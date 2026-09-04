@@ -22,9 +22,12 @@ export class McpAppsAgentService {
   private readonly agentCache = new ProviderAgentCache<McpAppsAgent>();
 
   private getAgent(opts: ChatOptions): Promise<McpAppsAgent> {
+    const createAgent = () =>
+      createMcpAppsAgent(pickProviderConfig(opts)).agent;
+    if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(
       opts,
-      () => createMcpAppsAgent(pickProviderConfig(opts)).agent,
+      createAgent,
     );
   }
 

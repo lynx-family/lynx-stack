@@ -934,6 +934,8 @@ function BundledProtocolRender() {
     ref: lynxViewRef,
     className: 'renderLynx',
     'thread-strategy': 'multi-thread',
+    'transform-vh': 'true',
+    'transform-vw': 'true',
     url: initData?.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
   });
 }

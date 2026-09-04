@@ -204,6 +204,12 @@ export class BackgroundSnapshotInstance {
   //   return child.parentNode === this;
   // }
 
+  // Preact 11's `removeNode` calls `node.remove()` instead of
+  // `parentNode.removeChild(node)`.
+  remove(): void {
+    this.parentNode?.removeChild(this);
+  }
+
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
     return this.insertBefore(child);

@@ -105,6 +105,7 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
   let view = LynxView::builder(env, renderer)
     .viewport(320.0, 240.0, 2.0)
     .font_scale(1.2)
+    .enable_js_runtime(false)
     .resource_fetcher(StaticFetcher)
     .expect("attach resource fetcher")
     .lynx_group(group)

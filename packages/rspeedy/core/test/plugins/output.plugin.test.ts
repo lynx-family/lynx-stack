@@ -638,10 +638,10 @@ describe('Plugins - Output', () => {
         !!plugin && plugin.constructor.name === 'CssExtractRspackPlugin'
       )
       expect(cssExtractPlugin?.options.filename).toMatchInlineSnapshot(
-        `".rspeedy/[name]/[name].css"`,
+        `".lynx/[name]/[name].css"`,
       )
       expect(cssExtractPlugin?.options.chunkFilename).toMatchInlineSnapshot(
-        `".rspeedy/async/[name]/[name].css"`,
+        `".lynx/async/[name]/[name].css"`,
       )
     })
 
@@ -712,7 +712,7 @@ describe('Plugins - Output', () => {
         !!plugin && plugin.constructor.name === 'CssExtractRspackPlugin'
       )
       expect(cssExtractPlugin?.options.filename).toMatchInlineSnapshot(
-        `".rspeedy/[name]/[name].css"`,
+        `".lynx/[name]/[name].css"`,
       )
       expect(cssExtractPlugin?.options.chunkFilename).toMatchInlineSnapshot(
         `"css_chunks/[name]/[name].css"`,
@@ -941,8 +941,8 @@ describe('Plugins - Output', () => {
       ).toHaveProperty(
         'options',
         expect.objectContaining({
-          filename: '.rspeedy/static/css/foo.[fullhash].css',
-          chunkFilename: '.rspeedy/async/static/css/foo.[fullhash].css',
+          filename: '.lynx/static/css/foo.[fullhash].css',
+          chunkFilename: '.lynx/async/static/css/foo.[fullhash].css',
         }),
       )
     })

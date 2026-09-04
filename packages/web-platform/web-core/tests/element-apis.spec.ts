@@ -20,6 +20,35 @@ import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainTh
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
+const X_ELEMENT_ALIAS_CASES = [
+  ['viewpager', 'x-viewpager-ng', 'x-viewpager-ng'],
+  ['viewpager-item', 'x-viewpager-item-ng', 'x-viewpager-item-ng'],
+  ['webview', 'x-webview', 'x-webview'],
+  ['overlay', 'x-overlay-ng', 'x-overlay-ng'],
+  ['refresh', 'x-refresh-view', 'x-refresh-view'],
+  ['refresh-header', 'x-refresh-header', 'x-refresh-header'],
+  ['blur-view', 'x-blur-view', 'x-blur-view'],
+  ['scroll-coordinator', 'x-foldview-ng', 'x-foldview-ng'],
+  [
+    'scroll-coordinator-header',
+    'x-foldview-header-ng',
+    'x-foldview-header-ng',
+  ],
+  ['scroll-coordinator-slot', 'x-foldview-slot-ng', 'x-foldview-slot-ng'],
+  [
+    'scroll-coordinator-slot-drag',
+    'x-foldview-slot-drag-ng',
+    'x-foldview-slot-drag-ng',
+  ],
+  [
+    'scroll-coordinator-toolbar',
+    'x-foldview-toolbar-ng',
+    'x-foldview-toolbar-ng',
+  ],
+  ['x-input-ng', 'x-input', 'x-input-ng'],
+  ['x-textarea-ng', 'x-textarea', 'textarea'],
+] as const;
+
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
@@ -110,6 +139,21 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
 
+  test('gesture detector PAPIs are supported as no-ops', () => {
+    const element = mtsGlobalThis.__CreateElement('view', 0);
+
+    expect(() => {
+      mtsGlobalThis.__SetGestureDetector(
+        element,
+        1,
+        0,
+        { callbacks: [] },
+        { waitFor: [], simultaneous: [], continueWith: [] },
+      );
+      mtsGlobalThis.__RemoveGestureDetector(element, 1);
+    }).not.toThrow();
+  });
+
   test('createElement maps input to x-input', () => {
     // `input` is created as the `x-input` custom element so Lynx event
     // forwarding wires up (matches native behavior on web).
@@ -125,6 +169,16 @@ describe('Element APIs', () => {
     expect(element.tagName.toLowerCase()).toBe('x-textarea');
     expect(mtsGlobalThis.__GetTag(element)).toBe('textarea');
   });
+
+  test.each(X_ELEMENT_ALIAS_CASES)(
+    '__CreateElement maps %s to <%s>',
+    (lynxTag, htmlTag, canonicalLynxTag) => {
+      const element = mtsGlobalThis.__CreateElement(lynxTag, 0);
+
+      expect(element.tagName.toLowerCase()).toBe(htmlTag);
+      expect(mtsGlobalThis.__GetTag(element)).toBe(canonicalLynxTag);
+    },
+  );
 
   test('createCrossThreadEvent properly sets touch detail x and y', async () => {
     const { createCrossThreadEvent } = await import(
@@ -1940,6 +1994,33 @@ describe('Element APIs', () => {
     expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
   });
 
+  test('should preserve reactive event calls until a custom element upgrades', async () => {
+    const calls: string[] = [];
+    const element = document.createElement('x-deferred-reactive-event');
+    const elementRef = new WeakRef(element);
+
+    mtsBinding.enableElementEvent(elementRef, 'selectionchange');
+    mtsBinding.disableElementEvent(elementRef, 'selectionchange');
+    customElements.define(
+      'x-deferred-reactive-event',
+      class extends HTMLElement {
+        enableEvent(eventName: string) {
+          calls.push(`enable:${eventName}`);
+        }
+
+        disableEvent(eventName: string) {
+          calls.push(`disable:${eventName}`);
+        }
+      },
+    );
+    await customElements.whenDefined('x-deferred-reactive-event');
+
+    expect(calls).toEqual([
+      'enable:selectionchange',
+      'disable:selectionchange',
+    ]);
+  });
+
   test('should handle worklet events enable/disable', () => {
     const root = mtsGlobalThis.__CreatePage('page', 0);
     const element = mtsGlobalThis.__CreateView(0);
@@ -2097,6 +2178,36 @@ describe('Element APIs', () => {
   });
 
   describe('Server Element APIs SSR Propagation', () => {
+    test('gesture detector PAPIs are supported as no-ops in SSR', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+        transformVW: false,
+        transformVH: false,
+        transformREM: false,
+      };
+      const { globalThisAPIs: api } = createServerElementAPI(
+        binding,
+        undefined,
+        '',
+        config,
+      );
+      const element = api.__CreateElement('view', 0);
+
+      expect(() => {
+        api.__SetGestureDetector(
+          element,
+          1,
+          0,
+          { callbacks: [] },
+          { waitFor: [], simultaneous: [], continueWith: [] },
+        );
+        api.__RemoveGestureDetector(element, 1);
+      }).not.toThrow();
+    });
+
     test('ssr __SetInlineStyles and __SetAttribute style transformations', () => {
       const binding: SSRBinding = { ssrResult: '' };
       const config = {

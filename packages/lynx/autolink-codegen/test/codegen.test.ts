@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 
+import ts from 'typescript';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { generate, parseNativeModules, runCodegen } from '../src/index.js';
@@ -541,7 +542,14 @@ export declare class StorageNapiModule {
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
       )?.content,
-    ).toContain('#include "napi.h"');
+    ).toContain('#include <LynxWeakNodeAPI/headers/napi.h>');
+    expect(
+      files.find((file) =>
+        file.path === 'shared/nativeModule/StorageNapiModule.cc'
+      )?.content,
+    ).toMatch(
+      /#if __has_include\(<LynxWeakNodeAPI\/headers\/napi\.h>\)[\s\S]*#else[\s\S]*#include "napi\.h"[\s\S]*#endif/,
+    );
     expect(
       files.find((file) =>
         file.path === 'shared/nativeModule/StorageNapiModule.cc'
@@ -553,6 +561,14 @@ export declare class StorageNapiModule {
           === 'shared/nativeModule/generated/StorageNapiModuleRegistration.cc'
       )?.content,
     ).toContain('napi_module_register(&g_module)');
+    expect(
+      files.find((file) =>
+        file.path
+          === 'shared/nativeModule/generated/StorageNapiModuleRegistration.cc'
+      )?.content,
+    ).toMatch(
+      /#if __has_include\(<LynxWeakNodeAPI\/headers\/napi\.h>\)[\s\S]*#else[\s\S]*#include "napi\.h"[\s\S]*#endif/,
+    );
     expect(
       files.find((file) =>
         file.path
@@ -693,7 +709,7 @@ export declare class StorageNapiModule {
       files.find((file) => file.path === 'generated/StorageNapiModule.ts')
         ?.content,
     ).toMatch(
-      /const nativeModules = nativeModulesBeforeShim;[\s\S]*return existingModule as StorageNapiModuleSpec;[\s\S]*const loadResult = tryLoadNodeApiAddon\(\);[\s\S]*throw loadResult\.error;/,
+      /const nativeModules = nativeModulesBeforeShim;[\s\S]*return existingModule as StorageNapiModuleSpec;[\s\S]*const loadResult = tryLoadNodeApiAddon\(\);[\s\S]*return loadResult\.addon as unknown as StorageNapiModuleSpec;[\s\S]*throw loadResult\.error;/,
     );
     expect(
       files.find((file) => file.path === 'generated/StorageNapiModule.ts')
@@ -834,6 +850,49 @@ export declare class StorageNapiModule {
       '#include "../../../shared/nativeModule/StorageNapiModule.cc"',
     );
     expect(fs.readFileSync(wrapperPath, 'utf8')).not.toContain('stale');
+  });
+
+  it('generates NAPI facades that pass strict TypeScript checks', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            path: 'dist',
+          },
+        },
+      },
+      types: '',
+    });
+    writeTypesFile(
+      root,
+      'napi-native-module.d.ts',
+      `/** @lynxmodule */
+export declare class ScannerModule {
+  scan(image: ArrayBuffer): ArrayBuffer;
+}
+`,
+    );
+
+    runCodegen({ root });
+
+    const facadePath = path.join(root, 'generated/ScannerModule.ts');
+    const program = ts.createProgram([facadePath], {
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+      module: ts.ModuleKind.ESNext,
+      noEmit: true,
+      skipLibCheck: true,
+      strict: true,
+      target: ts.ScriptTarget.ES2022,
+    });
+    const errors = ts.getPreEmitDiagnostics(program).filter((diagnostic) =>
+      diagnostic.category === ts.DiagnosticCategory.Error
+    );
+
+    expect(
+      errors.map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
+      ),
+    ).toEqual([]);
   });
 
   it('rejects multiple NAPI native modules in one library', () => {

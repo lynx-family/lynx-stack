@@ -19,7 +19,16 @@ function isDebugMode(): boolean {
   const debug = process.env['DEBUG']
   if (!debug) return false
   const values = debug.toLocaleLowerCase().split(',')
-  return ['rspeedy', 'rsbuild', '*', 'rspeedy:*', 'rspeedy:template'].some((
+  return [
+    'lynx',
+    'lynx:*',
+    'lynx:template',
+    'rspeedy',
+    'rsbuild',
+    '*',
+    'rspeedy:*',
+    'rspeedy:template',
+  ].some((
     key,
   ) => values.includes(key))
 }

@@ -143,6 +143,22 @@ export function resolveReasoningEffort(
   return config.config.models[modelName]!.reasoningEffort;
 }
 
+export function resolveModelOutputTokenBudget(
+  opts: ChatOptions,
+  desiredMaxOutputTokens: number,
+): number {
+  const config = readModelConfig();
+  if (!config.ok) return desiredMaxOutputTokens;
+  if (opts.model && !config.config.models[opts.model]) {
+    return desiredMaxOutputTokens;
+  }
+  const modelName = opts.model ?? config.config.defaultModel;
+  const configuredLimit = config.config.models[modelName]!.maxOutputTokens;
+  return configuredLimit === undefined
+    ? desiredMaxOutputTokens
+    : Math.min(desiredMaxOutputTokens, configuredLimit);
+}
+
 export function buildResourceRunOptions(
   opts: ChatOptions,
   abortSignal?: AbortSignal,

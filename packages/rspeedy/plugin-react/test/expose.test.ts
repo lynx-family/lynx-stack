@@ -84,9 +84,7 @@ describe('Expose', () => {
     await rsbuild.initConfigs()
     expect(expose).toMatchInlineSnapshot(`
       {
-        "LynxTemplatePlugin": {
-          "getLynxTemplatePluginHooks": [Function],
-        },
+        "LynxTemplatePlugin": [Function],
       }
     `)
 
@@ -104,7 +102,7 @@ describe('Expose', () => {
       .toMatchInlineSnapshot(`
       [
         "/app-service.js",
-        "/.rspeedy/main/background.js",
+        "/.lynx/main/background.js",
       ]
     `)
   })

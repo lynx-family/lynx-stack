@@ -21,6 +21,7 @@ import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
   adaptMTEventAttrSlot,
+  adaptMTRefAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { hydrateBackground as hydrate } from '../../test-utils/debug/hydrate.js';
@@ -124,7 +125,7 @@ describe('hydrate', () => {
     );
 
     expect(stream).toEqual([
-      ElementTemplateUpdateOps.setAttribute,
+      ElementTemplateUpdateOps.setMainThreadEvent,
       root.instanceId,
       0,
       { type: 'worklet', value: ctx },
@@ -161,6 +162,61 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
+  it('forces callback MTRef hydrate slot updates when wrappers are deep-equal', () => {
+    __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
+    const callback = { _wkltId: 'ref-callback' };
+    const root = new BackgroundElementTemplateInstance('root');
+    root.attributeSlots = [{ type: 'main-thread-ref', value: callback }];
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'main-thread-ref', value: { _wkltId: 'ref-callback' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setMainThreadRef,
+      root.instanceId,
+      0,
+      { type: 'main-thread-ref', value: callback },
+    ]);
+  });
+
+  it('keeps deep-equal object MTRef hydrate wrappers skipped', () => {
+    __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root');
+    root.attributeSlots = [{ type: 'main-thread-ref', value: { _wvid: 7 } }];
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'main-thread-ref', value: { _wvid: 7 } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+  });
+
+  it('forces MTRef hydrate clears when native serialization already contains null', () => {
+    __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root', [null]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [null],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setMainThreadRef,
+      root.instanceId,
+      0,
+      null,
+    ]);
+  });
+
   it('keeps direct MTEvent hydrate clears on the normal null diff path', () => {
     __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
     const root = new BackgroundElementTemplateInstance('root', [false]);
@@ -173,7 +229,7 @@ describe('hydrate', () => {
     );
 
     expect(stream).toEqual([
-      ElementTemplateUpdateOps.setAttribute,
+      ElementTemplateUpdateOps.setMainThreadEvent,
       root.instanceId,
       0,
       null,
@@ -240,6 +296,7 @@ describe('hydrate', () => {
       0,
       card.instanceId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toEqual([existing, card]);
     expect(card.elementSlots[0]).toEqual([rawText]);
@@ -359,6 +416,7 @@ describe('hydrate', () => {
       0,
       a.instanceId,
       c.instanceId,
+      null,
     ]);
     expect(root.elementSlots[0]).toEqual([b, a, c]);
     expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
@@ -400,6 +458,7 @@ describe('hydrate', () => {
       1,
       localId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([moved]);
@@ -480,6 +539,7 @@ describe('hydrate', () => {
       1,
       moved.instanceId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
     expect(root.elementSlots[1]).toEqual([moved]);
@@ -517,6 +577,7 @@ describe('hydrate', () => {
       0,
       localId,
       0,
+      null,
       ElementTemplateUpdateOps.removeNode,
       root.instanceId,
       1,
@@ -574,6 +635,7 @@ describe('hydrate', () => {
       1,
       firstLocalId,
       0,
+      null,
       ElementTemplateUpdateOps.createTemplate,
       secondLocalId,
       'item',
@@ -585,6 +647,7 @@ describe('hydrate', () => {
       1,
       secondLocalId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([first, second]);
@@ -626,6 +689,7 @@ describe('hydrate', () => {
       0,
       child.instanceId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toEqual([child]);
     expect(child.elementSlots[0]).toEqual([rawText]);
@@ -675,11 +739,13 @@ describe('hydrate', () => {
       0,
       newA.instanceId,
       0,
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       1,
       b0.instanceId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toEqual([newA]);
     expect(root.elementSlots[1]).toEqual([b1, b0]);
@@ -749,6 +815,7 @@ describe('hydrate', () => {
       0,
       entryA.instanceId,
       0,
+      null,
     ]);
     expect(root.elementSlots[0]).toEqual([entryB, entryA]);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(entryA);
@@ -1121,6 +1188,7 @@ describe('hydrate', () => {
       0,
       child.instanceId,
       0,
+      null,
     ]);
   });
 
@@ -1208,6 +1276,120 @@ describe('hydrate', () => {
       0,
       child.instanceId,
       0,
+      null,
+    ]);
+  });
+
+  it('emits nested list item subtrees before inserting a missing list', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item');
+    const nested = new BackgroundElementTemplateInstance('_et_nested');
+    item.appendChild(nested);
+    list.appendChild(item);
+    root.appendChild(list);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      nested.instanceId,
+      '_et_nested',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.createTemplate,
+      item.instanceId,
+      '_et_item',
+      null,
+      [],
+      [[nested.instanceId]],
+      ElementTemplateUpdateOps.createTypedElement,
+      list.instanceId,
+      'list',
+      null,
+      null,
+      {
+        listChildren: [{
+          __etHandleRef: item.instanceId,
+          type: '_et_item',
+          platformInfo: {},
+          subtreeHandleIds: [],
+        }],
+      },
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      list.instanceId,
+      0,
+      null,
+    ]);
+  });
+
+  it('keeps list-owned subtree refs deferred while hydrating item children', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item');
+    const b = new BackgroundElementTemplateInstance('b');
+    const a = new BackgroundElementTemplateInstance('a');
+    const c = new BackgroundElementTemplateInstance('c');
+    const inserted = new BackgroundElementTemplateInstance('inserted');
+    item.appendChild(b);
+    item.appendChild(a);
+    item.appendChild(c);
+    item.appendChild(inserted);
+    list.appendChild(item);
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: null,
+        uid: -10,
+        options: {
+          listChildren: [createHydrationChild(-11, '_et_item', {
+            elementSlots: [[
+              createHydrationChild(-12, 'a'),
+              createHydrationChild(-13, 'b'),
+              createHydrationChild(-14, 'c'),
+            ]],
+          })],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.insertNode,
+      -11,
+      0,
+      -12,
+      -14,
+      null,
+      ElementTemplateUpdateOps.createTemplate,
+      inserted.instanceId,
+      'inserted',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      -11,
+      0,
+      inserted.instanceId,
+      0,
+      null,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -11,
+        type: '_et_item',
+        platformInfo: {},
+        subtreeHandleIds: [],
+      },
     ]);
   });
 
@@ -1245,7 +1427,7 @@ describe('hydrate', () => {
     expect(stream).toEqual([
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {} },
+      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {}, subtreeHandleIds: [] },
     ]);
     expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(oldItemId)).toBeUndefined();
@@ -1362,7 +1544,7 @@ describe('hydrate', () => {
     expect(stream).toEqual([
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {} },
+      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {}, subtreeHandleIds: [] },
     ]);
     expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(item);
@@ -1400,11 +1582,16 @@ describe('hydrate', () => {
       [],
       ElementTemplateUpdateOps.insertTypedListItem,
       -10,
-      { __etHandleRef: secondLocalId, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
+      {
+        __etHandleRef: secondLocalId,
+        type: '_et_item_b',
+        platformInfo: { 'item-key': 'b' },
+        subtreeHandleIds: [],
+      },
       0,
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
     ]);
     expect(backgroundElementTemplateInstanceManager.get(secondLocalId)).toBe(second);
   });
@@ -1445,7 +1632,12 @@ describe('hydrate', () => {
       [],
       ElementTemplateUpdateOps.insertTypedListItem,
       -10,
-      { __etHandleRef: extraSecondLocalId, type: '_et_item_y', platformInfo: { 'item-key': 'y' } },
+      {
+        __etHandleRef: extraSecondLocalId,
+        type: '_et_item_y',
+        platformInfo: { 'item-key': 'y' },
+        subtreeHandleIds: [],
+      },
       -11,
       ElementTemplateUpdateOps.createTemplate,
       extraFirstLocalId,
@@ -1455,11 +1647,16 @@ describe('hydrate', () => {
       [],
       ElementTemplateUpdateOps.insertTypedListItem,
       -10,
-      { __etHandleRef: extraFirstLocalId, type: '_et_item_x', platformInfo: { 'item-key': 'x' } },
+      {
+        __etHandleRef: extraFirstLocalId,
+        type: '_et_item_x',
+        platformInfo: { 'item-key': 'x' },
+        subtreeHandleIds: [],
+      },
       extraSecondLocalId,
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
     ]);
   });
 
@@ -1492,7 +1689,7 @@ describe('hydrate', () => {
       [-12],
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
     ]);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBeUndefined();
   });
@@ -1566,11 +1763,11 @@ describe('hydrate', () => {
       [],
       ElementTemplateUpdateOps.insertTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
       0,
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
+      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' }, subtreeHandleIds: [] },
     ]);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(itemA);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(itemB);
@@ -1617,7 +1814,12 @@ describe('hydrate', () => {
       [-13],
       ElementTemplateUpdateOps.insertTypedListItem,
       -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a', 'reuse-identifier': 'next' } },
+      {
+        __etHandleRef: -11,
+        type: '_et_item_a',
+        platformInfo: { 'item-key': 'a', 'reuse-identifier': 'next' },
+        subtreeHandleIds: [],
+      },
       0,
       ElementTemplateUpdateOps.createTemplate,
       extraLocalId,
@@ -1627,11 +1829,16 @@ describe('hydrate', () => {
       [],
       ElementTemplateUpdateOps.insertTypedListItem,
       -10,
-      { __etHandleRef: extraLocalId, type: '_et_item_x', platformInfo: { 'item-key': 'x' } },
+      {
+        __etHandleRef: extraLocalId,
+        type: '_et_item_x',
+        platformInfo: { 'item-key': 'x' },
+        subtreeHandleIds: [],
+      },
       -11,
       ElementTemplateUpdateOps.updateTypedListItem,
       -10,
-      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
+      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' }, subtreeHandleIds: [] },
     ]);
   });
 
@@ -1674,7 +1881,12 @@ describe('hydrate', () => {
         [],
         ElementTemplateUpdateOps.insertTypedListItem,
         -10,
-        { __etHandleRef: nextLocalId, type: '_et_next_item', platformInfo: { 'item-key': 'next' } },
+        {
+          __etHandleRef: nextLocalId,
+          type: '_et_next_item',
+          platformInfo: { 'item-key': 'next' },
+          subtreeHandleIds: [],
+        },
         0,
       ]);
       expect(backgroundElementTemplateInstanceManager.get(-11)).toBeUndefined();
@@ -1710,6 +1922,7 @@ describe('hydrate', () => {
         __etHandleRef: -11,
         type: '_et_item',
         platformInfo: { 'item-key': 'after', 'reuse-identifier': 'next' },
+        subtreeHandleIds: [],
       },
     ]);
   });

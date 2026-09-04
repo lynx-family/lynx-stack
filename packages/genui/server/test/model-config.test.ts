@@ -23,6 +23,7 @@ const CONFIG = {
     model: 'doubao-seed-upstream',
     api: 'chat',
     default: true,
+    maxOutputTokens: 8192,
     reasoningEffort: 'medium',
   },
   'Doubao Pro': {
@@ -60,6 +61,21 @@ describe('GenUI model configuration', () => {
     ).toThrow('only one configured model may be marked as default');
   });
 
+  test('rejects invalid model output token limits', () => {
+    for (const maxOutputTokens of [0, -1, 1.5, '8192']) {
+      expect(() =>
+        parseModelConfig(JSON.stringify({
+          Doubao: {
+            apiKey: 'server-secret',
+            baseURL: 'https://example.com/v1',
+            model: 'doubao-seed',
+            maxOutputTokens,
+          },
+        }))
+      ).toThrow('maxOutputTokens must be a positive safe integer');
+    }
+  });
+
   test('resolves a model name to its independent upstream configuration', () => {
     const previous = process.env[GENUI_MODEL_CONFIG_ENV];
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
@@ -78,15 +94,12 @@ describe('GenUI model configuration', () => {
     }
   });
 
-  test('allows configured model selection without exposing provider overrides', () => {
+  test('allows configured selection without accepting partial overrides', () => {
     const previous = process.env[GENUI_MODEL_CONFIG_ENV];
-    const previousAllowOverride = process.env.A2UI_ALLOW_CLIENT_OVERRIDE;
     process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
-    delete process.env.A2UI_ALLOW_CLIENT_OVERRIDE;
     try {
       expect(pickProviderOptions({
         apiKey: 'client-secret',
-        baseURL: 'https://untrusted.example.com/v1',
         model: 'Doubao Pro',
         api: 'responses',
       })).toEqual({
@@ -96,20 +109,70 @@ describe('GenUI model configuration', () => {
         baseURL: undefined,
         api: undefined,
         reasoningEffort: undefined,
+        disableAgentCache: undefined,
       });
       expect(pickProviderOptions({ model: 'Unknown Model' }).model).toBe(
         undefined,
       );
+      expect(createLLMProvider({
+        baseURL: 'https://openrouter.ai/api/v1',
+        model: 'Doubao Pro',
+      })).toMatchObject({
+        model: 'doubao-pro-upstream',
+        api: 'responses',
+        baseURL: 'https://pro.example.com/api/v3',
+      });
+      expect(createLLMProvider({
+        api: 'chat',
+        apiKey: 'client-secret',
+        model: 'Doubao Pro',
+      })).toMatchObject({
+        model: 'doubao-pro-upstream',
+        api: 'responses',
+        baseURL: 'https://pro.example.com/api/v3',
+      });
     } finally {
       if (previous === undefined) {
         delete process.env[GENUI_MODEL_CONFIG_ENV];
       } else {
         process.env[GENUI_MODEL_CONFIG_ENV] = previous;
       }
-      if (previousAllowOverride === undefined) {
-        delete process.env.A2UI_ALLOW_CLIENT_OVERRIDE;
+    }
+  });
+
+  test('uses a complete client provider without server model config', () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    delete process.env[GENUI_MODEL_CONFIG_ENV];
+    try {
+      const options = pickProviderOptions({
+        apiKey: '  client-secret  ',
+        baseURL: '  https://api.openai.com/v1  ',
+        model: '  gpt-client  ',
+      });
+      expect(options.disableAgentCache).toBe(true);
+      expect(createLLMProvider(options)).toMatchObject({
+        model: 'gpt-client',
+        api: 'responses',
+        baseURL: 'https://api.openai.com/v1',
+      });
+      expect(() =>
+        createLLMProvider(pickProviderOptions({
+          baseURL: 'https://api.openai.com/v1',
+          model: 'gpt-client',
+        }))
+      ).toThrow(`${GENUI_MODEL_CONFIG_ENV} is required`);
+      expect(() =>
+        createLLMProvider(pickProviderOptions({
+          apiKey: 'client-secret',
+          baseURL: 'https://127.0.0.1/v1',
+          model: 'gpt-client',
+        }))
+      ).toThrow('must be one of the supported provider URLs');
+    } finally {
+      if (previous === undefined) {
+        delete process.env[GENUI_MODEL_CONFIG_ENV];
       } else {
-        process.env.A2UI_ALLOW_CLIENT_OVERRIDE = previousAllowOverride;
+        process.env[GENUI_MODEL_CONFIG_ENV] = previous;
       }
     }
   });
@@ -203,5 +266,26 @@ describe('GenUI model configuration', () => {
         process.env.SEARCH_INFINITY_API_KEY = previousSearchApiKey;
       }
     }
+  });
+
+  test('redacts request-scoped API key variants without global state', () => {
+    const requestKey = 'request-"secret\\+/=';
+    const encodedKey = encodeURIComponent(requestKey);
+    const escapedKey = JSON.stringify(requestKey).slice(1, -1);
+    const upstreamError = new Error(
+      `raw ${requestKey}; encoded ${encodedKey}; escaped ${escapedKey}; `
+        + `authorization Bearer ${requestKey}; query ?apiKey=${encodedKey}`,
+    );
+    upstreamError.name = `ProviderError ${requestKey}`;
+
+    expect(errorMessage(upstreamError, { secrets: [requestKey] })).toEqual({
+      message: 'raw [REDACTED]; encoded [REDACTED]; escaped [REDACTED]; '
+        + 'authorization Bearer [REDACTED]; query ?apiKey=[REDACTED]',
+      name: 'ProviderError [REDACTED]',
+    });
+    expect(errorMessage(new Error(`retry ${requestKey}`))).toEqual({
+      message: `retry ${requestKey}`,
+      name: 'Error',
+    });
   });
 });

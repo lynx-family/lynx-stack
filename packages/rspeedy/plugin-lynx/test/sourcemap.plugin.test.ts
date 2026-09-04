@@ -24,6 +24,14 @@ const hasDropPlugin = (plugins: unknown[] | undefined) =>
         === 'DropSourceMapAssetsPlugin',
   )
 
+const hasCSSSourceMapPlugin = (plugins: unknown[] | undefined) =>
+  !!plugins?.some(
+    p =>
+      typeof p === 'object' && p !== null
+      && (p as { constructor?: { name?: string } }).constructor?.name
+        === 'SourceMapDevToolPlugin',
+  )
+
 describe('pluginSourcemap', () => {
   describe('production', () => {
     test('defaults', async () => {
@@ -650,6 +658,107 @@ describe('pluginSourcemap', () => {
       })
       const config = await rsbuild.unwrapConfig()
       expect(hasDropPlugin(config.plugins)).toBe(false)
+    })
+  })
+
+  describe('css source map', () => {
+    test('enables css source map for lynx environments', async () => {
+      const rsbuild = await createStubRsbuild({})
+      await rsbuild.unwrapConfig()
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.sourceMap,
+      ).toMatchObject({ css: true })
+    })
+
+    test('does not enable css source map for other environments', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rsbuild = await createStubRsbuild({ environments: { web: {} } })
+      const config = await rsbuild.unwrapConfig({ action: 'build' })
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'web' }).output.sourceMap,
+      ).toMatchObject({ css: false })
+      expect(hasCSSSourceMapPlugin(config.plugins)).toBe(false)
+    })
+
+    test('respects output.sourceMap.css: true for other environments', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rsbuild = await createStubRsbuild({
+        environments: { web: {} },
+        output: { sourceMap: { css: true } },
+      })
+      const config = await rsbuild.unwrapConfig({ action: 'build' })
+      expect(hasCSSSourceMapPlugin(config.plugins)).toBe(true)
+    })
+
+    test('respects output.sourceMap.css: false for lynx environments', async () => {
+      const rsbuild = await createStubRsbuild({
+        output: { sourceMap: { css: false } },
+      })
+      await rsbuild.unwrapConfig()
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.sourceMap,
+      ).toMatchObject({ css: false })
+    })
+
+    test('respects environment-level output.sourceMap.css: false', async () => {
+      const rsbuild = await createStubRsbuild({
+        environments: { lynx: { output: { sourceMap: { css: false } } } },
+      })
+      await rsbuild.unwrapConfig()
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.sourceMap,
+      ).toMatchObject({ css: false })
+    })
+  })
+
+  describe('environment config', () => {
+    test('honors output.sourceMap.js: false set on an environment', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        environments: {
+          lynx: { output: { sourceMap: { js: false } } },
+        },
+      })
+      const config = await rsbuild.unwrapConfig()
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).not.toBeCalled()
+    })
+
+    test('prefers output.sourceMap.js of the environment over the root', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        output: { sourceMap: { js: false } },
+        environments: {
+          lynx: { output: { sourceMap: { js: 'source-map' } } },
+        },
+      })
+      const config = await rsbuild.unwrapConfig()
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({ filename: '[file].map[query]' }),
+      )
+    })
+
+    test('honors dev.assetPrefix set on an environment', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        environments: {
+          lynx: { dev: { assetPrefix: 'https://lynx.example.com/' } },
+        },
+      })
+      await rsbuild.unwrapConfig()
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({ publicPath: 'https://lynx.example.com/' }),
+      )
     })
   })
 })
