@@ -113,6 +113,14 @@ pub(crate) struct CapturedPage {
 }
 
 impl CapturedPage {
+  pub(crate) fn from_staged_bmp(screenshot: Vec<u8>, url: String) -> Self {
+    Self {
+      screenshot,
+      steps: vec![],
+      url,
+    }
+  }
+
   #[cfg(test)]
   pub(crate) fn from_bmp(screenshot: Vec<u8>) -> Self {
     Self {
@@ -125,6 +133,12 @@ impl CapturedPage {
   #[cfg(test)]
   pub(crate) async fn into_jpeg(self) -> Result<Vec<u8>, String> {
     transcode_captured_bmp(self.screenshot).await
+  }
+
+  #[cfg(test)]
+  pub(crate) fn with_url(mut self, url: String) -> Self {
+    self.url = url;
+    self
   }
 
   pub(crate) async fn screenshot_data_url(&self) -> Result<String, String> {

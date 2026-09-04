@@ -186,13 +186,17 @@ those calls in the first place. Keep this boundary in place: model output must
 not make the server-side headless resource loader fetch arbitrary URLs, read
 local files, or execute nested bundles.
 
-By default, Judge renders
+By default, Judge securely fetches and renders
 `https://lynx-stack.dev/genui/a2ui.lynx.js`. Override that server-owned bundle
-URL when running a local or pinned bundle:
+URL with another publicly resolvable HTTP(S) asset when pinning a bundle:
 
 ```bash
-export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
+export UI_JUDGE_BUNDLE_URL="https://cdn.example.com/a2ui.lynx.js"
 ```
+
+The sidecar applies the screenshot endpoint's SSRF policy to this URL, so
+localhost, private-network targets, redirects, and URL credentials are
+rejected. Use the Rust library API for trusted local bundle judging.
 
 ## Security
 
