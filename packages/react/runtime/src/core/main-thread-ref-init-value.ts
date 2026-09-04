@@ -19,12 +19,20 @@ let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
 /**
  * @internal
  */
-export function addMainThreadRefInitValue(id: number, value: unknown): void {
+export function addMainThreadRefInitValue(
+  id: number,
+  value: unknown,
+  mainThreadObject?: { readonly type: string; readonly protocolVersion: number },
+): void {
   if (!isMtsEnabled()) {
     return;
   }
 
-  mainThreadRefInitValuePatch.push([id, value]);
+  mainThreadRefInitValuePatch.push(
+    mainThreadObject === undefined
+      ? [id, value]
+      : [id, value, mainThreadObject.type, mainThreadObject.protocolVersion],
+  );
 }
 
 /**
