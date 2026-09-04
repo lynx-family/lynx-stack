@@ -17,7 +17,7 @@ const lynxtronArtifacts = {
     {
       os: 'darwin',
       arch: 'arm64',
-      binaries: ['dist/native.node'],
+      files: ['dist/native.node'],
     },
   ],
 };
@@ -1274,13 +1274,13 @@ export declare class StorageModule {
               {
                 os: 'darwin',
                 arch: 'arm64',
-                binaries: ['dist/darwin/arm64/canvas.dylib'],
+                files: ['dist/darwin/arm64/canvas.dylib'],
                 frameworks: ['dist/darwin/arm64/frameworks'],
               },
               {
                 os: 'win32',
                 arch: 'x64',
-                binaries: ['dist/win32/x64/canvas.dll'],
+                files: ['dist/win32/x64/canvas.dll'],
               },
             ],
           },
@@ -1291,6 +1291,32 @@ export declare class StorageModule {
 
     expect(() => generate({ root })).not.toThrow();
   });
+
+  it.each(['binaries', 'resources'])(
+    'rejects the legacy Lynxtron %s category',
+    (field) => {
+      const root = createFixture({
+        manifest: {
+          platforms: {
+            lynxtron: {
+              targets: [
+                {
+                  os: 'win32',
+                  arch: 'x64',
+                  [field]: ['dist/win32/x64/canvas.node'],
+                },
+              ],
+            },
+          },
+        },
+        types: '',
+      });
+
+      expect(() => generate({ root })).toThrow(
+        new RegExp(`does not support.*${field}.*use.*\\.files`),
+      );
+    },
+  );
 
   it('rejects opaque Lynxtron artifact roots', () => {
     const root = createFixture({
@@ -1326,7 +1352,7 @@ export declare class StorageModule {
     });
 
     expect(() => generate({ root })).toThrow(
-      /requires binaries and frameworks inside.*lynxtron\.targets/,
+      /requires files and frameworks inside.*lynxtron\.targets/,
     );
   });
 
@@ -1340,7 +1366,7 @@ export declare class StorageModule {
                 os: 'darwin',
                 arch: 'arm64',
                 arc: 'arm64',
-                binaries: ['dist/darwin/arm64/canvas.dylib'],
+                files: ['dist/darwin/arm64/canvas.dylib'],
               },
             ],
           },
@@ -1385,12 +1411,12 @@ export declare class StorageModule {
               {
                 os: 'darwin',
                 arch: 'arm64',
-                binaries: ['dist/first.node'],
+                files: ['dist/first.node'],
               },
               {
                 os: 'darwin',
                 arch: 'arm64',
-                binaries: ['dist/second.node'],
+                files: ['dist/second.node'],
               },
             ],
           },

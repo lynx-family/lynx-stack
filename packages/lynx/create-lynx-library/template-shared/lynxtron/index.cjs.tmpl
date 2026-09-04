@@ -14,7 +14,11 @@ if (!target) {
   );
 }
 
-if (!Array.isArray(target.binaries) || target.binaries.length !== 1) {
+const binaryFiles = Array.isArray(target.files)
+  ? target.files.filter((file) => path.extname(file) === '.node')
+  : [];
+
+if (binaryFiles.length !== 1) {
   throw new Error(
     '__PACKAGE_NAME__ expected exactly one Lynxtron binary for '
       + `${process.platform}/${process.arch}`,
@@ -22,7 +26,7 @@ if (!Array.isArray(target.binaries) || target.binaries.length !== 1) {
 }
 
 const nativeBinding = require(
-  path.resolve(__dirname, '..', target.binaries[0]),
+  path.resolve(__dirname, '..', binaryFiles[0]),
 );
 
 if (typeof nativeBinding.initialize !== 'function') {

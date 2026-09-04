@@ -1378,22 +1378,22 @@ function platformManifestEntries(context: TemplateContext): string {
         {
           "os": "darwin",
           "arch": "arm64",
-          "binaries": ["dist/darwin/arm64/${context.addonBinaryName}.node"]
+          "files": ["dist/darwin/arm64/${context.addonBinaryName}.node"]
         },
         {
           "os": "darwin",
           "arch": "x64",
-          "binaries": ["dist/darwin/x64/${context.addonBinaryName}.node"]
+          "files": ["dist/darwin/x64/${context.addonBinaryName}.node"]
         },
         {
           "os": "win32",
           "arch": "x64",
-          "binaries": ["dist/win32/x64/${context.addonBinaryName}.node"]
+          "files": ["dist/win32/x64/${context.addonBinaryName}.node"]
         },
         {
           "os": "linux",
           "arch": "x64",
-          "binaries": ["dist/linux/x64/${context.addonBinaryName}.node"]
+          "files": ["dist/linux/x64/${context.addonBinaryName}.node"]
         }
       ]
     }`);

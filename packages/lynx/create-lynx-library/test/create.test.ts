@@ -23,22 +23,22 @@ function lynxtronManifest(binaryName: string): Record<string, unknown> {
       {
         os: 'darwin',
         arch: 'arm64',
-        binaries: [`dist/darwin/arm64/${binaryName}.node`],
+        files: [`dist/darwin/arm64/${binaryName}.node`],
       },
       {
         os: 'darwin',
         arch: 'x64',
-        binaries: [`dist/darwin/x64/${binaryName}.node`],
+        files: [`dist/darwin/x64/${binaryName}.node`],
       },
       {
         os: 'win32',
         arch: 'x64',
-        binaries: [`dist/win32/x64/${binaryName}.node`],
+        files: [`dist/win32/x64/${binaryName}.node`],
       },
       {
         os: 'linux',
         arch: 'x64',
-        binaries: [`dist/linux/x64/${binaryName}.node`],
+        files: [`dist/linux/x64/${binaryName}.node`],
       },
     ],
   };
@@ -1021,6 +1021,9 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'lynxtron/index.cjs')).toContain(
       'manifest.platforms.lynxtron.targets.find',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'target.files.filter((file) => path.extname(file) === \'.node\')',
     );
     expect(read(dir, 'lynxtron/index.cjs')).toContain('process.platform');
     expect(read(dir, 'lynxtron/index.cjs')).not.toContain('normalizePlatform');

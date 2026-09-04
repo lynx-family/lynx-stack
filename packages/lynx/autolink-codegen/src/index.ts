@@ -93,7 +93,7 @@ export interface NativeModuleObjectSpec {
 export interface LynxtronRuntimeTarget {
   os: string;
   arch: string;
-  binaries?: string[];
+  files?: string[];
   frameworks?: string[];
 }
 
@@ -1476,9 +1476,15 @@ function readLynxtronPlatform(
     );
   }
 
-  if ('binary' in value || 'binaries' in value || 'frameworks' in value) {
+  if (
+    'binary' in value
+    || 'binaries' in value
+    || 'files' in value
+    || 'resources' in value
+    || 'frameworks' in value
+  ) {
     throw new Error(
-      `${manifestPath} requires binaries and frameworks inside "platforms.lynxtron.targets"`,
+      `${manifestPath} requires files and frameworks inside "platforms.lynxtron.targets"`,
     );
   }
 
@@ -1513,10 +1519,16 @@ function readLynxtronPlatform(
       );
     }
 
-    const binaries = readOptionalStringPaths(
-      entry['binaries'],
+    if ('binary' in entry || 'binaries' in entry || 'resources' in entry) {
+      throw new Error(
+        `${manifestPath} does not support binary, binaries, or resources in "${entryPath}"; use "${entryPath}.files"`,
+      );
+    }
+
+    const files = readOptionalStringPaths(
+      entry['files'],
       manifestPath,
-      `${entryPath}.binaries`,
+      `${entryPath}.files`,
     );
     const frameworks = readOptionalStringPaths(
       entry['frameworks'],
@@ -1524,16 +1536,16 @@ function readLynxtronPlatform(
       `${entryPath}.frameworks`,
     );
 
-    if (binaries === undefined && frameworks === undefined) {
+    if (files === undefined && frameworks === undefined) {
       throw new Error(
-        `${manifestPath} must define "${entryPath}.binaries" or "${entryPath}.frameworks"`,
+        `${manifestPath} must define "${entryPath}.files" or "${entryPath}.frameworks"`,
       );
     }
 
     return {
       os,
       arch,
-      ...(binaries === undefined ? {} : { binaries }),
+      ...(files === undefined ? {} : { files }),
       ...(frameworks === undefined ? {} : { frameworks }),
     };
   });
