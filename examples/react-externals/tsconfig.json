@@ -14,6 +14,7 @@
     "external-bundle",
     "lynx.config.ts",
     "rslib-comp-lib.config.ts",
+    "rslib-utils.config.ts",
     "rslib-reactlynx.config.ts",
   ],
   "references": [
