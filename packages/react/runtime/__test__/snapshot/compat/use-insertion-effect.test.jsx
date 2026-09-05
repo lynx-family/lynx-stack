@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { useEffect } from '../../../src/index';
 import { useInsertionEffect } from '../../../compat';

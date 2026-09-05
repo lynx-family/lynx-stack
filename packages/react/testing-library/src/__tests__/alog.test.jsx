@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom';
-import { describe, test, vi, expect } from 'vitest';
+import { describe, test, rs, expect } from '@rstest/core';
 import { Component, useState } from '@lynx-js/react';
 import { fireEvent, render } from '..';
 import { act } from 'preact/test-utils';
 
 describe('alog', () => {
   test('should log', async () => {
-    vi.spyOn(lynxTestingEnv.mainThread.console, 'alog');
-    vi.spyOn(lynxTestingEnv.backgroundThread.console, 'alog');
+    rs.spyOn(lynxTestingEnv.mainThread.console, 'alog');
+    rs.spyOn(lynxTestingEnv.backgroundThread.console, 'alog');
 
     let _setCount;
     function App() {

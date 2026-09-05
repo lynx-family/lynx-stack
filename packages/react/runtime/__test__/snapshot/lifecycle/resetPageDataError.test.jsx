@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { RESET_WITH_INIT_DATA_IN_STATE_ERROR } from '../../../src/core/initData';
 import { applyUpdatePageData } from '../../../src/core/lynx-page-data';
@@ -29,12 +29,12 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
 });
 
 describe('data reset + withInitDataInState dev error', () => {
   it('does not report on a main-thread resetPageData when withInitDataInState is unused', () => {
-    const spy = vi.spyOn(lynx, 'reportError');
+    const spy = rs.spyOn(lynx, 'reportError');
 
     applyUpdatePageData({ msg: 'reset' }, { resetPageData: true });
 
@@ -43,7 +43,7 @@ describe('data reset + withInitDataInState dev error', () => {
 
   it('does not report on a background updateCardData reset when withInitDataInState is unused', () => {
     globalEnvManager.switchToBackground();
-    const spy = vi.spyOn(lynx, 'reportError');
+    const spy = rs.spyOn(lynx, 'reportError');
 
     updateCardData({ msg: 'reset' }, { type: NativeUpdateDataType.RESET });
 
@@ -52,7 +52,7 @@ describe('data reset + withInitDataInState dev error', () => {
 
   it('reports once on a main-thread resetPageData combined with withInitDataInState', () => {
     markWithInitDataInStateUsed();
-    const spy = vi.spyOn(lynx, 'reportError');
+    const spy = rs.spyOn(lynx, 'reportError');
 
     applyUpdatePageData({ msg: 'reset' }, { resetPageData: true });
     expect(spy).toHaveBeenCalledTimes(1);
@@ -66,7 +66,7 @@ describe('data reset + withInitDataInState dev error', () => {
   it('reports once on a background updateCardData reset combined with withInitDataInState', () => {
     markWithInitDataInStateUsed();
     globalEnvManager.switchToBackground();
-    const spy = vi.spyOn(lynx, 'reportError');
+    const spy = rs.spyOn(lynx, 'reportError');
 
     updateCardData({ msg: 'reset' }, { type: NativeUpdateDataType.RESET });
     expect(spy).toHaveBeenCalledTimes(1);

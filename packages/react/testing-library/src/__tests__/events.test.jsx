@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, test, vi } from 'vitest';
+import { expect, test, rs } from '@rstest/core';
 
 import { createRef } from '@lynx-js/react';
 
@@ -56,7 +56,7 @@ eventTypes.forEach(({ type, events, elementType, init }, eventTypeIdx) => {
 
       it(`triggers ${eventProp}`, async () => {
         const ref = createRef();
-        const spy = vi.fn();
+        const spy = rs.fn();
 
         const Comp = () => {
           return (
@@ -132,7 +132,7 @@ eventTypes.forEach(({ type, events, elementType, init }, eventTypeIdx) => {
 });
 
 test('calling `fireEvent` directly works too', () => {
-  const handler = vi.fn();
+  const handler = rs.fn();
 
   const Comp = () => {
     return <text catchtap={handler} />;
@@ -212,8 +212,8 @@ describe('Event handler property semantics', () => {
   });
 
   it('catch: handler runs in bubble phase and stops further propagation', () => {
-    const parent = vi.fn();
-    const child = vi.fn();
+    const parent = rs.fn();
+    const child = rs.fn();
     const childRef = createRef();
 
     const Comp = () => (
@@ -250,8 +250,8 @@ describe('Event handler property semantics', () => {
   });
 
   it('capture-catch: handler runs in capture phase and stops further propagation', () => {
-    const parent = vi.fn();
-    const child = vi.fn();
+    const parent = rs.fn();
+    const child = rs.fn();
     const childRef = createRef();
 
     const Comp = () => (
@@ -270,7 +270,7 @@ describe('Event handler property semantics', () => {
   });
 
   it('capture phase fires regardless of bubbles=false', () => {
-    const parent = vi.fn();
+    const parent = rs.fn();
     const childRef = createRef();
 
     const Comp = () => (
@@ -289,7 +289,7 @@ describe('Event handler property semantics', () => {
   });
 
   it('bind on ancestor needs bubbles=true to be reached from a descendant', () => {
-    const parent = vi.fn();
+    const parent = rs.fn();
     const childRef = createRef();
 
     const Comp = () => (
@@ -314,7 +314,7 @@ describe('Event handler property semantics', () => {
   it.each(['touchstart', 'touchmove', 'touchend', 'touchcancel', 'longpress'])(
     '%s: bubbles to ancestor handlers by default',
     (eventName) => {
-      const parent = vi.fn();
+      const parent = rs.fn();
       const childRef = createRef();
 
       const Comp = () => (
@@ -331,7 +331,7 @@ describe('Event handler property semantics', () => {
 });
 
 test('customEvent not in internal eventMap', () => {
-  const handler = vi.fn();
+  const handler = rs.fn();
 
   const Comp = () => {
     return <text catchcustomevent={handler} />;

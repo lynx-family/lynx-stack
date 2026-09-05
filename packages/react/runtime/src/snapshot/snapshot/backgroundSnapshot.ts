@@ -57,6 +57,7 @@ export const backgroundSnapshotInstanceManager: {
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
+    /* v8 ignore next */
     if (__DEV__) {
       clearSnapshotVNodeSource();
     }
@@ -78,6 +79,7 @@ export const backgroundSnapshotInstanceManager: {
     values.delete(id);
     values.set(newId, si);
     si.__id = newId;
+    /* v8 ignore next */
     if (__DEV__) {
       moveSnapshotVNodeSource(id, newId);
     }
@@ -396,6 +398,7 @@ export class BackgroundSnapshotInstance {
       }
       this.__values = value as unknown[];
       this.syncListItemPlatformInfo();
+      /* v8 ignore next */
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
@@ -406,6 +409,7 @@ export class BackgroundSnapshotInstance {
       if (key === '__listItemPlatformInfoIndex') {
         this.__listItemPlatformInfoIndex = value as number;
         this.syncListItemPlatformInfo();
+        /* v8 ignore next */
         if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }
@@ -413,6 +417,7 @@ export class BackgroundSnapshotInstance {
       }
       if (key === '__listItemPlatformInfo') {
         this.__listItemPlatformInfo = value as PlatformInfo;
+        /* v8 ignore next */
         if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }
@@ -679,6 +684,7 @@ export function hydrate(
           filteredBeforeChildNodes,
           diffResult,
           (node, target) => {
+            /* v8 ignore next */
             if (shouldProfile) {
               profileStart('ReactLynx::BSI::reconstructInstanceTree', {
                 args: {
@@ -691,6 +697,7 @@ export function hydrate(
             try {
               reconstructInstanceTree([node], before.id, target?.id);
             } finally {
+              /* v8 ignore next */
               if (shouldProfile) {
                 profileEnd();
               }

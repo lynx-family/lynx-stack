@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 
 import { OrdinaryRefEffectQueue, SelectorRefProxy, applyOrdinaryRef, normalizeRefValue } from '../../src/core/ref.js';
 import type { RefProxyForwardedMethods } from '../../src/core/ref.js';
@@ -28,19 +28,19 @@ class TestSelectorRefProxy extends SelectorRefProxy<TestSelectorRefProxy> {
 
 interface TestSelectorRefProxy extends RefProxyForwardedMethods<TestSelectorRefProxy> {}
 
-function stubReportError(): ReturnType<typeof vi.fn> {
-  const reportError = vi.fn();
-  vi.stubGlobal('lynx', { ...(globalThis.lynx ?? {}), reportError });
+function stubReportError(): ReturnType<typeof rs.fn> {
+  const reportError = rs.fn();
+  rs.stubGlobal('lynx', { ...(globalThis.lynx ?? {}), reportError });
   return reportError;
 }
 
 describe('core/ref ordinary ref semantics', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('normalizes valid refs and empty refs', () => {
-    const callback = vi.fn();
+    const callback = rs.fn();
     const objectRef = { current: null };
 
     expect(normalizeRefValue(callback)).toBe(callback);
@@ -71,8 +71,8 @@ describe('core/ref ordinary ref semantics', () => {
   });
 
   it('runs function cleanup instead of calling null when cleanup exists', () => {
-    const cleanup = vi.fn();
-    const ref = vi.fn(() => cleanup);
+    const cleanup = rs.fn();
+    const ref = rs.fn(() => cleanup);
     const reportError = stubReportError();
 
     applyOrdinaryRef(ref, 'node');
@@ -88,7 +88,7 @@ describe('core/ref ordinary ref semantics', () => {
   });
 
   it('calls function refs with null when no cleanup exists', () => {
-    const ref = vi.fn();
+    const ref = rs.fn();
     const reportError = stubReportError();
 
     applyOrdinaryRef(ref, 'node');
@@ -101,7 +101,7 @@ describe('core/ref ordinary ref semantics', () => {
   });
 
   it('ignores non-function cleanup return values', () => {
-    const refMock = vi.fn(() => null);
+    const refMock = rs.fn(() => null);
     const ref = refMock as unknown as ((value: string | null) => void) & {
       _unmount?: (() => void) | void;
     };
@@ -119,7 +119,7 @@ describe('core/ref ordinary ref semantics', () => {
 
   it('reports ref errors without throwing', () => {
     const error = new Error('ref failed');
-    const ref = vi.fn(() => {
+    const ref = rs.fn(() => {
       throw error;
     });
     const reportError = stubReportError();
@@ -132,13 +132,13 @@ describe('core/ref ordinary ref semantics', () => {
   it('queues ordinary ref effects as detach before attach', () => {
     const queue = new OrdinaryRefEffectQueue<string, string>();
     const calls: Array<[label: string, value: string | null]> = [];
-    const oldRef = vi.fn((value: string | null) => {
+    const oldRef = rs.fn((value: string | null) => {
       calls.push(['old', value]);
     });
-    const newRef = vi.fn((value: string | null) => {
+    const newRef = rs.fn((value: string | null) => {
       calls.push(['new', value]);
     });
-    const unchangedRef = vi.fn();
+    const unchangedRef = rs.fn();
     const reportError = stubReportError();
 
     queue.queue(unchangedRef, unchangedRef, 'ignored');
@@ -157,13 +157,13 @@ describe('core/ref ordinary ref semantics', () => {
   });
 
   it('forwards NodesRef methods through backend-provided selector and scheduler', () => {
-    const exec = vi.fn();
-    const fields = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ fields }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
+    const exec = rs.fn();
+    const fields = rs.fn(() => ({ exec }));
+    const select = rs.fn(() => ({ fields }));
+    const createSelectorQuery = rs.fn(() => ({ select }));
     const originalLynx = globalThis.lynx;
     const tasks: (() => void)[] = [];
-    vi.stubGlobal('lynx', { createSelectorQuery });
+    rs.stubGlobal('lynx', { createSelectorQuery });
 
     try {
       new TestSelectorRefProxy('[ref=test]', task => tasks.push(task)).fields({ id: true }).exec();
@@ -178,7 +178,7 @@ describe('core/ref ordinary ref semantics', () => {
       expect(fields).toHaveBeenCalledWith({ id: true });
       expect(exec).toHaveBeenCalledTimes(1);
     } finally {
-      vi.stubGlobal('lynx', originalLynx);
+      rs.stubGlobal('lynx', originalLynx);
     }
   });
 });

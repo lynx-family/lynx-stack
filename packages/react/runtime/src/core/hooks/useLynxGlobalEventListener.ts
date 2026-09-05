@@ -50,6 +50,9 @@ export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
 
   useEffect(() => {
     return () => {
+      // The `useMemo` above always assigns during render, which precedes any
+      // unmount cleanup.
+      /* v8 ignore else */
       if (previousArgsRef.current) {
         const [eventName, listener] = previousArgsRef.current;
         lynx.getJSModule('GlobalEventEmitter').removeListener(eventName, listener);

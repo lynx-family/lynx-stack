@@ -1,8 +1,8 @@
 /** @jsxImportSource ../../lepus */
 
-import { Component, createContext, Fragment } from 'preact';
+import { Component, createContext, Fragment, options } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
@@ -14,6 +14,7 @@ import { createElement, cloneElement } from '../../lepus';
 import { Suspense } from 'preact/compat';
 import { createSuspender } from './createSuspender';
 import { __root } from '../../src/root';
+import { COMMIT, DIFF, DIFF2, DIFFED, RENDER } from '../../src/shared/render-constants';
 
 const renderToString = (element, root = __root) => {
   return renderToStringBase(element, null, root);
@@ -29,7 +30,7 @@ describe('renderToString', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
 
     globalEnvManager.resetEnv();
     elementTree.clear();
@@ -318,7 +319,7 @@ describe('renderToString', () => {
   });
 
   it('should render with attr', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    rs.spyOn(Math, 'random').mockReturnValue(0.5);
     const random = Math.random();
 
     function App() {
@@ -673,15 +674,15 @@ describe('renderToString', () => {
             <App />
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
 
     // renderToString will throw on Error without calling `options[DIFFED]`
-    vi.mocked(console.profile).mockClear();
-    vi.mocked(console.profileEnd).mockClear();
+    rs.mocked(console.profile).mockClear();
+    rs.mocked(console.profileEnd).mockClear();
   });
 
   it('should throw when error occur - with ErrorBoundary ignored', () => {
-    const f = vi.fn();
+    const f = rs.fn();
 
     class ErrorBoundary extends Component {
       componentDidCatch = f;
@@ -705,7 +706,7 @@ describe('renderToString', () => {
             </ErrorBoundary>
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
     expect(f).toBeCalledTimes(0);
 
     class ErrorBoundary2 extends Component {
@@ -726,12 +727,12 @@ describe('renderToString', () => {
             </ErrorBoundary2>
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
     expect(f).toBeCalledTimes(0);
 
     // renderToString will throw on Error without calling `options[DIFFED]`
-    vi.mocked(console.profile).mockClear();
-    vi.mocked(console.profileEnd).mockClear();
+    rs.mocked(console.profile).mockClear();
+    rs.mocked(console.profileEnd).mockClear();
   });
 
   it('should render fallback when a direct child suspends', async () => {
@@ -1229,7 +1230,7 @@ describe('renderOpcodesInto', () => {
   it('should render component with ref', () => {
     scratch.ensureElements();
 
-    const ref = vi.fn();
+    const ref = rs.fn();
 
     function Counter({ ref: r, count: _ }) {
       expect(r).toBe(ref);
@@ -1398,7 +1399,7 @@ describe('createElement', () => {
   });
 
   it('ref should be accessible to developer', () => {
-    const ref = vi.fn();
+    const ref = rs.fn();
 
     function Key({ ref: r }) {
       expect(r).toBe(ref);
@@ -1614,5 +1615,55 @@ describe('renderMainThread', () => {
         cssId="default-entry-from-native:0"
       />
     `);
+  });
+  it('renders when no preact option hooks are installed', () => {
+    const hookKeys = [DIFF, DIFF2, RENDER, DIFFED, COMMIT, 'unmount'];
+    const previous = {};
+    for (const key of hookKeys) {
+      previous[key] = options[key];
+      delete options[key];
+    }
+
+    class ClassChild extends Component {
+      render() {
+        return 'class-child';
+      }
+    }
+
+    function FunctionChild() {
+      return 'function-child';
+    }
+
+    let opcodes;
+    try {
+      opcodes = renderToString(
+        <Fragment>
+          <ClassChild />
+          <FunctionChild />
+        </Fragment>,
+      );
+    } finally {
+      for (const key of hookKeys) {
+        if (previous[key] === undefined) {
+          delete options[key];
+        } else {
+          options[key] = previous[key];
+        }
+      }
+    }
+
+    const serialized = JSON.stringify(opcodes);
+    expect(serialized).toContain('class-child');
+    expect(serialized).toContain('function-child');
+  });
+  it('keeps an explicitly provided prop over its defaultProps value', () => {
+    function Foo() {
+      return null;
+    }
+    Foo.defaultProps = { foo: 'bar' };
+
+    const vnode = createElement(Foo, { foo: 'explicit' });
+
+    expect(vnode.props.foo).toBe('explicit');
   });
 });

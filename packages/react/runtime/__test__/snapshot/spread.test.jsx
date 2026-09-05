@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { useState } from '../../src/index';
 import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
 
   globalEnvManager.switchToMainThread();
   render(null, scratch);
@@ -57,10 +57,10 @@ describe('spreadUpdate', () => {
           __spread: true,
           textMaxline: 2,
           tailColorConvert: false,
-          onClick: vi.fn(),
-          onCatchTap: vi.fn(),
+          onClick: rs.fn(),
+          onCatchTap: rs.fn(),
           onReady: null,
-          bindchange: vi.fn(),
+          bindchange: rs.fn(),
         },
       ),
     ).toEqual({

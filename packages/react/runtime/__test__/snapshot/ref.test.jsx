@@ -4,12 +4,13 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/snapshot/lifecycle/ref/delay';
 
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { destroyBackground } from '../../src/snapshot/lifecycle/destroy';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { __root } from '../../src/root';
@@ -30,7 +31,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
 
   globalEnvManager.resetEnv();
   elementTree.clear();
@@ -39,7 +40,7 @@ afterEach(() => {
 
 describe('component ref', () => {
   it('basic', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
 
     class Child extends Component {
@@ -78,7 +79,7 @@ describe('component ref', () => {
 
 describe('element ref', () => {
   it('basic', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
 
     class Comp extends Component {
@@ -155,7 +156,7 @@ describe('element ref', () => {
   });
 
   it('should trigger ref when insert node', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
 
     class Comp extends Component {
@@ -245,7 +246,7 @@ describe('element ref', () => {
   });
 
   it('should trigger ref when remove node', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
 
     class Comp extends Component {
@@ -312,8 +313,8 @@ describe('element ref', () => {
   });
 
   it('should trigger ref when remove node with cleanup function', async function() {
-    const cleanup = vi.fn();
-    const ref1 = vi.fn(() => {
+    const cleanup = rs.fn();
+    const ref1 = rs.fn(() => {
       return cleanup;
     });
 
@@ -378,8 +379,8 @@ describe('element ref', () => {
   });
 
   it('should trigger ref when ref and unref deeply', async () => {
-    const ref1 = [vi.fn(), vi.fn(), vi.fn()];
-    const ref2 = vi.fn();
+    const ref1 = [rs.fn(), rs.fn(), rs.fn()];
+    const ref2 = rs.fn();
     let _setShow;
 
     function ComponentWithRef({ index }) {
@@ -454,7 +455,7 @@ describe('element ref', () => {
   it('should trigger ref when ref is null in the first screen', async function() {
     const ref1 = createRef();
     const ref2 = createRef();
-    const ref3 = vi.fn();
+    const ref3 = rs.fn();
 
     class Comp extends Component {
       x = 'x';
@@ -608,8 +609,8 @@ describe('element ref', () => {
   });
 
   it('should trigger ref when ref object is updated', async function() {
-    const cleanup = vi.fn();
-    let ref1 = vi.fn(() => {
+    const cleanup = rs.fn();
+    let ref1 = rs.fn(() => {
       return cleanup;
     });
     let ref2 = createRef();
@@ -659,7 +660,7 @@ describe('element ref', () => {
     oldRef1.mockClear();
     {
       globalEnvManager.switchToBackground();
-      ref1 = vi.fn();
+      ref1 = rs.fn();
       ref2 = createRef();
       ref3 = null;
       render(<Comp />, __root);
@@ -741,10 +742,10 @@ describe('element ref', () => {
 
   // NOT working for now
   it.skip('should work when using error boundary with ref', async function() {
-    const ref = vi.fn(() => {
+    const ref = rs.fn(() => {
       throw new Error('error in ref');
     });
-    const errorHandler = vi.fn();
+    const errorHandler = rs.fn();
 
     class Comp extends Component {
       state = { hasError: false };
@@ -779,7 +780,7 @@ describe('element ref', () => {
   });
 
   it('should not trigger ref when ref function is not updated', async function() {
-    let ref1 = vi.fn();
+    let ref1 = rs.fn();
     let show = true;
 
     class Comp extends Component {
@@ -869,7 +870,7 @@ describe('element ref', () => {
   });
 
   it('should trigger ref when element not exists in the first screen', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
 
     class Comp extends Component {
       x = 'x';
@@ -972,7 +973,7 @@ describe('element ref', () => {
 
 describe('element ref in spread', () => {
   it('should trigger ref when insert ref into spread', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
     let spread1 = {};
     const spread2 = { ref: ref2 };
@@ -1113,7 +1114,7 @@ describe('element ref in spread', () => {
   });
 
   it('should trigger ref when remove ref from spread', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
     let spread1 = { ref: ref1 };
     let spread2 = { ref: ref2 };
@@ -1218,7 +1219,7 @@ describe('element ref in spread', () => {
   });
 
   it('should trigger ref when update ref in spread', async function() {
-    let ref1 = vi.fn();
+    let ref1 = rs.fn();
     let ref2 = createRef();
     let ref3 = createRef();
     let spread1 = { ref: ref1 };
@@ -1313,7 +1314,7 @@ describe('element ref in spread', () => {
     const oldRef3 = ref3;
     {
       globalEnvManager.switchToBackground();
-      ref1 = vi.fn();
+      ref1 = rs.fn();
       ref2 = createRef();
       ref3 = null;
       spread1 = { ref: ref1 };
@@ -1619,7 +1620,7 @@ describe('element ref in list', () => {
 
 describe('ui operations', () => {
   it('should delay until hydration finished', async function() {
-    const ref1 = vi.fn((ref) => {
+    const ref1 = rs.fn((ref) => {
       ref.invoke({
         method: 'boundingClientRect',
       }).exec();
@@ -1671,11 +1672,11 @@ describe('ui operations', () => {
   });
 
   it('should support more usages of ref 1', async function() {
-    const ref1 = vi.fn((ref) => {
+    const ref1 = rs.fn((ref) => {
       ref.setNativeProps({
         'background-color': 'blue',
       }).exec();
-      ref.path(vi.fn()).exec();
+      ref.path(rs.fn()).exec();
     });
 
     class Comp extends Component {
@@ -1720,7 +1721,7 @@ describe('ui operations', () => {
             "[react-ref--2-0]",
             "path",
             [
-              [MockFunction spy],
+              [MockFunction rstest.fn()],
             ],
           ],
         ]
@@ -1730,7 +1731,7 @@ describe('ui operations', () => {
   });
 
   it('should support more usages of ref 2', async function() {
-    const ref1 = vi.fn((ref) => {
+    const ref1 = rs.fn((ref) => {
       const fields = ref.fields({
         id: true,
       });
@@ -1913,7 +1914,7 @@ describe('ui operations', () => {
   });
 
   it('should not delay after hydration', async function() {
-    const ref1 = vi.fn((ref) => {
+    const ref1 = rs.fn((ref) => {
       ref.invoke({
         method: 'boundingClientRect',
       }).exec();
@@ -1981,8 +1982,8 @@ describe('ui operations', () => {
 
 describe('applyRef before hydration', () => {
   it('ref is changed across rerenders before hydration', async function() {
-    const oldCb = vi.fn();
-    const newCb = vi.fn();
+    const oldCb = rs.fn();
+    const newCb = rs.fn();
 
     function App({ cb }) {
       return <view ref={cb} />;
@@ -2001,7 +2002,7 @@ describe('applyRef before hydration', () => {
   });
 
   it('ref becomes null on rerender before hydration', async function() {
-    const cb = vi.fn();
+    const cb = rs.fn();
 
     function App({ useRef }) {
       return <view ref={useRef ? cb : null} />;
@@ -2017,7 +2018,7 @@ describe('applyRef before hydration', () => {
   });
 
   it('ref is added on rerender before hydration', async function() {
-    const cb = vi.fn();
+    const cb = rs.fn();
 
     function App({ useRef }) {
       return <view ref={useRef ? cb : null} />;
@@ -2032,7 +2033,7 @@ describe('applyRef before hydration', () => {
   });
 
   it('spread ref is removed on rerender before hydration', async function() {
-    const cb = vi.fn();
+    const cb = rs.fn();
 
     function App({ withRef }) {
       return <view {...(withRef ? { ref: cb } : {})} />;
@@ -2048,7 +2049,7 @@ describe('applyRef before hydration', () => {
   });
 
   it('spread ref is added on rerender before hydration', async function() {
-    const cb = vi.fn();
+    const cb = rs.fn();
 
     function App({ withRef }) {
       return <view {...(withRef ? { ref: cb } : {})} />;
@@ -2111,7 +2112,7 @@ describe('applyRef before hydration', () => {
   });
 
   it('same ref callback in spread form should not be re-invoked', async function() {
-    const cb = vi.fn();
+    const cb = rs.fn();
 
     function App() {
       return <view {...{ ref: cb }} />;
@@ -2127,10 +2128,10 @@ describe('applyRef before hydration', () => {
 
   it('reports ref callback errors without breaking render', async function() {
     const error = new Error('ref failed');
-    const cb = vi.fn(() => {
+    const cb = rs.fn(() => {
       throw error;
     });
-    const reportError = vi.spyOn(lynx, 'reportError');
+    const reportError = rs.spyOn(lynx, 'reportError');
 
     function App() {
       return <view ref={cb} />;
@@ -2144,9 +2145,9 @@ describe('applyRef before hydration', () => {
   });
 
   it('three consecutive rerenders before hydration clean up intermediate refs', async function() {
-    const cb1 = vi.fn();
-    const cb2 = vi.fn();
-    const cb3 = vi.fn();
+    const cb1 = rs.fn();
+    const cb2 = rs.fn();
+    const cb3 = rs.fn();
 
     function App({ cb }) {
       return <view ref={cb} />;
@@ -2179,5 +2180,68 @@ describe('runDelayedUiOps helper', () => {
     shouldDelayUiOps.value = true;
     runDelayedUiOps();
     expect(shouldDelayUiOps.value).toBe(false);
+  });
+  it('clears refs on removal when the ref slot holds no value', async function() {
+    class Comp extends Component {
+      render() {
+        return this.props.show && (
+          <view>
+            <view ref={null} />
+          </view>
+        );
+      }
+    }
+
+    __root.__jsx = <Comp show={true} />;
+    renderPage();
+
+    globalEnvManager.switchToBackground();
+    render(<Comp show={true} />, __root);
+
+    lynx.getApp().OnLifecycleEvent(
+      ...globalThis.__OnLifecycleEvent.mock.calls[0],
+    );
+    globalEnvManager.switchToMainThread();
+    const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+    globalThis[rLynxChange[0]](rLynxChange[1]);
+
+    globalEnvManager.switchToBackground();
+    expect(() => render(<Comp show={false} />, __root)).not.toThrow();
+  });
+  it('tolerates a patch-update callback whose commit task is already gone', async function() {
+    const ref1 = rs.fn();
+
+    class Comp extends Component {
+      render() {
+        return <view ref={ref1} />;
+      }
+    }
+
+    __root.__jsx = <Comp />;
+    renderPage();
+
+    globalEnvManager.switchToBackground();
+    render(<Comp />, __root);
+
+    lynx.getApp().OnLifecycleEvent(
+      ...globalThis.__OnLifecycleEvent.mock.calls[0],
+    );
+    lynx.getNativeApp().callLepusMethod.mockClear();
+
+    // A second background update produces the patch whose callback we drive.
+    render(<Comp key='second' />, __root);
+    await waitSchedule();
+
+    const calls = lynx.getNativeApp().callLepusMethod.mock.calls;
+    const rLynxChange = calls.at(-1);
+
+    // A page destroy drains the commit task map, so the native patch callback
+    // can land with nothing left to run.
+    destroyBackground();
+
+    globalEnvManager.switchToMainThread();
+    globalThis[rLynxChange[0]](rLynxChange[1]);
+
+    expect(() => rLynxChange[2]()).not.toThrow();
   });
 });

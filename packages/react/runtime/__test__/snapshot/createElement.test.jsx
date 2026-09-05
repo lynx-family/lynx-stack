@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { setupPage } from '../../src/snapshot';
@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   globalEnvManager.resetEnv();
   elementTree.clear();
 });
@@ -190,7 +190,7 @@ describe('createElement', () => {
   });
 
   it('view with event', async function() {
-    const handleTap = vi.fn();
+    const handleTap = rs.fn();
     let element;
     const App = () => {
       element = createElement('view', {
@@ -320,7 +320,7 @@ describe('createElement', () => {
   });
 
   it('view with ref', async function() {
-    const ref1 = vi.fn();
+    const ref1 = rs.fn();
     const ref2 = createRef();
     let element;
     const App = () => {
@@ -627,7 +627,7 @@ describe('createElement', () => {
           style: {
             color: 'red',
           },
-          bindtap: vi.fn(),
+          bindtap: rs.fn(),
         });
       return element;
     };

@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { resetElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
@@ -15,8 +14,10 @@ import {
   assertOrUpdateTextFile,
   expectReportErrorCount,
   formatFixtureOutput,
+  loadFixtureCaseModule,
   runFixtureTests,
 } from './fixtureRunner.js';
+import { evaluateCompiledModule } from './evaluateCompiledModule.js';
 import { installMockNativePapi } from '../mock/mockNativePapi.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from './registry.js';
 import { serializeToJSX } from './serializer.js';
@@ -91,7 +92,7 @@ async function runCaseFixture(options: {
   update: boolean;
 }): Promise<void> {
   const { casePath, fixtureDir, fixtureName, update } = options;
-  const caseModule = (await import(pathToFileURL(casePath).href)) as CaseFixtureModule;
+  const caseModule = loadFixtureCaseModule<CaseFixtureModule>(casePath);
   const reportErrorCount = caseModule.reportErrorCount ?? 0;
   const result = await caseModule.run({ fixtureDir, fixtureName });
   const normalized = normalizeCaseFixtureResult(result);
@@ -135,7 +136,6 @@ async function runCompiledRenderFixture(options: {
   const templatesPath = path.join(fixtureDir, 'templates.json.txt');
   const expectedPath = path.join(fixtureDir, 'output.txt');
   const papiPath = path.join(fixtureDir, 'papi.txt');
-  const tempImportPath = path.join(tempDir, 'temp_actual.js');
   const fixtureConfig = readCompiledRenderFixtureConfig(fixtureDir, fixtureName);
   const previousGlobDynamicComponentEntry = globalThis.globDynamicComponentEntry;
 
@@ -143,7 +143,7 @@ async function runCompiledRenderFixture(options: {
     throw new Error(`Source file missing for fixture "${fixtureName}"`);
   }
 
-  vi.resetAllMocks();
+  rs.resetAllMocks();
   elementTemplateRegistry.clear();
   clearEtAttrPlanMap();
   resetTemplateId();
@@ -234,9 +234,11 @@ async function runCompiledRenderFixture(options: {
       );
     }
 
-    fs.writeFileSync(tempImportPath, importableCode);
-    try {
-      const module = (await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`)) as { App: unknown };
+    {
+      const module = evaluateCompiledModule<{ App: unknown }>(
+        importableCode,
+        `${fixtureName}/index.js`,
+      );
       const vnode = { type: module.App, props: {}, key: null, ref: null };
       const opcodes = renderToString(vnode, null);
       const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
@@ -258,10 +260,6 @@ async function runCompiledRenderFixture(options: {
         fixtureName,
         label: 'papi log',
       });
-    } finally {
-      if (fs.existsSync(tempImportPath)) {
-        fs.unlinkSync(tempImportPath);
-      }
     }
 
     expectReportErrorCount(0);

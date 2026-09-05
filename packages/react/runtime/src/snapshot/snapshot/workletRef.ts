@@ -21,6 +21,9 @@ export function applyRefQueue(): void {
   for (let i = 0; i < queue.length; i += 2) {
     const worklet = queue[i] as Worklet | WorkletRefImpl<Element>;
     const element = queue[i + 1] as Element;
+    // `addToRefQueue` is only reached from the `_wvid` / `_wkltId` branches of
+    // `updateWorkletRef`, so nothing else can be in the queue.
+    /* v8 ignore else */
     if ('_wvid' in worklet) {
       update(worklet as WorkletRefImpl<Element>, element);
     } else if ('_wkltId' in worklet) {

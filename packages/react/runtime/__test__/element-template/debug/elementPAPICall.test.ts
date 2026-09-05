@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { initElementTemplatePAPICallAlog } from '../../../src/element-template/debug/elementPAPICall.js';
 
@@ -10,7 +10,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
   const originalProfile = globalThis.__PROFILE__;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     globalThis.__PROFILE__ = true;
   });
 
@@ -30,13 +30,13 @@ describe('ElementTemplate PAPI alog wrapper', () => {
     Object.defineProperty(anonymousHandler, 'name', { value: '' });
 
     const target = {
-      __CreateElementTemplate: vi.fn(() => templateRef),
-      __CreateTypedElementTemplate: vi.fn(() => typedRef),
-      __SetAttributeOfElementTemplate: vi.fn(),
-      __InsertNodeToElementTemplate: vi.fn(() => childRef),
-      __RemoveNodeFromElementTemplate: vi.fn(() => null),
-      __FlushElementTree: vi.fn(),
-      __SerializeElementTemplate: vi.fn(() => Symbol.for('serialized')),
+      __CreateElementTemplate: rs.fn(() => templateRef),
+      __CreateTypedElementTemplate: rs.fn(() => typedRef),
+      __SetAttributeOfElementTemplate: rs.fn(),
+      __InsertNodeToElementTemplate: rs.fn(() => childRef),
+      __RemoveNodeFromElementTemplate: rs.fn(() => null),
+      __FlushElementTree: rs.fn(),
+      __SerializeElementTemplate: rs.fn(() => Symbol.for('serialized')),
     } satisfies Record<string, unknown>;
 
     initElementTemplatePAPICallAlog(target);
@@ -108,7 +108,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
 
   it('skips missing APIs and keeps logging optional', () => {
     const originalAlog = console.alog;
-    const createElementTemplate = vi.fn(() => null);
+    const createElementTemplate = rs.fn(() => null);
     const target = {
       __CreateElementTemplate: createElementTemplate,
     } satisfies Record<string, unknown>;
@@ -136,7 +136,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
   it('ends the profile when a wrapped ET PAPI throws', () => {
     const error = new Error('native failed');
     const target = {
-      __CreateElementTemplate: vi.fn(() => {
+      __CreateElementTemplate: rs.fn(() => {
         throw error;
       }),
     } satisfies Record<string, unknown>;

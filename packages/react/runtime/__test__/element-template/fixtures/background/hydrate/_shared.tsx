@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import {
   globalCommitContext,
@@ -97,13 +97,13 @@ function createHydrationRawTextChild(handleId: number, text: unknown): Serialize
 }
 
 function setup(): CaseContext {
-  vi.clearAllMocks();
+  rs.clearAllMocks();
   installMockNativePapi({ clearTemplatesOnCleanup: false });
   const hydrationData: HydrateInstances = [];
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
 
-  const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
+  const onHydrate = rs.fn().mockImplementation((event: HydrateEvent) => {
     hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);

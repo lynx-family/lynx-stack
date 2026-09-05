@@ -1,9 +1,4 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import type { TransformNodiffOutput } from '@lynx-js/react-transform';
 import { transformReactLynx } from '@lynx-js/react-transform';
@@ -25,6 +20,7 @@ import { resetTemplateId } from '../../../../src/element-template/runtime/templa
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import type { SerializedTypedNode } from '../../../../src/element-template/protocol/types.js';
 import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
+import { evaluateCompiledModule } from '../../test-utils/debug/evaluateCompiledModule.js';
 import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
 import { clearTemplates, registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { installMockNativePapi, lastMock } from '../../test-utils/mock/mockNativePapi.js';
@@ -128,10 +124,7 @@ async function compileAndRender(
   source: string,
   options: CompileOptions = {},
 ): Promise<RenderResult> {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'et-runtime-transform-'));
-  const tempImportPath = path.join(tempDir, 'compiled.mjs');
-
-  try {
+  {
     globalThis.__USE_ELEMENT_TEMPLATE__ = true;
     globalThis.__LEPUS__ = true;
     globalThis.__JS__ = false;
@@ -154,10 +147,10 @@ async function compileAndRender(
 
     registerCompiledTemplates(result, entryName);
 
-    fs.writeFileSync(tempImportPath, outputCode);
-    const module = (await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`)) as {
-      App: unknown;
-    };
+    const module = evaluateCompiledModule<{ App: unknown }>(
+      outputCode,
+      'render-transform.contract.mjs',
+    );
 
     const vnode = { type: module.App, props: {}, key: null, ref: null };
     const opcodes = renderToString(vnode, null);
@@ -172,8 +165,6 @@ async function compileAndRender(
         .filter(templateId => templateId !== '_et_builtin_raw_text'),
       code: transformedCode,
     };
-  } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
   }
 }
 
@@ -189,8 +180,8 @@ describe('render transform contract', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
-    vi.unstubAllGlobals();
+    rs.clearAllMocks();
+    rs.unstubAllGlobals();
     clearTemplates();
     backgroundElementTemplateInstanceManager.clear();
     elementTemplateRegistry.clear();
@@ -295,7 +286,7 @@ describe('render transform contract', () => {
   });
 
   it('passes dynamic component entry through ET bundleUrl create parameter', async () => {
-    vi.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
+    rs.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
 
     const { rootRef, userTemplateIds } = await compileAndRender(
       `

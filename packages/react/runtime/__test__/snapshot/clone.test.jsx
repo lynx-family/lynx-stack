@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { setupPage } from '../../src/snapshot';
@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   globalEnvManager.resetEnv();
   elementTree.clear();
 });
@@ -249,7 +249,7 @@ describe('clone element', () => {
   });
 
   it('cannot clone view with children', () => {
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleWarn = rs.spyOn(console, 'warn').mockImplementation(() => {});
     const original = <view className='a'></view>;
     const clone = cloneElement(original, {
       className: 'b',
@@ -955,5 +955,20 @@ describe('clone element', () => {
         />
       </page>
     `);
+  });
+  it('reuses an already-registered original definition when cloning', function() {
+    const original = <view className='a' id='id-a'></view>;
+    // Render the original first so its definition is registered before the
+    // clone definition is derived from it.
+    __root.__jsx = original;
+    renderPage();
+
+    const clone = cloneElement(original, { className: 'b' });
+    __root.__jsx = clone;
+    renderPage();
+
+    const rendered = __root.__element_root.children.at(-1);
+    expect(rendered.props['class']).toBe('b');
+    expect(rendered.props['id']).toBe('id-a');
   });
 });

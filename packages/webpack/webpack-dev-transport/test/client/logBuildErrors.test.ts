@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { log } from '../../client/log.js';
 import { logBuildErrors } from '../../client/logBuildErrors.js';
@@ -9,7 +9,7 @@ import { logBuildErrors } from '../../client/logBuildErrors.js';
 describe('logBuildErrors', () => {
   // `log` binds `console.error` at module load, so spying on `console` itself
   // would not be observed.
-  const logError = vi.spyOn(log, 'error').mockReturnValue(undefined);
+  const logError = rs.spyOn(log, 'error').mockReturnValue(undefined);
 
   beforeEach(() => {
     logError.mockClear();

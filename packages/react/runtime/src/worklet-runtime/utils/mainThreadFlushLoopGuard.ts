@@ -40,6 +40,7 @@ function compressTrace(markers: string[]): string {
 }
 
 export function mainThreadFlushLoopMark(marker: string): void {
+  /* v8 ignore next */
   if (__DEV__) {
     pushTrace(marker);
   }
@@ -71,6 +72,7 @@ export function mainThreadFlushLoopOnFlushMicrotask(): Error | null {
 }
 
 export function mainThreadFlushLoopReport(error: Error): void {
+  /* v8 ignore next */
   if (__DEV__) {
     // Throw on macrotask to avoid Promise-unhandled-rejection noise.
     setTimeout(() => {

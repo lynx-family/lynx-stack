@@ -26,6 +26,7 @@ import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadMainThread');
   }
@@ -63,6 +64,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   __FlushElementTree(__page, options);
 
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
@@ -70,6 +72,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 }
 
 function reloadBackground(updateData: Record<string, any>): void {
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadBackground');
   }
@@ -87,6 +90,7 @@ function reloadBackground(updateData: Record<string, any>): void {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(__root.__jsx, __root as any);
 
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,
@@ -100,7 +100,7 @@ describe('Compiled authored ET page fixtures', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     resetElementTemplateCommitState();
     resetElementTemplateHydrationListener();
     clearEtAttrPlanMap();
@@ -134,7 +134,7 @@ describe('Compiled authored ET page fixtures', () => {
   it('reports multiple authored pages mounted concurrently on background', async () => {
     const { backgroundModule } = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
     const originalReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -153,7 +153,7 @@ describe('Compiled authored ET page fixtures', () => {
   it('keeps tracking a duplicate after the first authored page unmounts', async () => {
     const { backgroundModule } = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
     const originalReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -179,7 +179,7 @@ describe('Compiled authored ET page fixtures', () => {
   it('does not report a keyed authored page replacement as multiple pages', async () => {
     const { backgroundModule } = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
     const originalReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -234,8 +234,8 @@ describe('Compiled authored ET page fixtures', () => {
   });
 
   it('updates, clears, and remounts compiled authored page state on reserved target 0', async () => {
-    const onTap = vi.fn();
-    const pageRef = vi.fn();
+    const onTap = rs.fn();
+    const pageRef = rs.fn();
     const pageProps = { onTap, pageId: 'screen', pageRef, withPage: true };
     const backgroundModule = await renderHydratedPair(pageProps);
 
@@ -262,7 +262,7 @@ describe('Compiled authored ET page fixtures', () => {
 
     pageRef.mockClear();
     updateEvents = [];
-    const nextOnTap = vi.fn();
+    const nextOnTap = rs.fn();
     renderOnBackground(backgroundModule, { ...pageProps, onTap: nextOnTap });
 
     envManager.switchToMainThread();
@@ -331,8 +331,8 @@ describe('Compiled authored ET page fixtures', () => {
     expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0:bindtap')).toBeUndefined();
     expect(pageRef).toHaveBeenCalledWith(null);
 
-    const remountOnTap = vi.fn();
-    const remountRef = vi.fn();
+    const remountOnTap = rs.fn();
+    const remountRef = rs.fn();
     updateEvents = [];
     renderOnBackground(backgroundModule, {
       onTap: remountOnTap,
@@ -388,8 +388,8 @@ describe('Compiled authored ET page fixtures', () => {
   it.each(['direct', 'spread'] as const)(
     'delivers compiled %s page refs through typed attributes',
     async refMode => {
-      const backgroundPageRef = vi.fn();
-      const mainThreadPageRef = vi.fn();
+      const backgroundPageRef = rs.fn();
+      const mainThreadPageRef = rs.fn();
 
       await renderHydratedPair(
         { pageRef: backgroundPageRef, refMode, withPage: true },
@@ -411,9 +411,9 @@ describe('Compiled authored ET page fixtures', () => {
   it.each(['direct', 'spread'] as const)(
     'detaches the old compiled %s page ref before attaching its replacement',
     async refMode => {
-      const firstRef = vi.fn();
-      const mainThreadRef = vi.fn();
-      const replacementRef = vi.fn();
+      const firstRef = rs.fn();
+      const mainThreadRef = rs.fn();
+      const replacementRef = rs.fn();
       const backgroundModule = await renderHydratedPair(
         {
           pageRef: firstRef,
@@ -472,16 +472,16 @@ describe('Compiled authored ET page fixtures', () => {
 
     envManager.switchToMainThread();
     updateEvents = [];
-    vi.mocked(__SerializeElementTemplate).mockClear();
+    rs.mocked(__SerializeElementTemplate).mockClear();
     reloadMainThread({}, { reloadTemplate: true });
     expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
-    const cleanupSnapshot = vi.mocked(__SerializeElementTemplate).mock.results[0]?.value as {
+    const cleanupSnapshot = rs.mocked(__SerializeElementTemplate).mock.results[0]?.value as {
       attributes?: { id?: string } | null;
       elementSlots?: Array<Array<{ uid: number | string }> | null | undefined>;
     };
     expect(cleanupSnapshot.attributes?.id).toBe('background-replacement');
     expect(cleanupSnapshot.elementSlots?.[0]?.map(root => root.uid)).toContain(patchedRootUid);
-    const reloadEnvelope = vi.mocked(__SerializeElementTemplate).mock.results[1]?.value as {
+    const reloadEnvelope = rs.mocked(__SerializeElementTemplate).mock.results[1]?.value as {
       attributes?: { id?: string } | null;
       elementSlots?: Array<Array<{ uid: number | string }> | null | undefined>;
     };
@@ -508,8 +508,8 @@ describe('Compiled authored ET page fixtures', () => {
   });
 
   it('clears compiled page event and ref state on background destroy', async () => {
-    const onTap = vi.fn();
-    const pageRef = vi.fn();
+    const onTap = rs.fn();
+    const pageRef = rs.fn();
     await renderHydratedPair({ onTap, pageId: 'screen', pageRef, withPage: true });
 
     expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0:bindtap')).toBe(onTap);

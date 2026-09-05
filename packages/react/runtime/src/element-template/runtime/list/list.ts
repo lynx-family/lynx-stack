@@ -393,6 +393,7 @@ function createComponentAtIndexCallback(state: ETListState): ComponentAtIndexCal
     enableReuseNotification,
   ) {
     const shouldLog = typeof __ALOG__ !== 'undefined' && __ALOG__;
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('component-at-index called', {
         destroyed: state.destroyed,
@@ -405,6 +406,7 @@ function createComponentAtIndexCallback(state: ETListState): ComponentAtIndexCal
       });
     }
     if (state.destroyed) {
+      /* v8 ignore next */
       if (shouldLog) {
         logListCallbackAlog('component-at-index returned', {
           listHandleId: state.listHandleId,
@@ -448,6 +450,7 @@ function createComponentAtIndexesCallback(state: ETListState): ComponentAtIndexe
     asyncFlush,
   ) {
     const shouldLog = typeof __ALOG__ !== 'undefined' && __ALOG__;
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('component-at-indexes called', {
         destroyed: state.destroyed,
@@ -461,6 +464,7 @@ function createComponentAtIndexesCallback(state: ETListState): ComponentAtIndexe
       });
     }
     if (state.destroyed) {
+      /* v8 ignore next */
       if (shouldLog) {
         logListCallbackAlog('component-at-indexes returned', {
           listHandleId: state.listHandleId,
@@ -504,6 +508,7 @@ function createComponentAtIndexesCallback(state: ETListState): ComponentAtIndexe
 function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCallback {
   return function enqueueComponent(_list, listID, sign) {
     const shouldLog = typeof __ALOG__ !== 'undefined' && __ALOG__;
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('enqueue-component called', {
         destroyed: state.destroyed,
@@ -514,6 +519,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
       });
     }
     if (state.destroyed) {
+      /* v8 ignore next */
       if (shouldLog) {
         logListCallbackAlog('enqueue-component returned', {
           listHandleId: state.listHandleId,
@@ -526,6 +532,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
     }
     const item = state.callbackItemBySign.get(sign);
     if (!item) {
+      /* v8 ignore next */
       if (shouldLog) {
         logListCallbackAlog('enqueue-component returned', {
           listHandleId: state.listHandleId,
@@ -538,6 +545,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
     }
     if (!item.attached) {
       state.callbackItemBySign.delete(sign);
+      /* v8 ignore next */
       if (shouldLog) {
         logListCallbackAlog('enqueue-component returned', {
           listHandleId: state.listHandleId,
@@ -551,6 +559,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
     }
     if (item.skipNextEnqueue) {
       item.skipNextEnqueue = false;
+      /* v8 ignore next */
       if (shouldLog) {
         logListCallbackAlog('enqueue-component returned', {
           listHandleId: state.listHandleId,
@@ -567,6 +576,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
     item.attached = false;
     item.needsAttachMove = false;
     state.callbackItemBySign.delete(sign);
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('enqueue-component detached', {
         listHandleId: state.listHandleId,
@@ -615,6 +625,7 @@ function attachListItemAtIndex(
     __InsertNodeToElementTemplate(list, LIST_ELEMENT_SLOT_INDEX, item.ref, referenceRef);
     item.attached = true;
     item.needsAttachMove = false;
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('attach-list-item inserted', {
         listHandleId: state.listHandleId,
@@ -628,6 +639,7 @@ function attachListItemAtIndex(
 
   const sign = __GetElementUniqueID(item.ref);
   state.callbackItemBySign.set(sign, item);
+  /* v8 ignore next */
   if (shouldLog) {
     logListCallbackAlog('attach-list-item sign', {
       listHandleId: state.listHandleId,
@@ -641,6 +653,7 @@ function attachListItemAtIndex(
   }
 
   if (!batchMode) {
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('attach-list-item flush', {
         listHandleId: state.listHandleId,
@@ -659,6 +672,7 @@ function attachListItemAtIndex(
       listID,
     });
   } else if (asyncFlush) {
+    /* v8 ignore next */
     if (shouldLog) {
       logListCallbackAlog('attach-list-item async flush', {
         listHandleId: state.listHandleId,

@@ -328,19 +328,30 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-26.04-medium
+      # These packages cannot join the root `rstest.config.ts` aggregator:
+      # `@lynx-js/reactlynx-testing-library`, `testing-library-example-basic`,
+      # and `testing-library-example-react-compiler` all wire
+      # `@lynx-js/react-rsbuild-plugin`'s alias resolution (directly via
+      # `pluginReactLynx()`, or through `withLynxConfig`, which uses it too),
+      # and that plugin cannot find `@lynx-js/react` once Rstest runs the
+      # config as one entry of a `projects` list — reproducible even with a
+      # single such project wrapped in `projects: [...]`, and gone the moment
+      # the same config runs as a standalone `-c <path>` invocation (which is
+      # what each package's own `test` script does).
       run: >
         pnpm
         --filter @lynx-js/react-runtime
         --filter @lynx-js/react-transform
+        --filter @lynx-js/reactlynx-testing-library
+        --filter @lynx-js/testing-library-example-basic
+        --filter @lynx-js/testing-library-example-react-compiler
         run test
         --reporter=github-actions
         --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage.reporter='json'
-        --coverage.reporter='text'
+        --coverage.reporters='json'
+        --coverage.reporters='text'
         --testTimeout=50000
-        --no-cache
+        --hookTimeout=50000
         --logHeapUsage
         --silent
   test-rust:
@@ -440,7 +451,7 @@ jobs:
         echo "Lynx Explorer is running."
 
         # 8. Run Kitten Lynx's Android tests.
-        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
+        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --coverage.reporters='json' --coverage.reporters='text' --testTimeout=50000 --hookTimeout=50000 --logHeapUsage --silent
 
   test-typos:
     runs-on: lynx-ubuntu-26.04-medium
@@ -449,52 +460,6 @@ jobs:
       - uses: crate-ci/typos@8a48f81b6c64dcfea44b3633223084c4be58ac5f # v1.49.0
         with:
           files: .
-  test-vitest:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    name: Vitest (Ubuntu)
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-26.04-medium
-      run: >
-        pnpm run test
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --expect.poll.timeout=5000
-        --testTimeout=50000
-        --hookTimeout=50000
-        --coverage
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --no-cache
-        --logHeapUsage
-        --silent
-  test-vitest-windows:
-    needs: build-windows
-    uses: ./.github/workflows/workflow-test.yml
-    name: Vitest (Windows)
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-windows-2022-large
-      run: >
-        pnpm run test
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --expect.poll.timeout=5000
-        --testTimeout=50000
-        --hookTimeout=50000
-        --coverage
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --no-cache
-        --logHeapUsage
-        --silent
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
@@ -514,8 +479,6 @@ jobs:
       - test-rstest
       - test-rstest-windows
       - test-typos
-      - test-vitest
-      - test-vitest-windows
       - web-core-e2e
       - website
     if: always()

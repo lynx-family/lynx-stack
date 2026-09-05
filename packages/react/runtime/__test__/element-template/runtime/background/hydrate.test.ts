@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
@@ -72,7 +72,7 @@ describe('hydrate', () => {
     clearEtAttrPlanMap();
     clearRefState();
     resetElementTemplateCommitState();
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
   });
 
@@ -122,7 +122,7 @@ describe('hydrate', () => {
         value: { _wkltId: 'tap', _c: { items: [1, 2], label: 'same' } },
       }],
     });
-    const stringify = vi.spyOn(JSON, 'stringify');
+    const stringify = rs.spyOn(JSON, 'stringify');
     try {
       const stream = hydrate(serialized, root);
 
@@ -179,7 +179,7 @@ describe('hydrate', () => {
         value: { _wkltId: 'ref-callback', _c: { items: [1, 2], label: 'same' } },
       }],
     });
-    const stringify = vi.spyOn(JSON, 'stringify');
+    const stringify = rs.spyOn(JSON, 'stringify');
     try {
       const stream = hydrate(serialized, root);
 
@@ -481,7 +481,7 @@ describe('hydrate', () => {
 
   it('rejects unsupported typed nodes when they match a live background child', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -934,7 +934,7 @@ describe('hydrate', () => {
 
   it('fails serialized-only removal when the stale child uid is invalid', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -958,7 +958,7 @@ describe('hydrate', () => {
 
   it('fails serialized-only removal when a nested stale child uid is invalid', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -984,7 +984,7 @@ describe('hydrate', () => {
 
   it('fails serialized-only typed list removal when listChildren is missing', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1015,7 +1015,7 @@ describe('hydrate', () => {
 
   it('fails serialized-only typed list removal when generic element slots are present', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1049,7 +1049,7 @@ describe('hydrate', () => {
 
   it('fails serialized-only typed list removal when a nested logical child uid is invalid', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1104,10 +1104,10 @@ describe('hydrate', () => {
 
   it('reports non-Error failures when rebinding handle ids', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
     const root = new BackgroundElementTemplateInstance('root');
-    const updateIdSpy = vi
+    const updateIdSpy = rs
       .spyOn(backgroundElementTemplateInstanceManager, 'updateId')
       .mockImplementationOnce(() => {
         throw 'bad handle';
@@ -1127,7 +1127,7 @@ describe('hydrate', () => {
 
   it('drops the hydrate stream when a matched child fails to hydrate', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1448,8 +1448,8 @@ describe('hydrate', () => {
   });
 
   it('re-prepares typed list event and ref attributes after hydration handle binding', () => {
-    const handler = vi.fn();
-    const ref = vi.fn();
+    const handler = rs.fn();
+    const ref = rs.fn();
     const list = new BackgroundListElementTemplateInstance();
     const oldListId = list.instanceId;
     list.setAttribute('attributes', {
@@ -1708,7 +1708,7 @@ describe('hydrate', () => {
 
   it('rejects unsupported stale typed nodes while reconciling typed list removals', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1856,7 +1856,7 @@ describe('hydrate', () => {
 
   it('treats typed list item type mismatch as list replacement instead of hydrate failure', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1941,7 +1941,7 @@ describe('hydrate', () => {
 
   it('rejects typed list hydrate when a matched logical child cannot bind its handle', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -1973,7 +1973,7 @@ describe('hydrate', () => {
 
   it('rejects typed list payloads without options listChildren before rebinding handles', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -2004,7 +2004,7 @@ describe('hydrate', () => {
 
   it('rejects typed list payloads with invalid holder uid before hydrating children', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {
@@ -2036,7 +2036,7 @@ describe('hydrate', () => {
 
   it('rejects typed list payloads with generic elementSlots before rebinding handles', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rs.fn();
     lynx.reportError = reportError;
 
     try {

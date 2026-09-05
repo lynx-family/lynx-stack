@@ -2,21 +2,24 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rs,
+} from '@rstest/core';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
-
-import * as motionLib from 'motion';
-import * as motionDom from 'motion-dom';
 
 import { animate, motionValue, stagger } from '../../src/animation/index.js';
 import { ElementCompt } from '../../src/polyfill/element.js';
 
 // Mock dependencies
-vi.mock('motion', async (importOriginal) => {
-  const actual = await importOriginal<typeof motionLib>();
+rs.mock('motion', () => {
   return {
-    ...actual,
+    ...rs.requireActual<typeof import('motion')>('motion'),
     animate: (...args: any[]) => {
       (globalThis as any).__ANIMATE_ARGS = args;
       return { then: () => {}, play: () => {}, cancel: () => {} };
@@ -28,10 +31,9 @@ vi.mock('motion', async (importOriginal) => {
   };
 });
 
-vi.mock('motion-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof motionDom>();
+rs.mock('motion-dom', () => {
   return {
-    ...actual,
+    ...rs.requireActual<typeof import('motion-dom')>('motion-dom'),
     motionValue: (...args: any[]) => {
       (globalThis as any).__MOTION_VALUE_ARGS = args;
       return { set: () => {}, get: () => 0 };
@@ -39,7 +41,7 @@ vi.mock('motion-dom', async (importOriginal) => {
   };
 });
 
-vi.mock('../../src/polyfill/element.js', async (importOriginal) => {
+rs.mock('../../src/polyfill/element.js', () => {
   return {
     ElementCompt: class ElementCompt {
       constructor(el: any) {
@@ -51,7 +53,7 @@ vi.mock('../../src/polyfill/element.js', async (importOriginal) => {
 
 describe('Wrapper Animation', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     // Cleanup globals
     delete (globalThis as any).__ANIMATE_ARGS;
     delete (globalThis as any).__STAGGER_ARGS;

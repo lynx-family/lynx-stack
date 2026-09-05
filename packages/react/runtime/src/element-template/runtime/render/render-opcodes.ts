@@ -248,6 +248,7 @@ export function renderOpcodesIntoElementTemplate(
         break;
       }
       case __OpPageEnd: {
+        /* v8 ignore next */
         if (__DEV__) {
           isInsideAuthoredPage = false;
         }

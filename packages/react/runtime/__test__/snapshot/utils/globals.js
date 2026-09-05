@@ -1,14 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, expect, vi } from 'vitest';
+import { afterEach, beforeEach, expect, rs } from '@rstest/core';
 
 import { getJSModule } from './jsModule.ts';
 
 const app = {
-  callLepusMethod: vi.fn(),
-  markTiming: vi.fn(),
-  createJSObjectDestructionObserver: vi.fn(() => {
+  callLepusMethod: rs.fn(),
+  markTiming: rs.fn(),
+  createJSObjectDestructionObserver: rs.fn(() => {
     return {};
   }),
 };
@@ -16,19 +16,19 @@ const app = {
 const native = {
   _listeners: {},
   onTriggerEvent: undefined,
-  postMessage: vi.fn((_message) => {}),
-  addEventListener: vi.fn((type, listener) => {
+  postMessage: rs.fn((_message) => {}),
+  addEventListener: rs.fn((type, listener) => {
     if (!native._listeners[type]) {
       native._listeners[type] = [];
     }
     native._listeners[type].push(listener);
   }),
-  removeEventListener: vi.fn((type, listener) => {
+  removeEventListener: rs.fn((type, listener) => {
     if (native._listeners[type]) {
       native._listeners[type] = native._listeners[type].filter(l => l !== listener);
     }
   }),
-  dispatchEvent: vi.fn((event) => {
+  dispatchEvent: rs.fn((event) => {
     if (native._listeners[event.type]) {
       native._listeners[event.type].forEach(listener => listener(event));
     }
@@ -46,36 +46,36 @@ const native = {
 
 const performance = {
   __functionCallHistory: [],
-  _generatePipelineOptions: vi.fn(() => {
+  _generatePipelineOptions: rs.fn(() => {
     performance.__functionCallHistory.push(['_generatePipelineOptions']);
     return {
       pipelineID: 'pipelineID',
       needTimestamps: false,
     };
   }),
-  _onPipelineStart: vi.fn((id, options) => {
+  _onPipelineStart: rs.fn((id, options) => {
     if (typeof options === 'undefined') {
       performance.__functionCallHistory.push(['_onPipelineStart', id]);
     } else {
       performance.__functionCallHistory.push(['_onPipelineStart', id, options]);
     }
   }),
-  _markTiming: vi.fn((id, key) => {
+  _markTiming: rs.fn((id, key) => {
     performance.__functionCallHistory.push(['_markTiming', id, key]);
   }),
-  _bindPipelineIdWithTimingFlag: vi.fn((id, flag) => {
+  _bindPipelineIdWithTimingFlag: rs.fn((id, flag) => {
     performance.__functionCallHistory.push(['_bindPipelineIdWithTimingFlag', id, flag]);
   }),
 
-  profileStart: vi.fn(),
-  profileEnd: vi.fn(),
-  profileMark: vi.fn(),
-  profileFlowId: vi.fn(() => 666),
-  isProfileRecording: vi.fn(() => true),
+  profileStart: rs.fn(),
+  profileEnd: rs.fn(),
+  profileMark: rs.fn(),
+  profileFlowId: rs.fn(() => 666),
+  isProfileRecording: rs.fn(() => true),
 };
 
 class SelectorQuery {
-  static execLog = vi.fn();
+  static execLog = rs.fn();
   id = '';
   method = '';
   params = undefined;
@@ -164,10 +164,10 @@ function injectGlobals() {
       return new SelectorQuery();
     },
     getJSModule,
-    getElementByIdTasks: vi.fn(),
-    getElementById: vi.fn((id) => {
+    getElementByIdTasks: rs.fn(),
+    getElementById: rs.fn((id) => {
       return {
-        animate: vi.fn(() => {
+        animate: rs.fn(() => {
           lynx.getElementByIdTasks('animate');
           return {
             play: () => {
@@ -194,9 +194,9 @@ function injectGlobals() {
     return snapshot.type;
   };
 
-  console.profile = vi.fn();
-  console.profileEnd = vi.fn();
-  console.alog = vi.fn();
+  console.profile = rs.fn();
+  console.profileEnd = rs.fn();
+  console.alog = rs.fn();
 }
 
 beforeEach(() => {

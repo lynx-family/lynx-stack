@@ -64,6 +64,7 @@ export function applyElementTemplateUpdateCommands(
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
         const elementSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
 
+        /* v8 ignore next */
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
             handleId,
@@ -315,6 +316,7 @@ export function applyElementTemplateUpdateCommands(
       }
 
       default: {
+        /* v8 ignore next */
         if (__DEV__) {
           lynx.reportError(new Error(`ElementTemplate update opcode ${String(op)} is not supported.`));
         }

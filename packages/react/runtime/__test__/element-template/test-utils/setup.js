@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, expect } from 'vitest';
+import { afterEach, beforeEach, expect } from '@rstest/core';
 
 import { injectGlobals } from './mock/globals.js';
 import { resetReportErrorState } from './debug/fixtureRunner.ts';

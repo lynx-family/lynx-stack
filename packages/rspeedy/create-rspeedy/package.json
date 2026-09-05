@@ -31,8 +31,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
-    "test": "vitest"
+    "build": "rslib build"
   },
   "dependencies": {
     "@rstackjs/create-toolkit": "2.1.4"

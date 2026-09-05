@@ -15,7 +15,10 @@ import {
   callbackifyEndpoint,
 } from './endpoints';
 
-const worker = new Worker(new URL('./worker.js', import.meta.url));
+// Injected by `rstest.config.ts`: the absolute path of `test/worker.js`.
+declare const __WORKER_ENTRY__: string;
+
+const worker = new Worker(__WORKER_ENTRY__);
 const privateChannel = new MessageChannel();
 
 const readyPromise = new Promise<void>((resolve, reject) => {

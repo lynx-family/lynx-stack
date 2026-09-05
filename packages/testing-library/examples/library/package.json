@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "rstest": "rstest run",
-    "test": "vitest run",
-    "test:rstest": "rstest run",
-    "test:vitest": "vitest run"
+    "test": "rstest run",
+    "test:rstest": "rstest run"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"

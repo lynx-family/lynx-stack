@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",

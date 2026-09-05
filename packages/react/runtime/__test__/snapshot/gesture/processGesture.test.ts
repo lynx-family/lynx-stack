@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
-import { processGesture } from '../../../src/snapshot/gesture/processGesture.js';
+import { processGesture, retainGestureWorkletCtx } from '../../../src/snapshot/gesture/processGesture.js';
 
 function createSerializedGesture(id: number) {
   return {
@@ -24,33 +24,33 @@ function createSerializedComposedGesture(gestures: ReturnType<typeof createSeria
 }
 
 describe('processGesture', () => {
-  let setAttribute: ReturnType<typeof vi.fn>;
-  let setGestureDetector: ReturnType<typeof vi.fn>;
-  let removeGestureDetector: ReturnType<typeof vi.fn>;
-  let hydrateCtx: ReturnType<typeof vi.fn>;
+  let setAttribute: ReturnType<typeof rs.fn>;
+  let setGestureDetector: ReturnType<typeof rs.fn>;
+  let removeGestureDetector: ReturnType<typeof rs.fn>;
+  let hydrateCtx: ReturnType<typeof rs.fn>;
 
   beforeEach(() => {
-    setAttribute = vi.fn();
-    setGestureDetector = vi.fn();
-    removeGestureDetector = vi.fn();
-    hydrateCtx = vi.fn();
+    setAttribute = rs.fn();
+    setGestureDetector = rs.fn();
+    removeGestureDetector = rs.fn();
+    hydrateCtx = rs.fn();
 
-    vi.stubGlobal('__SetAttribute', setAttribute);
-    vi.stubGlobal('__SetGestureDetector', setGestureDetector);
-    vi.stubGlobal('__RemoveGestureDetector', removeGestureDetector);
-    vi.stubGlobal('lynxWorkletImpl', {
+    rs.stubGlobal('__SetAttribute', setAttribute);
+    rs.stubGlobal('__SetGestureDetector', setGestureDetector);
+    rs.stubGlobal('__RemoveGestureDetector', removeGestureDetector);
+    rs.stubGlobal('lynxWorkletImpl', {
       _hydrateCtx: hydrateCtx,
       _jsFunctionLifecycleManager: {
-        addRef: vi.fn(),
+        addRef: rs.fn(),
       },
       _eventDelayImpl: {
-        runDelayedWorklet: vi.fn(),
+        runDelayedWorklet: rs.fn(),
       },
     });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('sets detector on mount with expected params', () => {
@@ -238,20 +238,20 @@ describe('processGesture', () => {
     const dom = {} as FiberElement;
     const gesture = createSerializedGesture(1);
 
-    vi.unstubAllGlobals();
-    setAttribute = vi.fn();
-    setGestureDetector = vi.fn();
-    hydrateCtx = vi.fn();
-    vi.stubGlobal('__SetAttribute', setAttribute);
-    vi.stubGlobal('__SetGestureDetector', setGestureDetector);
-    vi.stubGlobal('__RemoveGestureDetector', undefined);
-    vi.stubGlobal('lynxWorkletImpl', {
+    rs.unstubAllGlobals();
+    setAttribute = rs.fn();
+    setGestureDetector = rs.fn();
+    hydrateCtx = rs.fn();
+    rs.stubGlobal('__SetAttribute', setAttribute);
+    rs.stubGlobal('__SetGestureDetector', setGestureDetector);
+    rs.stubGlobal('__RemoveGestureDetector', undefined);
+    rs.stubGlobal('lynxWorkletImpl', {
       _hydrateCtx: hydrateCtx,
       _jsFunctionLifecycleManager: {
-        addRef: vi.fn(),
+        addRef: rs.fn(),
       },
       _eventDelayImpl: {
-        runDelayedWorklet: vi.fn(),
+        runDelayedWorklet: rs.fn(),
       },
     });
 
@@ -322,5 +322,57 @@ describe('processGesture', () => {
       expect.objectContaining({ _wkltId: 'new-c' }),
       expect.objectContaining({ _wkltId: 'old-a' }),
     );
+  });
+  it('skips attribute writes for a composed gesture when domSet is true', () => {
+    const dom = {} as FiberElement;
+    const composed = createSerializedComposedGesture([
+      createSerializedGesture(1),
+      createSerializedGesture(2),
+    ]);
+
+    processGesture(dom, composed as any, undefined, false, { domSet: true });
+
+    expect(setAttribute).not.toHaveBeenCalled();
+    expect(setGestureDetector).toHaveBeenCalledTimes(2);
+  });
+
+  it('deduplicates a repeated base gesture in the old composed gesture', () => {
+    const dom = {} as FiberElement;
+    const repeated = createSerializedGesture(1);
+    const oldComposed = createSerializedComposedGesture([repeated, repeated]);
+
+    processGesture(dom, undefined, oldComposed as any, false, {
+      domSet: true,
+    });
+
+    expect(removeGestureDetector).toHaveBeenCalledTimes(1);
+    expect(removeGestureDetector).toHaveBeenCalledWith(dom, 1);
+  });
+
+  it('ignores empty callback slots when retaining gesture worklet ctx', () => {
+    const gesture = {
+      id: 1,
+      type: 0,
+      callbacks: {
+        onUpdate: undefined,
+      },
+      __isSerialized: true,
+    };
+
+    expect(() => retainGestureWorkletCtx(gesture as any)).not.toThrow();
+  });
+  it('keeps legacy gesture attrs when an empty composed gesture arrives with domSet', () => {
+    const dom = {} as FiberElement;
+    const oldComposed = createSerializedComposedGesture([
+      createSerializedGesture(1),
+    ]);
+    const emptyComposed = createSerializedComposedGesture([]);
+
+    processGesture(dom, emptyComposed as any, oldComposed as any, false, {
+      domSet: true,
+    });
+
+    expect(removeGestureDetector).toHaveBeenCalledWith(dom, 1);
+    expect(setAttribute).not.toHaveBeenCalled();
   });
 });

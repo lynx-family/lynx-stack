@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, it, vi } from 'vitest';
+import { expect, it, rs } from '@rstest/core';
 import { render, screen, waitForElementToBeRemoved, act } from '@lynx-js/react/testing-library';
 import { Suspense, lazy, useState } from '@lynx-js/react';
 import { BackgroundSnapshotInstance } from '@lynx-js/react/internal';
@@ -158,17 +158,17 @@ describe('lazy bundle', () => {
 
 describe('Suspense', () => {
   beforeEach(() => {
-    vi.clearAllTimers();
-    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    rs.clearAllTimers();
+    rs.useFakeTimers({ toFake: ['setTimeout'] });
   });
 
   Object.entries(SuspenseMap).forEach(([name, Suspense]) => {
     it(`${name} with host element child`, async () => {
-      vi.spyOn(lynxTestingEnv.backgroundThread.lynx, 'reportError');
+      rs.spyOn(lynxTestingEnv.backgroundThread.lynx, 'reportError');
       const reportErrorCalls = lynxTestingEnv.backgroundThread.lynx.reportError.mock.calls;
-      vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+      rs.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
       const onLifecycleEventCalls = lynxTestingEnv.backgroundThread.lynxCoreInject.tt.OnLifecycleEvent.mock.calls;
-      vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+      rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
       const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
 
       const LazyComponent = lazy(() => import('./LazyComponent'));
@@ -176,7 +176,7 @@ describe('Suspense', () => {
       const tearDownInstances = [];
 
       const tearDown = BackgroundSnapshotInstance.prototype.tearDown;
-      vi.spyOn(BackgroundSnapshotInstance.prototype, 'tearDown').mockImplementation(function() {
+      rs.spyOn(BackgroundSnapshotInstance.prototype, 'tearDown').mockImplementation(function() {
         tearDownInstances.push({
           __id: this.__id,
           type: this.type,
@@ -381,9 +381,9 @@ describe('Suspense', () => {
         `);
       }
 
-      vi.runAllTimers();
+      rs.runAllTimers();
       if (name === 'PreactSuspense') {
-        // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `vi.runAllTimers()` to simulate the situation that will cause the bug)
+        // <view className="lazy-wrapper"> is torn down, (it is triggered in first render but delayed 10_000ms to execute, we use `rs.runAllTimers()` to simulate the situation that will cause the bug)
         // <text>loading...</text> is torn down
         if (!process.env.RSTEST) {
           expect(tearDownInstances).toMatchInlineSnapshot(`

@@ -5,7 +5,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { Rspack } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import type { DebugMetadataAsset } from '@lynx-js/debug-metadata'
 

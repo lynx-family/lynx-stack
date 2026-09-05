@@ -57,6 +57,7 @@ function init(): void {
     injectCalledByNative();
     installElementTemplatePatchListener();
     installOnMtsDestruction();
+    /* v8 ignore next */
     if (__PROFILE__) {
       initProfileHook();
     }

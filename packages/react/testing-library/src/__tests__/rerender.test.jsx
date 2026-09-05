@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { render } from '..';
-import { expect, vi } from 'vitest';
+import { expect, rs } from '@rstest/core';
 import { useEffect, useState } from '@lynx-js/react';
 
 test('rerender will re-render the element', async () => {
@@ -52,11 +52,11 @@ test('rerender will flush pending hooks effects', async () => {
 
   const { rerender, findByText } = render(<Component />);
   rerender(<Component />);
-  vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+  rs.spyOn(lynx.getNativeApp(), 'callLepusMethod');
   const callLepusMethod = lynxTestingEnv.backgroundThread.lynx.getNativeApp().callLepusMethod;
   expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
   await findByText('1');
 
-  vi.clearAllMocks();
+  rs.clearAllMocks();
 });

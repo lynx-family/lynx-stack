@@ -7,7 +7,7 @@ import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 
 import type { CliPrompts, CliRuntime } from '../src/cli.js';
 import {
@@ -24,7 +24,7 @@ afterEach(() => {
     fs.rmSync(dir, { force: true, recursive: true });
   }
 
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   process.exitCode = undefined;
 });
 
@@ -179,7 +179,7 @@ describe('create-lynx-library CLI', () => {
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining('Native platforms:\n  - Android'),
     );
-    const message = vi.mocked(runtime.info).mock.calls[0]?.[0] ?? '';
+    const message = rs.mocked(runtime.info).mock.calls[0]?.[0] ?? '';
     expect(message).not.toContain('  - iOS');
     expect(
       read(
@@ -270,8 +270,8 @@ describe('create-lynx-library CLI', () => {
 
   it('prompts with project text, library feature, and Native platform controls', async () => {
     const dir = createTempPath('interactive-library');
-    const textPrompt = vi.fn().mockResolvedValue(dir);
-    const multiselectPrompt = vi.fn()
+    const textPrompt = rs.fn().mockResolvedValue(dir);
+    const multiselectPrompt = rs.fn()
       .mockResolvedValueOnce([
         'native-module',
         'element',
@@ -360,8 +360,8 @@ describe('create-lynx-library CLI', () => {
     const runtime = createRuntime({
       isTTY: true,
       prompts: {
-        text: vi.fn().mockResolvedValue(dir) as CliPrompts['text'],
-        multiselect: vi.fn().mockResolvedValue([]) as CliPrompts[
+        text: rs.fn().mockResolvedValue(dir) as CliPrompts['text'],
+        multiselect: rs.fn().mockResolvedValue([]) as CliPrompts[
           'multiselect'
         ],
       },
@@ -377,8 +377,8 @@ describe('create-lynx-library CLI', () => {
     const runtime = createRuntime({
       isTTY: true,
       prompts: {
-        text: vi.fn().mockResolvedValue(dir) as CliPrompts['text'],
-        multiselect: vi.fn()
+        text: rs.fn().mockResolvedValue(dir) as CliPrompts['text'],
+        multiselect: rs.fn()
           .mockResolvedValueOnce(['native-module'])
           .mockResolvedValueOnce([]) as CliPrompts['multiselect'],
       },
@@ -412,7 +412,7 @@ describe('create-lynx-library CLI', () => {
     );
     const resolvedCliPath = path.resolve(cliPath);
 
-    vi.spyOn(fs, 'realpathSync').mockImplementation(
+    rs.spyOn(fs, 'realpathSync').mockImplementation(
       ((filePath) => {
         const resolvedPath = path.resolve(String(filePath));
 
@@ -440,8 +440,8 @@ function createRuntime(
   return {
     input,
     output,
-    info: vi.fn(),
-    error: vi.fn(),
+    info: rs.fn(),
+    error: rs.fn(),
     ...(options.prompts === undefined ? {} : { prompts: options.prompts }),
   };
 }

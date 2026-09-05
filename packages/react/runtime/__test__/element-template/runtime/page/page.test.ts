@@ -1,18 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 describe('ElementTemplate page root helpers', () => {
   beforeEach(() => {
-    vi.resetModules();
-    vi.stubGlobal('__CreateTypedElementTemplate', vi.fn());
+    rs.resetModules();
+    rs.stubGlobal('__CreateTypedElementTemplate', rs.fn());
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rs.unstubAllGlobals();
   });
 
   it('creates and installs the typed page root', async () => {
     const page = { type: 'page' } as unknown as ElementRef;
-    vi.mocked(__CreateTypedElementTemplate).mockReturnValue(page);
+    rs.mocked(__CreateTypedElementTemplate).mockReturnValue(page);
 
     const pageModule = await import('../../../../src/element-template/runtime/page/page.js');
 

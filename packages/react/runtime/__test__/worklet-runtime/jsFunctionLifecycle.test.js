@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from '@rstest/core';
 
 import { JsFunctionLifecycleManager } from '../../src/worklet-runtime/jsFunctionLifecycle';
 
@@ -85,5 +85,15 @@ describe('jsFunctionLifecycle', () => {
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
     `);
+  });
+  it('schedules only one flush for consecutive removeRef() calls', () => {
+    const manager = new JsFunctionLifecycleManager();
+    manager.addRef(3, {});
+    manager.addRef(4, {});
+
+    manager.removeRef(3);
+    manager.removeRef(4);
+
+    expect(manager.willFire).toBe(true);
   });
 });
