@@ -113,7 +113,7 @@ catalogs:
     "@lynx-js/preact-devtools": "5.0.1-20260827072047-5f77e12"
 
   adb:
-    "@yume-chan/adb": ^2.6.2
+    "@yume-chan/adb": ^2.6.4
     "@yume-chan/adb-scrcpy": ^2.3.2
     "@yume-chan/adb-server-node-tcp": ^2.5.2
     "@yume-chan/async": ^4.1.3
