@@ -183,4 +183,15 @@ describe('runOnBackground', () => {
     });
     expect(task).not.toHaveBeenCalled();
   });
+  it('skips delayed entries that never got a js function handle', () => {
+    const task = rs.fn();
+    const impl = globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl;
+    impl.delayedBackgroundFunctionArray.length = 0;
+    impl.delayedBackgroundFunctionArray.push({ task });
+
+    impl.runDelayedBackgroundFunctions();
+
+    expect(task).not.toHaveBeenCalled();
+    expect(impl.delayedBackgroundFunctionArray.length).toBe(0);
+  });
 });

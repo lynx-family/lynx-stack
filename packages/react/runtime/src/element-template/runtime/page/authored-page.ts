@@ -33,6 +33,7 @@ export const __ElementTemplatePage: FunctionalComponent<ElementTemplatePageProps
   if (__BACKGROUND__) {
     root.setAuthoredPageAttributes(lifetime.current, props.attributes ?? null);
     useLayoutEffect(() => {
+      /* v8 ignore next */
       if (__DEV__) {
         if (mountedAuthoredPageLifetimes.size > 0) {
           lynx.reportError(new Error('Attempt to render more than one `<page />`, which is not supported.'));
@@ -41,6 +42,7 @@ export const __ElementTemplatePage: FunctionalComponent<ElementTemplatePageProps
       }
 
       return () => {
+        /* v8 ignore next */
         if (__DEV__) {
           mountedAuthoredPageLifetimes.delete(lifetime.current);
         }

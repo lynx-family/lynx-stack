@@ -478,6 +478,8 @@ describe('useState', () => {
       const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxChange[0]](rLynxChange[1]);
       rLynxChange[2]();
+      // A repeat callback finds the commit task already consumed.
+      expect(() => rLynxChange[2]()).not.toThrow();
       lynx.getNativeApp().callLepusMethod.mockClear();
       await waitSchedule();
     }

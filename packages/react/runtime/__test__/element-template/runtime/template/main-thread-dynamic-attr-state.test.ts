@@ -564,4 +564,36 @@ describe('main-thread dynamic attr state', () => {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });
+  it('keeps the sibling slot state when one of several ref slots is cleared', () => {
+    registerMTRefSlots(31, 0, 1);
+    setMTRefSlot(31, 0, { type: 'main-thread-ref', value: { _wvid: 1 } });
+    setMTRefSlot(31, 1, { type: 'main-thread-ref', value: { _wvid: 2 } });
+
+    setMTRefSlot(31, 0, null);
+
+    expect(getMainThreadDynamicAttrState(31, 0)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(31, 1)).toBeDefined();
+  });
+
+  it('detaches a materialized handle whose ref slot state is already gone', () => {
+    registerMTRefSlots(32, 0);
+    setMTRefSlot(32, 0, { type: 'main-thread-ref', value: { _wvid: 3 } });
+    attachMainThreadDynamicAttrRefsForSubtree([
+      { uid: 32, ref: TEST_NATIVE_REF },
+    ]);
+    setMTRefSlot(32, 0, null);
+
+    expect(() =>
+      detachMainThreadDynamicAttrRefsForSubtree([
+        { uid: 32, ref: TEST_NATIVE_REF },
+      ])
+    ).not.toThrow();
+  });
+  it('skips worklet ctx hydration when the slot has no previous value', () => {
+    registerMTRefSlots(33, 0);
+
+    setMTRefSlot(33, 0, { type: 'main-thread-ref', value: { _wvid: 9 } }, true);
+
+    expect(getMainThreadDynamicAttrState(33, 0)).toBeDefined();
+  });
 });

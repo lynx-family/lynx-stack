@@ -17,13 +17,16 @@ let isFirstScreenTreeReady = false;
 function syncFirstScreen(): void {
   isFirstScreenSynced = true;
 
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::serializeRoot');
   }
   const root = JSON.stringify(__root);
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::transferRoot');
   }
@@ -34,6 +37,7 @@ function syncFirstScreen(): void {
       firstScreenEventIdSwap,
     },
   ]);
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
@@ -42,6 +46,7 @@ function syncFirstScreen(): void {
 
 // ready signal: business/framework allows the handover. Syncs if the tree is ready.
 function onFirstScreenSyncReady(): void {
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::onFirstScreenSyncReady');
   }
@@ -51,6 +56,7 @@ function onFirstScreenSyncReady(): void {
   if (isFirstScreenTreeReady && !isProcessingDefaultData() && !isFirstScreenSynced) {
     syncFirstScreen();
   }
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }

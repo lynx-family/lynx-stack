@@ -107,6 +107,8 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
       },
       removeChild(child) {
         const idx = this.childNodes.indexOf(child);
+        // Preact only removes children this container is currently holding.
+        /* v8 ignore else */
         if (idx >= 0) this.childNodes.splice(idx, 1);
         (child as unknown as { __parent: unknown; __removed_from_tree: boolean }).__parent = null;
         // Mirror `BackgroundSnapshotInstance.removeChild`'s bookkeeping:

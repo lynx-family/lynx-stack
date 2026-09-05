@@ -220,5 +220,13 @@ describe('element-template native index wiring', () => {
     expect(injectCalledByNative).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();
     expect(installOnMtsDestruction).not.toHaveBeenCalled();
+
+    rs.resetModules();
+    globalThis.lynx.performance.isProfileRecording = rs.fn(() => false);
+
+    await import('../../../src/element-template/native/index.js');
+
+    expect(initTimingAPI).toHaveBeenCalledTimes(2);
+    expect(initProfileHook).toHaveBeenCalledTimes(1);
   });
 });

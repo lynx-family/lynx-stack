@@ -259,6 +259,32 @@ describe('createPortal', () => {
     expect(__globalSnapshotPatch).toEqual([]);
   });
 
+  it('walks past unrelated queued portals when draining a cancelled one', () => {
+    const hostA = { selector: '[react-ref-first-test]' };
+    const hostB = { selector: '[react-ref-second-test]' };
+
+    function App({ showA, showB }) {
+      return (
+        <view>
+          {showA && createPortal(<text data-testid='first'>first</text>, hostA)}
+          {showB && createPortal(<text data-testid='second'>second</text>, hostB)}
+        </view>
+      );
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App showA={true} showB={true} />, __root);
+    // Dropping the second portal has to skip the first queued tuple.
+    render(<App showA={true} showB={false} />, __root);
+    // Drop the first one too so nothing leaks into later tests.
+    render(<App showA={false} showB={false} />, __root);
+
+    globalEnvManager.switchToMainThread();
+    initGlobalSnapshotPatch();
+    clearPendingPortalInsertBefore();
+    expect(__globalSnapshotPatch).toEqual([]);
+  });
+
   /**
    * Portal mounts AFTER hydrate (state flips from "no portal" to "portal").
    * Exercises the post-hydrate branch of `fakeRoot.insertBefore`, where
@@ -647,6 +673,34 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     expect(listElement.componentAtIndex()).toBe(-1);
     expect(listElement.enqueueComponent()).toBeUndefined();
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
+  });
+
+  it('keeps the elements of an already-materialized portal child', () => {
+    globalEnvManager.switchToMainThread();
+    const hostType = __SNAPSHOT__(<view portal-host-marker='1' />);
+    const host = new SnapshotInstance(hostType);
+    __root.ensureElements();
+    __root.insertBefore(host);
+    host.ensureElements();
+
+    const childId = -9990;
+    snapshotPatchApply([
+      SnapshotOperation.CreateElement,
+      '__snapshot_a94a8_test_1',
+      childId,
+    ]);
+    const child = snapshotInstanceManager.values.get(childId);
+    child.ensureElements();
+    const elementsBefore = child.__elements;
+
+    snapshotPatchApply([
+      SnapshotOperation.nodesRefInsertBefore,
+      '[portal-host-marker]',
+      childId,
+      undefined,
+    ]);
+
+    expect(child.__elements).toBe(elementsBefore);
   });
 });
 

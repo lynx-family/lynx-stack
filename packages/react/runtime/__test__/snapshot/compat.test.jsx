@@ -196,4 +196,23 @@ describe('addComponentElement', () => {
       </page>
     `);
   });
+  it('drops props that are not component attributes', () => {
+    class C extends ComponentFromReactRuntime {
+      render() {
+        return <view />;
+      }
+    }
+
+    const jsx = wrapWithLynxComponent(
+      snapshotSpread,
+      <C id='1' notAComponentAttr='x' />,
+    );
+
+    scratch.ensureElements();
+    render(jsx, scratch);
+
+    expect(scratch.__element_root.children[0].props).not.toHaveProperty(
+      'notAComponentAttr',
+    );
+  });
 });

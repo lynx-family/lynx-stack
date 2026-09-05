@@ -54,6 +54,7 @@ export function installElementTemplateHydrationListener(): void {
 
     const root = __root as BackgroundPageRootInstance;
 
+    /* v8 ignore next */
     if (__PROFILE__) {
       profileStart('ReactLynx::hydrate');
     }
@@ -83,6 +84,7 @@ export function installElementTemplateHydrationListener(): void {
         );
       }
 
+      /* v8 ignore next */
       if (__PROFILE__) {
         profileEnd();
       }
@@ -117,6 +119,7 @@ export function installElementTemplateHydrationListener(): void {
           ? takeRemovedSubtreesForPostDispatchTeardown()
           : [];
         let hydrateUpdateEvent: ReturnType<typeof createElementTemplateUpdateEvent> | undefined;
+        /* v8 ignore next */
         if (__PROFILE__) {
           profileStart('ReactLynx::commitChanges');
         }
@@ -166,6 +169,7 @@ export function installElementTemplateHydrationListener(): void {
         if (pipelineOptions) {
           setPipeline(undefined);
         }
+        /* v8 ignore next */
         if (__PROFILE__) {
           profileEnd();
         }

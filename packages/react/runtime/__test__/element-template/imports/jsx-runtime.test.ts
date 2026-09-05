@@ -42,6 +42,17 @@ describe('element-template jsx-runtime', () => {
     });
   });
 
+  it('keeps an explicitly provided prop over its defaultProps value', () => {
+    function Foo() {
+      return null;
+    }
+    Foo.defaultProps = { foo: 'bar' };
+
+    const vnode = jsx(Foo, { foo: 'explicit' });
+
+    expect(vnode.props).toEqual({ foo: 'explicit' });
+  });
+
   it('strips ref for class components', () => {
     class Foo {
       render() {

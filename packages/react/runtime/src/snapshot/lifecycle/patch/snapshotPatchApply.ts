@@ -109,6 +109,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         break;
       }
       case SnapshotOperation.DEV_ONLY_AddSnapshot: {
+        /* v8 ignore next */
         if (__DEV__) {
           const uniqID = snapshotPatch[++i] as string;
           const snapshotCreator = snapshotPatch[++i] as string;
@@ -120,6 +121,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         break;
       }
       case SnapshotOperation.DEV_ONLY_SetSnapshotEntryName: {
+        /* v8 ignore next */
         if (__DEV__) {
           const uniqID = snapshotPatch[++i] as string;
           const entryName = snapshotPatch[++i] as string;
