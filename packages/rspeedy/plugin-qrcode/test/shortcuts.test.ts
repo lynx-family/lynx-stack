@@ -194,6 +194,116 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     unregister()
   })
 
+  describe('dev server restart', () => {
+    // The reader loop is process-wide state; start each test from a fresh
+    // module so a loop parked by an earlier test cannot serve these.
+    let register: typeof registerConsoleShortcuts
+    beforeEach(async () => {
+      vi.resetModules()
+      ;({ registerConsoleShortcuts: register } = await import(
+        '../src/shortcuts.js'
+      ))
+    })
+
+    test('hands the pending prompt over to the registration that replaces it', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { select, selectKey, isCancel, log } = await import(
+        '@clack/prompts'
+      )
+      vi.mocked(isCancel).mockReturnValue(false)
+      vi.mocked(log.success).mockClear()
+
+      let pressKey!: (key: string) => void
+      vi.mocked(selectKey)
+        .mockReset()
+        .mockImplementationOnce(() =>
+          new Promise<string>(resolve => {
+            pressKey = resolve
+          })
+        )
+        .mockImplementation(() => new Promise(vi.fn()))
+      vi.mocked(select).mockReset().mockResolvedValue('bar')
+
+      const unregister = await register({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+      })
+      await expect.poll(() => selectKey).toHaveBeenCalledTimes(1)
+
+      // The dev server restarts while the prompt is still waiting for a key.
+      unregister()
+      const unregisterReplacement = await register({
+        api: mockedRsbuildAPI,
+        entries: ['bar', 'baz'],
+        schema: i => i,
+        port: 4000,
+      })
+
+      // No second prompt competes with the pending one.
+      expect(selectKey).toHaveBeenCalledTimes(1)
+      vi.mocked(log.success).mockClear()
+
+      pressKey('r')
+
+      // The key is served for the replacement: its entries are offered and
+      // its QR code is printed.
+      await expect.poll(() => select).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(select).mock.calls[0]![0]).toMatchObject({
+        options: [
+          expect.objectContaining({ value: 'bar' }),
+          expect.objectContaining({ value: 'baz' }),
+        ],
+      })
+      await expect.poll(() => log.success).toHaveBeenCalled()
+      const printed = vi.mocked(log.success).mock.calls.map(call =>
+        String(call[0])
+      )
+      expect(printed).toContainEqual(
+        expect.stringContaining('https://example.com/bar.lynx.bundle'),
+      )
+      expect(printed).not.toContainEqual(
+        expect.stringContaining('https://example.com/foo.lynx.bundle'),
+      )
+
+      unregisterReplacement()
+    })
+
+    test('stops prompting once the dev server closes for good', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { select, selectKey, isCancel } = await import('@clack/prompts')
+      vi.mocked(isCancel).mockReturnValue(false)
+
+      let pressKey!: (key: string) => void
+      vi.mocked(selectKey)
+        .mockReset()
+        .mockImplementationOnce(() =>
+          new Promise<string>(resolve => {
+            pressKey = resolve
+          })
+        )
+        .mockImplementation(() => new Promise(vi.fn()))
+      vi.mocked(select).mockReset()
+
+      const unregister = await register({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+      })
+      await expect.poll(() => selectKey).toHaveBeenCalledTimes(1)
+
+      unregister()
+      pressKey('r')
+      await new Promise(resolve => setTimeout(resolve, 20))
+
+      // Nothing to act for: no entry prompt, no new key prompt, no exit.
+      expect(select).not.toHaveBeenCalled()
+      expect(selectKey).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('showQRCode option', () => {
     test('renders the QR block by default', async () => {
       const { log, selectKey } = await import('@clack/prompts')

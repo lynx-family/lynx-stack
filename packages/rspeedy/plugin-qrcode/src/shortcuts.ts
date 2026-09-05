@@ -9,7 +9,13 @@ import generateDevUrls from './generateDevUrls.js'
 
 import type { CustomizedSchemaFn } from './index.js'
 
-const gExistingShortcuts = new WeakSet<Options>()
+// One reader serves the whole process. It looks up the current registration
+// before every prompt and again once a key arrives, so a dev-server restart
+// (`off()` followed by a new `registerConsoleShortcuts`) hands a pending
+// prompt over to the replacement instead of opening a second one or
+// swallowing the key.
+let gCurrent: Options | undefined
+let gLoop: Promise<void> | undefined
 
 interface Options {
   api: RsbuildPluginAPI
@@ -64,13 +70,17 @@ export async function registerConsoleShortcuts(
     showQRCode(value)
   }
 
-  gExistingShortcuts.add(options)
+  gCurrent = options
 
   // We should not `await` on this since it would block the NodeJS main thread.
-  void loop(options, value, devUrls)
+  gLoop ??= loop(value).finally(() => {
+    gLoop = undefined
+  })
 
   function off() {
-    gExistingShortcuts.delete(options)
+    if (gCurrent === options) {
+      gCurrent = undefined
+    }
   }
   return off
 }
@@ -101,11 +111,7 @@ async function printNonTTY(options: Options): Promise<void> {
   }
 }
 
-async function loop(
-  options: Options,
-  value: string | symbol,
-  devUrls: Record<string, string>,
-) {
+async function loop(value: string | symbol) {
   const [
     { autocomplete, select, selectKey, isCancel, cancel },
     { default: showQRCode },
@@ -113,45 +119,50 @@ async function loop(
     import('@clack/prompts'),
     import('./showQRCode.js'),
   ])
-  const shouldShowQRCode = options.showQRCode ?? true
 
   const selectFn = (length: number) => length > 5 ? autocomplete : select
 
-  let currentEntry = options.entries[0]!
-  let currentSchema = Object.keys(devUrls)[0]!
+  let options: Options | undefined
+  let currentEntry = ''
+  let currentSchema = ''
 
-  while (!isCancel(value)) {
+  while (!isCancel(value) && gCurrent) {
+    follow(gCurrent)
     const name = await selectKey({
       message: 'Usage',
       options: [
         { value: 'r', label: 'Switch entries' },
         { value: 'a', label: 'Switch schema' },
         { value: 'h', label: 'Help' },
-        ...Object.values(options.customShortcuts ?? {}),
+        ...Object.values(options!.customShortcuts ?? {}),
         { value: 'q', label: 'Quit' },
       ],
       initialValue: 'q' as string,
     })
 
-    if (
-      // User cancel, exit the process
-      isCancel(name) || name === 'q'
-      // Auto restart, stop the loop but avoid exiting the process
-      || !gExistingShortcuts.has(options)
-    ) {
+    if (!gCurrent) {
+      // The dev server closed while waiting and nothing replaced it: stop
+      // without exiting the process.
+      break
+    }
+    // A restart may have replaced the registration while waiting; act for
+    // the replacement.
+    follow(gCurrent)
+
+    if (isCancel(name) || name === 'q') {
       break
     }
     if (name === 'r') {
-      const selection = await selectFn(options.entries.length)({
+      const selection = await selectFn(options!.entries.length)({
         message: 'Select entry',
-        options: options.entries.map(entry => ({
+        options: options!.entries.map(entry => ({
           value: entry,
           label: entry,
           hint: generateDevUrls(
-            options.api,
+            options!.api,
             entry,
-            options.schema,
-            options.port,
+            options!.schema,
+            options!.port,
           )[currentSchema]!,
         })),
         initialValue: currentEntry,
@@ -163,10 +174,10 @@ async function loop(
       value = getCurrentUrl()
     } else if (name === 'a') {
       const devUrls = generateDevUrls(
-        options.api,
+        options!.api,
         currentEntry,
-        options.schema,
-        options.port,
+        options!.schema,
+        options!.port,
       )
       const selection = await selectFn(Object.keys(devUrls).length)({
         message: 'Select schema',
@@ -182,37 +193,51 @@ async function loop(
       }
       currentSchema = selection
       value = getCurrentUrl()
-    } else if (options.customShortcuts?.[name]) {
-      await options.customShortcuts[name].action?.()
+    } else if (options!.customShortcuts?.[name]) {
+      await options!.customShortcuts[name].action?.()
     }
-    await options.onPrint?.(value)
-    if (shouldShowQRCode) {
+    await options!.onPrint?.(value)
+    if (options!.showQRCode ?? true) {
       showQRCode(value)
     }
   }
 
-  // If the `options` is not deleted from `gExistingShortcuts`, means that this is an explicitly
-  // exiting requested by the user. We should exit the process.
-  // Otherwise, this is exit by devServer restart, we should not exit the process.
-  if (gExistingShortcuts.has(options)) {
-    await exit(1)
+  // A live registration means the user asked to quit; exit the process.
+  // Otherwise the dev server closed the shortcuts (restart) and the process
+  // must stay alive.
+  if (gCurrent) {
+    await exit(gCurrent, 1)
   }
 
   return
 
+  function follow(next: Options): void {
+    if (next === options) {
+      return
+    }
+    options = next
+    currentEntry = next.entries[0]!
+    currentSchema = Object.keys(generateDevUrls(
+      next.api,
+      currentEntry,
+      next.schema,
+      next.port,
+    ))[0]!
+  }
+
   function getCurrentUrl(): string {
     return generateDevUrls(
-      options.api,
+      options!.api,
       currentEntry,
-      options.schema,
-      options.port,
+      options!.schema,
+      options!.port,
     )[currentSchema]!
   }
 
-  function exit(code?: number) {
+  function exit(current: Options, code?: number) {
     cancel('exiting...')
     // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
-    const { exit } = options.api.useExposed<ExposedAPI>(
+    const { exit } = current.api.useExposed<ExposedAPI>(
       Symbol.for('rspeedy.api'),
     )!
     return exit(code)
