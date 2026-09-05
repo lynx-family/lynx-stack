@@ -875,8 +875,8 @@ importers:
   packages/genui:
     dependencies:
       '@a2ui/web_core':
-        specifier: 0.10.6
-        version: 0.10.6
+        specifier: 0.10.7
+        version: 0.10.7
       '@lynx-js/lynx-ui':
         specifier: '>=3.133.0'
         version: 3.135.4(@lynx-js/react@packages+react)(@lynx-js/types@4.1.0)(@types/react@18.3.28)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -930,8 +930,8 @@ importers:
   packages/genui/a2ui:
     dependencies:
       '@a2ui/web_core':
-        specifier: 0.10.6
-        version: 0.10.6
+        specifier: 0.10.7
+        version: 0.10.7
       '@lynx-js/react-signals':
         specifier: workspace:*
         version: link:../../react-signals
@@ -2966,8 +2966,8 @@ packages:
       express:
         optional: true
 
-  '@a2ui/web_core@0.10.6':
-    resolution: {integrity: sha512-kTwir93Fk5eupl4FZ6CkhJDrisR2fnQgEIlDCTp06uzx2PvUhItbq1E+h7hFyeHGTu/NMci9Tqn7Is1IVRpufw==}
+  '@a2ui/web_core@0.10.7':
+    resolution: {integrity: sha512-9czuUjSgsomHYy79lKExwtmMza9iCqaXJx7aw5xOGMLKNPziwux5fj4UnsV41bQkLDeZwNu2LoOwn5c2ceyDsQ==}
 
   '@acemir/cssom@0.9.30':
     resolution: {integrity: sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg==}
@@ -12571,7 +12571,7 @@ snapshots:
     optionalDependencies:
       express: 5.2.1(supports-color@10.2.2)
 
-  '@a2ui/web_core@0.10.6':
+  '@a2ui/web_core@0.10.7':
     dependencies:
       '@preact/signals-core': 1.14.4
       date-fns: 4.4.0
