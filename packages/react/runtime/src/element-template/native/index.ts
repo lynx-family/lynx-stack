@@ -6,7 +6,7 @@ import type { ComponentChild, ContainerNode, VNode } from 'preact';
 import { render } from 'preact';
 
 import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
-import { injectCalledByNative } from './main-thread-api.js';
+import { injectCalledByNative, injectLepusMethods } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
 import { installElementTemplatePatchListener } from './patch-listener.js';
 import { reloadBackground } from './reload-background.js';
@@ -55,6 +55,9 @@ function init(): void {
   if (__MAIN_THREAD__) {
     installMainThreadHooks();
     injectCalledByNative();
+    if (__DEV__ || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__)) {
+      injectLepusMethods();
+    }
     installElementTemplatePatchListener();
     installOnMtsDestruction();
     if (__PROFILE__) {
