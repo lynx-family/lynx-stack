@@ -341,7 +341,7 @@ describe('MainThreadObject', () => {
     expect(captureMainThreadObject({ value: 42 })).toBeUndefined();
   });
 
-  it('creates a typed handle through the library-author hook', () => {
+  it('creates a typed handle through the library-author hook', async () => {
     const definition = {
       type: '@test/counter',
       create: value => ({ value }),
@@ -377,9 +377,17 @@ describe('MainThreadObject', () => {
     expect(otherType.downcast(counter)).toBeUndefined();
     expect(otherType.downcast(null)).toBeUndefined();
     expect(otherType.downcast(42)).toBeUndefined();
+    expect(otherType.downcast({
+      _initValue: 42,
+      _type: '@test/other-counter',
+    })).toBeUndefined();
     expect(() => counter.get()).toThrow(
       'MainThreadObject handle for "@test/counter" cannot access "get" in the background runtime. Use the object only inside a main-thread function.',
     );
+    expect(counter.then).toBeUndefined();
+    expect(counter.$$typeof).toBeUndefined();
+    expect(counter[Symbol.toStringTag]).toBeUndefined();
+    await expect(Promise.resolve(counter)).resolves.toBe(counter);
     expect(() => counter.value = 43).toThrow(
       'MainThreadObject handle for "@test/counter" cannot set "value" in the background runtime. Use the object only inside a main-thread function.',
     );
@@ -488,6 +496,64 @@ describe('MainThreadObject', () => {
     ).toThrow(
       'MainThreadObject create function for "@test/capturing-create" must not capture values. Import dependencies from a shared-runtime module instead.',
     );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/js-function-capture',
+        create: {
+          _wkltId: 'js-function-capture',
+          _jsFn: { callback: { _jsFnId: 1 } },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/js-function-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/this-capture',
+        create: {
+          _wkltId: 'this-capture',
+          helper: { stop() {} },
+        },
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/this-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    const hiddenCapture = { _wkltId: 'hidden-capture' };
+    Object.defineProperty(hiddenCapture, 'helper', { value: 1 });
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/hidden-capture',
+        create: hiddenCapture,
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/hidden-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    const symbolCapture = {
+      _wkltId: 'symbol-capture',
+      [Symbol('helper')]: 1,
+    };
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/symbol-capture',
+        create: symbolCapture,
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/symbol-capture" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
+    const accessorClosure = {
+      _wkltId: 'accessor-closure',
+      get _c() {
+        return {};
+      },
+    };
+    expect(() =>
+      defineMainThreadObjectType({
+        type: '@test/accessor-closure',
+        create: accessorClosure,
+      })
+    ).toThrow(
+      'MainThreadObject create function for "@test/accessor-closure" must not capture values. Import dependencies from a shared-runtime module instead.',
+    );
     const type = defineMainThreadObjectType({
       type: '@test/frozen',
       create: value => ({ value }),
@@ -512,6 +578,32 @@ describe('MainThreadObject', () => {
       'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.',
     );
     expect(() => renderTestMainThreadObject([1, { value: 2 }])).not.toThrow();
+    const sparseArray = Array(2);
+    sparseArray[1] = 1;
+    expect(() => renderTestMainThreadObject(sparseArray)).not.toThrow();
+    expect(() => renderTestMainThreadObject([undefined, 1])).toThrow(
+      'MainThreadObject initial value for "@test/main-thread-object" must be JSON-serializable; invalid value at $.0.',
+    );
+  });
+
+  it('exposes the readonly-typed creation payload without a runtime copy', () => {
+    globalEnvManager.switchToBackground();
+    const initialValue = { nested: { value: 1 }, values: [2, 3] };
+    const value = renderTestMainThreadObject(initialValue);
+    const handle = captureMainThreadObject(value);
+
+    expect(handle).toBeDefined();
+
+    initialValue.nested.value = 4;
+    initialValue.values.push(5);
+
+    expect(handle.creationPayload).toBe(initialValue);
+    expect(Object.isFrozen(handle.creationPayload)).toBe(false);
+    expect(handle.creationPayload).toEqual({ nested: { value: 4 }, values: [2, 3, 5] });
+    expect(JSON.parse(JSON.stringify(value))._initValue).toEqual({
+      nested: { value: 4 },
+      values: [2, 3, 5],
+    });
   });
 
   it('diagnoses an incompatible main-thread runtime', () => {
@@ -525,10 +617,12 @@ describe('MainThreadObject', () => {
     delete refImpl.registerMainThreadObjectType;
     globalEnvManager.switchToMainThread();
 
-    expect(() => registerMainThreadObjectDefinition(definition)).toThrow(
-      'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
-    );
-
-    refImpl.registerMainThreadObjectType = register;
+    try {
+      expect(() => registerMainThreadObjectDefinition(definition)).toThrow(
+        'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
+      );
+    } finally {
+      refImpl.registerMainThreadObjectType = register;
+    }
   });
 });

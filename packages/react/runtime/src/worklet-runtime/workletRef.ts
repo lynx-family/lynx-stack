@@ -267,7 +267,7 @@ function assertCompatibleWorkletValue(
 }
 
 function releaseMainThreadObject(value: unknown): void {
-  if (isMutableCell(value) || typeof value !== 'object' || value === null) {
+  if (typeof value !== 'object' || value === null) {
     return;
   }
   if (!realizedMainThreadObjectMetadata.has(value)) {

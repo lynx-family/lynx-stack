@@ -121,8 +121,12 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
     }
   }
 
-  /** The payload used to create the realized main-thread object. */
-  public get creationPayload(): I {
+  /**
+   * The payload used to create the realized object.
+   *
+   * Readonly is a TypeScript contract; the value is not frozen at runtime.
+   */
+  public get creationPayload(): Readonly<I> {
     return this._initValue;
   }
 
@@ -253,10 +257,28 @@ function assertCaptureFreeLifecycleFunction(
   name: 'create',
   value: ((...args: never[]) => unknown) | Worklet,
 ): void {
-  if (typeof value === 'function' || value._c === undefined) {
+  if (typeof value === 'function') {
     return;
   }
-  if (Object.keys(value._c).length !== 0) {
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const hasCaptures = Reflect.ownKeys(descriptors).some(key => {
+    if (typeof key !== 'string') {
+      return true;
+    }
+    if (key === '_wkltId' || key === '_workletType' || key === '_lepusWorkletHash') {
+      return false;
+    }
+    if (key === '_c') {
+      const descriptor = descriptors[key]!;
+      const closure = 'value' in descriptor ? descriptor.value : undefined;
+      return !('value' in descriptor)
+        || (closure !== undefined
+          && (typeof closure !== 'object' || closure === null
+            || Reflect.ownKeys(closure).length !== 0));
+    }
+    return true;
+  });
+  if (hasCaptures) {
     throw new Error(
       `MainThreadObject ${name} function for "${type}" must not capture values. Import dependencies from a shared-runtime module instead.`,
     );
@@ -278,6 +300,13 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
     get(target, property, receiver): unknown {
       if (property in target) {
         return Reflect.get(target, property, receiver) as unknown;
+      }
+      if (
+        typeof property === 'symbol'
+        || property === 'then'
+        || property === '$$typeof'
+      ) {
+        return undefined;
       }
       throw new Error(
         `MainThreadObject handle for "${type}" cannot access "${
@@ -343,8 +372,8 @@ function findNonSerializablePath(
   }
 
   ancestors.add(value);
-  const entries = Array.isArray(value)
-    ? value.map((item, index) => [String(index), item] as const)
+  const entries: ReadonlyArray<readonly [string, unknown]> = Array.isArray(value)
+    ? value.flatMap((item, index) => [[String(index), item] as const])
     : Object.entries(value);
   for (const [key, item] of entries) {
     const invalidPath = findNonSerializablePath(item, `${path}.${key}`, ancestors);
