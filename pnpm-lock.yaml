@@ -2025,27 +2025,123 @@ importers:
 
   packages/rspeedy/upgrade-rspeedy:
     devDependencies:
+      '@lynx-js/autolink-codegen':
+        specifier: workspace:*
+        version: link:../../lynx/autolink-codegen
+      '@lynx-js/cache-events-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/cache-events-webpack-plugin
+      '@lynx-js/chunk-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/chunk-loading-webpack-plugin
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-config
+      '@lynx-js/css-extract-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/css-extract-webpack-plugin
+      '@lynx-js/css-serializer':
+        specifier: workspace:*
+        version: link:../../tools/css-serializer
+      '@lynx-js/debug-metadata':
+        specifier: workspace:*
+        version: link:../../tools/debug-metadata
+      '@lynx-js/debug-metadata-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-debug-metadata
+      '@lynx-js/docs-mcp-server':
+        specifier: workspace:*
+        version: link:../../mcp-servers/docs-mcp-server
+      '@lynx-js/external-bundle-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-external-bundle
+      '@lynx-js/externals-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/externals-loading-webpack-plugin
+      '@lynx-js/gesture-runtime':
+        specifier: workspace:*
+        version: link:../../lynx/gesture-runtime
+      '@lynx-js/i18next-translation-dedupe':
+        specifier: workspace:*
+        version: link:../../i18n/i18next-translation-dedupe
+      '@lynx-js/kitten-lynx-test-infra':
+        specifier: workspace:*
+        version: link:../../testing-library/kitten-lynx
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../lynx-bundle-rslib-config
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-qrcode
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
+      '@lynx-js/react-alias-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-react-alias
+      '@lynx-js/react-refresh-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/react-refresh-webpack-plugin
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-react
+      '@lynx-js/react-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/react-webpack-plugin
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../core
+      '@lynx-js/runtime-config-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/runtime-config-webpack-plugin
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/skill-lynx-openui':
+        specifier: workspace:*
+        version: link:../../genui/skill-lynx-openui
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
+      '@lynx-js/testing-environment':
+        specifier: workspace:*
+        version: link:../../testing-library/testing-environment
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@lynx-js/vanilla-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-vanilla
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../../web-platform/web-elements
+      '@lynx-js/web-explorer':
+        specifier: workspace:*
+        version: link:../../web-platform/web-explorer
+      '@lynx-js/web-platform-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../web-platform/web-rsbuild-plugin
+      '@lynx-js/web-rsbuild-server-middleware':
+        specifier: workspace:*
+        version: link:../../web-platform/web-rsbuild-server-middleware
+      '@lynx-js/web-worker-rpc':
+        specifier: workspace:*
+        version: link:../../web-platform/web-worker-rpc
+      '@lynx-js/webpack-dev-transport':
+        specifier: workspace:*
+        version: link:../../webpack/webpack-dev-transport
+      '@lynx-js/webpack-runtime-globals':
+        specifier: workspace:*
+        version: link:../../webpack/webpack-runtime-globals
+      '@lynx-js/websocket':
+        specifier: workspace:*
+        version: link:../websocket
       '@rsbuild/plugin-less':
         specifier: 2.0.1
         version: 2.0.1(@rsbuild/core@2.2.3(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
