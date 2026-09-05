@@ -173,12 +173,18 @@ export function pluginQRCode(
         }
       })
 
-      api.onAfterStartDevServer(async ({ environments, port }) => {
-        const entries = getLynxEntries(environments)
+      // The QR code and the shortcuts are printed once the dev server is up
+      // *and* the first compilation has finished: printing while the progress
+      // bar is still redrawing leaves a stale copy of the bar behind.
+      let devServer: { entries: string[], port: number } | undefined
+      let firstCompileDone = false
 
-        if (entries.length === 0) {
+      const registerDevShortcuts = async () => {
+        if (!devServer || !firstCompileDone) {
           return
         }
+        const { entries, port } = devServer
+        devServer = undefined
 
         try {
           const unregister = await registerConsoleShortcuts(
@@ -195,6 +201,25 @@ export function pluginQRCode(
         } catch (error) {
           logShortcutError(error)
         }
+      }
+
+      api.onAfterStartDevServer(async ({ environments, port }) => {
+        const entries = getLynxEntries(environments)
+
+        if (entries.length === 0) {
+          return
+        }
+
+        devServer = { entries, port }
+        await registerDevShortcuts()
+      })
+
+      api.onAfterDevCompile(async ({ isFirstCompile }) => {
+        if (!isFirstCompile) {
+          return
+        }
+        firstCompileDone = true
+        await registerDevShortcuts()
       })
 
       async function main(

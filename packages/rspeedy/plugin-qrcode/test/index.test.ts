@@ -331,6 +331,7 @@ describe('Plugins - Terminal', () => {
           onAfterStartPreviewServer = handler
         },
         onAfterStartDevServer: vi.fn(),
+        onAfterDevCompile: vi.fn(),
         onCloseDevServer,
         onExit(handler: () => void) {
           onExit = handler
