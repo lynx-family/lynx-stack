@@ -1687,8 +1687,8 @@ importers:
         specifier: workspace:*
         version: link:../plugin-lynx
       '@lynx-js/tasm':
-        specifier: 0.0.49
-        version: 0.0.49
+        specifier: 0.0.52
+        version: 0.0.52
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
@@ -2725,8 +2725,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/css-serializer
       '@lynx-js/tasm':
-        specifier: 0.0.49
-        version: 0.0.49
+        specifier: 0.0.52
+        version: 0.0.52
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core
@@ -4654,8 +4654,8 @@ packages:
     resolution: {integrity: sha512-TZ8qdZEkKQQcBVobpkThhjmxem/uqDp3KahlBxCfmjQ9tucFYCTNmdgiLBGzjdYcgWoCN1Fe+054NYepaFcgAQ==}
     engines: {node: '>=18'}
 
-  '@lynx-js/tasm@0.0.49':
-    resolution: {integrity: sha512-sI+xmLXaMvXWFN5n47kYNHFEMIEpkrz/bVvU2GwvhB26lXfYPdSNedE3bh85vfW/vAmYsB/TbKwtiNhXgN3LDw==}
+  '@lynx-js/tasm@0.0.52':
+    resolution: {integrity: sha512-4HykPh/q04lSpEmhFjSQSpeAOQxkpwyM67QWVNgBzPC3LKSUkF/FxwYmMw88eQNT3QQQXx2yGFDz+rJgXpWOHQ==}
     hasBin: true
 
   '@lynx-js/trace-processor@0.0.1':
@@ -14768,7 +14768,7 @@ snapshots:
 
   '@lynx-js/skill-vanilla-lynx@0.2.0': {}
 
-  '@lynx-js/tasm@0.0.49': {}
+  '@lynx-js/tasm@0.0.52': {}
 
   '@lynx-js/trace-processor@0.0.1':
     dependencies:
