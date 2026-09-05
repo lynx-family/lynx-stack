@@ -5,7 +5,7 @@
 use std::future::Future;
 use std::io;
 use std::io::{Read, Write};
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs};
 use std::num::{NonZeroU16, ParseIntError};
 use std::path::{Component, Path, PathBuf};
 use std::process::Stdio;
@@ -641,12 +641,25 @@ fn arm_zip_capture_parent_lifeline() -> Result<(), ServerError> {
 }
 
 /// Runs the feature-gated UI Judge HTTP server on IPv4 and IPv6 unspecified
-/// addresses. Ordinary native capture runs on one container-owning worker
-/// behind a bounded queue; untrusted uploads use one fresh child process each.
-/// Completed captures are scored concurrently on the async runtime.
+/// addresses.
 pub async fn serve(port: &str) -> Result<(), ServerError> {
+  serve_on(None, port).await
+}
+
+/// Runs the feature-gated UI Judge HTTP server on the requested host, or on
+/// both IPv4 and IPv6 unspecified addresses when no host is provided. Ordinary
+/// native capture runs on one container-owning worker behind a bounded queue;
+/// untrusted uploads use one fresh child process each. Completed captures are
+/// scored concurrently on the async runtime.
+pub async fn serve_on(host: Option<&str>, port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
-  let (ipv4_listener, ipv6_listener) = bind_listeners(port)?;
+  let (ipv4_listener, ipv6_listener) = bind_listeners(host, port)?;
+  let addresses = [ipv4_listener.as_ref(), ipv6_listener.as_ref()]
+    .into_iter()
+    .flatten()
+    .map(|listener| listener.local_addr().map(|address| address.to_string()))
+    .collect::<io::Result<Vec<_>>>()?
+    .join(" and ");
   let headless = shared_workers().map_err(ServerError::HeadlessWorkerUnavailable)?;
   let worker_failure = headless
     .take_failure_receiver()
@@ -681,12 +694,8 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
     let _ = shutdown_sender.send(true);
   });
 
-  println!("UI Judge server listening on 0.0.0.0:{port} and [::]:{port}");
-  let ipv4_server = axum::serve(ipv4_listener, app.clone())
-    .with_graceful_shutdown(wait_for_shutdown(shutdown_receiver.clone()));
-  let ipv6_server =
-    axum::serve(ipv6_listener, app).with_graceful_shutdown(wait_for_shutdown(shutdown_receiver));
-  let result = tokio::try_join!(ipv4_server, ipv6_server);
+  println!("UI Judge server listening on {addresses}");
+  let result = serve_listeners(ipv4_listener, ipv6_listener, app, shutdown_receiver).await;
 
   signal_task.abort();
   let _ = signal_task.await;
@@ -707,20 +716,64 @@ fn parse_port(port: &str) -> Result<u16, ServerError> {
     })
 }
 
-fn bind_listeners(port: u16) -> io::Result<(TcpListener, TcpListener)> {
-  let ipv4 = bind_listener(
-    Domain::IPV4,
-    SocketAddr::from((Ipv4Addr::UNSPECIFIED, port)),
-  )?;
-  let ipv6 = Socket::new(Domain::IPV6, Type::STREAM, Some(Protocol::TCP))?;
-  ipv6.set_only_v6(true)?;
-  let ipv6 = configure_listener(ipv6, SocketAddr::from((Ipv6Addr::UNSPECIFIED, port)))?;
-  Ok((ipv4, ipv6))
+fn bind_listeners(
+  host: Option<&str>,
+  port: u16,
+) -> io::Result<(Option<TcpListener>, Option<TcpListener>)> {
+  if let Some(host) = host {
+    let address = (host, port).to_socket_addrs()?.next().ok_or_else(|| {
+      io::Error::new(
+        io::ErrorKind::AddrNotAvailable,
+        "host resolved to no address",
+      )
+    })?;
+    let listener = bind_listener(address)?;
+    return if address.is_ipv4() {
+      Ok((Some(listener), None))
+    } else {
+      Ok((None, Some(listener)))
+    };
+  }
+
+  let ipv4 = bind_listener(SocketAddr::from((Ipv4Addr::UNSPECIFIED, port)))?;
+  let ipv6 = bind_listener(SocketAddr::from((Ipv6Addr::UNSPECIFIED, port)))?;
+  Ok((Some(ipv4), Some(ipv6)))
 }
 
-fn bind_listener(domain: Domain, address: SocketAddr) -> io::Result<TcpListener> {
+fn bind_listener(address: SocketAddr) -> io::Result<TcpListener> {
+  let domain = if address.is_ipv4() {
+    Domain::IPV4
+  } else {
+    Domain::IPV6
+  };
   let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
+  if address.is_ipv6() {
+    socket.set_only_v6(true)?;
+  }
   configure_listener(socket, address)
+}
+
+async fn serve_listeners(
+  ipv4_listener: Option<TcpListener>,
+  ipv6_listener: Option<TcpListener>,
+  app: Router,
+  shutdown_receiver: watch::Receiver<bool>,
+) -> io::Result<()> {
+  match (ipv4_listener, ipv6_listener) {
+    (Some(ipv4_listener), Some(ipv6_listener)) => {
+      let ipv4_server = axum::serve(ipv4_listener, app.clone())
+        .with_graceful_shutdown(wait_for_shutdown(shutdown_receiver.clone()));
+      let ipv6_server = axum::serve(ipv6_listener, app)
+        .with_graceful_shutdown(wait_for_shutdown(shutdown_receiver));
+      tokio::try_join!(ipv4_server, ipv6_server).map(|_| ())
+    }
+    (Some(listener), None) | (None, Some(listener)) => {
+      axum::serve(listener, app)
+        .with_graceful_shutdown(wait_for_shutdown(shutdown_receiver))
+        .await
+    }
+    (None, None) => unreachable!("at least one listener is always bound"),
+  }
 }
 
 fn configure_listener(socket: Socket, address: SocketAddr) -> io::Result<TcpListener> {
@@ -2467,6 +2520,58 @@ mod tests {
       parse_port("0"),
       Err(ServerError::InvalidPort { .. })
     ));
+  }
+
+  #[tokio::test]
+  async fn binds_both_unspecified_addresses_by_default() {
+    let (ipv4, ipv6) = bind_listeners(None, 0).expect("bind default listeners");
+
+    assert_eq!(
+      ipv4
+        .expect("IPv4 listener")
+        .local_addr()
+        .expect("IPv4 address")
+        .ip(),
+      Ipv4Addr::UNSPECIFIED
+    );
+    assert_eq!(
+      ipv6
+        .expect("IPv6 listener")
+        .local_addr()
+        .expect("IPv6 address")
+        .ip(),
+      Ipv6Addr::UNSPECIFIED
+    );
+  }
+
+  #[tokio::test]
+  async fn binds_only_the_explicit_ipv4_host() {
+    let (ipv4, ipv6) = bind_listeners(Some("127.0.0.1"), 0).expect("bind IPv4 listener");
+
+    assert_eq!(
+      ipv4
+        .expect("IPv4 listener")
+        .local_addr()
+        .expect("IPv4 address")
+        .ip(),
+      Ipv4Addr::LOCALHOST
+    );
+    assert!(ipv6.is_none());
+  }
+
+  #[tokio::test]
+  async fn binds_only_the_explicit_ipv6_host() {
+    let (ipv4, ipv6) = bind_listeners(Some("::1"), 0).expect("bind IPv6 listener");
+
+    assert!(ipv4.is_none());
+    assert_eq!(
+      ipv6
+        .expect("IPv6 listener")
+        .local_addr()
+        .expect("IPv6 address")
+        .ip(),
+      Ipv6Addr::LOCALHOST
+    );
   }
 
   #[tokio::test]
