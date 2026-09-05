@@ -193,6 +193,19 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
 
+  benchmark/preact-runtime:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+      benchx_cli:
+        specifier: workspace:*
+        version: link:../../packages/lynx/benchx_cli
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+
   benchmark/react:
     dependencies:
       '@lynx-js/react':
@@ -294,6 +307,54 @@ importers:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
+
+  examples/preact:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  examples/preact-ports:
+    dependencies:
+      '@lynx-js/gesture-runtime':
+        specifier: workspace:*
+        version: link:../../packages/lynx/gesture-runtime
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+
+  examples/preact-ports-tailwind:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/tailwind-preset':
+        specifier: workspace:*
+        version: link:../../packages/tailwind-preset
+      rsbuild-plugin-tailwindcss:
+        specifier: 0.2.4
+        version: 0.2.4(@rsbuild/core@2.1.7(core-js@3.49.0))(tailwindcss@3.4.19)
+      tailwindcss:
+        specifier: ^3.4.19
+        version: 3.4.19
 
   examples/react:
     dependencies:
@@ -1325,6 +1386,28 @@ importers:
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.3(core-js@3.50.0))
+
+  packages/preact-runtime:
+    dependencies:
+      '@lynx-js/css-extract-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/css-extract-webpack-plugin
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/template-webpack-plugin
+      preact:
+        specifier: ^10.29.1
+        version: 10.29.1
+    devDependencies:
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.7(core-js@3.49.0)
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 0.23.2(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(@typescript/native-preview@7.0.0-dev.20260707.2)(core-js@3.49.0)(typescript@6.0.3)
 
   packages/react:
     dependencies:
