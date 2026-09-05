@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.7.1
+
+### Patch Changes
+
+- Stop a console-shortcut loop whose dev server has already been closed from prompting again. ([#3816](https://github.com/lynx-family/lynx-stack/pull/3816))
+
 ## 0.7.0
 
 ### Minor Changes
