@@ -467,6 +467,35 @@ test.describe('reactlynx3 tests', () => {
       await expect(await target.getAttribute('style')).toContain('pink');
     });
 
+    test('basic-lynx-add-font', async ({ page }, { title }) => {
+      // `document.fonts.check()` is no help here: it answers "can this text be
+      // rendered now", which is already `true` for a family nothing has
+      // registered, because the text falls back to a system font. Inspect the
+      // font set itself instead.
+      const addedFonts = () =>
+        page.evaluate(() =>
+          Array.from(document.fonts, font => ({
+            // Safari serializes `family` as a quoted CSS <family-name>.
+            family: font.family.replace(/^['"]|['"]$/g, ''),
+            status: font.status,
+          })).filter(font => font.family === 'Add Font E2E')
+        );
+      await goto(page, title);
+      await wait(100);
+      expect(await addedFonts()).toStrictEqual([]);
+      await page.locator('#target').click();
+      // Polled rather than waited out: registering the font fetches it over
+      // the network, so how long it takes is not ours to guess.
+      await expect.poll(addedFonts).toStrictEqual([{
+        family: 'Add Font E2E',
+        status: 'loaded',
+      }]);
+      // The style update is gated on `lynx.addFont`'s callback, so this also
+      // covers the callback firing.
+      await expect(await page.locator('#target').getAttribute('style'))
+        .toContain('Add Font E2E');
+    });
+
     test(
       'basic-wrapper-element-do-not-impact-layout',
       async ({ page }, { title }) => {
