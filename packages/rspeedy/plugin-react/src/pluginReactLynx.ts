@@ -344,6 +344,20 @@ export interface PluginReactLynxOptions {
   experimental_isLazyBundle?: boolean
 
   /**
+   * Entry names to build as background-only runtimes.
+   *
+   * Such an entry has no main thread and no template: it emits the background
+   * bundle alone, for a host that runs it outside of any card. It still takes
+   * part in chunk splitting, so it shares chunks with the pages built alongside
+   * it.
+   *
+   * @defaultValue `[]`
+   *
+   * @alpha
+   */
+  experimental_backgroundOnlyEntries?: string[]
+
+  /**
    * Enable Element Template compile and runtime entries.
    *
    * @defaultValue `false`
@@ -415,6 +429,7 @@ export function pluginReactLynx(
     globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
+    experimental_backgroundOnlyEntries: [],
     experimental_transformBuiltinAttributeNames: false,
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,

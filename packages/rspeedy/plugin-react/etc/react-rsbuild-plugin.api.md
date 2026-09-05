@@ -80,6 +80,8 @@ export interface PluginReactLynxOptions {
     enableUiSourceMap?: boolean;
     engineVersion?: string;
     // @alpha
+    experimental_backgroundOnlyEntries?: string[];
+    // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
