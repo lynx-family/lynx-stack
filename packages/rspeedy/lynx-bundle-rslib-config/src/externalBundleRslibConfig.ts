@@ -810,9 +810,7 @@ const externalBundleRsbuildPlugin = ({
           // dprint-ignore
           chain
           .plugin(MainThreadRuntimeWrapperWebpackPlugin.name)
-          .use(MainThreadRuntimeWrapperWebpackPlugin, [{
-            test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
-          }])
+          .use(MainThreadRuntimeWrapperWebpackPlugin)
           .end()
         }
 
@@ -841,5 +839,3 @@ const externalBundleRsbuildPlugin = ({
     )
   },
 })
-
-const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

@@ -529,6 +529,41 @@ describe('JsBytecode encoding', () => {
     })
   })
 
+  it('should wrap a main-thread entry named like a path', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-path-name')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'utils-path-name',
+      output: {
+        distPath: {
+          root: distRoot,
+        },
+      },
+      plugins: [pluginReactLynx()],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-path-name.lynx.bundle'),
+    )
+    const mainThreadSection =
+      decodedResult['custom-sections']['./utils.js__main-thread']
+    expect(mainThreadSection).toBeTypeOf('string')
+    // The wrapper survives minification as an IIFE that returns the module.
+    expect(mainThreadSection).toMatch(/^\(function\s*\(\)\s*\{/)
+    expect(mainThreadSection!.trimEnd()).toMatch(
+      /\}\)\(\);?(\n\/\/# sourceMappingURL=\S*)?$/,
+    )
+    expect(mainThreadSection).toMatch(/\{\s*exports\s*:\s*\{\s*\}\s*\}/)
+  })
+
   it('should not compile main thread chunks to bytecode in development by default', async () => {
     const decodedResult = await buildAndDecode(
       'utils-dev-no-bytecode',
