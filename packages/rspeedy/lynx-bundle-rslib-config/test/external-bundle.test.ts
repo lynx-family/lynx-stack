@@ -1440,4 +1440,25 @@ describe('without a DSL plugin', () => {
     expect(decodedResult['custom-sections']['./utils.js'])
       .toMatch(/^\(function\s*\(\)\s*\{/)
   })
+
+  it('builds a web bundle with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine-web')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine-web',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }, { target: 'web', engineVersion: '3.5' }))
+
+    expect(fs.existsSync(path.join(distRoot, 'plain-engine-web.web.bundle')))
+      .toBe(true)
+  })
 })

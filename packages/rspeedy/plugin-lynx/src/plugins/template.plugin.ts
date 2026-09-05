@@ -7,6 +7,7 @@ import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-pl
 import {
   LynxEncodePlugin,
   LynxTemplatePlugin,
+  WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
 export function pluginTemplate(): RsbuildPlugin {
@@ -20,7 +21,10 @@ export function pluginTemplate(): RsbuildPlugin {
       }
 
       api.modifyBundlerChain((chain, { environment }) => {
-        if (environment.name !== 'lynx') {
+        if (environment.name === 'web') {
+          if (!chain.plugins.has(PLUGIN_NAME_WEB)) {
+            chain.plugin(PLUGIN_NAME_WEB).use(WebEncodePlugin, []).end()
+          }
           return
         }
 
@@ -43,3 +47,4 @@ export function pluginTemplate(): RsbuildPlugin {
 }
 
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
+const PLUGIN_NAME_WEB = 'lynx:web'
