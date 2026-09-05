@@ -100,6 +100,8 @@ impl VisitMut for WorkletVisitor {
     });
     method.visit_mut_with(&mut collector);
 
+    let should_use_getter = collector.has_extracted_this_props();
+
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let collect_main_thread = self.defines_collector.is_some();
     let collected_hash = collect_main_thread.then(|| hash.clone());
@@ -117,10 +119,32 @@ impl VisitMut for WorkletVisitor {
       collect_main_thread,
     );
 
-    *n = Prop::KeyValue(KeyValueProp {
-      key: method.key.clone(),
-      value: worklet_object_expr,
-    });
+    // Extracted `this.xxx` captures are spread into the ctx object. In an object literal,
+    // `this` in a plain key-value initializer refers to the enclosing lexical scope
+    // (`undefined` at ESM module top level), not the object being defined. Emitting a
+    // getter keeps `this` bound to the receiver on property read, matching the original
+    // method-call semantics (`obj.create()` has `this === obj`).
+    if should_use_getter {
+      *n = Prop::Getter(GetterProp {
+        span: method.span(),
+        key: method.key.clone(),
+        type_ann: None,
+        body: Some(BlockStmt {
+          ctxt: Default::default(),
+          span: DUMMY_SP,
+          stmts: vec![ReturnStmt {
+            span: DUMMY_SP,
+            arg: Some(worklet_object_expr),
+          }
+          .into()],
+        }),
+      });
+    } else {
+      *n = Prop::KeyValue(KeyValueProp {
+        key: method.key.clone(),
+        value: worklet_object_expr,
+      });
+    }
     self.collect_worklet_define(
       collected_hash,
       main_thread_stmt,
@@ -936,6 +960,72 @@ function worklet(event: Event) {
       )),
       hygiene()
     ),
+    should_expose_object_method_capture_channels_lepus,
+    r#"
+const callback = () => {};
+const valueType = defineMainThreadObjectType({
+  type: '@test/capturing-value',
+  helper: 1,
+  create(initialValue: number) {
+    "main thread";
+    runOnBackground(callback)();
+    return { value: initialValue + this.helper };
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_expose_object_method_capture_channels_js,
+    r#"
+const callback = () => {};
+const valueType = defineMainThreadObjectType({
+  type: '@test/capturing-value',
+  helper: 1,
+  create(initialValue: number) {
+    "main thread";
+    runOnBackground(callback)();
+    return { value: initialValue + this.helper };
+  },
+});
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
     should_transform_lepus_alias,
     r#"
 function worklet(event: Event) {
@@ -1072,6 +1162,7 @@ class App extends Component {
   onTap() {
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
@@ -1119,6 +1210,7 @@ class App extends Component {
   onTap() {
     "main thread";
     this.value.get();
+    this.props.value.get();
     this.value.set(1);
     this.value?.get();
     this.value["get"]();
@@ -2055,7 +2147,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );
@@ -2085,7 +2177,7 @@ class App extends Component {
         let a = 123;
         const b = [ a, ...y1];
         const c = { a, y2, ...y3, ...{ d: 233, e: y4 } };
-        return y5.r;
+        return y5.r + props.value.get();
     }
     "#
   );
