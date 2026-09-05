@@ -12,6 +12,7 @@ afterEach(() => {
 
 describe('WorkletOnPost', () => {
   it('error when sdk version not fulfilled', async function() {
+    const getCoreContext = lynx.getCoreContext;
     lynx.getCoreContext = undefined;
     const reportError = lynx.reportError;
     lynx.reportError = vi.fn();
@@ -22,6 +23,7 @@ describe('WorkletOnPost', () => {
 
     expect(lynx.reportError).toHaveBeenCalledTimes(1);
     lynx.reportError = reportError;
+    lynx.getCoreContext = getCoreContext;
   });
 
   it('should return when worklet is null', async function() {

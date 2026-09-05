@@ -143,7 +143,7 @@ export const root: Root = {
  */
 export function createRenderContext(context: { lynx: unknown }): Root {
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-    initBackgroundRuntime();
+    initBackgroundRuntime(context.lynx);
   }
   return {
     ...root,
