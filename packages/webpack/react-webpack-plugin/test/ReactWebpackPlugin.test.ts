@@ -4,6 +4,7 @@
 import { describe, expect, it } from '@rstest/core';
 
 import {
+  collectElementTemplatesForChunkGroups,
   collectElementTemplatesForEntries,
   collectElementTemplatesFromModule,
   mergeElementTemplate,
@@ -219,6 +220,21 @@ function moduleWithTemplate(
     },
   };
 }
+
+describe('collectElementTemplatesForChunkGroups', () => {
+  it('collects the templates of an unnamed lazy bundle chunk group', () => {
+    const lazyModule = moduleWithTemplate('_et_lazy', { type: 'text' });
+    const lazyChunk = { id: 'src_LazyComponent_tsx' };
+    // A dynamic import produces a chunk group without a name.
+    const lazyGroup = { name: null, chunks: [lazyChunk] };
+    const getChunkModules = (chunk: typeof lazyChunk) =>
+      chunk === lazyChunk ? [lazyModule] : [];
+
+    expect(
+      collectElementTemplatesForChunkGroups([lazyGroup], getChunkModules),
+    ).toEqual({ _et_lazy: { type: 'text' } });
+  });
+});
 
 describe('collectElementTemplatesForEntries', () => {
   it('scopes templates to the encoded bundle so a lazy template does not leak into the main bundle', () => {
