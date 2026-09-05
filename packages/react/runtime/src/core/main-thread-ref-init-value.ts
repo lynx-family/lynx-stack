@@ -4,19 +4,35 @@
 
 import { isMtsEnabled } from './mts-capability.js';
 
-export type MainThreadRefInitValuePatch = [id: number, value: unknown][];
+export type MainThreadRefInitValuePatch = (
+  | [id: number, value: unknown]
+  | [
+    id: number,
+    value: unknown,
+    type: string,
+    mainThreadObjectProtocolVersion: number,
+  ]
+)[];
 
 let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
 
 /**
  * @internal
  */
-export function addMainThreadRefInitValue(id: number, value: unknown): void {
+export function addMainThreadRefInitValue(
+  id: number,
+  value: unknown,
+  mainThreadObject?: { readonly type: string; readonly protocolVersion: number },
+): void {
   if (!isMtsEnabled()) {
     return;
   }
 
-  mainThreadRefInitValuePatch.push([id, value]);
+  mainThreadRefInitValuePatch.push(
+    mainThreadObject === undefined
+      ? [id, value]
+      : [id, value, mainThreadObject.type, mainThreadObject.protocolVersion],
+  );
 }
 
 /**

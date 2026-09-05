@@ -37,6 +37,11 @@
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
     },
+    "./main-thread-object": {
+      "types": "./runtime/lib/main-thread-object.d.ts",
+      "lazy": "./runtime/lazy/main-thread-object.js",
+      "default": "./runtime/lib/main-thread-object.js"
+    },
     "./element-template": {
       "types": "./runtime/lib/element-template/index.d.ts",
       "default": "./runtime/lib/element-template/index.js"
@@ -158,6 +163,9 @@
       ],
       "internal/document": [
         "./runtime/lib/document.d.ts"
+      ],
+      "main-thread-object": [
+        "./runtime/lib/main-thread-object.d.ts"
       ],
       "element-template": [
         "./runtime/lib/element-template/index.d.ts"

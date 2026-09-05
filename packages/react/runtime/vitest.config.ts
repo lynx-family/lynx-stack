@@ -76,6 +76,10 @@ export default defineConfig({
       { find: /^preact\/jsx-runtime$/, replacement: path.join(internalPreactRoot, 'jsx-runtime/dist/jsxRuntime.mjs') },
       { find: '@lynx-js/react/compat', replacement: path.resolve(__dirname, './compat/index.js') },
       {
+        find: /^@lynx-js\/react\/main-thread-object$/,
+        replacement: path.resolve(__dirname, './src/main-thread-object.ts'),
+      },
+      {
         find: '@lynx-js/react/worklet-runtime/bindings',
         replacement: path.resolve(__dirname, './src/worklet-runtime/bindings/index.ts'),
       },

@@ -4,16 +4,13 @@
 import type { RefObject } from 'react';
 
 import { useMemo } from './hooks/react.js';
+import { allocateMainThreadRefId, clearMainThreadRefIdsForTesting } from './main-thread-ref-id.js';
 import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
 import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
 import type { WorkletRefImpl } from '../worklet-runtime/bindings/types.js';
 
-// Split into two variables for testing purposes.
-let lastIdBG = 0;
-let lastIdMT = 0;
-
 export function clearMainThreadRefLastIdForTesting(): void {
-  lastIdBG = lastIdMT = 0;
+  clearMainThreadRefIdsForTesting();
 }
 
 export function isMainThreadRef(value: unknown): value is WorkletRefImpl<unknown> {
@@ -50,8 +47,8 @@ export class MainThreadRef<T> {
   constructor(initValue: T) {
     this._initValue = initValue;
     this._type = 'main-thread';
+    this._wvid = allocateMainThreadRefId();
     if (__JS__) {
-      this._wvid = ++lastIdBG;
       addMainThreadRefInitValue(this._wvid, initValue);
       const id = this._wvid;
       this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
@@ -62,8 +59,6 @@ export class MainThreadRef<T> {
           },
         });
       });
-    } else {
-      this._wvid = --lastIdMT;
     }
   }
 
