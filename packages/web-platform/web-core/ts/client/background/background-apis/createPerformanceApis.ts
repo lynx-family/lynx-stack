@@ -171,7 +171,7 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
       return ++profileFlowIdInc;
     },
     isProfileRecording: (): boolean => {
-      return getUserTimingPerformance() !== undefined;
+      return false;
     },
   };
   return performanceApis;

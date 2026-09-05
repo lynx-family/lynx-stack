@@ -14,6 +14,7 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { isProfiling } from '../../shared/profile.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -48,6 +49,9 @@ function updateGlobalProps(newData: Record<string, any>): void {
 }
 
 function init(): void {
+  const includeProfileComponentHooks = typeof __PROFILE_COMPONENT_HOOKS__ === 'undefined'
+    || __PROFILE_COMPONENT_HOOKS__;
+
   if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
     initElementTemplatePAPICallAlog();
   }
@@ -57,7 +61,7 @@ function init(): void {
     injectCalledByNative();
     installElementTemplatePatchListener();
     installOnMtsDestruction();
-    if (__PROFILE__) {
+    if (includeProfileComponentHooks && __PROFILE__) {
       initProfileHook();
     }
   }
@@ -78,7 +82,7 @@ function init(): void {
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();
-      if (lynx.performance?.isProfileRecording?.()) {
+      if (includeProfileComponentHooks && isProfiling) {
         initProfileHook();
       }
     }
