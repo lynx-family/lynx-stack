@@ -3,7 +3,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/jest-dom": "^7.0.1",
     "jsdom": "^27.4.0",
     "vitest": "^3.2.7"
   }

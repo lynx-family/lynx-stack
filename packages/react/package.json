@@ -227,7 +227,7 @@
     "preact": "catalog:lynxjs"
   },
   "devDependencies": {
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.2.1",
     "@microsoft/api-extractor": "catalog:",
     "@types/react": "^19.2.18"
   },

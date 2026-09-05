@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/type-element-api": "0.0.9",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/type-element-api": "0.0.10",
+    "@lynx-js/types": "4.2.1",
     "@lynx-js/vanilla-rsbuild-plugin": "workspace:*"
   }
 }
