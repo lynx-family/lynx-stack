@@ -135,6 +135,7 @@ export class Element {
     willFlush = true;
     void Promise.resolve().then(() => {
       willFlush = false;
+      /* v8 ignore next */
       if (__DEV__) {
         mainThreadFlushLoopMark('render');
         const error = mainThreadFlushLoopOnFlushMicrotask();

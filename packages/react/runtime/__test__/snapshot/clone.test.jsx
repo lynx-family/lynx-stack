@@ -956,4 +956,19 @@ describe('clone element', () => {
       </page>
     `);
   });
+  it('reuses an already-registered original definition when cloning', function() {
+    const original = <view className='a' id='id-a'></view>;
+    // Render the original first so its definition is registered before the
+    // clone definition is derived from it.
+    __root.__jsx = original;
+    renderPage();
+
+    const clone = cloneElement(original, { className: 'b' });
+    __root.__jsx = clone;
+    renderPage();
+
+    const rendered = __root.__element_root.children.at(-1);
+    expect(rendered.props['class']).toBe('b');
+    expect(rendered.props['id']).toBe('id-a');
+  });
 });

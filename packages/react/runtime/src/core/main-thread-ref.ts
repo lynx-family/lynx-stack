@@ -71,10 +71,12 @@ export class MainThreadRef<T> {
     if (__JS__ && __DEV__) {
       throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed in the background thread.');
     }
+    /* v8 ignore next */
     if (__LEPUS__ && __DEV__) {
-      /* v8 ignore next 3 */
+      /* v8 ignore next */
       throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed outside of main thread script.');
     }
+    /* v8 ignore next */
     return undefined as T;
   }
 
@@ -82,6 +84,7 @@ export class MainThreadRef<T> {
     if (__JS__ && __DEV__) {
       throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed in the background thread.');
     }
+    /* v8 ignore next */
     if (__LEPUS__ && __DEV__) {
       throw new Error('MainThreadRef: value of a MainThreadRef cannot be accessed outside of main thread script.');
     }

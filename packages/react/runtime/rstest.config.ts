@@ -149,14 +149,16 @@ export default defineConfig({
     path.join(__dirname, './__test__/snapshot/utils/runtimeProxy.ts'),
   ],
   coverage: {
-    // NOTE: the Vitest config enforced 100% thresholds here. They are not
-    // carried over: Vitest measured with `@vitest/coverage-v8` and Rstest
-    // measures with `@rstest/coverage-istanbul`, which instruments files the
-    // tests never load (they report 0% instead of being omitted) and counts
-    // branches more strictly. The same suites score 96.5% / 99.9% under
-    // istanbul, so re-enabling the gate needs new tests, not a config change.
-    // Patterns are resolved against the cwd, not this project's `root`, so
-    // they have to be absolute to stay anchored to this package.
+    // `v8`, matching the Vitest config this replaced: the generated snapshot
+    // code carries `/* v8 ignore start|stop */` markers, which istanbul does
+    // not honour.
+    provider: 'v8',
+    thresholds: {
+      lines: 100,
+      functions: 100,
+      branches: 100,
+      statements: 100,
+    },
     exclude: [
       'debug/**',
       'jsx-runtime/**',
@@ -195,6 +197,6 @@ export default defineConfig({
       'src/snapshot/worklet/hmr.ts',
       '**/*.d.ts',
       '**/*.test-d.*',
-    ].map((pattern) => path.join(__dirname, pattern)),
+    ],
   },
 });

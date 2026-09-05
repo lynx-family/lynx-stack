@@ -162,19 +162,20 @@ const config: RstestConfig = defineConfig({
   },
   setupFiles: [path.join(__dirname, './test-utils/setup.js')],
   coverage: {
-    // NOTE: the Vitest config enforced 100% thresholds here. They are not
-    // carried over: Vitest measured with `@vitest/coverage-v8` and Rstest
-    // measures with `@rstest/coverage-istanbul`, which instruments files the
-    // tests never load (they report 0% instead of being omitted) and counts
-    // branches more strictly. The same suites score 96.5% / 99.9% under
-    // istanbul, so re-enabling the gate needs new tests, not a config change.
-    // Patterns are resolved against the cwd, not this project's `root`, so
-    // they have to be absolute to stay anchored to the package.
-    include: [path.join(projectRoot, 'src/element-template/**')],
+    // `v8`, matching the Vitest config this replaced: the source carries
+    // `/* v8 ignore start|stop */` markers, which istanbul does not honour.
+    provider: 'v8',
+    include: ['src/element-template/**'],
     exclude: [
-      path.join(projectRoot, 'src/element-template/**/*.d.ts'),
-      path.join(projectRoot, 'src/element-template/protocol/types.ts'),
+      'src/element-template/**/*.d.ts',
+      'src/element-template/protocol/types.ts',
     ],
+    thresholds: {
+      lines: 100,
+      functions: 100,
+      branches: 100,
+      statements: 100,
+    },
   },
 });
 

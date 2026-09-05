@@ -27,6 +27,7 @@
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rspack/core": "catalog:rspack",
+    "@rstest/coverage-v8": "catalog:rstest",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "pretty-format": "^30.4.1"

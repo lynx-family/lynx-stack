@@ -44,6 +44,7 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
   }
 
   let message = `${errorMsg}, snapshot type: '${snapshotType}'`;
+  /* v8 ignore next */
   if (__DEV__) {
     message += '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
   }

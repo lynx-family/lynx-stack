@@ -160,6 +160,32 @@ describe('ElementTemplate hydration listener', () => {
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
 
+  it('hydrates when no pipeline options are generated', () => {
+    const performance = lynx.performance as unknown as {
+      _generatePipelineOptions?: unknown;
+    };
+    const originalGenerate = performance._generatePipelineOptions;
+    performance._generatePipelineOptions = undefined;
+
+    try {
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const after = new BackgroundElementTemplateInstance('_et_test');
+      backgroundRoot.appendChild(after);
+
+      envManager.switchToMainThread();
+      dispatchHydrate([createSerializedTemplate(after.instanceId, '_et_test')]);
+
+      envManager.switchToBackground();
+
+      expect(globalPipelineOptions).toBeUndefined();
+    } finally {
+      performance._generatePipelineOptions = originalGenerate;
+    }
+  });
+
   it('dispatches hydration boundary after clean hydrate without ops', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
@@ -599,6 +625,53 @@ describe('ElementTemplate hydration listener', () => {
       expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
     } finally {
       rs.useRealTimers();
+    }
+  });
+
+  it('resets commit state when hydrate serialization throws with no delayed main-thread data', () => {
+    SystemInfo.lynxSdkVersion = '4.0';
+    const serializeError = new Error('hydrate update serialization failed');
+    const oldReportError = lynx.reportError;
+    const reportError = rs.fn();
+    const printTreeSpy = rs.spyOn(
+      elementTemplateAlog,
+      'printElementTemplateTreeToString',
+    ).mockReturnValue('<tree>');
+    lynx.reportError = reportError;
+
+    try {
+      __etAttrPlanMap._et_serialize_failure = [1, adaptEventAttrSlot];
+      resetEventStateForRuntime();
+      envManager.switchToBackground();
+      installElementTemplateHydrationListener();
+
+      const backgroundRoot = __root as BackgroundElementTemplateInstance;
+      const throwingValue = {
+        toJSON() {
+          throw serializeError;
+        },
+      } as unknown as SerializableValue;
+      const after = new BackgroundElementTemplateInstance(
+        '_et_serialize_failure',
+        [throwingValue, rs.fn()],
+      );
+      backgroundRoot.appendChild(after);
+
+      envManager.switchToMainThread();
+      dispatchHydrate([
+        {
+          ...createSerializedTemplate(-1, '_et_serialize_failure'),
+          attributeSlots: ['before', '-1:1:'],
+        } satisfies SerializedElementTemplate,
+      ]);
+
+      expect(() => envManager.switchToBackground()).not.toThrow();
+      expect(reportError).toHaveBeenCalledWith(serializeError);
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+    } finally {
+      lynx.reportError = oldReportError;
+      printTreeSpy.mockRestore();
     }
   });
 

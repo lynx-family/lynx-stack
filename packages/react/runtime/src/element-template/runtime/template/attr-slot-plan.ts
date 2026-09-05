@@ -100,6 +100,7 @@ export function adaptMTEventAttrSlot(
     return null;
   }
   if (!isMainThreadFunction(value)) {
+    /* v8 ignore next */
     if (__DEV__) {
       lynx.reportError(
         new Error(`ElementTemplate main-thread event slot ${handleId}:${attrSlotIndex} expects a worklet ctx object.`),

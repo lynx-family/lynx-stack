@@ -17,7 +17,16 @@ import {
   renderToString,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes';
 import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page';
-import { DIFFED, PARENT } from '../../../../src/shared/render-constants';
+import {
+  BITS,
+  COMMIT,
+  COMPONENT_DIRTY,
+  DIFF,
+  DIFF2,
+  DIFFED,
+  PARENT,
+  RENDER,
+} from '../../../../src/shared/render-constants';
 
 describe('Element Template renderToOpcodes', () => {
   it('should export correct opcodes', () => {
@@ -170,6 +179,16 @@ describe('Element Template renderToOpcodes', () => {
         __listItemPlatformInfo: itemPlatformInfo,
       },
     });
+    expect(opcodes.at(-1)).toBe(__OpEnd);
+  });
+
+  it('omits typed list attributes and slot opcodes when both props are absent', () => {
+    const opcodes = renderToString(h('list', {}));
+
+    expect(opcodes[0]).toBe(__OpBegin);
+    expect(opcodes[1]).toMatchObject({ type: 'list' });
+    expect(opcodes).not.toContain(__OpAttr);
+    expect(opcodes).not.toContain(__OpSlot);
     expect(opcodes.at(-1)).toBe(__OpEnd);
   });
 
@@ -471,5 +490,66 @@ describe('Element Template renderToOpcodes', () => {
 
     const opcodes = renderToString(h(ThemeReader, null));
     expect(opcodes).toContain('default-theme');
+  });
+  it('renders when no preact option hooks are installed', () => {
+    const hookKeys = [DIFF, DIFF2, RENDER, DIFFED, COMMIT, 'unmount'];
+    const previous = {};
+    for (const key of hookKeys) {
+      previous[key] = options[key];
+      delete options[key];
+    }
+
+    class ClassChild extends Component {
+      render() {
+        return 'class-child';
+      }
+    }
+
+    function FunctionChild() {
+      return 'function-child';
+    }
+
+    let opcodes;
+    try {
+      opcodes = renderToString(
+        h(Fragment, null, h(ClassChild, null), h(FunctionChild, null)),
+      );
+    } finally {
+      for (const key of hookKeys) {
+        if (previous[key] === undefined) {
+          delete options[key];
+        } else {
+          options[key] = previous[key];
+        }
+      }
+    }
+
+    expect(opcodes).toContain('class-child');
+    expect(opcodes).toContain('function-child');
+  });
+  it('skips the suspended re-render when the boundary is left non-dirty', () => {
+    function AsyncText() {
+      throw Promise.resolve();
+    }
+
+    class Boundary extends Component {
+      constructor(props) {
+        super(props);
+        // `_childDidSuspend`: marks this component as a suspense boundary.
+        this.__c = () => {};
+      }
+
+      setState() {
+        this[BITS] &= ~COMPONENT_DIRTY;
+      }
+
+      render() {
+        return h(AsyncText, null);
+      }
+    }
+
+    const opcodes = renderToString(h(Boundary, null));
+
+    expect(opcodes).not.toContain('async-text');
   });
 });

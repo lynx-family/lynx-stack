@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../lepus */
 
-import { Component, createContext, Fragment } from 'preact';
+import { Component, createContext, Fragment, options } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
@@ -14,6 +14,7 @@ import { createElement, cloneElement } from '../../lepus';
 import { Suspense } from 'preact/compat';
 import { createSuspender } from './createSuspender';
 import { __root } from '../../src/root';
+import { COMMIT, DIFF, DIFF2, DIFFED, RENDER } from '../../src/shared/render-constants';
 
 const renderToString = (element, root = __root) => {
   return renderToStringBase(element, null, root);
@@ -1614,5 +1615,55 @@ describe('renderMainThread', () => {
         cssId="default-entry-from-native:0"
       />
     `);
+  });
+  it('renders when no preact option hooks are installed', () => {
+    const hookKeys = [DIFF, DIFF2, RENDER, DIFFED, COMMIT, 'unmount'];
+    const previous = {};
+    for (const key of hookKeys) {
+      previous[key] = options[key];
+      delete options[key];
+    }
+
+    class ClassChild extends Component {
+      render() {
+        return 'class-child';
+      }
+    }
+
+    function FunctionChild() {
+      return 'function-child';
+    }
+
+    let opcodes;
+    try {
+      opcodes = renderToString(
+        <Fragment>
+          <ClassChild />
+          <FunctionChild />
+        </Fragment>,
+      );
+    } finally {
+      for (const key of hookKeys) {
+        if (previous[key] === undefined) {
+          delete options[key];
+        } else {
+          options[key] = previous[key];
+        }
+      }
+    }
+
+    const serialized = JSON.stringify(opcodes);
+    expect(serialized).toContain('class-child');
+    expect(serialized).toContain('function-child');
+  });
+  it('keeps an explicitly provided prop over its defaultProps value', () => {
+    function Foo() {
+      return null;
+    }
+    Foo.defaultProps = { foo: 'bar' };
+
+    const vnode = createElement(Foo, { foo: 'explicit' });
+
+    expect(vnode.props.foo).toBe('explicit');
   });
 });

@@ -3652,4 +3652,20 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
     expect(lynx.performance._markTiming.mock.calls).toEqual([]);
   });
+  it('does not register a handle when the native create returns no ref', () => {
+    const globalWithCreate = globalThis as unknown as {
+      __CreateElementTemplate: (...args: unknown[]) => unknown;
+    };
+    const originalCreate = globalWithCreate.__CreateElementTemplate;
+    globalWithCreate.__CreateElementTemplate = rs.fn(() => null);
+
+    try {
+      envManager.switchToMainThread();
+      applyElementTemplateUpdateCommands([...createRawTextOps(77, 'text')]);
+
+      expect(elementTemplateRegistry.has(77)).toBe(false);
+    } finally {
+      globalWithCreate.__CreateElementTemplate = originalCreate;
+    }
+  });
 });

@@ -293,6 +293,46 @@ describe('renderMainThread', () => {
     );
   });
 
+  it('skips the initial list attribute flush when the handle has no native ref', () => {
+    const rootRef = { type: 'root-ref' } as unknown as ElementRef;
+    const listRef = { type: 'list-ref' } as unknown as ElementRef;
+    const serializedPage = {
+      tag: 'page',
+      attributes: null,
+      elementSlots: [[{
+        templateKey: '_et_root',
+        attributeSlots: [],
+        elementSlots: [],
+        uid: -1,
+      }]],
+      uid: 0,
+    };
+    rs.mocked(mockRender).mockReturnValue([]);
+    rs.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [rootRef],
+      rootSubtreeHandles: [[]],
+    });
+    rs.mocked(__SerializeElementTemplate).mockReturnValue(
+      serializedPage as unknown as ReturnType<typeof __SerializeElementTemplate>,
+    );
+    registerElementTemplateListState(
+      -2,
+      createElementTemplateListState([], { id: 'feed' }),
+      true,
+      listRef,
+    );
+
+    renderMainThread();
+
+    expect(__SetAttributeOfElementTemplate).not.toHaveBeenCalledWith(
+      listRef,
+      0,
+      expect.anything(),
+      null,
+    );
+  });
+
   it('attaches root MTRef state only after page insertion succeeds', () => {
     const rootRef = { type: 'root-ref' } as unknown as ElementRef;
     const ref = { _wvid: 80 };

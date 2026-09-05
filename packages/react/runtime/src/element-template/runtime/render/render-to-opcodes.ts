@@ -281,6 +281,7 @@ function renderTypedListHostVNode(vnode, props, context, opcodes) {
   opcodes.push(__OpBegin, vnode);
 
   try {
+    /* v8 ignore next */
     if (__DEV__) {
       for (const name in props) {
         if (name.startsWith('$') && name !== TYPED_LIST_LOGICAL_SLOT_PROP) {
@@ -392,6 +393,7 @@ function _renderToString(
     return;
   }
 
+  /* v8 ignore next */
   if (__DEV__) {
     cleanupVNode(vnode);
     throw new Error('Element Template main-thread renderer received an invalid vnode.');

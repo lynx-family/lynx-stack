@@ -95,6 +95,7 @@ function clearTransientChildPropRefs(owner: SnapshotInstance, removedSnapshots: 
 export { snapshotCreatorMap } from './snapshotCreatorMap.js';
 export { snapshotInstanceManager };
 
+/* v8 ignore next */
 if (__DEV__ && __JS__) {
   setSnapshotCreatorMap(
     new Proxy(snapshotCreatorMap, {
@@ -157,6 +158,7 @@ export class SnapshotInstance {
         createCloneSnapshot(type);
       } else if (isCompiledSnapshot(type)) {
         let message = 'Snapshot not found: ' + type;
+        /* v8 ignore next */
         if (__DEV__) {
           message +=
             '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';

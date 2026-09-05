@@ -86,4 +86,14 @@ describe('jsFunctionLifecycle', () => {
       }
     `);
   });
+  it('schedules only one flush for consecutive removeRef() calls', () => {
+    const manager = new JsFunctionLifecycleManager();
+    manager.addRef(3, {});
+    manager.addRef(4, {});
+
+    manager.removeRef(3);
+    manager.removeRef(4);
+
+    expect(manager.willFire).toBe(true);
+  });
 });

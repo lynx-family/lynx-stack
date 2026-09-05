@@ -10,6 +10,7 @@ import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/snapshot/
 
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { destroyBackground } from '../../src/snapshot/lifecycle/destroy';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { __root } from '../../src/root';
@@ -2179,5 +2180,68 @@ describe('runDelayedUiOps helper', () => {
     shouldDelayUiOps.value = true;
     runDelayedUiOps();
     expect(shouldDelayUiOps.value).toBe(false);
+  });
+  it('clears refs on removal when the ref slot holds no value', async function() {
+    class Comp extends Component {
+      render() {
+        return this.props.show && (
+          <view>
+            <view ref={null} />
+          </view>
+        );
+      }
+    }
+
+    __root.__jsx = <Comp show={true} />;
+    renderPage();
+
+    globalEnvManager.switchToBackground();
+    render(<Comp show={true} />, __root);
+
+    lynx.getApp().OnLifecycleEvent(
+      ...globalThis.__OnLifecycleEvent.mock.calls[0],
+    );
+    globalEnvManager.switchToMainThread();
+    const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+    globalThis[rLynxChange[0]](rLynxChange[1]);
+
+    globalEnvManager.switchToBackground();
+    expect(() => render(<Comp show={false} />, __root)).not.toThrow();
+  });
+  it('tolerates a patch-update callback whose commit task is already gone', async function() {
+    const ref1 = rs.fn();
+
+    class Comp extends Component {
+      render() {
+        return <view ref={ref1} />;
+      }
+    }
+
+    __root.__jsx = <Comp />;
+    renderPage();
+
+    globalEnvManager.switchToBackground();
+    render(<Comp />, __root);
+
+    lynx.getApp().OnLifecycleEvent(
+      ...globalThis.__OnLifecycleEvent.mock.calls[0],
+    );
+    lynx.getNativeApp().callLepusMethod.mockClear();
+
+    // A second background update produces the patch whose callback we drive.
+    render(<Comp key='second' />, __root);
+    await waitSchedule();
+
+    const calls = lynx.getNativeApp().callLepusMethod.mock.calls;
+    const rLynxChange = calls.at(-1);
+
+    // A page destroy drains the commit task map, so the native patch callback
+    // can land with nothing left to run.
+    destroyBackground();
+
+    globalEnvManager.switchToMainThread();
+    globalThis[rLynxChange[0]](rLynxChange[1]);
+
+    expect(() => rLynxChange[2]()).not.toThrow();
   });
 });

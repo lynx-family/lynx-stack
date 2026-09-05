@@ -17,6 +17,7 @@ import {
   BackgroundPageRootInstance,
   BackgroundTypedElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+  collectElementTemplateSubtreeHandleIds,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
@@ -2553,5 +2554,62 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
 
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([text]);
+  });
+  it('emits no typed list item command for a silent insertBefore', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_list_item');
+    list.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    list.insertBefore(item, null, true);
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(list.firstChild).toBe(item);
+  });
+
+  it('omits the page root handle when collecting subtree handle ids', () => {
+    const page = new BackgroundPageRootInstance();
+    const child = new BackgroundElementTemplateInstance('_et_item');
+    page.appendChild(child);
+
+    expect(collectElementTemplateSubtreeHandleIds(page)).toEqual([
+      child.instanceId,
+    ]);
+  });
+
+  it('leaves the manager untouched when releasing an instance it no longer holds', () => {
+    const instance = new BackgroundElementTemplateInstance('_et_item');
+    backgroundElementTemplateInstanceManager.values.clear();
+
+    instance.releaseDetachedSubtreeFromManager();
+
+    expect(backgroundElementTemplateInstanceManager.values.size).toBe(0);
+  });
+  it('does not notify the list parent when the platform info is deep-equal', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_list_item');
+    list.appendChild(item);
+    list.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    globalCommitContext.ops = [];
+
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('keeps the page root materialized when its subtree is detached', () => {
+    const parent = new BackgroundElementTemplateInstance('_et_item');
+    const page = new BackgroundPageRootInstance();
+    parent.appendChild(page);
+    parent.markMaterializedByHydration();
+    page.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    parent.removeChild(page);
+
+    expect(page.isMaterializedOnMainThread).toBe(true);
   });
 });

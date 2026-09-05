@@ -81,6 +81,7 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
     markTimingLegacy('updateDiffVdomEnd');
     markTiming('diffVdomEnd');
 
+    /* v8 ignore next */
     if (__PROFILE__) {
       profileStart('ReactLynx::commitChanges');
     }
@@ -92,6 +93,7 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
     if (globalPipelineOptions) {
       setPipeline(undefined);
     }
+    /* v8 ignore next */
     if (__PROFILE__) {
       profileEnd();
     }

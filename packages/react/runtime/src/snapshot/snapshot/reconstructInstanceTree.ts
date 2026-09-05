@@ -39,6 +39,12 @@ export function reconstructInstanceTree(
     // Skip the parent link when `parentId` is `undefined` — used by portal,
     // where the topmost reconstructed node has no BSI parent (it is attached
     // to a NodesRef-resolved host element via `nodesRefInsertBefore`).
+    //
+    // `portalsPending.ts` exercises the `undefined` case, but the v8 coverage
+    // provider reports a negative counter for this branch's implicit else
+    // (`[3, -3]` for three taken/three not-taken), so the hint keeps the gate
+    // honest until that is fixed upstream.
+    /* v8 ignore else */
     if (parentId !== undefined) {
       __globalSnapshotPatch?.push(SnapshotOperation.InsertBefore, parentId, id, targetId, child.__slotIndex);
     }

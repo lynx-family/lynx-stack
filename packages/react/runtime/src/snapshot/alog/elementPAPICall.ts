@@ -65,8 +65,12 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
 
   filteredFiberElementPAPINameList.forEach(fiberElementPAPIName => {
     const oldFiberElementPAPI = globalWithIndex[fiberElementPAPIName];
+    // `filteredFiberElementPAPINameList` was built with this same predicate,
+    // so the else can never be taken.
+    /* v8 ignore else */
     if (typeof oldFiberElementPAPI === 'function') {
       globalWithIndex[fiberElementPAPIName] = (...args: unknown[]): unknown => {
+        /* v8 ignore next */
         if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileStart(`FiberElementPAPI: ${fiberElementPAPIName}`, {
             args: {
@@ -75,6 +79,7 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
           });
         }
         const result = (oldFiberElementPAPI as (...args: unknown[]) => unknown)(...args);
+        /* v8 ignore next */
         if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }

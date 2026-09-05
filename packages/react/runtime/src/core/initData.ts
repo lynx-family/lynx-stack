@@ -137,6 +137,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
 
     constructor(props: P) {
       super(props);
+      /* v8 ignore next */
       if (__DEV__) {
         usesWithInitDataInState = true;
       }
@@ -159,6 +160,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
 
     override componentWillUnmount(): void {
       super.componentWillUnmount?.();
+      /* v8 ignore next */
       if (!__LEPUS__) {
         lynx.getJSModule('GlobalEventEmitter').removeListener(
           'onDataChanged',
