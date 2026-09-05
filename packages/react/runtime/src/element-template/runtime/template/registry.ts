@@ -46,6 +46,20 @@ export function deleteElementTemplateNativeRef(id: number): void {
   otherRefs.delete(id);
 }
 
+export function forEachElementTemplateNativeRef(
+  callback: (id: number, nativeRef: ElementRef) => void,
+): void {
+  for (let index = 0; index < negativeRefs.length; index++) {
+    const nativeRef = negativeRefs[index];
+    if (nativeRef !== undefined) {
+      callback(-index - 1, nativeRef);
+    }
+  }
+  for (const [id, nativeRef] of otherRefs) {
+    callback(id, nativeRef);
+  }
+}
+
 export function clearElementTemplateNativeRefRegistry(): void {
   negativeRefs.length = 0;
   otherRefs.clear();

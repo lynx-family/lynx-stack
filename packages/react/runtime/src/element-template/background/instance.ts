@@ -52,6 +52,11 @@ const EMPTY_REMOVED_SUBTREE_HANDLE_IDS: number[] = [];
 
 export class BackgroundElementTemplateInstance {
   public instanceId: number = 0; // Assigned by manager
+
+  // `@lynx-js/preact-devtools` keys an instance by `__id`, as it does a `SnapshotInstance`.
+  get __id(): number {
+    return this.instanceId;
+  }
   public type: string;
 
   public parent: BackgroundElementTemplateInstance | null = null;

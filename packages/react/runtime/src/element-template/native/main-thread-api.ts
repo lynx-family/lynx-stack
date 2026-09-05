@@ -6,6 +6,7 @@ import { reloadMainThread } from './reload-main-thread.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { __page, createElementTemplatePage, setupPage } from '../runtime/page/page.js';
 import { renderMainThread } from '../runtime/render/render-main-thread.js';
+import { forEachElementTemplateNativeRef, getElementTemplateTargetNativeRef } from '../runtime/template/registry.js';
 
 function injectCalledByNative(): void {
   const calledByNative: LynxCallByNative = {
@@ -49,7 +50,37 @@ function updateGlobalProps(_data: unknown, options?: UpdatePageOption): void {
   }
 }
 
+// The lepus methods `@lynx-js/preact-devtools` calls to map an instance to
+// its elements; the snapshot runtime injects the same pair.
+function injectLepusMethods(): void {
+  Object.assign(globalThis, {
+    getUniqueIdListBySnapshotId,
+    getSnapshotIdByUniqueId,
+  });
+}
+
+function getUniqueIdListBySnapshotId({ snapshotId }: { snapshotId: number }) {
+  if (typeof snapshotId !== 'number') {
+    return null;
+  }
+  const nativeRef = getElementTemplateTargetNativeRef(snapshotId);
+  if (nativeRef == null) {
+    return null;
+  }
+  return { uniqueIdList: [__GetElementUniqueID(nativeRef)] };
+}
+
+function getSnapshotIdByUniqueId({ uniqueId }: { uniqueId: number }) {
+  let snapshotId: number | null = null;
+  forEachElementTemplateNativeRef((id, nativeRef) => {
+    if (snapshotId === null && __GetElementUniqueID(nativeRef) === uniqueId) {
+      snapshotId = id;
+    }
+  });
+  return snapshotId === null ? null : { snapshotId };
+}
+
 /**
  * @internal
  */
-export { injectCalledByNative };
+export { injectCalledByNative, injectLepusMethods };

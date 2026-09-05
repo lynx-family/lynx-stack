@@ -41,6 +41,7 @@ describe('element-template native index wiring', () => {
     globalThis.__ALOG_ELEMENT_API__ = true;
 
     const injectCalledByNative = vi.fn();
+    const injectLepusMethods = vi.fn();
     const installElementTemplatePatchListener = vi.fn();
     const installOnMtsDestruction = vi.fn();
     const initElementTemplatePAPICallAlog = vi.fn();
@@ -55,6 +56,7 @@ describe('element-template native index wiring', () => {
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
+      injectLepusMethods,
     }));
     vi.doMock('../../../src/element-template/native/patch-listener.js', () => ({
       installElementTemplatePatchListener,
@@ -98,6 +100,7 @@ describe('element-template native index wiring', () => {
 
     expect(initElementTemplatePAPICallAlog).toHaveBeenCalledTimes(1);
     expect(injectCalledByNative).toHaveBeenCalledTimes(1);
+    expect(injectLepusMethods).toHaveBeenCalledTimes(1);
     expect(installElementTemplatePatchListener).toHaveBeenCalledTimes(1);
     expect(installOnMtsDestruction).toHaveBeenCalledTimes(1);
     expect(initProfileHook).toHaveBeenCalledTimes(1);
@@ -116,6 +119,7 @@ describe('element-template native index wiring', () => {
     globalThis.lynx.performance.isProfileRecording = vi.fn(() => true);
 
     const injectCalledByNative = vi.fn();
+    const injectLepusMethods = vi.fn();
     const installElementTemplatePatchListener = vi.fn();
     const installOnMtsDestruction = vi.fn();
     const installElementTemplateCommitHook = vi.fn();
@@ -143,6 +147,7 @@ describe('element-template native index wiring', () => {
 
     vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
+      injectLepusMethods,
     }));
     vi.doMock('../../../src/element-template/native/patch-listener.js', () => ({
       installElementTemplatePatchListener,
@@ -218,6 +223,7 @@ describe('element-template native index wiring', () => {
     );
 
     expect(injectCalledByNative).not.toHaveBeenCalled();
+    expect(injectLepusMethods).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();
     expect(installOnMtsDestruction).not.toHaveBeenCalled();
   });
