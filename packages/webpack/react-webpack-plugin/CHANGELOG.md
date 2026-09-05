@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.11.3
+
+### Patch Changes
+
+- Keep the lazy-chunk definitions import of one compiler from leaking into another compiler in the same process, which made builds with several environments fail intermittently with `Module not found: Can't resolve '<lazy module>.__lynx-react-defines.js'`. ([#3817](https://github.com/lynx-family/lynx-stack/pull/3817))
+
 ## 0.11.2
 
 ### Patch Changes

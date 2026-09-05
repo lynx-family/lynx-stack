@@ -1,5 +1,11 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- Build an external bundle without a DSL plugin using `pluginLynx` alone. It now registers the runtime wrapper and the encoder a bundle needs to be loadable, and `defineExternalBundleRslibConfig` falls back to its own exported `LAYERS` when no DSL exposes them. ([#3814](https://github.com/lynx-family/lynx-stack/pull/3814))
+
 ## 0.1.0
 
 ### Minor Changes
