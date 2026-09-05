@@ -21,6 +21,10 @@ export async function preview(
   cwd: string,
   previewOptions: PreviewOptions,
 ): Promise<void> {
+  if (previewOptions.logLevel) {
+    logger.level = previewOptions.logLevel
+  }
+
   try {
     const { createRspeedyOptions } = await init(cwd, previewOptions)
 
