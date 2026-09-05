@@ -39,7 +39,7 @@ version-compare = { workspace = true }
 version = "0.4.3"
 
 [build-dependencies]
-napi-build = "2.3.2"
+napi-build = "2.4.1"
 
 [features]
 noop = []
