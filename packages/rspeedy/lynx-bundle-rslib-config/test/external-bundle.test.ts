@@ -15,7 +15,10 @@ import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { decodeTemplate } from './utils.js'
-import { defineExternalBundleRslibConfig } from '../src/index.js'
+import {
+  LAYERS as DEFAULT_LAYERS,
+  defineExternalBundleRslibConfig,
+} from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -1399,5 +1402,63 @@ describe('intermediate directory', () => {
     ).toStrictEqual(
       expect.arrayContaining(['utils.js', 'utils__main-thread.js']),
     )
+  })
+})
+
+describe('without a DSL plugin', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  it('builds with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }))
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'plain-engine.lynx.bundle'),
+    )
+
+    // The entry picks one layer, so the bundle carries one section.
+    expect(Object.keys(decodedResult['custom-sections'])).toStrictEqual([
+      './utils.js',
+    ])
+
+    // `lynx.loadScript` returns the completion value of the section, which the
+    // runtime wrapper provides. Without it the bundle still builds, and fails
+    // to load on device.
+    expect(decodedResult['custom-sections']['./utils.js'])
+      .toMatch(/^\(function\s*\(\)\s*\{/)
+  })
+
+  it('builds a web bundle with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine-web')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine-web',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }, { target: 'web', engineVersion: '3.5' }))
+
+    expect(fs.existsSync(path.join(distRoot, 'plain-engine-web.web.bundle')))
+      .toBe(true)
   })
 })
