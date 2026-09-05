@@ -6,6 +6,7 @@ import { reloadMainThread } from './reload-main-thread.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { __page, createElementTemplatePage, setupPage } from '../runtime/page/page.js';
 import { renderMainThread } from '../runtime/render/render-main-thread.js';
+import { getElementTemplateTargetNativeRef } from '../runtime/template/registry.js';
 
 function injectCalledByNative(): void {
   const calledByNative: LynxCallByNative = {
@@ -50,6 +51,27 @@ function updateGlobalProps(_data: unknown, options?: UpdatePageOption): void {
 }
 
 /**
+ * `@lynx-js/preact-devtools` maps a background instance to its element through
+ * this method, keyed by the handle id shared with the main thread.
+ */
+function injectLepusMethods(): void {
+  Object.assign(globalThis, {
+    getUniqueIdListByElementTemplateHandleId,
+  });
+}
+
+function getUniqueIdListByElementTemplateHandleId({ handleId }: { handleId: number }) {
+  if (typeof handleId !== 'number') {
+    return null;
+  }
+  const nativeRef = getElementTemplateTargetNativeRef(handleId);
+  if (nativeRef == null) {
+    return null;
+  }
+  return { uniqueIdList: [__GetElementUniqueID(nativeRef)] };
+}
+
+/**
  * @internal
  */
-export { injectCalledByNative };
+export { injectCalledByNative, injectLepusMethods };
