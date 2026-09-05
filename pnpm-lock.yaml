@@ -737,6 +737,37 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  examples/react-shared-context:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-config
+      '@lynx-js/preact-devtools':
+        specifier: 5.0.1-20260721114100-d7da994
+        version: 5.0.1-20260721114100-d7da994
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/type-config':
+        specifier: 4.1.3
+        version: 4.1.3
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+
   examples/react-signals:
     dependencies:
       '@lynx-js/react':
@@ -4641,6 +4672,9 @@ packages:
     peerDependenciesMeta:
       '@lynx-js/types':
         optional: true
+
+  '@lynx-js/preact-devtools@5.0.1-20260721114100-d7da994':
+    resolution: {integrity: sha512-UdP8IdKQVkE3LqhhQ+hqEuacfhPOoG/9qGeR856sDvbrFXOLLAik+gf5QH+GEfcVh/YG1/IiaRbGd1TUPlD+jg==}
 
   '@lynx-js/preact-devtools@5.0.1-20260827072047-5f77e12':
     resolution: {integrity: sha512-S4zV+qtL+M8MBT9G4I2jkeaDsbLVyX4kt5m+XyS9w7drBSrJlgOdxZ/lMtG3ngZVhpo7TuE6UODZGexB0QbZdA==}
@@ -14750,6 +14784,11 @@ snapshots:
       - '@emotion/is-prop-valid'
       - react
       - react-dom
+
+  '@lynx-js/preact-devtools@5.0.1-20260721114100-d7da994':
+    dependencies:
+      errorstacks: 2.4.1
+      htm: 3.1.1
 
   '@lynx-js/preact-devtools@5.0.1-20260827072047-5f77e12':
     dependencies:
