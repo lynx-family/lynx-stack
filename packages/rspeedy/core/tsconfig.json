@@ -11,6 +11,7 @@
     "test",
     "client.d.ts",
     "package.json",
+    "rslib.stats.ts",
     "rstest.config.ts",
   ],
   "exclude": [
