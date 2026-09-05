@@ -10,6 +10,7 @@ import { expect } from '@rstest/core';
 import { waitSchedule } from '../utils/nativeMethod';
 import { beforeAll } from '@rstest/core';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
+import { updateGlobalProps } from '../../../src/core/globalProps';
 import { elementTree } from '../utils/nativeMethod';
 import { __root } from '../../../src/root';
 
@@ -378,5 +379,12 @@ describe('updateGlobalProps', () => {
         </page>
       `);
     }
+  });
+  it('merges global props without scheduling a rerender when none is given', () => {
+    lynx.__globalProps = { theme: 'dark' };
+
+    updateGlobalProps({ theme: 'light' });
+
+    expect(lynx.__globalProps.theme).toBe('light');
   });
 });

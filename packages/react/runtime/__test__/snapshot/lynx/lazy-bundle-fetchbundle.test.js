@@ -235,6 +235,29 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
     expect(thenCalled).toBe(true);
   });
 
+  test('runs the prepare-MTS completion callback passed to callLepusMethod', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    callLepusMethod.mockImplementation((_name, _params, callback) => {
+      callback();
+    });
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    const promise = loadLazyBundle('callback-bundle', 'sync');
+
+    expect(callLepusMethod).toHaveBeenCalledTimes(1);
+
+    let thenCalled = false;
+    promise.then((v) => {
+      expect(v).toEqual({ default: 'BG' });
+      thenCalled = true;
+    });
+    expect(thenCalled).toBe(true);
+  });
+
   test('a repeat sync load is served from the success cache (no re-fetch/prepare)', async () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
     loadScript.mockReturnValueOnce({ default: 'BG' });

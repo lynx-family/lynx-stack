@@ -339,6 +339,20 @@ describe(`list "update-list-info"`, () => {
         }
       `);
     }
+
+    {
+      // Two removals in one batch: exercises the `removeAction` sort comparator.
+      __pendingListUpdates.clearAttachedLists();
+      const [first, , third] = b1.childNodes;
+      b1.removeChild(first);
+      b1.removeChild(third);
+
+      const [update] = JSON.parse(
+        JSON.stringify(__pendingListUpdates.values),
+      )['-8'];
+      expect(update.removeAction).toHaveLength(2);
+      expect(update.removeAction[0]).toBeLessThan(update.removeAction[1]);
+    }
   });
 
   it(`"update-list-info" should work when setAttribute`, () => {
@@ -2510,6 +2524,22 @@ describe('list bug', () => {
           ],
         }
       `);
+    }
+
+    {
+      // Same old SDK version, but the list is no longer a `list-container`:
+      // the full-rewrite path must not kick in.
+      __pendingListUpdates.clearAttachedLists();
+      const listElement = b1.__elements[b1.__snapshot_def.slot[0][1]];
+      __SetAttribute(listElement, 'custom-list-name', 'plain-list');
+
+      b1.insertBefore(new SnapshotInstance(s3));
+
+      const [update] = JSON.parse(
+        JSON.stringify(__pendingListUpdates.values),
+      )['-7'];
+      expect(update.updateAction).toEqual([]);
+      expect(update.insertAction).toHaveLength(1);
     }
 
     SystemInfo.lynxSdkVersion = undefined;
@@ -4952,5 +4982,12 @@ describe('list worklet ref lifecycle', () => {
     } finally {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
+  });
+  it('is a no-op while updates are suspended by runWithoutUpdates', () => {
+    __pendingListUpdates.runWithoutUpdates(() => {
+      expect(() => __pendingListUpdates.clear(-8)).not.toThrow();
+      expect(() => __pendingListUpdates.clearAttachedLists()).not.toThrow();
+      expect(() => __pendingListUpdates.flush()).not.toThrow();
+    });
   });
 });

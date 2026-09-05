@@ -282,6 +282,24 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
+  it('cleans commit state when serialization throws without delayed main-thread data', () => {
+    globalThis.__ALOG__ = false;
+    const serializeError = new Error('update serialization failed');
+    const throwingValue = {
+      toJSON() {
+        throw serializeError;
+      },
+    } as unknown as string;
+
+    markElementTemplateHydrated();
+    globalCommitContext.ops = createRawTextOps(1, throwingValue);
+
+    expect(() => options.__c?.({} as unknown as object, [])).toThrow(
+      serializeError,
+    );
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
   it('dispatches triggerDataUpdated when useInitData observes a data change', () => {
     const dataChange = installDataChangeHarness();
 

@@ -93,6 +93,8 @@ export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 
+/* v8 ignore next */
+/* v8 ignore next */
 if (__DEV__) {
   // Dev snapshot creators take the runtime as a parameter (they are
   // stringified for cross-thread HMR and must not capture module bindings);

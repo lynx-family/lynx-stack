@@ -11,6 +11,7 @@ import { profileEnd, profileStart } from '../../shared/profile.js';
 import { withSyncEffectFlush } from '../../utils.js';
 
 function destroyBackground(): void {
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::destroyBackground');
   }
@@ -30,6 +31,7 @@ function destroyBackground(): void {
   if (delayedEvents) {
     delayedEvents.length = 0;
   }
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }

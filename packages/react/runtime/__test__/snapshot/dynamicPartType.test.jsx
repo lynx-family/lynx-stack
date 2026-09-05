@@ -533,6 +533,25 @@ describe('DynamicPartType v2 should work', () => {
     null,
   );
 
+  const listChildrenHost = ReactLynx.createSnapshot(
+    'list_children_host',
+    function() {
+      const pageId = ReactLynx.__pageId;
+      const el = __CreateElement('list', pageId);
+      return [el];
+    },
+    null,
+    [
+      [
+        ReactLynx.__DynamicPartListChildren,
+        0,
+      ],
+    ],
+    undefined,
+    globDynamicComponentEntry,
+    null,
+  );
+
   const slotTextA = __SNAPSHOT__(<text>A</text>);
   const slotTextB = __SNAPSHOT__(<text>B</text>);
   const listItemA = __SNAPSHOT__(
@@ -686,5 +705,54 @@ describe('DynamicPartType v2 should work', () => {
         updateAction: [],
       },
     ]);
+  });
+  it('hydrate should diff legacy ListChildren without slot filtering', () => {
+    setupPage(__CreatePage('0', 0));
+
+    const before = new SnapshotInstance(listChildrenHost);
+    before.ensureElements();
+
+    const listID = __GetElementUniqueID(before.__element_root);
+    gSignMap[listID] = new Map();
+    gRecycleMap[listID] = new Map();
+
+    const beforeChild = new SnapshotInstance(listItemA);
+    beforeChild.__listItemPlatformInfo = { 'item-key': 0 };
+    before.insertBefore(beforeChild);
+    beforeChild.ensureElements();
+
+    const after = new SnapshotInstance(listChildrenHost);
+    // Same type and item-key as `beforeChild`, so the list diff takes the
+    // update path and transfers elements instead of replacing the item.
+    const afterChild = new SnapshotInstance(listItemA);
+    afterChild.__listItemPlatformInfo = { 'item-key': 0 };
+    after.insertBefore(afterChild);
+
+    // The list item was materialized but never enqueued, so its element id is
+    // absent from the sign map.
+    gSignMap[listID].clear();
+
+    expect(() => hydrate(before, after)).not.toThrow();
+  });
+
+  it('background hydrate should diff legacy ListChildren without slot filtering', () => {
+    setupPage(__CreatePage('0', 0));
+
+    const before = new SnapshotInstance(listChildrenHost);
+    const beforeChild = new SnapshotInstance(listItemA);
+    beforeChild.__listItemPlatformInfo = { 'item-key': 0 };
+    before.insertBefore(beforeChild);
+
+    const after = new BackgroundSnapshotInstance(listChildrenHost);
+    const afterChild = new BackgroundSnapshotInstance(listItemB);
+    afterChild.__listItemPlatformInfo = { 'item-key': 0 };
+    after.insertBefore(afterChild);
+
+    const patch = backgroundHydrate(
+      JSON.parse(JSON.stringify(before)),
+      after,
+    );
+
+    expect(Array.isArray(patch)).toBe(true);
   });
 });

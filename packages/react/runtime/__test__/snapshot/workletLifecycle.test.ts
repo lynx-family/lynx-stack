@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { updateGesture } from '../../src/snapshot/snapshot/gesture';
 import { getListItemPlatformInfoFromIndexedValue } from '../../src/snapshot/snapshot/platformInfo';
 import { updateSpread } from '../../src/snapshot/snapshot/spread';
+import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { updateWorkletEvent } from '../../src/snapshot/snapshot/workletEvent';
 import { updateWorkletRef } from '../../src/snapshot/snapshot/workletRef';
 
@@ -194,5 +195,73 @@ describe('worklet lifecycle without elements', () => {
     ).toEqual({
       'item-key': 'item-0',
     });
+  });
+  it('does not retain background-thread gesture callbacks', () => {
+    const gesture = {
+      __isSerialized: true,
+      callbacks: {
+        onUpdate: { _execId: 7, _wkltId: 'bg-gesture' },
+      },
+      id: 1,
+      type: 0,
+    };
+
+    updateGesture(createSnapshot(gesture), 0, undefined, 0, 'background');
+
+    expect(addRef).not.toHaveBeenCalled();
+  });
+
+  it('does not retain background-thread event worklet ctx', () => {
+    const worklet = {
+      _execId: 8,
+      _wkltId: 'bg-event',
+    };
+
+    updateWorkletEvent(
+      createSnapshot(worklet),
+      0,
+      undefined,
+      0,
+      'bindEvent',
+      'tap',
+      'background',
+    );
+
+    expect(addRef).not.toHaveBeenCalled();
+  });
+  it('does not retain background-thread spread ref and gesture entries', () => {
+    updateSpread(
+      createSnapshot({
+        'background:ref': { _execId: 9, _wkltId: 'bg-ref' },
+        'background:gesture': {
+          __isSerialized: true,
+          callbacks: { onUpdate: { _execId: 10, _wkltId: 'bg-gesture' } },
+          id: 1,
+          type: 0,
+        },
+      }),
+      0,
+      {},
+      0,
+    );
+
+    expect(addRef).not.toHaveBeenCalled();
+  });
+  it('does not record a list update when the platform info is unchanged', () => {
+    const platformInfo = { 'item-key': 'a' };
+    const listHolder = {
+      __id: -8,
+      __snapshot_def: { isListHolder: true },
+    };
+    const snapshot = {
+      __id: 1,
+      __values: [{ ...platformInfo }],
+      parentNode: listHolder,
+      type: 'TestSnapshot',
+    } as any;
+
+    updateSpread(snapshot, 0, { ...platformInfo }, 0);
+
+    expect(__pendingListUpdates.values[-8]).toBeUndefined();
   });
 });

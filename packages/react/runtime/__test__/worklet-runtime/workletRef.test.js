@@ -325,4 +325,13 @@ describe('WorkletRef', () => {
       'background-thread-init-2',
     );
   });
+  it('keeps an existing ref when the same id arrives again', () => {
+    updateWorkletRefInitValueChanges([[1, 'ref1']]);
+    const first = getFromWorkletRefMap({ _wvid: 1 });
+
+    updateWorkletRefInitValueChanges([[1, 'ref1-again']]);
+
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(first);
+    expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('ref1');
+  });
 });

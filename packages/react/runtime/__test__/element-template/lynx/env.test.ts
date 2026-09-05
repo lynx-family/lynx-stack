@@ -239,4 +239,12 @@ describe('setupLynxEnv', () => {
     expect(g.processData?.({ value: 1 }, 'missing')).toEqual({ value: 1 });
     expect(g.processData?.({ value: 2 })).toEqual({ value: 2 });
   });
+  it('keeps an existing NativeModules global untouched', () => {
+    const nativeModules = { existing: true };
+    g.NativeModules = nativeModules;
+
+    setupLynxEnv();
+
+    expect(g.NativeModules).toBe(nativeModules);
+  });
 });

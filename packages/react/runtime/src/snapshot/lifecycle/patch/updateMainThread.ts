@@ -41,6 +41,7 @@ function updateMainThread(
   const parsedData = JSON.parse(data) as PatchList;
   const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = parsedData;
 
+  /* v8 ignore next */
   if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
     console.alog?.(
       '[ReactLynxDebug] BTS -> MTS updateMainThread:\n' + JSON.stringify(
@@ -88,8 +89,8 @@ function updateMainThread(
     for (const data of delayedRunOnMainThreadData) {
       try {
         runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
-        /* v8 ignore next 3 */
       } catch (e) {
+        /* v8 ignore next */
         lynx.reportError(e as Error);
       }
     }

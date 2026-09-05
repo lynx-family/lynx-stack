@@ -1,6 +1,6 @@
 import { Component, h, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
-import { setupPage } from '../../../src/snapshot';
+import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { __root } from '../../../src/root';
@@ -77,5 +77,16 @@ describe('setState timing api', () => {
     expect(
       getSnapshotIdByUniqueId({ uniqueId: 3 }),
     ).toMatchInlineSnapshot(`null`);
+  });
+  it('skips registered snapshot instances that have no elements', () => {
+    injectLepusMethods();
+    // An entry registered before its elements are materialized.
+    snapshotInstanceManager.values.set(-9999, { __id: -9999 });
+
+    try {
+      expect(getSnapshotIdByUniqueId({ uniqueId: 9999 })).toBe(null);
+    } finally {
+      snapshotInstanceManager.values.delete(-9999);
+    }
   });
 });

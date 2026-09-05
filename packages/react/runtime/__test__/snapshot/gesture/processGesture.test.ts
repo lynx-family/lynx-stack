@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
-import { processGesture } from '../../../src/snapshot/gesture/processGesture.js';
+import { processGesture, retainGestureWorkletCtx } from '../../../src/snapshot/gesture/processGesture.js';
 
 function createSerializedGesture(id: number) {
   return {
@@ -322,5 +322,57 @@ describe('processGesture', () => {
       expect.objectContaining({ _wkltId: 'new-c' }),
       expect.objectContaining({ _wkltId: 'old-a' }),
     );
+  });
+  it('skips attribute writes for a composed gesture when domSet is true', () => {
+    const dom = {} as FiberElement;
+    const composed = createSerializedComposedGesture([
+      createSerializedGesture(1),
+      createSerializedGesture(2),
+    ]);
+
+    processGesture(dom, composed as any, undefined, false, { domSet: true });
+
+    expect(setAttribute).not.toHaveBeenCalled();
+    expect(setGestureDetector).toHaveBeenCalledTimes(2);
+  });
+
+  it('deduplicates a repeated base gesture in the old composed gesture', () => {
+    const dom = {} as FiberElement;
+    const repeated = createSerializedGesture(1);
+    const oldComposed = createSerializedComposedGesture([repeated, repeated]);
+
+    processGesture(dom, undefined, oldComposed as any, false, {
+      domSet: true,
+    });
+
+    expect(removeGestureDetector).toHaveBeenCalledTimes(1);
+    expect(removeGestureDetector).toHaveBeenCalledWith(dom, 1);
+  });
+
+  it('ignores empty callback slots when retaining gesture worklet ctx', () => {
+    const gesture = {
+      id: 1,
+      type: 0,
+      callbacks: {
+        onUpdate: undefined,
+      },
+      __isSerialized: true,
+    };
+
+    expect(() => retainGestureWorkletCtx(gesture as any)).not.toThrow();
+  });
+  it('keeps legacy gesture attrs when an empty composed gesture arrives with domSet', () => {
+    const dom = {} as FiberElement;
+    const oldComposed = createSerializedComposedGesture([
+      createSerializedGesture(1),
+    ]);
+    const emptyComposed = createSerializedComposedGesture([]);
+
+    processGesture(dom, emptyComposed as any, oldComposed as any, false, {
+      domSet: true,
+    });
+
+    expect(removeGestureDetector).toHaveBeenCalledWith(dom, 1);
+    expect(setAttribute).not.toHaveBeenCalled();
   });
 });

@@ -44,6 +44,10 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
         ref: (bsi: BackgroundSnapshotInstance) => {
           if (bsi && childrenRef.current) {
             const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
+            // The children wrapper is removed and the fallback mounted inside
+            // one Preact commit, so its id is always still pending here — the
+            // commit hook only hands the list off afterwards.
+            /* v8 ignore else */
             if (i !== -1) {
               globalBackgroundSnapshotInstancesToRemove.splice(i, 1);
             }
