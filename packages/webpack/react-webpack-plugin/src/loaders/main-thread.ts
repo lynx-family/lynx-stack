@@ -124,12 +124,14 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     }
   }
 
-  const definesImport = definesImportByBoundary.get(
-    boundaryKey(
-      (currentModule as { layer?: string | null } | undefined)?.layer,
-      this.resourcePath,
-    ),
-  );
+  const definesImport = this._compiler
+    ? definesImportByBoundary(this._compiler).get(
+      boundaryKey(
+        (currentModule as { layer?: string | null } | undefined)?.layer,
+        this.resourcePath,
+      ),
+    )
+    : undefined;
 
   this.callback(
     null,
