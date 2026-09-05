@@ -19,7 +19,11 @@ export function pluginTemplate(): RsbuildPlugin {
         return
       }
 
-      api.modifyBundlerChain((chain) => {
+      api.modifyBundlerChain((chain, { environment }) => {
+        if (environment.name !== 'lynx') {
+          return
+        }
+
         if (!chain.plugins.has(PLUGIN_NAME_RUNTIME_WRAPPER)) {
           chain
             .plugin(PLUGIN_NAME_RUNTIME_WRAPPER)
