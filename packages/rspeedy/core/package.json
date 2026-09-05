@@ -75,7 +75,7 @@
     "rsbuild-plugin-publint": "1.0.0",
     "ts-blank-space": "^0.9.0",
     "type-fest": "^5.8.0",
-    "typia": "12.1.1",
+    "typia": "14.0.4",
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
