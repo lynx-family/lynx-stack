@@ -1730,11 +1730,13 @@ describe('Element APIs', () => {
     );
   });
 
-  test('cross-thread event errors do not escape the wasm boundary', () => {
+  test('cross-thread event errors are reported after leaving the wasm boundary', async () => {
     const publishError = new DOMException(
       'The object could not be cloned.',
       'DataCloneError',
     );
+    const reportError = rstest.fn();
+    mtsBinding.lynxViewInstance.mainThreadGlobalThis._ReportError = reportError;
     mtsBinding.lynxViewInstance.backgroundThread.publishEvent = rstest.fn(
       () => {
         throw publishError;
@@ -1753,29 +1755,24 @@ describe('Element APIs', () => {
         new window.Event('click'),
       );
     }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(publishError, undefined);
     expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
   });
 
-  test('worklet errors do not escape the wasm boundary', () => {
+  test('worklet errors are reported after leaving the wasm boundary', async () => {
     const workletError = {
       name: 'TypeError',
       message: 'worklet failed',
       stack: 'TypeError: worklet failed\n    at worklet.js:1:1',
     };
-    mtsBinding = new WASMJSBinding(
-      createTestLynxViewInstance(rootDom, {
-        runWorklet: () => {
-          throw workletError;
-        },
-      } as any),
-    );
-    mtsGlobalThis = createElementAPI(
-      rootDom,
-      mtsBinding,
-      true,
-      true,
-      true,
-    );
+    const reportError = rstest.fn();
+    mtsBinding.lynxViewInstance.mainThreadGlobalThis.runWorklet = () => {
+      throw workletError;
+    };
+    mtsBinding.lynxViewInstance.mainThreadGlobalThis._ReportError = reportError;
 
     const page = mtsGlobalThis.__CreatePage('0', 0);
     const target = mtsGlobalThis.__CreateView(0);
@@ -1794,6 +1791,10 @@ describe('Element APIs', () => {
         new window.Event('click'),
       );
     }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(workletError, undefined);
     expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
   });
 
