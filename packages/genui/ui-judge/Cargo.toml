@@ -25,12 +25,12 @@ server = [
 ]
 
 [dependencies]
-agent-sdk = { version = "0.15.0", default-features = false }
+agent-sdk = { version = "0.18.0", default-features = false }
 anyhow = "1.0.104"
-async-trait = "0.1.91"
+async-trait = "0.1.92"
 axum = { version = "0.8.9", optional = true, features = ["multipart"] }
-base64 = "0.23.0"
-http-body-util = { version = "0.1.4", optional = true }
+base64 = "0.23.1"
+http-body-util = { version = "0.1.5", optional = true }
 image = { version = "0.25.10", default-features = false, features = ["bmp", "jpeg", "png", "webp"] }
 lynx-headless-rust-test-runner = { path = "../../lynx/headless-rust-test-runner" }
 rayon = "1.12.0"
@@ -39,7 +39,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 socket2 = { version = "0.6.5", optional = true }
 tempfile = { version = "3.27.0", optional = true }
-thiserror = "2.0.19"
+thiserror = "2.0.20"
 tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
 zip = { version = "8.6.0", optional = true, default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
