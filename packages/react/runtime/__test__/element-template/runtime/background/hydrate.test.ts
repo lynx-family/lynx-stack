@@ -124,7 +124,7 @@ describe('hydrate', () => {
         value: { _wkltId: 'tap', _c: { items: [1, 2], label: 'same' } },
       }],
     });
-    const stringify = vi.spyOn(JSON, 'stringify');
+    const stringify = rs.spyOn(JSON, 'stringify');
     try {
       const stream = hydrate(serialized, root);
 
@@ -181,7 +181,7 @@ describe('hydrate', () => {
         value: { _wkltId: 'ref-callback', _c: { items: [1, 2], label: 'same' } },
       }],
     });
-    const stringify = vi.spyOn(JSON, 'stringify');
+    const stringify = rs.spyOn(JSON, 'stringify');
     try {
       const stream = hydrate(serialized, root);
 
