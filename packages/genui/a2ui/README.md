@@ -110,4 +110,4 @@ generated UI actions through `onAction`.
 - [Overview and architecture](./docs/overview.md)
 - [Catalogs, built-ins, and custom components](./docs/catalog-guide.md)
 - [System prompts](./docs/system-prompts.md)
-- [Open the GenUI playground](https://lynxjs.org/genui)
+- [Open the GenUI playground](https://lynx-stack.dev/genui/)
