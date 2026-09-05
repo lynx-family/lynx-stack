@@ -933,7 +933,7 @@ describe('BackgroundElementTemplateInstance', () => {
       parent.appendChild(owner);
       globalCommitContext.ops = [];
 
-      const createCheck = vi.spyOn(BackgroundElementTemplateInstance.prototype, 'emitMainThreadCreateIfNeeded');
+      const createCheck = rs.spyOn(BackgroundElementTemplateInstance.prototype, 'emitMainThreadCreateIfNeeded');
       try {
         parent.insertBefore(owner, anchor);
 
@@ -973,7 +973,7 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('creates new descendants once when moving their materialized owner', () => {
-      const ref = vi.fn();
+      const ref = rs.fn();
       __etAttrPlanMap._et_ref_leaf = [0, adaptRefAttrSlot];
       const root = new BackgroundPageRootInstance();
       const parent = new BackgroundElementTemplateInstance('_et_parent');
@@ -2342,7 +2342,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
       markElementTemplateHydrated();
     }
     const nextSlots = [{ id: 'after' }];
-    const stringify = vi.spyOn(JSON, 'stringify');
+    const stringify = rs.spyOn(JSON, 'stringify');
     try {
       instance.setAttribute('attributeSlots', nextSlots);
 
