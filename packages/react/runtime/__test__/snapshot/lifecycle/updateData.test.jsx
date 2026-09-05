@@ -1363,7 +1363,7 @@ describe('firstScreenSyncTiming - manual', () => {
                   "-5": -8,
                   "-6": -9,
                 },
-                "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__snapshot_a94a8_test_15","children":[{"id":-9,"type":null,"values":["update2"]}]}]}",
+                "root": "[1,["root","__snapshot_a94a8_test_15",null],[-7,0,8,[[-8,1,8,[[-9,2,1,["update2"]]]]]]]",
               },
             ],
           ],
@@ -1468,7 +1468,7 @@ describe('firstScreenSyncTiming - manual', () => {
               "rLynxFirstScreen",
               {
                 "firstScreenEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_16","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+                "root": "[1,["root","__snapshot_a94a8_test_16",null],[-1,0,8,[[-2,1,8,[[-3,2,1,["init"]]]]]]]",
               },
             ],
           ],
@@ -1504,7 +1504,7 @@ describe('firstScreenSyncTiming - manual', () => {
               "rLynxFirstScreen",
               {
                 "firstScreenEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_17","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+                "root": "[1,["root","__snapshot_a94a8_test_17",null],[-1,0,8,[[-2,1,8,[[-3,2,1,["init"]]]]]]]",
               },
             ],
           ],
@@ -1543,7 +1543,7 @@ describe('firstScreenSyncTiming - manual', () => {
               "rLynxFirstScreen",
               {
                 "firstScreenEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_18","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+                "root": "[1,["root","__snapshot_a94a8_test_18",null],[-1,0,8,[[-2,1,8,[[-3,2,1,["init"]]]]]]]",
               },
             ],
           ],
@@ -1599,7 +1599,7 @@ describe('firstScreenSyncTiming - manual', () => {
               "rLynxFirstScreen",
               {
                 "firstScreenEventIdSwap": {},
-                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_19","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+                "root": "[1,["root","__snapshot_a94a8_test_19",null],[-1,0,8,[[-2,1,8,[[-3,2,1,["init"]]]]]]]",
               },
             ],
           ],
@@ -1677,7 +1677,7 @@ describe('firstScreenSyncTiming - manual', () => {
                   "-2": -5,
                   "-3": -6,
                 },
-                "root": "{"id":-4,"type":"root","children":[{"id":-5,"type":"__snapshot_a94a8_test_20","children":[{"id":-6,"type":null,"values":["real"]}]}]}",
+                "root": "[1,["root","__snapshot_a94a8_test_20",null],[-4,0,8,[[-5,1,8,[[-6,2,1,["real"]]]]]]]",
               },
             ],
           ],

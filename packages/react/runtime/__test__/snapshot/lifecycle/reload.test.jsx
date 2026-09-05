@@ -1308,7 +1308,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-8": -13,
                 "-9": -14,
               },
-              "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-13,"type":null,"values":["Hello 2"]},{"id":-14,"type":null,"values":["World"],"slotIndex":1},{"id":-15,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"slotIndex":2}]}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_2",null,"__snapshot_a94a8_test_1"],[-11,0,8,[[-12,1,9,[{"dataX":"WorldX"}],[[-13,2,1,["Hello 2"]],[-14,2,17,["World"],1],[-15,3,17,[{"attr":{"dataX":"WorldX"}}],2]]]]]]",
             },
           ],
         ]
@@ -1511,7 +1511,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-5": -13,
                 "-9": -17,
               },
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_5","children":[{"id":-18,"type":"__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-22,"type":"__snapshot_a94a8_test_4","values":["a"]}],"__listItemPlatformInfo":{"item-key":0}},{"id":-19,"type":"__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-23,"type":"__snapshot_a94a8_test_4","values":["b"]}],"__listItemPlatformInfo":{"item-key":1}},{"id":-20,"type":"__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-24,"type":"__snapshot_a94a8_test_4","values":["c"]}],"__listItemPlatformInfo":{"item-key":2}}]}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_5","__snapshot_a94a8_test_6","__snapshot_a94a8_test_4"],[-17,0,8,[[-21,1,8,[[-18,2,11,[{"item-key":0}],{"item-key":0},[[-22,3,1,["a"]]]],[-19,2,11,[{"item-key":1}],{"item-key":1},[[-23,3,1,["b"]]]],[-20,2,11,[{"item-key":2}],{"item-key":2},[[-24,3,1,["c"]]]]]]]]]",
             },
           ],
         ]
@@ -1675,7 +1675,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-2": -10,
                 "-6": -14,
               },
-              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__snapshot_a94a8_test_7","children":[{"id":-11,"type":"__snapshot_a94a8_test_8","values":[{"item-key":0}],"children":[{"id":-15,"type":"__snapshot_a94a8_test_4","values":["a"]}],"__listItemPlatformInfo":{"item-key":0}},{"id":-12,"type":"__snapshot_a94a8_test_8","values":[{"item-key":1}],"children":[{"id":-16,"type":"__snapshot_a94a8_test_4","values":["b"]}],"__listItemPlatformInfo":{"item-key":1}},{"id":-13,"type":"__snapshot_a94a8_test_8","values":[{"item-key":2}],"children":[{"id":-17,"type":"__snapshot_a94a8_test_4","values":["c"]}],"__listItemPlatformInfo":{"item-key":2}}]}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_7","__snapshot_a94a8_test_8","__snapshot_a94a8_test_4"],[-10,0,8,[[-14,1,8,[[-11,2,11,[{"item-key":0}],{"item-key":0},[[-15,3,1,["a"]]]],[-12,2,11,[{"item-key":1}],{"item-key":1},[[-16,3,1,["b"]]]],[-13,2,11,[{"item-key":2}],{"item-key":2},[[-17,3,1,["c"]]]]]]]]]",
             },
           ],
         ]
@@ -1868,7 +1868,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
             "rLynxFirstScreen",
             {
               "firstScreenEventIdSwap": {},
-              "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-13,"type":null,"values":["Hello 2"]},{"id":-14,"type":null,"values":["World"],"slotIndex":1},{"id":-15,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"slotIndex":2}]}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_2",null,"__snapshot_a94a8_test_1"],[-11,0,8,[[-12,1,9,[{"dataX":"WorldX"}],[[-13,2,1,["Hello 2"]],[-14,2,17,["World"],1],[-15,3,17,[{"attr":{"dataX":"WorldX"}}],2]]]]]]",
             },
           ],
         ]
