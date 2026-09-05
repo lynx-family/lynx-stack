@@ -1064,8 +1064,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@lynx-js/luna-styles':
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: 0.2.2
+        version: 0.2.2
       '@lynx-js/lynx-core':
         specifier: 0.1.4
         version: 0.1.4
@@ -4473,8 +4473,8 @@ packages:
       preact-render-to-string:
         optional: true
 
-  '@lynx-js/luna-styles@0.2.1':
-    resolution: {integrity: sha512-m5vFRVn3RpFqPN8JAhUSYAmXOf/ZPaOkVrk26XlKjhvICWKXebbQ/WDSW6psq9UgdhPTjNw16tzdjIoJU7F8jg==}
+  '@lynx-js/luna-styles@0.2.2':
+    resolution: {integrity: sha512-D3/5EATX4whcVCRS3WHQL40oNb6JqHG0oYRSsVgGGG+FDQJ3kVQPOLwjTylbzMV1wkTJXe8M9B4mkWcjHlWYqA==}
 
   '@lynx-js/lynx-core@0.1.4':
     resolution: {integrity: sha512-JxpAoDhpR8dJ6PFR2KOsFQyWt6SKiU+Bp701/miy5exqZHd+SlCd3UCfMtJy3nRlz3gy1O1xsObK7+x+jArdAQ==}
@@ -14176,7 +14176,7 @@ snapshots:
 
   '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a': {}
 
-  '@lynx-js/luna-styles@0.2.1': {}
+  '@lynx-js/luna-styles@0.2.2': {}
 
   '@lynx-js/lynx-core@0.1.4': {}
 
