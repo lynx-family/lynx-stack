@@ -159,6 +159,46 @@ configuration, credentials, and Lynx runtime configuration continue to come
 from the caller's environment. Linux hosts must also provide the
 `libepoxy.so.0` system dependency.
 
+### Docker
+
+The package Dockerfile puts a prebuilt Linux AMD64 server bundle and its system
+dependencies into an Ubuntu runtime image. Build the bundle with the package
+script first. It invokes Cargo, verifies the output from `build.rs`, and copies
+the server, Lynx runtime, `lynx_core.js`, and launcher into `dist/linux-amd64`:
+
+```bash
+packages/genui/ui-judge/build.sh
+
+docker buildx build \
+  --platform linux/amd64 \
+  --file packages/genui/ui-judge/Dockerfile \
+  --tag ui-judge:local \
+  --load \
+  packages/genui/ui-judge/dist/linux-amd64
+```
+
+The deploy workflow waits for the Rust tests, then runs the same build script
+and publishes the resulting image on a Lynx-hosted Ubuntu runner.
+
+Pass model credentials only when starting the container. Production containers
+should use a read-only root filesystem and mount the configured `TMPDIR` as a
+dedicated `noexec,nosuid,nodev` temporary volume:
+
+```bash
+docker run --rm \
+  --read-only \
+  --tmpfs /tmp/ui-judge:rw,noexec,nosuid,nodev,size=512m,mode=1777 \
+  --publish 8080:8080 \
+  --env UI_JUDGE_API_KEY \
+  ui-judge:local
+```
+
+The image runs as UID/GID `65532`, listens on port `8080`, and keeps credentials
+out of its layers. Override the port with `LYNX_USE_PORT` and publish the same
+container port when a different port is required. A `file://` page URL refers
+to a file inside the container, so mount local bundles read-only or use an HTTP
+or HTTPS URL.
+
 `LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
 process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
 `[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
