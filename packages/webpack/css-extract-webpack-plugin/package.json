@@ -51,8 +51,8 @@
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
-    "css-loader": "^7.1.4",
-    "sass-loader": "^17.0.0"
+    "css-loader": "^7.1.5",
+    "sass-loader": "^17.0.1"
   },
   "peerDependencies": {
     "@lynx-js/template-webpack-plugin": "^0.16.0"
