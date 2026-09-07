@@ -105,9 +105,9 @@ touches the caller's thread. The runner must have its standard runtime resources
 installed, including `lynx_core.js` beside the executable on Linux or in
 `LynxResources.bundle` on macOS.
 
-The runner captures frames as uncompressed BMP. UI Judge keeps that lossless
-copy for the deterministic reference comparison and transcodes to JPEG for every
-byte that leaves the process, because vision models do not accept `image/bmp`.
+The runner captures frames as uncompressed BMP. UI Judge uses those original
+bytes for reference comparison, model image inputs, and screenshot responses
+without transcoding. Model image inputs use `data:image/bmp;base64,...`.
 
 Natural-language steps are planned with Agent SDK from the current DOM and
 screenshot, then executed with selector-based tap and wait APIs. The runner has
@@ -207,14 +207,14 @@ curl --request POST http://127.0.0.1:8080/judge \
 
 To render a LynXML string without auxiliary local files, send it directly as
 the request body. The endpoint accepts `application/xml`, `text/xml`, and
-`text/plain`, buffers at most 10 MiB, and returns `image/jpeg` with
+`text/plain`, buffers at most 10 MiB, and returns `image/bmp` with
 `Cache-Control: no-store`:
 
 ```bash
 curl --request POST 'http://127.0.0.1:8080/screenshot/lynxml?entry=pages%2Findex.lynxml&width=375&height=812' \
   --header 'content-type: application/xml; charset=utf-8' \
   --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
-  --output screenshot.jpg
+  --output screenshot.bmp
 ```
 
 The server stages the source at the requested entry in a fresh private
@@ -232,7 +232,7 @@ a caller-supplied base directory, model options, or interaction steps:
 curl --request POST 'http://127.0.0.1:8080/screenshot/zip/upload?entry=index.lynxml' \
   --header 'content-type: application/zip' \
   --data-binary '@/absolute/path/to/page.zip' \
-  --output screenshot.jpg
+  --output screenshot.bmp
 ```
 
 The entry must be a safe relative file path inside the archive. That document
@@ -240,7 +240,7 @@ may use paths relative to itself, such as `./images/logo.png`, or archive-root U
 `zip:///images/logo.png`. Local paths resolve only within the new private
 extraction directory created for that request. Explicit `file://` URLs and
 HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
-hosts remain available. A successful response is `200 image/jpeg` with
+hosts remain available. A successful response is `200 image/bmp` with
 `Cache-Control: no-store`.
 
 To fetch the same ZIP remotely, send its URL as the plain-text request body:
@@ -249,7 +249,7 @@ To fetch the same ZIP remotely, send its URL as the plain-text request body:
 curl --request POST 'http://127.0.0.1:8080/screenshot/zip/url?entry=index.lynxml' \
   --header 'content-type: text/plain; charset=utf-8' \
   --data-binary 'https://cdn.example.com/page.zip' \
-  --output screenshot.jpg
+  --output screenshot.bmp
 ```
 
 The template URL route uses the same request shape, with an entry such as
@@ -293,8 +293,8 @@ MiB plus 64 KiB of multipart overhead.
 
 Trusted library captures run sequentially on one dedicated process-owner thread
 with one reused `LynxContainer`. After a capture returns its owned BMP, Tokio can
-run model scoring concurrently while the bounded Rayon pool handles BMP-to-JPEG
-transcoding, normalization, alignment, and comparison. The capture queue holds
+run model scoring concurrently while the bounded Rayon pool handles
+normalization, alignment, and comparison. The capture queue holds
 at most eight requests. When it is full, the caller waits asynchronously within
 its request timeout, without blocking a Tokio worker thread. If the owner panics,
 admission closes and queued or capacity-waiting callers are released before the
@@ -311,8 +311,7 @@ kill and reap the child before its render slot and staged tree are released;
 graceful shutdown drains accepted children. Failure to confirm reaping exits the
 service without unwinding the staging guard after a fixed five-second reap grace
 so its supervisor can restart it. This fail-closed exit does not request a core
-dump. The same absolute deadline also covers output reading and JPEG
-transcoding.
+dump. The same absolute deadline also covers output reading.
 
 ### Secure ZIP staging
 

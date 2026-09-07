@@ -41,8 +41,7 @@ use crate::headless::{prepare_judge_page_request, score_captured_page, PageLoadO
 use crate::model::{configured_model_name, ModelClient};
 use crate::ssrf::{fetch_http_resource, HttpFetchError};
 use crate::visual::{
-  compare_uploaded_images, transcode_captured_bmp, ReferenceImageComparison, VisualEvaluationError,
-  MAX_IMAGE_BYTES,
+  compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
 };
 use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
 
@@ -186,33 +185,6 @@ impl ZipCaptureProcesses {
       _render_slot: render_slot,
       started,
     })
-  }
-
-  async fn capture_jpeg<T: Send + 'static>(
-    &self,
-    activity: ZipCaptureProcessActivity,
-    staging_guard: T,
-    base_dir: PathBuf,
-    url: String,
-    viewport: ScreenshotViewport,
-    job_id: u64,
-  ) -> Result<Vec<u8>, ApiError> {
-    let deadline = activity.deadline;
-    let bmp = self
-      .capture(
-        activity,
-        staging_guard,
-        base_dir,
-        url,
-        viewport,
-        job_id,
-        IsolatedCaptureConfig::default(),
-      )
-      .await?;
-    tokio::time::timeout_at(deadline, transcode_captured_bmp(bmp))
-      .await
-      .map_err(|_| zip_render_timeout_error())?
-      .map_err(|_| isolated_zip_worker_error())
   }
 
   async fn capture<T: Send + 'static>(
@@ -991,12 +963,7 @@ async fn finish_judge(
   let (result, screenshot_data_url) = match capture {
     Ok(capture) => {
       let screenshot_data_url = if include_screenshot {
-        Some(
-          capture
-            .screenshot_data_url()
-            .await
-            .map_err(|error| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, error))?,
-        )
+        Some(capture.screenshot_data_url())
       } else {
         None
       };
@@ -1244,16 +1211,24 @@ async fn render_zip(
   };
   log_zip_extraction(job_id, "accepted", &extraction_stats, false);
 
-  let jpeg = match state.zip_capture_backend {
+  let bmp = match state.zip_capture_backend {
     ZipCaptureBackend::IsolatedProcess => {
       let activity = zip_process_activity
         .expect("isolated ZIP capture must acquire render capacity before extraction");
       match state
         .zip_capture_processes
-        .capture_jpeg(activity, extracted, base_dir, entry.url, viewport, job_id)
+        .capture(
+          activity,
+          extracted,
+          base_dir,
+          entry.url,
+          viewport,
+          job_id,
+          IsolatedCaptureConfig::default(),
+        )
         .await
       {
-        Ok(jpeg) => jpeg,
+        Ok(bmp) => bmp,
         Err(error) => {
           log_zip_extraction(job_id, "render-failed", &extraction_stats, false);
           return Err(error);
@@ -1287,18 +1262,13 @@ async fn render_zip(
           ));
         }
       };
-      capture.into_jpeg().await.map_err(|_| {
-        ApiError::new(
-          StatusCode::INTERNAL_SERVER_ERROR,
-          "The uploaded ZIP screenshot could not be encoded.",
-        )
-      })?
+      capture.into_bmp()
     }
   };
   Ok(
     (
-      [(CONTENT_TYPE, "image/jpeg"), (CACHE_CONTROL, "no-store")],
-      jpeg,
+      [(CONTENT_TYPE, "image/bmp"), (CACHE_CONTROL, "no-store")],
+      bmp,
     )
       .into_response(),
   )
@@ -1312,7 +1282,6 @@ async fn render_staged_source(
   viewport: ScreenshotViewport,
 ) -> Result<Response, ApiError> {
   let request = staged_screenshot_request(&entry.url, kind.task());
-  let deadline = tokio::time::Instant::now() + request.timeout + ZIP_CAPTURE_PROCESS_GRACE;
   let capture = capture_staged_source(
     state,
     entry,
@@ -1323,19 +1292,11 @@ async fn render_staged_source(
     &request,
   )
   .await?;
-  let jpeg = tokio::time::timeout_at(deadline, capture.into_jpeg())
-    .await
-    .map_err(|_| staged_source_timeout_error(kind))?
-    .map_err(|_| {
-      ApiError::new(
-        StatusCode::INTERNAL_SERVER_ERROR,
-        format!("The {} screenshot could not be encoded.", kind.label()),
-      )
-    })?;
+  let bmp = capture.into_bmp();
   Ok(
     (
-      [(CONTENT_TYPE, "image/jpeg"), (CACHE_CONTROL, "no-store")],
-      jpeg,
+      [(CONTENT_TYPE, "image/bmp"), (CACHE_CONTROL, "no-store")],
+      bmp,
     )
       .into_response(),
   )
@@ -2536,6 +2497,7 @@ mod tests {
     let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
     let worker_staged_path = Arc::clone(&staged_path);
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
+    let expected_bmp = bmp.clone();
     let headless = scripted_workers(move |job| {
       assert!(job.client.is_none());
       assert_eq!(job.request.url, "zip:///pages/index.lynxml");
@@ -2574,8 +2536,12 @@ mod tests {
     .expect("render LynXML source");
 
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
+    assert_eq!(response.headers()[CONTENT_TYPE], "image/bmp");
     assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
+    let body = axum::body::to_bytes(response.into_body(), MAX_CAPTURE_BMP_BYTES)
+      .await
+      .expect("read BMP screenshot response");
+    assert_eq!(body.as_ref(), expected_bmp.as_slice());
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -2594,6 +2560,7 @@ mod tests {
     let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
     let worker_staged_path = Arc::clone(&staged_path);
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
+    let expected_bmp = bmp.clone();
     let headless = scripted_workers(move |job| {
       assert!(job.client.is_none());
       assert_eq!(job.request.url, "zip:///template.js");
@@ -2649,11 +2616,15 @@ mod tests {
     .await
     .expect("capture staged remote template");
 
-    assert!(capture
-      .screenshot_data_url()
-      .await
-      .expect("encode captured template")
-      .starts_with("data:image/jpeg;base64,"));
+    let data_url = capture.screenshot_data_url();
+    let image = BASE64_STANDARD
+      .decode(
+        data_url
+          .strip_prefix("data:image/bmp;base64,")
+          .expect("BMP data URL"),
+      )
+      .expect("decode captured template");
+    assert_eq!(image, expected_bmp);
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -2754,6 +2725,7 @@ mod tests {
     let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
     let worker_staged_path = Arc::clone(&staged_path);
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
+    let expected_bmp = bmp.clone();
     let headless = scripted_workers(move |job| {
       assert!(job.client.is_none());
       assert_eq!(job.request.url, "zip:///pages/index.lynxml");
@@ -2792,8 +2764,12 @@ mod tests {
     .expect("render uploaded ZIP");
 
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/jpeg");
+    assert_eq!(response.headers()[CONTENT_TYPE], "image/bmp");
     assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
+    let body = axum::body::to_bytes(response.into_body(), MAX_CAPTURE_BMP_BYTES)
+      .await
+      .expect("read BMP screenshot response");
+    assert_eq!(body.as_ref(), expected_bmp.as_slice());
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -3143,17 +3119,15 @@ mod tests {
         .expect("receive a concurrent capture")
         .capture
         .expect("render a concurrent page");
-      let screenshot_data_url = runtime
-        .block_on(capture.screenshot_data_url())
-        .expect("transcode the screenshot");
-      let jpeg = BASE64_STANDARD
+      let screenshot_data_url = capture.screenshot_data_url();
+      let bmp = BASE64_STANDARD
         .decode(
           screenshot_data_url
-            .strip_prefix("data:image/jpeg;base64,")
+            .strip_prefix("data:image/bmp;base64,")
             .expect("screenshot data URL"),
         )
         .expect("decode screenshot data URL");
-      let rgb = image::load_from_memory(&jpeg)
+      let rgb = image::load_from_memory(&bmp)
         .expect("decode a concurrent screenshot")
         .to_rgb8();
       assert_eq!(rgb.dimensions(), (800, 600));
@@ -3186,10 +3160,10 @@ mod tests {
         lynxml_request(lynxml),
       ))
       .expect("render raw LynXML source");
-    let jpeg = runtime
+    let bmp = runtime
       .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
       .expect("read LynXML screenshot response");
-    let rgb = image::load_from_memory(&jpeg)
+    let rgb = image::load_from_memory(&bmp)
       .expect("decode LynXML screenshot")
       .to_rgb8();
     assert_eq!(rgb.dimensions(), (375, 812));
@@ -3253,10 +3227,10 @@ mod tests {
         ))
         .expect("render ZIP image resources");
       assert_eq!(response.status(), StatusCode::OK);
-      let jpeg = runtime
+      let bmp = runtime
         .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
         .expect("read ZIP screenshot response");
-      let rgb = image::load_from_memory(&jpeg)
+      let rgb = image::load_from_memory(&bmp)
         .expect("decode ZIP screenshot")
         .to_rgb8();
       assert_eq!(rgb.dimensions(), (800, 600));
