@@ -36,11 +36,11 @@ lifecycle, so callers can use any Tokio runtime.
 
 `capture_page` returns the original uncompressed BMP bytes. `compare_images`
 accepts two byte slices containing BMP images and returns
-alignment, similarity, block counts, a base64 PNG diff, and warnings. Input bytes,
+alignment, similarity, block counts, a base64 BMP diff, and warnings. Input bytes,
 dimensions, and allocations are bounded. Each BMP is decoded once; alignment and
 pixel comparison pass RGBA buffers directly on a bounded Rayon pool. Only the
-final diff is encoded as PNG; the comparison pipeline has no PNG decoding or
-intermediate image encoding. Comparison preserves raw RGBA channels, including
+final diff is encoded as BMP; the comparison pipeline has no PNG codec dependency
+or intermediate image encoding. Comparison preserves raw RGBA channels, including
 transparent pixels.
 
 The crate has no model client, scoring API, interaction planner, or model
@@ -244,7 +244,8 @@ any non-fatal `warnings`. Both uploads must contain valid BMP bytes. PNG, JPEG,
 WebP, and malformed images return `400`, even if their filename or part media
 type claims BMP. The server validates the bytes rather than the upload metadata.
 It decodes each BMP once and compares RGBA buffers on the bounded Rayon pool;
-`diffImageBase64` remains a base64-encoded PNG without a data-URL prefix.
+`diffImageBase64` contains base64-encoded BMP bytes without a data-URL prefix.
+Clients that display the diff as a data URL must use `data:image/bmp;base64,`.
 
 Remote-source routes reject non-HTTP(S) URLs with `400` and non-public network
 addresses with `403`. The source-specific

@@ -6,11 +6,9 @@ use std::io::Cursor;
 use std::sync::{Arc, OnceLock};
 
 use base64::prelude::{Engine, BASE64_STANDARD};
-use image::codecs::{bmp::BmpDecoder, png::PngEncoder};
+use image::codecs::bmp::{BmpDecoder, BmpEncoder};
 use image::imageops::{self, FilterType};
-use image::{
-  DynamicImage, ExtendedColorType, GrayImage, ImageDecoder, ImageEncoder, Limits, Rgba, RgbaImage,
-};
+use image::{DynamicImage, ExtendedColorType, GrayImage, ImageDecoder, Limits, Rgba, RgbaImage};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use thiserror::Error;
 
@@ -38,6 +36,7 @@ pub(crate) type VisualResult<T> = std::result::Result<T, VisualEvaluationError>;
 #[derive(Debug, Clone)]
 pub struct ReferenceImageComparison {
   pub alignment_score: Option<f64>,
+  /// Base64-encoded BMP bytes without a data-URL prefix.
   pub diff_image_base64: String,
   pub different_blocks: usize,
   pub similarity: f64,
@@ -230,7 +229,7 @@ where
   })?
 }
 
-/// Compares two BMP uploads, returning similarity metrics and a base64 PNG diff.
+/// Compares two BMP uploads, returning similarity metrics and a base64 BMP diff.
 pub async fn compare_uploaded_images(
   reference_image: &[u8],
   rendered_image: &[u8],
@@ -258,7 +257,7 @@ pub async fn compare_uploaded_images(
     if align_result.is_none() {
       warnings.push("Image alignment confidence too low; compared original images.".to_string());
     }
-    let diff_image_base64 = BASE64_STANDARD.encode(encode_rgba_png(&comparison.diff)?);
+    let diff_image_base64 = BASE64_STANDARD.encode(encode_rgba_bmp(&comparison.diff)?);
     Ok(ReferenceImageComparison {
       alignment_score: align_result.map(|alignment| alignment.score),
       diff_image_base64,
@@ -720,10 +719,10 @@ fn round_positive(value: f64) -> u32 {
   value.round().max(1.0) as u32
 }
 
-fn encode_rgba_png(image: &RgbaImage) -> VisualResult<Vec<u8>> {
+fn encode_rgba_bmp(image: &RgbaImage) -> VisualResult<Vec<u8>> {
   let mut buffer = Vec::new();
-  PngEncoder::new(&mut buffer)
-    .write_image(
+  BmpEncoder::new(&mut buffer)
+    .encode(
       image.as_raw(),
       image.width(),
       image.height(),
@@ -763,8 +762,6 @@ impl ImageKind {
 #[cfg(test)]
 mod tests {
   use std::time::Duration;
-
-  use image::codecs::bmp::BmpEncoder;
 
   use super::*;
 
@@ -850,6 +847,9 @@ mod tests {
     assert_eq!(output.result.different_blocks, 1);
     assert_eq!(output.result.similarity, 0.75);
     assert_eq!(output.diff.get_pixel(32, 32), &Rgba([255, 0, 0, 255]));
+    let bmp = encode_rgba_bmp(&output.diff).expect("encode diff as BMP");
+    let diff = decode_bmp_with_limits(&bmp, ImageKind::Rendered).expect("decode BMP diff");
+    assert_eq!(diff, output.diff);
   }
 
   #[tokio::test]
@@ -864,7 +864,8 @@ mod tests {
 
   #[tokio::test]
   async fn compares_two_uploaded_images_without_model_evaluation() {
-    let bmp = encode_bmp(&sample_image(Rgba([20, 40, 60, 255])));
+    let pixels = sample_image(Rgba([20, 40, 60, 0]));
+    let bmp = encode_bmp(&pixels);
     let result = compare_uploaded_images(&bmp, &bmp)
       .await
       .expect("compare uploaded images");
@@ -872,20 +873,33 @@ mod tests {
     assert_eq!(result.similarity, 1.0);
     assert_eq!(result.different_blocks, 0);
     assert_eq!(result.total_blocks, 1);
-    assert!(BASE64_STANDARD
+    let diff = BASE64_STANDARD
       .decode(result.diff_image_base64)
-      .expect("base64 diff")
-      .starts_with(b"\x89PNG\r\n\x1a\n"));
+      .expect("base64 diff");
+    assert!(diff.starts_with(b"BM"));
+    assert_eq!(
+      decode_bmp_with_limits(&diff, ImageKind::Rendered).expect("decode BMP diff"),
+      pixels,
+      "the BMP diff must preserve raw RGBA pixels, including transparent pixels"
+    );
   }
 
   #[tokio::test]
   async fn rejects_png_in_either_upload() {
     let pixels = sample_image(Rgba([20, 40, 60, 255]));
     let bmp = encode_bmp(&pixels);
-    let png = encode_rgba_png(&pixels).expect("encode non-BMP fixture");
+    let png = include_bytes!("../tests/fixtures/images/red.png").as_slice();
     for (reference, rendered, code) in [
-      (&png, &bmp, VisualEvaluationErrorCode::ReferenceImageInvalid),
-      (&bmp, &png, VisualEvaluationErrorCode::RenderedImageInvalid),
+      (
+        png,
+        bmp.as_slice(),
+        VisualEvaluationErrorCode::ReferenceImageInvalid,
+      ),
+      (
+        bmp.as_slice(),
+        png,
+        VisualEvaluationErrorCode::RenderedImageInvalid,
+      ),
     ] {
       let error = compare_uploaded_images(reference, rendered)
         .await

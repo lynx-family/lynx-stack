@@ -1913,6 +1913,7 @@ mod tests {
   use axum::body::Body;
   use axum::extract::FromRequest;
   use axum::http::Request;
+  use base64::prelude::{Engine, BASE64_STANDARD};
   use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 
   use super::*;
@@ -1965,15 +1966,6 @@ mod tests {
 
   fn sample_bmp(color: Rgba<u8>) -> Vec<u8> {
     sample_image(ImageFormat::Bmp, color)
-  }
-
-  fn sample_png_with_dimensions(width: u32, height: u32, color: Rgba<u8>) -> Vec<u8> {
-    let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(width, height, color));
-    let mut bytes = Vec::new();
-    image
-      .write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)
-      .expect("encode the ZIP image");
-    bytes
   }
 
   fn zip_upload(entries: &[(&str, &[u8])]) -> Vec<u8> {
@@ -3134,13 +3126,11 @@ mod tests {
     engine.addEventListener("__RenderPage", renderPage);
   </script>
 </lynx>"#;
-    let render_zip = |relative_color, absolute_color| {
-      let relative_png = sample_png_with_dimensions(64, 64, Rgba(relative_color));
-      let absolute_png = sample_png_with_dimensions(64, 64, Rgba(absolute_color));
+    let render_zip = |relative_png: &[u8], absolute_png: &[u8]| {
       let upload = zip_upload(&[
         ("index.lynxml", index),
-        ("images/relative.png", relative_png.as_slice()),
-        ("images/absolute.png", absolute_png.as_slice()),
+        ("images/relative.png", relative_png),
+        ("images/absolute.png", absolute_png),
       ]);
       let response = runtime
         .block_on(screenshot_zip_upload(
@@ -3193,13 +3183,19 @@ mod tests {
         );
       };
 
-    let first = render_zip([255, 0, 0, 255], [0, 0, 255, 255]);
+    let first = render_zip(
+      include_bytes!("../tests/fixtures/images/red.png"),
+      include_bytes!("../tests/fixtures/images/blue.png"),
+    );
     assert_split_colors(&first, [255, 0, 0], [0, 0, 255], "first upload");
 
     // Reuse the exact same archive paths with different bytes. Each untrusted
     // upload must run in a fresh process so Clay's process-wide image cache
     // cannot return pixels belonging to the previous request.
-    let second = render_zip([0, 255, 0, 255], [255, 255, 0, 255]);
+    let second = render_zip(
+      include_bytes!("../tests/fixtures/images/green.png"),
+      include_bytes!("../tests/fixtures/images/yellow.png"),
+    );
     assert_split_colors(&second, [0, 255, 0], [255, 255, 0], "second upload");
     for bundle in bundles {
       std::fs::remove_file(bundle).expect("remove concurrent fixture copy");
@@ -3236,23 +3232,27 @@ mod tests {
     assert_eq!(response.visual_similarity, 1.0);
     assert_eq!(response.different_blocks, 0);
     assert_eq!(response.total_blocks, 1);
-    assert!(!response.diff_image_base64.is_empty());
+    let diff = BASE64_STANDARD
+      .decode(response.diff_image_base64)
+      .expect("decode base64 diff response");
+    assert!(diff.starts_with(b"BM"));
+    let pixels = image::load_from_memory_with_format(&diff, ImageFormat::Bmp)
+      .expect("decode BMP diff response")
+      .into_rgba8();
+    assert_eq!(pixels, RgbaImage::from_pixel(8, 8, Rgba([20, 40, 60, 255])));
   }
 
   #[tokio::test]
   async fn rejects_png_uploads_even_with_a_bmp_filename_and_content_type() {
     let bmp = sample_bmp(Rgba([20, 40, 60, 255]));
-    let png = sample_image(ImageFormat::Png, Rgba([20, 40, 60, 255]));
+    let png = include_bytes!("../tests/fixtures/images/red.png").as_slice();
     for (reference, rendered, name) in [
-      (&png, &bmp, "Reference image"),
-      (&bmp, &png, "Rendered image"),
+      (png, bmp.as_slice(), "Reference image"),
+      (bmp.as_slice(), png, "Rendered image"),
     ] {
       let multipart = multipart(
         "ui-judge-boundary",
-        &[
-          ("referenceImage", reference.as_slice()),
-          ("renderedImage", rendered.as_slice()),
-        ],
+        &[("referenceImage", reference), ("renderedImage", rendered)],
       )
       .await;
       let error = compare(multipart)
