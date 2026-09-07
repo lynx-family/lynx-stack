@@ -1577,8 +1577,8 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
       wasm-feature-detect:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.9.0
+        version: 1.9.0
 
   packages/rspeedy/core:
     dependencies:
@@ -2312,8 +2312,8 @@ importers:
         specifier: workspace:*
         version: link:../web-worker-rpc
       wasm-feature-detect:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.9.0
+        version: 1.9.0
     devDependencies:
       '@lynx-js/animax':
         specifier: 0.1.0-alpha.0
@@ -12343,8 +12343,8 @@ packages:
   wabt@1.0.0-nightly.20180421:
     resolution: {integrity: sha512-bsu9zk672KACjoabONcAS94IS20prRm05IbiIUGfa8eBpRLjWZv8ugocdinV/ONh0mFMfXrVWkvF1/BNtwIfUw==}
 
-  wasm-feature-detect@1.8.0:
-    resolution: {integrity: sha512-zksaLKM2fVlnB5jQQDqKXXwYHLQUVH9es+5TOOHwGOVJOCeRBCiPjwSg+3tN2AdTCzjgli4jijCH290kXb/zWQ==}
+  wasm-feature-detect@1.9.0:
+    resolution: {integrity: sha512-zonE+xlIIYtxPy++L24ow0hAD8CICb4+FgPyROd3buyXIqsJvUEDkBgfCCoXOd1Hu3DUr0GOfnPIdcGV+YpNaA==}
 
   wast-loader@1.14.1:
     resolution: {integrity: sha512-s35gffU7MzyA8nHZapVlYG6KlfSey4ZlZ1Xk//6wmXzogPAykqBMKWUWWBuzVSrrm8dWqNfzcPD0I3z167N72g==}
@@ -23230,7 +23230,7 @@ snapshots:
 
   wabt@1.0.0-nightly.20180421: {}
 
-  wasm-feature-detect@1.8.0: {}
+  wasm-feature-detect@1.9.0: {}
 
   wast-loader@1.14.1:
     dependencies:
