@@ -15,7 +15,7 @@ members = [
 
 [workspace.dependencies]
 convert_case = "0.11.0"
-dashmap = "5.5.3"
+dashmap = "6.2.1"
 hex = "0.4.3"
 indexmap = "2.14.0"
 js-sys = "0.3.103"
@@ -34,7 +34,7 @@ serde = "1.0.229"
 serde_json = "1.0.151"
 sha-1 = "0.10.1"
 sha2 = "0.11.0"
-sugar_path = "1.2.1"
+sugar_path = "3.0.0"
 swc_core = "77.1.2"
 swc_sourcemap = "10.0.2"
 tokio = "1.53.1"
