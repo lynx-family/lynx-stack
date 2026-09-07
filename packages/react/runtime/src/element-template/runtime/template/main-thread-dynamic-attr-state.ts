@@ -89,7 +89,7 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
   }
   let nativeSlots: SerializableValue[] | undefined;
   for (const [attrSlotIndex, kind] of slotKinds) {
-    if (kind !== 'mt-ref') {
+    if (kind !== 'mt-ref' || attributeSlots[attrSlotIndex] === null) {
       continue;
     }
     nativeSlots ??= attributeSlots.slice() as SerializableValue[];

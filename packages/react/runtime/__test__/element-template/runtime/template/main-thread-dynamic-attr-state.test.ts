@@ -17,6 +17,7 @@ import {
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
   updateMainThreadEventAttrSlot as setMTEventSlot,
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
@@ -87,6 +88,42 @@ describe('main-thread dynamic attr state', () => {
   afterEach(() => {
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
+  });
+
+  it('reuses native slots when every MTRef slot is already null', () => {
+    __etAttrPlanMap[MT_REF_TEMPLATE] = [0, adaptMTRefAttrSlot, 1, adaptMTEventAttrSlot, 2, adaptMTRefAttrSlot];
+    const event = { type: 'worklet', value: { _wkltId: 'tap' } };
+    const slots = Object.freeze([null, event, null, 'ordinary']);
+
+    expect(prepareMainThreadDynamicAttrSlotsForNative(MT_REF_TEMPLATE, slots)).toBe(slots);
+  });
+
+  it('copies mixed MTRef slots while preserving the original wrappers', () => {
+    __etAttrPlanMap[MT_REF_TEMPLATE] = [0, adaptMTRefAttrSlot, 1, adaptMTRefAttrSlot, 2, adaptMTRefAttrSlot];
+    const ref = { type: 'main-thread-ref', value: { _wvid: 7 } };
+    const slots = Object.freeze([null, ref, null, 'ordinary']);
+
+    const nativeSlots = prepareMainThreadDynamicAttrSlotsForNative(MT_REF_TEMPLATE, slots);
+
+    expect(nativeSlots).not.toBe(slots);
+    expect(nativeSlots).toEqual([null, null, null, 'ordinary']);
+    expect(slots[1]).toBe(ref);
+  });
+
+  it('still normalizes undefined and missing MTRef slots to explicit null', () => {
+    __etAttrPlanMap[MT_REF_TEMPLATE] = [0, adaptMTRefAttrSlot, 1, adaptMTRefAttrSlot, 2, adaptMTRefAttrSlot];
+    const slots: unknown[] = [undefined];
+    slots.length = 2;
+    Object.freeze(slots);
+
+    const nativeSlots = prepareMainThreadDynamicAttrSlotsForNative(MT_REF_TEMPLATE, slots);
+
+    expect(nativeSlots).toStrictEqual([null, null, null]);
+    expect(slots).toHaveLength(2);
+    expect(Object.hasOwn(slots, 0)).toBe(true);
+    expect(slots[0]).toBeUndefined();
+    expect(Object.hasOwn(slots, 1)).toBe(false);
+    expect(Object.hasOwn(slots, 2)).toBe(false);
   });
 
   it('records native-held MTEvent ctx by handle and slot without storing the wrapper', () => {
