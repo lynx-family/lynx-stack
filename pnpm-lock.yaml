@@ -71,7 +71,7 @@ importers:
         version: 3.0.1
       '@codspeed/vitest-plugin':
         specifier: ^5.7.1
-        version: 5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vitest@3.2.7)
+        version: 5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.4)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vitest@3.2.7)
       '@eslint/js':
         specifier: ^9.39.5
         version: 9.39.5
@@ -214,8 +214,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
       tinybench:
-        specifier: ^6.1.2
-        version: 6.1.2
+        specifier: ^6.1.4
+        version: 6.1.4
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -11847,8 +11847,8 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
-  tinybench@6.1.2:
-    resolution: {integrity: sha512-REdMxUreK3VSUeWcLd5+ijUGNKFyHT8s1trKmYEE/tlYE6ggdOkFOlKba/vI/l1fIqh/NTEEr1Cyw4AwttOicA==}
+  tinybench@6.1.4:
+    resolution: {integrity: sha512-9APumHG7r4yOk4X4WlkmE71aZcv1gvin1czO3OQ1U9iJcFA5Ja/ygyb0vPOVHTthFozUYs8CLoLUlM8grb2lTQ==}
     engines: {node: '>=20.0.0'}
 
   tinyexec@0.3.2:
@@ -13408,10 +13408,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@codspeed/vitest-plugin@5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.2)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vitest@3.2.7)':
+  '@codspeed/vitest-plugin@5.7.1(debug@4.4.3(supports-color@10.2.2))(tinybench@6.1.4)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vitest@3.2.7)':
     dependencies:
       '@codspeed/core': 5.7.1(debug@4.4.3(supports-color@10.2.2))
-      tinybench: 6.1.2
+      tinybench: 6.1.4
       vite: 7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0)
       vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(jiti@2.7.0)(jsdom@30.0.1)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
     transitivePeerDependencies:
@@ -22706,7 +22706,7 @@ snapshots:
 
   tinybench@2.9.0: {}
 
-  tinybench@6.1.2: {}
+  tinybench@6.1.4: {}
 
   tinyexec@0.3.2: {}
 
