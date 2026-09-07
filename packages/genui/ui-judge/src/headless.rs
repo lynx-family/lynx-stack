@@ -18,8 +18,8 @@ use crate::judge::{
   GEQI_DIMENSIONS,
 };
 use crate::model::{ModelClient, ModelError, ModelOptions};
-use crate::screenshot::{bmp_to_jpeg, jpeg_data_url};
-use crate::visual::{compare_reference_image, transcode_captured_bmp};
+use crate::screenshot::bmp_data_url;
+use crate::visual::compare_reference_image;
 
 const MAX_ACTIONS_PER_STEP: usize = 8;
 const MAX_DOM_CHARS: usize = 40_000;
@@ -75,8 +75,6 @@ enum HeadlessPageError {
     operation: &'static str,
     timeout_ms: u128,
   },
-  #[error("headless screenshot could not be transcoded: {0}")]
-  Screenshot(String),
   #[error("headless step is unsupported by the existing runner: {0}")]
   UnsupportedAction(String),
   #[error("headless step exceeded {MAX_ACTIONS_PER_STEP} model actions: {0}")]
@@ -104,8 +102,7 @@ struct PageAction {
 /// A captured frame plus the steps that produced it.
 ///
 /// The frame is kept as the runner's lossless BMP: the deterministic reference
-/// comparison comes from these exact pixels, and only the copies that leave the
-/// process are transcoded to JPEG.
+/// comparison and all screenshot outputs use these exact bytes.
 pub(crate) struct CapturedPage {
   screenshot: Vec<u8>,
   steps: Vec<String>,
@@ -132,8 +129,8 @@ impl CapturedPage {
   }
 
   #[cfg(any(feature = "server", test))]
-  pub(crate) async fn into_jpeg(self) -> Result<Vec<u8>, String> {
-    transcode_captured_bmp(self.screenshot).await
+  pub(crate) fn into_bmp(self) -> Vec<u8> {
+    self.screenshot
   }
 
   #[cfg(test)]
@@ -142,10 +139,8 @@ impl CapturedPage {
     self
   }
 
-  pub(crate) async fn screenshot_data_url(&self) -> Result<String, String> {
-    transcode_captured_bmp(self.screenshot.clone())
-      .await
-      .map(|jpeg| jpeg_data_url(&jpeg))
+  pub(crate) fn screenshot_data_url(&self) -> String {
+    bmp_data_url(&self.screenshot)
   }
 }
 
@@ -335,16 +330,7 @@ pub(crate) async fn score_captured_page(
     steps,
     url,
   } = capture;
-  // The model needs a format it can read; the comparison below keeps the
-  // lossless capture.
-  let screenshot_data_url = match transcode_captured_bmp(screenshot.clone()).await {
-    Ok(jpeg) => jpeg_data_url(&jpeg),
-    Err(error) => {
-      let mut result = request_error_result(request, url, error);
-      result.steps = steps;
-      return result;
-    }
-  };
+  let screenshot_data_url = bmp_data_url(&screenshot);
   let scoring_request = JudgeScreenshotRequest {
     reference: request.reference.clone(),
     screenshot_data_url,
@@ -523,7 +509,6 @@ fn run_page_step(
     }
     let dom = page.content()?;
     let screenshot = capture_page_screenshot(page, Duration::from_millis(16))?;
-    let jpeg = bmp_to_jpeg(&screenshot).map_err(HeadlessPageError::Screenshot)?;
     let prompt = build_step_prompt(step, &dom, &history);
     let remaining = deadline.saturating_duration_since(Instant::now());
     if remaining.is_zero() {
@@ -534,7 +519,7 @@ fn run_page_step(
       client.evaluate_structured(
         STEP_SYSTEM_PROMPT,
         &prompt,
-        &[&jpeg_data_url(&jpeg)],
+        &[&bmp_data_url(&screenshot)],
         "lynx_page_action",
         page_action_schema(),
       ),

@@ -13,8 +13,6 @@ use rayon::{ThreadPool, ThreadPoolBuilder};
 use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use thiserror::Error;
 
-use crate::screenshot::bmp_to_jpeg;
-
 pub(crate) const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_DECODED_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_IMAGE_DIMENSION: u32 = 8_192;
@@ -192,21 +190,6 @@ where
   F: FnOnce() -> VisualResult<T> + Send + 'static,
 {
   run_visual_worker_with_slots(visual_worker_slots(), operation, work).await
-}
-
-/// Transcodes an owned post-capture frame without occupying a Tokio worker.
-pub(crate) async fn transcode_captured_bmp(bmp: Vec<u8>) -> Result<Vec<u8>, String> {
-  run_visual_worker("screenshot transcoding", move || {
-    bmp_to_jpeg(&bmp).map_err(|message| {
-      VisualEvaluationError::new(
-        500,
-        VisualEvaluationErrorCode::VisualEvaluationError,
-        message,
-      )
-    })
-  })
-  .await
-  .map_err(|error| error.to_string())
 }
 
 async fn run_visual_worker_with_slots<T, F>(

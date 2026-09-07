@@ -178,6 +178,13 @@ first `/judge` request. Successful A2UI generations are submitted to
 `POST /judge`; generated messages are injected through server-owned Lynx
 `globalProps` and cannot be supplied or overridden by Bench clients.
 
+UI Judge returns captured screenshots as BMP data URLs. GenUI Server converts
+the runner's 32-bit BMP frames to PNG before including them in Bench results,
+preserving RGBA pixels. The existing 2 MiB per-image and 8 MiB per-job storage
+limits apply to PNG bytes; malformed or oversized screenshots are discarded
+with a warning. PNG responses from older sidecars remain accepted. This
+conversion happens after scoring and does not change model inputs in UI Judge.
+
 Before rendering, the Bench integration replaces `Image`, `LazyComponent`,
 `LineChart`, `McpApp`, and `PieChart` definitions with inert loading
 placeholders, downgrades Markdown text, and rejects recursive `openUrl`
