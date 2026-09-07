@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "rspeedy build",
+    "build:et": "USE_ELEMENT_TEMPLATE=1 rspeedy build",
     "dev": "rspeedy dev",
+    "dev:et": "USE_ELEMENT_TEMPLATE=1 rspeedy dev",
     "test:type": "tsc6 --noEmit"
   },
   "dependencies": {

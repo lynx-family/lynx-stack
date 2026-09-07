@@ -65,6 +65,10 @@ export function App() {
     <view style={{ flex: 1, backgroundColor: theme.bg, padding: '40px' }}>
       <ThemeContext.Provider value={theme}>
         <Title />
+        <text style={{ color: theme.fg, fontSize: '13px', marginTop: '4px' }}>
+          render path:{' '}
+          {__USE_ELEMENT_TEMPLATE__ ? 'element template' : 'snapshot'}
+        </text>
         <Card label='read through use(), not useContext()' />
         <ThemeContext.Provider value={light}>
           <Card label='nested provider always reads light' />
