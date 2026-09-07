@@ -27,6 +27,14 @@ export interface EncodeOptions {
 }
 
 // @public
+export interface ExposedLayers {
+    // (undocumented)
+    readonly BACKGROUND: string;
+    // (undocumented)
+    readonly MAIN_THREAD: string;
+}
+
+// @public
 export interface ExternalBundleLibConfig extends LibConfig {
     // (undocumented)
     output?: OutputConfig;
@@ -59,6 +67,9 @@ export type ExternalsPresets = {
 export type ExternalsPresetValue = boolean | {
     async?: boolean;
 };
+
+// @public
+export const LAYERS: ExposedLayers;
 
 // @public
 export class MainThreadRuntimeWrapperWebpackPlugin {

@@ -29,11 +29,6 @@ import type {
 } from './common/types';
 
 export interface OpenUIChatOptions extends ChatOptions {
-  /**
-   * Create an agent for this call without retaining request-scoped provider
-   * credentials in the shared provider cache.
-   */
-  disableAgentCache?: boolean | undefined;
   promptComponentNames?: readonly string[] | undefined;
   promptOptions?: OpenUIAgentOptions['promptOptions'];
   promptRoot?: string | undefined;

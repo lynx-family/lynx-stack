@@ -29,10 +29,10 @@ describe('config length', () => {
   })
   it('type config config should have expected length', () => {
     expectTypeOf<UnionToTuple<keyof TypeConfig.Config>['length']>()
-      .toEqualTypeOf<33>()
+      .toEqualTypeOf<36>()
   })
   it('pluginLynxConfig config should have expected length', () => {
     expectTypeOf<UnionToTuple<keyof Config>['length']>()
-      .toEqualTypeOf<33>()
+      .toEqualTypeOf<36>()
   })
 })

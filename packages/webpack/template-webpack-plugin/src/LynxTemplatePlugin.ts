@@ -601,14 +601,19 @@ export function buildCustomSections(
 ): {
   sections: Record<string, CustomSectionEntry>;
   remainingManifest: Record<string, string>;
+  // The asset each section was assembled from, so its recorded location can
+  // follow it out of `lepusCode` / `manifest`.
+  sectionByAsset: Map<string, string>;
 } {
   const sections: Record<string, CustomSectionEntry> = {};
+  const sectionByAsset = new Map<string, string>();
 
   mainThreadAssets.forEach((asset, index) => {
     const name = naming.mainThread(asset.name, index);
     if (name === undefined) {
       return;
     }
+    sectionByAsset.set(asset.name, name);
     sections[name] = {
       ...(enableBytecode ? { encoding: 'JsBytecode' as const } : {}),
       content: asset.source.source().toString(),
@@ -627,6 +632,7 @@ export function buildCustomSections(
       remainingManifest[manifestKey] = content;
       continue;
     }
+    sectionByAsset.set(manifestKey.replace(/^\//, ''), name);
     sections[name] = { content };
   }
 
@@ -635,6 +641,7 @@ export function buildCustomSections(
     if (name === undefined) {
       return;
     }
+    sectionByAsset.set(asset.name, name);
     const ruleList = cssChunksToMap(
       [asset.source.source().toString()],
       cssPlugins,
@@ -646,7 +653,7 @@ export function buildCustomSections(
     };
   });
 
-  return { sections, remainingManifest };
+  return { sections, remainingManifest, sectionByAsset };
 }
 
 // A lazy bundle is a single component: the runtime resolves these three
@@ -988,8 +995,14 @@ class LynxTemplatePluginImpl {
         LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
       )
     ) {
+      const derived = chunkGroups.every(cg =>
+        cg.name === null || cg.name === undefined
+      );
       for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
-        if (chunk.id !== null && chunk.id !== undefined) {
+        if (chunk.id === null || chunk.id === undefined) {
+          continue;
+        }
+        if (derived || !lazyBundleNames.has(chunk.id)) {
           lazyBundleNames.set(chunk.id, filename);
         }
       }
@@ -1228,12 +1241,19 @@ class LynxTemplatePluginImpl {
       compilation,
     );
 
+    const isFetchBundleLazy = isAsync
+      && this.#options.lazyBundleFetcher === 'FetchBundle';
+    const naming = this.#options.customSectionNaming
+      ?? (isFetchBundleLazy ? () => LAZY_BUNDLE_SECTION_NAMING : undefined);
+
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
       filenameTemplate,
       chunkGroups,
       intermediate,
-      intermediateAssets: [],
+      intermediateAssets: naming
+        ? assetsInfoByGroups.mainThread.map(asset => asset.name)
+        : [],
     });
 
     const { lepusCode, css } = encodeData;
@@ -1243,18 +1263,13 @@ class LynxTemplatePluginImpl {
         return [asset.name, asset.source.source().toString()];
       }),
     );
-
-    const isFetchBundleLazy = isAsync
-      && this.#options.lazyBundleFetcher === 'FetchBundle';
-    const naming = this.#options.customSectionNaming
-      ?? (isFetchBundleLazy ? () => LAZY_BUNDLE_SECTION_NAMING : undefined);
     // Default to bytecode for the main-thread sections. Skip in dev or when
     // DEBUG matches rspeedy so the source stays debuggable.
     const enableSectionBytecode = this.#options.enableSectionBytecode
       ?? (!isDev && !isDebug());
     const customSectionSplit = naming
       ? buildCustomSections({
-        mainThreadAssets: lepusCode.root ? [lepusCode.root] : [],
+        mainThreadAssets: assetsInfoByGroups.mainThread,
         manifest: encodeData.manifest,
         cssAssets: encodeData.css.chunks,
         enableBytecode: enableSectionBytecode,
@@ -1263,6 +1278,19 @@ class LynxTemplatePluginImpl {
         enableCSSSelector: this.#options.enableCSSSelector,
       })
       : null;
+
+    // `LynxEncodePlugin` records where each asset sits in `tasm.json` before
+    // the split runs, so the ones that move into a section are restamped here.
+    if (customSectionSplit) {
+      for (const [assetName, section] of customSectionSplit.sectionByAsset) {
+        const asset = compilation.getAsset(assetName);
+        if (!asset) continue;
+        compilation.updateAsset(asset.name, asset.source, {
+          ...asset.info,
+          'lynx:tasm-section': ['customSections', section],
+        });
+      }
+    }
 
     const resolvedEncodeOptions: EncodeOptions = {
       ...encodeData,
@@ -1337,8 +1365,10 @@ class LynxTemplatePluginImpl {
         ...(cssDiagnostics === undefined ? {} : { cssDiagnostics }),
         template: buffer,
         outputName: filename,
-        mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
-          .filter(i => i !== undefined),
+        mainThreadAssets: customSectionSplit
+          ? assetsInfoByGroups.mainThread
+          : [lepusCode.root, ...encodeData.lepusCode.chunks]
+            .filter(i => i !== undefined),
         cssChunks: assetsInfoByGroups.css,
         chunkGroups,
       });

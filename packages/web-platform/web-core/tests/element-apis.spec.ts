@@ -1994,6 +1994,33 @@ describe('Element APIs', () => {
     expect(disableSpy).toHaveBeenCalledWith(expect.anything(), 'input');
   });
 
+  test('should preserve reactive event calls until a custom element upgrades', async () => {
+    const calls: string[] = [];
+    const element = document.createElement('x-deferred-reactive-event');
+    const elementRef = new WeakRef(element);
+
+    mtsBinding.enableElementEvent(elementRef, 'selectionchange');
+    mtsBinding.disableElementEvent(elementRef, 'selectionchange');
+    customElements.define(
+      'x-deferred-reactive-event',
+      class extends HTMLElement {
+        enableEvent(eventName: string) {
+          calls.push(`enable:${eventName}`);
+        }
+
+        disableEvent(eventName: string) {
+          calls.push(`disable:${eventName}`);
+        }
+      },
+    );
+    await customElements.whenDefined('x-deferred-reactive-event');
+
+    expect(calls).toEqual([
+      'enable:selectionchange',
+      'disable:selectionchange',
+    ]);
+  });
+
   test('should handle worklet events enable/disable', () => {
     const root = mtsGlobalThis.__CreatePage('page', 0);
     const element = mtsGlobalThis.__CreateView(0);

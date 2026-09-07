@@ -134,6 +134,7 @@ lazy_static::lazy_static! {
     "layoutchange",
     "input",
     "selection",
+    "selectionchange",
     "error",
     "layout",
     "offset",

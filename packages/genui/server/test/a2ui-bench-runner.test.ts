@@ -154,7 +154,11 @@ describe('A2UI Bench UI Judge integration', () => {
         }),
     );
     const store = getBenchJobStore();
-    const job = store.createJob(request(), 1);
+    const benchRequest = request();
+    benchRequest.playground = {
+      uiJudgeServerUrl: 'http://request-judge.test/',
+    };
+    const job = store.createJob(benchRequest, 1);
 
     const running = runBenchJob(job.id);
     store.cancelJob(job.id);
@@ -164,6 +168,9 @@ describe('A2UI Bench UI Judge integration', () => {
     });
     await running;
 
+    expect(probeBenchUiJudge).toHaveBeenCalledWith({
+      serverUrl: 'http://request-judge.test/',
+    });
     const completed = store.getJob(job.id);
     expect(completed?.status).toBe('cancelled');
     expect(completed?.report?.status).toBe('cancelled');

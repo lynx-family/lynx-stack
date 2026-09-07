@@ -4,6 +4,14 @@
 
 export const DEFAULT_GENUI_SERVER_URL = 'http://localhost:3060';
 
+export function isLoopbackHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return normalized === 'localhost'
+    || normalized.endsWith('.localhost')
+    || normalized === '127.0.0.1'
+    || normalized === '[::1]';
+}
+
 export function resolveGenuiServerUrl(raw: string | undefined): string {
   const configured = raw?.trim();
   const value = configured === undefined || configured === ''
@@ -32,6 +40,43 @@ export function resolveGenuiServerUrl(raw: string | undefined): string {
       'GENUI_SERVER_URL must be an HTTP(S) origin without credentials, path, query, or fragment',
     );
   }
+  if (url.protocol === 'http:' && !isLoopbackHostname(url.hostname)) {
+    throw new Error(
+      'GENUI_SERVER_URL must use HTTPS unless it targets a loopback hostname',
+    );
+  }
 
   return url.origin;
+}
+
+export function assertTrustedGenuiServerCredentialTarget(
+  rawTarget: string,
+  configuredOrigin: string,
+): void {
+  let target: URL;
+  let configured: URL;
+  try {
+    target = new URL(rawTarget);
+    configured = new URL(configuredOrigin);
+  } catch {
+    throw new Error('Custom API key requests require a valid GenUI Server URL');
+  }
+
+  if (
+    target.origin !== configured.origin
+    || target.username
+    || target.password
+  ) {
+    throw new Error(
+      'Custom API keys may only be sent to the configured GenUI Server origin',
+    );
+  }
+  if (
+    target.protocol !== 'https:'
+    && !(target.protocol === 'http:' && isLoopbackHostname(target.hostname))
+  ) {
+    throw new Error(
+      'Custom API keys require an HTTPS GenUI Server; HTTP is allowed only for loopback development',
+    );
+  }
 }

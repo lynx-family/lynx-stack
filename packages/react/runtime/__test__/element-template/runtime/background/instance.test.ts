@@ -474,7 +474,7 @@ describe('BackgroundElementTemplateInstance', () => {
       -11,
       [-11],
     ]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([item]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([item]);
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(ref).not.toHaveBeenCalled();
   });
@@ -493,7 +493,7 @@ describe('BackgroundElementTemplateInstance', () => {
     list.removeChild(item, true);
 
     expect(globalCommitContext.ops).toEqual([]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
   it('emits logical updates for both lists when an item moves across typed lists', () => {
@@ -881,6 +881,123 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
       ]);
       expect(ref).not.toHaveBeenCalled();
+    });
+
+    it.each(['compiled', 'list'])('checks only the moved subtree root for creation under a %s parent', (parentKind) => {
+      __etAttrPlanMap._et_leaf = [0, adaptMTRefAttrSlot];
+      const root = new BackgroundPageRootInstance();
+      const parent = parentKind === 'list'
+        ? new BackgroundListElementTemplateInstance()
+        : new BackgroundElementTemplateInstance('_et_parent');
+      const anchor = new BackgroundElementTemplateInstance('_et_anchor');
+      const owner = new BackgroundElementTemplateInstance('_et_owner');
+      const nested = new BackgroundElementTemplateInstance('_et_nested');
+      const leaf = new BackgroundElementTemplateInstance('_et_leaf');
+      nested.appendChild(leaf);
+      owner.appendChild(nested);
+      markElementTemplateHydrated();
+      root.appendChild(parent);
+      parent.appendChild(anchor);
+      parent.appendChild(owner);
+      globalCommitContext.ops = [];
+
+      const createCheck = vi.spyOn(BackgroundElementTemplateInstance.prototype, 'emitMainThreadCreateIfNeeded');
+      try {
+        parent.insertBefore(owner, anchor);
+
+        expect(createCheck).toHaveBeenCalledTimes(1);
+      } finally {
+        createCheck.mockRestore();
+      }
+      expect(parent.childNodes).toEqual([owner, anchor]);
+      expect(owner.firstChild).toBe(nested);
+      expect(nested.firstChild).toBe(leaf);
+      expect(globalCommitContext.ops).toEqual(
+        parentKind === 'list'
+          ? [
+            ElementTemplateUpdateOps.removeTypedListItem,
+            parent.instanceId,
+            owner.instanceId,
+            [],
+            ElementTemplateUpdateOps.insertTypedListItem,
+            parent.instanceId,
+            {
+              __etHandleRef: owner.instanceId,
+              type: '_et_owner',
+              platformInfo: {},
+              subtreeHandleIds: [leaf.instanceId],
+            },
+            anchor.instanceId,
+          ]
+          : [
+            ElementTemplateUpdateOps.insertNode,
+            parent.instanceId,
+            0,
+            owner.instanceId,
+            anchor.instanceId,
+            [leaf.instanceId],
+          ],
+      );
+    });
+
+    it('creates new descendants once when moving their materialized owner', () => {
+      const ref = vi.fn();
+      __etAttrPlanMap._et_ref_leaf = [0, adaptRefAttrSlot];
+      const root = new BackgroundPageRootInstance();
+      const parent = new BackgroundElementTemplateInstance('_et_parent');
+      const anchor = new BackgroundElementTemplateInstance('_et_anchor');
+      const owner = new BackgroundElementTemplateInstance('_et_owner');
+      markElementTemplateHydrated();
+      root.appendChild(parent);
+      parent.appendChild(anchor);
+      parent.appendChild(owner);
+      globalCommitContext.ops = [];
+
+      const nested = new BackgroundElementTemplateInstance('_et_nested');
+      const leaf = new BackgroundElementTemplateInstance('_et_ref_leaf');
+      leaf.setAttribute('attributeSlots', [ref]);
+      nested.appendChild(leaf);
+      flushPendingRefs();
+      expect(ref).not.toHaveBeenCalled();
+      expect(globalCommitContext.ops).toEqual([]);
+
+      owner.appendChild(nested);
+      parent.insertBefore(owner, anchor);
+      flushPendingRefs();
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        leaf.instanceId,
+        '_et_ref_leaf',
+        null,
+        [`${leaf.instanceId}-0`],
+        [],
+        ElementTemplateUpdateOps.createTemplate,
+        nested.instanceId,
+        '_et_nested',
+        null,
+        [],
+        [[leaf.instanceId]],
+        ElementTemplateUpdateOps.insertNode,
+        owner.instanceId,
+        0,
+        nested.instanceId,
+        0,
+        null,
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        0,
+        owner.instanceId,
+        anchor.instanceId,
+        null,
+      ]);
+      expect(ref).toHaveBeenCalledTimes(1);
+      expect(ref).toHaveBeenCalledWith(expect.objectContaining({
+        selector: `[ref=${leaf.instanceId}-0]`,
+      }));
+      expect(parent.childNodes).toEqual([owner, anchor]);
+      expect(owner.firstChild).toBe(nested);
+      expect(nested.firstChild).toBe(leaf);
     });
 
     it('defers nested slot inserts until the owner template is created', () => {
@@ -1342,7 +1459,7 @@ describe('BackgroundElementTemplateInstance', () => {
         child.instanceId,
         [child.instanceId, grandchild.instanceId],
       ]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([child]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([child]);
     });
 
     it('queues direct ref cleanup when removing a hydrated subtree', () => {
@@ -1508,7 +1625,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
 
@@ -1565,7 +1682,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     });
   });
 
@@ -2022,6 +2139,43 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.setAttribute('attributeSlots', [...slots]);
 
     expect(instance.attributeSlots).toEqual(slots);
+  });
+
+  it.each([false, true])('does not serialize attributes before materialization (hydrated=%s)', (isHydrated) => {
+    const instance = new BackgroundElementTemplateInstance('view', [{ id: 'before' }]);
+    if (isHydrated) {
+      markElementTemplateHydrated();
+    }
+    const nextSlots = [{ id: 'after' }];
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      instance.setAttribute('attributeSlots', nextSlots);
+
+      expect(stringify).not.toHaveBeenCalled();
+    } finally {
+      stringify.mockRestore();
+    }
+    expect(instance.attributeSlots).toEqual(nextSlots);
+    expect(globalCommitContext.ops).toEqual([]);
+
+    const root = new BackgroundPageRootInstance();
+    markElementTemplateHydrated();
+    root.appendChild(instance);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      instance.instanceId,
+      'view',
+      null,
+      nextSlots,
+      [],
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      instance.instanceId,
+      0,
+      null,
+    ]);
   });
 
   it('keeps raw initial planned attribute slots for later native prepare', () => {

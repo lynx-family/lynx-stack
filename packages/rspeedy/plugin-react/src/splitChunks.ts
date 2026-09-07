@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
+import type { RsbuildConfig, RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 type CacheGroups = Rspack.Configuration extends {
   optimization?: {
@@ -27,18 +27,37 @@ const isPlainObject = (obj: unknown): obj is Record<string, unknown> =>
   && typeof obj === 'object'
   && Object.prototype.toString.call(obj) === '[object Object]'
 
+// A value set on the environment wins over the same value set at the root,
+// which is how Rsbuild merges the two.
+export function getUserSplitChunks(
+  config: RsbuildConfig,
+  environment: string,
+): {
+  splitChunks: RsbuildConfig['splitChunks']
+  chunkSplitStrategy: string | undefined
+} {
+  const scoped = config.environments?.[environment]
+  return {
+    splitChunks: scoped?.splitChunks ?? config.splitChunks,
+    chunkSplitStrategy: scoped?.performance?.chunkSplit?.strategy
+      ?? config.performance?.chunkSplit?.strategy,
+  }
+}
+
 export const applySplitChunksRule: (
   api: RsbuildPluginAPI,
 ) => void = (api): void => {
   // Defaults to `all-in-one`.
-  api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-    const userConfig = api.getRsbuildConfig('original')
-    const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
+  api.modifyEnvironmentConfig((config, { name, mergeEnvironmentConfig }) => {
+    const { splitChunks, chunkSplitStrategy } = getUserSplitChunks(
+      api.getRsbuildConfig('original'),
+      name,
+    )
     if (
-      userConfig.splitChunks === undefined
+      splitChunks === undefined
       && (chunkSplitStrategy === 'all-in-one' || !chunkSplitStrategy)
     ) {
-      return mergeRsbuildConfig(config, {
+      return mergeEnvironmentConfig(config, {
         splitChunks: false,
       })
     }
@@ -47,9 +66,12 @@ export const applySplitChunksRule: (
 
   api.modifyBundlerChain((chain, { environment }) => {
     const { config } = environment
-    const userConfig = api.getRsbuildConfig('original')
-    const isSplitByExperience = userConfig.splitChunks === undefined
-      ? userConfig.performance?.chunkSplit?.strategy === 'split-by-experience'
+    const { splitChunks, chunkSplitStrategy } = getUserSplitChunks(
+      api.getRsbuildConfig('original'),
+      environment.name,
+    )
+    const isSplitByExperience = splitChunks === undefined
+      ? chunkSplitStrategy === 'split-by-experience'
       : (isPlainObject(config.splitChunks)
         && config.splitChunks.preset === 'default')
 

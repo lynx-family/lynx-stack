@@ -2,24 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 
 import { getLynxConfig } from '../config.js'
+
+type OutputConfig = NonNullable<RsbuildConfig['output']>
 
 export function pluginOutput(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:output',
     setup(api) {
-      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const original = api.getRsbuildConfig('original')
-        const originalFilename = typeof original.output?.filename === 'object'
-          ? original.output.filename
-          : undefined
-        const originalDistPath = typeof original.output?.distPath === 'object'
-          ? original.output.distPath
-          : undefined
-
-        return mergeRsbuildConfig(
+      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+        mergeRsbuildConfig(
           {
             // Default bundler-generated runtime / wrapper code to `var`
             // (QuickJS parses it faster than `const`/`let`); the SWC
@@ -33,24 +27,53 @@ export function pluginOutput(): RsbuildPlugin {
             },
           },
           config,
-          {
+        )
+      )
+
+      api.modifyEnvironmentConfig(
+        (config, { name, mergeEnvironmentConfig }) => {
+          const original = api.getRsbuildConfig('original')
+          // A value set on the environment wins over the same value set at the
+          // root, which is how Rsbuild merges the two.
+          const outputs = [
+            original.environments?.[name]?.output,
+            original.output,
+          ]
+          return mergeEnvironmentConfig(config, {
             output: {
               distPath: {
                 // We override the default value of Rsbuild(`static/css`) here.
                 // Since all the CSS should be encoded into the template in
                 // Lynx.
-                css: originalDistPath?.css
-                  ?? getLynxConfig(api).resolveIntermediateDir(),
+                css: pick(outputs, (output) =>
+                  typeof output.distPath === 'object'
+                    ? output.distPath.css
+                    : undefined) ?? getLynxConfig(api).resolveIntermediateDir(),
               },
               filename: {
-                css: originalFilename?.css ?? '[name]/[name].css',
+                css: pick(outputs, (output) =>
+                  output.filename?.css)
+                  ?? '[name]/[name].css',
               },
               // A Lynx bundle has nowhere to link a separate license file to.
-              legalComments: original.output?.legalComments ?? 'none',
+              legalComments: pick(outputs, (output) =>
+                output.legalComments)
+                ?? 'none',
             },
-          },
-        )
-      })
+          })
+        },
+      )
     },
   }
+}
+
+function pick<T>(
+  outputs: (OutputConfig | undefined)[],
+  get: (output: OutputConfig) => T | undefined,
+): T | undefined {
+  for (const output of outputs) {
+    const value = output === undefined ? undefined : get(output)
+    if (value !== undefined) return value
+  }
+  return undefined
 }

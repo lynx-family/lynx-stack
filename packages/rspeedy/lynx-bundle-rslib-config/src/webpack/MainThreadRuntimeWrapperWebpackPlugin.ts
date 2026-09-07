@@ -12,7 +12,7 @@ const PLUGIN_NAME = 'MainThreadRuntimeWrapperWebpackPlugin'
  */
 export interface MainThreadRuntimeWrapperWebpackPluginOptions {
   /**
-   * Include all modules that pass test assertion.
+   * Include the assets marked `lynx:main-thread` that pass test assertion.
    *
    * @defaultValue `/\.js$/`
    *
@@ -31,25 +31,39 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
   ) {}
 
   apply(compiler: Rspack.Compiler): void {
-    const { BannerPlugin } = compiler.webpack
-    new BannerPlugin({
-      test: this.options.test ?? /\.js$/,
-      raw: true,
-      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
-      banner: `(function () {
+    const test = this.options.test ?? /\.js$/
+    const header = `(function () {
   // TODO: remove this after \`useModuleWrapper\` supports MTS
   var globDynamicComponentEntry = '__Card__';
   const module = { exports: {} }
-  const exports = module.exports`,
-    }).apply(compiler)
-    new BannerPlugin({
-      test: this.options.test ?? /\.js$/,
-      raw: true,
-      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
-      banner: `return module.exports
-})()`,
-      footer: true,
-    }).apply(compiler)
+  const exports = module.exports`
+    const footer = `return module.exports
+})()`
+
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      const { ModuleFilenameHelpers, sources: { ConcatSource } } =
+        compiler.webpack
+      compilation.hooks.processAssets.tap(
+        {
+          name: PLUGIN_NAME,
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
+        },
+        () => {
+          for (const asset of compilation.getAssets()) {
+            if (!ModuleFilenameHelpers.matchObject({ test }, asset.name)) {
+              continue
+            }
+            if (!asset.info['lynx:main-thread']) {
+              continue
+            }
+            compilation.updateAsset(
+              asset.name,
+              (source) => new ConcatSource(header, '\n', source, '\n', footer),
+            )
+          }
+        },
+      )
+    })
 
     const { RuntimeGlobals, RuntimeModule } = compiler.webpack
     class LoadingConsumerModulesRuntimeModule extends RuntimeModule {

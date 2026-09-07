@@ -2,9 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import type {
   CustomSectionNaming,
   LynxTemplatePlugin as LynxTemplatePluginClass,
@@ -599,9 +602,24 @@ export function defineExternalBundleRslibConfig(
   }
 }
 
-interface ExposedLayers {
+/**
+ * The layer names an external bundle is split by.
+ *
+ * @public
+ */
+export interface ExposedLayers {
   readonly BACKGROUND: string
   readonly MAIN_THREAD: string
+}
+
+/**
+ * The layer names an entry is split by without a DSL plugin.
+ *
+ * @public
+ */
+export const LAYERS: ExposedLayers = {
+  BACKGROUND: 'lynx:background',
+  MAIN_THREAD: 'lynx:main-thread',
 }
 
 // The consuming application loads a section by the name of the chunk it holds.
@@ -659,16 +677,9 @@ const externalBundleRsbuildPlugin = ({
   // ensure dsl plugin has exposed LAYERS
   enforce: 'post',
   setup(api) {
-    // Get layer names from react-rsbuild-plugin
-    const LAYERS = api.useExposed<ExposedLayers>(
+    const layers = api.useExposed<ExposedLayers>(
       Symbol.for('LAYERS'),
-    )
-
-    if (!LAYERS) {
-      throw new Error(
-        'lynx-bundle-rslib-config requires exposed `LAYERS`. Please install a DSL plugin, for example `pluginReactLynx` for ReactLynx.',
-      )
-    }
+    ) ?? LAYERS
 
     const exposed = api.useExposed<{
       LynxTemplatePlugin: typeof LynxTemplatePluginClass
@@ -676,11 +687,27 @@ const externalBundleRsbuildPlugin = ({
 
     if (!exposed) {
       throw new Error(
-        'lynx-bundle-rslib-config requires exposed `LynxTemplatePlugin`. Please apply `pluginLynx` from `@lynx-js/rsbuild-plugin`, which a DSL plugin such as `pluginReactLynx` does for you.',
+        'lynx-bundle-rslib-config requires an exposed `LynxTemplatePlugin`. Apply `pluginLynx` from `@lynx-js/rsbuild-plugin`, or a DSL plugin such as `pluginReactLynx` that applies it for you.',
       )
     }
 
     const { LynxTemplatePlugin } = exposed
+
+    const lynxConfig = api.useExposed<LynxConfig>(
+      Symbol.for('@lynx-js/rsbuild-plugin:config'),
+    )
+
+    if (!lynxConfig) {
+      throw new Error(
+        'lynx-bundle-rslib-config requires an exposed Lynx config. Apply `pluginLynx` from `@lynx-js/rsbuild-plugin`, or a DSL plugin such as `pluginReactLynx` that applies it for you.',
+      )
+    }
+
+    // The raw per-thread chunks are only ingredients for the encoded bundle,
+    // the way a page's are — keep them out of `dist` alongside it.
+    const intermediateDir = lynxConfig.resolveIntermediateDir({
+      entryName: bundleName,
+    })
 
     api.modifyBundlerChain(
       async (chain, { CHAIN_ID }) => {
@@ -688,7 +715,7 @@ const externalBundleRsbuildPlugin = ({
         const jsMainRule = chain.module
           .rule(CHAIN_ID.RULE.JS)
           .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
-        for (const layer of [LAYERS.BACKGROUND, LAYERS.MAIN_THREAD]) {
+        for (const layer of [layers.BACKGROUND, layers.MAIN_THREAD]) {
           // Only tap when the DSL plugin has registered a loader for this
           // layer. Creating the use entry here would produce a loader-less
           // `{ options }` record that Rspack >= 2.0.8 rejects.
@@ -716,7 +743,10 @@ const externalBundleRsbuildPlugin = ({
         ) => {
           chain
             .entry(entryName)
-            .add(entryValue)
+            .add({
+              ...entryValue,
+              filename: path.posix.join(intermediateDir, `${entryName}.js`),
+            })
             .end()
         }
 
@@ -731,26 +761,26 @@ const externalBundleRsbuildPlugin = ({
               backgroundEntryName.push(backgroundEntry)
               addLayeredEntry(mainThreadEntry, {
                 import: value,
-                layer: LAYERS.MAIN_THREAD,
+                layer: layers.MAIN_THREAD,
               })
               addLayeredEntry(backgroundEntry, {
                 import: value,
-                layer: LAYERS.BACKGROUND,
+                layer: layers.BACKGROUND,
               })
             } else {
               // object
               const { layer } = value
-              if (layer === LAYERS.MAIN_THREAD) {
+              if (layer === layers.MAIN_THREAD) {
                 mainThreadEntryName.push(entryName)
                 addLayeredEntry(entryName, {
                   ...value,
-                  layer: LAYERS.MAIN_THREAD,
+                  layer: layers.MAIN_THREAD,
                 })
-              } else if (layer === LAYERS.BACKGROUND) {
+              } else if (layer === layers.BACKGROUND) {
                 backgroundEntryName.push(entryName)
                 addLayeredEntry(entryName, {
                   ...value,
-                  layer: LAYERS.BACKGROUND,
+                  layer: layers.BACKGROUND,
                 })
               } else {
                 // not specify layer
@@ -760,11 +790,11 @@ const externalBundleRsbuildPlugin = ({
                 backgroundEntryName.push(backgroundEntry)
                 addLayeredEntry(mainThreadEntry, {
                   ...value,
-                  layer: LAYERS.MAIN_THREAD,
+                  layer: layers.MAIN_THREAD,
                 })
                 addLayeredEntry(backgroundEntry, {
                   ...value,
-                  layer: LAYERS.BACKGROUND,
+                  layer: layers.BACKGROUND,
                 })
               }
             }
@@ -773,7 +803,7 @@ const externalBundleRsbuildPlugin = ({
         chain
           .plugin(MarkMainThreadWebpackPlugin.name)
           .use(MarkMainThreadWebpackPlugin, [{
-            entryNames: mainThreadEntryName,
+            layer: layers.MAIN_THREAD,
           }])
           .end()
 
@@ -788,9 +818,7 @@ const externalBundleRsbuildPlugin = ({
           // dprint-ignore
           chain
           .plugin(MainThreadRuntimeWrapperWebpackPlugin.name)
-          .use(MainThreadRuntimeWrapperWebpackPlugin, [{
-            test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
-          }])
+          .use(MainThreadRuntimeWrapperWebpackPlugin)
           .end()
         }
 
@@ -799,6 +827,7 @@ const externalBundleRsbuildPlugin = ({
           .use(LynxTemplatePlugin, [{
             ...LynxTemplatePlugin.defaultOptions,
             filename: `${bundleName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+            intermediate: intermediateDir,
             chunks: [...mainThreadEntryName, ...backgroundEntryName],
             customSectionNaming: sectionNaming,
             appType: 'DynamicComponent',
@@ -818,5 +847,3 @@ const externalBundleRsbuildPlugin = ({
     )
   },
 })
-
-const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

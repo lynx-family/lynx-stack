@@ -9,12 +9,14 @@
  */
 export {
   defineExternalBundleRslibConfig,
+  LAYERS,
   builtInExternalsPresetDefinitions,
   reactLynxExternalsPreset,
   DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG as defaultExternalBundleLibConfig,
 } from './externalBundleRslibConfig.js'
 export type {
   EncodeOptions,
+  ExposedLayers,
   ExternalBundleLibConfig,
   ExternalObject,
   Externals,

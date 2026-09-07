@@ -149,8 +149,7 @@ impl VisitMut for WorkletVisitor {
           getter_fn.is_generator = false;
           getter_fn.type_params = None;
           getter_fn.return_type = None;
-          getter_fn.body = Some(BlockStmt {
-            ctxt: Default::default(),
+          getter_fn.body = Some(FunctionBody {
             span: DUMMY_SP,
             stmts: vec![ReturnStmt {
               span: DUMMY_SP,
@@ -206,8 +205,8 @@ impl VisitMut for WorkletVisitor {
 
         let value = p.value.as_mut().unwrap();
         let worklet_type: Option<WorkletType> = match value.as_mut() {
-          Expr::Arrow(arrow) if arrow.body.is_block_stmt() => {
-            self.check_is_worklet_block(arrow.body.as_mut_block_stmt().unwrap())
+          Expr::Arrow(arrow) if arrow.body.is_function_body() => {
+            self.check_is_worklet_block(arrow.body.as_mut_function_body().unwrap())
           }
           Expr::Fn(FnExpr { function, .. }) if function.body.is_some() => {
             self.check_is_worklet_block(function.body.as_mut().unwrap())
@@ -227,15 +226,16 @@ impl VisitMut for WorkletVisitor {
         value.visit_mut_with(&mut collector);
 
         let function: Box<Function> = match value.as_ref() {
-          Expr::Arrow(arrow) if arrow.body.is_block_stmt() => Box::new(Function {
+          Expr::Arrow(arrow) if arrow.body.is_function_body() => Box::new(Function {
             ctxt: arrow.ctxt,
-            body: arrow.body.as_block_stmt().unwrap().clone().into(),
+            body: arrow.body.as_function_body().unwrap().clone().into(),
             span: arrow.span,
             return_type: arrow.return_type.clone(),
             is_async: arrow.is_async,
             is_generator: arrow.is_generator,
             type_params: arrow.type_params.clone(),
             decorators: vec![],
+            this_param: None,
             params: arrow.params.iter().cloned().map(|p| p.into()).collect(),
           }),
           Expr::Fn(FnExpr { function, .. }) => function.clone(),
@@ -274,8 +274,8 @@ impl VisitMut for WorkletVisitor {
             span: DUMMY_SP,
             params: vec![],
             decorators: vec![],
-            body: Some(BlockStmt {
-              ctxt: Default::default(),
+            this_param: None,
+            body: Some(FunctionBody {
               span: DUMMY_SP,
               stmts: vec![ReturnStmt {
                 span: DUMMY_SP,
@@ -382,9 +382,14 @@ impl VisitMut for WorkletVisitor {
 
   fn visit_mut_expr(&mut self, n: &mut Expr) {
     match n {
-      Expr::Arrow(ArrowExpr { body, .. }) if body.is_block_stmt() => {
-        let worklet_type =
-          self.check_is_worklet_block(n.as_mut_arrow().unwrap().body.as_mut_block_stmt().unwrap());
+      Expr::Arrow(ArrowExpr { body, .. }) if body.is_function_body() => {
+        let worklet_type = self.check_is_worklet_block(
+          n.as_mut_arrow()
+            .unwrap()
+            .body
+            .as_mut_function_body()
+            .unwrap(),
+        );
         if worklet_type.is_none() {
           n.visit_mut_children_with(self);
           return;
@@ -412,7 +417,7 @@ impl VisitMut for WorkletVisitor {
                 .as_mut_arrow()
                 .unwrap()
                 .body
-                .as_block_stmt()
+                .as_function_body()
                 .unwrap()
                 .clone()
                 .into(),
@@ -422,6 +427,7 @@ impl VisitMut for WorkletVisitor {
               is_generator: n.as_mut_arrow().unwrap().is_generator,
               type_params: n.as_mut_arrow().unwrap().type_params.clone(),
               decorators: vec![],
+              this_param: None,
               params: n
                 .as_mut_arrow()
                 .unwrap()
@@ -801,8 +807,8 @@ impl WorkletVisitor {
     );
   }
 
-  fn check_is_worklet_block(&self, n: &mut BlockStmt) -> Option<WorkletType> {
-    let BlockStmt { stmts, .. } = n;
+  fn check_is_worklet_block(&self, n: &mut FunctionBody) -> Option<WorkletType> {
+    let FunctionBody { stmts, .. } = n;
     if !stmts.is_empty() {
       match &mut stmts[0] {
         Stmt::Expr(ExprStmt { expr, span: _ }) => match &mut **expr {

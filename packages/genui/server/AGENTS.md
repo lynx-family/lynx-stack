@@ -19,10 +19,10 @@ For multi-instance deployments, place a shared rate limiter (e.g. an API
 gateway or Redis-backed limiter) in front of this server when global rate
 limits are required.
 
-## Required Model Configuration
+## Model Configuration
 
-Before starting this server, provide the provider credentials, endpoint, and
-model list through one JSON environment variable:
+To provide server-owned model choices, configure the provider credentials,
+endpoint, and model list through one JSON environment variable:
 
 ```bash
 export GENUI_MODEL_CONFIG_JSON='{
@@ -46,6 +46,14 @@ export GENUI_MODEL_CONFIG_JSON='{
   supported output ceiling. Lynx XML requests target 16384 tokens and use the
   lower of that target and the configured model ceiling.
 - `reasoningEffort` is optional per model.
+
+`GENUI_MODEL_CONFIG_JSON` is optional when the request supplies a complete
+custom provider with `model`, `apiKey`, and `baseURL`. Partial custom provider
+values are ignored rather than inheriting a server-owned credential. A
+request-scoped custom `baseURL` must exactly match one of the public
+OpenAI-compatible provider URLs in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS` (an
+optional trailing slash is normalized). Server-owned model configuration
+remains the trusted path for private, HTTP, or deployment-specific endpoints.
 
 `GET /models` exposes only the top-level names and default selection. It must
 never expose `model`, `apiKey`, or `baseURL` to the playground.
@@ -178,32 +186,31 @@ those calls in the first place. Keep this boundary in place: model output must
 not make the server-side headless resource loader fetch arbitrary URLs, read
 local files, or execute nested bundles.
 
-By default, Judge renders
+By default, Judge securely fetches and renders
 `https://lynx-stack.dev/genui/a2ui.lynx.js`. Override that server-owned bundle
-URL when running a local or pinned bundle:
+URL with another publicly resolvable HTTP(S) asset when pinning a bundle:
 
 ```bash
-export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
+export UI_JUDGE_BUNDLE_URL="https://cdn.example.com/a2ui.lynx.js"
 ```
+
+The sidecar applies the screenshot endpoint's SSRF policy to this URL, so
+localhost, private-network targets, redirects, and URL credentials are
+rejected. Use the Rust library API for trusted local bundle judging.
 
 ## Security
 
-By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-`/a2ui/action`, `/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and
-`/html/stream` **cannot** override `apiKey` or `baseURL`. This
-prevents an unauthenticated client from turning the server into an open
-proxy that uses arbitrary keys against arbitrary OpenAI-compatible
-endpoints.
+Request bodies submitted to `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
+`/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream`
+may provide a complete custom `model`, `apiKey`, and `baseURL`. Incomplete
+overrides are ignored and ordinary model names resolve only through
+`GENUI_MODEL_CONFIG_JSON`.
 
-For trusted local development workflows where overriding is desirable
-(e.g. the playground swapping providers), opt in explicitly:
-
-```bash
-export A2UI_ALLOW_CLIENT_OVERRIDE="1"
-```
-
-Do **not** enable this flag on a publicly reachable deployment unless
-authentication and an allow-list are added in front of the server.
+Request-scoped custom providers accept only the exact HTTPS base URLs in
+`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`; reject alternate origins, ports, paths,
+credentials, query strings, and fragments. Add a provider only when its
+official OpenAI-compatible endpoint is documented and covered by tests. Do not
+expose these routes publicly without authentication.
 
 ## Rate Limiting
 

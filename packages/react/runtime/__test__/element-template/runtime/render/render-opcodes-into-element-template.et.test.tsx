@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { h } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
@@ -26,6 +27,7 @@ import {
   __OpPageStart,
   __OpSlot,
   __OpText,
+  renderToString,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 
 describe('renderOpcodesIntoElementTemplate', () => {
@@ -204,7 +206,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: 'list' },
       __OpAttr,
-      'typedAttributes',
       attributes,
       __OpSlot,
       0,
@@ -259,6 +260,102 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-2)).toBe(listRef);
   });
 
+  it('keeps compiled and typed attributes separate across nested frames', () => {
+    const itemRef = { kind: 'item-ref' };
+    const listRef = { kind: 'list-ref' };
+    const parentRef = { kind: 'parent-ref' };
+    const handleTap = vi.fn();
+    const parentAttributes = [handleTap, 'parent'];
+    const itemAttributes = ['item'];
+    const listAttributes = { id: 'feed', bindtap: handleTap };
+    __etAttrPlanMap._et_parent = [0, adaptEventAttrSlot];
+    createElementTemplate.mockReturnValueOnce(itemRef).mockReturnValueOnce(parentRef);
+    createTypedElementTemplate.mockReturnValueOnce(listRef);
+
+    const result = renderOpcodesIntoElementTemplate(renderToString(
+      h('_et_parent', {
+        attributeSlots: parentAttributes,
+        $0: h('list', {
+          attributes: listAttributes,
+          $0: h('_et_item', {
+            attributeSlots: itemAttributes,
+            __listItemPlatformInfo: { 'item-key': 'a' },
+          }),
+        }),
+      }),
+      undefined,
+    ));
+
+    expect(result.rootRefs).toEqual([parentRef]);
+    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_item', null, itemAttributes, null, -1);
+    expect(createTypedElementTemplate).toHaveBeenCalledWith(
+      'list',
+      {
+        id: 'feed',
+        bindtap: '-2:0:bindtap',
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -2,
+      { listChildren: [itemRef] },
+    );
+    expect(createElementTemplate).toHaveBeenNthCalledWith(
+      2,
+      '_et_parent',
+      null,
+      ['-3:0:', 'parent'],
+      [[listRef]],
+      -3,
+    );
+    expect(parentAttributes).toEqual([handleTap, 'parent']);
+    expect(createElementTemplate.mock.calls[1]![2]).not.toBe(parentAttributes);
+    expect(itemAttributes).toEqual(['item']);
+    expect(listAttributes).toEqual({ id: 'feed', bindtap: handleTap });
+    expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('resets attribute payloads when sibling frames switch host types', () => {
+    createElementTemplate.mockImplementation(type => ({ type }));
+    createTypedElementTemplate.mockImplementation(type => ({ type }));
+
+    renderOpcodesIntoElementTemplate(renderToString([
+      h('_et_with_attrs', { attributeSlots: ['compiled'] }),
+      h('list', {}),
+      h('list', { attributes: { id: 'typed' } }),
+      h('_et_without_attrs', {}),
+    ], undefined));
+
+    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_with_attrs', null, ['compiled'], null, -1);
+    expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
+      1,
+      'list',
+      {
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -2,
+      { listChildren: [] },
+    );
+    expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
+      2,
+      'list',
+      {
+        id: 'typed',
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -3,
+      { listChildren: [] },
+    );
+    expect(createElementTemplate).toHaveBeenNthCalledWith(2, '_et_without_attrs', null, null, null, -4);
+  });
+
   it('creates empty exact lists without logical children or typed attributes', () => {
     const listRef = { kind: 'list-ref' };
     createTypedElementTemplate.mockReturnValueOnce(listRef);
@@ -310,7 +407,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: 'list' },
       __OpAttr,
-      'typedAttributes',
       {},
       __OpSlot,
       0,
@@ -490,7 +586,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_event' },
       __OpAttr,
-      'attributeSlots',
       [handleTap, 'title', 1],
       __OpEnd,
     ]);
@@ -544,7 +639,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_event' },
       __OpAttr,
-      'attributeSlots',
       [null, undefined, false, true],
       __OpEnd,
     ]);
@@ -589,7 +683,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_ref' },
       __OpAttr,
-      'attributeSlots',
       [ref],
       __OpEnd,
     ]);
@@ -614,7 +707,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_spread' },
       __OpAttr,
-      'attributeSlots',
       [{
         id: 'cta',
         className: 'primary',
@@ -646,7 +738,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_spread' },
       __OpAttr,
-      'attributeSlots',
       [{
         id: 'cta',
         ref,

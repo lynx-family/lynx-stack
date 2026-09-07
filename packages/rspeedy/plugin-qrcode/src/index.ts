@@ -160,12 +160,12 @@ export function pluginQRCode(
         unregisterPreviewShortcuts = undefined
       })
 
-      api.onAfterStartPreviewServer(async ({ environments, routes, port }) => {
+      api.onAfterStartPreviewServer(async ({ environments, port }) => {
         unregisterPreviewShortcuts?.()
 
         try {
           unregisterPreviewShortcuts = await main(
-            getEntriesFromRoutes(routes, environments),
+            getLynxEntries(environments),
             port,
           )
         } catch (error) {
@@ -173,8 +173,8 @@ export function pluginQRCode(
         }
       })
 
-      api.onAfterStartDevServer(async ({ environments, routes, port }) => {
-        const entries = getEntriesFromRoutes(routes, environments)
+      api.onAfterStartDevServer(async ({ environments, port }) => {
+        const entries = getLynxEntries(environments)
 
         if (entries.length === 0) {
           return
@@ -219,18 +219,10 @@ export function pluginQRCode(
   }
 }
 
-function getEntriesFromRoutes(
-  routes: { entryName: string }[],
+function getLynxEntries(
   environments: Record<string, EnvironmentContext>,
 ): string[] {
-  const entries = new Set(Object.keys(environments['lynx']?.entry ?? {}))
-  return [
-    ...new Set(
-      routes
-        .map(route => route.entryName)
-        .filter(entryName => entries.has(entryName)),
-    ),
-  ]
+  return Object.keys(environments['lynx']?.entry ?? {})
 }
 
 type PrintUrlsFn = Extract<

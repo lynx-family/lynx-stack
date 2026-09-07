@@ -48,7 +48,6 @@ describe('probeGenuiBenchUiJudge', () => {
       fetch: () =>
         Promise.resolve(
           Response.json({
-            model: 'gpt-5.5-2026-04-24',
             status: 'ok',
           }),
         ),
@@ -63,7 +62,7 @@ describe('probeGenuiBenchUiJudge', () => {
     });
   });
 
-  test('rejects a sidecar configured with a different judge model', async () => {
+  test('does not configure or validate the UI Judge model', async () => {
     const capability = await probeGenuiBenchUiJudge('a2ui', {
       env: {
         UI_JUDGE_SERVER_URL: 'http://judge.test',
@@ -74,11 +73,7 @@ describe('probeGenuiBenchUiJudge', () => {
         ),
     });
 
-    expect(capability).toEqual({
-      enabled: false,
-      reason:
-        'UI Judge model mismatch: expected gpt-5.5-2026-04-24, received another-model.',
-    });
+    expect(capability.enabled).toBe(true);
   });
 });
 

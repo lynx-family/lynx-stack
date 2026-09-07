@@ -39,6 +39,8 @@ The Rust code forms the logic backbone, compiled into WASM.
 
 TypeScript bindings that load the WASM module and build the browser environment.
 
+- **`ts/animax.ts`**: Opt-in side-effect entry for `@lynx-js/web-core/animax`. It imports `@lynx-js/animax` without making it part of the default Web Core bundle graph.
+
 #### Main Thread (`ts/client/mainthread`)
 
 Handles DOM rendering and user interaction.

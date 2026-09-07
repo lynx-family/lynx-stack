@@ -41,6 +41,7 @@ export interface BenchProviderConfig {
 
 export interface BenchPlaygroundConfig {
   baseUrl?: string;
+  uiJudgeServerUrl?: string;
 }
 
 export interface BenchSettings {

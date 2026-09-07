@@ -7,6 +7,8 @@ mod headless;
 mod judge;
 mod model;
 mod screenshot;
+#[cfg(feature = "server")]
+mod ssrf;
 mod visual;
 
 #[cfg(feature = "server")]

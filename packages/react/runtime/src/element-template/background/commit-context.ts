@@ -12,7 +12,7 @@ interface ElementTemplateCommitNonPayloadState {
   // Background-only JS objects must not be included in the cross-thread update
   // payload. They ride alongside the payload until the dispatch boundary
   // schedules delayed cleanup.
-  removedSubtreesAwaitingTeardown: BackgroundElementTemplateInstance[];
+  removedSubtreesAwaitingTeardown: Set<BackgroundElementTemplateInstance>;
 }
 
 type ElementTemplateGlobalCommitContext = ElementTemplateUpdateCommitContext & {
@@ -20,7 +20,7 @@ type ElementTemplateGlobalCommitContext = ElementTemplateUpdateCommitContext & {
 };
 
 const nonPayload: ElementTemplateCommitNonPayloadState = {
-  removedSubtreesAwaitingTeardown: [],
+  removedSubtreesAwaitingTeardown: new Set(),
 };
 
 export const globalCommitContext = coreGlobalCommitContext as unknown as ElementTemplateGlobalCommitContext;
@@ -29,20 +29,19 @@ globalCommitContext.nonPayload = nonPayload;
 
 export function resetGlobalCommitContext(): void {
   resetCoreGlobalCommitContext();
-  nonPayload.removedSubtreesAwaitingTeardown = [];
+  nonPayload.removedSubtreesAwaitingTeardown.clear();
 }
 
 export function markRemovedSubtreeForPostDispatchTeardown(
   root: BackgroundElementTemplateInstance,
 ): void {
-  const { removedSubtreesAwaitingTeardown } = globalCommitContext.nonPayload;
-  if (!removedSubtreesAwaitingTeardown.includes(root)) {
-    removedSubtreesAwaitingTeardown.push(root);
-  }
+  globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown.add(root);
 }
 
 export function takeRemovedSubtreesForPostDispatchTeardown(): BackgroundElementTemplateInstance[] {
-  const removedSubtreesAwaitingTeardown = globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown;
-  globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown = [];
-  return removedSubtreesAwaitingTeardown;
+  const { removedSubtreesAwaitingTeardown } = globalCommitContext.nonPayload;
+  // Each delayed cleanup owns its batch after the current commit is reset.
+  const roots = [...removedSubtreesAwaitingTeardown];
+  removedSubtreesAwaitingTeardown.clear();
+  return roots;
 }

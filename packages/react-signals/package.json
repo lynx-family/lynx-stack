@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-signals",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Thread-aware Preact Signals integration for ReactLynx.",
   "keywords": [
     "lynx",

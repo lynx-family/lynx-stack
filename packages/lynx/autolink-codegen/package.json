@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/autolink-codegen",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Lynx library code generator",
   "keywords": [
     "Lynx",

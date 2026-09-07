@@ -29,6 +29,11 @@ export type WASMJSBindingInjectedHandler = {
 
 const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
 
+type EventReactiveElement = HTMLElement & {
+  enableEvent?(eventName: string): void;
+  disableEvent?(eventName: string): void;
+};
+
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
@@ -322,19 +327,38 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   }
 
   enableElementEvent(elementRef: WeakRef<HTMLElement>, eventName: string) {
-    const element = elementRef.deref();
-    if (element) {
-      // @ts-expect-error
-      element.enableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
-    }
+    this.#invokeElementEventMethod(elementRef, eventName, 'enableEvent');
   }
 
   disableElementEvent(elementRef: WeakRef<HTMLElement>, eventName: string) {
-    const element = elementRef.deref();
-    if (element) {
-      // @ts-expect-error
-      element.disableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
+    this.#invokeElementEventMethod(elementRef, eventName, 'disableEvent');
+  }
+
+  #invokeElementEventMethod(
+    elementRef: WeakRef<HTMLElement>,
+    eventName: string,
+    method: 'enableEvent' | 'disableEvent',
+  ) {
+    const element = elementRef.deref() as EventReactiveElement | undefined;
+    if (!element) return;
+
+    const normalizedEventName = LynxEventNameToW3cCommon[eventName]
+      ?? eventName;
+    if (element[method]) {
+      element[method](normalizedEventName);
+      return;
     }
+
+    const registry = element.ownerDocument.defaultView?.customElements;
+    if (!registry || !element.localName.includes('-')) return;
+    void registry.whenDefined(element.localName).then(() => {
+      const upgradedElement = elementRef.deref() as
+        | EventReactiveElement
+        | undefined;
+      if (!upgradedElement) return;
+      registry.upgrade(upgradedElement);
+      upgradedElement[method]?.(normalizedEventName);
+    });
   }
 
   setAttribute(elementRef: WeakRef<HTMLElement>, name: string, value: string) {

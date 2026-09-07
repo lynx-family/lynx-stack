@@ -21,6 +21,11 @@ describe('Default export', () => {
     expect(compat.use).toBe(preactUse);
   });
 
+  it('should include useInsertionEffect', () => {
+    expect(compat).toHaveProperty('useInsertionEffect');
+    expect(compat.useInsertionEffect).toBe(ReactLynx.useEffect);
+  });
+
   it('should include startTransition and useTransition', () => {
     expect(compat).toHaveProperty('startTransition');
     expect(compat.startTransition).toBe(preactStartTransition);
@@ -30,8 +35,8 @@ describe('Default export', () => {
   });
 
   it('should have correct number of exports', () => {
-    // +3 for startTransition, use and useTransition
-    const expectedExportCount = Object.keys(ReactLynx).length + 3;
+    // +4 for startTransition, use, useInsertionEffect and useTransition
+    const expectedExportCount = Object.keys(ReactLynx).length + 4;
     expect(Object.keys(compat).length).toBe(expectedExportCount);
   });
 });

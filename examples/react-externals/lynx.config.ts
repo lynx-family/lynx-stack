@@ -48,6 +48,12 @@ export default defineConfig({
         : { reactlynx: true },
       externals: {
         './App.js': 'comp-lib.lynx.bundle',
+        './utils.js': {
+          bundlePath: 'utils.lynx.bundle',
+          libraryName: './utils.js',
+          background: { sectionPath: './utils.js' },
+          async: true,
+        },
       },
       globalObject: 'globalThis',
     }),

@@ -55,11 +55,6 @@ import type {
 
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
-  /**
-   * Create an agent for this call without retaining request-scoped provider
-   * credentials in the shared provider cache.
-   */
-  disableAgentCache?: boolean | undefined;
   /** Disable non-deterministic web and image search for controlled runs. */
   enableWebSearch?: boolean | undefined;
   maxRepairAttempts?: number | undefined;

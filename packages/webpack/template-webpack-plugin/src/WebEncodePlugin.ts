@@ -81,11 +81,18 @@ export class WebEncodePlugin {
         }, (encodeOptions) => {
           const { encodeData, intermediateAssets } = encodeOptions;
 
-          const name = last(Object.keys(encodeData.manifest));
+          // A bundle assembled from sections packs every background chunk, so
+          // none of them stays on disk. A card keeps its split chunks.
+          const inlinedManifest =
+            encodeData.sourceContent.appType === 'DynamicComponent'
+              ? Object.keys(encodeData.manifest)
+              : [last(Object.keys(encodeData.manifest))];
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
             [
-              name === undefined ? undefined : { name },
+              ...inlinedManifest.map(name =>
+                name === undefined ? undefined : { name }
+              ),
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...encodeData.css.chunks,

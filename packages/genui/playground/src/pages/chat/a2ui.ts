@@ -475,7 +475,7 @@ export const A2UI_CHAT_ADAPTER = {
   suggestions: SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
-    const url = getChatEndpoint('a2ui', host);
+    const url = getChatEndpoint('a2ui', host, settings);
     const provider = toProviderRequestOptions(settings);
     return {
       url,
@@ -634,7 +634,7 @@ export const A2UI_CHAT_ADAPTER = {
     },
     label: actionLabel,
     request({ action, conversation, settings, host }) {
-      const chatEndpoint = getChatEndpoint('a2ui', host);
+      const chatEndpoint = getChatEndpoint('a2ui', host, settings);
       const url = getA2UIActionEndpoint(chatEndpoint);
       const provider = toProviderRequestOptions(settings);
       return {

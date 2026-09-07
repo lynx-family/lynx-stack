@@ -1,5 +1,30 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.0
+
+### Minor Changes
+
+- Add `customSectionNaming`, `appType` and `enableSectionBytecode`, so a caller can have a bundle assembled entirely from custom sections under names of its own. A `FetchBundle` lazy bundle is one such caller; an external bundle is another. ([#3692](https://github.com/lynx-family/lynx-stack/pull/3692))
+
+- **BREAKING CHANGE**: Emit the intermediate files into `.lynx` instead of `.rspeedy`, since the directory is written by the Lynx build engine rather than by Rspeedy. The directory is no longer configurable: `output.distPath.intermediate` was documented as never read, and nothing else reads it now either. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+### Patch Changes
+
+- Record a custom section's real location on the asset it was assembled from. An asset that moved into `customSections` kept the `lepusCode` or `manifest` location it was stamped with before the split, so consumers reading `lynx:tasm-section` were pointed at a section the bundle does not carry. ([#3776](https://github.com/lynx-family/lynx-stack/pull/3776))
+
+- Accept `DEBUG=lynx` (and `lynx:*`, `lynx:template`) for the Lynx debug output and intermediates. It is the recommended form now that the plugins also run under Rslib and Rsbuild; `DEBUG=rspeedy` keeps working. ([#3735](https://github.com/lynx-family/lynx-stack/pull/3735))
+
+- Assemble every main-thread entry of an external bundle into its own section instead of dropping all but the first, and leave no packed chunk of a web external bundle on disk. ([#3752](https://github.com/lynx-family/lynx-stack/pull/3752))
+
+- Map an async chunk shared by an unnamed `import()` and a `webpackChunkName` import to the lazy bundle derived from its modules, regardless of build order. ([#3751](https://github.com/lynx-family/lynx-stack/pull/3751))
+
+- `pluginReactLynx` registers the encoders and the background runtime wrapper for every caller, and `WebEncodePlugin` routes the custom sections of a bundle without a root into the slots the web runtime reads. `@lynx-js/lynx-bundle-rslib-config` only sets the template plugin and the main-thread wrapper up now. ([#3744](https://github.com/lynx-family/lynx-stack/pull/3744))
+
+- Stop emitting a lazy bundle for a dynamic import whose module is also imported statically. Rspack puts such a module in the initial chunk and drops the now-empty async chunk, but keeps the chunk group, so the template was still emitted with an empty payload that nothing loads -- and the web target crashed encoding it. ([#3633](https://github.com/lynx-family/lynx-stack/pull/3633))
+- Updated dependencies [[`5dfe399`](https://github.com/lynx-family/lynx-stack/commit/5dfe3999492aa4184fd8f4de9c686438f894a6f7), [`76126fc`](https://github.com/lynx-family/lynx-stack/commit/76126fcad0f16e649c372d22c013e90ad88640df), [`5f35429`](https://github.com/lynx-family/lynx-stack/commit/5f354299d85c3dbdf9d51358eecb6a2a3e5da1d1), [`f9fe5ae`](https://github.com/lynx-family/lynx-stack/commit/f9fe5aed8ec13c307ee22030cc2a925104fc7297), [`0047e35`](https://github.com/lynx-family/lynx-stack/commit/0047e3578e639a522bae8c78f596ebacfe0114ec), [`b2a8367`](https://github.com/lynx-family/lynx-stack/commit/b2a8367e4ec481f7cf026f902fb049fc1caf04ed), [`8ec51e4`](https://github.com/lynx-family/lynx-stack/commit/8ec51e4cfc778c946884cee415eb3ec2d12829a1), [`4d81264`](https://github.com/lynx-family/lynx-stack/commit/4d812643c39bd5cc48bd6e9fdbacc6d06a051a4a), [`1c50924`](https://github.com/lynx-family/lynx-stack/commit/1c509240dd5f2d5a3dbda47416ffffe711b0e877), [`b4dc3e1`](https://github.com/lynx-family/lynx-stack/commit/b4dc3e1138ee9c40e6eb46714af15d85c856e80e)]:
+  - @lynx-js/web-core@0.26.0
+  - @lynx-js/webpack-runtime-globals@0.0.8
+
 ## 0.15.2
 
 ### Patch Changes

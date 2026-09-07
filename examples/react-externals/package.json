@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run build:comp-lib && rspeedy build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy build",
+    "build": "pnpm run build:comp-lib && pnpm run build:utils && rspeedy build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true pnpm run build:utils && cross-env REACTLYNX_ASYNC=true rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
     "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
-    "dev": "pnpm run build:comp-lib && rspeedy dev",
-    "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy dev",
+    "build:utils": "rslib build --config rslib-utils.config.ts",
+    "dev": "pnpm run build:comp-lib && pnpm run build:utils && rspeedy dev",
+    "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true pnpm run build:utils && cross-env REACTLYNX_ASYNC=true rspeedy dev",
     "preview": "rspeedy preview",
     "preview:react-async": "cross-env REACTLYNX_ASYNC=true rspeedy preview"
   },
@@ -21,6 +22,7 @@
     "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@types/react": "^19.2.18",

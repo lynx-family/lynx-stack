@@ -1,5 +1,18 @@
 # @lynx-js/web-elements
 
+## 0.12.10
+
+### Patch Changes
+
+- Update markdown-it to ^15.0.1. ([#3749](https://github.com/lynx-family/lynx-stack/pull/3749))
+
+- Add an optional `scroll-view` mouse-drag plugin for touchscreen-like scrolling ([#3594](https://github.com/lynx-family/lynx-stack/pull/3594))
+  on desktop browsers. Enable it by importing
+  `@lynx-js/web-core/plugins/scroll-view-mouse-drag` or
+  `@lynx-js/web-elements/plugins/scroll-view-mouse-drag` before registering the
+  web elements.
+- Support the `bindselectionchange` event on `text` and `inline-text` in Lynx for Web. ([#3741](https://github.com/lynx-family/lynx-stack/pull/3741))
+
 ## 0.12.9
 
 ### Patch Changes

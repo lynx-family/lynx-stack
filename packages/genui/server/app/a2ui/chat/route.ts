@@ -82,7 +82,9 @@ async function postA2UIChat(req: Request) {
       cachedTokens: extractUsageMetrics(validatedResult.usage).cachedTokens,
     });
   } catch (err: unknown) {
-    const { message, name } = errorMessage(err);
+    const { message, name } = errorMessage(err, {
+      secrets: [body.apiKey, opts.apiKey],
+    });
     return jsonWithCors(req, { ok: false, error: message, name });
   }
 }

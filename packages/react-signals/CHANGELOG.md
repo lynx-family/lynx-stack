@@ -1,5 +1,11 @@
 # @lynx-js/react-signals
 
+## 0.0.3
+
+### Patch Changes
+
+- Accept `@lynx-js/react` 0.126, which ships Preact 11. ([#3450](https://github.com/lynx-family/lynx-stack/pull/3450))
+
 ## 0.0.2
 
 ### Patch Changes

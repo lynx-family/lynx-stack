@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 The Lynx Authors. All rights reserved.
+Licensed under the Apache License Version 2.0 that can be found in the
+LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+      name="viewport"
+    >
+    <link href="/main.css" rel="stylesheet">
+    <style>
+    body {
+      margin: 0;
+    }
+
+    .row {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    scroll-view {
+      border: 1px solid black;
+      height: 140px;
+      width: 180px;
+    }
+
+    .tall-content {
+      flex: none;
+      height: 500px;
+      width: 100%;
+    }
+
+    .wide-content {
+      flex: none;
+      height: 100%;
+      width: 500px;
+    }
+
+    .large-content {
+      flex: none;
+      height: 500px;
+      width: 500px;
+    }
+
+    #outer, #cross-outer, #contained-outer {
+      height: 220px;
+      width: 220px;
+    }
+
+    #inner, #cross-inner, #contained-inner {
+      flex: none;
+      height: 120px;
+      margin: 20px;
+      width: 160px;
+    }
+
+    #contained-inner {
+      overscroll-behavior-y: contain;
+    }
+
+    #rtl {
+      direction: rtl;
+    }
+
+    .outer-spacer {
+      flex: none;
+      height: 300px;
+    }
+
+    #click-target {
+      flex: none;
+      height: 120px;
+      width: 100%;
+    }
+
+    .click-spacer {
+      flex: none;
+      height: 400px;
+    }
+    </style>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+
+    <div class="row">
+      <scroll-view id="vertical" scroll-orientation="vertical">
+        <div class="tall-content">vertical</div>
+      </scroll-view>
+      <scroll-view id="horizontal" scroll-orientation="horizontal">
+        <div class="wide-content">horizontal</div>
+      </scroll-view>
+      <scroll-view id="both" scroll-orientation="both">
+        <div class="large-content">both</div>
+      </scroll-view>
+      <scroll-view id="rtl" scroll-orientation="horizontal">
+        <div class="wide-content">right to left</div>
+      </scroll-view>
+      <scroll-view
+        enable-scroll="false"
+        id="disabled"
+        scroll-orientation="vertical"
+      >
+        <div class="tall-content">disabled</div>
+      </scroll-view>
+    </div>
+
+    <div class="row">
+      <scroll-view id="outer" scroll-orientation="vertical">
+        <scroll-view id="inner" scroll-orientation="vertical">
+          <div class="tall-content">inner</div>
+        </scroll-view>
+        <div class="outer-spacer">outer</div>
+      </scroll-view>
+
+      <scroll-view id="cross-outer" scroll-orientation="vertical">
+        <scroll-view id="cross-inner" scroll-orientation="horizontal">
+          <div class="wide-content">cross-axis inner</div>
+        </scroll-view>
+        <div class="outer-spacer">cross-axis outer</div>
+      </scroll-view>
+
+      <scroll-view id="contained-outer" scroll-orientation="vertical">
+        <scroll-view id="contained-inner" scroll-orientation="vertical">
+          <div class="tall-content">contained inner</div>
+        </scroll-view>
+        <div class="outer-spacer">contained outer</div>
+      </scroll-view>
+    </div>
+
+    <div class="row">
+      <scroll-view id="clickable" scroll-orientation="vertical">
+        <button id="click-target" type="button">click or drag</button>
+        <div class="click-spacer"></div>
+      </scroll-view>
+      <output id="click-count">0</output>
+      <output id="document-click-count">0</output>
+
+      <div>
+        <scroll-view id="reconnectable" scroll-orientation="vertical">
+          <div class="tall-content">reconnectable</div>
+        </scroll-view>
+      </div>
+    </div>
+
+    <script>
+    const clickTarget = document.querySelector('#click-target');
+      const clickCount = document.querySelector('#click-count');
+      const documentClickCount = document.querySelector(
+        '#document-click-count',
+      );
+      document.addEventListener('click', () => {
+        documentClickCount.textContent = String(
+          Number(documentClickCount.textContent) + 1,
+        );
+      }, true);
+      clickTarget.addEventListener('click', () => {
+        clickCount.textContent = String(
+          Number(clickCount.textContent) + 1,
+        );
+      });
+    </script>
+  </body>
+</html>

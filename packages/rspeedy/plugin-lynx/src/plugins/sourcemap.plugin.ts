@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin, Rspack, RspackChain } from '@rsbuild/core'
+import type {
+  RsbuildConfig,
+  RsbuildPlugin,
+  Rspack,
+  RspackChain,
+} from '@rsbuild/core'
 import invariant from 'tiny-invariant'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
@@ -15,8 +20,20 @@ export function pluginSourcemap(): RsbuildPlugin {
     name: 'lynx:rsbuild:sourcemap',
     pre: ['lynx:rsbuild:dev'],
     setup(api) {
+      api.modifyEnvironmentConfig((config, { name }) => {
+        if (
+          !isLynx(name)
+          || hasCSSSourceMapConfigured(api.getRsbuildConfig('original'), name)
+          || typeof config.output.sourceMap !== 'object'
+        ) {
+          return
+        }
+        config.output.sourceMap = { ...config.output.sourceMap, css: true }
+      })
+
       api.modifyBundlerChain((chain, { isDev, environment }) => {
-        const { dev, output, server } = api.getRsbuildConfig('current')
+        const { dev, output } = environment.config
+        const { server } = api.getRsbuildConfig('current')
 
         const publicPath = isDev ? dev?.assetPrefix : output?.assetPrefix
 
@@ -70,6 +87,18 @@ export function pluginSourcemap(): RsbuildPlugin {
       })
     },
   }
+}
+
+function hasCSSSourceMapConfigured(
+  config: RsbuildConfig,
+  environment: string,
+): boolean {
+  return [
+    config.environments?.[environment]?.output?.sourceMap,
+    config.output?.sourceMap,
+  ].some(sourceMap =>
+    typeof sourceMap === 'boolean' || sourceMap?.css !== undefined
+  )
 }
 
 function applyDropSourceMapAssets(chain: RspackChain): void {

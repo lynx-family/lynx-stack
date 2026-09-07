@@ -1,5 +1,38 @@
 # @lynx-js/web-core
 
+## 0.26.0
+
+### Minor Changes
+
+- Add an opt-in `@lynx-js/web-core/animax` side-effect entry that loads `@lynx-js/animax` on the Web platform. ([#3602](https://github.com/lynx-family/lynx-stack/pull/3602))
+
+- Parse single-file Lynx XML with the current Vanilla Lynx `engine-version` and ([#3628](https://github.com/lynx-family/lynx-stack/pull/3628))
+  `thread="main"` / `thread="background"` syntax, and reject the legacy wrapper
+  syntax.
+- Support a view-scoped `console` in background bundles through the ([#3648](https://github.com/lynx-family/lynx-stack/pull/3648))
+  `LynxConsoleModule` native module.
+
+### Patch Changes
+
+- Support legacy XElement component names in Lynx for Web element creation, SSR, and CSS selectors. ([#3734](https://github.com/lynx-family/lynx-stack/pull/3734))
+
+- Defer callbacks registered through `__AddEventListener` by one microtask. ([#3643](https://github.com/lynx-family/lynx-stack/pull/3643))
+
+- Render main-only Lynx XML cards without requesting a missing `app-service.js` ([#3717](https://github.com/lynx-family/lynx-stack/pull/3717))
+  by registering an empty background entry when the optional background script
+  is omitted.
+- Add an optional `scroll-view` mouse-drag plugin for touchscreen-like scrolling ([#3594](https://github.com/lynx-family/lynx-stack/pull/3594))
+  on desktop browsers. Enable it by importing
+  `@lynx-js/web-core/plugins/scroll-view-mouse-drag` or
+  `@lynx-js/web-elements/plugins/scroll-view-mouse-drag` before registering the
+  web elements.
+- Support the `bindselectionchange` event on `text` and `inline-text` in Lynx for Web. ([#3741](https://github.com/lynx-family/lynx-stack/pull/3741))
+
+- Allow Lynx-for-Web pages that use `main-thread:gesture` to render by providing no-op gesture detector element APIs. ([#3743](https://github.com/lynx-family/lynx-stack/pull/3743))
+- Updated dependencies [[`f256648`](https://github.com/lynx-family/lynx-stack/commit/f256648ae74cf5070c914b2a1cd38d98a7e8feea), [`b2a8367`](https://github.com/lynx-family/lynx-stack/commit/b2a8367e4ec481f7cf026f902fb049fc1caf04ed), [`4d81264`](https://github.com/lynx-family/lynx-stack/commit/4d812643c39bd5cc48bd6e9fdbacc6d06a051a4a)]:
+  - @lynx-js/web-elements@0.12.10
+  - @lynx-js/web-worker-rpc@0.26.0
+
 ## 0.25.0
 
 ### Minor Changes

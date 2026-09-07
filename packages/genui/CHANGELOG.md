@@ -1,5 +1,22 @@
 # @lynx-js/genui
 
+## 0.4.0
+
+### Minor Changes
+
+- Add a Lynx XML playground with real-time Vanilla Lynx artifact generation, ([#3634](https://github.com/lynx-family/lynx-stack/pull/3634))
+  token-usage reporting, interactive examples, source editing, and direct
+  zero-build previews through the shared protocol-aware render host. Expose a
+  reusable Lynx XML system-prompt builder composed from the
+  `@lynx-js/skill-vanilla-lynx` guidance, Lynx XML-specific overrides, and
+  mobile-first responsive design constraints.
+- Support `xxs` and `2xl` gap sizes in the OpenUI layout components. ([#3753](https://github.com/lynx-family/lynx-stack/pull/3753))
+
+### Patch Changes
+
+- Updated dependencies [[`80a92ae`](https://github.com/lynx-family/lynx-stack/commit/80a92ae51ca08b0ccfa3f3f9e88d029ecf9b186f)]:
+  - @lynx-js/react-signals@0.0.3
+
 ## 0.3.1
 
 ### Patch Changes

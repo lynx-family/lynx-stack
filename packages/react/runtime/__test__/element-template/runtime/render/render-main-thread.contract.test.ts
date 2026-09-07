@@ -77,7 +77,6 @@ describe('renderMainThread contract', () => {
       __OpBegin,
       { type: '_et_contract_root' },
       __OpAttr,
-      'attributeSlots',
       ['main', 'lazy-entry'],
       __OpSlot,
       0,

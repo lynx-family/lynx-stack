@@ -112,24 +112,30 @@ describe('hydrate', () => {
     }
   });
 
-  it('forces direct MTEvent hydrate slot updates even when wrappers are deep-equal', () => {
+  it('hydrates direct MTEvent slots without serializing deep-equal wrappers', () => {
     __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
-    const ctx = { _wkltId: 'tap' };
+    const ctx = { _wkltId: 'tap', _c: { items: [1, 2], label: 'same' } };
     const root = new BackgroundElementTemplateInstance('root', [ctx]);
+    const serialized = createHydrationTemplate(root.instanceId, 'root', {
+      attributeSlots: [{
+        type: 'worklet',
+        value: { _wkltId: 'tap', _c: { items: [1, 2], label: 'same' } },
+      }],
+    });
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      const stream = hydrate(serialized, root);
 
-    const stream = hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
-      }),
-      root,
-    );
-
-    expect(stream).toEqual([
-      ElementTemplateUpdateOps.setMainThreadEvent,
-      root.instanceId,
-      0,
-      { type: 'worklet', value: ctx },
-    ]);
+      expect(stringify).not.toHaveBeenCalled();
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.setMainThreadEvent,
+        root.instanceId,
+        0,
+        { type: 'worklet', value: ctx },
+      ]);
+    } finally {
+      stringify.mockRestore();
+    }
   });
 
   it('keeps deep-equal hydrate wrappers skipped without a direct MTEvent attr plan', () => {
@@ -162,25 +168,31 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('forces callback MTRef hydrate slot updates when wrappers are deep-equal', () => {
+  it('hydrates callback MTRef slots without serializing deep-equal wrappers', () => {
     __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
-    const callback = { _wkltId: 'ref-callback' };
+    const callback = { _wkltId: 'ref-callback', _c: { items: [1, 2], label: 'same' } };
     const root = new BackgroundElementTemplateInstance('root');
     root.attributeSlots = [{ type: 'main-thread-ref', value: callback }];
+    const serialized = createHydrationTemplate(root.instanceId, 'root', {
+      attributeSlots: [{
+        type: 'main-thread-ref',
+        value: { _wkltId: 'ref-callback', _c: { items: [1, 2], label: 'same' } },
+      }],
+    });
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      const stream = hydrate(serialized, root);
 
-    const stream = hydrate(
-      createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [{ type: 'main-thread-ref', value: { _wkltId: 'ref-callback' } }],
-      }),
-      root,
-    );
-
-    expect(stream).toEqual([
-      ElementTemplateUpdateOps.setMainThreadRef,
-      root.instanceId,
-      0,
-      { type: 'main-thread-ref', value: callback },
-    ]);
+      expect(stringify).not.toHaveBeenCalled();
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.setMainThreadRef,
+        root.instanceId,
+        0,
+        { type: 'main-thread-ref', value: callback },
+      ]);
+    } finally {
+      stringify.mockRestore();
+    }
   });
 
   it('keeps deep-equal object MTRef hydrate wrappers skipped', () => {
@@ -355,7 +367,7 @@ describe('hydrate', () => {
       [101, 102, 103],
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(101)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(102)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(103)).toBeUndefined();
@@ -386,7 +398,7 @@ describe('hydrate', () => {
       [stale.instanceId],
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([stale]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([stale]);
   });
 
   it('moves serialized children to match the background slot order', () => {
@@ -419,7 +431,7 @@ describe('hydrate', () => {
       null,
     ]);
     expect(root.elementSlots[0]).toEqual([b, a, c]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
   it('treats a source-before-target cross-slot hydrate candidate as remove and recreate', () => {
@@ -462,7 +474,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -543,7 +555,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
 
@@ -586,7 +598,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([moved]);
     expect(root.elementSlots[1]).toBeUndefined();
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -651,7 +663,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([first, second]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(firstLocalId)).toBe(first);
@@ -820,7 +832,7 @@ describe('hydrate', () => {
     expect(root.elementSlots[0]).toEqual([entryB, entryA]);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(entryA);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(entryB);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
   it('ignores native main-bundle sentinel urls during hydrate', () => {

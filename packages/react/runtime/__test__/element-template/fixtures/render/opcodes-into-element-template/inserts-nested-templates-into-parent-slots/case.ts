@@ -18,7 +18,6 @@ export function run() {
       __OpBegin,
       { type: '_et_inner', props: {} },
       __OpAttr,
-      'attributeSlots',
       ['inner'],
       __OpSlot,
       0,

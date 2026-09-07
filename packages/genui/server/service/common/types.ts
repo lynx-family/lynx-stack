@@ -27,6 +27,8 @@ export interface ChatOptions {
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /** Do not retain request-scoped provider credentials in the shared cache. */
+  disableAgentCache?: boolean | undefined;
   /**
    * Set to false for controlled runs that must not inherit the process-wide
    * reasoningEffort from the selected GENUI_MODEL_CONFIG_JSON entry.

@@ -2,7 +2,7 @@
   "name": "@lynx-js/genui-lynx-xml",
   "version": "0.0.0",
   "private": true,
-  "description": "Lynx XML system prompt construction utilities for GenUI.",
+  "description": "Headless Lynx XML prompt and fragment conversion utilities for GenUI.",
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
@@ -26,7 +26,8 @@
     "test": "rstest"
   },
   "dependencies": {
-    "@lynx-js/skill-vanilla-lynx": "0.2.0"
+    "@lynx-js/skill-vanilla-lynx": "0.2.0",
+    "fast-xml-parser": "^5.11.1"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",

@@ -120,7 +120,10 @@ async function loop(
   let currentEntry = options.entries[0]!
   let currentSchema = Object.keys(devUrls)[0]!
 
-  while (!isCancel(value)) {
+  // A loop whose dev server has already been closed (`off()` ran) must not
+  // prompt again: it would consume the answer meant for the loop that
+  // replaced it.
+  while (!isCancel(value) && gExistingShortcuts.has(options)) {
     const name = await selectKey({
       message: 'Usage',
       options: [
@@ -185,7 +188,15 @@ async function loop(
     } else if (options.customShortcuts?.[name]) {
       await options.customShortcuts[name].action?.()
     }
+    if (!gExistingShortcuts.has(options)) {
+      // The dev server closed while a selection was pending; its URL is gone.
+      break
+    }
     await options.onPrint?.(value)
+    if (!gExistingShortcuts.has(options)) {
+      // ...or while `onPrint` was pending.
+      break
+    }
     if (shouldShowQRCode) {
       showQRCode(value)
     }

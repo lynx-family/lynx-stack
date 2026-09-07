@@ -8,16 +8,19 @@ import { createA2UIAgent } from '../agent/a2ui-agent.js';
 import type { A2UICatalog } from '../agent/a2ui-catalog.js';
 import { createHtmlAgent } from '../agent/html-agent.js';
 import { createLynxXmlAgent } from '../agent/lynx-xml-agent.js';
+import { createMcpAppsAgent } from '../agent/mcp-apps-agent.js';
 import { createOpenUIAgent } from '../agent/openui-agent.js';
 import A2UIAgentService from '../service/a2ui-agent.js';
 import HtmlAgentService from '../service/html-agent.js';
 import LynxXmlAgentService from '../service/lynx-xml-agent.js';
+import { McpAppsAgentService } from '../service/mcp-apps-agent.js';
 import OpenUIAgentService from '../service/openui-agent.js';
 
 rstest.mock('../agent/a2ui-agent.js', { mock: true });
 rstest.mock('../agent/html-agent.js', { mock: true });
 rstest.mock('../agent/openui-agent.js', { mock: true });
 rstest.mock('../agent/lynx-xml-agent.js', { mock: true });
+rstest.mock('../agent/mcp-apps-agent.js', { mock: true });
 
 const catalog: A2UICatalog = {
   id: 'cache-policy-test',
@@ -45,6 +48,7 @@ beforeEach(() => {
   rstest.mocked(createHtmlAgent).mockReset();
   rstest.mocked(createOpenUIAgent).mockReset();
   rstest.mocked(createLynxXmlAgent).mockReset();
+  rstest.mocked(createMcpAppsAgent).mockReset();
 });
 
 describe('request-scoped provider agent policy', () => {
@@ -122,5 +126,22 @@ describe('request-scoped provider agent policy', () => {
     expect(createHtmlAgent).toHaveBeenCalledTimes(2);
     expect(first.text).toBe('generated');
     expect(second.text).toBe('generated');
+  });
+
+  test('MCP Apps bypasses its cache for ephemeral credentials', async () => {
+    rstest.mocked(createMcpAppsAgent).mockImplementation(() => ({
+      agent: testAgent(),
+      model: 'test-model',
+    }));
+    const service = new McpAppsAgentService();
+    const options = {
+      apiKey: 'request-scoped-key',
+      disableAgentCache: true,
+    };
+
+    await service.generateRaw([], options);
+    await service.generateRaw([], options);
+
+    expect(createMcpAppsAgent).toHaveBeenCalledTimes(2);
   });
 });

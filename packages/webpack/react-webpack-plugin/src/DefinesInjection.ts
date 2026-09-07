@@ -42,7 +42,8 @@ export function applyDefinesInjection(
         resource?: string;
         layer?: string | null;
       };
-      definesImportByBoundary.clear();
+      const definesImports = definesImportByBoundary(compiler);
+      definesImports.clear();
 
       const traverse = (roots: Module[]) => {
         const visited = new Set<Module>();
@@ -173,7 +174,7 @@ export function applyDefinesInjection(
             present,
             `${resource}.__lynx-react-defines.js`,
             async (boundaryRequest) => {
-              definesImportByBoundary.set(
+              definesImports.set(
                 boundaryKey(
                   (mainThreadBoundary as ModuleWithMeta).layer,
                   resource,

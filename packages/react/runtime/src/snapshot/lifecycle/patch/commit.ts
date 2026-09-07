@@ -100,6 +100,7 @@ function replaceCommitHook(): void {
     return;
   }
   commitHookInstalled = true;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   previousCommit = options[COMMIT];
 
   hook(

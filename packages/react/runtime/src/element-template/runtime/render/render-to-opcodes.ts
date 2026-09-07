@@ -257,7 +257,7 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
 
   const attributeSlots = props.attributeSlots;
   if (attributeSlots !== undefined) {
-    opcodes.push(__OpAttr, 'attributeSlots', attributeSlots);
+    opcodes.push(__OpAttr, attributeSlots);
   }
 
   // ET host nodes are compiler-generated; `swc_plugin_element_template`
@@ -291,7 +291,7 @@ function renderTypedListHostVNode(vnode, props, context, opcodes) {
 
     const attributes = props.attributes;
     if (attributes !== undefined) {
-      opcodes.push(__OpAttr, 'typedAttributes', attributes);
+      opcodes.push(__OpAttr, attributes);
     }
 
     const listChildren = props[TYPED_LIST_LOGICAL_SLOT_PROP];

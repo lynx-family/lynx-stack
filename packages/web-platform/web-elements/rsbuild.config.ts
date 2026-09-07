@@ -6,6 +6,10 @@ export default defineConfig({
   source: {
     entry: {
       main: './tests/fixtures/shell-project.ts',
+      'no-plugin': {
+        import: './tests/fixtures/shell-project-no-plugin.ts',
+        html: false,
+      },
     },
   },
   output: {

@@ -76,4 +76,43 @@ describe('HTML stream route', () => {
       global.__HTML_AGENT_SERVICE__ = previous;
     }
   });
+
+  test('redacts a request-scoped API key from stream errors', async () => {
+    const global = globalThis as GlobalWithHtmlService;
+    const previous = global.__HTML_AGENT_SERVICE__;
+    const apiKey = 'request-only-secret+/=';
+    const encodedKey = encodeURIComponent(apiKey);
+    global.__HTML_AGENT_SERVICE__ = {
+      streamAsAsyncIterable() {
+        return Promise.reject(
+          new Error(`upstream exposed ${apiKey} and ${encodedKey}`),
+        );
+      },
+    };
+
+    try {
+      const response = await app.request('/html/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.49',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: 'Create a card' }],
+          model: 'gpt-custom',
+          apiKey,
+          baseURL: 'https://api.openai.com/v1',
+        }),
+      });
+      const body = await response.text();
+
+      expect(response.status).toBe(200);
+      expect(body).toContain('event: error');
+      expect(body).toContain('[REDACTED]');
+      expect(body).not.toContain(apiKey);
+      expect(body).not.toContain(encodedKey);
+    } finally {
+      global.__HTML_AGENT_SERVICE__ = previous;
+    }
+  });
 });

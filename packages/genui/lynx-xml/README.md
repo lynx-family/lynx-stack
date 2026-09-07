@@ -1,7 +1,9 @@
-# Lynx XML Prompt
+# Lynx XML
 
 `@lynx-js/genui-lynx-xml` owns the system prompt used to generate complete,
-zero-build `.lynxml` artifacts with Vanilla Lynx and Element PAPI.
+zero-build `.lynxml` artifacts with Vanilla Lynx and Element PAPI. It also
+provides headless utilities for converting well-formed XML fragments into
+deterministic Element PAPI JavaScript.
 
 The built-in prompt is composed from selected guidance in the direct,
 version-pinned `@lynx-js/skill-vanilla-lynx` dependency plus a small Lynx XML
@@ -43,5 +45,16 @@ const prompt = buildLynxXmlSystemPrompt({
 });
 ```
 
-The package intentionally has no model-provider, agent-runtime, renderer, or
-XML extraction dependencies. Consumers own those integration concerns.
+Convert an XML fragment into main-thread script and stable bindings for its
+`id` attributes:
+
+```ts
+import { generateMainThreadScriptResult } from '@lynx-js/genui-lynx-xml';
+
+const { bindings, javascript } = generateMainThreadScriptResult(
+  '<view id="root"><text>Hello</text></view>',
+);
+```
+
+The package intentionally has no model-provider, agent-runtime, or renderer
+dependencies. Consumers own those integration concerns.

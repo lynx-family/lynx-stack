@@ -13,6 +13,7 @@ import type {
   BenchSettings,
   BenchVariable,
 } from './a2ui-bench-types';
+import { configuredModelName } from './common/model-config.js';
 
 const MAX_GROUPS = 8;
 const MAX_SCENARIOS = 20;
@@ -143,7 +144,6 @@ function normalizeSettings(value: unknown): BenchSettings {
 
 function normalizeGroups(
   value: unknown,
-  clientOverrideAccepted: boolean,
 ): BenchGroupRequest[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -153,9 +153,8 @@ function normalizeGroups(
       const id = readString(item.id, `group-${index + 1}`, 120);
       const name = readString(item.name, `Group ${index + 1}`, 120);
       if (!id || !name) return null;
-      const model = clientOverrideAccepted
-        ? readOptionalString(item.model, 240)
-        : undefined;
+      const requestedModel = readOptionalString(item.model, 240);
+      const model = configuredModelName(requestedModel);
       const protocol = readProtocol(item.protocol);
       const profile = readProfile(item.profile, protocol);
       return {
@@ -206,15 +205,50 @@ function normalizeScenarios(value: unknown): BenchScenarioRequest[] {
 
 function normalizePlayground(
   value: unknown,
-): BenchJobRequest['playground'] {
-  if (!isRecord(value)) return undefined;
+):
+  | { ok: true; value?: BenchJobRequest['playground'] }
+  | { ok: false; error: string }
+{
+  if (!isRecord(value)) return { ok: true };
   const baseUrl = readOptionalString(value.baseUrl, 500);
-  return baseUrl ? { baseUrl } : undefined;
+  const requestedUiJudgeServerUrl = readOptionalString(
+    value.uiJudgeServerUrl,
+    500,
+  );
+  let uiJudgeServerUrl: string | undefined;
+  if (requestedUiJudgeServerUrl) {
+    try {
+      const url = new URL(requestedUiJudgeServerUrl);
+      if (
+        (url.protocol !== 'http:' && url.protocol !== 'https:')
+        || url.username
+        || url.password
+      ) {
+        throw new Error('invalid UI Judge URL');
+      }
+      url.hash = '';
+      url.search = '';
+      if (!url.pathname.endsWith('/')) url.pathname = `${url.pathname}/`;
+      uiJudgeServerUrl = url.toString();
+    } catch {
+      return {
+        ok: false,
+        error:
+          'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
+      };
+    }
+  }
+  const normalized = {
+    ...(baseUrl ? { baseUrl } : {}),
+    ...(uiJudgeServerUrl ? { uiJudgeServerUrl } : {}),
+  };
+  return Object.keys(normalized).length > 0
+    ? { ok: true, value: normalized }
+    : { ok: true };
 }
 
 export function normalizeBenchJobRequest(
   value: unknown,
-  options: { clientOverrideAccepted: boolean },
 ):
   | {
     ok: true;
@@ -229,37 +263,20 @@ export function normalizeBenchJobRequest(
   }
 
   const providerRecord = isRecord(value.provider) ? value.provider : {};
-  const requestedProviderOverride = Boolean(
-    readOptionalString(providerRecord.apiKey, 8_000)
-      ?? readOptionalString(providerRecord.baseURL, 500)
-      ?? readOptionalString(providerRecord.model, 240)
-      ?? providerRecord.api,
-  );
-  const clientOverrideAccepted = options.clientOverrideAccepted;
-  const requestedGroupModelOverride = Array.isArray(value.groups)
-    && value.groups.some((group) =>
-      isRecord(group) && readOptionalString(group.model, 240) !== undefined
-    );
+  const requestedApiKey = readOptionalString(providerRecord.apiKey, 8_000);
+  const requestedBaseURL = readOptionalString(providerRecord.baseURL, 500);
+  const requestedModel = readOptionalString(providerRecord.model, 240);
   const api =
     providerRecord.api === 'chat' || providerRecord.api === 'responses'
       ? providerRecord.api
       : undefined;
-  const provider: BenchJobRequest['provider'] = clientOverrideAccepted
-    ? {
-      ...(readOptionalString(providerRecord.apiKey, 8_000)
-        ? { apiKey: readOptionalString(providerRecord.apiKey, 8_000) }
-        : {}),
-      ...(readOptionalString(providerRecord.baseURL, 500)
-        ? { baseURL: readOptionalString(providerRecord.baseURL, 500) }
-        : {}),
-      ...(readOptionalString(providerRecord.model, 240)
-        ? { model: readOptionalString(providerRecord.model, 240) }
-        : {}),
-      ...(api ? { api } : {}),
-    }
-    : {};
+  const configuredProviderModel = configuredModelName(requestedModel);
+  let provider: BenchJobRequest['provider'] = {};
+  if (configuredProviderModel) {
+    provider = { model: configuredProviderModel };
+  }
 
-  const groups = normalizeGroups(value.groups, clientOverrideAccepted);
+  const groups = normalizeGroups(value.groups);
   const enabledGroups = groups.filter((group) => group.enabled);
   if (enabledGroups.length === 0) {
     return {
@@ -315,21 +332,25 @@ export function normalizeBenchJobRequest(
     );
   }
   if (
-    !clientOverrideAccepted
-    && (requestedProviderOverride || requestedGroupModelOverride)
+    requestedApiKey !== undefined
+    || requestedBaseURL !== undefined
+    || api !== undefined
   ) {
     warnings.push(
-      'Client provider overrides are disabled by server policy; using server environment provider settings.',
+      'Custom provider settings are unsupported for Bench; using only server-configured model selections.',
     );
   }
 
   const playground = normalizePlayground(value.playground);
+  if (!playground.ok) {
+    return { ok: false, status: 400, error: playground.error };
+  }
 
   return {
     ok: true,
     request: {
       provider,
-      ...(playground ? { playground } : {}),
+      ...(playground.value ? { playground: playground.value } : {}),
       settings,
       groups,
       scenarios,

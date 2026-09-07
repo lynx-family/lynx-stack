@@ -119,7 +119,8 @@ produce an explicit unsupported error.
 Turn on the `server` feature to serve UI Judge over HTTP:
 
 ```bash
-LYNX_USE_PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
+LYNX_USE_HOST=127.0.0.1 LYNX_USE_PORT=8080 \
+  cargo run -p ui_judge --features server --bin ui-judge-server
 ```
 
 Build the release server for Linux AMD64 from any directory with:
@@ -150,7 +151,8 @@ from a different host requires the Rust standard library and a linker for the
 Start the packaged server with:
 
 ```bash
-LYNX_USE_PORT=8080 packages/genui/ui-judge/dist/linux-amd64/start.sh
+LYNX_USE_HOST=127.0.0.1 LYNX_USE_PORT=8080 \
+  packages/genui/ui-judge/dist/linux-amd64/start.sh
 ```
 
 `start.sh` resolves the bundle directory independently of the current working
@@ -159,20 +161,49 @@ configuration, credentials, and Lynx runtime configuration continue to come
 from the caller's environment. Linux hosts must also provide the
 `libepoxy.so.0` system dependency.
 
-`LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
-process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
-`[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
-non-secret configured model name. Use `POST /compare` to compare two uploaded
-images without rendering a page or calling the VLM. Use `POST /screenshot/zip`
-to render an uploaded Lynx project from the `zip://` URL supplied in its `url`
-query parameter. Use `POST /screenshot/lynxml` to render one raw UTF-8 LynXML
-document.
+`LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. When
+`LYNX_USE_HOST` is unset, the process listens on both
+`0.0.0.0:{LYNX_USE_PORT}` and `[::]:{LYNX_USE_PORT}`. Set `LYNX_USE_HOST` to
+an IPv4 address, IPv6 address, or hostname to bind only its resolved address.
+Use `GET /health` for a readiness check and the non-secret configured model
+name. Use `POST /compare` to compare two uploaded images without rendering a
+page or calling the VLM. Screenshot capture uses four source-specific routes:
 
-The server does not allow direct `file://`, `http://`, or `https://` page
-navigation. `POST /judge` and `POST /screenshot` reject those URL forms with
-HTTP `403` before model initialization or headless capture. Use the default
-library build for trusted direct-URL judging, or upload an untrusted project to
-`POST /screenshot/zip`.
+- `POST /screenshot/zip/upload` accepts a raw ZIP body.
+- `POST /screenshot/zip/url` fetches a ZIP from the HTTP(S) URL in its
+  `text/plain` body.
+- `POST /screenshot/lynxml` accepts a raw UTF-8 LynXML body.
+- `POST /screenshot/template/url` fetches a compiled `template.js` from the
+  HTTP(S) URL in its `text/plain` body.
+
+Every screenshot route uses the same query parameters. `entry` is required and
+may be a relative staged path such as `pages/index.lynxml` or the equivalent
+`zip:///pages/index.lynxml` URL. Optional `width` and `height` parameters set the
+viewport dimensions; omitted values default to `800` and `600`, respectively.
+Both dimensions must be between 1 and 8192, and `width × height` must not exceed
+2,621,440 pixels. The server does not expose the former generic screenshot
+route, `POST /screenshot`.
+
+The server does not allow direct page navigation. `POST /judge` accepts an
+HTTP(S) `url` as a remote compiled-template source, fetches it through the same
+SSRF-safe downloader as `POST /screenshot/template/url`, stages it privately,
+and captures it in a short-lived isolated process before scoring the resulting
+frame in the parent process. The downloader rejects credentials, redirects,
+and non-public network addresses and limits the response to 10 MiB. Remote
+template judging currently requires an empty `steps` array. Direct `file://`
+URLs remain disabled; use the default library build for trusted local judging.
+
+```bash
+curl --request POST http://127.0.0.1:8080/judge \
+  --header 'content-type: application/json' \
+  --data '{
+    "url": "https://cdn.example.com/a2ui.lynx.js",
+    "task": "The generated interface should satisfy the requested task",
+    "globalProps": {"messages": []},
+    "includeGeqi": true,
+    "includeScreenshot": true
+  }'
+```
 
 To render a LynXML string without auxiliary local files, send it directly as
 the request body. The endpoint accepts `application/xml`, `text/xml`, and
@@ -180,38 +211,53 @@ the request body. The endpoint accepts `application/xml`, `text/xml`, and
 `Cache-Control: no-store`:
 
 ```bash
-curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
+curl --request POST 'http://127.0.0.1:8080/screenshot/lynxml?entry=pages%2Findex.lynxml&width=375&height=812' \
   --header 'content-type: application/xml; charset=utf-8' \
   --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
   --output screenshot.jpg
 ```
 
-The server stages the source as an internal `zip:///index.lynxml` navigation in
-a fresh private directory and renders it in the same isolated process pool as
-ZIP uploads. HTTP(S) resources with domain hosts remain available, while
-`file://`, IP-hosted HTTP(S), and paths outside that private directory remain
-blocked. Use the ZIP endpoint when the document needs relative image or script
-files.
+The server stages the source at the requested entry in a fresh private
+directory and renders it through the equivalent internal `zip:///` URL in the
+same isolated process pool as ZIP inputs. HTTP(S) resources with domain hosts
+remain available, while `file://`, IP-hosted HTTP(S), and paths outside that
+private directory remain blocked. Use a ZIP endpoint when the document needs
+relative image or script files.
 
 To render an uploaded ZIP without scoring it, send the archive itself as the
-request body and pass its entrypoint as a `zip://` URL. The route does not
-accept a caller-supplied base directory, model options, or interaction steps:
+request body and pass its entrypoint through `entry`. The route does not accept
+a caller-supplied base directory, model options, or interaction steps:
 
 ```bash
-curl --request POST 'http://127.0.0.1:8080/screenshot/zip?url=zip%3A%2F%2F%2Findex.lynxml' \
+curl --request POST 'http://127.0.0.1:8080/screenshot/zip/upload?entry=index.lynxml' \
   --header 'content-type: application/zip' \
   --data-binary '@/absolute/path/to/page.zip' \
   --output screenshot.jpg
 ```
 
-The URL must use the `zip://` scheme and select an entry inside the archive,
-for example `zip:///pages/index.lynxml`. That document may use paths relative
-to itself, such as `./images/logo.png`, or archive-root URLs such as
+The entry must be a safe relative file path inside the archive. That document
+may use paths relative to itself, such as `./images/logo.png`, or archive-root URLs such as
 `zip:///images/logo.png`. Local paths resolve only within the new private
 extraction directory created for that request. Explicit `file://` URLs and
 HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
 hosts remain available. A successful response is `200 image/jpeg` with
 `Cache-Control: no-store`.
+
+To fetch the same ZIP remotely, send its URL as the plain-text request body:
+
+```bash
+curl --request POST 'http://127.0.0.1:8080/screenshot/zip/url?entry=index.lynxml' \
+  --header 'content-type: text/plain; charset=utf-8' \
+  --data-binary 'https://cdn.example.com/page.zip' \
+  --output screenshot.jpg
+```
+
+The template URL route uses the same request shape, with an entry such as
+`main/template.js`. Both URL routes use the shared SSRF-safe downloader. It
+accepts only HTTP(S) URLs without credentials, disables redirects and ambient
+proxies, resolves DNS before connecting, pins the validated addresses for the
+request, and rejects any host that resolves to a non-public address. Remote
+responses are limited to 10 MiB; URL request bodies are limited to 8 KiB.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
@@ -230,13 +276,13 @@ content. It normalizes and compares the uploads on a blocking task; it does not
 enqueue headless capture, initialize a model client, render a Lynx page, or
 perform VLM scoring.
 
-`POST /judge` and `POST /screenshot` return `403` for direct `file://` or
-HTTP(S) page URLs. `POST /screenshot/zip` returns `422` with a JSON error when
-rendering cannot produce a frame. `POST /screenshot/lynxml` likewise returns
-`422` when its UTF-8 source cannot be rendered. Both upload routes return `413`
-when their body exceeds 10 MiB, `415` for an unsupported media type, and `408`
-when body reading or isolated rendering exceeds its deadline; the ZIP route
-also applies its ten-second extraction deadline. A busy bounded queue keeps the
+`POST /judge` returns `403` for direct `file://` page URLs and for HTTP(S)
+sources that resolve to a non-public network address. The source-specific
+screenshot routes return `422` with a JSON error when rendering cannot produce
+a frame. Uploads and remote responses return `413` when they exceed 10 MiB.
+Invalid upload media types return `415`. Body reading and isolated rendering
+return `408` when they exceed their deadlines; remote fetches return `504`. ZIP
+processing also applies its ten-second extraction deadline. A busy bounded queue keeps the
 HTTP callback pending until capacity becomes available or that deadline
 expires; eager load shedding belongs in an outer middleware. The server returns `503` when the
 headless worker is shutting down or no longer available. A headless-worker panic
@@ -254,11 +300,12 @@ its request timeout, without blocking a Tokio worker thread. If the owner panics
 admission closes and queued or capacity-waiting callers are released before the
 worker is joined.
 
-Uploaded ZIP pages are deliberately different. Each one is rendered by a fresh,
-short-lived `ui-judge-server` child process with its own `LynxContainer`, so
-native process-global image caches cannot return another upload's bytes. The
-child receives only the server-selected staging root and output path, inherits
-no model credentials, and sends no request output to stdout or stderr. A private
+Untrusted staged pages, including remote templates submitted to `/judge`, are
+deliberately different. Each one is rendered by a fresh, short-lived
+`ui-judge-server` child process with its own `LynxContainer`, so native
+process-global image caches cannot return another request's bytes. The child
+receives only server-selected paths and page-load data, inherits no model
+credentials, and sends no request output to stdout or stderr. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
 kill and reap the child before its render slot and staged tree are released;
 graceful shutdown drains accepted children. Failure to confirm reaping exits the
@@ -270,10 +317,11 @@ transcoding.
 ### Secure ZIP staging
 
 The `server` feature exposes `ui_judge::server::zip` for server adapters that
-accept user-supplied Lynx projects and backs the fixed `POST /screenshot/zip`
-route. The route buffers the raw request body with a ten-second deadline, stops
-at 10 MiB, and never accepts a caller-provided base directory. It then waits
-asynchronously for isolated-render capacity before extracting. The
+accept user-supplied Lynx projects and backs both ZIP screenshot routes. The
+upload route buffers the raw request body with a ten-second deadline, stops at
+10 MiB, and never accepts a caller-provided base directory. The URL route
+applies the same byte limit before passing the response to the staging module.
+It then waits asynchronously for isolated-render capacity before extracting. The
 module parses the content as ZIP regardless of its filename, rejects encrypted
 or overlapping archives, symbolic links, and entries other than regular files
 or directories, and extracts at most 100 entries, 50 MiB per file, and 100 MiB
@@ -331,6 +379,8 @@ legacy `/crawl?ak=` endpoint is Chat-only.
 
 Other user-configurable environment variables are:
 
+- `LYNX_USE_HOST`: optional HTTP server bind address or hostname; when unset,
+  listens on both IPv4 and IPv6 unspecified addresses.
 - `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
 - `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
   Without `LYNX_CORE_JS_PATH`, an SDK also supplies
@@ -338,11 +388,11 @@ Other user-configurable environment variables are:
 - `LYNX_CORE_JS_PATH`: override the `lynx_core.js` source at runtime and when
   building a server bundle. The bundled destination remains named
   `lynx_core.js`, so a compatible source file may use a different filename.
-- `LYNX_CORE_JS_URL` and `LYNX_CORE_JS_SHA256`: use and verify a custom
+- `CUSTOM_LYNX_CORE_JS_URL` and `CUSTOM_LYNX_CORE_JS_SHA256`: use and verify a custom
   build-time core-script download.
 - `LYNX_DOWNLOAD_RUNTIME`: enable or disable build-time runtime and core-script
   downloading.
-- `LYNX_RUNTIME_URL` and `LYNX_RUNTIME_SHA256`: use and verify a custom
+- `CUSTOM_LYNX_RUNTIME_URL` and `CUSTOM_LYNX_RUNTIME_SHA256`: use and verify a custom
   build-time runtime download.
 - `LYNX_SKIP_ADHOC_SIGN`: skip build-time ad-hoc signing on macOS.
 - `CARGO_TARGET_DIR`: override Cargo's intermediate output directory.

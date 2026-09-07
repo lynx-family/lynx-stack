@@ -250,13 +250,14 @@ export async function probeBenchUiJudge(
   options: {
     bundleUrl?: string;
     env?: NodeJS.ProcessEnv;
-    expectedModel?: string;
     fetch?: FetchLike;
+    serverUrl?: string;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
   const fetchImpl = options.fetch ?? fetch;
-  const rawServerUrl = env.UI_JUDGE_SERVER_URL?.trim();
+  const rawServerUrl = options.serverUrl?.trim()
+    ?? env.UI_JUDGE_SERVER_URL?.trim();
   if (!rawServerUrl) {
     return {
       enabled: false,
@@ -306,19 +307,6 @@ export async function probeBenchUiJudge(
         enabled: false,
         reason: 'UI Judge health check returned an invalid response.',
       };
-    }
-    if (options.expectedModel) {
-      const actualModel = typeof body.model === 'string'
-        ? body.model.trim()
-        : '';
-      if (actualModel !== options.expectedModel) {
-        return {
-          enabled: false,
-          reason: actualModel
-            ? `UI Judge model mismatch: expected ${options.expectedModel}, received ${actualModel}.`
-            : `UI Judge health check did not report the required model ${options.expectedModel}.`,
-        };
-      }
     }
   } catch (error) {
     return {

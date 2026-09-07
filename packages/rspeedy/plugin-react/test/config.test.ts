@@ -1841,6 +1841,31 @@ describe('Config', () => {
 
       expect(backgroundConfig).toHaveProperty('inlineSourcesContent', false)
     })
+
+    test('with output.sourceMap.js: "nosources" set on an environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              output: {
+                sourceMap: {
+                  js: 'nosources-source-map',
+                },
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const backgroundConfig = await getBackgroundLayerOptions(rsbuild)
+
+      expect(backgroundConfig).toHaveProperty('inlineSourcesContent', false)
+    })
   })
 
   describe('Output IIFE', () => {
@@ -2049,6 +2074,67 @@ describe('Config', () => {
       expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
         'preact',
       )
+    })
+
+    test('splitChunks.preset: "default" set on an environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              splitChunks: {
+                preset: 'default',
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+      expect(config.optimization.splitChunks).not.toBe(false)
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+      expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
+        'preact',
+      )
+    })
+
+    test('performance.chunkSplit.strategy set on an environment overrides the root', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+          environments: {
+            lynx: {
+              performance: {
+                chunkSplit: {
+                  strategy: 'all-in-one',
+                },
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+      expect(config?.optimization?.splitChunks).toBe(false)
     })
 
     test('splitChunks overrides performance.chunkSplit', async () => {

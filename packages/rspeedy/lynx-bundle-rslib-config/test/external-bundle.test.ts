@@ -15,7 +15,10 @@ import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { decodeTemplate } from './utils.js'
-import { defineExternalBundleRslibConfig } from '../src/index.js'
+import {
+  LAYERS as DEFAULT_LAYERS,
+  defineExternalBundleRslibConfig,
+} from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -207,6 +210,37 @@ describe('should build external bundle', () => {
     ])
   })
 
+  it('should build every main-thread entry into external bundle', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-multi')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          a: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+          b: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-multi',
+      output: {
+        distPath: {
+          root: distRoot,
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-multi.lynx.bundle'),
+    )
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'a',
+      'a__main-thread',
+      'b',
+      'b__main-thread',
+    ])
+  })
+
   it('should only build main-thread code into external bundle', async () => {
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
@@ -394,6 +428,145 @@ describe('JsBytecode encoding', () => {
     expect(decodedResult['custom-sections']['utils']).toBeTypeOf('string')
   })
 
+  it('should not wrap a main-thread entry with the background runtime wrapper', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: {
+            import: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+            layer: LAYERS.MAIN_THREAD,
+          },
+        },
+      },
+      id: 'utils-m-plain',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist', 'utils-m-plain'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-m-plain',
+        'utils-m-plain.lynx.bundle',
+      ),
+    )
+    const mainThreadSection = decodedResult['custom-sections']['utils']
+    expect(mainThreadSection).toBeTypeOf('string')
+    expect(mainThreadSection).not.toContain('.define(')
+  })
+
+  it('should mark a chunk by its main-thread modules rather than its name', async () => {
+    const marked: Record<string, boolean> = {}
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(fixtureDir, 'index.ts'),
+          helpers: path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'utils-shared-mt',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist', 'utils-shared-mt'),
+        },
+      },
+      tools: {
+        rspack: {
+          optimization: {
+            splitChunks: {
+              chunks: 'all',
+              minSize: 0,
+              cacheGroups: {
+                default: false,
+                defaultVendors: false,
+                mainThread: {
+                  name: 'shared-mt',
+                  test: (module: { layer?: string | null }) =>
+                    module.layer === LAYERS.MAIN_THREAD,
+                  enforce: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      plugins: [
+        pluginReactLynx(),
+        {
+          name: 'test:read-marks',
+          setup(api) {
+            api.processAssets(
+              { stage: 'report' },
+              ({ compilation }) => {
+                for (const asset of compilation.getAssets()) {
+                  if (asset.name.endsWith('.js')) {
+                    marked[asset.name] = asset.info['lynx:main-thread'] === true
+                  }
+                }
+              },
+            )
+          },
+        } satisfies rsbuild.RsbuildPlugin,
+      ],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    expect(marked).toStrictEqual({
+      'shared-mt.js': true,
+      '.lynx/utils-shared-mt/utils__main-thread.js': true,
+      '.lynx/utils-shared-mt/helpers__main-thread.js': true,
+      '.lynx/utils-shared-mt/utils.js': false,
+      '.lynx/utils-shared-mt/helpers.js': false,
+    })
+  })
+
+  it('should wrap a main-thread entry named like a path', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-path-name')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'utils-path-name',
+      output: {
+        distPath: {
+          root: distRoot,
+        },
+      },
+      plugins: [pluginReactLynx()],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-path-name.lynx.bundle'),
+    )
+    const mainThreadSection =
+      decodedResult['custom-sections']['./utils.js__main-thread']
+    expect(mainThreadSection).toBeTypeOf('string')
+    // The wrapper survives minification as an IIFE that returns the module.
+    expect(mainThreadSection).toMatch(/^\(function\s*\(\)\s*\{/)
+    expect(mainThreadSection!.trimEnd()).toMatch(
+      /\}\)\(\);?(\n\/\/# sourceMappingURL=\S*)?$/,
+    )
+    expect(mainThreadSection).toMatch(/\{\s*exports\s*:\s*\{\s*\}\s*\}/)
+  })
+
   it('should not compile main thread chunks to bytecode in development by default', async () => {
     const decodedResult = await buildAndDecode(
       'utils-dev-no-bytecode',
@@ -481,7 +654,7 @@ describe('debug mode artifacts', () => {
   // The template intermediates go into the `.lynx` directory, the same way an
   // application build emits them.
   const getFiles = () => {
-    const intermediate = path.join(distRoot, '.lynx')
+    const intermediate = path.join(distRoot, '.lynx', bundleId)
     return fs.existsSync(intermediate) ? fs.readdirSync(intermediate) : []
   }
 
@@ -1083,14 +1256,47 @@ describe('debug metadata', () => {
       rstest.unstubAllEnvs()
     }
 
-    expect(
-      fs.existsSync(path.join(distRoot, '.lynx', 'debug-metadata.json')),
-    ).toBe(true)
+    const metadataPath = path.join(
+      distRoot,
+      '.lynx',
+      'utils-debug-metadata',
+      'debug-metadata.json',
+    )
+    expect(fs.existsSync(metadataPath)).toBe(true)
+
+    // A devtool looks an artifact up by the name a stack frame carries, which
+    // for a bundle assembled from custom sections is the section name.
+    const metadata = JSON.parse(
+      await fs.promises.readFile(metadataPath, 'utf-8'),
+    ) as {
+      artifacts: {
+        kind: string
+        filename: string
+        path: string
+        tasmSection?: string[]
+      }[]
+    }
+    const mainThreadArtifact = metadata.artifacts.find(a =>
+      a.kind === 'main-thread'
+    )
+    expect(mainThreadArtifact?.tasmSection).toEqual([
+      'customSections',
+      'utils__main-thread',
+    ])
+    expect(mainThreadArtifact?.filename).toBe('utils__main-thread')
+    expect(mainThreadArtifact?.path).toBe(
+      '.lynx/utils-debug-metadata/utils__main-thread.js',
+    )
 
     // The release banner has to sit inside the module wrapper, which is what
     // `lynx.loadScript` takes the section's value from.
     const mainThread = await fs.promises.readFile(
-      path.join(distRoot, 'utils__main-thread.js'),
+      path.join(
+        distRoot,
+        '.lynx',
+        'utils-debug-metadata',
+        'utils__main-thread.js',
+      ),
       'utf-8',
     )
     expect(mainThread).toMatch(/^\(function\s*\(\)\s*\{/)
@@ -1138,7 +1344,10 @@ describe('debug info outside', () => {
         plugins: [pluginReactLynx()],
       }))
       const tasmJson = JSON.parse(
-        fs.readFileSync(path.join(distRoot, '.lynx', 'tasm.json'), 'utf-8'),
+        fs.readFileSync(
+          path.join(distRoot, '.lynx', 'utils-dbg-outside', 'tasm.json'),
+          'utf-8',
+        ),
       ) as {
         compilerOptions: Record<string, unknown>
         sourceContent: Record<string, unknown>
@@ -1151,5 +1360,105 @@ describe('debug info outside', () => {
     } finally {
       rstest.unstubAllEnvs()
     }
+  })
+})
+
+describe('intermediate directory', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  // A `development` build (`DEBUG` unset — `lynxRstestConfig` otherwise sets
+  // `DEBUG=rspeedy`) is the case that used to leak: `LynxEncodePlugin` skips
+  // its own cleanup for `NODE_ENV=development`, so the raw entry chunks stay
+  // on disk. Their directory is what this test checks.
+  it('keeps the raw entry chunks out of dist root, the way a page build does', async () => {
+    const debug = process.env['DEBUG']
+    const nodeEnv = process.env['NODE_ENV']
+    delete process.env['DEBUG']
+    process.env['NODE_ENV'] = 'development'
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-intermediate-dir')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+        id: 'utils-intermediate-dir',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }))
+    } finally {
+      if (debug === undefined) delete process.env['DEBUG']
+      else process.env['DEBUG'] = debug
+      if (nodeEnv === undefined) delete process.env['NODE_ENV']
+      else process.env['NODE_ENV'] = nodeEnv
+    }
+
+    const rootEntries = await fs.promises.readdir(distRoot)
+    expect(rootEntries.sort()).toStrictEqual([
+      '.lynx',
+      'utils-intermediate-dir.lynx.bundle',
+    ])
+    expect(
+      await fs.promises.readdir(
+        path.join(distRoot, '.lynx', 'utils-intermediate-dir'),
+      ),
+    ).toStrictEqual(
+      expect.arrayContaining(['utils.js', 'utils__main-thread.js']),
+    )
+  })
+})
+
+describe('without a DSL plugin', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  it('builds with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }))
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'plain-engine.lynx.bundle'),
+    )
+
+    // The entry picks one layer, so the bundle carries one section.
+    expect(Object.keys(decodedResult['custom-sections'])).toStrictEqual([
+      './utils.js',
+    ])
+
+    // `lynx.loadScript` returns the completion value of the section, which the
+    // runtime wrapper provides. Without it the bundle still builds, and fails
+    // to load on device.
+    expect(decodedResult['custom-sections']['./utils.js'])
+      .toMatch(/^\(function\s*\(\)\s*\{/)
+  })
+
+  it('builds a web bundle with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine-web')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine-web',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }, { target: 'web', engineVersion: '3.5' }))
+
+    expect(fs.existsSync(path.join(distRoot, 'plain-engine-web.web.bundle')))
+      .toBe(true)
   })
 })

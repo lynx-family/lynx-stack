@@ -149,13 +149,35 @@ export function collectElementTemplatesForEntries<TChunk>(
     chunk: TChunk,
   ) => Iterable<ModuleWithElementTemplateBuildInfo>,
 ): Record<string, Record<string, unknown>> {
-  const elementTemplates: Record<string, Record<string, unknown>> = {};
-  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  const chunkGroups: { chunks: Iterable<TChunk> }[] = [];
   for (const entryName of entryNames) {
     const chunkGroup = getChunkGroup(entryName);
-    if (chunkGroup === undefined) {
-      continue;
+    if (chunkGroup !== undefined) {
+      chunkGroups.push(chunkGroup);
     }
+  }
+  return collectElementTemplatesForChunkGroups(chunkGroups, getChunkModules);
+}
+
+/**
+ * Collect element templates for the chunk groups an encoded bundle covers.
+ *
+ * A lazy bundle's chunk groups come from dynamic imports and have no name, so
+ * they have to be walked directly rather than looked up in
+ * `compilation.namedChunkGroups`; otherwise the lazy bundle is encoded without
+ * its templates and the main thread cannot create them.
+ *
+ * @internal
+ */
+export function collectElementTemplatesForChunkGroups<TChunk>(
+  chunkGroups: Iterable<{ chunks: Iterable<TChunk> }>,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithElementTemplateBuildInfo>,
+): Record<string, Record<string, unknown>> {
+  const elementTemplates: Record<string, Record<string, unknown>> = {};
+  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  for (const chunkGroup of chunkGroups) {
     for (const chunk of chunkGroup.chunks) {
       for (const module of getChunkModules(chunk)) {
         if (visited.has(module)) {
@@ -586,12 +608,9 @@ class ReactWebpackPlugin {
           `${this.constructor.name}.ElementTemplate`,
           (args) => {
             const { chunkGraph } = compilation;
-            const elementTemplates = collectElementTemplatesForEntries(
-              args.chunkGroups.flatMap(cg =>
-                cg.name === null || cg.name === undefined ? [] : [cg.name]
-              ),
-              (name) => compilation.namedChunkGroups.get(name),
-              (chunk) =>
+            const elementTemplates = collectElementTemplatesForChunkGroups(
+              args.chunkGroups,
+              (chunk: Chunk) =>
                 chunkGraph.getChunkModules(
                   chunk,
                 ) as ModuleWithElementTemplateBuildInfo[],

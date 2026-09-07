@@ -121,6 +121,28 @@ describe('probeBenchUiJudge', () => {
     });
   });
 
+  test('prefers a request-scoped server URL over the environment', async () => {
+    let requestUrl = '';
+    const capability = await probeBenchUiJudge({
+      env: {
+        UI_JUDGE_SERVER_URL: 'http://environment-judge.test',
+      },
+      serverUrl: 'http://request-judge.test/worker/',
+      fetch: (input) => {
+        requestUrl = input.toString();
+        return Promise.resolve(Response.json({ status: 'ok' }));
+      },
+    });
+
+    expect(requestUrl).toBe('http://request-judge.test/worker/health');
+    expect(capability).toMatchObject({
+      enabled: true,
+      session: {
+        judgeUrl: 'http://request-judge.test/worker/judge',
+      },
+    });
+  });
+
   test('keeps Judge disabled when the sidecar is not ready', async () => {
     const capability = await probeBenchUiJudge({
       env: {

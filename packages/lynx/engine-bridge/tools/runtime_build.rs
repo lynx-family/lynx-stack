@@ -24,19 +24,19 @@ const LINUX_X86_64_RUNTIME_URL: &str = concat!(
 );
 const LINUX_X86_64_RUNTIME_SHA256: &str =
   "db12b6d6e61a8fb378f6517b7c4df7f017304c52c54a6bd604c362a7d5f517a4";
-const LYNX_CORE_JS_URL: &str = concat!(
+const DEFAULT_LYNX_CORE_JS_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
   "lynx-runtime-clay-manual-0.0.4/lynx_core.js"
 );
-const LYNX_CORE_JS_SHA256: &str =
+const DEFAULT_LYNX_CORE_JS_SHA256: &str =
   "81f0b9dbf51684872de0489b037110eab448e42039f5ac69d6ebe18371ea3efa";
 const LYNX_CORE_JS_RELATIVE_PATH: &str = "resources/lynx_core.js";
 
 pub(crate) fn prepare_runtime_for(root: &Path) -> Option<PathBuf> {
   println!("cargo:rerun-if-env-changed=LYNX_LIB_PATH");
   println!("cargo:rerun-if-env-changed=LYNX_SDK_DIR");
-  println!("cargo:rerun-if-env-changed=LYNX_RUNTIME_URL");
-  println!("cargo:rerun-if-env-changed=LYNX_RUNTIME_SHA256");
+  println!("cargo:rerun-if-env-changed=CUSTOM_LYNX_RUNTIME_URL");
+  println!("cargo:rerun-if-env-changed=CUSTOM_LYNX_RUNTIME_SHA256");
   println!("cargo:rerun-if-env-changed=LYNX_DOWNLOAD_RUNTIME");
   println!("cargo:rerun-if-env-changed=LYNX_SKIP_ADHOC_SIGN");
 
@@ -71,8 +71,8 @@ pub(crate) fn prepare_runtime_for(root: &Path) -> Option<PathBuf> {
 
 pub(crate) fn prepare_lynx_core_for(root: &Path) -> Option<PathBuf> {
   println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_PATH");
-  println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_URL");
-  println!("cargo:rerun-if-env-changed=LYNX_CORE_JS_SHA256");
+  println!("cargo:rerun-if-env-changed=CUSTOM_LYNX_CORE_JS_URL");
+  println!("cargo:rerun-if-env-changed=CUSTOM_LYNX_CORE_JS_SHA256");
   println!("cargo:rerun-if-env-changed=LYNX_SDK_DIR");
   println!("cargo:rerun-if-env-changed=LYNX_DOWNLOAD_RUNTIME");
 
@@ -136,18 +136,19 @@ fn should_download_runtime() -> bool {
   if let Some(value) = env::var_os("LYNX_DOWNLOAD_RUNTIME") {
     return enabled_env_flag(&value);
   }
-  default_runtime_url().is_some() || env::var_os("LYNX_RUNTIME_URL").is_some()
+  default_runtime_url().is_some() || env::var_os("CUSTOM_LYNX_RUNTIME_URL").is_some()
 }
 
 fn should_download_lynx_core() -> bool {
   if let Some(value) = env::var_os("LYNX_DOWNLOAD_RUNTIME") {
     return enabled_env_flag(&value);
   }
-  default_runtime_url().is_some() || env::var_os("LYNX_CORE_JS_URL").is_some()
+  default_runtime_url().is_some() || env::var_os("CUSTOM_LYNX_CORE_JS_URL").is_some()
 }
 
 fn has_custom_lynx_core_download() -> bool {
-  env::var_os("LYNX_CORE_JS_URL").is_some() || env::var_os("LYNX_CORE_JS_SHA256").is_some()
+  env::var_os("CUSTOM_LYNX_CORE_JS_URL").is_some()
+    || env::var_os("CUSTOM_LYNX_CORE_JS_SHA256").is_some()
 }
 
 fn enabled_env_flag(value: &OsStr) -> bool {
@@ -158,43 +159,45 @@ fn enabled_env_flag(value: &OsStr) -> bool {
 }
 
 fn runtime_url() -> String {
-  if let Some(url) = env::var_os("LYNX_RUNTIME_URL") {
+  if let Some(url) = env::var_os("CUSTOM_LYNX_RUNTIME_URL") {
     return url.to_string_lossy().into_owned();
   }
   if let Some(url) = default_runtime_url() {
     return url.to_string();
   }
   panic!(
-    "no default Lynx runtime URL is configured for target {}; set LYNX_RUNTIME_URL",
+    "no default Lynx runtime URL is configured for target {}; set CUSTOM_LYNX_RUNTIME_URL",
     target_triple_name()
   );
 }
 
 fn runtime_sha256(url: &str) -> String {
-  if let Some(sha256) = env::var_os("LYNX_RUNTIME_SHA256") {
+  if let Some(sha256) = env::var_os("CUSTOM_LYNX_RUNTIME_SHA256") {
     return sha256.to_string_lossy().into_owned();
   }
   match url {
     MACOS_AARCH64_RUNTIME_URL => MACOS_AARCH64_RUNTIME_SHA256.to_string(),
     LINUX_X86_64_RUNTIME_URL => LINUX_X86_64_RUNTIME_SHA256.to_string(),
-    _ => panic!("LYNX_RUNTIME_SHA256 must be set when LYNX_RUNTIME_URL is customized"),
+    _ => {
+      panic!("CUSTOM_LYNX_RUNTIME_SHA256 must be set when CUSTOM_LYNX_RUNTIME_URL is customized")
+    }
   }
 }
 
 fn lynx_core_url() -> String {
-  env::var_os("LYNX_CORE_JS_URL")
+  env::var_os("CUSTOM_LYNX_CORE_JS_URL")
     .map(|url| url.to_string_lossy().into_owned())
-    .unwrap_or_else(|| LYNX_CORE_JS_URL.to_string())
+    .unwrap_or_else(|| DEFAULT_LYNX_CORE_JS_URL.to_string())
 }
 
 fn lynx_core_sha256(url: &str) -> String {
-  if let Some(sha256) = env::var_os("LYNX_CORE_JS_SHA256") {
+  if let Some(sha256) = env::var_os("CUSTOM_LYNX_CORE_JS_SHA256") {
     return sha256.to_string_lossy().into_owned();
   }
-  if url == LYNX_CORE_JS_URL {
-    return LYNX_CORE_JS_SHA256.to_string();
+  if url == DEFAULT_LYNX_CORE_JS_URL {
+    return DEFAULT_LYNX_CORE_JS_SHA256.to_string();
   }
-  panic!("LYNX_CORE_JS_SHA256 must be set when LYNX_CORE_JS_URL is customized");
+  panic!("CUSTOM_LYNX_CORE_JS_SHA256 must be set when CUSTOM_LYNX_CORE_JS_URL is customized");
 }
 
 fn default_runtime_url() -> Option<&'static str> {

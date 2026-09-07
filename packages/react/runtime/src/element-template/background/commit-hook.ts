@@ -160,6 +160,7 @@ export function installElementTemplateCommitHook(): void {
     return;
   }
   installed = true;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   previousCommit = options[COMMIT];
 
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {

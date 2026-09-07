@@ -48,6 +48,8 @@ import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
+// The update event's JSON transport already normalizes array holes and undefined
+// entries to null. Consume those wire values without copying each attr array.
 export function applyElementTemplateUpdateCommands(
   stream: ElementTemplateUpdateCommandStream,
   isHydration = false,
@@ -81,11 +83,10 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
 
-        const preparedAttributeSlots = normalizeAttributeSlots(attributeSlots);
         const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
         const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(
           templateType,
-          preparedAttributeSlots,
+          attributeSlots,
         );
         const nativeRef = __CreateElementTemplate(
           templateKey,
@@ -100,7 +101,7 @@ export function applyElementTemplateUpdateCommands(
           initializeMainThreadDynamicAttrSlots(
             handleId,
             templateType,
-            preparedAttributeSlots,
+            attributeSlots,
           );
         }
         break;
@@ -513,13 +514,4 @@ function validateCreateTemplatePayload(
     return new Error('ElementTemplate update create elementSlots must be an array, null, or undefined.');
   }
   return null;
-}
-
-function normalizeAttributeSlots(
-  attributeSlots: SerializableValue[] | null | undefined,
-): SerializableValue[] | null | undefined {
-  if (attributeSlots == null) {
-    return attributeSlots;
-  }
-  return attributeSlots.map((value) => (value === undefined ? null : value));
 }

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/runtime-config-webpack-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
   "keywords": [
     "webpack",

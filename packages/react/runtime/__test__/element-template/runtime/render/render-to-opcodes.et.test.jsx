@@ -40,6 +40,27 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes).toContain(__OpEnd);
   });
 
+  it.each([
+    ['_et_compiled', 'attributeSlots', ['title']],
+    ['list', 'attributes', { id: 'feed' }],
+  ])('emits one attribute payload for %s without a name entry', (type, propName, attributes) => {
+    const opcodes = renderToString(h(type, { [propName]: attributes }));
+
+    expect(opcodes).toEqual([
+      __OpBegin,
+      expect.objectContaining({ type }),
+      __OpAttr,
+      attributes,
+      __OpEnd,
+    ]);
+    expect(opcodes[3]).toBe(attributes);
+    expect(renderToString(h(type, {}))).toEqual([
+      __OpBegin,
+      expect.objectContaining({ type }),
+      __OpEnd,
+    ]);
+  });
+
   it('emits prepared outermost page attrs as root metadata and keeps children transparent', () => {
     const Template = '_et_page_child';
     const opcodes = renderToString(
@@ -139,12 +160,11 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes[0]).toBe(__OpBegin);
     expect(opcodes[1]).toMatchObject({ type: 'list' });
     expect(opcodes[2]).toBe(__OpAttr);
-    expect(opcodes[3]).toBe('typedAttributes');
-    expect(opcodes[4]).toBe(attributes);
-    expect(opcodes[5]).toBe(__OpSlot);
-    expect(opcodes[6]).toBe(0);
-    expect(opcodes[7]).toBe(__OpBegin);
-    expect(opcodes[8]).toMatchObject({
+    expect(opcodes[3]).toBe(attributes);
+    expect(opcodes[4]).toBe(__OpSlot);
+    expect(opcodes[5]).toBe(0);
+    expect(opcodes[6]).toBe(__OpBegin);
+    expect(opcodes[7]).toMatchObject({
       type: ItemTemplate,
       props: {
         __listItemPlatformInfo: itemPlatformInfo,

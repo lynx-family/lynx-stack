@@ -45,8 +45,8 @@ pnpm install
 ```
 
 The **Create** (chat) tab talks to the GenUI server for agent responses and
-preview publishing. Start it on port `3060` with one server-owned model
-configuration:
+preview publishing. Start it on port `3060`. This example provides one
+server-owned model configuration:
 
 ```bash
 # 2. Start the GenUI server → http://localhost:3060
@@ -103,7 +103,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 
 | Variable                                                       | Purpose                                             | Default             |
 | -------------------------------------------------------------- | --------------------------------------------------- | ------------------- |
-| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations       | —                   |
+| `GENUI_MODEL_CONFIG_JSON`                                      | Optional map of server-owned model configurations   | disabled            |
 | `IMG_GEN_ARK_API_KEY`                                          | Server-side Volcengine Ark image-generation key     | —                   |
 | `IMG_GEN_ARK_IMAGE_MODEL`                                      | Ark image-generation model/endpoint id              | —                   |
 | `IMG_GEN_ARK_IMAGE_BASE_URL`                                   | Ark image-generation HTTPS API base URL             | —                   |
@@ -114,9 +114,35 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
 
-The Create tab loads its model selector from the server's `GET /models`
-endpoint. Provider credentials, upstream model ids, and upstream API URLs
-remain server-only. The configured text model must support tool/function calls:
+The Create tab and Bench runner load their model selectors from the server's `GET /models`
+endpoint. Server-owned provider credentials, upstream model ids, and upstream
+API URLs remain server-only. The selector also exposes a `Custom API key`
+option with model and API key fields plus an approved-provider endpoint
+selector. An empty custom model falls back to `gpt-5.6-terra`, and the endpoint
+defaults to `https://api.openai.com/v1`. Custom
+model, API key, and base URL values remain only in the current page session and
+survive protocol switches within that page. A refresh restores the model and
+base URL defaults and clears the API key; none of these fields are written to
+browser storage.
+
+Changing the custom endpoint also fills its default model: OpenAI uses
+`gpt-5.6-terra`, Google Gemini uses `gemini-3.7-flash`, and OpenRouter uses
+`openrouter/auto`. The model field remains editable after it is filled.
+
+When `GENUI_MODEL_CONFIG_JSON` is unset, the Create tab opens directly in this
+custom-provider form instead of requiring a server-owned model. A complete
+custom configuration can make model requests without
+`GENUI_MODEL_CONFIG_JSON`.
+
+Custom base URLs are requested by the GenUI server and must match the approved
+OpenAI, Google Gemini, or OpenRouter OpenAI-compatible endpoint. Alternate
+origins, ports, paths, credentials, queries, and fragments are rejected. Use
+`GENUI_MODEL_CONFIG_JSON` for an intentionally private, HTTP, or custom
+endpoint. Public deployments must still protect model routes with
+authentication; the allow-list specifically limits custom-provider SSRF
+exposure.
+
+The configured text model must support tool/function calls:
 the A2UI agent invokes its `generate_image` tool and copies the generated Ark
 URL into the final `Image.url` value. One request may invoke the image tool at
 most four times across initial generation and validation repairs. Arbitrary
@@ -140,7 +166,24 @@ post-paid keys are supported. See the [Doubao Search Custom API documentation](h
 and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 
-Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
+Bench is a regular GenUI top-level tab. Its Create-style history rail keeps
+drafts and completed runs in browser storage. New Bench immediately creates
+and selects the first draft item; completion updates that item in place.
+Completed entries restore their configuration and report as read-only, so a
+new run starts from a new Bench draft instead of rerunning history. Runner
+presents three default editable scenarios (with custom scenario append),
+comparison groups created by Protocol, Model, or Prompt direction, and inline
+run configuration in one scrollable workflow surface. A compact fixed footer
+shows the live plan next to Start run, then switches to real-time progress next
+to Pause while a job is active. Bench is English-only until the Playground
+adopts site-wide localization; it has no page-local locale prop or translation
+layer and does not expose separate Runner, History, or language-switching
+views.
+
+Bench can override `UI_JUDGE_SERVER_URL` in its inline run configuration. A valid HTTP(S) URL
+without credentials is stored in browser local storage and restored on later
+visits; leaving it empty falls back to the server environment. Bench probes
+the selected `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
 enabled only when that sidecar is ready. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
 startup and model environment.
