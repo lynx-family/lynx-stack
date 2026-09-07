@@ -181,10 +181,26 @@ Both dimensions must be between 1 and 8192, and `width × height` must not excee
 2,621,440 pixels. The server does not expose the former generic screenshot
 route, `POST /screenshot`.
 
-The server does not allow direct `file://`, `http://`, or `https://` page
-navigation. `POST /judge` rejects those URL forms with HTTP `403` before model
-initialization or headless capture. Use the default library build for trusted
-direct-URL judging, or one of the source-specific screenshot routes.
+The server does not allow direct page navigation. `POST /judge` accepts an
+HTTP(S) `url` as a remote compiled-template source, fetches it through the same
+SSRF-safe downloader as `POST /screenshot/template/url`, stages it privately,
+and captures it in a short-lived isolated process before scoring the resulting
+frame in the parent process. The downloader rejects credentials, redirects,
+and non-public network addresses and limits the response to 10 MiB. Remote
+template judging currently requires an empty `steps` array. Direct `file://`
+URLs remain disabled; use the default library build for trusted local judging.
+
+```bash
+curl --request POST http://127.0.0.1:8080/judge \
+  --header 'content-type: application/json' \
+  --data '{
+    "url": "https://cdn.example.com/a2ui.lynx.js",
+    "task": "The generated interface should satisfy the requested task",
+    "globalProps": {"messages": []},
+    "includeGeqi": true,
+    "includeScreenshot": true
+  }'
+```
 
 To render a LynXML string without auxiliary local files, send it directly as
 the request body. The endpoint accepts `application/xml`, `text/xml`, and
@@ -257,13 +273,13 @@ content. It normalizes and compares the uploads on a blocking task; it does not
 enqueue headless capture, initialize a model client, render a Lynx page, or
 perform VLM scoring.
 
-`POST /judge` returns `403` for direct `file://` or HTTP(S) page URLs. The
-source-specific screenshot routes return `422` with a JSON error when rendering
-cannot produce a frame. Uploads and remote responses return `413` when they
-exceed 10 MiB. Invalid upload media types return `415`, while a rejected remote
-network target returns `403`. Body reading and isolated rendering return `408`
-when they exceed their deadlines; remote fetches return `504`. ZIP processing
-also applies its ten-second extraction deadline. A busy bounded queue keeps the
+`POST /judge` returns `403` for direct `file://` page URLs and for HTTP(S)
+sources that resolve to a non-public network address. The source-specific
+screenshot routes return `422` with a JSON error when rendering cannot produce
+a frame. Uploads and remote responses return `413` when they exceed 10 MiB.
+Invalid upload media types return `415`. Body reading and isolated rendering
+return `408` when they exceed their deadlines; remote fetches return `504`. ZIP
+processing also applies its ten-second extraction deadline. A busy bounded queue keeps the
 HTTP callback pending until capacity becomes available or that deadline
 expires; eager load shedding belongs in an outer middleware. The server returns `503` when the
 headless worker is shutting down or no longer available. A headless-worker panic
@@ -281,11 +297,12 @@ its request timeout, without blocking a Tokio worker thread. If the owner panics
 admission closes and queued or capacity-waiting callers are released before the
 worker is joined.
 
-Uploaded ZIP pages are deliberately different. Each one is rendered by a fresh,
-short-lived `ui-judge-server` child process with its own `LynxContainer`, so
-native process-global image caches cannot return another upload's bytes. The
-child receives only the server-selected staging root and output path, inherits
-no model credentials, and sends no request output to stdout or stderr. A private
+Untrusted staged pages, including remote templates submitted to `/judge`, are
+deliberately different. Each one is rendered by a fresh, short-lived
+`ui-judge-server` child process with its own `LynxContainer`, so native
+process-global image caches cannot return another request's bytes. The child
+receives only server-selected paths and page-load data, inherits no model
+credentials, and sends no request output to stdout or stderr. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
 kill and reap the child before its render slot and staged tree are released;
 graceful shutdown drains accepted children. Failure to confirm reaping exits the
