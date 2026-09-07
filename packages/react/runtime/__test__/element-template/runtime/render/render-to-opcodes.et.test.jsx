@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component, Fragment, createContext, h, options } from 'preact';
-import { Suspense } from 'preact/compat';
+import { Suspense, use } from 'preact/compat';
 import { useState } from '@lynx-js/react/lepus/hooks';
 import { describe, expect, it } from 'vitest';
 
@@ -28,6 +28,19 @@ describe('Element Template renderToOpcodes', () => {
     expect(__OpSlot).toBe(4);
     expect(__OpPageStart).toBe(5);
     expect(__OpPageEnd).toBe(6);
+  });
+
+  it('lets use() read a context', () => {
+    const Ctx = createContext('default');
+
+    function Reader() {
+      return use(Ctx);
+    }
+
+    expect(
+      renderToString(h(Ctx.Provider, { value: 'provided' }, h(Reader, null))),
+    ).toContain('provided');
+    expect(renderToString(h(Reader, null))).toContain('default');
   });
 
   it('emits slot opcodes for ET host nodes using $N named props', () => {

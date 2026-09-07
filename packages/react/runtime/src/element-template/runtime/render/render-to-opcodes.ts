@@ -21,6 +21,7 @@ import {
   DIFF,
   DIFF2,
   DIFFED,
+  GLOBAL_CONTEXT,
   NEXT_STATE,
   PARENT,
   RENDER,
@@ -107,7 +108,7 @@ export const __OpPageEnd = 6;
  * @param {VNode} vnode
  * @param {Record<string, unknown>} context
  */
-function renderClassComponent(vnode, context) {
+function renderClassComponent(vnode, context, globalContext) {
   const type = /** @type {import("preact").ComponentClass<typeof vnode.props>} */ (vnode.type);
 
   let c;
@@ -123,6 +124,7 @@ function renderClassComponent(vnode, context) {
 
   c.props = vnode.props;
   c.context = context;
+  c[GLOBAL_CONTEXT] = globalContext;
   // turn off stateful re-rendering:
   c[BITS] |= COMPONENT_DIRTY;
 
@@ -193,13 +195,14 @@ function renderComponentVNode(
     }
 
     if (type.prototype && typeof type.prototype.render === 'function') {
-      rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx);
+      rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx, context);
       component = vnode[COMPONENT];
     } else {
       component = {
         __v: vnode,
         props,
         context: cctx,
+        [GLOBAL_CONTEXT]: context,
         // silently drop state updates
         setState: markAsDirty,
         forceUpdate: markAsDirty,
@@ -238,7 +241,7 @@ function renderComponentVNode(
       component.setState({ /* _suspended */ __a: true });
 
       if (component[BITS] & COMPONENT_DIRTY) {
-        rendered = renderClassComponent(vnode, context);
+        rendered = renderClassComponent(vnode, context, context);
         component = vnode[COMPONENT];
 
         opcodes.length = opcodesLength;
