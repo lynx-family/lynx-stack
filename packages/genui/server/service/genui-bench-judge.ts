@@ -33,6 +33,7 @@ export type GenuiBenchJudgeArtifact =
   | { protocol: 'openui'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
+  model?: string;
   artifact: GenuiBenchJudgeArtifact;
   scenario: Pick<
     BenchScenarioRequest,
@@ -172,6 +173,7 @@ export async function runGenuiBenchUiJudge(
       () =>
         runBenchUiJudge(
           {
+            model: options.model,
             includeScreenshot: true,
             messages,
             scenario: options.scenario,
@@ -205,6 +207,7 @@ export async function runGenuiBenchUiJudge(
     () =>
       runBenchUiJudgeRequest(
         {
+          model: options.model,
           globalProps: {
             benchMode: true,
             instant: true,

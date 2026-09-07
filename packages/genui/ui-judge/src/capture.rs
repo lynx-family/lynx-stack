@@ -6,7 +6,7 @@
 //!
 //! `LynxContainer` and its pages are blocking and bound to their creating
 //! thread. The process therefore keeps one dedicated owner thread and moves
-//! concurrency to request handling and post-capture scoring. Callers hand a job
+//! concurrency to request handling and image comparison. Callers hand a job
 //! to the bounded queue and await one reply.
 
 use std::io;
@@ -21,8 +21,7 @@ use thiserror::Error;
 use tokio::sync::{oneshot, OwnedSemaphorePermit, Semaphore};
 
 use crate::headless::{capture_with_container, CapturedPage, PageLoadOptions};
-use crate::model::ModelClient;
-use crate::{JudgePageRequest, UiJudgeResult};
+use crate::{CapturePageError, CapturePageRequest};
 
 /// Native Lynx currently permits one process-wide owner thread.
 const NATIVE_CAPTURE_WORKERS: usize = 1;
@@ -46,9 +45,8 @@ pub(crate) enum CaptureError {
 pub(crate) struct WorkerPanicked;
 
 pub(crate) struct CaptureJob {
-  pub(crate) client: Option<ModelClient>,
   pub(crate) load_options: PageLoadOptions,
-  pub(crate) request: JudgePageRequest,
+  pub(crate) request: CapturePageRequest,
   _resources: CaptureResources,
   queue_slot: Option<OwnedSemaphorePermit>,
   pub(crate) response: oneshot::Sender<CaptureResponse>,
@@ -78,9 +76,7 @@ impl CaptureResources {
 }
 
 pub(crate) struct CaptureResponse {
-  pub(crate) capture: Result<CapturedPage, UiJudgeResult>,
-  pub(crate) client: Option<ModelClient>,
-  pub(crate) request: JudgePageRequest,
+  pub(crate) capture: Result<CapturedPage, CapturePageError>,
 }
 
 /// Container-owning worker threads behind a bounded queue.
@@ -183,19 +179,17 @@ impl CaptureWorkers {
   /// backpressure; any eager load shedding belongs at the middleware layer.
   pub(crate) async fn submit(
     &self,
-    request: JudgePageRequest,
-    client: Option<ModelClient>,
+    request: CapturePageRequest,
     load_options: PageLoadOptions,
   ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
     self
-      .submit_with_resources(request, client, load_options, CaptureResources::default())
+      .submit_with_resources(request, load_options, CaptureResources::default())
       .await
   }
 
   async fn submit_with_resources(
     &self,
-    request: JudgePageRequest,
-    client: Option<ModelClient>,
+    request: CapturePageRequest,
     load_options: PageLoadOptions,
     resources: CaptureResources,
   ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
@@ -211,7 +205,6 @@ impl CaptureWorkers {
     };
     let (response, response_receiver) = oneshot::channel();
     let job = CaptureJob {
-      client,
       load_options,
       request,
       _resources: resources,
@@ -237,12 +230,11 @@ impl CaptureWorkers {
 
   pub(crate) async fn capture(
     &self,
-    request: JudgePageRequest,
-    client: Option<ModelClient>,
+    request: CapturePageRequest,
     load_options: PageLoadOptions,
   ) -> Result<CaptureResponse, CaptureError> {
     self
-      .submit(request, client, load_options)
+      .submit(request, load_options)
       .await?
       .await
       .map_err(|_| CaptureError::Stopped)
@@ -251,14 +243,13 @@ impl CaptureWorkers {
   #[cfg(all(feature = "server", test))]
   pub(crate) async fn capture_staged_zip(
     &self,
-    request: JudgePageRequest,
+    request: CapturePageRequest,
     load_options: PageLoadOptions,
     staged_zip: crate::server::zip::ExtractedZip,
   ) -> Result<CaptureResponse, CaptureError> {
     self
       .submit_with_resources(
         request,
-        None,
         load_options,
         CaptureResources::staged_zip(staged_zip),
       )
@@ -343,35 +334,23 @@ fn run_capture_worker(jobs: Arc<Mutex<Receiver<CaptureJob>>>) {
       continue;
     }
     let capture = match container_for(&mut container, &job) {
-      Ok(container) => capture_with_container(
-        container,
-        job.client.as_ref(),
-        &job.request,
-        &job.load_options,
-      ),
+      Ok(container) => capture_with_container(container, &job.request, &job.load_options),
       Err(result) => Err(result),
     };
-    let _ = job.response.send(CaptureResponse {
-      capture,
-      client: job.client,
-      request: job.request,
-    });
+    let _ = job.response.send(CaptureResponse { capture });
   }
 }
 
-// `UiJudgeResult` is the crate's public failure shape; boxing it here would only
-// move the allocation without changing what callers must handle.
-#[allow(clippy::result_large_err)]
 fn container_for<'a>(
   container: &'a mut Option<LynxContainer>,
   job: &CaptureJob,
-) -> Result<&'a LynxContainer, UiJudgeResult> {
+) -> Result<&'a LynxContainer, CapturePageError> {
   if container.is_none() {
     let created = LynxContainer::new(ContainerOptions {
       timeout: job.request.timeout,
       ..ContainerOptions::default()
     })
-    .map_err(|error| crate::headless::page_request_error(&job.request, error.to_string()))?;
+    .map_err(|error| crate::headless::page_request_error(error.to_string()))?;
     *container = Some(created);
   }
   Ok(container.as_ref().expect("the container was just created"))
@@ -401,7 +380,6 @@ mod tests {
         workers
           .submit(
             request("file:///tmp/queued.lynx.bundle"),
-            None,
             PageLoadOptions::default(),
           )
           .await
@@ -411,7 +389,7 @@ mod tests {
     let mut overflow_request = request("file:///tmp/overflow.lynx.bundle");
     overflow_request.timeout = std::time::Duration::from_millis(1);
     let overflow = workers
-      .submit(overflow_request, None, PageLoadOptions::default())
+      .submit(overflow_request, PageLoadOptions::default())
       .await;
 
     assert_eq!(accepted.len(), MAX_QUEUED_CAPTURES);
@@ -431,7 +409,6 @@ mod tests {
         workers
           .submit(
             request("file:///tmp/queued.lynx.bundle"),
-            None,
             PageLoadOptions::default(),
           )
           .await
@@ -444,7 +421,6 @@ mod tests {
       waiting_workers
         .submit(
           request("file:///tmp/waiting.lynx.bundle"),
-          None,
           PageLoadOptions::default(),
         )
         .await
@@ -478,7 +454,6 @@ mod tests {
     let error = match workers
       .capture(
         request("file:///tmp/late.lynx.bundle"),
-        None,
         PageLoadOptions::default(),
       )
       .await
@@ -489,16 +464,10 @@ mod tests {
     assert!(matches!(error, CaptureError::ShuttingDown), "got {error:?}");
   }
 
-  fn request(url: &str) -> JudgePageRequest {
-    JudgePageRequest {
-      include_geqi: false,
-      reference: None,
-      reference_image: None,
-      screenshot_settle: std::time::Duration::ZERO,
-      steps: vec![],
-      task: "Render the page".to_string(),
-      timeout: std::time::Duration::from_secs(1),
-      url: url.to_string(),
+  fn request(url: &str) -> CapturePageRequest {
+    CapturePageRequest {
+      url: url.into(),
+      ..Default::default()
     }
   }
 }

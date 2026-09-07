@@ -4,20 +4,17 @@
 
 use std::io::Cursor;
 use std::sync::{Arc, OnceLock};
-use std::time::Duration;
 
-use base64::prelude::{Engine, BASE64_STANDARD, BASE64_STANDARD_NO_PAD};
+use base64::prelude::{Engine, BASE64_STANDARD};
 use image::imageops::{self, FilterType};
 use image::{DynamicImage, GrayImage, ImageFormat, ImageReader, Limits, Rgba, RgbaImage};
 use rayon::{ThreadPool, ThreadPoolBuilder};
-use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use thiserror::Error;
 
 pub(crate) const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_DECODED_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_IMAGE_DIMENSION: u32 = 8_192;
 const MAX_IMAGE_PIXELS: u64 = 8 * 1024 * 1024;
-const IMAGE_FETCH_TIMEOUT_MS: u64 = 10_000;
 
 const DEFAULT_DOWNSAMPLE_WIDTH: f64 = 256.0;
 const MAX_DOWNSAMPLED_HEIGHT: u32 = 1_024;
@@ -36,7 +33,7 @@ const MAX_VISUAL_WORKERS: usize = 4;
 pub(crate) type VisualResult<T> = std::result::Result<T, VisualEvaluationError>;
 
 #[derive(Debug, Clone)]
-pub(crate) struct ReferenceImageComparison {
+pub struct ReferenceImageComparison {
   pub alignment_score: Option<f64>,
   pub diff_image_base64: String,
   pub different_blocks: usize,
@@ -79,9 +76,7 @@ struct CompareResult {
 pub enum VisualEvaluationErrorCode {
   ImageAlignmentError,
   ImageCompareError,
-  ReferenceImageFetchFailed,
   ReferenceImageInvalid,
-  RenderedImageFetchFailed,
   RenderedImageInvalid,
   VisualEvaluationError,
 }
@@ -232,18 +227,16 @@ where
   })?
 }
 
-pub(crate) async fn compare_reference_image(
-  reference_image: &str,
-  rendered_png: &[u8],
-) -> VisualResult<ReferenceImageComparison> {
-  let reference_png = load_reference_image(reference_image).await?;
-  compare_normalized_images(reference_png, rendered_png.to_vec()).await
-}
-
-pub(crate) async fn compare_uploaded_images(
+pub async fn compare_uploaded_images(
   reference_image: &[u8],
   rendered_image: &[u8],
 ) -> VisualResult<ReferenceImageComparison> {
+  if reference_image.len() > MAX_IMAGE_BYTES {
+    return Err(invalid_image(ImageKind::Reference));
+  }
+  if rendered_image.len() > MAX_IMAGE_BYTES {
+    return Err(invalid_image(ImageKind::Rendered));
+  }
   let reference_image = reference_image.to_vec();
   let rendered_image = rendered_image.to_vec();
   let (reference_png, rendered_png) = run_visual_worker("normalization", move || {
@@ -283,118 +276,6 @@ async fn compare_normalized_images(
     })
   })
   .await
-}
-
-pub(crate) async fn load_reference_image(input: &str) -> VisualResult<Vec<u8>> {
-  load_image(input, ImageKind::Reference).await
-}
-
-async fn load_image(input: &str, kind: ImageKind) -> VisualResult<Vec<u8>> {
-  if let Some(url) = parse_http_url(input) {
-    let buffer = fetch_http_image(url, kind).await?;
-    run_visual_worker("normalization", move || {
-      normalize_image_to_png(&buffer, kind)
-    })
-    .await
-  } else {
-    let input = input.to_string();
-    run_visual_worker("normalization", move || {
-      let buffer = decode_base64_image(&input, kind)?;
-      normalize_image_to_png(&buffer, kind)
-    })
-    .await
-  }
-}
-
-fn parse_http_url(input: &str) -> Option<reqwest::Url> {
-  let url = reqwest::Url::parse(input).ok()?;
-  matches!(url.scheme(), "http" | "https").then_some(url)
-}
-
-async fn fetch_http_image(url: reqwest::Url, kind: ImageKind) -> VisualResult<Vec<u8>> {
-  let client = reqwest::Client::builder()
-    .redirect(reqwest::redirect::Policy::none())
-    .timeout(Duration::from_millis(IMAGE_FETCH_TIMEOUT_MS))
-    .build()
-    .map_err(|error| fetch_error(kind, format!("Failed to create HTTP client: {error}")))?;
-  let mut response = client
-    .get(url)
-    .send()
-    .await
-    .map_err(|error| fetch_error(kind, format!("Failed to fetch {}: {error}", kind.label())))?;
-  let status = response.status();
-  if !status.is_success() {
-    return Err(fetch_error(
-      kind,
-      format!("Failed to fetch {}: {}", kind.label(), status.as_u16()),
-    ));
-  }
-
-  if let Some(content_type) = response
-    .headers()
-    .get(CONTENT_TYPE)
-    .and_then(|value| value.to_str().ok())
-  {
-    if !content_type.to_ascii_lowercase().starts_with("image/") {
-      return Err(fetch_error(
-        kind,
-        format!(
-          "{} response must be an image, got {content_type}.",
-          capitalize(kind.label())
-        ),
-      ));
-    }
-  }
-
-  if let Some(length) = response
-    .headers()
-    .get(CONTENT_LENGTH)
-    .and_then(|value| value.to_str().ok())
-    .and_then(|value| value.parse::<usize>().ok())
-  {
-    if length > MAX_IMAGE_BYTES {
-      return Err(fetch_error(
-        kind,
-        format!("{} response is too large.", capitalize(kind.label())),
-      ));
-    }
-  }
-
-  let mut buffer = Vec::new();
-  while let Some(chunk) = response
-    .chunk()
-    .await
-    .map_err(|error| fetch_error(kind, format!("Failed to fetch {}: {error}", kind.label())))?
-  {
-    if buffer.len() + chunk.len() > MAX_IMAGE_BYTES {
-      return Err(fetch_error(kind, "Image response is too large."));
-    }
-    buffer.extend_from_slice(&chunk);
-  }
-  Ok(buffer)
-}
-
-fn decode_base64_image(input: &str, kind: ImageKind) -> VisualResult<Vec<u8>> {
-  let stripped = strip_data_url_prefix(input).replace(char::is_whitespace, "");
-  let max_encoded_bytes = MAX_IMAGE_BYTES.div_ceil(3) * 4 + 4;
-  if stripped.is_empty() || stripped.len() % 4 == 1 || stripped.len() > max_encoded_bytes {
-    return Err(invalid_image(kind));
-  }
-  let buffer = BASE64_STANDARD
-    .decode(stripped.as_bytes())
-    .or_else(|_| BASE64_STANDARD_NO_PAD.decode(stripped.as_bytes()))
-    .map_err(|_| invalid_image(kind))?;
-  if buffer.is_empty() || buffer.len() > MAX_IMAGE_BYTES {
-    return Err(invalid_image(kind));
-  }
-  Ok(buffer)
-}
-
-fn strip_data_url_prefix(input: &str) -> &str {
-  input
-    .find("base64,")
-    .map(|index| &input[index + "base64,".len()..])
-    .unwrap_or(input)
 }
 
 fn normalize_image_to_png(buffer: &[u8], kind: ImageKind) -> VisualResult<Vec<u8>> {
@@ -884,17 +765,8 @@ fn encode_rgba_png(image: &RgbaImage) -> VisualResult<Vec<u8>> {
   })
 }
 
-#[cfg(test)]
-fn png_data_url(bytes: &[u8]) -> String {
-  format!("data:image/png;base64,{}", BASE64_STANDARD.encode(bytes))
-}
-
 fn invalid_image(kind: ImageKind) -> VisualEvaluationError {
   VisualEvaluationError::new(400, kind.invalid_code(), kind.invalid_message())
-}
-
-fn fetch_error(kind: ImageKind, message: impl Into<String>) -> VisualEvaluationError {
-  VisualEvaluationError::new(502, kind.fetch_failed_code(), message)
 }
 
 fn image_operation_error(
@@ -904,33 +776,11 @@ fn image_operation_error(
   VisualEvaluationError::new(500, code, error.to_string())
 }
 
-fn capitalize(value: &str) -> String {
-  let mut chars = value.chars();
-  match chars.next() {
-    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-    None => String::new(),
-  }
-}
-
 impl ImageKind {
-  fn label(self) -> &'static str {
-    match self {
-      ImageKind::Reference => "reference image",
-      ImageKind::Rendered => "rendered image",
-    }
-  }
-
   fn invalid_code(self) -> VisualEvaluationErrorCode {
     match self {
       ImageKind::Reference => VisualEvaluationErrorCode::ReferenceImageInvalid,
       ImageKind::Rendered => VisualEvaluationErrorCode::RenderedImageInvalid,
-    }
-  }
-
-  fn fetch_failed_code(self) -> VisualEvaluationErrorCode {
-    match self {
-      ImageKind::Reference => VisualEvaluationErrorCode::ReferenceImageFetchFailed,
-      ImageKind::Rendered => VisualEvaluationErrorCode::RenderedImageFetchFailed,
     }
   }
 
@@ -944,31 +794,9 @@ impl ImageKind {
 
 #[cfg(test)]
 mod tests {
+  use std::time::Duration;
 
   use super::*;
-
-  #[tokio::test]
-  async fn loads_plain_base64_and_data_url_as_png() {
-    let png = sample_png(Rgba([255, 0, 0, 255]));
-    for input in [
-      png_data_url(&png),
-      BASE64_STANDARD.encode(&png),
-      BASE64_STANDARD_NO_PAD.encode(&png),
-    ] {
-      let loaded = load_image(&input, ImageKind::Reference)
-        .await
-        .expect("load image");
-      assert!(loaded.starts_with(&[0x89, b'P', b'N', b'G']));
-    }
-  }
-
-  #[tokio::test]
-  async fn rejects_malformed_base64_image() {
-    let error = load_image("not an image", ImageKind::Reference)
-      .await
-      .expect_err("invalid image must fail");
-    assert_eq!(error.code, VisualEvaluationErrorCode::ReferenceImageInvalid);
-  }
 
   #[test]
   fn rejects_images_beyond_the_decoded_dimension_limit() {
@@ -1066,19 +894,6 @@ mod tests {
     let rendered = sample_png(Rgba([0, 255, 255, 0]));
     let output = compare_images(&reference, &rendered, None).expect("compare images");
     assert_eq!(output.result.similarity, 0.0);
-  }
-
-  #[tokio::test]
-  async fn compares_a_reference_image_without_model_evaluation() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
-    let result = compare_reference_image(&png_data_url(&png), &png)
-      .await
-      .expect("compare reference image");
-
-    assert_eq!(result.similarity, 1.0);
-    assert_eq!(result.different_blocks, 0);
-    assert_eq!(result.total_blocks, 1);
-    assert!(!result.diff_image_base64.is_empty());
   }
 
   #[tokio::test]

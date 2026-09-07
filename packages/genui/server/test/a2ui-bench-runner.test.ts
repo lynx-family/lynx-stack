@@ -197,7 +197,7 @@ describe('A2UI Bench UI Judge integration', () => {
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/bench.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        screenshotUrl: 'https://judge.example/screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -348,7 +348,7 @@ describe('A2UI Bench UI Judge integration', () => {
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/bench.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        screenshotUrl: 'https://judge.example/screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValue({
@@ -423,6 +423,14 @@ describe('A2UI Bench UI Judge integration', () => {
       a2ui: 'a2ui-group-model',
       openui: 'openui-group-model',
     });
+    expect(
+      rstest.mocked(runGenuiBenchUiJudge).mock.calls.map((
+        [options],
+      ) => [options.artifact.protocol, options.model]),
+    ).toEqual(expect.arrayContaining([
+      ['a2ui', 'a2ui-group-model'],
+      ['openui', 'openui-group-model'],
+    ]));
     expect(store.getJob(job.id)?.report?.results).toEqual([
       expect.objectContaining({
         judgeDimensions: geqiDimensions(4),
@@ -446,7 +454,7 @@ describe('A2UI Bench UI Judge integration', () => {
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/openui.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        screenshotUrl: 'https://judge.example/screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -648,7 +656,7 @@ describe('A2UI Bench UI Judge integration', () => {
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        screenshotUrl: 'https://judge.example/screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -729,7 +737,7 @@ describe('A2UI Bench UI Judge integration', () => {
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        screenshotUrl: 'https://judge.example/screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({

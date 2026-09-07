@@ -32,16 +32,13 @@ use tokio::net::TcpListener;
 use tokio::process::{Child, Command};
 use tokio::sync::{oneshot, watch, Notify, OwnedSemaphorePermit, Semaphore};
 
-use crate::capture::{
-  shared_workers, CaptureError, CaptureResponse, CaptureWorkers, WorkerPanicked,
-};
-use crate::headless::{prepare_judge_page_request, score_captured_page, PageLoadOptions};
-use crate::model::{configured_model_name, ModelClient};
+use crate::capture::{shared_workers, CaptureError, CaptureWorkers, WorkerPanicked};
+use crate::headless::PageLoadOptions;
 use crate::ssrf::{fetch_http_resource, HttpFetchError};
 use crate::visual::{
   compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
 };
-use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
+use crate::{CapturePageError, CapturePageRequest};
 
 #[path = "zip/mod.rs"]
 pub mod zip;
@@ -74,9 +71,6 @@ const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
 const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
 const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
 static NEXT_ZIP_JOB_ID: AtomicU64 = AtomicU64::new(1);
-
-type PrepareJudgePageRequest =
-  fn(JudgePageRequest) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>>;
 
 #[derive(Clone, Copy)]
 enum ZipCaptureBackend {
@@ -279,32 +273,19 @@ impl From<WorkerPanicked> for ServerError {
 #[derive(Clone)]
 struct AppState {
   headless: Arc<CaptureWorkers>,
-  model_name: Arc<str>,
-  prepare_request: PrepareJudgePageRequest,
   zip_capture_backend: ZipCaptureBackend,
   zip_capture_processes: ZipCaptureProcesses,
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct HttpJudgePageRequest {
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct TemplateScreenshotRequest {
   #[serde(default, alias = "global_props")]
   global_props: Option<Value>,
-  #[serde(default, alias = "include_screenshot")]
-  include_screenshot: bool,
   #[serde(default, alias = "initial_data")]
   initial_data: Option<Value>,
-  #[serde(default, alias = "include_geqi")]
-  include_geqi: bool,
-  #[serde(default)]
-  reference: Option<String>,
-  #[serde(default, alias = "reference_image")]
-  reference_image: Option<String>,
   #[serde(default, alias = "screenshot_settle_ms")]
   screenshot_settle_ms: Option<u64>,
-  #[serde(default)]
-  steps: Vec<String>,
-  task: String,
   #[serde(default, alias = "timeout_ms")]
   timeout_ms: Option<u64>,
   url: String,
@@ -312,9 +293,8 @@ struct HttpJudgePageRequest {
 
 #[derive(Debug)]
 struct HttpCaptureRequest {
-  include_screenshot: bool,
   load_options: PageLoadOptions,
-  request: JudgePageRequest,
+  request: CapturePageRequest,
 }
 
 #[derive(Debug)]
@@ -441,13 +421,6 @@ impl StagedSourceKind {
       Self::Template => "ui-judge-template-",
     }
   }
-
-  fn task(self) -> &'static str {
-    match self {
-      Self::Lynxml => "Render the uploaded LynXML",
-      Self::Template => "Render the remote template",
-    }
-  }
 }
 
 fn invalid_screenshot_entry() -> ApiError {
@@ -497,15 +470,6 @@ fn hex_value(value: u8) -> Option<u8> {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct HttpJudgePageResponse {
-  #[serde(flatten)]
-  result: UiJudgeResult,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  screenshot_data_url: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 struct HttpCompareImagesResponse {
   #[serde(skip_serializing_if = "Option::is_none")]
   alignment_score: Option<f64>,
@@ -530,7 +494,7 @@ impl From<ReferenceImageComparison> for HttpCompareImagesResponse {
   }
 }
 
-impl HttpJudgePageRequest {
+impl TemplateScreenshotRequest {
   fn into_capture_request(self) -> Result<HttpCaptureRequest, ApiError> {
     let timeout_ms = self.timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS);
     if timeout_ms == 0 {
@@ -542,25 +506,20 @@ impl HttpJudgePageRequest {
     let global_props_json = page_data_json("globalProps", self.global_props)?;
     let initial_data_json = page_data_json("initialData", self.initial_data)?;
     Ok(HttpCaptureRequest {
-      include_screenshot: self.include_screenshot,
       load_options: PageLoadOptions {
         base_dir: None,
         global_props_json,
         initial_data_json,
       },
-      request: JudgePageRequest {
-        include_geqi: self.include_geqi,
-        reference: self.reference,
-        reference_image: self.reference_image,
+      request: CapturePageRequest {
         screenshot_settle: Duration::from_millis(
           self
             .screenshot_settle_ms
             .unwrap_or(DEFAULT_SCREENSHOT_SETTLE_MS),
         ),
-        steps: self.steps,
-        task: self.task,
         timeout: Duration::from_millis(timeout_ms),
         url: self.url,
+        ..CapturePageRequest::default()
       },
     })
   }
@@ -612,7 +571,7 @@ impl From<VisualEvaluationError> for ApiError {
 
 #[derive(Serialize)]
 struct ApiErrorBody {
-  error: UiJudgeError,
+  error: CapturePageError,
 }
 
 impl IntoResponse for ApiError {
@@ -620,7 +579,7 @@ impl IntoResponse for ApiError {
     (
       self.status,
       Json(ApiErrorBody {
-        error: UiJudgeError {
+        error: CapturePageError {
           message: self.message,
         },
       }),
@@ -756,7 +715,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
 /// both IPv4 and IPv6 unspecified addresses when no host is provided. Ordinary
 /// native capture runs on one container-owning worker behind a bounded queue;
 /// untrusted uploads use one fresh child process each. Completed captures are
-/// scored concurrently on the async runtime.
+/// returned as uncompressed BMP bytes.
 pub async fn serve_on(host: Option<&str>, port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
   let (ipv4_listener, ipv6_listener) = bind_listeners(host, port)?;
@@ -773,15 +732,14 @@ pub async fn serve_on(host: Option<&str>, port: &str) -> Result<(), ServerError>
   let zip_capture_processes = ZipCaptureProcesses::new();
   let state = AppState {
     headless: Arc::clone(&headless),
-    model_name: configured_model_name().into(),
-    prepare_request: prepare_judge_page_request,
+
     zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
     zip_capture_processes: zip_capture_processes.clone(),
   };
   let app = Router::new()
     .route("/health", get(health))
     .route("/compare", post(compare))
-    .route("/judge", post(judge))
+    .route("/screenshot/template", post(screenshot_template))
     .route("/screenshot/lynxml", post(screenshot_lynxml))
     .route("/screenshot/template/url", post(screenshot_template_url))
     .route("/screenshot/zip/upload", post(screenshot_zip_upload))
@@ -893,7 +851,6 @@ fn configure_listener(socket: Socket, address: SocketAddr) -> io::Result<TcpList
 async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
   if state.headless.is_healthy() {
     Ok(Json(json!({
-      "model": state.model_name.as_ref(),
       "status": "ok"
     })))
   } else {
@@ -904,100 +861,22 @@ async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> 
   }
 }
 
-async fn judge(
+async fn screenshot_template(
   State(state): State<AppState>,
-  Json(request): Json<HttpJudgePageRequest>,
-) -> Result<Json<HttpJudgePageResponse>, ApiError> {
-  let is_remote_template = is_http_page_url(&request.url);
-  if !is_remote_template {
-    reject_direct_page_url(&request.url)?;
-  }
+  Json(input): Json<TemplateScreenshotRequest>,
+) -> Result<Response, ApiError> {
   let HttpCaptureRequest {
-    include_screenshot,
     load_options,
     request,
-  } = request.into_capture_request()?;
-  if is_remote_template {
-    return judge_remote_template(&state, include_screenshot, load_options, request).await;
-  }
-  let (request, client) = match (state.prepare_request)(request) {
-    Ok(prepared) => prepared,
-    Err(result) => {
-      return Ok(Json(HttpJudgePageResponse {
-        result: *result,
-        screenshot_data_url: None,
-      }))
-    }
-  };
-  let CaptureResponse {
-    capture,
-    client,
-    request,
-  } = state
-    .headless
-    .capture(request, Some(client), load_options)
-    .await?;
-  let client = client.expect("judge capture retains its model client");
-  finish_judge(include_screenshot, request, client, capture).await
-}
-
-async fn finish_judge(
-  include_screenshot: bool,
-  request: JudgePageRequest,
-  client: ModelClient,
-  capture: Result<crate::headless::CapturedPage, UiJudgeResult>,
-) -> Result<Json<HttpJudgePageResponse>, ApiError> {
-  let (result, screenshot_data_url) = match capture {
-    Ok(capture) => {
-      let screenshot_data_url = if include_screenshot {
-        Some(capture.screenshot_data_url())
-      } else {
-        None
-      };
-      (
-        score_captured_page(&client, &request, capture).await,
-        screenshot_data_url,
-      )
-    }
-    Err(result) => (result, None),
-  };
-  Ok(Json(HttpJudgePageResponse {
-    result,
-    screenshot_data_url,
-  }))
-}
-
-async fn judge_remote_template(
-  state: &AppState,
-  include_screenshot: bool,
-  load_options: PageLoadOptions,
-  request: JudgePageRequest,
-) -> Result<Json<HttpJudgePageResponse>, ApiError> {
-  if !request.steps.is_empty() {
-    return Err(ApiError::new(
-      StatusCode::BAD_REQUEST,
-      "HTTP(S) source judging does not support interaction steps.",
-    ));
-  }
+  } = input.into_capture_request()?;
   let source_url = request.url.trim();
   if source_url.len() > MAX_REMOTE_URL_BYTES {
     return Err(remote_url_too_large());
   }
   let source = fetch_remote_template(source_url).await?;
-  let (request, client) = match (state.prepare_request)(request) {
-    Ok(prepared) => prepared,
-    Err(result) => {
-      return Ok(Json(HttpJudgePageResponse {
-        result: *result,
-        screenshot_data_url: None,
-      }))
-    }
-  };
-  let entry = ScreenshotEntry::parse("template.js")
-    .expect("the server-selected template entry is always safe");
   let capture = capture_staged_source(
-    state,
-    entry,
+    &state,
+    ScreenshotEntry::parse("template.js").expect("the internal entry is safe"),
     source,
     StagedSourceKind::Template,
     ScreenshotViewport {
@@ -1008,30 +887,13 @@ async fn judge_remote_template(
     &request,
   )
   .await?;
-  finish_judge(include_screenshot, request, client, Ok(capture)).await
-}
-
-fn is_http_page_url(url: &str) -> bool {
-  let url = url.trim();
-  ["http://", "https://"].iter().any(|scheme| {
-    url
-      .get(..scheme.len())
-      .is_some_and(|prefix| prefix.eq_ignore_ascii_case(scheme))
-  })
-}
-
-fn reject_direct_page_url(url: &str) -> Result<(), ApiError> {
-  let url = url.trim();
-  if url
-    .get(.."file://".len())
-    .is_some_and(|prefix| prefix.eq_ignore_ascii_case("file://"))
-  {
-    return Err(ApiError::new(
-      StatusCode::FORBIDDEN,
-      "Direct file:// page URLs are disabled by the UI Judge server; use a source-specific screenshot endpoint.",
-    ));
-  }
-  Ok(())
+  Ok(
+    (
+      [(CONTENT_TYPE, "image/bmp"), (CACHE_CONTROL, "no-store")],
+      capture.into_bmp(),
+    )
+      .into_response(),
+  )
 }
 
 async fn screenshot_lynxml(
@@ -1406,7 +1268,7 @@ async fn render_zip(
       let capture_response = state
         .headless
         .capture_staged_zip(
-          staged_screenshot_request(&entry.url, "Render the uploaded ZIP"),
+          staged_screenshot_request(&entry.url),
           PageLoadOptions {
             base_dir: Some(base_dir),
             ..load_options
@@ -1448,7 +1310,7 @@ async fn render_staged_source(
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
 ) -> Result<Response, ApiError> {
-  let request = staged_screenshot_request(&entry.url, kind.task());
+  let request = staged_screenshot_request(&entry.url);
   let capture = capture_staged_source(
     state,
     entry,
@@ -1476,7 +1338,7 @@ async fn capture_staged_source(
   kind: StagedSourceKind,
   viewport: ScreenshotViewport,
   load_options: &PageLoadOptions,
-  request: &JudgePageRequest,
+  request: &CapturePageRequest,
 ) -> Result<crate::headless::CapturedPage, ApiError> {
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   let zip_process_activity = match state.zip_capture_backend {
@@ -1533,10 +1395,7 @@ async fn capture_staged_source(
         )
         .await
         .map_err(|error| staged_source_render_api_error(kind, error))?;
-      Ok(crate::headless::CapturedPage::from_staged_bmp(
-        bmp,
-        request.url.clone(),
-      ))
+      Ok(crate::headless::CapturedPage::from_bmp(bmp))
     }
     #[cfg(test)]
     ZipCaptureBackend::SharedWorker => {
@@ -1546,7 +1405,6 @@ async fn capture_staged_source(
         .headless
         .capture(
           capture_request,
-          None,
           PageLoadOptions {
             base_dir: Some(base_dir),
             global_props_json: load_options.global_props_json.clone(),
@@ -1561,21 +1419,18 @@ async fn capture_staged_source(
         )
       })?;
       drop(staged);
-      Ok(capture.with_url(request.url.clone()))
+      Ok(capture)
     }
   }
 }
 
-fn staged_screenshot_request(url: &str, task: &str) -> JudgePageRequest {
-  JudgePageRequest {
-    include_geqi: false,
-    reference: None,
-    reference_image: None,
+fn staged_screenshot_request(url: &str) -> CapturePageRequest {
+  CapturePageRequest {
     screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
-    steps: vec![],
-    task: task.to_string(),
+
     timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
     url: url.to_string(),
+    ..CapturePageRequest::default()
   }
 }
 
@@ -2047,6 +1902,7 @@ async fn shutdown_signal() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+  use crate::capture::CaptureResponse;
   use std::io::{Cursor, Write};
   use std::path::Path;
   use std::sync::mpsc::Receiver;
@@ -2057,13 +1913,11 @@ mod tests {
   use axum::body::Body;
   use axum::extract::FromRequest;
   use axum::http::Request;
-  use base64::prelude::{Engine, BASE64_STANDARD};
   use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 
   use super::*;
   use crate::capture::CaptureJob;
   use crate::headless::CapturedPage;
-  use crate::model::ModelOptions;
 
   const CONCURRENT_CAPTURE_REQUESTS: usize = 4;
 
@@ -2087,61 +1941,17 @@ mod tests {
     )
   }
 
-  fn http_request(url: &str) -> HttpJudgePageRequest {
-    HttpJudgePageRequest {
+  fn http_request(url: &str) -> TemplateScreenshotRequest {
+    TemplateScreenshotRequest {
       global_props: None,
-      include_screenshot: false,
+
       initial_data: None,
-      include_geqi: false,
-      reference: None,
-      reference_image: None,
+
       screenshot_settle_ms: None,
-      steps: vec![],
-      task: "Render the page".to_string(),
+
       timeout_ms: None,
       url: url.to_string(),
     }
-  }
-
-  fn test_client() -> ModelClient {
-    ModelClient::new(ModelOptions {
-      api_key: Some("ui-judge-test".to_string()),
-      ..ModelOptions::default()
-    })
-    .expect("create test model client")
-  }
-
-  fn completed_result(url: String) -> UiJudgeResult {
-    UiJudgeResult {
-      alignment_score: None,
-      diff_image_base64: None,
-      different_blocks: None,
-      dimensions: vec![],
-      error: None,
-      geqi_score: None,
-      reference_image_error: None,
-      visual_similarity: None,
-      reason: None,
-      reference: None,
-      score: 5,
-      steps: vec![],
-      summary: None,
-      total_blocks: None,
-      url,
-      warnings: vec![],
-    }
-  }
-
-  fn prepare_test_request(
-    request: JudgePageRequest,
-  ) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
-    Ok((request, test_client()))
-  }
-
-  fn prepare_request_must_not_run(
-    _request: JudgePageRequest,
-  ) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
-    panic!("screenshot without steps must not initialize a model client")
   }
 
   fn sample_image(format: ImageFormat, color: Rgba<u8>) -> Vec<u8> {
@@ -2535,8 +2345,7 @@ mod tests {
     let headless = scripted_workers(|_| panic!("invalid sources must not reach capture"));
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
+
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -2620,8 +2429,6 @@ mod tests {
     let headless = scripted_workers(|_| panic!("blocked URLs must not reach capture"));
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -2649,8 +2456,6 @@ mod tests {
     let headless = scripted_workers(|_| panic!("invalid entries must not reach capture"));
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -2666,24 +2471,41 @@ mod tests {
   }
 
   #[test]
+  fn rejects_scoring_model_and_interaction_fields() {
+    for field in [
+      "task",
+      "steps",
+      "includeGeqi",
+      "includeScreenshot",
+      "model",
+      "apiKey",
+      "baseURL",
+      "referenceImage",
+    ] {
+      let mut value = json!({"url": "https://example.com/template.js"});
+      value[field] = json!(null);
+      assert!(
+        serde_json::from_value::<TemplateScreenshotRequest>(value).is_err(),
+        "accepted {field}"
+      );
+    }
+  }
+
+  #[test]
   fn accepts_camel_case_page_data_as_json() {
-    let request: HttpJudgePageRequest = serde_json::from_value(json!({
+    let request: TemplateScreenshotRequest = serde_json::from_value(json!({
       "globalProps": {
         "instant": true,
         "messages": [{"beginRendering": {"surfaceId": "main"}}],
         "theme": "light"
       },
-      "includeGeqi": true,
       "initialData": {
         "messages": [{"surfaceUpdate": {"surfaceId": "main"}}]
       },
-      "task": "Render the A2UI page",
       "url": "file:///tmp/a2ui.lynx.bundle"
     }))
     .expect("deserialize HTTP request");
     let capture_request = request.into_capture_request().expect("valid HTTP request");
-
-    assert!(capture_request.request.include_geqi);
 
     assert_eq!(
       capture_request
@@ -2713,38 +2535,6 @@ mod tests {
     );
   }
 
-  #[test]
-  fn screenshot_capture_is_opt_in_and_supports_snake_case() {
-    let default_request = http_request("file:///tmp/a2ui.lynx.bundle")
-      .into_capture_request()
-      .expect("valid default request");
-    assert!(!default_request.include_screenshot);
-
-    let request: HttpJudgePageRequest = serde_json::from_value(json!({
-      "include_screenshot": true,
-      "task": "Render the A2UI page",
-      "url": "file:///tmp/a2ui.lynx.bundle"
-    }))
-    .expect("deserialize screenshot opt-in");
-    let capture_request = request.into_capture_request().expect("valid request");
-    assert!(capture_request.include_screenshot);
-  }
-
-  #[test]
-  fn screenshot_response_flattens_the_existing_result_contract() {
-    let response = HttpJudgePageResponse {
-      result: completed_result("file:///tmp/a2ui.lynx.bundle".to_string()),
-      screenshot_data_url: Some("data:image/png;base64,iVBORw0KGgo=".to_string()),
-    };
-    let value = serde_json::to_value(response).expect("serialize response");
-
-    assert_eq!(value["score"], 5);
-    assert_eq!(
-      value["screenshotDataUrl"],
-      "data:image/png;base64,iVBORw0KGgo="
-    );
-  }
-
   #[tokio::test]
   async fn lynxml_screenshot_stages_source_and_cleans_it_up() {
     let source: &'static [u8] = b"<!doctype lynx><lynx><script thread=\"main\"></script></lynx>";
@@ -2753,7 +2543,6 @@ mod tests {
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
     let expected_bmp = bmp.clone();
     let headless = scripted_workers(move |job| {
-      assert!(job.client.is_none());
       assert_eq!(
         job.load_options.initial_data_json.as_deref(),
         Some(r#"{"ready":true}"#)
@@ -2774,14 +2563,10 @@ mod tests {
         .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(base_dir.clone());
       let _ = job.response.send(CaptureResponse {
         capture: Ok(CapturedPage::from_bmp(bmp.clone())),
-        client: job.client,
-        request: job.request,
       });
     });
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -2820,14 +2605,13 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn remote_template_judge_and_screenshot_stage_page_data_and_clean_up() {
+  async fn remote_template_screenshot_stages_capture_options_and_cleans_up() {
     let source: &'static [u8] = b"globalThis.__uiJudgeTemplate = true;";
     let staged_path = Arc::new(Mutex::new(None::<PathBuf>));
     let worker_staged_path = Arc::clone(&staged_path);
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
     let expected_bmp = bmp.clone();
     let headless = scripted_workers(move |job| {
-      assert!(job.client.is_none());
       assert_eq!(job.request.url, "zip:///template.js");
       assert_eq!(
         job.load_options.global_props_json.as_deref(),
@@ -2848,14 +2632,10 @@ mod tests {
         .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(base_dir.clone());
       let _ = job.response.send(CaptureResponse {
         capture: Ok(CapturedPage::from_bmp(bmp.clone())),
-        client: job.client,
-        request: job.request,
       });
     });
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_test_request,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -2881,14 +2661,7 @@ mod tests {
     .await
     .expect("capture staged remote template");
 
-    let data_url = capture.screenshot_data_url();
-    let image = BASE64_STANDARD
-      .decode(
-        data_url
-          .strip_prefix("data:image/bmp;base64,")
-          .expect("BMP data URL"),
-      )
-      .expect("decode captured template");
+    let image = capture.into_bmp();
     assert_eq!(image, expected_bmp);
     let form = read_screenshot_form(
       multipart_request(
@@ -2938,7 +2711,6 @@ mod tests {
     let bmp = sample_image(ImageFormat::Bmp, Rgba([20, 40, 60, 255]));
     let expected_bmp = bmp.clone();
     let headless = scripted_workers(move |job| {
-      assert!(job.client.is_none());
       assert_eq!(
         job.load_options.global_props_json.as_deref(),
         Some(r#"{"messages":[]}"#)
@@ -2962,14 +2734,10 @@ mod tests {
         .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(base_dir.clone());
       let _ = job.response.send(CaptureResponse {
         capture: Ok(CapturedPage::from_bmp(bmp.clone())),
-        client: job.client,
-        request: job.request,
       });
     });
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -3010,17 +2778,13 @@ mod tests {
 
   #[test]
   fn accepts_snake_case_page_data_aliases() {
-    let request: HttpJudgePageRequest = serde_json::from_value(json!({
+    let request: TemplateScreenshotRequest = serde_json::from_value(json!({
       "global_props": {"messages": []},
-      "include_geqi": true,
       "initial_data": {"playbackMode": true},
-      "task": "Render the A2UI page",
       "url": "file:///tmp/a2ui.lynx.bundle"
     }))
     .expect("deserialize aliased HTTP request");
     let capture_request = request.into_capture_request().expect("valid HTTP request");
-
-    assert!(capture_request.request.include_geqi);
 
     assert_eq!(
       capture_request.load_options.global_props_json.as_deref(),
@@ -3120,18 +2884,13 @@ mod tests {
     let headless = scripted_workers(drop);
     let response = health(State(AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_test_request,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     }))
     .await
     .expect("healthy worker must pass readiness");
 
-    assert_eq!(
-      response.0,
-      json!({ "model": "judge-model", "status": "ok" })
-    );
+    assert_eq!(response.0, json!({ "status": "ok" }));
     headless.shutdown().expect("stop mock headless worker");
   }
 
@@ -3245,7 +3004,7 @@ mod tests {
           .expect("build capture request");
         async move {
           headless
-            .capture(capture.request, None, capture.load_options)
+            .capture(capture.request, capture.load_options)
             .await
         }
       });
@@ -3257,14 +3016,7 @@ mod tests {
         .expect("receive a concurrent capture")
         .capture
         .expect("render a concurrent page");
-      let screenshot_data_url = capture.screenshot_data_url();
-      let bmp = BASE64_STANDARD
-        .decode(
-          screenshot_data_url
-            .strip_prefix("data:image/bmp;base64,")
-            .expect("screenshot data URL"),
-        )
-        .expect("decode screenshot data URL");
+      let bmp = capture.into_bmp();
       let rgb = image::load_from_memory(&bmp)
         .expect("decode a concurrent screenshot")
         .to_rgb8();
@@ -3280,8 +3032,7 @@ mod tests {
       .block_on(screenshot_zip_upload(
         State(AppState {
           headless: Arc::clone(&headless),
-          model_name: "judge-model".into(),
-          prepare_request: prepare_request_must_not_run,
+
           zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
           zip_capture_processes: ZipCaptureProcesses::new(),
         }),
@@ -3322,8 +3073,7 @@ mod tests {
       .block_on(screenshot_lynxml(
         State(AppState {
           headless: Arc::clone(&headless),
-          model_name: "judge-model".into(),
-          prepare_request: prepare_request_must_not_run,
+
           zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
           zip_capture_processes: ZipCaptureProcesses::new(),
         }),
@@ -3396,8 +3146,7 @@ mod tests {
         .block_on(screenshot_zip_upload(
           State(AppState {
             headless: Arc::clone(&headless),
-            model_name: "judge-model".into(),
-            prepare_request: prepare_request_must_not_run,
+
             zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
             zip_capture_processes: ZipCaptureProcesses::new(),
           }),
@@ -3522,15 +3271,13 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn judge_rejects_direct_file_page_access() {
+  async fn template_screenshot_rejects_direct_file_page_access() {
     let headless = Arc::new(
       CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
         .expect("create an idle headless pool"),
     );
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -3540,26 +3287,20 @@ mod tests {
       "FILE:///tmp/private.lynx.bundle",
     ] {
       let mut request = http_request(url);
-      request.global_props = Some(json!(["invalid page data"]));
       request.timeout_ms = Some(1);
-      let error = judge(State(state.clone()), Json(request))
+      let error = screenshot_template(State(state.clone()), Json(request))
         .await
         .expect_err("the server must reject direct file access");
-      assert_eq!(error.status, StatusCode::FORBIDDEN);
-      assert!(error
-        .message
-        .contains("source-specific screenshot endpoint"));
+      assert_eq!(error.status, StatusCode::BAD_REQUEST);
     }
     headless.shutdown().expect("stop mock headless worker");
   }
 
   #[tokio::test]
-  async fn remote_template_judge_uses_screenshot_ssrf_protection() {
+  async fn remote_template_screenshot_uses_screenshot_ssrf_protection() {
     let headless = scripted_workers(|_| panic!("blocked URLs must not reach capture"));
     let state = AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     };
@@ -3569,33 +3310,12 @@ mod tests {
       "HTTP://127.0.0.1/private.lynx.js",
       "http://[::1]/private.lynx.js",
     ] {
-      let error = judge(State(state.clone()), Json(http_request(url)))
+      let error = screenshot_template(State(state.clone()), Json(http_request(url)))
         .await
         .expect_err("the SSRF-safe downloader must reject private hosts");
       assert_eq!(error.status, StatusCode::FORBIDDEN);
       assert!(error.message.contains("non-public network address"));
     }
-    headless.shutdown().expect("stop unused headless worker");
-  }
-
-  #[tokio::test]
-  async fn remote_template_judge_rejects_steps_before_fetching() {
-    let headless = scripted_workers(|_| panic!("unsupported steps must not reach capture"));
-    let state = AppState {
-      headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_request_must_not_run,
-      zip_capture_backend: ZipCaptureBackend::SharedWorker,
-      zip_capture_processes: ZipCaptureProcesses::new(),
-    };
-    let mut request = http_request("https://example.com/template.js");
-    request.steps = vec!["Tap Save".to_string()];
-
-    let error = judge(State(state), Json(request))
-      .await
-      .expect_err("isolated template judging cannot execute model-driven steps");
-    assert_eq!(error.status, StatusCode::BAD_REQUEST);
-    assert!(error.message.contains("does not support interaction steps"));
     headless.shutdown().expect("stop unused headless worker");
   }
 
@@ -3630,11 +3350,7 @@ mod tests {
       .into_capture_request()
       .expect("valid panic request");
     let first_response = headless
-      .submit(
-        first_request.request,
-        Some(test_client()),
-        first_request.load_options,
-      )
+      .submit(first_request.request, first_request.load_options)
       .await
       .expect("submit the active request");
     received_first.wait();
@@ -3642,11 +3358,7 @@ mod tests {
       .into_capture_request()
       .expect("valid queued request");
     let queued_response = headless
-      .submit(
-        queued_request.request,
-        Some(test_client()),
-        queued_request.load_options,
-      )
+      .submit(queued_request.request, queued_request.load_options)
       .await
       .expect("submit a request behind the active capture");
     release_panic.wait();
@@ -3676,11 +3388,7 @@ mod tests {
       .expect("valid late request");
     assert!(matches!(
       headless
-        .submit(
-          late_request.request,
-          Some(test_client()),
-          late_request.load_options
-        )
+        .submit(late_request.request, late_request.load_options)
         .await,
       Err(CaptureError::ShuttingDown)
     ));
@@ -3688,8 +3396,6 @@ mod tests {
     assert!(!headless.is_healthy());
     let health_error = health(State(AppState {
       headless: Arc::clone(&headless),
-      model_name: "judge-model".into(),
-      prepare_request: prepare_test_request,
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
     }))

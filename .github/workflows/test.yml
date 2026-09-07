@@ -348,9 +348,6 @@ jobs:
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      UI_JUDGE_API_KEY: ${{ secrets.UI_JUDGE_API_KEY }}
-      UI_JUDGE_BASE_URL: ${{ secrets.UI_JUDGE_BASE_URL }}
-      UI_JUDGE_MODEL: ${{ secrets.UI_JUDGE_MODEL }}
   test-type:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

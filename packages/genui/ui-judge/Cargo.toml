@@ -5,7 +5,7 @@ autobins = false
 edition = "2021"
 license = "Apache-2.0"
 publish = false
-description = "Headless Lynx UI evaluation and VLM scoring"
+description = "Headless Lynx screenshots and deterministic image comparison"
 
 [lib]
 crate-type = ["rlib"]
@@ -24,9 +24,6 @@ server = [
 ]
 
 [dependencies]
-agent-sdk = { version = "0.15.0", default-features = false }
-anyhow = "1.0.104"
-async-trait = "0.1.91"
 axum = { version = "0.8.9", optional = true, features = ["multipart"] }
 base64 = "0.23.0"
 image = { version = "0.25.10", default-features = false, features = ["bmp", "jpeg", "png", "webp"] }
