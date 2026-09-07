@@ -26,7 +26,7 @@ export async function preview(
 
     const rspeedy = await createRspeedy(createRspeedyOptions)
 
-    await rspeedy.initConfigs()
+    await rspeedy.initConfigs({ action: 'preview' })
 
     const { distPath } = rspeedy.context
 
