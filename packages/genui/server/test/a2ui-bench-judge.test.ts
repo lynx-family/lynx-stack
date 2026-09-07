@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { describe, expect, test } from '@rstest/core';
+import { PNG } from 'pngjs';
 
 import {
   probeBenchUiJudge,
@@ -12,7 +13,65 @@ import {
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
+  readBenchScreenshotDataUrl,
 } from '../service/a2ui-bench-screenshot.js';
+
+// A runner-format 2x2 BMP: red, translucent green, transparent blue, and RGB(20,40,60).
+const CAPTURED_BMP = Buffer.from(
+  'Qk2KAAAAAAAAAHoAAABsAAAAAgAAAP7///8BACAAAwAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAD/AAD/AAAAAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AP8AgP8AAAA8KBT/',
+  'base64',
+);
+
+function bmpDataUrl(bmp: Buffer): string {
+  return 'data:image/bmp;base64,' + bmp.toString('base64');
+}
+
+function largeBmp(): Buffer {
+  const bmp = Buffer.alloc(122 + 1024 * 768 * 4, 255);
+  CAPTURED_BMP.copy(bmp, 0, 0, 122);
+  bmp.writeUInt32LE(bmp.length, 2);
+  bmp.writeInt32LE(1024, 18);
+  bmp.writeInt32LE(-768, 22);
+  bmp.writeUInt32LE(bmp.length - 122, 34);
+  return bmp;
+}
+
+describe('BMP screenshot conversion', () => {
+  test('applies the screenshot limit after PNG compression', async () => {
+    const bmp = largeBmp();
+    expect(bmp.length).toBeGreaterThan(MAX_BENCH_SCREENSHOT_DECODED_BYTES);
+    const result = await readBenchScreenshotDataUrl(bmpDataUrl(bmp));
+    expect(result).toBeDefined();
+    const png = PNG.sync.read(Buffer.from(result!.split(',')[1]!, 'base64'));
+    expect([png.width, png.height]).toEqual([1024, 768]);
+    expect(png.data.every((byte) => byte === 255)).toBe(true);
+  });
+
+  test('discards PNG output larger than the report limit', async () => {
+    const bmp = largeBmp();
+    // Deterministic noise is incompressible and exercises the output limit.
+    let state = 42;
+    for (let i = 122; i < bmp.length; i++) {
+      state ^= state << 13;
+      state ^= state >>> 17;
+      state ^= state << 5;
+      bmp[i] = state & 255;
+    }
+    expect(await readBenchScreenshotDataUrl(bmpDataUrl(bmp))).toBeUndefined();
+  });
+
+  test('rejects truncated pixels, unsupported masks, and excessive dimensions', async () => {
+    const wrongMask = Buffer.from(CAPTURED_BMP);
+    wrongMask.writeUInt32LE(0, 66);
+    const huge = Buffer.from(CAPTURED_BMP);
+    huge.writeInt32LE(0x7fffffff, 18);
+    for (const bmp of [CAPTURED_BMP.subarray(0, 130), wrongMask, huge]) {
+      expect(await readBenchScreenshotDataUrl(bmpDataUrl(bmp))).toBeUndefined();
+    }
+    expect(await readBenchScreenshotDataUrl('data:image/bmp;base64,!!!!'))
+      .toBeUndefined();
+  });
+});
 
 function screenshotDataUrlForBytes(bytes: number): string {
   const encodedLength = Math.ceil(bytes / 3) * 4;
@@ -240,6 +299,53 @@ describe('runBenchUiJudge', () => {
       screenshotDataUrl,
       status: 'complete',
     });
+  });
+
+  test('converts Judge BMP responses to PNG without changing RGBA pixels', async () => {
+    const result = await runBenchUiJudgeRequest(
+      {
+        globalProps: { instant: true },
+        includeScreenshot: true,
+        scenario: { prompt: 'Build a greeting' },
+        session: {
+          bundleUrl: 'https://assets.test/openui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      () =>
+        Promise.resolve(Response.json({
+          ...geqiResponse(4),
+          screenshotDataUrl: bmpDataUrl(CAPTURED_BMP),
+        })),
+    );
+    expect(result.status).toBe('complete');
+    expect(result.warnings).toEqual([]);
+    expect(
+      result.screenshotDataUrl?.startsWith(BENCH_SCREENSHOT_DATA_URL_PREFIX),
+    )
+      .toBe(true);
+    const png = PNG.sync.read(
+      Buffer.from(result.screenshotDataUrl!.split(',')[1]!, 'base64'),
+    );
+    expect([png.width, png.height]).toEqual([2, 2]);
+    expect([...png.data]).toEqual([
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      128,
+      0,
+      0,
+      255,
+      0,
+      20,
+      40,
+      60,
+      255,
+    ]);
   });
 
   test('discards a captured PNG larger than 2 MiB', async () => {
