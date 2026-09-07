@@ -1351,8 +1351,8 @@ importers:
   packages/react-signals:
     dependencies:
       '@preact/signals':
-        specifier: ^2.9.4
-        version: 2.11.0(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
+        specifier: ^2.11.2
+        version: 2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
@@ -4924,8 +4924,8 @@ packages:
   '@preact/signals-core@1.14.4':
     resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
 
-  '@preact/signals@2.11.0':
-    resolution: {integrity: sha512-mmrZ8I/Wef+tmSsQSjZySLRlnvuYAVfSZEy1+HrFvSwBtQf8/zSM+bV7odllUXIhKzUkBjsNk+TLZ20nt7p6Gg==}
+  '@preact/signals@2.11.2':
+    resolution: {integrity: sha512-rVTRTt/T0HIRgbugwS5FigbfF/kfdEFYFtiqxa+lbpqTajepqnR0firuAS2iNdHyejWB7Yc9p9QePkVNBtTAwg==}
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
@@ -15141,7 +15141,7 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.0(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
+  '@preact/signals@2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
     dependencies:
       '@preact/signals-core': 1.14.4
       preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
