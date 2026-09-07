@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { readBenchScreenshotDataUrl } from './a2ui-bench-screenshot';
+import { readBenchScreenshotDataUrl } from './a2ui-bench-screenshot.js';
 import type { BenchScenarioRequest } from './a2ui-bench-types';
 import type { A2UIMessage } from '../agent/a2ui-validator';
 
@@ -478,7 +478,7 @@ export async function runBenchUiJudgeRequest(
   const summary = typeof result.summary === 'string' && result.summary.trim()
     ? result.summary.trim()
     : undefined;
-  const screenshotDataUrl = readBenchScreenshotDataUrl(
+  const screenshotDataUrl = await readBenchScreenshotDataUrl(
     result.screenshotDataUrl,
   );
   const resultWarnings = [...warnings];
