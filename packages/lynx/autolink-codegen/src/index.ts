@@ -90,6 +90,18 @@ export interface NativeModuleObjectSpec {
   properties: NativeModuleObjectProperty[];
 }
 
+export interface LynxtronRuntimeTarget {
+  os: string;
+  arch: string;
+  files?: string[];
+  frameworks?: string[];
+  appBundles?: string[];
+}
+
+export interface LynxtronPlatformManifest {
+  targets: LynxtronRuntimeTarget[];
+}
+
 interface LynxLibJson {
   platforms: {
     android?: {
@@ -102,7 +114,7 @@ interface LynxLibJson {
     harmony?: {
       packageDir: string;
     };
-    lynxtron?: Record<string, unknown>;
+    lynxtron?: LynxtronPlatformManifest;
   };
 }
 
@@ -1439,12 +1451,181 @@ function readManifest(root: string): LynxLibJson {
   }
 
   if (lynxtron !== undefined) {
-    normalizedPlatforms.lynxtron = lynxtron;
+    normalizedPlatforms.lynxtron = readLynxtronPlatform(
+      lynxtron,
+      manifestPath,
+    );
   }
 
   return {
     platforms: normalizedPlatforms,
   };
+}
+
+/**
+ * Reads and validates the Lynxtron native artifact declarations.
+ */
+function readLynxtronPlatform(
+  value: Record<string, unknown>,
+  manifestPath: string,
+): LynxtronPlatformManifest {
+  const targets = value['targets'];
+
+  if ('path' in value) {
+    throw new Error(
+      `${manifestPath} does not support "platforms.lynxtron.path"; declare "platforms.lynxtron.targets" explicitly`,
+    );
+  }
+
+  if (
+    'binary' in value
+    || 'binaries' in value
+    || 'files' in value
+    || 'resources' in value
+    || 'frameworks' in value
+    || 'appBundles' in value
+  ) {
+    throw new Error(
+      `${manifestPath} requires files, frameworks, and appBundles inside "platforms.lynxtron.targets"`,
+    );
+  }
+
+  if (!Array.isArray(targets) || targets.length === 0) {
+    throw new Error(
+      `${manifestPath} must define non-empty array "platforms.lynxtron.targets"`,
+    );
+  }
+
+  const normalizedTargets = targets.map((entry, index) => {
+    const entryPath = `platforms.lynxtron.targets[${index}]`;
+    if (!isRecord(entry)) {
+      throw new Error(`${manifestPath} must define object "${entryPath}"`);
+    }
+
+    const os = readRequiredString(
+      entry,
+      'os',
+      manifestPath,
+      `${entryPath}.os`,
+    );
+    const arch = readRequiredString(
+      entry,
+      'arch',
+      manifestPath,
+      `${entryPath}.arch`,
+    );
+
+    if ('arc' in entry) {
+      throw new Error(
+        `${manifestPath} does not support "${entryPath}.arc"; use "${entryPath}.arch"`,
+      );
+    }
+
+    if ('binary' in entry || 'binaries' in entry || 'resources' in entry) {
+      throw new Error(
+        `${manifestPath} does not support binary, binaries, or resources in "${entryPath}"; use "${entryPath}.files"`,
+      );
+    }
+
+    const files = readOptionalStringPaths(
+      entry['files'],
+      manifestPath,
+      `${entryPath}.files`,
+    );
+    const frameworks = readOptionalStringPaths(
+      entry['frameworks'],
+      manifestPath,
+      `${entryPath}.frameworks`,
+    );
+    const appBundles = readOptionalStringPaths(
+      entry['appBundles'],
+      manifestPath,
+      `${entryPath}.appBundles`,
+    );
+
+    if (frameworks !== undefined) {
+      if (os !== 'darwin') {
+        throw new Error(
+          `${manifestPath} only supports "${entryPath}.frameworks" for darwin targets`,
+        );
+      }
+      if (frameworks.some((framework) => !framework.endsWith('.framework'))) {
+        throw new Error(
+          `${manifestPath} requires every "${entryPath}.frameworks" path to end in .framework`,
+        );
+      }
+    }
+
+    if (
+      files === undefined && frameworks === undefined
+      && appBundles === undefined
+    ) {
+      throw new Error(
+        `${manifestPath} must define "${entryPath}.files", "${entryPath}.frameworks", or "${entryPath}.appBundles"`,
+      );
+    }
+
+    if (appBundles !== undefined) {
+      if (os !== 'darwin') {
+        throw new Error(
+          `${manifestPath} only supports "${entryPath}.appBundles" for darwin targets`,
+        );
+      }
+      if (appBundles.some((appBundle) => !appBundle.endsWith('.app'))) {
+        throw new Error(
+          `${manifestPath} requires every "${entryPath}.appBundles" path to end in .app`,
+        );
+      }
+    }
+
+    return {
+      os,
+      arch,
+      ...(files === undefined ? {} : { files }),
+      ...(frameworks === undefined ? {} : { frameworks }),
+      ...(appBundles === undefined ? {} : { appBundles }),
+    };
+  });
+  const targetKeys = new Set<string>();
+
+  for (const target of normalizedTargets) {
+    const targetKey = `${target.os}/${target.arch}`;
+    if (targetKeys.has(targetKey)) {
+      throw new Error(
+        `${manifestPath} defines duplicate Lynxtron target "${targetKey}"`,
+      );
+    }
+    targetKeys.add(targetKey);
+  }
+
+  return { targets: normalizedTargets };
+}
+
+/**
+ * Reads optional non-empty relative artifact paths.
+ */
+function readOptionalStringPaths(
+  value: unknown,
+  manifestPath: string,
+  displayPath: string,
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    Array.isArray(value) && value.length > 0
+    && value.every(
+      (item: unknown): item is string =>
+        typeof item === 'string' && item.trim().length > 0,
+    )
+  ) {
+    return value;
+  }
+
+  throw new Error(
+    `${manifestPath} must define non-empty string array "${displayPath}"`,
+  );
 }
 
 /**
