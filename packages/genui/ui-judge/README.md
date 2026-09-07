@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     url: "file:///absolute/path/to/main.lynx.bundle".into(),
     ..Default::default()
   }).await?;
-  let baseline = std::fs::read("reference.png")?;
+  let baseline = std::fs::read("reference.bmp")?;
   let comparison = compare_images(&baseline, &bmp).await?;
   println!("Similarity: {}", comparison.similarity);
   Ok(())
@@ -35,11 +35,13 @@ Native work stays on a dedicated thread that owns the container and page
 lifecycle, so callers can use any Tokio runtime.
 
 `capture_page` returns the original uncompressed BMP bytes. `compare_images`
-accepts two byte slices containing BMP, PNG, JPEG, or WebP images and returns
+accepts two byte slices containing BMP images and returns
 alignment, similarity, block counts, a base64 PNG diff, and warnings. Input bytes,
-dimensions, and allocations are bounded. Normalization, alignment, and pixel
-comparison run on a bounded Rayon pool. Comparison preserves raw RGBA channels,
-including transparent pixels.
+dimensions, and allocations are bounded. Each BMP is decoded once; alignment and
+pixel comparison pass RGBA buffers directly on a bounded Rayon pool. Only the
+final diff is encoded as PNG; the comparison pipeline has no PNG decoding or
+intermediate image encoding. Comparison preserves raw RGBA channels, including
+transparent pixels.
 
 The crate has no model client, scoring API, interaction planner, or model
 configuration. `CapturePageError` reports capture failures;
@@ -227,19 +229,22 @@ any host that resolves to a non-public address. Remote responses are limited
 to 10 MiB; `url` parts are limited to 8 KiB.
 
 To run only the deterministic image alignment and pixel comparison, upload the
-two images as `multipart/form-data`:
+two BMP images as `multipart/form-data`:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/compare \
-  --form 'referenceImage=@/absolute/path/to/reference.png' \
-  --form 'renderedImage=@/absolute/path/to/rendered.png'
+  --form 'referenceImage=@/absolute/path/to/reference.bmp;type=image/bmp' \
+  --form 'renderedImage=@/absolute/path/to/rendered.bmp;type=image/bmp'
 ```
 
 `reference_image` and `rendered_image` are accepted as aliases for clients that
 use snake-case form names. The response contains `alignmentScore`,
 `visualSimilarity`, `differentBlocks`, `totalBlocks`, `diffImageBase64`, and
-any non-fatal `warnings`. This route accepts BMP, PNG, JPEG, and WebP image
-content. It normalizes and compares the uploads on the bounded Rayon pool.
+any non-fatal `warnings`. Both uploads must contain valid BMP bytes. PNG, JPEG,
+WebP, and malformed images return `400`, even if their filename or part media
+type claims BMP. The server validates the bytes rather than the upload metadata.
+It decodes each BMP once and compares RGBA buffers on the bounded Rayon pool;
+`diffImageBase64` remains a base64-encoded PNG without a data-URL prefix.
 
 Remote-source routes reject non-HTTP(S) URLs with `400` and non-public network
 addresses with `403`. The source-specific

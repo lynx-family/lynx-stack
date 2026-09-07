@@ -6,8 +6,11 @@ use std::io::Cursor;
 use std::sync::{Arc, OnceLock};
 
 use base64::prelude::{Engine, BASE64_STANDARD};
+use image::codecs::{bmp::BmpDecoder, png::PngEncoder};
 use image::imageops::{self, FilterType};
-use image::{DynamicImage, GrayImage, ImageFormat, ImageReader, Limits, Rgba, RgbaImage};
+use image::{
+  DynamicImage, ExtendedColorType, GrayImage, ImageDecoder, ImageEncoder, Limits, Rgba, RgbaImage,
+};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use thiserror::Error;
 
@@ -107,8 +110,8 @@ enum ImageKind {
 
 #[derive(Debug)]
 struct AlignImagesOutput {
-  aligned_reference_png: Vec<u8>,
-  aligned_rendered_png: Vec<u8>,
+  aligned_reference: RgbaImage,
+  aligned_rendered: RgbaImage,
   result: Option<AlignResult>,
 }
 
@@ -138,7 +141,7 @@ struct OverlapCrop {
 
 #[derive(Debug)]
 struct CompareImagesOutput {
-  diff_png: Vec<u8>,
+  diff: RgbaImage,
   result: CompareResult,
 }
 
@@ -227,6 +230,7 @@ where
   })?
 }
 
+/// Compares two BMP uploads, returning similarity metrics and a base64 PNG diff.
 pub async fn compare_uploaded_images(
   reference_image: &[u8],
   rendered_image: &[u8],
@@ -239,24 +243,13 @@ pub async fn compare_uploaded_images(
   }
   let reference_image = reference_image.to_vec();
   let rendered_image = rendered_image.to_vec();
-  let (reference_png, rendered_png) = run_visual_worker("normalization", move || {
-    let reference_png = normalize_image_to_png(&reference_image, ImageKind::Reference)?;
-    let rendered_png = normalize_image_to_png(&rendered_image, ImageKind::Rendered)?;
-    Ok((reference_png, rendered_png))
-  })
-  .await?;
-  compare_normalized_images(reference_png, rendered_png).await
-}
-
-async fn compare_normalized_images(
-  reference_png: Vec<u8>,
-  rendered_png: Vec<u8>,
-) -> VisualResult<ReferenceImageComparison> {
   run_visual_worker("comparison", move || {
-    let alignment = align_images(&reference_png, &rendered_png, None)?;
+    let reference = decode_bmp_with_limits(&reference_image, ImageKind::Reference)?;
+    let rendered = decode_bmp_with_limits(&rendered_image, ImageKind::Rendered)?;
+    let alignment = align_images(&reference, &rendered, None)?;
     let comparison = compare_images(
-      &alignment.aligned_reference_png,
-      &alignment.aligned_rendered_png,
+      &alignment.aligned_reference,
+      &alignment.aligned_rendered,
       None,
     )?;
 
@@ -265,7 +258,7 @@ async fn compare_normalized_images(
     if align_result.is_none() {
       warnings.push("Image alignment confidence too low; compared original images.".to_string());
     }
-    let diff_image_base64 = BASE64_STANDARD.encode(&comparison.diff_png);
+    let diff_image_base64 = BASE64_STANDARD.encode(encode_rgba_png(&comparison.diff)?);
     Ok(ReferenceImageComparison {
       alignment_score: align_result.map(|alignment| alignment.score),
       diff_image_base64,
@@ -278,22 +271,10 @@ async fn compare_normalized_images(
   .await
 }
 
-fn normalize_image_to_png(buffer: &[u8], kind: ImageKind) -> VisualResult<Vec<u8>> {
-  if buffer.is_empty() {
-    return Err(invalid_image(kind));
-  }
-  let image = decode_image_with_limits(buffer).map_err(|_| invalid_image(kind))?;
-  let png = encode_dynamic_png(&image).map_err(|_| invalid_image(kind))?;
-  Ok(png)
-}
-
-fn decode_image_with_limits(buffer: &[u8]) -> Result<DynamicImage, String> {
-  let dimensions_reader = ImageReader::new(Cursor::new(buffer))
-    .with_guessed_format()
-    .map_err(|error| error.to_string())?;
-  let (width, height) = dimensions_reader
-    .into_dimensions()
-    .map_err(|error| error.to_string())?;
+fn decode_bmp_with_limits(buffer: &[u8], kind: ImageKind) -> VisualResult<RgbaImage> {
+  // Select the BMP decoder directly: never infer a codec from upload metadata.
+  let mut decoder = BmpDecoder::new(Cursor::new(buffer)).map_err(|_| invalid_image(kind))?;
+  let (width, height) = decoder.dimensions();
   let pixels = u64::from(width).saturating_mul(u64::from(height));
   if width == 0
     || height == 0
@@ -301,39 +282,37 @@ fn decode_image_with_limits(buffer: &[u8]) -> Result<DynamicImage, String> {
     || height > MAX_IMAGE_DIMENSION
     || pixels > MAX_IMAGE_PIXELS
   {
-    return Err(format!(
-      "Image dimensions {width}x{height} exceed the supported limit."
-    ));
+    return Err(invalid_image(kind));
   }
 
-  let mut reader = ImageReader::new(Cursor::new(buffer))
-    .with_guessed_format()
-    .map_err(|error| error.to_string())?;
   let mut limits = Limits::default();
   limits.max_image_width = Some(MAX_IMAGE_DIMENSION);
   limits.max_image_height = Some(MAX_IMAGE_DIMENSION);
   limits.max_alloc = Some(MAX_DECODED_IMAGE_BYTES);
-  reader.limits(limits);
-  reader.decode().map_err(|error| error.to_string())
+  // BmpDecoder's default limits only check dimensions. Reserve both the decoded
+  // buffer and RGBA conversion before allocating either of them.
+  limits
+    .reserve(decoder.total_bytes() + pixels * 4)
+    .map_err(|_| invalid_image(kind))?;
+  decoder
+    .set_limits(limits)
+    .map_err(|_| invalid_image(kind))?;
+  DynamicImage::from_decoder(decoder)
+    .map(DynamicImage::into_rgba8)
+    .map_err(|_| invalid_image(kind))
 }
 
 fn align_images(
-  reference_png: &[u8],
-  rendered_png: &[u8],
+  reference: &RgbaImage,
+  rendered: &RgbaImage,
   options: Option<&VisualEvaluationAlignOptions>,
 ) -> VisualResult<AlignImagesOutput> {
-  let reference = decode_image_with_limits(reference_png).map_err(|error| {
-    image_operation_error(VisualEvaluationErrorCode::ImageAlignmentError, error)
-  })?;
-  let rendered = decode_image_with_limits(rendered_png).map_err(|error| {
-    image_operation_error(VisualEvaluationErrorCode::ImageAlignmentError, error)
-  })?;
   let reference_width = reference.width();
   let rendered_width = rendered.width();
   if reference_width == 0 || rendered_width == 0 {
     return Ok(AlignImagesOutput {
-      aligned_reference_png: reference_png.to_vec(),
-      aligned_rendered_png: rendered_png.to_vec(),
+      aligned_reference: reference.clone(),
+      aligned_rendered: rendered.clone(),
       result: None,
     });
   }
@@ -351,8 +330,8 @@ fn align_images(
       .unwrap_or(DEFAULT_DOWNSAMPLE_WIDTH)
       .min(target_width as f64),
   );
-  let resized_reference = resize_to_width(&reference, target_width)?;
-  let resized_rendered = resize_to_width(&rendered, target_width)?;
+  let resized_reference = resize_to_width(reference, target_width)?;
+  let resized_rendered = resize_to_width(rendered, target_width)?;
   let max_resized_height = resized_reference.height.max(resized_rendered.height);
   let height_limited_width = ((u64::from(target_width) * u64::from(MAX_DOWNSAMPLED_HEIGHT))
     / u64::from(max_resized_height.max(1)))
@@ -394,8 +373,8 @@ fn align_images(
     .is_none_or(|candidate| candidate.score < options.min_score.unwrap_or(DEFAULT_MIN_SCORE))
   {
     return Ok(AlignImagesOutput {
-      aligned_reference_png: reference_png.to_vec(),
-      aligned_rendered_png: rendered_png.to_vec(),
+      aligned_reference: reference.clone(),
+      aligned_rendered: rendered.clone(),
       result: None,
     });
   }
@@ -414,8 +393,8 @@ fn align_images(
   );
   if crop.width == 0 || crop.height == 0 {
     return Ok(AlignImagesOutput {
-      aligned_reference_png: reference_png.to_vec(),
-      aligned_rendered_png: rendered_png.to_vec(),
+      aligned_reference: reference.clone(),
+      aligned_rendered: rendered.clone(),
       result: None,
     });
   }
@@ -434,12 +413,9 @@ fn align_images(
     crop.width,
     crop.height,
   );
-  let aligned_reference_png = encode_rgba_png(&aligned_reference)?;
-  let aligned_rendered_png = encode_rgba_png(&aligned_rendered)?;
-
   Ok(AlignImagesOutput {
-    aligned_reference_png,
-    aligned_rendered_png,
+    aligned_reference,
+    aligned_rendered,
     result: Some(AlignResult {
       score: best_candidate.score,
     }),
@@ -447,14 +423,10 @@ fn align_images(
 }
 
 fn compare_images(
-  reference_png: &[u8],
-  rendered_png: &[u8],
+  reference: &RgbaImage,
+  rendered: &RgbaImage,
   options: Option<&VisualEvaluationCompareOptions>,
 ) -> VisualResult<CompareImagesOutput> {
-  let reference = decode_image_with_limits(reference_png)
-    .map_err(|error| image_operation_error(VisualEvaluationErrorCode::ImageCompareError, error))?;
-  let rendered = decode_image_with_limits(rendered_png)
-    .map_err(|error| image_operation_error(VisualEvaluationErrorCode::ImageCompareError, error))?;
   let width = reference.width().min(rendered.width());
   let height = reference.height().min(rendered.height());
   if width == 0 || height == 0 {
@@ -470,8 +442,8 @@ fn compare_images(
   let threshold = options.threshold.unwrap_or(DEFAULT_THRESHOLD);
   let pixel_tolerance = options.pixel_tolerance.unwrap_or(DEFAULT_PIXEL_TOLERANCE);
   let pixel_tolerance_squared = pixel_tolerance * pixel_tolerance;
-  let reference = resize_to_exact_rgba(&reference, width, height);
-  let rendered = resize_to_exact_rgba(&rendered, width, height);
+  let reference = resize_to_exact_rgba(reference, width, height);
+  let rendered = resize_to_exact_rgba(rendered, width, height);
   let block_columns = width.div_ceil(block_size);
   let block_rows = height.div_ceil(block_size);
   let mut block_stats = vec![
@@ -515,9 +487,8 @@ fn compare_images(
   }
 
   let total_blocks = (block_columns * block_rows) as usize;
-  let diff_png = encode_rgba_png(&diff)?;
   Ok(CompareImagesOutput {
-    diff_png,
+    diff,
     result: CompareResult {
       different_blocks,
       similarity: if total_blocks == 0 {
@@ -530,7 +501,7 @@ fn compare_images(
   })
 }
 
-fn resize_to_width(image: &DynamicImage, width: u32) -> VisualResult<ResizedImage> {
+fn resize_to_width(image: &RgbaImage, width: u32) -> VisualResult<ResizedImage> {
   if image.width() == 0 || image.height() == 0 {
     return Err(VisualEvaluationError::new(
       500,
@@ -548,8 +519,8 @@ fn resize_to_width(image: &DynamicImage, width: u32) -> VisualResult<ResizedImag
   })
 }
 
-fn resize_to_exact_rgba(image: &DynamicImage, width: u32, height: u32) -> RgbaImage {
-  imageops::resize(&image.to_rgba8(), width, height, FilterType::Lanczos3)
+fn resize_to_exact_rgba(image: &RgbaImage, width: u32, height: u32) -> RgbaImage {
+  imageops::resize(image, width, height, FilterType::Lanczos3)
 }
 
 fn to_grayscale(image: &RgbaImage, width: u32) -> GrayImage {
@@ -749,20 +720,17 @@ fn round_positive(value: f64) -> u32 {
   value.round().max(1.0) as u32
 }
 
-fn encode_dynamic_png(image: &DynamicImage) -> image::ImageResult<Vec<u8>> {
-  let mut buffer = Vec::new();
-  image.write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png)?;
-  Ok(buffer)
-}
-
 fn encode_rgba_png(image: &RgbaImage) -> VisualResult<Vec<u8>> {
-  encode_dynamic_png(&DynamicImage::ImageRgba8(image.clone())).map_err(|error| {
-    VisualEvaluationError::new(
-      500,
-      VisualEvaluationErrorCode::ImageCompareError,
-      error.to_string(),
+  let mut buffer = Vec::new();
+  PngEncoder::new(&mut buffer)
+    .write_image(
+      image.as_raw(),
+      image.width(),
+      image.height(),
+      ExtendedColorType::Rgba8,
     )
-  })
+    .map_err(|error| image_operation_error(VisualEvaluationErrorCode::ImageCompareError, error))?;
+  Ok(buffer)
 }
 
 fn invalid_image(kind: ImageKind) -> VisualEvaluationError {
@@ -786,8 +754,8 @@ impl ImageKind {
 
   fn invalid_message(self) -> &'static str {
     match self {
-      ImageKind::Reference => "Reference image is empty, malformed, or unreadable.",
-      ImageKind::Rendered => "Rendered image is empty, malformed, or unreadable.",
+      ImageKind::Reference => "Reference image must be a valid BMP within the image limits.",
+      ImageKind::Rendered => "Rendered image must be a valid BMP within the image limits.",
     }
   }
 }
@@ -796,22 +764,35 @@ impl ImageKind {
 mod tests {
   use std::time::Duration;
 
+  use image::codecs::bmp::BmpEncoder;
+
   use super::*;
 
   #[test]
   fn rejects_images_beyond_the_decoded_dimension_limit() {
     let oversized = RgbaImage::from_pixel(MAX_IMAGE_DIMENSION + 1, 1, Rgba([255, 255, 255, 255]));
-    let png = encode_rgba_png(&oversized).expect("encode oversized fixture");
+    let bmp = encode_bmp(&oversized);
 
     let error =
-      normalize_image_to_png(&png, ImageKind::Reference).expect_err("oversized image must fail");
+      decode_bmp_with_limits(&bmp, ImageKind::Reference).expect_err("oversized image must fail");
     assert_eq!(error.code, VisualEvaluationErrorCode::ReferenceImageInvalid);
   }
 
   #[test]
+  fn rejects_bmp_headers_beyond_the_decoded_pixel_limit_before_reading_pixels() {
+    let mut bmp = encode_bmp(&sample_image(Rgba([20, 40, 60, 255])));
+    bmp[18..22].copy_from_slice(&4096_i32.to_le_bytes());
+    bmp[22..26].copy_from_slice(&4096_i32.to_le_bytes());
+
+    let error = decode_bmp_with_limits(&bmp, ImageKind::Rendered)
+      .expect_err("oversized pixel buffer must fail");
+    assert_eq!(error.code, VisualEvaluationErrorCode::RenderedImageInvalid);
+  }
+
+  #[test]
   fn compares_identical_images() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
-    let output = compare_images(&png, &png, None).expect("compare images");
+    let pixels = sample_image(Rgba([20, 40, 60, 255]));
+    let output = compare_images(&pixels, &pixels, None).expect("compare images");
     assert_eq!(output.result.different_blocks, 0);
     assert_eq!(output.result.similarity, 1.0);
   }
@@ -830,27 +811,18 @@ mod tests {
       window_height_ratio: Some(0.25),
     };
 
-    let output = align_images(
-      &encode_rgba_png(&reference).expect("encode reference"),
-      &encode_rgba_png(&rendered).expect("encode rendered"),
-      Some(&options),
-    )
-    .expect("align images");
+    let output = align_images(&reference, &rendered, Some(&options)).expect("align images");
     assert!(output.result.expect("alignment result").score >= 0.5);
 
-    let comparison = compare_images(
-      &output.aligned_reference_png,
-      &output.aligned_rendered_png,
-      None,
-    )
-    .expect("compare aligned images");
+    let comparison = compare_images(&output.aligned_reference, &output.aligned_rendered, None)
+      .expect("compare aligned images");
     assert_eq!(comparison.result.similarity, 1.0);
   }
 
   #[test]
   fn falls_back_to_original_images_when_alignment_confidence_is_too_low() {
-    let reference = encode_rgba_png(&patterned_image(32, 32)).expect("encode reference");
-    let rendered = encode_rgba_png(&patterned_image(32, 32)).expect("encode rendered");
+    let reference = patterned_image(32, 32);
+    let rendered = patterned_image(32, 32);
     let options = VisualEvaluationAlignOptions {
       min_score: Some(2.0),
       ..VisualEvaluationAlignOptions::default()
@@ -858,8 +830,8 @@ mod tests {
 
     let output = align_images(&reference, &rendered, Some(&options)).expect("align images");
     assert!(output.result.is_none());
-    assert_eq!(output.aligned_reference_png, reference);
-    assert_eq!(output.aligned_rendered_png, rendered);
+    assert_eq!(output.aligned_reference, reference);
+    assert_eq!(output.aligned_rendered, rendered);
   }
 
   #[test]
@@ -873,46 +845,61 @@ mod tests {
       threshold: Some(0.0),
     };
 
-    let output = compare_images(
-      &encode_rgba_png(&reference).expect("encode reference"),
-      &encode_rgba_png(&rendered).expect("encode rendered"),
-      Some(&options),
-    )
-    .expect("compare images");
+    let output = compare_images(&reference, &rendered, Some(&options)).expect("compare images");
     assert_eq!(output.result.total_blocks, 4);
     assert_eq!(output.result.different_blocks, 1);
     assert_eq!(output.result.similarity, 0.75);
-    let diff = image::load_from_memory(&output.diff_png)
-      .expect("decode diff")
-      .to_rgba8();
-    assert_eq!(diff.get_pixel(32, 32), &Rgba([255, 0, 0, 255]));
+    assert_eq!(output.diff.get_pixel(32, 32), &Rgba([255, 0, 0, 255]));
   }
 
-  #[test]
-  fn compares_raw_rgba_channels_including_fully_transparent_pixels() {
-    let reference = sample_png(Rgba([255, 0, 0, 0]));
-    let rendered = sample_png(Rgba([0, 255, 255, 0]));
-    let output = compare_images(&reference, &rendered, None).expect("compare images");
-    assert_eq!(output.result.similarity, 0.0);
+  #[tokio::test]
+  async fn compares_raw_bmp_rgba_channels_including_fully_transparent_pixels() {
+    let reference = encode_bmp(&sample_image(Rgba([255, 0, 0, 0])));
+    let rendered = encode_bmp(&sample_image(Rgba([0, 255, 255, 0])));
+    let output = compare_uploaded_images(&reference, &rendered)
+      .await
+      .expect("compare BMP images");
+    assert_eq!(output.similarity, 0.0);
   }
 
   #[tokio::test]
   async fn compares_two_uploaded_images_without_model_evaluation() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
-    let result = compare_uploaded_images(&png, &png)
+    let bmp = encode_bmp(&sample_image(Rgba([20, 40, 60, 255])));
+    let result = compare_uploaded_images(&bmp, &bmp)
       .await
       .expect("compare uploaded images");
 
     assert_eq!(result.similarity, 1.0);
     assert_eq!(result.different_blocks, 0);
     assert_eq!(result.total_blocks, 1);
-    assert!(!result.diff_image_base64.is_empty());
+    assert!(BASE64_STANDARD
+      .decode(result.diff_image_base64)
+      .expect("base64 diff")
+      .starts_with(b"\x89PNG\r\n\x1a\n"));
+  }
+
+  #[tokio::test]
+  async fn rejects_png_in_either_upload() {
+    let pixels = sample_image(Rgba([20, 40, 60, 255]));
+    let bmp = encode_bmp(&pixels);
+    let png = encode_rgba_png(&pixels).expect("encode non-BMP fixture");
+    for (reference, rendered, code) in [
+      (&png, &bmp, VisualEvaluationErrorCode::ReferenceImageInvalid),
+      (&bmp, &png, VisualEvaluationErrorCode::RenderedImageInvalid),
+    ] {
+      let error = compare_uploaded_images(reference, rendered)
+        .await
+        .expect_err("PNG uploads must fail");
+      assert_eq!(error.status, 400);
+      assert_eq!(error.code, code);
+      assert!(error.message.contains("BMP"));
+    }
   }
 
   #[tokio::test]
   async fn identifies_an_invalid_rendered_upload() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
-    let error = compare_uploaded_images(&png, b"not an image")
+    let bmp = encode_bmp(&sample_image(Rgba([20, 40, 60, 255])));
+    let error = compare_uploaded_images(&bmp, b"not an image")
       .await
       .expect_err("invalid rendered image must fail");
 
@@ -964,14 +951,21 @@ mod tests {
     drop(permit);
   }
 
-  fn sample_png(color: Rgba<u8>) -> Vec<u8> {
-    let mut image = RgbaImage::new(8, 8);
-    for y in 0..8 {
-      for x in 0..8 {
-        image.put_pixel(x, y, color);
-      }
-    }
-    encode_rgba_png(&image).expect("encode png")
+  fn sample_image(color: Rgba<u8>) -> RgbaImage {
+    RgbaImage::from_pixel(8, 8, color)
+  }
+
+  fn encode_bmp(image: &RgbaImage) -> Vec<u8> {
+    let mut buffer = Vec::new();
+    BmpEncoder::new(&mut buffer)
+      .encode(
+        image.as_raw(),
+        image.width(),
+        image.height(),
+        ExtendedColorType::Rgba8,
+      )
+      .expect("encode BMP fixture");
+    buffer
   }
 
   fn patterned_image(width: u32, height: u32) -> RgbaImage {

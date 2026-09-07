@@ -1963,8 +1963,8 @@ mod tests {
     bytes
   }
 
-  fn sample_png(color: Rgba<u8>) -> Vec<u8> {
-    sample_image(ImageFormat::Png, color)
+  fn sample_bmp(color: Rgba<u8>) -> Vec<u8> {
+    sample_image(ImageFormat::Bmp, color)
   }
 
   fn sample_png_with_dimensions(width: u32, height: u32, color: Rgba<u8>) -> Vec<u8> {
@@ -2014,10 +2014,10 @@ mod tests {
     for (name, bytes) in fields {
       body.extend_from_slice(format!("--{boundary}\r\n").as_bytes());
       body.extend_from_slice(
-        format!("Content-Disposition: form-data; name=\"{name}\"; filename=\"{name}.png\"\r\n")
+        format!("Content-Disposition: form-data; name=\"{name}\"; filename=\"{name}.bmp\"\r\n")
           .as_bytes(),
       );
-      body.extend_from_slice(b"Content-Type: image/png\r\n\r\n");
+      body.extend_from_slice(b"Content-Type: image/bmp\r\n\r\n");
       body.extend_from_slice(bytes);
       body.extend_from_slice(b"\r\n");
     }
@@ -3222,12 +3222,12 @@ mod tests {
 
   #[tokio::test]
   async fn compares_two_uploads_without_a_headless_or_model_request() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let bmp = sample_bmp(Rgba([20, 40, 60, 255]));
     let multipart = multipart(
       "ui-judge-boundary",
       &[
-        ("referenceImage", png.as_slice()),
-        ("renderedImage", png.as_slice()),
+        ("referenceImage", bmp.as_slice()),
+        ("renderedImage", bmp.as_slice()),
       ],
     )
     .await;
@@ -3240,9 +3240,35 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn rejects_png_uploads_even_with_a_bmp_filename_and_content_type() {
+    let bmp = sample_bmp(Rgba([20, 40, 60, 255]));
+    let png = sample_image(ImageFormat::Png, Rgba([20, 40, 60, 255]));
+    for (reference, rendered, name) in [
+      (&png, &bmp, "Reference image"),
+      (&bmp, &png, "Rendered image"),
+    ] {
+      let multipart = multipart(
+        "ui-judge-boundary",
+        &[
+          ("referenceImage", reference.as_slice()),
+          ("renderedImage", rendered.as_slice()),
+        ],
+      )
+      .await;
+      let error = compare(multipart)
+        .await
+        .expect_err("PNG bytes must fail regardless of upload metadata");
+
+      assert_eq!(error.status, StatusCode::BAD_REQUEST);
+      assert!(error.message.contains(name));
+      assert!(error.message.contains("BMP"));
+    }
+  }
+
+  #[tokio::test]
   async fn rejects_a_compare_request_missing_an_image() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
-    let multipart = multipart("ui-judge-boundary", &[("referenceImage", png.as_slice())]).await;
+    let bmp = sample_bmp(Rgba([20, 40, 60, 255]));
+    let multipart = multipart("ui-judge-boundary", &[("referenceImage", bmp.as_slice())]).await;
     let error = compare(multipart)
       .await
       .expect_err("both image uploads are required");
@@ -3253,11 +3279,11 @@ mod tests {
 
   #[tokio::test]
   async fn rejects_an_invalid_rendered_image_upload() {
-    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let bmp = sample_bmp(Rgba([20, 40, 60, 255]));
     let multipart = multipart(
       "ui-judge-boundary",
       &[
-        ("referenceImage", png.as_slice()),
+        ("referenceImage", bmp.as_slice()),
         ("renderedImage", b"not an image"),
       ],
     )
