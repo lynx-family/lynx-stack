@@ -1656,8 +1656,8 @@ importers:
   packages/rspeedy/create-rspeedy:
     dependencies:
       '@rstackjs/create-toolkit':
-        specifier: 2.1.4
-        version: 2.1.4
+        specifier: 2.2.5
+        version: 2.2.5
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
@@ -5955,8 +5955,8 @@ packages:
       '@rspress/core':
         optional: true
 
-  '@rstackjs/create-toolkit@2.1.4':
-    resolution: {integrity: sha512-kwPhfMdgWN7z/Op5UKMszhmZy7+hzqXeiQPli4uycYYTLxCVUGLlEW3etoGoZlrM2t5zLqXZQAgL60PTUR/ocw==}
+  '@rstackjs/create-toolkit@2.2.5':
+    resolution: {integrity: sha512-RVPaqOi2FDlHQT/z/zRyhJ650Zo/w+M3Aa5bYq92Rri2VOh46OIWFzaJGqAHF2/qeP+Ns7+JsRnVSk4H/4otUg==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
   '@rstest/adapter-rsbuild@0.11.12':
@@ -16189,7 +16189,7 @@ snapshots:
     optionalDependencies:
       '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
-  '@rstackjs/create-toolkit@2.1.4': {}
+  '@rstackjs/create-toolkit@2.2.5': {}
 
   '@rstest/adapter-rsbuild@0.11.12(@rsbuild/core@2.2.3(core-js@3.50.0))(@rstest/core@0.11.12(core-js@3.50.0)(jsdom@30.0.1))':
     dependencies:
