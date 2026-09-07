@@ -1647,11 +1647,11 @@ importers:
         specifier: ^5.8.0
         version: 5.8.0
       typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@6.0.3)
+        specifier: 12.2.0
+        version: 12.2.0(typescript@6.0.3)
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.2.0(typescript@6.0.3))
 
   packages/rspeedy/create-rspeedy:
     dependencies:
@@ -1754,11 +1754,11 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@6.0.3)
+        specifier: 12.2.0
+        version: 12.2.0(typescript@6.0.3)
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.2.0(typescript@6.0.3))
 
   packages/rspeedy/plugin-debug-metadata:
     dependencies:
@@ -1965,11 +1965,11 @@ importers:
         specifier: ^5.8.0
         version: 5.8.0
       typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@6.0.3)
+        specifier: 12.2.0
+        version: 12.2.0(typescript@6.0.3)
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.2.0(typescript@6.0.3))
 
   packages/rspeedy/plugin-react-alias:
     devDependencies:
@@ -6764,17 +6764,21 @@ packages:
     resolution: {integrity: sha512-mbCddXd+jm7hfx7w2YU64/Av4/NqqeG3GoRZgxPcgoTxYjhrcfJRw9ULch71SS4G+Q3bOXFhRvPqjguN0Hyp5w==}
     hasBin: true
 
-  '@typia/core@12.1.1':
-    resolution: {integrity: sha512-SfyugTNTCJa75pVwSXwfx6SwvS5YcNOCBg8VjxqykhSgCyoAXkZtc2PsWEkeeaB8EPut1JRBCrzlWtsXo1EZ8Q==}
+  '@typia/core@12.2.0':
+    resolution: {integrity: sha512-0U7Jb0ltG2+hqHf05Y1mhLSfB1ROkLDH55OC/vDdz0Hzf1X6Bt8tU5inR8QyDzjmaMO3o5/+AVMjkHtDthtqdw==}
+    peerDependencies:
+      typescript: '>=4.8.0 <7.0.0'
 
-  '@typia/interface@12.1.1':
-    resolution: {integrity: sha512-FKLpgNX1mrGnPfeXhU6ztRyMhLvuK13OY8MgqaIucl59XNyCVtcRqgnCMc7dJGLpXEveVp3N5a5VGyZdNUHnCQ==}
+  '@typia/interface@12.2.0':
+    resolution: {integrity: sha512-7GKMzWxjDdHV1eMjwx9ZEVWcUDAYr58ErjgKS5j16QXDD7rLdgfm4wvWoSWuiQVP5q0cho6C55LFWmyVqEeYlA==}
 
-  '@typia/transform@12.1.1':
-    resolution: {integrity: sha512-RbWB9L/aqcBTbPrJBOYpIg8IyQh6eGliElAFww40F7QlgsXIlk13twjTV3EEWXvgvOTl5eOSDWUKYgL7iAgoOw==}
+  '@typia/transform@12.2.0':
+    resolution: {integrity: sha512-d+yB0OO3762hS/XRoCyvoA024WPi6SKYnyhLeZGzfSBJnX0RwEfX9EzXHJcVP6TsbiCnuqOLtnlsCCl9VZximg==}
+    peerDependencies:
+      typescript: '>=4.8.0 <7.0.0'
 
-  '@typia/utils@12.1.1':
-    resolution: {integrity: sha512-RQSHMEyVfPnpQJHGfFe2pxU1H5lJPUBF9CQcCB6/EtI+QKcBj/QmQBOJX7a/WRyvC5ojJlJGL0DEylufhBKxkQ==}
+  '@typia/utils@12.2.0':
+    resolution: {integrity: sha512-6tJnBuGOvYuOyMtB4I+Ems4T2OVs4N9C5jB63wadFQo4ZPXSCYyh/qdc91Nowd34N41ZfpbK5CDISzPFkAqPWA==}
 
   '@uiw/codemirror-extensions-basic-setup@4.25.11':
     resolution: {integrity: sha512-otyFa+n9IOYtEjaKOxPedHkj15fTPUF21wdR9pv0GpZPfuGl27cvmcv6+tognbRu9VvEcsHKE+ESoszeo3KfTw==}
@@ -12069,8 +12073,8 @@ packages:
       typescript: '*'
       typia: '*'
 
-  typia@12.1.1:
-    resolution: {integrity: sha512-sgUjpsSW8EhvVoLVbalMyejo9XT42cJUPqFPmXPdf/bIh7xY0rIiNF4CJc9oTXZpqtiZR9II7M8qZ0dYkg93Gw==}
+  typia@12.2.0:
+    resolution: {integrity: sha512-0Iol9utQXI0xJ1z7xFhWdjQoElqqPDPJn+lyp1PmPS07SSfmJAk8IDrPWpSN51MShdRAficPqRRvXPcUjhbPAQ==}
     hasBin: true
     peerDependencies:
       typescript: '>=4.8.0 <7.0.0'
@@ -16983,24 +16987,24 @@ snapshots:
     dependencies:
       '@typescript/old': typescript@6.0.3
 
-  '@typia/core@12.1.1':
+  '@typia/core@12.2.0(typescript@6.0.3)':
     dependencies:
-      '@typia/interface': 12.1.1
-      '@typia/utils': 12.1.1
+      '@typia/interface': 12.2.0
+      '@typia/utils': 12.2.0
       typescript: 6.0.3
 
-  '@typia/interface@12.1.1': {}
+  '@typia/interface@12.2.0': {}
 
-  '@typia/transform@12.1.1':
+  '@typia/transform@12.2.0(typescript@6.0.3)':
     dependencies:
-      '@typia/core': 12.1.1
-      '@typia/interface': 12.1.1
-      '@typia/utils': 12.1.1
+      '@typia/core': 12.2.0(typescript@6.0.3)
+      '@typia/interface': 12.2.0
+      '@typia/utils': 12.2.0
       typescript: 6.0.3
 
-  '@typia/utils@12.1.1':
+  '@typia/utils@12.2.0':
     dependencies:
-      '@typia/interface': 12.1.1
+      '@typia/interface': 12.2.0
 
   '@uiw/codemirror-extensions-basic-setup@4.25.11(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.1)':
     dependencies:
@@ -22932,19 +22936,19 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
-  typia-rspack-plugin@3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3)):
+  typia-rspack-plugin@3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.2.0(typescript@6.0.3)):
     dependencies:
       '@rspack/core': 2.2.2(@swc/helpers@0.5.23)
       typescript: 6.0.3
-      typia: 12.1.1(typescript@6.0.3)
+      typia: 12.2.0(typescript@6.0.3)
 
-  typia@12.1.1(typescript@6.0.3):
+  typia@12.2.0(typescript@6.0.3):
     dependencies:
       '@standard-schema/spec': 1.1.0
-      '@typia/core': 12.1.1
-      '@typia/interface': 12.1.1
-      '@typia/transform': 12.1.1
-      '@typia/utils': 12.1.1
+      '@typia/core': 12.2.0(typescript@6.0.3)
+      '@typia/interface': 12.2.0
+      '@typia/transform': 12.2.0(typescript@6.0.3)
+      '@typia/utils': 12.2.0
       commander: 10.0.1
       comment-json: 4.2.5
       inquirer: 8.2.6
