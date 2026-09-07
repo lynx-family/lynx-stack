@@ -43,6 +43,40 @@ describe('Element Template renderToOpcodes', () => {
     expect(renderToString(h(Reader, null))).toContain('default');
   });
 
+  it('lets use() read a context from a class that declares contextType', () => {
+    const Ctx = createContext('default');
+    const seen = [];
+
+    class Reader extends Component {
+      static contextType = Ctx;
+      render() {
+        seen.push(['this.context', this.context], ['use', use(Ctx)]);
+        return 'ok';
+      }
+    }
+
+    renderToString(h(Ctx.Provider, { value: 'provided' }, h(Reader, null)));
+
+    expect(seen).toEqual([['this.context', 'provided'], ['use', 'provided']]);
+  });
+
+  it('lets use() read a context from a function that declares contextType', () => {
+    const Ctx = createContext('default');
+    const seen = [];
+
+    function Reader(_props, context) {
+      seen.push(['arg', context], ['use', use(Ctx)]);
+      return 'ok';
+    }
+    Reader.contextType = Ctx;
+
+    renderToString(h(Ctx.Provider, { value: 'provided' }, h(Reader, null)));
+
+    // `context` is the resolved contextType value here, so `use` has to read
+    // the provider map from `_globalContext` instead.
+    expect(seen).toEqual([['arg', 'provided'], ['use', 'provided']]);
+  });
+
   it('emits slot opcodes for ET host nodes using $N named props', () => {
     const Template = '_et_test_root';
     const opcodes = renderToString(<Template $3='marker' />);

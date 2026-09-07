@@ -94,4 +94,48 @@ describe('use() on the main thread', () => {
 
     expect(seen).toEqual(['provided']);
   });
+
+  describe('alongside contextType', () => {
+    it('gives a class its contextType value while use() still reads the provider', () => {
+      const Ctx = createContext('default');
+      const seen = [];
+
+      class Reader extends Component {
+        static contextType = Ctx;
+        render() {
+          seen.push(['this.context', this.context], ['use', use(Ctx)]);
+          return <text>ok</text>;
+        }
+      }
+
+      renderToString(
+        <Ctx.Provider value='provided'>
+          <Reader />
+        </Ctx.Provider>,
+      );
+
+      expect(seen).toEqual([['this.context', 'provided'], ['use', 'provided']]);
+    });
+
+    it('gives a function its contextType value while use() still reads the provider', () => {
+      const Ctx = createContext('default');
+      const seen = [];
+
+      function Reader(_props, context) {
+        seen.push(['arg', context], ['use', use(Ctx)]);
+        return <text>ok</text>;
+      }
+      Reader.contextType = Ctx;
+
+      renderToString(
+        <Ctx.Provider value='provided'>
+          <Reader />
+        </Ctx.Provider>,
+      );
+
+      // `context` is the resolved contextType value here, so `use` has to read
+      // the provider map from `_globalContext` instead.
+      expect(seen).toEqual([['arg', 'provided'], ['use', 'provided']]);
+    });
+  });
 });
