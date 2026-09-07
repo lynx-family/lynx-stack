@@ -57,7 +57,7 @@ describe('callDestroyLifetimeFun', () => {
 
     callDestroyLifetimeFun();
 
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(globalCommitContext.ops).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.values.size).toBe(0);
   });

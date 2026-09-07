@@ -367,7 +367,7 @@ describe('hydrate', () => {
       [101, 102, 103],
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(101)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(102)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(103)).toBeUndefined();
@@ -398,7 +398,7 @@ describe('hydrate', () => {
       [stale.instanceId],
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([stale]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([stale]);
   });
 
   it('moves serialized children to match the background slot order', () => {
@@ -431,7 +431,7 @@ describe('hydrate', () => {
       null,
     ]);
     expect(root.elementSlots[0]).toEqual([b, a, c]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
   it('treats a source-before-target cross-slot hydrate candidate as remove and recreate', () => {
@@ -474,7 +474,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -555,7 +555,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([keep]);
     expect(root.elementSlots[1]).toEqual([moved]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
   });
 
@@ -598,7 +598,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([moved]);
     expect(root.elementSlots[1]).toBeUndefined();
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
   });
@@ -663,7 +663,7 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toBeUndefined();
     expect(root.elementSlots[1]).toEqual([first, second]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-2)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-3)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(firstLocalId)).toBe(first);
@@ -832,7 +832,7 @@ describe('hydrate', () => {
     expect(root.elementSlots[0]).toEqual([entryB, entryA]);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(entryA);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(entryB);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
   it('ignores native main-bundle sentinel urls during hydrate', () => {

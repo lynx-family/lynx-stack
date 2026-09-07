@@ -20,7 +20,10 @@ import type {
   ElementTemplateUpdateCommitContext,
   SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
-import { createElementTemplateUpdateEvent } from '../../../../src/element-template/protocol/update-event.js';
+import {
+  createElementTemplateUpdateEvent,
+  parseElementTemplateUpdateEventPayload,
+} from '../../../../src/element-template/protocol/update-event.js';
 import { __page, setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
@@ -3544,7 +3547,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     `);
   });
 
-  it('normalizes undefined attribute slot values to null on create', () => {
+  it('reuses create attribute slots normalized by the update transport', () => {
     envManager.switchToMainThread();
     const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
       mockClear: () => void;
@@ -3552,16 +3555,26 @@ describe('ElementTemplate patch stream (apply)', () => {
     };
     createTemplateMock.mockClear();
 
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.createTemplate,
-      8,
-      '_et_builtin_raw_text',
-      null,
-      [undefined, 'x'] as unknown as ElementTemplateUpdateCommandStream[number],
-      [],
-    ]);
+    const rawSlots = [undefined, 'x'];
+    rawSlots.length = 3;
+    const event = createElementTemplateUpdateEvent({
+      ops: [
+        ElementTemplateUpdateOps.createTemplate,
+        8,
+        '_et_builtin_raw_text',
+        null,
+        rawSlots as unknown as ElementTemplateUpdateCommandStream[number],
+        [],
+      ],
+      flushOptions: {},
+    });
+    const payload = parseElementTemplateUpdateEventPayload(event.data);
+    const attributeSlots = payload.ops[4];
+    expect(attributeSlots).toEqual([null, 'x', null]);
 
-    expect(createTemplateMock.mock.calls[0]?.[2]).toEqual([null, 'x']);
+    applyElementTemplateUpdateCommands(payload.ops);
+
+    expect(createTemplateMock.mock.calls[0]?.[2]).toBe(attributeSlots);
   });
 
   it('passes bundleUrl from createTemplate patch to native create', () => {

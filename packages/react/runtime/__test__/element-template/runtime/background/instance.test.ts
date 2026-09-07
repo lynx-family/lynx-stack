@@ -474,7 +474,7 @@ describe('BackgroundElementTemplateInstance', () => {
       -11,
       [-11],
     ]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([item]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([item]);
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(ref).not.toHaveBeenCalled();
   });
@@ -493,7 +493,7 @@ describe('BackgroundElementTemplateInstance', () => {
     list.removeChild(item, true);
 
     expect(globalCommitContext.ops).toEqual([]);
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
   });
 
   it('emits logical updates for both lists when an item moves across typed lists', () => {
@@ -1459,7 +1459,7 @@ describe('BackgroundElementTemplateInstance', () => {
         child.instanceId,
         [child.instanceId, grandchild.instanceId],
       ]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([child]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([child]);
     });
 
     it('queues direct ref cleanup when removing a hydrated subtree', () => {
@@ -1625,7 +1625,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
 
@@ -1682,7 +1682,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
       expect(parent.elementSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     });
   });
 

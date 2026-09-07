@@ -270,7 +270,7 @@ describe('ElementTemplate commit hook', () => {
       expect(takeDelayedRunOnMainThreadData()).toEqual([]);
       expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
       expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
 
       options.__c?.({} as unknown as object, []);
       expect(ref).not.toHaveBeenCalled();
@@ -557,7 +557,7 @@ describe('ElementTemplate commit hook', () => {
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       options.__c?.({} as unknown as object, []);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
 
@@ -732,7 +732,7 @@ describe('ElementTemplate commit hook', () => {
 
     resetElementTemplateHydrationListener();
 
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([root]);
   });
 
   it('cancels scheduled removed subtree cleanup on background destroy', () => {
