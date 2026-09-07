@@ -76,7 +76,7 @@ pub async fn capture_page(mut request: CapturePageRequest) -> Result<Vec<u8>, Ca
     initial_data_json: request.initial_data_json.clone(),
     ..PageLoadOptions::default()
   };
-  let workers = shared_workers().map_err(|error| page_request_error(error))?;
+  let workers = shared_workers().map_err(page_request_error)?;
   let response = workers
     .capture(request, load_options)
     .await
