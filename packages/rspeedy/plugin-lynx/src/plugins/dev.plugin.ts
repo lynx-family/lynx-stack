@@ -23,7 +23,8 @@ export function pluginDev(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:dev',
     apply(config, { action }) {
-      return action === 'dev' || config.mode === 'development'
+      return action === 'dev' || action === 'preview'
+        || config.mode === 'development'
     },
     async setup(api) {
       if (
@@ -49,6 +50,17 @@ export function pluginDev(): RsbuildPlugin {
             createWebVirtualFilesMiddleware('/__web_preview'),
           )
         }
+      })
+
+      api.modifyRsbuildConfig({
+        handler: (config, { mergeRsbuildConfig }) =>
+          mergeRsbuildConfig(config, {
+            dev: {
+              lazyCompilation: api.getRsbuildConfig('original').dev
+                ?.lazyCompilation ?? false,
+            },
+          }),
+        order: 'pre',
       })
 
       api.modifyRsbuildConfig({
