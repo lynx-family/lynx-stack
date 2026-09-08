@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
 
-    // Rspeedy uses Node.js's module resolution
+    // Rsbuild uses Node.js's module resolution
     "module": "node16",
     "moduleResolution": "node16",
     "erasableSyntaxOnly": true,
@@ -14,5 +14,5 @@
 
     "noEmit": true,
   },
-  "include": ["./lynx.config.ts"],
+  "include": ["./rsbuild.config.ts"],
 }

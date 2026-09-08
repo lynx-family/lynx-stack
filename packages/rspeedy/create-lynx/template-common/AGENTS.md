@@ -17,8 +17,6 @@ Read docs below in advance to help you understand the library or frameworks this
 
 - `npm run preview` - Preview the production build locally
 
-- `npm exec rspeedy inspect` - Inspect the Rspeedy config and Rspack config of the project.
-
 ## Related Docs
 
 - Rsbuild: <https://rsbuild.rs/llms.txt>

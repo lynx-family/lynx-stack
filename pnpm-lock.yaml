@@ -1878,6 +1878,9 @@ importers:
       '@rsbuild/plugin-type-check':
         specifier: 1.6.0
         version: 1.6.0(@rsbuild/core@2.2.3(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.0(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
 
   packages/rspeedy/create-rspeedy:
     dependencies:

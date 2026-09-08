@@ -41,7 +41,8 @@
     "@lynx-js/rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-type-check": "1.6.0"
+    "@rsbuild/plugin-type-check": "1.6.0",
+    "@rslib/core": "catalog:rslib"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
