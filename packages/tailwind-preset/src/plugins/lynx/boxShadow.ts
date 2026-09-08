@@ -31,8 +31,9 @@ export const boxShadow: Plugin = (() => {
 
           if (typeof resolved !== 'string') return null;
 
-          // Lynx does not support nesting CSS variables
-          // uncomment this block in the future
+          // Tailwind composes shadow colors and rings through nested CSS
+          // variables. Lynx SDK 3.6+ supports them, but adapting that
+          // composition to this plugin remains pending.
 
           /*
           const ast = parseBoxShadowValue(resolved as string);
@@ -45,8 +46,8 @@ export const boxShadow: Plugin = (() => {
           } */
 
           return {
-            // Bug in box-shadow & CSS var
-            // uncomment in the future
+            // Keep emitting box-shadow directly until variable-based shadow
+            // composition is implemented.
             /*
             '--tw-shadow': value === 'none' ? transparentShadow : value,
             '--tw-shadow-colored': value === 'none'
