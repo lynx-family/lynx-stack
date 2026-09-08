@@ -52,7 +52,7 @@ export const BENCH_CATALOG_OPTIONS = [
 ] as const;
 
 export const DEFAULT_BENCH_SETTINGS: Readonly<BenchSettings> = {
-  repeats: 3,
+  repeats: 2,
   parallelism: 2,
   repairEnabled: true,
   judgeEnabled: true,

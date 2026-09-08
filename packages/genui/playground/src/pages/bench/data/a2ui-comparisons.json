@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "genui-bench/artifact-v1",
+  "title": "A2UI tests",
+  "description": "Model, Catalog, and Prompt comparisons across Weather Refresh Card, Product Purchase Card, and Kyoto Trip Planner.",
+  "sections": [
+    {
+      "id": "model",
+      "title": "Model comparison",
+      "description": "Compare deepseek-coder, gemini-3-pro-preview-new, and gpt-5.5-2026-04-24 across the same three scenarios.",
+      "image": "../assets/model-comparison.png",
+      "alt": "A2UI model comparison matrix: three models across weather, product purchase, and Kyoto trip scenarios, with the captured UI, Judge score, token count, and Agent latency for each run."
+    },
+    {
+      "id": "catalog",
+      "title": "Catalog comparison",
+      "description": "Compare Full Catalog (19 components), Core Catalog (9), and Minimal Catalog (6).",
+      "image": "../assets/catalog-comparison.png",
+      "alt": "A2UI catalog comparison matrix: Full, Core, and Minimal component catalogs across the same three scenarios, with the captured UI and per-run metrics."
+    },
+    {
+      "id": "prompt",
+      "title": "Prompt comparison",
+      "description": "Compare Baseline, Token Efficient, and Visual Polish prompt variants using gpt-5.5-2026-04-24.",
+      "image": "../assets/prompt-comparison.png",
+      "alt": "A2UI prompt comparison matrix: Baseline, Token Efficient, and Visual Polish variants across the same three scenarios, with the captured UI and per-run metrics."
+    }
+  ],
+  "limitations": [
+    "This record preserves the original comparison images. The underlying per-run JSON and capture date are not included in this archive.",
+    "Metrics remain visible in the original images; this page does not reconstruct aggregates, infer statistical significance, or rerun the benchmark."
+  ]
+}

@@ -33,19 +33,24 @@ import type {
 } from './benchData.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
+import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport, BenchStatus } from './benchReportTypes.js';
 import { BenchRunFooter } from './BenchRunFooter.js';
 import { BenchRunNotice } from './BenchRunNotice.js';
 import { BenchRunPanel } from './BenchRunPanel.js';
 import { BenchScenarioSection } from './BenchScenarioSection.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import {
+  BENCH_HISTORY_STORAGE_KEY,
+  BENCH_SELECTED_REPORT_STORAGE_KEY,
+} from './publishedReportLoader.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
 import {
   GENUI_SERVER_URL,
   buildGenuiServerUrl,
 } from '../../config/genuiServer.js';
-import { copyToClipboard } from '../../utils/clipboard.js';
+import { BENCH_JOB_ID } from '../../utils/appRoute.js';
 import { isDevHost } from '../../utils/publishPayload.js';
 import {
   createChatHost,
@@ -53,6 +58,8 @@ import {
   loadProviderSettings,
 } from '../chat/shared.js';
 import type { ProviderSettings } from '../chat/shared.js';
+
+export { serializeBenchReport } from './benchReportSerialization.js';
 
 type BenchRunMessage =
   | { code: 'bench-cancelled' }
@@ -64,6 +71,8 @@ type BenchRunMessage =
   | { code: 'creating-job' }
   | { code: 'defaults-confirmation-required' }
   | { code: 'history-report-loaded'; failedRuns?: number }
+  | { code: 'history-report-invalid-job-id' }
+  | { code: 'report-invalid-job-id' }
   | { code: 'job-queued'; jobId: string }
   | { code: 'loading-report'; jobId: string }
   | { code: 'raw'; text: string }
@@ -111,6 +120,10 @@ export function getBenchRunMessageText(
       return message.failedRuns
         ? `Saved report loaded · ${message.failedRuns} failed runs`
         : 'Saved report loaded';
+    case 'history-report-invalid-job-id':
+      return 'Saved report loaded · The saved job ID is invalid. Use the original report link or rerun to load the complete report.';
+    case 'report-invalid-job-id':
+      return 'This report link has an invalid job ID. Use the original report link.';
     case 'job-queued':
       return `Job ${message.jobId} queued`;
     case 'loading-report':
@@ -221,7 +234,6 @@ const RESIZE_HANDLE_WIDTH = 10;
 const REPORT_PANE_RESIZE_BREAKPOINT = 1240;
 const REPORT_PANE_WIDTH_STORAGE_KEY = 'a2ui-bench-report-width';
 const EVENT_SOURCE_CLOSED_READY_STATE = 2;
-const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
 const LOCAL_A2UI_SERVER_PORT = '3060';
 const UI_JUDGE_SERVER_URL_STORAGE_KEY = 'genui-bench-ui-judge-server-url';
 
@@ -372,7 +384,8 @@ function getA2UIBenchHealthEndpoint(): string {
   }
 }
 
-function getA2UIBenchReportEndpoint(jobId: string): string {
+export function getA2UIBenchReportEndpoint(jobId: string): string | null {
+  if (!BENCH_JOB_ID.test(jobId)) return null;
   const jobsEndpoint = getA2UIBenchJobsEndpoint();
   try {
     const url = new URL(jobsEndpoint, window.location.origin);
@@ -439,13 +452,6 @@ function getA2UIBenchJobIdFromUrl(): string | null {
     window.location.hash.slice(hashQueryIndex + 1),
   );
   return hashParams.get('a2uiBenchJobId') ?? hashParams.get('benchJobId');
-}
-
-function getA2UIBenchRecoveryUrl(jobId: string): string {
-  const url = new URL(window.location.href);
-  url.searchParams.set('a2uiBenchJobId', jobId);
-  url.hash = '#/bench';
-  return url.toString();
 }
 
 function getA2UIPlaygroundBaseUrl(): string {
@@ -679,15 +685,16 @@ export function readBenchHistory(): BenchHistoryEntry[] {
   }
 }
 
-function persistBenchHistory(entries: BenchHistoryEntry[]): void {
+export function persistBenchHistory(entries: BenchHistoryEntry[]): boolean {
   try {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
       serializeBenchHistoryEntries(entries),
     );
+    return true;
   } catch {
-    // History is a convenience layer; quota/private-mode failures should not
-    // block a benchmark run.
+    // Never evict earlier runs or silently drop screenshots to make a write fit.
+    return false;
   }
 }
 
@@ -760,11 +767,11 @@ export function upsertBenchHistoryEntry(
   entries: BenchHistoryEntry[],
   entry: BenchHistoryEntry,
 ): BenchHistoryEntry[] {
-  const reportIdentity = entry.report?.jobId ?? entry.report?.id;
+  const jobId = entry.report?.jobId;
   const next = entries.filter((item) => {
-    const itemReportIdentity = item.report?.jobId ?? item.report?.id;
-    const sameReport = Boolean(reportIdentity)
-      && itemReportIdentity === reportIdentity;
+    // Redacted identifiers cannot establish that two saved reports are the same.
+    const sameReport = Boolean(jobId && BENCH_JOB_ID.test(jobId))
+      && item.report?.jobId === jobId;
     return item.id !== entry.id && !sameReport;
   });
   return [entry, ...next];
@@ -787,66 +794,6 @@ export function shouldApplyBenchReportRequest(
   activeController: AbortController | null,
 ): boolean {
   return !controller.signal.aborted && activeController === controller;
-}
-
-function isSensitiveBenchReportKey(key: string): boolean {
-  const normalized = key.replaceAll(/[-_]/gu, '').toLowerCase();
-  return normalized === 'apikey'
-    || normalized === 'authorization'
-    || normalized === 'accesstoken'
-    || normalized === 'token'
-    || normalized === 'secret'
-    || normalized === 'baseurl'
-    || normalized === 'screenshotdataurl';
-}
-
-function redactBenchReportString(
-  value: string,
-  secrets: readonly string[],
-): string {
-  let sanitized = value;
-  for (
-    const secret of new Set(
-      secrets.map((item) => item.trim()).filter(
-        Boolean,
-      ),
-    )
-  ) {
-    sanitized = sanitized.replaceAll(secret, '[redacted credential]');
-    const encoded = encodeURIComponent(secret);
-    if (encoded !== secret) {
-      sanitized = sanitized.replaceAll(encoded, '[redacted credential]');
-    }
-  }
-  return sanitized
-    .replace(/https?:\/\/[^\s"'<>]+/giu, '[redacted URL]')
-    .replace(/\bBearer\s+\S+/giu, 'Bearer [redacted]')
-    .replace(
-      /\b(?:OPENAI_API_KEY|API[_-]?KEY|AUTHORIZATION|ACCESS[_-]?TOKEN|SECRET)\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/giu,
-      'credential=[redacted]',
-    )
-    .replace(/\b(?:sk-[\w-]{8,}|[\w+/=-]{32,})\b/gu, '[redacted credential]');
-}
-
-function sanitizeBenchReportValue(
-  value: unknown,
-  secrets: readonly string[] = [],
-): unknown {
-  if (typeof value === 'string') {
-    return redactBenchReportString(value, secrets);
-  }
-  if (Array.isArray(value)) {
-    return value.map((item) => sanitizeBenchReportValue(item, secrets));
-  }
-  if (!isRecord(value)) return value;
-
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([key, item]) =>
-      isSensitiveBenchReportKey(key)
-        ? []
-        : [[key, sanitizeBenchReportValue(item, secrets)]]
-    ),
-  );
 }
 
 export function migrateBenchHistoryEntries(
@@ -902,13 +849,6 @@ export function serializeBenchHistoryEntries(
     }),
   );
   return JSON.stringify(persistableEntries);
-}
-
-export function serializeBenchReport(
-  report: BenchReport,
-  secrets: readonly string[] = [],
-): string {
-  return JSON.stringify(sanitizeBenchReportValue(report, secrets), null, 2);
 }
 
 function readEventData<T>(event: MessageEvent<unknown>): T | null {
@@ -1003,8 +943,8 @@ export function BenchPage() {
     readBenchHistory,
   );
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
-  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
-  const [historyCopyId, setHistoryCopyId] = useState<string | null>(null);
+  const [historyReportNotice, setHistoryReportNotice] = useState('');
+  const [historyStorageNotice, setHistoryStorageNotice] = useState('');
   const benchBodyRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -1052,7 +992,11 @@ export function BenchPage() {
   }, [uiJudgeServerUrl]);
 
   useEffect(() => {
-    persistBenchHistory(historyItems);
+    setHistoryStorageNotice(
+      persistBenchHistory(historyItems)
+        ? ''
+        : 'History could not be saved in this browser (storage full or unavailable). Free some browser storage and retry View details before leaving; screenshots are still available in this page.',
+    );
   }, [historyItems]);
 
   useEffect(() => {
@@ -1284,6 +1228,12 @@ export function BenchPage() {
   useEffect(() => {
     const jobId = getA2UIBenchJobIdFromUrl();
     if (!jobId) return;
+    const endpoint = getA2UIBenchReportEndpoint(jobId);
+    if (!endpoint) {
+      setStatus('failed');
+      setRunMessage({ code: 'report-invalid-job-id' });
+      return;
+    }
 
     let cancelled = false;
     const controller = new AbortController();
@@ -1296,7 +1246,7 @@ export function BenchPage() {
     void (async () => {
       try {
         const response = await window.fetch(
-          getA2UIBenchReportEndpoint(jobId),
+          endpoint,
           { signal: controller.signal },
         );
         const payload = await response.json().catch(() => ({})) as
@@ -1871,30 +1821,39 @@ export function BenchPage() {
     });
   }, [cancelActiveBenchJob, status]);
 
-  const copyReport = useCallback(async () => {
-    if (!report) return;
-    const copied = await copyToClipboard(
-      serializeBenchReport(report),
-    );
-    if (!copied) return;
-    setCopyState('copied');
-    window.setTimeout(() => setCopyState('idle'), 1200);
-  }, [report]);
-
-  const copyHistoryRecoveryUrl = useCallback(
-    async (entry: BenchHistoryEntry) => {
-      const jobId = entry.report?.jobId;
-      if (!jobId) return;
-      const copied = await copyToClipboard(getA2UIBenchRecoveryUrl(jobId));
-      if (!copied) return;
-      setHistoryCopyId(entry.id);
-      window.setTimeout(() => {
-        setHistoryCopyId((current) => current === entry.id ? null : current);
-      }, 1200);
-    },
-    [],
-  );
-
+  const openHistoryReport = useCallback((entry: BenchHistoryEntry) => {
+    if (!entry.report) return;
+    setHistoryReportNotice('');
+    if (!persistBenchHistory(historyItems)) {
+      setHistoryReportNotice(
+        'Could not save this report. Free some browser storage and try again before leaving.',
+      );
+      return;
+    }
+    let tab: Window | null = null;
+    try {
+      window.localStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, entry.id);
+      tab = window.open('about:blank', '_blank');
+      if (!tab) {
+        setHistoryReportNotice(
+          'Allow pop-ups to view report details in a new tab.',
+        );
+        return;
+      }
+      tab.opener = null;
+      // Each tab owns its selection; opening another report must not replace it.
+      tab.sessionStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, entry.id);
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.hash = '#/bench/reports';
+      tab.location.replace(url.href);
+    } catch {
+      tab?.close();
+      setHistoryReportNotice(
+        'Could not open the local report because browser storage is unavailable.',
+      );
+    }
+  }, [historyItems]);
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     void cancelActiveBenchJob();
     setActiveHistoryId(entry.id);
@@ -1929,6 +1888,11 @@ export function BenchPage() {
     });
     const jobId = entry.report.jobId;
     if (!jobId) return;
+    const endpoint = getA2UIBenchReportEndpoint(jobId);
+    if (!endpoint) {
+      setRunMessage({ code: 'history-report-invalid-job-id' });
+      return;
+    }
 
     setRunMessage({ code: 'setup-restored-loading-report' });
     const controller = new AbortController();
@@ -1936,7 +1900,7 @@ export function BenchPage() {
     void (async () => {
       try {
         const response = await window.fetch(
-          getA2UIBenchReportEndpoint(jobId),
+          endpoint,
           { signal: controller.signal },
         );
         const payload = await response.json().catch(() => ({})) as
@@ -1956,6 +1920,17 @@ export function BenchPage() {
         setReport(payload);
         setReportPlanSignature(restoredSignature);
         setStatus(payload.status ?? 'complete');
+        // Upgrade older snapshots while the original server report still exists.
+        setHistoryItems((current) =>
+          current.map((item) =>
+            item.id === entry.id
+              ? {
+                ...item,
+                report: sanitizeBenchReportValue(payload) as BenchReport,
+              }
+              : item
+          )
+        );
         setRunMessage({ code: 'complete-report-loaded' });
       } catch {
         if (
@@ -1978,6 +1953,8 @@ export function BenchPage() {
   useEffect(() => {
     if (initialHistoryRestoredRef.current) return;
     initialHistoryRestoredRef.current = true;
+    // An explicit report link owns restoration, including invalid-link feedback.
+    if (getA2UIBenchJobIdFromUrl()) return;
     const firstEntry = historyItems[0];
     if (firstEntry) restoreHistoryEntry(firstEntry);
   }, [historyItems, restoreHistoryEntry]);
@@ -2059,11 +2036,12 @@ export function BenchPage() {
       >
         <BenchHistoryRail
           activeId={activeHistoryId}
-          copyId={historyCopyId}
           disabled={historyLocked}
           entries={historyItems}
           onClear={clearHistory}
-          onCopy={copyHistoryRecoveryUrl}
+          onOpenReport={openHistoryReport}
+          reportNotice={historyReportNotice}
+          storageNotice={historyStorageNotice}
           onDelete={deleteHistoryEntry}
           onNew={resetBench}
           onRestore={restoreHistoryEntry}
@@ -2145,8 +2123,9 @@ export function BenchPage() {
         />
 
         <BenchReportPanel
-          copyState={copyState}
-          onCopy={copyReport}
+          onOpenReport={activeHistoryEntry?.report
+            ? () => openHistoryReport(activeHistoryEntry)
+            : undefined}
           onOpenScreenshots={() => setScreenshotsOpen(true)}
           report={report}
           reportIsStale={reportIsStale}
