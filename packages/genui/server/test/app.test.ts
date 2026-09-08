@@ -14,11 +14,11 @@ import {
   IMG_GEN_ARK_API_KEY_ENV,
   IMG_GEN_ARK_IMAGE_BASE_URL_ENV,
   IMG_GEN_ARK_IMAGE_MODEL_ENV,
-} from '../agent/ark-image-generation-tool.js';
+} from '../agent/common/ark-image-generation-tool.js';
 import {
   SEARCH_INFINITY_API_KEY_ENV,
   SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV,
-} from '../agent/doubao-search-tool.js';
+} from '../agent/common/doubao-search-tool.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import app from '../src/app.js';
 

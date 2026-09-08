@@ -4,9 +4,11 @@ applyTo: "packages/genui/server/**"
 
 # GenUI Server Architecture
 
+Organize both `agent` and `service` into `common`, `a2ui`, `openui`, `html`, `lynx-xml`, and `mcp-apps`. Keep protocol factories, prompts, catalogs, parsing, validation, and custom tools in `agent/<protocol>`, and generation services and protocol-specific Bench adapters in `service/<protocol>`. Shared provider helpers, Mastra storage, search/image tools, and screenshot evaluation belong in `agent/common`. Cross-protocol Bench scheduling, request normalization, report storage/types, redaction, screenshot conversion, and Judge orchestration belong in `service/common/bench`; this orchestration may wire protocol implementations, while ordinary common helpers remain independent of protocol services. Move files without changing runtime behavior or leaving old-path forwarding modules. Update consumers, mocks, documentation scopes, and the A2UI prompt package's exports, TypeScript includes, and Turbo inputs together.
+
 Keep protocol-neutral request infrastructure in `app/common`. Request-size enforcement, JSON parsing, chat and conversation validation, provider override selection, error and usage extraction, CORS, rate limiting, SSE encoding and headers, and stream logging must not live under a protocol route such as `app/a2ui`.
 
-Keep shared agent-service contracts and helpers in `service/common`. `ChatMessage`, `ConversationContext`, generic provider options, provider agent caching, conversation assembly, model-message conversion, Mastra result extraction, and stream adaptation must not be imported from `service/a2ui-agent` by OpenUI or MCP Apps. Extend the generic options inside `service/a2ui-agent` only for A2UI-specific catalog and repair settings.
+Keep shared agent-service contracts and helpers in `service/common`. `ChatMessage`, `ConversationContext`, generic provider options, provider agent caching, conversation assembly, model-message conversion, Mastra result extraction, and stream adaptation must not be imported from `service/a2ui/a2ui-agent` by OpenUI or MCP Apps. Extend the generic options inside `service/a2ui/a2ui-agent` only for A2UI-specific catalog and repair settings.
 
 Keep public provider integrations vendor-neutral. Do not commit deployment-only gateway rewrites, private hostnames, environment-specific authentication conventions, or credentials; inject those only through the deployment environment.
 

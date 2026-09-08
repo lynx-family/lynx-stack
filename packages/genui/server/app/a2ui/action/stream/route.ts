@@ -4,27 +4,27 @@
 
 import { Hono } from 'hono';
 
-import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
-import { loadBasicCatalog } from '../../../../agent/a2ui-catalog';
-import { createA2UIImageSourcePolicy } from '../../../../agent/a2ui-image-source-policy.js';
+import type { A2UICatalog } from '../../../../agent/a2ui/a2ui-catalog.js';
+import { loadBasicCatalog } from '../../../../agent/a2ui/a2ui-catalog.js';
+import { createA2UIImageSourcePolicy } from '../../../../agent/a2ui/a2ui-image-source-policy.js';
 import {
   createA2UIOpenURLPolicy,
   userProvidedA2UIURLSources,
-} from '../../../../agent/a2ui-open-url-policy.js';
-import { A2UIProtocolMessageStreamParser } from '../../../../agent/a2ui-stream-parser';
+} from '../../../../agent/a2ui/a2ui-open-url-policy.js';
+import { A2UIProtocolMessageStreamParser } from '../../../../agent/a2ui/a2ui-stream-parser.js';
 import {
   getA2UIValidationDebugData,
   validateA2UIOutput,
-} from '../../../../agent/a2ui-validator';
+} from '../../../../agent/a2ui/a2ui-validator.js';
 import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
-} from '../../../../agent/ark-image-generation-tool.js';
+} from '../../../../agent/common/ark-image-generation-tool.js';
 import {
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
-} from '../../../../agent/doubao-search-tool.js';
-import { getA2UIAgentService } from '../../../../service/a2ui-agent';
+} from '../../../../agent/common/doubao-search-tool.js';
+import { getA2UIAgentService } from '../../../../service/a2ui/a2ui-agent.js';
 import {
   configuredApiStyle,
   defaultModelName,

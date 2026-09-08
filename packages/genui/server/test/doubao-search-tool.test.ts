@@ -4,15 +4,15 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { loadBasicCatalog } from '../agent/a2ui-catalog.js';
-import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
+import { loadBasicCatalog } from '../agent/a2ui/a2ui-catalog.js';
+import { createA2UIImageSourcePolicy } from '../agent/a2ui/a2ui-image-source-policy.js';
 import {
   createA2UIOpenURLPolicy,
   userProvidedA2UIURLSources,
-} from '../agent/a2ui-open-url-policy.js';
-import { A2UIProtocolMessageStreamParser } from '../agent/a2ui-stream-parser.js';
-import { validateA2UIOutput } from '../agent/a2ui-validator.js';
-import { createArkImageGenerationRunScope } from '../agent/ark-image-generation-tool.js';
+} from '../agent/a2ui/a2ui-open-url-policy.js';
+import { A2UIProtocolMessageStreamParser } from '../agent/a2ui/a2ui-stream-parser.js';
+import { validateA2UIOutput } from '../agent/a2ui/a2ui-validator.js';
+import { createArkImageGenerationRunScope } from '../agent/common/ark-image-generation-tool.js';
 import {
   SEARCH_INFINITY_ENDPOINT,
   createOptionalDoubaoImageSearchTool,
@@ -26,7 +26,7 @@ import {
   searchDoubaoImagesForRun,
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
-} from '../agent/doubao-search-tool.js';
+} from '../agent/common/doubao-search-tool.js';
 
 const CONFIG = {
   apiKey: 'search-secret',
