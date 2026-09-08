@@ -19,6 +19,14 @@ export interface LynxConfigOptions {
    * Rsbuild one
    */
   configPath?: string;
+
+  /**
+   * The build tool the config file belongs to.
+   *
+   * Inferred from `configPath`, or from the config files present in
+   * `rootPath`. Set it when a custom `configPath` carries no such hint.
+   */
+  buildTool?: 'rsbuild' | 'rspeedy';
 }
 
 export interface RstestConfigOptions {
@@ -86,15 +94,26 @@ const RSPEEDY_CONFIG_FILES = [
  * with Rsbuild and `pluginLynx`, which reads `rsbuild.config.*`. Load whichever
  * one this project has.
  */
+export function isRspeedyProject(
+  options: LynxConfigOptions | undefined,
+  exists: (path: string) => boolean = existsSync,
+): boolean {
+  const cwd = options?.rootPath ?? process.cwd();
+  const configPath = options?.configPath;
+  return options?.buildTool
+    ? options.buildTool === 'rspeedy'
+    // A custom `configPath` names no build tool of its own, so fall back to
+    // what the project root holds.
+    : (configPath && RSPEEDY_CONFIG_FILES.some((name) => configPath.endsWith(name)))
+      || RSPEEDY_CONFIG_FILES.some((name) => exists(join(cwd, name)));
+}
+
 async function loadLynxConfig(
   options?: LynxConfigOptions,
 ): Promise<RsbuildConfig> {
   const cwd = options?.rootPath ?? process.cwd();
-  const isRspeedy = options?.configPath
-    ? RSPEEDY_CONFIG_FILES.some((name) => options.configPath!.endsWith(name))
-    : RSPEEDY_CONFIG_FILES.some((name) => existsSync(join(cwd, name)));
 
-  if (isRspeedy) {
+  if (isRspeedyProject(options)) {
     const { loadConfig } = await import('@lynx-js/rspeedy');
     const { content } = await loadConfig({
       cwd: options?.rootPath,
