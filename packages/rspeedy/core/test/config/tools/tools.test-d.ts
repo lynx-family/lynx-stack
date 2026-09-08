@@ -1,10 +1,13 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
 import type { Rspack } from '@rsbuild/core'
+import type { RsdoctorRspackPluginOptions as UpstreamOptions } from '@rsdoctor/core'
 import { describe, test } from '@rstest/core'
 import { expectTypeOf } from 'expect-type'
 
+import type { RsdoctorRspackPluginOptions } from '../../../src/config/tools/rsdoctor.js'
 import type { Tools } from '../../../src/index.js'
 import { assertType } from '../../assertType.js'
 
@@ -187,23 +190,20 @@ describe('Config - Tools', () => {
   })
 
   test('tools.rsdoctor', () => {
-    assertType<Tools>({
-      rsdoctor: {},
-    })
+    // Keep the self-contained public type aligned with the optional plugin.
+    type PublicOptions = Omit<
+      RsdoctorRspackPluginOptions,
+      'linter' | 'sdkInstance'
+    >
+    type RawOptions = Omit<UpstreamOptions<[]>, 'linter' | 'sdkInstance'>
+    expectTypeOf<PublicOptions>().toExtend<RawOptions>()
+    expectTypeOf<RawOptions>().toExtend<PublicOptions>()
 
+    assertType<Tools>({ rsdoctor: {} })
     assertType<Tools>({
       rsdoctor: {
-        experiments: {
-          enableNativePlugin: true,
-        },
-      },
-    })
-
-    assertType<Tools>({
-      rsdoctor: {
-        experiments: {
-          enableNativePlugin: false,
-        },
+        server: { port: 3300 },
+        output: { mode: 'brief' },
       },
     })
   })
