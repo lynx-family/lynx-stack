@@ -1,26 +1,26 @@
-# @lynx-js/server-bundle-rsbuild-plugin
+# @lynx-js/genui-server-bundle-rsbuild-plugin
 
-Package production output as a server bundle in ZIP format for [Lynx UI Judge](../../genui/ui-judge/README.md).
+Package production output as a server bundle in ZIP format for [Lynx UI Judge](../ui-judge/README.md).
 
 ## Usage
 
-This package is private and is not published to npm. Add it to a package in this
-repository's workspace:
+This is an internal GenUI package. It is private and is not published to npm.
+Add it to a GenUI workspace package:
 
 ```sh
-pnpm add -D @lynx-js/server-bundle-rsbuild-plugin@workspace:*
+pnpm add -D @lynx-js/genui-server-bundle-rsbuild-plugin@workspace:*
 ```
 
 Add it to your existing Rspeedy plugins:
 
 ```ts
-import { defineConfig } from '@lynx-js/rspeedy'
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { pluginServerBundle } from '@lynx-js/server-bundle-rsbuild-plugin'
+import { defineConfig } from '@lynx-js/rspeedy';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { pluginServerBundle } from '@lynx-js/genui-server-bundle-rsbuild-plugin';
 
 export default defineConfig({
   plugins: [pluginReactLynx(), pluginServerBundle()],
-})
+});
 ```
 
 Run `rspeedy build`. For production builds, the plugin sets `output.assetPrefix`

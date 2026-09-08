@@ -2,11 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { defineProject } from 'vitest/config'
-import type { UserWorkspaceConfig } from 'vitest/config'
+import { defineProject } from 'vitest/config';
+import type { UserWorkspaceConfig } from 'vitest/config';
 
 const config: UserWorkspaceConfig = defineProject({
-  test: { name: 'rspeedy/server-bundle', testTimeout: 30_000 },
-})
+  test: { name: 'genui/server-bundle', testTimeout: 30_000 },
+});
 
-export default config
+export default config;

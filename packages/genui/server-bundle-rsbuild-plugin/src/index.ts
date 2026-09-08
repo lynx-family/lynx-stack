@@ -7,14 +7,14 @@
  * @packageDocumentation
  */
 
-import { randomUUID } from 'node:crypto'
-import { createReadStream } from 'node:fs'
-import { lstat, mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises'
-import path from 'node:path'
+import { randomUUID } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { lstat, mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildPlugin } from '@rsbuild/core';
 
-import { createArchive, readOutput, validatePath } from './archive.js'
+import { createArchive, readOutput, validatePath } from './archive.js';
 
 /** Options for {@link pluginServerBundle}.
  * @public
@@ -24,7 +24,7 @@ export interface PluginServerBundleOptions {
    * ZIP filename inside the output directory. Directory components are not allowed.
    * @defaultValue 'dist.zip'
    */
-  filename?: string | undefined
+  filename?: string | undefined;
 }
 
 /**
@@ -33,7 +33,7 @@ export interface PluginServerBundleOptions {
  *
  * @example
  * ```ts
- * import { pluginServerBundle } from '@lynx-js/server-bundle-rsbuild-plugin'
+ * import { pluginServerBundle } from '@lynx-js/genui-server-bundle-rsbuild-plugin'
  * export default { plugins: [pluginServerBundle()] }
  * ```
  * @public
@@ -41,12 +41,12 @@ export interface PluginServerBundleOptions {
 export function pluginServerBundle(
   options: PluginServerBundleOptions = {},
 ): RsbuildPlugin {
-  const filename = options.filename ?? 'dist.zip'
-  validatePath(filename)
+  const filename = options.filename ?? 'dist.zip';
+  validatePath(filename);
   if (filename.includes('/') || !filename.endsWith('.zip')) {
     throw new Error(
       'pluginServerBundle filename must be a .zip filename without directories',
-    )
+    );
   }
 
   return {
@@ -55,33 +55,33 @@ export function pluginServerBundle(
       const isProductionBuild = (): boolean =>
         api.context.action === 'build'
         && (api.getRsbuildConfig().mode ?? process.env['NODE_ENV'])
-          === 'production'
+          === 'production';
       const outputDirectory = (): string => {
-        const distPath = api.getRsbuildConfig().output?.distPath
+        const distPath = api.getRsbuildConfig().output?.distPath;
         return path.resolve(
           api.context.rootPath,
           typeof distPath === 'string' ? distPath : distPath?.root ?? 'dist',
-        )
-      }
+        );
+      };
       const assetPrefix = (directory: string): string => {
-        const root = outputDirectory()
-        const rootRelative = path.relative(root, api.context.rootPath)
+        const root = outputDirectory();
+        const rootRelative = path.relative(root, api.context.rootPath);
         if (
           !rootRelative
           || !rootRelative.startsWith(`..${path.sep}`) && rootRelative !== '..'
         ) {
           throw new Error(
             'pluginServerBundle output directory must not contain the project root',
-          )
+          );
         }
-        const relative = path.relative(root, directory)
+        const relative = path.relative(root, directory);
         if (
           relative === '..' || relative.startsWith(`..${path.sep}`)
           || path.isAbsolute(relative)
         ) {
           throw new Error(
             'pluginServerBundle requires environment output directories inside output.distPath.root',
-          )
+          );
         }
         return `zip:///${
           relative
@@ -90,10 +90,10 @@ export function pluginServerBundle(
                 .join('/')
             }/`
             : ''
-        }`
-      }
+        }`;
+      };
 
-      let previewArchive = false
+      let previewArchive = false;
 
       api.modifyEnvironmentConfig({
         order: 'post',
@@ -102,74 +102,74 @@ export function pluginServerBundle(
             config.output.assetPrefix = assetPrefix(path.resolve(
               api.context.rootPath,
               config.output.distPath?.root ?? 'dist',
-            ))
+            ));
           }
         },
-      })
+      });
       api.modifyRspackConfig({
         order: 'post',
         handler(config, { environment }) {
           if (isProductionBuild()) {
-            config.output ??= {}
-            config.output.publicPath = assetPrefix(environment.distPath)
+            config.output ??= {};
+            config.output.publicPath = assetPrefix(environment.distPath);
           }
         },
-      })
+      });
 
       // Preserve files for watch rebuilds: Rsbuild copies public only once and
       // Rspack can skip emitting unchanged assets on later compilations.
-      let previousFiles: Map<string, Uint8Array> | undefined
+      let previousFiles: Map<string, Uint8Array> | undefined;
       api.onBeforeBuild({
         order: 'pre',
         async handler({ isFirstCompile }) {
-          if (!isProductionBuild() || isFirstCompile || !previousFiles) return
+          if (!isProductionBuild() || isFirstCompile || !previousFiles) return;
           for (const [name, contents] of previousFiles) {
-            const destination = path.join(api.context.distPath, name)
-            await mkdir(path.dirname(destination), { recursive: true })
-            await writeFile(destination, contents)
+            const destination = path.join(api.context.distPath, name);
+            await mkdir(path.dirname(destination), { recursive: true });
+            await writeFile(destination, contents);
           }
         },
-      })
+      });
       api.onCloseBuild(() => {
-        previousFiles = undefined
-      })
+        previousFiles = undefined;
+      });
 
       api.onAfterBuild({
         order: 'post',
         async handler({ stats }) {
-          if (!isProductionBuild() || stats?.hasErrors()) return
-          const directory = api.context.distPath
-          const directoryStat = await lstat(directory)
+          if (!isProductionBuild() || stats?.hasErrors()) return;
+          const directory = api.context.distPath;
+          const directoryStat = await lstat(directory);
           if (!directoryStat.isDirectory()) {
             throw new Error(
               'pluginServerBundle output must be a regular directory',
-            )
+            );
           }
-          const children = stats && ('stats' in stats ? stats.stats : [stats])
+          const children = stats && ('stats' in stats ? stats.stats : [stats]);
           if (children?.some(child => child.compilation.getAsset(filename))) {
             throw new Error(
               `ZIP filename conflicts with a build asset: ${filename}`,
-            )
+            );
           }
-          const files = await readOutput(directory, filename)
-          const archive = createArchive(files)
+          const files = await readOutput(directory, filename);
+          const archive = createArchive(files);
           const temporary = path.join(
             directory,
             `.${filename}.${randomUUID()}.tmp`,
-          )
+          );
           try {
-            await writeFile(temporary, archive, { flag: 'wx' })
-            await rename(temporary, path.join(directory, filename))
+            await writeFile(temporary, archive, { flag: 'wx' });
+            await rename(temporary, path.join(directory, filename));
           } finally {
-            await rm(temporary, { force: true })
+            await rm(temporary, { force: true });
           }
-          previousFiles = files
+          previousFiles = files;
           for (const name of await readdir(directory)) {
             if (name !== filename) {
               await rm(path.join(directory, name), {
                 recursive: true,
                 force: true,
-              })
+              });
             }
           }
           api.logger.info(
@@ -179,66 +179,66 @@ export function pluginServerBundle(
                 path.join(directory, filename),
               )
             } (${files.size} files)`,
-          )
+          );
         },
-      })
+      });
 
       api.modifyRsbuildConfig({
         order: 'post',
         handler(config) {
-          config.server ??= {}
-          const printUrls = config.server.printUrls
-          if (printUrls === false) return
+          config.server ??= {};
+          const printUrls = config.server.printUrls;
+          if (printUrls === false) return;
           config.server.printUrls = (params) => {
             if (!previewArchive || api.context.action !== 'preview') {
               return typeof printUrls === 'function'
                 ? printUrls(params)
-                : params.urls
+                : params.urls;
             }
             // Lynx has no HTML routes. Remove any web routes so Rsbuild does
             // not append an HTML pathname to the archive download URL.
-            params.routes.splice(0)
-            const base = api.getNormalizedConfig().server.base
+            params.routes.splice(0);
+            const base = api.getNormalizedConfig().server.base;
             return params.urls.map(url => ({
               label: 'Zip',
               url: new URL(
                 `${base.replace(/\/$/, '')}/${encodeURIComponent(filename)}`,
                 url,
               ).toString(),
-            }))
-          }
+            }));
+          };
         },
-      })
+      });
 
       api.onBeforeStartPreviewServer(async ({ server }) => {
-        const archivePath = path.join(api.context.distPath, filename)
+        const archivePath = path.join(api.context.distPath, filename);
         const stat = await lstat(archivePath).catch(
           (error: NodeJS.ErrnoException) => {
-            if (error.code === 'ENOENT') return undefined
-            throw error
+            if (error.code === 'ENOENT') return undefined;
+            throw error;
           },
-        )
-        if (!stat) return
+        );
+        if (!stat) return;
         if (!stat.isFile()) {
-          throw new Error(`ZIP output is not a regular file: ${archivePath}`)
+          throw new Error(`ZIP output is not a regular file: ${archivePath}`);
         }
-        previewArchive = true
-        const base = api.getNormalizedConfig().server.base.replace(/\/$/, '')
+        previewArchive = true;
+        const base = api.getNormalizedConfig().server.base.replace(/\/$/, '');
         server.middlewares.use((req, res, next) => {
-          const pathname = req.url?.split('?')[0]
+          const pathname = req.url?.split('?')[0];
           if (pathname !== `${base}/${encodeURIComponent(filename)}`) {
-            return next()
+            return next();
           }
-          if (req.method !== 'GET' && req.method !== 'HEAD') return next()
-          res.setHeader('Content-Type', 'application/zip')
-          res.setHeader('Content-Length', stat.size)
-          if (req.method === 'HEAD') return res.end()
-          const stream = createReadStream(archivePath)
-          stream.on('error', next)
-          res.on('close', () => stream.destroy())
-          stream.pipe(res)
-        })
-      })
+          if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+          res.setHeader('Content-Type', 'application/zip');
+          res.setHeader('Content-Length', stat.size);
+          if (req.method === 'HEAD') return res.end();
+          const stream = createReadStream(archivePath);
+          stream.on('error', next);
+          res.on('close', () => stream.destroy());
+          stream.pipe(res);
+        });
+      });
     },
-  }
+  };
 }

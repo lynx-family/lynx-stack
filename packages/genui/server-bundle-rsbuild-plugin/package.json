@@ -1,8 +1,8 @@
 {
-  "name": "@lynx-js/server-bundle-rsbuild-plugin",
+  "name": "@lynx-js/genui-server-bundle-rsbuild-plugin",
   "version": "0.0.0",
   "private": true,
-  "description": "An Rsbuild plugin that creates server bundles for Lynx UI Judge.",
+  "description": "Internal GenUI Rsbuild plugin that creates server bundles for Lynx UI Judge.",
   "keywords": [
     "rsbuild",
     "Lynx",
@@ -12,18 +12,18 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/plugin-server-bundle"
+    "directory": "packages/genui/server-bundle-rsbuild-plugin"
   },
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
-      "default": "./lib/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./lib/index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "CHANGELOG.md",
@@ -32,7 +32,7 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "test": "pnpm -w run test --project rspeedy/server-bundle"
+    "test": "pnpm -w run test --project genui/server-bundle"
   },
   "dependencies": {
     "fflate": "0.8.2"
@@ -49,16 +49,5 @@
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "./package.json": "./package.json"
-    },
-    "types": "./dist/index.d.ts"
   }
 }

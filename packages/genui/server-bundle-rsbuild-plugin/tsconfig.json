@@ -5,5 +5,5 @@
     "noEmit": true,
   },
   "include": ["src", "test", "vitest.config.ts"],
-  "references": [{ "path": "../core/tsconfig.build.json" }],
+  "references": [{ "path": "../../rspeedy/core/tsconfig.build.json" }],
 }
