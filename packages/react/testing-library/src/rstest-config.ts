@@ -155,7 +155,10 @@ export function withLynxConfig(
         ...(rstestConfig.plugins || []),
         {
           name: 'lynx-adapter:remove-useless-plugins',
-          remove: ['lynx:rsbuild:qrcode'],
+          // `lynx:rsbuild:target` builds for Lynx, but the tests run in jsdom
+          // against DOM packages. An Rsbuild project applies `pluginLynx`
+          // itself, so its config carries the plugin; an Rspeedy one does not.
+          remove: ['lynx:rsbuild:qrcode', 'lynx:rsbuild:target'],
           setup: () => {},
         },
       ],
