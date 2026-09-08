@@ -6,7 +6,7 @@ import { defineProject } from 'vitest/config'
 import type { UserWorkspaceConfig } from 'vitest/config'
 
 const config: UserWorkspaceConfig = defineProject({
-  test: { name: 'rspeedy/zip', testTimeout: 30_000 },
+  test: { name: 'rspeedy/server-bundle', testTimeout: 30_000 },
 })
 
 export default config

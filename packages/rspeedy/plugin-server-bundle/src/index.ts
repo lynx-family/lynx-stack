@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Package production output as a ZIP accepted by Lynx UI Judge.
+ * Package production output as a server bundle accepted by Lynx UI Judge.
  * @packageDocumentation
  */
 
@@ -16,10 +16,10 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { createArchive, readOutput, validatePath } from './archive.js'
 
-/** Options for {@link pluginZip}.
+/** Options for {@link pluginServerBundle}.
  * @public
  */
-export interface PluginZipOptions {
+export interface PluginServerBundleOptions {
   /**
    * ZIP filename inside the output directory. Directory components are not allowed.
    * @defaultValue 'dist.zip'
@@ -28,27 +28,29 @@ export interface PluginZipOptions {
 }
 
 /**
- * Replace production build outputs with a ZIP and serve it through preview.
+ * Replace production build outputs with a server bundle in ZIP format and serve it through preview.
  * Development builds and dev servers keep their original outputs and URLs.
  *
  * @example
  * ```ts
- * import { pluginZip } from '@lynx-js/zip-rsbuild-plugin'
- * export default { plugins: [pluginZip()] }
+ * import { pluginServerBundle } from '@lynx-js/server-bundle-rsbuild-plugin'
+ * export default { plugins: [pluginServerBundle()] }
  * ```
  * @public
  */
-export function pluginZip(options: PluginZipOptions = {}): RsbuildPlugin {
+export function pluginServerBundle(
+  options: PluginServerBundleOptions = {},
+): RsbuildPlugin {
   const filename = options.filename ?? 'dist.zip'
   validatePath(filename)
   if (filename.includes('/') || !filename.endsWith('.zip')) {
     throw new Error(
-      'pluginZip filename must be a .zip filename without directories',
+      'pluginServerBundle filename must be a .zip filename without directories',
     )
   }
 
   return {
-    name: 'lynx:rsbuild:zip',
+    name: 'lynx:rsbuild:server-bundle',
     setup(api) {
       const isProductionBuild = (): boolean =>
         api.context.action === 'build'
@@ -69,7 +71,7 @@ export function pluginZip(options: PluginZipOptions = {}): RsbuildPlugin {
           || !rootRelative.startsWith(`..${path.sep}`) && rootRelative !== '..'
         ) {
           throw new Error(
-            'pluginZip output directory must not contain the project root',
+            'pluginServerBundle output directory must not contain the project root',
           )
         }
         const relative = path.relative(root, directory)
@@ -78,7 +80,7 @@ export function pluginZip(options: PluginZipOptions = {}): RsbuildPlugin {
           || path.isAbsolute(relative)
         ) {
           throw new Error(
-            'pluginZip requires environment output directories inside output.distPath.root',
+            'pluginServerBundle requires environment output directories inside output.distPath.root',
           )
         }
         return `zip:///${
@@ -139,7 +141,9 @@ export function pluginZip(options: PluginZipOptions = {}): RsbuildPlugin {
           const directory = api.context.distPath
           const directoryStat = await lstat(directory)
           if (!directoryStat.isDirectory()) {
-            throw new Error('pluginZip output must be a regular directory')
+            throw new Error(
+              'pluginServerBundle output must be a regular directory',
+            )
           }
           const children = stats && ('stats' in stats ? stats.stats : [stats])
           if (children?.some(child => child.compilation.getAsset(filename))) {

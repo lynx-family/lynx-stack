@@ -2032,6 +2032,28 @@ importers:
         specifier: ^7.8.5
         version: 7.8.5
 
+  packages/rspeedy/plugin-server-bundle:
+    dependencies:
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.12(@types/node@24.13.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.2.3(core-js@3.50.0)
+
   packages/rspeedy/plugin-vanilla:
     dependencies:
       '@lynx-js/runtime-wrapper-webpack-plugin':
@@ -2056,28 +2078,6 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
-
-  packages/rspeedy/plugin-zip:
-    dependencies:
-      fflate:
-        specifier: 0.8.2
-        version: 0.8.2
-    devDependencies:
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../react
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../plugin-react
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../core
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.12(@types/node@24.13.3)
-      '@rsbuild/core':
-        specifier: catalog:rsbuild
-        version: 2.2.3(core-js@3.50.0)
 
   packages/rspeedy/upgrade-rspeedy:
     devDependencies:

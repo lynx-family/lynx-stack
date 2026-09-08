@@ -1,6 +1,6 @@
-# @lynx-js/zip-rsbuild-plugin
+# @lynx-js/server-bundle-rsbuild-plugin
 
-Package a production build as a ZIP accepted by [Lynx UI Judge](../../genui/ui-judge/README.md).
+Package production output as a server bundle in ZIP format for [Lynx UI Judge](../../genui/ui-judge/README.md).
 
 ## Usage
 
@@ -8,7 +8,7 @@ This package is private and is not published to npm. Add it to a package in this
 repository's workspace:
 
 ```sh
-pnpm add -D @lynx-js/zip-rsbuild-plugin@workspace:*
+pnpm add -D @lynx-js/server-bundle-rsbuild-plugin@workspace:*
 ```
 
 Add it to your existing Rspeedy plugins:
@@ -16,10 +16,10 @@ Add it to your existing Rspeedy plugins:
 ```ts
 import { defineConfig } from '@lynx-js/rspeedy'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { pluginZip } from '@lynx-js/zip-rsbuild-plugin'
+import { pluginServerBundle } from '@lynx-js/server-bundle-rsbuild-plugin'
 
 export default defineConfig({
-  plugins: [pluginReactLynx(), pluginZip()],
+  plugins: [pluginReactLynx(), pluginServerBundle()],
 })
 ```
 
@@ -60,7 +60,7 @@ so use the upload endpoint for a local preview download.
 
 ## Options and limits
 
-`pluginZip({ filename: 'page.zip' })` changes the output to `dist/page.zip`.
+`pluginServerBundle({ filename: 'page.zip' })` changes the output to `dist/page.zip`.
 The filename must end in `.zip` and cannot contain directory components.
 Reserve this filename for the plugin.
 

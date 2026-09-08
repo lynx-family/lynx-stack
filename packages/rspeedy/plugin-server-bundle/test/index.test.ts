@@ -24,7 +24,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
 
-import { pluginZip } from '../src/index.js'
+import { pluginServerBundle } from '../src/index.js'
 
 const directories: string[] = []
 afterEach(async () => {
@@ -68,11 +68,11 @@ function config(): RsbuildConfig {
     },
     server: { publicDir: { copyOnBuild: true }, port: 0, host: '127.0.0.1' },
     dev: { cliShortcuts: false, writeToDisk: true },
-    plugins: [pluginZip()],
+    plugins: [pluginServerBundle()],
   }
 }
 
-describe('pluginZip', () => {
+describe('pluginServerBundle', () => {
   test('packages a real ReactLynx bundle with external image resources', async () => {
     const cwd = await fixture()
     await writeFile(
@@ -95,7 +95,7 @@ describe('pluginZip', () => {
           sourceMap: false,
           distPath: { root: path.join(cwd, 'dist') },
         },
-        plugins: [pluginReactLynx(), pluginZip()],
+        plugins: [pluginReactLynx(), pluginServerBundle()],
       },
     })
     await rspeedy.build()
@@ -116,7 +116,7 @@ describe('pluginZip', () => {
           first: {},
           second: { output: { distPath: { root: 'output/second' } } },
         },
-        plugins: [pluginZip({ filename: 'page.zip' })],
+        plugins: [pluginServerBundle({ filename: 'page.zip' })],
       },
     })
     await rsbuild.build()
@@ -191,7 +191,7 @@ describe('pluginZip', () => {
       rspeedyConfig: {
         source: { entry: { main: './src/index.js' } },
         server: { host: '127.0.0.1', port: 0, base: '/app' },
-        plugins: [pluginZip()],
+        plugins: [pluginServerBundle()],
       },
     })
     // Match the CLI, which initializes configs before calling preview().
