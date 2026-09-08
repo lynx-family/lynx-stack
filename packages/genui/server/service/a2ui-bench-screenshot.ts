@@ -37,9 +37,13 @@ export async function readBenchScreenshotDataUrl(
   value: unknown,
 ): Promise<string | undefined> {
   if (typeof value === 'string' && value.startsWith('data:image/bmp;base64,')) {
-    return await convertCapturedBmp(
-      value.slice('data:image/bmp;base64,'.length),
-    );
+    const encoded = value.slice('data:image/bmp;base64,'.length);
+    if (
+      encoded.length > Math.ceil((10 * 1024 * 1024 + 1024) / 3) * 4
+      || encoded.length % 4 === 1 || !/^[A-Za-z0-9+/]+={0,2}$/u.test(encoded)
+    ) return undefined;
+    const converted = await convertCapturedBmp(Buffer.from(encoded, 'base64'));
+    return await readBenchScreenshotDataUrl(converted);
   }
   if (
     typeof value !== 'string'
@@ -58,18 +62,11 @@ export async function readBenchScreenshotDataUrl(
 
 // Accept only the runner's top-down, 32-bit BITMAPV4HEADER layout. Bound the
 // uncompressed input separately from the smaller PNG stored in Bench reports.
-async function convertCapturedBmp(
-  encoded: string,
+export async function convertCapturedBmp(
+  bmp: Buffer,
 ): Promise<string | undefined> {
   const maxPixelBytes = 10 * 1024 * 1024;
   const maxBmpBytes = maxPixelBytes + 1024;
-  if (
-    encoded.length > Math.ceil(maxBmpBytes / 3) * 4
-    || encoded.length % 4 === 1
-    || !/^[A-Za-z0-9+/]+={0,2}$/u.test(encoded)
-  ) return undefined;
-
-  const bmp = Buffer.from(encoded, 'base64');
   if (
     bmp.length < 122 || bmp.length > maxBmpBytes
     || bmp.toString('ascii', 0, 2) !== 'BM'
@@ -101,14 +98,14 @@ async function convertCapturedBmp(
     png.data[offset + 3] = bmp[122 + offset + 3]!;
   }
 
-  // pngjs uses asynchronous zlib compression. Enforce the existing report limit
-  // on encoded PNG bytes rather than rejecting larger, compressible BMP frames.
+  // Model inputs retain all captured pixels. Report storage has a separate limit.
+  const maxPngBytes = maxPixelBytes + 64 * 1024;
   const output = await new Promise<Buffer | undefined>((resolve) => {
     const chunks: Buffer[] = [];
     let bytes = 0;
     png.on('data', (chunk: Buffer) => {
       bytes += chunk.length;
-      if (bytes > MAX_BENCH_SCREENSHOT_DECODED_BYTES) {
+      if (bytes > maxPngBytes) {
         chunks.length = 0;
         return;
       }
@@ -117,7 +114,7 @@ async function convertCapturedBmp(
     png.once('error', () => resolve(undefined));
     png.once('end', () => {
       resolve(
-        bytes <= MAX_BENCH_SCREENSHOT_DECODED_BYTES
+        bytes <= maxPngBytes
           ? Buffer.concat(chunks)
           : undefined,
       );

@@ -353,6 +353,7 @@ async function runA2UINativeOne(
       ? await (async () => {
         emitRunPhase(jobId, item, 'judge');
         return await runGenuiBenchUiJudge({
+          model,
           artifact: {
             protocol: 'a2ui',
             messages: result.messages ?? [],
@@ -562,6 +563,7 @@ async function runProtocolAdapterOne(
       ? await (async () => {
         emitRunPhase(jobId, item, 'judge');
         return await runGenuiBenchUiJudge({
+          model,
           artifact: judgePayload.kind === 'a2ui-messages'
             ? {
               protocol: 'a2ui',

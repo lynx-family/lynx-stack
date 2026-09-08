@@ -183,19 +183,18 @@ Judge HTTP server and configure its private base URL:
 export UI_JUDGE_SERVER_URL="http://127.0.0.1:8080"
 ```
 
-The server probes `GET /health` for each Bench job and reports Judge as enabled
-only when the sidecar worker is ready. This is a shallow readiness check; model
-credentials, the configured bundle, and runtime resources are validated by the
-first `/judge` request. Successful A2UI generations are submitted to
-`POST /judge`; generated messages are injected through server-owned Lynx
-`globalProps` and cannot be supplied or overridden by Bench clients.
+The server probes `GET /health` for each Bench job. It sends sanitized page data
+to `POST /screenshot/template`, which returns raw BMP bytes. GenUI Server converts
+the capture to PNG and runs visual-correctness and four GEQI evaluations with
+the Bench group's selected model, or the GenUI default. Reuse
+`createLLMProvider`, `GENUI_MODEL_CONFIG_JSON`, reasoning settings, token limits,
+and cancellation. The screenshot service receives no task, model, or credentials.
+Nonempty `judgeSteps` remain unsupported and are rejected before capture.
 
-UI Judge returns captured screenshots as BMP data URLs. GenUI Server converts
-the runner's 32-bit BMP frames to PNG before including them in Bench results,
-preserving RGBA pixels. The existing 2 MiB per-image and 8 MiB per-job storage
-limits apply to PNG bytes; malformed or oversized screenshots are discarded
-with a warning. PNG responses from older sidecars remain accepted. This
-conversion happens after scoring and does not change model inputs in UI Judge.
+PNG conversion preserves RGBA pixels and happens before model evaluation. Model
+inputs retain the full capture; Bench report storage separately applies its
+2 MiB per-image and 8 MiB per-job limits. A scoring failure makes the whole Judge
+result unavailable, while a report storage limit only omits the screenshot.
 
 Before rendering, the Bench integration replaces `Image`, `LazyComponent`,
 `LineChart`, `McpApp`, and `PieChart` definitions with inert loading
@@ -215,7 +214,7 @@ export UI_JUDGE_BUNDLE_URL="https://cdn.example.com/a2ui.lynx.js"
 
 The sidecar applies the screenshot endpoint's SSRF policy to this URL, so
 localhost, private-network targets, redirects, and URL credentials are
-rejected. Use the Rust library API for trusted local bundle judging.
+rejected. Use the Rust library API for trusted local bundle capture.
 
 ## Security
 

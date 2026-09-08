@@ -2,9 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { readBenchScreenshotDataUrl } from './a2ui-bench-screenshot.js';
+import {
+  convertCapturedBmp,
+  readBenchScreenshotDataUrl,
+} from './a2ui-bench-screenshot.js';
 import type { BenchScenarioRequest } from './a2ui-bench-types';
 import type { A2UIMessage } from '../agent/a2ui-validator';
+import type {
+  ScreenshotEvaluation,
+  ScreenshotEvaluationRequest,
+} from '../agent/ui-judge-agent.js';
+import {
+  JUDGE_DIMENSIONS,
+  evaluateScreenshot,
+} from '../agent/ui-judge-agent.js';
 
 const DEFAULT_A2UI_BUNDLE_URL = 'https://lynx-stack.dev/genui/a2ui.lynx.js';
 const HEALTH_TIMEOUT_MS = 3_000;
@@ -17,7 +28,7 @@ type FetchLike = (
 
 export interface BenchUiJudgeSession {
   bundleUrl: string;
-  judgeUrl: string;
+  screenshotUrl: string;
 }
 
 export interface BenchUiJudgeCapability {
@@ -56,7 +67,6 @@ interface UiJudgeResponse {
   geqiScore?: unknown;
   reason?: unknown;
   score?: unknown;
-  screenshotDataUrl?: unknown;
   summary?: unknown;
 }
 
@@ -68,14 +78,12 @@ export interface BenchUiJudgeScenario
   type?: string;
 }
 
-const GEQI_DIMENSION_WEIGHTS = new Map<string, number>([
-  ['usability-interaction', 30],
-  ['visual-aesthetics', 25],
-  ['consistency-standards', 15],
-  ['architecture-writing', 15],
-]);
+const GEQI_DIMENSION_WEIGHTS = new Map<string, number>(
+  JUDGE_DIMENSIONS.slice(1).map(({ id, weight }) => [id, weight]),
+);
 
 interface RunBenchUiJudgeOptions {
+  model?: string;
   messages: A2UIMessage[];
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
@@ -86,6 +94,7 @@ interface RunBenchUiJudgeOptions {
 }
 
 export interface RunBenchUiJudgeRequestOptions {
+  model?: string;
   globalProps: Record<string, unknown>;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
@@ -131,7 +140,7 @@ function normalizeBundleUrl(raw: string): string | null {
   try {
     const url = new URL(raw);
     if (
-      !['file:', 'http:', 'https:'].includes(url.protocol)
+      !['http:', 'https:'].includes(url.protocol)
       || url.username
       || url.password
     ) {
@@ -283,8 +292,7 @@ export async function probeBenchUiJudge(
   if (!bundleUrl) {
     return {
       enabled: false,
-      reason:
-        'UI_JUDGE_BUNDLE_URL must be a file, HTTP, or HTTPS URL without credentials.',
+      reason: 'UI_JUDGE_BUNDLE_URL must be an HTTP(S) URL without credentials.',
     };
   }
 
@@ -319,7 +327,7 @@ export async function probeBenchUiJudge(
     enabled: true,
     session: {
       bundleUrl,
-      judgeUrl: new URL('judge', serverUrl).toString(),
+      screenshotUrl: new URL('screenshot/template', serverUrl).toString(),
     },
   };
 }
@@ -327,6 +335,9 @@ export async function probeBenchUiJudge(
 export async function runBenchUiJudge(
   options: RunBenchUiJudgeOptions,
   fetchImpl: FetchLike = fetch,
+  evaluate: (
+    request: ScreenshotEvaluationRequest,
+  ) => Promise<ScreenshotEvaluation> = evaluateScreenshot,
 ): Promise<BenchUiJudgeResult> {
   const sanitized = sanitizeMessagesForHeadless(options.messages);
   if (sanitized.error) {
@@ -339,6 +350,7 @@ export async function runBenchUiJudge(
   }
   return await runBenchUiJudgeRequest(
     {
+      model: options.model,
       globalProps: {
         benchMode: true,
         instant: true,
@@ -346,7 +358,7 @@ export async function runBenchUiJudge(
         speed: 0,
         theme: 'light',
       },
-      ...(options.includeScreenshot ? { includeScreenshot: true } : {}),
+      includeScreenshot: options.includeScreenshot,
       scenario: options.scenario,
       ...(options.screenshotSettleMs === undefined
         ? {}
@@ -357,18 +369,31 @@ export async function runBenchUiJudge(
       warnings: sanitized.warnings,
     },
     fetchImpl,
+    evaluate,
   );
 }
 
 export async function runBenchUiJudgeRequest(
   options: RunBenchUiJudgeRequestOptions,
   fetchImpl: FetchLike = fetch,
+  evaluate: (
+    request: ScreenshotEvaluationRequest,
+  ) => Promise<ScreenshotEvaluation> = evaluateScreenshot,
 ): Promise<BenchUiJudgeResult> {
   const warnings = options.warnings ?? [];
   const operationTimeoutMs = options.timeoutMs
     ?? DEFAULT_OPERATION_TIMEOUT_MS;
-  const requestTimeoutMs = operationTimeoutMs
-    * ((options.scenario.judgeSteps?.length ?? 0) + 4);
+  const requestTimeoutMs = operationTimeoutMs * 2;
+  if ((options.scenario.judgeSteps?.length ?? 0) > 0) {
+    return {
+      errors: [
+        'ui-judge rejected interaction steps: remote screenshot evaluation does not support them.',
+      ],
+      score: 0,
+      status: 'failed',
+      warnings,
+    };
+  }
   const timeoutSignal = AbortSignal.timeout(requestTimeoutMs);
   const requestSignal = options.signal
     ? AbortSignal.any([options.signal, timeoutSignal])
@@ -383,23 +408,19 @@ export async function runBenchUiJudgeRequest(
   }
   const body = {
     globalProps: options.globalProps,
-    includeGeqi: true,
-    ...(options.includeScreenshot ? { includeScreenshot: true } : {}),
     ...(options.screenshotSettleMs === undefined
       ? {}
       : { screenshotSettleMs: options.screenshotSettleMs }),
-    steps: options.scenario.judgeSteps ?? [],
-    task: options.scenario.judgeTask ?? options.scenario.prompt,
     ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
     url: options.session.bundleUrl,
   };
 
   let response: Response;
   try {
-    response = await fetchImpl(options.session.judgeUrl, {
+    response = await fetchImpl(options.session.screenshotUrl, {
       body: JSON.stringify(body),
       headers: {
-        Accept: 'application/json',
+        Accept: 'image/bmp',
         'Content-Type': 'application/json',
       },
       method: 'POST',
@@ -422,9 +443,8 @@ export async function runBenchUiJudgeRequest(
     };
   }
 
-  const payload = await readJson(response);
   if (!response.ok) {
-    const detail = readResponseError(payload);
+    const detail = readResponseError(await readJson(response));
     return {
       errors: [
         `ui-judge request returned HTTP ${response.status}${
@@ -437,11 +457,37 @@ export async function runBenchUiJudgeRequest(
     };
   }
 
-  if (!isRecord(payload)) {
+  let screenshotDataUrl: string | undefined;
+  let reportScreenshot: string | undefined;
+  let payload: ScreenshotEvaluation;
+  try {
+    const contentType = response.headers.get('content-type')?.split(';')[0]
+      ?.trim();
+    if (contentType !== 'image/bmp') {
+      await response.body?.cancel().catch(() => undefined);
+      throw new Error('Expected a BMP screenshot.');
+    }
+    const bmp = await readScreenshotBytes(response, requestSignal);
+    screenshotDataUrl = await convertCapturedBmp(bmp);
+    if (!screenshotDataUrl) throw new Error('Invalid or oversized screenshot.');
+    reportScreenshot = options.includeScreenshot
+      ? await readBenchScreenshotDataUrl(screenshotDataUrl)
+      : undefined;
+    requestSignal.throwIfAborted();
+    payload = await evaluate({
+      screenshotDataUrl,
+      task: options.scenario.judgeTask ?? options.scenario.prompt,
+      model: options.model,
+      signal: requestSignal,
+    });
+  } catch {
     return {
-      errors: ['ui-judge returned an invalid JSON response.'],
+      errors: options.signal?.aborted
+        ? []
+        : ['GenUI screenshot evaluation failed.'],
       score: 0,
       status: 'failed',
+      ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
       warnings,
     };
   }
@@ -478,17 +524,10 @@ export async function runBenchUiJudgeRequest(
   const summary = typeof result.summary === 'string' && result.summary.trim()
     ? result.summary.trim()
     : undefined;
-  const screenshotDataUrl = await readBenchScreenshotDataUrl(
-    result.screenshotDataUrl,
-  );
   const resultWarnings = [...warnings];
-  if (
-    options.includeScreenshot
-    && result.screenshotDataUrl !== undefined
-    && !screenshotDataUrl
-  ) {
+  if (options.includeScreenshot && !reportScreenshot) {
     resultWarnings.push(
-      'ui-judge returned an invalid screenshotDataUrl; the screenshot was discarded.',
+      'The captured PNG exceeded the Bench screenshot storage limit.',
     );
   }
   const complete = errors.length === 0;
@@ -499,11 +538,46 @@ export async function runBenchUiJudgeRequest(
     ...(complete && geqiScore !== undefined ? { geqiScore } : {}),
     ...(complete && reason ? { reason } : {}),
     score: complete ? score : 0,
-    ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
+    ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
     status: complete ? 'complete' : 'failed',
     ...(complete && summary ? { summary } : {}),
     warnings: resultWarnings,
   };
+}
+
+async function readScreenshotBytes(
+  response: Response,
+  signal: AbortSignal,
+): Promise<Buffer> {
+  const limit = 10 * 1024 * 1024 + 1024;
+  if (Number(response.headers.get('content-length')) > limit) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error('Screenshot too large.');
+  }
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('Missing screenshot.');
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  const cancel = () => {
+    void reader.cancel().catch(() => undefined);
+  };
+  signal.addEventListener('abort', cancel, { once: true });
+  try {
+    while (true) {
+      signal.throwIfAborted();
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      bytes += chunk.value.length;
+      if (bytes > limit) throw new Error('Screenshot too large.');
+      chunks.push(chunk.value);
+    }
+    signal.throwIfAborted();
+    return Buffer.concat(chunks);
+  } finally {
+    signal.removeEventListener('abort', cancel);
+    await reader.cancel().catch(() => undefined);
+    reader.releaseLock();
+  }
 }
 
 function parseGeqiDimensions(
