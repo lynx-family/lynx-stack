@@ -257,7 +257,8 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
-    "@lynx-js/rspeedy": "workspace:^"
+    "@lynx-js/rspeedy": "workspace:^",
+    "@types/react": "^19.2.18"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",
