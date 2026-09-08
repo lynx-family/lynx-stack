@@ -15,8 +15,8 @@ import {
   select,
 } from '@rstackjs/create-toolkit'
 
-type Tool = 'rsbuild' | 'rspeedy'
-type Lang = 'js' | 'ts'
+import type { Lang, Tool } from './template.js'
+import { TEMPLATES, resolveTemplateName } from './template.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -26,40 +26,9 @@ const { devDependencies } = require('../package.json') as {
   devDependencies: Record<string, string>
 }
 
-const TOOLS: Tool[] = ['rsbuild', 'rspeedy']
-const LANGS: Lang[] = ['ts', 'js']
-
-const TEMPLATES = TOOLS.flatMap(tool => LANGS.map(lang => `${tool}-${lang}`))
-
-function isTool(value: string): value is Tool {
-  return (TOOLS as string[]).includes(value)
-}
-
-function isLang(value: string): value is Lang {
-  return (LANGS as string[]).includes(value)
-}
-
-// `create-rspeedy` named its templates after the DSL instead of the build tool.
-const LEGACY_TOOL_ALIAS: Record<string, Tool> = {
-  react: 'rspeedy',
-}
-
 async function getTemplateName({ template }: Argv) {
   if (typeof template === 'string') {
-    const parts = template.split('-')
-    const lang = parts[parts.length - 1]
-    const name = parts.slice(0, -1).join('-')
-    const tool = LEGACY_TOOL_ALIAS[name] ?? name
-
-    if (isTool(tool) && isLang(lang)) {
-      return `${tool}-${lang}`
-    }
-
-    const bare = LEGACY_TOOL_ALIAS[template] ?? template
-    if (isTool(bare)) {
-      return `${bare}-ts`
-    }
-    return template
+    return resolveTemplateName(template)
   }
 
   const tool = checkCancel<Tool>(
