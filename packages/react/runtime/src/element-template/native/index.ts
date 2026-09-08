@@ -14,6 +14,7 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { isProfiling } from '../../shared/profile.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -78,7 +79,7 @@ function init(): void {
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();
-      if (lynx.performance?.isProfileRecording?.()) {
+      if (isProfiling) {
         initProfileHook();
       }
     }

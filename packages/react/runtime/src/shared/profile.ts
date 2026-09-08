@@ -8,7 +8,8 @@ const noopFlowId = () => 0;
 /* v8 ignore end */
 
 export const isProfiling: boolean = /* @__PURE__ */ Boolean(
-  lynx.performance?.isProfileRecording?.(),
+  (typeof __PROFILE__ !== 'undefined' && __PROFILE__)
+    || lynx.performance?.isProfileRecording?.(),
 );
 
 export const profileStart = /* @__PURE__ */ ((() => {

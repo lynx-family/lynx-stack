@@ -159,7 +159,7 @@ export function createMainThreadLynxPerformance(
       return ++profileFlowIdInc;
     },
     isProfileRecording: (): boolean => {
-      return getUserTimingPerformance() !== undefined;
+      return false;
     },
   };
 }

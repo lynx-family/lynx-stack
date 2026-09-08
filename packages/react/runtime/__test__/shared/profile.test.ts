@@ -32,6 +32,24 @@ describe('shared/profile module', () => {
     const perf: PerformanceLike = {
       isProfileRecording: vi.fn(() => true),
     };
+    // eslint-disable-next-line no-undef
+    globalThis.__PROFILE__ = false;
+    globalThis.lynx = {
+      ...globalThis.lynx,
+      performance: perf,
+    };
+
+    const profile = await import('../../src/shared/profile');
+
+    expect(profile.isProfiling).toBe(true);
+  });
+
+  it('should indicate profiling is enabled by the compile-time option', async () => {
+    const perf: PerformanceLike = {
+      isProfileRecording: vi.fn(() => false),
+    };
+    // eslint-disable-next-line no-undef
+    globalThis.__PROFILE__ = true;
     globalThis.lynx = {
       ...globalThis.lynx,
       performance: perf,

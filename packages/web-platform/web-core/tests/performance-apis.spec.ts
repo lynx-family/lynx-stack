@@ -61,7 +61,13 @@ describe('createPerformanceApis', () => {
     clearUserTimingEntries();
   });
 
-  test('bridges profile traces and marks to browser User Timing entries', () => {
+  test('reports profiling inactive by default when User Timing is available', () => {
+    const performanceApis = createPerformanceApis(createTimingSystemMock());
+
+    expect(performanceApis.isProfileRecording()).toBe(false);
+  });
+
+  test('bridges explicit profile traces and marks to browser User Timing entries', () => {
     const performanceApis = createPerformanceApis(createTimingSystemMock());
 
     const outerOption = {
@@ -74,7 +80,7 @@ describe('createPerformanceApis', () => {
       flowId: performanceApis.profileFlowId(),
     };
 
-    expect(performanceApis.isProfileRecording()).toBe(true);
+    expect(performanceApis.isProfileRecording()).toBe(false);
     expect(markOption.flowId).toBe(2);
 
     performanceApis.profileStart('ReactLynx::outer', outerOption);
@@ -144,12 +150,22 @@ describe('main-thread lynx.performance', () => {
   test('exposes profile and timing APIs to lifecycle handlers', () => {
     const markTiming = rstest.fn();
     const performanceApis = createMainThreadLynxPerformance(markTiming);
+    const traceOption = {
+      flowId: performanceApis.profileFlowId(),
+    };
 
-    expect(performanceApis.profileFlowId()).toBe(1);
+    expect(performanceApis.isProfileRecording()).toBe(false);
     expect(() => {
-      performanceApis.profileStart('ReactLynx::patch');
+      performanceApis.profileStart('ReactLynx::patch', traceOption);
       performanceApis.profileEnd();
     }).not.toThrow();
+
+    const measures = performance.getEntriesByName(
+      'ReactLynx::patch',
+      'measure',
+    ) as PerformanceMeasure[];
+    expect(measures).toHaveLength(1);
+    expect(measures[0]!.detail).toEqual(traceOption);
 
     performanceApis._markTiming('pipeline-1', 'patchChangesStart');
     expect(markTiming).toHaveBeenCalledWith(
