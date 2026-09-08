@@ -62,11 +62,11 @@ void create({
   getTemplateName,
   extraTools: [
     {
-      value: 'vitest-rltl',
-      label: 'Vitest',
+      value: 'rstest-rltl',
+      label: 'Rstest',
       order: 'pre',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
-        const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
+        const from = path.resolve(__dirname, '..', 'template-react-rstest-rltl')
         copyFolder({
           from,
           to: distFolder,
@@ -76,11 +76,11 @@ void create({
       },
     },
     {
-      value: 'rstest-rltl',
-      label: 'Rstest',
+      value: 'vitest-rltl',
+      label: 'Vitest',
       order: 'pre',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
-        const from = path.resolve(__dirname, '..', 'template-react-rstest-rltl')
+        const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
         copyFolder({
           from,
           to: distFolder,
