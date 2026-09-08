@@ -8,15 +8,17 @@ npm create @lynx-js/lynx@latest
 
 ## Templates
 
-Pick a build tool and a language, or pass `--template <tool>-<lang>`:
+Templates are named `<build tool>-<DSL>-<language>`. Parts that are left out
+take their default, so `rsbuild`, `rsbuild-ts` and `rsbuild-react-ts` all name
+the same template.
 
-| Template                    | Build tool                                       | Config             |
-| --------------------------- | ------------------------------------------------ | ------------------ |
-| `rsbuild-ts` / `rsbuild-js` | [Rsbuild](https://rsbuild.rs/) with `pluginLynx` | `rsbuild.config.*` |
-| `rspeedy-ts` / `rspeedy-js` | [Rspeedy](https://lynxjs.org/rspeedy/)           | `lynx.config.*`    |
+| Template                                | Build tool                                       | Config             |
+| --------------------------------------- | ------------------------------------------------ | ------------------ |
+| `rsbuild-react-ts` / `rsbuild-react-js` | [Rsbuild](https://rsbuild.rs/) with `pluginLynx` | `rsbuild.config.*` |
+| `rspeedy-react-ts` / `rspeedy-react-js` | [Rspeedy](https://lynxjs.org/rspeedy/)           | `lynx.config.*`    |
 
 ```bash
-npm create @lynx-js/lynx@latest my-app -- --template rsbuild-ts
+npm create @lynx-js/lynx@latest my-app -- --template rsbuild-react-ts
 ```
 
 ## Options

@@ -1,5 +1,5 @@
 {
-  "name": "lynx-rsbuild-js",
+  "name": "lynx-rsbuild-react-ts",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -15,7 +15,11 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
-    "@rsbuild/core": "catalog:rsbuild"
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-type-check": "1.6.0",
+    "@types/react": "^19.2.18",
+    "typescript": "~6.0.3"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

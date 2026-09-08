@@ -16,7 +16,7 @@ import {
 } from '@rstackjs/create-toolkit'
 
 import type { Lang, Tool } from './template.js'
-import { TEMPLATES, resolveTemplateName } from './template.js'
+import { DEFAULT_DSL, TEMPLATES, resolveTemplateName } from './template.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -51,7 +51,7 @@ async function getTemplateName({ template }: Argv) {
     }),
   )
 
-  return `${tool}-${lang}`
+  return `${tool}-${DEFAULT_DSL}-${lang}`
 }
 
 void create({
@@ -66,7 +66,7 @@ void create({
       label: 'Vitest',
       order: 'pre',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
-        const from = path.resolve(__dirname, '..', 'template-vitest-rltl')
+        const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
         copyFolder({
           from,
           to: distFolder,
@@ -80,7 +80,7 @@ void create({
       label: 'Rstest',
       order: 'pre',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
-        const from = path.resolve(__dirname, '..', 'template-rstest-rltl')
+        const from = path.resolve(__dirname, '..', 'template-react-rstest-rltl')
         copyFolder({
           from,
           to: distFolder,

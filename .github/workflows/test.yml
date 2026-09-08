@@ -320,14 +320,14 @@ jobs:
           run_script "$bin" lint
         }
 
-        smoke_test pnpm rsbuild-ts eslint create-lynx-regression-rsbuild --skill lynx-devtool
-        smoke_test pnpm rspeedy-ts eslint create-lynx-regression --skill lynx-devtool
-        smoke_test pnpm rspeedy-ts eslint,vitest-rltl create-lynx-regression-vitest-rltl
+        smoke_test pnpm rsbuild-react-ts eslint create-lynx-regression-rsbuild --skill lynx-devtool
+        smoke_test pnpm rspeedy-react-ts eslint create-lynx-regression --skill lynx-devtool
+        smoke_test pnpm rspeedy-react-ts eslint,vitest-rltl create-lynx-regression-vitest-rltl
         run_script pnpm test
-        smoke_test pnpm rspeedy-ts eslint,rstest-rltl create-lynx-regression-rstest-rltl
+        smoke_test pnpm rspeedy-react-ts eslint,rstest-rltl create-lynx-regression-rstest-rltl
         run_script pnpm test
-        smoke_test npm rsbuild-ts eslint create-lynx-regression-npm --skill lynx-devtool
-        smoke_test yarn rspeedy-ts eslint create-lynx-regression-yarn --skill lynx-devtool
+        smoke_test npm rsbuild-react-ts eslint create-lynx-regression-npm --skill lynx-devtool
+        smoke_test yarn rspeedy-react-ts eslint create-lynx-regression-yarn --skill lynx-devtool
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

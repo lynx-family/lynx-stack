@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 import {
+  DSLS,
   LANGS,
   TEMPLATES,
   TOOLS,
@@ -26,18 +27,20 @@ describe('resolveTemplateName', () => {
     }
   })
 
-  it('defaults a bare tool name to TypeScript', () => {
+  it('fills in the DSL and the language that are left out', () => {
     for (const tool of TOOLS) {
-      expect(resolveTemplateName(tool)).toBe(`${tool}-ts`)
+      expect(resolveTemplateName(tool)).toBe(`${tool}-react-ts`)
+      expect(resolveTemplateName(`${tool}-js`)).toBe(`${tool}-react-js`)
+      expect(resolveTemplateName(`${tool}-react`)).toBe(`${tool}-react-ts`)
     }
   })
 
   // `create-rspeedy` is superseded by this package, so the template names it
   // documented have to keep working.
   it('maps the create-rspeedy template names onto Rspeedy', () => {
-    expect(resolveTemplateName('react-ts')).toBe('rspeedy-ts')
-    expect(resolveTemplateName('react-js')).toBe('rspeedy-js')
-    expect(resolveTemplateName('react')).toBe('rspeedy-ts')
+    expect(resolveTemplateName('react-ts')).toBe('rspeedy-react-ts')
+    expect(resolveTemplateName('react-js')).toBe('rspeedy-react-js')
+    expect(resolveTemplateName('react')).toBe('rspeedy-react-ts')
   })
 
   it('passes an npm package name through untouched', () => {
@@ -58,15 +61,21 @@ describe('templates on disk', () => {
 
   it('builds each template with its own tool', () => {
     for (const tool of TOOLS) {
-      for (const lang of LANGS) {
-        const manifest = JSON.parse(
-          fs.readFileSync(
-            path.join(packageRoot, `template-${tool}-${lang}`, 'package.json'),
-            'utf-8',
-          ),
-        ) as { scripts: Record<string, string> }
+      for (const dsl of DSLS) {
+        for (const lang of LANGS) {
+          const manifest = JSON.parse(
+            fs.readFileSync(
+              path.join(
+                packageRoot,
+                `template-${tool}-${dsl}-${lang}`,
+                'package.json',
+              ),
+              'utf-8',
+            ),
+          ) as { scripts: Record<string, string> }
 
-        expect(manifest.scripts['build']).toBe(`${tool} build`)
+          expect(manifest.scripts['build']).toBe(`${tool} build`)
+        }
       }
     }
   })
