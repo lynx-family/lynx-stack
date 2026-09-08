@@ -39,17 +39,25 @@ function isLang(value: string): value is Lang {
   return (LANGS as string[]).includes(value)
 }
 
+// `create-rspeedy` named its templates after the DSL instead of the build tool.
+const LEGACY_TOOL_ALIAS: Record<string, Tool> = {
+  react: 'rspeedy',
+}
+
 async function getTemplateName({ template }: Argv) {
   if (typeof template === 'string') {
     const parts = template.split('-')
     const lang = parts[parts.length - 1]
-    const tool = parts.slice(0, -1).join('-')
+    const name = parts.slice(0, -1).join('-')
+    const tool = LEGACY_TOOL_ALIAS[name] ?? name
 
     if (isTool(tool) && isLang(lang)) {
       return `${tool}-${lang}`
     }
-    if (isTool(template)) {
-      return `${template}-ts`
+
+    const bare = LEGACY_TOOL_ALIAS[template] ?? template
+    if (isTool(bare)) {
+      return `${bare}-ts`
     }
     return template
   }
