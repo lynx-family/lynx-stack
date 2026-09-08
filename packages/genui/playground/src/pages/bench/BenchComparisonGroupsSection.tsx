@@ -150,21 +150,30 @@ export function BenchComparisonGroupsSection(props: {
                   props.onNameChange(group.id, event.target.value)}
               />
               <div className='benchGroupSummary'>
-                <span data-protocol={group.protocol}>
+                <span
+                  data-protocol={group.protocol}
+                  title={group.protocol === 'a2ui' ? 'A2UI' : 'OpenUI'}
+                >
                   {group.protocol === 'a2ui' ? 'A2UI' : 'OpenUI'}
                 </span>
-                <span>{group.profile}</span>
-                <span>{group.model || 'Model required'}</span>
+                <span title={group.profile}>{group.profile}</span>
+                <span title={group.model || 'Model required'}>
+                  {group.model || 'Model required'}
+                </span>
                 {differences.length === 0
-                  ? <span data-baseline='true'>Baseline</span>
+                  ? <span data-baseline='true' title='Baseline'>Baseline</span>
                   : differences.map((difference) => (
-                    <span data-changed='true' key={difference}>
+                    <span
+                      data-changed='true'
+                      key={difference}
+                      title={`${difference} changed`}
+                    >
                       {`${difference} changed`}
                     </span>
                   ))}
                 {group.role === 'experiment' && baseline
                   ? (
-                    <span data-baseline='true'>
+                    <span data-baseline='true' title={`vs. ${baseline.name}`}>
                       {`vs. ${baseline.name}`}
                     </span>
                   )

@@ -120,6 +120,45 @@ describe('app route hash', () => {
         tab: 'bench',
       });
       expect(parseRouteHash(hash)).not.toHaveProperty('benchSlug');
+      expect(parseRouteHash(hash)).not.toHaveProperty('benchReportId');
     }
+  });
+
+  test('opens published records by ID without treating them as live jobs', () => {
+    for (
+      const id of [
+        '5d8ad40a-b0cf-40b3-9495-bcb628d62e9b',
+        '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+      ]
+    ) {
+      expect(parseRouteHash(`#/bench/reports/${id}`)).toMatchObject({
+        tab: 'bench',
+        benchReportId: id,
+      });
+    }
+  });
+
+  test('does not select a static report or silently replace an invalid link', () => {
+    expect(parseRouteHash('#/bench/phase-2')).not.toHaveProperty(
+      'benchReportId',
+    );
+    expect(parseRouteHash('#/bench/reports')).toMatchObject({
+      tab: 'bench',
+      benchReportId: '',
+    });
+    expect(parseRouteHash('#/bench/reports/extra/path')).toMatchObject({
+      tab: 'bench',
+      benchReportId: '',
+    });
+  });
+
+  test('uses a fixed local report route without shared-data URL parameters', () => {
+    expect(parseRouteHash('#/bench/reports')).toMatchObject({
+      tab: 'bench',
+      benchReportId: '',
+    });
+    expect(parseRouteHash('#/bench/reports/shared')).not.toHaveProperty(
+      'benchReportUrl',
+    );
   });
 });

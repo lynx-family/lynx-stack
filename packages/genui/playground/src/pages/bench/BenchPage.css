@@ -91,6 +91,14 @@
   overflow-y: auto;
 }
 
+.benchHistoryShareNotice {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .benchHistoryRailItem {
   position: relative;
   min-width: 0;
@@ -1091,15 +1099,18 @@
 
 .benchGroupSummary {
   display: flex;
-  flex-wrap: wrap;
+  min-width: 0;
+  flex-wrap: nowrap;
   gap: 6px;
+  overflow: hidden;
 }
 
 .benchGroupSummary span {
-  display: inline-flex;
-  max-width: 100%;
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 160px;
   height: 24px;
-  align-items: center;
   padding: 0 8px;
   overflow: hidden;
   border: 1px solid var(--geist-border);
@@ -1108,6 +1119,7 @@
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 650;
+  line-height: 22px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

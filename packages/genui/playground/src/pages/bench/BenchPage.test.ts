@@ -14,11 +14,13 @@ import {
 import {
   BenchPage,
   createBenchJobCancellationRequestInit,
+  getA2UIBenchReportEndpoint,
   getBenchJobCancellationDisposition,
   getBenchRunBlockers,
   getBenchRunMessageText,
   migrateBenchHistoryEntries,
   normalizeBenchUiJudgeServerUrl,
+  persistBenchHistory,
   readBenchHistory,
   readBenchUiJudgeServerUrl,
   saveBenchHistoryEntry,
@@ -64,12 +66,30 @@ function createCompletedHistoryEntry(id: string, jobId: string) {
 }
 
 describe('BenchPage', () => {
+  test('defaults new runs to two repeats without overwriting saved settings', () => {
+    expect(DEFAULT_BENCH_SETTINGS.repeats).toBe(2);
+    const entry = createCompletedHistoryEntry(
+      'saved-repeats',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const restored = migrateBenchHistoryEntries([{
+      ...entry,
+      config: {
+        ...entry.config,
+        settings: { ...DEFAULT_BENCH_SETTINGS, repeats: 5 },
+      },
+    }]);
+    expect(restored[0]?.config.settings.repeats).toBe(5);
+  });
   test('renders one English page with history and a new Bench workflow', () => {
     const markup = renderToStaticMarkup(
       React.createElement(BenchPage),
     );
 
     expect(markup).toContain('Bench Runner');
+    expect(markup).not.toContain('benchPublishedReports');
+    expect(markup).not.toContain('a2ui-comparisons');
+    expect(markup).not.toContain('2026-07-30-matched-core');
     expect(markup).toContain(
       'Combine Protocol, Model, Prompt, and Catalog freely',
     );
@@ -219,6 +239,8 @@ describe('BenchPage', () => {
     expect(groupMarkup).toContain('Baseline Model');
     expect(groupMarkup).toContain('Model comparison Model');
     expect(groupMarkup).toContain('Test model');
+    expect(groupMarkup).toContain('title="test-model"');
+    expect(groupMarkup).toContain('title="other-model"');
     expect(groupMarkup).toContain('Other model');
     expect(groupMarkup).not.toContain('Custom model');
     expect(runMarkup).not.toContain('Provider');
@@ -343,7 +365,7 @@ describe('BenchPage', () => {
     }
   });
 
-  test('sanitizes provider details and screenshots from copied reports', () => {
+  test('sanitizes provider details and invalid screenshots from copied reports', () => {
     const serialized = serializeBenchReport({
       env: {
         baseURL: 'https://private-provider.example/v1',
@@ -368,6 +390,69 @@ describe('BenchPage', () => {
     expect(serialized).not.toContain('screenshotDataUrl');
   });
 
+  test('preserves screenshot bytes through history serialization, migration, and reload', () => {
+    const screenshotDataUrl =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+    const entry = createCompletedHistoryEntry(
+      'image-history',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const entries = [{
+      ...entry,
+      report: { ...entry.report, results: [{ screenshotDataUrl }] },
+    }];
+    const serialized = serializeBenchHistoryEntries(entries as never);
+    const migrated = migrateBenchHistoryEntries(JSON.parse(serialized));
+    expect(migrated[0]?.report?.results[0]?.screenshotDataUrl).toBe(
+      screenshotDataUrl,
+    );
+    expect(JSON.parse(serializeBenchHistoryEntries(migrated))).toMatchObject([
+      { report: { results: [{ screenshotDataUrl }] } },
+    ]);
+    const originalWindow = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'window',
+    );
+    let saved = serialized;
+    try {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: {
+          localStorage: {
+            getItem: () => saved,
+            setItem: (_key: string, value: string) => {
+              saved = value;
+            },
+          },
+        },
+      });
+      expect(readBenchHistory()[0]?.report?.results[0]?.screenshotDataUrl).toBe(
+        screenshotDataUrl,
+      );
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: {
+          localStorage: {
+            setItem: () => {
+              throw new Error('quota');
+            },
+          },
+        },
+      });
+      expect(persistBenchHistory(migrated)).toBe(false);
+      expect(migrated[0]?.report?.results[0]?.screenshotDataUrl).toBe(
+        screenshotDataUrl,
+      );
+      expect(JSON.parse(saved)).toMatchObject([
+        { report: { results: [{ screenshotDataUrl }] } },
+      ]);
+    } finally {
+      if (originalWindow) {
+        Object.defineProperty(globalThis, 'window', originalWindow);
+      } else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   test('redacts the current provider key from report text', () => {
     const apiKey = 'custom/key+with?chars=42';
     const serialized = serializeBenchReport({
@@ -382,6 +467,36 @@ describe('BenchPage', () => {
     expect(serialized).not.toContain(apiKey);
     expect(serialized).not.toContain(encodeURIComponent(apiKey));
     expect(serialized).toContain('[redacted credential]');
+  });
+
+  test('keeps long public model names in cached reports and JSON while redacting credentials', () => {
+    const model = 'doubao-evolving-medium-long-public-model-name';
+    const saved = createCompletedHistoryEntry(
+      'model-history',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const entry = {
+      ...saved,
+      report: { ...saved.report, groups: createDefaultBenchGroups(model) },
+    };
+    const serialized = serializeBenchHistoryEntries([entry] as never);
+    expect(
+      migrateBenchHistoryEntries(JSON.parse(serialized))[0]?.report?.groups[0]
+        ?.model,
+    ).toBe(model);
+    const json = serializeBenchReport(
+      { ...entry.report, env: { model, apiKey: 'actual-api-key' } } as never,
+    );
+    expect(JSON.parse(json)).toMatchObject({
+      groups: [{ model }],
+      env: { model },
+    });
+    expect(json).not.toContain('actual-api-key');
+    expect(
+      serializeBenchReport({ env: { model: 'actual-api-key' } } as never, [
+        'actual-api-key',
+      ]),
+    ).not.toContain('actual-api-key');
   });
 
   test('migrates legacy history into a sanitized persistent shape', () => {
@@ -506,8 +621,14 @@ describe('BenchPage', () => {
   });
 
   test('retains runs with distinct jobs when report ids are reused', () => {
-    const first = createCompletedHistoryEntry('history-1', 'job-1');
-    const second = createCompletedHistoryEntry('history-2', 'job-2');
+    const first = createCompletedHistoryEntry(
+      'history-1',
+      '7e11b5b1-9f92-4a99-899f-0fa6c7d8e901',
+    );
+    const second = createCompletedHistoryEntry(
+      'history-2',
+      '7e11b5b1-9f92-4a99-899f-0fa6c7d8e902',
+    );
 
     expect(
       upsertBenchHistoryEntry([first, second] as never, {
@@ -520,6 +641,74 @@ describe('BenchPage', () => {
         (entry) => entry.id,
       ),
     ).toEqual(['history-2', 'history-1']);
+  });
+
+  test('preserves the report endpoint through history persistence and migration', () => {
+    const jobId = '7e11b5b1-9f92-4a99-899f-0fa6c7d8e901';
+    const entry = createCompletedHistoryEntry('history-1', jobId);
+    const serialized = serializeBenchHistoryEntries([{
+      ...entry,
+      report: {
+        ...entry.report,
+        warnings: ['Bearer private-token', 'a'.repeat(40)],
+      },
+    }] as never);
+    const restored = migrateBenchHistoryEntries(JSON.parse(serialized));
+    const originalWindow = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'window',
+    );
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { location: { origin: 'http://localhost:3000', search: '' } },
+    });
+    try {
+      expect(restored[0]?.report?.jobId).toBe(jobId);
+      const endpoint = getA2UIBenchReportEndpoint(restored[0]!.report!.jobId!);
+      expect(new URL(endpoint!).pathname).toBe(
+        `/a2ui/bench/jobs/${jobId}/report`,
+      );
+      expect(serialized).not.toContain('private-token');
+      expect(serialized).not.toContain('a'.repeat(40));
+    } finally {
+      if (originalWindow) {
+        Object.defineProperty(globalThis, 'window', originalWindow);
+      } else {
+        Reflect.deleteProperty(globalThis, 'window');
+      }
+    }
+  });
+
+  test('retains distinct redacted reports without constructing remote endpoints', () => {
+    const history = ['history-1', 'history-2'].map((id) => {
+      const entry = createCompletedHistoryEntry(id, '[redacted credential]');
+      entry.report.id = '[redacted credential]';
+      return entry;
+    });
+    const restored = migrateBenchHistoryEntries(
+      JSON.parse(serializeBenchHistoryEntries(history as never)),
+    );
+    expect(restored).toHaveLength(2);
+    for (const entry of restored) {
+      expect(entry.report).not.toBeNull();
+      expect(getA2UIBenchReportEndpoint(entry.report!.jobId!)).toBeNull();
+    }
+    expect(getBenchRunMessageText({ code: 'history-report-invalid-job-id' }))
+      .toContain('Saved report loaded');
+    expect(
+      upsertBenchHistoryEntry(restored, {
+        ...restored[0]!,
+        title: 'Updated saved report',
+      }).map((entry) => entry.id),
+    ).toEqual(['history-1', 'history-2']);
+  });
+
+  test('rejects invalid report link identifiers before resolving server URLs', () => {
+    for (
+      const jobId of ['[redacted credential]', '../report', 'not-a-job', '']
+    ) {
+      expect(getA2UIBenchReportEndpoint(jobId)).toBeNull();
+    }
   });
 
   test('saves a completed draft without replacing previous history', () => {

@@ -12,6 +12,7 @@ import {
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
 import { BenchPage } from './pages/bench/BenchPage.js';
+import { PublishedReportRoute } from './pages/bench/PublishedReportRoute.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
@@ -276,6 +277,14 @@ export function App() {
 
     switch (route.tab) {
       case 'bench': {
+        if (route.benchReportId !== undefined) {
+          return (
+            <PublishedReportRoute
+              key={route.benchReportId}
+              reportId={route.benchReportId}
+            />
+          );
+        }
         return <BenchPage key='bench' />;
       }
       case 'examples':
@@ -311,6 +320,7 @@ export function App() {
     embedded,
     protocol,
     route.tab,
+    route.benchReportId,
     route.componentName,
     route.demoId,
     theme,

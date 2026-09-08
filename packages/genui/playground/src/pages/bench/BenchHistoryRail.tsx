@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Button } from '../../components/Button.js';
 import {
-  Copy,
+  FileText,
   History,
   MessageSquarePlus,
   Trash2,
@@ -24,14 +24,15 @@ interface BenchHistoryRailEntry {
 
 export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
   activeId: string | null;
-  copyId: string | null;
   disabled: boolean;
   entries: readonly T[];
   onClear: () => void;
-  onCopy: (entry: T) => Promise<void> | void;
+  onOpenReport: (entry: T) => void;
   onDelete: (id: string) => void;
   onNew: () => void;
   onRestore: (entry: T) => void;
+  reportNotice?: string;
+  storageNotice?: string;
 }) {
   return (
     <aside className='benchHistoryRail' aria-label='Bench history'>
@@ -58,7 +59,6 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
             const totalRuns = entry.report?.summary?.totalRuns
               ?? entry.report?.results.length
               ?? 0;
-            const jobId = entry.report?.jobId;
             return (
               <article
                 className='benchHistoryRailItem'
@@ -86,11 +86,11 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
                     variant='ghost'
                     size='sm'
                     iconOnly
-                    iconBefore={Copy}
-                    disabled={props.disabled || !jobId}
-                    aria-label={`Copy recovery link for ${entry.title}`}
-                    title={props.copyId === entry.id ? 'Copied' : 'Copy link'}
-                    onClick={() => void props.onCopy(entry)}
+                    iconBefore={FileText}
+                    disabled={props.disabled || !entry.report}
+                    aria-label={`View report details for ${entry.title} (opens in a new tab)`}
+                    title='View report details in a new tab'
+                    onClick={() => props.onOpenReport(entry)}
                   />
                   <Button
                     variant='danger'
@@ -113,6 +113,16 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
             </div>
           )}
       </div>
+      {props.reportNotice && (
+        <p className='benchHistoryShareNotice' role='status'>
+          {props.reportNotice}
+        </p>
+      )}
+      {props.storageNotice && (
+        <p className='benchHistoryShareNotice' role='alert'>
+          {props.storageNotice}
+        </p>
+      )}
       <button
         type='button'
         className='benchHistoryRailClear'

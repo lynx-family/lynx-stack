@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from '@rstest/core';
 
-import { PHASE_TWO_PUBLISHED_REPORT } from './phaseTwoPublishedReport.js';
+import PUBLISHED_REPORT_FIXTURE from './data/phase-two-published.json';
 
 const METRIC_KEYS: readonly string[] = [
   'plannedRuns',
@@ -43,12 +43,12 @@ function expectAllowedKeys(
   const allowed = new Set([...required, ...optional]);
 
   expect(keys.filter((key) => !allowed.has(key))).toEqual([]);
-  expect(keys).toEqual(expect.arrayContaining(required));
+  expect(keys).toEqual(expect.arrayContaining([...required]));
 }
 
-describe('published Phase 2 benchmark artifact', () => {
+describe('published benchmark record', () => {
   it('publishes the complete canonical matched-core run', () => {
-    expect(PHASE_TWO_PUBLISHED_REPORT).toMatchObject({
+    expect(PUBLISHED_REPORT_FIXTURE).toMatchObject({
       larkUrl:
         'https://bytedance.larkoffice.com/docx/E6xPdVshBoV4bkxHGdwc5SoTnub',
       scope: {
@@ -69,12 +69,12 @@ describe('published Phase 2 benchmark artifact', () => {
       warnings: [],
     });
     expect(
-      PHASE_TWO_PUBLISHED_REPORT.pairs.every((pair) => pair.complete),
+      PUBLISHED_REPORT_FIXTURE.pairs.every((pair) => pair.complete),
     ).toBe(true);
   });
 
   it('publishes only the sampled repeat-1 screenshot assets', () => {
-    const screenshots = PHASE_TWO_PUBLISHED_REPORT.pairs.flatMap((pair) =>
+    const screenshots = PUBLISHED_REPORT_FIXTURE.pairs.flatMap((pair) =>
       (['a2ui', 'openui'] as const).flatMap((protocol) => {
         const screenshotUrl = pair.runs[protocol]?.screenshotUrl;
         return screenshotUrl
@@ -97,10 +97,10 @@ describe('published Phase 2 benchmark artifact', () => {
   });
 
   it('preserves the measured quality and efficiency trade-off', () => {
-    const a2ui = PHASE_TWO_PUBLISHED_REPORT.modelProtocols.find(
+    const a2ui = PUBLISHED_REPORT_FIXTURE.modelProtocols.find(
       (item) => item.protocol === 'a2ui',
     );
-    const openui = PHASE_TWO_PUBLISHED_REPORT.modelProtocols.find(
+    const openui = PUBLISHED_REPORT_FIXTURE.modelProtocols.find(
       (item) => item.protocol === 'openui',
     );
 
@@ -119,28 +119,30 @@ describe('published Phase 2 benchmark artifact', () => {
   });
 
   it('keeps publication caveats beside the measured data', () => {
-    expect(PHASE_TWO_PUBLISHED_REPORT.limitations).toEqual(
+    expect(PUBLISHED_REPORT_FIXTURE.limitations).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('3 个合成场景'),
-        expect.stringContaining('同一模型版本'),
-        expect.stringContaining('静态 Lynx 截图'),
+        expect.stringContaining('three synthetic scenarios'),
+        expect.stringContaining('same model version'),
+        expect.stringContaining('static Lynx screenshots'),
         expect.stringContaining('dirty worktree'),
         expect.stringContaining('Render evaluator'),
       ]),
     );
     expect(
-      PHASE_TWO_PUBLISHED_REPORT.limitations.filter((limitation) =>
+      PUBLISHED_REPORT_FIXTURE.limitations.filter((limitation) =>
         limitation.includes('Render')
       ),
     ).toEqual([
-      '独立 Render evaluator 未启用；本报告不能推导 Render、FMP 或 TTI。',
+      'The independent Render evaluator was disabled; this report cannot infer Render, FMP, or TTI.',
     ]);
   });
 
   it('contains only the sanitized publication allow-list', () => {
-    expectAllowedKeys(PHASE_TWO_PUBLISHED_REPORT, [
+    expectAllowedKeys(PUBLISHED_REPORT_FIXTURE, [
       'schemaVersion',
       'title',
+      'description',
+      'screenshotBasePath',
       'larkUrl',
       'sources',
       'scope',
@@ -153,7 +155,7 @@ describe('published Phase 2 benchmark artifact', () => {
       'warnings',
       'limitations',
     ]);
-    expectAllowedKeys(PHASE_TWO_PUBLISHED_REPORT.scope, [
+    expectAllowedKeys(PUBLISHED_REPORT_FIXTURE.scope, [
       'reportCount',
       'completeReportCount',
       'modelCount',
@@ -163,8 +165,8 @@ describe('published Phase 2 benchmark artifact', () => {
       'runCount',
       'failedRuns',
     ]);
-    expectAllowedKeys(PHASE_TWO_PUBLISHED_REPORT.summary, METRIC_KEYS);
-    expectAllowedKeys(PHASE_TWO_PUBLISHED_REPORT.methodology, [
+    expectAllowedKeys(PUBLISHED_REPORT_FIXTURE.summary, METRIC_KEYS);
+    expectAllowedKeys(PUBLISHED_REPORT_FIXTURE.methodology, [
       'modes',
       'capabilityProfiles',
       'protocolVersions',
@@ -177,11 +179,11 @@ describe('published Phase 2 benchmark artifact', () => {
       'judgeEnabled',
     ]);
     expectAllowedKeys(
-      PHASE_TWO_PUBLISHED_REPORT.methodology.protocolVersions,
+      PUBLISHED_REPORT_FIXTURE.methodology.protocolVersions,
       ['a2ui', 'openui'],
     );
 
-    for (const source of PHASE_TWO_PUBLISHED_REPORT.sources) {
+    for (const source of PUBLISHED_REPORT_FIXTURE.sources) {
       expectAllowedKeys(source, [
         'id',
         'jobId',
@@ -195,7 +197,7 @@ describe('published Phase 2 benchmark artifact', () => {
       ]);
     }
 
-    for (const model of PHASE_TWO_PUBLISHED_REPORT.models) {
+    for (const model of PUBLISHED_REPORT_FIXTURE.models) {
       expectAllowedKeys(model, ['model', 'metrics', 'protocols']);
       expectAllowedKeys(model.metrics, METRIC_KEYS);
       for (const protocol of model.protocols) {
@@ -204,7 +206,7 @@ describe('published Phase 2 benchmark artifact', () => {
       }
     }
 
-    for (const modelProtocol of PHASE_TWO_PUBLISHED_REPORT.modelProtocols) {
+    for (const modelProtocol of PUBLISHED_REPORT_FIXTURE.modelProtocols) {
       expectAllowedKeys(modelProtocol, [
         'id',
         'model',
@@ -214,7 +216,7 @@ describe('published Phase 2 benchmark artifact', () => {
       expectAllowedKeys(modelProtocol.metrics, METRIC_KEYS);
     }
 
-    for (const scenario of PHASE_TWO_PUBLISHED_REPORT.scenarios) {
+    for (const scenario of PUBLISHED_REPORT_FIXTURE.scenarios) {
       expectAllowedKeys(scenario, [
         'id',
         'name',
@@ -243,7 +245,7 @@ describe('published Phase 2 benchmark artifact', () => {
       }
     }
 
-    for (const pair of PHASE_TWO_PUBLISHED_REPORT.pairs) {
+    for (const pair of PUBLISHED_REPORT_FIXTURE.pairs) {
       expectAllowedKeys(pair, [
         'id',
         'sourceReportId',
@@ -295,16 +297,16 @@ describe('published Phase 2 benchmark artifact', () => {
   });
 
   it('does not expose raw endpoints, credentials, or source identities', () => {
-    const serialized = JSON.stringify(PHASE_TWO_PUBLISHED_REPORT);
+    const serialized = JSON.stringify(PUBLISHED_REPORT_FIXTURE);
     const urls = serialized.match(/https?:\/\/[^"\\]+/g) ?? [];
 
-    expect(PHASE_TWO_PUBLISHED_REPORT.sources).toEqual([
+    expect(PUBLISHED_REPORT_FIXTURE.sources).toEqual([
       expect.objectContaining({
         id: 'phase-two-formal-source-1',
         jobId: 'phase-two-formal-2026-07-30',
       }),
     ]);
-    expect(urls).toEqual([PHASE_TWO_PUBLISHED_REPORT.larkUrl]);
+    expect(urls).toEqual([PUBLISHED_REPORT_FIXTURE.larkUrl]);
     expect(serialized).not.toMatch(
       /OPENAI_API_KEY|api[_-]?key|authorization|bearer\s|private-provider|internal-provider|baseURLs?|base\s+urls?/i,
     );

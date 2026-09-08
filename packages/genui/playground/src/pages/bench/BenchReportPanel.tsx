@@ -7,7 +7,7 @@ import { findComparableBaseline } from './benchData.js';
 import type { BenchSettings } from './benchData.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
 import { Button } from '../../components/Button.js';
-import { Copy, Maximize2, Sparkles } from '../../components/Icon.js';
+import { FileText, Maximize2, Sparkles } from '../../components/Icon.js';
 import { PageHeader } from '../../components/PageHeader.js';
 
 function formatMs(value: number): string {
@@ -76,8 +76,7 @@ function getScreenshotSummary(
 }
 
 export function BenchReportPanel(props: {
-  copyState: 'copied' | 'idle';
-  onCopy: () => Promise<void> | void;
+  onOpenReport?: () => void;
   onOpenScreenshots: () => void;
   report: BenchReport | null;
   reportIsStale: boolean;
@@ -144,11 +143,13 @@ export function BenchReportPanel(props: {
             <Button
               variant='secondary'
               size='sm'
-              iconBefore={Copy}
-              disabled={!props.report}
-              onClick={() => void props.onCopy()}
+              iconBefore={FileText}
+              disabled={!props.report || !props.onOpenReport}
+              aria-label='View report details (opens in a new tab)'
+              title='View report details in a new tab'
+              onClick={props.onOpenReport}
             >
-              {props.copyState === 'copied' ? 'Copied' : 'JSON'}
+              View details
             </Button>
           </div>
         }
