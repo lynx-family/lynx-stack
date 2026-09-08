@@ -12,6 +12,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { generate, parseNativeModules, runCodegen } from '../src/index.js';
 
 const tempDirs: string[] = [];
+const lynxtronArtifacts = {
+  targets: [
+    {
+      os: 'darwin',
+      arch: 'arm64',
+      files: ['dist/native.node'],
+    },
+  ],
+};
 
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) {
@@ -161,7 +170,7 @@ export declare class FormattedModule {
             packageName: 'com.example.scanner',
             nodeApiAddons: [{ name: 'ScannerModule' }],
           },
-          lynxtron: { path: 'dist' },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -433,9 +442,7 @@ export declare class StorageModule {
           ios: {
             sourceDir: 'ios',
           },
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -856,9 +863,7 @@ export declare class StorageNapiModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -899,9 +904,7 @@ export declare class ScannerModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -934,9 +937,7 @@ export declare class SecondModule {
             packageName: 'com.example.storage',
           },
           ios: {},
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -1012,9 +1013,7 @@ export declare class StorageNapiModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -1086,9 +1085,7 @@ export declare class StorageModule {
     const root = createFixture({
       manifest: {
         platforms: {
-          lynxtron: {
-            path: 'dist',
-          },
+          lynxtron: lynxtronArtifacts,
         },
       },
       types: '',
@@ -1265,6 +1262,245 @@ export declare class StorageModule {
 
     expect(() => generate({ root })).toThrow(
       /platforms\.android\.sourceDir/,
+    );
+  });
+
+  it('accepts Lynxtron runtime target declarations', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                files: ['dist/darwin/arm64/canvas.dylib'],
+                frameworks: [
+                  'dist/darwin/arm64/Canvas.framework',
+                ],
+                appBundles: [
+                  'dist/darwin/arm64/Canvas Helper.app',
+                ],
+              },
+              {
+                os: 'win32',
+                arch: 'x64',
+                files: ['dist/win32/x64/canvas.dll'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).not.toThrow();
+  });
+
+  it('rejects Lynxtron app bundles outside darwin targets', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'win32',
+                arch: 'x64',
+                appBundles: ['dist/win32/x64/Canvas Helper.app'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /only supports.*appBundles.*darwin targets/,
+    );
+  });
+
+  it('rejects malformed Lynxtron app bundle paths', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                appBundles: ['dist/darwin/arm64/Canvas Helper'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /appBundles.*path to end in \.app/,
+    );
+  });
+
+  it.each(['binaries', 'resources'])(
+    'rejects the legacy Lynxtron %s category',
+    (field) => {
+      const root = createFixture({
+        manifest: {
+          platforms: {
+            lynxtron: {
+              targets: [
+                {
+                  os: 'win32',
+                  arch: 'x64',
+                  [field]: ['dist/win32/x64/canvas.node'],
+                },
+              ],
+            },
+          },
+        },
+        types: '',
+      });
+
+      expect(() => generate({ root })).toThrow(
+        new RegExp(`does not support.*${field}.*use.*\\.files`),
+      );
+    },
+  );
+
+  it('rejects opaque Lynxtron artifact roots', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            path: 'dist',
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /does not support.*lynxtron\.path.*lynxtron\.targets/,
+    );
+  });
+
+  it('rejects Lynxtron artifacts outside targets', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            binary: {
+              os: 'darwin',
+              arch: 'arm64',
+              path: 'dist/darwin/arm64/canvas.dylib',
+            },
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /requires files, frameworks, and appBundles inside.*lynxtron\.targets/,
+    );
+  });
+
+  it('rejects misspelled Lynxtron architecture selectors', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                arc: 'arm64',
+                files: ['dist/darwin/arm64/canvas.dylib'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /does not support.*lynxtron\.targets\[0\]\.arc.*arch/,
+    );
+  });
+
+  it('rejects malformed Lynxtron framework declarations', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                frameworks: ['dist/darwin/arm64/frameworks'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /platforms\.lynxtron\.targets\[0\]\.arch/,
+    );
+  });
+
+  it('requires Lynxtron framework paths to identify macOS bundles', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                frameworks: ['dist/darwin/arm64/frameworks'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /frameworks.*path to end in \.framework/,
+    );
+  });
+
+  it('rejects duplicate Lynxtron runtime targets', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          lynxtron: {
+            targets: [
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                files: ['dist/first.node'],
+              },
+              {
+                os: 'darwin',
+                arch: 'arm64',
+                files: ['dist/second.node'],
+              },
+            ],
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /duplicate Lynxtron target "darwin\/arm64"/,
     );
   });
 
