@@ -1673,6 +1673,28 @@ describe('Element APIs', () => {
     expect(mtsBinding.publishEvent).toBeCalledTimes(1);
   });
 
+  test.each(['bindevent', 'global-bindevent'])(
+    '%s on a page child publishes a page event',
+    (eventType) => {
+      const page = mtsGlobalThis.__CreatePage('0', 0);
+      const child = mtsGlobalThis.__CreateView(
+        mtsGlobalThis.__GetElementUniqueID(page),
+      );
+      mtsGlobalThis.__AppendElement(page, child);
+      mtsGlobalThis.__AddEvent(child, eventType, 'tap', 'handler');
+      mtsGlobalThis.__FlushElementTree();
+
+      child.dispatchEvent(new window.Event('click', { bubbles: true }));
+
+      const { backgroundThread } = mtsBinding.lynxViewInstance;
+      expect(backgroundThread.publishEvent).toHaveBeenCalledWith(
+        'handler',
+        expect.any(Object),
+      );
+      expect(backgroundThread.publicComponentEvent).not.toHaveBeenCalled();
+    },
+  );
+
   test('publicComponentEvent', () => {
     rstest.spyOn(mtsBinding, 'addEventListener');
     rstest.spyOn(mtsBinding, 'publishEvent');
