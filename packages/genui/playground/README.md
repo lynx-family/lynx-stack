@@ -152,16 +152,21 @@ configured explicitly. See the
 [Volcengine Ark image-generation API](https://www.volcengine.com/docs/82379/1541523?lang=zh)
 for model/endpoint setup.
 
-When `SEARCH_INFINITY_API_KEY` is configured, the A2UI agent can call the
-server-side `web_search` and `image_search` tools. Web search retrieves current
+When `SEARCH_INFINITY_API_KEY` is configured, A2UI, OpenUI, Lynx XML, HTML,
+and MCP Apps generation agents can call the same server-side `web_search`
+and `image_search` tools. Web search retrieves current
 or explicitly requested public-web information; image search returns existing
-image URLs with source and quality metadata. The agent prefers image search
-before image generation unless the user explicitly requests original generated
-artwork. The key is never sent to the Playground. Each generation may perform
+image URLs with source and quality metadata. All generation agents can use
+searched images. A2UI additionally supports image generation, preferring image
+search unless the user explicitly requests original generated artwork. The key
+is never sent to the Playground. Each generation may perform
 at most three searches combined across the initial response and validation
-repairs; each call returns at most five normalized results. Source links and
-image URLs must come from the user input or the current request's trusted tool
-scope. The server uses the Custom search API so both subscription-plan and
+repairs; each call returns at most five normalized results. Agents are instructed
+to use source links and image URLs from user/host
+input or the current request's tool results; A2UI additionally enforces source
+provenance during streaming and final validation. Search is disabled for both
+A2UI and OpenUI Bench runs. `generate_image` remains A2UI-only. The server uses
+the Custom search API so both subscription-plan and
 post-paid keys are supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
 and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.

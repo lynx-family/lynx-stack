@@ -5,15 +5,15 @@
 import { createHtmlAgent } from '../../agent/html/html-agent.js';
 import type { HtmlAgent } from '../../agent/html/html-agent.js';
 import {
+  buildSearchRunOptions,
+  pickSearchAgentConfig,
+} from '../common/agent-capabilities.js';
+import {
   buildConversationMessages,
   sumContentChars,
   toModelMessages,
 } from '../common/messages.js';
-import {
-  ProviderAgentCache,
-  buildResourceRunOptions,
-  pickProviderConfig,
-} from '../common/provider.js';
+import { ProviderAgentCache } from '../common/provider.js';
 import {
   extractGenerationResult,
   finalizeResult,
@@ -33,7 +33,8 @@ export default class HtmlAgentService {
   private readonly agentCache = new ProviderAgentCache<HtmlAgent>();
 
   private getAgent(opts: HtmlChatOptions): Promise<HtmlAgent> {
-    const createAgent = () => createHtmlAgent(pickProviderConfig(opts)).agent;
+    const createAgent = () =>
+      createHtmlAgent(pickSearchAgentConfig(opts)).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(opts, createAgent);
   }
@@ -58,7 +59,7 @@ export default class HtmlAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = await agent.stream(
       modelMessages,
-      buildResourceRunOptions(opts, abortSignal),
+      buildSearchRunOptions(opts, abortSignal),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -112,7 +113,7 @@ export default class HtmlAgentService {
     abortSignal?.throwIfAborted();
     const result = await agent.generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
-      buildResourceRunOptions(opts, abortSignal),
+      buildSearchRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

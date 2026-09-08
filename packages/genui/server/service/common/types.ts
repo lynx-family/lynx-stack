@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { SearchCapabilityOptions } from '../../agent/common/search-capability.js';
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -20,7 +22,7 @@ export type OpenAIReasoningEffort =
   | 'high'
   | 'xhigh';
 
-export interface ChatOptions {
+export interface ChatOptions extends SearchCapabilityOptions {
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;

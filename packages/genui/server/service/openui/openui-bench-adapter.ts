@@ -376,6 +376,7 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
       generated = await this.generateRaw(input.messages, {
         ...input.provider,
         disableAgentCache: true,
+        enableWebSearch: false,
         inheritReasoningEffort: false,
         resourceId: input.resourceId,
         promptComponentNames: OPENUI_BENCH_MATCHED_COMPONENTS,

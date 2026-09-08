@@ -9,13 +9,10 @@ import { loadBasicCatalog } from './a2ui-catalog.js';
 import { buildA2UISystemPrompt } from './a2ui-prompt.js';
 import type { ArkImageGenerationRunScope } from '../common/ark-image-generation-tool.js';
 import { createArkImageGenerationTool } from '../common/ark-image-generation-tool.js';
-import {
-  createOptionalDoubaoImageSearchTool,
-  createOptionalDoubaoSearchTool,
-} from '../common/doubao-search-tool.js';
 import { getA2UIMastra } from '../common/mastra.js';
 import { createLLMProvider } from '../common/openai-provider.js';
-import type { OpenAIProviderOptions } from '../common/openai-provider.js';
+import { createSearchCapability } from '../common/search-capability.js';
+import type { SearchAgentOptions } from '../common/search-capability.js';
 
 const IMAGE_GENERATION_TOOL_INSTRUCTIONS = `## Image generation tool
 
@@ -37,35 +34,8 @@ distinct images needed and reuse a returned URL when appropriate. If the tool
 fails, replace or remove the pending image presentation using other catalog
 components; do not leave a permanent Loading component.`;
 
-const IMAGE_SEARCH_TOOL_INSTRUCTIONS = `## Image search tool
-
-When the UI needs or would materially benefit from an image, call image_search
-before generate_image. The only exception is when the user explicitly asks for
-new, original, generated artwork; in that case, call generate_image directly.
-Use one focused query that describes the subject and useful visual qualities.
-Prefer a relevant, clear, high-resolution result without a watermark when the
-returned metadata makes that choice possible.
-
-Copy the selected imageUrl exactly into Image.url or the bound data-model
-field. Use sourceUrl, when present, only for a related openUrl action. Never
-invent, rewrite, or proxy either URL. If image_search fails or returns no
-suitable result, fall back to generate_image. Reuse a suitable returned image
-instead of repeating the same search or generating a replacement.`;
-
-const WEB_SEARCH_TOOL_INSTRUCTIONS = `## Web search tool
-
-Call web_search only when the user explicitly asks to search the web or when
-the requested UI depends on current or externally verifiable information. Do
-not search for ordinary static UI generation. Use focused queries and make no
-more calls than necessary. Ground factual content in the returned results,
-preserve source titles and URLs exactly, and use openUrl only with URLs returned
-by the tool or supplied by the user. The tool returns text and source metadata,
-not images. If search fails or returns no useful results, do not invent facts or
-citations; present an honest unavailable or empty state instead.`;
-
-export interface A2UIAgentOptions extends OpenAIProviderOptions {
+export interface A2UIAgentOptions extends SearchAgentOptions {
   catalog?: A2UICatalog | undefined;
-  enableWebSearch?: boolean | undefined;
   systemAppendix?: string | undefined;
 }
 
@@ -99,15 +69,11 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
 
   const catalog = opts.catalog ?? await loadBasicCatalog();
-  const webSearch = createOptionalDoubaoSearchTool(opts.enableWebSearch);
-  const imageSearch = createOptionalDoubaoImageSearchTool(
-    opts.enableWebSearch,
-  );
+  const search = createSearchCapability(opts, true);
   const appendix = [
     opts.systemAppendix,
-    imageSearch ? IMAGE_SEARCH_TOOL_INSTRUCTIONS : undefined,
+    search.instructions,
     IMAGE_GENERATION_TOOL_INSTRUCTIONS,
-    webSearch ? WEB_SEARCH_TOOL_INSTRUCTIONS : undefined,
   ]
     .filter((part): part is string => Boolean(part))
     .join('\n\n');
@@ -125,9 +91,8 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
     mastra: getA2UIMastra(),
     model: buildModel(model),
     tools: {
-      ...(imageSearch ? { image_search: imageSearch } : {}),
+      ...search.tools,
       generate_image: generateImage,
-      ...(webSearch ? { web_search: webSearch } : {}),
     },
     defaultOptions: {
       maxSteps: 5,

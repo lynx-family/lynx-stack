@@ -58,8 +58,6 @@ import type {
 
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
-  /** Disable non-deterministic web and image search for controlled runs. */
-  enableWebSearch?: boolean | undefined;
   maxRepairAttempts?: number | undefined;
 }
 
@@ -142,7 +140,6 @@ export default class A2UIAgentService {
       `${catalog.id}:${
         createStableValueHash({
           catalog,
-          enableWebSearch: opts.enableWebSearch,
         })
       }`,
     );

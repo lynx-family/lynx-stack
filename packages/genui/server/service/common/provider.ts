@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto';
 
 import { readModelConfig } from './model-config.js';
-import type { ChatOptions, OpenAIReasoningEffort } from './types';
+import type { ChatOptions, OpenAIReasoningEffort } from './types.js';
 
 const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'none',
@@ -65,6 +65,7 @@ function createProviderCacheKey(
     opts.model ?? 'default',
     hashApiKey(opts.apiKey),
     opts.api ?? 'default',
+    opts.enableWebSearch === false ? 'search-disabled' : 'search-enabled',
   ].join(':');
   return variant === undefined ? baseKey : `${baseKey}:${variant}`;
 }
