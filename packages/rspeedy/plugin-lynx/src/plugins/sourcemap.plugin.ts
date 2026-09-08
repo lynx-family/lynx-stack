@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type {
+  EnvironmentConfig,
   RsbuildConfig,
   RsbuildPlugin,
   Rspack,
@@ -20,15 +21,32 @@ export function pluginSourcemap(): RsbuildPlugin {
     name: 'lynx:rsbuild:sourcemap',
     pre: ['lynx:rsbuild:dev'],
     setup(api) {
-      api.modifyEnvironmentConfig((config, { name }) => {
-        if (
-          !isLynx(name)
-          || hasCSSSourceMapConfigured(api.getRsbuildConfig('original'), name)
-          || typeof config.output.sourceMap !== 'object'
-        ) {
-          return
-        }
-        config.output.sourceMap = { ...config.output.sourceMap, css: true }
+      api.modifyRsbuildConfig({
+        handler: (config, { mergeRsbuildConfig }) => {
+          if (hasCSSSourceMapConfigured(api.getRsbuildConfig('original'))) {
+            return config
+          }
+          return mergeRsbuildConfig(config, {
+            output: { sourceMap: { css: true } },
+          })
+        },
+        order: 'pre',
+      })
+
+      api.modifyRsbuildConfig({
+        handler: (config, { mergeRsbuildConfig }) => {
+          const original = api.getRsbuildConfig('original')
+          const environments: Record<string, EnvironmentConfig> = {}
+
+          for (const name of Object.keys(config.environments ?? {})) {
+            if (!isLynx(name) && !hasCSSSourceMapConfigured(original, name)) {
+              environments[name] = { output: { sourceMap: { css: false } } }
+            }
+          }
+
+          return mergeRsbuildConfig(config, { environments })
+        },
+        order: 'post',
       })
 
       api.modifyBundlerChain((chain, { isDev, environment }) => {
@@ -91,10 +109,12 @@ export function pluginSourcemap(): RsbuildPlugin {
 
 function hasCSSSourceMapConfigured(
   config: RsbuildConfig,
-  environment: string,
+  environment?: string,
 ): boolean {
   return [
-    config.environments?.[environment]?.output?.sourceMap,
+    environment === undefined
+      ? undefined
+      : config.environments?.[environment]?.output?.sourceMap,
     config.output?.sourceMap,
   ].some(sourceMap =>
     typeof sourceMap === 'boolean' || sourceMap?.css !== undefined
