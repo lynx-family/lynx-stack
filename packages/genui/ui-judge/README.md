@@ -169,20 +169,37 @@ Use `GET /health` for a readiness check and the non-secret configured model
 name. Use `POST /compare` to compare two uploaded images without rendering a
 page or calling the VLM. Screenshot capture uses four source-specific routes:
 
-- `POST /screenshot/zip/upload` accepts a raw ZIP body.
-- `POST /screenshot/zip/url` fetches a ZIP from the HTTP(S) URL in its
-  `text/plain` body.
-- `POST /screenshot/lynxml` accepts a raw UTF-8 LynXML body.
-- `POST /screenshot/template/url` fetches a compiled `template.js` from the
-  HTTP(S) URL in its `text/plain` body.
+All four screenshot routes accept `multipart/form-data`. Put every parameter in
+a named part; query parameters and the former raw request bodies are rejected.
 
-Every screenshot route uses the same query parameters. `entry` is required and
-may be a relative staged path such as `pages/index.lynxml` or the equivalent
-`zip:///pages/index.lynxml` URL. Optional `width` and `height` parameters set the
-viewport dimensions; omitted values default to `800` and `600`, respectively.
+| Route                           | Required source part                 |
+| ------------------------------- | ------------------------------------ |
+| `POST /screenshot/lynxml`       | `source`: UTF-8 LynXML text or file  |
+| `POST /screenshot/template/url` | `url`: HTTP(S) compiled-template URL |
+| `POST /screenshot/zip/upload`   | `file`: ZIP archive bytes            |
+| `POST /screenshot/zip/url`      | `url`: HTTP(S) ZIP URL               |
+
+Every screenshot route accepts these additional parts:
+
+| Part          | Required | Value                                                                                                |
+| ------------- | -------- | ---------------------------------------------------------------------------------------------------- |
+| `entry`       | Yes      | Relative staged path such as `pages/index.lynxml`, or the equivalent `zip:///pages/index.lynxml` URL |
+| `width`       | No       | Viewport width in pixels; defaults to `800`                                                          |
+| `height`      | No       | Viewport height in pixels; defaults to `600`                                                         |
+| `globalProps` | No       | JSON object passed as global properties when loading a compiled template                             |
+| `initData`    | No       | JSON object passed as initial page data                                                              |
+
 Both dimensions must be between 1 and 8192, and `width × height` must not exceed
-2,621,440 pixels. The server does not expose the former generic screenshot
-route, `POST /screenshot`.
+2,621,440 pixels. Omit page-data parts to use the runtime defaults. JSON parts
+accept objects, including nested values; arrays, scalars, and `null` are rejected.
+LynXML supports `initData` but its native loading API does not support
+`globalProps`. An explicit `globalProps` part with a `.lynxml` entry returns `400`,
+including for ZIP sources. Compiled-template entries support both parts.
+
+Parts may appear in any order. Duplicate, unknown, and missing required parts
+return `400`. All part contents share a 10 MiB limit, with another 64 KiB allowed
+for multipart framing. The complete body has a ten-second read deadline.
+The server does not expose the former generic screenshot route, `POST /screenshot`.
 
 The server does not allow direct page navigation. `POST /judge` accepts an
 HTTP(S) `url` as a remote compiled-template source, fetches it through the same
@@ -205,15 +222,16 @@ curl --request POST http://127.0.0.1:8080/judge \
   }'
 ```
 
-To render a LynXML string without auxiliary local files, send it directly as
-the request body. The endpoint accepts `application/xml`, `text/xml`, and
-`text/plain`, buffers at most 10 MiB, and returns `image/bmp` with
-`Cache-Control: no-store`:
+To render a LynXML string without auxiliary local files, send a `source` part.
+A successful response is `image/bmp` with `Cache-Control: no-store`:
 
 ```bash
-curl --request POST 'http://127.0.0.1:8080/screenshot/lynxml?entry=pages%2Findex.lynxml&width=375&height=812' \
-  --header 'content-type: application/xml; charset=utf-8' \
-  --data-binary '<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
+curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
+  --form-string 'entry=pages/index.lynxml' \
+  --form-string 'width=375' \
+  --form-string 'height=812' \
+  --form-string 'initData={"title":"Preview"}' \
+  --form-string 'source=<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
   --output screenshot.bmp
 ```
 
@@ -224,14 +242,16 @@ remain available, while `file://`, IP-hosted HTTP(S), and paths outside that
 private directory remain blocked. Use a ZIP endpoint when the document needs
 relative image or script files.
 
-To render an uploaded ZIP without scoring it, send the archive itself as the
-request body and pass its entrypoint through `entry`. The route does not accept
-a caller-supplied base directory, model options, or interaction steps:
+To render an uploaded ZIP without scoring it, send the archive in `file` and
+its entrypoint in `entry`. The route does not accept a caller-supplied base
+directory, model options, or interaction steps:
 
 ```bash
-curl --request POST 'http://127.0.0.1:8080/screenshot/zip/upload?entry=index.lynxml' \
-  --header 'content-type: application/zip' \
-  --data-binary '@/absolute/path/to/page.zip' \
+curl --request POST http://127.0.0.1:8080/screenshot/zip/upload \
+  --form-string 'entry=template.js' \
+  --form 'file=@/absolute/path/to/page.zip;type=application/zip' \
+  --form-string 'globalProps={"theme":"dark"}' \
+  --form-string 'initData={"title":"Preview"}' \
   --output screenshot.bmp
 ```
 
@@ -243,21 +263,36 @@ HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
 hosts remain available. A successful response is `200 image/bmp` with
 `Cache-Control: no-store`.
 
-To fetch the same ZIP remotely, send its URL as the plain-text request body:
+To fetch a ZIP remotely, send its URL in `url`:
 
 ```bash
-curl --request POST 'http://127.0.0.1:8080/screenshot/zip/url?entry=index.lynxml' \
-  --header 'content-type: text/plain; charset=utf-8' \
-  --data-binary 'https://cdn.example.com/page.zip' \
+curl --request POST http://127.0.0.1:8080/screenshot/zip/url \
+  --form-string 'entry=index.lynxml' \
+  --form-string 'url=https://cdn.example.com/page.zip' \
+  --form-string 'initData={"title":"Preview"}' \
   --output screenshot.bmp
 ```
 
-The template URL route uses the same request shape, with an entry such as
-`main/template.js`. Both URL routes use the shared SSRF-safe downloader. It
-accepts only HTTP(S) URLs without credentials, disables redirects and ambient
-proxies, resolves DNS before connecting, pins the validated addresses for the
-request, and rejects any host that resolves to a non-public address. Remote
-responses are limited to 10 MiB; URL request bodies are limited to 8 KiB.
+To render a remote compiled template with global properties and initial data:
+
+```bash
+curl --request POST http://127.0.0.1:8080/screenshot/template/url \
+  --form-string 'entry=main/template.js' \
+  --form-string 'url=https://cdn.example.com/template.js' \
+  --form-string 'globalProps={"theme":"dark"}' \
+  --form-string 'initData={"title":"Preview"}' \
+  --output screenshot.bmp
+```
+
+For large JSON objects, read the part from a file, for example
+`--form 'globalProps=</absolute/path/to/global-props.json;type=application/json'`.
+Let your HTTP client generate the multipart boundary and `Content-Type` header.
+
+Both URL routes use the shared SSRF-safe downloader. It accepts only HTTP(S)
+URLs without credentials, disables redirects and ambient proxies, resolves DNS
+before connecting, pins the validated addresses for the request, and rejects
+any host that resolves to a non-public address. Remote responses are limited
+to 10 MiB; `url` parts are limited to 8 KiB.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two images as `multipart/form-data`:
@@ -317,8 +352,9 @@ dump. The same absolute deadline also covers output reading.
 
 The `server` feature exposes `ui_judge::server::zip` for server adapters that
 accept user-supplied Lynx projects and backs both ZIP screenshot routes. The
-upload route buffers the raw request body with a ten-second deadline, stops at
-10 MiB, and never accepts a caller-provided base directory. The URL route
+upload route reads multipart parts with a ten-second deadline and a shared
+10 MiB content limit, plus 64 KiB for framing. It never accepts a caller-provided
+base directory. The URL route
 applies the same byte limit before passing the response to the staging module.
 It then waits asynchronously for isolated-render capacity before extracting. The
 module parses the content as ZIP regardless of its filename, rejects encrypted
