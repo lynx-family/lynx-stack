@@ -9,6 +9,7 @@ import {
 import type { HtmlFragmentScriptRunScope } from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
 import { createLynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
 import type { LynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
+import { pickSearchAgentConfig } from '../common/agent-capabilities.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -17,7 +18,6 @@ import {
 import {
   ProviderAgentCache,
   buildResourceRunOptions,
-  pickProviderConfig,
   resolveModelOutputTokenBudget,
 } from '../common/provider.js';
 import {
@@ -83,7 +83,7 @@ export default class LynxXmlAgentService {
 
   private getAgent(opts: LynxXmlChatOptions): Promise<LynxXmlAgent> {
     const createAgent = () =>
-      createLynxXmlAgent(pickProviderConfig(opts)).agent;
+      createLynxXmlAgent(pickSearchAgentConfig(opts)).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(opts, createAgent);
   }

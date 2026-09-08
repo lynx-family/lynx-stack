@@ -4,8 +4,10 @@
 
 import { Agent } from '@mastra/core/agent';
 
+import type { SearchRunScope } from '../common/doubao-search-tool.js';
 import { createLLMProvider } from '../common/openai-provider.js';
-import type { OpenAIProviderOptions } from '../common/openai-provider.js';
+import { createSearchCapability } from '../common/search-capability.js';
+import type { SearchAgentOptions } from '../common/search-capability.js';
 
 const MCP_APPS_AGENT_INSTRUCTIONS = `You are an MCP Apps routing agent.
 
@@ -21,16 +23,31 @@ Never invent a tool name, resource URI, schema field, or tool result. The host
 executes the selected tool and renders its predeclared ui:// resource.`;
 
 export interface McpAppsAgent {
-  generate: (messages: unknown, options?: { resourceId?: string }) => unknown;
+  generate: (
+    messages: unknown,
+    options?: {
+      resourceId?: string;
+      abortSignal?: AbortSignal | undefined;
+      requestContext?: SearchRunScope['requestContext'] | undefined;
+    },
+  ) => unknown;
 }
 
-export function createMcpAppsAgent(opts: OpenAIProviderOptions = {}) {
+export function createMcpAppsAgent(opts: SearchAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
+  const search = createSearchCapability(opts);
   const agent = new Agent({
     id: 'mcp-apps-agent',
     name: 'McpAppsAgent',
-    instructions: MCP_APPS_AGENT_INSTRUCTIONS,
+    instructions: [MCP_APPS_AGENT_INSTRUCTIONS, search.instructions].filter(
+      Boolean,
+    ).join('\n\n'),
     model: buildModel(model),
+    tools: search.tools,
+    defaultOptions: {
+      maxSteps: 5,
+      toolCallConcurrency: 3,
+    },
   }) as unknown as McpAppsAgent;
   return { agent, model };
 }
