@@ -464,6 +464,7 @@ export async function runBenchUiJudgeRequest(
     const contentType = response.headers.get('content-type')?.split(';')[0]
       ?.trim();
     if (contentType !== 'image/bmp') {
+      await response.body?.cancel().catch(() => undefined);
       throw new Error('Expected a BMP screenshot.');
     }
     const bmp = await readScreenshotBytes(response, requestSignal);
@@ -550,6 +551,7 @@ async function readScreenshotBytes(
 ): Promise<Buffer> {
   const limit = 10 * 1024 * 1024 + 1024;
   if (Number(response.headers.get('content-length')) > limit) {
+    await response.body?.cancel().catch(() => undefined);
     throw new Error('Screenshot too large.');
   }
   const reader = response.body?.getReader();

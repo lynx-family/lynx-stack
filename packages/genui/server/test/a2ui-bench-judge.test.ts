@@ -864,6 +864,66 @@ describe('screenshot evaluation boundary', () => {
     expect(evaluate).not.toHaveBeenCalled();
   });
 
+  for (
+    const [reason, headers] of [
+      ['an unexpected content type', { 'Content-Type': 'image/png' }],
+      ['an oversized content length', {
+        'Content-Type': 'image/bmp',
+        'Content-Length': String(10 * 1024 * 1024 + 1025),
+      }],
+    ] as const
+  ) {
+    test(`cancels the unread body for ${reason}`, async () => {
+      for (const rejectCancellation of [false, true]) {
+        const cancel = rstest.fn(() =>
+          rejectCancellation
+            ? Promise.reject(new Error('Cleanup failed.'))
+            : Promise.resolve()
+        );
+        const pull = rstest.fn();
+        const evaluate = rstest.fn();
+        const response = new Response(
+          new ReadableStream({ cancel, pull }, { highWaterMark: 0 }),
+          { headers },
+        );
+        const result = await runBenchUiJudgeRequest(
+          {
+            globalProps: {},
+            scenario: { prompt: 'Build a greeting' },
+            session,
+          },
+          () => Promise.resolve(response),
+          evaluate,
+        );
+
+        expect(result).toMatchObject({
+          status: 'failed',
+          score: 0,
+          errors: ['GenUI screenshot evaluation failed.'],
+        });
+        expect(cancel).toHaveBeenCalledTimes(1);
+        expect(pull).not.toHaveBeenCalled();
+        expect(response.bodyUsed).toBe(true);
+        expect(evaluate).not.toHaveBeenCalled();
+      }
+    });
+
+    test(`rejects ${reason} when the response body is absent`, async () => {
+      const evaluate = rstest.fn();
+      const result = await runBenchUiJudgeRequest(
+        { globalProps: {}, scenario: { prompt: 'Build a greeting' }, session },
+        () => Promise.resolve(new Response(null, { headers })),
+        evaluate,
+      );
+      expect(result).toMatchObject({
+        status: 'failed',
+        score: 0,
+        errors: ['GenUI screenshot evaluation failed.'],
+      });
+      expect(evaluate).not.toHaveBeenCalled();
+    });
+  }
+
   test('cancels a stalled screenshot body without starting the model', async () => {
     const controller = new AbortController();
     let cancelled = false;
