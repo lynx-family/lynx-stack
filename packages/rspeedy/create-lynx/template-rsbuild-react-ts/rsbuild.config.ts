@@ -2,7 +2,6 @@ import { defineConfig } from '@rsbuild/core'
 
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import { pluginTypeCheck } from '@rsbuild/plugin-type-check'
 
 export default defineConfig({
@@ -15,7 +14,6 @@ export default defineConfig({
     },
   },
   plugins: [
-    pluginLynx(),
     pluginQRCode({
       schema(url) {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
