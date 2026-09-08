@@ -211,3 +211,21 @@ describe('live preview delivery', () => {
     }]);
   });
 });
+
+test('a preview that boots before the first output delivers its first delta immediately', () => {
+  expect(prepareLivePreviewOutputs(null, [])).toEqual([]);
+  const delivered: unknown[] = [];
+  const pending: { type: 'A2UI_LIVE_MESSAGES'; output: string[] }[] = [];
+  queueOrDeliverLivePreviewOutput(pending, {
+    type: 'A2UI_LIVE_MESSAGES',
+    output: ['first'],
+  }, (item) => {
+    delivered.push(item);
+    return true;
+  });
+  expect(pending).toEqual([]);
+  expect(delivered).toEqual([{
+    type: 'A2UI_LIVE_MESSAGES',
+    output: ['first'],
+  }]);
+});

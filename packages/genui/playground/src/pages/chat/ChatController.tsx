@@ -1057,7 +1057,7 @@ export function ChatController<
     ]);
     resetLivePreviewDelivery();
     setCurrentOutput(null);
-    setCurrentPreviewOutput(null);
+    setCurrentPreviewOutput(adapter.preview.initialOutput?.() ?? null);
     setCurrentPreviewPayloadUrls(null);
     setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = {};
@@ -1636,6 +1636,33 @@ export function ChatController<
                   <span className='chatTokenUsageItem'>
                     Prompt {formatTokenCount(usage.promptTokens)}
                   </span>
+                  <span
+                    className='chatTokenUsageItem'
+                    title={usage.cachedTokens === undefined
+                      ? 'Cache read usage was not reported for every model call.'
+                      : 'Input tokens read from the prompt cache, as a percentage of Prompt. Included in Prompt and Total.'}
+                  >
+                    Cached {usage.cachedTokens === undefined
+                      ? '—'
+                      : formatTokenCount(usage.cachedTokens)}
+                    {usage.cachedTokens !== undefined && usage.promptTokens > 0
+                      ? ` (${
+                        (usage.cachedTokens / usage.promptTokens * 100).toFixed(
+                          1,
+                        )
+                      }%)`
+                      : null}
+                  </span>
+                  {usage.cacheWriteTokens === undefined
+                    ? null
+                    : (
+                      <span
+                        className='chatTokenUsageItem'
+                        title='Input tokens written to the prompt cache. Included in Prompt and Total.'
+                      >
+                        Cache write {formatTokenCount(usage.cacheWriteTokens)}
+                      </span>
+                    )}
                   <span className='chatTokenUsageItem'>
                     Output {formatTokenCount(usage.completionTokens)}
                   </span>

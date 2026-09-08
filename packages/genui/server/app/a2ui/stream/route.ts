@@ -210,6 +210,8 @@ async function postA2UIStream(req: Request) {
           let streamedText = '';
           let chunkCount = 0;
           let firstChunkLogged = false;
+          let firstMessagesLogged = false;
+          let parseTotalMs = 0;
 
           log('upstream.stream.started');
 
@@ -225,15 +227,27 @@ async function postA2UIStream(req: Request) {
             }
             streamedText += chunk;
             if (!enqueue('delta', { text: chunk })) break;
+            const parseStartedAt = performance.now();
             const newMessages = protocolParser.push(chunk);
+            const parseDurationMs = performance.now() - parseStartedAt;
+            parseTotalMs += parseDurationMs;
             if (newMessages.length > 0) {
               streamedMessages.push(...newMessages);
               enqueue('message', { messages: newMessages });
+              if (!firstMessagesLogged) {
+                firstMessagesLogged = true;
+                log('protocol.first_messages', {
+                  durationSinceConnectStartedMs: performance.now()
+                    - connectStartedAt,
+                  parseTotalMs,
+                });
+              }
               log('protocol.messages', {
                 chunkCount,
                 newMessageCount: newMessages.length,
                 streamedMessageCount: streamedMessages.length,
                 streamedTextLength: streamedText.length,
+                parseDurationMs,
               });
             }
           }
@@ -243,6 +257,7 @@ async function postA2UIStream(req: Request) {
             chunkCount,
             streamedTextLength: streamedText.length,
             streamedMessageCount: streamedMessages.length,
+            parseTotalMs,
           });
 
           let { text: finalText, usage, finishReason } = await finalize();
