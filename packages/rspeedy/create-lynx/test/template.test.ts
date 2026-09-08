@@ -43,6 +43,13 @@ describe('resolveTemplateName', () => {
     expect(resolveTemplateName('react')).toBe('rspeedy-react-ts')
   })
 
+  // A name like `rsbuild-ttml-ts` must not quietly scaffold React.
+  it('rejects a component that names no known DSL or language', () => {
+    expect(() => resolveTemplateName('rsbuild-vue-js')).toThrow(/"vue"/)
+    expect(() => resolveTemplateName('rsbuild-ttml-ts')).toThrow(/"ttml"/)
+    expect(() => resolveTemplateName('rspeedy-svelte')).toThrow(/"svelte"/)
+  })
+
   it('passes an npm package name through untouched', () => {
     expect(resolveTemplateName('@scope/some-template')).toBe(
       '@scope/some-template',

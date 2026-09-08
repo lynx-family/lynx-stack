@@ -49,13 +49,27 @@ function isLang(value: string): value is Lang {
  */
 export function resolveTemplateName(template: string): string {
   const parts = template.split('-')
+  const head = parts[0] ?? ''
+  const tool = LEGACY_TOOL[head] ?? head
 
-  const tool = LEGACY_TOOL[parts[0] ?? ''] ?? parts[0] ?? ''
   if (!isTool(tool)) {
     return template
   }
 
-  const rest = LEGACY_TOOL[parts[0] ?? ''] ? parts : parts.slice(1)
+  // A legacy name carries no tool of its own, so all of it names the rest.
+  const rest = LEGACY_TOOL[head] ? parts : parts.slice(1)
+  const unknown = rest.filter(part => !isDsl(part) && !isLang(part))
+
+  if (unknown.length > 0) {
+    throw new Error(
+      `Invalid template "${template}": ${
+        unknown.map(part => `"${part}"`).join(', ')
+      } names neither a DSL (${DSLS.join(', ')}) nor a language (${
+        LANGS.join(', ')
+      }). Available templates: ${TEMPLATES.join(', ')}.`,
+    )
+  }
+
   const dsl = rest.find(part => isDsl(part)) ?? DEFAULT_DSL
   const lang = rest.find(part => isLang(part)) ?? DEFAULT_LANG
 

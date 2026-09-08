@@ -1,5 +1,7 @@
 import type { ExtendConfig, ExtendConfigFn } from '@rstest/core';
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { join } from 'node:path';
 import type { RsbuildConfig } from '@rsbuild/core';
 
 export interface LynxConfigOptions {
@@ -13,7 +15,8 @@ export interface LynxConfigOptions {
   /**
    * The path to the Lynx config file.
    *
-   * @default `lynx.config.ts`
+   * @default `lynx.config.ts` in an Rspeedy project, `rsbuild.config.ts` in an
+   * Rsbuild one
    */
   configPath?: string;
 }
@@ -69,15 +72,50 @@ export function withDefaultConfig(
   };
 }
 
+const RSPEEDY_CONFIG_FILES = [
+  'lynx.config.ts',
+  'lynx.config.js',
+  'lynx.config.mjs',
+  'lynx.config.mts',
+  'lynx.config.cjs',
+  'lynx.config.cts',
+];
+
+/**
+ * A Lynx project builds either with Rspeedy, which reads `lynx.config.*`, or
+ * with Rsbuild and `pluginLynx`, which reads `rsbuild.config.*`. Load whichever
+ * one this project has.
+ */
+async function loadLynxConfig(
+  options?: LynxConfigOptions,
+): Promise<RsbuildConfig> {
+  const cwd = options?.rootPath ?? process.cwd();
+  const isRspeedy = options?.configPath
+    ? RSPEEDY_CONFIG_FILES.some((name) => options.configPath!.endsWith(name))
+    : RSPEEDY_CONFIG_FILES.some((name) => existsSync(join(cwd, name)));
+
+  if (isRspeedy) {
+    const { loadConfig } = await import('@lynx-js/rspeedy');
+    const { content } = await loadConfig({
+      cwd: options?.rootPath,
+      configPath: options?.configPath,
+    });
+    return content as RsbuildConfig;
+  }
+
+  const { loadConfig } = await import('@rsbuild/core');
+  const { content } = await loadConfig({
+    cwd,
+    ...(options?.configPath ? { path: options.configPath } : {}),
+  });
+  return content;
+}
+
 export function withLynxConfig(
   options?: LynxRstestConfigOptions,
 ): ExtendConfigFn {
   return async () => {
-    const { loadConfig } = await import('@lynx-js/rspeedy');
-    const lynxConfig = await loadConfig({
-      cwd: options?.rootPath,
-      configPath: options?.configPath,
-    });
+    const lynxConfig = { content: await loadLynxConfig(options) };
 
     const { toRstestConfig } = await import('@rstest/adapter-rsbuild');
     const rstestConfig = toRstestConfig({
