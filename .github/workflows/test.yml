@@ -325,15 +325,15 @@ jobs:
         # the build tool owns, so each pair has to be exercised.
         for template in rsbuild-react-ts rsbuild-react-js rspeedy-react-ts rspeedy-react-js; do
           for runner in vitest-rltl rstest-rltl; do
-            smoke_test pnpm "$template" "eslint,$runner" "create-lynx-$template-$runner"
+            smoke_test pnpm "$template" "eslint,$runner" \
+              "create-lynx-$template-$runner" --skill lynx-devtool
             run_script pnpm test
           done
         done
 
-        # One template per package manager, to catch phantom dependencies that
-        # only one `node_modules` layout exposes.
-        smoke_test pnpm rsbuild-react-ts eslint create-lynx-regression-rsbuild --skill lynx-devtool
-        smoke_test pnpm rspeedy-react-ts eslint create-lynx-regression --skill lynx-devtool
+        # The loop above stays on pnpm. Each package manager lays `node_modules`
+        # out differently, so they do not agree on which undeclared transitive
+        # dependency a package can still resolve.
         smoke_test npm rsbuild-react-ts eslint create-lynx-regression-npm --skill lynx-devtool
         smoke_test yarn rspeedy-react-ts eslint create-lynx-regression-yarn --skill lynx-devtool
   test-react:
