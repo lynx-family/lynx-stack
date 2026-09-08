@@ -1,28 +1,24 @@
 {
-  "name": "create-rspeedy",
-  "version": "0.17.1",
-  "description": "Deprecated: use @lynx-js/create-lynx instead",
+  "name": "@lynx-js/create-lynx",
+  "version": "0.1.0",
+  "description": "Create a Lynx app with one command",
   "keywords": [
-    "webpack",
-    "rspack",
-    "rspeedy",
+    "create",
     "Lynx",
-    "ReactLynx"
+    "ReactLynx",
+    "rsbuild",
+    "rspeedy"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/create-rspeedy"
+    "directory": "packages/rspeedy/create-lynx"
   },
   "license": "Apache-2.0",
-  "author": {
-    "name": "Qingyu Wang",
-    "email": "colinwang.0616@gmail.com"
-  },
   "type": "module",
   "exports": null,
   "bin": {
-    "create-rspeedy": "./dist/index.js"
+    "create-lynx": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -31,8 +27,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
-    "test": "vitest"
+    "build": "rslib build"
   },
   "dependencies": {
     "@rstackjs/create-toolkit": "2.1.4"
@@ -42,9 +37,10 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
+    "@lynx-js/rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
-    "@rsbuild/plugin-type-check": "1.6.0",
-    "@rstest/core": "catalog:rstest"
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-type-check": "1.6.0"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

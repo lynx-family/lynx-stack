@@ -4,6 +4,14 @@
 
 # create-rspeedy
 
+> [!IMPORTANT]
+> This package is superseded by [`@lynx-js/create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) and no longer receives updates.
+> It scaffolds Rspeedy projects only; `@lynx-js/create-lynx` scaffolds both Rsbuild and Rspeedy projects.
+>
+> ```bash
+> npm create @lynx-js/lynx@latest
+> ```
+
 Create a new Rspeedy x ReactLynx project.
 
 Using `npm create`:

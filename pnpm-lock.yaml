@@ -1848,6 +1848,37 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(@rspack/core@2.2.2(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
 
+  packages/rspeedy/create-lynx:
+    dependencies:
+      '@rstackjs/create-toolkit':
+        specifier: 2.1.4
+        version: 2.1.4
+    devDependencies:
+      '@lynx-js/preact-devtools':
+        specifier: catalog:lynxjs
+        version: 5.0.1-20260827072047-5f77e12
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../plugin-qrcode
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../plugin-lynx
+      '@lynx-js/rspeedy':
+        specifier: workspace:^
+        version: link:../core
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.2.3(core-js@3.50.0)
+      '@rsbuild/plugin-type-check':
+        specifier: 1.6.0
+        version: 1.6.0(@rsbuild/core@2.2.3(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
+
   packages/rspeedy/create-rspeedy:
     dependencies:
       '@rstackjs/create-toolkit':

@@ -70,6 +70,7 @@ export default tseslint.config(
       'packages/**/vitest.config.ts',
       'packages/genui/cli/templates/**',
       'packages/react/runtime/compat/**',
+      'packages/rspeedy/create-lynx/template-*/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
       'packages/i18n/**/tests/fixtures/**',
       'packages/{rspeedy,webpack}/*/test/**/cases/**',
