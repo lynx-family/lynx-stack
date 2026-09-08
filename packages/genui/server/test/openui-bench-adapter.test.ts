@@ -178,6 +178,7 @@ describe('OpenUI Bench adapter', () => {
       api: 'responses',
       baseURL: 'https://provider.test/v1',
       disableAgentCache: true,
+      enableWebSearch: false,
       inheritReasoningEffort: false,
       model: 'test-model',
       promptRoot: 'Column',

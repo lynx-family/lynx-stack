@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RequestContext } from '@mastra/core/request-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
@@ -19,7 +19,7 @@ const IMAGE_SEARCH_RESULT_COUNT = 5;
 const SEARCH_SNIPPET_LENGTH = 600;
 const WEB_SEARCH_TYPE = 'web';
 const IMAGE_SEARCH_TYPE = 'image';
-const SEARCH_RUN_STATE_KEY = 'a2ui:doubao-search-run-state' as const;
+const SEARCH_RUN_STATE_KEY = 'genui:doubao-search-run-state' as const;
 const MAX_SEARCH_QUERY_LENGTH = 100;
 const MAX_SEARCH_TITLE_LENGTH = 500;
 const MAX_SEARCH_METADATA_LENGTH = 100;
@@ -88,6 +88,18 @@ export interface DoubaoImageSearchResult {
 
 interface RequestContextScope {
   requestContext: unknown;
+}
+
+export interface SearchRunScope {
+  requestContext: RequestContext<DoubaoSearchRequestContextValues>;
+}
+
+export function createSearchRunScope(): SearchRunScope {
+  const scope = {
+    requestContext: new RequestContext<DoubaoSearchRequestContextValues>(),
+  };
+  initializeDoubaoSearchRunScope(scope);
+  return scope;
 }
 
 function readNonEmpty(
@@ -691,7 +703,7 @@ export function createDoubaoImageSearchTool(
   return createTool({
     id: 'image_search',
     description:
-      'Search the public web for existing images. Returns trusted imageUrl values plus source and quality metadata. Copy a selected imageUrl exactly into Image.url. Prefer this tool before generate_image unless the user explicitly requests original generated artwork.',
+      'Search the public web for existing images. Returns imageUrl values plus source and quality metadata. Copy a selected imageUrl exactly into the image source field supported by the output protocol. Use sourceUrl only as a source-page link.',
     inputSchema: imageSearchInputSchema,
     outputSchema: imageSearchOutputSchema,
     execute: ({ query }, context) =>
