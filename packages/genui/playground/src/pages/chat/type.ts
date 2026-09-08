@@ -32,6 +32,8 @@ export interface ChatTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cachedTokens?: number;
+  cacheWriteTokens?: number;
 }
 
 export type ChatMessageKind =
@@ -177,6 +179,8 @@ export interface ChatPreviewContext {
 
 export interface ChatPreviewAdapter<TOutput> {
   delivery: 'reload' | 'live-message';
+  /** Boot a live renderer while the agent is still preparing its first output. */
+  initialOutput?: () => TOutput;
   source: (
     output: TOutput | null,
     context: ChatPreviewContext,

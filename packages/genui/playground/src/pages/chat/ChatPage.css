@@ -359,12 +359,14 @@
 .chatTokenUsageBadge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  max-width: 100%;
   min-height: 26px;
   margin-left: auto;
-  padding: 0 10px;
+  padding: 4px 10px;
   border: 1px solid var(--geist-border);
-  border-radius: 999px;
+  border-radius: 14px;
   background: var(--geist-surface);
   color: var(--geist-secondary);
   font-family: var(--geist-mono);

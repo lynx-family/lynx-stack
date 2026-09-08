@@ -407,7 +407,12 @@ describe('chat protocol adapters', () => {
       event: 'done',
       data: {
         validation: { messages: finalMessages },
-        usage: { inputTokens: 2, outputTokens: 3, totalTokens: 5 },
+        usage: {
+          inputTokens: 2,
+          outputTokens: 3,
+          totalTokens: 5,
+          cachedInputTokens: 1,
+        },
         preview: {
           messagesUrl: 'https://example.com/messages.json',
           actionMocksUrl: 'https://example.com/actions.json',
@@ -419,7 +424,12 @@ describe('chat protocol adapters', () => {
     expect(done.emissions).toEqual([
       {
         type: 'usage',
-        usage: { promptTokens: 2, completionTokens: 3, totalTokens: 5 },
+        usage: {
+          promptTokens: 2,
+          completionTokens: 3,
+          totalTokens: 5,
+          cachedTokens: 1,
+        },
       },
       {
         type: 'previewPayload',
@@ -458,7 +468,11 @@ describe('chat protocol adapters', () => {
     const done = reduceOpenUIStream(state, {
       event: 'done',
       data: {
-        usage: { prompt_tokens: 4, completion_tokens: 6 },
+        usage: {
+          prompt_tokens: 4,
+          completion_tokens: 6,
+          prompt_tokens_details: { cached_tokens: 2 },
+        },
       },
     });
     const output = {
@@ -469,7 +483,12 @@ describe('chat protocol adapters', () => {
       { type: 'progress', text: output.rawText },
       {
         type: 'usage',
-        usage: { promptTokens: 4, completionTokens: 6, totalTokens: 10 },
+        usage: {
+          promptTokens: 4,
+          completionTokens: 6,
+          totalTokens: 10,
+          cachedTokens: 2,
+        },
       },
       { type: 'final', output },
     ]);
@@ -1007,4 +1026,13 @@ describe('chat protocol adapters', () => {
       });
     }
   });
+});
+
+test('A2UI can boot an empty live preview before any model output', () => {
+  const output = A2UI_CHAT_ADAPTER.preview.initialOutput();
+  expect(A2UI_CHAT_ADAPTER.preview.source(output, {
+    protocol: PROTOCOLS.a2ui,
+    theme: 'light',
+    previewPayloadUrls: null,
+  })).toMatchObject({ kind: 'a2ui', messages: [], liveAction: true });
 });

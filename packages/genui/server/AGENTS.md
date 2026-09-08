@@ -47,6 +47,18 @@ export GENUI_MODEL_CONFIG_JSON='{
   lower of that target and the configured model ceiling.
 - `reasoningEffort` is optional per model.
 
+For generation latency, keep static instructions/catalogs ahead of conversation
+history and the latest request. Prompt Cache behavior follows the upstream
+provider's defaults. GenUI reports returned cache usage without adding routing
+keys, cache options, or explicit breakpoints to model requests. Provider caching
+is independent of the process-local Agent instance cache.
+
+Compare cold and warm requests with the same model, catalog, tool availability,
+and reasoning settings. The stream logs report `upstream.first_chunk`,
+`protocol.first_messages`, cumulative `parseTotalMs`, and final cached-token
+counts/ratios. Measure the preview's paint separately: cache-hit counts and
+parser microbenchmarks alone do not establish end-to-end latency improvements.
+
 `GENUI_MODEL_CONFIG_JSON` is optional when the request supplies a complete
 custom provider with `model`, `apiKey`, and `baseURL`. Partial custom provider
 values are ignored rather than inheriting a server-owned credential. A

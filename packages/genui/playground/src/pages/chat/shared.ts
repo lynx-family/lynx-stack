@@ -375,15 +375,42 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
   badge: compactProviderLabel,
 } satisfies ChatSettingsAdapter<ProviderSettings>;
 
+function readTokenCount(value: unknown): number | undefined {
+  const candidate = value && typeof value === 'object'
+    ? (value as Record<string, unknown>).total
+    : value;
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+      && candidate >= 0
+    ? candidate
+    : undefined;
+}
+
+function findCacheTokenCount(
+  value: unknown,
+  keys: readonly string[],
+): number | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  for (const key of keys) {
+    const count = readTokenCount(record[key]);
+    if (count !== undefined) return count;
+  }
+  for (const nested of Object.values(record)) {
+    const count = findCacheTokenCount(nested, keys);
+    if (count !== undefined) return count;
+  }
+  return undefined;
+}
+
 export function parseTokenUsage(value: unknown): ChatTokenUsage | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   const pickNumber = (...keys: string[]): number => {
     for (const key of keys) {
-      const candidate = record[key];
-      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
-        return candidate;
-      }
+      const count = readTokenCount(record[key]);
+      if (count !== undefined) return count;
     }
     return 0;
   };
@@ -405,17 +432,52 @@ export function parseTokenUsage(value: unknown): ChatTokenUsage | null {
   if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
     return null;
   }
-  return { promptTokens, completionTokens, totalTokens };
+  const cachedTokens = findCacheTokenCount(record, [
+    'cached_tokens',
+    'cachedTokens',
+    'cached_input_tokens',
+    'cachedInputTokens',
+    'cacheReadTokens',
+    'cacheRead',
+    'cache_read_input_tokens',
+  ]);
+  const cacheWriteTokens = findCacheTokenCount(record, [
+    'cache_write_tokens',
+    'cacheWriteTokens',
+    'cacheWrite',
+    'cache_creation_input_tokens',
+  ]);
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    ...(cachedTokens === undefined ? {} : { cachedTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+  };
 }
 
 export function addTokenUsage(
   current: ChatTokenUsage,
   next: ChatTokenUsage,
 ): ChatTokenUsage {
+  const addCacheTokens = (
+    key: 'cachedTokens' | 'cacheWriteTokens',
+  ): number | undefined => {
+    // Missing usage from any model call must not become a reported cache miss.
+    if (
+      (current.totalTokens > 0 && current[key] === undefined)
+      || (next.totalTokens > 0 && next[key] === undefined)
+    ) return undefined;
+    return (current[key] ?? 0) + (next[key] ?? 0);
+  };
+  const cachedTokens = addCacheTokens('cachedTokens');
+  const cacheWriteTokens = addCacheTokens('cacheWriteTokens');
   return {
     promptTokens: current.promptTokens + next.promptTokens,
     completionTokens: current.completionTokens + next.completionTokens,
     totalTokens: current.totalTokens + next.totalTokens,
+    ...(cachedTokens === undefined ? {} : { cachedTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
   };
 }
 
