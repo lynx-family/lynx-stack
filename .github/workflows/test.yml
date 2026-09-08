@@ -298,7 +298,13 @@ jobs:
           cd `mktemp -d`
           npx --registry http://localhost:4873 @lynx-js/create-lynx-canary@latest --template "$template" --dir "$dir" --tools "$tools" "$@"
           cd "$dir"
-          npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+          # `upgrade-rspeedy` bumps the Rspeedy dependencies of a project, so it
+          # has nothing to do in an Rsbuild one.
+          case "$template" in
+            rspeedy-*)
+              npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+              ;;
+          esac
           if [ "$pm" = pnpm ]; then
             # pnpm 11 reads these typed settings from pnpm-workspace.yaml.
             printf '%s\n' \
