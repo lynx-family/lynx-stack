@@ -20,7 +20,6 @@ export function toRsbuildConfig(
       assetPrefix: config.dev?.assetPrefix,
 
       hmr: config.dev?.hmr ?? true,
-      lazyCompilation: false,
       liveReload: config.dev?.liveReload ?? true,
       watchFiles: config.dev?.watchFiles,
       writeToDisk: config.dev?.writeToDisk,

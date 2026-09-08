@@ -33,7 +33,7 @@ pnpm preview   # serve an existing build without opening a browser
 - `rslib-comp-lib.config.ts` builds `comp-lib.web.bundle` with
   `defineExternalBundleRslibConfig({ ... }, { target: 'web' })`, keeping ReactLynx
   external via `externalsPresets: { reactlynx: { async: true } }`.
-- `lynx.config.ts` builds the app for the `web` environment, loading ReactLynx
+- `rsbuild.config.ts` builds the app for the `web` environment, loading ReactLynx
   (`reactlynx: { async: true }`) and the component library (`comp-lib.web.bundle`)
   as async externals.
 - `web/index.ts` is the browser host: it imports `@lynx-js/web-core/client` (which

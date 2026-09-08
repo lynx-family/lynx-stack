@@ -15,6 +15,7 @@ import invariant from 'tiny-invariant'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
 import type { LynxPluginOptions } from '../src/index.js'
+import { pluginDev } from '../src/plugins/dev.plugin.js'
 
 function createDevStubRsbuild(
   rsbuildConfig: RsbuildConfig = {},
@@ -92,6 +93,77 @@ describe('pluginDev', () => {
     return () => {
       rstest.restoreAllMocks()
     }
+  })
+
+  test.each(
+    [
+      ['dev', true],
+      ['preview', true],
+      ['build', false],
+    ] as const,
+  )('applies to %s: %s', (action, expected) => {
+    const { apply } = pluginDev()
+    invariant(typeof apply === 'function', 'apply is a filter function')
+
+    expect(apply({ mode: 'production' }, { action })).toBe(expected)
+  })
+
+  describe('lazyCompilation', () => {
+    test('disabled by default', async () => {
+      const rsbuild = await createDevStubRsbuild()
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.lazyCompilation).toBeFalsy()
+    })
+
+    test('kept when set by user config', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        dev: { lazyCompilation: { entries: true } },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.lazyCompilation).toStrictEqual({ entries: true })
+    })
+
+    test('kept when set by environment config', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        environments: {
+          lynx: {},
+          web: { dev: { lazyCompilation: { imports: true } } },
+        },
+      })
+
+      const configs = await rsbuild.initConfigs()
+
+      expect(
+        configs.find(({ name }) => name === 'lynx')?.lazyCompilation,
+      ).toBeFalsy()
+      expect(configs.find(({ name }) => name === 'web')?.lazyCompilation)
+        .toStrictEqual({ imports: true })
+    })
+
+    test('kept when set by a plugin after pluginLynx', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        plugins: [
+          {
+            name: 'test',
+            setup(api) {
+              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                mergeRsbuildConfig(config, {
+                  dev: { lazyCompilation: { imports: true } },
+                })
+              )
+            },
+          } satisfies RsbuildPlugin,
+        ],
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.lazyCompilation).toStrictEqual({ imports: true })
+    })
   })
 
   test('defaults', async () => {

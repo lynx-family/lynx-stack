@@ -223,9 +223,13 @@ async function loop(
   function exit(code?: number) {
     cancel('exiting...')
     // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
-    const { exit } = options.api.useExposed<ExposedAPI>(
+    const rspeedy = options.api.useExposed<ExposedAPI>(
       Symbol.for('rspeedy.api'),
-    )!
-    return exit(code)
+    )
+    if (rspeedy) {
+      return rspeedy.exit(code)
+    }
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(code)
   }
 }

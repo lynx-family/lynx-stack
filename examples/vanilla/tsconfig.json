@@ -4,9 +4,9 @@
     "noEmit": true,
     "isolatedDeclarations": false,
   },
-  "include": ["src", "lynx.config.ts"],
+  "include": ["src", "rsbuild.config.ts"],
   "references": [
-    { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-lynx/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-vanilla/tsconfig.build.json" },
   ],
 }

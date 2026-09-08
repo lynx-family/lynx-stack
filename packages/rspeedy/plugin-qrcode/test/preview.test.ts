@@ -120,6 +120,61 @@ describe('Preview', () => {
     })
   })
 
+  test('preview with NODE_ENV=production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const { renderUnicodeCompact } = await import('uqr')
+
+    const { selectKey, isCancel } = await import('@clack/prompts')
+    vi.mocked(selectKey).mockResolvedValue('foo')
+    vi.mocked(isCancel).mockReturnValue(true)
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+
+    const port = getRandomNumberInRange(3000, 60000)
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/hello-world/index.js',
+          },
+        },
+        plugins: [
+          {
+            name: 'lynx:rsbuild:api',
+            setup(api) {
+              api.expose<ExposedAPI>(Symbol.for('rspeedy.api'), {
+                config: {},
+                debug: vi.fn(),
+                exit,
+                logger,
+                version: '1.0.0',
+              })
+            },
+          } satisfies RsbuildPlugin,
+          ...pluginLynx(),
+          pluginQRCode(),
+        ],
+        environments: {
+          lynx: {},
+        },
+        server: {
+          port,
+        },
+      },
+    })
+
+    const { server } = await rsbuild.preview({ checkDistDir: false })
+
+    expect(renderUnicodeCompact).toBeCalled()
+    expect(vi.mocked(renderUnicodeCompact).mock.calls[0]?.[0]).toMatch(
+      new RegExp(`^http://[^/]+:${port}/main\\.lynx\\.bundle$`),
+    )
+
+    await server.close()
+    await vi.waitFor(() => {
+      expect(exit).toBeCalledTimes(1)
+    })
+  })
+
   test('preview with port', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')

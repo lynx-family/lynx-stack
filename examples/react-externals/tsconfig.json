@@ -12,14 +12,14 @@
   "include": [
     "src",
     "external-bundle",
-    "lynx.config.ts",
+    "rsbuild.config.ts",
     "rslib-comp-lib.config.ts",
     "rslib-utils.config.ts",
-    "rslib-reactlynx.config.ts",
+    "rslib-reactrsbuild.config.ts",
   ],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
-    { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-lynx/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-qrcode/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-react/tsconfig.build.json" },
   ],
