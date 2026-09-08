@@ -8,7 +8,12 @@ import {
   transformValue,
   useMotionValueRef,
 } from '@lynx-js/motion';
-import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
+import {
+  root,
+  runOnMainThread,
+  useEffect,
+  useMainThreadRef,
+} from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
 import SunPng from './sun.png';
@@ -137,4 +142,10 @@ export default function Comp() {
       </view>
     </view>
   );
+}
+
+root.render(<Comp />);
+
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept();
 }
