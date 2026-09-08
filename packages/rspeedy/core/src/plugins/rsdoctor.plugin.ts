@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createRequire } from 'node:module'
+
 import { logger, mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 
@@ -24,22 +26,45 @@ export function pluginRsdoctor(
       }
 
       api.onBeforeCreateCompiler(async ({ bundlerConfigs }) => {
-        const { RsdoctorRspackPlugin } = await import('@rsdoctor/rspack-plugin')
-
-        for (const config of bundlerConfigs) {
-          const pluginName = 'RsdoctorRspackPlugin'
-
-          const registered = config.plugins?.some(
-            (plugin) =>
-              (typeof plugin === 'object'
-                && plugin?.['isRsdoctorPlugin'] === true)
-              || plugin?.constructor?.name === pluginName,
+        const pendingConfigs = bundlerConfigs.filter(config =>
+          !config.plugins?.some(plugin =>
+            (typeof plugin === 'object'
+              && plugin?.['isRsdoctorPlugin'] === true)
+            || plugin?.constructor?.name === 'RsdoctorRspackPlugin'
           )
+        )
+        if (pendingConfigs.length === 0) return
 
-          if (registered) {
-            continue
+        const [major = 0, minor = 0] = process.versions.node.split('.').map(
+          Number,
+        )
+        if (major < 22 || (major === 22 && minor < 18)) {
+          throw new Error(
+            'Rsdoctor 2.0 requires Node.js >=22.18. Upgrade Node.js, unset RSDOCTOR, '
+              + 'or install @rsdoctor/rspack-plugin@1 and register RsdoctorRspackPlugin '
+              + 'through tools.rspack with supports.banner: true.',
+          )
+        }
+
+        const installMessage =
+          'Rsdoctor 2.0 is unavailable. Install @rsdoctor/core@2.0.0-beta.1 '
+          + 'without omitting optional dependencies, or unset RSDOCTOR.'
+
+        // Resolve separately so errors inside the plugin are not reported as missing packages.
+        try {
+          createRequire(import.meta.url).resolve('@rsdoctor/core')
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'MODULE_NOT_FOUND') {
+            throw error
           }
+          throw new Error(installMessage, { cause: error })
+        }
+        const { RsdoctorRspackPlugin } = await import('@rsdoctor/core')
+        if (typeof RsdoctorRspackPlugin !== 'function') {
+          throw new Error(installMessage)
+        }
 
+        for (const config of pendingConfigs) {
           config.plugins ??= []
 
           const defaultOptions: RsdoctorRspackPluginOptions = {

@@ -39,14 +39,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
     performance: {
       profile: isDebug() ? true : undefined,
     },
-
-    tools: {
-      rsdoctor: {
-        experiments: {
-          enableNativePlugin: true,
-        },
-      },
-    },
   }, config)
 }
 
