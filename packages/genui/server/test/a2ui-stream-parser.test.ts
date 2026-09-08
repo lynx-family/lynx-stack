@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { A2UIProtocolMessageStreamParser } from '../agent/a2ui-stream-parser.js';
-import type { A2UIMessage } from '../agent/a2ui-validator.js';
+import { A2UIProtocolMessageStreamParser } from '../agent/a2ui/a2ui-stream-parser.js';
+import type { A2UIMessage } from '../agent/a2ui/a2ui-validator.js';
 
 const create = {
   version: 'v0.9',

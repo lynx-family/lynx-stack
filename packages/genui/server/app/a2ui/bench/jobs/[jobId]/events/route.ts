@@ -4,8 +4,8 @@
 
 import { Hono } from 'hono';
 
-import { getBenchJobStore } from '../../../../../../service/a2ui-bench-store';
-import type { BenchJobEvent } from '../../../../../../service/a2ui-bench-types';
+import { getBenchJobStore } from '../../../../../../service/common/bench/store.js';
+import type { BenchJobEvent } from '../../../../../../service/common/bench/types.js';
 import {
   encodeSSE,
   encodeSseComment,

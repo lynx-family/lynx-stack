@@ -4,33 +4,33 @@
 
 import { describe, expect, rstest, test } from '@rstest/core';
 
-import { getA2UIAgentService } from '../service/a2ui-agent.js';
-import { probeBenchUiJudge } from '../service/a2ui-bench-judge.js';
-import { runBenchJob, summarizeGroup } from '../service/a2ui-bench-runner.js';
+import { getA2UIAgentService } from '../service/a2ui/a2ui-agent.js';
+import { probeBenchUiJudge } from '../service/a2ui/a2ui-bench-judge.js';
+import {
+  probeGenuiBenchUiJudge,
+  runGenuiBenchUiJudge,
+} from '../service/common/bench/judge.js';
+import type {
+  ProtocolBenchAdapter,
+} from '../service/common/bench/protocol-adapter.js';
+import { runBenchJob, summarizeGroup } from '../service/common/bench/runner.js';
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
-} from '../service/a2ui-bench-screenshot.js';
+} from '../service/common/bench/screenshot.js';
 import {
   BenchJobStore,
   getBenchJobStore,
-} from '../service/a2ui-bench-store.js';
+} from '../service/common/bench/store.js';
 import type {
   BenchGroupRequest,
   BenchJobRequest,
   BenchRunResult,
-} from '../service/a2ui-bench-types.js';
-import type {
-  ProtocolBenchAdapter,
-} from '../service/genui-bench/protocol-adapter.js';
-import {
-  probeGenuiBenchUiJudge,
-  runGenuiBenchUiJudge,
-} from '../service/genui-bench-judge.js';
+} from '../service/common/bench/types.js';
 
-rstest.mock('../service/a2ui-bench-judge.js', { mock: true });
-rstest.mock('../service/a2ui-agent.js', { mock: true });
-rstest.mock('../service/genui-bench-judge.js', { mock: true });
+rstest.mock('../service/a2ui/a2ui-bench-judge.js', { mock: true });
+rstest.mock('../service/a2ui/a2ui-agent.js', { mock: true });
+rstest.mock('../service/common/bench/judge.js', { mock: true });
 
 const group: BenchGroupRequest = {
   enabled: true,

@@ -4,8 +4,8 @@
 
 import { Hono } from 'hono';
 
-import { readArkImageGenerationConfig } from '../../../agent/ark-image-generation-tool.js';
-import { readDoubaoSearchConfig } from '../../../agent/doubao-search-tool.js';
+import { readArkImageGenerationConfig } from '../../../agent/common/ark-image-generation-tool.js';
+import { readDoubaoSearchConfig } from '../../../agent/common/doubao-search-tool.js';
 import { readModelConfig } from '../../../service/common/model-config.js';
 import { jsonWithCors } from '../../common/cors';
 

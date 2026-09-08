@@ -11,7 +11,7 @@ import {
   test,
 } from '@rstest/core';
 
-import { evaluateScreenshot } from '../agent/ui-judge-agent.js';
+import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 const { generate, agentModels } = rstest.hoisted(() => ({

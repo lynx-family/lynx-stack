@@ -6,21 +6,21 @@ import { describe, expect, test } from '@rstest/core';
 
 import type {
   ProtocolBenchAdapterInput,
-} from '../service/genui-bench/protocol-adapter.js';
-import type { ProtocolBenchScenario } from '../service/genui-bench/types.js';
-import type { OpenUIChatOptions } from '../service/openui-agent.js';
+} from '../service/common/bench/protocol-adapter.js';
+import type { ProtocolBenchScenario } from '../service/common/bench/protocol-types.js';
+import type { OpenUIChatOptions } from '../service/openui/openui-agent.js';
 import {
   OPENUI_BENCH_CAPABILITY_PROFILE,
   OPENUI_BENCH_MATCHED_COMPONENTS,
   OPENUI_BENCH_PROMPT_OPTIONS,
   createOpenUIBenchAdapter,
-} from '../service/openui-bench-adapter.js';
+} from '../service/openui/openui-bench-adapter.js';
 import type {
   OpenUIBenchGenerateRaw,
-} from '../service/openui-bench-adapter.js';
+} from '../service/openui/openui-bench-adapter.js';
 import {
   validateOpenUIBenchOutput,
-} from '../service/openui-bench-validator.js';
+} from '../service/openui/openui-bench-validator.js';
 
 const VALID_OPENUI = [
   'root = Column([title, card], "start", "stretch", "m")',

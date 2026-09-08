@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { createA2UISourcePolicy } from '../agent/a2ui-source-policy.js';
+import { createA2UISourcePolicy } from '../agent/a2ui/a2ui-source-policy.js';
 
 describe('createA2UISourcePolicy', () => {
   test('uses the supplied normalizer for nested, embedded, and dynamic sources', () => {

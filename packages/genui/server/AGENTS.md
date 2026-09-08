@@ -4,6 +4,26 @@ This package contains the Rslib-built Hono server for GenUI agent APIs,
 including A2UI, OpenUI, MCP Apps, streamed Lynx XML, and standalone HTML
 generation.
 
+## Source Layout
+
+Both `agent` and `service` are organized into `common`, `a2ui`, `openui`,
+`html`, `lynx-xml`, and `mcp-apps` directories. Keep protocol factories,
+prompts, catalogs, parsers, validators, and custom tools in the corresponding
+`agent/<protocol>` directory; keep protocol services and Bench adapters in
+`service/<protocol>`.
+
+`agent/common` owns provider/security helpers, search and image-generation
+tools, the Mastra runtime, and screenshot evaluation. `service/common` owns
+shared service contracts and infrastructure. `service/common/bench` contains
+cross-protocol scheduling, request normalization, storage, report types,
+redaction, screenshot conversion, and Judge orchestration. Bench orchestration
+may wire protocol implementations; ordinary common helpers must not depend on
+protocol services.
+
+When moving sources, update route imports, test mocks, documentation, and the
+`a2ui-prompt` package's re-exports, TypeScript includes, and Turbo inputs
+together. Do not leave forwarding modules at obsolete paths.
+
 ## Deployment Model
 
 This server is safe to run on serverless and multi-replica deployments for

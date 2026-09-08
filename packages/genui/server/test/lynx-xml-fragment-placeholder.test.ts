@@ -8,12 +8,12 @@ import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
 
 import {
   createHtmlFragmentToMainThreadScriptTool,
-} from '../agent/html-fragment-to-main-thread-script-tool.js';
-import type { HtmlFragmentScriptRunScope } from '../agent/html-fragment-to-main-thread-script-tool.js';
-import { createLynxXmlAgent } from '../agent/lynx-xml-agent.js';
-import LynxXmlAgentService from '../service/lynx-xml-agent.js';
+} from '../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
+import type { HtmlFragmentScriptRunScope } from '../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
+import { createLynxXmlAgent } from '../agent/lynx-xml/lynx-xml-agent.js';
+import LynxXmlAgentService from '../service/lynx-xml/lynx-xml-agent.js';
 
-rstest.mock('../agent/lynx-xml-agent.js', { mock: true });
+rstest.mock('../agent/lynx-xml/lynx-xml-agent.js', { mock: true });
 
 interface FragmentToolOutput {
   bindings: Record<string, string>;

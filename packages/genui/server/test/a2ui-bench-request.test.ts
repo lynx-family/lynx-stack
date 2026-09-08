@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { normalizeBenchJobRequest } from '../service/a2ui-bench-request.js';
+import { normalizeBenchJobRequest } from '../service/common/bench/request.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 function body(groups: unknown[]) {
