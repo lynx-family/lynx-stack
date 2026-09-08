@@ -29,6 +29,7 @@ export const BITS = '__g';
 export const COMPONENT_DIRTY: number = 1 << 3;
 export const COMPONENT_FORCE: number = 1 << 2;
 export const NEXT_STATE = '__s';
+export const GLOBAL_CONTEXT = '__n';
 export const CHILD_DID_SUSPEND = '__c';
 export const RENDER_CALLBACKS = '__h';
 export const HOOK = '__h';
