@@ -7,7 +7,7 @@ import { createTool } from '@mastra/core/tools';
 import { describe, expect, test } from '@rstest/core';
 import { z } from 'zod';
 
-import { getA2UIMastra } from '../agent/a2ui-mastra.js';
+import { getA2UIMastra } from '../agent/common/mastra.js';
 
 const usage = {
   inputTokens: 1,

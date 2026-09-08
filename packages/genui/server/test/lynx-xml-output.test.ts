@@ -7,7 +7,7 @@ import { describe, expect, test } from '@rstest/core';
 import {
   extractLynxXmlArtifact,
   normalizeLynxXmlArtifact,
-} from '../agent/lynx-xml-output.js';
+} from '../agent/lynx-xml/lynx-xml-output.js';
 
 const VALID_ARTIFACT = [
   '<!doctype lynx>',

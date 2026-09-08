@@ -4,17 +4,17 @@
 
 import { describe, expect, rstest, test } from '@rstest/core';
 
-import type { ScreenshotEvaluation } from '../agent/ui-judge-agent.js';
-import { evaluateScreenshot } from '../agent/ui-judge-agent.js';
-import * as actualJudge from '../agent/ui-judge-agent.js' with {
+import type { ScreenshotEvaluation } from '../agent/common/ui-judge-agent.js';
+import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
+import * as actualJudge from '../agent/common/ui-judge-agent.js' with {
   rstest: 'importActual',
 };
 import {
   probeGenuiBenchUiJudge,
   runGenuiBenchUiJudge,
-} from '../service/genui-bench-judge.js';
+} from '../service/common/bench/judge.js';
 
-rstest.mock('../agent/ui-judge-agent.js', () => ({
+rstest.mock('../agent/common/ui-judge-agent.js', () => ({
   ...actualJudge,
   evaluateScreenshot: rstest.fn(),
 }));

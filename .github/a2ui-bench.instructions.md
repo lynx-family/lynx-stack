@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/server/service/a2ui-bench-*.ts,packages/genui/server/app/a2ui/bench/**,packages/genui/playground/src/pages/bench/**,packages/genui/server/rslib.config.ts"
+applyTo: "packages/genui/server/service/{a2ui,openui}/*bench*.ts,packages/genui/server/service/common/bench/**,packages/genui/server/app/a2ui/bench/**,packages/genui/playground/src/pages/bench/**,packages/genui/server/rslib.config.ts"
 ---
 
 A2UI bench jobs run agent generation and validation in `genui-server`, but browser-backed render metrics and screenshots remain disabled. Keep browser metrics marked as disabled in reports.

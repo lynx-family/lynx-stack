@@ -4,10 +4,10 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { createLLMProvider } from '../agent/openai-provider.js';
+import { createLLMProvider } from '../agent/common/openai-provider.js';
 import { errorMessage } from '../app/common/errors.js';
 import { pickProviderOptions } from '../app/common/provider-options.js';
-import { redactBenchText } from '../service/a2ui-bench-redaction.js';
+import { redactBenchText } from '../service/common/bench/redaction.js';
 import {
   GENUI_MODEL_CONFIG_ENV,
   configuredModelName,

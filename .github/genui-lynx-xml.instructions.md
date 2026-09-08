@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/{lynx-xml-agent,html-fragment-to-main-thread-script-tool}.ts,packages/genui/server/service/lynx-xml-agent.ts"
+applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/lynx-xml/**,packages/genui/server/service/lynx-xml/**"
 ---
 
 Keep Lynx XML prompt construction in `packages/genui/lynx-xml`; the server

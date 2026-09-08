@@ -7,7 +7,7 @@ import { describe, expect, test } from '@rstest/core';
 import {
   extractHtmlArtifact,
   normalizeHtmlArtifact,
-} from '../agent/html-output.js';
+} from '../agent/html/html-output.js';
 
 const VALID_ARTIFACT = [
   '<!doctype html>',

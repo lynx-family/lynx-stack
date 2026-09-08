@@ -5,23 +5,23 @@
 import { describe, expect, rstest, test } from '@rstest/core';
 import { PNG } from 'pngjs';
 
-import type { ScreenshotEvaluation } from '../agent/ui-judge-agent.js';
-import { evaluateScreenshot } from '../agent/ui-judge-agent.js';
-import * as actualJudge from '../agent/ui-judge-agent.js' with {
+import type { ScreenshotEvaluation } from '../agent/common/ui-judge-agent.js';
+import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
+import * as actualJudge from '../agent/common/ui-judge-agent.js' with {
   rstest: 'importActual',
 };
 import {
   probeBenchUiJudge,
   runBenchUiJudge,
   runBenchUiJudgeRequest,
-} from '../service/a2ui-bench-judge.js';
+} from '../service/a2ui/a2ui-bench-judge.js';
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
   readBenchScreenshotDataUrl,
-} from '../service/a2ui-bench-screenshot.js';
+} from '../service/common/bench/screenshot.js';
 
-rstest.mock('../agent/ui-judge-agent.js', () => ({
+rstest.mock('../agent/common/ui-judge-agent.js', () => ({
   ...actualJudge,
   evaluateScreenshot: rstest.fn(),
 }));

@@ -4,14 +4,14 @@
 
 import { describe, expect, rstest, test } from '@rstest/core';
 
-import { createA2UIAgent } from '../agent/a2ui-agent.js';
-import type { A2UIAgent } from '../agent/a2ui-agent.js';
-import type { A2UICatalog } from '../agent/a2ui-catalog.js';
-import { createArkImageGenerationRunScope } from '../agent/ark-image-generation-tool.js';
-import { searchDoubaoForRun } from '../agent/doubao-search-tool.js';
-import A2UIAgentService from '../service/a2ui-agent.js';
+import { createA2UIAgent } from '../agent/a2ui/a2ui-agent.js';
+import type { A2UIAgent } from '../agent/a2ui/a2ui-agent.js';
+import type { A2UICatalog } from '../agent/a2ui/a2ui-catalog.js';
+import { createArkImageGenerationRunScope } from '../agent/common/ark-image-generation-tool.js';
+import { searchDoubaoForRun } from '../agent/common/doubao-search-tool.js';
+import A2UIAgentService from '../service/a2ui/a2ui-agent.js';
 
-rstest.mock('../agent/a2ui-agent.js', { mock: true });
+rstest.mock('../agent/a2ui/a2ui-agent.js', { mock: true });
 
 const catalog: A2UICatalog = {
   id: 'search-request-scope-test',

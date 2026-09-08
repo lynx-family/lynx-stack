@@ -8,7 +8,7 @@ import {
   createHtmlFragmentScriptRunScope,
   createHtmlFragmentToMainThreadScriptTool,
   resolveHtmlFragmentScriptPlaceholders,
-} from '../agent/html-fragment-to-main-thread-script-tool.js';
+} from '../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
 
 interface FragmentToolOutput {
   bindings: Record<string, string>;
