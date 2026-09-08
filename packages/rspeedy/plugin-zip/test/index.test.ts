@@ -11,7 +11,6 @@ import {
   readFile,
   readdir,
   rm,
-  symlink,
   writeFile,
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -76,11 +75,6 @@ function config(): RsbuildConfig {
 describe('pluginZip', () => {
   test('packages a real ReactLynx bundle with external image resources', async () => {
     const cwd = await fixture()
-    await symlink(
-      path.resolve(__dirname, '../node_modules'),
-      path.join(cwd, 'node_modules'),
-      'junction',
-    )
     await writeFile(
       path.join(cwd, 'src/index.jsx'),
       `
@@ -90,11 +84,17 @@ describe('pluginZip', () => {
     `,
     )
     const rspeedy = await createRspeedy({
-      cwd,
+      // Resolve ReactLynx from the workspace without a temporary node_modules
+      // junction, which the native resolver cannot follow reliably on Windows.
+      cwd: path.resolve(__dirname, '..'),
       rspeedyConfig: {
         mode: 'production',
-        source: { entry: { main: './src/index.jsx' } },
-        output: { dataUriLimit: 0, sourceMap: false },
+        source: { entry: { main: path.join(cwd, 'src/index.jsx') } },
+        output: {
+          dataUriLimit: 0,
+          sourceMap: false,
+          distPath: { root: path.join(cwd, 'dist') },
+        },
         plugins: [pluginReactLynx(), pluginZip()],
       },
     })
