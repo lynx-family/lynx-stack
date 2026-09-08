@@ -6,6 +6,7 @@ import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
 const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts');
+const internalPreactRoot = path.dirname(require.resolve('preact/package.json'));
 
 function transformReactLynxPlugin(): Plugin {
   return {
@@ -67,44 +68,82 @@ const config: UserConfigExport = defineConfig({
   ],
   resolve: {
     dedupe: ['preact'],
-    alias: {
-      '@lynx-js/react/compat': path.resolve(__dirname, '../../compat/index.js'),
-      '@lynx-js/react/worklet-runtime/bindings': path.resolve(
-        __dirname,
-        '../../src/worklet-runtime/bindings/index.ts',
-      ),
-      '@lynx-js/react/runtime-components': path.resolve(__dirname, '../../../components/src/index.ts'),
-      '@lynx-js/react/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
+    alias: [
+      // Pin every preact entry point to the internal-preact copy resolved from
+      // this package. Without these aliases the externalized preact modules
+      // resolve bare `preact` imports through pnpm's hidden hoist
+      // (node_modules/.pnpm/node_modules/preact), whose winner is arbitrary
+      // once another real `preact` exists anywhere in the workspace — mixing
+      // two preact instances breaks hooks (`__H`) and Suspense.
+      { find: /^preact$/, replacement: path.join(internalPreactRoot, 'dist/preact.mjs') },
+      { find: /^preact\/compat$/, replacement: path.join(internalPreactRoot, 'compat/dist/compat.mjs') },
+      { find: /^preact\/hooks$/, replacement: path.join(internalPreactRoot, 'hooks/dist/hooks.mjs') },
+      {
+        find: /^preact\/jsx-dev-runtime$/,
+        replacement: path.join(internalPreactRoot, 'jsx-runtime/dist/jsxRuntime.mjs'),
+      },
+      { find: /^preact\/jsx-runtime$/, replacement: path.join(internalPreactRoot, 'jsx-runtime/dist/jsxRuntime.mjs') },
+      { find: '@lynx-js/react/compat', replacement: path.resolve(__dirname, '../../compat/index.js') },
+      {
+        find: '@lynx-js/react/worklet-runtime/bindings',
+        replacement: path.resolve(__dirname, '../../src/worklet-runtime/bindings/index.ts'),
+      },
+      {
+        find: '@lynx-js/react/runtime-components',
+        replacement: path.resolve(__dirname, '../../../components/src/index.ts'),
+      },
+      {
+        find: '@lynx-js/react/internal',
+        replacement: path.resolve(__dirname, '../../src/element-template/internal.ts'),
+      },
       // The ET vitest harness evaluates both background and main-thread flows in
       // a no-layer environment. Keep JSX creation on the shared runtime so the
       // background tree still receives the standard vnode shape it expects.
-      '@lynx-js/react/jsx-dev-runtime': path.resolve(__dirname, '../../jsx-dev-runtime/index.js'),
-      '@lynx-js/react/jsx-runtime': path.resolve(__dirname, '../../jsx-runtime/index.js'),
-      '@lynx-js/react/element-template/jsx-dev-runtime': path.resolve(
-        __dirname,
-        '../../src/element-template/jsx-dev-runtime/index.ts',
-      ),
-      '@lynx-js/react/element-template/jsx-runtime': path.resolve(
-        __dirname,
-        '../../src/element-template/jsx-runtime/index.ts',
-      ),
-      '@lynx-js/react/hooks': path.resolve(__dirname, '../../src/core/hooks/react.ts'),
-      '@lynx-js/react/lepus/hooks': path.resolve(
-        __dirname,
-        '../../src/core/hooks/mainThread.ts',
-      ),
-      '@lynx-js/react/lepus': path.resolve(__dirname, '../../lepus/index.js'),
-      '@lynx-js/react/legacy-react-runtime': path.resolve(
-        __dirname,
-        '../../src/core/compat/legacy-react-runtime.ts',
-      ),
-      '@lynx-js/react/element-template/internal': path.resolve(__dirname, '../../src/element-template/internal.ts'),
-      '@lynx-js/react/element-template': path.resolve(__dirname, '../../src/element-template/index.ts'),
-      '@lynx-js/react': path.resolve(__dirname, '../../src/element-template/index.ts'),
-    },
+      {
+        find: '@lynx-js/react/jsx-dev-runtime',
+        replacement: path.resolve(__dirname, '../../jsx-dev-runtime/index.js'),
+      },
+      { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, '../../jsx-runtime/index.js') },
+      {
+        find: '@lynx-js/react/element-template/jsx-dev-runtime',
+        replacement: path.resolve(__dirname, '../../src/element-template/jsx-dev-runtime/index.ts'),
+      },
+      {
+        find: '@lynx-js/react/element-template/jsx-runtime',
+        replacement: path.resolve(__dirname, '../../src/element-template/jsx-runtime/index.ts'),
+      },
+      { find: '@lynx-js/react/hooks', replacement: path.resolve(__dirname, '../../src/core/hooks/react.ts') },
+      {
+        find: '@lynx-js/react/lepus/hooks',
+        replacement: path.resolve(__dirname, '../../src/core/hooks/mainThread.ts'),
+      },
+      { find: '@lynx-js/react/lepus', replacement: path.resolve(__dirname, '../../lepus/index.js') },
+      {
+        find: '@lynx-js/react/legacy-react-runtime',
+        replacement: path.resolve(__dirname, '../../src/core/compat/legacy-react-runtime.ts'),
+      },
+      {
+        find: '@lynx-js/react/element-template/internal',
+        replacement: path.resolve(__dirname, '../../src/element-template/internal.ts'),
+      },
+      {
+        find: '@lynx-js/react/element-template',
+        replacement: path.resolve(__dirname, '../../src/element-template/index.ts'),
+      },
+      { find: '@lynx-js/react', replacement: path.resolve(__dirname, '../../src/element-template/index.ts') },
+    ],
   },
   test: {
     name: 'react/runtime-et',
+    server: {
+      deps: {
+        // Keep internal-preact inside the vite module graph so its bare
+        // `preact` imports hit the aliases above instead of Node resolution
+        // (which would land on pnpm's hidden hoist and may load a second
+        // preact copy).
+        inline: [/@lynx-js[\\/]internal-preact/],
+      },
+    },
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
       include: ['src/element-template/**'],

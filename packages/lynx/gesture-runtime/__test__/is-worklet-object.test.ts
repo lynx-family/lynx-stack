@@ -75,6 +75,20 @@ describe('isWorkletObj', () => {
     expect(isWorkletObj(fn)).toBe(false);
   });
 
+  test('should return true for function when __TRANSFORM_FREE_MTS__ is set', () => {
+    const flagged = globalThis as { __TRANSFORM_FREE_MTS__?: boolean };
+    flagged.__TRANSFORM_FREE_MTS__ = true;
+
+    const fn = () => {};
+    const result = isWorkletObj(fn);
+    const nonFunction = isWorkletObj({});
+
+    delete flagged.__TRANSFORM_FREE_MTS__;
+
+    expect(result).toBe(true);
+    expect(nonFunction).toBe(false);
+  });
+
   test('should handle object with _wkltId as falsy value', () => {
     const worklet = {
       _wkltId: '',

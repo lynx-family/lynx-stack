@@ -1,0 +1,53 @@
+{
+  "name": "@lynx-js/preact-runtime",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A transform-free ReactLynx runtime running vanilla preact purely on the background thread.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/preact-runtime"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./compat": {
+      "types": "./dist/compat/index.d.ts",
+      "default": "./dist/compat/index.js"
+    },
+    "./compat/debug": {
+      "types": "./dist/compat/debug.d.ts",
+      "default": "./dist/compat/debug.js"
+    },
+    "./plugin": {
+      "default": "./dist/plugin/index.js"
+    },
+    "./main-thread": "./dist/main-thread.js",
+    "./loader/import-attributes-loader": "./loader/import-attributes-loader.cjs",
+    "./compat/worklet-bindings": {
+      "types": "./dist/compat/worklet-bindings.d.ts",
+      "default": "./dist/compat/worklet-bindings.js"
+    }
+  },
+  "files": [
+    "dist",
+    "loader"
+  ],
+  "scripts": {
+    "build": "rslib build"
+  },
+  "dependencies": {
+    "@lynx-js/css-extract-webpack-plugin": "workspace:*",
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "preact": "^10.29.1"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rslib/core": "catalog:rslib"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "noEmit": true,
+    "lib": ["ES2022"],
+    "allowJs": true,
+    "checkJs": true,
+    "isolatedDeclarations": false,
+  },
+  "include": [
+    "lynx.config.js",
+    "cases",
+  ],
+}

@@ -10,5 +10,13 @@ export function isWorkletObj(obj: unknown): boolean {
   if (!obj) {
     return false;
   }
+  // Transform-free runtimes (e.g. @lynx-js/preact-runtime) run main-thread
+  // functions on the background thread; plain functions are valid there.
+  if (
+    (globalThis as { __TRANSFORM_FREE_MTS__?: boolean }).__TRANSFORM_FREE_MTS__
+    && typeof obj === 'function'
+  ) {
+    return true;
+  }
   return typeof obj === 'object' && '_wkltId' in obj;
 }

@@ -1,4 +1,5 @@
 packages:
+  - benchmark/preact-runtime
   - benchmark/react
   - examples/*
   - packages/background-only
@@ -7,6 +8,7 @@ packages:
   - packages/i18n/*
   - packages/lynx/*
   - packages/mcp-servers/*
+  - packages/preact-runtime
   - packages/repl
   - packages/react
   - packages/react-signals

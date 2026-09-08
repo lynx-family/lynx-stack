@@ -1,0 +1,20 @@
+{
+  "name": "@lynx-js/benchmark-preact-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "pnpm run --sequential --stream --aggregate-output '/^bench:.*/'",
+    "bench:002-hello-preact": "benchx_cli run dist/002-hello-preact.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:007-four-layer-views-preact": "benchx_cli run dist/007-four-layer-views-preact.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:008-many-use-state-preact": "benchx_cli run dist/008-many-use-state-preact.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "build": "rspeedy build"
+  },
+  "dependencies": {
+    "@lynx-js/preact-runtime": "workspace:*",
+    "benchx_cli": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "workspace:*"
+  }
+}
