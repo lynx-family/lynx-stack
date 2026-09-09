@@ -64,6 +64,7 @@ export interface ChatArtifactView {
   id: string;
   label: string;
   text: string;
+  formattedText?: string;
   language: 'text' | 'json';
 }
 
@@ -103,6 +104,8 @@ export interface ChatStreamAdapter<TState, TOutput> {
 
 export interface ChatTurnPersistence {
   assistantContent: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   a2uiMessages: unknown[];
   previewMessages: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;

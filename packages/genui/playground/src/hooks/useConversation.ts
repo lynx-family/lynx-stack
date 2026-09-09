@@ -29,6 +29,8 @@ import type {
 export interface ModelChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
 }
@@ -49,6 +51,8 @@ interface ConversationHotState {
 export interface RecordTurnInput {
   userMessage: ModelChatMessage;
   assistantContent: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   a2uiMessages: unknown[];
   previewMessages?: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
@@ -228,6 +232,12 @@ function toPersistedMessages(
     seq: index,
     role: message.role,
     content: message.content,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
     createdAt: now + index,
@@ -240,6 +250,12 @@ function fromPersistedMessages(
   return messages.map((message) => ({
     role: message.role,
     content: message.content,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
   }));
@@ -474,6 +490,12 @@ export function useConversation(
           messages: doc.messages.map((message) => ({
             role: message.role,
             content: message.content,
+            ...(message.lynxXmlFragment
+              ? { lynxXmlFragment: message.lynxXmlFragment }
+              : {}),
+            ...(message.lynxXmlModelOutput
+              ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+              : {}),
             previewPayloadUrls: message.previewPayloadUrls,
             previewMetrics: clonePreviewPerformanceMetrics(
               message.previewMetrics,
@@ -559,6 +581,12 @@ export function useConversation(
         {
           role: 'assistant' as const,
           content: input.assistantContent,
+          ...(input.lynxXmlFragment
+            ? { lynxXmlFragment: input.lynxXmlFragment }
+            : {}),
+          ...(input.lynxXmlModelOutput
+            ? { lynxXmlModelOutput: input.lynxXmlModelOutput }
+            : {}),
           previewPayloadUrls: input.previewPayloadUrls ?? undefined,
           previewMetrics: clonePreviewPerformanceMetrics(input.previewMetrics),
         },

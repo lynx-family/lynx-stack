@@ -40,6 +40,7 @@ interface TextStreamingService {
       text: string | undefined;
       usage: unknown;
       finishReason: unknown;
+      metadata?: Record<string, unknown>;
     }>;
   }>;
 }
@@ -208,7 +209,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             streamedTextLength: streamedText.length,
           });
 
-          const { text, usage, finishReason } = await finalize();
+          const { text, usage, finishReason, metadata } = await finalize();
           resultMetadata = { finishReason, usage };
           generationController.signal.throwIfAborted();
           const rawFinalText = text ?? streamedText;
@@ -240,6 +241,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           enqueue('done', {
             ok: true,
             text: finalText,
+            ...(metadata ? { metadata } : {}),
             usage,
             finishReason,
           });

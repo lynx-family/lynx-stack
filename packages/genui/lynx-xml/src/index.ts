@@ -15,4 +15,8 @@ export {
   generateMainThreadScriptResult,
   MAX_XML_FRAGMENT_LENGTH,
 } from './html-fragment.js';
-export type { GeneratedMainThreadScript } from './html-fragment.js';
+export type {
+  GeneratedMainThreadScript,
+  GenerateMainThreadScriptOptions,
+} from './html-fragment.js';
+export { resolveFragmentBindings } from './fragment-bindings.js';

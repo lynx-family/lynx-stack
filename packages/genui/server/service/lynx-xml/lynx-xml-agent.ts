@@ -5,9 +5,12 @@
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import {
   createHtmlFragmentScriptRunScope,
+  getHtmlFragmentScriptMetadata,
   resolveHtmlFragmentScriptPlaceholders,
 } from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
-import type { HtmlFragmentScriptRunScope } from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
+import type {
+  HtmlFragmentScriptRunScope,
+} from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
 import { createLynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
 import type { LynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
 import { pickAgentCapabilityConfig } from '../common/agent-capabilities.js';
@@ -35,6 +38,11 @@ import type {
 } from '../common/types.js';
 
 export type LynxXmlChatOptions = ChatOptions;
+
+export interface LynxXmlGenerationMetadata extends Record<string, unknown> {
+  modelOutput: string;
+  xmlFragment?: string;
+}
 
 export const LYNX_XML_MAX_OUTPUT_TOKENS = 16_384;
 
@@ -151,6 +159,7 @@ export default class LynxXmlAgentService {
       text: string | undefined;
       usage: unknown;
       finishReason: unknown;
+      metadata: LynxXmlGenerationMetadata;
     }>;
   }> {
     const buildConversationStartedAt = performance.now();
@@ -184,6 +193,10 @@ export default class LynxXmlAgentService {
         return {
           ...result,
           text: resolveHtmlFragmentScriptPlaceholders(scope, rawText),
+          metadata: {
+            ...getHtmlFragmentScriptMetadata(scope),
+            modelOutput: rawText,
+          },
         };
       },
     };
@@ -194,7 +207,12 @@ export default class LynxXmlAgentService {
     opts: LynxXmlChatOptions = {},
     conversation?: ConversationContext,
     abortSignal?: AbortSignal,
-  ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+  ): Promise<{
+    text: string;
+    usage: unknown;
+    finishReason: unknown;
+    metadata: LynxXmlGenerationMetadata;
+  }> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
@@ -207,6 +225,10 @@ export default class LynxXmlAgentService {
     return {
       ...generated,
       text: resolveHtmlFragmentScriptPlaceholders(scope, generated.text),
+      metadata: {
+        ...getHtmlFragmentScriptMetadata(scope),
+        modelOutput: generated.text,
+      },
     };
   }
 }

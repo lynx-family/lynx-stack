@@ -41,6 +41,22 @@ __AppendElement(node0, node1);
 __AppendElement(page, node0);`);
   });
 
+  test('separates hoisted node declarations from render assignments when requested', () => {
+    const result = generateMainThreadScriptResult(
+      '<view>content<text id="dateText">Today</text></view>',
+      { nodeScope: 'script' },
+    );
+    expect(result.bindings).toEqual({ dateText: 'node2' });
+    expect(result.declarations).toBe('var node0, node1, node2;');
+    expect(result.javascript).not.toContain('const node');
+    expect(result.javascript).toContain('node0 = __CreateView(pageId);');
+    expect(result.javascript).toContain('node1 = __CreateText(pageId);');
+    expect(result.javascript).toContain('node2 = __CreateText(pageId);');
+    expect(generateMainThreadScriptResult('<view/>')).not.toHaveProperty(
+      'declarations',
+    );
+  });
+
   test('supports multiple roots, text content, and generic element tags', () => {
     expect(
       generateMainThreadScript(

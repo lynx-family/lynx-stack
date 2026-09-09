@@ -70,3 +70,41 @@ dependency-derived and local override invariants with package tests. Verify the
 built output has no runtime Markdown imports. Include the package config in the
 root Rstest project list and validate it with `pnpm exec rstest run -c
 rstest.config.ts --project genui/lynx-xml`.
+
+Keep the original successful `html_fragment_to_main_thread_script` input in the
+same per-run RequestContext as its generated script. Return only that original
+string to clients as `metadata.xmlFragment` alongside the final `text`, including
+in the SSE `done` event; omit `xmlFragment` when no conversion ran. Preserve whitespace
+and XML entities exactly, keep generated-script registry details out of metadata,
+and keep the model-visible tool result limited to bindings and
+the placeholder. Also expose the exact final model text as `metadata.modelOutput`
+before placeholder expansion, declaration insertion, binding repair, or envelope
+normalization. Include it even when no fragment conversion ran, using accumulated
+text deltas only when the provider does not return final text. The shared text-stream route may forward optional result metadata
+without depending on Lynx XML types or mixing it into text deltas.
+
+When the server inserts generated fragment code inside `renderPage()`, request
+script-scoped node generation. Keep node assignments at the placeholder and add
+one combined `var node0, node1, ...;` declaration outside the function at the
+start of the main-thread script, after any directive prologue. Preserve directive
+semantics, including automatic semicolons, and support eager rendering; ordinary converter calls keep local
+`const` declarations by default. Returned bindings must work from external event,
+update, and destroy handlers after rendering. Cover this by executing an assembled
+script with deterministic Element PAPI mocks, including re-render and node13 access.
+
+XML ids do not declare JavaScript variables. Tell the model to use binding-map
+values in every handler and update, and that the placeholder already appends the
+fragment roots. At final assembly, resolve undeclared XML-id references against
+the per-run bindings using JavaScript parsing and lexical scope analysis in the
+headless Lynx XML package. Preserve declared aliases, local bindings, property
+keys, strings, comments, and shorthand keys. Reject rewrites captured by a local
+nodeN binding. Do not create globals for arbitrary XML ids or rewrite identifiers
+with a text regex. Cover initial updates and tap-driven updates with executable,
+model-free weather regressions.
+
+Keep `eslint-scope` external in the intermediate Lynx XML ESM build; the GenUI
+server bundles it and its CommonJS dependencies once in the final executable.
+Embedding that runtime in the library and bundling it again can overwrite the
+server's module table. Validate dependency and bundling changes by starting the
+built server on an ephemeral local port and requesting a model-free route,
+in addition to source-level converter tests.

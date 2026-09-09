@@ -399,6 +399,7 @@ function ArtifactViewer(props: {
   onCopy: (text: string) => void;
 }) {
   const { artifact, onCopy } = props;
+  const [showFormatted, setShowFormatted] = useState(false);
   const [activeViewId, setActiveViewId] = useState(
     () => artifact.views[0]?.id ?? '',
   );
@@ -411,6 +412,9 @@ function ArtifactViewer(props: {
   }, [activeViewId, artifact.views]);
 
   if (!activeView) return null;
+  const displayedText = showFormatted
+    ? activeView.formattedText ?? activeView.text
+    : activeView.text;
   return (
     <div className='chatGeneratedJson chatArtifact'>
       <div className='chatGeneratedJsonTitle chatArtifactHeader'>
@@ -439,17 +443,45 @@ function ArtifactViewer(props: {
               </div>
             )
             : null}
-          <button
-            type='button'
-            className='chatJsonCopyButton'
-            onClick={() => onCopy(activeView.text)}
-          >
-            Copy
-          </button>
         </div>
       </div>
+      <div className='chatArtifactCodeToolbar'>
+        {activeView.formattedText === undefined
+          ? <span className='chatArtifactCodeLabel'>{activeView.label}</span>
+          : (
+            <div
+              className='chatArtifactFormatSwitch'
+              role='group'
+              aria-label={`${activeView.label} formatting`}
+            >
+              <button
+                type='button'
+                className='chatArtifactFormatButton'
+                aria-pressed={!showFormatted}
+                onClick={() => setShowFormatted(false)}
+              >
+                Raw
+              </button>
+              <button
+                type='button'
+                className='chatArtifactFormatButton'
+                aria-pressed={showFormatted}
+                onClick={() => setShowFormatted(true)}
+              >
+                Formatted
+              </button>
+            </div>
+          )}
+        <button
+          type='button'
+          className='chatJsonCopyButton chatArtifactCopyButton'
+          onClick={() => onCopy(displayedText)}
+        >
+          Copy
+        </button>
+      </div>
       <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
-        {activeView.text}
+        {displayedText}
       </pre>
     </div>
   );

@@ -38,7 +38,19 @@ describe('buildLynxXmlSystemPrompt', () => {
       'bindings map',
     );
     expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'main-thread script scope',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'Do not access them before the initial render',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
       'It does not return the generated JavaScript',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'Use the VALUES of the bindings map',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
+      'Do not append those roots again',
     );
   });
 

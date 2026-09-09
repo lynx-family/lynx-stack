@@ -47,6 +47,7 @@ beforeEach(() => {
 describe('Lynx XML fragment placeholder delivery', () => {
   test('keeps scripts request-scoped and expands only the final text', async () => {
     const placeholders: string[] = [];
+    const fragments: string[] = [];
     const tool = createHtmlFragmentToMainThreadScriptTool();
     const execute = tool.execute;
     if (!execute) throw new Error('fragment tool execute is missing');
@@ -59,8 +60,11 @@ describe('Lynx XML fragment placeholder delivery', () => {
           requestContext: HtmlFragmentScriptRunScope['requestContext'];
         },
       ) => {
+        const xmlFragment =
+          `<view id="button"><text>Tap ${fragments.length}</text></view>`;
+        fragments.push(xmlFragment);
         const output = await execute(
-          { xmlFragment: '<view id="button"><text>Tap</text></view>' },
+          { xmlFragment },
           { requestContext: options.requestContext } as never,
         ) as FragmentToolOutput;
         const buttonBinding = output.bindings.button;
@@ -88,17 +92,65 @@ describe('Lynx XML fragment placeholder delivery', () => {
     const secondStreamedText = await collect(second.textStream);
     const secondFinal = await second.finalize();
 
+    expect(firstFinal.metadata).toEqual({
+      xmlFragment: fragments[0],
+      modelOutput: firstStreamedText,
+    });
+    expect(secondFinal.metadata).toEqual({
+      xmlFragment: fragments[1],
+      modelOutput: secondStreamedText,
+    });
     expect(createLynxXmlAgent).toHaveBeenCalledTimes(1);
     expect(placeholders).toHaveLength(2);
     expect(placeholders[0]).not.toBe(placeholders[1]);
     expect(firstStreamedText).toContain(placeholders[0]);
     expect(secondStreamedText).toContain(placeholders[1]);
-    expect(firstFinal.text).toContain('const node0 = __CreateView(pageId);');
+    expect(firstFinal.text).toContain('node0 = __CreateView(pageId);');
     expect(firstFinal.text).toContain(
       '__AddEventListener(node0, "tap", onTap, {});',
     );
-    expect(secondFinal.text).toContain('const node0 = __CreateView(pageId);');
+    expect(secondFinal.text).toContain('node0 = __CreateView(pageId);');
     expect(firstFinal.text).not.toContain('__GENUI_HTML_FRAGMENT_');
     expect(secondFinal.text).not.toContain('__GENUI_HTML_FRAGMENT_');
+  });
+  test('returns original model output with and without fragment conversion', async () => {
+    const xmlFragment = '<view id="button"><text>Original</text></view>';
+    const execute = createHtmlFragmentToMainThreadScriptTool().execute;
+    if (!execute) throw new Error('fragment tool execute is missing');
+    let calls = 0;
+    let modelOutput = '';
+    rstest.mocked(createLynxXmlAgent).mockReturnValue({
+      agent: {
+        generate: async (
+          _messages: unknown,
+          options: HtmlFragmentScriptRunScope,
+        ) => {
+          if (calls++ > 0) {
+            return { text: 'no conversion', finishReason: 'stop' };
+          }
+          const output = await execute({ xmlFragment }, {
+            requestContext: options.requestContext,
+          } as never) as FragmentToolOutput;
+          modelOutput = `\n${
+            modelArtifact(output.placeholder, output.bindings.button!)
+          }\n`;
+          return {
+            text: modelOutput,
+            finishReason: 'stop',
+          };
+        },
+      },
+      model: 'test-model',
+    } as never);
+    const service = new LynxXmlAgentService();
+    const first = await service.generateRaw([]);
+    expect(first.metadata).toEqual({ xmlFragment, modelOutput });
+    expect(first.text).toContain('node0 = __CreateView(pageId);');
+    expect(first.text).not.toContain('__GENUI_HTML_FRAGMENT_');
+    const withoutConversion = await service.generateRaw([]);
+    expect(withoutConversion.metadata).toEqual({
+      modelOutput: 'no conversion',
+    });
+    expect(createLynxXmlAgent).toHaveBeenCalledTimes(1);
   });
 });
