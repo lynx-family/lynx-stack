@@ -54,7 +54,8 @@
   },
   "dependencies": {
     "@lynx-js/rsbuild-plugin": "workspace:*",
-    "@rsbuild/core": "catalog:rsbuild"
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsdoctor/core": "2.0.0-beta.2"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
@@ -83,9 +84,6 @@
     "typescript": {
       "optional": true
     }
-  },
-  "optionalDependencies": {
-    "@rsdoctor/core": "2.0.0-beta.1"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
