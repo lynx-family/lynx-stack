@@ -59,7 +59,11 @@ describe('Plugins - Rsdoctor', () => {
     expect(
       validateConfig({
         tools: {
-          rsdoctor: { server: { port: 3300 }, output: { mode: 'brief' } },
+          rsdoctor: {
+            server: { port: 3300 },
+            output: { mode: 'brief' },
+            supports: { brotli: { brotliLevel: 4 } },
+          },
         },
       }).success,
     ).toBe(true)

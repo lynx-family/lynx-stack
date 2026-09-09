@@ -92,8 +92,6 @@ export type {
 } from './config/tools/css-extract.js'
 export type { CssLoader, CssLoaderModules } from './config/tools/css-loader.js'
 export type {
-  RsdoctorCorsOrigin,
-  RsdoctorFeature,
   RsdoctorRspackPluginOptions,
   Tools,
 } from './config/tools/index.js'

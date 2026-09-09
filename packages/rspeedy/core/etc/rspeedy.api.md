@@ -19,6 +19,7 @@ import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
 import type { RsbuildPlugins } from '@rsbuild/core';
 import { version as rsbuildVersion } from '@rsbuild/core';
+import type { RsdoctorRspackPluginOptions as RsdoctorRspackPluginOptions_2 } from '@rsdoctor/core';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
 import type { ServerConfig } from '@rsbuild/core';
@@ -286,83 +287,15 @@ export { RsbuildPluginAPI }
 
 export { rsbuildVersion }
 
-// @public (undocumented)
-export type RsdoctorCorsOrigin = boolean | string | RegExp | (boolean | string | RegExp)[];
-
-// @public (undocumented)
-export type RsdoctorFeature = 'loader' | 'plugins' | 'resolver' | 'bundle' | 'treeShaking' | 'lite';
-
 // @public
-export interface RsdoctorRspackPluginOptions {
-    // (undocumented)
-    disableClientServer?: boolean;
-    // (undocumented)
-    features?: Partial<Record<RsdoctorFeature, boolean>> | RsdoctorFeature[];
-    // (undocumented)
-    innerClientPath?: string;
+export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter' | 'sdkInstance'> {
     // (undocumented)
     linter?: {
         rules?: Record<string, unknown>;
         level?: 'Ignore' | 'Warn' | 'Error';
         extends?: unknown[];
     };
-    // (undocumented)
-    multiCompiler?: boolean | {
-        group?: string;
-    };
-    // (undocumented)
-    output?: {
-        reportDir?: string;
-    } & ({
-        mode?: 'normal';
-        reportCodeType?: 'noModuleSource' | 'noAssetsAndModuleSource' | 'noCode' | undefined;
-        options?: {
-            type?: never;
-        };
-    } | {
-        mode?: 'brief';
-        reportCodeType?: 'noCode' | undefined;
-        options?: {
-            type?: ('html' | 'json')[];
-            htmlOptions?: {
-                reportHtmlName?: string;
-            };
-            jsonOptions?: {
-                fileName?: string;
-                sections?: {
-                    moduleGraph?: boolean;
-                    chunkGraph?: boolean;
-                    rules?: boolean;
-                };
-            };
-        };
-    });
-    // (undocumented)
-    printLog?: {
-        serverUrls: boolean;
-    };
-    // (undocumented)
-    server?: {
-        port?: number;
-        cors?: boolean | {
-            origin?: RsdoctorCorsOrigin | ((requestOrigin: string | undefined, callback: (error: Error | null, origin?: RsdoctorCorsOrigin) => void) => void);
-            methods?: string | string[];
-            allowedHeaders?: string | string[];
-            exposedHeaders?: string | string[];
-            credentials?: boolean;
-            maxAge?: number;
-            preflightContinue?: boolean;
-            optionsSuccessStatus?: number;
-        };
-    };
-    // (undocumented)
-    supports?: {
-        banner?: boolean;
-        parseBundle?: boolean;
-        gzip?: boolean | {
-            gzipLevel?: number;
-        };
-    };
+    sdkInstance?: object;
 }
 
 export { Rspack }

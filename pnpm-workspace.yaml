@@ -49,9 +49,9 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   # Explicit Rsdoctor 2.0 beta upgrade.
-  - "@rsdoctor/core@2.0.0-beta.1"
-  - "@rsdoctor/client@2.0.0-beta.1"
-  - "@rsdoctor/shared@2.0.0-beta.1"
+  - "@rsdoctor/core@2.0.0-beta.2"
+  - "@rsdoctor/client@2.0.0-beta.2"
+  - "@rsdoctor/shared@2.0.0-beta.2"
   - "@lynx-js/*"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"

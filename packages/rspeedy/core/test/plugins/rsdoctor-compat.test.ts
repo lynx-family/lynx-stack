@@ -14,27 +14,15 @@ import {
 
 import { pluginRsdoctor } from '../../src/plugins/rsdoctor.plugin.js'
 
-const { resolve, pluginState } = rstest.hoisted(() => ({
-  resolve: rstest.fn(),
-  pluginState: { available: true },
-}))
-rstest.mock('node:module', () => ({ createRequire: () => ({ resolve }) }))
+const { createPlugin } = rstest.hoisted(() => ({ createPlugin: rstest.fn() }))
 rstest.mock('@rsdoctor/core', () => ({
-  get RsdoctorRspackPlugin() {
-    if (!pluginState.available) return undefined
-    return class {
-      readonly isRsdoctorPlugin = true
-      constructor(readonly options: unknown) {}
+  RsdoctorRspackPlugin: class {
+    readonly isRsdoctorPlugin = true
+    constructor(options: unknown) {
+      createPlugin(options)
     }
   },
 }))
-
-function useNode(node: string) {
-  rstest.stubGlobal('process', {
-    ...process,
-    versions: { ...process.versions, node },
-  })
-}
 
 async function register(configs: Rspack.Configuration[]) {
   const onBeforeCreateCompiler = rstest.fn<
@@ -50,96 +38,55 @@ async function register(configs: Rspack.Configuration[]) {
   await onBeforeCreateCompiler.mock.calls[0]?.[0]({ bundlerConfigs: configs })
 }
 
-function customPlugin() {
-  return { isRsdoctorPlugin: true, apply: rstest.fn() }
-}
-
 beforeEach(() => {
   rstest.stubEnv('RSDOCTOR', 'true')
-  pluginState.available = true
-  resolve.mockReset().mockReturnValue('/optional/rsdoctor.js')
+  createPlugin.mockReset()
 })
 afterEach(() => {
   rstest.unstubAllGlobals()
   rstest.unstubAllEnvs()
 })
 
-describe('optional Rsdoctor compatibility', () => {
-  test('does not resolve the plugin when analysis is disabled', async () => {
-    useNode('20.19.0')
+describe('Rsdoctor 2 registration', () => {
+  test('does not register when analysis is disabled', async () => {
     rstest.stubEnv('RSDOCTOR', 'false')
     await register([{}])
-    expect(resolve).not.toHaveBeenCalled()
+    expect(createPlugin).not.toHaveBeenCalled()
   })
 
-  test.each(['20.19.0', '22.12.0', '22.17.1'])(
-    'guides Node %s users to manual v1 registration',
+  test.each(['20.19.0', '22.12.0', '22.18.0', '24.0.0'])(
+    'auto-registers on Node %s',
     async node => {
-      useNode(node)
-      await expect(register([{}])).rejects.toThrow(
-        'install @rsdoctor/rspack-plugin@1',
-      )
-      expect(resolve).not.toHaveBeenCalled()
+      rstest.stubGlobal('process', {
+        ...process,
+        versions: { ...process.versions, node },
+      })
+      const config: Rspack.Configuration = {}
+      await register([config])
+      expect(config.plugins).toHaveLength(1)
+      expect(createPlugin).toHaveBeenCalledTimes(1)
     },
   )
 
-  test.each(['22.18.0', '24.0.0'])('auto-registers on Node %s', async node => {
-    useNode(node)
-    const config: Rspack.Configuration = {}
-    await register([config])
-    expect(config.plugins).toHaveLength(1)
-    expect(resolve).toHaveBeenCalledWith('@rsdoctor/core')
-  })
-
-  test('preserves manually registered plugins on Node 20 without resolving v2', async () => {
-    useNode('20.19.0')
-    const plugin = customPlugin()
-    const configs = [{ plugins: [plugin] }, { plugins: [plugin] }]
-    await register(configs)
-    expect(configs.every(config => config.plugins.length === 1)).toBe(true)
-    expect(resolve).not.toHaveBeenCalled()
-  })
-
   test('only fills missing configs in a multi-compiler build', async () => {
-    useNode('22.18.0')
-    const custom = { plugins: [customPlugin()] }
+    const plugin = { isRsdoctorPlugin: true, apply: rstest.fn() }
+    const custom = { plugins: [plugin] }
     const pending: Rspack.Configuration = {}
     await register([custom, pending])
-    expect(custom.plugins).toHaveLength(1)
+    expect(custom.plugins).toEqual([plugin])
     expect(pending.plugins).toHaveLength(1)
+    expect(createPlugin).toHaveBeenCalledTimes(1)
   })
 
-  test('does not silently skip an unconfigured compiler on Node 20', async () => {
-    useNode('20.19.0')
-    await expect(register([{ plugins: [customPlugin()] }, {}])).rejects.toThrow(
-      'requires Node.js >=22.18',
-    )
+  test('does not construct another plugin when all configs already have one', async () => {
+    const plugin = { isRsdoctorPlugin: true, apply: rstest.fn() }
+    await register([{ plugins: [plugin] }, { plugins: [plugin] }])
+    expect(createPlugin).not.toHaveBeenCalled()
   })
 
-  test('explains how to install the missing optional dependency', async () => {
-    useNode('22.18.0')
-    resolve.mockImplementation(() => {
-      throw Object.assign(new Error('missing'), { code: 'MODULE_NOT_FOUND' })
-    })
-    await expect(register([{}])).rejects.toThrow(
-      'Install @rsdoctor/core@2.0.0-beta.1',
-    )
-  })
-
-  test('guides users when resolution finds core v1 without the plugin export', async () => {
-    useNode('22.18.0')
-    pluginState.available = false
-    await expect(register([{}])).rejects.toThrow(
-      'Install @rsdoctor/core@2.0.0-beta.1',
-    )
-  })
-
-  test('preserves other resolution errors', async () => {
-    useNode('22.18.0')
-    const error = Object.assign(new Error('permission denied'), {
-      code: 'EACCES',
-    })
-    resolve.mockImplementation(() => {
+  test('preserves plugin initialization errors', async () => {
+    const error = new Error('invalid plugin options')
+    createPlugin.mockImplementation(() => {
       throw error
     })
     await expect(register([{}])).rejects.toBe(error)
