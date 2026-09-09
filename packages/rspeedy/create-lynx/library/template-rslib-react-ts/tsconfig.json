@@ -7,8 +7,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
 
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "jsxImportSource": "@lynx-js/react",
+    "types": ["@lynx-js/types"],
 
     "module": "ESNext",
     "moduleResolution": "Bundler",

@@ -17,16 +17,15 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/types": "4.1.0",
-    "@rsbuild/plugin-react": "2.1.0",
+    "@rsbuild/plugin-react": "^2.1.0",
     "@rslib/core": "catalog:rslib",
-    "@rstest/core": "0.11.12",
+    "@rstest/adapter-rslib": "^0.11.12",
+    "@rstest/core": "^0.11.12",
     "@testing-library/jest-dom": "^6.9.1",
-    "jsdom": "^27.4.0"
+    "happy-dom": "^20.13.2"
   },
   "peerDependencies": {
-    "@lynx-js/react": ">=0.100.0",
-    "@lynx-js/types": ">=4"
+    "@lynx-js/react": ">=0.100.0"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
