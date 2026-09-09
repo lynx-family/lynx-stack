@@ -12,19 +12,19 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import {
+  migrateBenchHistoryEntries,
+  serializeBenchHistoryEntries,
+} from './benchHistory.js';
+import {
   BenchPage,
   createBenchJobCancellationRequestInit,
   getA2UIBenchReportEndpoint,
   getBenchJobCancellationDisposition,
   getBenchRunBlockers,
   getBenchRunMessageText,
-  migrateBenchHistoryEntries,
   normalizeBenchUiJudgeServerUrl,
-  persistBenchHistory,
-  readBenchHistory,
   readBenchUiJudgeServerUrl,
   saveBenchHistoryEntry,
-  serializeBenchHistoryEntries,
   serializeBenchReport,
   shouldApplyBenchReportRequest,
   shouldCancelCreatedBenchJob,
@@ -409,48 +409,6 @@ describe('BenchPage', () => {
     expect(JSON.parse(serializeBenchHistoryEntries(migrated))).toMatchObject([
       { report: { results: [{ screenshotDataUrl }] } },
     ]);
-    const originalWindow = Object.getOwnPropertyDescriptor(
-      globalThis,
-      'window',
-    );
-    let saved = serialized;
-    try {
-      Object.defineProperty(globalThis, 'window', {
-        configurable: true,
-        value: {
-          localStorage: {
-            getItem: () => saved,
-            setItem: (_key: string, value: string) => {
-              saved = value;
-            },
-          },
-        },
-      });
-      expect(readBenchHistory()[0]?.report?.results[0]?.screenshotDataUrl).toBe(
-        screenshotDataUrl,
-      );
-      Object.defineProperty(globalThis, 'window', {
-        configurable: true,
-        value: {
-          localStorage: {
-            setItem: () => {
-              throw new Error('quota');
-            },
-          },
-        },
-      });
-      expect(persistBenchHistory(migrated)).toBe(false);
-      expect(migrated[0]?.report?.results[0]?.screenshotDataUrl).toBe(
-        screenshotDataUrl,
-      );
-      expect(JSON.parse(saved)).toMatchObject([
-        { report: { results: [{ screenshotDataUrl }] } },
-      ]);
-    } finally {
-      if (originalWindow) {
-        Object.defineProperty(globalThis, 'window', originalWindow);
-      } else Reflect.deleteProperty(globalThis, 'window');
-    }
   });
 
   test('redacts the current provider key from report text', () => {
@@ -550,38 +508,9 @@ describe('BenchPage', () => {
         },
       },
     ];
-    const originalWindow = Object.getOwnPropertyDescriptor(
-      globalThis,
-      'window',
-    );
-    let persisted = '';
-    let serialized = '';
-    let migratedLength = 0;
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: {
-        localStorage: {
-          getItem: () => JSON.stringify(legacyHistory),
-          setItem: (_key: string, value: string) => {
-            persisted = value;
-          },
-        },
-      },
-    });
-    try {
-      const migrated = readBenchHistory();
-      migratedLength = migrated.length;
-      serialized = serializeBenchHistoryEntries(migrated);
-    } finally {
-      if (originalWindow) {
-        Object.defineProperty(globalThis, 'window', originalWindow);
-      } else {
-        Reflect.deleteProperty(globalThis, 'window');
-      }
-    }
-
-    expect(migratedLength).toBe(1);
-    expect(persisted).toBe(serialized);
+    const migrated = migrateBenchHistoryEntries(legacyHistory);
+    const serialized = serializeBenchHistoryEntries(migrated);
+    expect(migrated).toHaveLength(1);
     expect(serialized).not.toContain('legacy-secret');
     expect(serialized).not.toContain('private-provider');
     expect(serialized).not.toContain('legacy-token');

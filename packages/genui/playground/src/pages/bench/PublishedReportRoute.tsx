@@ -6,65 +6,60 @@ import { useEffect, useRef, useState } from 'react';
 import { BenchReportImageAction } from './BenchReportImageAction.js';
 import { serializeBenchReport } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
-import {
-  BENCH_HISTORY_STORAGE_KEY,
-  BENCH_SELECTED_REPORT_STORAGE_KEY,
-  loadPublishedReport,
-} from './publishedReportLoader.js';
+import { loadPublishedReport } from './publishedReportLoader.js';
 import { PublishedReportPage } from './PublishedReportPage.js';
 import { Button } from '../../components/Button.js';
 import { Copy } from '../../components/Icon.js';
+import { subscribeBenchHistory } from '../../storage/benchRepo.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
 
 type ReportState =
+  | { status: 'loading' }
   | { status: 'ready'; report: BenchReport }
   | { status: 'error'; error: string };
 
-function readLocalReport(reportId: string): ReportState {
-  if (typeof window === 'undefined') {
-    return {
-      status: 'error',
-      error: 'Open this page in the browser that saved the Bench history.',
-    };
-  }
-  try {
-    return {
-      status: 'ready',
-      report: loadPublishedReport(
-        reportId,
-        window.localStorage,
-        window.sessionStorage,
-      ),
-    };
-  } catch (error) {
-    return {
-      status: 'error',
-      error: error instanceof Error
-        ? error.message
-        : 'Local Bench history could not be read.',
-    };
-  }
-}
-
 export function PublishedReportRoute(props: { reportId: string }) {
   const [state, setState] = useState<ReportState>(() =>
-    readLocalReport(props.reportId)
+    typeof window === 'undefined'
+      ? {
+        status: 'error',
+        error: 'Open this page in the browser that saved the Bench history.',
+      }
+      : { status: 'loading' }
   );
+  const [reload, setReload] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const [copyNotice, setCopyNotice] = useState('');
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reload explicitly retries a failed database read.
   useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (
-        event.key === null || event.key === BENCH_HISTORY_STORAGE_KEY
-        || event.key === BENCH_SELECTED_REPORT_STORAGE_KEY
-      ) {
-        setState(readLocalReport(props.reportId));
-      }
+    let active = true;
+    let revision = 0;
+    setState({ status: 'loading' });
+    const refresh = () => {
+      const request = ++revision;
+      void loadPublishedReport(props.reportId).then((report) => {
+        if (active && request === revision) {
+          setState({ status: 'ready', report });
+        }
+      }).catch((error: unknown) => {
+        if (active && request === revision) {
+          setState({
+            status: 'error',
+            error: error instanceof Error
+              ? error.message
+              : 'Local Bench history could not be read.',
+          });
+        }
+      });
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, [props.reportId]);
+    refresh();
+    const unsubscribe = subscribeBenchHistory(refresh);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [props.reportId, reload]);
 
   useEffect(() => {
     const previous = document.title;
@@ -73,6 +68,14 @@ export function PublishedReportRoute(props: { reportId: string }) {
       document.title = previous;
     };
   }, []);
+
+  if (state.status === 'loading') {
+    return (
+      <main className='publishedReportPage'>
+        <p role='status'>Loading saved report…</p>
+      </main>
+    );
+  }
 
   if (state.status === 'error') {
     return (
@@ -86,7 +89,7 @@ export function PublishedReportRoute(props: { reportId: string }) {
             site. Open a report from Bench history. Link-based sharing is not
             enabled.
           </p>
-          <Button onClick={() => setState(readLocalReport(props.reportId))}>
+          <Button onClick={() => setReload((value) => value + 1)}>
             Reload report
           </Button>
         </div>

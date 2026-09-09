@@ -3,10 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { DEFAULT_BENCH_SETTINGS } from './benchData.js';
 import type { BenchReport } from './benchReportTypes.js';
+import {
+  getSelectedBenchReportId,
+  readBenchHistory,
+} from '../../storage/benchRepo.js';
 import { BENCH_JOB_ID } from '../../utils/appRoute.js';
-
-export const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
-export const BENCH_SELECTED_REPORT_STORAGE_KEY = 'a2ui-bench-selected-report';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -97,37 +98,16 @@ export function getHistoryReport(entry: unknown): BenchReport {
 }
 
 /** Legacy job links resolve directly from this browser's saved snapshot. */
-export function loadPublishedReport(
-  jobId: string,
-  storage: Pick<Window['localStorage'], 'getItem'> = window.localStorage,
-  tabStorage?: Pick<Window['sessionStorage'], 'getItem'>,
-): BenchReport {
+export async function loadPublishedReport(jobId: string): Promise<BenchReport> {
   if (jobId && !BENCH_JOB_ID.test(jobId)) {
     throw new Error(
       'Only reports saved in this browser are supported. Open one from Bench history.',
     );
   }
-  const selectedId = jobId
-    ? null
-    : tabStorage?.getItem(BENCH_SELECTED_REPORT_STORAGE_KEY)
-      ?? storage.getItem(BENCH_SELECTED_REPORT_STORAGE_KEY);
-  const raw = storage.getItem(BENCH_HISTORY_STORAGE_KEY);
-  if (!raw) {
-    throw new Error(
-      'This report was not found in this browser’s Bench history.',
-    );
-  }
-  let entries: unknown;
-  try {
-    entries = JSON.parse(raw);
-  } catch {
-    throw new Error('Local Bench history could not be read.');
-  }
-  if (!Array.isArray(entries)) {
-    throw new Error('Local Bench history could not be read.');
-  }
-  const entry: unknown = entries.find((item: unknown) =>
-    isRecord(item) && isRecord(item.report)
+  const selectedId = jobId ? null : await getSelectedBenchReportId();
+  const entries = await readBenchHistory();
+  const entry = entries.find((item) =>
+    item.report
     && (jobId ? item.report.jobId === jobId : item.id === selectedId)
   );
   if (!entry) {

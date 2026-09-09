@@ -11,6 +11,7 @@ import {
   rstest,
   test,
 } from '@rstest/core';
+import 'fake-indexeddb/auto';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -21,16 +22,35 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import * as reportImage from './benchReportImage.js';
-import {
-  BENCH_HISTORY_STORAGE_KEY,
-  BENCH_SELECTED_REPORT_STORAGE_KEY,
-} from './publishedReportLoader.js';
+import { loadPublishedReport } from './publishedReportLoader.js';
 import { PublishedReportRoute } from './PublishedReportRoute.js';
+import {
+  LEGACY_BENCH_HISTORY_KEY as BENCH_HISTORY_STORAGE_KEY,
+  BENCH_SELECTED_REPORT_STORAGE_KEY,
+  readBenchHistory,
+  selectBenchReport,
+} from '../../storage/benchRepo.js';
+import { getDB } from '../../storage/db.js';
 import * as clipboard from '../../utils/clipboard.js';
 
 const JOB_ID = '059a758e-4cbf-4053-bbe4-9f8cb47f7444';
 const PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+
+function historyEntry(id: string, report = reportFixture()) {
+  return {
+    id,
+    title: id,
+    savedAt: report.createdAt,
+    report,
+    config: {
+      env: { ...report.env, apiKeyConfigured: false },
+      settings: report.settings,
+      groups: report.groups,
+      scenarios: report.scenarios,
+    },
+  };
+}
 
 function reportFixture() {
   return {
@@ -60,7 +80,10 @@ describe('local-only report routing', () => {
   let root: Root;
   let fetch: ReturnType<typeof rstest.fn>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const db = await getDB();
+    await db.clear('benchHistory');
+    await db.clear('meta');
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.history.replaceState(null, '', '/#/bench/reports');
@@ -102,6 +125,14 @@ describe('local-only report routing', () => {
         React.createElement(PublishedReportRoute, { reportId }),
       )
     );
+    await rstest.waitFor(async () => {
+      await React.act(async () => {
+        await loadPublishedReport(reportId).catch(() => undefined);
+      });
+      expect(container.textContent).not.toContain('Loading saved report…');
+      expect(container.querySelector('.publishedReportContent, [role="alert"]'))
+        .not.toBeNull();
+    });
   }
 
   async function click(label: string) {
@@ -113,10 +144,7 @@ describe('local-only report routing', () => {
   }
 
   test('reads the selected cached record and its screenshot without a data URL or network request', async () => {
-    const raw = JSON.stringify([{
-      id: 'local-entry',
-      report: reportFixture(),
-    }]);
+    const raw = JSON.stringify([historyEntry('local-entry')]);
     window.localStorage.setItem(BENCH_HISTORY_STORAGE_KEY, raw);
     window.localStorage.setItem(
       BENCH_SELECTED_REPORT_STORAGE_KEY,
@@ -130,15 +158,17 @@ describe('local-only report routing', () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(window.location.hash).toBe('#/bench/reports');
     expect(window.location.search).toBe('');
-    expect(window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY)).toBe(raw);
+    expect(window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY)).toBeNull();
+    const saved = await readBenchHistory();
+    expect(saved[0]?.report?.results[0]?.screenshotDataUrl)
+      .toBe(PNG);
   });
 
   test('generates, previews and downloads a local PNG while retaining JSON copy', async () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify([{ id: 'local-entry', report: reportFixture() }]),
+      JSON.stringify([historyEntry('local-entry')]),
     );
-    const raw = window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY);
     const blob = new Blob(['PNG'], { type: 'image/png' });
     const capture = rstest.spyOn(reportImage, 'createBenchReportImage')
       .mockResolvedValue(blob);
@@ -181,7 +211,10 @@ describe('local-only report routing', () => {
     expect(container.querySelector('dialog')?.open).toBe(false);
     expect(revokeUrl).toHaveBeenCalledWith('blob:report-image');
     expect(fetch).not.toHaveBeenCalled();
-    expect(window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY)).toBe(raw);
+    expect(window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY)).toBeNull();
+    const saved = await readBenchHistory();
+    expect(saved[0]?.report?.results[0]?.screenshotDataUrl)
+      .toBe(PNG);
     expect(window.location.hash).toBe('#/bench/reports');
     expect(window.location.search).toBe('');
   });
@@ -189,7 +222,7 @@ describe('local-only report routing', () => {
   test('supports copying PNGs and keeps download available when clipboard access fails', async () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify([{ id: 'local-entry', report: reportFixture() }]),
+      JSON.stringify([historyEntry('local-entry')]),
     );
     const blob = new Blob(['PNG'], { type: 'image/png' });
     rstest.spyOn(reportImage, 'createBenchReportImage').mockResolvedValue(blob);
@@ -224,7 +257,7 @@ describe('local-only report routing', () => {
   test('shows capture errors and lets the user retry, cancel, and ignore a late result', async () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify([{ id: 'local-entry', report: reportFixture() }]),
+      JSON.stringify([historyEntry('local-entry')]),
     );
     const capture = rstest.spyOn(reportImage, 'createBenchReportImage')
       .mockRejectedValueOnce(new Error('Screenshot decode failed'));
@@ -265,25 +298,23 @@ describe('local-only report routing', () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
       JSON.stringify([
-        { id: 'first', report: reportFixture() },
-        {
-          id: 'second',
-          report: {
-            ...reportFixture(),
-            groups: createDefaultBenchGroups('second-model'),
-          },
-        },
+        historyEntry('first'),
+        historyEntry('second', {
+          ...reportFixture(),
+          groups: createDefaultBenchGroups('second-model'),
+        }),
       ]),
     );
     window.sessionStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, 'first');
     window.localStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, 'first');
     await mount();
-    window.localStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, 'second');
-    await React.act(async () =>
-      window.dispatchEvent(
-        new StorageEvent('storage', { key: BENCH_SELECTED_REPORT_STORAGE_KEY }),
-      )
-    );
+    await React.act(async () => selectBenchReport('second'));
+    await rstest.waitFor(async () => {
+      await React.act(async () => {
+        await readBenchHistory();
+      });
+      expect(container.textContent).toContain('saved-model');
+    });
     expect(container.textContent).toContain('saved-model');
     expect(container.textContent).not.toContain('second-model');
     expect(fetch).not.toHaveBeenCalled();
@@ -299,8 +330,8 @@ describe('local-only report routing', () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
       JSON.stringify([
-        { id: 'first', report: first },
-        { id: 'second', report: second },
+        historyEntry('first', first),
+        historyEntry('second', second),
       ]),
     );
     window.localStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, 'second');
@@ -313,7 +344,7 @@ describe('local-only report routing', () => {
   test('does not fetch a legacy shared-data parameter or substitute local history', async () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify([{ id: 'local-entry', report: reportFixture() }]),
+      JSON.stringify([historyEntry('local-entry')]),
     );
     window.localStorage.setItem(
       BENCH_SELECTED_REPORT_STORAGE_KEY,
@@ -335,7 +366,7 @@ describe('local-only report routing', () => {
   test('does not use an unrelated cached report when the selection is missing', async () => {
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify([{ id: 'local-entry', report: reportFixture() }]),
+      JSON.stringify([historyEntry('local-entry')]),
     );
     await mount();
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
