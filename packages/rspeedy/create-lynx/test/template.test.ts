@@ -147,7 +147,9 @@ describe('templates on disk', () => {
     }
   })
 
-  test('does not leave unresolvable ranges in a template manifest', () => {
+  // A template only names its dependencies; the versions come from this
+  // package, so one bump here reaches every template.
+  test('pins every template dependency in this package', () => {
     const versions = readManifest(packageRoot)['devDependencies'] ?? {}
     const dirs = [
       ...TEMPLATES.map(template => templateDir(template)),
@@ -167,11 +169,10 @@ describe('templates on disk', () => {
 
       for (const field of ['dependencies', 'devDependencies']) {
         for (const [name, range] of Object.entries(manifest[field] ?? {})) {
-          if (
-            !range.startsWith('workspace:') && !range.startsWith('catalog:')
-          ) {
-            continue
-          }
+          expect(
+            range,
+            `${template} must leave the version of ${name} to this package`,
+          ).toBe('workspace:*')
           expect(
             versions,
             `${template} depends on ${name}, so it must be pinned by this package`,

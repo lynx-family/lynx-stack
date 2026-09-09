@@ -12,13 +12,13 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "catalog:lynxjs",
+    "@lynx-js/preact-devtools": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@rstest/core": "^0.11.12",
-    "@testing-library/jest-dom": "^6.9.1",
-    "jsdom": "^27.4.0"
+    "@rstest/core": "workspace:*",
+    "@testing-library/jest-dom": "workspace:*",
+    "jsdom": "workspace:*"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

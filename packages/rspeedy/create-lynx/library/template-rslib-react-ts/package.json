@@ -21,15 +21,15 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/types": "^4.1.0",
-    "@rsbuild/plugin-react": "^2.1.0",
-    "@rslib/core": "catalog:rslib",
-    "@rstest/adapter-rslib": "^0.11.12",
-    "@rstest/core": "^0.11.12",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@types/react": "^19.2.18",
-    "happy-dom": "^20.13.2",
-    "typescript": "~6.0.3"
+    "@lynx-js/types": "workspace:*",
+    "@rsbuild/plugin-react": "workspace:*",
+    "@rslib/core": "workspace:*",
+    "@rstest/adapter-rslib": "workspace:*",
+    "@rstest/core": "workspace:*",
+    "@testing-library/jest-dom": "workspace:*",
+    "@types/react": "workspace:*",
+    "happy-dom": "workspace:*",
+    "typescript": "workspace:*"
   },
   "peerDependencies": {
     "@lynx-js/react": ">=0.100.0",

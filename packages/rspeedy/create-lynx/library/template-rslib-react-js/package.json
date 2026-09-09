@@ -17,12 +17,12 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@rsbuild/plugin-react": "^2.1.0",
-    "@rslib/core": "catalog:rslib",
-    "@rstest/adapter-rslib": "^0.11.12",
-    "@rstest/core": "^0.11.12",
-    "@testing-library/jest-dom": "^6.9.1",
-    "happy-dom": "^20.13.2"
+    "@rsbuild/plugin-react": "workspace:*",
+    "@rslib/core": "workspace:*",
+    "@rstest/adapter-rslib": "workspace:*",
+    "@rstest/core": "workspace:*",
+    "@testing-library/jest-dom": "workspace:*",
+    "happy-dom": "workspace:*"
   },
   "peerDependencies": {
     "@lynx-js/react": ">=0.100.0"

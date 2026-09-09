@@ -44,10 +44,18 @@
     "@lynx-js/rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
     "@lynx-js/test-tools": "workspace:*",
+    "@lynx-js/types": "4.1.0",
     "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "2.1.0",
     "@rsbuild/plugin-type-check": "1.6.0",
     "@rslib/core": "catalog:rslib",
-    "@rstest/core": "catalog:rstest"
+    "@rstest/adapter-rslib": "catalog:rstest",
+    "@rstest/core": "catalog:rstest",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@types/react": "^19.2.18",
+    "happy-dom": "^20.14.0",
+    "jsdom": "^27.4.0",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

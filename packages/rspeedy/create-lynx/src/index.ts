@@ -37,6 +37,15 @@ const { devDependencies } = require('../package.json') as {
   devDependencies: Record<string, string>
 }
 
+// Published with the exact versions this workspace pins; a scaffold should
+// take patch and minor updates on its own.
+const versions = Object.fromEntries(
+  Object.entries(devDependencies).map(([name, range]) => [
+    name,
+    /^\d/.test(range) ? `^${range}` : range,
+  ]),
+)
+
 // `copyFolder` merges a tool's package.json without pinning its
 // `workspace:` ranges the way it pins a template's, so pin them here.
 function pinVersions(distFolder: string): void {
@@ -47,7 +56,7 @@ function pinVersions(distFolder: string): void {
   >
   for (const field of ['dependencies', 'devDependencies']) {
     for (const name of Object.keys(pkg[field] ?? {})) {
-      const version = devDependencies[name]
+      const version = versions[name]
       if (version !== undefined) {
         pkg[field]![name] = version
       }
@@ -100,7 +109,7 @@ void create({
   root: templateRoot(packageRoot, tool),
   name: 'lynx',
   templates: TEMPLATES,
-  version: devDependencies,
+  version: versions,
   async getTemplateName({ template }: Argv) {
     if (typeof template === 'string') {
       return resolveTemplateName(template)
