@@ -7,12 +7,11 @@ import { Agent } from '@mastra/core/agent';
 import type { A2UICatalog } from './a2ui-catalog.js';
 import { loadBasicCatalog } from './a2ui-catalog.js';
 import { buildA2UISystemPrompt } from './a2ui-prompt.js';
+import { createAgentCapabilities } from '../common/agent-capabilities.js';
+import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { ArkImageGenerationRunScope } from '../common/ark-image-generation-tool.js';
-import { createArkImageGenerationTool } from '../common/ark-image-generation-tool.js';
 import { getA2UIMastra } from '../common/mastra.js';
 import { createLLMProvider } from '../common/openai-provider.js';
-import { createSearchCapability } from '../common/search-capability.js';
-import type { SearchAgentOptions } from '../common/search-capability.js';
 
 const IMAGE_GENERATION_TOOL_INSTRUCTIONS = `## Image generation tool
 
@@ -34,7 +33,7 @@ distinct images needed and reuse a returned URL when appropriate. If the tool
 fails, replace or remove the pending image presentation using other catalog
 components; do not leave a permanent Loading component.`;
 
-export interface A2UIAgentOptions extends SearchAgentOptions {
+export interface A2UIAgentOptions extends GenerationAgentOptions {
   catalog?: A2UICatalog | undefined;
   systemAppendix?: string | undefined;
 }
@@ -69,11 +68,13 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
 
   const catalog = opts.catalog ?? await loadBasicCatalog();
-  const search = createSearchCapability(opts, true);
+  const capabilities = createAgentCapabilities(
+    opts,
+    IMAGE_GENERATION_TOOL_INSTRUCTIONS,
+  );
   const appendix = [
     opts.systemAppendix,
-    search.instructions,
-    IMAGE_GENERATION_TOOL_INSTRUCTIONS,
+    capabilities.instructions,
   ]
     .filter((part): part is string => Boolean(part))
     .join('\n\n');
@@ -82,7 +83,6 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
     appendix,
   };
   const instructions = buildA2UISystemPrompt(promptOptions);
-  const generateImage = createArkImageGenerationTool();
 
   const agent = new Agent({
     id: 'a2ui-agent',
@@ -90,10 +90,7 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
     instructions,
     mastra: getA2UIMastra(),
     model: buildModel(model),
-    tools: {
-      ...search.tools,
-      generate_image: generateImage,
-    },
+    tools: capabilities.tools,
     defaultOptions: {
       maxSteps: 5,
       toolCallConcurrency: 3,

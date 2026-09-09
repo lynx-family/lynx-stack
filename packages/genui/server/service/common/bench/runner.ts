@@ -250,6 +250,7 @@ async function generateA2UINative(
         catalog,
         disableAgentCache: true,
         enableWebSearch: false,
+        enableImageGeneration: false,
         inheritReasoningEffort: false,
       },
       undefined,

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import {
   createHtmlFragmentScriptRunScope,
   resolveHtmlFragmentScriptPlaceholders,
@@ -9,7 +10,7 @@ import {
 import type { HtmlFragmentScriptRunScope } from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
 import { createLynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
 import type { LynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
-import { pickSearchAgentConfig } from '../common/agent-capabilities.js';
+import { pickAgentCapabilityConfig } from '../common/agent-capabilities.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -57,6 +58,7 @@ function buildLynxXmlScopedRunOptions(
   abortSignal: AbortSignal | undefined,
   scope: HtmlFragmentScriptRunScope,
 ) {
+  initializeArkImageGenerationRunScope(scope);
   return {
     ...buildLynxXmlRunOptions(opts, abortSignal),
     requestContext: scope.requestContext,
@@ -83,7 +85,7 @@ export default class LynxXmlAgentService {
 
   private getAgent(opts: LynxXmlChatOptions): Promise<LynxXmlAgent> {
     const createAgent = () =>
-      createLynxXmlAgent(pickSearchAgentConfig(opts)).agent;
+      createLynxXmlAgent(pickAgentCapabilityConfig(opts)).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(opts, createAgent);
   }

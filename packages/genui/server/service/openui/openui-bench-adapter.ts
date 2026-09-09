@@ -377,6 +377,7 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
         ...input.provider,
         disableAgentCache: true,
         enableWebSearch: false,
+        enableImageGeneration: false,
         inheritReasoningEffort: false,
         resourceId: input.resourceId,
         promptComponentNames: OPENUI_BENCH_MATCHED_COMPONENTS,

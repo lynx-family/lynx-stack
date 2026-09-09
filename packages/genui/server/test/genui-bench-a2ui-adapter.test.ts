@@ -97,6 +97,7 @@ describe('A2UI matched-core bench adapter', () => {
       apiKey: 'request-scoped-key',
       disableAgentCache: true,
       enableWebSearch: false,
+      enableImageGeneration: false,
       inheritReasoningEffort: false,
     });
     expect(receivedSignal).toBe(abortController.signal);
