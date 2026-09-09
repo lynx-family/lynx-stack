@@ -9,7 +9,7 @@
 
     "jsx": "preserve",
     "jsxImportSource": "@lynx-js/react",
-    "types": ["@lynx-js/types"],
+    "types": ["@lynx-js/types", "@rslib/core/types"],
 
     "module": "ESNext",
     "moduleResolution": "Bundler",
