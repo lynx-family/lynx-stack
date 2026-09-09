@@ -8,17 +8,21 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { Argv } from '@rstackjs/create-toolkit'
-import {
-  checkCancel,
-  copyFolder,
-  create,
-  select,
-} from '@rstackjs/create-toolkit'
+import { checkCancel, create, select } from '@rstackjs/create-toolkit'
 
 import type { Lang, Tool } from './template.js'
-import { DEFAULT_DSL, TEMPLATES, resolveTemplateName } from './template.js'
+import {
+  DEFAULT_DSL,
+  TEMPLATES,
+  resolveTemplateName,
+  templateRoot,
+  toolOf,
+} from './template.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const packageRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+)
 const require = createRequire(import.meta.url)
 
 // eslint-disable-next-line import/no-commonjs
@@ -26,70 +30,68 @@ const { devDependencies } = require('../package.json') as {
   devDependencies: Record<string, string>
 }
 
-async function getTemplateName({ template }: Argv) {
-  if (typeof template === 'string') {
-    return resolveTemplateName(template)
+function templateArg(argv: string[]): string | undefined {
+  for (const [index, arg] of argv.entries()) {
+    if (arg === '--template' || arg === '-t') {
+      return argv[index + 1]
+    }
+    if (arg.startsWith('--template=')) {
+      return arg.slice('--template='.length)
+    }
   }
+  return undefined
+}
 
-  const tool = checkCancel<Tool>(
+async function selectTool(): Promise<Tool> {
+  return checkCancel<Tool>(
     await select({
       message: 'Select build tool',
       options: [
-        { value: 'rsbuild', label: 'Rsbuild', hint: 'recommended' },
-        { value: 'rspeedy', label: 'Rspeedy' },
+        { value: 'rsbuild', label: 'Rsbuild', hint: 'app, recommended' },
+        { value: 'rspeedy', label: 'Rspeedy', hint: 'app' },
+        { value: 'rslib', label: 'Rslib', hint: 'library' },
       ],
     }),
   )
-
-  const lang = checkCancel<Lang>(
-    await select({
-      message: 'Select language',
-      options: [
-        { value: 'ts', label: 'TypeScript', hint: 'recommended' },
-        { value: 'js', label: 'JavaScript' },
-      ],
-    }),
-  )
-
-  return `${tool}-${DEFAULT_DSL}-${lang}`
 }
 
+// The tool picks the template root, so it is settled before `create` takes
+// over the prompts.
+function resolveTool(argv: string[]): Tool | undefined | Promise<Tool> {
+  const template = templateArg(argv)
+  if (template !== undefined) {
+    return toolOf(resolveTemplateName(template))
+  }
+  if (argv.includes('--help') || argv.includes('-h')) {
+    return undefined
+  }
+  return selectTool()
+}
+
+const tool = await resolveTool(process.argv.slice(2))
+
 void create({
-  root: path.resolve(__dirname, '..'),
+  root: templateRoot(packageRoot, tool),
   name: 'lynx',
   templates: TEMPLATES,
   version: devDependencies,
-  getTemplateName,
-  extraTools: [
-    {
-      value: 'rstest-rltl',
-      label: 'Rstest',
-      order: 'pre',
-      action: ({ distFolder, addAgentsMdSearchDirs }) => {
-        const from = path.resolve(__dirname, '..', 'template-react-rstest-rltl')
-        copyFolder({
-          from,
-          to: distFolder,
-          isMergePackageJson: true,
-        })
-        addAgentsMdSearchDirs(from)
-      },
-    },
-    {
-      value: 'vitest-rltl',
-      label: 'Vitest',
-      order: 'pre',
-      action: ({ distFolder, addAgentsMdSearchDirs }) => {
-        const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
-        copyFolder({
-          from,
-          to: distFolder,
-          isMergePackageJson: true,
-        })
-        addAgentsMdSearchDirs(from)
-      },
-    },
-  ],
+  async getTemplateName({ template }: Argv) {
+    if (typeof template === 'string') {
+      return resolveTemplateName(template)
+    }
+
+    const lang = checkCancel<Lang>(
+      await select({
+        message: 'Select language',
+        options: [
+          { value: 'ts', label: 'TypeScript', hint: 'recommended' },
+          { value: 'js', label: 'JavaScript' },
+        ],
+      }),
+    )
+
+    return `${tool ?? 'rsbuild'}-${DEFAULT_DSL}-${lang}`
+  },
   extraSkills: [
     {
       label: 'Lynx DevTool',

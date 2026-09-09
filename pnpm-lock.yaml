@@ -1872,6 +1872,9 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:^
         version: link:../core
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../../webpack/test-tools
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.2.3(core-js@3.50.0)
@@ -1881,6 +1884,9 @@ importers:
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
 
   packages/rspeedy/create-rspeedy:
     dependencies:

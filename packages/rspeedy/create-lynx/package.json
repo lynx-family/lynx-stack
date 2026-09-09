@@ -1,13 +1,14 @@
 {
   "name": "@lynx-js/create-lynx",
   "version": "0.1.0",
-  "description": "Create a Lynx app with one command",
+  "description": "Create a Lynx app or library with one command",
   "keywords": [
     "create",
     "Lynx",
     "ReactLynx",
     "rsbuild",
-    "rspeedy"
+    "rspeedy",
+    "rslib"
   ],
   "repository": {
     "type": "git",
@@ -23,12 +24,13 @@
   "files": [
     "dist",
     "template-*/**",
+    "library/template-*/**",
     "CHANGELOG.md",
     "README.md"
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "dependencies": {
     "@rstackjs/create-toolkit": "2.1.4"
@@ -40,9 +42,11 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/rsbuild-plugin": "workspace:^",
     "@lynx-js/rspeedy": "workspace:^",
+    "@lynx-js/test-tools": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-type-check": "1.6.0",
-    "@rslib/core": "catalog:rslib"
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

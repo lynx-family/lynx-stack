@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "lib": ["es2023"],
+    "target": "es2022",
+
+    "rootDir": "./src",
+    "noEmit": true,
+  },
+  "include": ["./src"],
+}

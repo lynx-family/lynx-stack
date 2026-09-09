@@ -1,0 +1,41 @@
+{
+  "name": "lynx-rslib-react-ts",
+  "version": "0.0.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.jsx"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "rstest run"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/plugin-react": "2.1.0",
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "0.11.12",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@types/react": "^19.2.18",
+    "jsdom": "^27.4.0",
+    "typescript": "~6.0.3"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": ">=0.100.0",
+    "@lynx-js/types": ">=4",
+    "@types/react": ">=19"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

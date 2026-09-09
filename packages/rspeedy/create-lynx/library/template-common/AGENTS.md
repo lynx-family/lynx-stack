@@ -1,6 +1,6 @@
 # AGENTS.md
 
-You are an expert in JavaScript, Rspeedy, and Lynx application development. You write maintainable, performant, and accessible code.
+You are an expert in JavaScript, Rslib, and Lynx library development. You write maintainable, performant, and accessible code.
 
 ## Read in Advance
 
@@ -11,16 +11,14 @@ Read docs below in advance to help you understand the library or frameworks this
 
 ## Commands
 
-- `npm run dev` - Start the dev server
+- `npm run build` - Build the library into `dist/`
 
-- `npm run build` - Build the app for production
-
-- `npm run preview` - Preview the production build locally
+- `npm run dev` - Rebuild the library on every change
 
 - `npm run test` - Run the tests with Rstest
 
 ## Related Docs
 
-- Rsbuild: <https://rsbuild.rs/llms.txt>
+- Rslib: <https://rslib.rs/llms.txt>
 
-- Rspack: <https://rspack.rs/llms.txt>
+- Rsbuild: <https://rsbuild.rs/llms.txt>

@@ -5,7 +5,8 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "preview": "rspeedy preview"
+    "preview": "rspeedy preview",
+    "test": "rstest run"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
@@ -14,7 +15,10 @@
     "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/rspeedy": "workspace:*"
+    "@lynx-js/rspeedy": "workspace:*",
+    "@rstest/core": "0.11.12",
+    "@testing-library/jest-dom": "^6.9.1",
+    "jsdom": "^27.4.0"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

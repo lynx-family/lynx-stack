@@ -8,5 +8,6 @@
     "src",
     "test",
     "rslib.config.ts",
+    "rstest.config.ts",
   ],
 }

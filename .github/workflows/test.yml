@@ -316,19 +316,20 @@ jobs:
           install_with "$pm"
           local bin=${pm%%-*}
           run_script "$bin" build
-          run_script "$bin" build --mode development
+          # A library has one output, an app also has a development one.
+          case "$template" in
+            rslib-*) ;;
+            *) run_script "$bin" build --mode development ;;
+          esac
           run_script "$bin" lint
+          run_script "$bin" test
         }
 
-        # Every template against every test runner. Both runners go through
-        # `@lynx-js/react/testing-library`, which reads whichever config file
-        # the build tool owns, so each pair has to be exercised.
-        for template in rsbuild-react-ts rsbuild-react-js rspeedy-react-ts rspeedy-react-js; do
-          for runner in vitest-rltl rstest-rltl; do
-            smoke_test pnpm "$template" "eslint,$runner" \
-              "create-lynx-$template-$runner" --skill lynx-devtool
-            run_script pnpm test
-          done
+        # Every template. The tests go through `@lynx-js/react/testing-library`,
+        # which reads whichever config file the build tool owns, so each
+        # template has to be exercised.
+        for template in rsbuild-react-ts rsbuild-react-js rspeedy-react-ts rspeedy-react-js rslib-react-ts rslib-react-js; do
+          smoke_test pnpm "$template" eslint "create-lynx-$template" --skill lynx-devtool
         done
 
         # The loop above stays on pnpm. Each package manager lays `node_modules`

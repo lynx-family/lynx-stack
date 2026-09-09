@@ -5,7 +5,8 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "preview": "rspeedy preview"
+    "preview": "rspeedy preview",
+    "test": "rstest run"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
@@ -17,7 +18,10 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rsbuild/plugin-type-check": "1.6.0",
+    "@rstest/core": "0.11.12",
+    "@testing-library/jest-dom": "^6.9.1",
     "@types/react": "^19.2.18",
+    "jsdom": "^27.4.0",
     "typescript": "~6.0.3"
   },
   "engines": {
