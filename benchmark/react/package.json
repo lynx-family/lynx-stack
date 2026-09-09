@@ -24,6 +24,7 @@
     "bench:017-use-signal-local-attribute-update": "benchx_cli run dist/017-use-signal-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:018-use-state-full-attribute-update": "benchx_cli run dist/018-use-state-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:019-use-signal-full-attribute-update": "benchx_cli run dist/019-use-signal-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:020-many-main-thread-refs": "benchx_cli run dist/020-many-main-thread-refs.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -46,6 +47,7 @@
     "perfetto:017-use-signal-local-attribute-update": "benchx_cli -o dist/017-use-signal-local-attribute-update.ptrace run dist/017-use-signal-local-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:018-use-state-full-attribute-update": "benchx_cli -o dist/018-use-state-full-attribute-update.ptrace run dist/018-use-state-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:019-use-signal-full-attribute-update": "benchx_cli -o dist/019-use-signal-full-attribute-update.ptrace run dist/019-use-signal-full-attribute-update.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:020-many-main-thread-refs": "benchx_cli -o dist/020-many-main-thread-refs.ptrace run dist/020-many-main-thread-refs.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {
