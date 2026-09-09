@@ -5,6 +5,9 @@ import type { BenchReport } from './benchReportTypes.js';
 import { createBenchScreenshotReader } from './benchScreenshot.js';
 import { BENCH_JOB_ID } from '../../utils/appRoute.js';
 
+const BENCH_COMPARISON_GROUP_ID =
+  /^(?:protocol|model|prompt)-comparison-[a-z0-9]{8,10}-[a-z0-9]{1,6}$/u;
+
 function isSensitiveKey(key: string): boolean {
   const normalized = key.replaceAll(/[-_]/gu, '').toLowerCase();
   return normalized === 'apikey'
@@ -68,6 +71,14 @@ export function sanitizeBenchReportValue(
         }
         if (isSensitiveKey(key)) return [];
         if (key === 'model' && typeof item === 'string') {
+          return [[key, redactString(item, secrets, true)]];
+        }
+        // Generated group identities join the report to its saved plan. Their
+        // length is not evidence of a credential; still redact known secrets.
+        if (
+          (key === 'id' || key === 'groupId') && typeof item === 'string'
+          && BENCH_COMPARISON_GROUP_ID.test(item)
+        ) {
           return [[key, redactString(item, secrets, true)]];
         }
         // UUID job handles are public report identities, not provider credentials.

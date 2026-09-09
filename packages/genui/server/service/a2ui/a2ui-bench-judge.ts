@@ -27,7 +27,7 @@ type FetchLike = (
 ) => Promise<Response>;
 
 export interface BenchUiJudgeSession {
-  bundleUrl: string;
+  bundleUrl?: string;
   screenshotUrl: string;
 }
 
@@ -96,6 +96,7 @@ interface RunBenchUiJudgeOptions {
 export interface RunBenchUiJudgeRequestOptions {
   model?: string;
   globalProps: Record<string, unknown>;
+  lynxXmlSource?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   screenshotSettleMs?: number;
@@ -258,6 +259,7 @@ function containsOpenUrlCall(
 export async function probeBenchUiJudge(
   options: {
     bundleUrl?: string;
+    sourceKind?: 'lynx-xml';
     env?: NodeJS.ProcessEnv;
     fetch?: FetchLike;
     serverUrl?: string;
@@ -288,8 +290,10 @@ export async function probeBenchUiJudge(
       && configuredBundleUrl.length > 0
     ? configuredBundleUrl
     : DEFAULT_A2UI_BUNDLE_URL;
-  const bundleUrl = normalizeBundleUrl(rawBundleUrl);
-  if (!bundleUrl) {
+  const bundleUrl = options.sourceKind === 'lynx-xml'
+    ? undefined
+    : normalizeBundleUrl(rawBundleUrl);
+  if (options.sourceKind !== 'lynx-xml' && !bundleUrl) {
     return {
       enabled: false,
       reason: 'UI_JUDGE_BUNDLE_URL must be an HTTP(S) URL without credentials.',
@@ -326,8 +330,13 @@ export async function probeBenchUiJudge(
   return {
     enabled: true,
     session: {
-      bundleUrl,
-      screenshotUrl: new URL('screenshot/template', serverUrl).toString(),
+      ...(bundleUrl ? { bundleUrl } : {}),
+      screenshotUrl: new URL(
+        options.sourceKind === 'lynx-xml'
+          ? 'screenshot/lynxml'
+          : 'screenshot/template',
+        serverUrl,
+      ).toString(),
     },
   };
 }
@@ -406,6 +415,7 @@ export async function runBenchUiJudgeRequest(
       warnings,
     };
   }
+  const viewport = { width: 390, height: 844 };
   const body = {
     globalProps: options.globalProps,
     ...(options.screenshotSettleMs === undefined
@@ -415,13 +425,21 @@ export async function runBenchUiJudgeRequest(
     url: options.session.bundleUrl,
   };
 
+  const form = options.lynxXmlSource === undefined ? undefined : new FormData();
+  if (form) {
+    form.set('entry', 'index.lynxml');
+    form.set('source', options.lynxXmlSource!);
+    form.set('width', String(viewport.width));
+    form.set('height', String(viewport.height));
+  }
+
   let response: Response;
   try {
     response = await fetchImpl(options.session.screenshotUrl, {
-      body: JSON.stringify(body),
+      body: form ?? JSON.stringify(body),
       headers: {
         Accept: 'image/bmp',
-        'Content-Type': 'application/json',
+        ...(form ? {} : { 'Content-Type': 'application/json' }),
       },
       method: 'POST',
       signal: requestSignal,

@@ -23,6 +23,7 @@ import type {
   BenchRunResult,
   BenchScenarioRequest,
 } from './types.js';
+import { benchAttemptTokenCounts, readBenchTokenUsage } from './usage.js';
 import { createA2UIImageSourcePolicy } from '../../../agent/a2ui/a2ui-image-source-policy.js';
 import {
   formatErrorsForModel,
@@ -41,6 +42,7 @@ import type {
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 // import { runBenchPreview } from '../../a2ui/a2ui-bench-preview.js';
+import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
 import { defaultModelName } from '../model-config.js';
 import type { ChatMessage } from '../types.js';
@@ -61,45 +63,9 @@ export interface BenchRunnerDependencies {
 
 type BenchJudgeCapabilities = Map<string, BenchUiJudgeCapability>;
 
-interface UsageRecord {
-  promptTokens?: unknown;
-  completionTokens?: unknown;
-  totalTokens?: unknown;
-  inputTokens?: unknown;
-  outputTokens?: unknown;
-  prompt_tokens?: unknown;
-  completion_tokens?: unknown;
-  total_tokens?: unknown;
-}
-
 function averagePlanned(values: number[], plannedRuns: number): number {
   if (plannedRuns === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / plannedRuns;
-}
-
-function pickNumber(record: UsageRecord, keys: (keyof UsageRecord)[]): number {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-  }
-  return 0;
-}
-
-function parseTotalTokens(usage: unknown): number {
-  if (!usage || typeof usage !== 'object') return 0;
-  const record = usage as UsageRecord;
-  const promptTokens = pickNumber(record, [
-    'promptTokens',
-    'inputTokens',
-    'prompt_tokens',
-  ]);
-  const completionTokens = pickNumber(record, [
-    'completionTokens',
-    'outputTokens',
-    'completion_tokens',
-  ]);
-  const totalTokens = pickNumber(record, ['totalTokens', 'total_tokens']);
-  return Math.round(totalTokens || promptTokens + completionTokens);
 }
 
 function protocolForGroup(group: BenchGroupRequest): BenchProtocol {
@@ -391,7 +357,7 @@ async function runA2UINativeOne(
       model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens: result.usage.reduce<number>(
-        (total, usage) => total + parseTotalTokens(usage),
+        (total, usage) => total + benchAttemptTokenCounts(usage).totalTokens,
         0,
       ),
       agentMs: Math.round(agentMs),
@@ -508,9 +474,11 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = profile === 'matched-core'
-    ? 'matched-core' as const
-    : pickRunCatalog(item.group);
+  const catalogLabel = protocol === 'lynx-xml'
+    ? 'none' as const
+    : (profile === 'matched-core'
+      ? 'matched-core' as const
+      : pickRunCatalog(item.group));
 
   store.emit(jobId, 'run-start', {
     runId,
@@ -569,7 +537,12 @@ async function runProtocolAdapterOne(
                 BenchRunResult['messages']
               >,
             }
-            : { protocol: 'openui', rawText: judgePayload.rawText },
+            : {
+              protocol: judgePayload.kind === 'lynx-xml-source'
+                ? 'lynx-xml'
+                : 'openui',
+              rawText: judgePayload.rawText,
+            },
           scenario: item.scenario,
           session: judgeCapability.session!,
           signal,
@@ -647,7 +620,10 @@ async function runProtocolAdapterOne(
         : {
           finishReason: attempts[attempts.length - 1]?.finishReason,
         }),
-      usage: { totalTokens: tokens },
+      usage: {
+        ...readBenchTokenUsage(attempts.map((attempt) => attempt.usage)),
+        totalTokens: tokens,
+      },
       ...(messages ? { messages } : {}),
       ...('screenshotDataUrl' in judge && judge.screenshotDataUrl
         ? { screenshotDataUrl: judge.screenshotDataUrl }
@@ -962,7 +938,9 @@ function resolveProtocolAdapters(
     adapters[protocol] = overrides?.[protocol]
       ?? (protocol === 'a2ui'
         ? createA2UIBenchAdapter()
-        : createOpenUIBenchAdapter());
+        : (protocol === 'openui'
+          ? createOpenUIBenchAdapter()
+          : createLynxXmlBenchAdapter()));
   }
   return adapters;
 }

@@ -143,6 +143,87 @@ function screenshotDataUrlForBytes(bytes: number): string {
 }
 
 describe('A2UI Bench UI Judge integration', () => {
+  test('routes XML source to Judge and preserves XML results and summaries', async () => {
+    const rawText =
+      '<!doctype lynx><lynx engine-version="4.2"><script thread="main"></script></lynx>';
+    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+      enabled: true,
+      session: { screenshotUrl: 'https://judge.example/screenshot/lynxml' },
+    });
+    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      errors: [],
+      score: 4,
+      status: 'complete',
+      warnings: [],
+    });
+    const benchRequest = request();
+    benchRequest.groups = [{
+      ...group,
+      protocol: 'lynx-xml',
+      profile: 'native',
+      model: 'xml-model',
+    }];
+    const store = getBenchJobStore();
+    const job = store.createJob(benchRequest, 1);
+    await runBenchJob(job.id, {
+      adapters: {
+        'lynx-xml': {
+          protocol: 'lynx-xml',
+          generate: () =>
+            Promise.resolve({
+              attempts: [{
+                index: 1,
+                durationMs: 10,
+                inputTokens: 2,
+                outputTokens: 3,
+                totalTokens: 5,
+                usage: {
+                  inputTokens: 2,
+                  outputTokens: 3,
+                  inputTokenDetails: { cacheReadTokens: 1 },
+                },
+                valid: true,
+                validationErrors: [],
+                outputChars: rawText.length,
+              }],
+              finalValid: true,
+              finalText: rawText,
+              finalErrors: [],
+              judgePayload: { kind: 'lynx-xml-source', rawText },
+            }),
+        },
+      },
+    });
+    expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'xml-model',
+        artifact: { protocol: 'lynx-xml', rawText },
+      }),
+    );
+    const report = store.getJob(job.id)?.report;
+    expect(report?.results[0]).toMatchObject({
+      protocol: 'lynx-xml',
+      profile: 'native',
+      catalog: 'none',
+      text: rawText,
+      tokens: 5,
+      usage: {
+        inputTokens: 2,
+        outputTokens: 3,
+        totalTokens: 5,
+        cachedTokens: 1,
+      },
+      judgeScore: 4,
+      status: 'complete',
+      ok: true,
+    });
+    expect(report?.summaries[0]).toMatchObject({
+      protocol: 'lynx-xml',
+      profile: 'native',
+      judgeRunCount: 1,
+    });
+  });
+
   test('does not restore a cancelled job to running after the health probe', async () => {
     let resolveProbe:
       | ((capability: Awaited<ReturnType<typeof probeBenchUiJudge>>) => void)
@@ -479,6 +560,7 @@ describe('A2UI Bench UI Judge integration', () => {
               inputTokens: 7,
               outputTokens: 3,
               totalTokens: 10,
+              usage: { inputTokens: 7, outputTokens: 3, cachedTokens: 2 },
               valid: false,
               validationErrors: ['repair'],
               outputChars: 5,
@@ -489,6 +571,7 @@ describe('A2UI Bench UI Judge integration', () => {
               inputTokens: 11,
               outputTokens: 4,
               totalTokens: 15,
+              usage: { inputTokens: 11, outputTokens: 4, cachedTokens: 5 },
               valid: true,
               validationErrors: [],
               outputChars: 12,
@@ -536,6 +619,12 @@ describe('A2UI Bench UI Judge integration', () => {
       profile: 'matched-core',
       catalog: 'matched-core',
       tokens: 25,
+      usage: {
+        inputTokens: 18,
+        outputTokens: 7,
+        totalTokens: 25,
+        cachedTokens: 7,
+      },
       attempts: 2,
       judgeScore: 4.5,
       judgeStatus: 'complete',

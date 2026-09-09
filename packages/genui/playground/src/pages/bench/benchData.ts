@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 export type BenchRole = 'control' | 'experiment';
-export type BenchProtocol = 'a2ui' | 'openui';
+export type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml';
 export type BenchProfile = 'matched-core' | 'native';
 export type BenchVariable =
   | 'catalog'
@@ -35,6 +35,53 @@ export interface BenchScenario {
   name: string;
   prompt: string;
   type: string;
+}
+
+export const BENCH_PROTOCOL_OPTIONS = [
+  { value: 'a2ui', label: 'A2UI', description: 'Structured message stream' },
+  { value: 'openui', label: 'OpenUI', description: 'OpenUI Lang' },
+  {
+    value: 'lynx-xml',
+    label: 'Lynx XML',
+    description: 'Self-contained Lynx XML page',
+  },
+] as const;
+
+export function getBenchProtocolLabel(
+  protocol: BenchProtocol = 'a2ui',
+): string {
+  return BENCH_PROTOCOL_OPTIONS.find((option) => option.value === protocol)
+    ?.label ?? protocol;
+}
+
+export function withBenchProtocol(
+  group: BenchGroup,
+  protocol: BenchProtocol,
+): BenchGroup {
+  if (protocol === 'a2ui') {
+    return group.protocol === 'a2ui'
+      ? group
+      : { ...group, protocol, profile: 'native', catalog: 'Full Catalog' };
+  }
+  let profile = group.profile;
+  if (protocol === 'openui') profile = 'matched-core';
+  if (protocol === 'lynx-xml') profile = 'native';
+  let catalog = group.catalog === 'none' ? 'Full Catalog' : group.catalog;
+  if (profile === 'matched-core') catalog = 'Core Catalog';
+  if (protocol === 'lynx-xml') catalog = 'none';
+  return { ...group, protocol, profile, catalog };
+}
+
+export function nextBenchComparisonProtocol(
+  groups: readonly BenchGroup[],
+  baseline: BenchGroup,
+): BenchProtocol {
+  return BENCH_PROTOCOL_OPTIONS.find((option) =>
+    !groups.some((group) => group.protocol === option.value)
+  )?.value
+    ?? BENCH_PROTOCOL_OPTIONS.find((option) =>
+      option.value !== baseline.protocol
+    )!.value;
 }
 
 export interface BenchSettings {

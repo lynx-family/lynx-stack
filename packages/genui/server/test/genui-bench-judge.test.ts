@@ -64,6 +64,20 @@ function geqiResponse(score: number): {
 }
 
 describe('probeGenuiBenchUiJudge', () => {
+  test('uses source capture for Lynx XML without any bundle configuration', async () => {
+    const capability = await probeGenuiBenchUiJudge('lynx-xml', {
+      env: {
+        UI_JUDGE_BUNDLE_URL: 'invalid-bundle',
+        UI_JUDGE_SERVER_URL: 'http://judge.test',
+      },
+      fetch: () => Promise.resolve(Response.json({ status: 'ok' })),
+    });
+    expect(capability).toEqual({
+      enabled: true,
+      session: { screenshotUrl: 'http://judge.test/screenshot/lynxml' },
+    });
+  });
+
   test('selects the OpenUI bundle independently', async () => {
     const capability = await probeGenuiBenchUiJudge('openui', {
       env: {
@@ -103,6 +117,58 @@ describe('probeGenuiBenchUiJudge', () => {
 });
 
 describe('runGenuiBenchUiJudge', () => {
+  test('captures Lynx XML as multipart source and scores the converted PNG', async () => {
+    const rawText =
+      '<!doctype lynx><lynx engine-version="4.2"><script thread="main">const page = __CreatePage("0", 0);</script></lynx>';
+    const result = await runGenuiBenchUiJudge({
+      artifact: { protocol: 'lynx-xml', rawText },
+      model: 'xml-model',
+      scenario: { prompt: 'Build a greeting' },
+      session: { screenshotUrl: 'http://judge.test/screenshot/lynxml' },
+      timeoutMs: 10_000,
+    }, (input, init) => {
+      expect(String(input)).toBe('http://judge.test/screenshot/lynxml');
+      expect(init?.body).toBeInstanceOf(FormData);
+      expect([...(init?.body as FormData).entries()]).toEqual([
+        ['entry', 'index.lynxml'],
+        ['source', rawText],
+        ['width', '390'],
+        ['height', '844'],
+      ]);
+      expect(new Headers(init?.headers).get('Content-Type')).toBeNull();
+      return Promise.resolve(evaluationResponse(geqiResponse(4)));
+    });
+    expect(result).toMatchObject({
+      status: 'complete',
+      score: 4,
+      geqiScore: 80,
+    });
+    expect(evaluateScreenshot).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'xml-model',
+        task: 'Build a greeting',
+        screenshotDataUrl: expect.stringMatching(
+          /^data:image\/png;base64,/u,
+        ) as unknown,
+      }),
+    );
+  });
+
+  test('rejects external XML resources before calling the screenshot service', async () => {
+    const capture = rstest.fn();
+    const result = await runGenuiBenchUiJudge({
+      artifact: {
+        protocol: 'lynx-xml',
+        rawText:
+          '<style>.hero { background-image: url("https://assets.test/image.png"); }</style>',
+      },
+      scenario: { prompt: 'Build a card' },
+      session: { screenshotUrl: 'http://judge.test/screenshot/lynxml' },
+    }, capture);
+    expect(capture).not.toHaveBeenCalled();
+    expect(result.status).toBe('failed');
+  });
+
   test('injects OpenUI source into the OpenUI bundle', async () => {
     let body: unknown;
     const result = await runGenuiBenchUiJudge(
