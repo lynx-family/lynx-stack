@@ -26,11 +26,15 @@ import type {
   BenchGroup,
   BenchProfile,
   BenchProtocol,
-  BenchRole,
   BenchScenario,
   BenchSettings,
-  BenchVariable,
 } from './benchData.js';
+import {
+  createBenchGroupsFromReport,
+  createBenchScenariosFromReport,
+  createBenchSettingsFromReport,
+} from './benchHistory.js';
+import type { BenchHistoryEntry } from './benchHistory.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
@@ -40,16 +44,17 @@ import { BenchRunNotice } from './BenchRunNotice.js';
 import { BenchRunPanel } from './BenchRunPanel.js';
 import { BenchScenarioSection } from './BenchScenarioSection.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
-import {
-  BENCH_HISTORY_STORAGE_KEY,
-  BENCH_SELECTED_REPORT_STORAGE_KEY,
-} from './publishedReportLoader.js';
+import { useBenchHistory } from './useBenchHistory.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
 import {
   GENUI_SERVER_URL,
   buildGenuiServerUrl,
 } from '../../config/genuiServer.js';
+import {
+  selectBenchReport,
+  setBenchReportTabSelection,
+} from '../../storage/benchRepo.js';
 import { BENCH_JOB_ID } from '../../utils/appRoute.js';
 import { isDevHost } from '../../utils/publishPayload.js';
 import {
@@ -200,28 +205,6 @@ interface BenchJobSnapshot {
   error?: string;
   warnings?: string[];
 }
-
-interface BenchHistoryConfig {
-  env: {
-    apiKeyConfigured: boolean;
-    model: string;
-  };
-  settings: BenchSettings;
-  groups: BenchGroup[];
-  scenarios: BenchScenario[];
-}
-
-interface BenchHistoryEntry {
-  id: string;
-  title: string;
-  savedAt: string;
-  report: BenchReport | null;
-  config: BenchHistoryConfig;
-}
-
-type BenchReportSettingsPayload = Partial<BenchSettings> & {
-  renderMetricsEnabled?: boolean;
-};
 
 const DEFAULT_ENV: Readonly<BenchEnv> = createDefaultProviderSettings();
 
@@ -545,159 +528,6 @@ function createBenchPlanSignature(
   });
 }
 
-function readFiniteNumber(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : fallback;
-}
-
-function readBoolean(value: unknown, fallback: boolean): boolean {
-  return typeof value === 'boolean' ? value : fallback;
-}
-
-function isBenchRole(value: unknown): value is BenchRole {
-  return value === 'control' || value === 'experiment';
-}
-
-function isBenchVariable(value: unknown): value is BenchVariable {
-  return value === 'protocol'
-    || value === 'model'
-    || value === 'prompt'
-    || value === 'catalog'
-    || value === 'custom';
-}
-
-function isBenchProtocol(value: unknown): value is BenchProtocol {
-  return value === 'a2ui' || value === 'openui';
-}
-
-function isBenchProfile(value: unknown): value is BenchProfile {
-  return value === 'native' || value === 'matched-core';
-}
-
-function createBenchSettingsFromReport(report: BenchReport): BenchSettings {
-  const reportSettings = (report.settings ?? {}) as BenchReportSettingsPayload;
-  return {
-    repeats: readFiniteNumber(
-      reportSettings.repeats,
-      DEFAULT_BENCH_SETTINGS.repeats,
-    ),
-    parallelism: readFiniteNumber(
-      reportSettings.parallelism,
-      DEFAULT_BENCH_SETTINGS.parallelism,
-    ),
-    repairEnabled: readBoolean(
-      reportSettings.repairEnabled,
-      DEFAULT_BENCH_SETTINGS.repairEnabled,
-    ),
-    judgeEnabled: readBoolean(
-      reportSettings.judgeEnabled,
-      DEFAULT_BENCH_SETTINGS.judgeEnabled,
-    ),
-    collectLiveRenderMetrics: readBoolean(
-      reportSettings.collectLiveRenderMetrics,
-      readBoolean(
-        reportSettings.renderMetricsEnabled,
-        DEFAULT_BENCH_SETTINGS.collectLiveRenderMetrics,
-      ),
-    ),
-  };
-}
-
-function createBenchGroupsFromReport(report: BenchReport): BenchGroup[] {
-  const fallbackModel = report.env?.model ?? DEFAULT_ENV.model;
-  const reportGroups = Array.isArray(report.groups) ? report.groups : [];
-  const groups = reportGroups.map((group, index) => {
-    const item = group as Partial<BenchGroup>;
-    const protocol = isBenchProtocol(item.protocol)
-      ? item.protocol
-      : 'a2ui';
-    return {
-      id: item.id ?? createId(`history-group-${index + 1}`),
-      role: isBenchRole(item.role) ? item.role : 'experiment',
-      protocol,
-      profile: isBenchProfile(item.profile)
-        ? item.profile
-        : (protocol === 'openui' ? 'matched-core' : 'native'),
-      name: item.name ?? `Group ${index + 1}`,
-      variable: isBenchVariable(item.variable) ? item.variable : 'custom',
-      model: item.model ?? fallbackModel,
-      catalog: item.catalog ?? 'Full Catalog',
-      extraInstruction: item.extraInstruction ?? '',
-      enabled: readBoolean(item.enabled, true),
-    };
-  });
-  return groups.length > 0 ? groups : createDefaultBenchGroups(fallbackModel);
-}
-
-function createBenchScenariosFromReport(report: BenchReport): BenchScenario[] {
-  const reportScenarios = Array.isArray(report.scenarios)
-    ? report.scenarios
-    : [];
-  const scenarios = reportScenarios.map((scenario, index) => {
-    const item = scenario as Partial<BenchScenario>;
-    return {
-      id: item.id ?? createId(`history-scenario-${index + 1}`),
-      name: item.name ?? `Scenario ${index + 1}`,
-      prompt: item.prompt ?? '',
-      type: item.type ?? 'Custom',
-      complexity: readFiniteNumber(item.complexity, 1),
-      action: item.action ?? '',
-    };
-  });
-  return scenarios.length > 0
-    ? scenarios
-    : cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isBenchHistoryEntry(value: unknown): value is BenchHistoryEntry {
-  if (!isRecord(value)) return false;
-  if (typeof value.id !== 'string') return false;
-  if (typeof value.title !== 'string') return false;
-  if (typeof value.savedAt !== 'string') return false;
-  if (value.report !== null && !isRecord(value.report)) return false;
-  if (!isRecord(value.config)) return false;
-  const reportIsValid = value.report === null
-    || (Array.isArray(value.report.summaries)
-      && Array.isArray(value.report.results));
-  return reportIsValid
-    && isRecord(value.config.env)
-    && isRecord(value.config.settings)
-    && Array.isArray(value.config.groups)
-    && Array.isArray(value.config.scenarios);
-}
-
-export function readBenchHistory(): BenchHistoryEntry[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    const entries = migrateBenchHistoryEntries(parsed);
-    persistBenchHistory(entries);
-    return entries;
-  } catch {
-    return [];
-  }
-}
-
-export function persistBenchHistory(entries: BenchHistoryEntry[]): boolean {
-  try {
-    window.localStorage.setItem(
-      BENCH_HISTORY_STORAGE_KEY,
-      serializeBenchHistoryEntries(entries),
-    );
-    return true;
-  } catch {
-    // Never evict earlier runs or silently drop screenshots to make a write fit.
-    return false;
-  }
-}
-
 function createBenchHistoryEntry(
   report: BenchReport,
   groups: BenchGroup[],
@@ -796,61 +626,6 @@ export function shouldApplyBenchReportRequest(
   return !controller.signal.aborted && activeController === controller;
 }
 
-export function migrateBenchHistoryEntries(
-  value: unknown,
-): BenchHistoryEntry[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((entry) => isBenchHistoryEntry(entry)).map((entry) => {
-    const safeReport = entry.report
-      ? sanitizeBenchReportValue(entry.report) as BenchReport
-      : null;
-    const configReport = {
-      ...(safeReport ?? {
-        env: entry.config.env,
-        results: [],
-        summaries: [],
-      }),
-      groups: entry.config.groups,
-      scenarios: entry.config.scenarios,
-      settings: entry.config.settings,
-    };
-    return {
-      ...entry,
-      report: safeReport,
-      config: {
-        env: {
-          apiKeyConfigured: Boolean(entry.config.env.apiKeyConfigured),
-          model: entry.config.env.model ?? DEFAULT_ENV.model,
-        },
-        groups: createBenchGroupsFromReport(configReport),
-        scenarios: createBenchScenariosFromReport(configReport),
-        settings: createBenchSettingsFromReport(configReport),
-      },
-    };
-  });
-}
-
-export function serializeBenchHistoryEntries(
-  entries: BenchHistoryEntry[],
-): string {
-  const persistableEntries = entries.map(
-    (entry) => ({
-      ...entry,
-      report: sanitizeBenchReportValue(entry.report),
-      config: {
-        groups: entry.config.groups,
-        scenarios: entry.config.scenarios,
-        settings: entry.config.settings,
-        env: {
-          apiKeyConfigured: entry.config.env.apiKeyConfigured,
-          model: entry.config.env.model,
-        },
-      },
-    }),
-  );
-  return JSON.stringify(persistableEntries);
-}
-
 function readEventData<T>(event: MessageEvent<unknown>): T | null {
   if (typeof event.data !== 'string') return null;
   try {
@@ -939,12 +714,15 @@ export function BenchPage() {
   const [reportPlanSignature, setReportPlanSignature] = useState<string | null>(
     null,
   );
-  const [historyItems, setHistoryItems] = useState<BenchHistoryEntry[]>(
-    readBenchHistory,
-  );
+  const {
+    items: historyItems,
+    setItems: setHistoryItems,
+    ready: historyReady,
+    notice: historyStorageNotice,
+    save: saveHistory,
+  } = useBenchHistory();
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
   const [historyReportNotice, setHistoryReportNotice] = useState('');
-  const [historyStorageNotice, setHistoryStorageNotice] = useState('');
   const benchBodyRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -992,14 +770,6 @@ export function BenchPage() {
   }, [uiJudgeServerUrl]);
 
   useEffect(() => {
-    setHistoryStorageNotice(
-      persistBenchHistory(historyItems)
-        ? ''
-        : 'History could not be saved in this browser (storage full or unavailable). Free some browser storage and retry View details before leaving; screenshots are still available in this page.',
-    );
-  }, [historyItems]);
-
-  useEffect(() => {
     if (!activeHistoryId) return;
     setHistoryItems((current) => {
       const activeEntry = current.find((entry) => entry.id === activeHistoryId);
@@ -1022,7 +792,7 @@ export function BenchPage() {
       );
       return next;
     });
-  }, [activeHistoryId, groups, scenarios, settings]);
+  }, [activeHistoryId, groups, scenarios, settings, setHistoryItems]);
 
   const activeGroups = useMemo(
     () => groups.filter((group) => group.enabled),
@@ -1053,7 +823,7 @@ export function BenchPage() {
   );
   const historyReadOnly = activeHistoryEntry?.report !== null
     && activeHistoryEntry?.report !== undefined;
-  const historyLocked = status === 'running';
+  const historyLocked = status === 'running' || !historyReady;
   const planLocked = historyLocked || historyReadOnly;
   const planSignature = useMemo(
     () => createBenchPlanSignature(runGroups, scenarios, settings),
@@ -1100,6 +870,9 @@ export function BenchPage() {
   );
   const benchRunBlockers = useMemo(
     () => [
+      ...(historyReady
+        ? []
+        : ['Bench history must finish loading before starting a run.']),
       ...getBenchRunBlockers(
         activeGroups.length,
         enabledControlGroupCount,
@@ -1114,6 +887,7 @@ export function BenchPage() {
     [
       activeGroups.length,
       enabledControlGroupCount,
+      historyReady,
       modelValidationError,
       scenarios.length,
       settings.repeats,
@@ -1226,6 +1000,7 @@ export function BenchPage() {
   }, []);
 
   useEffect(() => {
+    if (!historyReady) return;
     const jobId = getA2UIBenchJobIdFromUrl();
     if (!jobId) return;
     const endpoint = getA2UIBenchReportEndpoint(jobId);
@@ -1320,7 +1095,7 @@ export function BenchPage() {
         historyReportAbortRef.current = null;
       }
     };
-  }, []);
+  }, [historyReady, setHistoryItems]);
 
   const updateGroup = useCallback(
     (id: string, patch: Partial<BenchGroup>) => {
@@ -1493,7 +1268,7 @@ export function BenchPage() {
     setBenchHealthError(null);
     setBenchRunNoticeOpen(false);
     setScreenshotsOpen(false);
-  }, [cancelActiveBenchJob, env]);
+  }, [cancelActiveBenchJob, env, setHistoryItems]);
 
   const loadBenchHealth = useCallback(() => {
     setBenchHealth(null);
@@ -1799,6 +1574,7 @@ export function BenchPage() {
       }
     })();
   }, [
+    setHistoryItems,
     activeHistoryEntry,
     benchRunBlockers.length,
     cancelActiveBenchJob,
@@ -1822,17 +1598,11 @@ export function BenchPage() {
   }, [cancelActiveBenchJob, status]);
 
   const openHistoryReport = useCallback((entry: BenchHistoryEntry) => {
-    if (!entry.report) return;
+    if (!entry.report || !historyReady) return;
     setHistoryReportNotice('');
-    if (!persistBenchHistory(historyItems)) {
-      setHistoryReportNotice(
-        'Could not save this report. Free some browser storage and try again before leaving.',
-      );
-      return;
-    }
     let tab: Window | null = null;
     try {
-      window.localStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, entry.id);
+      // Open synchronously while the click still grants popup permission.
       tab = window.open('about:blank', '_blank');
       if (!tab) {
         setHistoryReportNotice(
@@ -1841,19 +1611,31 @@ export function BenchPage() {
         return;
       }
       tab.opener = null;
-      // Each tab owns its selection; opening another report must not replace it.
-      tab.sessionStorage.setItem(BENCH_SELECTED_REPORT_STORAGE_KEY, entry.id);
-      const url = new URL(window.location.href);
-      url.search = '';
-      url.hash = '#/bench/reports';
-      tab.location.replace(url.href);
+      setBenchReportTabSelection(tab, entry.id);
     } catch {
       tab?.close();
       setHistoryReportNotice(
         'Could not open the local report because browser storage is unavailable.',
       );
+      return;
     }
-  }, [historyItems]);
+    const reportTab = tab;
+    void (async () => {
+      try {
+        await saveHistory(historyItems);
+        await selectBenchReport(entry.id);
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '#/bench/reports';
+        reportTab.location.replace(url.href);
+      } catch {
+        reportTab.close();
+        setHistoryReportNotice(
+          'Could not save this report. Free some browser storage and try again before leaving.',
+        );
+      }
+    })();
+  }, [historyItems, historyReady, saveHistory]);
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     void cancelActiveBenchJob();
     setActiveHistoryId(entry.id);
@@ -1948,26 +1730,26 @@ export function BenchPage() {
         }
       }
     })();
-  }, [cancelActiveBenchJob, env]);
+  }, [cancelActiveBenchJob, env, setHistoryItems]);
 
   useEffect(() => {
-    if (initialHistoryRestoredRef.current) return;
+    if (!historyReady || initialHistoryRestoredRef.current) return;
     initialHistoryRestoredRef.current = true;
     // An explicit report link owns restoration, including invalid-link feedback.
     if (getA2UIBenchJobIdFromUrl()) return;
     const firstEntry = historyItems[0];
     if (firstEntry) restoreHistoryEntry(firstEntry);
-  }, [historyItems, restoreHistoryEntry]);
+  }, [historyItems, historyReady, restoreHistoryEntry]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     setActiveHistoryId((current) => current === id ? null : current);
     setHistoryItems((current) => current.filter((entry) => entry.id !== id));
-  }, []);
+  }, [setHistoryItems]);
 
   const clearHistory = useCallback(() => {
     setActiveHistoryId(null);
     setHistoryItems([]);
-  }, []);
+  }, [setHistoryItems]);
 
   const setWidthFromPointer = useCallback((clientX: number) => {
     const body = benchBodyRef.current;

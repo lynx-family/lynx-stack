@@ -172,7 +172,12 @@ and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 
 Bench is a regular GenUI top-level tab. Its Create-style history rail keeps
-drafts and completed runs in browser storage. New Bench immediately creates
+drafts, completed runs, and report screenshots in the shared local IndexedDB
+(`a2ui-playground`, `benchHistory` store). Database migration and reads/writes
+are maintained in `src/storage/benchRepo.ts`; history types, normalization, and
+React state remain in `src/pages/bench`. Existing `a2ui-bench-history` localStorage
+data is imported once and removed only after the database transaction commits.
+New Bench immediately creates
 and selects the first draft item; completion updates that item in place.
 Completed entries restore their configuration and report as read-only, so a
 new run starts from a new Bench draft instead of rerunning history. Runner
