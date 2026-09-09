@@ -1175,6 +1175,15 @@ importers:
       '@lynx-js/skill-vanilla-lynx':
         specifier: 0.2.0
         version: 0.2.0
+      acorn:
+        specifier: ^8.17.0
+        version: 8.17.0
+      acorn-walk:
+        specifier: ^8.3.5
+        version: 8.3.5
+      eslint-scope:
+        specifier: ^8.4.0
+        version: 8.4.0
       fast-xml-parser:
         specifier: ^5.11.1
         version: 5.11.1
@@ -1185,6 +1194,9 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
+      '@types/eslint-scope':
+        specifier: ^3.7.7
+        version: 3.7.7
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1282,6 +1294,9 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      xml-formatter:
+        specifier: ^3.7.0
+        version: 3.7.0
     devDependencies:
       '@lynx-js/config-rsbuild-plugin':
         specifier: workspace:*
@@ -6585,6 +6600,9 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
+
+  '@types/eslint-scope@3.7.7':
+    resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
   '@types/eslint@8.56.12':
     resolution: {integrity: sha512-03ruubjWyOHlmljCVoxSuNDdmfZDzsrrz0P2LeJsOXr+ZwFQ+0yQIwNCwt/GYhV7Z31fgtXJTAEs+FYlEL851g==}
@@ -12680,6 +12698,10 @@ packages:
       utf-8-validate:
         optional: true
 
+  xml-formatter@3.7.0:
+    resolution: {integrity: sha512-+8qTc3zv2UcJ1v9IsSIce37Dl4MQG14Cp7tWrwmy202UaI1wqRukw5QMX1JHsV+DX64yw77EgGsj2s5wGvuMbQ==}
+    engines: {node: '>= 16'}
+
   xml-name-validator@5.0.0:
     resolution: {integrity: sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==}
     engines: {node: '>=18'}
@@ -12687,6 +12709,10 @@ packages:
   xml-naming@0.3.0:
     resolution: {integrity: sha512-ghig2TBE/H11aOVgmahA3MhimvkBr6JIYknH/Dhdk10nXwdbIqBJsbfMxpvFPG8bAw77gN29aQWvKpmVoPlvPQ==}
     engines: {node: '>=16.0.0'}
+
+  xml-parser-xo@4.1.6:
+    resolution: {integrity: sha512-mXbSNSM+rIwndoxSwmFa83bOdeP8G/cOGr7XvxA67X7ebCzoAuVez9JYDCDub3zRDNBZxIbfjuXLSsamr7NfwQ==}
+    engines: {node: '>= 20'}
 
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
@@ -16548,6 +16574,11 @@ snapshots:
       '@types/ms': 2.1.0
 
   '@types/deep-eql@4.0.2': {}
+
+  '@types/eslint-scope@3.7.7':
+    dependencies:
+      '@types/eslint': 8.56.12
+      '@types/estree': 1.0.9
 
   '@types/eslint@8.56.12':
     dependencies:
@@ -23318,9 +23349,15 @@ snapshots:
 
   ws@8.21.2: {}
 
+  xml-formatter@3.7.0:
+    dependencies:
+      xml-parser-xo: 4.1.6
+
   xml-name-validator@5.0.0: {}
 
   xml-naming@0.3.0: {}
+
+  xml-parser-xo@4.1.6: {}
 
   xmlchars@2.2.0: {}
 

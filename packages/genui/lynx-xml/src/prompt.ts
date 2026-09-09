@@ -24,7 +24,9 @@ export const LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS =
 - Draft the initial static Lynx element tree as one well-formed XML fragment, then call html_fragment_to_main_thread_script exactly once with that fragment. Give every node needed by event handlers or dynamic updates a unique id attribute.
 - The tool returns an opaque placeholder comment and a bindings map from XML ids to generated node variable names. It does not return the generated JavaScript.
 - Copy the placeholder exactly, without quoting or rewriting it, onto its own line inside renderPage() after page and pageId exist. The server replaces it with the generated Element PAPI statements after model generation.
-- Write event handlers and dynamic updates after the placeholder. Refer to generated nodes only through the returned bindings and do not redeclare those node variable names.
+- The server declares generated node variables at main-thread script scope and assigns them inside renderPage(). Event handlers, updatePage(), and destroyLifetime() may use the returned bindings after rendering, even when declared outside renderPage(). Do not access them before the initial render, invent node names, or redeclare/shadow them with const, let, var, or function parameters.
+- Use the VALUES of the bindings map as JavaScript references: for {"cityText":"node5","currentTemp":"node15"}, write setText(node5, ...) and setText(node15, ...). XML ids are strings, not JavaScript variables; __SetID does not declare cityText or currentTemp. Apply this rule inside helpers, arrays, event handlers, and lifecycle callbacks too.
+- The placeholder already appends every fragment root to page. Do not append those roots again after the placeholder.
 - The tool handles element creation, literal text, classes, IDs, inline styles, datasets, attributes, and child order. Write state, event handlers, dynamic updates, lifecycle registration, and cleanup yourself.
 - Do not put style, script, lynx, page, or raw-text elements in the fragment. Keep CSS in the artifact's style block and bind events in main-thread JavaScript.`;
 

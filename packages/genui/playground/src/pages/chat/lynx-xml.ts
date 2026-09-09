@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { formatXmlFragment } from './format-xml-fragment.js';
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   getChatEndpoint,
@@ -25,11 +26,12 @@ import type { LynxXmlScenario } from '../demos/lynx-xml.js';
 
 export interface LynxXmlOutput {
   source: string;
+  xmlFragment?: string;
+  modelOutput?: string;
 }
 
-export interface LynxXmlStreamState {
+export interface LynxXmlStreamState extends LynxXmlOutput {
   generatedText: string;
-  source: string;
 }
 
 const DOCTYPE = '<!doctype lynx>';
@@ -109,7 +111,19 @@ function requireCompleteOutput(value: unknown, fallback = ''): LynxXmlOutput {
   if (!isCompleteLynxXmlSource(source)) {
     throw new Error('The agent returned an incomplete Lynx XML artifact');
   }
-  return { source };
+  const xmlFragment = isRecord(value) && isRecord(value.metadata)
+      && typeof value.metadata.xmlFragment === 'string'
+    ? value.metadata.xmlFragment
+    : undefined;
+  const modelOutput = isRecord(value) && isRecord(value.metadata)
+      && typeof value.metadata.modelOutput === 'string'
+    ? value.metadata.modelOutput
+    : undefined;
+  return {
+    source,
+    ...(xmlFragment ? { xmlFragment } : {}),
+    ...(modelOutput ? { modelOutput } : {}),
+  };
 }
 
 function streamStep(
@@ -156,7 +170,7 @@ export const LYNX_XML_STREAM = {
     if (usage) emissions.push({ type: 'usage', usage });
     emissions.push({ type: 'final', output });
     return streamStep(
-      { generatedText: output.source, source: output.source },
+      { generatedText: output.source, ...output },
       emissions,
     );
   },
@@ -167,13 +181,17 @@ export const LYNX_XML_STREAM = {
     if (usage) emissions.push({ type: 'usage', usage });
     emissions.push({ type: 'final', output });
     return streamStep(
-      { generatedText: output.source, source: output.source },
+      { generatedText: output.source, ...output },
       emissions,
     );
   },
   finish(state: LynxXmlStreamState): LynxXmlOutput | null {
     return isCompleteLynxXmlSource(state.source)
-      ? { source: state.source }
+      ? {
+        source: state.source,
+        ...(state.xmlFragment ? { xmlFragment: state.xmlFragment } : {}),
+        ...(state.modelOutput ? { modelOutput: state.modelOutput } : {}),
+      }
       : null;
   },
   error: normalizeError,
@@ -237,7 +255,16 @@ function hydrate(
     if (message.role !== 'assistant') continue;
     const source = extractLynxXmlSource(message.content);
     if (!isCompleteLynxXmlSource(source)) continue;
-    output = { source };
+    output = {
+      source,
+      ...(typeof message.lynxXmlFragment === 'string' && message.lynxXmlFragment
+        ? { xmlFragment: message.lynxXmlFragment }
+        : {}),
+      ...(typeof message.lynxXmlModelOutput === 'string'
+          && message.lynxXmlModelOutput
+        ? { modelOutput: message.lynxXmlModelOutput }
+        : {}),
+    };
     messages.push(
       pendingLocalTitle
         ? localExampleStatus(pendingLocalTitle)
@@ -255,21 +282,47 @@ function hydrate(
 }
 
 function createArtifact(output: LynxXmlOutput): ChatArtifact {
+  const formattedFragment = output.xmlFragment
+    ? formatXmlFragment(output.xmlFragment)
+    : undefined;
   return {
     title: 'Generated Lynx XML Artifact',
     meta: `.lynxml · ${formatCharacterCount(output.source)}`,
-    views: [{
-      id: 'source',
-      label: 'Source',
-      text: output.source,
-      language: 'text',
-    }],
+    views: [
+      {
+        id: 'source',
+        label: 'Source',
+        text: output.source,
+        language: 'text',
+      },
+      ...(output.xmlFragment
+        ? [{
+          id: 'xml-fragment',
+          label: 'XML Fragment',
+          text: output.xmlFragment,
+          ...(formattedFragment === undefined
+            ? {}
+            : { formattedText: formattedFragment }),
+          language: 'text' as const,
+        }]
+        : []),
+      ...(output.modelOutput
+        ? [{
+          id: 'model-output',
+          label: 'Model Output',
+          text: output.modelOutput,
+          language: 'text' as const,
+        }]
+        : []),
+    ],
   };
 }
 
 function persistOutput(output: LynxXmlOutput): ChatTurnPersistence {
   return {
     assistantContent: output.source,
+    ...(output.xmlFragment ? { lynxXmlFragment: output.xmlFragment } : {}),
+    ...(output.modelOutput ? { lynxXmlModelOutput: output.modelOutput } : {}),
     a2uiMessages: [],
     previewMessages: [],
   };
@@ -300,7 +353,13 @@ export const LYNX_XML_CHAT_ADAPTER = {
       body: {
         resourceId: 'lynx-xml-create',
         messages: [{ role: 'user', content: prompt }],
-        conversation,
+        conversation: {
+          ...conversation,
+          history: conversation.history.map(({ role, content }) => ({
+            role,
+            content,
+          })),
+        },
         ...toProviderRequestOptions(settings),
       },
     };

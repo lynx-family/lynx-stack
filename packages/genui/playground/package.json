@@ -31,7 +31,8 @@
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "xml-formatter": "^3.7.0"
   },
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
