@@ -4,6 +4,7 @@
 
 import { describe, expect, rstest, test } from '@rstest/core';
 
+import { readScreenshotForm } from './helpers/screenshot-form.js';
 import type { ScreenshotEvaluation } from '../agent/common/ui-judge-agent.js';
 import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
 import * as actualJudge from '../agent/common/ui-judge-agent.js' with {
@@ -134,6 +135,8 @@ describe('runGenuiBenchUiJudge', () => {
         ['source', rawText],
         ['width', '390'],
         ['height', '844'],
+        ['screenshotSettleMs', '1000'],
+        ['timeoutMs', '10000'],
       ]);
       expect(new Headers(init?.headers).get('Content-Type')).toBeNull();
       return Promise.resolve(evaluationResponse(geqiResponse(4)));
@@ -184,13 +187,15 @@ describe('runGenuiBenchUiJudge', () => {
         },
       },
       (_input, init) => {
-        const requestBody = typeof init?.body === 'string' ? init.body : '';
-        body = JSON.parse(requestBody) as unknown;
+        body = readScreenshotForm(init);
         return Promise.resolve(evaluationResponse(geqiResponse(4)));
       },
     );
 
     expect(body).toEqual({
+      entry: 'template.js',
+      width: 390,
+      height: 844,
       globalProps: {
         benchMode: true,
         instant: true,
@@ -232,13 +237,15 @@ describe('runGenuiBenchUiJudge', () => {
         },
       },
       (_input, init) => {
-        const requestBody = typeof init?.body === 'string' ? init.body : '';
-        body = JSON.parse(requestBody) as unknown;
+        body = readScreenshotForm(init);
         return Promise.resolve(evaluationResponse(geqiResponse(4)));
       },
     );
 
     expect(body).toEqual({
+      entry: 'template.js',
+      width: 390,
+      height: 844,
       globalProps: {
         benchMode: true,
         instant: true,

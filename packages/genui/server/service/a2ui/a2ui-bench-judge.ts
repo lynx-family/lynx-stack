@@ -20,6 +20,8 @@ import type { BenchScenarioRequest } from '../common/bench/types.js';
 const DEFAULT_A2UI_BUNDLE_URL = 'https://lynx-stack.dev/genui/a2ui.lynx.js';
 const HEALTH_TIMEOUT_MS = 3_000;
 const DEFAULT_OPERATION_TIMEOUT_MS = 60_000;
+const DEFAULT_SCREENSHOT_WIDTH = 390;
+const DEFAULT_SCREENSHOT_HEIGHT = 844;
 
 type FetchLike = (
   input: string | URL,
@@ -96,6 +98,8 @@ interface RunBenchUiJudgeOptions {
 export interface RunBenchUiJudgeRequestOptions {
   model?: string;
   globalProps: Record<string, unknown>;
+  initData?: Record<string, unknown>;
+  viewport?: { width?: number; height?: number };
   lynxXmlSource?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
@@ -415,31 +419,39 @@ export async function runBenchUiJudgeRequest(
       warnings,
     };
   }
-  const viewport = { width: 390, height: 844 };
-  const body = {
-    globalProps: options.globalProps,
-    ...(options.screenshotSettleMs === undefined
-      ? {}
-      : { screenshotSettleMs: options.screenshotSettleMs }),
-    ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
-    url: options.session.bundleUrl,
-  };
-
-  const form = options.lynxXmlSource === undefined ? undefined : new FormData();
-  if (form) {
+  const form = new FormData();
+  if (options.lynxXmlSource === undefined) {
+    form.set('entry', 'template.js');
+    if (options.session.bundleUrl !== undefined) {
+      form.set('url', options.session.bundleUrl);
+    }
+    form.set('globalProps', JSON.stringify(options.globalProps));
+  } else {
     form.set('entry', 'index.lynxml');
-    form.set('source', options.lynxXmlSource!);
-    form.set('width', String(viewport.width));
-    form.set('height', String(viewport.height));
+    form.set('source', options.lynxXmlSource);
+  }
+  if (options.initData !== undefined) {
+    form.set('initData', JSON.stringify(options.initData));
+  }
+  const viewport = {
+    width: options.viewport?.width ?? DEFAULT_SCREENSHOT_WIDTH,
+    height: options.viewport?.height ?? DEFAULT_SCREENSHOT_HEIGHT,
+  };
+  form.set('width', String(viewport.width));
+  form.set('height', String(viewport.height));
+  if (options.screenshotSettleMs !== undefined) {
+    form.set('screenshotSettleMs', String(options.screenshotSettleMs));
+  }
+  if (options.timeoutMs !== undefined) {
+    form.set('timeoutMs', String(options.timeoutMs));
   }
 
   let response: Response;
   try {
     response = await fetchImpl(options.session.screenshotUrl, {
-      body: form ?? JSON.stringify(body),
+      body: form,
       headers: {
         Accept: 'image/bmp',
-        ...(form ? {} : { 'Content-Type': 'application/json' }),
       },
       method: 'POST',
       signal: requestSignal,

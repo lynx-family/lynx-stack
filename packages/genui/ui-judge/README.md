@@ -107,6 +107,7 @@ a named part; query parameters and the former raw request bodies are rejected.
 | Route                           | Required source part                 |
 | ------------------------------- | ------------------------------------ |
 | `POST /screenshot/lynxml`       | `source`: UTF-8 LynXML text or file  |
+| `POST /screenshot/template`     | `url`: HTTP(S) compiled-template URL |
 | `POST /screenshot/template/url` | `url`: HTTP(S) compiled-template URL |
 | `POST /screenshot/zip/upload`   | `file`: ZIP archive bytes            |
 | `POST /screenshot/zip/url`      | `url`: HTTP(S) ZIP URL               |
@@ -133,22 +134,34 @@ return `400`. All part contents share a 10 MiB limit, with another 64 KiB allowe
 for multipart framing. The complete body has a ten-second read deadline.
 The server does not expose the former generic screenshot route, `POST /screenshot`.
 
-For a compiled remote template with injected page data, use
-`POST /screenshot/template`. It accepts only `url`, `globalProps`, `initialData`,
-`screenshotSettleMs`, and `timeoutMs` in a JSON body. The server fetches the
-HTTP(S) template through the shared SSRF-safe downloader, stages it privately,
-and captures it in a fresh child process. Direct `file://` URLs, unknown fields,
-and interaction steps are rejected. Successful responses contain the original
-BMP with `Content-Type: image/bmp` and `Cache-Control: no-store`.
+`POST /screenshot/template` and `POST /screenshot/lynxml` both accept
+`multipart/form-data`. Template capture requires `entry` (ending in `.js`) and
+`url`; XML capture requires `entry` (ending in `.lynxml`) and `source`. JSON
+request bodies are not accepted. Template URLs retain the existing SSRF-safe
+download and private staging path; XML source is staged locally. Both return BMP.
+
+In addition to the shared fields above, these two endpoints accept:
+
+| Field                | Required | Description                                                 |
+| -------------------- | -------- | ----------------------------------------------------------- |
+| `screenshotSettleMs` | No       | Non-negative integer wait before capture; defaults to 16 ms |
+| `timeoutMs`          | No       | Positive integer capture timeout; defaults to 60,000 ms     |
+
+Width and height default to `DEFAULT_SCREENSHOT_WIDTH` and
+`DEFAULT_SCREENSHOT_HEIGHT` (800 × 600). Bench explicitly sends its mobile
+viewport defaults (390 × 844), with per-dimension overrides when configured.
+`initData` and `globalProps` are JSON objects encoded as text fields;
+XML supports `initData` but rejects `globalProps`. The ZIP endpoints and the
+legacy `/screenshot/template/url` endpoint retain their existing fields and
+capture defaults; they do not accept the two new timing fields.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/template \
-  --header 'content-type: application/json' \
-  --data '{
-    "url": "https://cdn.example.com/a2ui.lynx.js",
-    "globalProps": {"messages": []},
-    "screenshotSettleMs": 1000
-  }' \
+  --form-string 'entry=template.js' \
+  --form-string 'url=https://cdn.example.com/a2ui.lynx.js' \
+  --form-string 'globalProps={"messages":[]}' \
+  --form-string 'screenshotSettleMs=1000' \
+  --form-string 'timeoutMs=60000' \
   --output screenshot.bmp
 ```
 
