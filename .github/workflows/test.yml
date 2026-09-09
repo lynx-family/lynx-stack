@@ -332,6 +332,10 @@ jobs:
           smoke_test pnpm "$template" eslint "create-lynx-$template" --skill lynx-devtool
         done
 
+        # A library can also be packed into a Lynx External Bundle.
+        smoke_test pnpm rslib-react-ts eslint,external-bundle create-lynx-rslib-external-bundle --skill lynx-devtool
+        run_script pnpm build:external-bundle
+
         # The loop above stays on pnpm. Each package manager lays `node_modules`
         # out differently, so they do not agree on which undeclared transitive
         # dependency a package can still resolve.

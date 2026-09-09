@@ -22,7 +22,9 @@ Every template comes with [Rstest](https://rstest.rs/) and
 `@lynx-js/react/testing-library` set up; run the tests with `npm run test`.
 
 A library keeps JSX in its output (`dist/*.jsx`), so the Lynx app that depends
-on it compiles the components with its own ReactLynx version.
+on it compiles the components with its own ReactLynx version. Pick the
+`external-bundle` tool to also pack it into a Lynx External Bundle
+(`dist-external-bundle/*.lynx.bundle`) that a host app loads at runtime.
 
 ```bash
 npm create @lynx-js/lynx@latest my-app -- --template rsbuild-react-ts
@@ -31,12 +33,12 @@ npm create @lynx-js/lynx@latest my-lib -- --template rslib-react-ts
 
 ## Options
 
-| Option           | Description                                        |
-| ---------------- | -------------------------------------------------- |
-| `-d, --dir`      | Directory to create the project in                 |
-| `-t, --template` | Template to use                                    |
-| `--tools`        | Extra tools, such as `eslint`, `prettier`, `biome` |
-| `--skill`        | Agent skills to install                            |
-| `--override`     | Override files in the target directory             |
+| Option           | Description                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `-d, --dir`      | Directory to create the project in                                                     |
+| `-t, --template` | Template to use                                                                        |
+| `--tools`        | Extra tools, such as `eslint`, `prettier`, `biome`, or `external-bundle` for a library |
+| `--skill`        | Agent skills to install                                                                |
+| `--override`     | Override files in the target directory                                                 |
 
 This package supersedes `create-rspeedy`.

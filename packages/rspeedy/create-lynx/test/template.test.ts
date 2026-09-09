@@ -131,11 +131,39 @@ describe('templates on disk', () => {
     }
   })
 
+  test('packs a library into an External Bundle on request', () => {
+    for (const tool of LIBRARY_TOOLS) {
+      for (const lang of LANGS) {
+        const manifest = readManifest(
+          path.join(
+            templateRoot(packageRoot, tool),
+            `template-external-bundle-${lang}`,
+          ),
+        )
+        expect(manifest['scripts']?.['build:external-bundle']).toMatch(
+          /^rslib build --config /,
+        )
+      }
+    }
+  })
+
   test('does not leave unresolvable ranges in a template manifest', () => {
     const versions = readManifest(packageRoot)['devDependencies'] ?? {}
+    const dirs = [
+      ...TEMPLATES.map(template => templateDir(template)),
+      ...LIBRARY_TOOLS.flatMap(tool =>
+        LANGS.map(lang =>
+          path.join(
+            templateRoot(packageRoot, tool),
+            `template-external-bundle-${lang}`,
+          )
+        )
+      ),
+    ]
 
-    for (const template of TEMPLATES) {
-      const manifest = readManifest(templateDir(template))
+    for (const dir of dirs) {
+      const template = path.basename(dir)
+      const manifest = readManifest(dir)
 
       for (const field of ['dependencies', 'devDependencies']) {
         for (const [name, range] of Object.entries(manifest[field] ?? {})) {

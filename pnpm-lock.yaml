@@ -1854,6 +1854,9 @@ importers:
         specifier: 2.1.4
         version: 2.1.4
     devDependencies:
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:^
+        version: link:../lynx-bundle-rslib-config
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
         version: 5.0.1-20260827072047-5f77e12

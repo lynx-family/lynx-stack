@@ -36,6 +36,7 @@
     "@rstackjs/create-toolkit": "2.1.4"
   },
   "devDependencies": {
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:^",
     "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",

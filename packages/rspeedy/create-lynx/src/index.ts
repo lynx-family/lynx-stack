@@ -8,11 +8,17 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { Argv } from '@rstackjs/create-toolkit'
-import { checkCancel, create, select } from '@rstackjs/create-toolkit'
+import {
+  checkCancel,
+  copyFolder,
+  create,
+  select,
+} from '@rstackjs/create-toolkit'
 
 import type { Lang, Tool } from './template.js'
 import {
   DEFAULT_DSL,
+  LIBRARY_TOOLS,
   TEMPLATES,
   resolveTemplateName,
   templateRoot,
@@ -92,6 +98,29 @@ void create({
 
     return `${tool ?? 'rsbuild'}-${DEFAULT_DSL}-${lang}`
   },
+  extraTools: [
+    {
+      value: 'external-bundle',
+      label: 'External Bundle',
+      order: 'pre',
+      when: ({ templateName }) => {
+        const tool = toolOf(templateName)
+        return tool !== undefined && LIBRARY_TOOLS.includes(tool)
+      },
+      action: ({ templateName, distFolder, addAgentsMdSearchDirs }) => {
+        const from = path.join(
+          templateRoot(packageRoot, toolOf(templateName)),
+          `template-external-bundle-${templateName.split('-').at(-1)}`,
+        )
+        copyFolder({
+          from,
+          to: distFolder,
+          isMergePackageJson: true,
+        })
+        addAgentsMdSearchDirs(from)
+      },
+    },
+  ],
   extraSkills: [
     {
       label: 'Lynx DevTool',
