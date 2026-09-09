@@ -180,7 +180,8 @@ cache and reasoning tokens are already included in input and output respectively
 Bench supports A2UI, OpenUI, and Lynx XML comparison groups. Lynx XML uses
 the native profile without a component catalog, reuses the XML generation
 service, and submits the resulting source to UI Judge's `/screenshot/lynxml`
-endpoint for capture. Search and image generation are disabled in all Bench
+endpoint for capture. Template and XML screenshot requests use multipart with
+shared viewport, timing, and initial-data fields. Search and image generation are disabled in all Bench
 groups. The same GenUI scoring and report pipeline evaluates each protocol;
 browser render timing metrics remain disabled. Protocol comparisons preserve
 the selected baseline and offer protocols not yet present in the job.
