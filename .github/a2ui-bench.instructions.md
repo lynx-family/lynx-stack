@@ -1,10 +1,14 @@
 ---
-applyTo: "packages/genui/server/service/{a2ui,openui}/*bench*.ts,packages/genui/server/service/common/bench/**,packages/genui/server/app/a2ui/bench/**,packages/genui/playground/src/pages/bench/**,packages/genui/server/rslib.config.ts"
+applyTo: "packages/genui/server/service/{a2ui,openui,lynx-xml}/*bench*.ts,packages/genui/server/service/common/bench/**,packages/genui/server/app/a2ui/bench/**,packages/genui/playground/src/pages/bench/**,packages/genui/server/rslib.config.ts"
 ---
 
 A2UI bench jobs run agent generation and validation in `genui-server`, but browser-backed render metrics and screenshots remain disabled. Keep browser metrics marked as disabled in reports.
 
+Lynx XML participates in Bench as `lynx-xml` with the `native` profile and no component catalog. Reuse its existing generation service and document normalization, retain its deterministic fragment conversion tool, and disable search and image generation. Capture the final source through UI Judge's existing `POST /screenshot/lynxml` multipart route with `entry=index.lynxml`, `source`, `width`, and `height`; do not wrap XML in an A2UI/OpenUI bundle or send globalProps, model settings, or JSON-only capture options. Reuse BMP conversion, GenUI scoring, cancellation, and report storage. Keep XML protocol identity in history and every report label, and preserve the user's baseline protocol when adding comparisons.
+
 Let every comparison group select its model independently, but expose and accept only public model names returned by the GenUI server. Do not add a free-form Bench model input or reinterpret an unknown group model as an upstream model ID.
+
+Preserve exact configured public model names in structured Bench `model` fields even when they equal a private upstream model ID; keep upstream IDs and provider credentials redacted in diagnostics and unrecognized model fields. Preserve generated comparison `id`/`groupId` values through history serialization so reports can join the saved plan. Older redacted group IDs may recover model names only through a unique match on name, protocol, profile, and role in the same history entry; never guess from another group, array order, or the current default model.
 
 Use the Rust HTTP sidecar for screenshots and deterministic comparison, and GenUI Server for model evaluation. Configure the capture service through `UI_JUDGE_SERVER_URL` or a normalized credential-free job-level `playground.uiJudgeServerUrl`; keep bundle URLs server-owned. Probe `GET /health`, then send sanitized page data to `POST /screenshot/template`. Convert the returned BMP to PNG before scoring with the Bench group's GenUI model. Reject nonempty `judgeSteps` before capture; do not extend remote interaction.
 
@@ -19,3 +23,9 @@ Never let model-generated Bench messages make the server-side headless renderer 
 Do not add `@sparticuz/chromium` or `playwright-core` back to `packages/genui/server`. Keep the entire browser-backed implementation in `a2ui-bench-preview.ts` and its runner import and call sites commented until preview rendering moves to its dedicated service. Do not add a fallback preview implementation, capability flag, or configuration switch while it is disabled.
 
 Bench job event streams can sit in a long-running phase without producing run events. Keep the `/a2ui/bench/jobs/[jobId]/events` SSE response alive with heartbeat comments, and let native EventSource disconnects reconnect unless the server sends an explicit `event: error` payload. Otherwise proxies or serverless hosts may close an idle stream and the playground will lose a still-running job.
+
+Preserve generation usage for every Bench protocol and sum all generation steps and repair attempts, excluding UI Judge calls. Keep missing input, output, cache-read, cache-write, and reasoning counts unknown rather than zero; a partial retry breakdown must not appear complete. Cache counts are subsets of input and reasoning is a subset of output, so never add them to total tokens again. Keep numeric and nested AI SDK usage formats plus snake-case provider formats readable in older browser history, and divide group breakdowns by the same planned-run denominator as avgTokens.
+
+Request a 390 × 844 portrait viewport where the existing screenshot API supports it: Lynx XML multipart capture accepts width and height, but the current A2UI/OpenUI JSON template route rejects them. Do not send unsupported dimensions to that route or change UI Judge to add them.
+
+Default new A2UI groups and switches from another protocol to A2UI to native with Full Catalog. Adding comparisons must not rewrite existing groups' profiles or catalogs; preserve manual A2UI choices when cloning model/prompt comparisons or retaining the same protocol.

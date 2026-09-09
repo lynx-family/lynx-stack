@@ -26,6 +26,40 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test('accepts Lynx XML native alongside both component protocols', () => {
+    const normalized = normalizeBenchJobRequest(body(
+      ['a2ui', 'openui', 'lynx-xml'].map((protocol) => ({
+        id: protocol,
+        protocol,
+        catalog: 'Core Catalog',
+        enabled: true,
+      })),
+    ));
+    expect(normalized.ok).toBe(true);
+    if (!normalized.ok) return;
+    expect(
+      normalized.request.groups.map((group) => [group.protocol, group.profile]),
+    ).toEqual([
+      ['a2ui', 'native'],
+      ['openui', 'matched-core'],
+      ['lynx-xml', 'native'],
+    ]);
+    expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
+    expect(normalized.request.settings.parallelism).toBe(1);
+  });
+
+  test('rejects a matched-core profile for Lynx XML', () => {
+    expect(normalizeBenchJobRequest(body([{
+      id: 'xml',
+      protocol: 'lynx-xml',
+      profile: 'matched-core',
+    }]))).toMatchObject({
+      ok: false,
+      status: 400,
+      error: 'lynx-xml groups require the "native" profile',
+    });
+  });
+
   test('keeps legacy groups on the A2UI native profile', () => {
     const normalized = normalizeBenchJobRequest(
       body([{

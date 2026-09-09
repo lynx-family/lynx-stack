@@ -57,6 +57,7 @@ export interface BenchResult {
   status?: 'complete' | 'failed';
   ttiMs: number;
   tokens: number;
+  usage?: unknown;
 }
 
 export interface BenchGroupSummary {
@@ -76,6 +77,7 @@ export interface BenchGroupSummary {
   protocol?: BenchProtocol;
   role: BenchRole;
   runCount?: number;
+  plannedRuns?: number;
   successRate?: number;
 }
 

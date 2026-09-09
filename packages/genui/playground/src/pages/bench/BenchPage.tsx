@@ -18,8 +18,11 @@ import {
   createCustomBenchScenario,
   createDefaultBenchGroups,
   findComparableBaseline,
+  getBenchProtocolLabel,
   inferBenchVariable,
+  nextBenchComparisonProtocol,
   usesCatalog,
+  withBenchProtocol,
 } from './benchData.js';
 import type {
   BenchComparisonDirection,
@@ -539,7 +542,7 @@ function createBenchHistoryEntry(
   const protocols = [
     ...new Set(
       createBenchGroupsFromReport(report).map((group) =>
-        group.protocol === 'openui' ? 'OpenUI' : 'A2UI'
+        getBenchProtocolLabel(group.protocol)
       ),
     ),
   ];
@@ -1116,38 +1119,27 @@ export function BenchPage() {
       const nextModel = direction === 'model'
         ? (env.models.find((item) => item.id !== model)?.id ?? model)
         : model;
+      const nextProtocol = direction === 'protocol'
+        ? nextBenchComparisonProtocol(current, baseline)
+        : baseline.protocol;
+      const protocolGroup = withBenchProtocol(baseline, nextProtocol);
       const nextGroup: BenchGroup = {
         ...baseline,
         id: createId(`${direction}-comparison`),
         role: 'experiment',
-        protocol: direction === 'protocol' ? 'openui' : baseline.protocol,
-        profile: direction === 'protocol' ? 'matched-core' : baseline.profile,
+        protocol: protocolGroup.protocol,
+        profile: protocolGroup.profile,
         name: `${direction} comparison`,
         variable: direction,
         model: nextModel,
-        catalog: direction === 'protocol'
-          ? 'Core Catalog'
-          : baseline.catalog,
+        catalog: protocolGroup.catalog,
         extraInstruction: direction === 'prompt'
           ? 'Use concise copy and minimize unnecessary UI structure while preserving the requested content and interaction.'
           : baseline.extraInstruction,
         enabled: true,
       };
 
-      if (direction !== 'protocol') return [...current, nextGroup];
-      return [
-        ...current.map((group) =>
-          group.id === baseline.id
-            ? {
-              ...group,
-              protocol: 'a2ui' as const,
-              profile: 'matched-core' as const,
-              catalog: 'Core Catalog',
-            }
-            : group
-        ),
-        nextGroup,
-      ];
+      return [...current, nextGroup];
     });
     if (direction === 'protocol') {
       setSettings((current) => ({ ...current, parallelism: 1 }));
@@ -1159,20 +1151,11 @@ export function BenchPage() {
       setGroups((current) =>
         current.map((group) =>
           group.id === id
-            ? {
-              ...group,
-              protocol,
-              profile: protocol === 'openui'
-                ? 'matched-core'
-                : group.profile,
-              catalog: protocol === 'openui'
-                ? 'Core Catalog'
-                : group.catalog,
-            }
+            ? withBenchProtocol(group, protocol)
             : group
         )
       );
-      if (protocol === 'openui') {
+      if (protocol !== 'a2ui') {
         setSettings((current) => ({ ...current, parallelism: 1 }));
       }
     },
