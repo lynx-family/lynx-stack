@@ -15,12 +15,46 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isVisibleModelName(name: unknown): name is string {
   return typeof name === 'string'
-    && name.trim().length > 0 && !/\[redacted(?: credential)?\]/iu.test(name);
+    && name.trim().length > 0 && name !== 'Model name unavailable'
+    && !/\[redacted(?: credential)?\]/iu.test(name);
 }
 
 function modelName(value: unknown, fallback: unknown): string {
   if (isVisibleModelName(value)) return value;
   return isVisibleModelName(fallback) ? fallback : 'Model name unavailable';
+}
+
+function findSavedGroup(
+  group: BenchReport['groups'][number],
+  configGroups: Record<string, unknown>[],
+): Record<string, unknown> | undefined {
+  if (isVisibleModelName(group.id)) {
+    return configGroups.find((item) => item.id === group.id);
+  }
+  // Older serialization replaced long generated ids with a redaction marker.
+  // Recover only a unique match in this report's own saved plan, never by order.
+  const matches = configGroups.filter((item) =>
+    ['name', 'protocol', 'profile', 'role'].every((key) => {
+      const value = group[key as keyof typeof group];
+      return typeof value === 'string' && value.length > 0
+        && item[key] === value;
+    })
+  );
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+function findResultGroup(
+  result: BenchReport['results'][number],
+  groups: BenchReport['groups'],
+): BenchReport['groups'][number] | undefined {
+  if (isVisibleModelName(result.groupId)) {
+    return groups.find((group) => group.id === result.groupId);
+  }
+  const matches = groups.filter((group) =>
+    group.name === result.groupName
+    && group.protocol === result.protocol && group.role === result.role
+  );
+  return matches.length === 1 ? matches[0] : undefined;
 }
 
 /** Fill missing display configuration from the same saved entry, never another run. */
@@ -51,7 +85,7 @@ export function getHistoryReport(entry: unknown): BenchReport {
     ...group,
     model: modelName(
       group.model,
-      configGroups.find((item) => item.id === group.id)?.model,
+      findSavedGroup(group, configGroups)?.model,
     ),
   }));
   return {
@@ -75,7 +109,7 @@ export function getHistoryReport(entry: unknown): BenchReport {
         ...result,
         model: modelName(
           result.model,
-          displayGroups.find((group) => group.id === result.groupId)?.model,
+          findResultGroup(result, displayGroups)?.model,
         ),
       }
     ),

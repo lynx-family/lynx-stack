@@ -20,6 +20,8 @@ import type { BenchScenarioRequest } from '../common/bench/types.js';
 const DEFAULT_A2UI_BUNDLE_URL = 'https://lynx-stack.dev/genui/a2ui.lynx.js';
 const HEALTH_TIMEOUT_MS = 3_000;
 const DEFAULT_OPERATION_TIMEOUT_MS = 60_000;
+const DEFAULT_SCREENSHOT_WIDTH = 390;
+const DEFAULT_SCREENSHOT_HEIGHT = 844;
 
 type FetchLike = (
   input: string | URL,
@@ -27,7 +29,7 @@ type FetchLike = (
 ) => Promise<Response>;
 
 export interface BenchUiJudgeSession {
-  bundleUrl: string;
+  bundleUrl?: string;
   screenshotUrl: string;
 }
 
@@ -96,6 +98,9 @@ interface RunBenchUiJudgeOptions {
 export interface RunBenchUiJudgeRequestOptions {
   model?: string;
   globalProps: Record<string, unknown>;
+  initData?: Record<string, unknown>;
+  viewport?: { width?: number; height?: number };
+  lynxXmlSource?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   screenshotSettleMs?: number;
@@ -258,6 +263,7 @@ function containsOpenUrlCall(
 export async function probeBenchUiJudge(
   options: {
     bundleUrl?: string;
+    sourceKind?: 'lynx-xml';
     env?: NodeJS.ProcessEnv;
     fetch?: FetchLike;
     serverUrl?: string;
@@ -288,8 +294,10 @@ export async function probeBenchUiJudge(
       && configuredBundleUrl.length > 0
     ? configuredBundleUrl
     : DEFAULT_A2UI_BUNDLE_URL;
-  const bundleUrl = normalizeBundleUrl(rawBundleUrl);
-  if (!bundleUrl) {
+  const bundleUrl = options.sourceKind === 'lynx-xml'
+    ? undefined
+    : normalizeBundleUrl(rawBundleUrl);
+  if (options.sourceKind !== 'lynx-xml' && !bundleUrl) {
     return {
       enabled: false,
       reason: 'UI_JUDGE_BUNDLE_URL must be an HTTP(S) URL without credentials.',
@@ -326,8 +334,13 @@ export async function probeBenchUiJudge(
   return {
     enabled: true,
     session: {
-      bundleUrl,
-      screenshotUrl: new URL('screenshot/template', serverUrl).toString(),
+      ...(bundleUrl ? { bundleUrl } : {}),
+      screenshotUrl: new URL(
+        options.sourceKind === 'lynx-xml'
+          ? 'screenshot/lynxml'
+          : 'screenshot/template',
+        serverUrl,
+      ).toString(),
     },
   };
 }
@@ -406,22 +419,39 @@ export async function runBenchUiJudgeRequest(
       warnings,
     };
   }
-  const body = {
-    globalProps: options.globalProps,
-    ...(options.screenshotSettleMs === undefined
-      ? {}
-      : { screenshotSettleMs: options.screenshotSettleMs }),
-    ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
-    url: options.session.bundleUrl,
+  const form = new FormData();
+  if (options.lynxXmlSource === undefined) {
+    form.set('entry', 'template.js');
+    if (options.session.bundleUrl !== undefined) {
+      form.set('url', options.session.bundleUrl);
+    }
+    form.set('globalProps', JSON.stringify(options.globalProps));
+  } else {
+    form.set('entry', 'index.lynxml');
+    form.set('source', options.lynxXmlSource);
+  }
+  if (options.initData !== undefined) {
+    form.set('initData', JSON.stringify(options.initData));
+  }
+  const viewport = {
+    width: options.viewport?.width ?? DEFAULT_SCREENSHOT_WIDTH,
+    height: options.viewport?.height ?? DEFAULT_SCREENSHOT_HEIGHT,
   };
+  form.set('width', String(viewport.width));
+  form.set('height', String(viewport.height));
+  if (options.screenshotSettleMs !== undefined) {
+    form.set('screenshotSettleMs', String(options.screenshotSettleMs));
+  }
+  if (options.timeoutMs !== undefined) {
+    form.set('timeoutMs', String(options.timeoutMs));
+  }
 
   let response: Response;
   try {
     response = await fetchImpl(options.session.screenshotUrl, {
-      body: JSON.stringify(body),
+      body: form,
       headers: {
         Accept: 'image/bmp',
-        'Content-Type': 'application/json',
       },
       method: 'POST',
       signal: requestSignal,

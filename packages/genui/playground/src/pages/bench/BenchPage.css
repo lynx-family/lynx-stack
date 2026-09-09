@@ -1196,20 +1196,6 @@
   margin-top: 10px;
 }
 
-.benchProfileHint {
-  margin: 9px 0 0;
-  padding-left: 9px;
-  border-left: 2px solid var(--geist-foreground);
-  color: var(--geist-secondary);
-  font-size: 11px;
-  line-height: 1.55;
-}
-
-.benchProfileHint strong {
-  color: var(--geist-foreground);
-  font-weight: 650;
-}
-
 .benchPlanSection {
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
@@ -2147,4 +2133,64 @@
   .benchDirectionPicker {
     grid-template-columns: 1fr;
   }
+}
+
+.benchGroupSummary span[data-protocol="lynx-xml"] {
+  color: #7c3aed;
+  background: #f3e8ff;
+}
+
+.benchTokenDetails {
+  width: fit-content;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchTokenDetails > summary {
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  white-space: nowrap;
+}
+
+.benchTokenDetails > summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.benchTokenBreakdown {
+  min-width: 220px;
+  max-width: 300px;
+  padding: 12px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  white-space: normal;
+}
+
+.benchTokenBreakdown dl {
+  margin: 8px 0;
+}
+
+.benchTokenBreakdown dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.benchTokenBreakdown dd {
+  margin: 0;
+}
+
+.benchTokenBreakdown p {
+  margin: 8px 0 0;
+  opacity: 0.7;
+}
+
+.benchRunTokenMetrics {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 12px 0;
+  font-size: 13px;
 }

@@ -14,6 +14,7 @@ import type {
   BenchVariable,
 } from './types.js';
 import { configuredModelName } from '../model-config.js';
+import { BENCH_PROTOCOLS } from './protocol-types.js';
 
 const MAX_GROUPS = 8;
 const MAX_SCENARIOS = 20;
@@ -30,7 +31,7 @@ const CATALOG_LABELS = new Set<BenchCatalogLabel>([
 ]);
 
 const ROLES = new Set<BenchRole>(['control', 'experiment']);
-const PROTOCOLS = new Set<BenchProtocol>(['a2ui', 'openui']);
+const PROTOCOLS = new Set<BenchProtocol>(BENCH_PROTOCOLS);
 const PROFILES = new Set<BenchProfile>(['native', 'matched-core']);
 const VARIABLES = new Set<BenchVariable>([
   'model',
@@ -297,6 +298,18 @@ export function normalizeBenchJobRequest(
     };
   }
 
+  if (
+    enabledGroups.some((group) =>
+      group.protocol === 'lynx-xml' && group.profile !== 'native'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'lynx-xml groups require the "native" profile',
+    };
+  }
+
   const scenarios = normalizeScenarios(value.scenarios);
   if (scenarios.length === 0) {
     return {
@@ -314,7 +327,10 @@ export function normalizeBenchJobRequest(
     * (settings.maxRepairAttempts + 1);
   if (
     (settings.judgeEnabled
-      || enabledGroups.some((group) => group.profile === 'matched-core'))
+      || enabledGroups.some((group) =>
+        group.profile === 'matched-core'
+        || group.protocol === 'lynx-xml'
+      ))
     && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
   ) {
     return {

@@ -21,6 +21,10 @@ export type ProtocolBenchJudgePayload =
   | {
     kind: 'openui-text';
     rawText: string;
+  }
+  | {
+    kind: 'lynx-xml-source';
+    rawText: string;
   };
 
 export interface ProtocolBenchAdapterInput {

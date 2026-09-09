@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getBenchProtocolLabel } from './benchData.js';
 import type { BenchProtocol } from './benchData.js';
 import { Button } from '../../components/Button.js';
 import { Pause, Play } from '../../components/Icon.js';
@@ -76,7 +77,7 @@ export function BenchRunFooter(props: {
     props.runCount,
   );
   const protocolLabel = props.protocols.map((protocol) =>
-    protocol === 'a2ui' ? 'A2UI' : 'OpenUI'
+    getBenchProtocolLabel(protocol)
   ).join(' + ');
   const planComplete = isBenchRunPlanComplete(
     props.protocols,
