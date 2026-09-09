@@ -3,6 +3,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -34,6 +35,25 @@ const require = createRequire(import.meta.url)
 // eslint-disable-next-line import/no-commonjs
 const { devDependencies } = require('../package.json') as {
   devDependencies: Record<string, string>
+}
+
+// `copyFolder` merges a tool's package.json without pinning its
+// `workspace:` ranges the way it pins a template's, so pin them here.
+function pinVersions(distFolder: string): void {
+  const file = path.join(distFolder, 'package.json')
+  const pkg = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<
+    string,
+    Record<string, string> | undefined
+  >
+  for (const field of ['dependencies', 'devDependencies']) {
+    for (const name of Object.keys(pkg[field] ?? {})) {
+      const version = devDependencies[name]
+      if (version !== undefined) {
+        pkg[field]![name] = version
+      }
+    }
+  }
+  fs.writeFileSync(file, `${JSON.stringify(pkg, null, 2)}\n`)
 }
 
 function templateArg(argv: string[]): string | undefined {
@@ -117,6 +137,7 @@ void create({
           to: distFolder,
           isMergePackageJson: true,
         })
+        pinVersions(distFolder)
         addAgentsMdSearchDirs(from)
       },
     },
