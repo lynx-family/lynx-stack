@@ -10,6 +10,7 @@ import {
   rstest,
   test,
 } from '@rstest/core';
+import 'fake-indexeddb/auto';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -21,8 +22,14 @@ import {
 } from './benchData.js';
 import { BenchPage } from './BenchPage.js';
 import type { BenchReport } from './benchReportTypes.js';
-import { BENCH_SELECTED_REPORT_STORAGE_KEY } from './publishedReportLoader.js';
 import { GENUI_SERVER_URL } from '../../config/genuiServer.js';
+import {
+  BENCH_SELECTED_REPORT_STORAGE_KEY,
+  getSelectedBenchReportId,
+  readBenchHistory,
+} from '../../storage/benchRepo.js';
+import * as benchRepo from '../../storage/benchRepo.js';
+import { getDB } from '../../storage/db.js';
 
 const HISTORY_KEY = 'a2ui-bench-history';
 const REDACTED_JOB_ID = '[redacted credential]';
@@ -92,7 +99,11 @@ describe('BenchPage report recovery', () => {
   let requests: { url: string; method: string }[];
   let reports: Map<string, BenchReport>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const db = await getDB();
+    await db.clear('benchHistory');
+    await db.clear('meta');
+    window.sessionStorage.clear();
     window.localStorage.clear();
     window.history.replaceState(null, '', '/#/bench');
     requests = [];
@@ -143,6 +154,12 @@ describe('BenchPage report recovery', () => {
 
   async function mountPage() {
     await React.act(async () => root.render(React.createElement(BenchPage)));
+    await rstest.waitFor(async () => {
+      await React.act(async () => {
+        await readBenchHistory();
+      });
+      expect(container.textContent).not.toContain('Loading Bench history…');
+    });
   }
 
   function benchRequests() {
@@ -185,7 +202,7 @@ describe('BenchPage report recovery', () => {
     expect(reportText()).not.toContain('First saved result');
     expect(container.textContent).toContain('The saved job ID is invalid.');
     expect(benchRequests()).toEqual([]);
-    expect(JSON.parse(window.localStorage.getItem(HISTORY_KEY)!)).toHaveLength(
+    expect(await readBenchHistory()).toHaveLength(
       2,
     );
   });
@@ -250,7 +267,7 @@ describe('BenchPage report recovery', () => {
     expect(benchRequests()).toEqual([{ url: REPORT_URL, method: 'GET' }]);
     expect(reportText()).toContain('Complete remote result');
     expect(container.textContent).toContain('Complete report loaded');
-    expect(JSON.parse(window.localStorage.getItem(HISTORY_KEY)!)).toMatchObject(
+    expect(await readBenchHistory()).toMatchObject(
       [
         { report: { results: [{ screenshotDataUrl: PNG }] } },
       ],
@@ -264,15 +281,16 @@ describe('BenchPage report recovery', () => {
     );
     const saved = JSON.stringify([entry]);
     window.localStorage.setItem(HISTORY_KEY, saved);
-    rstest.spyOn(window.Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('QuotaExceededError');
-    });
+    rstest.spyOn(benchRepo, 'persistBenchHistory').mockRejectedValue(
+      new Error('QuotaExceededError'),
+    );
     await mountPage();
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       'History could not be saved',
     );
     expect(reportText()).toContain('Saved result');
-    expect(window.localStorage.getItem(HISTORY_KEY)).toBe(saved);
+    expect(await readBenchHistory()).toHaveLength(1);
+    expect(window.localStorage.getItem(HISTORY_KEY)).toBeNull();
   });
 
   test('opens cached details in an isolated new tab without changing the runner URL', async () => {
@@ -297,7 +315,7 @@ describe('BenchPage report recovery', () => {
     );
     expect(button).not.toBeNull();
     await React.act(async () => button!.click());
-    expect(window.localStorage.getItem(BENCH_SELECTED_REPORT_STORAGE_KEY)).toBe(
+    expect(await getSelectedBenchReportId()).toBe(
       entry.id,
     );
     expect(open).toHaveBeenCalledWith('about:blank', '_blank');
@@ -364,7 +382,7 @@ describe('BenchPage report recovery', () => {
     expect(benchRequests()).toEqual([{ url: REPORT_URL, method: 'GET' }]);
     expect(reportText()).toContain('Explicit linked result');
     expect(reportText()).not.toContain('Other saved result');
-    expect(JSON.parse(window.localStorage.getItem(HISTORY_KEY)!)).toHaveLength(
+    expect(await readBenchHistory()).toHaveLength(
       2,
     );
   });

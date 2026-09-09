@@ -44,6 +44,8 @@ Build `genui-server` as an executable ESM Hono server through `rslib.config.ts`.
 
 Keep Rslib's ESM `__dirname` shim enabled while bundling runtime dependencies with `autoExternal: false`. The Volcengine TOS SDK transitively loads `tos-crc64-js`, whose CommonJS initialization reads `__dirname`; leaving that identifier unshimmed makes the executable ESM bundle fail during startup.
 
+For package-local development under pnpm 12.3.4, run the `dev:build` and `dev:server` regex selector without `--parallel`. The plain regex selector starts both scripts concurrently; adding `--parallel` enters workspace execution and runs this package's matched scripts sequentially, so the persistent build watcher prevents the server script from starting. Verify the listening log as well as successful compilation when diagnosing development startup. `start` only runs the existing `dist/index.js` and does not rebuild or watch source files.
+
 Read the server port from `LYNX_USE_PORT`, defaulting to `3000`; do not use `PORT` as a compatibility fallback.
 
 Read the bind address from `LYNX_USE_HOST`, defaulting to the IPv6 unspecified address `::` so Node accepts both IPv6 and IPv4 connections through its dual-stack listener; do not use `HOST` as a compatibility fallback. Format IPv6 addresses with brackets when logging HTTP URLs.

@@ -10,8 +10,14 @@ import type {
   MetaRecord,
   PersistedMessage,
 } from './types.js';
+import type { BenchHistoryEntry } from '../pages/bench/benchHistory.js';
 
 interface A2UIPlaygroundDB extends DBSchema {
+  benchHistory: {
+    key: string;
+    value: BenchHistoryEntry;
+    indexes: { by_savedAt: string };
+  };
   conversations: {
     key: string;
     value: ConversationMeta;
@@ -37,7 +43,7 @@ interface A2UIPlaygroundDB extends DBSchema {
 }
 
 const DB_NAME = 'a2ui-playground';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<A2UIPlaygroundDB>> | null = null;
 
@@ -67,6 +73,10 @@ export function getDB(): Promise<IDBPDatabase<A2UIPlaygroundDB>> {
 
         db.createObjectStore('snapshots', { keyPath: 'conversationId' });
         db.createObjectStore('meta', { keyPath: 'key' });
+      }
+      if (oldVersion < 2) {
+        const history = db.createObjectStore('benchHistory', { keyPath: 'id' });
+        history.createIndex('by_savedAt', 'savedAt');
       }
     },
     blocked() {

@@ -1,7 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, describe, expect, rstest, test } from '@rstest/core';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
@@ -13,12 +20,21 @@ import {
 import { BenchHistoryRail } from './BenchHistoryRail.js';
 import type { BenchReport } from './benchReportTypes.js';
 import {
-  BENCH_HISTORY_STORAGE_KEY,
   getHistoryReport,
   loadPublishedReport,
 } from './publishedReportLoader.js';
 import { PublishedReportPage } from './PublishedReportPage.js';
 import { PublishedReportRoute } from './PublishedReportRoute.js';
+import {
+  getSelectedBenchReportId,
+  readBenchHistory,
+} from '../../storage/benchRepo.js';
+
+rstest.mock('../../storage/benchRepo.js', { mock: true });
+beforeEach(() => {
+  rstest.mocked(readBenchHistory).mockReset();
+  rstest.mocked(getSelectedBenchReportId).mockResolvedValue('history');
+});
 
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
 
@@ -111,22 +127,14 @@ afterEach(() => {
 });
 
 describe('local historical Bench reports', () => {
-  test('reads the matching saved snapshot without fetching or writing history', () => {
+  test('reads the matching saved snapshot without fetching', async () => {
     const entry = historyEntry();
-    const getItem = rstest.fn(() =>
-      JSON.stringify([
-        null,
-        { report: null },
-        { report: { jobId: 'other' } },
-        entry,
-      ])
-    );
+    rstest.mocked(readBenchHistory).mockResolvedValue([entry]);
     const fetch = rstest.fn();
     rstest.stubGlobal('window', { fetch });
-    const report = loadPublishedReport(JOB_ID, { getItem });
-    expect(report).toEqual(entry.report);
-    expect(getItem).toHaveBeenCalledWith(BENCH_HISTORY_STORAGE_KEY);
+    expect(await loadPublishedReport(JOB_ID)).toEqual(entry.report);
     expect(fetch).not.toHaveBeenCalled();
+    expect(await loadPublishedReport('')).toEqual(entry.report);
   });
 
   test('fills old report configuration from the same history entry without changing measurements', () => {
@@ -150,15 +158,14 @@ describe('local historical Bench reports', () => {
     expect(JSON.stringify(entry)).toBe(original);
   });
 
-  test('keeps public identities intact when reading local metrics', () => {
+  test('keeps public identities intact when reading local metrics', async () => {
     const entry = historyEntry();
     const id = 'experiment-model-with-a-long-public-identifier';
     entry.report.groups[0]!.id = id;
     entry.report.summaries[0]!.groupId = id;
     entry.report.results[0]!.groupId = id;
-    const report = loadPublishedReport(JOB_ID, {
-      getItem: () => JSON.stringify([entry]),
-    });
+    rstest.mocked(readBenchHistory).mockResolvedValue([entry]);
+    const report = await loadPublishedReport(JOB_ID);
     expect(report.groups[0]!.id).toBe(id);
     expect(report.summaries[0]!.groupId).toBe(id);
     expect(report.results[0]!.groupId).toBe(id);
@@ -195,32 +202,29 @@ describe('local historical Bench reports', () => {
     '[redacted credential]',
   ])(
     'rejects invalid local handles without reading another report: %s',
-    (id) => {
-      const getItem = rstest.fn();
-      expect(() => loadPublishedReport(id, { getItem })).toThrow(
+    async (id) => {
+      await expect(loadPublishedReport(id)).rejects.toThrow(
         'Only reports saved in this browser',
       );
-      expect(getItem).not.toHaveBeenCalled();
+      expect(readBenchHistory).not.toHaveBeenCalled();
     },
   );
 
-  test.each([null, '[]', JSON.stringify([{ report: null }])])(
-    'explains missing local records %#',
-    (raw) => {
-      expect(() => loadPublishedReport(JOB_ID, { getItem: () => raw })).toThrow(
-        'not found in this browser',
-      );
-    },
-  );
+  test('explains missing local records', async () => {
+    rstest.mocked(readBenchHistory).mockResolvedValue([]);
+    await expect(loadPublishedReport(JOB_ID)).rejects.toThrow(
+      'not found in this browser',
+    );
+  });
 
-  test.each(['invalid json', '{}'])(
-    'explains unreadable local history %#',
-    (raw) => {
-      expect(() => loadPublishedReport(JOB_ID, { getItem: () => raw })).toThrow(
-        'could not be read',
-      );
-    },
-  );
+  test('reports a database read failure', async () => {
+    rstest.mocked(readBenchHistory).mockRejectedValue(
+      new Error('Local Bench history could not be read.'),
+    );
+    await expect(loadPublishedReport(JOB_ID)).rejects.toThrow(
+      'could not be read',
+    );
+  });
 });
 
 describe('fixed read-only report template', () => {
