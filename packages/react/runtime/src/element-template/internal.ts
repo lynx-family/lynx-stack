@@ -51,6 +51,7 @@ export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 
 export { transformToWorklet } from './runtime/template/main-thread-background-function.js';
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+export { captureMainThreadObject } from '../snapshot/worklet/capture.js';
 
 export function registerWorkletOnBackground(
   _type: string,
