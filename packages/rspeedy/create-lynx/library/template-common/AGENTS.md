@@ -12,13 +12,10 @@ Read docs below in advance to help you understand the library or frameworks this
 ## Commands
 
 - `npm run build` - Build the library into `dist/`
-
 - `npm run dev` - Rebuild the library on every change
-
 - `npm run test` - Run the tests with Rstest
 
 ## Related Docs
 
 - Rslib: <https://rslib.rs/llms.txt>
-
 - Rsbuild: <https://rsbuild.rs/llms.txt>
