@@ -26,7 +26,6 @@
   },
   "files": [
     "dist",
-    "template-*/**",
     "CHANGELOG.md",
     "README.md"
   ],
@@ -35,15 +34,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@rstackjs/create-toolkit": "2.2.7"
+    "@lynx-js/create-lynx": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "catalog:lynxjs",
-    "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
-    "@lynx-js/react": "workspace:^",
-    "@lynx-js/react-rsbuild-plugin": "workspace:^",
-    "@lynx-js/rspeedy": "workspace:^",
-    "@rsbuild/plugin-type-check": "1.6.0",
     "@rstest/core": "catalog:rstest"
   },
   "engines": {

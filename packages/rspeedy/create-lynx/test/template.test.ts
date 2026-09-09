@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, test } from '@rstest/core'
 
+import { createGetTemplateName } from '../src/create.js'
 import {
   DSLS,
   LANGS,
@@ -227,5 +228,28 @@ describe('templates on disk', () => {
         }
       }
     }
+  })
+})
+
+// `create-rspeedy` pins the CLI to Rspeedy, so `--template` must not reach an
+// Rsbuild template through it.
+describe('a CLI pinned to one build tool', () => {
+  const getTemplateName = createGetTemplateName('rspeedy')
+
+  test('takes a template of its own tool', async () => {
+    await expect(getTemplateName({ template: 'rspeedy-react-ts' }))
+      .resolves.toBe('rspeedy-react-ts')
+    await expect(getTemplateName({ template: 'react-ts' }))
+      .resolves.toBe('rspeedy-react-ts')
+  })
+
+  test('rejects a template of another tool', async () => {
+    await expect(getTemplateName({ template: 'rsbuild-react-ts' }))
+      .rejects.toThrow(/builds with rsbuild.*builds with rspeedy/s)
+  })
+
+  test('leaves an npm template package alone', async () => {
+    await expect(getTemplateName({ template: '@scope/tpl' }))
+      .resolves.toBe('@scope/tpl')
   })
 })

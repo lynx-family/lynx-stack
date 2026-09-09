@@ -5,8 +5,8 @@
 # create-rspeedy
 
 > [!IMPORTANT]
-> This package is superseded by [`@lynx-js/create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) and no longer receives updates.
-> It scaffolds Rspeedy projects only; `@lynx-js/create-lynx` scaffolds both Rsbuild and Rspeedy projects.
+> This package is superseded by [`@lynx-js/create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx), which it now delegates to.
+> It stays pinned to Rspeedy; `@lynx-js/create-lynx` scaffolds for both Rsbuild and Rspeedy.
 >
 > ```bash
 > npm create @lynx-js/lynx@latest
