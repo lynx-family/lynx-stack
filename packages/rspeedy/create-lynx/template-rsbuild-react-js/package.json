@@ -17,6 +17,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "workspace:*",
     "@rstest/core": "workspace:*",
+    "@testing-library/dom": "workspace:*",
     "@testing-library/jest-dom": "workspace:*",
     "jsdom": "workspace:*"
   },

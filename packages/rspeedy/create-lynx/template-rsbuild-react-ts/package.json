@@ -19,6 +19,7 @@
     "@rsbuild/core": "workspace:*",
     "@rsbuild/plugin-type-check": "workspace:*",
     "@rstest/core": "workspace:*",
+    "@testing-library/dom": "workspace:*",
     "@testing-library/jest-dom": "workspace:*",
     "@types/react": "workspace:*",
     "jsdom": "workspace:*",

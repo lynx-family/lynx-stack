@@ -1902,6 +1902,9 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
+      '@testing-library/dom':
+        specifier: ^10.4.1
+        version: 10.4.1
       '@testing-library/jest-dom':
         specifier: ^7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)

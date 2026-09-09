@@ -26,6 +26,7 @@
     "@rslib/core": "workspace:*",
     "@rstest/adapter-rslib": "workspace:*",
     "@rstest/core": "workspace:*",
+    "@testing-library/dom": "workspace:*",
     "@testing-library/jest-dom": "workspace:*",
     "@types/react": "workspace:*",
     "happy-dom": "workspace:*",
