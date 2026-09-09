@@ -15,7 +15,7 @@ export const IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS_ENV =
 const DEFAULT_IMAGE_GENERATION_REQUEST_TIMEOUT_MS = 120_000;
 const MAX_IMAGE_GENERATION_REQUEST_TIMEOUT_MS = 600_000;
 const ARK_IMAGE_GENERATION_RUN_STATE_KEY =
-  'a2ui:image-generation-run-state' as const;
+  'genui:image-generation-run-state' as const;
 export const MAX_ARK_IMAGE_GENERATIONS_PER_RUN = 4;
 
 interface ArkImageGenerationRunState {
@@ -182,21 +182,33 @@ export function readArkImageGenerationConfig(
 export function createArkImageGenerationRunScope(
   maxCalls = MAX_ARK_IMAGE_GENERATIONS_PER_RUN,
 ): ArkImageGenerationRunScope {
+  const scope = {
+    requestContext: new RequestContext<
+      ArkImageGenerationRequestContextValues
+    >(),
+  };
+  initializeArkImageGenerationRunScope(scope, maxCalls);
+  return scope;
+}
+
+/** Initialize image generation without replacing another capability's context. */
+export function initializeArkImageGenerationRunScope(
+  scope: { requestContext: unknown },
+  maxCalls = MAX_ARK_IMAGE_GENERATIONS_PER_RUN,
+): void {
   if (!Number.isSafeInteger(maxCalls) || maxCalls < 1 || maxCalls > 10) {
     throw new Error(
       'image generation maxCalls must be an integer from 1 to 10',
     );
   }
-  const requestContext = new RequestContext<
-    ArkImageGenerationRequestContextValues
-  >();
+  const requestContext = scope
+    .requestContext as ArkImageGenerationRunScope['requestContext'];
   requestContext.set(ARK_IMAGE_GENERATION_RUN_STATE_KEY, {
     attemptedCalls: 0,
     generatedURLs: [],
     maxCalls,
     scopeId: crypto.randomUUID(),
   });
-  return { requestContext };
 }
 
 export function generatedArkImageURLs(
@@ -440,7 +452,7 @@ const imageGenerationInputSchema = z.object({
 
 const imageGenerationOutputSchema = z.object({
   url: z.string().url().describe(
-    'The generated image URL. Copy this value exactly into Image.url or the bound data-model field.',
+    'The generated image URL. Copy this value exactly into the protocol\'s image source or bound data-model field.',
   ),
   size: z.string().optional(),
 });
@@ -457,11 +469,12 @@ const imageGenerationRequestContextSchema = z.object({
 export function createArkImageGenerationTool(
   config: ArkImageGenerationConfig = resolveArkImageGenerationConfig(),
   fetchImpl: typeof fetch = fetch,
+  suspendGeneration = true,
 ) {
   return createTool({
     id: 'generate_image',
     description:
-      'Asynchronously generate one original image for an A2UI Image component. Emit a complete renderable A2UI array with a same-id Loading placeholder in the assistant content before calling this tool. The agent run suspends while the image is generated, then resumes with the generated URL so the agent can return the A2UI patch. Reuse a returned URL when the same visual can serve multiple components.',
+      'Generate one original image for the requested interface. Follow the host instructions for when to emit protocol output and use the returned URL exactly as the image source. Reuse a returned URL when the same visual can serve multiple components.',
     inputSchema: imageGenerationInputSchema,
     outputSchema: imageGenerationOutputSchema,
     suspendSchema: imageGenerationSuspendSchema,
@@ -483,7 +496,7 @@ export function createArkImageGenerationTool(
         };
       }
 
-      const suspend = context.agent?.suspend;
+      const suspend = suspendGeneration ? context.agent?.suspend : undefined;
       if (!suspend) {
         return generateArkImageForRun(
           { requestContext },

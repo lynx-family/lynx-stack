@@ -90,9 +90,8 @@ remains the trusted path for private, HTTP, or deployment-specific endpoints.
 `GET /models` exposes only the top-level names and default selection. It must
 never expose `model`, `apiKey`, or `baseURL` to the playground.
 
-The A2UI agent generates image assets through a server-side Volcengine Ark
-tool. The Ark credential, image-generation model name, and base URL are
-required:
+All five generation agents optionally generate image assets through a shared
+server-side Volcengine Ark tool. To enable it, configure all three values:
 
 ```bash
 export IMG_GEN_ARK_API_KEY="..."
@@ -109,7 +108,7 @@ support tool/function calling. Only user/host-provided image sources and URLs
 returned by the request's tool scope may reach the renderer. There is no
 stock-image or placeholder-image fallback when generation fails.
 
-Image generation uses Mastra tool suspension. The agent first streams a
+A2UI image generation uses Mastra tool suspension. The agent first streams a
 complete surface with its theme, body, and a stable-id `Loading` placeholder.
 `generate_image` starts Ark generation and suspends the run; the service waits
 without closing the SSE response and resumes the same agent run with the image
@@ -140,10 +139,10 @@ which supports
 subscription-plan and post-paid API keys. Web search returns at most five
 normalized text results. Image search returns at most five image URLs with
 source and quality metadata. The agent should prefer image search whenever a
-UI needs an existing image. Only A2UI also provides `generate_image`, used
+UI needs an existing image. All five generation agents also provide optional `generate_image`, used
 when search fails, has no suitable result, or the user explicitly asks for
-original generated artwork. Other agents use a non-image presentation when
-no suitable image is available. The two search tools may make at most three
+original generated artwork. If neither image tool is available or succeeds,
+use a non-image presentation. The two search tools may make at most three
 calls combined
 per HTTP request across the initial generation and all repair attempts.
 `SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
@@ -156,8 +155,8 @@ Each generation request owns its search budget and returned URL registry,
 independent of the cached Agent instance. A2UI reuses its image-generation
 RequestContext across continuations and validation repairs; Lynx XML shares
 its fragment-conversion RequestContext with search. Other generation services
-create a search RequestContext through `service/common/agent-capabilities.ts`.
-Agent cache keys include the search-enabled setting.
+create a shared tool RequestContext through `service/common/agent-capabilities.ts`.
+Agent cache keys include both capability settings.
 
 In A2UI, image URLs returned by the current request's image-search scope may
 reach the renderer. Source-page URLs returned by either search tool may be
@@ -166,11 +165,23 @@ used with
 model-generated targets, and the streaming parser keeps components with
 untrusted sources in a loading state until final validation. A2UI and OpenUI
 Bench runs
-explicitly disable both search tools so their output stays deterministic.
+explicitly disable search and image generation so their output stays deterministic.
 Search guidance preserves each protocol's output contract: searches run inside
 the server agent, never as OpenUI Query/Mutation calls or MCP Apps routing
 targets. HTML keeps scripts and styles inline while allowing image URLs from
-the user/host or image search, and source links from the user or search.
+the user/host, image search, or image generation, and source links from the user or search.
+
+The internal `enableImageGeneration` option mirrors `enableWebSearch`: it
+is enabled by default, `false` omits the tool, and missing or invalid Ark
+configuration leaves it unregistered without making health checks fail.
+`GET /a2ui/health` reports availability through `imageGenerationReady`.
+`agent/common/agent-capabilities.ts` composes both capabilities, and search
+instructions suggest generation only when `generate_image` is registered.
+OpenUI, Lynx XML, HTML, and MCP Apps await the image tool before emitting their
+complete protocol output; only A2UI uses the continuation described above.
+All requests receive an independent four-call image budget, sharing their
+existing RequestContext with search and protocol-specific tools. UI Judge
+scoring agents remain tool-free. Neither capability accepts client credentials.
 
 To publish short, shareable A2UI and OpenUI preview URLs, configure the
 public-read Volcengine TOS bucket and server-only write credentials. All four

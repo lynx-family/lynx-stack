@@ -281,6 +281,7 @@ export function createA2UIBenchAdapter(
               catalog,
               disableAgentCache: true,
               enableWebSearch: false,
+              enableImageGeneration: false,
               inheritReasoningEffort: false,
             },
             signal,

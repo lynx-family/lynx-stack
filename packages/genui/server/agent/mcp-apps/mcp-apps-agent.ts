@@ -4,10 +4,10 @@
 
 import { Agent } from '@mastra/core/agent';
 
+import { createAgentCapabilities } from '../common/agent-capabilities.js';
+import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { SearchRunScope } from '../common/doubao-search-tool.js';
 import { createLLMProvider } from '../common/openai-provider.js';
-import { createSearchCapability } from '../common/search-capability.js';
-import type { SearchAgentOptions } from '../common/search-capability.js';
 
 const MCP_APPS_AGENT_INSTRUCTIONS = `You are an MCP Apps routing agent.
 
@@ -33,17 +33,18 @@ export interface McpAppsAgent {
   ) => unknown;
 }
 
-export function createMcpAppsAgent(opts: SearchAgentOptions = {}) {
+export function createMcpAppsAgent(opts: GenerationAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
-  const search = createSearchCapability(opts);
+  const capabilities = createAgentCapabilities(opts);
   const agent = new Agent({
     id: 'mcp-apps-agent',
     name: 'McpAppsAgent',
-    instructions: [MCP_APPS_AGENT_INSTRUCTIONS, search.instructions].filter(
-      Boolean,
-    ).join('\n\n'),
+    instructions: [MCP_APPS_AGENT_INSTRUCTIONS, capabilities.instructions]
+      .filter(
+        Boolean,
+      ).join('\n\n'),
     model: buildModel(model),
-    tools: search.tools,
+    tools: capabilities.tools,
     defaultOptions: {
       maxSteps: 5,
       toolCallConcurrency: 3,

@@ -132,6 +132,7 @@ export default class A2UIAgentService {
         ...pickProviderConfig(opts),
         catalog,
         enableWebSearch: opts.enableWebSearch,
+        enableImageGeneration: opts.enableImageGeneration,
       }).then(({ agent }) => agent);
     if (opts.disableAgentCache) return createAgent();
     return this.agentCache.get(

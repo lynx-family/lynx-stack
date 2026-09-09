@@ -116,14 +116,13 @@ describe('Hono application', () => {
       const missingImageModelResponse = await app.request('/a2ui/health');
       expect(missingImageModelResponse.status).toBe(200);
       await expect(missingImageModelResponse.json()).resolves.toEqual({
-        ok: false,
+        ok: true,
         provider: 'openai',
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: false,
         imageSearchReady: true,
         webSearchReady: true,
-        error: 'IMG_GEN_ARK_IMAGE_MODEL is required',
       });
 
       process.env[IMG_GEN_ARK_IMAGE_MODEL_ENV] = 'private-image-model';
@@ -131,14 +130,13 @@ describe('Hono application', () => {
       const missingImageBaseURLResponse = await app.request('/a2ui/health');
       expect(missingImageBaseURLResponse.status).toBe(200);
       await expect(missingImageBaseURLResponse.json()).resolves.toEqual({
-        ok: false,
+        ok: true,
         provider: 'openai',
         hasKey: true,
         modelName: 'Doubao Seed',
         imageGenerationReady: false,
         imageSearchReady: true,
         webSearchReady: true,
-        error: 'IMG_GEN_ARK_IMAGE_BASE_URL is required',
       });
 
       process.env[IMG_GEN_ARK_IMAGE_BASE_URL_ENV] =

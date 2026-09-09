@@ -28,25 +28,13 @@ function getA2UIHealth(req: Request) {
   const { defaultModel, models } = result.config;
   const { apiKey } = models[defaultModel]!;
   const imageGeneration = readArkImageGenerationConfig();
-  if (!imageGeneration.ok) {
-    return jsonWithCors(req, {
-      ok: false,
-      provider: 'openai',
-      hasKey: Boolean(apiKey),
-      modelName: defaultModel,
-      imageGenerationReady: false,
-      imageSearchReady,
-      webSearchReady,
-      error: imageGeneration.error,
-    });
-  }
 
   return jsonWithCors(req, {
     ok: true,
     provider: 'openai',
     hasKey: Boolean(apiKey),
     modelName: defaultModel,
-    imageGenerationReady: true,
+    imageGenerationReady: imageGeneration.ok,
     imageSearchReady,
     webSearchReady,
   });

@@ -4,22 +4,26 @@
 
 import { buildResourceRunOptions, pickProviderConfig } from './provider.js';
 import type { ChatOptions } from './types.js';
+import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
 
-export function pickSearchAgentConfig(opts: ChatOptions) {
+export function pickAgentCapabilityConfig(opts: ChatOptions) {
   return {
     ...pickProviderConfig(opts),
     enableWebSearch: opts.enableWebSearch,
+    enableImageGeneration: opts.enableImageGeneration,
   };
 }
 
-/** Each invocation owns its search budget, even when the Agent is cached. */
-export function buildSearchRunOptions(
+/** Each invocation owns its tool budgets, even when the Agent is cached. */
+export function buildCapabilityRunOptions(
   opts: ChatOptions,
   abortSignal?: AbortSignal,
 ) {
+  const scope = createSearchRunScope();
+  initializeArkImageGenerationRunScope(scope);
   return {
     ...buildResourceRunOptions(opts, abortSignal),
-    ...createSearchRunScope(),
+    ...scope,
   };
 }

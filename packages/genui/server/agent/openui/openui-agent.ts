@@ -9,12 +9,12 @@ import type {
   BuildOpenUiSystemPromptOptions,
 } from '@lynx-js/genui-openui/openui-prompt';
 
+import { createAgentCapabilities } from '../common/agent-capabilities.js';
+import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { SearchRunScope } from '../common/doubao-search-tool.js';
 import { createLLMProvider } from '../common/openai-provider.js';
-import { createSearchCapability } from '../common/search-capability.js';
-import type { SearchAgentOptions } from '../common/search-capability.js';
 
-export interface OpenUIAgentOptions extends SearchAgentOptions {
+export interface OpenUIAgentOptions extends GenerationAgentOptions {
   promptComponentNames?: readonly string[] | undefined;
   promptOptions?: BuildOpenUiSystemPromptOptions['promptOptions'];
   promptRoot?: string | undefined;
@@ -40,7 +40,7 @@ export interface OpenUIAgent {
 
 export function createOpenUIAgent(opts: OpenUIAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
-  const search = createSearchCapability(opts);
+  const capabilities = createAgentCapabilities(opts);
   const instructions = buildOpenUiSystemPrompt(
     {
       ...(opts.promptComponentNames === undefined
@@ -59,11 +59,12 @@ export function createOpenUIAgent(opts: OpenUIAgentOptions = {}) {
   const agent = new Agent({
     id: 'openui-agent',
     name: 'OpenUIAgent',
-    instructions: [instructions, search.instructions].filter(Boolean).join(
-      '\n\n',
-    ),
+    instructions: [instructions, capabilities.instructions].filter(Boolean)
+      .join(
+        '\n\n',
+      ),
     model: buildModel(model),
-    tools: search.tools,
+    tools: capabilities.tools,
     defaultOptions: {
       maxSteps: 5,
       toolCallConcurrency: 3,
