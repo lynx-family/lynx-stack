@@ -27,6 +27,29 @@ describe('Worklet', () => {
     consoleMock.mockReset();
   });
 
+  it.each(['cycle', 'metadata', 'proxy'])('preserves realized %s targets in shared captures', (kind) => {
+    initWorklet();
+    const value = kind === 'proxy'
+      ? new Proxy({}, {
+        get() {
+          throw new Error('target must remain opaque');
+        },
+      })
+      : kind === 'metadata'
+      ? { nested: { _wvid: 999 }, _wkltId: 'user-data' }
+      : {};
+    if (kind === 'cycle') value.self = value;
+    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/shared', () => value, 1);
+    updateWorkletRefInitValueChanges([[1, null, '@test/shared', 1]]);
+    registerWorklet('main-thread', 'shared', function() {
+      return this._c.holder.value;
+    });
+    const holder = { value: { _wvid: 1, _type: '@test/shared', _mtoVersion: 1, _initValue: null } };
+    expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
+    expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
+    if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
+  });
+
   it('worklet should be called', () => {
     initWorklet();
 
@@ -53,6 +76,19 @@ describe('Worklet', () => {
 
     expect(first).not.toBeCalled();
     expect(second).toBeCalled();
+  });
+
+  it('rejects invalid worklet descriptors during direct resolution', () => {
+    initWorklet();
+
+    expect(() => globalThis.lynxWorkletImpl._resolveWorklet({})).toThrow(
+      'Cannot resolve an invalid Main Thread Function.',
+    );
+    expect(() =>
+      globalThis.lynxWorkletImpl._resolveWorklet({
+        _lepusWorkletHash: 'legacy',
+      })
+    ).toThrow('Cannot resolve an invalid Main Thread Function.');
   });
 
   it('worklet should be called with arguments', async () => {
@@ -260,6 +296,79 @@ describe('Worklet', () => {
     globalThis.runWorklet(worklet, []);
     globalThis.runWorklet(worklet, []);
     expect(value).toBe(5);
+  });
+
+  it('treats MainThreadObject descriptors as atomic user payloads', () => {
+    initWorklet();
+
+    const initialValue = {
+      workletRefLike: { _wvid: 999 },
+      workletLike: { _wkltId: 'payload-worklet' },
+      jsFunctionLike: { _jsFnId: 999 },
+      elementLike: { elementRefptr: 'payload-element' },
+    };
+    let deepValue = initialValue;
+    for (let index = 0; index < 1000; index++) {
+      deepValue.next = {};
+      deepValue = deepValue.next;
+    }
+
+    const create = vi.fn(value => ({ initialValue: value }));
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/atomic-payload',
+      create,
+      1,
+    );
+    globalThis.registerWorklet('main-thread', 'atomic-payload', function(value) {
+      return value;
+    });
+
+    const value = globalThis.runWorklet({ _wkltId: 'atomic-payload' }, [{
+      _wvid: -1,
+      _initValue: initialValue,
+      _type: '@test/atomic-payload',
+      _mtoVersion: 1,
+    }]);
+
+    expect(create).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledWith(initialValue);
+    expect(value.initialValue).toBe(initialValue);
+    expect(initialValue.workletRefLike).toEqual({ _wvid: 999 });
+    expect(initialValue.workletLike).toEqual({ _wkltId: 'payload-worklet' });
+    expect(initialValue.jsFunctionLike).toEqual({ _jsFnId: 999 });
+    expect(initialValue.elementLike).toEqual({ elementRefptr: 'payload-element' });
+  });
+
+  it('reuses one realized MainThreadObject for repeated parameter descriptors', () => {
+    initWorklet();
+
+    const create = vi.fn(value => ({ value }));
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/repeated-parameter',
+      create,
+      1,
+    );
+    globalThis.registerWorklet('main-thread', 'repeated-parameter', function(value) {
+      return value;
+    });
+    const descriptor = {
+      _wvid: -2,
+      _initValue: 42,
+      _type: '@test/repeated-parameter',
+      _mtoVersion: 1,
+    };
+
+    const first = globalThis.runWorklet(
+      { _wkltId: 'repeated-parameter' },
+      [descriptor],
+    );
+    const second = globalThis.runWorklet(
+      { _wkltId: 'repeated-parameter' },
+      [descriptor],
+    );
+
+    expect(second).toBe(first);
+    expect(create).toHaveBeenCalledOnce();
   });
 
   it('should support various types of parameters', async () => {
