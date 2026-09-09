@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ImageGenerationCapabilityOptions } from '../../agent/common/image-generation-capability.js';
 import type { SearchCapabilityOptions } from '../../agent/common/search-capability.js';
 
 export interface ChatMessage {
@@ -22,7 +23,9 @@ export type OpenAIReasoningEffort =
   | 'high'
   | 'xhigh';
 
-export interface ChatOptions extends SearchCapabilityOptions {
+export interface ChatOptions
+  extends SearchCapabilityOptions, ImageGenerationCapabilityOptions
+{
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;

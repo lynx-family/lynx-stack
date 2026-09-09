@@ -671,13 +671,16 @@ describe('A2UI Bench UI Judge integration', () => {
     });
     let callCount = 0;
     let receivedEnableWebSearch: boolean | undefined;
+    let receivedEnableImageGeneration: boolean | undefined;
     rstest.mocked(getA2UIAgentService).mockReturnValue({
       generateRaw(_messages: unknown, options: {
         catalog?: { id?: string };
         enableWebSearch?: boolean;
+        enableImageGeneration?: boolean;
       }) {
         callCount += 1;
         receivedEnableWebSearch = options.enableWebSearch;
+        receivedEnableImageGeneration = options.enableImageGeneration;
         if (callCount === 1) {
           return Promise.resolve({
             text: 'invalid',
@@ -720,6 +723,7 @@ describe('A2UI Bench UI Judge integration', () => {
     await runBenchJob(job.id);
 
     expect(receivedEnableWebSearch).toBe(false);
+    expect(receivedEnableImageGeneration).toBe(false);
     expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
       judgeDimensions: geqiDimensions(4),
       judgeGeqiScore: 80,

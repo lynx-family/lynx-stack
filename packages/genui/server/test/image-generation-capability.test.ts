@@ -13,9 +13,8 @@ import {
 } from '@rstest/core';
 
 import { createA2UIAgent } from '../agent/a2ui/a2ui-agent.js';
-import { SEARCH_INFINITY_ENDPOINT } from '../agent/common/doubao-search-tool.js';
+import type { GenerationAgentOptions } from '../agent/common/agent-capabilities.js';
 import { createLLMProvider } from '../agent/common/openai-provider.js';
-import type { SearchAgentOptions } from '../agent/common/search-capability.js';
 import { createHtmlAgent } from '../agent/html/html-agent.js';
 import { createLynxXmlAgent } from '../agent/lynx-xml/lynx-xml-agent.js';
 import { createMcpAppsAgent } from '../agent/mcp-apps/mcp-apps-agent.js';
@@ -28,11 +27,10 @@ import OpenUIAgentService from '../service/openui/openui-agent.js';
 
 rstest.mock('../agent/common/openai-provider.js', { mock: true });
 
-const imageUrl = 'https://images.example.com/searched.png';
-const sourceUrl = 'https://news.example.com/source';
-const searchCalls: string[] = [];
+const imageUrl = 'https://images.example.com/generated.png';
+const imageCalls: string[] = [];
 const environment = {
-  SEARCH_INFINITY_API_KEY: 'search-test-key',
+  SEARCH_INFINITY_API_KEY: 'image-test-key',
   SEARCH_INFINITY_REQUEST_TIMEOUT_MS: '5000',
   IMG_GEN_ARK_API_KEY: 'image-test-key',
   IMG_GEN_ARK_IMAGE_MODEL: 'image-test-model',
@@ -54,63 +52,62 @@ interface ModelCallOptions {
   tools?: { name?: string }[];
 }
 
-function searchStep(options: ModelCallOptions) {
-  const enabled = options.tools?.some((tool) => tool.name === 'web_search');
+function imageStep(options: ModelCallOptions) {
+  const enabled = options.tools?.some((tool) => tool.name === 'generate_image');
   const prompt = JSON.stringify(options.prompt);
   const hasResults = prompt.includes('"role":"tool"');
   if (enabled && hasResults) {
     expect(prompt).toContain(imageUrl);
-    expect(prompt).toContain(sourceUrl);
   }
-  return { enabled, needsSearch: enabled && !hasResults };
+  return { enabled, needsImage: enabled && !hasResults };
 }
 
 function toolCalls() {
-  return ['web_search', 'image_search'].map((toolName) => ({
+  return [{
     type: 'tool-call' as const,
-    toolCallId: `${toolName}-call`,
-    toolName,
-    input: '{"query":"a current landscape"}',
-  }));
+    toolCallId: 'generate-image-call',
+    toolName: 'generate_image',
+    input: '{"prompt":"an original landscape"}',
+  }];
 }
 
 /** Exercise real Mastra multi-step execution without any model or network I/O. */
 const model = {
   specificationVersion: 'v2' as const,
-  provider: 'search-test',
-  modelId: 'search-test',
+  provider: 'image-test',
+  modelId: 'image-test',
   supportedUrls: {},
   doGenerate: (options: ModelCallOptions) => {
-    const { enabled, needsSearch } = searchStep(options);
+    const { enabled, needsImage } = imageStep(options);
     return Promise.resolve({
-      content: needsSearch ? toolCalls() : [{
+      content: needsImage ? toolCalls() : [{
         type: 'text' as const,
-        text: enabled ? 'searched output' : 'search disabled',
+        text: enabled ? 'generated output' : 'generation disabled',
       }],
-      finishReason: needsSearch ? 'tool-calls' as const : 'stop' as const,
+      finishReason: needsImage ? 'tool-calls' as const : 'stop' as const,
       usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
       warnings: [],
     });
   },
   doStream: (options: ModelCallOptions) => {
-    const { enabled, needsSearch } = searchStep(options);
+    const { enabled, needsImage } = imageStep(options);
     return Promise.resolve({
       stream: readableStream([
         { type: 'stream-start' as const, warnings: [] },
-        ...(needsSearch
+        ...(needsImage
           ? toolCalls()
           : [
             { type: 'text-start' as const, id: 'answer' },
             {
               type: 'text-delta' as const,
               id: 'answer',
-              delta: enabled ? 'searched output' : 'search disabled',
+              delta: enabled ? 'generated output' : 'generation disabled',
             },
             { type: 'text-end' as const, id: 'answer' },
           ]),
         {
           type: 'finish' as const,
-          finishReason: needsSearch ? 'tool-calls' as const : 'stop' as const,
+          finishReason: needsImage ? 'tool-calls' as const : 'stop' as const,
           usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
         },
       ]),
@@ -124,37 +121,23 @@ beforeEach(() => {
     previousEnvironment[key] = process.env[key];
     process.env[key] = value;
   }
-  searchCalls.length = 0;
+  imageCalls.length = 0;
   rstest.mocked(createLLMProvider).mockReturnValue({
     buildModel: () => model,
-    model: 'search-test',
+    model: 'image-test',
     provider: {} as never,
     api: 'chat',
     baseURL: 'https://provider.example.com/v1',
   });
   rstest.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
-    expect(input).toBe(SEARCH_INFINITY_ENDPOINT);
+    expect(input).toBe('https://ark.example.com/api/v3/images/generations');
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
     if (typeof init?.body !== 'string') {
       throw new Error('Expected JSON request body');
     }
-    const body = JSON.parse(init.body) as { SearchType: string };
-    searchCalls.push(body.SearchType);
+    imageCalls.push(init.body);
     return Promise.resolve(
-      new Response(JSON.stringify({
-        Result: {
-          ResultCount: 1,
-          WebResults: [{
-            Url: sourceUrl,
-            Title: 'Current source',
-            Summary: 'Current facts',
-          }],
-          ImageResults: [{
-            Url: sourceUrl,
-            Title: 'Landscape',
-            Image: { Url: imageUrl },
-          }],
-        },
-      })),
+      new Response(JSON.stringify({ data: [{ url: imageUrl }] })),
     );
   });
 });
@@ -167,7 +150,7 @@ afterEach(() => {
   }
 });
 
-const factories: [string, (opts: SearchAgentOptions) => unknown][] = [
+const factories: [string, (opts: GenerationAgentOptions) => unknown][] = [
   ['A2UI', createA2UIAgent],
   ['OpenUI', createOpenUIAgent],
   ['HTML', createHtmlAgent],
@@ -175,36 +158,55 @@ const factories: [string, (opts: SearchAgentOptions) => unknown][] = [
   ['MCP Apps', createMcpAppsAgent],
 ];
 
-describe('shared search capability', () => {
+describe('shared image generation capability', () => {
   test.each(factories)(
-    '%s registers search conditionally and preserves its own tools',
+    '%s registers image generation independently of search and only with valid configuration',
     async (name, create) => {
-      const ownTools = [
-        'generate_image',
-        ...(name === 'Lynx XML'
-          ? ['html_fragment_to_main_thread_script']
-          : []),
-      ];
-      for (const enabled of [true, false]) {
-        const { agent } = await create({ enableWebSearch: enabled }) as {
-          agent: Agent;
-        };
-        expect(Object.keys(await agent.listTools()).sort()).toEqual(
-          [...ownTools, ...(enabled ? ['web_search', 'image_search'] : [])]
-            .sort(),
-        );
-        const instructions = await agent.getInstructions();
-        if (typeof instructions !== 'string') {
-          throw new Error('Expected string instructions');
+      for (const enableWebSearch of [true, false]) {
+        for (const enableImageGeneration of [undefined, true, false]) {
+          const { agent } = await create({
+            enableWebSearch,
+            enableImageGeneration,
+          }) as { agent: Agent };
+          const tools = Object.keys(await agent.listTools());
+          expect(tools.includes('generate_image')).toBe(
+            enableImageGeneration !== false,
+          );
+          expect(tools.includes('image_search')).toBe(enableWebSearch);
+          if (name === 'Lynx XML') {
+            expect(tools).toContain('html_fragment_to_main_thread_script');
+          }
+          const instructions = await agent.getInstructions();
+          if (typeof instructions !== 'string') {
+            throw new Error('Expected string instructions');
+          }
+          expect(
+            instructions.includes('## Server-side image generation'),
+          ).toBe(enableImageGeneration !== false);
+          if (enableImageGeneration === false) {
+            expect(instructions).not.toContain('Call generate_image');
+            expect(instructions).not.toContain(
+              '## Image generation tool',
+            );
+          }
         }
-        expect(instructions.includes('## Server-side search tools')).toBe(
-          enabled,
-        );
-        expect(instructions).toContain('generate_image');
       }
-      delete process.env.SEARCH_INFINITY_API_KEY;
+      for (
+        const key of [
+          'IMG_GEN_ARK_API_KEY',
+          'IMG_GEN_ARK_IMAGE_MODEL',
+          'IMG_GEN_ARK_IMAGE_BASE_URL',
+        ]
+      ) {
+        const original = process.env[key];
+        delete process.env[key];
+        const { agent } = await create({}) as { agent: Agent };
+        expect(await agent.listTools()).not.toHaveProperty('generate_image');
+        process.env[key] = original;
+      }
+      process.env.IMG_GEN_ARK_IMAGE_BASE_URL = 'http://invalid.example.com';
       const { agent } = await create({}) as { agent: Agent };
-      expect(Object.keys(await agent.listTools()).sort()).toEqual(ownTools);
+      expect(await agent.listTools()).not.toHaveProperty('generate_image');
     },
   );
 
@@ -217,27 +219,26 @@ describe('shared search capability', () => {
   ] as const;
 
   test.each(services)(
-    '%s executes both tools with a fresh budget on cached and uncached requests',
+    '%s executes image generation with a fresh budget on cached and uncached requests',
     async (_name, create) => {
       const service = create();
       const messages = [{
         role: 'user' as const,
-        content: 'Search for current facts and a landscape image',
+        content: 'Generate an original landscape image',
       }];
-      for (const opts of [{}, {}, { disableAgentCache: true }]) {
+      for (const opts of [{}, {}, {}, {}, {}, { disableAgentCache: true }]) {
         const result = await service.generateRaw(messages, opts);
-        expect(result.text).toBe('searched output');
+        expect(result.text).toBe('generated output');
       }
-      expect(searchCalls.filter((type) => type === 'web')).toHaveLength(3);
-      expect(searchCalls.filter((type) => type === 'image')).toHaveLength(3);
+      expect(imageCalls).toHaveLength(6);
       const disabled = await service.generateRaw(messages, {
-        enableWebSearch: false,
+        enableImageGeneration: false,
       });
-      expect(disabled.text).toBe('search disabled');
-      expect(searchCalls).toHaveLength(6);
+      expect(disabled.text).toBe('generation disabled');
+      expect(imageCalls).toHaveLength(6);
       const enabled = await service.generateRaw(messages);
-      expect(enabled.text).toBe('searched output');
-      expect(searchCalls).toHaveLength(8);
+      expect(enabled.text).toBe('generated output');
+      expect(imageCalls).toHaveLength(7);
     },
   );
 
@@ -249,19 +250,21 @@ describe('shared search capability', () => {
   ] as const;
 
   test.each(streamingServices)(
-    '%s streams the answer after consuming search results',
-    async (_name, create) => {
+    '%s streams the answer after consuming image results',
+    async (name, create) => {
       const result = await create().streamAsAsyncIterable([
-        { role: 'user', content: 'Search for facts and an image' },
+        { role: 'user', content: 'Generate an original image' },
       ]);
       let text = '';
       for await (const chunk of result.textStream) text += chunk;
-      expect(text).toBe('searched output');
+      expect(text).toBe(
+        name === 'A2UI' ? '\ngenerated output' : 'generated output',
+      );
       expect(await result.finalize()).toMatchObject({
-        text: 'searched output',
+        text: 'generated output',
         finishReason: 'stop',
       });
-      expect(searchCalls.sort()).toEqual(['image', 'web']);
+      expect(imageCalls).toHaveLength(1);
     },
   );
 });

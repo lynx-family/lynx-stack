@@ -8,8 +8,8 @@ import type {
   OpenUIAgentOptions,
 } from '../../agent/openui/openui-agent.js';
 import {
-  buildSearchRunOptions,
-  pickSearchAgentConfig,
+  buildCapabilityRunOptions,
+  pickAgentCapabilityConfig,
 } from '../common/agent-capabilities.js';
 import {
   buildConversationMessages,
@@ -68,7 +68,7 @@ export default class OpenUIAgentService {
       });
     const createAgent = () =>
       createOpenUIAgent({
-        ...pickSearchAgentConfig(opts),
+        ...pickAgentCapabilityConfig(opts),
         ...(opts.promptComponentNames === undefined
           ? {}
           : { promptComponentNames: opts.promptComponentNames }),
@@ -110,7 +110,7 @@ export default class OpenUIAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = await agent.stream(
       modelMessages,
-      buildSearchRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -177,7 +177,7 @@ export default class OpenUIAgentService {
           buildDataModelSystemMessage,
         ),
       ),
-      buildSearchRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

@@ -5,8 +5,8 @@
 import { createMcpAppsAgent } from '../../agent/mcp-apps/mcp-apps-agent.js';
 import type { McpAppsAgent } from '../../agent/mcp-apps/mcp-apps-agent.js';
 import {
-  buildSearchRunOptions,
-  pickSearchAgentConfig,
+  buildCapabilityRunOptions,
+  pickAgentCapabilityConfig,
 } from '../common/agent-capabilities.js';
 import {
   buildConversationMessages,
@@ -26,7 +26,7 @@ export class McpAppsAgentService {
 
   private getAgent(opts: ChatOptions): Promise<McpAppsAgent> {
     const createAgent = () =>
-      createMcpAppsAgent(pickSearchAgentConfig(opts)).agent;
+      createMcpAppsAgent(pickAgentCapabilityConfig(opts)).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(
       opts,
@@ -52,7 +52,7 @@ export class McpAppsAgentService {
     );
     const result = await agent.generate(
       modelMessages,
-      buildSearchRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

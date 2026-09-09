@@ -66,6 +66,9 @@ function createProviderCacheKey(
     hashApiKey(opts.apiKey),
     opts.api ?? 'default',
     opts.enableWebSearch === false ? 'search-disabled' : 'search-enabled',
+    opts.enableImageGeneration === false
+      ? 'image-generation-disabled'
+      : 'image-generation-enabled',
   ].join(':');
   return variant === undefined ? baseKey : `${baseKey}:${variant}`;
 }
