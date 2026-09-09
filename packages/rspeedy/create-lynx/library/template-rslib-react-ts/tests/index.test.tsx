@@ -5,11 +5,11 @@ import { fireEvent, render } from '@lynx-js/react/testing-library'
 import { Counter } from '../src/Counter.js'
 
 test('Counter', async () => {
-  const { container, findByText } = render(<Counter initialCount={1} />)
+  const { findByText } = render(<Counter initialCount={1} />)
 
   expect(await findByText('Count: 1')).toBeInTheDocument()
 
-  fireEvent.tap(container.firstChild!)
+  fireEvent.tap(await findByText('+1'))
 
   expect(await findByText('Count: 2')).toBeInTheDocument()
 })
