@@ -7,7 +7,10 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import {
+  BackgroundElementTemplateInstance,
+  BackgroundListElementTemplateInstance,
+} from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { root, Suspense, lazy } from '../../../../src/element-template/index.js';
 import { loadLazyBundle } from '../../../../src/core/lynx/lazy-bundle.js';
@@ -18,6 +21,7 @@ import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
   SerializableValue,
+  UpdateTypedListItemCommand,
 } from '../../../../src/element-template/protocol/types.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
@@ -61,10 +65,26 @@ interface ParsedRemoveNodeOp {
   removedSubtreeHandleIds: number[];
 }
 
+interface ParsedInsertTypedListItemOp {
+  op: 'insertTypedListItem';
+  targetId: number;
+  item: UpdateTypedListItemCommand;
+  referenceId: number;
+}
+
+interface ParsedRemoveTypedListItemOp {
+  op: 'removeTypedListItem';
+  targetId: number;
+  childId: number;
+  removedSubtreeHandleIds: number[];
+}
+
 type ParsedOp =
   | ParsedCreateTemplateOp
   | ParsedInsertNodeOp
   | ParsedRemoveNodeOp
+  | ParsedInsertTypedListItemOp
+  | ParsedRemoveTypedListItemOp
   | {
     op: 'setAttribute';
     targetId: number;
@@ -255,6 +275,22 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
           removedSubtreeHandleIds: stream[i++] as number[],
         });
         break;
+      case ElementTemplateUpdateOps.insertTypedListItem:
+        parsed.push({
+          op: 'insertTypedListItem',
+          targetId: stream[i++] as number,
+          item: stream[i++] as UpdateTypedListItemCommand,
+          referenceId: stream[i++] as number,
+        });
+        break;
+      case ElementTemplateUpdateOps.removeTypedListItem:
+        parsed.push({
+          op: 'removeTypedListItem',
+          targetId: stream[i++] as number,
+          childId: stream[i++] as number,
+          removedSubtreeHandleIds: stream[i++] as number[],
+        });
+        break;
       default:
         throw new Error(`Unsupported test opcode: ${String(op)}`);
     }
@@ -379,6 +415,109 @@ describe('ElementTemplate Suspense background lifecycle', () => {
       attachedSubtreeHandleIds: null,
     });
     expect(ops.filter(op => op.op === 'removeNode')).toEqual([]);
+    envManager.switchToBackground();
+  });
+
+  it('restores one typed list item identity from the Suspense detached parent', async () => {
+    const deferred = createDeferred<void>();
+    let shouldSuspend = false;
+
+    function Suspender({ children }: { children?: ComponentChildren }): ComponentChildren {
+      if (shouldSuspend) {
+        throw deferred.promise;
+      }
+      return children ?? null;
+    }
+
+    function App(): JSX.Element {
+      return (
+        <list>
+          <Suspense fallback={null}>
+            <Suspender>
+              <Marker value='item' />
+            </Suspender>
+          </Suspense>
+        </list>
+      );
+    }
+
+    root.render(<App />);
+    await flushSuspenseRenders(scheduledRenders);
+
+    const list = getRenderedHost();
+    expect(list).toBeInstanceOf(BackgroundListElementTemplateInstance);
+    const item = getMarkerElementByValue(list, 'item');
+    markRenderedTreeHydrated();
+    updateEvents = [];
+
+    shouldSuspend = true;
+    root.render(<App />);
+    await flushSuspenseRenders(scheduledRenders);
+
+    expect(findMarkerElementByValue(list, 'item')).toBeNull();
+    envManager.switchToMainThread();
+    expect(parseUpdateOps(updateEvents.flatMap(event => event.ops))).toEqual([{
+      op: 'removeTypedListItem',
+      targetId: list.instanceId,
+      childId: item.instanceId,
+      removedSubtreeHandleIds: [item.instanceId],
+    }]);
+    envManager.switchToBackground();
+    updateEvents = [];
+
+    shouldSuspend = false;
+    deferred.resolve();
+    await flushSuspenseRenders(scheduledRenders);
+
+    expect(getMarkerElementByValue(list, 'item')).toBe(item);
+    envManager.switchToMainThread();
+    const ops = parseUpdateOps(updateEvents.flatMap(event => event.ops));
+    const createIndex = ops.findIndex(op => op.op === 'createTemplate' && op.handleId === item.instanceId);
+    const firstInsertIndex = ops.findIndex(op => op.op === 'insertTypedListItem');
+    expect(ops[createIndex]).toEqual({
+      op: 'createTemplate',
+      handleId: item.instanceId,
+      templateKey: MARKER_TYPE,
+      bundleUrl: null,
+      attributeSlots: ['item'],
+      elementSlots: [],
+    });
+    expect(createIndex).toBeLessThan(firstInsertIndex);
+    const inserts = ops.filter(op => op.op === 'insertTypedListItem');
+    const removes = ops.filter(op => op.op === 'removeTypedListItem');
+    expect(inserts.length).toBeGreaterThan(0);
+    for (const insert of inserts) {
+      expect(insert).toEqual({
+        op: 'insertTypedListItem',
+        targetId: list.instanceId,
+        item: {
+          __etHandleRef: item.instanceId,
+          type: MARKER_TYPE,
+          platformInfo: {},
+          subtreeHandleIds: [],
+        },
+        referenceId: 0,
+      });
+    }
+    for (const remove of removes) {
+      expect(remove).toEqual({
+        op: 'removeTypedListItem',
+        targetId: list.instanceId,
+        childId: item.instanceId,
+        removedSubtreeHandleIds: [],
+      });
+    }
+    let logicalItemCount = 0;
+    for (const op of ops) {
+      if (op.op === 'insertTypedListItem') {
+        logicalItemCount += 1;
+      } else if (op.op === 'removeTypedListItem') {
+        logicalItemCount -= 1;
+        expect(logicalItemCount).toBeGreaterThanOrEqual(0);
+      }
+    }
+    expect(logicalItemCount).toBe(1);
+    expect(ops.at(-1)?.op).toBe('insertTypedListItem');
     envManager.switchToBackground();
   });
 
