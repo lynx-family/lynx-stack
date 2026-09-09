@@ -39,11 +39,19 @@ interface GeneratorState {
   bindings: Map<string, string>;
   lines: string[];
   nextNodeIndex: number;
+  nodeScope: 'render' | 'script';
+}
+
+export interface GenerateMainThreadScriptOptions {
+  /** Script scope exposes nodes to handlers declared outside renderPage(). */
+  nodeScope?: 'render' | 'script';
 }
 
 export interface GeneratedMainThreadScript {
   bindings: Record<string, string>;
   javascript: string;
+  /** Hoisted script-level declarations, to be placed outside renderPage(). */
+  declarations?: string;
 }
 
 type OrderedXmlNode = Record<string, unknown>;
@@ -82,7 +90,9 @@ function appendText(
 
   const node = `node${state.nextNodeIndex++}`;
   state.lines.push(
-    `const ${node} = __CreateText(pageId);`,
+    `${
+      state.nodeScope === 'script' ? '' : 'const '
+    }${node} = __CreateText(pageId);`,
     `__AppendElement(${node}, __CreateRawText(${javascriptString(text)}));`,
     `__AppendElement(${parent}, ${node});`,
   );
@@ -154,7 +164,11 @@ function appendParsedNode(
   }
 
   const node = `node${state.nextNodeIndex++}`;
-  state.lines.push(`const ${node} = ${createElementExpression(tagName)};`);
+  state.lines.push(
+    `${state.nodeScope === 'script' ? '' : 'const '}${node} = ${
+      createElementExpression(tagName)
+    };`,
+  );
 
   const attributes = parsedNode[ATTRIBUTE_NODE_NAME];
   if (attributes && typeof attributes === 'object') {
@@ -175,6 +189,7 @@ function appendParsedNode(
 /** Generate Element PAPI calls and stable id-to-node bindings. */
 export function generateMainThreadScriptResult(
   xmlFragment: string,
+  options: GenerateMainThreadScriptOptions = {},
 ): GeneratedMainThreadScript {
   if (!xmlFragment.trim()) throw new Error('XML fragment must not be empty');
   if (xmlFragment.length > MAX_XML_FRAGMENT_LENGTH) {
@@ -203,6 +218,7 @@ export function generateMainThreadScriptResult(
     bindings: new Map(),
     lines: [],
     nextNodeIndex: 0,
+    nodeScope: options.nodeScope ?? 'render',
   };
   for (const child of children) {
     if (!child || typeof child !== 'object' || Array.isArray(child)) {
@@ -216,6 +232,16 @@ export function generateMainThreadScriptResult(
   return {
     bindings: Object.fromEntries(state.bindings),
     javascript: state.lines.join('\n'),
+    ...(state.nodeScope === 'script'
+      ? {
+        declarations: `var ${
+          Array.from(
+            { length: state.nextNodeIndex },
+            (_, index) => `node${index}`,
+          ).join(', ')
+        };`,
+      }
+      : {}),
   };
 }
 

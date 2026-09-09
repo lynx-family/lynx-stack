@@ -605,6 +605,104 @@ describe('chat protocol adapters', () => {
     ).toBe(VALID_HTML);
   });
 
+  test('keeps the original XML fragment as a separate artifact view and persists it', () => {
+    const xmlFragment = '\n<view>\n  <text>杭州 &amp; 天气</text>\n</view>\n';
+    const modelOutput = `\n\`\`\`xml\n${VALID_LYNX_XML}\n\`\`\`\n`;
+    const output = { source: VALID_LYNX_XML, xmlFragment, modelOutput };
+    const done = LYNX_XML_CHAT_ADAPTER.stream.reduce(
+      LYNX_XML_CHAT_ADAPTER.stream.initial(),
+      {
+        event: 'done',
+        data: { text: VALID_LYNX_XML, metadata: { xmlFragment, modelOutput } },
+      },
+    );
+    expect(done.emissions).toEqual([{ type: 'final', output }]);
+    expect(LYNX_XML_CHAT_ADAPTER.stream.finish(done.state)).toEqual(output);
+    expect(
+      LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+        text: VALID_LYNX_XML,
+        metadata: { xmlFragment, modelOutput },
+      }).emissions,
+    ).toEqual([{ type: 'final', output }]);
+    expect(LYNX_XML_CHAT_ADAPTER.preview.artifact(output).views).toEqual([
+      { id: 'source', label: 'Source', text: VALID_LYNX_XML, language: 'text' },
+      {
+        id: 'xml-fragment',
+        label: 'XML Fragment',
+        text: xmlFragment,
+        formattedText: '<view>\n  <text>杭州 &amp; 天气</text>\n</view>',
+        language: 'text',
+      },
+      {
+        id: 'model-output',
+        label: 'Model Output',
+        text: modelOutput,
+        language: 'text',
+      },
+    ]);
+    const saved = LYNX_XML_CHAT_ADAPTER.persist(output);
+    expect(saved.assistantContent).toBe(VALID_LYNX_XML);
+    expect(saved.lynxXmlFragment).toBe(xmlFragment);
+    expect(saved.lynxXmlModelOutput).toBe(modelOutput);
+    const history = [{
+      role: 'assistant' as const,
+      content: saved.assistantContent,
+      lynxXmlFragment: xmlFragment,
+      lynxXmlModelOutput: modelOutput,
+    }];
+    expect(
+      LYNX_XML_CHAT_ADAPTER.hydrate({
+        history,
+        previewMessages: [],
+        previewPayloadUrls: null,
+      }).output,
+    ).toEqual(output);
+    const request = LYNX_XML_CHAT_ADAPTER.createRequest({
+      prompt: 'Change the city',
+      conversation: { history, dataModel: {} },
+      settings: createDefaultProviderSettings(),
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: '/',
+      },
+      signal: new AbortController().signal,
+    });
+    expect(JSON.stringify(request.body)).not.toContain('lynxXmlFragment');
+    expect(JSON.stringify(request.body)).not.toContain('lynxXmlModelOutput');
+    expect(LYNX_XML_CHAT_ADAPTER.preview.source(output, {
+      protocol: PROTOCOLS['lynx-xml'],
+      theme: 'light',
+      previewPayloadUrls: null,
+    })).not.toHaveProperty('modelOutput');
+    expect(
+      JSON.stringify(
+        LYNX_XML_CHAT_ADAPTER.preview.source(output, {
+          protocol: PROTOCOLS['lynx-xml'],
+          theme: 'light',
+          previewPayloadUrls: null,
+        }),
+      ),
+    ).not.toContain('xmlFragment');
+  });
+
+  test.each([undefined, {}, { xmlFragment: 42 }])(
+    'keeps legacy or invalid fragment metadata out of the artifact views: %j',
+    (metadata) => {
+      const result = LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+        text: VALID_LYNX_XML,
+        metadata,
+      });
+      const output = LYNX_XML_CHAT_ADAPTER.stream.finish(result.state)!;
+      expect(output).toEqual({ source: VALID_LYNX_XML });
+      expect(LYNX_XML_CHAT_ADAPTER.preview.artifact(output).views).toHaveLength(
+        1,
+      );
+    },
+  );
+
   test('rejects an incomplete final HTML response', () => {
     expect(() =>
       HTML_CHAT_ADAPTER.stream.fromJson({

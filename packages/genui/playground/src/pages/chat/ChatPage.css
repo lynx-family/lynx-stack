@@ -1717,6 +1717,67 @@
   font-size: 11px;
 }
 
+.chatArtifactCodeToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 10px;
+  min-height: 36px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--geist-border) 55%, transparent);
+  background: var(--geist-surface);
+}
+
+.chatArtifactFormatSwitch {
+  display: flex;
+  align-self: stretch;
+  gap: 14px;
+}
+
+.chatArtifactFormatButton {
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.chatArtifactFormatButton:hover,
+.chatArtifactFormatButton[aria-pressed="true"] {
+  color: var(--geist-foreground);
+}
+
+.chatArtifactFormatButton[aria-pressed="true"] {
+  border-bottom-color: var(--geist-foreground);
+}
+
+.chatArtifactFormatButton:focus-visible,
+.chatArtifactCopyButton:focus-visible {
+  outline: 2px solid var(--geist-accent);
+  outline-offset: 2px;
+}
+
+.chatArtifactCodeLabel {
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+}
+
+.chatArtifactCopyButton {
+  border-color: transparent;
+  background: transparent;
+  color: var(--geist-secondary);
+  font-weight: 500;
+}
+
+.chatArtifactCopyButton:hover {
+  color: var(--geist-foreground);
+}
+
 .chatArtifactCodeBlock {
   max-height: 360px;
   margin: 0;

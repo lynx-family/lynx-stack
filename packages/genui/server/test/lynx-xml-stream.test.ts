@@ -22,6 +22,7 @@ interface MockLynxXmlService {
       text: string;
       usage: unknown;
       finishReason: string;
+      metadata?: Record<string, unknown>;
     }>;
   }>;
 }
@@ -31,50 +32,66 @@ type GlobalWithLynxXmlService = typeof globalThis & {
 };
 
 describe('Lynx XML stream route', () => {
-  test('streams deltas and normalizes the final artifact', async () => {
-    const global = globalThis as GlobalWithLynxXmlService;
-    const previous = global.__LYNX_XML_AGENT_SERVICE__;
-    global.__LYNX_XML_AGENT_SERVICE__ = {
-      streamAsAsyncIterable() {
-        return Promise.resolve({
-          textStream: Readable.from(['```xml\n', ARTIFACT]),
-          finalize: () =>
-            Promise.resolve({
-              text: `Generated artifact:\n${ARTIFACT}\n\`\`\``,
-              usage: { inputTokens: 3, outputTokens: 5 },
-              finishReason: 'stop',
-            }),
-        });
-      },
-    };
-
-    try {
-      const response = await app.request('/lynx-xml/stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '203.0.113.47',
+  test.each([undefined, {
+    xmlFragment: '<view>\n  <text>Hello &amp; 你好</text>\n</view>',
+    modelOutput: '<!doctype lynx>\n<!-- original model response -->',
+  }])(
+    'streams deltas and passes optional metadata alongside the normalized artifact: %j',
+    async (metadata) => {
+      const global = globalThis as GlobalWithLynxXmlService;
+      const previous = global.__LYNX_XML_AGENT_SERVICE__;
+      global.__LYNX_XML_AGENT_SERVICE__ = {
+        streamAsAsyncIterable() {
+          return Promise.resolve({
+            textStream: Readable.from(['```xml\n', ARTIFACT]),
+            finalize: () =>
+              Promise.resolve({
+                text: `Generated artifact:\n${ARTIFACT}\n\`\`\``,
+                usage: { inputTokens: 3, outputTokens: 5 },
+                finishReason: 'stop',
+                ...(metadata ? { metadata } : {}),
+              }),
+          });
         },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: 'Create a counter' }],
-        }),
-      });
-      expect(response.status).toBe(200);
-      expect(response.headers.get('content-type')).toContain(
-        'text/event-stream',
-      );
-      const body = await response.text();
-      expect(body).toContain('event: delta\ndata: {"text":"```xml\\n"}');
-      expect(body).toContain(`"text":${JSON.stringify(ARTIFACT)}`);
-      expect(body).toContain('event: done');
-      expect(body).toContain(
-        '"usage":{"inputTokens":3,"outputTokens":5}',
-      );
-      expect(body).not.toContain('Generated artifact:');
-    } finally {
-      global.__LYNX_XML_AGENT_SERVICE__ = previous;
-    }
-  });
+      };
+
+      try {
+        const response = await app.request('/lynx-xml/stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': '203.0.113.47',
+          },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: 'Create a counter' }],
+          }),
+        });
+        expect(response.status).toBe(200);
+        expect(response.headers.get('content-type')).toContain(
+          'text/event-stream',
+        );
+        const body = await response.text();
+        expect(body).toContain('event: delta\ndata: {"text":"```xml\\n"}');
+        expect(body).toContain(`"text":${JSON.stringify(ARTIFACT)}`);
+        expect(body).toContain('event: done');
+        expect(body).toContain(
+          '"usage":{"inputTokens":3,"outputTokens":5}',
+        );
+        expect(body).not.toContain('Generated artifact:');
+        const doneFrame = body.split('\n\n').find((frame) =>
+          frame.startsWith('event: done\n')
+        );
+        expect(doneFrame).toBeDefined();
+        const done = JSON.parse(
+          doneFrame!.slice('event: done\ndata: '.length),
+        ) as Record<string, unknown>;
+        if (metadata) expect(done.metadata).toEqual(metadata);
+        else expect(done).not.toHaveProperty('metadata');
+      } finally {
+        global.__LYNX_XML_AGENT_SERVICE__ = previous;
+      }
+    },
+  );
 
   test('reports token-limit metadata when the final artifact is incomplete', async () => {
     const global = globalThis as GlobalWithLynxXmlService;

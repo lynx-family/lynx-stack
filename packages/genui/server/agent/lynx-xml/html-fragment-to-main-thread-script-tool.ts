@@ -9,6 +9,7 @@ import { z } from 'zod';
 import {
   MAX_XML_FRAGMENT_LENGTH,
   generateMainThreadScriptResult,
+  resolveFragmentBindings,
 } from '@lynx-js/genui-lynx-xml';
 import type { GeneratedMainThreadScript } from '@lynx-js/genui-lynx-xml';
 
@@ -19,7 +20,14 @@ const FRAGMENT_SCRIPT_PLACEHOLDER_PATTERN =
 const FRAGMENT_SCRIPT_PLACEHOLDER_IN_SOURCE_PATTERN =
   /\/\*__GENUI_HTML_FRAGMENT_[0-9a-f-]{36}__\*\//gu;
 
+export interface HtmlFragmentScriptMetadata extends Record<string, unknown> {
+  xmlFragment: string;
+}
+
 interface FragmentScriptReplacement {
+  bindings: Record<string, string>;
+  declarations: string;
+  xmlFragment: string;
   javascript: string;
   placeholder: string;
 }
@@ -44,6 +52,15 @@ export function createHtmlFragmentScriptRunScope(): HtmlFragmentScriptRunScope {
   >();
   requestContext.set(FRAGMENT_SCRIPT_RUN_STATE_KEY, { replacements: [] });
   return { requestContext };
+}
+
+/** Expose only the original converter input as client-facing metadata. */
+export function getHtmlFragmentScriptMetadata(
+  scope: HtmlFragmentScriptRunScope,
+): HtmlFragmentScriptMetadata | undefined {
+  const replacement = scope.requestContext.get(FRAGMENT_SCRIPT_RUN_STATE_KEY)
+    .replacements[0];
+  return replacement ? { xmlFragment: replacement.xmlFragment } : undefined;
 }
 
 /** Count exact, non-overlapping occurrences of a value. */
@@ -107,6 +124,28 @@ export function resolveHtmlFragmentScriptPlaceholders(
       replacement.javascript,
     );
   }
+  const declarations = state.replacements.map((replacement) =>
+    replacement.declarations
+  ).filter(Boolean).join('\n');
+  if (declarations) {
+    const scriptStart = resolved.indexOf('<script thread="main">');
+    const scriptEnd = resolved.indexOf('</script>', scriptStart);
+    if (scriptStart === -1 || scriptEnd === -1) {
+      throw new Error(
+        'Fragment node declarations require a complete main-thread script',
+      );
+    }
+    const scriptBodyStart = scriptStart + '<script thread="main">'.length;
+    const javascript = resolveFragmentBindings(
+      resolved.slice(scriptBodyStart, scriptEnd),
+      Object.fromEntries(
+        state.replacements.flatMap(item => Object.entries(item.bindings)),
+      ),
+      declarations,
+    );
+    resolved = resolved.slice(0, scriptBodyStart) + javascript
+      + resolved.slice(scriptEnd);
+  }
   return resolved;
 }
 
@@ -114,6 +153,7 @@ export function resolveHtmlFragmentScriptPlaceholders(
 function registerHtmlFragmentScript(
   requestContext: RequestContext<FragmentScriptRequestContextValues>,
   generated: GeneratedMainThreadScript,
+  xmlFragment: string,
 ): { bindings: Record<string, string>; placeholder: string } {
   const state = requestContext.get(FRAGMENT_SCRIPT_RUN_STATE_KEY);
   if (!state) {
@@ -128,6 +168,9 @@ function registerHtmlFragmentScript(
   const placeholder = `/*__GENUI_HTML_FRAGMENT_${crypto.randomUUID()}__*/`;
   requestContext.set(FRAGMENT_SCRIPT_RUN_STATE_KEY, {
     replacements: [...state.replacements, {
+      bindings: generated.bindings,
+      xmlFragment,
+      declarations: generated.declarations ?? '',
       javascript: generated.javascript,
       placeholder,
     }],
@@ -146,13 +189,16 @@ const outputSchema = z.object({
     'An opaque comment marker to copy exactly once onto its own line inside renderPage(). The server replaces it with generated Element PAPI JavaScript after model generation.',
   ),
   bindings: z.record(z.string(), z.string().regex(/^node\d+$/u)).describe(
-    'A map from XML id attributes to generated JavaScript node variable names for event handlers and updates.',
+    'A map from XML id attributes to generated JavaScript node variable names. Use the VALUES in handlers and updates: {"cityText":"node5"} means setText(node5, ...), not setText(cityText, ...). XML ids do not declare variables.',
   ),
 });
 
 const requestContextSchema = z.object({
   [FRAGMENT_SCRIPT_RUN_STATE_KEY]: z.object({
     replacements: z.array(z.object({
+      bindings: z.record(z.string(), z.string().regex(/^node\d+$/u)),
+      xmlFragment: z.string().min(1).max(MAX_XML_FRAGMENT_LENGTH),
+      declarations: z.string(),
       javascript: z.string().min(1),
       placeholder: z.string().regex(FRAGMENT_SCRIPT_PLACEHOLDER_PATTERN),
     })).max(1),
@@ -164,7 +210,7 @@ export function createHtmlFragmentToMainThreadScriptTool() {
   return createTool({
     id: 'html_fragment_to_main_thread_script',
     description:
-      'Convert one HTML-like, well-formed XML fragment into server-held Element PAPI JavaScript. Returns only an opaque placeholder to copy exactly once onto its own line inside renderPage(), plus bindings from XML id attributes to generated node variables. The server replaces the placeholder after model generation, so never expand or rewrite it. Event handlers and lifecycle code remain the agent\'s responsibility.',
+      'Convert one HTML-like, well-formed XML fragment into server-held Element PAPI JavaScript. Returns only an opaque placeholder to copy exactly once onto its own line inside renderPage(), plus bindings from XML id attributes to generated node variables. The server replaces the placeholder after model generation, and adds hoisted script-level node declarations, so handlers outside renderPage() can use the bindings after rendering. Never expand the placeholder or redeclare the returned node variables. Event handlers and lifecycle code remain the agent\'s responsibility.',
     inputSchema,
     outputSchema,
     requestContextSchema,
@@ -173,7 +219,8 @@ export function createHtmlFragmentToMainThreadScriptTool() {
         context.requestContext as RequestContext<
           FragmentScriptRequestContextValues
         >,
-        generateMainThreadScriptResult(xmlFragment),
+        generateMainThreadScriptResult(xmlFragment, { nodeScope: 'script' }),
+        xmlFragment,
       ),
   });
 }
