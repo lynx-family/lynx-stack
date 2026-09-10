@@ -16,8 +16,10 @@ import type { CssLoader } from './css-loader.js'
  * @public
  */
 export interface RsdoctorRspackPluginOptions
-  extends Omit<RawRsdoctorRspackPluginOptions<[]>, 'linter'>
+  extends Omit<RawRsdoctorRspackPluginOptions<[]>, 'linter' | 'sdkInstance'>
 {
+  /** Custom SDK instances are opaque to the config validator. */
+  sdkInstance?: object
   linter?: {
     rules?: Record<string, unknown>
     level?: 'Ignore' | 'Warn' | 'Error'

@@ -24,22 +24,18 @@ export function pluginRsdoctor(
       }
 
       api.onBeforeCreateCompiler(async ({ bundlerConfigs }) => {
-        const { RsdoctorRspackPlugin } = await import('@rsdoctor/rspack-plugin')
-
-        for (const config of bundlerConfigs) {
-          const pluginName = 'RsdoctorRspackPlugin'
-
-          const registered = config.plugins?.some(
-            (plugin) =>
-              (typeof plugin === 'object'
-                && plugin?.['isRsdoctorPlugin'] === true)
-              || plugin?.constructor?.name === pluginName,
+        const pendingConfigs = bundlerConfigs.filter(config =>
+          !config.plugins?.some(plugin =>
+            (typeof plugin === 'object'
+              && plugin?.['isRsdoctorPlugin'] === true)
+            || plugin?.constructor?.name === 'RsdoctorRspackPlugin'
           )
+        )
+        if (pendingConfigs.length === 0) return
 
-          if (registered) {
-            continue
-          }
+        const { RsdoctorRspackPlugin } = await import('@rsdoctor/core')
 
+        for (const config of pendingConfigs) {
           config.plugins ??= []
 
           const defaultOptions: RsdoctorRspackPluginOptions = {

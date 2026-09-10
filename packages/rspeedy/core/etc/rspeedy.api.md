@@ -288,13 +288,14 @@ export { RsbuildPluginAPI }
 export { rsbuildVersion }
 
 // @public
-export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter'> {
+export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter' | 'sdkInstance'> {
     // (undocumented)
     linter?: {
         rules?: Record<string, unknown>;
         level?: 'Ignore' | 'Warn' | 'Error';
         extends?: unknown[];
     };
+    sdkInstance?: object;
 }
 
 export { Rspack }

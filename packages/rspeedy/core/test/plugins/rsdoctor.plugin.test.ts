@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Rspack } from '@rsbuild/core'
-import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin'
+import { RsdoctorRspackPlugin } from '@rsdoctor/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
 describe('Plugins - Rsdoctor', () => {
@@ -31,39 +31,47 @@ describe('Plugins - Rsdoctor', () => {
 
     expect(options.supports.banner).toBe(true)
 
-    expect(options.experiments?.enableNativePlugin).toStrictEqual({
-      'chunkGraph': true,
-      'moduleGraph': true,
-    })
+    expect(options).not.toHaveProperty('experiments.enableNativePlugin')
   })
 
-  test('experiments.enableNativePlugin: false', async () => {
+  test('does not register twice when a custom Rsdoctor 2 plugin is provided', async () => {
     rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
-
+    const plugin = new RsdoctorRspackPlugin({ disableClientServer: true })
     const rsbuild = await createStubRspeedy({
       tools: {
-        rsdoctor: {
-          experiments: {
-            enableNativePlugin: false,
-          },
-        },
+        rspack: { plugins: [plugin] },
       },
     })
-
     const compiler = await rsbuild.createCompiler() as Rspack.Compiler
+    const plugins = compiler.options.plugins.filter(
+      plugin =>
+        typeof plugin === 'object' && plugin?.['isRsdoctorPlugin'] === true,
+    )
 
-    const { options } = compiler.options.plugins
-      ?.find(
-        (plugin) => (typeof plugin === 'object'
-          && plugin?.['isRsdoctorPlugin'] === true),
-      ) as RsdoctorRspackPlugin<[]>
+    expect(plugins).toEqual([plugin])
+  })
 
-    expect(options.experiments?.enableNativePlugin).toStrictEqual({
-      'chunkGraph': false,
-      'moduleGraph': false,
-    })
+  test('validates Rsdoctor 2 options and rejects the removed native plugin switch', async () => {
+    const { validateConfig } = await import('../../src/config/validate.js')
+
+    expect(
+      validateConfig({
+        tools: {
+          rsdoctor: {
+            server: { port: 3300 },
+            output: { mode: 'brief' },
+            supports: { brotli: { brotliLevel: 4 } },
+          },
+        },
+      }).success,
+    ).toBe(true)
+    expect(
+      validateConfig({
+        tools: { rsdoctor: { experiments: { enableNativePlugin: false } } },
+      }).success,
+    ).toBe(false)
   })
 
   test('linter.rules.ecma-version-check', async () => {
