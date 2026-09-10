@@ -50,6 +50,11 @@ const CREATE_EXAMPLES_TABS: TabDef[] = [
   { id: 'examples', label: 'Examples' },
 ];
 
+const LYNX_XML_TABS: TabDef[] = [
+  ...CREATE_EXAMPLES_TABS,
+  { id: 'bench', label: 'Bench' },
+];
+
 const CREATE_ONLY_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
 ];
@@ -124,10 +129,10 @@ export function App() {
   let tabs = GENUI_TABS;
   if (protocol.name === 'html') {
     tabs = CREATE_ONLY_TABS;
-  } else if (
-    protocol.name === 'mcp-apps' || protocol.name === 'lynx-xml'
-  ) {
+  } else if (protocol.name === 'mcp-apps') {
     tabs = CREATE_EXAMPLES_TABS;
+  } else if (protocol.name === 'lynx-xml') {
+    tabs = LYNX_XML_TABS;
   }
 
   useLayoutEffect(() => {

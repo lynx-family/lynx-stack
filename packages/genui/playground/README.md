@@ -6,8 +6,9 @@ examples (including zero-build Lynx XML artifacts), and preview the result on
 the web or a real device — then rename, delete, or **share** any conversation
 as a durable preview link.
 
-The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`
-and an **Examples** surface at `#/lynx-xml/examples`. Create calls the GenUI
+The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`,
+an **Examples** surface at `#/lynx-xml/examples`, and the shared **Bench** tab
+at `#/bench`. Create calls the GenUI
 server's `/lynx-xml/stream` endpoint, shows the `.lynxml` source as it arrives,
 and loads the complete zero-build artifact in a directly mounted `<lynx-view>`.
 Generated XML never enters the A2UI/OpenUI renderer; the shared `render.html`
