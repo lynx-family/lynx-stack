@@ -5,9 +5,9 @@
 import { describe, expect, rstest, test } from '@rstest/core';
 
 import { getA2UIAgentService } from '../service/a2ui/a2ui-agent.js';
-import { probeBenchUiJudge } from '../service/a2ui/a2ui-bench-judge.js';
+import { resolveBenchUiJudge } from '../service/a2ui/a2ui-bench-judge.js';
 import {
-  probeGenuiBenchUiJudge,
+  resolveGenuiBenchUiJudge,
   runGenuiBenchUiJudge,
 } from '../service/common/bench/judge.js';
 import type {
@@ -146,9 +146,9 @@ describe('A2UI Bench UI Judge integration', () => {
   test('routes XML source to Judge and preserves XML results and summaries', async () => {
     const rawText =
       '<!doctype lynx><lynx engine-version="4.2"><script thread="main"></script></lynx>';
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
-      session: { screenshotUrl: 'https://judge.example/screenshot/lynxml' },
+      session: { screenshotPath: 'screenshot/lynxml' },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
       errors: [],
@@ -202,6 +202,7 @@ describe('A2UI Bench UI Judge integration', () => {
         model: 'xml-model',
         artifact: { protocol: 'lynx-xml', rawText },
       }),
+      expect.any(Function),
     );
     const report = store.getJob(job.id)?.report;
     expect(report?.results[0]).toMatchObject({
@@ -227,11 +228,11 @@ describe('A2UI Bench UI Judge integration', () => {
     });
   });
 
-  test('does not restore a cancelled job to running after the health probe', async () => {
+  test('does not restore a cancelled job to running after resolving capture configuration', async () => {
     let resolveProbe:
-      | ((capability: Awaited<ReturnType<typeof probeBenchUiJudge>>) => void)
+      | ((capability: Awaited<ReturnType<typeof resolveBenchUiJudge>>) => void)
       | undefined;
-    rstest.mocked(probeBenchUiJudge).mockImplementationOnce(
+    rstest.mocked(resolveBenchUiJudge).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveProbe = resolve;
@@ -240,7 +241,7 @@ describe('A2UI Bench UI Judge integration', () => {
     const store = getBenchJobStore();
     const benchRequest = request();
     benchRequest.playground = {
-      uiJudgeServerUrl: 'http://request-judge.test/',
+      browserScreenshots: true,
     };
     const job = store.createJob(benchRequest, 1);
 
@@ -252,9 +253,7 @@ describe('A2UI Bench UI Judge integration', () => {
     });
     await running;
 
-    expect(probeBenchUiJudge).toHaveBeenCalledWith({
-      serverUrl: 'http://request-judge.test/',
-    });
+    expect(resolveBenchUiJudge).toHaveBeenCalledWith();
     const completed = store.getJob(job.id);
     expect(completed?.status).toBe('cancelled');
     expect(completed?.report?.status).toBe('cancelled');
@@ -277,11 +276,11 @@ describe('A2UI Bench UI Judge integration', () => {
   });
 
   test('marks a matched-core run failed when Judge fails', async () => {
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/bench.lynx.js',
-        screenshotUrl: 'https://judge.example/screenshot/template',
+        screenshotPath: 'screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -428,11 +427,11 @@ describe('A2UI Bench UI Judge integration', () => {
   test('uses each group model and stores the Judge scoring frame for both protocols', async () => {
     const screenshotDataUrl =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValue({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValue({
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/bench.lynx.js',
-        screenshotUrl: 'https://judge.example/screenshot/template',
+        screenshotPath: 'screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValue({
@@ -534,11 +533,11 @@ describe('A2UI Bench UI Judge integration', () => {
   test('maps an OpenUI matched-core result and redacts provider configuration from public output', async () => {
     const secret = 'must-not-appear-in-report';
     const providerUrl = `https://provider.example/v1?key=${secret}`;
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/openui.lynx.js',
-        screenshotUrl: 'https://judge.example/screenshot/template',
+        screenshotPath: 'screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -744,11 +743,11 @@ describe('A2UI Bench UI Judge integration', () => {
   });
 
   test('aggregates native A2UI repair tokens and keeps its Judge screenshot', async () => {
-    rstest.mocked(probeBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        screenshotUrl: 'https://judge.example/screenshot/template',
+        screenshotPath: 'screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -829,11 +828,11 @@ describe('A2UI Bench UI Judge integration', () => {
   });
 
   test('marks a native A2UI run failed when Judge fails', async () => {
-    rstest.mocked(probeBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
         bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        screenshotUrl: 'https://judge.example/screenshot/template',
+        screenshotPath: 'screenshot/template',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({

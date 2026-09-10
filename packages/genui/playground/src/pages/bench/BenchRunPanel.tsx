@@ -61,8 +61,8 @@ export function BenchRunPanel(props: {
                 />
               </label>
               <p className='benchFieldHint'>
-                Leave empty for the server setting. Valid URLs are saved in this
-                browser.
+                Your browser connects to this service and uploads screenshots
+                for scoring. The address is saved only in this browser.
               </p>
               {props.uiJudgeServerUrlValidationError
                 ? (

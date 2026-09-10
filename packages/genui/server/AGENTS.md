@@ -239,15 +239,16 @@ growth, then extract and validate one complete HTML5 document before sending
 without same-origin access; do not add a server-side browser runtime or route
 HTML through Lynx.
 
-To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
-Judge HTTP server and configure its private base URL:
-
-```bash
-export UI_JUDGE_SERVER_URL="http://127.0.0.1:8080"
-```
-
-The server probes `GET /health` for each Bench job. It sends sanitized page data
-to `POST /screenshot/template`, which returns raw BMP bytes. GenUI Server converts
+To enable UI Judge scoring, configure `UI_JUDGE_SERVER_URL` in the Playground's
+Bench run settings. The address stays in browser local storage; GenUI Server
+must never read it or access the screenshot service. The browser checks
+`GET /health` before creating a job with `playground.browserScreenshots: true`.
+For each `screenshot-requested` SSE task, it fetches the pending task's capture
+fields from `/a2ui/bench/jobs/:jobId/screenshots/:captureId`, requests multipart
+`/screenshot/template` or `/screenshot/lynxml` directly from the configured service,
+and posts raw BMP or a JSON capture error to the task endpoint. Bound uploads,
+timeouts, replay, and cancellation. The deployment must allow browser CORS.
+GenUI Server validates the uploaded BMP, converts
 the capture to PNG and runs visual-correctness and four GEQI evaluations with
 the Bench group's selected model, or the GenUI default. Reuse
 `createLLMProvider`, `GENUI_MODEL_CONFIG_JSON`, reasoning settings, token limits,

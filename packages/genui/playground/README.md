@@ -130,7 +130,6 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)       | `120000`            |
 | `SEARCH_INFINITY_API_KEY`                                      | Optional Doubao Custom subscription/post-paid key   | disabled            |
 | `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
-| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring             | disabled            |
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
 
@@ -225,13 +224,15 @@ adopts site-wide localization; it has no page-local locale prop or translation
 layer and does not expose separate Runner, History, or language-switching
 views.
 
-Bench can override `UI_JUDGE_SERVER_URL` in its inline run configuration. A valid HTTP(S) URL
-without credentials is stored in browser local storage and restored on later
-visits; leaving it empty falls back to the server environment. Bench probes
-the selected `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
-enabled only when that sidecar is ready. See
-[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
-startup and model environment.
+Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
+Judge. A credential-free HTTP(S) URL is saved only in browser local storage;
+it is never sent to GenUI Server and has no server environment fallback. The
+Playground checks `/health`, requests each screenshot directly with multipart,
+and uploads the resulting BMP to GenUI Server for PNG conversion and model
+scoring. Keep the Bench page open during evaluation. The screenshot service or
+its gateway must permit the Playground origin through CORS, and its URL must
+be reachable under the browser's HTTPS and local-network policies. See
+[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for service startup.
 
 Conversation **share** links and Web / Native Preview upload through the GenUI
 server and consume the public URL returned by it. The playground does not
