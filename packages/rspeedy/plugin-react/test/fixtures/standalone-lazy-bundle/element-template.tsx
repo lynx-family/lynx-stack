@@ -1,9 +1,10 @@
-import { root, useEffect, useState } from '@lynx-js/react'
+import React, { root, useEffect, useState } from '@lynx-js/react'
 import { __root, options } from '@lynx-js/react/internal'
 import { jsx } from '@lynx-js/react/jsx-runtime'
 import { jsxDEV } from '@lynx-js/react/jsx-dev-runtime'
 
 export const runtime = {
+  default: React,
   root,
   useEffect,
   useState,

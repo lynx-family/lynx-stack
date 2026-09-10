@@ -312,14 +312,20 @@ describe('Lazy', () => {
           }
           const originalCallbacks = { ...app }
           const vnode = {}
-          const host = {
+          const hostReact = {
+            default: {},
             root: { render: rstest.fn() },
             useEffect: rstest.fn(),
             useState: rstest.fn(),
-            __root: {},
-            options: {},
-            jsx: rstest.fn(() => vnode),
-            jsxDEV: rstest.fn(() => vnode),
+          }
+          const hostInternal = { __root: {}, options: {} }
+          const hostJSX = { jsx: rstest.fn(() => vnode) }
+          const hostJSXDev = { jsxDEV: rstest.fn(() => vnode) }
+          const expectedRuntime = {
+            ...hostReact,
+            ...hostInternal,
+            ...hostJSX,
+            ...hostJSXDev,
           }
           // The emitted module reads the real lazy ABI. A finite host makes any
           // accidental native initialization fail instead of absorbing it.
@@ -332,11 +338,11 @@ describe('Lazy', () => {
           target[backend] = 'Element Template'
           for (
             const [entry, value] of Object.entries({
-              '@lynx-js/react': host,
-              '@lynx-js/react/lepus': host,
-              '@lynx-js/react/internal': host,
-              '@lynx-js/react/jsx-runtime': host,
-              '@lynx-js/react/jsx-dev-runtime': host,
+              '@lynx-js/react': hostReact,
+              '@lynx-js/react/lepus': {},
+              '@lynx-js/react/internal': hostInternal,
+              '@lynx-js/react/jsx-runtime': hostJSX,
+              '@lynx-js/react/jsx-dev-runtime': hostJSXDev,
             })
           ) {
             target[Symbol.for(`__REACT_LYNX_EXPORTS__(${entry})`)] = value
@@ -375,14 +381,18 @@ describe('Lazy', () => {
               ) => unknown
               return bundle('standalone-et')
             }, target) as {
-              runtime: typeof host
+              runtime: typeof expectedRuntime
               default: () => unknown
             }
           }
 
           const bundleExports = execute()
-          for (const key of Object.keys(host) as (keyof typeof host)[]) {
-            expect(bundleExports.runtime[key]).toBe(host[key])
+          for (
+            const key of Object.keys(
+              expectedRuntime,
+            ) as (keyof typeof expectedRuntime)[]
+          ) {
+            expect(bundleExports.runtime[key]).toBe(expectedRuntime[key])
           }
           expect(bundleExports.default()).toBe(vnode)
           for (const key of Object.keys(app) as (keyof typeof app)[]) {
