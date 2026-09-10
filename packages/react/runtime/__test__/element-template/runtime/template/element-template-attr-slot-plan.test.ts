@@ -297,7 +297,7 @@ describe('ElementTemplate attr slot plan registry', () => {
 
   it('skips queued ref effects for templates without attr plans', () => {
     expect(() => {
-      queueRefAttributeSlotUpdates('_et_without_backend_attrs', -2, [() => {}]);
+      queueRefAttributeSlotUpdates('_et_without_backend_attrs', { instanceId: -2 }, [() => {}]);
     }).not.toThrow();
   });
 
@@ -306,7 +306,7 @@ describe('ElementTemplate attr slot plan registry', () => {
     const newRef = vi.fn();
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
-    queueRefAttributeSlotUpdates('_et_ref', -2, [oldRef], [newRef]);
+    queueRefAttributeSlotUpdates('_et_ref', { instanceId: -2 }, [oldRef], [newRef]);
     flushPendingRefs();
 
     expect(oldRef).toHaveBeenCalledWith(null);
@@ -335,7 +335,7 @@ describe('ElementTemplate attr slot plan registry', () => {
       '-7-1',
       { ref: '-7-2' },
     ]);
-    queueRefAttributeSlotUpdates('_et_multi_ref', -7, undefined, rawSlots);
+    queueRefAttributeSlotUpdates('_et_multi_ref', { instanceId: -7 }, undefined, rawSlots);
     flushPendingRefs();
 
     expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
@@ -361,7 +361,7 @@ describe('ElementTemplate attr slot plan registry', () => {
 
     queueRefAttributeSlotUpdates(
       '_et_multi_ref',
-      -7,
+      { instanceId: -7 },
       [directRef, { ref: spreadRef }],
       [directRef, { ref: undefined }],
     );

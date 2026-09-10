@@ -31,6 +31,7 @@ import {
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
+import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
 
 function createTextNode(text: string): BackgroundElementTemplateInstance {
   return new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, [text]);
@@ -1943,6 +1944,144 @@ describe('BackgroundElementTemplateInstance', () => {
 
     expect(spreadRef).toHaveBeenCalledWith(null);
     expect(directRef).not.toHaveBeenCalled();
+  });
+
+  it.each(['direct', 'spread'])(
+    'keeps shared %s ref cleanups isolated through hydration, moves and replacement',
+    (kind) => {
+      const cleanupA = vi.fn();
+      const cleanupB = vi.fn();
+      const replacementCleanup = vi.fn();
+      const ref = vi.fn<(value: { selector: string } | null) => () => void>()
+        .mockReturnValueOnce(cleanupA)
+        .mockReturnValueOnce(cleanupB);
+      const replacement = vi.fn(() => replacementCleanup);
+      const slots = (value: unknown) => [kind === 'spread' ? { ref: value } : value];
+      __etAttrPlanMap.view = [0, kind === 'spread' ? adaptSpreadAttrSlot : adaptRefAttrSlot];
+      const parent = new BackgroundElementTemplateInstance('root');
+      const childA = new BackgroundElementTemplateInstance('view');
+      const childB = new BackgroundElementTemplateInstance('view');
+      childA.setAttribute('attributeSlots', slots(ref));
+      childB.setAttribute('attributeSlots', slots(ref));
+      parent.appendChild(childA);
+      parent.appendChild(childB);
+      flushPendingRefs();
+
+      expect(ref).toHaveBeenCalledTimes(2);
+      expect(ref).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          selector: `[ref=${childA.instanceId}-0]`,
+        }),
+      );
+      expect(ref).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          selector: `[ref=${childB.instanceId}-0]`,
+        }),
+      );
+      expect(cleanupA).not.toHaveBeenCalled();
+      expect(cleanupB).not.toHaveBeenCalled();
+      const proxyA = ref.mock.calls[0]![0];
+      const proxyB = ref.mock.calls[1]![0];
+
+      hydrateBackground({
+        templateKey: 'root',
+        uid: -1,
+        childSlots: [[
+          {
+            templateKey: 'view',
+            uid: -2,
+            attributeSlots: [kind === 'spread' ? { ref: '-2-0' } : '-2-0'],
+          },
+          {
+            templateKey: 'view',
+            uid: -3,
+            attributeSlots: [kind === 'spread' ? { ref: '-3-0' } : '-3-0'],
+          },
+        ]],
+      }, parent);
+      markElementTemplateHydrated();
+      flushPendingRefs();
+
+      expect(childA.instanceId).toBe(-2);
+      expect(childB.instanceId).toBe(-3);
+      expect(proxyA).toMatchObject({ selector: '[ref=-2-0]' });
+      expect(proxyB).toMatchObject({ selector: '[ref=-3-0]' });
+      expect(ref).toHaveBeenCalledTimes(2);
+      expect(cleanupA).not.toHaveBeenCalled();
+      expect(cleanupB).not.toHaveBeenCalled();
+
+      parent.insertBefore(childB, childA);
+      childA.setAttribute('attributeSlots', slots(ref));
+      childB.setAttribute('attributeSlots', slots(ref));
+      flushPendingRefs();
+
+      expect(ref).toHaveBeenCalledTimes(2);
+      expect(cleanupA).not.toHaveBeenCalled();
+      expect(cleanupB).not.toHaveBeenCalled();
+
+      childA.setAttribute('attributeSlots', slots(replacement));
+      flushPendingRefs();
+
+      expect(cleanupA).toHaveBeenCalledTimes(1);
+      expect(cleanupB).not.toHaveBeenCalled();
+      expect(replacement).toHaveBeenCalledTimes(1);
+      expect(replacement).toHaveBeenCalledWith(expect.objectContaining({ selector: '[ref=-2-0]' }));
+      expect(ref).toHaveBeenCalledTimes(2);
+
+      parent.removeChild(childA);
+      flushPendingRefs();
+
+      expect(replacementCleanup).toHaveBeenCalledTimes(1);
+      expect(cleanupA).toHaveBeenCalledTimes(1);
+      expect(cleanupB).not.toHaveBeenCalled();
+
+      parent.removeChild(childB);
+      flushPendingRefs();
+
+      expect(cleanupB).toHaveBeenCalledTimes(1);
+      expect(cleanupA).toHaveBeenCalledTimes(1);
+      expect(replacementCleanup).toHaveBeenCalledTimes(1);
+      expect(ref).toHaveBeenCalledTimes(2);
+      expect(replacement).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('keeps a shared callback cleanup separate for direct and spread slots on the same instance', () => {
+    const directCleanup = vi.fn();
+    const spreadCleanup = vi.fn();
+    const ref = vi.fn()
+      .mockReturnValueOnce(directCleanup)
+      .mockReturnValueOnce(spreadCleanup);
+    __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
+    const instance = new BackgroundElementTemplateInstance('view');
+    backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
+    instance.markMaterializedByHydration();
+    markElementTemplateHydrated();
+
+    instance.setAttribute('attributeSlots', [ref, { ref }]);
+    flushPendingRefs();
+
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref).toHaveBeenNthCalledWith(1, expect.objectContaining({ selector: '[ref=-2-0]' }));
+    expect(ref).toHaveBeenNthCalledWith(2, expect.objectContaining({ selector: '[ref=-2-1]' }));
+    expect(directCleanup).not.toHaveBeenCalled();
+    expect(spreadCleanup).not.toHaveBeenCalled();
+
+    instance.setAttribute('attributeSlots', [null, { ref }]);
+    flushPendingRefs();
+
+    expect(directCleanup).toHaveBeenCalledTimes(1);
+    expect(spreadCleanup).not.toHaveBeenCalled();
+    expect(ref).toHaveBeenCalledTimes(2);
+
+    instance.setAttribute('attributeSlots', [null, {}]);
+    flushPendingRefs();
+
+    expect(directCleanup).toHaveBeenCalledTimes(1);
+    expect(spreadCleanup).toHaveBeenCalledTimes(1);
+    expect(ref).toHaveBeenCalledTimes(2);
   });
 
   it('does not let explicit undefined spread refs detach sibling direct refs', () => {
