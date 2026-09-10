@@ -1858,25 +1858,25 @@ importers:
         version: 2.1.4
     devDependencies:
       '@lynx-js/lynx-bundle-rslib-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../lynx-bundle-rslib-config
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
         version: 5.0.1-20260827072047-5f77e12
       '@lynx-js/qrcode-rsbuild-plugin':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../plugin-qrcode
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
       '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../plugin-react
       '@lynx-js/rsbuild-plugin':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../plugin-lynx
       '@lynx-js/rspeedy':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
       '@lynx-js/test-tools':
         specifier: workspace:*
@@ -1903,22 +1903,22 @@ importers:
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
       '@testing-library/dom':
-        specifier: ^10.4.1
+        specifier: 10.4.1
         version: 10.4.1
       '@testing-library/jest-dom':
-        specifier: ^7.0.0
+        specifier: 7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)
       '@types/react':
-        specifier: ^19.2.18
+        specifier: 19.2.18
         version: 19.2.18
       happy-dom:
-        specifier: ^20.14.0
+        specifier: 20.14.0
         version: 20.14.0
       jsdom:
-        specifier: ^27.4.0
+        specifier: 27.4.0
         version: 27.4.0(supports-color@10.2.2)
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
 
   packages/rspeedy/create-rspeedy:

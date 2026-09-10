@@ -147,6 +147,20 @@ describe('templates on disk', () => {
     }
   })
 
+  // `src/index.ts` turns each version into a caret range when it scaffolds, so
+  // a range here would reach the generated project twice.
+  test('pins every version exactly', () => {
+    const versions = readManifest(packageRoot)['devDependencies'] ?? {}
+
+    for (const [name, range] of Object.entries(versions)) {
+      expect(
+        /^(?:\d|workspace:\*$|catalog:)/.test(range),
+        `${name} is "${range}", but this package may only pin an exact version, `
+          + 'workspace:* or catalog:',
+      ).toBe(true)
+    }
+  })
+
   // A template only names its dependencies; the versions come from this
   // package, so one bump here reaches every template.
   test('pins every template dependency in this package', () => {
