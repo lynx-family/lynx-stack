@@ -1280,6 +1280,58 @@ describe('pluginDev', () => {
     })
   })
 
+  test.each(['lynx', 'web'])(
+    'printUrls respects --environment %s',
+    async (name) => {
+      const entry = path.resolve(__dirname, './fixtures/hello-world/index.js')
+      const rsbuild = await createStubRsbuild(
+        {
+          mode: 'development',
+          source: { entry: { main: entry } },
+          dev: { assetPrefix: 'http://example.com:<port>/' },
+          environments: {
+            web: { source: { entry: { webOnly: entry } } },
+            lynx: { source: { entry: { lynxOnly: entry } } },
+          },
+        },
+        undefined,
+        undefined,
+        [name],
+      )
+
+      await rsbuild.initConfigs()
+      expect(Object.keys(rsbuild.getNormalizedConfig().environments))
+        .toStrictEqual([name])
+      const { printUrls } = rsbuild.getNormalizedConfig().server
+      invariant(typeof printUrls === 'function')
+      const urls = printUrls({
+        urls: ['http://example.com:8098/'],
+        port: 8098,
+        routes: [],
+        protocol: 'http',
+      })
+      const label = name === 'lynx' ? 'Lynx' : 'Web'
+      expect(urls).toStrictEqual([
+        { label, url: `http://example.com:8098/main.${name}.bundle` },
+        ...(name === 'web'
+          ? [{
+            label: '∟ Preview',
+            url:
+              'http://example.com:8098/__web_preview?casename=main.web.bundle',
+          }]
+          : []),
+        { label, url: `http://example.com:8098/${name}Only.${name}.bundle` },
+        ...(name === 'web'
+          ? [{
+            label: '∟ Preview',
+            url:
+              'http://example.com:8098/__web_preview?casename=webOnly.web.bundle',
+          }]
+          : []),
+      ])
+    },
+  )
+
   test('preview prints the bundle path exactly once', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
