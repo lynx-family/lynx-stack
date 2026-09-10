@@ -215,36 +215,18 @@ function normalizePlayground(
 {
   if (!isRecord(value)) return { ok: true };
   const baseUrl = readOptionalString(value.baseUrl, 500);
-  const requestedUiJudgeServerUrl = readOptionalString(
-    value.uiJudgeServerUrl,
-    500,
-  );
-  let uiJudgeServerUrl: string | undefined;
-  if (requestedUiJudgeServerUrl) {
-    try {
-      const url = new URL(requestedUiJudgeServerUrl);
-      if (
-        (url.protocol !== 'http:' && url.protocol !== 'https:')
-        || url.username
-        || url.password
-      ) {
-        throw new Error('invalid UI Judge URL');
-      }
-      url.hash = '';
-      url.search = '';
-      if (!url.pathname.endsWith('/')) url.pathname = `${url.pathname}/`;
-      uiJudgeServerUrl = url.toString();
-    } catch {
-      return {
-        ok: false,
-        error:
-          'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
-      };
-    }
+  if (
+    value.browserScreenshots !== undefined
+    && typeof value.browserScreenshots !== 'boolean'
+  ) {
+    return {
+      ok: false,
+      error: 'playground.browserScreenshots must be a boolean',
+    };
   }
   const normalized = {
     ...(baseUrl ? { baseUrl } : {}),
-    ...(uiJudgeServerUrl ? { uiJudgeServerUrl } : {}),
+    ...(value.browserScreenshots === true ? { browserScreenshots: true } : {}),
   };
   return Object.keys(normalized).length > 0
     ? { ok: true, value: normalized }
@@ -377,6 +359,15 @@ export function normalizeBenchJobRequest(
   const playground = normalizePlayground(value.playground);
   if (!playground.ok) {
     return { ok: false, status: 400, error: playground.error };
+  }
+
+  if (settings.judgeEnabled && playground.value?.browserScreenshots !== true) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        'UI Judge requires a browser screenshot client. Start this Bench from the Playground.',
+    };
   }
 
   return {

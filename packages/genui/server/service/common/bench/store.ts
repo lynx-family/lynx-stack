@@ -22,6 +22,7 @@ import type {
   BenchReport,
   BenchRunResult,
 } from './types.js';
+import type { BenchScreenshotRequest } from '../../a2ui/a2ui-bench-judge.js';
 
 const MAX_EVENT_HISTORY = 500;
 const MAX_RETAINED_JOBS = 20;
@@ -47,6 +48,10 @@ export type BenchJobAdmission =
   };
 
 export interface BenchJobRecord {
+  screenshots: Map<string, {
+    request: BenchScreenshotRequest;
+    settle: (response: Response) => void;
+  }>;
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -116,6 +121,7 @@ export class BenchJobStore {
     }
     const now = new Date().toISOString();
     const job: BenchJobRecord = {
+      screenshots: new Map(),
       id: randomUUID(),
       createdAt: now,
       updatedAt: now,
@@ -140,6 +146,75 @@ export class BenchJobStore {
 
   public getJob(jobId: string): BenchJobRecord | undefined {
     return this.jobs.get(jobId);
+  }
+
+  public requestScreenshot(
+    jobId: string,
+    request: BenchScreenshotRequest,
+    signal: AbortSignal,
+  ): Promise<Response> {
+    const job = this.jobs.get(jobId);
+    if (!job || !job.workerActive || job.abortController.signal.aborted) {
+      return Promise.reject(new Error('Bench job is no longer active.'));
+    }
+    const captureId = randomUUID();
+    const combined = AbortSignal.any([signal, job.abortController.signal]);
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timer);
+        combined.removeEventListener('abort', abort);
+        job.screenshots.delete(captureId);
+      };
+      const abort = () => {
+        cleanup();
+        reject(
+          combined.reason instanceof Error
+            ? combined.reason
+            : new Error('Screenshot cancelled.'),
+        );
+      };
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(
+          new Error(
+            'Timed out waiting for the browser screenshot. Keep the Bench page open and check the screenshot service connection.',
+          ),
+        );
+      }, Math.min(1_200_000, Math.max(1, request.timeoutMs)));
+      if (combined.aborted) {
+        abort();
+        return;
+      }
+      combined.addEventListener('abort', abort, { once: true });
+      job.screenshots.set(captureId, {
+        request,
+        settle: (response) => {
+          cleanup();
+          resolve(response);
+        },
+      });
+      // Artifact content is fetched separately and must not pass through event
+      // redaction, which would rewrite strings inside executable page source.
+      this.emit(jobId, 'screenshot-requested', { captureId });
+    });
+  }
+
+  public getScreenshotRequest(
+    jobId: string,
+    captureId: string,
+  ): BenchScreenshotRequest | undefined {
+    return this.jobs.get(jobId)?.screenshots.get(captureId)?.request;
+  }
+
+  public submitScreenshot(
+    jobId: string,
+    captureId: string,
+    response: Response,
+  ): boolean {
+    const task = this.jobs.get(jobId)?.screenshots.get(captureId);
+    if (!task) return false;
+    task.settle(response);
+    return true;
   }
 
   public getSnapshot(jobId: string): BenchJobSnapshot | null {
@@ -269,7 +344,14 @@ export class BenchJobStore {
     };
     job.events.push(item);
     if (job.events.length > MAX_EVENT_HISTORY) {
-      job.events.splice(0, job.events.length - MAX_EVENT_HISTORY);
+      const oldestRetained = job.events.length - MAX_EVENT_HISTORY;
+      // Pending captures must remain discoverable after an SSE reconnect.
+      job.events = job.events.filter((entry, index) => {
+        if (index >= oldestRetained) return true;
+        if (entry.event !== 'screenshot-requested') return false;
+        const { captureId } = entry.data as { captureId: string };
+        return job.screenshots.has(captureId);
+      });
     }
     for (const listener of job.listeners) listener(item);
   }

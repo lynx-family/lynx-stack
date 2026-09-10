@@ -6,11 +6,12 @@ import type { BenchProtocol } from './protocol-types.js';
 import type { BenchScenarioRequest } from './types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
 import {
-  probeBenchUiJudge,
+  resolveBenchUiJudge,
   runBenchUiJudge,
   runBenchUiJudgeRequest,
 } from '../../a2ui/a2ui-bench-judge.js';
 import type {
+  BenchScreenshotCapture,
   BenchUiJudgeCapability,
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
@@ -24,10 +25,6 @@ const UNSAFE_OPENUI_RESOURCE_URL =
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
 
 export type GenuiBenchProtocol = BenchProtocol;
-type FetchLike = (
-  input: string | URL,
-  init?: RequestInit,
-) => Promise<Response>;
 
 export type GenuiBenchJudgeArtifact =
   | { messages: A2UIMessage[]; protocol: 'a2ui' }
@@ -141,12 +138,10 @@ async function runWithBoundedRetry(
   };
 }
 
-export async function probeGenuiBenchUiJudge(
+export async function resolveGenuiBenchUiJudge(
   protocol: GenuiBenchProtocol,
   options: {
     env?: NodeJS.ProcessEnv;
-    fetch?: FetchLike;
-    serverUrl?: string;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
@@ -155,18 +150,16 @@ export async function probeGenuiBenchUiJudge(
       ?? env.UI_JUDGE_BUNDLE_URL?.trim()
     : env.UI_JUDGE_OPENUI_BUNDLE_URL?.trim()
       ?? DEFAULT_OPENUI_BUNDLE_URL;
-  return await probeBenchUiJudge({
+  return await resolveBenchUiJudge({
     ...(protocol === 'lynx-xml' ? { sourceKind: 'lynx-xml' as const } : {}),
     ...(bundleUrl ? { bundleUrl } : {}),
     env,
-    ...(options.fetch ? { fetch: options.fetch } : {}),
-    ...(options.serverUrl ? { serverUrl: options.serverUrl } : {}),
   });
 }
 
 export async function runGenuiBenchUiJudge(
   options: RunGenuiBenchUiJudgeOptions,
-  fetchImpl: FetchLike = fetch,
+  captureScreenshot: BenchScreenshotCapture,
 ): Promise<BenchUiJudgeResult> {
   if (options.artifact.protocol === 'a2ui') {
     const messages = options.artifact.messages;
@@ -184,7 +177,7 @@ export async function runGenuiBenchUiJudge(
             ...(options.signal ? { signal: options.signal } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
-          fetchImpl,
+          captureScreenshot,
         ),
     );
   }
@@ -229,7 +222,7 @@ export async function runGenuiBenchUiJudge(
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },
-        fetchImpl,
+        captureScreenshot,
       ),
   );
 }

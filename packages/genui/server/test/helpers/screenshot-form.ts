@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { expect } from '@rstest/core';
 
+import type { BenchScreenshotRequest } from '../../service/a2ui/a2ui-bench-judge.js';
+
 export function readScreenshotForm(
-  init: RequestInit | undefined,
+  request: BenchScreenshotRequest,
 ): Record<string, unknown> {
-  expect(init?.body).toBeInstanceOf(FormData);
-  expect(new Headers(init?.headers).get('Content-Type')).toBeNull();
   const result: Record<string, unknown> = {};
-  for (const [key, value] of (init?.body as FormData).entries()) {
+  for (const [key, value] of Object.entries(request.fields)) {
     expect(typeof value).toBe('string');
     if (typeof value !== 'string') {
       throw new Error('Expected a text form field');

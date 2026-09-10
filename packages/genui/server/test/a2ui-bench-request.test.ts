@@ -10,6 +10,7 @@ import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 function body(groups: unknown[]) {
   return {
     provider: {},
+    playground: { browserScreenshots: true },
     settings: {
       repeats: 1,
       parallelism: 3,
@@ -289,7 +290,7 @@ describe('A2UI Bench request protocol groups', () => {
     });
   });
 
-  test('normalizes a request-scoped UI Judge server URL', () => {
+  test('drops legacy screenshot URLs from server job configuration', () => {
     const normalized = normalizeBenchJobRequest(
       {
         ...body([{
@@ -299,6 +300,7 @@ describe('A2UI Bench request protocol groups', () => {
         }]),
         playground: {
           baseUrl: 'https://playground.example/',
+          browserScreenshots: true,
           uiJudgeServerUrl: 'http://judge.test/internal?token=ignored#health',
         },
       },
@@ -308,11 +310,11 @@ describe('A2UI Bench request protocol groups', () => {
     if (!normalized.ok) return;
     expect(normalized.request.playground).toEqual({
       baseUrl: 'https://playground.example/',
-      uiJudgeServerUrl: 'http://judge.test/internal/',
+      browserScreenshots: true,
     });
   });
 
-  test('rejects an invalid request-scoped UI Judge server URL', () => {
+  test('requires a browser screenshot client when Judge is enabled', () => {
     expect(normalizeBenchJobRequest(
       {
         ...body([{
@@ -320,6 +322,7 @@ describe('A2UI Bench request protocol groups', () => {
           name: 'Group',
           enabled: true,
         }]),
+        settings: { judgeEnabled: true },
         playground: {
           uiJudgeServerUrl: 'file:///tmp/ui-judge.sock',
         },
@@ -328,7 +331,7 @@ describe('A2UI Bench request protocol groups', () => {
       ok: false,
       status: 400,
       error:
-        'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
+        'UI Judge requires a browser screenshot client. Start this Bench from the Playground.',
     });
   });
 });
