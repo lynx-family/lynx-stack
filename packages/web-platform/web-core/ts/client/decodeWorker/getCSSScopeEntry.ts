@@ -8,7 +8,7 @@ export function getCSSScopeEntry(
   config: Partial<PageConfig>,
   url: string,
 ): string | undefined {
-  return config.isLazy === 'true' && config.enableRemoveCSSScope !== 'true'
+  return config.isLazy === 'true' && config.isExternalBundle !== 'true'
     ? url
     : undefined;
 }

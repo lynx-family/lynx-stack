@@ -5,7 +5,11 @@ import {
   encodeLynxXML,
   type TasmJSONInfo,
 } from '../ts/encode/index.js';
-import { MagicHeader0, MagicHeader1 } from '../ts/constants.js';
+import {
+  MagicHeader0,
+  MagicHeader1,
+  TemplateSectionLabel,
+} from '../ts/constants.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import type { HeartbreakMessage } from '../ts/client/decodeWorker/types.js';
 
@@ -135,6 +139,53 @@ describe('Template Manager', () => {
     );
     expect(decodedCustomSections).toEqual(sampleTasm.customSections);
   });
+
+  test.each([false, true])(
+    'registers styles before main-thread execution (reject=%s)',
+    async reject => {
+      const templateUrl =
+        `http://example.com/styles_before_execution_${reject}`;
+      const encoded = encode(sampleTasm);
+      const view = new DataView(
+        encoded.buffer,
+        encoded.byteOffset,
+        encoded.byteLength,
+      );
+      const labels: number[] = [];
+      for (let offset = 12; offset < encoded.length;) {
+        labels.push(view.getUint32(offset, true));
+        offset += 8 + view.getUint32(offset + 4, true);
+      }
+      expect(labels.indexOf(TemplateSectionLabel.LepusCode)).toBeLessThan(
+        labels.indexOf(TemplateSectionLabel.StyleInfo),
+      );
+      rstest.mocked(globalThis.fetch).mockResolvedValue(new Response(encoded));
+      const instance = {
+        ...mockLynxViewInstance,
+        onMTSScriptsLoaded: rstest.fn(async () => {
+          expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(
+            templateUrl,
+          );
+          expect(templateManager.getStyleSheet(templateUrl)).toBeDefined();
+          if (reject) throw new Error('main-thread execution failed');
+        }),
+      } as unknown as LynxViewInstance;
+      const pending = templateManager.fetchBundle(
+        templateUrl,
+        Promise.resolve(instance),
+        false,
+        false,
+        false,
+      );
+      if (reject) {
+        await expect(pending).rejects.toThrow('main-thread execution failed');
+        expect(templateManager.getBundle(templateUrl)).toBeUndefined();
+      } else {
+        await pending;
+      }
+      expect(instance.onMTSScriptsLoaded).toHaveBeenCalled();
+    },
+  );
 
   test('should wait for background chunks before resolving', async () => {
     const templateUrl = 'http://example.com/template_background_ready';

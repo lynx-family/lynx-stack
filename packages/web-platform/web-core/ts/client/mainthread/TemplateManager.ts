@@ -242,12 +242,26 @@ export class TemplateManager {
     try {
       await this.#sectionQueues.get(url);
       const bundle = this.#loadingBundles.get(url);
+      const instance = await lynxViewInstancePromise;
       if (bundle) {
+        // LepusCode may precede StyleInfo in the stream. Register all sections
+        // before executing scripts so the first render can query its styles.
+        if (bundle.lepusCode) {
+          await instance.onMTSScriptsLoaded(
+            url,
+            bundle.config?.isLazy === 'true',
+          );
+        }
+        if (bundle.backgroundCode) {
+          await instance.onBTSScriptsLoaded(
+            url,
+            bundle.config?.isExternalBundle === 'true',
+          );
+        }
         this.#bundles.set(url, bundle);
         this.#loadingBundles.delete(url);
       }
       this.#resolvePromise(url);
-      const instance = await lynxViewInstancePromise;
       instance.backgroundThread.markTiming('decode_end');
       instance.backgroundThread.markTiming('load_template_start');
     } catch (error) {
@@ -271,7 +285,7 @@ export class TemplateManager {
       instancePromise,
       wasm.then((wasm) => (wasm.wasmInstance.StyleSheetResource)),
     ]);
-    const { label, data, url, config } = msg;
+    const { label, data, url } = msg;
     switch (label) {
       case TemplateSectionLabel.Configurations: {
         instance.backgroundThread.markTiming('decode_start');
@@ -294,10 +308,6 @@ export class TemplateManager {
       case TemplateSectionLabel.LepusCode: {
         const blobMap = data as Record<string, string>;
         this.#setLepusCode(url, blobMap);
-        await instance.onMTSScriptsLoaded(
-          url,
-          config!['isLazy'] === 'true',
-        );
         break;
       }
 
@@ -308,10 +318,6 @@ export class TemplateManager {
       case TemplateSectionLabel.Manifest: {
         const blobMap = data as Record<string, string>;
         this.#setBackgroundCode(url, blobMap);
-        await instance.onBTSScriptsLoaded(
-          url,
-          config?.['isExternalBundle'] === 'true',
-        );
         break;
       }
       default:
