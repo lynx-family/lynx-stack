@@ -3,7 +3,7 @@ Object {
     Object {
       "attributeSlots": Array [],
       "bundleUrl": null,
-      "elementSlots": Array [],
+      "childSlots": Array [],
       "handleId": 3,
       "op": "createTemplate",
       "templateKey": "_et_157abe83dcba",
@@ -11,7 +11,7 @@ Object {
     Object {
       "attachedSubtreeHandleIds": null,
       "childId": 3,
-      "elementSlotIndex": 0,
+      "childSlotIndex": 0,
       "op": "insertNode",
       "referenceId": -1,
       "targetId": -3,

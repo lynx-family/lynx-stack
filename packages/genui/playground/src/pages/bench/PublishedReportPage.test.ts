@@ -18,6 +18,7 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
 import {
   getHistoryReport,
@@ -171,6 +172,86 @@ describe('local historical Bench reports', () => {
     expect(report.results[0]!.groupId).toBe(id);
   });
 
+  test('keeps generated XML group ids linked to the saved model through serialization', () => {
+    const entry = historyEntry();
+    const xml = {
+      ...entry.config.groups[0]!,
+      id: 'protocol-comparison-mfd4x9ab-abc123',
+      name: 'protocol comparison',
+      protocol: 'lynx-xml' as const,
+      role: 'experiment' as const,
+      model: 'doubao-evolving-medium',
+    };
+    entry.config.groups = [...entry.config.groups, xml];
+    entry.report.groups = [...entry.report.groups, {
+      ...xml,
+      model: '[REDACTED]',
+    }];
+    entry.report.results.push({
+      ...entry.report.results[0]!,
+      groupId: xml.id,
+      groupName: xml.name,
+      protocol: xml.protocol,
+      role: xml.role,
+      model: '[REDACTED]',
+    });
+    const report = getHistoryReport({
+      ...entry,
+      report: sanitizeBenchReportValue(entry.report),
+    });
+    expect(report.groups[1]).toMatchObject({ id: xml.id, model: xml.model });
+    expect(report.results[1]).toMatchObject({
+      groupId: xml.id,
+      model: xml.model,
+    });
+    expect(sanitizeBenchReportValue({ id: xml.id, error: 'x'.repeat(40) }))
+      .toEqual({
+        id: xml.id,
+        error: '[redacted credential]',
+      });
+    expect(JSON.stringify(sanitizeBenchReportValue({ id: xml.id }, [xml.id])))
+      .not.toContain(xml.id);
+  });
+
+  test('recovers old redacted XML group ids only when the saved plan has a unique match', () => {
+    const entry = historyEntry();
+    const xml = {
+      ...entry.config.groups[0]!,
+      id: 'protocol-comparison-mfd4x9ab-abc123',
+      name: 'protocol comparison',
+      protocol: 'lynx-xml' as const,
+      role: 'experiment' as const,
+      model: 'doubao-evolving-medium',
+    };
+    entry.config.groups = [...entry.config.groups, xml];
+    entry.report.groups = [...entry.report.groups, {
+      ...xml,
+      id: '[redacted credential]',
+      model: '[REDACTED]',
+    }];
+    entry.report.results.push({
+      ...entry.report.results[0]!,
+      groupId: '[redacted credential]',
+      groupName: xml.name,
+      protocol: xml.protocol,
+      role: xml.role,
+      model: '[REDACTED]',
+    });
+    const original = JSON.stringify(entry);
+    const report = getHistoryReport(entry);
+    expect(report.groups[1]?.model).toBe(xml.model);
+    expect(report.results[1]?.model).toBe(xml.model);
+    expect(JSON.stringify(entry)).toBe(original);
+    entry.config.groups.push({
+      ...xml,
+      id: 'another-xml-group',
+      model: 'different-model',
+    });
+    expect(getHistoryReport(entry).groups[1]?.model).toBe(
+      'Model name unavailable',
+    );
+  });
+
   test('recovers public model names only from the same cached comparison group', () => {
     const entry = historyEntry();
     entry.config.groups = [
@@ -233,7 +314,14 @@ describe('fixed read-only report template', () => {
     const markup = renderToStaticMarkup(
       React.createElement(PublishedReportPage, { report }),
     );
-    const disclosures = markup.match(/<details[^>]*>/gu) ?? [];
+    const disclosures = (markup.match(/<details[^>]*>/gu) ?? [])
+      .filter((tag) => tag.includes('publishedReportDisclosure'));
+    const tokenDetails = (markup.match(/<details[^>]*>/gu) ?? [])
+      .filter((tag) => tag.includes('benchTokenDetails'));
+    expect(tokenDetails).toHaveLength(
+      report.summaries.length + report.results.length,
+    );
+    expect(tokenDetails.every((tag) => !tag.includes('open=""'))).toBe(true);
     expect(disclosures).toHaveLength(
       report.scenarios.length + report.groups.length + report.results.length,
     );
@@ -339,4 +427,26 @@ describe('fixed read-only report template', () => {
       /disabled=""[^>]*aria-label="View report details/u,
     );
   });
+});
+
+test('preserves usage through history serialization and displays group and run details', () => {
+  const report = reportFixture();
+  report.results[0]!.usage = [{
+    inputTokens: 11000,
+    outputTokens: 408,
+    inputTokenDetails: { cacheReadTokens: 5500, cacheWriteTokens: 0 },
+    outputTokenDetails: { reasoningTokens: 100 },
+  }];
+  const saved = sanitizeBenchReportValue(report) as BenchReport;
+  const markup = renderToStaticMarkup(
+    React.createElement(PublishedReportPage, { report: saved }),
+  );
+  expect(markup).toContain('Input: 11,000');
+  expect(markup).toContain('Output: 408');
+  expect(markup).toContain('Cache read: 5,500');
+  expect(markup).toContain('Cache write: 0');
+  expect(markup).toContain('Reasoning: 100');
+  expect(markup).toContain('Cache hit rate: 50%');
+  expect(markup).toContain('Average token details: 11,408');
+  expect(markup).toContain('Token details: 11,408');
 });

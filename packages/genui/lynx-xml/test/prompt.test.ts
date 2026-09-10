@@ -6,8 +6,8 @@ import { describe, expect, test } from '@rstest/core';
 
 import {
   LYNX_XML_ENGINE_VERSION,
-  LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
-  LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT,
+  LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS,
+  LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT,
   LYNX_XML_SYSTEM_PROMPT,
   buildLynxXmlSystemPrompt,
 } from '../src/index.js';
@@ -19,38 +19,39 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toBe(buildLynxXmlSystemPrompt());
   });
 
-  test('builds the prompt for agents with the fragment conversion tool', () => {
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toBe(
-      buildLynxXmlSystemPrompt({
-        appendix: LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
-      }),
+  test('builds the one-pass fragment prompt without conversion tools or returned bindings', () => {
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toBe(buildLynxXmlSystemPrompt({
+      enableHtmlFragment: true,
+    }));
+    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('XML fragment mode');
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
+      'nodes = createFragment(page, pageId)',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain('nodes["cityText"]');
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
+      LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS,
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT.indexOf('XML fragment mode'))
+      .toBeLessThan(
+        LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT.indexOf(
+          '### references/lynxml.md',
+        ),
+      );
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain('unique id ONLY');
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
+      'Omit id on purely static nodes',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
+      'Prefer literal text directly inside <text>',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
+      'An explicit <raw-text> leaf',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
+      'without another model request',
+    );
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).not.toContain(
       'html_fragment_to_main_thread_script',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'html_fragment_to_main_thread_script',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'opaque placeholder comment',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'bindings map',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'main-thread script scope',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'Do not access them before the initial render',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'It does not return the generated JavaScript',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'Use the VALUES of the bindings map',
-    );
-    expect(LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT).toContain(
-      'Do not append those roots again',
     );
   });
 

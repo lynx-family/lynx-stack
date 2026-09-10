@@ -76,7 +76,7 @@ export function applyCSS(
         //   - resolve-url-loader(for sass/less)
         //   - sass-loader/less-loader(for sass/less)
         const uses = mainRule.uses.entries() ?? {}
-        const ruleEntries = mainRule.entries() as Rspack.RuleSetRule
+        const ruleEntries = mainRule.entries() as Record<string, unknown>
 
         const cssLoader = uses[CHAIN_ID.USE.CSS]
         if (!cssLoader) {

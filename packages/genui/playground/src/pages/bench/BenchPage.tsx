@@ -18,8 +18,11 @@ import {
   createCustomBenchScenario,
   createDefaultBenchGroups,
   findComparableBaseline,
+  getBenchProtocolLabel,
   inferBenchVariable,
+  nextBenchComparisonProtocol,
   usesCatalog,
+  withBenchProtocol,
 } from './benchData.js';
 import type {
   BenchComparisonDirection,
@@ -43,6 +46,10 @@ import { BenchRunFooter } from './BenchRunFooter.js';
 import { BenchRunNotice } from './BenchRunNotice.js';
 import { BenchRunPanel } from './BenchRunPanel.js';
 import { BenchScenarioSection } from './BenchScenarioSection.js';
+import {
+  checkBenchScreenshotService,
+  createBenchScreenshotRelay,
+} from './benchScreenshots.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
 import { useBenchHistory } from './useBenchHistory.js';
 import { PageHeader } from '../../components/PageHeader.js';
@@ -477,6 +484,9 @@ function createBenchRequestGroups(
     variable: group.variable,
     model: group.model,
     catalog: group.catalog,
+    ...(group.protocol === 'lynx-xml'
+      ? { enableHtmlFragment: group.enableHtmlFragment === true }
+      : {}),
     extraInstruction: group.extraInstruction,
     enabled: group.enabled,
   }));
@@ -513,6 +523,9 @@ function createBenchPlanSignature(
       name: group.name,
       model: group.model,
       catalog: usesCatalog(group) ? group.catalog : undefined,
+      ...(group.protocol === 'lynx-xml'
+        ? { enableHtmlFragment: group.enableHtmlFragment === true }
+        : {}),
       extraInstruction: group.extraInstruction,
       enabled: group.enabled,
     })),
@@ -539,7 +552,7 @@ function createBenchHistoryEntry(
   const protocols = [
     ...new Set(
       createBenchGroupsFromReport(report).map((group) =>
-        group.protocol === 'openui' ? 'OpenUI' : 'A2UI'
+        getBenchProtocolLabel(group.protocol)
       ),
     ),
   ];
@@ -726,6 +739,7 @@ export function BenchPage() {
   const benchBodyRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
+  const screenshotAbortRef = useRef<AbortController | null>(null);
   const historyReportAbortRef = useRef<AbortController | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
   const pendingCancellationJobIdsRef = useRef<Set<string>>(new Set());
@@ -857,13 +871,14 @@ export function BenchPage() {
     }
     return undefined;
   }, [activeGroups, env]);
-  const uiJudgeServerUrlValidationError = useMemo(
-    () =>
-      normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl) === null
-        ? 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.'
-        : undefined,
-    [uiJudgeServerUrl],
-  );
+  const uiJudgeServerUrlValidationError = useMemo(() => {
+    if (normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl) === null) {
+      return 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.';
+    }
+    return settings.judgeEnabled && !uiJudgeServerUrl.trim()
+      ? 'Enter the screenshot service URL to enable UI Judge.'
+      : '';
+  }, [uiJudgeServerUrl, settings.judgeEnabled]);
   const providerConfigured = useMemo(
     () => isProviderConfigured(env),
     [env],
@@ -896,6 +911,8 @@ export function BenchPage() {
   );
 
   const clearActiveJobConnection = useCallback(() => {
+    screenshotAbortRef.current?.abort();
+    screenshotAbortRef.current = null;
     eventSourceRef.current?.close();
     eventSourceRef.current = null;
     historyReportAbortRef.current?.abort();
@@ -1079,6 +1096,7 @@ export function BenchPage() {
         ) {
           return;
         }
+        screenshotAbortRef.current?.abort();
         setStatus('failed');
         setRunMessage({ code: 'raw', text: getErrorMessage(error) });
       } finally {
@@ -1116,38 +1134,27 @@ export function BenchPage() {
       const nextModel = direction === 'model'
         ? (env.models.find((item) => item.id !== model)?.id ?? model)
         : model;
+      const nextProtocol = direction === 'protocol'
+        ? nextBenchComparisonProtocol(current, baseline)
+        : baseline.protocol;
+      const protocolGroup = withBenchProtocol(baseline, nextProtocol);
       const nextGroup: BenchGroup = {
         ...baseline,
         id: createId(`${direction}-comparison`),
         role: 'experiment',
-        protocol: direction === 'protocol' ? 'openui' : baseline.protocol,
-        profile: direction === 'protocol' ? 'matched-core' : baseline.profile,
+        protocol: protocolGroup.protocol,
+        profile: protocolGroup.profile,
         name: `${direction} comparison`,
         variable: direction,
         model: nextModel,
-        catalog: direction === 'protocol'
-          ? 'Core Catalog'
-          : baseline.catalog,
+        catalog: protocolGroup.catalog,
         extraInstruction: direction === 'prompt'
           ? 'Use concise copy and minimize unnecessary UI structure while preserving the requested content and interaction.'
           : baseline.extraInstruction,
         enabled: true,
       };
 
-      if (direction !== 'protocol') return [...current, nextGroup];
-      return [
-        ...current.map((group) =>
-          group.id === baseline.id
-            ? {
-              ...group,
-              protocol: 'a2ui' as const,
-              profile: 'matched-core' as const,
-              catalog: 'Core Catalog',
-            }
-            : group
-        ),
-        nextGroup,
-      ];
+      return [...current, nextGroup];
     });
     if (direction === 'protocol') {
       setSettings((current) => ({ ...current, parallelism: 1 }));
@@ -1159,20 +1166,11 @@ export function BenchPage() {
       setGroups((current) =>
         current.map((group) =>
           group.id === id
-            ? {
-              ...group,
-              protocol,
-              profile: protocol === 'openui'
-                ? 'matched-core'
-                : group.profile,
-              catalog: protocol === 'openui'
-                ? 'Core Catalog'
-                : group.catalog,
-            }
+            ? withBenchProtocol(group, protocol)
             : group
         )
       );
-      if (protocol === 'openui') {
+      if (protocol !== 'a2ui') {
         setSettings((current) => ({ ...current, parallelism: 1 }));
       }
     },
@@ -1348,15 +1346,22 @@ export function BenchPage() {
         const normalizedUiJudgeServerUrl = normalizeBenchUiJudgeServerUrl(
           uiJudgeServerUrl,
         );
+        const screenshotController = new AbortController();
+        screenshotAbortRef.current = screenshotController;
+        if (settings.judgeEnabled) {
+          await checkBenchScreenshotService(
+            normalizedUiJudgeServerUrl ?? '',
+            screenshotController.signal,
+          );
+        }
+        screenshotController.signal.throwIfAborted();
         const response = await window.fetch(jobsEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             playground: {
               baseUrl: getA2UIPlaygroundBaseUrl(),
-              ...(normalizedUiJudgeServerUrl
-                ? { uiJudgeServerUrl: normalizedUiJudgeServerUrl }
-                : {}),
+              browserScreenshots: settings.judgeEnabled,
             },
             provider: {},
             settings: {
@@ -1405,24 +1410,38 @@ export function BenchPage() {
           return;
         }
 
-        activeJobIdRef.current = payload.jobId;
-        pendingCancellationJobIdsRef.current.delete(payload.jobId);
+        const jobId = payload.jobId;
+        activeJobIdRef.current = jobId;
+        pendingCancellationJobIdsRef.current.delete(jobId);
         setRunMessage(
           payload.warnings && payload.warnings.length > 0
             ? { code: 'raw', text: payload.warnings[0] }
-            : { code: 'job-queued', jobId: payload.jobId.slice(0, 8) },
+            : { code: 'job-queued', jobId: jobId.slice(0, 8) },
         );
 
         const eventsUrl = new URL(
-          payload.eventsUrl ?? `/a2ui/bench/jobs/${payload.jobId}/events`,
+          payload.eventsUrl ?? `/a2ui/bench/jobs/${jobId}/events`,
           jobsEndpoint,
         ).toString();
         // eslint-disable-next-line n/no-unsupported-features/node-builtins
         const source = new EventSource(eventsUrl);
         eventSourceRef.current = source;
+        const captureScreenshot = createBenchScreenshotRelay({
+          jobUrl: `${jobsEndpoint}/${encodeURIComponent(jobId)}`,
+          serverUrl: normalizedUiJudgeServerUrl ?? '',
+          signal: screenshotController.signal,
+          onError: (text) => setRunMessage({ code: 'raw', text }),
+        });
+        source.addEventListener('screenshot-requested', (event) => {
+          const task = readEventData<{ captureId?: unknown }>(
+            event as MessageEvent<unknown>,
+          );
+          captureScreenshot(task?.captureId);
+        });
         const clearTerminalJob = () => {
-          pendingCancellationJobIdsRef.current.delete(payload.jobId);
-          if (activeJobIdRef.current === payload.jobId) {
+          screenshotController.abort();
+          pendingCancellationJobIdsRef.current.delete(jobId);
+          if (activeJobIdRef.current === jobId) {
             activeJobIdRef.current = null;
           }
         };
@@ -1544,6 +1563,7 @@ export function BenchPage() {
             setRunMessage({ code: 'reconnecting' });
             return;
           }
+          screenshotController.abort();
           setStatus('failed');
           const normalizedMessage = message?.toLowerCase();
           if (
@@ -1569,6 +1589,7 @@ export function BenchPage() {
         ) {
           return;
         }
+        screenshotAbortRef.current?.abort();
         setStatus('failed');
         setRunMessage({ code: 'raw', text: getErrorMessage(error) });
       }
@@ -1859,6 +1880,11 @@ export function BenchPage() {
                 locked={planLocked}
                 modelOptions={env.models}
                 onAdd={addComparisonGroup}
+                onFragmentChange={(id, enabled) =>
+                  updateGroup(
+                    id,
+                    groupPatch('enableHtmlFragment', enabled),
+                  )}
                 onCatalogChange={(id, catalog) =>
                   updateGroup(id, groupPatch('catalog', catalog))}
                 onEnabledChange={(id, enabled) =>

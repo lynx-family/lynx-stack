@@ -73,7 +73,8 @@ Inside `lynx-src/App.tsx`:
 
 ## Lynx XML Create and Examples
 
-The `lynx-xml` protocol exposes Create and Examples. Create uses the hook-free
+The `lynx-xml` protocol exposes Create, Examples, and the shared Bench tab at
+`#/bench`. Catalog remains unavailable. Create uses the hook-free
 adapter in `src/pages/chat/lynx-xml.ts`, streams source from
 `/lynx-xml/stream`, and updates the artifact viewer for every usable partial.
 Only the complete document is sent to the reload-based Lynx preview, because an

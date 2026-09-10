@@ -10,6 +10,7 @@ import {
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createDefaultBenchGroups,
+  withBenchProtocol,
 } from './benchData.js';
 import {
   migrateBenchHistoryEntries,
@@ -39,6 +40,47 @@ import { BenchScenarioSection } from './BenchScenarioSection.js';
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
 
 const noop = () => undefined;
+
+test('renders a Lynx XML comparison with native capability and no catalog', () => {
+  const group = withBenchProtocol(
+    createDefaultBenchGroups('test-model')[0]!,
+    'lynx-xml',
+  );
+  const markup = renderToStaticMarkup(
+    React.createElement(BenchComparisonGroupsSection, {
+      catalogOptions: ['Full Catalog', 'Core Catalog'],
+      groups: [group],
+      locked: false,
+      modelOptions: [{ id: 'test-model', label: 'Test model' }],
+      onAdd: noop,
+      onCatalogChange: noop,
+      onFragmentChange: noop,
+      onEnabledChange: noop,
+      onModelChange: noop,
+      onNameChange: noop,
+      onProfileChange: noop,
+      onPromptChange: noop,
+      onProtocolChange: noop,
+      onRemove: noop,
+      onRoleChange: noop,
+    }),
+  );
+  expect(markup).toContain('data-protocol="lynx-xml"');
+  expect(markup).toContain('Lynx XML');
+  expect(markup).toContain('Not applicable');
+  expect(markup).toMatch(
+    /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
+  );
+  expect(markup).toContain(
+    'title="Lynx XML generates a complete page without a component catalog."',
+  );
+  expect(markup).not.toContain('<p class="benchFieldHint">');
+  expect(markup).toMatch(
+    /aria-label="Baseline Profile" disabled=""><span>native<\/span>/u,
+  );
+  expect(markup).toMatch(/aria-label="Baseline Catalog" disabled=""/u);
+  expect(markup).not.toContain('fixed shared catalog');
+});
 
 function createCompletedHistoryEntry(id: string, jobId: string) {
   return {
@@ -163,6 +205,7 @@ describe('BenchPage', () => {
         modelOptions: [],
         onAdd: noop,
         onCatalogChange: noop,
+        onFragmentChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
@@ -214,6 +257,7 @@ describe('BenchPage', () => {
         ],
         onAdd: noop,
         onCatalogChange: noop,
+        onFragmentChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,

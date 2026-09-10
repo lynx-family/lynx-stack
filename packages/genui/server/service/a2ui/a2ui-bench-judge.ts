@@ -18,17 +18,25 @@ import {
 import type { BenchScenarioRequest } from '../common/bench/types.js';
 
 const DEFAULT_A2UI_BUNDLE_URL = 'https://lynx-stack.dev/genui/a2ui.lynx.js';
-const HEALTH_TIMEOUT_MS = 3_000;
 const DEFAULT_OPERATION_TIMEOUT_MS = 60_000;
+const DEFAULT_SCREENSHOT_WIDTH = 390;
+const DEFAULT_SCREENSHOT_HEIGHT = 844;
 
-type FetchLike = (
-  input: string | URL,
-  init?: RequestInit,
+export interface BenchScreenshotRequest {
+  path: 'screenshot/template' | 'screenshot/lynxml';
+  fields: Record<string, string>;
+  timeoutMs: number;
+}
+
+/** The browser captures the page and relays its response to the waiting run. */
+export type BenchScreenshotCapture = (
+  request: BenchScreenshotRequest,
+  signal: AbortSignal,
 ) => Promise<Response>;
 
 export interface BenchUiJudgeSession {
-  bundleUrl: string;
-  screenshotUrl: string;
+  bundleUrl?: string;
+  screenshotPath: BenchScreenshotRequest['path'];
 }
 
 export interface BenchUiJudgeCapability {
@@ -96,6 +104,9 @@ interface RunBenchUiJudgeOptions {
 export interface RunBenchUiJudgeRequestOptions {
   model?: string;
   globalProps: Record<string, unknown>;
+  initData?: Record<string, unknown>;
+  viewport?: { width?: number; height?: number };
+  lynxXmlSource?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   screenshotSettleMs?: number;
@@ -115,25 +126,6 @@ const RESOURCE_COMPONENTS = new Set([
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function normalizeServerUrl(raw: string): string | null {
-  try {
-    const url = new URL(raw);
-    if (
-      (url.protocol !== 'http:' && url.protocol !== 'https:')
-      || url.username
-      || url.password
-    ) {
-      return null;
-    }
-    url.hash = '';
-    url.search = '';
-    if (!url.pathname.endsWith('/')) url.pathname = `${url.pathname}/`;
-    return url.toString();
-  } catch {
-    return null;
-  }
 }
 
 function normalizeBundleUrl(raw: string): string | null {
@@ -255,86 +247,43 @@ function containsOpenUrlCall(
   return Object.values(value).some((child) => containsOpenUrlCall(child, seen));
 }
 
-export async function probeBenchUiJudge(
+export function resolveBenchUiJudge(
   options: {
     bundleUrl?: string;
+    sourceKind?: 'lynx-xml';
     env?: NodeJS.ProcessEnv;
-    fetch?: FetchLike;
-    serverUrl?: string;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
-  const fetchImpl = options.fetch ?? fetch;
-  const rawServerUrl = options.serverUrl?.trim()
-    ?? env.UI_JUDGE_SERVER_URL?.trim();
-  if (!rawServerUrl) {
-    return {
-      enabled: false,
-      reason: 'UI_JUDGE_SERVER_URL is not configured.',
-    };
-  }
-
-  const serverUrl = normalizeServerUrl(rawServerUrl);
-  if (!serverUrl) {
-    return {
-      enabled: false,
-      reason: 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.',
-    };
-  }
-
   const configuredBundleUrl = options.bundleUrl?.trim()
     ?? env.UI_JUDGE_BUNDLE_URL?.trim();
-  const rawBundleUrl = configuredBundleUrl !== undefined
-      && configuredBundleUrl.length > 0
-    ? configuredBundleUrl
-    : DEFAULT_A2UI_BUNDLE_URL;
-  const bundleUrl = normalizeBundleUrl(rawBundleUrl);
-  if (!bundleUrl) {
-    return {
+  const rawBundleUrl =
+    configuredBundleUrl !== undefined && configuredBundleUrl.length > 0
+      ? configuredBundleUrl
+      : DEFAULT_A2UI_BUNDLE_URL;
+  const bundleUrl = options.sourceKind === 'lynx-xml'
+    ? undefined
+    : normalizeBundleUrl(rawBundleUrl);
+  if (options.sourceKind !== 'lynx-xml' && !bundleUrl) {
+    return Promise.resolve({
       enabled: false,
       reason: 'UI_JUDGE_BUNDLE_URL must be an HTTP(S) URL without credentials.',
-    };
-  }
-
-  const healthUrl = new URL('health', serverUrl);
-  try {
-    const response = await fetchImpl(healthUrl, {
-      headers: { Accept: 'application/json' },
-      method: 'GET',
-      signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
     });
-    if (!response.ok) {
-      return {
-        enabled: false,
-        reason: `UI Judge health check returned HTTP ${response.status}.`,
-      };
-    }
-    const body = await readJson(response);
-    if (!isRecord(body) || body.status !== 'ok') {
-      return {
-        enabled: false,
-        reason: 'UI Judge health check returned an invalid response.',
-      };
-    }
-  } catch (error) {
-    return {
-      enabled: false,
-      reason: `UI Judge health check failed: ${toErrorMessage(error)}`,
-    };
   }
-
-  return {
+  return Promise.resolve({
     enabled: true,
     session: {
-      bundleUrl,
-      screenshotUrl: new URL('screenshot/template', serverUrl).toString(),
+      ...(bundleUrl ? { bundleUrl } : {}),
+      screenshotPath: options.sourceKind === 'lynx-xml'
+        ? 'screenshot/lynxml'
+        : 'screenshot/template',
     },
-  };
+  });
 }
 
 export async function runBenchUiJudge(
   options: RunBenchUiJudgeOptions,
-  fetchImpl: FetchLike = fetch,
+  captureScreenshot: BenchScreenshotCapture,
   evaluate: (
     request: ScreenshotEvaluationRequest,
   ) => Promise<ScreenshotEvaluation> = evaluateScreenshot,
@@ -368,14 +317,14 @@ export async function runBenchUiJudge(
       ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
       warnings: sanitized.warnings,
     },
-    fetchImpl,
+    captureScreenshot,
     evaluate,
   );
 }
 
 export async function runBenchUiJudgeRequest(
   options: RunBenchUiJudgeRequestOptions,
-  fetchImpl: FetchLike = fetch,
+  captureScreenshot: BenchScreenshotCapture,
   evaluate: (
     request: ScreenshotEvaluationRequest,
   ) => Promise<ScreenshotEvaluation> = evaluateScreenshot,
@@ -406,26 +355,40 @@ export async function runBenchUiJudgeRequest(
       warnings,
     };
   }
-  const body = {
-    globalProps: options.globalProps,
-    ...(options.screenshotSettleMs === undefined
-      ? {}
-      : { screenshotSettleMs: options.screenshotSettleMs }),
-    ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
-    url: options.session.bundleUrl,
+  const fields: Record<string, string> = {};
+  if (options.lynxXmlSource === undefined) {
+    fields.entry = 'template.js';
+    if (options.session.bundleUrl !== undefined) {
+      fields.url = options.session.bundleUrl;
+    }
+    fields.globalProps = JSON.stringify(options.globalProps);
+  } else {
+    fields.entry = 'index.lynxml';
+    fields.source = options.lynxXmlSource;
+  }
+  if (options.initData !== undefined) {
+    fields.initData = JSON.stringify(options.initData);
+  }
+  const viewport = {
+    width: options.viewport?.width ?? DEFAULT_SCREENSHOT_WIDTH,
+    height: options.viewport?.height ?? DEFAULT_SCREENSHOT_HEIGHT,
   };
+  fields.width = String(viewport.width);
+  fields.height = String(viewport.height);
+  if (options.screenshotSettleMs !== undefined) {
+    fields.screenshotSettleMs = String(options.screenshotSettleMs);
+  }
+  if (options.timeoutMs !== undefined) {
+    fields.timeoutMs = String(options.timeoutMs);
+  }
 
   let response: Response;
   try {
-    response = await fetchImpl(options.session.screenshotUrl, {
-      body: JSON.stringify(body),
-      headers: {
-        Accept: 'image/bmp',
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      signal: requestSignal,
-    });
+    response = await captureScreenshot({
+      path: options.session.screenshotPath,
+      fields,
+      timeoutMs: requestTimeoutMs,
+    }, requestSignal);
   } catch (error) {
     if (options.signal?.aborted) {
       return {

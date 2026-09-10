@@ -3,9 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { useMemo } from 'react';
 
-import { findComparableBaseline } from './benchData.js';
+import { findComparableBaseline, getBenchProtocolLabel } from './benchData.js';
 import type { BenchSettings } from './benchData.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
+import { BenchTokens } from './BenchTokens.js';
+import { groupBenchTokenUsage } from './benchTokenUsage.js';
 import { Button } from '../../components/Button.js';
 import { FileText, Maximize2, Sparkles } from '../../components/Icon.js';
 import { PageHeader } from '../../components/PageHeader.js';
@@ -162,9 +164,17 @@ export function BenchReportPanel(props: {
               <div className='benchInsight'>
                 <span>Lowest tokens</span>
                 <strong>{getGroupName(bestTokens)}</strong>
-                <small>
-                  {bestTokens ? formatNumber(bestTokens.avgTokens) : 'n/a'}
-                </small>
+                <div>
+                  {bestTokens
+                    ? (
+                      <BenchTokens
+                        tokens={bestTokens.avgTokens}
+                        usage={groupBenchTokenUsage(props.report, bestTokens)}
+                        average
+                      />
+                    )
+                    : 'n/a'}
+                </div>
               </div>
               <div className='benchInsight'>
                 <span>Fastest agent</span>
@@ -208,16 +218,18 @@ export function BenchReportPanel(props: {
                             <span>
                               {getGroupName(summary)}
                               <small>
-                                {summary.protocol === 'openui'
-                                  ? 'OpenUI'
-                                  : 'A2UI'}
+                                {getBenchProtocolLabel(summary.protocol)}
                                 {summary.profile ? ` · ${summary.profile}` : ''}
                               </small>
                             </span>
                           </div>
                         </td>
                         <td>
-                          <strong>{formatNumber(summary.avgTokens)}</strong>
+                          <BenchTokens
+                            tokens={summary.avgTokens}
+                            usage={groupBenchTokenUsage(props.report!, summary)}
+                            average
+                          />
                           <small>
                             {deltaText(summary.avgTokens, baseline.avgTokens)}
                           </small>

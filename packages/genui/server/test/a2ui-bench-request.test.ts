@@ -10,6 +10,7 @@ import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 function body(groups: unknown[]) {
   return {
     provider: {},
+    playground: { browserScreenshots: true },
     settings: {
       repeats: 1,
       parallelism: 3,
@@ -26,6 +27,69 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([undefined, false, true])(
+    'normalizes fragment conversion with default off: %s',
+    (enabled) => {
+      const result = normalizeBenchJobRequest(
+        body([{
+          id: 'xml',
+          protocol: 'lynx-xml',
+          enableHtmlFragment: enabled,
+        }]),
+      );
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.request.groups[0]?.enableHtmlFragment).toBe(
+          enabled === true,
+        );
+      }
+    },
+  );
+  test('rejects non-boolean fragment selection', () => {
+    expect(
+      normalizeBenchJobRequest(
+        body([{
+          id: 'xml',
+          protocol: 'lynx-xml',
+          enableHtmlFragment: 'false',
+        }]),
+      ),
+    ).toMatchObject({ ok: false, status: 400 });
+  });
+  test('accepts Lynx XML native alongside both component protocols', () => {
+    const normalized = normalizeBenchJobRequest(body(
+      ['a2ui', 'openui', 'lynx-xml'].map((protocol) => ({
+        id: protocol,
+        protocol,
+        catalog: 'Core Catalog',
+        enabled: true,
+      })),
+    ));
+    expect(normalized.ok).toBe(true);
+    if (!normalized.ok) return;
+    expect(
+      normalized.request.groups.map((group) => [group.protocol, group.profile]),
+    ).toEqual([
+      ['a2ui', 'native'],
+      ['openui', 'matched-core'],
+      ['lynx-xml', 'native'],
+    ]);
+    expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
+    expect(normalized.request.settings.parallelism).toBe(1);
+  });
+
+  test('rejects a matched-core profile for Lynx XML', () => {
+    expect(normalizeBenchJobRequest(body([{
+      id: 'xml',
+      protocol: 'lynx-xml',
+      profile: 'matched-core',
+    }]))).toMatchObject({
+      ok: false,
+      status: 400,
+      error: 'lynx-xml groups require the "native" profile',
+    });
+  });
+
   test('keeps legacy groups on the A2UI native profile', () => {
     const normalized = normalizeBenchJobRequest(
       body([{
@@ -226,7 +290,7 @@ describe('A2UI Bench request protocol groups', () => {
     });
   });
 
-  test('normalizes a request-scoped UI Judge server URL', () => {
+  test('drops legacy screenshot URLs from server job configuration', () => {
     const normalized = normalizeBenchJobRequest(
       {
         ...body([{
@@ -236,6 +300,7 @@ describe('A2UI Bench request protocol groups', () => {
         }]),
         playground: {
           baseUrl: 'https://playground.example/',
+          browserScreenshots: true,
           uiJudgeServerUrl: 'http://judge.test/internal?token=ignored#health',
         },
       },
@@ -245,11 +310,11 @@ describe('A2UI Bench request protocol groups', () => {
     if (!normalized.ok) return;
     expect(normalized.request.playground).toEqual({
       baseUrl: 'https://playground.example/',
-      uiJudgeServerUrl: 'http://judge.test/internal/',
+      browserScreenshots: true,
     });
   });
 
-  test('rejects an invalid request-scoped UI Judge server URL', () => {
+  test('requires a browser screenshot client when Judge is enabled', () => {
     expect(normalizeBenchJobRequest(
       {
         ...body([{
@@ -257,6 +322,7 @@ describe('A2UI Bench request protocol groups', () => {
           name: 'Group',
           enabled: true,
         }]),
+        settings: { judgeEnabled: true },
         playground: {
           uiJudgeServerUrl: 'file:///tmp/ui-judge.sock',
         },
@@ -265,7 +331,7 @@ describe('A2UI Bench request protocol groups', () => {
       ok: false,
       status: 400,
       error:
-        'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
+        'UI Judge requires a browser screenshot client. Start this Bench from the Playground.',
     });
   });
 });

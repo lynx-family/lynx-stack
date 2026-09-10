@@ -216,17 +216,17 @@ as a missing XML tag. The final artifact must start with lowercase
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
 
-The SSE `done` payload optionally includes `metadata.xmlFragment`, containing
-the exact original XML passed to `html_fragment_to_main_thread_script` before
-conversion. It is separate from `text`, which remains the complete expanded and
-validated `.lynxml` artifact. `xmlFragment` is omitted when the tool was not used.
-The service's `generateRaw` result exposes the same metadata. Tool inputs are
-request-scoped and are not added to text deltas or the model-visible tool result.
+`enableHtmlFragment` defaults to false. When enabled, the model outputs one
+intermediate document with one root-child `<template>` plus styles and scripts in any order;
+the service compiles the template and injects an id-based `createFragment`
+helper before final validation. Conversion is deterministic postprocessing,
+not a Mastra tool. Keep shared search/image capability scopes independent of it.
 
-`metadata.modelOutput` preserves the exact final model text before placeholder
-expansion, node declarations, binding repair, and document normalization. Return
-it from streaming finalization and `generateRaw`, even without fragment conversion.
-It is client-facing display metadata and must not be fed back into model history.
+Return the exact model text in `metadata.modelOutput` and the successful
+original fragment in `metadata.xmlFragment`; omit fragment metadata when off.
+Stream model text for source inspection, but deliver only the compiled document
+to preview and Judge. Preserve usage and finish reason on compilation failure
+so configured Bench repairs count the failed generation.
 
 ## HTML Generation
 
@@ -239,15 +239,16 @@ growth, then extract and validate one complete HTML5 document before sending
 without same-origin access; do not add a server-side browser runtime or route
 HTML through Lynx.
 
-To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
-Judge HTTP server and configure its private base URL:
-
-```bash
-export UI_JUDGE_SERVER_URL="http://127.0.0.1:8080"
-```
-
-The server probes `GET /health` for each Bench job. It sends sanitized page data
-to `POST /screenshot/template`, which returns raw BMP bytes. GenUI Server converts
+To enable UI Judge scoring, configure `UI_JUDGE_SERVER_URL` in the Playground's
+Bench run settings. The address stays in browser local storage; GenUI Server
+must never read it or access the screenshot service. The browser checks
+`GET /health` before creating a job with `playground.browserScreenshots: true`.
+For each `screenshot-requested` SSE task, it fetches the pending task's capture
+fields from `/a2ui/bench/jobs/:jobId/screenshots/:captureId`, requests multipart
+`/screenshot/template` or `/screenshot/lynxml` directly from the configured service,
+and posts raw BMP or a JSON capture error to the task endpoint. Bound uploads,
+timeouts, replay, and cancellation. The deployment must allow browser CORS.
+GenUI Server validates the uploaded BMP, converts
 the capture to PNG and runs visual-correctness and four GEQI evaluations with
 the Bench group's selected model, or the GenUI default. Reuse
 `createLLMProvider`, `GENUI_MODEL_CONFIG_JSON`, reasoning settings, token limits,

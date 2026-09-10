@@ -2,14 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { BenchProtocol } from './protocol-types.js';
 import type { BenchScenarioRequest } from './types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
 import {
-  probeBenchUiJudge,
+  resolveBenchUiJudge,
   runBenchUiJudge,
   runBenchUiJudgeRequest,
 } from '../../a2ui/a2ui-bench-judge.js';
 import type {
+  BenchScreenshotCapture,
   BenchUiJudgeCapability,
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
@@ -22,15 +24,11 @@ const UNSAFE_OPENUI_RESOURCE_URL =
   /(?:^|[\s("'=])(?:data|file|https?):(?:\/\/)?/iu;
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
 
-export type GenuiBenchProtocol = 'a2ui' | 'openui';
-type FetchLike = (
-  input: string | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type GenuiBenchProtocol = BenchProtocol;
 
 export type GenuiBenchJudgeArtifact =
   | { messages: A2UIMessage[]; protocol: 'a2ui' }
-  | { protocol: 'openui'; rawText: string };
+  | { protocol: 'openui' | 'lynx-xml'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
   model?: string;
@@ -140,12 +138,10 @@ async function runWithBoundedRetry(
   };
 }
 
-export async function probeGenuiBenchUiJudge(
+export async function resolveGenuiBenchUiJudge(
   protocol: GenuiBenchProtocol,
   options: {
     env?: NodeJS.ProcessEnv;
-    fetch?: FetchLike;
-    serverUrl?: string;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
@@ -154,17 +150,16 @@ export async function probeGenuiBenchUiJudge(
       ?? env.UI_JUDGE_BUNDLE_URL?.trim()
     : env.UI_JUDGE_OPENUI_BUNDLE_URL?.trim()
       ?? DEFAULT_OPENUI_BUNDLE_URL;
-  return await probeBenchUiJudge({
+  return await resolveBenchUiJudge({
+    ...(protocol === 'lynx-xml' ? { sourceKind: 'lynx-xml' as const } : {}),
     ...(bundleUrl ? { bundleUrl } : {}),
     env,
-    ...(options.fetch ? { fetch: options.fetch } : {}),
-    ...(options.serverUrl ? { serverUrl: options.serverUrl } : {}),
   });
 }
 
 export async function runGenuiBenchUiJudge(
   options: RunGenuiBenchUiJudgeOptions,
-  fetchImpl: FetchLike = fetch,
+  captureScreenshot: BenchScreenshotCapture,
 ): Promise<BenchUiJudgeResult> {
   if (options.artifact.protocol === 'a2ui') {
     const messages = options.artifact.messages;
@@ -182,7 +177,7 @@ export async function runGenuiBenchUiJudge(
             ...(options.signal ? { signal: options.signal } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
-          fetchImpl,
+          captureScreenshot,
         ),
     );
   }
@@ -194,7 +189,9 @@ export async function runGenuiBenchUiJudge(
   ) {
     return {
       errors: [
-        'ui-judge rejected OpenUI output containing an external resource URL or openUrl call.',
+        `ui-judge rejected ${
+          options.artifact.protocol === 'lynx-xml' ? 'Lynx XML' : 'OpenUI'
+        } output containing an external resource URL or openUrl call.`,
       ],
       score: 0,
       status: 'failed',
@@ -208,6 +205,9 @@ export async function runGenuiBenchUiJudge(
       runBenchUiJudgeRequest(
         {
           model: options.model,
+          ...(options.artifact.protocol === 'lynx-xml'
+            ? { lynxXmlSource: rawText }
+            : {}),
           globalProps: {
             benchMode: true,
             instant: true,
@@ -222,7 +222,7 @@ export async function runGenuiBenchUiJudge(
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },
-        fetchImpl,
+        captureScreenshot,
       ),
   );
 }

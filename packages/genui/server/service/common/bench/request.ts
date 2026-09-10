@@ -14,6 +14,7 @@ import type {
   BenchVariable,
 } from './types.js';
 import { configuredModelName } from '../model-config.js';
+import { BENCH_PROTOCOLS } from './protocol-types.js';
 
 const MAX_GROUPS = 8;
 const MAX_SCENARIOS = 20;
@@ -30,7 +31,7 @@ const CATALOG_LABELS = new Set<BenchCatalogLabel>([
 ]);
 
 const ROLES = new Set<BenchRole>(['control', 'experiment']);
-const PROTOCOLS = new Set<BenchProtocol>(['a2ui', 'openui']);
+const PROTOCOLS = new Set<BenchProtocol>(BENCH_PROTOCOLS);
 const PROFILES = new Set<BenchProfile>(['native', 'matched-core']);
 const VARIABLES = new Set<BenchVariable>([
   'model',
@@ -164,6 +165,9 @@ function normalizeGroups(
         variable: readVariable(item.variable),
         enabled: item.enabled !== false,
         protocol,
+        ...(protocol === 'lynx-xml'
+          ? { enableHtmlFragment: item.enableHtmlFragment === true }
+          : {}),
         profile,
         ...(model ? { model } : {}),
         ...(protocol === 'a2ui' && profile === 'native'
@@ -211,36 +215,18 @@ function normalizePlayground(
 {
   if (!isRecord(value)) return { ok: true };
   const baseUrl = readOptionalString(value.baseUrl, 500);
-  const requestedUiJudgeServerUrl = readOptionalString(
-    value.uiJudgeServerUrl,
-    500,
-  );
-  let uiJudgeServerUrl: string | undefined;
-  if (requestedUiJudgeServerUrl) {
-    try {
-      const url = new URL(requestedUiJudgeServerUrl);
-      if (
-        (url.protocol !== 'http:' && url.protocol !== 'https:')
-        || url.username
-        || url.password
-      ) {
-        throw new Error('invalid UI Judge URL');
-      }
-      url.hash = '';
-      url.search = '';
-      if (!url.pathname.endsWith('/')) url.pathname = `${url.pathname}/`;
-      uiJudgeServerUrl = url.toString();
-    } catch {
-      return {
-        ok: false,
-        error:
-          'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
-      };
-    }
+  if (
+    value.browserScreenshots !== undefined
+    && typeof value.browserScreenshots !== 'boolean'
+  ) {
+    return {
+      ok: false,
+      error: 'playground.browserScreenshots must be a boolean',
+    };
   }
   const normalized = {
     ...(baseUrl ? { baseUrl } : {}),
-    ...(uiJudgeServerUrl ? { uiJudgeServerUrl } : {}),
+    ...(value.browserScreenshots === true ? { browserScreenshots: true } : {}),
   };
   return Object.keys(normalized).length > 0
     ? { ok: true, value: normalized }
@@ -277,6 +263,20 @@ export function normalizeBenchJobRequest(
   }
 
   const groups = normalizeGroups(value.groups);
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some((group) =>
+      isRecord(group) && group.protocol === 'lynx-xml'
+      && group.enableHtmlFragment !== undefined
+      && typeof group.enableHtmlFragment !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableHtmlFragment must be a boolean',
+    };
+  }
   const enabledGroups = groups.filter((group) => group.enabled);
   if (enabledGroups.length === 0) {
     return {
@@ -297,6 +297,18 @@ export function normalizeBenchJobRequest(
     };
   }
 
+  if (
+    enabledGroups.some((group) =>
+      group.protocol === 'lynx-xml' && group.profile !== 'native'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'lynx-xml groups require the "native" profile',
+    };
+  }
+
   const scenarios = normalizeScenarios(value.scenarios);
   if (scenarios.length === 0) {
     return {
@@ -314,7 +326,10 @@ export function normalizeBenchJobRequest(
     * (settings.maxRepairAttempts + 1);
   if (
     (settings.judgeEnabled
-      || enabledGroups.some((group) => group.profile === 'matched-core'))
+      || enabledGroups.some((group) =>
+        group.profile === 'matched-core'
+        || group.protocol === 'lynx-xml'
+      ))
     && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
   ) {
     return {
@@ -344,6 +359,15 @@ export function normalizeBenchJobRequest(
   const playground = normalizePlayground(value.playground);
   if (!playground.ok) {
     return { ok: false, status: 400, error: playground.error };
+  }
+
+  if (settings.judgeEnabled && playground.value?.browserScreenshots !== true) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        'UI Judge requires a browser screenshot client. Start this Bench from the Playground.',
+    };
   }
 
   return {

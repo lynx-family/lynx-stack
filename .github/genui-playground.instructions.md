@@ -41,7 +41,7 @@ disable redirect following so credentials cannot move to another origin.
 
 Load Create-tab and Bench server-owned model choices from the GenUI server's `GET /models` endpoint. Reuse the shared provider settings adapter semantics in both surfaces: also provide a custom-provider control with model and API key fields plus a fixed selector containing the server-approved OpenAI-compatible base URLs; do not accept an arbitrary custom-provider URL in the playground. Store each endpoint's default model in the same option mapping and replace the model field with that default whenever the endpoint changes. When the endpoint reports that `GENUI_MODEL_CONFIG_JSON` is absent, select that custom provider instead of blocking Create or Bench. Persist only the non-sensitive provider selection in browser local storage. Keep model, API key, and base URL only in current-page memory so they survive protocol switches; after a refresh, clear the API key and restore the built-in model and base URL defaults. Never restore custom-provider fields left by older persisted formats so the next settings write removes them. Keep the API key input visually masked. Send custom provider values only in model request bodies, and continue sending only the public model name for ordinary server-owned selections. Bench comparison-group model controls must use the loaded server model list for server-owned providers and allow free-form model ids only with a complete custom provider.
 
-Expose `UI_JUDGE_SERVER_URL` in Bench's inline run configuration. Accept only credential-free HTTP(S) URLs, persist the normalized value in browser local storage for later visits, omit it from the request when empty so the server environment remains the fallback, and send it only as `playground.uiJudgeServerUrl` in Bench job requests.
+Expose `UI_JUDGE_SERVER_URL` in Bench's inline run configuration as a browser-only setting. Accept only credential-free HTTP(S) URLs and persist the normalized value in local storage. Require it when UI Judge is enabled; never send it to GenUI Server or fall back to a server environment variable. Check `/health` directly from the browser before starting the job. Consume screenshot task IDs from Bench SSE, fetch capture fields from GenUI, POST multipart directly to `/screenshot/template` or `/screenshot/lynxml`, then upload raw BMP or a capture error to GenUI for scoring. Deduplicate replayed task IDs, bound image bytes and timeouts, and cancel browser work when the job ends or the page disconnects. Cross-origin screenshot deployments must allow the Playground origin through CORS and browser network policies; do not work around this with a GenUI proxy.
 
 Keep completed Bench history plans non-editable without making their content inert. Use read-only text fields and disable only controls that mutate state, while preserving text selection, copying, scrolling, and disclosure controls throughout the historical plan.
 
@@ -121,7 +121,7 @@ Keep MCP Apps Examples aligned with the renderer registry in `lynx-src/mcp-apps/
 
 ### Lynx XML
 
-- Expose Lynx XML Create at its protocol root and Examples at `/examples`; keep Catalog and Bench unavailable. Route Create through the shared Chat controller and the dedicated Lynx XML adapter.
+- Expose Lynx XML Create at its protocol root, Examples at `/examples`, and the shared Bench tab linking to the canonical `#/bench` route; keep Catalog unavailable. Route Create through the shared Chat controller and the dedicated Lynx XML adapter.
 - Stream cumulative canonical source into the Create artifact viewer as soon as `<!doctype lynx>` arrives. Do not reload `<lynx-view>` for incomplete source; hand the complete document to the direct Lynx XML preview only after the final stream event.
 - Reuse the A2UI Playground Examples `flow` layout, `DemosList`, `ExamplePreviewCard`, and card styles without protocol-specific markup or CSS.
 - Keep complete `.lynxml` artifacts in `src/mock/lynx-xml`, import them as raw editor source, copy them to `dist/demos/lynx-xml`, and load them directly in `<lynx-view>`. Mount generated and edited XML through `PreviewViewport`'s direct `LynxXmlView`; use an `application/xml` Blob URL only to satisfy LynxView's public URL input, and never turn XML into A2UI/OpenUI init data, global props, or events. Use the shared `render.html?protocol=lynx-xml&sourceUrl=...` entry for shareable/example Web URLs and keep its XML protocol branch direct instead of invoking a bundled protocol renderer. Do not add per-example compilation or a ReactLynx renderer. Browser-local Blob URLs are not shareable: keep the Web and Native QR cards mounted with an unavailable placeholder instead of encoding the Blob URL or removing the QR pane. Use `@codemirror/lang-html` in the editor and keep Playback disabled.
@@ -173,19 +173,10 @@ For the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy b
 
 Keep Bench database migration and persistence in `packages/genui/playground/src/storage/benchRepo.ts`, with schema upgrades in the existing `storage/db.ts`. Keep Bench history types, normalization, React hooks, and Bench-specific tests in `packages/genui/playground/src/pages/bench`. Upgrade the existing database without replacing conversation stores. Import legacy `a2ui-bench-history` localStorage records and the fallback report selection in one transaction; remove the legacy copy only after commit, and do not overwrite existing database IDs. Wait for hydration before enabling Bench mutations, serialize writes against the last successful snapshot, and apply record-level deltas so another tab’s unrelated entries survive. Keep report selection tab-local in sessionStorage, notify detail tabs after committed writes, and open the blank detail tab synchronously before awaiting database writes.
 
-For Lynx XML results, read the optional SSE `done.metadata.xmlFragment` as display-only
-artifact data. Offer a separate XML Fragment view alongside the final Source using
-the shared artifact viewer and Copy control. Preserve the original string and
-persist it as `lynxXmlFragment` in local and shared assistant history so reopened
-conversations retain the switch. Keep it out of runtime preview sources and model
-conversation inputs; older results and local examples without it show only Source.
-
-Offer Raw and Formatted display modes for XML Fragment through the shared artifact
-viewer. Copy the text currently displayed, derive formatted text only in the
-Playground, and persist only the original fragment. Support multiple roots and
-mixed text; malformed legacy fragments must remain readable in Raw mode.
-
-Show `done.metadata.modelOutput` as a separate Model Output artifact view without
-trimming or normalizing it. Persist it as `lynxXmlModelOutput` in local and shared
-assistant history. Keep it out of preview sources and model request history;
-older results without this metadata must not fabricate it from expanded Source.
+For converted Lynx XML results, show the exact `done.metadata.modelOutput` as
+Original by default and the final Source as Transformed in the
+shared artifact viewer. Copy the selected view's text. Do not show a separate
+XML Fragment view. Preserve `lynxXmlFragment` and `lynxXmlModelOutput` in local
+and shared assistant history, keeping both out of runtime preview sources and
+model conversation inputs. Results without conversion metadata show only Source;
+older converted results without model output must not fabricate a before view.

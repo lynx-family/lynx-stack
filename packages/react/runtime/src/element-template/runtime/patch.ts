@@ -29,10 +29,11 @@ import {
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
-  RuntimeElementSlots,
+  RuntimeChildSlots,
   RuntimeOptions,
   RuntimeOptionsCommand,
   RuntimeTypedElementAttributes,
+  RuntimeTypedListOptions,
   SerializableValue,
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
@@ -64,13 +65,13 @@ export function applyElementTemplateUpdateCommands(
         const templateKey = stream[i++] as string;
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
-        const elementSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
+        const childSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
 
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
             handleId,
             attributeSlots,
-            elementSlots,
+            childSlots,
           );
           if (createError) {
             lynx.reportError(createError);
@@ -78,8 +79,8 @@ export function applyElementTemplateUpdateCommands(
           }
         }
 
-        const resolvedElementSlots = resolveElementSlots(elementSlots);
-        if (resolvedElementSlots === undefined) {
+        const resolvedChildSlots = resolveChildSlots(childSlots);
+        if (resolvedChildSlots === undefined) {
           continue;
         }
 
@@ -92,7 +93,7 @@ export function applyElementTemplateUpdateCommands(
           templateKey,
           bundleUrl,
           nativeAttributeSlots,
-          resolvedElementSlots,
+          resolvedChildSlots,
           handleId,
         );
 
@@ -121,11 +122,11 @@ export function applyElementTemplateUpdateCommands(
             value as RuntimeTypedElementAttributes | null,
           );
           if (listAttributes) {
-            __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, listAttributes, null);
+            __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, listAttributes);
             break;
           }
         }
-        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
         break;
       }
 
@@ -137,7 +138,7 @@ export function applyElementTemplateUpdateCommands(
         if (!nativeRef) {
           continue;
         }
-        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
         updateMainThreadEventAttrSlot(targetId, attrSlotIndex, value, isHydration);
         break;
       }
@@ -158,7 +159,7 @@ export function applyElementTemplateUpdateCommands(
         const handleId = stream[i++] as number;
         const type = stream[i++] as string;
         const attributes = stream[i++] as TypedElementAttributesCommand | null | undefined;
-        const elementSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
+        const childSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
         const options = stream[i++] as RuntimeOptionsCommand | null | undefined;
         const isTypedList = type === 'list';
 
@@ -169,28 +170,28 @@ export function applyElementTemplateUpdateCommands(
             continue;
           }
         }
-        if (__DEV__ && elementSlots != null && !Array.isArray(elementSlots)) {
+        if (__DEV__ && childSlots != null && !Array.isArray(childSlots)) {
           lynx.reportError(
-            new Error('ElementTemplate update create elementSlots must be an array, null, or undefined.'),
+            new Error('ElementTemplate update create childSlots must be an array, null, or undefined.'),
           );
           continue;
         }
         if (
           __DEV__
           && isTypedList
-          && !isTypedListElementSlotsEmpty(elementSlots)
+          && !isTypedListChildSlotsEmpty(childSlots)
         ) {
           lynx.reportError(
             new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
           );
           continue;
         }
-        const resolvedElementSlots = isTypedList ? null : resolveElementSlots(elementSlots);
-        if (resolvedElementSlots === undefined) {
+        const resolvedChildSlots = isTypedList ? null : resolveChildSlots(childSlots);
+        if (resolvedChildSlots === undefined) {
           continue;
         }
         let resolvedListItems: ETListUpdateItem[] | null = null;
-        let nativeOptions: RuntimeOptions | null | undefined;
+        let nativeOptions: RuntimeOptions | RuntimeTypedListOptions | null | undefined;
         if (isTypedList) {
           const listChildren = getTypedListChildren(options);
           if (__DEV__ && !Array.isArray(listChildren)) {
@@ -223,7 +224,7 @@ export function applyElementTemplateUpdateCommands(
         const nativeRef = __CreateTypedElementTemplate(
           type,
           typedAttributes,
-          isTypedList ? null : resolvedElementSlots!,
+          isTypedList ? null : resolvedChildSlots!,
           handleId,
           nativeOptions,
         );
@@ -270,7 +271,7 @@ export function applyElementTemplateUpdateCommands(
 
       case ElementTemplateUpdateOps.insertNode: {
         const targetId = stream[i++] as number;
-        const elementSlotIndex = stream[i++] as number;
+        const childSlotIndex = stream[i++] as number;
         const childId = stream[i++] as number;
         const referenceId = stream[i++] as number;
         const attachedSubtreeHandleIds = stream[i++] as number[] | null;
@@ -292,7 +293,7 @@ export function applyElementTemplateUpdateCommands(
         }
         insertElementTemplateSubtree(
           nativeRef,
-          elementSlotIndex,
+          childSlotIndex,
           childRef,
           referenceRef,
           attachedSubtreeHandles,
@@ -302,7 +303,7 @@ export function applyElementTemplateUpdateCommands(
 
       case ElementTemplateUpdateOps.removeNode: {
         const targetId = stream[i++] as number;
-        const elementSlotIndex = stream[i++] as number;
+        const childSlotIndex = stream[i++] as number;
         const childId = stream[i++] as number;
         const removedSubtreeHandleIds = stream[i++] as number[];
         const nativeRef = resolveTargetHandle(targetId, 'target');
@@ -310,7 +311,7 @@ export function applyElementTemplateUpdateCommands(
         if (!nativeRef || !childRef) {
           continue;
         }
-        __RemoveNodeFromElementTemplate(nativeRef, elementSlotIndex, childRef);
+        __RemoveNodeFromElementTemplate(nativeRef, childSlotIndex, childRef);
         releaseRemovedSubtreeHandles(removedSubtreeHandleIds);
         break;
       }
@@ -341,7 +342,6 @@ function applyListFlushResults(results: ETListFlushResult[]): void {
       listRef,
       TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
       result.attributes,
-      null,
     );
     if (result.removedSubtreeHandleIds) {
       releaseRemovedSubtreeHandles(result.removedSubtreeHandleIds);
@@ -362,17 +362,17 @@ function releaseRemovedSubtreeHandles(
   }
 }
 
-function resolveElementSlots(
-  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
-): RuntimeElementSlots | null | undefined {
-  if (elementSlots == null) {
+function resolveChildSlots(
+  childSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+): RuntimeChildSlots | null | undefined {
+  if (childSlots == null) {
     return null;
   }
 
   let hasError = false;
-  const value: RuntimeElementSlots = [];
-  for (let slotIndex = 0; slotIndex < elementSlots.length; slotIndex += 1) {
-    const children = elementSlots[slotIndex];
+  const value: RuntimeChildSlots = [];
+  for (let slotIndex = 0; slotIndex < childSlots.length; slotIndex += 1) {
+    const children = childSlots[slotIndex];
     if (children == null) {
       continue;
     }
@@ -384,7 +384,7 @@ function resolveElementSlots(
       continue;
     }
 
-    const resolvedChildren: ElementRef[] = [];
+    const resolvedChildren: ElementTemplateHandle[] = [];
     for (let childIndex = 0; childIndex < children.length; childIndex += 1) {
       const childId = children[childIndex]!;
       const childRef = resolveTargetHandle(childId, 'child');
@@ -405,7 +405,7 @@ function resolveElementSlots(
 function resolveTypedListOptions(
   options: RuntimeOptionsCommand | null | undefined,
   items: ETListUpdateItem[],
-): RuntimeOptions {
+): RuntimeTypedListOptions {
   return {
     ...options!,
     listChildren: items.map(item => item.ref),
@@ -415,7 +415,7 @@ function resolveTypedListOptions(
 function getTypedListChildren(
   options: RuntimeOptionsCommand | null | undefined,
 ): UpdateTypedListItemCommand[] {
-  return (__DEV__ ? options?.listChildren : options!.listChildren!)!;
+  return (__DEV__ ? options?.['listChildren'] : options!['listChildren']!)! as UpdateTypedListItemCommand[];
 }
 
 function resolveTypedListItems(
@@ -468,14 +468,14 @@ function resolveSubtreeHandles(
   return subtreeHandles;
 }
 
-function isTypedListElementSlotsEmpty(elementSlots: ElementTemplateHandleSlotsCommand | null | undefined): boolean {
-  if (!Array.isArray(elementSlots)) {
+function isTypedListChildSlotsEmpty(childSlots: ElementTemplateHandleSlotsCommand | null | undefined): boolean {
+  if (!Array.isArray(childSlots)) {
     return true;
   }
-  return elementSlots.every(slot => slot == null || (Array.isArray(slot) && slot.length === 0));
+  return childSlots.every(slot => slot == null || (Array.isArray(slot) && slot.length === 0));
 }
 
-function resolveTargetHandle(id: number, role: string): ElementRef | null {
+function resolveTargetHandle(id: number, role: string): ElementTemplateHandle | null {
   const nativeRef = elementTemplateRegistry.getTarget(id);
   if (!nativeRef) {
     lynx.reportError(new Error(`ElementTemplate update ${role} handle ${id} not found.`));
@@ -501,7 +501,7 @@ function validateCreateHandleId(handleId: number): Error | null {
 function validateCreateTemplatePayload(
   handleId: number,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+  childSlots: ElementTemplateHandleSlotsCommand | null | undefined,
 ): Error | null {
   const handleError = validateCreateHandleId(handleId);
   if (handleError) {
@@ -510,8 +510,8 @@ function validateCreateTemplatePayload(
   if (attributeSlots != null && !Array.isArray(attributeSlots)) {
     return new Error('ElementTemplate update create attributeSlots must be an array, null, or undefined.');
   }
-  if (elementSlots != null && !Array.isArray(elementSlots)) {
-    return new Error('ElementTemplate update create elementSlots must be an array, null, or undefined.');
+  if (childSlots != null && !Array.isArray(childSlots)) {
+    return new Error('ElementTemplate update create childSlots must be an array, null, or undefined.');
   }
   return null;
 }

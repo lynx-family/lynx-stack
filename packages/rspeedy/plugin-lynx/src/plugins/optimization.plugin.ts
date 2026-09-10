@@ -21,8 +21,8 @@ export function pluginOptimization(): RsbuildPlugin {
         chain
           .module
           .rule('js-override-strict')
-          .type(jsMainRule.get('type') as string)
-          .test(jsRule.get('test') as RegExp)
+          .type(jsMainRule.get('type'))
+          .test(jsRule.get('test'))
           // We do not directly apply this to `CHAIN_ID.RULE.JS` since it will not
           // includes the `node_modules` by default.
           .parser({

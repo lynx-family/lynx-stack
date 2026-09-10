@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { BenchProviderConfig } from './types.js';
-import { redactModelConfigSecrets } from '../model-config.js';
+import {
+  configuredModelName,
+  redactModelConfigSecrets,
+} from '../model-config.js';
 
 const PRIVATE_FIELD_NAMES = new Set([
   'apikey',
@@ -86,6 +89,13 @@ export function sanitizeBenchPublicValue(
   return Object.fromEntries(
     Object.entries(value).flatMap(([key, item]) => {
       const normalizedKey = key.replace(/[^a-z]/giu, '').toLowerCase();
+      // Public model names are already exposed by /models. A name can equal
+      // an upstream id, which remains private everywhere outside this field.
+      if (
+        key === 'model' && typeof item === 'string' && configuredModelName(item)
+      ) {
+        return [[key, item]];
+      }
       return PRIVATE_FIELD_NAMES.has(normalizedKey)
         ? []
         : [[

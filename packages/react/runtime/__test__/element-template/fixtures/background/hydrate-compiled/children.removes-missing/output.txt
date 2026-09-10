@@ -2,7 +2,7 @@ Object {
   "ops": Array [
     Object {
       "childId": -1,
-      "elementSlotIndex": 0,
+      "childSlotIndex": 0,
       "op": "removeNode",
       "removedSubtreeHandleIds": Array [
         -1,

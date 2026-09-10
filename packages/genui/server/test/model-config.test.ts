@@ -7,7 +7,10 @@ import { describe, expect, test } from '@rstest/core';
 import { createLLMProvider } from '../agent/common/openai-provider.js';
 import { errorMessage } from '../app/common/errors.js';
 import { pickProviderOptions } from '../app/common/provider-options.js';
-import { redactBenchText } from '../service/common/bench/redaction.js';
+import {
+  redactBenchText,
+  sanitizeBenchPublicValue,
+} from '../service/common/bench/redaction.js';
 import {
   GENUI_MODEL_CONFIG_ENV,
   configuredModelName,
@@ -35,6 +38,31 @@ const CONFIG = {
 };
 
 describe('GenUI model configuration', () => {
+  test('preserves configured public Bench model names even when they equal upstream ids', () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    const name = 'doubao-seed-upstream';
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
+      ...CONFIG,
+      [name]: { ...CONFIG['Doubao Seed'], default: false },
+    });
+    try {
+      expect(sanitizeBenchPublicValue({
+        groups: [{ model: name }],
+        results: [{ model: name, error: `${name} seed-secret` }],
+        unknown: { model: 'doubao-pro-upstream' },
+        apiKey: 'seed-secret',
+        baseURL: 'https://seed.example.com/api/v3',
+      }, {})).toEqual({
+        groups: [{ model: name }],
+        results: [{ model: name, error: '[REDACTED] [REDACTED]' }],
+        unknown: { model: '[REDACTED]' },
+      });
+    } finally {
+      if (previous === undefined) delete process.env[GENUI_MODEL_CONFIG_ENV];
+      else process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+    }
+  });
+
   test('parses a provider config map keyed by public model name', () => {
     expect(parseModelConfig(JSON.stringify(CONFIG))).toEqual({
       defaultModel: 'Doubao Seed',

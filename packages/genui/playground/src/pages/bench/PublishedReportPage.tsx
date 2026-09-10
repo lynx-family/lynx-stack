@@ -4,9 +4,15 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
 
+import { getBenchProtocolLabel } from './benchData.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
 import { createBenchScreenshotReader } from './benchScreenshot.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import { BenchTokens } from './BenchTokens.js';
+import {
+  groupBenchTokenUsage,
+  readBenchTokenUsage,
+} from './benchTokenUsage.js';
 import { Button } from '../../components/Button.js';
 import { Maximize2 } from '../../components/Icon.js';
 import './BenchPage.css';
@@ -157,14 +163,19 @@ export function PublishedReportPage(
                       <th scope='row'>
                         <strong>{group?.name ?? summary.groupName}</strong>
                         <small>
-                          {(group?.protocol ?? summary.protocol) === 'openui'
-                            ? 'OpenUI'
-                            : 'A2UI'} ·{' '}
-                          {group?.profile ?? summary.profile ?? 'native'}
+                          {getBenchProtocolLabel(
+                            group?.protocol ?? summary.protocol,
+                          )} · {group?.profile ?? summary.profile ?? 'native'}
                         </small>
                         <small>{group?.model ?? report.env.model}</small>
                       </th>
-                      <td>{formatNumber(summary.avgTokens)}</td>
+                      <td>
+                        <BenchTokens
+                          tokens={summary.avgTokens}
+                          usage={groupBenchTokenUsage(report, summary)}
+                          average
+                        />
+                      </td>
                       <td>{formatMs(summary.avgAgentMs)}</td>
                       <td>{formatNumber(summary.avgAttempts)}</td>
                       <td>{judgeScore(report, summary)}</td>
@@ -237,7 +248,7 @@ export function PublishedReportPage(
                     <div>
                       <dt>Protocol</dt>
                       <dd>
-                        {group.protocol === 'openui' ? 'OpenUI' : 'A2UI'} ·{' '}
+                        {getBenchProtocolLabel(group.protocol)} ·{' '}
                         {group.profile}
                       </dd>
                     </div>
@@ -249,6 +260,14 @@ export function PublishedReportPage(
                       <dt>Catalog</dt>
                       <dd>{group.catalog}</dd>
                     </div>
+                    {group.protocol === 'lynx-xml' && (
+                      <div>
+                        <dt>XML fragment</dt>
+                        <dd>
+                          {group.enableHtmlFragment === true ? 'On' : 'Off'}
+                        </dd>
+                      </div>
+                    )}
                     <div>
                       <dt>Instruction</dt>
                       <dd>
@@ -346,11 +365,16 @@ export function PublishedReportPage(
                       : 'Not recorded')}
                 </span>
               </summary>
-              <p>
-                {formatNumber(result.tokens)} tokens ·{' '}
-                {formatMs(result.agentMs)} Agent ·{' '}
-                {formatNumber(result.attempts)} attempts
-              </p>
+              <div className='benchRunTokenMetrics'>
+                <BenchTokens
+                  tokens={result.tokens}
+                  usage={readBenchTokenUsage(result.usage)}
+                />
+                <span>
+                  tokens · {formatMs(result.agentMs)} Agent ·{' '}
+                  {formatNumber(result.attempts)} attempts
+                </span>
+              </div>
               <p>
                 UI Judge: {result.judgeStatus === 'complete'
                     && Number.isFinite(result.judgeScore)

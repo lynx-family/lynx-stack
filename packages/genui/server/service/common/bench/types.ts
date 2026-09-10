@@ -2,10 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { BenchProtocol } from './protocol-types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
 
 export type BenchRole = 'control' | 'experiment';
-export type BenchProtocol = 'a2ui' | 'openui';
+export type { BenchProtocol } from './protocol-types.js';
 export type BenchProfile = 'native' | 'matched-core';
 export type BenchVariable =
   | 'model'
@@ -41,7 +42,7 @@ export interface BenchProviderConfig {
 
 export interface BenchPlaygroundConfig {
   baseUrl?: string;
-  uiJudgeServerUrl?: string;
+  browserScreenshots?: boolean;
 }
 
 export interface BenchSettings {
@@ -55,6 +56,7 @@ export interface BenchSettings {
 }
 
 export interface BenchGroupRequest {
+  enableHtmlFragment?: boolean;
   id: string;
   role: BenchRole;
   name: string;
@@ -110,7 +112,7 @@ export interface BenchRunResult {
   status: 'complete' | 'failed';
   ok: boolean;
   model: string;
-  catalog: BenchCatalogLabel | 'matched-core';
+  catalog: BenchCatalogLabel | 'matched-core' | 'none';
   tokens: number;
   agentMs: number;
   fmpMs: number;

@@ -2,18 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { compileLynxXmlFragment } from '@lynx-js/genui-lynx-xml';
+
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
-import {
-  createHtmlFragmentScriptRunScope,
-  getHtmlFragmentScriptMetadata,
-  resolveHtmlFragmentScriptPlaceholders,
-} from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
-import type {
-  HtmlFragmentScriptRunScope,
-} from '../../agent/lynx-xml/html-fragment-to-main-thread-script-tool.js';
+import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
+import type { SearchRunScope } from '../../agent/common/doubao-search-tool.js';
 import { createLynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
-import type { LynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
+import type {
+  LynxXmlAgent,
+  LynxXmlFragmentOptions,
+} from '../../agent/lynx-xml/lynx-xml-agent.js';
+import { extractLynxXmlArtifact } from '../../agent/lynx-xml/lynx-xml-output.js';
 import { pickAgentCapabilityConfig } from '../common/agent-capabilities.js';
+import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -25,6 +26,7 @@ import {
   resolveModelOutputTokenBudget,
 } from '../common/provider.js';
 import {
+  GenerationPostprocessError,
   extractGenerationResult,
   finalizeResult,
   toAsyncIterable,
@@ -37,7 +39,9 @@ import type {
   MastraStreamResult,
 } from '../common/types.js';
 
-export type LynxXmlChatOptions = ChatOptions;
+export interface LynxXmlChatOptions
+  extends ChatOptions, LynxXmlFragmentOptions
+{}
 
 export interface LynxXmlGenerationMetadata extends Record<string, unknown> {
   modelOutput: string;
@@ -60,20 +64,23 @@ export function buildLynxXmlRunOptions(
   };
 }
 
-/** Add the request-scoped fragment registry to one agent invocation. */
+/** Add shared capability budgets and diagnostics to one agent invocation. */
 function buildLynxXmlScopedRunOptions(
   opts: LynxXmlChatOptions,
   abortSignal: AbortSignal | undefined,
-  scope: HtmlFragmentScriptRunScope,
+  scope: SearchRunScope,
 ) {
   initializeArkImageGenerationRunScope(scope);
   return {
     ...buildLynxXmlRunOptions(opts, abortSignal),
+    ...createAgentStepLogger(opts, 'lynx-xml', {
+      enableHtmlFragment: opts.enableHtmlFragment === true,
+    }),
     requestContext: scope.requestContext,
   };
 }
 
-/** Track streamed text so final placeholder expansion has a fallback value. */
+/** Track streamed text so final fragment compilation has a fallback value. */
 function trackTextStream(
   source: AsyncIterable<string>,
   onChunk: (chunk: string) => void,
@@ -88,21 +95,52 @@ function trackTextStream(
   };
 }
 
+function compileGeneration(
+  result: { text: string; usage: unknown; finishReason: unknown },
+  opts: LynxXmlChatOptions,
+): { text: string; metadata: LynxXmlGenerationMetadata } {
+  try {
+    const compiled = opts.enableHtmlFragment === true
+      ? compileLynxXmlFragment(extractLynxXmlArtifact(result.text))
+      : { text: result.text };
+    return {
+      text: compiled.text,
+      metadata: {
+        ...('xmlFragment' in compiled
+          ? { xmlFragment: compiled.xmlFragment }
+          : {}),
+        modelOutput: result.text,
+      },
+    };
+  } catch (error) {
+    throw new GenerationPostprocessError(error, result);
+  }
+}
+
 export default class LynxXmlAgentService {
   private readonly agentCache = new ProviderAgentCache<LynxXmlAgent>();
 
   private getAgent(opts: LynxXmlChatOptions): Promise<LynxXmlAgent> {
     const createAgent = () =>
-      createLynxXmlAgent(pickAgentCapabilityConfig(opts)).agent;
+      createLynxXmlAgent({
+        ...pickAgentCapabilityConfig(opts),
+        enableHtmlFragment: opts.enableHtmlFragment,
+      }).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
-    return this.agentCache.get(opts, createAgent);
+    return this.agentCache.get(
+      opts,
+      createAgent,
+      opts.enableHtmlFragment === true
+        ? 'html-fragment-enabled'
+        : 'html-fragment-disabled',
+    );
   }
 
   private async streamWithScope(
     messages: ChatMessage[],
     opts: LynxXmlChatOptions,
     abortSignal: AbortSignal | undefined,
-    scope: HtmlFragmentScriptRunScope,
+    scope: SearchRunScope,
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
@@ -144,7 +182,7 @@ export default class LynxXmlAgentService {
       messages,
       opts,
       abortSignal,
-      createHtmlFragmentScriptRunScope(),
+      createSearchRunScope(),
     );
   }
 
@@ -172,7 +210,7 @@ export default class LynxXmlAgentService {
       preparedContentChars: sumContentChars(preparedMessages),
     });
 
-    const scope = createHtmlFragmentScriptRunScope();
+    const scope = createSearchRunScope();
     const streamResult = await this.streamWithScope(
       preparedMessages,
       opts,
@@ -192,11 +230,7 @@ export default class LynxXmlAgentService {
         const rawText = result.text ?? streamedText;
         return {
           ...result,
-          text: resolveHtmlFragmentScriptPlaceholders(scope, rawText),
-          metadata: {
-            ...getHtmlFragmentScriptMetadata(scope),
-            modelOutput: rawText,
-          },
+          ...compileGeneration({ ...result, text: rawText }, opts),
         };
       },
     };
@@ -216,7 +250,7 @@ export default class LynxXmlAgentService {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
-    const scope = createHtmlFragmentScriptRunScope();
+    const scope = createSearchRunScope();
     const result = await agent.generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
       buildLynxXmlScopedRunOptions(opts, abortSignal, scope),
@@ -224,11 +258,7 @@ export default class LynxXmlAgentService {
     const generated = await extractGenerationResult(result);
     return {
       ...generated,
-      text: resolveHtmlFragmentScriptPlaceholders(scope, generated.text),
-      metadata: {
-        ...getHtmlFragmentScriptMetadata(scope),
-        modelOutput: generated.text,
-      },
+      ...compileGeneration(generated, opts),
     };
   }
 }

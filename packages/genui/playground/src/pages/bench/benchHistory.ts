@@ -68,7 +68,7 @@ function isBenchVariable(value: unknown): value is BenchVariable {
 }
 
 function isBenchProtocol(value: unknown): value is BenchProtocol {
-  return value === 'a2ui' || value === 'openui';
+  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml';
 }
 
 function isBenchProfile(value: unknown): value is BenchProfile {
@@ -112,7 +112,9 @@ export function createBenchGroupsFromReport(
   const fallbackModel = report.env?.model ?? CUSTOM_PROVIDER_MODEL;
   const reportGroups = Array.isArray(report.groups) ? report.groups : [];
   const groups = reportGroups.map((group, index) => {
-    const item = group as Partial<BenchGroup>;
+    const item = group as Partial<BenchGroup> & {
+      enableHtmlFragmentTool?: boolean;
+    };
     const protocol = isBenchProtocol(item.protocol)
       ? item.protocol
       : 'a2ui';
@@ -120,13 +122,21 @@ export function createBenchGroupsFromReport(
       id: item.id ?? createId(`history-group-${index + 1}`),
       role: isBenchRole(item.role) ? item.role : 'experiment',
       protocol,
+      ...(protocol === 'lynx-xml'
+        ? {
+          enableHtmlFragment:
+            (item.enableHtmlFragment ?? item.enableHtmlFragmentTool) === true,
+        }
+        : {}),
       profile: isBenchProfile(item.profile)
         ? item.profile
         : (protocol === 'openui' ? 'matched-core' : 'native'),
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
-      catalog: item.catalog ?? 'Full Catalog',
+      catalog: protocol === 'lynx-xml'
+        ? 'none'
+        : item.catalog ?? 'Full Catalog',
       extraInstruction: item.extraInstruction ?? '',
       enabled: readBoolean(item.enabled, true),
     };

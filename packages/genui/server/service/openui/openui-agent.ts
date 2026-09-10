@@ -110,7 +110,7 @@ export default class OpenUIAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = await agent.stream(
       modelMessages,
-      buildCapabilityRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal, 'openui'),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -177,7 +177,7 @@ export default class OpenUIAgentService {
           buildDataModelSystemMessage,
         ),
       ),
-      buildCapabilityRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal, 'openui'),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

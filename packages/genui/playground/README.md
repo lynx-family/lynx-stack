@@ -6,14 +6,34 @@ examples (including zero-build Lynx XML artifacts), and preview the result on
 the web or a real device — then rename, delete, or **share** any conversation
 as a durable preview link.
 
-The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`
-and an **Examples** surface at `#/lynx-xml/examples`. Create calls the GenUI
+The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`,
+an **Examples** surface at `#/lynx-xml/examples`, and the shared **Bench** tab
+at `#/bench`. Create calls the GenUI
 server's `/lynx-xml/stream` endpoint, shows the `.lynxml` source as it arrives,
 and loads the complete zero-build artifact in a directly mounted `<lynx-view>`.
 Generated XML never enters the A2UI/OpenUI renderer; the shared `render.html`
 entry selects the direct XML path through `protocol=lynx-xml`. Each example uses
 the same single-file format with Lynx CSS plus main-thread and, where needed,
 background-thread JavaScript.
+
+Lynx XML Create offers an **XML fragment** selector, disabled by default.
+With `enableHtmlFragment: true`, the model writes a template, styles, and
+interaction code in one response. The server compiles and assembles the final
+`.lynxml` without a conversion tool or a second model request. Shared search or
+image tools can still require their own model rounds. Bench exposes the same
+choice per comparison group. Preview receives only the compiled final document;
+the artifact viewer shows Original by default for the original model output and
+lets users switch to Transformed. Without conversion, it shows Source.
+
+All generation agents and UI Judge share model-step logging. To diagnose token usage, inspect the server's `agent.model.started`,
+`agent.model.step.completed`, and `agent.model.completed` events. They share an
+`invocationId`; Create also has the stream request ID, while Bench's `resourceId`
+identifies its run and attempt. Step logs include usage, tool status and content
+lengths; `toolErrors` records failed call IDs, tool names, and sanitized error
+messages, including failures missing from `toolResults`. Completion logs compare
+`stepUsageTotal` with `totalUsage`. Lengths are
+character counts, not token estimates. Unavailable provider details remain
+unknown. Prompts, XML, reasoning text, and tool result bodies are not logged.
 
 The bundled cases are Counter, Travel Plan, Product Card, Weather Card, and
 Todo List. Together they cover main-thread interaction, subtree re-rendering,
@@ -110,7 +130,6 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)       | `120000`            |
 | `SEARCH_INFINITY_API_KEY`                                      | Optional Doubao Custom subscription/post-paid key   | disabled            |
 | `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
-| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring             | disabled            |
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
 
@@ -171,6 +190,21 @@ post-paid keys are supported. See the [Doubao Search Custom API documentation](h
 and [Doubao Search console](https://console.volcengine.com/search-infinity) for
 service activation and API-key management.
 
+Bench Tokens can be hovered for a preview or expanded for input, output, cache read/write,
+reasoning, and cache hit rate. Totals include generation steps and repair attempts and
+exclude UI Judge. Comparison-group details use the same planned-run average as Tokens.
+Missing provider fields and unavailable historical breakdowns display `Not recorded`;
+cache and reasoning tokens are already included in input and output respectively.
+
+Bench supports A2UI, OpenUI, and Lynx XML comparison groups. Lynx XML uses
+the native profile without a component catalog, reuses the XML generation
+service, and submits the resulting source to UI Judge's `/screenshot/lynxml`
+endpoint for capture. Template and XML screenshot requests use multipart with
+shared viewport, timing, and initial-data fields. Search and image generation are disabled in all Bench
+groups. The same GenUI scoring and report pipeline evaluates each protocol;
+browser render timing metrics remain disabled. Protocol comparisons preserve
+the selected baseline and offer protocols not yet present in the job.
+
 Bench is a regular GenUI top-level tab. Its Create-style history rail keeps
 drafts, completed runs, and report screenshots in the shared local IndexedDB
 (`a2ui-playground`, `benchHistory` store). Database migration and reads/writes
@@ -190,13 +224,15 @@ adopts site-wide localization; it has no page-local locale prop or translation
 layer and does not expose separate Runner, History, or language-switching
 views.
 
-Bench can override `UI_JUDGE_SERVER_URL` in its inline run configuration. A valid HTTP(S) URL
-without credentials is stored in browser local storage and restored on later
-visits; leaving it empty falls back to the server environment. Bench probes
-the selected `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
-enabled only when that sidecar is ready. See
-[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
-startup and model environment.
+Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
+Judge. A credential-free HTTP(S) URL is saved only in browser local storage;
+it is never sent to GenUI Server and has no server environment fallback. The
+Playground checks `/health`, requests each screenshot directly with multipart,
+and uploads the resulting BMP to GenUI Server for PNG conversion and model
+scoring. Keep the Bench page open during evaluation. The screenshot service or
+its gateway must permit the Playground origin through CORS, and its URL must
+be reachable under the browser's HTTPS and local-network policies. See
+[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for service startup.
 
 Conversation **share** links and Web / Native Preview upload through the GenUI
 server and consume the public URL returned by it. The playground does not

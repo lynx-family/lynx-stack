@@ -18,18 +18,8 @@ import type {
   ProtocolBenchRunArtifact,
 } from '../common/bench/protocol-adapter.js';
 import type { ProtocolBenchAttemptResult } from '../common/bench/protocol-types.js';
+import { benchAttemptTokenCounts } from '../common/bench/usage.js';
 import type { ChatMessage } from '../common/types.js';
-
-interface UsageRecord {
-  promptTokens?: unknown;
-  completionTokens?: unknown;
-  totalTokens?: unknown;
-  inputTokens?: unknown;
-  outputTokens?: unknown;
-  prompt_tokens?: unknown;
-  completion_tokens?: unknown;
-  total_tokens?: unknown;
-}
 
 export type A2UIBenchGenerateRaw = (
   messages: ChatMessage[],
@@ -79,46 +69,6 @@ function createMatchedCoreCatalog(): A2UICatalog {
         components.map((component) => component.name).join(', ')
       }. Image and protocol-native extension components are excluded.`,
     ],
-  };
-}
-
-function pickToken(
-  usage: UsageRecord,
-  keys: (keyof UsageRecord)[],
-): number {
-  for (const key of keys) {
-    const value = usage[key];
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return Math.max(0, Math.round(value));
-    }
-  }
-  return 0;
-}
-
-function readUsage(usage: unknown): {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-} {
-  if (!usage || typeof usage !== 'object') {
-    return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
-  }
-  const record = usage as UsageRecord;
-  const inputTokens = pickToken(record, [
-    'promptTokens',
-    'inputTokens',
-    'prompt_tokens',
-  ]);
-  const outputTokens = pickToken(record, [
-    'completionTokens',
-    'outputTokens',
-    'completion_tokens',
-  ]);
-  const reportedTotal = pickToken(record, ['totalTokens', 'total_tokens']);
-  return {
-    inputTokens,
-    outputTokens,
-    totalTokens: reportedTotal || inputTokens + outputTokens,
   };
 }
 
@@ -295,11 +245,12 @@ export function createA2UIBenchAdapter(
           const validation = validateA2UIOutput(generated.text, catalog);
           finalErrors = validation.errors;
           warnings.push(...validation.warnings);
-          const usage = readUsage(generated.usage);
+          const usage = benchAttemptTokenCounts(generated.usage);
           attempts.push({
             index,
             durationMs,
             ...usage,
+            usage: generated.usage,
             valid: validation.ok,
             validationErrors: [...validation.errors],
             outputChars: generated.text.length,

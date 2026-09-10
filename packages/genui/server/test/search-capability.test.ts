@@ -176,15 +176,86 @@ const factories: [string, (opts: SearchAgentOptions) => unknown][] = [
 ];
 
 describe('shared search capability', () => {
+  test.each(
+    [
+      ['a2ui', () => new A2UIAgentService()],
+      ['openui', () => new OpenUIAgentService()],
+      ['html', () => new HtmlAgentService()],
+      ['lynx-xml', () => new LynxXmlAgentService()],
+      ['mcp-apps', () => new McpAppsAgentService()],
+    ] as const,
+  )('%s logs real Mastra steps and totals', async (name, create) => {
+    for (const streaming of [false, true]) {
+      const log = rstest.fn((
+        _event: string,
+        _details?: Record<string, unknown>,
+      ) => undefined);
+      const service = create();
+      const messages = [{ role: 'user' as const, content: 'Search for facts' }];
+      if (streaming && 'streamAsAsyncIterable' in service) {
+        const result = await service.streamAsAsyncIterable(messages, {
+          onPerformanceEvent: log,
+        });
+        for await (const _chunk of result.textStream) {
+          /* consume the stream */
+        }
+        await result.finalize();
+      } else {
+        await service.generateRaw(messages, { onPerformanceEvent: log });
+      }
+      const steps = log.mock.calls.filter(([event]) =>
+        event === 'agent.model.step.completed'
+      );
+      expect(steps).toHaveLength(2);
+      expect(steps[0]![1]).toMatchObject({
+        step: 1,
+        toolCalls: [
+          expect.objectContaining({ toolName: 'web_search' }),
+          expect.objectContaining({ toolName: 'image_search' }),
+        ],
+      });
+      expect(steps[0]![1]!.toolResults).toHaveLength(2);
+      expect(log).toHaveBeenCalledWith(
+        'agent.model.completed',
+        expect.objectContaining({
+          agent: name,
+          stepCount: 2,
+          stepUsageTotal: { inputTokens: 2, outputTokens: 2, totalTokens: 4 },
+          totalUsage: { inputTokens: 2, outputTokens: 2, totalTokens: 4 },
+        }),
+      );
+    }
+  });
+
+  test('toggles Lynx XML fragment conversion without changing shared tools', async () => {
+    for (const enabled of [undefined, false, true]) {
+      const { agent } = createLynxXmlAgent({
+        enableHtmlFragment: enabled,
+      }) as unknown as { agent: Agent };
+      const tools = Object.keys(await agent.listTools());
+      expect(tools).toEqual(
+        expect.arrayContaining([
+          'web_search',
+          'image_search',
+          'generate_image',
+        ]),
+      );
+      expect(tools.includes('html_fragment_to_main_thread_script')).toBe(false);
+      const instructions = await agent.getInstructions();
+      if (typeof instructions !== 'string') {
+        throw new Error('Expected string instructions');
+      }
+      expect(
+        instructions.includes('XML fragment mode'),
+      ).toBe(enabled === true);
+      expect(instructions).toContain('Element PAPI');
+    }
+  });
+
   test.each(factories)(
     '%s registers search conditionally and preserves its own tools',
-    async (name, create) => {
-      const ownTools = [
-        'generate_image',
-        ...(name === 'Lynx XML'
-          ? ['html_fragment_to_main_thread_script']
-          : []),
-      ];
+    async (_name, create) => {
+      const ownTools = ['generate_image'];
       for (const enabled of [true, false]) {
         const { agent } = await create({ enableWebSearch: enabled }) as {
           agent: Agent;

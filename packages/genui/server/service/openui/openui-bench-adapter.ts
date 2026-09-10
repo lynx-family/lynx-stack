@@ -25,6 +25,7 @@ import type {
   ProtocolBenchAttemptResult,
   ProtocolBenchScenario,
 } from '../common/bench/protocol-types.js';
+import { benchAttemptTokenCounts } from '../common/bench/usage.js';
 import type { ChatMessage } from '../common/types.js';
 
 export { OPENUI_BENCH_MATCHED_COMPONENTS, OPENUI_BENCH_ROOT_COMPONENT };
@@ -135,58 +136,8 @@ export const OPENUI_BENCH_PROMPT_OPTIONS: NonNullable<
   examples: [],
 };
 
-interface UsageRecord {
-  promptTokens?: unknown;
-  completionTokens?: unknown;
-  totalTokens?: unknown;
-  inputTokens?: unknown;
-  outputTokens?: unknown;
-  prompt_tokens?: unknown;
-  completion_tokens?: unknown;
-  total_tokens?: unknown;
-  input_tokens?: unknown;
-  output_tokens?: unknown;
-}
-
-function pickTokenCount(
-  usage: UsageRecord,
-  keys: (keyof UsageRecord)[],
-): number {
-  for (const key of keys) {
-    const value = usage[key];
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return Math.max(0, Math.round(value));
-    }
-  }
-  return 0;
-}
-
 export function normalizeOpenUIBenchUsage(usage: unknown): OpenUIBenchUsage {
-  if (usage === null || typeof usage !== 'object' || Array.isArray(usage)) {
-    return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
-  }
-  const record = usage as UsageRecord;
-  const inputTokens = pickTokenCount(record, [
-    'inputTokens',
-    'promptTokens',
-    'input_tokens',
-    'prompt_tokens',
-  ]);
-  const outputTokens = pickTokenCount(record, [
-    'outputTokens',
-    'completionTokens',
-    'output_tokens',
-    'completion_tokens',
-  ]);
-  const reportedTotal = pickTokenCount(record, [
-    'totalTokens',
-    'total_tokens',
-  ]);
-  return {
-    inputTokens,
-    outputTokens,
-    totalTokens: reportedTotal || inputTokens + outputTokens,
-  };
+  return benchAttemptTokenCounts(usage);
 }
 
 function sumUsage(attempts: OpenUIBenchAttemptResult[]): OpenUIBenchUsage {

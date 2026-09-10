@@ -6,7 +6,7 @@ import { backgroundElementTemplateInstanceManager } from '../../../../src/elemen
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
-import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
+import type { SerializedCompiledNode } from '../../../../src/element-template/protocol/types.js';
 import {
   __etAttrPlanMap,
   adaptEventAttrSlot,
@@ -20,18 +20,18 @@ function createHydrationTemplate(
   templateKey: string,
   options: {
     attributeSlots?: unknown[] | null;
-    elementSlots?: SerializedElementTemplate[][] | null;
+    childSlots?: SerializedCompiledNode[][] | null;
   } = {},
-): SerializedElementTemplate {
-  const serialized: SerializedElementTemplate = {
+): SerializedCompiledNode {
+  const serialized: SerializedCompiledNode = {
     templateKey,
     uid: handleId,
   };
   if ('attributeSlots' in options) {
-    serialized.attributeSlots = options.attributeSlots as SerializedElementTemplate['attributeSlots'];
+    serialized.attributeSlots = options.attributeSlots as SerializedCompiledNode['attributeSlots'];
   }
-  if ('elementSlots' in options) {
-    serialized.elementSlots = options.elementSlots as SerializedElementTemplate['elementSlots'];
+  if ('childSlots' in options) {
+    serialized.childSlots = options.childSlots as SerializedCompiledNode['childSlots'];
   }
   return serialized;
 }
@@ -59,7 +59,7 @@ describe('Element Template prop adapter hydration', () => {
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        elementSlots: [[]],
+        childSlots: [[]],
       }),
       root,
     );

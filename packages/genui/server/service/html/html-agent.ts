@@ -59,7 +59,7 @@ export default class HtmlAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = await agent.stream(
       modelMessages,
-      buildCapabilityRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal, 'html'),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -113,7 +113,7 @@ export default class HtmlAgentService {
     abortSignal?.throwIfAborted();
     const result = await agent.generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
-      buildCapabilityRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal, 'html'),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

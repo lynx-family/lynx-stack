@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { probeGenuiBenchUiJudge, runGenuiBenchUiJudge } from './judge.js';
+import { resolveGenuiBenchUiJudge, runGenuiBenchUiJudge } from './judge.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchJudgePayload,
@@ -23,6 +23,7 @@ import type {
   BenchRunResult,
   BenchScenarioRequest,
 } from './types.js';
+import { benchAttemptTokenCounts, readBenchTokenUsage } from './usage.js';
 import { createA2UIImageSourcePolicy } from '../../../agent/a2ui/a2ui-image-source-policy.js';
 import {
   formatErrorsForModel,
@@ -35,12 +36,13 @@ import {
 import { getA2UIAgentService } from '../../a2ui/a2ui-agent.js';
 import { createA2UIBenchAdapter } from '../../a2ui/a2ui-bench-adapter.js';
 import { resolveBenchCatalog } from '../../a2ui/a2ui-bench-catalog.js';
-import { probeBenchUiJudge } from '../../a2ui/a2ui-bench-judge.js';
+import { resolveBenchUiJudge } from '../../a2ui/a2ui-bench-judge.js';
 import type {
   BenchUiJudgeCapability,
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 // import { runBenchPreview } from '../../a2ui/a2ui-bench-preview.js';
+import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
 import { defaultModelName } from '../model-config.js';
 import type { ChatMessage } from '../types.js';
@@ -61,45 +63,9 @@ export interface BenchRunnerDependencies {
 
 type BenchJudgeCapabilities = Map<string, BenchUiJudgeCapability>;
 
-interface UsageRecord {
-  promptTokens?: unknown;
-  completionTokens?: unknown;
-  totalTokens?: unknown;
-  inputTokens?: unknown;
-  outputTokens?: unknown;
-  prompt_tokens?: unknown;
-  completion_tokens?: unknown;
-  total_tokens?: unknown;
-}
-
 function averagePlanned(values: number[], plannedRuns: number): number {
   if (plannedRuns === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / plannedRuns;
-}
-
-function pickNumber(record: UsageRecord, keys: (keyof UsageRecord)[]): number {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-  }
-  return 0;
-}
-
-function parseTotalTokens(usage: unknown): number {
-  if (!usage || typeof usage !== 'object') return 0;
-  const record = usage as UsageRecord;
-  const promptTokens = pickNumber(record, [
-    'promptTokens',
-    'inputTokens',
-    'prompt_tokens',
-  ]);
-  const completionTokens = pickNumber(record, [
-    'completionTokens',
-    'outputTokens',
-    'completion_tokens',
-  ]);
-  const totalTokens = pickNumber(record, ['totalTokens', 'total_tokens']);
-  return Math.round(totalTokens || promptTokens + completionTokens);
 }
 
 function protocolForGroup(group: BenchGroupRequest): BenchProtocol {
@@ -350,17 +316,21 @@ async function runA2UINativeOne(
         && !signal.aborted
       ? await (async () => {
         emitRunPhase(jobId, item, 'judge');
-        return await runGenuiBenchUiJudge({
-          model,
-          artifact: {
-            protocol: 'a2ui',
-            messages: result.messages ?? [],
+        return await runGenuiBenchUiJudge(
+          {
+            model,
+            artifact: {
+              protocol: 'a2ui',
+              messages: result.messages ?? [],
+            },
+            scenario: item.scenario,
+            session: judgeSession,
+            signal,
+            timeoutMs: request.settings.timeoutMs,
           },
-          scenario: item.scenario,
-          session: judgeSession,
-          signal,
-          timeoutMs: request.settings.timeoutMs,
-        });
+          (capture, captureSignal) =>
+            store.requestScreenshot(jobId, capture, captureSignal),
+        );
       })()
       : { errors: [], score: 0, status: 'skipped', warnings: [] };
     const runErrors = [...result.errors, ...judge.errors];
@@ -391,7 +361,7 @@ async function runA2UINativeOne(
       model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens: result.usage.reduce<number>(
-        (total, usage) => total + parseTotalTokens(usage),
+        (total, usage) => total + benchAttemptTokenCounts(usage).totalTokens,
         0,
       ),
       agentMs: Math.round(agentMs),
@@ -508,9 +478,11 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = profile === 'matched-core'
-    ? 'matched-core' as const
-    : pickRunCatalog(item.group);
+  const catalogLabel = protocol === 'lynx-xml'
+    ? 'none' as const
+    : (profile === 'matched-core'
+      ? 'matched-core' as const
+      : pickRunCatalog(item.group));
 
   store.emit(jobId, 'run-start', {
     runId,
@@ -531,6 +503,9 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      ...(protocol === 'lynx-xml'
+        ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
+        : {}),
       runId,
       pairId: `${item.scenario.id}-repeat-${item.repeatIndex}`,
       scenario: adapterScenarioFor(item.group, item.scenario),
@@ -560,21 +535,30 @@ async function runProtocolAdapterOne(
         && !signal.aborted
       ? await (async () => {
         emitRunPhase(jobId, item, 'judge');
-        return await runGenuiBenchUiJudge({
-          model,
-          artifact: judgePayload.kind === 'a2ui-messages'
-            ? {
-              protocol: 'a2ui',
-              messages: judgePayload.messages as NonNullable<
-                BenchRunResult['messages']
-              >,
-            }
-            : { protocol: 'openui', rawText: judgePayload.rawText },
-          scenario: item.scenario,
-          session: judgeCapability.session!,
-          signal,
-          timeoutMs: request.settings.timeoutMs,
-        });
+        return await runGenuiBenchUiJudge(
+          {
+            model,
+            artifact: judgePayload.kind === 'a2ui-messages'
+              ? {
+                protocol: 'a2ui',
+                messages: judgePayload.messages as NonNullable<
+                  BenchRunResult['messages']
+                >,
+              }
+              : {
+                protocol: judgePayload.kind === 'lynx-xml-source'
+                  ? 'lynx-xml'
+                  : 'openui',
+                rawText: judgePayload.rawText,
+              },
+            scenario: item.scenario,
+            session: judgeCapability.session!,
+            signal,
+            timeoutMs: request.settings.timeoutMs,
+          },
+          (capture, captureSignal) =>
+            store.requestScreenshot(jobId, capture, captureSignal),
+        );
       })()
       : { errors: [], score: 0, status: 'skipped', warnings: [] };
     const attempts = artifact.attempts;
@@ -647,7 +631,10 @@ async function runProtocolAdapterOne(
         : {
           finishReason: attempts[attempts.length - 1]?.finishReason,
         }),
-      usage: { totalTokens: tokens },
+      usage: {
+        ...readBenchTokenUsage(attempts.map((attempt) => attempt.usage)),
+        totalTokens: tokens,
+      },
       ...(messages ? { messages } : {}),
       ...('screenshotDataUrl' in judge && judge.screenshotDataUrl
         ? { screenshotDataUrl: judge.screenshotDataUrl }
@@ -921,7 +908,7 @@ export function startBenchJob(jobId: string): void {
   void runBenchJob(jobId);
 }
 
-async function probeJudgeCapabilities(
+async function resolveJudgeCapabilities(
   request: BenchJobRequest,
 ): Promise<BenchJudgeCapabilities> {
   const capabilities: BenchJudgeCapabilities = new Map();
@@ -930,14 +917,12 @@ async function probeJudgeCapabilities(
   const uniqueGroups = new Map(
     groups.map((group) => [judgeCapabilityKey(group), group]),
   );
-  const serverUrl = request.playground?.uiJudgeServerUrl;
   await Promise.all([...uniqueGroups.entries()].map(async ([key, group]) => {
     const capability = protocolForGroup(group) === 'a2ui'
         && profileForGroup(group) === 'native'
-      ? await probeBenchUiJudge({ ...(serverUrl ? { serverUrl } : {}) })
-      : await probeGenuiBenchUiJudge(
+      ? await resolveBenchUiJudge()
+      : await resolveGenuiBenchUiJudge(
         protocolForGroup(group),
-        { ...(serverUrl ? { serverUrl } : {}) },
       );
     capabilities.set(key, capability);
   }));
@@ -962,7 +947,9 @@ function resolveProtocolAdapters(
     adapters[protocol] = overrides?.[protocol]
       ?? (protocol === 'a2ui'
         ? createA2UIBenchAdapter()
-        : createOpenUIBenchAdapter());
+        : (protocol === 'openui'
+          ? createOpenUIBenchAdapter()
+          : createLynxXmlBenchAdapter()));
   }
   return adapters;
 }
@@ -1001,7 +988,7 @@ export async function runBenchJob(
     }
 
     store.updateStatus(jobId, 'running');
-    judgeCapabilities = await probeJudgeCapabilities(request);
+    judgeCapabilities = await resolveJudgeCapabilities(request);
     const adapters = resolveProtocolAdapters(
       request,
       dependencies.adapters,
