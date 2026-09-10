@@ -252,7 +252,7 @@ et_snapshot_test!(
             <text>Header</text>
         </view>
         <view class="content">
-            {/* Expression should become an elementSlot */}
+            {/* Expression should become an childSlot */}
             {items.map(item => <text>{item}</text>)}
         </view>
         <view class="footer">
@@ -391,7 +391,7 @@ et_snapshot_test!(
 );
 
 et_snapshot_test!(
-  should_isolate_arrays_with_element_slot_placeholder,
+  should_isolate_arrays_with_child_slot_placeholder,
   r#"
     <view>
         {["a", "b"]}

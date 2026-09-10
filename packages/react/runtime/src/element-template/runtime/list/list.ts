@@ -9,7 +9,7 @@ import type {
   SerializableValue,
 } from '../../protocol/types.js';
 
-const LIST_ELEMENT_SLOT_INDEX = 0;
+const LIST_CHILD_SLOT_INDEX = 0;
 const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
 const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
 const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
@@ -26,7 +26,7 @@ interface ETListItemRecord extends ETListItemMeta {
   // list callback return values.
   uid: number;
   // Native item root ref. The root can exist detached until native requests it.
-  ref: ElementRef;
+  ref: ElementTemplateHandle;
   // True after `component-at-index(es)` has inserted this item root into the
   // list's native slot.
   attached: boolean;
@@ -48,10 +48,10 @@ export interface ETListState {
   // Stable ET handle of the typed list holder; filled when the native holder is
   // created and registered.
   listHandleId: number | null;
-  // Typed list TemplateElement returned by native create. Native invokes list
-  // callbacks with the materialized ListElement root, but ET slot APIs need the
-  // TemplateElement holder as their target.
-  holderRef: ElementRef | null;
+  // Typed list handle returned by native create. Native invokes list callbacks
+  // with an ordinary materialized Element root, while ET slot APIs target the
+  // ElementTemplateHandle holder.
+  holderRef: ElementTemplateHandle | null;
   // Current logical order. Mutation commands update this immediately so stable
   // callbacks observe the latest committed-by-JS list shape.
   items: ETListItemRecord[];
@@ -74,7 +74,7 @@ export interface ETListState {
 
 export interface ETListUpdateItem extends ETListItemMeta {
   uid: number;
-  ref: ElementRef;
+  ref: ElementTemplateHandle;
 }
 
 export interface ETListUpdateInfo {
@@ -115,7 +115,7 @@ const pendingListUpdates = /* @__PURE__ */ new Map<number, PendingETListUpdate>(
 
 export function registerElementTemplateListItem(
   uid: number,
-  ref: ElementRef,
+  ref: ElementTemplateHandle,
   meta: ETListItemMeta,
 ): void {
   listItemByUid.set(uid, {
@@ -206,7 +206,7 @@ export function registerElementTemplateListState(
   uid: number,
   state: ETListState,
   needsInitialFlush: boolean,
-  holderRef: ElementRef,
+  holderRef: ElementTemplateHandle,
 ): void {
   state.listHandleId = uid;
   state.holderRef = holderRef;
@@ -492,7 +492,7 @@ function createComponentAtIndexesCallback(state: ETListState): ComponentAtIndexe
         elementIDs,
       });
     }
-    __FlushElementTree(state.holderRef!, {
+    __FlushElementTree(state.holderRef! as unknown as FiberElement, {
       triggerLayout: true,
       operationIDs,
       elementIDs,
@@ -563,7 +563,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
       return;
     }
 
-    __RemoveNodeFromElementTemplate(state.holderRef!, LIST_ELEMENT_SLOT_INDEX, item.ref);
+    __RemoveNodeFromElementTemplate(state.holderRef!, LIST_CHILD_SLOT_INDEX, item.ref);
     item.attached = false;
     item.needsAttachMove = false;
     state.callbackItemBySign.delete(sign);
@@ -580,7 +580,7 @@ function createEnqueueComponentCallback(state: ETListState): EnqueueComponentCal
 
 function attachListItemAtIndex(
   state: ETListState,
-  list: ElementRef,
+  list: ElementTemplateHandle,
   listID: number,
   cellIndex: number,
   operationID: unknown,
@@ -612,7 +612,7 @@ function attachListItemAtIndex(
   if (!item.attached) {
     const referenceItem = findNextAttachedItem(state, cellIndex);
     const referenceRef = referenceItem?.ref ?? null;
-    __InsertNodeToElementTemplate(list, LIST_ELEMENT_SLOT_INDEX, item.ref, referenceRef);
+    __InsertNodeToElementTemplate(list, LIST_CHILD_SLOT_INDEX, item.ref, referenceRef);
     item.attached = true;
     item.needsAttachMove = false;
     if (shouldLog) {
@@ -626,7 +626,8 @@ function attachListItemAtIndex(
     }
   }
 
-  const sign = __GetElementUniqueID(item.ref);
+  const itemElement = item.ref as unknown as FiberElement;
+  const sign = __GetElementUniqueID(itemElement);
   state.callbackItemBySign.set(sign, item);
   if (shouldLog) {
     logListCallbackAlog('attach-list-item sign', {
@@ -652,7 +653,7 @@ function attachListItemAtIndex(
         triggerLayout: true,
       });
     }
-    __FlushElementTree(item.ref, {
+    __FlushElementTree(itemElement, {
       triggerLayout: true,
       operationID,
       elementID: sign,
@@ -668,7 +669,7 @@ function attachListItemAtIndex(
         asyncFlush: true,
       });
     }
-    __FlushElementTree(item.ref, {
+    __FlushElementTree(itemElement, {
       asyncFlush: true,
     });
   }
@@ -685,13 +686,13 @@ function logListCallbackAlog(message: string, payload: Record<string, unknown>):
 
 function moveAttachedListItemsIntoFinalOrder(
   state: ETListState,
-  list: ElementRef,
+  list: ElementTemplateHandle,
 ): void {
   if (!state.hasAttachedMoves) {
     return;
   }
 
-  let referenceRef: ElementRef | null = null;
+  let referenceRef: ElementTemplateHandle | null = null;
   for (let index = state.items.length - 1; index >= 0; index -= 1) {
     const item = state.items[index]!;
     if (!item.attached) {
@@ -699,7 +700,7 @@ function moveAttachedListItemsIntoFinalOrder(
       continue;
     }
     if (item.needsAttachMove) {
-      __InsertNodeToElementTemplate(list, LIST_ELEMENT_SLOT_INDEX, item.ref, referenceRef);
+      __InsertNodeToElementTemplate(list, LIST_CHILD_SLOT_INDEX, item.ref, referenceRef);
       item.needsAttachMove = false;
       item.skipNextEnqueue = true;
     }

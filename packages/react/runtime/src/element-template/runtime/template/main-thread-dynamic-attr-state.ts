@@ -24,7 +24,7 @@ const materializedMTRefHandleIds = new Set<number>();
 
 export interface MainThreadDynamicAttrSubtreeHandle {
   uid: number;
-  ref: ElementRef;
+  ref: ElementTemplateHandle;
 }
 
 function deleteSlotState<T>(
@@ -167,7 +167,7 @@ export function updateMainThreadRefAttrSlot(
   handleId: number,
   attrSlotIndex: number,
   value: unknown,
-  nativeRef: ElementRef,
+  nativeRef: ElementTemplateHandle,
   isHydration = false,
 ): void {
   const previousState = mtRefAttrState.get(handleId)?.get(attrSlotIndex);

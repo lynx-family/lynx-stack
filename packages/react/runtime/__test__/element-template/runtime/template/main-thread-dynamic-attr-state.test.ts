@@ -23,14 +23,14 @@ import {
 
 const MT_EVENT_TEMPLATE = '_et_mt_event';
 const MT_REF_TEMPLATE = '_et_mt_ref';
-const TEST_NATIVE_REF = { id: 'dynamic-attr-target' } as unknown as ElementRef;
+const TEST_NATIVE_REF = { id: 'dynamic-attr-target' } as unknown as ElementTemplateHandle;
 
 function setMTRefSlot(
   handleId: number,
   attrSlotIndex: number,
   value: unknown,
   isHydration = false,
-  nativeRef: ElementRef = TEST_NATIVE_REF,
+  nativeRef: ElementTemplateHandle = TEST_NATIVE_REF,
 ): void {
   setMTRefSlotImpl(handleId, attrSlotIndex, value, nativeRef, isHydration);
 }
@@ -131,7 +131,7 @@ describe('main-thread dynamic attr state', () => {
 
   it('attaches and detaches MTRef values for list-managed subtrees', () => {
     const { updateWorkletRef, restore } = installRefRuntime();
-    const nativeRef = { id: 'target' } as unknown as ElementRef;
+    const nativeRef = { id: 'target' } as unknown as ElementTemplateHandle;
     const firstRef = { _wvid: 7 };
     const nextRef = { _wvid: 8 };
 
@@ -206,7 +206,7 @@ describe('main-thread dynamic attr state', () => {
 
   it('updates MTRef attachment state before invoking callbacks', () => {
     const { updateWorkletRef, restore } = installRefRuntime();
-    const nativeRef = { id: 'target' } as unknown as ElementRef;
+    const nativeRef = { id: 'target' } as unknown as ElementTemplateHandle;
     const ref = { _wvid: 7 };
     const subtree = [{ uid: 17, ref: nativeRef }];
 
@@ -420,7 +420,7 @@ describe('main-thread dynamic attr state', () => {
         0,
         { type: 'main-thread-ref', value: ref },
         false,
-        { id: 'ref-target' } as unknown as ElementRef,
+        { id: 'ref-target' } as unknown as ElementTemplateHandle,
       );
       registerMTRefSlots(18, 0);
       setMTRefSlot(
@@ -428,11 +428,11 @@ describe('main-thread dynamic attr state', () => {
         0,
         { type: 'main-thread-ref', value: callback },
         false,
-        { id: 'callback-target' } as unknown as ElementRef,
+        { id: 'callback-target' } as unknown as ElementTemplateHandle,
       );
       attachMainThreadDynamicAttrRefsForSubtree([
-        { uid: 17, ref: { id: 'ref-target' } as unknown as ElementRef },
-        { uid: 18, ref: { id: 'callback-target' } as unknown as ElementRef },
+        { uid: 17, ref: { id: 'ref-target' } as unknown as ElementTemplateHandle },
+        { uid: 18, ref: { id: 'callback-target' } as unknown as ElementTemplateHandle },
       ]);
 
       clearMainThreadDynamicAttrState();
@@ -460,10 +460,10 @@ describe('main-thread dynamic attr state', () => {
         0,
         { type: 'main-thread-ref', value: callback },
         false,
-        { id: 'callback-target' } as unknown as ElementRef,
+        { id: 'callback-target' } as unknown as ElementTemplateHandle,
       );
       attachMainThreadDynamicAttrRefsForSubtree([
-        { uid: 17, ref: { id: 'callback-target' } as unknown as ElementRef },
+        { uid: 17, ref: { id: 'callback-target' } as unknown as ElementTemplateHandle },
       ]);
 
       clearMainThreadDynamicAttrState();
@@ -486,10 +486,10 @@ describe('main-thread dynamic attr state', () => {
         0,
         { type: 'main-thread-ref', value: ref },
         false,
-        { id: 'target' } as unknown as ElementRef,
+        { id: 'target' } as unknown as ElementTemplateHandle,
       );
       attachMainThreadDynamicAttrRefsForSubtree([
-        { uid: 17, ref: { id: 'target' } as unknown as ElementRef },
+        { uid: 17, ref: { id: 'target' } as unknown as ElementTemplateHandle },
       ]);
 
       deleteMainThreadDynamicAttrStateForSubtree([17]);

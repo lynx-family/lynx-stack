@@ -13,7 +13,7 @@ import {
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../../test-utils/debug/registry.js';
 
-export interface RootNode {
+export interface RootNode extends ElementTemplateHandle {
   type: 'page';
   children?: unknown[];
 }
@@ -52,8 +52,8 @@ const templates = [
         },
       ],
       children: [
-        { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
-        { kind: 'elementSlot', type: 'slot', elementSlotIndex: 1 },
+        { kind: 'childSlot', type: 'slot', elementSlotIndex: 0 },
+        { kind: 'childSlot', type: 'slot', elementSlotIndex: 1 },
       ],
     },
   },
@@ -63,7 +63,7 @@ const templates = [
       kind: 'element',
       type: 'view',
       attributesArray: [],
-      children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
+      children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
     },
   },
   {
@@ -76,7 +76,7 @@ const templates = [
       kind: 'element',
       type: 'view',
       attributesArray: [],
-      children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
+      children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
     },
   },
   {
@@ -91,7 +91,7 @@ const templates = [
           attrSlotIndex: 0,
         },
       ],
-      children: [{ kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 }],
+      children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
     },
   },
   {
@@ -114,7 +114,7 @@ function setup(): CaseContext {
   registerTemplates(templates);
 
   return {
-    root: __CreateTypedElementTemplate('page', null, null, '0', null) as unknown as RootNode,
+    root: __CreateTypedElementTemplate('page', null, null, 0, null) as RootNode,
     nativeLog: installed.nativeLog,
   };
 }

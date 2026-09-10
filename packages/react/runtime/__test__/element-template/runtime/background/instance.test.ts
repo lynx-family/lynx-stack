@@ -448,6 +448,36 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(globalCommitContext.ops).toEqual([]);
   });
 
+  it('keeps hydrated list removal silent while the list holder is not materialized', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    list.appendChild(item);
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    list.removeChild(item);
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(item.parent).toBeNull();
+    expect(backgroundElementTemplateInstanceManager.get(item.instanceId)).toBeUndefined();
+  });
+
+  it('keeps hydrated cross-list moves silent until list holders are materialized', () => {
+    const source = new BackgroundListElementTemplateInstance();
+    const destination = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    source.appendChild(item);
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    destination.appendChild(item);
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(source.childNodes).toEqual([]);
+    expect(destination.childNodes).toEqual([item]);
+    expect(backgroundElementTemplateInstanceManager.get(item.instanceId)).toBe(item);
+  });
+
   it('queues lifetime cleanup when logically removing a hydrated list item', () => {
     const cleanup = vi.fn();
     const ref = vi.fn(() => cleanup);
@@ -664,7 +694,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
     expect(parent.childNodes).toEqual([]);
     expect(child.parentNode).toBeNull();
-    expect(parent.elementSlots[0]).toBeUndefined();
+    expect(parent.childSlots[0]).toBeUndefined();
     expect(globalCommitContext.ops).toEqual([
       4,
       parent.instanceId,
@@ -1266,6 +1296,31 @@ describe('BackgroundElementTemplateInstance', () => {
       ]);
     });
 
+    it('emits only the destination insert when moving a hydrated child across parents', () => {
+      const source = new BackgroundElementTemplateInstance('view');
+      const destination = new BackgroundElementTemplateInstance('view');
+      const child = new BackgroundElementTemplateInstance('text');
+      source.appendChild(child);
+      markElementTemplateHydrated();
+      source.markMaterializedByHydration();
+      destination.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      globalCommitContext.ops = [];
+
+      destination.appendChild(child);
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.insertNode,
+        destination.instanceId,
+        0,
+        child.instanceId,
+        0,
+        null,
+      ]);
+      expect(source.childNodes).toEqual([]);
+      expect(destination.childNodes).toEqual([child]);
+    });
+
     it('does not emit create for a root-handle child inserted after hydration', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       parent.emitCreate();
@@ -1451,7 +1506,7 @@ describe('BackgroundElementTemplateInstance', () => {
       globalCommitContext.ops = [];
       parent.removeChild(child);
 
-      expect(parent.elementSlots[0]).toBeUndefined();
+      expect(parent.childSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([
         4,
         parent.instanceId,
@@ -1623,7 +1678,7 @@ describe('BackgroundElementTemplateInstance', () => {
       parent.appendChild(child);
       parent.removeChild(child);
 
-      expect(parent.elementSlots[0]).toBeUndefined();
+      expect(parent.childSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
       expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
@@ -1646,7 +1701,7 @@ describe('BackgroundElementTemplateInstance', () => {
       flushPendingRefs();
 
       expect(ref.current).toBeNull();
-      expect(parent.elementSlots[0]).toBeUndefined();
+      expect(parent.childSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
       expect(backgroundElementTemplateInstanceManager.get(childId)).toBeUndefined();
     });
@@ -1680,7 +1735,7 @@ describe('BackgroundElementTemplateInstance', () => {
       globalCommitContext.ops = [];
       parent.removeChild(child, true);
 
-      expect(parent.elementSlots[0]).toBeUndefined();
+      expect(parent.childSlots[0]).toBeUndefined();
       expect(globalCommitContext.ops).toEqual([]);
       expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     });
@@ -2036,11 +2091,11 @@ describe('BackgroundElementTemplateInstance', () => {
   it('ignores spread-like shadow keys', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     instance.setAttribute('__spread', { id: 'ignored' });
-    instance.setAttribute('elementSlots', []);
+    instance.setAttribute('childSlots', []);
     instance.setAttribute('children', []);
 
     expect(instance.attributeSlots).toEqual([]);
-    expect(instance.elementSlots).toEqual([]);
+    expect(instance.childSlots).toEqual([]);
   });
 });
 
@@ -2484,18 +2539,18 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
 
     text.__slotIndex = 1;
 
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[1]).toEqual([text]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[1]).toEqual([text]);
   });
 
-  it('should keep elementSlots in sync when slot is attached after children exist', () => {
+  it('should keep childSlots in sync when slot is attached after children exist', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const text = createTextNode('late');
 
     text.__slotIndex = 2;
     root.appendChild(text);
 
-    expect(root.elementSlots[2]).toEqual([text]);
+    expect(root.childSlots[2]).toEqual([text]);
   });
 
   it('should move slot children to the new slot index when partId changes', () => {
@@ -2506,8 +2561,8 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
     root.appendChild(text);
     text.__slotIndex = 3;
 
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[3]).toEqual([text]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[3]).toEqual([text]);
   });
 
   it('should detach a moved child from the old slot shadow state when silent reparenting', () => {
@@ -2519,8 +2574,8 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
     text.__slotIndex = 1;
     root.insertBefore(text, null, true);
 
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[1]).toEqual([text]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[1]).toEqual([text]);
     expect(root.firstChild).toBe(text);
   });
 
@@ -2533,25 +2588,25 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
 
     rootB.insertBefore(text, null, true);
 
-    expect(rootA.elementSlots).toEqual([]);
+    expect(rootA.childSlots).toEqual([]);
     expect(rootB.firstChild).toBe(text);
   });
 
-  it('should append to elementSlots', () => {
+  it('should append to childSlots', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const view = new BackgroundElementTemplateInstance('view');
     root.appendChild(view);
 
-    expect(root.elementSlots[0]).toEqual([view]);
+    expect(root.childSlots[0]).toEqual([view]);
   });
 
-  it('should append to elementSlots with custom slot index', () => {
+  it('should append to childSlots with custom slot index', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const text = createTextNode('Hello');
     text.__slotIndex = 1;
     root.appendChild(text);
 
-    expect(root.elementSlots[0]).toBeUndefined();
-    expect(root.elementSlots[1]).toEqual([text]);
+    expect(root.childSlots[0]).toBeUndefined();
+    expect(root.childSlots[1]).toEqual([text]);
   });
 });
