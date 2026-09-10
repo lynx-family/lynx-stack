@@ -5,6 +5,7 @@
 
     "jsx": "react-jsx",
     "jsxImportSource": "@lynx-js/react",
+    "types": ["@lynx-js/rspeedy/client"],
 
     "module": "ESNext",
     "moduleResolution": "Bundler",

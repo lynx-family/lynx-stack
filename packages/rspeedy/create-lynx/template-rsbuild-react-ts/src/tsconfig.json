@@ -5,6 +5,7 @@
 
     "jsx": "react-jsx",
     "jsxImportSource": "@lynx-js/react",
+    "types": ["@rsbuild/core/types"],
 
     "module": "ESNext",
     "moduleResolution": "Bundler",
