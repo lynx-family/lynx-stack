@@ -36,8 +36,5 @@
     "@lynx-js/react": ">=0.100.0",
     "@lynx-js/types": ">=4",
     "@types/react": ">=19"
-  },
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
   }
 }

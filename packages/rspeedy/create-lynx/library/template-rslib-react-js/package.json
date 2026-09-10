@@ -27,8 +27,5 @@
   },
   "peerDependencies": {
     "@lynx-js/react": ">=0.100.0"
-  },
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
   }
 }
