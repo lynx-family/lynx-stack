@@ -72,7 +72,9 @@ export function pluginDev(): RsbuildPlugin {
             originalServer?.host,
           )
 
-          let assetPrefix = original.dev?.assetPrefix
+          let assetPrefix = config.dev?.assetPrefix === config.server?.base
+            ? undefined
+            : config.dev?.assetPrefix
 
           switch (typeof assetPrefix) {
             case 'string': {
