@@ -21,7 +21,6 @@ const ELEMENT_FACTORIES: Readonly<Record<string, string>> = {
 const FORBIDDEN_FRAGMENT_ELEMENTS = new Set([
   'lynx',
   'page',
-  'raw-text',
   'script',
   'style',
 ]);
@@ -38,20 +37,12 @@ const parser = new XMLParser({
 interface GeneratorState {
   bindings: Map<string, string>;
   lines: string[];
-  nextNodeIndex: number;
-  nodeScope: 'render' | 'script';
-}
-
-export interface GenerateMainThreadScriptOptions {
-  /** Script scope exposes nodes to handlers declared outside renderPage(). */
-  nodeScope?: 'render' | 'script';
 }
 
 export interface GeneratedMainThreadScript {
+  /** Only explicit XML ids are retained in the runtime nodeMap. */
   bindings: Record<string, string>;
   javascript: string;
-  /** Hoisted script-level declarations, to be placed outside renderPage(). */
-  declarations?: string;
 }
 
 type OrderedXmlNode = Record<string, unknown>;
@@ -88,13 +79,10 @@ function appendText(
     return;
   }
 
-  const node = `node${state.nextNodeIndex++}`;
   state.lines.push(
-    `${
-      state.nodeScope === 'script' ? '' : 'const '
-    }${node} = __CreateText(pageId);`,
-    `__AppendElement(${node}, __CreateRawText(${javascriptString(text)}));`,
-    `__AppendElement(${parent}, ${node});`,
+    'element = __CreateText(pageId);',
+    `__AppendElement(element, __CreateRawText(${javascriptString(text)}));`,
+    `__AppendElement(${parent}, element);`,
   );
 }
 
@@ -113,8 +101,9 @@ function appendAttribute(
     if (state.bindings.has(bindingName)) {
       throw new Error(`Duplicate XML id: ${bindingName}`);
     }
-    state.bindings.set(bindingName, node);
-    state.lines.push(`__SetID(${node}, ${value});`);
+    const reference = `nodeMap[${value}]`;
+    state.bindings.set(bindingName, reference);
+    state.lines.push(`${reference} = ${node};`, `__SetID(${node}, ${value});`);
   } else if (name === 'style') {
     state.lines.push(`__SetInlineStyles(${node}, ${value});`);
   } else if (name.startsWith('data-') && name.length > 5) {
@@ -126,6 +115,57 @@ function appendAttribute(
       `__SetAttribute(${node}, ${javascriptString(name)}, ${value});`,
     );
   }
+}
+
+/** Explicit raw-text is a text leaf, not an element created with pageId. */
+function appendRawText(
+  children: unknown[],
+  attributes: OrderedXmlNode,
+  parent: string,
+  parentTagName: string | undefined,
+  state: GeneratorState,
+): void {
+  const parts = children.map(child => {
+    if (
+      !child || typeof child !== 'object' || Array.isArray(child)
+      || Object.keys(child).length !== 1 || !(TEXT_NODE_NAME in child)
+    ) {
+      throw new Error(
+        'XML raw-text must contain only literal text, not child elements',
+      );
+    }
+    return String((child as OrderedXmlNode)[TEXT_NODE_NAME]);
+  });
+  const body = parts.join('');
+  if (Object.hasOwn(attributes, 'text') && body.trim()) {
+    throw new Error(
+      'XML raw-text must use either the text attribute or text content, not both',
+    );
+  }
+  const text = Object.hasOwn(attributes, 'text')
+    ? String(attributes['text'])
+    : body;
+  const unsupported = Object.keys(attributes).find(name =>
+    name !== 'text' && name !== 'id'
+  );
+  if (unsupported) {
+    throw new Error(
+      `XML raw-text does not support attribute "${unsupported}"; put styling and events on its parent text element`,
+    );
+  }
+  if (parentTagName !== 'text') {
+    state.lines.push(
+      'element = __CreateText(pageId);',
+      `__AppendElement(${parent}, element);`,
+      'parents.push(element);',
+    );
+  }
+  state.lines.push(`element = __CreateRawText(${javascriptString(text)});`);
+  if (Object.hasOwn(attributes, 'id')) {
+    appendAttribute('element', 'id', attributes['id'], state);
+  }
+  state.lines.push(`__AppendElement(parents[parents.length - 1], element);`);
+  if (parentTagName !== 'text') state.lines.push('parents.pop();');
 }
 
 /** Emit one parsed XML node and its depth-bounded descendants. */
@@ -163,33 +203,51 @@ function appendParsedNode(
     throw new Error(`Invalid parsed children for <${tagName}>`);
   }
 
-  const node = `node${state.nextNodeIndex++}`;
-  state.lines.push(
-    `${state.nodeScope === 'script' ? '' : 'const '}${node} = ${
-      createElementExpression(tagName)
-    };`,
-  );
-
   const attributes = parsedNode[ATTRIBUTE_NODE_NAME];
+  if (tagName === 'raw-text') {
+    appendRawText(
+      children,
+      attributes && typeof attributes === 'object'
+        ? attributes as OrderedXmlNode
+        : {},
+      parent,
+      parentTagName,
+      state,
+    );
+    return;
+  }
+
+  const node = 'element';
+  state.lines.push(`${node} = ${createElementExpression(tagName)};`);
+
   if (attributes && typeof attributes === 'object') {
     for (const [name, value] of Object.entries(attributes)) {
       appendAttribute(node, name, value, state);
     }
   }
 
+  state.lines.push(
+    `__AppendElement(${parent}, ${node});`,
+    `parents.push(${node});`,
+  );
   for (const child of children) {
     if (!child || typeof child !== 'object' || Array.isArray(child)) {
       throw new Error(`Invalid parsed child in <${tagName}>`);
     }
-    appendParsedNode(child as OrderedXmlNode, node, tagName, state, depth + 1);
+    appendParsedNode(
+      child as OrderedXmlNode,
+      'parents[parents.length - 1]',
+      tagName,
+      state,
+      depth + 1,
+    );
   }
-  state.lines.push(`__AppendElement(${parent}, ${node});`);
+  state.lines.push('parents.pop();');
 }
 
 /** Generate Element PAPI calls and stable id-to-node bindings. */
 export function generateMainThreadScriptResult(
   xmlFragment: string,
-  options: GenerateMainThreadScriptOptions = {},
 ): GeneratedMainThreadScript {
   if (!xmlFragment.trim()) throw new Error('XML fragment must not be empty');
   if (xmlFragment.length > MAX_XML_FRAGMENT_LENGTH) {
@@ -217,31 +275,30 @@ export function generateMainThreadScriptResult(
   const state: GeneratorState = {
     bindings: new Map(),
     lines: [],
-    nextNodeIndex: 0,
-    nodeScope: options.nodeScope ?? 'render',
   };
   for (const child of children) {
     if (!child || typeof child !== 'object' || Array.isArray(child)) {
       throw new Error('XML fragment contains an unsupported node');
     }
-    appendParsedNode(child as OrderedXmlNode, 'page', undefined, state, 1);
+    appendParsedNode(
+      child as OrderedXmlNode,
+      'parents[parents.length - 1]',
+      undefined,
+      state,
+      1,
+    );
   }
   if (state.lines.length === 0) {
     throw new Error('XML fragment must contain visible content');
   }
   return {
     bindings: Object.fromEntries(state.bindings),
-    javascript: state.lines.join('\n'),
-    ...(state.nodeScope === 'script'
-      ? {
-        declarations: `var ${
-          Array.from(
-            { length: state.nextNodeIndex },
-            (_, index) => `node${index}`,
-          ).join(', ')
-        };`,
-      }
-      : {}),
+    javascript: [
+      'const nodeMap = Object.create(null);',
+      'const parents = [page];',
+      'let element;',
+      ...state.lines,
+    ].join('\n'),
   };
 }
 

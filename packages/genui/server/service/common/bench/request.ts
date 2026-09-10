@@ -165,6 +165,9 @@ function normalizeGroups(
         variable: readVariable(item.variable),
         enabled: item.enabled !== false,
         protocol,
+        ...(protocol === 'lynx-xml'
+          ? { enableHtmlFragment: item.enableHtmlFragment === true }
+          : {}),
         profile,
         ...(model ? { model } : {}),
         ...(protocol === 'a2ui' && profile === 'native'
@@ -278,6 +281,20 @@ export function normalizeBenchJobRequest(
   }
 
   const groups = normalizeGroups(value.groups);
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some((group) =>
+      isRecord(group) && group.protocol === 'lynx-xml'
+      && group.enableHtmlFragment !== undefined
+      && typeof group.enableHtmlFragment !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableHtmlFragment must be a boolean',
+    };
+  }
   const enabledGroups = groups.filter((group) => group.enabled);
   if (enabledGroups.length === 0) {
     return {

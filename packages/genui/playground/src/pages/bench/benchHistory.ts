@@ -112,7 +112,9 @@ export function createBenchGroupsFromReport(
   const fallbackModel = report.env?.model ?? CUSTOM_PROVIDER_MODEL;
   const reportGroups = Array.isArray(report.groups) ? report.groups : [];
   const groups = reportGroups.map((group, index) => {
-    const item = group as Partial<BenchGroup>;
+    const item = group as Partial<BenchGroup> & {
+      enableHtmlFragmentTool?: boolean;
+    };
     const protocol = isBenchProtocol(item.protocol)
       ? item.protocol
       : 'a2ui';
@@ -120,6 +122,12 @@ export function createBenchGroupsFromReport(
       id: item.id ?? createId(`history-group-${index + 1}`),
       role: isBenchRole(item.role) ? item.role : 'experiment',
       protocol,
+      ...(protocol === 'lynx-xml'
+        ? {
+          enableHtmlFragment:
+            (item.enableHtmlFragment ?? item.enableHtmlFragmentTool) === true,
+        }
+        : {}),
       profile: isBenchProfile(item.profile)
         ? item.profile
         : (protocol === 'openui' ? 'matched-core' : 'native'),

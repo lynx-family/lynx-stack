@@ -46,6 +46,7 @@ export interface ChatOptions
 }
 
 export interface MastraResult {
+  error?: unknown;
   text?: unknown;
   usage?: unknown;
   totalUsage?: unknown;

@@ -174,7 +174,7 @@ describe('shared image generation capability', () => {
           );
           expect(tools.includes('image_search')).toBe(enableWebSearch);
           if (name === 'Lynx XML') {
-            expect(tools).toContain('html_fragment_to_main_thread_script');
+            expect(tools).not.toContain('html_fragment_to_main_thread_script');
           }
           const instructions = await agent.getInstructions();
           if (typeof instructions !== 'string') {

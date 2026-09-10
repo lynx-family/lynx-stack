@@ -1856,6 +1856,7 @@ export function ChatController<
                   <select
                     key={control.id}
                     className='chatProviderSelect'
+                    title={control.label}
                     aria-label={control.label}
                     value={control.value}
                     disabled={busy || control.disabled}

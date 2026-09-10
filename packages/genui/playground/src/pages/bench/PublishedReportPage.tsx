@@ -260,6 +260,14 @@ export function PublishedReportPage(
                       <dt>Catalog</dt>
                       <dd>{group.catalog}</dd>
                     </div>
+                    {group.protocol === 'lynx-xml' && (
+                      <div>
+                        <dt>XML fragment</dt>
+                        <dd>
+                          {group.enableHtmlFragment === true ? 'On' : 'Off'}
+                        </dd>
+                      </div>
+                    )}
                     <div>
                       <dt>Instruction</dt>
                       <dd>

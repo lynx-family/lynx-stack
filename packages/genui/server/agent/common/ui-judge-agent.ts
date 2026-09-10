@@ -6,6 +6,7 @@ import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 
 import { createLLMProvider } from './openai-provider.js';
+import { createAgentStepLogger } from '../../service/common/agent-step-logger.js';
 import {
   buildOpenAIRunOptions,
   resolveModelOutputTokenBudget,
@@ -167,6 +168,9 @@ export async function evaluateScreenshot(
       ],
     }], {
       ...buildOpenAIRunOptions({ model: request.model }, signal),
+      ...createAgentStepLogger<z.infer<typeof resultSchema>>({
+        model: request.model,
+      }, 'ui-judge'),
       maxSteps: 1,
       modelSettings: {
         maxOutputTokens: resolveModelOutputTokenBudget(

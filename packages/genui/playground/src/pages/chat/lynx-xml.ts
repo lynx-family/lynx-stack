@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { formatXmlFragment } from './format-xml-fragment.js';
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   getChatEndpoint,
@@ -79,7 +78,12 @@ export function extractLynxXmlSource(value: string): string {
 }
 
 export function isCompleteLynxXmlSource(source: string): boolean {
+  const markup = source.replace(
+    /<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<!--[\s\S]*?-->/gu,
+    '',
+  );
   return source.startsWith(DOCTYPE)
+    && !/<template\b/u.test(markup)
     && source.includes('<lynx engine-version="')
     && source.includes(MAIN_THREAD_START)
     && source.trimEnd().endsWith(ROOT_END);
@@ -282,38 +286,25 @@ function hydrate(
 }
 
 function createArtifact(output: LynxXmlOutput): ChatArtifact {
-  const formattedFragment = output.xmlFragment
-    ? formatXmlFragment(output.xmlFragment)
-    : undefined;
+  const hasConversion = Boolean(output.xmlFragment);
   return {
     title: 'Generated Lynx XML Artifact',
     meta: `.lynxml · ${formatCharacterCount(output.source)}`,
     views: [
-      {
-        id: 'source',
-        label: 'Source',
-        text: output.source,
-        language: 'text',
-      },
-      ...(output.xmlFragment
-        ? [{
-          id: 'xml-fragment',
-          label: 'XML Fragment',
-          text: output.xmlFragment,
-          ...(formattedFragment === undefined
-            ? {}
-            : { formattedText: formattedFragment }),
-          language: 'text' as const,
-        }]
-        : []),
-      ...(output.modelOutput
+      ...(hasConversion && output.modelOutput
         ? [{
           id: 'model-output',
-          label: 'Model Output',
+          label: 'Original',
           text: output.modelOutput,
           language: 'text' as const,
         }]
         : []),
+      {
+        id: hasConversion ? 'transformed' : 'source',
+        label: hasConversion ? 'Transformed' : 'Source',
+        text: output.source,
+        language: 'text',
+      },
     ],
   };
 }
@@ -341,7 +332,26 @@ export const LYNX_XML_CHAT_ADAPTER = {
     failurePrefix: 'Lynx XML generation failed',
   },
   suggestions: SUGGESTIONS,
-  settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
+  settings: {
+    ...CHAT_PROVIDER_SETTINGS_ADAPTER,
+    controls(settings: ProviderSettings) {
+      return [...CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings), {
+        id: 'enableHtmlFragment',
+        label: 'XML fragment',
+        kind: 'select' as const,
+        value: settings.enableHtmlFragment === true ? 'on' : 'off',
+        options: [{ value: 'off', label: 'Fragment Off' }, {
+          value: 'on',
+          label: 'Fragment On',
+        }],
+      }];
+    },
+    update(settings: ProviderSettings, id: string, next: string) {
+      return id === 'enableHtmlFragment'
+        ? { ...settings, enableHtmlFragment: next === 'on' }
+        : CHAT_PROVIDER_SETTINGS_ADAPTER.update(settings, id, next);
+    },
+  },
   createRequest({ prompt, conversation, settings, host }) {
     return {
       url: getChatEndpoint('lynx-xml', host, settings),
@@ -352,6 +362,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
       },
       body: {
         resourceId: 'lynx-xml-create',
+        enableHtmlFragment: settings.enableHtmlFragment === true,
         messages: [{ role: 'user', content: prompt }],
         conversation: {
           ...conversation,
@@ -429,7 +440,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
   preview: {
     delivery: 'reload',
     source(output, context) {
-      return output
+      return output && isCompleteLynxXmlSource(output.source)
         ? {
           kind: 'lynx-xml',
           source: output.source,

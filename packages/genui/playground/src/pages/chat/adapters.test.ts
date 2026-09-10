@@ -34,6 +34,75 @@ import { PROTOCOLS } from '../../utils/protocol.js';
 const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
   A2UI_CHAT_ADAPTER.stream,
 );
+
+test('Lynx XML Create persists and sends the fragment switch, defaulting off', () => {
+  const adapter = LYNX_XML_CHAT_ADAPTER;
+  let settings = adapter.settings.initial();
+  expect(
+    adapter.settings.controls(settings).find((control) =>
+      control.id === 'enableHtmlFragment'
+    )?.value,
+  ).toBe('off');
+  for (const value of ['off', 'on', 'off']) {
+    settings = adapter.settings.update(
+      settings,
+      'enableHtmlFragment',
+      value,
+    );
+    settings = adapter.settings.parseStored(
+      JSON.stringify(adapter.settings.serialize(settings)),
+    );
+    expect(settings.enableHtmlFragment).toBe(value === 'on');
+    const request = adapter.createRequest({
+      prompt: 'Hello',
+      settings,
+      conversation: { history: [], dataModel: {} },
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: '/',
+      },
+      signal: new AbortController().signal,
+    });
+    expect(request.body).toMatchObject({
+      enableHtmlFragment: value === 'on',
+    });
+  }
+  expect(
+    CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).some((control) =>
+      control.id === 'enableHtmlFragment'
+    ),
+  ).toBe(false);
+});
+
+test('keeps intermediate fragment source out of preview and migrates the saved switch', () => {
+  const intermediate =
+    '<!doctype lynx>\n<lynx engine-version="4.2"><template><view/></template><script thread="main">createFragment(page, pageId);</script></lynx>';
+  for (
+    const source of [
+      intermediate,
+      intermediate.replace(
+        '<template>',
+        '<style>.page { display: flex; }</style><!-- content --><template>',
+      ),
+    ]
+  ) {
+    expect(LYNX_XML_CHAT_ADAPTER.preview.source({ source }, {
+      theme: 'light',
+      protocol: PROTOCOLS['lynx-xml'],
+      previewPayloadUrls: null,
+    })).toBeUndefined();
+  }
+  const migrated = parseStoredProviderSettings(
+    JSON.stringify({ enableHtmlFragmentTool: true }),
+  );
+  expect(migrated.enableHtmlFragment).toBe(true);
+  expect(serializeProviderSettings(migrated)).not.toHaveProperty(
+    'enableHtmlFragmentTool',
+  );
+});
 const reduceOpenUIStream = OPENUI_CHAT_ADAPTER.stream.reduce.bind(
   OPENUI_CHAT_ADAPTER.stream,
 );
@@ -605,7 +674,7 @@ describe('chat protocol adapters', () => {
     ).toBe(VALID_HTML);
   });
 
-  test('keeps the original XML fragment as a separate artifact view and persists it', () => {
+  test('shows before and after conversion while preserving original generation metadata', () => {
     const xmlFragment = '\n<view>\n  <text>杭州 &amp; 天气</text>\n</view>\n';
     const modelOutput = `\n\`\`\`xml\n${VALID_LYNX_XML}\n\`\`\`\n`;
     const output = { source: VALID_LYNX_XML, xmlFragment, modelOutput };
@@ -625,18 +694,16 @@ describe('chat protocol adapters', () => {
       }).emissions,
     ).toEqual([{ type: 'final', output }]);
     expect(LYNX_XML_CHAT_ADAPTER.preview.artifact(output).views).toEqual([
-      { id: 'source', label: 'Source', text: VALID_LYNX_XML, language: 'text' },
       {
-        id: 'xml-fragment',
-        label: 'XML Fragment',
-        text: xmlFragment,
-        formattedText: '<view>\n  <text>杭州 &amp; 天气</text>\n</view>',
+        id: 'model-output',
+        label: 'Original',
+        text: modelOutput,
         language: 'text',
       },
       {
-        id: 'model-output',
-        label: 'Model Output',
-        text: modelOutput,
+        id: 'transformed',
+        label: 'Transformed',
+        text: VALID_LYNX_XML,
         language: 'text',
       },
     ]);
@@ -697,9 +764,12 @@ describe('chat protocol adapters', () => {
       });
       const output = LYNX_XML_CHAT_ADAPTER.stream.finish(result.state)!;
       expect(output).toEqual({ source: VALID_LYNX_XML });
-      expect(LYNX_XML_CHAT_ADAPTER.preview.artifact(output).views).toHaveLength(
-        1,
-      );
+      expect(
+        LYNX_XML_CHAT_ADAPTER.preview.artifact({
+          ...output,
+          modelOutput: VALID_LYNX_XML,
+        }).views,
+      ).toHaveLength(1);
     },
   );
 

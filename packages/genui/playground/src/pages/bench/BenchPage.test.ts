@@ -54,6 +54,7 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       modelOptions: [{ id: 'test-model', label: 'Test model' }],
       onAdd: noop,
       onCatalogChange: noop,
+      onFragmentChange: noop,
       onEnabledChange: noop,
       onModelChange: noop,
       onNameChange: noop,
@@ -67,6 +68,9 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
   expect(markup).toContain('data-protocol="lynx-xml"');
   expect(markup).toContain('Lynx XML');
   expect(markup).toContain('Not applicable');
+  expect(markup).toMatch(
+    /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
+  );
   expect(markup).toContain(
     'title="Lynx XML generates a complete page without a component catalog."',
   );
@@ -201,6 +205,7 @@ describe('BenchPage', () => {
         modelOptions: [],
         onAdd: noop,
         onCatalogChange: noop,
+        onFragmentChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
@@ -252,6 +257,7 @@ describe('BenchPage', () => {
         ],
         onAdd: noop,
         onCatalogChange: noop,
+        onFragmentChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
