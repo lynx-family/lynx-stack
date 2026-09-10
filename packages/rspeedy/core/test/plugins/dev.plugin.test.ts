@@ -848,6 +848,36 @@ describe('Plugins - Dev', () => {
     })
   })
 
+  test.each(['lynx', 'web'])('dev respects --environment %s', async (name) => {
+    const rsbuild = await createStubRspeedy(
+      {
+        source: {
+          entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+        dev: { assetPrefix: 'http://example.com:<port>/' },
+        environments: { web: {}, lynx: {} },
+      },
+      undefined,
+      [name],
+    )
+    const printed = capturePrintUrls(rsbuild)
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+    expect(printed.urls).toStrictEqual([
+      {
+        label: name === 'lynx' ? 'Lynx' : 'Web',
+        url: `http://example.com:${server.port}/main.${name}.bundle`,
+      },
+      ...(name === 'web'
+        ? [{
+          label: '∟ Preview',
+          url:
+            `http://example.com:${server.port}/__web_preview?casename=main.web.bundle`,
+        }]
+        : []),
+    ])
+  })
+
   test('dev prints one URL per environment', async () => {
     const rsbuild = await createStubRspeedy({
       source: {

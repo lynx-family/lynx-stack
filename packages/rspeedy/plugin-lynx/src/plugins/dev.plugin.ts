@@ -157,19 +157,6 @@ export function pluginDev(): RsbuildPlugin {
           config.server?.printUrls === undefined
           || config.server?.printUrls === true
         ) {
-          // A root entry is merged into every environment (the way Rsbuild
-          // itself resolves entries), not replaced by an environment's own.
-          const entriesByEnvironment = Object.entries(
-            config.environments ?? {},
-          ).map(([environmentName, environmentConfig]) =>
-            [
-              environmentName,
-              Object.keys({
-                ...config.source?.entry,
-                ...environmentConfig.source?.entry,
-              }),
-            ] as const
-          )
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (param) => {
@@ -191,13 +178,14 @@ export function pluginDev(): RsbuildPlugin {
 
                 const finalUrls: { label: string, url: string }[] = []
                 for (
-                  const [environmentName, entries] of entriesByEnvironment
+                  const [environmentName, environmentConfig] of Object.entries(
+                    api.getNormalizedConfig().environments,
+                  )
                 ) {
+                  // Resolve after --environment filtering and config hooks,
+                  // using the same merged entries as the active build.
                   // `dev.assetPrefix`/`dev.client.host` can be set per
                   // environment, so each environment gets its own base URL.
-                  const environmentConfig = api.getNormalizedConfig({
-                    environment: environmentName,
-                  })
                   const assetPrefix = environmentConfig.dev.assetPrefix
                   const hostname = environmentConfig.dev.client.host
                     ?? formatHostname(environmentConfig.server.host)
@@ -207,7 +195,11 @@ export function pluginDev(): RsbuildPlugin {
                       : `http://${hostname}:<port>/`
                   ).replaceAll('<port>', String(param.port))
 
-                  for (const entry of entries) {
+                  for (
+                    const entry of Object.keys(
+                      environmentConfig.source.entry ?? {},
+                    )
+                  ) {
                     const pathname = resolveName(entry, environmentName)
                     finalUrls.push({
                       label: environmentName,
