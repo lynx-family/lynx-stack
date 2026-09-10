@@ -13,6 +13,7 @@ import {
   LIBRARY_TOOLS,
   TEMPLATES,
   TOOLS,
+  lintTemplateOf,
   resolveTemplateName,
   templateRoot,
   toolOf,
@@ -71,6 +72,20 @@ describe('resolveTemplateName', () => {
       '@scope/some-template',
     )
     expect(toolOf('@scope/some-template')).toBeUndefined()
+  })
+})
+
+describe('lintTemplateOf', () => {
+  test('lints each template with the React config of its language', () => {
+    expect(lintTemplateOf('rsbuild-react-ts')).toBe('react-ts')
+    expect(lintTemplateOf('rspeedy-react-js')).toBe('react-js')
+    expect(lintTemplateOf('rslib-react-ts')).toBe('react-ts')
+  })
+
+  test('maps every advertised template to a config', () => {
+    for (const template of TEMPLATES) {
+      expect(lintTemplateOf(template)).not.toBeNull()
+    }
   })
 })
 

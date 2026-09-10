@@ -21,6 +21,7 @@ import {
   DEFAULT_DSL,
   LIBRARY_TOOLS,
   TEMPLATES,
+  lintTemplateOf,
   resolveTemplateName,
   templateRoot,
   toolOf,
@@ -158,8 +159,6 @@ void create({
       value: 'lynx-devtool',
     },
   ],
-  mapESLintTemplate(templateName) {
-    const lang = templateName.split('-').at(-1)
-    return lang === 'js' || lang === 'ts' ? `react-${lang}` : null
-  },
+  mapESLintTemplate: lintTemplateOf,
+  mapRslintTemplate: lintTemplateOf,
 })

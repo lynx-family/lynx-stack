@@ -19,6 +19,12 @@ export const LANGS: Lang[] = ['ts', 'js']
 export const LIBRARY_TOOLS: Tool[] = ['rslib']
 
 export const DEFAULT_DSL: Dsl = 'react'
+
+/** The ESLint and Rslint config a template lints with. */
+export function lintTemplateOf(template: string): `react-${Lang}` | null {
+  const lang = template.split('-').at(-1)
+  return lang === 'js' || lang === 'ts' ? `react-${lang}` : null
+}
 export const DEFAULT_LANG: Lang = 'ts'
 
 export const TEMPLATES: string[] = TOOLS.flatMap(tool =>
