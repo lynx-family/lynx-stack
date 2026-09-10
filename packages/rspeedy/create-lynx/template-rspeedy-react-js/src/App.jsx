@@ -43,18 +43,11 @@ export function App() {
           <text className="Description">Tap the logo and have fun!</text>
           <text className="Hint">
             Edit
-            <text
-              style={{
-                fontStyle: 'italic',
-                color: 'rgba(255, 255, 255, 0.85)',
-              }}
-            >
-              {' src/App.jsx '}
-            </text>
+            <text className="Hint-file">{' src/App.jsx '}</text>
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }} />
+        <view className="Spacer" />
       </view>
     </view>
   );

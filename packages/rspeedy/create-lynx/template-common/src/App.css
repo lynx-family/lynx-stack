@@ -117,3 +117,12 @@ text {
   margin: 5px;
   color: rgba(255, 255, 255, 0.65);
 }
+
+.Hint-file {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.Spacer {
+  flex: 1;
+}
