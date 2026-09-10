@@ -23,9 +23,11 @@ interface RsbuildHelper {
 export async function createStubRspeedy(
   config: Config,
   cwd?: string,
+  environment: string[] = [],
 ): Promise<RspeedyInstance & RsbuildHelper> {
   const rsbuild = await createRspeedy({
     rspeedyConfig: config,
+    environment,
     // Pin to the package root: rstest's cwd differs between per-package runs
     // and the root CI run, which would make cwd-derived snapshots unstable.
     cwd: cwd ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..'),
