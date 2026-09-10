@@ -22,8 +22,8 @@ import type {
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { pluginAutoLynx } from './autoLynx.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
@@ -427,6 +427,7 @@ export function pluginReactLynx(
   })
 
   return [
+    pluginAutoLynx(),
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
       elementTemplate: resolvedOptions.experimental_useElementTemplate,
@@ -508,15 +509,6 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
-        // other breaking changes in `LynxTemplatePlugin`
-        // breaks `pluginReactLynx`
-        api.expose(Symbol.for('LynxTemplatePlugin'), {
-          LynxTemplatePlugin: {
-            getLynxTemplatePluginHooks: LynxTemplatePlugin
-              .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
-          },
-        })
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }

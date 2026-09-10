@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
@@ -21,7 +22,7 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(findCssExtractFilename(config.plugins)).toBe(
-      '.rspeedy/[name]/[name].css',
+      '.lynx/[name]/[name].css',
     )
   })
 
@@ -48,7 +49,7 @@ describe('pluginOutput', () => {
     })
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
-    expect(findCssExtractFilename(config.plugins)).toBe('.rspeedy/style.css')
+    expect(findCssExtractFilename(config.plugins)).toBe('.lynx/style.css')
   })
 
   test('lowers const/let to var via output.environment', async () => {
@@ -56,6 +57,13 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(config.output?.environment?.const).toBe(false)
+  })
+
+  test('does not emit HTML', async () => {
+    const rsbuild = await createStubRsbuild()
+    await rsbuild.unwrapConfig()
+
+    expect(rsbuild.getNormalizedConfig().tools?.htmlPlugin).toBe(false)
   })
 
   test('user can opt out of const/let lowering', async () => {
@@ -69,5 +77,101 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(config.output?.environment?.const).toBe(true)
+  })
+
+  test('a plugin can override the CSS output defaults', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      plugins: [
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                output: {
+                  distPath: { css: 'plugin-css' },
+                  filename: { css: 'plugin/[name].css' },
+                },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    expect(findCssExtractFilename(config.plugins)).toBe(
+      'plugin-css/plugin/[name].css',
+    )
+  })
+
+  test('a plugin can override the CSS output defaults per environment', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      plugins: [
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyEnvironmentConfig((config, { mergeEnvironmentConfig }) =>
+              mergeEnvironmentConfig(config, {
+                output: { filename: { css: 'plugin/[name].css' } },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    expect(findCssExtractFilename(config.plugins)).toBe(
+      '.lynx/plugin/[name].css',
+    )
+  })
+
+  test('honors output.filename.css set on an environment', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      environments: {
+        lynx: { output: { filename: { css: 'lynx-[name].css' } } },
+        web: { output: { filename: { css: 'web-[name].css' } } },
+      },
+    })
+    const [lynx, web] = await rsbuild.initConfigs({ action: 'build' })
+    expect(findCssExtractFilename(lynx?.plugins)).toBe('.lynx/lynx-[name].css')
+    expect(findCssExtractFilename(web?.plugins)).toBe('.lynx/web-[name].css')
+  })
+
+  test('prefers output.distPath.css of the environment over the root', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      output: { distPath: { css: 'root-css' } },
+      environments: {
+        lynx: { output: { distPath: { css: 'lynx-css' } } },
+        web: {},
+      },
+    })
+    const [lynx, web] = await rsbuild.initConfigs({ action: 'build' })
+    expect(findCssExtractFilename(lynx?.plugins)).toBe(
+      'lynx-css/[name]/[name].css',
+    )
+    expect(findCssExtractFilename(web?.plugins)).toBe(
+      'root-css/[name]/[name].css',
+    )
+  })
+
+  test('honors output.legalComments set on an environment', async () => {
+    const rsbuild = await createStubRsbuild({
+      environments: {
+        lynx: { output: { legalComments: 'inline' } },
+        web: {},
+      },
+    })
+    await rsbuild.initConfigs()
+    expect(
+      rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.legalComments,
+    ).toBe('inline')
+    expect(
+      rsbuild.getNormalizedConfig({ environment: 'web' }).output.legalComments,
+    ).toBe('none')
   })
 })

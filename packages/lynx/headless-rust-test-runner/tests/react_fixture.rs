@@ -1,11 +1,10 @@
-#[tokio::test(flavor = "current_thread")]
+#[test]
 #[cfg_attr(
   not(target_os = "linux"),
   ignore = "the Linux runtime-backed test is the CI contract; run explicitly for local diagnostics"
 )]
-async fn renders_react_fixture_with_puppeteer_apis() {
+fn renders_react_fixture_with_puppeteer_apis() {
   let report = lynx_headless_rust_test_runner::run_react_fixture()
-    .await
     .expect("React fixture should render and respond to Puppeteer-style APIs");
   assert_eq!((report.width, report.height), (800, 600));
   assert!(report.visible_pixels >= 450_000);

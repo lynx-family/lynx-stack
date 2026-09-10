@@ -560,4 +560,4 @@ export interface Lynx {
 export { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 export { runOnBackground } from './core/background-function/run-on-background.js';
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
-export { MainThreadRef, useMainThreadRef } from './snapshot/worklet/ref/workletRef.js';
+export { MainThreadRef, useMainThreadRef } from './core/main-thread-ref.js';

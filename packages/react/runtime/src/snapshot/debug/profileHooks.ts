@@ -7,12 +7,13 @@ import type { ComponentClass, ComponentType, VNode } from 'preact';
 import type { TraceOption } from '@lynx-js/types';
 
 import {
+  BITS,
   COMMIT,
   COMPONENT,
+  COMPONENT_DIRTY,
   DIFF,
   DIFF2,
   DIFFED,
-  DIRTY,
   HOOKS,
   LIST,
   NEXT_STATE,
@@ -108,7 +109,7 @@ export function initProfileHook(): void {
         function(this: PatchedComponent & { [NEXT_STATE]: unknown }, old, state, callback) {
           old?.call(this, state, callback);
 
-          if (this[DIRTY]) {
+          if (this[BITS] & COMPONENT_DIRTY) {
             const type = this[VNODE]!.type;
             const isClassComponent = typeof type === 'function' && ('prototype' in type)
               && ('render' in type.prototype);

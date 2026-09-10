@@ -298,6 +298,7 @@ export function createElementAPI(
         componentCSSID,
         componentID,
       );
+      wasmContext.set_page_element_unique_id(dom[uniqueIdSymbol]);
       if (config_default_overflow_visible) {
         dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
       }
@@ -628,6 +629,10 @@ export function createElementAPI(
     __InvokeUIMethod: mtsBinding.lynxViewInstance.invokeUIMethod,
     __QuerySelector,
     __QuerySelectorAll,
+    // Gesture recognition is not implemented on web yet. Keep these PAPIs as
+    // no-ops so ReactLynx bundles using `main-thread:gesture` can still render.
+    __SetGestureDetector: () => undefined,
+    __RemoveGestureDetector: () => undefined,
     __FlushElementTree: (_, options) => {
       const pipelineId = options?.pipelineOptions?.pipelineID;
       const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;

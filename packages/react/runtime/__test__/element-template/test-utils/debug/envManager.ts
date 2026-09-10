@@ -5,7 +5,7 @@
 import { flushCoreContextEvents, flushJSContextEvents } from '../mock/mockNativePapi/context.js';
 import { installMainThreadHooks } from '../../../../src/core/hooks/mainThreadImpl.js';
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { BackgroundPageRootInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { __root, setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
@@ -28,13 +28,13 @@ type RootWithTemplates = RootRef & {
 
 export class ElementTemplateEnvManager {
   private mainRoot: RootRef | undefined;
-  private backgroundRoot: BackgroundElementTemplateInstance | undefined;
+  private backgroundRoot: BackgroundPageRootInstance | undefined;
 
   constructor(private target: EnvTarget = globalThis as unknown as EnvTarget) {}
 
   switchToMainThread(fn?: () => void): void {
     if (this.target.__BACKGROUND__) {
-      this.backgroundRoot = __root as BackgroundElementTemplateInstance;
+      this.backgroundRoot = __root as BackgroundPageRootInstance;
     }
 
     this.mainRoot ??= {};
@@ -56,8 +56,8 @@ export class ElementTemplateEnvManager {
       this.mainRoot = __root;
     }
 
-    if (!(this.backgroundRoot instanceof BackgroundElementTemplateInstance)) {
-      this.backgroundRoot = new BackgroundElementTemplateInstance('root');
+    if (!(this.backgroundRoot instanceof BackgroundPageRootInstance)) {
+      this.backgroundRoot = new BackgroundPageRootInstance();
     }
 
     setRoot(this.backgroundRoot);

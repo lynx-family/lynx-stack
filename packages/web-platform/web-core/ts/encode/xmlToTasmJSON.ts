@@ -273,9 +273,12 @@ export function xmlToTasmJSON(source: string): XMLToTasmJSONResult {
       // bts chunk through `new Function(...paramNames, jsContent)`, which is the
       // web equivalent of the engine's module wrapper, so wrapping here would
       // nest two module functions and hide the source's top-level bindings.
-      manifest: parsed.backgroundThreadScript !== undefined
-        ? { [backgroundChunkPath]: parsed.backgroundThreadScript }
-        : {},
+      // Lynx Core still loads the card's fixed app-service entry when the XML
+      // omits its optional background script. Keep that syntax optional by
+      // registering an empty chunk instead of falling back to an HTTP request.
+      manifest: {
+        [backgroundChunkPath]: parsed.backgroundThreadScript ?? '',
+      },
       cardType: 'react',
       appType: 'card',
       pageConfig: { ...markupPageConfig },

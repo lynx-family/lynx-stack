@@ -32,7 +32,7 @@ afterEach(() => {
   g.__BACKGROUND__ = true;
 
   try {
-    g.lynxCoreInject?.tt?.callDestroyLifetimeFun?.();
+    g.lynx?.getApp?.().callDestroyLifetimeFun?.();
   } catch {}
 
   g.__LEPUS__ = true;

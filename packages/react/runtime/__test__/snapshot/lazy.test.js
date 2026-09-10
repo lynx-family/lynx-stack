@@ -1,6 +1,6 @@
 import '../../lazy/import.js';
 
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import * as ReactExports from '../../lazy/react.js';
 import * as ReactCompatExports from '../../lazy/compat.js';
 import * as ReactLepusExports from '../../lazy/react-lepus.js';
@@ -141,6 +141,7 @@ describe('Lazy Exports', () => {
 
     const lynx = {};
     vi.stubGlobal('lynx', lynx);
+    onTestFinished(() => vi.unstubAllGlobals());
     vi.stubGlobal('__LEPUS__', false);
 
     const { target } = await import('../../lazy/target.js');
@@ -179,12 +180,12 @@ describe('Lazy Exports', () => {
   });
 
   test('throws before ET lazy import initializes ET runtime under a Snapshot template', async () => {
-    const originalUpdateCardData = lynxCoreInject.tt.updateCardData;
+    const originalUpdateCardData = lynx.getApp().updateCardData;
 
     await expect(import('../../lazy/element-template-import.js')).rejects.toThrow(
       'Snapshot and Element Template templates cannot share lazy bundles.',
     );
-    expect(lynxCoreInject.tt.updateCardData).toBe(originalUpdateCardData);
+    expect(lynx.getApp().updateCardData).toBe(originalUpdateCardData);
   });
 
   test('throws when an ET runtime marker imports the Snapshot standalone lazy entry', async () => {

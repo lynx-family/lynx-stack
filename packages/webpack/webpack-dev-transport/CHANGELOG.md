@@ -1,5 +1,15 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.4.0
+
+### Minor Changes
+
+- Recover the HMR session after an update fails to apply. ([#3434](https://github.com/lynx-family/lynx-stack/pull/3434))
+
+### Patch Changes
+
+- Log the content of build errors instead of dropping it. ([#3433](https://github.com/lynx-family/lynx-stack/pull/3433))
+
 ## 0.3.0
 
 ### Minor Changes

@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ImageGenerationCapabilityOptions } from '../../agent/common/image-generation-capability.js';
+import type { SearchCapabilityOptions } from '../../agent/common/search-capability.js';
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -20,13 +23,17 @@ export type OpenAIReasoningEffort =
   | 'high'
   | 'xhigh';
 
-export interface ChatOptions {
+export interface ChatOptions
+  extends SearchCapabilityOptions, ImageGenerationCapabilityOptions
+{
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /** Do not retain request-scoped provider credentials in the shared cache. */
+  disableAgentCache?: boolean | undefined;
   /**
    * Set to false for controlled runs that must not inherit the process-wide
    * reasoningEffort from the selected GENUI_MODEL_CONFIG_JSON entry.
@@ -39,11 +46,15 @@ export interface ChatOptions {
 }
 
 export interface MastraResult {
+  error?: unknown;
   text?: unknown;
   usage?: unknown;
+  totalUsage?: unknown;
   finishReason?: unknown;
   content?: unknown;
   response?: unknown;
+  runId?: unknown;
+  suspendPayload?: unknown;
 }
 
 export interface MastraStreamResult extends MastraResult {

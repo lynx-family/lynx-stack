@@ -2,9 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-opcodes.js';
+import { __OpAttr, __OpBegin, __OpEnd, __OpPageEnd, __OpPageStart, __OpSlot, __OpText } from './render-to-opcodes.js';
 import { elementTemplateIdentityKey, parseElementTemplateType } from '../../protocol/template-type.js';
-import type { RuntimeTypedElementAttributes, SerializableValue } from '../../protocol/types.js';
+import type {
+  RuntimeTypedElementAttributes,
+  SerializableValue,
+  TypedElementAttributesCommand,
+} from '../../protocol/types.js';
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
@@ -12,53 +16,66 @@ import {
   registerElementTemplateListState,
 } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
-import { __etAttrPlanMap } from '../template/attr-slot-plan.js';
+import { __etAttrPlanMap, hasMainThreadRefAttrSlot } from '../template/attr-slot-plan.js';
 import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
 import {
   createElementTemplateWithReservedHandle,
   createTypedElementTemplateWithReservedHandle,
   reserveElementTemplateId,
 } from '../template/handle.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
+import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 const TYPED_LIST_HOST_TYPE = 'list';
 const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 
+type RenderAttributes = SerializableValue[] | RuntimeTypedElementAttributes | undefined;
+
 export interface MainThreadCreateResult {
-  rootRefs: ElementRef[];
+  pageAttributes: TypedElementAttributesCommand | null;
+  rootRefs: ElementTemplateHandle[];
+  rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][];
 }
 
 function appendChildToParent(
   parentTemplateKey: string | null,
-  parentActiveElementSlot: ElementRef[] | undefined,
+  parentActiveChildSlot: ElementTemplateHandle[] | undefined,
   parentListItemUids: number[] | undefined,
-  rootRefs: ElementRef[],
-  elementRef: ElementRef,
+  rootRefs: ElementTemplateHandle[],
+  rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][],
+  elementRef: ElementTemplateHandle,
   uid: number,
+  subtreeHandles: MainThreadDynamicAttrSubtreeHandle[],
 ): void {
   if (parentTemplateKey === null) {
     rootRefs.push(elementRef);
+    rootSubtreeHandles.push(subtreeHandles);
     return;
   }
 
-  if (__DEV__ && !parentActiveElementSlot) {
-    throw new Error(`Template '${parentTemplateKey}' received a child outside of any element slot.`);
+  if (__DEV__ && !parentActiveChildSlot) {
+    throw new Error(`Template '${parentTemplateKey}' received a child outside of any child slot.`);
   }
 
-  parentActiveElementSlot!.push(elementRef);
+  parentActiveChildSlot!.push(elementRef);
   parentListItemUids?.push(uid);
 }
 
 export function renderOpcodesIntoElementTemplate(
   opcodes: unknown[],
 ): MainThreadCreateResult {
-  const rootRefs: ElementRef[] = [];
+  const rootRefs: ElementTemplateHandle[] = [];
+  const rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][] = [];
+  let pageAttributes: TypedElementAttributesCommand | null | undefined;
+  let isInsideAuthoredPage = false;
   const typeStack: Array<string | null> = [null];
-  const attributeSlotsStack: Array<SerializableValue[] | undefined> = [undefined];
-  const typedAttributesStack: Array<RuntimeTypedElementAttributes | undefined> = [undefined];
-  const elementSlotsStack: Array<Array<Array<ElementRef>> | undefined> = [undefined];
+  // The host type determines whether its payload is compiled slots or typed attributes.
+  const attributesStack: RenderAttributes[] = [undefined];
+  const childSlotsStack: Array<Array<Array<ElementTemplateHandle>> | undefined> = [undefined];
   const listItemUidsStack: Array<number[] | undefined> = [undefined];
-  const activeElementSlotStack: Array<ElementRef[] | undefined> = [undefined];
+  const materializationHandlesStack: Array<MainThreadDynamicAttrSubtreeHandle[] | undefined> = [undefined];
+  const activeChildSlotStack: Array<ElementTemplateHandle[] | undefined> = [undefined];
   const activeListItemUidsStack: Array<number[] | undefined> = [undefined];
   const listItemPlatformInfoStack: Array<ETListItemPlatformInfo | undefined> = [undefined];
   const deferredListItemMarkerStack: boolean[] = [false];
@@ -68,15 +85,21 @@ export function renderOpcodesIntoElementTemplate(
     const opcode = opcodes[i];
     switch (opcode) {
       case __OpBegin: {
+        if (__DEV__ && stackTop === 0 && pageAttributes !== undefined && !isInsideAuthoredPage) {
+          throw new Error('Element Template authored <page /> must wrap all materialized roots.');
+        }
         const vnode = opcodes[i + 1] as { type: string; props?: Record<string, unknown> };
         const props = vnode.props;
+        const parentType = typeStack[stackTop];
         stackTop += 1;
         typeStack[stackTop] = vnode.type;
-        attributeSlotsStack[stackTop] = undefined;
-        typedAttributesStack[stackTop] = undefined;
-        elementSlotsStack[stackTop] = undefined;
+        attributesStack[stackTop] = undefined;
+        childSlotsStack[stackTop] = undefined;
         listItemUidsStack[stackTop] = undefined;
-        activeElementSlotStack[stackTop] = undefined;
+        materializationHandlesStack[stackTop] = stackTop === 1 || parentType === TYPED_LIST_HOST_TYPE
+          ? []
+          : materializationHandlesStack[stackTop - 1];
+        activeChildSlotStack[stackTop] = undefined;
         activeListItemUidsStack[stackTop] = undefined;
         listItemPlatformInfoStack[stackTop] = props?.['__listItemPlatformInfo'] as ETListItemPlatformInfo | undefined;
         deferredListItemMarkerStack[stackTop] = props?.['isReady'] !== undefined;
@@ -89,10 +112,10 @@ export function renderOpcodesIntoElementTemplate(
         }
 
         const type = typeStack[stackTop];
-        const attributeSlots = attributeSlotsStack[stackTop];
-        const typedAttributes = typedAttributesStack[stackTop];
-        const elementSlots = elementSlotsStack[stackTop];
+        const attributes = attributesStack[stackTop];
+        const childSlots = childSlotsStack[stackTop];
         const listItemUids = listItemUidsStack[stackTop];
+        const materializationHandles = materializationHandlesStack[stackTop]!;
         const listItemPlatformInfo = listItemPlatformInfoStack[stackTop];
         const deferredListItemMarker = deferredListItemMarkerStack[stackTop];
         stackTop -= 1;
@@ -100,20 +123,24 @@ export function renderOpcodesIntoElementTemplate(
         const concreteType = type!;
 
         const parentTemplateKey = stackTop === 0 ? null : typeStack[stackTop]!;
-        const parentActiveElementSlot = activeElementSlotStack[stackTop];
+        const parentActiveChildSlot = activeChildSlotStack[stackTop];
         const parentListItemUids = activeListItemUidsStack[stackTop];
 
         if (concreteType === TYPED_LIST_HOST_TYPE) {
-          const listChildren = elementSlots?.[0] ?? [];
+          const listChildren = childSlots?.[0] ?? [];
+          const handleId = reserveElementTemplateId();
+          const preparedTypedAttributes = prepareTypedElementAttributes(
+            handleId,
+            attributes as RuntimeTypedElementAttributes | undefined,
+          );
           const listState = createElementTemplateListState(
             listItemUids ?? EMPTY_LIST_ITEM_UIDS,
-            typedAttributes ?? null,
+            preparedTypedAttributes,
           );
           const attrsWithCallbacks = composeElementTemplateListAttributes(
             undefined,
             listState,
           );
-          const handleId = reserveElementTemplateId();
           const elementRef = createTypedElementTemplateWithReservedHandle(
             handleId,
             TYPED_LIST_HOST_TYPE,
@@ -124,11 +151,13 @@ export function renderOpcodesIntoElementTemplate(
           registerElementTemplateListState(handleId, listState, true, elementRef);
           appendChildToParent(
             parentTemplateKey,
-            parentActiveElementSlot,
+            parentActiveChildSlot,
             parentListItemUids,
             rootRefs,
+            rootSubtreeHandles,
             elementRef,
             handleId,
+            [],
           );
 
           i += 1;
@@ -146,6 +175,7 @@ export function renderOpcodesIntoElementTemplate(
 
         const attrPlan = __etAttrPlanMap[concreteType];
         const handleId = reserveElementTemplateId();
+        const attributeSlots = attributes as SerializableValue[] | undefined;
         let preparedAttributeSlots = attributeSlots ?? null;
         if (attrPlan !== undefined) {
           preparedAttributeSlots = attributeSlots?.slice() ?? [];
@@ -160,13 +190,20 @@ export function renderOpcodesIntoElementTemplate(
           }
         }
         const nativeTemplate = parseElementTemplateType(concreteType);
+        const hasMainThreadRef = hasMainThreadRefAttrSlot(concreteType);
         const elementRef = createElementTemplateWithReservedHandle(
           handleId,
           nativeTemplate.templateKey,
           nativeTemplate.bundleUrl,
           preparedAttributeSlots,
-          elementSlots ?? null,
+          childSlots ?? null,
         );
+        if (hasMainThreadRef) {
+          materializationHandles.push({
+            uid: handleId,
+            ref: elementRef,
+          });
+        }
         if (listItemPlatformInfo !== undefined) {
           registerElementTemplateListItem(handleId, elementRef, {
             // The native list identifies items by the same identity the template
@@ -178,25 +215,43 @@ export function renderOpcodesIntoElementTemplate(
         }
         appendChildToParent(
           parentTemplateKey,
-          parentActiveElementSlot,
+          parentActiveChildSlot,
           parentListItemUids,
           rootRefs,
+          rootSubtreeHandles,
           elementRef,
           handleId,
+          materializationHandles,
         );
 
         i += 1;
         break;
       }
       case __OpAttr: {
-        const name = opcodes[i + 1] as string;
-        const value = opcodes[i + 2] as SerializableValue;
-        if (name === 'attributeSlots') {
-          attributeSlotsStack[stackTop] = value as SerializableValue[];
-        } else if (name === 'typedAttributes') {
-          typedAttributesStack[stackTop] = value as RuntimeTypedElementAttributes;
+        attributesStack[stackTop] = opcodes[i + 1] as RenderAttributes;
+        i += 2;
+        break;
+      }
+      case __OpPageStart: {
+        if (__DEV__ && stackTop !== 0) {
+          throw new Error('Element Template authored <page /> must be the outermost element.');
         }
-        i += 3;
+        if (__DEV__ && pageAttributes !== undefined) {
+          throw new Error('Element Template does not support multiple authored <page /> elements.');
+        }
+        if (__DEV__ && rootRefs.length !== 0) {
+          throw new Error('Element Template authored <page /> must wrap all materialized roots.');
+        }
+        pageAttributes = opcodes[i + 1] as TypedElementAttributesCommand | null;
+        isInsideAuthoredPage = true;
+        i += 2;
+        break;
+      }
+      case __OpPageEnd: {
+        if (__DEV__) {
+          isInsideAuthoredPage = false;
+        }
+        i += 1;
         break;
       }
       case __OpSlot: {
@@ -204,9 +259,9 @@ export function renderOpcodesIntoElementTemplate(
         if (__DEV__ && typeStack[stackTop] === TYPED_LIST_HOST_TYPE && slotId !== 0) {
           throw new Error('Element Template typed list only supports logical slot $0.');
         }
-        const elementSlots = elementSlotsStack[stackTop] ?? (elementSlotsStack[stackTop] = []);
-        const activeElementSlot = elementSlots[slotId] = [];
-        activeElementSlotStack[stackTop] = activeElementSlot;
+        const childSlots = childSlotsStack[stackTop] ?? (childSlotsStack[stackTop] = []);
+        const activeChildSlot = childSlots[slotId] = [];
+        activeChildSlotStack[stackTop] = activeChildSlot;
         if (typeStack[stackTop] === TYPED_LIST_HOST_TYPE && slotId === 0) {
           const activeListItemUids = listItemUidsStack[stackTop] = [];
           activeListItemUidsStack[stackTop] = activeListItemUids;
@@ -217,6 +272,9 @@ export function renderOpcodesIntoElementTemplate(
         break;
       }
       case __OpText: {
+        if (__DEV__ && stackTop === 0 && pageAttributes !== undefined && !isInsideAuthoredPage) {
+          throw new Error('Element Template authored <page /> must wrap all materialized roots.');
+        }
         const text = opcodes[i + 1] as string;
         const parentTemplateKey = stackTop === 0 ? null : typeStack[stackTop]!;
         if (__DEV__ && parentTemplateKey === TYPED_LIST_HOST_TYPE) {
@@ -232,12 +290,13 @@ export function renderOpcodesIntoElementTemplate(
         );
         if (parentTemplateKey === null) {
           rootRefs.push(textRef);
+          rootSubtreeHandles.push([]);
         } else {
-          const activeElementSlot = activeElementSlotStack[stackTop];
-          if (__DEV__ && !activeElementSlot) {
-            throw new Error(`Template '${parentTemplateKey}' received a text child outside of any element slot.`);
+          const activeChildSlot = activeChildSlotStack[stackTop];
+          if (__DEV__ && !activeChildSlot) {
+            throw new Error(`Template '${parentTemplateKey}' received a text child outside of any child slot.`);
           }
-          activeElementSlot!.push(textRef);
+          activeChildSlot!.push(textRef);
         }
         i += 2;
         break;
@@ -247,6 +306,8 @@ export function renderOpcodesIntoElementTemplate(
     }
   }
   return {
+    pageAttributes: pageAttributes ?? null,
     rootRefs,
+    rootSubtreeHandles,
   };
 }

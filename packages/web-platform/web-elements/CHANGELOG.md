@@ -1,5 +1,42 @@
 # @lynx-js/web-elements
 
+## 0.12.10
+
+### Patch Changes
+
+- Update markdown-it to ^15.0.1. ([#3749](https://github.com/lynx-family/lynx-stack/pull/3749))
+
+- Add an optional `scroll-view` mouse-drag plugin for touchscreen-like scrolling ([#3594](https://github.com/lynx-family/lynx-stack/pull/3594))
+  on desktop browsers. Enable it by importing
+  `@lynx-js/web-core/plugins/scroll-view-mouse-drag` or
+  `@lynx-js/web-elements/plugins/scroll-view-mouse-drag` before registering the
+  web elements.
+- Support the `bindselectionchange` event on `text` and `inline-text` in Lynx for Web. ([#3741](https://github.com/lynx-family/lynx-stack/pull/3741))
+
+## 0.12.9
+
+### Patch Changes
+
+- Clamp the `setFoldExpanded` offset of `<x-foldview-ng>` to the scrollable length. ([#3290](https://github.com/lynx-family/lynx-stack/pull/3290))
+
+  `setFoldExpanded` called the native `scrollTo`, bypassing the clamping done by the
+  `scrollTop` setter. A page collapsing its header with a deliberately large offset
+  (e.g. `offset: '99999px'`) scrolled past the end, which does not happen on native.
+- Give `<x-foldview-header-ng>` a `width: 100%`. ([#3290](https://github.com/lynx-family/lynx-stack/pull/3290))
+
+  The element is laid out with `position: absolute` but had no width, so it shrank to
+  fit its content instead of filling the foldview.
+
+## 0.12.8
+
+### Patch Changes
+
+- Keep XList scroll offsets and automatic scrolling aligned with its configured orientation. ([#3357](https://github.com/lynx-family/lynx-stack/pull/3357))
+
+- Updated dependency `dompurify` to `^3.4.13`. ([#3417](https://github.com/lynx-family/lynx-stack/pull/3417))
+
+- Updated dependency `markdown-it` to `^15.0.0`. ([#3423](https://github.com/lynx-family/lynx-stack/pull/3423))
+
 ## 0.12.7
 
 ### Patch Changes

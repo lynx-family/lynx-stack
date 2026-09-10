@@ -185,7 +185,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -275,7 +275,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -343,7 +343,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -415,7 +415,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -537,7 +537,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[3,-2,0,null],"id":2}]}"`,
@@ -642,7 +642,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -807,7 +807,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -935,7 +935,7 @@ describe('element ref', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1].data).toMatchInlineSnapshot(
         `"{"patchList":[{"snapshotPatch":[0,"__snapshot_a94a8_test_18",3,4,3,[1],1,-2,3,null,0],"id":2}]}"`,
@@ -1033,7 +1033,7 @@ describe('element ref in spread', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -1146,7 +1146,7 @@ describe('element ref in spread', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1254,7 +1254,7 @@ describe('element ref in spread', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(ref1.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1651,7 +1651,7 @@ describe('ui operations', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1703,7 +1703,7 @@ describe('ui operations', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1763,7 +1763,7 @@ describe('ui operations', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`
         [
@@ -1883,7 +1883,7 @@ describe('ui operations', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`[]`);
 
@@ -1946,7 +1946,7 @@ describe('ui operations', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
       expect(lynx.createSelectorQuery().constructor.execLog.mock.calls).toMatchInlineSnapshot(`[]`);
 

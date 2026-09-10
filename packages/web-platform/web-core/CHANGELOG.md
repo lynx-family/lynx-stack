@@ -1,5 +1,194 @@
 # @lynx-js/web-core
 
+## 0.26.0
+
+### Minor Changes
+
+- Add an opt-in `@lynx-js/web-core/animax` side-effect entry that loads `@lynx-js/animax` on the Web platform. ([#3602](https://github.com/lynx-family/lynx-stack/pull/3602))
+
+- Parse single-file Lynx XML with the current Vanilla Lynx `engine-version` and ([#3628](https://github.com/lynx-family/lynx-stack/pull/3628))
+  `thread="main"` / `thread="background"` syntax, and reject the legacy wrapper
+  syntax.
+- Support a view-scoped `console` in background bundles through the ([#3648](https://github.com/lynx-family/lynx-stack/pull/3648))
+  `LynxConsoleModule` native module.
+
+### Patch Changes
+
+- Support legacy XElement component names in Lynx for Web element creation, SSR, and CSS selectors. ([#3734](https://github.com/lynx-family/lynx-stack/pull/3734))
+
+- Defer callbacks registered through `__AddEventListener` by one microtask. ([#3643](https://github.com/lynx-family/lynx-stack/pull/3643))
+
+- Render main-only Lynx XML cards without requesting a missing `app-service.js` ([#3717](https://github.com/lynx-family/lynx-stack/pull/3717))
+  by registering an empty background entry when the optional background script
+  is omitted.
+- Add an optional `scroll-view` mouse-drag plugin for touchscreen-like scrolling ([#3594](https://github.com/lynx-family/lynx-stack/pull/3594))
+  on desktop browsers. Enable it by importing
+  `@lynx-js/web-core/plugins/scroll-view-mouse-drag` or
+  `@lynx-js/web-elements/plugins/scroll-view-mouse-drag` before registering the
+  web elements.
+- Support the `bindselectionchange` event on `text` and `inline-text` in Lynx for Web. ([#3741](https://github.com/lynx-family/lynx-stack/pull/3741))
+
+- Allow Lynx-for-Web pages that use `main-thread:gesture` to render by providing no-op gesture detector element APIs. ([#3743](https://github.com/lynx-family/lynx-stack/pull/3743))
+- Updated dependencies [[`f256648`](https://github.com/lynx-family/lynx-stack/commit/f256648ae74cf5070c914b2a1cd38d98a7e8feea), [`b2a8367`](https://github.com/lynx-family/lynx-stack/commit/b2a8367e4ec481f7cf026f902fb049fc1caf04ed), [`4d81264`](https://github.com/lynx-family/lynx-stack/commit/4d812643c39bd5cc48bd6e9fdbacc6d06a051a4a)]:
+  - @lynx-js/web-elements@0.12.10
+  - @lynx-js/web-worker-rpc@0.26.0
+
+## 0.25.0
+
+### Minor Changes
+
+- Support `lynx.createIntersectionObserver` in Lynx for Web. ([#3383](https://github.com/lynx-family/lynx-stack/pull/3383))
+
+- Load a hand-written Lynx XML markup card in the browser, by compiling it into a ([#3404](https://github.com/lynx-family/lynx-stack/pull/3404))
+  `.web.bundle` there and then loading that.
+
+  A markup card is not a kind of artifact. The decode worker already dispatches on
+  the eight header bytes it reads - `{` for a `.json` template, the magic header for
+  a bundle - and a markup card is what neither of those claims, so it costs the two
+  shapes that stream nothing to reach. From there it is handed to `encodeLynxXML`,
+  the same function `@lynx-js/web-core/encode` gives a build, which returns real
+  bundle bytes: magic header, version, and the five sections in the encoder's order.
+  Those bytes go straight back to `handleStream`, so every section is read by the
+  reader that already existed. There is no markup decoding anywhere - not in the
+  worker, not on the main thread - and a markup card is not merely equivalent to a
+  built card, it _is_ one by the time anything decodes it.
+
+  Compiling in the browser is what #3589 made possible: `binary/encode`'s glue used
+  to load its wasm through `node:fs`, and is now generated with
+  `wasm-bindgen --target bundler`, which a bundler resolves on either platform.
+
+  **What this costs, measured**
+
+  Both sides rebuilt from source - `npm run build:wasm` then `rsbuild build`, with
+  `--force` so neither figure is a cache replay - because `binary/` is gitignored
+  and survives `git switch`, which has produced wrong numbers here before. Raw /
+  `gzip -9`.
+
+  | artifact                            | `origin/main`    | this change      | delta         |
+  | ----------------------------------- | ---------------- | ---------------- | ------------- |
+  | `binary/client/client_bg.wasm`      | 227,536 / 82,883 | _byte-identical_ | 0             |
+  | `binary/client_legacy/…_bg.wasm`    | 183,444 / 74,949 | _byte-identical_ | 0             |
+  | eager `client.js`                   | 45,287 / 14,388  | _byte-identical_ | 0             |
+  | `web-core-main-chunk.js`            | 159,621 / 33,074 | _byte-identical_ | 0             |
+  | `web-core-worker-chunk.js`          | 15,135 / 6,001   | _byte-identical_ | 0             |
+  | worker chunk (`…-loader-thread.js`) | 33,257 / 9,912   | 34,755 / 10,357  | +1,498 / +445 |
+  | `web-core-markup-encoder.js` (new)  | –                | 227,811 / 64,809 | new, lazy     |
+  | encode wasm asset (new)             | –                | 167,689 / 55,689 | new, lazy     |
+
+  So a card that was built ahead of time pays **+1,498 B raw / +445 B gzip**, all of
+  it in the worker chunk, and nothing at all in the eager entry or the main chunk.
+  The four byte-identical rows are sha256 comparisons, not size comparisons.
+
+  The laziness is load bearing rather than tidy: `TemplateManager` requests the
+  worker with `webpackPrefetch`, `webpackPreload` and `fetchPriority: "high"`, so a
+  static import would eagerly fetch all 395 kB for _every_ card. Verified positively
+  and with a negative control on `origin/main`, counting occurrences (a minified
+  chunk is one line, so a line count cannot tell 1 from 60):
+
+  | marker                       | eager `client.js` | worker chunk | main chunk | markup chunk |
+  | ---------------------------- | ----------------- | ------------ | ---------- | ------------ |
+  | encode wasm asset name       | 0                 | 0            | 0          | 1            |
+  | `css-tree` token names       | 0 / 0             | 0 / 0        | 0 / 0      | 2 / 2        |
+  | the XML parser's own message | 0                 | 0            | 0          | 2            |
+
+  All of these are 0 everywhere on `origin/main`, including in the chunk that does
+  not exist there. `encode_legacy_json_generated_raw_style_info` reads 2 in the
+  eager entry and 3 in the worker chunk on **both** sides - it is the _client_ wasm's
+  own export, used by `cssLoader` for `.json` artifacts, and is not this change.
+
+  Compiling itself is work that moved from a build into the browser, medians of 41
+  interleaved rounds: a 72 B stylesheet takes 0.42 ms, 872 B takes 0.89 ms, 9.1 kB
+  takes 7.4 ms and 26 kB takes 23.5 ms. Only markup cards pay it.
+
+  **Reviewer decisions this change deliberately leaves open**
+
+  - **`encodeLynxXML` warns on the console unconditionally, and now does so at
+    runtime.** It reports each at-rule the Lynx style format cannot carry. That was
+    written when the only caller was a build, which has no production runtime to
+    stay quiet for; the same code now runs in a browser. It is left exactly as it is
+    on `origin/main` so that `ts/encode/` keeps a zero diff, but gating it on a dev
+    build, or deduplicating it per at-rule name, are both reasonable and neither is
+    done here.
+  - **The published tarball grows by 397 kB**, being the new markup chunk plus the
+    encode wasm, which rspack now also emits under `dist/client_prod/static/wasm/`.
+    That wasm is consequently present three times in the package - there, under
+    `dist/encode_prod/static/wasm/` since #3589, and under `binary/encode/`. Nothing
+    here makes that worse than the pattern already in place for the client wasm, and
+    reclaiming it is a `files` change that would alter what deep importers can
+    reach, so it is left out of this change.
+  - **If #3390 lands first, the two chunk figures above need re-measuring.** It
+    reaches `css-tree` directly where this change reaches it through
+    `@lynx-js/css-serializer`; the spec resolves to a single `css-tree@3.2.1`, so
+    rspack would either duplicate it into both lazy chunks or hoist it into a shared
+    one. Nobody has built the union yet, so no combined figure is quoted here.
+
+  **Other limits worth knowing**
+
+  - `@lynx-js/css-serializer` becomes a real `dependency` rather than the optional
+    peer it was. `dist/client` ships as unbundled ESM, so the `import` the compiler
+    chunk performs is resolved by the consumer, and an optional peer nobody installs
+    would make a markup card fail to load in exactly the packaging that looks fine
+    on disk.
+  - **A corrupted bundle now reaches the markup path**, because markup is what is
+    left when a response is neither a bundle nor JSON. Handing those bytes to the XML
+    parser would answer `expected '<lynx version="...">' root element`, which points
+    the reader at a markup bug in a file that is not markup, so the two are told
+    apart first - before the compiler chunk is even fetched - on whether the content
+    begins a tag at all. Bytes that do not keep the diagnosis they always had,
+    `Invalid Magic Header`, now carrying the eight header bytes that failed to match;
+    a document that does gets the XML parser's own message and offset. A response
+    shorter than 8 bytes is still rejected by the header read, exactly as before.
+  - `@media`, `@supports` and `@layer` are dropped, as they already were when
+    building a markup card into a bundle: Lynx's style format has no rule kind for a
+    conditional group, so they are not Lynx features on any platform. Same for
+    `@import` with a URL.
+  - The `handleMarkup` recursion is one level deep and cannot loop: `encode` writes
+    the magic header at offset 0 unconditionally, so the second `handleStream` takes
+    the binary branch. Were that untrue, the bytes would fail the "begins a tag"
+    check and the recursion would end in a thrown error rather than a cycle.
+
+### Patch Changes
+
+- Build `binary/encode` with `wasm-bindgen --target bundler` and publish `@lynx-js/web-core/encode` as an rslib bundle, so one set of artifacts serves both Node and the browser. ([#3589](https://github.com/lynx-family/lynx-stack/pull/3589))
+
+  **Why**
+
+  `binary/encode` used to be generated with `--target experimental-nodejs-module`, whose glue calls `readFileSync('node:fs')` at module scope. That made `@lynx-js/web-core/encode` importable from Node only. The `bundler` target instead emits an "async wasm module" glue (`import * as wasm from './encode_bg.wasm'`), which a bundler can resolve for either platform.
+
+  **What changed in the published package**
+
+  - `./encode` now resolves to `dist/encode_prod/index.js` (bundled by rslib, like `./server` already was) instead of the unbundled `dist/encode/index.js` emitted by `tsc`. The wasm is emitted as a build asset under `dist/encode_prod/static/wasm/`.
+  - Bundling is what keeps the import clean: consuming the `bundler` glue directly from Node would work only on Node 22 or newer, and would print `ExperimentalWarning: Importing WebAssembly module instances` on every build. Letting rslib resolve the wasm at web-core build time avoids both.
+  - `encode_bg.wasm` is byte-for-byte unchanged; only the JavaScript glue differs. The `binary/encode/*.d.ts` type declarations are identical under both targets.
+
+  **Compatibility**
+
+  - No API change. `encode()` and `encodeCSS(cssMap): Uint8Array` keep their synchronous signatures. The wasm initialization becomes a single module-level `await` inside the bundle, which is already accommodated by the `await import('@lynx-js/web-core/encode')` that consumers use. Encoded output is byte-identical to the previous release.
+  - `@lynx-js/css-serializer` stays an external dependency of the bundle and is not inlined.
+  - Note on Node versions: `@lynx-js/web-core/encode` does not work on Node 20 and did not work there before this change either. The `encode` wasm is optimized with `wasm-opt --all-features`, and Node 20's engine rejects it with `CompileError: Unknown heap type -14` regardless of which glue is used. This is a pre-existing limitation that this change neither introduces nor fixes; the effective floor for this entry point is Node 22.
+  - The tarball grows by roughly the size of the encode wasm, because `binary/encode/encode_bg.wasm` is still shipped alongside the copy that rslib emits into `dist/encode_prod/`.
+- Prevent event dispatch failures from escaping through the WebAssembly boundary. ([#3356](https://github.com/lynx-family/lynx-stack/pull/3356))
+- Updated dependencies [[`9c2be3e`](https://github.com/lynx-family/lynx-stack/commit/9c2be3e239daf55f55a1991a9490705aa3587f46), [`d671851`](https://github.com/lynx-family/lynx-stack/commit/d67185113f38514e4946d1fcb295c0c6a36d6783), [`d671851`](https://github.com/lynx-family/lynx-stack/commit/d67185113f38514e4946d1fcb295c0c6a36d6783)]:
+  - @lynx-js/css-serializer@0.1.9
+  - @lynx-js/web-elements@0.12.9
+  - @lynx-js/web-worker-rpc@0.25.0
+
+## 0.24.1
+
+### Patch Changes
+
+- Allow `__FlushElementTree()` to run inside a main-thread event handler without ([#3438](https://github.com/lynx-family/lynx-stack/pull/3438))
+  triggering wasm-bindgen's recursive-borrow error or aborting the remaining
+  event dispatch.
+- Support the `__GetAttributeNames` element PAPI. ([#3291](https://github.com/lynx-family/lynx-stack/pull/3291))
+
+  `ElementNode.getAttributeNames()` of the ReactLynx worklet runtime calls it, so a
+  main-thread script reaching that API threw `ReferenceError` on web.
+- Updated dependencies [[`948eece`](https://github.com/lynx-family/lynx-stack/commit/948eece02aa9f7051f879a21f6c51d96a99fe1aa), [`f9fdbad`](https://github.com/lynx-family/lynx-stack/commit/f9fdbad607c5c8893d8f6e13c658fd46bbac3aeb), [`6cc9624`](https://github.com/lynx-family/lynx-stack/commit/6cc9624fb54dc7f73b6e68e49e2322b8136d3418), [`6cc9624`](https://github.com/lynx-family/lynx-stack/commit/6cc9624fb54dc7f73b6e68e49e2322b8136d3418)]:
+  - @lynx-js/css-serializer@0.1.8
+  - @lynx-js/web-elements@0.12.8
+  - @lynx-js/web-worker-rpc@0.24.1
+
 ## 0.24.0
 
 ### Minor Changes

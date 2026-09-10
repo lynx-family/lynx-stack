@@ -98,7 +98,7 @@ fn empty_object_expr() -> Expr {
   })
 }
 
-fn typed_list_attributes_expr(attrs: Vec<JSXAttrOrSpread>) -> (Vec<JSXAttrOrSpread>, Expr) {
+fn typed_host_attributes_expr(attrs: Vec<JSXAttrOrSpread>) -> (Vec<JSXAttrOrSpread>, Expr) {
   let mut passthrough_attrs = vec![];
   let mut object_props = vec![];
 
@@ -328,7 +328,7 @@ where
 
     let span = node.span();
     let opening_span = node.opening.span;
-    let (mut rendered_attrs, attributes) = typed_list_attributes_expr(node.opening.attrs.take());
+    let (mut rendered_attrs, attributes) = typed_host_attributes_expr(node.opening.attrs.take());
     let list_children = if node.children.is_empty() {
       empty_array_expr()
     } else {
@@ -356,6 +356,33 @@ where
       closing: None,
     };
   }
+
+  fn lower_authored_page_runtime_jsx(&mut self, node: &mut JSXElement) {
+    node.visit_mut_children_with(self);
+
+    let internal_runtime_ident = match self.internal_runtime_id.clone() {
+      Expr::Ident(ident) => ident,
+      _ => unreachable!("ET internal runtime must be bound through a namespace import"),
+    };
+    let (mut rendered_attrs, attributes) = typed_host_attributes_expr(node.opening.attrs.take());
+    let page_children = if node.children.is_empty() {
+      empty_array_expr()
+    } else {
+      jsx_children_to_expr(node.children.take())
+    };
+    rendered_attrs.push(jsx_expr_attr("attributes", attributes));
+    rendered_attrs.push(jsx_expr_attr("$0", page_children));
+    let page_helper_name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
+      obj: JSXObject::Ident(internal_runtime_ident),
+      prop: IdentName::new("__ElementTemplatePage".into(), DUMMY_SP),
+      span: node.opening.span,
+    });
+    node.opening.name = page_helper_name.clone();
+    node.opening.attrs = rendered_attrs;
+    if let Some(closing) = &mut node.closing {
+      closing.name = page_helper_name;
+    }
+  }
 }
 
 impl<C> VisitMut for JSXTransformer<C>
@@ -375,7 +402,11 @@ where
             self.lower_typed_list_runtime_jsx(node);
             return;
           }
-          if tag_str == "page" || tag_str == "component" {
+          if tag_str == "page" {
+            self.lower_authored_page_runtime_jsx(node);
+            return;
+          }
+          if tag_str == "component" {
             HANDLER.with(|handler| {
               handler
                 .struct_span_err(
@@ -414,6 +445,7 @@ where
       Event,
       MTEvent,
       Ref,
+      MTRef,
       Spread,
     }
 
@@ -435,6 +467,11 @@ where
           slot_index,
           ..
         } => Some((*slot_index, AttrPlanAdapter::Ref)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::MTRef,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::MTRef)),
         DynamicAttributePart::Spread { slot_index, .. } => {
           Some((*slot_index, AttrPlanAdapter::Spread))
         }
@@ -448,6 +485,7 @@ where
           AttrPlanAdapter::Event => "event",
           AttrPlanAdapter::MTEvent => "mt-event",
           AttrPlanAdapter::Ref => "ref",
+          AttrPlanAdapter::MTRef => "mt-ref",
           AttrPlanAdapter::Spread => "spread",
         };
         format!("{slot_index}:{adapter}")
@@ -473,14 +511,14 @@ where
     }
 
     let mut dynamic_attr_slot_cursor: usize = 0;
-    let mut element_slot_index: i32 = 0;
+    let mut child_slot_index: i32 = 0;
     // Attribute slot indices come from ElementTemplateExtractor so runtime
     // values and Template Definition descriptors share one compile-time source.
     let template_expr = self.element_template_from_jsx_element(
       node,
       &dynamic_attr_slots,
       &mut dynamic_attr_slot_cursor,
-      &mut element_slot_index,
+      &mut child_slot_index,
     );
     assert_eq!(
       dynamic_attr_slot_cursor,
@@ -568,6 +606,10 @@ where
             ),
             AttrPlanAdapter::Ref => quote!(
               "$internal_runtime_id.adaptRefAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+            AttrPlanAdapter::MTRef => quote!(
+              "$internal_runtime_id.adaptMTRefAttrSlot" as Expr,
               internal_runtime_id: Expr = internal_runtime_id.clone(),
             ),
             AttrPlanAdapter::Spread => quote!(

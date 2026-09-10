@@ -15,9 +15,44 @@ import type {
 } from '@rsbuild/core'
 import { afterAll, describe, expect, test } from '@rstest/core'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
 import { createRspeedy } from '@lynx-js/rspeedy'
+import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 
 import * as vanilla from '../src/index.js'
+
+// Built by `pluginLynx` itself, so the resolvers under test are the real ones
+// rather than a stub that fabricates them.
+function createLynxConfigStub(bundle?: string): LynxConfig {
+  let config: LynxConfig | undefined
+
+  // `pluginLynx` exposes the config from its second plugin, so the loop stops
+  // there instead of setting up the rest of the engine.
+  const options = bundle === undefined
+    ? {}
+    : { output: { filename: { bundle } } }
+
+  for (const plugin of pluginLynx(options)) {
+    // `pluginConfig.setup` is synchronous, so the config is set before the
+    // check below.
+    void plugin.setup({
+      expose(_id: string | symbol, value: unknown) {
+        config = value as LynxConfig
+      },
+    } as unknown as RsbuildPluginAPI)
+
+    if (config) {
+      break
+    }
+  }
+
+  if (!config) {
+    throw new Error('pluginLynx exposed no Lynx config')
+  }
+
+  return config
+}
 
 const tempDirs: string[] = []
 
@@ -35,10 +70,7 @@ interface HarnessOptions {
   lynxConfigTarget?: string | undefined
   pluginOptions?: vanilla.PluginVanillaLynxOptions | undefined
   rawEntries?: Record<string, EntryPointStub> | undefined
-  rspeedyFilename?: string | {
-    bundle?: vanilla.VanillaBundleFilename | undefined
-    template?: string | undefined
-  } | undefined
+  lynxBundleFilename?: string | undefined
 }
 
 interface HarnessResult {
@@ -66,11 +98,12 @@ async function runPluginHarness(
       config: { targetSdkVersion: options.lynxConfigTarget },
     })
   }
-  if (options.rspeedyFilename) {
-    exposed.set(Symbol.for('rspeedy.api'), {
-      config: { output: { filename: options.rspeedyFilename } },
-    })
-  }
+  // A real Lynx build always has the engine applied, so the config is always
+  // exposed here too.
+  exposed.set(
+    Symbol.for('@lynx-js/rsbuild-plugin:config'),
+    createLynxConfigStub(options.lynxBundleFilename),
+  )
 
   let bundlerChainModifier: BundlerChainModifier | undefined
   const api = {
@@ -234,14 +267,14 @@ describe('pluginVanillaLynx', () => {
 
     expect(existsSync(path.join(outputRoot, 'card.bundle'))).toBe(true)
     expect(beforeEncodeArgs?.encodeData.lepusCode.root?.name).toBe(
-      '.rspeedy/card/main-thread.js',
+      '.lynx/card/main-thread.js',
     )
     expect(
       beforeEncodeArgs?.encodeData.lepusCode.root?.source.source().toString(),
     ).toContain('__vanillaMainThreadLoaded')
     expect(Object.keys(beforeEncodeArgs?.encodeData.manifest ?? {})).toEqual([
       '/app-service.js',
-      '/.rspeedy/card/background.js',
+      '/.lynx/card/background.js',
     ])
     expect(beforeEncodeArgs?.encodeData.compilerOptions).toMatchObject({
       targetSdkVersion: '3.5',
@@ -400,12 +433,12 @@ describe('pluginVanillaLynx configuration', () => {
     })
 
     expect(result.entries.get('card__background')).toEqual({
-      filename: '.rspeedy/card/background.js',
+      filename: '.lynx/card/background.js',
       import: fixturePath('background.ts'),
       layer: vanilla.LAYERS.BACKGROUND,
     })
     expect(result.entries.get('card__main-thread')).toEqual({
-      filename: '.rspeedy/card/main-thread.js',
+      filename: '.lynx/card/main-thread.js',
       import: [
         'setup.ts',
         mainThreadRequest,
@@ -443,7 +476,7 @@ describe('pluginVanillaLynx configuration', () => {
         },
         targetSdkVersion: '3.9',
       },
-      rspeedyFilename: '[name].ignored.bundle',
+      lynxBundleFilename: '[name].ignored.bundle',
     })
 
     expect(filenameContext).toEqual({
@@ -453,7 +486,7 @@ describe('pluginVanillaLynx configuration', () => {
     })
     expect(result.entries.has('card__background')).toBe(false)
     expect(result.entries.get('card__main-thread')).toEqual({
-      filename: '.rspeedy/card/main-thread.js',
+      filename: '.lynx/card/main-thread.js',
       import: ['?raw'],
       layer: vanilla.LAYERS.MAIN_THREAD,
     })
@@ -472,23 +505,20 @@ describe('pluginVanillaLynx configuration', () => {
       expectedTarget: string
       lynxConfigTarget?: string | undefined
       pluginOptions?: vanilla.PluginVanillaLynxOptions | undefined
-      rspeedyFilename?: HarnessOptions['rspeedyFilename']
+      lynxBundleFilename?: HarnessOptions['lynxBundleFilename']
     }> = [
       {
         expectedFilename: 'main.template.bundle',
         expectedTarget: '3.9',
         lynxConfigTarget: '3.8',
         pluginOptions: { targetSdkVersion: '3.9' },
-        rspeedyFilename: { template: '[name].template.bundle' },
+        lynxBundleFilename: '[name].template.bundle',
       },
       {
         expectedFilename: 'main.bundle-only',
         expectedTarget: '3.8',
         lynxConfigTarget: '3.8',
-        rspeedyFilename: {
-          bundle: '[name].bundle-only',
-          template: '[name].ignored',
-        },
+        lynxBundleFilename: '[name].bundle-only',
       },
       {
         expectedFilename: 'main.lynx.bundle',
@@ -503,7 +533,7 @@ describe('pluginVanillaLynx configuration', () => {
         rawEntries: {
           main: { values: () => ['virtual-main-thread'] },
         },
-        rspeedyFilename: scenario.rspeedyFilename,
+        lynxBundleFilename: scenario.lynxBundleFilename,
       })
 
       expect(getTemplateOptions(result, 'main')).toMatchObject({
@@ -578,7 +608,30 @@ describe('pluginVanillaLynx configuration', () => {
     } as unknown as Rspack.Compiler
 
     expect(() => plugin.apply(compiler)).toThrow(
-      '[pluginVanillaLynx] Main-thread asset was not emitted: .rspeedy/main/main-thread.js',
+      '[pluginVanillaLynx] Main-thread asset was not emitted: .lynx/main/main-thread.js',
     )
+  })
+})
+
+describe('pluginVanillaLynx runtime wrapper', () => {
+  test('wraps exactly the background assets the plugin emits', async () => {
+    const result = await runPluginHarness({
+      rawEntries: {
+        card: { values: () => [fixturePath('main-thread.ts')] },
+        solo: { values: () => ['virtual-main-thread'] },
+      },
+    })
+
+    const backgroundEntry = result.entries.get('card__background') as {
+      filename: string
+    }
+    expect(backgroundEntry.filename).toBe('.lynx/card/background.js')
+    expect(result.entries.has('solo__background')).toBe(false)
+
+    const wrapper = result.plugins.get('lynx:vanilla:runtime-wrapper')
+    expect(wrapper?.plugin).toBe(RuntimeWrapperWebpackPlugin)
+    expect((wrapper?.args?.[0] as { test: unknown }).test).toEqual([
+      backgroundEntry.filename,
+    ])
   })
 })

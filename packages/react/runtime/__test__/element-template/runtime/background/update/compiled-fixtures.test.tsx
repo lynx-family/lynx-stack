@@ -13,6 +13,7 @@ import {
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import {
   collectElementTemplateSubtreeHandleIds,
+  collectMainThreadRefSubtreeHandleIds,
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
@@ -56,7 +57,7 @@ function getRenderedHost(): BackgroundElementTemplateInstance {
 }
 
 function getSlotChildren(host = getRenderedHost()): BackgroundElementTemplateInstance[] {
-  return host.elementSlots[SLOT_ID] ?? [];
+  return host.childSlots[SLOT_ID] ?? [];
 }
 
 function getSlotChildAt(
@@ -74,7 +75,7 @@ function collectRecursiveCreateCommandStream(
   instance: BackgroundElementTemplateInstance,
 ): ElementTemplateUpdateCommandStream {
   const commands: ElementTemplateUpdateCommandStream = [];
-  for (const slotChildren of instance.elementSlots) {
+  for (const slotChildren of instance.childSlots) {
     for (const child of slotChildren ?? []) {
       commands.push(...collectRecursiveCreateCommandStream(child));
     }
@@ -86,7 +87,7 @@ function collectRecursiveCreateCommandStream(
     nativeTemplate.templateKey,
     nativeTemplate.bundleUrl,
     instance.attributeSlots,
-    instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
+    instance.childSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );
   return commands;
 }
@@ -173,6 +174,7 @@ describe('Compiled background Preact updates', () => {
           SLOT_ID,
           moved.instanceId,
           first.instanceId,
+          collectMainThreadRefSubtreeHandleIds(moved),
         ]);
         envManager.switchToBackground();
         expect(getSlotChildren(host)).toEqual([moved, first, second]);
@@ -257,6 +259,7 @@ describe('Compiled background Preact updates', () => {
             SLOT_ID,
             current.instanceId,
             0,
+            collectMainThreadRefSubtreeHandleIds(current),
           ]);
           envManager.switchToBackground();
 

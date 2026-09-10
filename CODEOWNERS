@@ -1,5 +1,5 @@
 packages/repl/** @huxpro
-packages/web-platform/** @pupiltong @Sherry-hue
+packages/web-platform/** @pupiltong @upupming
 packages/webpack/** @colinaaa @upupming @luhc228
 packages/rspeedy/** @colinaaa @upupming @luhc228
 packages/i18n/** @luhc228
@@ -10,5 +10,5 @@ packages/rspeedy/plugin-react/** @upupming
 packages/react/** @hzy @HuJean @Yradex
 packages/react/transform/** @gaoachao
 packages/tailwind-preset/** @Dugyu @upupming
-packages/genui/** @pupiltong @Sherry-hue @gaoachao @HuJean @fzx2666-fz
+packages/genui/** @pupiltong @gaoachao @HuJean @fzx2666-fz
 benchmark/react/** @hzy @HuJean @upupming

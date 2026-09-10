@@ -1,6 +1,8 @@
 {
-  "schemaVersion": "genui-bench-phase-2/published-v1",
+  "schemaVersion": "genui-bench/published-v1",
   "title": "A2UI vs OpenUI",
+  "screenshotBasePath": "/bench/phase-two/screenshots",
+  "description": "Matched-core evaluation across three scenarios and ten repeats. A fixed report of generation quality, token usage, latency, and paired screenshot evidence.",
   "larkUrl": "https://bytedance.larkoffice.com/docx/E6xPdVshBoV4bkxHGdwc5SoTnub",
   "sources": [
     {
@@ -2559,13 +2561,13 @@
   },
   "warnings": [],
   "limitations": [
-    "本轮只覆盖 3 个合成场景、单一生成模型与单一 UI Judge，未执行显著性检验。",
-    "生成模型与 UI Judge 使用同一模型版本，Judge 结论可能存在同模型偏差。",
-    "matched-core 统一场景、模型、运行环境与 Judge，但协议 schema、组件表达和适配 prompt 并不相同。",
-    "UI Judge 只检查固定视口的静态 Lynx 截图，没有执行点击、滚动或其他交互步骤。",
-    "未固定 temperature 或 seed；生成耗时包含外部模型服务波动与本机轻量任务影响，只适合方向性比较。",
-    "Bench job store 为本地内存态，服务重启后不能从 API 恢复历史 job。",
-    "正式运行来自 dirty worktree；源码基线 commit 不能单独复现 bundle，需结合当时 diff 与飞书报告中的 bundle SHA-256。",
-    "独立 Render evaluator 未启用；本报告不能推导 Render、FMP 或 TTI。"
+    "This run covers only three synthetic scenarios, one generation model, and one UI Judge, with no significance testing.",
+    "The generation model and UI Judge use the same model version, so Judge conclusions may be subject to same-model bias.",
+    "matched-core aligns the scenario, model, runtime environment, and Judge, but the protocol schemas, component expressions, and adaptation prompts still differ.",
+    "UI Judge inspects only static Lynx screenshots at a fixed viewport; it does not perform clicks, scrolling, or other interactions.",
+    "Temperature and seed were not fixed. Generation latency includes external model-service variance and light local-task effects, so it supports directional comparison only.",
+    "The Bench job store is local in-memory state; historical jobs cannot be restored from the API after a server restart.",
+    "The formal run came from a dirty worktree. The source baseline commit alone cannot reproduce the bundle; the contemporaneous diff and bundle SHA-256 in the Lark report are also required.",
+    "The independent Render evaluator was disabled; this report cannot infer Render, FMP, or TTI."
   ]
 }

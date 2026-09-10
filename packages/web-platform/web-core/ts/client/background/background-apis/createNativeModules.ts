@@ -9,6 +9,7 @@ import {
   switchExposureServiceEndpoint,
 } from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
+import { createIntersectionObserverModule } from './createIntersectionObserverModule.js';
 
 export async function createNativeModules(
   uiThreadRpc: Rpc,
@@ -36,6 +37,9 @@ export async function createNativeModules(
       nativeModulesCall(name, data, 'bridge').then(callback);
     },
   };
+  const intersectionObserverModule = createIntersectionObserverModule(
+    mainThreadRpc,
+  );
 
   const nativeModules = {};
   const customNativeModules: Record<string, Record<string, any>> = {};
@@ -57,6 +61,7 @@ export async function createNativeModules(
 
   return Object.assign(nativeModules, {
     bridge: bridgeModule,
+    IntersectionObserverModule: intersectionObserverModule,
     LynxExposureModule: lynxExposureModule,
     ...customNativeModules,
   });

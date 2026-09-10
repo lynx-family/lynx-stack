@@ -32,7 +32,7 @@ describe('worklet lifecycle without elements', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     delete globalThis.lynxWorkletImpl;
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: false };
   });
 
   it('retains main-thread event worklet ctx before elements are materialized', () => {
@@ -153,7 +153,7 @@ describe('worklet lifecycle without elements', () => {
   });
 
   it('transforms list-item platform attribute names before extracting spread info', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
     const snapshot = createSnapshot({
       __spread: true,
       estimatedHeightPx: 10,
@@ -176,11 +176,13 @@ describe('worklet lifecycle without elements', () => {
   });
 
   it('does not transform normalized spread platform info again', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
-      mode: 'mapping-only',
-      rename: {
-        itemKey: 'item-key',
-        'item-key': 'renamed-item-key',
+    lynx.__runtime_configs__ = {
+      transformBuiltinAttributeNames: {
+        mode: 'mapping-only',
+        rename: {
+          itemKey: 'item-key',
+          'item-key': 'renamed-item-key',
+        },
       },
     };
 
@@ -191,20 +193,6 @@ describe('worklet lifecycle without elements', () => {
       ),
     ).toEqual({
       'item-key': 'item-0',
-    });
-  });
-
-  it('does not transform spread platform info when the compile-time config is unavailable', () => {
-    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
-
-    expect(
-      getListItemPlatformInfoFromIndexedValue({
-        __spread: true,
-        itemKey: 'camel-case',
-        'item-key': 'normalized',
-      }),
-    ).toEqual({
-      'item-key': 'normalized',
     });
   });
 });

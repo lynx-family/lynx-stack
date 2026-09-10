@@ -132,6 +132,7 @@ export { useLynxGlobalEventListener };
 export * from './client/root.js';
 export { runOnBackground } from './runtime/template/main-thread-background-function.js';
 export { runOnMainThread } from './runtime/template/main-thread-function.js';
+export { MainThreadRef, useMainThreadRef } from '../core/main-thread-ref.js';
 
 export type { GlobalProps } from '../core/globalProps.js';
 export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../lynx-api.js';

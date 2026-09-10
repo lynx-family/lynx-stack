@@ -11,8 +11,8 @@ import {
   parseMcpAppsAgentOutputs,
   resolveMcpAppsResource,
   validateMcpAppsClientRegistry,
-} from '../../../agent/mcp-apps-registry';
-import { getMcpAppsAgentService } from '../../../service/mcp-apps-agent';
+} from '../../../agent/mcp-apps/mcp-apps-registry.js';
+import { getMcpAppsAgentService } from '../../../service/mcp-apps/mcp-apps-agent.js';
 import {
   validateConversation,
   validateMessages,
@@ -74,6 +74,7 @@ async function postMcpAppsStream(req: Request) {
 
   const registry = validatedRegistry.registry;
   const opts = pickProviderOptions(parsed.body);
+  const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
   const service = getMcpAppsAgentService();
   const modelMessages = [
     {
@@ -158,7 +159,7 @@ async function postMcpAppsStream(req: Request) {
           });
         } catch (error) {
           if (!closed && !generationController.signal.aborted) {
-            enqueue('error', errorMessage(error));
+            enqueue('error', errorMessage(error, errorOptions));
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

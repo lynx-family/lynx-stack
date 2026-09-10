@@ -1,5 +1,52 @@
 # @lynx-js/genui
 
+## 0.4.0
+
+### Minor Changes
+
+- Add a Lynx XML playground with real-time Vanilla Lynx artifact generation, ([#3634](https://github.com/lynx-family/lynx-stack/pull/3634))
+  token-usage reporting, interactive examples, source editing, and direct
+  zero-build previews through the shared protocol-aware render host. Expose a
+  reusable Lynx XML system-prompt builder composed from the
+  `@lynx-js/skill-vanilla-lynx` guidance, Lynx XML-specific overrides, and
+  mobile-first responsive design constraints.
+- Support `xxs` and `2xl` gap sizes in the OpenUI layout components. ([#3753](https://github.com/lynx-family/lynx-stack/pull/3753))
+
+### Patch Changes
+
+- Updated dependencies [[`80a92ae`](https://github.com/lynx-family/lynx-stack/commit/80a92ae51ca08b0ccfa3f3f9e88d029ecf9b186f)]:
+  - @lynx-js/react-signals@0.0.3
+
+## 0.3.1
+
+### Patch Changes
+
+- Make A2UI image prompt guidance provider-neutral so host agents can generate ([#3537](https://github.com/lynx-family/lynx-stack/pull/3537))
+  image assets through their configured tools.
+- Updated dependencies [[`d8f80cd`](https://github.com/lynx-family/lynx-stack/commit/d8f80cd019ecafddbacb7749e16a3eb293b28727)]:
+  - @lynx-js/react-signals@0.0.2
+
+## 0.3.0
+
+### Minor Changes
+
+- Added an `includeDefaultComponents` option to `createOpenUiLibrary`. Set it to ([#3445](https://github.com/lynx-family/lynx-stack/pull/3445))
+  `false` to build a Library only from caller-provided definitions and component
+  groups. The new `openui/explicit` entry and per-component catalog subpaths let
+  applications keep unselected built-ins outside their static dependency graph.
+
+### Patch Changes
+
+- Render OpenUI Query defaults and prefetched results during the initial ([#3443](https://github.com/lynx-family/lynx-stack/pull/3443))
+  ReactLynx render.
+- Updated dependency `@a2ui/web_core` to `0.10.6`. ([#3416](https://github.com/lynx-family/lynx-stack/pull/3416))
+
+- Updated dependency `@openuidev/lang-core` to `^0.2.11`. ([#3419](https://github.com/lynx-family/lynx-stack/pull/3419))
+
+- Add `@lynx-js/react-signals`, a thread-aware Preact Signals adapter that keeps Signals dependencies out of `@lynx-js/react`. Signal reactivity runs on the background thread, while main-thread rendering uses static signal values with inactive setters, subscriptions, and effects. ([#3346](https://github.com/lynx-family/lynx-stack/pull/3346))
+- Updated dependencies [[`c58b6f9`](https://github.com/lynx-family/lynx-stack/commit/c58b6f91cf7084d2585f42e00db3dd699c27ed61), [`328f712`](https://github.com/lynx-family/lynx-stack/commit/328f7125d1881cf438e58aa749f1e554a756b652)]:
+  - @lynx-js/react-signals@0.0.1
+
 ## 0.2.1
 
 ### Patch Changes

@@ -72,6 +72,8 @@ export interface DemosPageSource<
     theme: 'light' | 'dark';
   }) => PreviewPanelSource;
   formatPlaybackChunk: (chunk: TChunk) => string;
+  /** Whole-artifact protocols can opt out of the incremental playback pane. */
+  playback?: false;
   emptyEditorValue: string;
   emptyPlaybackError: string;
   resetPlaybackOnFill?: boolean;

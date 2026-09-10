@@ -5,6 +5,6 @@
   "license": "Apache-2.0",
   "main": "Index.ets",
   "dependencies": {
-    "@lynx/lynx": "*"
+    __HARMONY_DEPENDENCIES__
   }
 }

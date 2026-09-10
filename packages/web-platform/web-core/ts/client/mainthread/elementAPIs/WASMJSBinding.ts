@@ -29,6 +29,11 @@ export type WASMJSBindingInjectedHandler = {
 
 const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
 
+type EventReactiveElement = HTMLElement & {
+  enableEvent?(eventName: string): void;
+  disableEvent?(eventName: string): void;
+};
+
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
@@ -133,9 +138,9 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   /**
    * Invokes a callback registered through `__AddEventListener`.
    *
-   * Called from the same per-element loop as `runWorklet` and `publishEvent`, so
-   * a callback sees the same `target` / `currentTarget` shape and takes part in
-   * the same capture, catch and bubble ordering.
+   * Called from the same per-element loop as `runWorklet` and `publishEvent`.
+   * The callback is queued in that loop's capture, catch and bubble order, but
+   * runs one microtask later.
    */
   runElementClosure(
     closure: unknown,
@@ -153,19 +158,23 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       | undefined;
     if (!resolvedTarget) return;
     const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
-    eventObject.target = this.generateTargetObject(
+    const eventTarget = this.generateTargetObject(
       resolvedTarget,
       resolvedTargetDataset,
     );
-    eventObject.currentTarget = this.generateTargetObject(
+    const eventCurrentTarget = this.generateTargetObject(
       currentTarget as DecoratedHTMLElement,
       currentTargetDataset,
     );
     // @ts-expect-error
-    eventObject.target.elementRefptr = resolvedTarget;
+    eventTarget.elementRefptr = resolvedTarget;
     // @ts-expect-error
-    eventObject.currentTarget.elementRefptr = currentTarget;
-    (closure as (event: LynxCrossThreadEvent) => void)(eventObject);
+    eventCurrentTarget.elementRefptr = currentTarget;
+    queueMicrotask(() => {
+      eventObject.target = eventTarget;
+      eventObject.currentTarget = eventCurrentTarget;
+      (closure as (event: LynxCrossThreadEvent) => void)(eventObject);
+    });
   }
 
   publishEvent(
@@ -318,19 +327,38 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   }
 
   enableElementEvent(elementRef: WeakRef<HTMLElement>, eventName: string) {
-    const element = elementRef.deref();
-    if (element) {
-      // @ts-expect-error
-      element.enableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
-    }
+    this.#invokeElementEventMethod(elementRef, eventName, 'enableEvent');
   }
 
   disableElementEvent(elementRef: WeakRef<HTMLElement>, eventName: string) {
-    const element = elementRef.deref();
-    if (element) {
-      // @ts-expect-error
-      element.disableEvent?.(LynxEventNameToW3cCommon[eventName] ?? eventName);
+    this.#invokeElementEventMethod(elementRef, eventName, 'disableEvent');
+  }
+
+  #invokeElementEventMethod(
+    elementRef: WeakRef<HTMLElement>,
+    eventName: string,
+    method: 'enableEvent' | 'disableEvent',
+  ) {
+    const element = elementRef.deref() as EventReactiveElement | undefined;
+    if (!element) return;
+
+    const normalizedEventName = LynxEventNameToW3cCommon[eventName]
+      ?? eventName;
+    if (element[method]) {
+      element[method](normalizedEventName);
+      return;
     }
+
+    const registry = element.ownerDocument.defaultView?.customElements;
+    if (!registry || !element.localName.includes('-')) return;
+    void registry.whenDefined(element.localName).then(() => {
+      const upgradedElement = elementRef.deref() as
+        | EventReactiveElement
+        | undefined;
+      if (!upgradedElement) return;
+      registry.upgrade(upgradedElement);
+      upgradedElement[method]?.(normalizedEventName);
+    });
   }
 
   setAttribute(elementRef: WeakRef<HTMLElement>, name: string, value: string) {

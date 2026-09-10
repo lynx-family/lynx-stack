@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { clearFirstScreenMainThreadRefs } from './bindings.js';
 import type { Worklet } from './types.js';
 
 /**
@@ -54,7 +55,7 @@ export function clearDelayedRunOnBackgroundFunctions(): void {
  */
 export function onHydrationFinished(): void {
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.runDelayedBackgroundFunctions();
-  globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
+  clearFirstScreenMainThreadRefs();
   // For old version dynamic component compatibility.
   globalThis.lynxWorkletImpl?._eventDelayImpl.clearDelayedWorklets();
 }

@@ -50,6 +50,7 @@ use swc_core::{
 
 // currently `use xxx as yyy` is not supported by napi-rs
 // So we have to use different name
+use swc_plugin_background_only::BackgroundOnlyVisitor;
 use swc_plugin_compat::napi::{CompatVisitor, CompatVisitorConfig};
 use swc_plugin_compat_post::CompatPostVisitor;
 use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
@@ -612,6 +613,11 @@ fn transform_react_lynx_inner(
     let enable_ui_source_map =
       !use_element_template_plugin && snapshot_plugin_config.enable_ui_source_map.unwrap_or(false);
 
+    let background_only_plugin = Optional::new(
+      visit_mut_pass(BackgroundOnlyVisitor::new()),
+      jsx_backend_enabled,
+    );
+
     let react_transformer = Optional::new(
       react::react(
         cm.clone(),
@@ -847,7 +853,7 @@ fn transform_react_lynx_inner(
         unresolved_mark,
         top_level_mark,
       ),
-      dynamic_import_plugin,
+      (background_only_plugin, dynamic_import_plugin),
       refresh_plugin,
       (compat_plugin, transform_builtin_attribute_names_plugin),
       worklet_plugin,

@@ -11,6 +11,12 @@ export function pluginChunkLoading(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:chunk-loading',
     setup(api) {
+      if (
+        api.context.callerName === 'rslib'
+        || api.context.callerName === 'rstest'
+      ) {
+        return
+      }
       api.modifyBundlerChain((chain) => {
         // dprint-ignore
         chain

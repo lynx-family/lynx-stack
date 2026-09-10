@@ -2,30 +2,96 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test } from '@rstest/core';
+import { describe, expect, rstest, test } from '@rstest/core';
+import { PNG } from 'pngjs';
 
+import { readScreenshotForm } from './helpers/screenshot-form.js';
+import type { ScreenshotEvaluation } from '../agent/common/ui-judge-agent.js';
+import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
+import * as actualJudge from '../agent/common/ui-judge-agent.js' with {
+  rstest: 'importActual',
+};
 import {
-  probeBenchUiJudge,
+  resolveBenchUiJudge,
   runBenchUiJudge,
   runBenchUiJudgeRequest,
-} from '../service/a2ui-bench-judge.js';
+} from '../service/a2ui/a2ui-bench-judge.js';
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
-} from '../service/a2ui-bench-screenshot.js';
+  readBenchScreenshotDataUrl,
+} from '../service/common/bench/screenshot.js';
 
-function screenshotDataUrlForBytes(bytes: number): string {
-  const encodedLength = Math.ceil(bytes / 3) * 4;
-  const remainder = bytes % 3;
-  let padding = '';
-  if (remainder === 1) {
-    padding = '==';
-  } else if (remainder === 2) {
-    padding = '=';
-  }
-  return BENCH_SCREENSHOT_DATA_URL_PREFIX
-    + 'A'.repeat(encodedLength - padding.length)
-    + padding;
+rstest.mock('../agent/common/ui-judge-agent.js', () => ({
+  ...actualJudge,
+  evaluateScreenshot: rstest.fn(),
+}));
+
+// A runner-format 2x2 BMP: red, translucent green, transparent blue, and RGB(20,40,60).
+const CAPTURED_BMP = Buffer.from(
+  'Qk2KAAAAAAAAAHoAAABsAAAAAgAAAP7///8BACAAAwAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAD/AAD/AAAAAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AP8AgP8AAAA8KBT/',
+  'base64',
+);
+
+function bmpDataUrl(bmp: Buffer): string {
+  return 'data:image/bmp;base64,' + bmp.toString('base64');
+}
+
+function largeBmp(): Buffer {
+  const bmp = Buffer.alloc(122 + 1024 * 768 * 4, 255);
+  CAPTURED_BMP.copy(bmp, 0, 0, 122);
+  bmp.writeUInt32LE(bmp.length, 2);
+  bmp.writeInt32LE(1024, 18);
+  bmp.writeInt32LE(-768, 22);
+  bmp.writeUInt32LE(bmp.length - 122, 34);
+  return bmp;
+}
+
+describe('BMP screenshot conversion', () => {
+  test('applies the screenshot limit after PNG compression', async () => {
+    const bmp = largeBmp();
+    expect(bmp.length).toBeGreaterThan(MAX_BENCH_SCREENSHOT_DECODED_BYTES);
+    const result = await readBenchScreenshotDataUrl(bmpDataUrl(bmp));
+    expect(result).toBeDefined();
+    const png = PNG.sync.read(Buffer.from(result!.split(',')[1]!, 'base64'));
+    expect([png.width, png.height]).toEqual([1024, 768]);
+    expect(png.data.every((byte) => byte === 255)).toBe(true);
+  });
+
+  test('discards PNG output larger than the report limit', async () => {
+    const bmp = largeBmp();
+    // Deterministic noise is incompressible and exercises the output limit.
+    let state = 42;
+    for (let i = 122; i < bmp.length; i++) {
+      state ^= state << 13;
+      state ^= state >>> 17;
+      state ^= state << 5;
+      bmp[i] = state & 255;
+    }
+    expect(await readBenchScreenshotDataUrl(bmpDataUrl(bmp))).toBeUndefined();
+  });
+
+  test('rejects truncated pixels, unsupported masks, and excessive dimensions', async () => {
+    const wrongMask = Buffer.from(CAPTURED_BMP);
+    wrongMask.writeUInt32LE(0, 66);
+    const huge = Buffer.from(CAPTURED_BMP);
+    huge.writeInt32LE(0x7fffffff, 18);
+    for (const bmp of [CAPTURED_BMP.subarray(0, 130), wrongMask, huge]) {
+      expect(await readBenchScreenshotDataUrl(bmpDataUrl(bmp))).toBeUndefined();
+    }
+    expect(await readBenchScreenshotDataUrl('data:image/bmp;base64,!!!!'))
+      .toBeUndefined();
+  });
+});
+
+function evaluationResponse(value: unknown, init?: ResponseInit): Response {
+  if (init?.status && init.status >= 400) return Response.json(value, init);
+  rstest.mocked(evaluateScreenshot).mockResolvedValue(
+    value as ScreenshotEvaluation,
+  );
+  return new Response(CAPTURED_BMP, {
+    headers: { 'Content-Type': 'image/bmp' },
+  });
 }
 
 const GEQI_DIMENSIONS = [
@@ -58,87 +124,42 @@ function geqiResponse(score: number): {
   };
 }
 
-describe('probeBenchUiJudge', () => {
-  test('stays disabled without the private sidecar URL', async () => {
-    let called = false;
-    const capability = await probeBenchUiJudge({
-      env: {},
-      fetch: () => {
-        called = true;
-        throw new Error('unexpected fetch');
-      },
-    });
-
-    expect(called).toBe(false);
-    expect(capability).toEqual({
-      enabled: false,
-      reason: 'UI_JUDGE_SERVER_URL is not configured.',
-    });
-  });
-
-  test('enables Judge after a successful health probe', async () => {
-    let requestUrl = '';
-    let requestInit: RequestInit | undefined;
-    const capability = await probeBenchUiJudge({
-      env: {
-        UI_JUDGE_BUNDLE_URL: 'https://assets.test/a2ui.lynx.js',
-        UI_JUDGE_SERVER_URL: 'http://judge.test/internal',
-      },
-      fetch: (input, init) => {
-        requestUrl = input.toString();
-        requestInit = init;
-        return Promise.resolve(Response.json({ status: 'ok' }));
-      },
-    });
-
-    expect(requestUrl).toBe('http://judge.test/internal/health');
-    expect(requestInit?.method).toBe('GET');
-    expect(capability).toEqual({
+describe('resolveBenchUiJudge', () => {
+  test('resolves capture inputs without using a screenshot service URL', async () => {
+    expect(
+      await resolveBenchUiJudge({
+        env: {
+          UI_JUDGE_SERVER_URL: 'file:///unreachable',
+          UI_JUDGE_ZIP_URL: 'https://assets.test/a2ui.lynx.zip',
+        },
+      }),
+    ).toEqual({
       enabled: true,
       session: {
-        bundleUrl: 'https://assets.test/a2ui.lynx.js',
-        judgeUrl: 'http://judge.test/internal/judge',
+        zipUrl: 'https://assets.test/a2ui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
   });
-
-  test('accepts a protocol-specific bundle override', async () => {
-    const capability = await probeBenchUiJudge({
-      bundleUrl: 'file:///tmp/openui.lynx.js',
-      env: {
-        UI_JUDGE_BUNDLE_URL: 'https://assets.test/a2ui.lynx.js',
-        UI_JUDGE_SERVER_URL: 'http://judge.test',
-      },
-      fetch: () => Promise.resolve(Response.json({ status: 'ok' })),
-    });
-
-    expect(capability).toEqual({
-      enabled: true,
-      session: {
-        bundleUrl: 'file:///tmp/openui.lynx.js',
-        judgeUrl: 'http://judge.test/judge',
-      },
-    });
+  test('accepts a protocol-specific bundle override without environment configuration', async () => {
+    expect(
+      await resolveBenchUiJudge({
+        env: {},
+        zipUrl: 'https://assets.test/openui.lynx.zip',
+      }),
+    )
+      .toEqual({
+        enabled: true,
+        session: {
+          zipUrl: 'https://assets.test/openui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
+        },
+      });
   });
-
-  test('keeps Judge disabled when the sidecar is not ready', async () => {
-    const capability = await probeBenchUiJudge({
-      env: {
-        UI_JUDGE_SERVER_URL: 'http://judge.test',
-      },
-      fetch: () =>
-        Promise.resolve(
-          Response.json(
-            { error: { message: 'not ready' } },
-            { status: 503 },
-          ),
-        ),
-    });
-
-    expect(capability).toEqual({
-      enabled: false,
-      reason: 'UI Judge health check returned HTTP 503.',
-    });
+  test('rejects an invalid bundle URL', async () => {
+    expect(
+      await resolveBenchUiJudge({ env: {}, zipUrl: 'file:///template.js' }),
+    ).toMatchObject({ enabled: false });
   });
 });
 
@@ -156,27 +177,26 @@ describe('runBenchUiJudge', () => {
           prompt: 'Build a greeting',
         },
         session: {
-          bundleUrl: 'https://assets.test/openui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/openui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
-      (_input, init) => {
-        const body = typeof init?.body === 'string' ? init.body : '';
-        requestBody = JSON.parse(body) as unknown;
-        return Promise.resolve(Response.json(geqiResponse(5)));
+      (request) => {
+        requestBody = readScreenshotForm(request);
+        return Promise.resolve(evaluationResponse(geqiResponse(5)));
       },
     );
 
     expect(requestBody).toEqual({
+      entry: 'template.js',
+      width: 390,
+      height: 844,
       globalProps: {
         instant: true,
         rawText: 'root = TextContent("Hello")',
         theme: 'light',
       },
-      includeGeqi: true,
-      steps: [],
-      task: 'Build a greeting',
-      url: 'https://assets.test/openui.lynx.js',
+      url: 'https://assets.test/openui.lynx.zip',
     });
     expect(result).toEqual({
       dimensions: geqiResponse(5).dimensions,
@@ -188,68 +208,50 @@ describe('runBenchUiJudge', () => {
     });
   });
 
-  test('returns an explicitly requested captured PNG', async () => {
-    let requestBody: unknown;
-    const screenshotDataUrl =
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
+  test('converts Judge BMP responses to PNG without changing RGBA pixels', async () => {
     const result = await runBenchUiJudgeRequest(
       {
         globalProps: { instant: true },
         includeScreenshot: true,
         scenario: { prompt: 'Build a greeting' },
         session: {
-          bundleUrl: 'file:///tmp/openui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
-        },
-      },
-      (_input, init) => {
-        if (typeof init?.body !== 'string') {
-          throw new Error('expected a JSON string request body');
-        }
-        requestBody = JSON.parse(init.body) as unknown;
-        return Promise.resolve(
-          Response.json({ ...geqiResponse(4), screenshotDataUrl }),
-        );
-      },
-    );
-
-    expect(requestBody).toMatchObject({ includeScreenshot: true });
-    expect(result).toMatchObject({
-      screenshotDataUrl,
-      status: 'complete',
-    });
-  });
-
-  test('discards a captured PNG larger than 2 MiB', async () => {
-    const screenshotDataUrl = screenshotDataUrlForBytes(
-      MAX_BENCH_SCREENSHOT_DECODED_BYTES + 1,
-    );
-    const result = await runBenchUiJudgeRequest(
-      {
-        globalProps: { instant: true },
-        includeScreenshot: true,
-        scenario: { prompt: 'Build a greeting' },
-        session: {
-          bundleUrl: 'file:///tmp/openui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/openui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () =>
-        Promise.resolve(
-          Response.json({ ...geqiResponse(4), screenshotDataUrl }),
-        ),
+        Promise.resolve(evaluationResponse({
+          ...geqiResponse(4),
+        })),
     );
-
-    expect(result).toEqual({
-      dimensions: geqiResponse(4).dimensions,
-      errors: [],
-      geqiScore: 80,
-      score: 4,
-      status: 'complete',
-      warnings: [
-        'ui-judge returned an invalid screenshotDataUrl; the screenshot was discarded.',
-      ],
-    });
+    expect(result.status).toBe('complete');
+    expect(result.warnings).toEqual([]);
+    expect(
+      result.screenshotDataUrl?.startsWith(BENCH_SCREENSHOT_DATA_URL_PREFIX),
+    )
+      .toBe(true);
+    const png = PNG.sync.read(
+      Buffer.from(result.screenshotDataUrl!.split(',')[1]!, 'base64'),
+    );
+    expect([png.width, png.height]).toEqual([2, 2]);
+    expect([...png.data]).toEqual([
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      128,
+      0,
+      0,
+      255,
+      0,
+      20,
+      40,
+      60,
+      255,
+    ]);
   });
 
   test('injects generated messages as server-owned global props', async () => {
@@ -266,26 +268,22 @@ describe('runBenchUiJudge', () => {
         }],
         scenario: {
           id: 'save',
-          judgeSteps: ['Tap Save'],
           judgeTask: 'The saved state is visible',
           name: 'Save card',
           prompt: 'Build a save card',
           type: 'Action',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
         timeoutMs: 45_000,
       },
-      (input, init) => {
-        requestUrl = input.toString();
-        if (typeof init?.body !== 'string') {
-          throw new Error('expected a JSON string request body');
-        }
-        requestBody = JSON.parse(init.body) as unknown;
+      (request) => {
+        requestUrl = request.path;
+        requestBody = readScreenshotForm(request);
         return Promise.resolve(
-          Response.json({
+          evaluationResponse({
             ...geqiResponse(4),
             reason: 'The saved state is clear.',
             summary: 'Strong result.',
@@ -294,8 +292,11 @@ describe('runBenchUiJudge', () => {
       },
     );
 
-    expect(requestUrl).toBe('http://judge.test/judge');
+    expect(requestUrl).toBe('screenshot/zip/url');
     expect(requestBody).toEqual({
+      entry: 'template.js',
+      width: 390,
+      height: 844,
       globalProps: {
         benchMode: true,
         instant: true,
@@ -309,11 +310,7 @@ describe('runBenchUiJudge', () => {
         speed: 0,
         theme: 'light',
       },
-      includeGeqi: true,
-      steps: ['Tap Save'],
-      task: 'The saved state is visible',
-      timeoutMs: 45_000,
-      url: 'https://assets.test/a2ui.lynx.js',
+      url: 'https://assets.test/a2ui.lynx.zip',
     });
     expect(result).toEqual({
       dimensions: geqiResponse(4).dimensions,
@@ -338,13 +335,13 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () =>
         Promise.resolve(
-          Response.json({
+          evaluationResponse({
             error: { message: 'capture failed' },
             score: 0,
           }),
@@ -377,11 +374,11 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
-      () => Promise.resolve(Response.json(response)),
+      () => Promise.resolve(evaluationResponse(response)),
     );
 
     expect(result).toEqual({
@@ -410,11 +407,11 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
-      () => Promise.resolve(Response.json(response)),
+      () => Promise.resolve(evaluationResponse(response)),
     );
 
     expect(result.status).toBe('failed');
@@ -439,11 +436,11 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
-      () => Promise.resolve(Response.json(response)),
+      () => Promise.resolve(evaluationResponse(response)),
     );
 
     expect(result.status).toBe('failed');
@@ -466,13 +463,13 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () =>
         Promise.resolve(
-          Response.json(
+          evaluationResponse(
             { error: { message: 'queue full' } },
             { status: 503 },
           ),
@@ -509,7 +506,7 @@ describe('runBenchUiJudge', () => {
                 component: 'McpApp',
                 id: 'mcp',
                 mcpAppData: {},
-                url: 'https://untrusted.test/app.lynx.js',
+                url: 'https://untrusted.test/app.lynx.zip',
               },
               {
                 component: 'Text',
@@ -547,16 +544,13 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
-      (_input, init) => {
-        if (typeof init?.body !== 'string') {
-          throw new Error('expected a JSON string request body');
-        }
-        requestBody = JSON.parse(init.body) as Record<string, unknown>;
-        return Promise.resolve(Response.json(geqiResponse(3)));
+      (request) => {
+        requestBody = readScreenshotForm(request);
+        return Promise.resolve(evaluationResponse(geqiResponse(3)));
       },
     );
 
@@ -623,13 +617,13 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () => {
         called = true;
-        return Promise.resolve(Response.json({ score: 5 }));
+        return Promise.resolve(evaluationResponse({ score: 5 }));
       },
     );
 
@@ -657,13 +651,13 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          judgeUrl: 'http://judge.test/judge',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
         signal: controller.signal,
       },
-      (_input, init) => {
-        requestSignal = init?.signal;
+      (_request, signal) => {
+        requestSignal = signal;
         return new Promise((_resolve, reject) => {
           requestSignal?.addEventListener(
             'abort',
@@ -685,3 +679,271 @@ describe('runBenchUiJudge', () => {
     expect(requestSignal?.aborted).toBe(true);
   });
 });
+
+describe('screenshot evaluation boundary', () => {
+  const session = {
+    zipUrl: 'https://assets.test/a2ui.lynx.zip',
+    screenshotPath: 'screenshot/zip/url' as const,
+  };
+
+  test('keeps task and model in GenUI and sends the same converted PNG to scoring and the report', async () => {
+    let body: unknown;
+    const result = await runBenchUiJudge({
+      messages: [],
+      includeScreenshot: true,
+      model: 'Selected',
+      scenario: { prompt: 'Build a greeting', judgeTask: 'Show the greeting' },
+      session,
+    }, (request) => {
+      body = readScreenshotForm(request);
+      return Promise.resolve(evaluationResponse(geqiResponse(4)));
+    });
+    expect(body).toEqual({
+      entry: 'template.js',
+      width: 390,
+      height: 844,
+      url: session.zipUrl,
+      globalProps: {
+        benchMode: true,
+        instant: true,
+        messages: [],
+        speed: 0,
+        theme: 'light',
+      },
+    });
+    expect(evaluateScreenshot).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'Selected',
+        task: 'Show the greeting',
+        screenshotDataUrl: result.screenshotDataUrl,
+      }),
+    );
+    expect(result.screenshotDataUrl).toMatch(/^data:image\/png;base64,/u);
+  });
+
+  test('rejects interaction steps before calling the capture service or model', async () => {
+    const fetch = rstest.fn();
+    const evaluate = rstest.fn();
+    const result = await runBenchUiJudgeRequest(
+      {
+        globalProps: {},
+        scenario: { prompt: 'Save', judgeSteps: ['Tap Save'] },
+        session,
+      },
+      fetch,
+      evaluate,
+    );
+    expect(result.status).toBe('failed');
+    expect(fetch).not.toHaveBeenCalled();
+    expect(evaluate).not.toHaveBeenCalled();
+  });
+
+  test('scores a PNG beyond the report storage limit without persisting it', async () => {
+    const bmp = largeBmp();
+    let state = 42;
+    for (let i = 122; i < bmp.length; i++) {
+      state ^= state << 13;
+      state ^= state >>> 17;
+      state ^= state << 5;
+      bmp[i] = state & 255;
+    }
+    const evaluate = rstest.fn(
+      (request: { screenshotDataUrl: string }) => {
+        expect(
+          Buffer.from(request.screenshotDataUrl.split(',')[1]!, 'base64')
+            .length,
+        ).toBeGreaterThan(MAX_BENCH_SCREENSHOT_DECODED_BYTES);
+        return Promise.resolve(geqiResponse(4) as ScreenshotEvaluation);
+      },
+    );
+    const result = await runBenchUiJudgeRequest(
+      {
+        globalProps: {},
+        includeScreenshot: true,
+        scenario: { prompt: 'Build a greeting' },
+        session,
+      },
+      () =>
+        Promise.resolve(
+          new Response(new Uint8Array(bmp), {
+            headers: { 'Content-Type': 'image/bmp' },
+          }),
+        ),
+      evaluate,
+    );
+    expect(result).toMatchObject({
+      status: 'complete',
+      score: 4,
+      geqiScore: 80,
+    });
+    expect(result.screenshotDataUrl).toBeUndefined();
+    expect(result.warnings).toEqual([
+      'The captured PNG exceeded the Bench screenshot storage limit.',
+    ]);
+    expect(evaluate).toHaveBeenCalledTimes(1);
+  });
+
+  test('rejects malformed BMP responses before evaluation', async () => {
+    const evaluate = rstest.fn();
+    const result = await runBenchUiJudgeRequest(
+      { globalProps: {}, scenario: { prompt: 'Build a greeting' }, session },
+      () =>
+        Promise.resolve(
+          new Response('broken', { headers: { 'Content-Type': 'image/bmp' } }),
+        ),
+      evaluate,
+    );
+    expect(result.status).toBe('failed');
+    expect(evaluate).not.toHaveBeenCalled();
+  });
+
+  for (
+    const [reason, headers] of [
+      ['an unexpected content type', { 'Content-Type': 'image/png' }],
+      ['an oversized content length', {
+        'Content-Type': 'image/bmp',
+        'Content-Length': String(10 * 1024 * 1024 + 1025),
+      }],
+    ] as const
+  ) {
+    test(`cancels the unread body for ${reason}`, async () => {
+      for (const rejectCancellation of [false, true]) {
+        const cancel = rstest.fn(() =>
+          rejectCancellation
+            ? Promise.reject(new Error('Cleanup failed.'))
+            : Promise.resolve()
+        );
+        const pull = rstest.fn();
+        const evaluate = rstest.fn();
+        const response = new Response(
+          new ReadableStream({ cancel, pull }, { highWaterMark: 0 }),
+          { headers },
+        );
+        const result = await runBenchUiJudgeRequest(
+          {
+            globalProps: {},
+            scenario: { prompt: 'Build a greeting' },
+            session,
+          },
+          () => Promise.resolve(response),
+          evaluate,
+        );
+
+        expect(result).toMatchObject({
+          status: 'failed',
+          score: 0,
+          errors: ['GenUI screenshot evaluation failed.'],
+        });
+        expect(cancel).toHaveBeenCalledTimes(1);
+        expect(pull).not.toHaveBeenCalled();
+        expect(response.bodyUsed).toBe(true);
+        expect(evaluate).not.toHaveBeenCalled();
+      }
+    });
+
+    test(`rejects ${reason} when the response body is absent`, async () => {
+      const evaluate = rstest.fn();
+      const result = await runBenchUiJudgeRequest(
+        { globalProps: {}, scenario: { prompt: 'Build a greeting' }, session },
+        () => Promise.resolve(new Response(null, { headers })),
+        evaluate,
+      );
+      expect(result).toMatchObject({
+        status: 'failed',
+        score: 0,
+        errors: ['GenUI screenshot evaluation failed.'],
+      });
+      expect(evaluate).not.toHaveBeenCalled();
+    });
+  }
+
+  test('cancels a stalled screenshot body without starting the model', async () => {
+    const controller = new AbortController();
+    let cancelled = false;
+    const evaluate = rstest.fn();
+    const pending = runBenchUiJudgeRequest({
+      globalProps: {},
+      scenario: { prompt: 'Build a greeting' },
+      session,
+      signal: controller.signal,
+    }, () => {
+      setTimeout(() => controller.abort(), 0);
+      return Promise.resolve(
+        new Response(
+          new ReadableStream({
+            cancel() {
+              cancelled = true;
+            },
+          }),
+          { headers: { 'Content-Type': 'image/bmp' } },
+        ),
+      );
+    }, evaluate);
+    expect(await pending).toMatchObject({ status: 'failed', errors: [] });
+    expect(cancelled).toBe(true);
+    expect(evaluate).not.toHaveBeenCalled();
+  });
+});
+
+test.each([
+  { viewport: undefined, width: 390, height: 844 },
+  { viewport: {}, width: 390, height: 844 },
+  { viewport: { width: 375 }, width: 375, height: 844 },
+  { viewport: { height: 812 }, width: 390, height: 812 },
+])(
+  'fills missing viewport dimensions for $viewport',
+  async ({ viewport, width, height }) => {
+    for (const xml of [false, true]) {
+      await runBenchUiJudgeRequest({
+        globalProps: {},
+        ...(xml ? { lynxXmlSource: '<lynx/>' } : {}),
+        ...(viewport ? { viewport } : {}),
+        scenario: { prompt: 'Greeting' },
+        session: {
+          screenshotPath: `screenshot/zip/${xml ? 'upload' : 'url'}`,
+          ...(xml ? {} : { zipUrl: 'https://assets.test/a2ui.lynx.zip' }),
+        },
+      }, (request) => {
+        expect(readScreenshotForm(request)).toMatchObject({ width, height });
+        return Promise.resolve(evaluationResponse(geqiResponse(4)));
+      });
+    }
+  },
+);
+
+test.each(['a2ui', 'openui', 'lynx-xml'])(
+  'passes supported ZIP fields and keeps timeout client-side for %s',
+  async (protocol) => {
+    const xml = protocol === 'lynx-xml';
+    await runBenchUiJudgeRequest({
+      globalProps: { ready: true },
+      ...(xml ? { lynxXmlSource: '<lynx/>' } : {}),
+      initData: { count: 1 },
+      viewport: { width: 375, height: 812 },
+      timeoutMs: 4321,
+      scenario: { prompt: 'Greeting' },
+      session: {
+        screenshotPath: `screenshot/zip/${xml ? 'upload' : 'url'}`,
+        ...(xml
+          ? {}
+          : { zipUrl: `https://assets.test/${protocol}.lynx.zip` }),
+      },
+    }, (request) => {
+      expect(request.source).toBe(xml ? '<lynx/>' : undefined);
+      expect(request.timeoutMs).toBe(8642);
+      expect(readScreenshotForm(request)).toEqual({
+        entry: xml ? 'index.lynxml' : 'template.js',
+        ...(xml
+          ? {}
+          : {
+            url: `https://assets.test/${protocol}.lynx.zip`,
+            globalProps: { ready: true },
+          }),
+        initData: { count: 1 },
+        width: 375,
+        height: 812,
+      });
+      return Promise.resolve(evaluationResponse(geqiResponse(4)));
+    });
+  },
+);

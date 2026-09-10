@@ -31,7 +31,7 @@ impl Eliminate for ArrowExpr {
   fn eliminate(&mut self) {
     // TODO(hongzhiyuan.hzy): don't change `length` of function
     self.params.clear();
-    if let BlockStmtOrExpr::BlockStmt(block) = &mut *self.body {
+    if let ArrowFunctionBody::FunctionBody(block) = &mut *self.body {
       block.stmts.clear();
     }
   }
@@ -60,8 +60,8 @@ impl DirectiveDCEVisitor {
     DirectiveDCEVisitor { opts }
   }
 
-  fn should_eliminate(&self, n: &BlockStmt) -> (bool, Option<Span>) {
-    let BlockStmt { stmts, .. } = n;
+  fn should_eliminate(&self, n: &FunctionBody) -> (bool, Option<Span>) {
+    let FunctionBody { stmts, .. } = n;
     if !stmts.is_empty() {
       match &stmts[0] {
         Stmt::Expr(ExprStmt { expr, span }) => match &**expr {
@@ -179,8 +179,8 @@ impl VisitMut for DirectiveDCEVisitor {
   }
 
   fn visit_mut_arrow_expr(&mut self, arrow: &mut ArrowExpr) {
-    if arrow.body.is_block_stmt() {
-      let body = arrow.body.as_mut_block_stmt().unwrap();
+    if arrow.body.is_function_body() {
+      let body = arrow.body.as_mut_function_body().unwrap();
       let (should_eliminate, _) = self.should_eliminate(body);
 
       // if should_eliminate, then clear the body

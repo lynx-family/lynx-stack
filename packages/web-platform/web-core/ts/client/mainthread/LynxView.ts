@@ -37,6 +37,8 @@ export interface BrowserConfig {
  * @property {Cloneable} globalProps [optional] (attribute: "global-props") The globalProps value of this Lynx card
  * @property {Cloneable} initData [optional] (attribute: "init-data") The initial data of this Lynx card
  * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
+ * A `LynxConsoleModule` whose factory returns a Console-like object provides
+ * the lexical `console` for this view's background bundles.
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
  * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
@@ -95,6 +97,8 @@ export class LynxViewElement extends HTMLElement {
    * @public
    * @property nativeModulesMap
    * @default {}
+   * A `LynxConsoleModule` whose factory returns a Console-like object provides
+   * the lexical `console` for this view's background bundles.
    */
   nativeModulesMap: NativeModulesMap | undefined;
 

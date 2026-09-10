@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.123.3",
+  "version": "0.126.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -43,18 +43,22 @@
     },
     "./element-template": {
       "types": "./runtime/lib/element-template/index.d.ts",
+      "lazy": "./runtime/lazy/element-template.js",
       "default": "./runtime/lib/element-template/index.js"
     },
     "./element-template/internal": {
       "types": "./runtime/lib/element-template/internal.d.ts",
+      "lazy": "./runtime/lazy/element-template-internal.js",
       "default": "./runtime/lib/element-template/internal.js"
     },
     "./element-template/jsx-runtime": {
       "types": "./runtime/lib/element-template/jsx-runtime/index.d.ts",
+      "lazy": "./runtime/lazy/element-template-jsx-runtime.js",
       "default": "./runtime/lib/element-template/jsx-runtime/index.js"
     },
     "./element-template/jsx-dev-runtime": {
       "types": "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts",
+      "lazy": "./runtime/lazy/element-template-jsx-dev-runtime.js",
       "default": "./runtime/lib/element-template/jsx-dev-runtime/index.js"
     },
     "./jsx-runtime": {

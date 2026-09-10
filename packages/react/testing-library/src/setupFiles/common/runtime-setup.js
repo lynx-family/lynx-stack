@@ -89,13 +89,13 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
 
   // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?
   // packages/react/runtime/src/lynx.ts
-  // intercept lynxCoreInject assignments to lynxTestingEnv.backgroundThread.globalThis.lynxCoreInject
-  const oldLynxCoreInject = globalThis.lynxCoreInject;
-  globalThis.lynxCoreInject = target.lynxCoreInject;
+  // point `lynx` at the target thread so injectTt assigns onto its app object
+  const oldLynx = globalThis.lynx;
+  globalThis.lynx = target.lynx;
   try {
     injectTt();
   } finally {
-    globalThis.lynxCoreInject = oldLynxCoreInject;
+    globalThis.lynx = oldLynx;
   }
 
   // re-init global snapshot patch to undefined

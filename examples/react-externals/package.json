@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run build:comp-lib && rspeedy build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy build",
+    "build": "pnpm run build:comp-lib && pnpm run build:utils && rsbuild build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true pnpm run build:utils && cross-env REACTLYNX_ASYNC=true rsbuild build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
     "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
-    "dev": "pnpm run build:comp-lib && rspeedy dev",
-    "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy dev",
-    "preview": "rspeedy preview",
-    "preview:react-async": "cross-env REACTLYNX_ASYNC=true rspeedy preview"
+    "build:utils": "rslib build --config rslib-utils.config.ts",
+    "dev": "pnpm run build:comp-lib && pnpm run build:utils && rsbuild dev",
+    "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true pnpm run build:utils && cross-env REACTLYNX_ASYNC=true rsbuild dev",
+    "preview": "rsbuild preview",
+    "preview:react-async": "cross-env REACTLYNX_ASYNC=true rsbuild preview"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
@@ -18,11 +19,12 @@
   "devDependencies": {
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
     "@types/react": "^19.2.18",
     "cross-env": "^10.1.0"
   }

@@ -1,10 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { DataUriLimit, InlineChunkConfig, Rspack } from '@rsbuild/core'
+import type {
+  DataUriLimit,
+  DistPathConfig,
+  InlineChunkConfig,
+  Rspack,
+} from '@rsbuild/core'
 
 import type { CssModules } from './css-modules.js'
-import type { DistPath } from './dist-path.js'
 import type { Filename } from './filename.js'
 import type { Minify } from './minify.js'
 import type { SourceMap } from './source-map.js'
@@ -257,7 +261,7 @@ export interface Output {
    * })
    * ```
    */
-  distPath?: DistPath | undefined
+  distPath?: DistPathConfig | undefined
 
   /**
    * The {@link Filename} determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.

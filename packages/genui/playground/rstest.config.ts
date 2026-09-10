@@ -3,7 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 import { defineConfig } from '@rstest/core';
 
+import { DEFAULT_GENUI_SERVER_URL } from './genui-server-url.js';
+
 export default defineConfig({
   name: 'genui/genui-playground',
   include: ['src/**/*.test.ts'],
+  source: {
+    define: {
+      __GENUI_SERVER_URL__: JSON.stringify(DEFAULT_GENUI_SERVER_URL),
+    },
+  },
+  tools: {
+    rspack: {
+      module: {
+        rules: [
+          {
+            test: /\.lynxml$/,
+            resourceQuery: /raw/,
+            type: 'asset/source',
+          },
+        ],
+      },
+    },
+  },
 });

@@ -13,4 +13,14 @@ describe('conversation protocol metadata', () => {
   test('keeps OpenUI conversations isolated by protocol metadata', () => {
     expect(resolveConversationProtocol({ protocol: 'openui' })).toBe('openui');
   });
+
+  test('keeps Lynx XML conversations isolated by protocol metadata', () => {
+    expect(resolveConversationProtocol({ protocol: 'lynx-xml' })).toBe(
+      'lynx-xml',
+    );
+  });
+
+  test('keeps HTML conversations isolated by protocol metadata', () => {
+    expect(resolveConversationProtocol({ protocol: 'html' })).toBe('html');
+  });
 });

@@ -5,17 +5,18 @@ import type { Protocol, ProtocolName } from './protocol.js';
 import { DEFAULT_PROTOCOL, getProtocol } from './protocol.js';
 
 export type Tab = 'create' | 'examples' | 'catalog' | 'bench';
-export type BenchSlug = 'runner' | 'phase-1' | 'phase-2';
 
 export interface Route {
   protocol: Protocol;
   tab: Tab;
   componentName?: string;
   demoId?: string;
-  benchSlug?: BenchSlug;
+  benchReportId?: string;
 }
 
 export const DEFAULT_ROUTE_HASH = '#/a2ui';
+export const BENCH_JOB_ID =
+  /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/iu;
 
 export function isEmptyRouteHash(hash: string): boolean {
   return hash === '' || hash === '#' || hash === '#/';
@@ -45,6 +46,8 @@ export function parseRouteHash(hash: string): Route {
     parts[0] === 'a2ui'
     || parts[0] === 'openui'
     || parts[0] === 'mcp-apps'
+    || parts[0] === 'lynx-xml'
+    || parts[0] === 'html'
   ) {
     protocol = getProtocol(parts[0]);
     rest = parts.slice(1);
@@ -68,17 +71,14 @@ export function parseRouteHash(hash: string): Route {
     return { protocol, tab: 'create' };
   }
   if (rest[0] === 'bench' && protocol.name === 'a2ui') {
-    const requestedSlug = rest[1];
-    const benchSlug: BenchSlug = requestedSlug === 'runner'
-        || requestedSlug === 'phase-1'
-        || requestedSlug === 'phase-2'
-      ? requestedSlug
-      : 'runner';
-    return {
-      protocol,
-      tab: 'bench',
-      benchSlug,
-    };
+    if (rest[1] === 'reports') {
+      return {
+        protocol,
+        tab: 'bench',
+        benchReportId: rest.length === 3 ? rest[2] : '',
+      };
+    }
+    return { protocol, tab: 'bench' };
   }
   // Back-compat: the standalone Playback tab is gone; route it to Examples.
   if (rest[0] === 'playback') {

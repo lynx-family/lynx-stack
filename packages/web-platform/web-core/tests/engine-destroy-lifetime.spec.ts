@@ -33,6 +33,9 @@ describe('__DestroyLifetime on teardown', () => {
       boundingClientRectService: {
         dispose: () => disposeCalls.push('boundingClientRect'),
       },
+      intersectionObserverService: {
+        dispose: () => disposeCalls.push('intersectionObserver'),
+      },
       backgroundThread: {
         [Symbol.asyncDispose]: async () => {
           disposeCalls.push('backgroundThread');

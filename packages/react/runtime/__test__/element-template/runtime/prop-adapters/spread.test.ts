@@ -4,24 +4,12 @@ import { getEventValue } from '../../../../src/element-template/prop-adapters/ev
 import { prepareSpreadAttrSlot } from '../../../../src/element-template/prop-adapters/spread.js';
 
 afterEach(() => {
-  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
+  lynx.__runtime_configs__ = { transformBuiltinAttributeNames: false };
 });
 
 describe('ElementTemplate spread prop adapter', () => {
-  it('preserves spread attribute names when the compile-time config is unavailable', () => {
-    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
-
-    expect(
-      prepareSpreadAttrSlot(-1, 0, {
-        textMaxline: 2,
-      }),
-    ).toEqual({
-      textMaxline: 2,
-    });
-  });
-
   it('transforms builtin attribute names and preserves event handler lookup keys', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     const prepared = prepareSpreadAttrSlot(-1, 0, {
       textMaxline: 2,
@@ -43,11 +31,13 @@ describe('ElementTemplate spread prop adapter', () => {
   });
 
   it('transforms only after identifying special spread attributes', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
-      rename: {
-        className: 'renamed-class',
-        ref: 'renamed-ref',
-        textMaxline: 'custom-maxline',
+    lynx.__runtime_configs__ = {
+      transformBuiltinAttributeNames: {
+        rename: {
+          className: 'renamed-class',
+          ref: 'renamed-ref',
+          textMaxline: 'custom-maxline',
+        },
       },
     };
     const ref = vi.fn();

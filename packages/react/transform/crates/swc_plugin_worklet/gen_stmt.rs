@@ -289,12 +289,10 @@ impl StmtGen {
     stmts.append(&mut function.body.unwrap().stmts);
 
     Function {
-      body: BlockStmt {
-        ctxt: Default::default(),
+      body: Some(FunctionBody {
         span: DUMMY_SP,
         stmts,
-      }
-      .into(),
+      }),
       ..*function
     }
   }

@@ -32,6 +32,8 @@ export interface ChatTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cachedTokens?: number;
+  cacheWriteTokens?: number;
 }
 
 export type ChatMessageKind =
@@ -62,6 +64,7 @@ export interface ChatArtifactView {
   id: string;
   label: string;
   text: string;
+  formattedText?: string;
   language: 'text' | 'json';
 }
 
@@ -101,6 +104,8 @@ export interface ChatStreamAdapter<TState, TOutput> {
 
 export interface ChatTurnPersistence {
   assistantContent: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   a2uiMessages: unknown[];
   previewMessages: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
@@ -140,6 +145,8 @@ export interface ChatSettingsAdapter<TSettings> {
   ) => Promise<TSettings>;
   controls: (value: TSettings) => readonly ChatSettingControl[];
   update: (value: TSettings, id: string, next: string) => TSettings;
+  validate?: (value: TSettings) => string | undefined;
+  validateRequest?: (value: TSettings, target: string) => void;
   badge: (value: TSettings) => string;
 }
 
@@ -175,6 +182,8 @@ export interface ChatPreviewContext {
 
 export interface ChatPreviewAdapter<TOutput> {
   delivery: 'reload' | 'live-message';
+  /** Boot a live renderer while the agent is still preparing its first output. */
+  initialOutput?: () => TOutput;
   source: (
     output: TOutput | null,
     context: ChatPreviewContext,

@@ -3,13 +3,21 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
+import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import type { SerializableValue } from '../protocol/types.js';
-import { __etAttrPlanMap, adaptRefAttrSlot, adaptSpreadAttrSlot } from '../runtime/template/attr-slot-plan.js';
-import type { EtAttrAdapter, EtAttrAdapterContext } from '../runtime/template/attr-slot-plan.js';
+import {
+  __etAttrPlanMap,
+  adaptRefAttrSlot,
+  adaptSpreadAttrSlot,
+  getMainThreadDynamicAttrSlotKinds,
+} from '../runtime/template/attr-slot-plan.js';
+import type { EtAttrAdapter, EtAttrAdapterContext, EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
 
 export interface PrepareAttributeSlotsOptions {
   previousPreparedSlots?: readonly unknown[];
   previousRawSlots?: readonly unknown[];
+  attributePlan?: EtAttrPlan | undefined;
 }
 
 function normalizeAttributeSlots(rawSlots: readonly unknown[]): SerializableValue[] {
@@ -67,7 +75,7 @@ export function prepareAttributeSlots(
   rawSlots: readonly unknown[],
   options?: PrepareAttributeSlotsOptions,
 ): SerializableValue[] {
-  const attrPlan = __etAttrPlanMap[templateKey];
+  const attrPlan = options?.attributePlan ?? __etAttrPlanMap[templateKey];
   if (!attrPlan || attrPlan.length === 0) {
     return normalizeAttributeSlots(rawSlots);
   }
@@ -99,11 +107,26 @@ export function queueRefAttributeSlotUpdates(
   handleId: number,
   previousRawSlots?: readonly unknown[],
   nextRawSlots?: readonly unknown[],
+  attributePlan?: EtAttrPlan,
 ): void {
-  const attrPlan = __etAttrPlanMap[templateKey];
+  const attrPlan = attributePlan ?? __etAttrPlanMap[templateKey];
   if (!attrPlan || attrPlan.length === 0) {
     return;
   }
 
   queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, nextRawSlots);
+}
+
+export function getAttributeSlotUpdateOp(
+  templateType: string,
+  attrSlotIndex: number,
+): ElementTemplateUpdateOp {
+  const kind = getMainThreadDynamicAttrSlotKinds(templateType)?.get(attrSlotIndex);
+  if (kind === 'mt-event') {
+    return ElementTemplateUpdateOps.setMainThreadEvent;
+  }
+  if (kind === 'mt-ref') {
+    return ElementTemplateUpdateOps.setMainThreadRef;
+  }
+  return ElementTemplateUpdateOps.setAttribute;
 }

@@ -12,6 +12,7 @@ import {
   isDebug,
   isRsdoctor,
 } from './LynxTemplatePlugin.js';
+import type { EncodeOptions } from './LynxTemplatePlugin.js';
 import { genStyleInfo } from './web/genStyleInfo.js';
 
 export class WebEncodePlugin {
@@ -80,11 +81,18 @@ export class WebEncodePlugin {
         }, (encodeOptions) => {
           const { encodeData, intermediateAssets } = encodeOptions;
 
-          const [name, content] = last(Object.entries(encodeData.manifest))!;
+          // A bundle assembled from sections packs every background chunk, so
+          // none of them stays on disk. A card keeps its split chunks.
+          const inlinedManifest =
+            encodeData.sourceContent.appType === 'DynamicComponent'
+              ? Object.keys(encodeData.manifest)
+              : [last(Object.keys(encodeData.manifest))];
 
           if (!isDebug() && !isDev && !isRsdoctor()) {
             [
-              { name },
+              ...inlinedManifest.map(name =>
+                name === undefined ? undefined : { name }
+              ),
               encodeData.lepusCode.root,
               ...encodeData.lepusCode.chunks,
               ...encodeData.css.chunks,
@@ -95,11 +103,6 @@ export class WebEncodePlugin {
           }
 
           Object.assign(encodeData, {
-            manifest: {
-              // `app-service.js` is the entry point of a template.
-              '/app-service.js': content,
-            },
-            customSections: encodeData.customSections,
             cardType: encodeData.sourceContent.dsl.substring(0, 5),
             appType: encodeData.sourceContent.appType,
             pageConfig: {
@@ -114,60 +117,36 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
         }, async ({ encodeOptions }) => {
-          const styleInfo = {
-            ...(encodeOptions['css'] as {
-              cssMap: Record<string, LynxStyleNode[]>;
-            }).cssMap,
-          };
-          const manifest = {
-            ...(encodeOptions.manifest as Record<string, string>),
-          };
-          const lepusCode: Record<string, string> = encodeOptions.lepusCode
-            ? {
-              ...encodeOptions.lepusCode.lepusChunk,
-              root: encodeOptions.lepusCode.root!,
-            }
-            : {};
-          const customSections: Record<
-            string,
-            { content: unknown; encoding?: string }
-          > = {
-            ...(encodeOptions.customSections ?? {}),
-          };
-          const background = customSections['background'];
-          if (typeof background?.content === 'string') {
-            manifest['/background'] = background.content;
-            delete customSections['background'];
-          }
-          const mainThread = customSections['main-thread'];
-          if (typeof mainThread?.content === 'string') {
-            lepusCode['main-thread'] = mainThread.content;
-            delete customSections['main-thread'];
-          }
-          const css = customSections['CSS'];
-          const cssContent = typeof css?.content === 'object'
-              && css.content !== null
-            ? css.content as Record<string, unknown>
-            : undefined;
-          if (
-            css?.encoding === 'CSS'
-            && Array.isArray(cssContent?.['ruleList'])
-          ) {
-            let cssId = 0;
-            while (String(cssId) in styleInfo) cssId++;
-            styleInfo[String(cssId)] = cssContent[
-              'ruleList'
-            ] as LynxStyleNode[];
-            delete customSections['CSS'];
-          }
+          // A bundle assembled from custom sections has no `lepusCode`. The
+          // web runtime has no section lookup: it reads the main thread from
+          // `lepusCode` and the background from `manifest`, so the sections
+          // are routed into those slots. A card keeps its fixed entry.
+          const slots = encodeOptions.lepusCode === undefined
+            ? routeSections(encodeOptions.customSections ?? {})
+            : {
+              styleInfo: (encodeOptions['css'] as {
+                cssMap: Record<string, LynxStyleNode[]>;
+              }).cssMap,
+              manifest: {
+                // `app-service.js` is the entry point of a template.
+                '/app-service.js': last(
+                  Object.values(
+                    encodeOptions.manifest as Record<string, string>,
+                  ),
+                )!,
+              },
+              lepusCode: {
+                // flatten the lepusCode to a single object
+                ...encodeOptions.lepusCode.lepusChunk,
+                root: encodeOptions.lepusCode.root!,
+              },
+              customSections: encodeOptions.customSections ?? {},
+            };
           const tasmJSONInfo: Record<string, unknown> = {
-            styleInfo,
-            manifest,
+            ...slots,
             cardType: encodeOptions['cardType'] as string,
             appType: encodeOptions['appType'] as string,
             pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
-            lepusCode,
-            customSections,
           };
           if (encodeOptions.elementTemplate !== undefined) {
             tasmJSONInfo['elementTemplate'] = encodeOptions.elementTemplate;
@@ -219,6 +198,46 @@ export class WebEncodePlugin {
       return compilation.deleteAsset(name);
     }
   }
+}
+
+/**
+ * Routes the custom sections of a bundle into the slots a web bundle carries.
+ * The `JsBytecode` tag says which section is the main thread one; on web it
+ * only selects the slot, the section stays raw source.
+ *
+ * @public
+ */
+export function routeSections(
+  customSections: NonNullable<EncodeOptions['customSections']>,
+): Pick<TasmJSONInfo, 'styleInfo' | 'lepusCode' | 'manifest'> & {
+  customSections: NonNullable<EncodeOptions['customSections']>;
+} {
+  const styleInfo: TasmJSONInfo['styleInfo'] = {};
+  const lepusCode: TasmJSONInfo['lepusCode'] = {};
+  const manifest: TasmJSONInfo['manifest'] = {};
+  const remainingSections: NonNullable<EncodeOptions['customSections']> = {};
+  let cssId = 0;
+
+  for (const [name, section] of Object.entries(customSections)) {
+    if (section.encoding === 'CSS') {
+      const { ruleList } = section.content as { ruleList?: LynxStyleNode[] };
+      // `encodeCSS` requires numeric css-id keys.
+      styleInfo[String(cssId++)] = ruleList ?? [];
+    } else if (
+      section.encoding === 'JsBytecode'
+      || (name === 'main-thread' && typeof section.content === 'string')
+    ) {
+      lepusCode[name] = section.content as string;
+    } else if (typeof section.content === 'string') {
+      // Keyed `/<name>` so `readScript` finds it, the way a card carries its
+      // own `/app-service.js`.
+      manifest[`/${name}`] = section.content;
+    } else {
+      remainingSections[name] = section;
+    }
+  }
+
+  return { styleInfo, lepusCode, manifest, customSections: remainingSections };
 }
 
 function last<T>(array: T[]): T | undefined {

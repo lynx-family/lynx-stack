@@ -20,7 +20,17 @@ import { snapshotCreateList } from './snapshot/snapshot/list.js';
 import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot/snapshot.js';
 import { setSnapshotCreatorRuntime } from './snapshot/snapshot/snapshotCreatorMap.js';
 
-export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './shared/render-constants.js';
+export {
+  BITS,
+  CHILDREN,
+  COMPONENT,
+  COMPONENT_DIRTY,
+  DIFF,
+  DOM,
+  FLAGS,
+  INDEX,
+  PARENT,
+} from './shared/render-constants.js';
 
 export { __page, __pageId, __root };
 

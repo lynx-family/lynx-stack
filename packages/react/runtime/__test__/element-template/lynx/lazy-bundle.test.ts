@@ -66,7 +66,7 @@ describe('element-template loadLazyBundle', () => {
     originalQueryComponent = g.__QueryComponent;
     originalLynxQueryComponent = (lynx as LynxWithQuery).QueryComponent;
     originalGetNativeLynx = lynx.getNativeLynx;
-    originalGetDynamicComponentExports = (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    originalGetDynamicComponentExports = (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports;
   });
@@ -76,7 +76,7 @@ describe('element-template loadLazyBundle', () => {
     restoreProperty(lynx as LynxWithQuery, 'QueryComponent', originalLynxQueryComponent);
     lynx.getNativeLynx = originalGetNativeLynx;
     restoreProperty(
-      lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+      lynx.getApp() as LynxApp & {
         getDynamicComponentExports?: DynamicExportsGetter;
       },
       'getDynamicComponentExports',
@@ -186,7 +186,7 @@ describe('element-template loadLazyBundle', () => {
     });
     const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithQuery).QueryComponent = QueryComponent;
-    (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports = getDynamicComponentExports;
 
@@ -211,7 +211,7 @@ describe('element-template loadLazyBundle', () => {
     });
     const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithQuery).QueryComponent = QueryComponent;
-    (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports = getDynamicComponentExports;
 
@@ -246,7 +246,7 @@ describe('element-template loadLazyBundle', () => {
     });
     const getDynamicComponentExports = vi.fn(() => undefined);
     (lynx as LynxWithQuery).QueryComponent = QueryComponent;
-    (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports = getDynamicComponentExports;
 
@@ -269,7 +269,7 @@ describe('element-template loadLazyBundle', () => {
       ({
         QueryComponent: nativeQueryComponent,
       }) as ReturnType<typeof lynx.getNativeLynx>;
-    (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
     }).getDynamicComponentExports = getDynamicComponentExports;
 

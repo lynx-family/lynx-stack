@@ -33,11 +33,11 @@ In the filename, `[name]` is the entry name corresponding to this file, such as 
 
 ### Development
 
-In development, an `dist/.rspeedy` directory is emitted which contains the resources for debugging.
+In development, an `dist/.lynx` directory is emitted which contains the resources for debugging.
 
 ```
 dist/
-├── .rspeedy
+├── .lynx
 │   ├── lazy-bundle
 │   │   └── [name]
 │   │       ├── background.js
@@ -65,8 +65,8 @@ dist/
 
 In addition, Rspeedy generates some extra files in development:
 
-- Background Thread Script(BTS): The background script file that is inlined into the bundle, default output to `.rspeedy/[name]/background.js`.
-- MainThread Thread Script(MTS): The main-thread script file that is inlined into the bundle, default output to `.rspeedy/[name]/main-thread.js`.
+- Background Thread Script(BTS): The background script file that is inlined into the bundle, default output to `.lynx/[name]/background.js`.
+- MainThread Thread Script(MTS): The main-thread script file that is inlined into the bundle, default output to `.lynx/[name]/main-thread.js`.
 - Source Map files: contains the source code mappings, which is output to the same level directory of JS files and adds a `.map` suffix when [`output.sourceMap`] is enabled.
 
 ## Modify the Directory
@@ -113,6 +113,6 @@ dist
 [`output.filename.js`]: /api/rspeedy.filename.js
 [`output.filename.bundle`]: /api/rspeedy.filename.bundle
 [`output.distPath`]: /api/rspeedy.output.distpath
-[`output.distPath.js`]: /api/rspeedy.distpath.js
+[`output.distPath.js`]: https://rsbuild.rs/config/output/dist-path
 [`output.legalComments`]: /api/rspeedy.output.legalcomments
 [`output.sourceMap`]: /api/rspeedy.output.sourcemap

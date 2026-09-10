@@ -12,7 +12,9 @@ import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
-import { MainThreadRef, useMainThreadRef } from '../../../src/snapshot/worklet/ref/workletRef';
+import { MainThreadRef, isMainThreadRef, useMainThreadRef } from '../../../src/core/main-thread-ref';
+import { isMainThreadFunction } from '../../../src/core/main-thread-function';
+import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value';
 import { globalEnvManager } from '../utils/envManager';
 import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
 
@@ -77,6 +79,24 @@ describe('WorkletRef in js', () => {
     expect(JSON.stringify(ref)).toMatchInlineSnapshot(`"{"_wvid":1}"`);
   });
 
+  it('should discard pending init values when resetting the test environment', () => {
+    globalEnvManager.switchToBackground();
+    new MainThreadRef('stale');
+
+    globalEnvManager.resetEnv();
+    globalEnvManager.switchToBackground();
+    new MainThreadRef('fresh');
+
+    expect(takeMainThreadRefInitValuePatch()).toEqual([[1, 'fresh']]);
+  });
+
+  it('should identify main-thread ref values', () => {
+    expect(isMainThreadRef({ _wvid: 1 })).toBe(true);
+    expect(isMainThreadRef({ _wkltId: 'callback' })).toBe(false);
+    expect(isMainThreadFunction({ _wkltId: 'callback' })).toBe(true);
+    expect(isMainThreadFunction({ _wvid: 1 })).toBe(false);
+  });
+
   it('should send init value to the main thread', () => {
     // main thread render
     {
@@ -93,7 +113,7 @@ describe('WorkletRef in js', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -155,14 +175,6 @@ describe('WorkletRef in js', () => {
     );
   });
 
-  it('should throw when native capabilities not fulfilled', () => {
-    globalEnvManager.switchToBackground();
-    lynx.getCoreContext = undefined;
-    expect(() => {
-      new MainThreadRef(1);
-    }).not.toThrow();
-  });
-
   it('should not send init value to the main thread when native capabilities not fulfilled', () => {
     SystemInfo.lynxSdkVersion = '2.13';
     const Comp = () => {
@@ -185,7 +197,7 @@ describe('WorkletRef in js', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -238,7 +250,7 @@ describe('WorkletRef in js', () => {
     {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();

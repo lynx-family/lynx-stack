@@ -11,8 +11,9 @@ import {
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
 } from './commit-hook.js';
-import { hydrateRootChildrenIntoContext } from './hydrate.js';
-import type { BackgroundElementTemplateInstance } from './instance.js';
+import type { BackgroundPageRootInstance } from './instance.js';
+import { hydratePageRootIntoContext } from './page-root-hydrate.js';
+import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import {
   PerformanceTimingFlags,
   PipelineOrigins,
@@ -46,12 +47,12 @@ export function installElementTemplateHydrationListener(): void {
   resetElementTemplateCommitState();
 
   listener = (event: { data: ElementTemplateHydrateCommitContext }) => {
-    const { instances, reloadVersion } = event.data;
+    const { page, reloadVersion } = event.data;
     if (reloadVersion < getReloadVersion()) {
       return;
     }
 
-    const root = __root as BackgroundElementTemplateInstance;
+    const root = __root as BackgroundPageRootInstance;
 
     if (__PROFILE__) {
       profileStart('ReactLynx::hydrate');
@@ -66,7 +67,7 @@ export function installElementTemplateHydrationListener(): void {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate:\n'
-            + JSON.stringify({ data: instances }, null, 2),
+            + JSON.stringify({ data: page }, null, 2),
         );
         console.alog?.(
           '[ReactLynxDebug] BackgroundElementTemplate tree before hydration:\n'
@@ -74,7 +75,7 @@ export function installElementTemplateHydrationListener(): void {
         );
       }
 
-      const didHydrateMatchedInstances = hydrateRootChildrenIntoContext(instances, root);
+      const didHydrateMatchedInstances = hydratePageRootIntoContext(page, root);
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'
@@ -97,6 +98,7 @@ export function installElementTemplateHydrationListener(): void {
         clearPendingRefs();
         clearDelayedRefUiOps();
         resetElementTemplateMainThreadFunctionRuntime();
+        takeMainThreadRefInitValuePatch();
         resetGlobalCommitContext();
       }
 
@@ -105,25 +107,11 @@ export function installElementTemplateHydrationListener(): void {
         const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
           ? takeDelayedRunOnMainThreadData()
           : undefined;
+        const mainThreadRefInitValuePatch = takeMainThreadRefInitValuePatch();
+        const hasMainThreadRefInitValuePatch = mainThreadRefInitValuePatch.length > 0;
         const pipelineOptions = globalPipelineOptions;
         if (pipelineOptions) {
           globalCommitContext.flushOptions.pipelineOptions = pipelineOptions;
-        }
-        if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-          console.alog?.(
-            '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
-              + JSON.stringify(
-                {
-                  ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
-                  flushOptions: globalCommitContext.flushOptions,
-                  flowIds: globalCommitContext.flowIds,
-                  isHydration: true,
-                  delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-                },
-                null,
-                2,
-              ),
-          );
         }
         const removedSubtreesAwaitingTeardown = globalCommitContext.ops.length > 0
           ? takeRemovedSubtreesForPostDispatchTeardown()
@@ -134,6 +122,23 @@ export function installElementTemplateHydrationListener(): void {
         }
         markTiming('packChangesStart');
         try {
+          if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+            console.alog?.(
+              '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
+                + JSON.stringify(
+                  {
+                    ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                    flushOptions: globalCommitContext.flushOptions,
+                    flowIds: globalCommitContext.flowIds,
+                    isHydration: true,
+                    delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
+                    mainThreadRefInitValuePatchCount: mainThreadRefInitValuePatch.length,
+                  },
+                  null,
+                  2,
+                ),
+            );
+          }
           hydrateUpdateEvent = createElementTemplateUpdateEvent({
             ops: globalCommitContext.ops,
             flushOptions: globalCommitContext.flushOptions,
@@ -141,6 +146,9 @@ export function installElementTemplateHydrationListener(): void {
             reloadVersion: getReloadVersion(),
             flowIds: globalCommitContext.flowIds,
             delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
+            mainThreadRefInitValuePatch: hasMainThreadRefInitValuePatch
+              ? mainThreadRefInitValuePatch
+              : undefined,
           });
         } catch (error) {
           if (delayedRunOnMainThreadPayload) {
@@ -167,6 +175,7 @@ export function installElementTemplateHydrationListener(): void {
         if (!hydrateUpdateEvent) {
           return;
         }
+
         lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
         flushPendingEvents();
         // Ordinary refs attach on Preact commit boundaries; hydration only releases

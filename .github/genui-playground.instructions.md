@@ -12,13 +12,15 @@ When sharing GenUI playground code between web preview and native Lynx execution
 
 When runtime code needs to distinguish Lynx for Web from native Lynx, prefer `SystemInfo.platform === 'web'` over `typeof window !== 'undefined'`. Native Lynx environments may expose browser-like globals, while Web Core explicitly sets `SystemInfo.platform` to `web`.
 
+Keep `transform-vw` and `transform-vh` enabled on every Web `<lynx-view>` used for playground previews, including both the bundled-protocol render entry and the direct Lynx XML preview. Set the attributes before assigning the preview URL so Web Core decodes viewport units relative to the preview LynxView container rather than the browser window.
+
 ### Playback Synchronization
 
 When wiring playback state between the Lynx app and the web preview, prefer `NativeModules.bridge.call('A2UI_PLAYBACK_SYNC', state, callback)` on the Lynx side and `lynxView.onNativeModulesCall` on the web preview side. Keep `window.postMessage` only as a compatibility fallback for older bundles. Do not add new playback sync paths that bypass the NativeModules bridge.
 
 When automating A2UI preview benchmarks, wrap `render.html` in a parent iframe with a `previewMetricId`, listen for `A2UI_PREVIEW_METRIC` in the parent, and inject generated messages with `A2UI_LIVE_MESSAGES` after `A2UI_RENDER_READY`. Loading generated messages only through the initial query payload can capture FCP/FMP/TTI, but it does not exercise the Create page's live-delivery path that reports the repeatable Render metric.
 
-Treat Bench reports as a protocol-neutral product area. Use `#/bench` as the canonical Runner route, keep `#/bench/runner` as a compatibility alias, and publish studies under phase routes such as `#/bench/phase-1`. This leaves later phases free to compare A2UI with other protocols. Keep legacy `#/a2ui/bench` hashes only as compatibility inputs. This route guidance does not apply to the A2UI server API paths under `/a2ui/bench/jobs`.
+Treat Bench as a protocol-neutral, English-only page in the regular GenUI top-level navigation; do not replace the GenUI application chrome with a standalone Bench shell or expose a language control. Until site-wide localization is introduced, keep `BenchPage` free of page-local locale props, translation helpers, and bilingual system labels. Use `#/bench` as its canonical route, keep old Bench hashes as compatibility inputs to the same combined page, and do not expose Runner, History, Phase 1, Phase 2, or other Bench subviews in the UI. This route guidance does not apply to the A2UI server API paths under `/a2ui/bench/jobs`. Follow Create's interaction model with an inline New Bench action and a persistent history rail: New Bench must immediately prepend and select a persisted draft item, completing that draft must update the same item, and earlier items must not be overwritten or evicted. Restore completed history entries as read-only and require New Bench before another run. Structure Runner as a single workflow surface with three internally separated `benchPlanSection` steps: show its three editable default scenarios first and allow custom scenarios to be appended, then let users create comparison groups explicitly in Protocol, Model, or Prompt directions, then show Provider, UI Judge, and run parameters inline. Keep the three-step configuration in its own scroll container and reserve a compact, non-scrolling footer for the live plan summary and run action. Once a job starts, replace that footer summary with the real-time progress message and progress bar so execution remains observable while the configuration scrolls. Label the primary action Start run while idle, complete, cancelled, or failed, and change it to Pause only while a job is active. Disable Start run when Protocol, Groups, Scenarios, or Runs is empty. Do not show potentially stale comparison-group, scenario, or run-count badges beside the Bench page title; the compact footer summary owns those values. Keep `pages/bench/BenchPage.tsx` focused on cross-section state, persistence, and server-job orchestration; keep static defaults and pure derived state in `pages/bench/benchData.ts`, and keep section-specific calculations in the corresponding component. Reuse shared `Button`, `Icon`, `PageHeader`, and `PanelResizeHandle` primitives instead of duplicating their structure or accessibility behavior.
 
 ### Native Test Bundles
 
@@ -26,11 +28,28 @@ When serving the playground's native Lynx bundles as static Android test fixture
 
 ## Chat Page Architecture
 
-Load Create-tab model choices from the GenUI server's `GET /models` endpoint. Keep provider credentials, upstream model ids, and upstream base URLs out of playground state, persistence, controls, and request bodies; persist only the selected server-approved model name.
+Use the build-time `GENUI_SERVER_URL` environment variable as the single
+default GenUI server origin for Chat, Bench, health checks, and preview payload
+publishing. Keep its fallback at `http://localhost:3060`, validate it as a
+credential-free HTTPS origin in the playground build configuration, allowing
+HTTP only for loopback development, and do not reintroduce separate
+hosted-server constants in individual frontend modules. URL query endpoint
+overrides may remain available for diagnosis only for server-owned model
+requests. When a request carries a custom API key, ignore endpoint overrides,
+require the request target to match the configured GenUI server origin, and
+disable redirect following so credentials cannot move to another origin.
+
+Load Create-tab and Bench server-owned model choices from the GenUI server's `GET /models` endpoint. Reuse the shared provider settings adapter semantics in both surfaces: also provide a custom-provider control with model and API key fields plus a fixed selector containing the server-approved OpenAI-compatible base URLs; do not accept an arbitrary custom-provider URL in the playground. Store each endpoint's default model in the same option mapping and replace the model field with that default whenever the endpoint changes. When the endpoint reports that `GENUI_MODEL_CONFIG_JSON` is absent, select that custom provider instead of blocking Create or Bench. Persist only the non-sensitive provider selection in browser local storage. Keep model, API key, and base URL only in current-page memory so they survive protocol switches; after a refresh, clear the API key and restore the built-in model and base URL defaults. Never restore custom-provider fields left by older persisted formats so the next settings write removes them. Keep the API key input visually masked. Send custom provider values only in model request bodies, and continue sending only the public model name for ordinary server-owned selections. Bench comparison-group model controls must use the loaded server model list for server-owned providers and allow free-form model ids only with a complete custom provider.
+
+Expose `UI_JUDGE_SERVER_URL` in Bench's inline run configuration as a browser-only setting. Accept only credential-free HTTP(S) URLs and persist the normalized value in local storage. Require it when UI Judge is enabled; never send it to GenUI Server or fall back to a server environment variable. Check `/health` directly from the browser before starting the job. Consume screenshot task IDs from Bench SSE, fetch capture fields from GenUI, POST multipart directly to `/screenshot/template` or `/screenshot/lynxml`, then upload raw BMP or a capture error to GenUI for scoring. Deduplicate replayed task IDs, bound image bytes and timeouts, and cancel browser work when the job ends or the page disconnects. Cross-origin screenshot deployments must allow the Playground origin through CORS and browser network policies; do not work around this with a GenUI proxy.
+
+Keep completed Bench history plans non-editable without making their content inert. Use read-only text fields and disable only controls that mutate state, while preserving text selection, copying, scrolling, and disclosure controls throughout the historical plan.
+
+Expose custom-provider completeness through the shared settings adapter validation hook. Disable Create submission and reject preview action requests when Custom API key lacks either a non-empty model or API key, and enforce the same invariant while building provider request options so alternate call paths cannot send incomplete credentials.
 
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
-Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, and `pages/chat/mcp-apps.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.
+Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, `pages/chat/mcp-apps.ts`, `pages/chat/lynx-xml.ts`, and `pages/chat/html.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects. Whole-document adapters should expose cumulative partial source as a live artifact while reserving reload-based preview delivery for a complete document.
 
 For MCP Apps tool turns, show the model's tool selection and the host-executed tool result as separate JSON transcript entries. Build those entries through the same pure helper for live success and history hydration so reopened conversations preserve the Tool Call/Tool Result sequence.
 
@@ -44,9 +63,11 @@ Use `mcpAppData` as the MCP Apps-specific preview payload field across Chat prev
 
 Keep OpenUI artifacts visually aligned with A2UI Generated Output cards: use the same transcript width, compact header alignment, single divider, and code-block density while preserving OpenUI-specific Raw/Parsed views and metadata.
 
-When rendering the unified `ChatPage`, key it by protocol so switching between A2UI, OpenUI, and MCP Apps fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
+When rendering the unified `ChatPage`, key it by protocol so switching between A2UI, OpenUI, MCP Apps, Lynx XML, and HTML fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
 
 ## Protocol-Aware Conversation Data
+
+Keep Bench comparison-group summary chips on one line with a 160px per-item maximum, shrinking and ellipsizing text within the available card width. Preserve full labels in their title attributes. Default new Bench run settings to two repeats without replacing explicitly saved historical settings.
 
 ### Local History
 
@@ -58,7 +79,15 @@ When an action response is merged with the current preview messages, clear any p
 
 ### Shared Imports
 
-Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
+Default Bench report scenario, comparison-group, and run disclosures to expanded. Treat public `model` fields as display metadata, not secrets merely because an identifier is long, while continuing to redact known credentials and private URLs. For older redacted model fields, recover only from the same cached entry's matching group ID (or its own environment); never infer a model from another group, another history entry, or current provider settings.
+
+Keep Copy Report JSON on the standalone report detail page alongside Generate share image. The Runner's right-hand report panel should offer View details instead of another JSON-copy entry, using the same new-tab opening behavior as the history rail.
+
+Open Bench history details in a new tab with the shared document-detail icon. Keep the report URL free of payloads and preserve the selected history ID in that tab's session storage so opening another report cannot switch existing detail tabs. Generate share images locally from the existing PublishedReport DOM, retaining its current disclosure state and saved PNGs rather than maintaining a second report renderer. Exclude navigation and action controls, lazy-load the rasterizer, skip unrelated web-font downloads, bound canvas dimensions, and revoke preview object URLs on close or replacement. Provide PNG preview/download and clipboard copying where supported; never upload the generated image or append it to a link.
+
+Bench report viewing is temporarily local-only. Open the fixed read-only `#/bench/reports` page from a history entry, storing the selected entry ID in `a2ui-bench-selected-report` rather than appending report data or remote URLs to links. Read reports asynchronously from the `benchHistory` store in the shared `a2ui-playground` IndexedDB via `src/storage/benchRepo.ts`; do not publish Bench reports, fetch `benchReportUrl` parameters, load providers, or recover server jobs from the standalone report page. Legacy job-ID routes read matching local snapshots only. Missing cached records require an explicit error, not another report or archive fallback. Preserve valid inline PNG `screenshotDataUrl` fields in history and JSON exports, bypassing text redaction only for this validated field. Check PNG framing and dimensions and bound decoded image bytes to 2 MiB per image and 8 MiB per report; do not render remote, SVG, blob, or malformed sources. Show screenshot thumbnails and reuse the comparison dialog. Keep credential redaction elsewhere. On database quota or write failure show an actionable warning, retain current in-memory results, and never silently remove screenshots or evict older history. When Runner recovers an old report from its existing server endpoint, persist the recovered screenshots too. The two source report archives remain hidden from runtime routes and menus.
+
+Publish playground payloads through the GenUI server's PUT endpoints and use the returned public URL as an opaque value; do not hardcode storage-provider hosts or object paths in frontend code. Publish a shared conversation with storage type `conversation` and its validated protocol (`a2ui`, `openui`, `mcp-apps`, `lynx-xml`, or `html`) as the storage method; treat a missing protocol as legacy A2UI and reject an unknown protocol before uploading. When importing shared playground conversations, accept same-origin HTTP(S) documents or credential-free cross-origin HTTPS documents, fetch them with credentials omitted, then validate the shared document schema and protocol before calling `importShared`. Treat a missing shared-document protocol as legacy A2UI, and reject unknown or mismatched protocols.
 
 ## Component Catalog Architecture
 
@@ -82,11 +111,27 @@ Component catalog examples are intentionally inline-only. Keep every bundled usa
 
 ## Example Showcase Architecture
 
-Keep the shared example-list page structure, preview queue, keyboard interaction, section rendering, and card layout in `pages/demos/DemosList.tsx`. Route both protocols through `pages/demos/DemosListPage.tsx`, and keep protocol-specific scenarios, sections, preview URL construction, and queue reset keys in `pages/demos/a2ui.ts` and `pages/demos/openui.ts`.
+Keep the shared example-list page structure, preview queue, keyboard interaction, section rendering, and card layout in `pages/demos/DemosList.tsx`. Route A2UI, OpenUI, and MCP Apps through `pages/demos/DemosListPage.tsx`, and keep protocol-specific scenarios, sections, preview URL construction, and queue reset keys in `pages/demos/a2ui.ts`, `pages/demos/openui.ts`, and `pages/demos/mcp-apps.ts`.
 
 Protocol-specific showcase sources may vary their header copy, section links, badges, layout mode, and preview payload construction, but must not duplicate the shared list-page JSX or card interaction logic.
 
-Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the existing `pages/demos/a2ui.ts` and `pages/demos/openui.ts` source modules.
+Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the respective `pages/demos/a2ui.ts`, `pages/demos/openui.ts`, and `pages/demos/mcp-apps.ts` source modules.
+
+Keep MCP Apps Examples aligned with the renderer registry in `lynx-src/mcp-apps/App.tsx`. Build their deterministic preview data through each renderer's sibling `api.ts`, validate edited data with the shared host parser plus the renderer-specific result parser, and render list and detail previews through the existing `mcp-apps.web.js` / `mcp-apps.lynx.js` bundles.
+
+### Lynx XML
+
+- Expose Lynx XML Create at its protocol root, Examples at `/examples`, and the shared Bench tab linking to the canonical `#/bench` route; keep Catalog unavailable. Route Create through the shared Chat controller and the dedicated Lynx XML adapter.
+- Stream cumulative canonical source into the Create artifact viewer as soon as `<!doctype lynx>` arrives. Do not reload `<lynx-view>` for incomplete source; hand the complete document to the direct Lynx XML preview only after the final stream event.
+- Reuse the A2UI Playground Examples `flow` layout, `DemosList`, `ExamplePreviewCard`, and card styles without protocol-specific markup or CSS.
+- Keep complete `.lynxml` artifacts in `src/mock/lynx-xml`, import them as raw editor source, copy them to `dist/demos/lynx-xml`, and load them directly in `<lynx-view>`. Mount generated and edited XML through `PreviewViewport`'s direct `LynxXmlView`; use an `application/xml` Blob URL only to satisfy LynxView's public URL input, and never turn XML into A2UI/OpenUI init data, global props, or events. Use the shared `render.html?protocol=lynx-xml&sourceUrl=...` entry for shareable/example Web URLs and keep its XML protocol branch direct instead of invoking a bundled protocol renderer. Do not add per-example compilation or a ReactLynx renderer. Browser-local Blob URLs are not shareable: keep the Web and Native QR cards mounted with an unavailable placeholder instead of encoding the Blob URL or removing the QR pane. Use `@codemirror/lang-html` in the editor and keep Playback disabled.
+- Append the business root directly to the Element PAPI `page`; do not style the page or add a generic `app` wrapper. The root owns viewport, background, and layout styles, and must be a vertical scroll view when content may overflow. Because Lynx defaults to Linear layout, every layout container must explicitly use `display: flex` and declare its intended `flex-direction`.
+
+### HTML
+
+- Expose HTML only at its Create protocol root; keep Examples, Catalog, Bench, and native preview unavailable.
+- Stream cumulative source into the shared artifact viewer as soon as the HTML doctype arrives, but do not execute partial markup or scripts. Deliver only a complete document to the reload-based preview.
+- Render HTML through `HtmlView` as iframe `srcDoc` with exactly the script capability required for generated interactions. Keep `allow-same-origin` out of the sandbox so model-authored code cannot read the Playground DOM, cookies, or local storage. Do not send HTML through `render.html`, `<lynx-view>`, init data, global props, native URLs, or Lynx bundles.
 
 ## OpenUI Integration
 
@@ -101,6 +146,8 @@ OpenUI playground theming should apply matching classes such as `openui-light lu
 Gate host-specific OpenUI visual treatments behind an additional root class in the playground entry CSS instead of changing the shared OpenUI theme tokens. For transparent editorial previews, keep the root, page, and scroll backgrounds transparent; scope Card surface removal and enlarged typography/spacing to that host class so the package defaults and Modal/control boundaries remain intact. Keep the render document's `data-theme` and `color-scheme` synchronized with preview init data so transparent Lynx content inherits the correct neutral light or dark device canvas instead of the iframe's default white background.
 
 ### Large Preview Payloads
+
+For local A2UI Web previews without `demoId` or `messagesUrl`, serialize the messages into an `application/json` Blob and pass its object URL through `messagesUrl` so local and remote JSON use the same runtime loading path. Reuse that object URL while the messages are unchanged; after replacement, keep it alive until the consuming runtime reports that loading completed, with a bounded cleanup fallback, and revoke all remaining URLs on unmount. Deliver later live deltas through `A2UI_LIVE_MESSAGES`, and replay the current surface only after the Lynx A2UI runtime reports that its message store is ready; the outer render-frame listener alone is not sufficient readiness. Give every `PreviewViewport` render navigation a unique token, require runtime-ready messages to echo it, and bind readiness fallbacks to the loaded URL and window so a delayed signal from an older iframe document cannot unlock the current frame. Blob URLs are local-only: share and native URLs must never expose them, and live share/native URLs require `demoId` or a published HTTP(S) `messagesUrl`. Apply `A2UI_INLINE_RENDER_URL_MAX_LENGTH` to remaining non-live inline A2UI preview URLs so deployed request-line limits cannot produce HTTP 414 responses.
 
 When building OpenUI playground preview links, avoid inlining large OpenUI Lang source in `rawText` query parameters. URL-encoded Chinese or generated DSL can exceed common request-line limits on deployed hosts; publish large source text and pass `rawTextUrl` to `render.html` instead.
 
@@ -118,8 +165,18 @@ Keep both `web` and `lynx` environments enabled when the same lazy demo should r
 
 LazyComponent demo data should contain complete `url` and `webUrl` values before it reaches preview rendering. Build those URLs at data construction time from the runtime playground base URL, with query and hash removed and file paths such as `render.html` collapsed to their containing directory. Keep this resolution in the demo data layer, not in `PreviewPanel`.
 
-Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios but pass inline `messages` into web preview and native QR preview links, because no corresponding `dist/demos/*.json` file exists.
+Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios, but because no corresponding `dist/demos/*.json` file exists, their local Web preview should expose the messages through a Blob `messagesUrl` while non-live native QR preview links may continue to carry inline `messages`.
 
-Keep `PreviewPanel` unaware of LazyComponent payload structure. It should choose between `demoId`, `messagesUrl`, and inline `messages/actionMocks`, then pass the selected payload through unchanged for web preview and QR/native preview paths.
+Keep `PreviewPanel` unaware of LazyComponent payload structure. It should select `demoId`, a portable `messagesUrl`, or local `messages/actionMocks`; derive a Blob `messagesUrl` only for the local Web preview, while keeping share and QR/native payloads portable.
 
 For the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy bundle URLs with `import(url, { with: { type: 'component' } })`. In web rendering, use `webUrl` only when `SystemInfo.platform === 'web'`; if `webUrl` is absent, show the mobile-scan fallback instead of trying to load the native `url` in Lynx for Web.
+
+Keep Bench database migration and persistence in `packages/genui/playground/src/storage/benchRepo.ts`, with schema upgrades in the existing `storage/db.ts`. Keep Bench history types, normalization, React hooks, and Bench-specific tests in `packages/genui/playground/src/pages/bench`. Upgrade the existing database without replacing conversation stores. Import legacy `a2ui-bench-history` localStorage records and the fallback report selection in one transaction; remove the legacy copy only after commit, and do not overwrite existing database IDs. Wait for hydration before enabling Bench mutations, serialize writes against the last successful snapshot, and apply record-level deltas so another tab’s unrelated entries survive. Keep report selection tab-local in sessionStorage, notify detail tabs after committed writes, and open the blank detail tab synchronously before awaiting database writes.
+
+For converted Lynx XML results, show the exact `done.metadata.modelOutput` as
+Original by default and the final Source as Transformed in the
+shared artifact viewer. Copy the selected view's text. Do not show a separate
+XML Fragment view. Preserve `lynxXmlFragment` and `lynxXmlModelOutput` in local
+and shared assistant history, keeping both out of runtime preview sources and
+model conversation inputs. Results without conversion metadata show only Source;
+older converted results without model output must not fabricate a before view.

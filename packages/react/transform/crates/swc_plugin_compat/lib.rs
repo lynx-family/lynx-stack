@@ -1129,8 +1129,7 @@ where
                     ctxt: Default::default(),
                     span: DUMMY_SP,
                     params: vec![],
-                    body: Box::new(BlockStmtOrExpr::BlockStmt(BlockStmt {
-                      ctxt: Default::default(),
+                    body: Box::new(ArrowFunctionBody::FunctionBody(FunctionBody {
                       span: DUMMY_SP,
                       stmts: simplify_ctor_like_react_lynx_2_visitor.remain_stmts,
                     })),

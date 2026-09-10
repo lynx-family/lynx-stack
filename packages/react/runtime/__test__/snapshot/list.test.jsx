@@ -4916,3 +4916,41 @@ describe('destroy list after element transfer', () => {
     expect(gRecycleMap[listID]).toBeUndefined();
   });
 });
+
+describe('list worklet ref lifecycle', () => {
+  it('unrefs worklet refs when a list child is logically removed', () => {
+    const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
+    const itemSnapshot = __SNAPSHOT__(<list-item />);
+    const list = new SnapshotInstance(listSnapshot);
+    const item = new SnapshotInstance(itemSnapshot);
+    const replacement = new SnapshotInstance(itemSnapshot);
+    const workletRef = { _wvid: 1 };
+    const updateWorkletRef = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: {
+        ...previousWorkletImpl?._refImpl,
+        updateWorkletRef,
+      },
+    };
+
+    try {
+      item.__worklet_ref_set = new Set([workletRef]);
+      __pendingListUpdates.runWithoutUpdates(() => {
+        list.insertBefore(item);
+        list.removeChild(item);
+      });
+
+      expect(updateWorkletRef).toHaveBeenCalledTimes(1);
+      expect(updateWorkletRef).toHaveBeenCalledWith(workletRef, null);
+
+      // A recycled native element may still be hydrated later.
+      hydrate(item, replacement);
+      expect(updateWorkletRef).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+});

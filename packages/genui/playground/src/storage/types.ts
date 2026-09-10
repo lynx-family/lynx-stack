@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export type ConversationProtocol = 'a2ui' | 'openui' | 'mcp-apps';
+export type ConversationProtocol =
+  | 'a2ui'
+  | 'openui'
+  | 'mcp-apps'
+  | 'lynx-xml'
+  | 'html';
 
 export interface ConversationMeta {
   id: string;
@@ -32,6 +37,8 @@ export interface PersistedMessage {
   seq: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
   createdAt: number;

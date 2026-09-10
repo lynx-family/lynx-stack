@@ -1,5 +1,11 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.4.2
+
+### Patch Changes
+
+- Allow `@lynx-js/react-webpack-plugin` v0.11 as a peer dependency. ([#3393](https://github.com/lynx-family/lynx-stack/pull/3393))
+
 ## 0.4.1
 
 ### Patch Changes

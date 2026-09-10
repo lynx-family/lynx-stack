@@ -138,7 +138,7 @@ Options:
   -h, --help            display help for command
 ```
 
-在项目根目录执行 `rspeedy inspect` 命令后，会在项目的 `dist/.rspeedy` 目录下生成以下文件：
+在项目根目录执行 `rspeedy inspect` 命令后，会在项目的 `dist/.lynx` 目录下生成以下文件：
 
 - `rspeedy.config.js`: 表示构建时使用的 Rspeedy 配置
 - `rsbuild.config.mjs`: 表示构建时使用的 Rsbuild 配置

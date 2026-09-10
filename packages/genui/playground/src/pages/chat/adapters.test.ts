@@ -4,6 +4,8 @@
 import { describe, expect, rs, test } from '@rstest/core';
 
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
+import { HTML_CHAT_ADAPTER } from './html.js';
+import { LYNX_XML_CHAT_ADAPTER } from './lynx-xml.js';
 import {
   MCP_APPS_CHAT_ADAPTER,
   PRODUCT_RESOURCE_URI,
@@ -11,11 +13,18 @@ import {
 } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import {
+  CHAT_PROVIDER_SETTINGS_ADAPTER,
+  CUSTOM_PROVIDER_BASE_URL,
+  CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+  CUSTOM_PROVIDER_ID,
+  CUSTOM_PROVIDER_MODEL,
   compactProviderLabel,
   createDefaultProviderSettings,
   getModelsEndpoint,
+  getProviderSettingsValidationError,
   loadProviderSettings,
   parseStoredProviderSettings,
+  serializeProviderSettings,
   toProviderRequestOptions,
 } from './shared.js';
 import { PRODUCT_API_NAME } from '../../../lynx-src/mcp-apps/product/api.js';
@@ -25,15 +34,101 @@ import { PROTOCOLS } from '../../utils/protocol.js';
 const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
   A2UI_CHAT_ADAPTER.stream,
 );
+
+test('Lynx XML Create persists and sends the fragment switch, defaulting off', () => {
+  const adapter = LYNX_XML_CHAT_ADAPTER;
+  let settings = adapter.settings.initial();
+  expect(
+    adapter.settings.controls(settings).find((control) =>
+      control.id === 'enableHtmlFragment'
+    )?.value,
+  ).toBe('off');
+  for (const value of ['off', 'on', 'off']) {
+    settings = adapter.settings.update(
+      settings,
+      'enableHtmlFragment',
+      value,
+    );
+    settings = adapter.settings.parseStored(
+      JSON.stringify(adapter.settings.serialize(settings)),
+    );
+    expect(settings.enableHtmlFragment).toBe(value === 'on');
+    const request = adapter.createRequest({
+      prompt: 'Hello',
+      settings,
+      conversation: { history: [], dataModel: {} },
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: '/',
+      },
+      signal: new AbortController().signal,
+    });
+    expect(request.body).toMatchObject({
+      enableHtmlFragment: value === 'on',
+    });
+  }
+  expect(
+    CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).some((control) =>
+      control.id === 'enableHtmlFragment'
+    ),
+  ).toBe(false);
+});
+
+test('keeps intermediate fragment source out of preview and migrates the saved switch', () => {
+  const intermediate =
+    '<!doctype lynx>\n<lynx engine-version="4.2"><template><view/></template><script thread="main">createFragment(page, pageId);</script></lynx>';
+  for (
+    const source of [
+      intermediate,
+      intermediate.replace(
+        '<template>',
+        '<style>.page { display: flex; }</style><!-- content --><template>',
+      ),
+    ]
+  ) {
+    expect(LYNX_XML_CHAT_ADAPTER.preview.source({ source }, {
+      theme: 'light',
+      protocol: PROTOCOLS['lynx-xml'],
+      previewPayloadUrls: null,
+    })).toBeUndefined();
+  }
+  const migrated = parseStoredProviderSettings(
+    JSON.stringify({ enableHtmlFragmentTool: true }),
+  );
+  expect(migrated.enableHtmlFragment).toBe(true);
+  expect(serializeProviderSettings(migrated)).not.toHaveProperty(
+    'enableHtmlFragmentTool',
+  );
+});
 const reduceOpenUIStream = OPENUI_CHAT_ADAPTER.stream.reduce.bind(
   OPENUI_CHAT_ADAPTER.stream,
 );
+const VALID_LYNX_XML = [
+  '<!doctype lynx>',
+  '<lynx engine-version="4.2">',
+  '<style>.root { display: flex; }</style>',
+  '<script thread="main">globalThis.processData = () => {};</script>',
+  '</lynx>',
+].join('\n');
+const VALID_HTML = [
+  '<!doctype html>',
+  '<html lang="en">',
+  '<head><meta charset="utf-8"><title>Counter</title></head>',
+  '<body><button id="counter">0</button></body>',
+  '</html>',
+].join('\n');
 
 describe('chat protocol adapters', () => {
   test('starts with an unloaded server-backed model list', () => {
     const settings = createDefaultProviderSettings();
     expect(settings).toEqual({
-      model: '',
+      provider: '',
+      apiKey: '',
+      baseURL: CUSTOM_PROVIDER_BASE_URL,
+      model: CUSTOM_PROVIDER_MODEL,
       models: [],
       status: 'idle',
     });
@@ -45,6 +140,19 @@ describe('chat protocol adapters', () => {
       baseURL: 'https://api.openai.com/v1',
       model: 'gpt-5.5',
     }))).toEqual(settings);
+
+    expect(parseStoredProviderSettings(JSON.stringify({
+      preset: 'custom',
+      apiKey: 'legacy-api-key',
+      baseURL: 'https://example.com/v1',
+      model: 'custom-model',
+    }))).toEqual({
+      ...settings,
+      provider: CUSTOM_PROVIDER_ID,
+      apiKey: '',
+      baseURL: CUSTOM_PROVIDER_BASE_URL,
+      model: CUSTOM_PROVIDER_MODEL,
+    });
   });
 
   test('loads the model list and default model from the server', async () => {
@@ -82,7 +190,10 @@ describe('chat protocol adapters', () => {
       expect(fetchModels).toHaveBeenCalledTimes(1);
       expect(fetchModels.mock.calls[0]?.[0]).toBe(modelsEndpoint);
       expect(settings).toEqual({
-        model: 'Doubao Seed',
+        provider: 'Doubao Seed',
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
         models: [
           { id: 'Doubao Seed', label: 'Doubao Seed' },
           { id: 'Doubao Pro', label: 'Doubao Pro' },
@@ -92,6 +203,81 @@ describe('chat protocol adapters', () => {
       expect(compactProviderLabel(settings)).toBe('Doubao Seed');
       expect(toProviderRequestOptions(settings)).toEqual({
         model: 'Doubao Seed',
+      });
+
+      let customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        settings,
+        'provider',
+        CUSTOM_PROVIDER_ID,
+      );
+      expect(
+        CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings).map(
+          (control) => control.id,
+        ),
+      ).toEqual(['provider', 'model', 'apiKey', 'baseURL']);
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings)[3])
+        .toMatchObject({
+          kind: 'select',
+          options: CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+        });
+      expect(compactProviderLabel(customSettings)).toBe(CUSTOM_PROVIDER_MODEL);
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.validate(customSettings)).toBe(
+        'Enter a provider API key to use Custom API key.',
+      );
+      expect(() => toProviderRequestOptions(customSettings)).toThrow(
+        'Enter a provider API key to use Custom API key.',
+      );
+      expect(getProviderSettingsValidationError({
+        ...customSettings,
+        apiKey: '   ',
+        model: '   ',
+      })).toBe(
+        'Enter a provider model and API key to use Custom API key.',
+      );
+      expect(getProviderSettingsValidationError({
+        ...customSettings,
+        apiKey: 'sk-user',
+        model: '   ',
+      })).toBe('Enter a provider model to use Custom API key.');
+      customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'apiKey',
+        '  sk-user  ',
+      );
+      customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'model',
+        '  custom-model  ',
+      );
+      customSettings = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'baseURL',
+        'https://generativelanguage.googleapis.com/v1beta/openai',
+      );
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.validate(customSettings))
+        .toBeUndefined();
+      expect(toProviderRequestOptions(customSettings)).toEqual({
+        apiKey: 'sk-user',
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai',
+        model: 'gemini-3.7-flash',
+      });
+      for (const option of CUSTOM_PROVIDER_BASE_URL_OPTIONS) {
+        expect(CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+          { ...customSettings, model: 'manually-edited-model' },
+          'baseURL',
+          option.value,
+        )).toMatchObject({
+          baseURL: option.value,
+          model: option.model,
+        });
+      }
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+        customSettings,
+        'baseURL',
+        'https://example.com/v1',
+      )).toBe(customSettings);
+      expect(serializeProviderSettings(customSettings)).toEqual({
+        provider: CUSTOM_PROVIDER_ID,
       });
     } finally {
       Object.defineProperty(globalThis, 'window', {
@@ -126,11 +312,78 @@ describe('chat protocol adapters', () => {
         host,
         new AbortController().signal,
       )).resolves.toEqual({
-        model: '',
+        provider: '',
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
         models: [],
         status: 'error',
         error: 'Model service unavailable',
       });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
+
+  test('opens custom provider settings when server model config is absent', async () => {
+    const host = {
+      origin: 'http://localhost:3000',
+      hostname: 'localhost',
+      protocol: 'http:',
+      search: '',
+      baseUrl: 'http://localhost:3000/',
+    };
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        fetch: rs.fn(async () => ({
+          ok: false,
+          json: async () => ({
+            error: 'GENUI_MODEL_CONFIG_JSON is required',
+          }),
+        })),
+      },
+    });
+
+    try {
+      const settings = await loadProviderSettings(
+        createDefaultProviderSettings(),
+        host,
+        new AbortController().signal,
+      );
+      expect(settings).toEqual({
+        provider: CUSTOM_PROVIDER_ID,
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
+        models: [],
+        status: 'ready',
+      });
+      expect(
+        CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).map(
+          (control) => control.id,
+        ),
+      ).toEqual(['provider', 'model', 'apiKey', 'baseURL']);
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings)[0])
+        .toMatchObject(
+          {
+            disabled: false,
+            options: [{
+              value: CUSTOM_PROVIDER_ID,
+              label: 'Custom API key',
+            }],
+          },
+        );
+      expect(CHAT_PROVIDER_SETTINGS_ADAPTER.validate(settings)).toBe(
+        'Enter a provider API key to use Custom API key.',
+      );
+      expect(() => toProviderRequestOptions(settings)).toThrow(
+        'Enter a provider API key to use Custom API key.',
+      );
     } finally {
       Object.defineProperty(globalThis, 'window', {
         configurable: true,
@@ -167,7 +420,10 @@ describe('chat protocol adapters', () => {
         host,
         new AbortController().signal,
       )).resolves.toEqual({
-        model: '',
+        provider: '',
+        apiKey: '',
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+        model: CUSTOM_PROVIDER_MODEL,
         models: [],
         status: 'error',
         error: 'The model list response is invalid',
@@ -220,7 +476,12 @@ describe('chat protocol adapters', () => {
       event: 'done',
       data: {
         validation: { messages: finalMessages },
-        usage: { inputTokens: 2, outputTokens: 3, totalTokens: 5 },
+        usage: {
+          inputTokens: 2,
+          outputTokens: 3,
+          totalTokens: 5,
+          cachedInputTokens: 1,
+        },
         preview: {
           messagesUrl: 'https://example.com/messages.json',
           actionMocksUrl: 'https://example.com/actions.json',
@@ -232,7 +493,12 @@ describe('chat protocol adapters', () => {
     expect(done.emissions).toEqual([
       {
         type: 'usage',
-        usage: { promptTokens: 2, completionTokens: 3, totalTokens: 5 },
+        usage: {
+          promptTokens: 2,
+          completionTokens: 3,
+          totalTokens: 5,
+          cachedTokens: 1,
+        },
       },
       {
         type: 'previewPayload',
@@ -271,7 +537,11 @@ describe('chat protocol adapters', () => {
     const done = reduceOpenUIStream(state, {
       event: 'done',
       data: {
-        usage: { prompt_tokens: 4, completion_tokens: 6 },
+        usage: {
+          prompt_tokens: 4,
+          completion_tokens: 6,
+          prompt_tokens_details: { cached_tokens: 2 },
+        },
       },
     });
     const output = {
@@ -282,7 +552,12 @@ describe('chat protocol adapters', () => {
       { type: 'progress', text: output.rawText },
       {
         type: 'usage',
-        usage: { promptTokens: 4, completionTokens: 6, totalTokens: 10 },
+        usage: {
+          promptTokens: 4,
+          completionTokens: 6,
+          totalTokens: 10,
+          cachedTokens: 2,
+        },
       },
       { type: 'final', output },
     ]);
@@ -300,6 +575,210 @@ describe('chat protocol adapters', () => {
         },
       },
     ]);
+  });
+
+  test('streams a Lynx XML artifact before final preview delivery', () => {
+    const reduceStream = LYNX_XML_CHAT_ADAPTER.stream.reduce.bind(
+      LYNX_XML_CHAT_ADAPTER.stream,
+    );
+    let state = LYNX_XML_CHAT_ADAPTER.stream.initial();
+    const preamble = reduceStream(state, {
+      event: 'delta',
+      data: { text: '```xml\n' },
+    });
+    state = preamble.state;
+    expect(preamble.emissions).toEqual([
+      { type: 'progress', text: '```xml\n' },
+    ]);
+
+    const partial = reduceStream(state, {
+      event: 'delta',
+      data: { text: VALID_LYNX_XML },
+    });
+    state = partial.state;
+    expect(partial.emissions).toEqual([
+      { type: 'progress', text: VALID_LYNX_XML },
+      { type: 'partial', output: { source: VALID_LYNX_XML } },
+    ]);
+
+    const done = reduceStream(state, {
+      event: 'done',
+      data: {
+        text: `Here is the artifact:\n${VALID_LYNX_XML}\n\`\`\``,
+        usage: { inputTokens: 7, outputTokens: 11, totalTokens: 18 },
+      },
+    });
+    expect(done.emissions).toEqual([
+      {
+        type: 'usage',
+        usage: { promptTokens: 7, completionTokens: 11, totalTokens: 18 },
+      },
+      { type: 'final', output: { source: VALID_LYNX_XML } },
+    ]);
+    expect(
+      LYNX_XML_CHAT_ADAPTER.preview.artifact({
+        source: VALID_LYNX_XML,
+      }).views[0]?.text,
+    ).toBe(VALID_LYNX_XML);
+  });
+
+  test('rejects an incomplete final Lynx XML response', () => {
+    expect(() =>
+      LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+        text: '<!doctype lynx><lynx engine-version="4.2">',
+      })
+    ).toThrow('incomplete Lynx XML artifact');
+  });
+
+  test('streams an HTML document before final iframe delivery', () => {
+    const reduceStream = HTML_CHAT_ADAPTER.stream.reduce.bind(
+      HTML_CHAT_ADAPTER.stream,
+    );
+    let state = HTML_CHAT_ADAPTER.stream.initial();
+    const preamble = reduceStream(state, {
+      event: 'delta',
+      data: { text: '```html\n' },
+    });
+    state = preamble.state;
+    expect(preamble.emissions).toEqual([
+      { type: 'progress', text: '```html\n' },
+    ]);
+
+    const partial = reduceStream(state, {
+      event: 'delta',
+      data: { text: VALID_HTML },
+    });
+    state = partial.state;
+    expect(partial.emissions).toEqual([
+      { type: 'progress', text: VALID_HTML },
+      { type: 'partial', output: { source: VALID_HTML } },
+    ]);
+
+    const done = reduceStream(state, {
+      event: 'done',
+      data: {
+        text: `Here is the document:\n${VALID_HTML}\n\`\`\``,
+        usage: { inputTokens: 5, outputTokens: 9, totalTokens: 14 },
+      },
+    });
+    expect(done.emissions).toEqual([
+      {
+        type: 'usage',
+        usage: { promptTokens: 5, completionTokens: 9, totalTokens: 14 },
+      },
+      { type: 'final', output: { source: VALID_HTML } },
+    ]);
+    expect(
+      HTML_CHAT_ADAPTER.preview.artifact({ source: VALID_HTML }).views[0]
+        ?.text,
+    ).toBe(VALID_HTML);
+  });
+
+  test('shows before and after conversion while preserving original generation metadata', () => {
+    const xmlFragment = '\n<view>\n  <text>杭州 &amp; 天气</text>\n</view>\n';
+    const modelOutput = `\n\`\`\`xml\n${VALID_LYNX_XML}\n\`\`\`\n`;
+    const output = { source: VALID_LYNX_XML, xmlFragment, modelOutput };
+    const done = LYNX_XML_CHAT_ADAPTER.stream.reduce(
+      LYNX_XML_CHAT_ADAPTER.stream.initial(),
+      {
+        event: 'done',
+        data: { text: VALID_LYNX_XML, metadata: { xmlFragment, modelOutput } },
+      },
+    );
+    expect(done.emissions).toEqual([{ type: 'final', output }]);
+    expect(LYNX_XML_CHAT_ADAPTER.stream.finish(done.state)).toEqual(output);
+    expect(
+      LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+        text: VALID_LYNX_XML,
+        metadata: { xmlFragment, modelOutput },
+      }).emissions,
+    ).toEqual([{ type: 'final', output }]);
+    expect(LYNX_XML_CHAT_ADAPTER.preview.artifact(output).views).toEqual([
+      {
+        id: 'model-output',
+        label: 'Original',
+        text: modelOutput,
+        language: 'text',
+      },
+      {
+        id: 'transformed',
+        label: 'Transformed',
+        text: VALID_LYNX_XML,
+        language: 'text',
+      },
+    ]);
+    const saved = LYNX_XML_CHAT_ADAPTER.persist(output);
+    expect(saved.assistantContent).toBe(VALID_LYNX_XML);
+    expect(saved.lynxXmlFragment).toBe(xmlFragment);
+    expect(saved.lynxXmlModelOutput).toBe(modelOutput);
+    const history = [{
+      role: 'assistant' as const,
+      content: saved.assistantContent,
+      lynxXmlFragment: xmlFragment,
+      lynxXmlModelOutput: modelOutput,
+    }];
+    expect(
+      LYNX_XML_CHAT_ADAPTER.hydrate({
+        history,
+        previewMessages: [],
+        previewPayloadUrls: null,
+      }).output,
+    ).toEqual(output);
+    const request = LYNX_XML_CHAT_ADAPTER.createRequest({
+      prompt: 'Change the city',
+      conversation: { history, dataModel: {} },
+      settings: createDefaultProviderSettings(),
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: '/',
+      },
+      signal: new AbortController().signal,
+    });
+    expect(JSON.stringify(request.body)).not.toContain('lynxXmlFragment');
+    expect(JSON.stringify(request.body)).not.toContain('lynxXmlModelOutput');
+    expect(LYNX_XML_CHAT_ADAPTER.preview.source(output, {
+      protocol: PROTOCOLS['lynx-xml'],
+      theme: 'light',
+      previewPayloadUrls: null,
+    })).not.toHaveProperty('modelOutput');
+    expect(
+      JSON.stringify(
+        LYNX_XML_CHAT_ADAPTER.preview.source(output, {
+          protocol: PROTOCOLS['lynx-xml'],
+          theme: 'light',
+          previewPayloadUrls: null,
+        }),
+      ),
+    ).not.toContain('xmlFragment');
+  });
+
+  test.each([undefined, {}, { xmlFragment: 42 }])(
+    'keeps legacy or invalid fragment metadata out of the artifact views: %j',
+    (metadata) => {
+      const result = LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+        text: VALID_LYNX_XML,
+        metadata,
+      });
+      const output = LYNX_XML_CHAT_ADAPTER.stream.finish(result.state)!;
+      expect(output).toEqual({ source: VALID_LYNX_XML });
+      expect(
+        LYNX_XML_CHAT_ADAPTER.preview.artifact({
+          ...output,
+          modelOutput: VALID_LYNX_XML,
+        }).views,
+      ).toHaveLength(1);
+    },
+  );
+
+  test('rejects an incomplete final HTML response', () => {
+    expect(() =>
+      HTML_CHAT_ADAPTER.stream.fromJson({
+        text: '<!doctype html><html><head></head><body>',
+      })
+    ).toThrow('incomplete HTML document');
   });
 
   test('builds protocol-specific preview sources and merge behavior', () => {
@@ -368,6 +847,32 @@ describe('chat protocol adapters', () => {
       theme: 'light',
       previewPayloadUrls: null,
     })).toBeUndefined();
+
+    const lynxXmlOutput = { source: VALID_LYNX_XML };
+    expect(LYNX_XML_CHAT_ADAPTER.preview.source(lynxXmlOutput, {
+      protocol: PROTOCOLS['lynx-xml'],
+      theme: 'dark',
+      previewPayloadUrls: null,
+    })).toEqual({
+      kind: 'lynx-xml',
+      source: VALID_LYNX_XML,
+      theme: 'dark',
+    });
+    expect(LYNX_XML_CHAT_ADAPTER.preview.merge(null, lynxXmlOutput)).toBe(
+      lynxXmlOutput,
+    );
+
+    const htmlOutput = { source: VALID_HTML };
+    expect(HTML_CHAT_ADAPTER.preview.source(htmlOutput, {
+      protocol: PROTOCOLS.html,
+      theme: 'light',
+      previewPayloadUrls: null,
+    })).toEqual({
+      kind: 'html',
+      source: VALID_HTML,
+      theme: 'light',
+    });
+    expect(HTML_CHAT_ADAPTER.preview.merge(null, htmlOutput)).toBe(htmlOutput);
   });
 
   test('parses A2UI action bridge messages', () => {
@@ -449,7 +954,8 @@ describe('chat protocol adapters', () => {
         prompt: 'Weather in Hangzhou',
         conversation: { history: [], dataModel: {} },
         settings: {
-          model: 'gpt-5.5',
+          ...createDefaultProviderSettings(),
+          provider: 'gpt-5.5',
           models: [{ id: 'gpt-5.5', label: 'gpt5.5' }],
           status: 'ready',
         },
@@ -458,11 +964,11 @@ describe('chat protocol adapters', () => {
       });
       expect(fetchMetadata).toHaveBeenCalledTimes(1);
       expect(fetchMetadata.mock.calls[0]?.[0]).toBe(
-        'https://genui-server.vercel.app/mcp-apps/metadata',
+        'http://localhost:3060/mcp-apps/metadata',
       );
       expect(fetchMetadata.mock.calls[0]?.[1]).toMatchObject({ signal });
       expect(chatRequest).toMatchObject({
-        url: 'https://genui-server.vercel.app/mcp-apps/stream',
+        url: 'http://localhost:3060/mcp-apps/stream',
         body: {
           model: 'gpt-5.5',
           registry: {
@@ -688,4 +1194,13 @@ describe('chat protocol adapters', () => {
       });
     }
   });
+});
+
+test('A2UI can boot an empty live preview before any model output', () => {
+  const output = A2UI_CHAT_ADAPTER.preview.initialOutput();
+  expect(A2UI_CHAT_ADAPTER.preview.source(output, {
+    protocol: PROTOCOLS.a2ui,
+    theme: 'light',
+    previewPayloadUrls: null,
+  })).toMatchObject({ kind: 'a2ui', messages: [], liveAction: true });
 });

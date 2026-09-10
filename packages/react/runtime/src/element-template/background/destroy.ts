@@ -7,6 +7,7 @@ import { render } from 'preact';
 import { cancelElementTemplateRemovedSubtreeCleanup, resetElementTemplateCommitState } from './commit-hook.js';
 import { resetElementTemplateHydrationListener } from './hydration-listener.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { withSyncEffectFlush } from '../../utils.js';
 import { clearEventState } from '../prop-adapters/event.js';
 import { clearRefState, flushPendingRefs } from '../prop-adapters/ref.js';
 import { __root } from '../runtime/page/root-instance.js';
@@ -17,7 +18,9 @@ export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateHydrationListener();
   cancelElementTemplateRemovedSubtreeCleanup();
 
-  render(null, __root as unknown as ContainerNode);
+  withSyncEffectFlush(() => {
+    render(null, __root as unknown as ContainerNode);
+  });
   // Run user cleanup before dropping the backend side tables; after clearRefState
   // the raw ref ownership needed to detach callbacks is gone.
   flushPendingRefs();

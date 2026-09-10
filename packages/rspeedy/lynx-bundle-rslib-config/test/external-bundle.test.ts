@@ -7,24 +7,35 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
-import type { RslibConfig, rsbuild } from '@rslib/core'
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  rstest,
-} from '@rstest/core'
+import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
+import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { decodeTemplate } from './utils.js'
-import { defineExternalBundleRslibConfig } from '../src/index.js'
+import {
+  LAYERS as DEFAULT_LAYERS,
+  defineExternalBundleRslibConfig,
+} from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+async function inspectRspackConfig(
+  rslibConfig: RslibConfig,
+): Promise<Rspack.Configuration> {
+  // Resolving a config makes Rsbuild write the mode back to `NODE_ENV`.
+  const prevNodeEnv = process.env['NODE_ENV']
+  try {
+    const rslib = await createRslib({ config: rslibConfig, cwd: __dirname })
+    const { origin } = await rslib.inspectConfig()
+    return origin.bundlerConfigs[0]!
+  } finally {
+    process.env['NODE_ENV'] = prevNodeEnv
+  }
+}
 
 async function build(rslibConfig: RslibConfig) {
   const rslib = await createRslib({
@@ -77,6 +88,63 @@ describe('define config', () => {
     })
   })
 
+  it('should resolve with the Lynx conditions of the build engine', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    const { resolve } = await inspectRspackConfig(rslibConfig)
+
+    expect(resolve?.conditionNames).toContain('lynx')
+    expect(resolve?.mainFields).toContain('lynx')
+    expect(resolve?.mainFiles).toContain('index.lynx')
+  })
+
+  it('should compile with the SWC transforms of the build engine', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    const { module: mod } = await inspectRspackConfig(rslibConfig)
+
+    const swcOptions: { env?: { include?: string[] } }[] = []
+    const collect = (rule: unknown): void => {
+      if (!rule || typeof rule !== 'object') return
+      if (Array.isArray(rule)) {
+        for (const nested of rule) {
+          collect(nested)
+        }
+        return
+      }
+      const { use, oneOf, rules, loader, options } = rule as Record<
+        string,
+        unknown
+      >
+      collect(use)
+      collect(oneOf)
+      collect(rules)
+      if (typeof loader === 'string' && loader.includes('swc')) {
+        swcOptions.push(options as { env?: { include?: string[] } })
+      }
+    }
+    collect(mod?.rules)
+
+    expect(swcOptions.length).toBeGreaterThan(0)
+    for (const options of swcOptions) {
+      expect(options.env?.include).toContain('transform-block-scoping')
+    }
+  })
+
   it('should override default lib config', () => {
     const rslibConfig = defineExternalBundleRslibConfig({
       syntax: 'es2019',
@@ -84,77 +152,31 @@ describe('define config', () => {
     expect(rslibConfig.lib[0]?.syntax).toBe('es2019')
   })
 
-  it('should preserve default minify jsOptions when output.minify is true', () => {
-    const rslibConfig = defineExternalBundleRslibConfig({
-      output: {
-        minify: true,
-      },
-    })
-
-    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
-      jsOptions: {
-        minimizerOptions: {
-          compress: {
-            negate_iife: false,
-            side_effects: false,
+  it('leaves the minify options to the engine', async () => {
+    for (const output of [{}, { minify: true }] as const) {
+      const rslibConfig = defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
           },
         },
-      },
-    })
-  })
-})
+        output,
+        plugins: [pluginReactLynx()],
+      })
+      expect(rslibConfig.lib[0]?.output?.minify).toBe(true)
 
-describe('REACT_DEVTOOL minify', () => {
-  const prevReactDevtool = process.env['REACT_DEVTOOL']
-
-  afterEach(() => {
-    if (prevReactDevtool === undefined) {
-      delete process.env['REACT_DEVTOOL']
-    } else {
-      process.env['REACT_DEVTOOL'] = prevReactDevtool
-    }
-    rstest.resetModules()
-  })
-
-  it('keeps function and class names when REACT_DEVTOOL is set', async () => {
-    process.env['REACT_DEVTOOL'] = '1'
-    rstest.resetModules()
-    const { defineExternalBundleRslibConfig } = await import('../src/index.js')
-
-    const rslibConfig = defineExternalBundleRslibConfig({
-      output: { minify: true },
-    })
-
-    expect(rslibConfig.lib[0]?.output?.minify).toMatchObject({
-      jsOptions: {
-        minimizerOptions: {
-          compress: { keep_fnames: true, keep_classnames: true },
-          mangle: { keep_fnames: true, keep_classnames: true },
+      const { optimization } = await inspectRspackConfig(rslibConfig)
+      const [minimizer] = optimization!.minimizer as [
+        {
+          _args: [{ minimizerOptions: { compress: { negate_iife?: boolean } } }]
         },
-      },
-    })
-  })
-
-  it('does not keep names when REACT_DEVTOOL is unset', async () => {
-    delete process.env['REACT_DEVTOOL']
-    rstest.resetModules()
-    const { defineExternalBundleRslibConfig } = await import('../src/index.js')
-
-    const rslibConfig = defineExternalBundleRslibConfig({
-      output: { minify: true },
-    })
-
-    const minify = rslibConfig.lib[0]?.output?.minify as {
-      jsOptions?: {
-        minimizerOptions?: {
-          compress?: { keep_fnames?: boolean }
-          mangle?: unknown
-        }
-      }
+      ]
+      // The wrapper IIFE has to keep its shape, or a section evaluates to a
+      // boolean instead of `module.exports`.
+      expect(minimizer._args[0].minimizerOptions.compress.negate_iife).toBe(
+        false,
+      )
     }
-    expect(minify.jsOptions?.minimizerOptions?.compress?.keep_fnames)
-      .toBeUndefined()
-    expect(minify.jsOptions?.minimizerOptions?.mangle).toBeUndefined()
   })
 })
 
@@ -171,7 +193,7 @@ describe('should build external bundle', () => {
       id: 'utils-dual',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-dual'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -180,11 +202,42 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-dual.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'utils-dual', 'utils-dual.lynx.bundle'),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
       'utils__main-thread',
+    ])
+  })
+
+  it('should build every main-thread entry into external bundle', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-multi')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          a: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+          b: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-multi',
+      output: {
+        distPath: {
+          root: distRoot,
+        },
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-multi.lynx.bundle'),
+    )
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
+      'a',
+      'a__main-thread',
+      'b',
+      'b__main-thread',
     ])
   })
 
@@ -201,7 +254,7 @@ describe('should build external bundle', () => {
       id: 'utils-m',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-m'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -210,7 +263,7 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-m.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'utils-m', 'utils-m.lynx.bundle'),
     )
     expect(Object.keys(decodedResult['custom-sections'])).toEqual([
       'utils',
@@ -232,7 +285,7 @@ describe('should build external bundle', () => {
       id: 'utils-b',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-b'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -241,7 +294,7 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-b.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'utils-b', 'utils-b.lynx.bundle'),
     )
     expect(Object.keys(decodedResult['custom-sections'])).toEqual([
       'utils',
@@ -260,7 +313,7 @@ describe('should build external bundle', () => {
       id: 'utils-engineVersion-35',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-engineVersion-35'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -271,7 +324,12 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-engineVersion-35.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-engineVersion-35',
+        'utils-engineVersion-35.lynx.bundle',
+      ),
     )
     expect(decodedResult['engine-version']).toBe('3.5')
   })
@@ -287,7 +345,7 @@ describe('should build external bundle', () => {
       id: 'css-bundle',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'css-bundle'),
         },
       },
       plugins: [pluginReactLynx()],
@@ -296,10 +354,9 @@ describe('should build external bundle', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist', 'css-bundle.lynx.bundle'),
+      path.join(fixtureDir, 'dist', 'css-bundle', 'css-bundle.lynx.bundle'),
     )
 
-    // Check custom-sections for CSS keys
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'index',
       'index:CSS',
@@ -346,14 +403,14 @@ describe('JsBytecode encoding', () => {
         id,
         output: {
           distPath: {
-            root: path.join(fixtureDir, 'dist'),
+            root: path.join(fixtureDir, 'dist', id),
           },
         },
         plugins: [pluginReactLynx()],
       }, encodeOptions)
       await build(rslibConfig)
       return await decodeTemplate(
-        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+        path.join(fixtureDir, 'dist', id, `${id}.lynx.bundle`),
       )
     } finally {
       process.env['NODE_ENV'] = prevNodeEnv
@@ -369,6 +426,145 @@ describe('JsBytecode encoding', () => {
       'string',
     )
     expect(decodedResult['custom-sections']['utils']).toBeTypeOf('string')
+  })
+
+  it('should not wrap a main-thread entry with the background runtime wrapper', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: {
+            import: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+            layer: LAYERS.MAIN_THREAD,
+          },
+        },
+      },
+      id: 'utils-m-plain',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist', 'utils-m-plain'),
+        },
+      },
+      plugins: [pluginReactLynx()],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-m-plain',
+        'utils-m-plain.lynx.bundle',
+      ),
+    )
+    const mainThreadSection = decodedResult['custom-sections']['utils']
+    expect(mainThreadSection).toBeTypeOf('string')
+    expect(mainThreadSection).not.toContain('.define(')
+  })
+
+  it('should mark a chunk by its main-thread modules rather than its name', async () => {
+    const marked: Record<string, boolean> = {}
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(fixtureDir, 'index.ts'),
+          helpers: path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'utils-shared-mt',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist', 'utils-shared-mt'),
+        },
+      },
+      tools: {
+        rspack: {
+          optimization: {
+            splitChunks: {
+              chunks: 'all',
+              minSize: 0,
+              cacheGroups: {
+                default: false,
+                defaultVendors: false,
+                mainThread: {
+                  name: 'shared-mt',
+                  test: (module: { layer?: string | null }) =>
+                    module.layer === LAYERS.MAIN_THREAD,
+                  enforce: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      plugins: [
+        pluginReactLynx(),
+        {
+          name: 'test:read-marks',
+          setup(api) {
+            api.processAssets(
+              { stage: 'report' },
+              ({ compilation }) => {
+                for (const asset of compilation.getAssets()) {
+                  if (asset.name.endsWith('.js')) {
+                    marked[asset.name] = asset.info['lynx:main-thread'] === true
+                  }
+                }
+              },
+            )
+          },
+        } satisfies rsbuild.RsbuildPlugin,
+      ],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    expect(marked).toStrictEqual({
+      'shared-mt.js': true,
+      '.lynx/utils-shared-mt/utils__main-thread.js': true,
+      '.lynx/utils-shared-mt/helpers__main-thread.js': true,
+      '.lynx/utils-shared-mt/utils.js': false,
+      '.lynx/utils-shared-mt/helpers.js': false,
+    })
+  })
+
+  it('should wrap a main-thread entry named like a path', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-path-name')
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'utils-path-name',
+      output: {
+        distPath: {
+          root: distRoot,
+        },
+      },
+      plugins: [pluginReactLynx()],
+    }, {
+      enableJsBytecode: false,
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-path-name.lynx.bundle'),
+    )
+    const mainThreadSection =
+      decodedResult['custom-sections']['./utils.js__main-thread']
+    expect(mainThreadSection).toBeTypeOf('string')
+    // The wrapper survives minification as an IIFE that returns the module.
+    expect(mainThreadSection).toMatch(/^\(function\s*\(\)\s*\{/)
+    expect(mainThreadSection!.trimEnd()).toMatch(
+      /\}\)\(\);?(\n\/\/# sourceMappingURL=\S*)?$/,
+    )
+    expect(mainThreadSection).toMatch(/\{\s*exports\s*:\s*\{\s*\}\s*\}/)
   })
 
   it('should not compile main thread chunks to bytecode in development by default', async () => {
@@ -416,13 +612,13 @@ describe('NODE_ENV configuration', () => {
         },
         id,
         output: {
-          distPath: { root: path.join(fixtureDir, 'dist') },
+          distPath: { root: path.join(fixtureDir, 'dist', id) },
         },
         plugins: [pluginReactLynx()],
       })
       await build(config)
       return await decodeTemplate(
-        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+        path.join(fixtureDir, 'dist', id, `${id}.lynx.bundle`),
       )
     } finally {
       process.env['NODE_ENV'] = prevNodeEnv
@@ -455,10 +651,12 @@ describe('debug mode artifacts', () => {
 
   const bundleId = 'utils-debug-flag'
 
-  const getFiles = () =>
-    fs.existsSync(distRoot)
-      ? fs.readdirSync(distRoot)
-      : []
+  // The template intermediates go into the `.lynx` directory, the same way an
+  // application build emits them.
+  const getFiles = () => {
+    const intermediate = path.join(distRoot, '.lynx', bundleId)
+    return fs.existsSync(intermediate) ? fs.readdirSync(intermediate) : []
+  }
 
   const buildBundle = () => {
     return build(defineExternalBundleRslibConfig({
@@ -513,7 +711,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx'),
         },
         externals: {
           '@lynx-js/react': ['ReactLynx', 'React'],
@@ -526,7 +724,12 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx',
+        'utils-reactlynx.lynx.bundle',
+      ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
       'utils',
@@ -553,7 +756,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-cjs2',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-cjs2'),
         },
         externals: {
           '@lynx-js/react': ['ReactLynx', 'React'],
@@ -566,7 +769,12 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx-cjs2.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx-cjs2',
+        'utils-reactlynx-cjs2.lynx.bundle',
+      ),
     )
     const backgroundSection = decodedResult['custom-sections']['utils']!
 
@@ -588,7 +796,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-preset',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-preset'),
         },
         externalsPresets: {
           reactlynx: true,
@@ -617,7 +825,9 @@ describe('mount externals library', () => {
     const decodedResult = await decodeTemplate(
       path.join(
         fixtureDir,
-        'dist/utils-reactlynx-preset.lynx.bundle',
+        'dist',
+        'utils-reactlynx-preset',
+        'utils-reactlynx-preset.lynx.bundle',
       ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
@@ -646,7 +856,11 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-preset-override',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(
+            fixtureDir,
+            'dist',
+            'utils-reactlynx-preset-override',
+          ),
         },
         externalsPresets: {
           reactlynx: true,
@@ -665,7 +879,9 @@ describe('mount externals library', () => {
     const decodedResult = await decodeTemplate(
       path.join(
         fixtureDir,
-        'dist/utils-reactlynx-preset-override.lynx.bundle',
+        'dist',
+        'utils-reactlynx-preset-override',
+        'utils-reactlynx-preset-override.lynx.bundle',
       ),
     )
     expect(decodedResult['custom-sections']['utils']).toContain(
@@ -692,7 +908,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-custom-extend',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-custom-extend'),
         },
         externalsPresets: {
           reactlynxPlus: true,
@@ -734,7 +950,7 @@ describe('mount externals library', () => {
       id: 'utils-custom-preset',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-custom-preset'),
         },
         externalsPresets: {
           lynxUi: true,
@@ -776,7 +992,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-globalThis',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-globalThis'),
         },
         externals: {
           '@lynx-js/react': ['ReactLynx', 'React'],
@@ -792,7 +1008,9 @@ describe('mount externals library', () => {
     const decodedResult = await decodeTemplate(
       path.join(
         fixtureDir,
-        'dist/utils-reactlynx-globalThis.lynx.bundle',
+        'dist',
+        'utils-reactlynx-globalThis',
+        'utils-reactlynx-globalThis.lynx.bundle',
       ),
     )
     expect(Object.keys(decodedResult['custom-sections']).sort()).toEqual([
@@ -821,7 +1039,7 @@ describe('mount externals library', () => {
       id: 'utils-reactlynx-async',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'utils-reactlynx-async'),
         },
         externals: {
           // Multi-level subpath: every segment after the mount key must be
@@ -839,7 +1057,12 @@ describe('mount externals library', () => {
     await build(rslibConfig)
 
     const decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx-async.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx-async',
+        'utils-reactlynx-async.lynx.bundle',
+      ),
     )
     expect(decodedResult['custom-sections']['utils']).toContain(
       'Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"])'
@@ -854,9 +1077,8 @@ describe('mount externals library', () => {
 
 describe('pluginReactLynx', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
-  const distRoot = path.join(fixtureDir, 'dist')
-
   const bundleId = 'utils-reactlynx'
+  const distRoot = path.join(fixtureDir, 'dist', bundleId)
 
   let rslib!: Awaited<ReturnType<typeof createRslib>>
   let decodedResult!: Awaited<ReturnType<typeof decodeTemplate>>
@@ -884,7 +1106,12 @@ describe('pluginReactLynx', () => {
     })
     await rslib.build()
     decodedResult = await decodeTemplate(
-      path.join(fixtureDir, 'dist/utils-reactlynx.lynx.bundle'),
+      path.join(
+        fixtureDir,
+        'dist',
+        'utils-reactlynx',
+        'utils-reactlynx.lynx.bundle',
+      ),
     )
   })
 
@@ -986,7 +1213,7 @@ describe('DSL plugin without layer loaders', () => {
       id: 'plain-no-layer-loaders',
       output: {
         distPath: {
-          root: path.join(fixtureDir, 'dist'),
+          root: path.join(fixtureDir, 'dist', 'plain-no-layer-loaders'),
         },
       },
       plugins: [
@@ -998,12 +1225,100 @@ describe('DSL plugin without layer loaders', () => {
           name: 'test:dsl-without-layer-loaders',
           setup(api) {
             api.expose(Symbol.for('LAYERS'), LAYERS)
+            // A DSL plugin registers the encoder, the way `pluginReactLynx` does.
+            api.modifyBundlerChain(chain => {
+              chain.plugin(LynxEncodePlugin.name).use(LynxEncodePlugin, [])
+            })
           },
         } satisfies rsbuild.RsbuildPlugin,
+        ...pluginLynx(),
       ],
     })
 
     await expect(build(rslibConfig)).resolves.toBeDefined()
+  })
+})
+
+describe('debug metadata', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+  const distRoot = path.join(fixtureDir, 'dist', 'debug-metadata')
+
+  it('emits the metadata a devtool remaps an external bundle with', async () => {
+    rstest.stubEnv('CI', '1')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+        id: 'utils-debug-metadata',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    const metadataPath = path.join(
+      distRoot,
+      '.lynx',
+      'utils-debug-metadata',
+      'debug-metadata.json',
+    )
+    expect(fs.existsSync(metadataPath)).toBe(true)
+
+    // A devtool looks an artifact up by the name a stack frame carries, which
+    // for a bundle assembled from custom sections is the section name.
+    const metadata = JSON.parse(
+      await fs.promises.readFile(metadataPath, 'utf-8'),
+    ) as {
+      artifacts: {
+        kind: string
+        filename: string
+        path: string
+        tasmSection?: string[]
+      }[]
+    }
+    const mainThreadArtifact = metadata.artifacts.find(a =>
+      a.kind === 'main-thread'
+    )
+    expect(mainThreadArtifact?.tasmSection).toEqual([
+      'customSections',
+      'utils__main-thread',
+    ])
+    expect(mainThreadArtifact?.filename).toBe('utils__main-thread')
+    expect(mainThreadArtifact?.path).toBe(
+      '.lynx/utils-debug-metadata/utils__main-thread.js',
+    )
+
+    // The release banner has to sit inside the module wrapper, which is what
+    // `lynx.loadScript` takes the section's value from.
+    const mainThread = await fs.promises.readFile(
+      path.join(
+        distRoot,
+        '.lynx',
+        'utils-debug-metadata',
+        'utils__main-thread.js',
+      ),
+      'utf-8',
+    )
+    expect(mainThread).toMatch(/^\(function\s*\(\)\s*\{/)
+    expect(mainThread).toContain('debugmetadata:')
+  })
+})
+
+describe('license comments', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+  const distRoot = path.join(fixtureDir, 'dist', 'license-comments')
+
+  it('does not emit a license file a Lynx bundle cannot link to', async () => {
+    await build(defineExternalBundleRslibConfig({
+      source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+      id: 'utils-legal-comments',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginReactLynx()],
+    }))
+
+    const emitted = await fs.promises.readdir(distRoot)
+
+    expect(emitted.filter(name => name.includes('LICENSE'))).toEqual([])
   })
 })
 
@@ -1013,7 +1328,7 @@ describe('debug info outside', () => {
   it('should keep bytecode debug info out of the tasm bundle', async () => {
     rstest.stubEnv('DEBUG', 'rspeedy')
     try {
-      const distRoot = path.join(fixtureDir, 'dist')
+      const distRoot = path.join(fixtureDir, 'dist', 'utils-dbg-outside')
       await build(defineExternalBundleRslibConfig({
         source: {
           entry: {
@@ -1029,13 +1344,123 @@ describe('debug info outside', () => {
         plugins: [pluginReactLynx()],
       }))
       const tasmJson = JSON.parse(
-        fs.readFileSync(path.join(distRoot, 'tasm.json'), 'utf-8'),
-      ) as { compilerOptions: Record<string, unknown> }
+        fs.readFileSync(
+          path.join(distRoot, '.lynx', 'utils-dbg-outside', 'tasm.json'),
+          'utf-8',
+        ),
+      ) as {
+        compilerOptions: Record<string, unknown>
+        sourceContent: Record<string, unknown>
+      }
       expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
       expect(tasmJson.compilerOptions['isExternalBundle']).toBe(true)
       expect(tasmJson.compilerOptions['isLazy']).toBe(false)
+      // The style sheet lands after the elements exist.
+      expect(tasmJson.compilerOptions['enableCSSInvalidation']).toBe(true)
+      // An external bundle is loaded by an application, not rendered as one.
+      expect(tasmJson.sourceContent['appType']).toBe('DynamicComponent')
     } finally {
       rstest.unstubAllEnvs()
     }
+  })
+})
+
+describe('intermediate directory', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  // A `development` build (`DEBUG` unset — `lynxRstestConfig` otherwise sets
+  // `DEBUG=rspeedy`) is the case that used to leak: `LynxEncodePlugin` skips
+  // its own cleanup for `NODE_ENV=development`, so the raw entry chunks stay
+  // on disk. Their directory is what this test checks.
+  it('keeps the raw entry chunks out of dist root, the way a page build does', async () => {
+    const debug = process.env['DEBUG']
+    const nodeEnv = process.env['NODE_ENV']
+    delete process.env['DEBUG']
+    process.env['NODE_ENV'] = 'development'
+    const distRoot = path.join(fixtureDir, 'dist', 'utils-intermediate-dir')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+        id: 'utils-intermediate-dir',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }))
+    } finally {
+      if (debug === undefined) delete process.env['DEBUG']
+      else process.env['DEBUG'] = debug
+      if (nodeEnv === undefined) delete process.env['NODE_ENV']
+      else process.env['NODE_ENV'] = nodeEnv
+    }
+
+    const rootEntries = await fs.promises.readdir(distRoot)
+    expect(rootEntries.sort()).toStrictEqual([
+      '.lynx',
+      'utils-intermediate-dir.lynx.bundle',
+    ])
+    expect(
+      await fs.promises.readdir(
+        path.join(distRoot, '.lynx', 'utils-intermediate-dir'),
+      ),
+    ).toStrictEqual(
+      expect.arrayContaining(['utils.js', 'utils__main-thread.js']),
+    )
+  })
+})
+
+describe('without a DSL plugin', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  it('builds with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }))
+
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'plain-engine.lynx.bundle'),
+    )
+
+    // The entry picks one layer, so the bundle carries one section.
+    expect(Object.keys(decodedResult['custom-sections'])).toStrictEqual([
+      './utils.js',
+    ])
+
+    // `lynx.loadScript` returns the completion value of the section, which the
+    // runtime wrapper provides. Without it the bundle still builds, and fails
+    // to load on device.
+    expect(decodedResult['custom-sections']['./utils.js'])
+      .toMatch(/^\(function\s*\(\)\s*\{/)
+  })
+
+  it('builds a web bundle with `pluginLynx` alone', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'plain-engine-web')
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          './utils.js': {
+            import: path.join(fixtureDir, 'index.ts'),
+            layer: DEFAULT_LAYERS.BACKGROUND,
+          },
+        },
+      },
+      id: 'plain-engine-web',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginLynx()],
+    }, { target: 'web', engineVersion: '3.5' }))
+
+    expect(fs.existsSync(path.join(distRoot, 'plain-engine-web.web.bundle')))
+      .toBe(true)
   })
 })

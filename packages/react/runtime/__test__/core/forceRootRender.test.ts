@@ -6,7 +6,7 @@ import type { VNode } from 'preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { runWithForceRootRender } from '../../src/core/forceRootRender.js';
-import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../../src/shared/render-constants.js';
+import { BITS, COMPONENT, COMPONENT_FORCE, DIFF2, ORIGINAL } from '../../src/shared/render-constants.js';
 
 const mutablePreactOptions = preactOptions as typeof preactOptions & Record<string, any>;
 const initialDiff2 = mutablePreactOptions[DIFF2];
@@ -40,7 +40,7 @@ describe('core/forceRootRender', () => {
     expect(setRootVNode.mock.calls[0]![0]).not.toBe(rootVNode);
     expect(setRootVNode.mock.calls[0]![0][ORIGINAL]).toBe(2);
     expect(oldDiff).toHaveBeenCalledTimes(1);
-    expect(component[FORCE]).toBe(true);
+    expect(component[BITS] & COMPONENT_FORCE).toBeTruthy();
     expect(mutablePreactOptions[DIFF2]).toBe(oldDiff);
   });
 

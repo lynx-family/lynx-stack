@@ -1,5 +1,15 @@
 # @lynx-js/docs-mcp-server
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependency `commander` to `^15.0.0`. ([#3340](https://github.com/lynx-family/lynx-stack/pull/3340))
+
+- Updated dependency `@modelcontextprotocol/sdk` to `1.28.0`. ([#3213](https://github.com/lynx-family/lynx-stack/pull/3213))
+
+- Updated dependency `undici` to `^8.10.0`. ([#3342](https://github.com/lynx-family/lynx-stack/pull/3342))
+
 ## 0.2.5
 
 ### Patch Changes

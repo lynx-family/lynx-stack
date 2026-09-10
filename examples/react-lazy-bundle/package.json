@@ -5,22 +5,23 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:querycomponent && pnpm run build:fetchbundle",
-    "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy build",
-    "build:querycomponent": "rspeedy build",
-    "dev": "rspeedy dev",
-    "dev:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy dev",
-    "preview": "rspeedy preview",
-    "preview:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy preview"
+    "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rsbuild build",
+    "build:querycomponent": "rsbuild build",
+    "dev": "rsbuild dev",
+    "dev:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rsbuild dev",
+    "preview": "rsbuild preview",
+    "preview:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rsbuild preview"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
     "@types/react": "^19.2.18",
     "cross-env": "^10.1.0"
   }

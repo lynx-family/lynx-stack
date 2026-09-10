@@ -210,7 +210,7 @@ function createOpenUIRequest(
   settings: ProviderSettings,
   host: ChatHost,
 ): ChatHttpRequest {
-  const endpoint = getChatEndpoint('openui', host);
+  const endpoint = getChatEndpoint('openui', host, settings);
   const providerOptions = toProviderRequestOptions(settings);
   return {
     url: endpoint,

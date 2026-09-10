@@ -15,6 +15,27 @@ import {
 } from '../binary/encode/encode.js';
 import { encode, TasmJSONInfo } from '../ts/encode/webEncoder.js';
 import { TemplateSectionLabel } from '../ts/constants.js';
+import { loadStyleFromJSON } from '../ts/client/decodeWorker/cssLoader.js';
+import { wasmInstance as clientWasmInstance } from '../ts/client/wasm.js';
+
+const X_ELEMENT_ALIASES = [
+  ['viewpager', 'x-viewpager-ng'],
+  ['viewpager-item', 'x-viewpager-item-ng'],
+  ['webview', 'x-webview'],
+  ['overlay', 'x-overlay-ng'],
+  ['refresh', 'x-refresh-view'],
+  ['refresh-header', 'x-refresh-header'],
+  ['blur-view', 'x-blur-view'],
+  ['scroll-coordinator', 'x-foldview-ng'],
+  ['scroll-coordinator-header', 'x-foldview-header-ng'],
+  ['scroll-coordinator-slot', 'x-foldview-slot-ng'],
+  ['scroll-coordinator-slot-drag', 'x-foldview-slot-drag-ng'],
+  ['scroll-coordinator-toolbar', 'x-foldview-toolbar-ng'],
+  ['input', 'x-input'],
+  ['x-input-ng', 'x-input'],
+  ['textarea', 'x-textarea'],
+  ['x-textarea-ng', 'x-textarea'],
+] as const;
 
 describe('RawStyleInfo', () => {
   test('should encode StyleRule correctly', () => {
@@ -62,7 +83,57 @@ describe('RawStyleInfo', () => {
   });
 });
 
+describe('legacy JSON CSS', () => {
+  test('should transform XElement aliases in lynx-tag selectors', () => {
+    const styleInfo = {
+      '0': {
+        content: [],
+        rules: X_ELEMENT_ALIASES.map(([alias]) => ({
+          sel: [[[`[lynx-tag="${alias}"]`], [], [], []]],
+          decl: [['width', '1px'] as [string, string]],
+        })),
+      },
+    };
+
+    const decodedStyleInfo = loadStyleFromJSON(
+      styleInfo,
+      true,
+      false,
+      false,
+      false,
+    );
+    const css = clientWasmInstance.get_style_content(decodedStyleInfo);
+
+    for (const [, htmlTag] of X_ELEMENT_ALIASES) {
+      expect(css).toContain(`${htmlTag}:not([l-e-name]){width:1px;}`);
+    }
+    expect(css).not.toContain('x-input-ng:not([l-e-name])');
+    expect(css).not.toContain('x-textarea-ng:not([l-e-name])');
+  });
+});
+
 describe('encodeCSS', () => {
+  test('should transform XElement alias type selectors', () => {
+    const cssMap = {
+      '0': CSS.parse(
+        X_ELEMENT_ALIASES.map(([alias]) => `${alias} { width: 1px; }`).join(
+          '\n',
+        ),
+      ).root,
+    };
+
+    const buffer = encodeCSS(cssMap);
+    const css = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+
+    for (const [, htmlTag] of X_ELEMENT_ALIASES) {
+      expect(css).toContain(`${htmlTag}:not([l-e-name]){width:1px;}`);
+    }
+    expect(css).not.toContain('x-input-ng:not([l-e-name])');
+    expect(css).not.toContain('x-textarea-ng:not([l-e-name])');
+  });
+
   test('should encode basic StyleRule', () => {
     const css = `
       .foo {

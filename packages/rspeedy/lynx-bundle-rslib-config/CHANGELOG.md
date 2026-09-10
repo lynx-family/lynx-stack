@@ -1,5 +1,50 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.8.1
+
+### Patch Changes
+
+- Wrap the main-thread assets of an external bundle by their `lynx:main-thread` mark instead of a filename pattern derived from the entry name, so an entry named like a path (`./App.js`) keeps its wrapper and no longer fails with `module is not defined`. ([#3807](https://github.com/lynx-family/lynx-stack/pull/3807))
+
+- Build an external bundle without a DSL plugin using `pluginLynx` alone. It now registers the runtime wrapper and the encoder a bundle needs to be loadable, and `defineExternalBundleRslibConfig` falls back to its own exported `LAYERS` when no DSL exposes them. ([#3814](https://github.com/lynx-family/lynx-stack/pull/3814))
+
+## 0.8.0
+
+### Minor Changes
+
+- Assemble an external bundle with `LynxTemplatePlugin`, so plugins can tap the template hooks. Custom sections are named after their chunks, the intermediate files move into `.lynx`, and `ExternalBundleWebpackPlugin` is removed. ([#3726](https://github.com/lynx-family/lynx-stack/pull/3726))
+
+  `target: 'tasm'` is renamed to `'lynx'`. The environment is now named after `target`, and `id` only names the emitted bundle.
+- The minify options come from `pluginLynx` now; `output.minify` only decides whether to minify at all. `pluginLynx` applies them per environment, so `output.minify: true` on an environment no longer drops them (part of #3723). ([#3731](https://github.com/lynx-family/lynx-stack/pull/3731))
+
+### Patch Changes
+
+- Route the raw per-thread chunks and debug intermediates of an external bundle into `.lynx/<id>/`, the way a page build's are routed into `.lynx/<entry>/`, instead of the flat `[name].js` default. A `development` build (or `DEBUG` set) used to leave them next to the bundle at the root of `dist`. ([#3769](https://github.com/lynx-family/lynx-stack/pull/3769))
+
+- Skip the background runtime wrapper on any asset marked `lynx:main-thread` instead of matching filenames, and mark the main-thread assets of an external bundle by the layer of their modules, so a main-thread entry an external bundle names itself is no longer wrapped. ([#3751](https://github.com/lynx-family/lynx-stack/pull/3751))
+
+- `pluginReactLynx` registers the encoders and the background runtime wrapper for every caller, and `WebEncodePlugin` routes the custom sections of a bundle without a root into the slots the web runtime reads. `@lynx-js/lynx-bundle-rslib-config` only sets the template plugin and the main-thread wrapper up now. ([#3744](https://github.com/lynx-family/lynx-stack/pull/3744))
+
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`9c2be3e`](https://github.com/lynx-family/lynx-stack/commit/9c2be3e239daf55f55a1991a9490705aa3587f46), [`cf98e14`](https://github.com/lynx-family/lynx-stack/commit/cf98e1461a8d571350d0c125ac095cc8531ac8f8), [`3bf135c`](https://github.com/lynx-family/lynx-stack/commit/3bf135c0bc8e30a9743b4a0d0dba18337d68b881), [`ae25e93`](https://github.com/lynx-family/lynx-stack/commit/ae25e93c63cb793cf53d99ce7345de0320b68046), [`9c2be3e`](https://github.com/lynx-family/lynx-stack/commit/9c2be3e239daf55f55a1991a9490705aa3587f46)]:
+  - @lynx-js/css-serializer@0.1.9
+  - @lynx-js/web-core@0.25.0
+
+## 0.7.0
+
+### Minor Changes
+
+- Require `@rslib/core ^1.0.0-beta.1` in `peerDependencies`, matching the `output.autoExternal` usage introduced by the Rslib v1 upgrade. ([#3437](https://github.com/lynx-family/lynx-stack/pull/3437))
+
+### Patch Changes
+
+- Updated dependencies [[`948eece`](https://github.com/lynx-family/lynx-stack/commit/948eece02aa9f7051f879a21f6c51d96a99fe1aa), [`e35739a`](https://github.com/lynx-family/lynx-stack/commit/e35739aa0ca3b46b74ad0bd681c3fbfcf183c7ec), [`365cc58`](https://github.com/lynx-family/lynx-stack/commit/365cc580d076db4878ff95da7f15d2c9044fbe87)]:
+  - @lynx-js/css-serializer@0.1.8
+  - @lynx-js/web-core@0.24.1
+
 ## 0.6.3
 
 ### Patch Changes

@@ -1,8 +1,10 @@
-use std::io::Cursor;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use crate::{ConnectOptions, Error, GotoOptions, Lynx, Page, Result, ScreenshotOptions};
+use crate::bmp::{self, Bitmap};
+use crate::{
+  ContainerOptions, Error, GotoOptions, LynxContainer, LynxPage, Result, ScreenshotOptions,
+};
 
 const VIEWPORT_WIDTH: usize = 800;
 const VIEWPORT_HEIGHT: usize = 600;
@@ -20,13 +22,12 @@ pub struct RunReport {
   pub screenshot_path: PathBuf,
 }
 
-pub async fn run_react_fixture() -> Result<RunReport> {
+pub fn run_react_fixture() -> Result<RunReport> {
   let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
   let repo_root = crate_dir.join("../../..");
   let bundle =
     repo_root.join("packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle");
-  let lynx_core = crate_dir.join("fixtures/react/lynx_core.js");
-  let screenshot_path = repo_root.join("target/headless-rust-test-runner/react-fixture.png");
+  let screenshot_path = repo_root.join("target/headless-rust-test-runner/react-fixture.bmp");
   if !bundle.is_file() {
     return Err(Error::Protocol(format!(
       "React fixture is not built: {}",
@@ -34,31 +35,26 @@ pub async fn run_react_fixture() -> Result<RunReport> {
     )));
   }
 
-  let lynx = Lynx::connect(ConnectOptions {
+  let container = LynxContainer::new(ContainerOptions {
     width: VIEWPORT_WIDTH,
     height: VIEWPORT_HEIGHT,
-    lynx_core_path: Some(lynx_core),
-    ..ConnectOptions::default()
-  })
-  .await?;
-  let mut page = lynx.new_page()?;
-  page
-    .goto(
-      bundle
-        .to_str()
-        .ok_or_else(|| Error::Protocol("fixture path is not UTF-8".into()))?,
-      GotoOptions::default(),
-    )
-    .await?;
+    ..ContainerOptions::default()
+  })?;
+  let mut page = container.new_page()?;
+  page.goto(
+    bundle
+      .to_str()
+      .ok_or_else(|| Error::Protocol("fixture path is not UTF-8".into()))?,
+    GotoOptions::default(),
+  )?;
 
-  assert_fixture_dom(&mut page).await?;
-  let (png, frame, stats) = wait_for_expected_screenshot(&page).await?;
+  assert_fixture_dom(&mut page)?;
+  let (screenshot, frame, stats) = wait_for_expected_screenshot(&mut page)?;
   if let Some(parent) = screenshot_path.parent() {
-    tokio::fs::create_dir_all(parent).await?;
+    std::fs::create_dir_all(parent)?;
   }
-  tokio::fs::write(&screenshot_path, png).await?;
-  assert_node_id_tap(&mut page).await?;
-  lynx.close();
+  std::fs::write(&screenshot_path, screenshot)?;
+  assert_node_id_tap(&mut page)?;
 
   Ok(RunReport {
     width: frame.width,
@@ -72,8 +68,8 @@ pub async fn run_react_fixture() -> Result<RunReport> {
   })
 }
 
-async fn assert_fixture_dom(page: &mut Page) -> Result<()> {
-  let content = page.content().await?;
+fn assert_fixture_dom(page: &mut LynxPage) -> Result<()> {
+  let content = page.content()?;
   if !content.contains("React") || !content.contains("have fun") {
     return Err(Error::Protocol(
       "React fixture rendered unexpected DOM content".into(),
@@ -81,20 +77,19 @@ async fn assert_fixture_dom(page: &mut Page) -> Result<()> {
   }
 
   let title = page
-    .locator(".Title")
-    .await?
+    .locator(".Title")?
     .ok_or_else(|| Error::Protocol("React fixture title is missing".into()))?;
-  if title.get_attribute("class").await?.as_deref() != Some("Title") {
+  if title.get_attribute("class")?.as_deref() != Some("Title") {
     return Err(Error::Protocol(
       "React fixture title has an unexpected class".into(),
     ));
   }
-  if title.get_attribute("text").await?.as_deref() != Some("React") {
+  if title.get_attribute("text")?.as_deref() != Some("React") {
     return Err(Error::Protocol(
       "React fixture title has unexpected text".into(),
     ));
   }
-  if !title.computed_style_map().await?.contains_key("display") {
+  if !title.computed_style_map()?.contains_key("display") {
     return Err(Error::Protocol(
       "React fixture title is missing computed display style".into(),
     ));
@@ -102,46 +97,41 @@ async fn assert_fixture_dom(page: &mut Page) -> Result<()> {
   Ok(())
 }
 
-async fn assert_node_id_tap(page: &mut Page) -> Result<()> {
+fn assert_node_id_tap(page: &mut LynxPage) -> Result<()> {
   let logo = page
-    .locator(".Logo")
-    .await?
+    .locator(".Logo")?
     .ok_or_else(|| Error::Protocol("React fixture logo is missing".into()))?;
-  if page.locator(".Logo--lynx").await?.is_none() {
+  if page.locator(".Logo--lynx")?.is_none() {
     return Err(Error::Protocol(
       "React fixture did not render the initial Lynx logo".into(),
     ));
   }
 
-  logo.tap().await?;
+  logo.tap()?;
   let deadline = Instant::now() + Duration::from_secs(5);
   while Instant::now() < deadline {
-    if page.locator(".Logo--react").await?.is_some() {
+    if page.locator(".Logo--react")?.is_some() {
       return Ok(());
     }
-    page.wait_for_timeout(Duration::from_millis(50)).await;
+    page.wait_for_timeout(Duration::from_millis(50));
   }
   Err(Error::Timeout(
     "waiting for React fixture state update after node-id tap".into(),
   ))
 }
 
-async fn wait_for_expected_screenshot(
-  page: &Page,
-) -> Result<(Vec<u8>, CapturedFrame, ScreenshotStats)> {
+fn wait_for_expected_screenshot(page: &mut LynxPage) -> Result<(Vec<u8>, Bitmap, ScreenshotStats)> {
   let expectation = ScreenshotExpectation::react_fixture();
   let deadline = Instant::now() + FIXTURE_TIMEOUT;
   let mut latest_mismatch = None;
   while Instant::now() < deadline {
-    let png = page
-      .screenshot(ScreenshotOptions {
-        settle: Duration::from_millis(16),
-        ..ScreenshotOptions::default()
-      })
-      .await?;
-    let frame = decode_png(&png)?;
+    let screenshot = page.screenshot(ScreenshotOptions {
+      settle: Duration::from_millis(16),
+      ..ScreenshotOptions::default()
+    })?;
+    let frame = bmp::decode(&screenshot)?;
     match expectation.assert_matches(&frame) {
-      Ok(stats) => return Ok((png, frame, stats)),
+      Ok(stats) => return Ok((screenshot, frame, stats)),
       Err(error) => latest_mismatch = Some(error),
     }
   }
@@ -149,38 +139,6 @@ async fn wait_for_expected_screenshot(
     "waiting for the complete React fixture frame; last mismatch: {}",
     latest_mismatch.unwrap_or_else(|| "no frame captured".into())
   )))
-}
-
-struct CapturedFrame {
-  width: usize,
-  height: usize,
-  rgba: Vec<u8>,
-}
-
-fn decode_png(bytes: &[u8]) -> Result<CapturedFrame> {
-  let decoder = png::Decoder::new(Cursor::new(bytes));
-  let mut reader = decoder
-    .read_info()
-    .map_err(|error| Error::Protocol(format!("failed to decode screenshot: {error}")))?;
-  let buffer_size = reader
-    .output_buffer_size()
-    .ok_or_else(|| Error::Protocol("decoded screenshot is too large".into()))?;
-  let mut buffer = vec![0; buffer_size];
-  let info = reader
-    .next_frame(&mut buffer)
-    .map_err(|error| Error::Protocol(format!("failed to decode screenshot: {error}")))?;
-  if info.color_type != png::ColorType::Rgba || info.bit_depth != png::BitDepth::Eight {
-    return Err(Error::Protocol(format!(
-      "expected an 8-bit RGBA screenshot, got {:?} {:?}",
-      info.color_type, info.bit_depth
-    )));
-  }
-  buffer.truncate(info.buffer_size());
-  Ok(CapturedFrame {
-    width: info.width as usize,
-    height: info.height as usize,
-    rgba: buffer,
-  })
 }
 
 struct ScreenshotExpectation {
@@ -215,7 +173,7 @@ impl ScreenshotExpectation {
     }
   }
 
-  fn assert_matches(&self, frame: &CapturedFrame) -> std::result::Result<ScreenshotStats, String> {
+  fn assert_matches(&self, frame: &Bitmap) -> std::result::Result<ScreenshotStats, String> {
     if frame.width != self.width || frame.height != self.height {
       return Err(format!(
         "expected {}x{} React fixture frame, got {}x{}",
@@ -242,7 +200,7 @@ impl ScreenshotExpectation {
   }
 }
 
-fn screenshot_stats(frame: &CapturedFrame) -> ScreenshotStats {
+fn screenshot_stats(frame: &Bitmap) -> ScreenshotStats {
   let mut stats = ScreenshotStats {
     visible_pixels: 0,
     white_pixels: 0,

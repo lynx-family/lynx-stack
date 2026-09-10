@@ -39,22 +39,17 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   'backgroundPosition',
   'backgroundRepeat',
   'backgroundSize',
-  // 'backgroundOpacity',
 
   'borderRadius',
   'borderWidth',
   'borderStyle',
   'borderColor',
-  // 'borderOpacity',
 
   // 'boxShadow',  // Defined using plugin
   'boxSizing',
   'caretColor',
 
   'textColor',
-  // 'textOpacity',
-  // 'textDecorationColor',
-  // 'textDecorationStyle',
 
   // 'display', // Defined using plugin
   'flexDirection',
@@ -136,26 +131,6 @@ export const DEFAULT_CORE_PLUGINS: CorePluginsConfig = [
   // 'blur' // Defined using plugin
   // 'grayscale' // Defined using plugin
   // 'filter' // Defined using plugin
-  /* Plugins to be customized */
-
-  // 'gradientColorStops'
-  // 'accessibility'
-
-  /* Plugins coming in next release */
-  // 'fontVariantNumeric'
-
-  /* Plugins waiting for Nested CSS Variables */
-  // 'boxShadowColor',
-  // 'ringWidth'
-  // 'ringColor'
-  // 'ringOpacity'
-  // 'ringOffsetWidth'
-  // 'ringOffsetColor'
-  // 'space'
-  // 'divideWidth'
-  // 'divideStyle'
-  // 'divideColor'
-  // 'divideOpacity'
 ];
 
 /* -----------------------------------------------------------------------------
@@ -184,7 +159,7 @@ export function toEnabledSet(
   if (opt === false) return new Set(); // none
   if (Array.isArray(opt)) return new Set(opt); // allowed array
 
-  // object form → blocked
+  // Object form: all plugins enabled unless explicitly disabled
   const set = new Set(REPLACEABLE_LYNX_PLUGINS);
   for (const [k, on] of Object.entries(opt)) {
     if (on === false) set.delete(k as LynxPluginName); // explicitly disabled
@@ -242,7 +217,81 @@ export {
   ORDERED_LYNX_UI_PLUGIN_NAMES,
 };
 
-/* ---------- Tailwind un-configured corePlugins --------------------------------- */
+/* ---------- Tailwind core plugins pending preset integration ------------------ */
+
+/**
+ * Text-decoration plugins requiring tailored integration with the current
+ * shorthand-based Lynx implementation.
+ */
+
+// 'textDecorationColor' // Longhand supported; minimum SDK is undocumented
+// 'textDecorationThickness' // Longhand supported on Android and iOS in SDK 4.0+
+// 'textDecorationStyle' // Longhand unsupported; available only via shorthand
+
+/**
+ * Filter functions available in Lynx SDK 3.6+ requiring Lynx replacements.
+ */
+
+// 'brightness'
+// 'contrast'
+// 'saturate'
+
+/**
+ * Runtime-backed candidates requiring target and semantic validation.
+ */
+
+// 'hyphens' // `manual` and `none` have the same behavior on Android and iOS
+// 'pointerEvents' // Native SDK 3.5+ and Clay; unavailable on Lynx for Web
+// 'cursor' // Lynx for Web and partial desktop Clay support only
+
+/**
+ * Place utilities require Lynx replacements that expand the unsupported
+ * shorthands into align and justify longhands with a reduced value set.
+ */
+
+// 'placeContent'
+// 'placeItems'
+// 'placeSelf'
+
+/**
+ * Variable-composed effects requiring SDK 3.6+ preset integration and
+ * runtime validation.
+ */
+
+// 'gradientColorStops'
+// 'boxShadowColor'
+// 'ringWidth'
+// 'ringColor'
+// 'ringOffsetWidth'
+// 'ringOffsetColor'
+
+/**
+ * Sibling-based utilities requiring cross-platform selector validation.
+ * Reverse spacing and divide widths additionally require SDK 3.6+ variable
+ * composition.
+ */
+
+// 'space'
+// 'divideWidth'
+// 'divideStyle'
+// 'divideColor'
+
+/**
+ * Legacy color-opacity compatibility candidates
+ *
+ * Tailwind CSS v3 recommends slash opacity modifiers such as `bg-black/25`
+ * instead of these variable-based utilities. No preset implementation is
+ * currently planned unless compatibility requires these aliases.
+ */
+
+// 'backgroundOpacity'
+// 'borderOpacity'
+// 'divideOpacity'
+// 'placeholderOpacity'
+// 'ringOpacity'
+// 'textOpacity'
+
+/* ---------- Tailwind core plugins not configured by the preset ---------------- */
 
 /** svg-related plugins */
 
@@ -250,14 +299,11 @@ export {
 // 'stroke'
 // 'strokeWidth'
 
-/** filter-related plugins, only grayscale and blur are supported */
+/** filter-related plugins */
 
-// 'brightness'
-// 'contrast'
 // 'dropShadow'
 // 'hueRotate'
 // 'invert'
-// 'saturate'
 // 'sepia'
 
 /** backdrop-related plugins */
@@ -273,12 +319,17 @@ export {
 // 'backdropSepia'
 // 'backdropFilter'
 
-/** deprecated outline-related plugins */
+/**
+ * Legacy outline definitions that are no longer maintained as Lynx CSS APIs.
+ */
 
-// 'outlineColor',
-// 'outlineOffset',
-// 'outlineStyle',
-// 'outlineWidth',
+// 'outlineColor'
+// 'outlineStyle'
+// 'outlineWidth'
+
+/** outline plugin without a corresponding Lynx CSS property */
+
+// 'outlineOffset'
 
 /** non-supported scroll-related plugins */
 
@@ -292,8 +343,6 @@ export {
 
 /** interactivity related plugins */
 
-// 'pointerEvents'
-// 'cursor'
 // 'userSelect'
 // 'touchAction',
 // 'willChange'
@@ -321,7 +370,6 @@ export {
 // 'appearance'
 // 'accentColor',
 // 'placeholderColor'
-// 'placeholderOpacity'
 
 /** background and effects related plugins */
 
@@ -334,9 +382,6 @@ export {
 // 'resize'
 // 'objectFit'
 // 'objectPosition'
-// 'placeContent'
-// 'placeItems'
-// 'placeSelf'
 // 'borderSpacing',
 
 /** break control related plugins */
@@ -349,14 +394,17 @@ export {
 
 // 'boxDecorationBreak'
 // 'content',
-// 'forcedColorAdjust',
 
 /** typography and text styling related plugins */
 
+// 'fontVariantNumeric'
 // 'textTransform'
 // 'fontSmoothing'
-// 'textDecorationThickness',
 // 'textUnderlineOffset',
 // 'textWrap',
-// 'hyphens',
 // 'lineClamp',
+
+/** accessibility related plugins */
+
+// 'accessibility'
+// 'forcedColorAdjust',

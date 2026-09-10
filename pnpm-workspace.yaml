@@ -33,11 +33,14 @@ packages:
 enablePrePostScripts: false
 engineStrict: true
 hoistWorkspacePackages: true
-ignorePatchFailures: false
 optimisticRepeatInstall: true
 publicHoistPattern: []
 resolutionMode: "lowest-direct"
 strictPeerDependencies: true
+
+# Treat workspace topology and filter mistakes as hard errors.
+disallowWorkspaceCycles: true
+failIfNoMatch: true
 
 # Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
 minimumReleaseAge: 4320
@@ -51,17 +54,17 @@ minimumReleaseAgeExclude:
   # First-party Rstack toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
+  - "@rslib/*"
+  - "rsbuild-plugin-dts"
   - "@rstest/*"
   - "@rstackjs/create-toolkit"
-  # Renovate security update: turbo@2.9.14
-  - turbo@2.9.14
-  # Renovate security update: dompurify@3.4.0
-  - dompurify@3.4.0
-# npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
-# (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
-# `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
-# is available and skipped (with a warning) when it is not.
-minimumReleaseAgeStrict: false
+  # Changesets v3 packages were released as one coordinated set.
+  - "@changesets/*"
+minimumReleaseAgeExcludePrune: true
+# Some registry metadata omits the `time` field. Skip only those packages;
+# otherwise fail rather than falling back to a release younger than three days.
+minimumReleaseAgeIgnoreMissingTime: true
+minimumReleaseAgeStrict: true
 
 peerDependencyRules:
   allowedVersions:
@@ -106,7 +109,8 @@ catalog:
 catalogs:
   # Packages vendored from the Lynx toolchain.
   lynxjs:
-    preact: "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c"
+    preact: "npm:@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a"
+    "@lynx-js/preact-devtools": "5.0.1-20260827072047-5f77e12"
 
   adb:
     "@yume-chan/adb": ^2.6.2
@@ -121,24 +125,24 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.1.10"
+    "@rsbuild/core": "2.2.4"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0-beta.1"
+    "@rslib/core": "1.0.0"
 
   # Rspack monorepo packages
   rspack:
     "@rspack/cli": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/cli@843bab005b2413345eb6efc3aaaba2a398fca908"
     "@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
-    "@rspack/dev-server": "2.1.0"
-    "@rspack/test-tools": "2.1.3"
+    "@rspack/dev-server": "2.2.1"
+    "@rspack/test-tools": "2.2.2"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.6"
-    "@rstest/coverage-istanbul": "0.11.6"
-    "@rstest/core": "0.11.6"
+    "@rstest/adapter-rsbuild": "0.11.12"
+    "@rstest/coverage-istanbul": "0.11.12"
+    "@rstest/core": "0.11.12"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
@@ -147,10 +151,8 @@ overrides:
   # singletons, which breaks ReactLynx snapshot registration ("BackgroundSnapshot not
   # found"). Force every @lynx-js/react to the single workspace copy.
   "@lynx-js/react": "workspace:*"
-  "@rspack/core": "$@rspack/core"
-  "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
-  "@rsdoctor/types>@rspack/core": "$@rspack/core"
+
+  "@rspack/core": "catalog:rspack"
 
 packageExtensions:
   # Typia's internal packages import TypeScript without declaring it. Keep

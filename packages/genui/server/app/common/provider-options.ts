@@ -17,18 +17,28 @@ export interface ProviderOptionsBody {
   reasoningEffort?: OpenAIReasoningEffort;
 }
 
-export function clientOverridesAllowed(): boolean {
-  return process.env.A2UI_ALLOW_CLIENT_OVERRIDE === '1';
+function nonEmptyString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : undefined;
 }
 
 export function pickProviderOptions(body: ProviderOptionsBody): ChatOptions {
-  const allowOverride = clientOverridesAllowed();
+  const model = nonEmptyString(body.model);
+  const apiKey = nonEmptyString(body.apiKey);
+  const baseURL = nonEmptyString(body.baseURL);
+  const hasCompleteCustomProvider = model !== undefined
+    && apiKey !== undefined
+    && baseURL !== undefined;
   return {
     resourceId: body.resourceId,
-    model: allowOverride ? body.model : configuredModelName(body.model),
-    apiKey: allowOverride ? body.apiKey : undefined,
-    baseURL: allowOverride ? body.baseURL : undefined,
-    api: allowOverride ? body.api : undefined,
-    reasoningEffort: allowOverride ? body.reasoningEffort : undefined,
+    model: hasCompleteCustomProvider ? model : configuredModelName(model),
+    apiKey: hasCompleteCustomProvider ? apiKey : undefined,
+    baseURL: hasCompleteCustomProvider ? baseURL : undefined,
+    api: hasCompleteCustomProvider ? body.api : undefined,
+    reasoningEffort: hasCompleteCustomProvider
+      ? body.reasoningEffort
+      : undefined,
+    disableAgentCache: hasCompleteCustomProvider ? true : undefined,
   };
 }

@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
-import { createRspeedy } from '@lynx-js/rspeedy'
 import type { RsbuildPluginAPI } from '@lynx-js/rspeedy'
 import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
@@ -13,15 +13,15 @@ describe('pluginLynxConfig', () => {
   test('should throw error when no LynxTemplatePlugin exposed', async () => {
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
 
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
         plugins: [
           pluginLynxConfig({}),
         ],
       },
     })
 
-    await expect(() => rspeedy.initConfigs()).rejects
+    await expect(() => rsbuild.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
       [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API https://rsbuild.rs/plugins/dev/core#apiexpose.
 
@@ -35,8 +35,8 @@ describe('pluginLynxConfig', () => {
   test('should throw error when lynx:react plugin exists', async () => {
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
 
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
         plugins: [
           pluginLynxConfig({}),
           {
@@ -47,7 +47,7 @@ describe('pluginLynxConfig', () => {
       },
     })
 
-    await expect(() => rspeedy.initConfigs()).rejects
+    await expect(() => rsbuild.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
       [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API https://rsbuild.rs/plugins/dev/core#apiexpose.
 
@@ -61,8 +61,8 @@ describe('pluginLynxConfig', () => {
   test('should throw error when lynx:vue plugin exists', async () => {
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
 
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
         plugins: [
           pluginLynxConfig({}, {
             dslPluginName2PkgName: {
@@ -77,7 +77,7 @@ describe('pluginLynxConfig', () => {
       },
     })
 
-    await expect(() => rspeedy.initConfigs()).rejects
+    await expect(() => rsbuild.initConfigs()).rejects
       .toThrowErrorMatchingInlineSnapshot(`
       [Error: [pluginLynxConfig] No \`LynxTemplatePlugin\` exposed to the plugin API https://rsbuild.rs/plugins/dev/core#apiexpose.
 
@@ -96,8 +96,8 @@ describe('pluginLynxConfig', () => {
 
     const LynxTemplatePlugin = rstest.fn()
 
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
         plugins: [
           pluginLynxConfig({ enableAccessibilityElement: true }),
           {
@@ -112,7 +112,7 @@ describe('pluginLynxConfig', () => {
       },
     })
 
-    await rspeedy.initConfigs()
+    await rsbuild.initConfigs()
 
     expect(LynxConfigWebpackPlugin).toHaveBeenCalledWith(
       {

@@ -23,7 +23,8 @@ import { ElementTemplateLifecycleConstant } from '../../../../../src/element-tem
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type {
   ElementTemplateHydrateCommitContext,
-  SerializedElementTemplate,
+  SerializedCompiledNode,
+  SerializedEtNode,
 } from '../../../../../src/element-template/protocol/types.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
@@ -41,7 +42,7 @@ declare module '@lynx-js/types' {
 }
 
 type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
-type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+type HydrateInstances = SerializedEtNode[];
 
 interface CaseContext {
   hydrationData: HydrateInstances;
@@ -59,13 +60,13 @@ function createHydrationTemplate(
   templateKey: string,
   options: {
     attributeSlots?: unknown[];
-    elementSlots?: SerializedElementTemplate[][];
+    childSlots?: SerializedCompiledNode[][];
   } = {},
-): SerializedElementTemplate {
+): SerializedCompiledNode {
   return {
     templateKey,
-    attributeSlots: (options.attributeSlots ?? []) as SerializedElementTemplate['attributeSlots'],
-    elementSlots: options.elementSlots ?? [],
+    attributeSlots: (options.attributeSlots ?? []) as SerializedCompiledNode['attributeSlots'],
+    childSlots: options.childSlots ?? [],
     uid: handleId,
   };
 }
@@ -75,23 +76,23 @@ function createHydrationChild(
   templateKey: string,
   options: {
     attributeSlots?: unknown[];
-    elementSlots?: SerializedElementTemplate[][];
+    childSlots?: SerializedCompiledNode[][];
   } = {},
-): SerializedElementTemplate {
+): SerializedCompiledNode {
   return createHydrationTemplate(handleId, templateKey, options);
 }
 
-function createHydrationRawTextRoot(handleId: number, text: unknown): SerializedElementTemplate {
+function createHydrationRawTextRoot(handleId: number, text: unknown): SerializedCompiledNode {
   return createHydrationTemplate(handleId, BUILTIN_RAW_TEXT_TEMPLATE_KEY, {
     attributeSlots: [typeof text === 'string' ? text : String(text ?? '')],
-    elementSlots: [],
+    childSlots: [],
   });
 }
 
-function createHydrationRawTextChild(handleId: number, text: unknown): SerializedElementTemplate {
+function createHydrationRawTextChild(handleId: number, text: unknown): SerializedCompiledNode {
   return createHydrationChild(handleId, BUILTIN_RAW_TEXT_TEMPLATE_KEY, {
     attributeSlots: [typeof text === 'string' ? text : String(text ?? '')],
-    elementSlots: [],
+    childSlots: [],
   });
 }
 
@@ -103,7 +104,7 @@ function setup(): CaseContext {
   envManager.setUseElementTemplate(true);
 
   const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-    hydrationData.push(...event.data.instances);
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
@@ -380,7 +381,7 @@ export function runCaseByName(name: string): unknown {
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
     const beforeChild = createHydrationChild(-2, 'child');
-    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[beforeChild]] });
+    const before = createHydrationTemplate(-1, 'root', { childSlots: [[beforeChild]] });
 
     const stream = hydrateBackground(before, rootInstance);
     return { stream };
@@ -406,7 +407,7 @@ export function runCaseByName(name: string): unknown {
     const beforeExisting = createHydrationChild(-2, 'existing');
     const beforeRemoved = createHydrationChild(-3, 'removed');
     const before = createHydrationTemplate(-1, 'root', {
-      elementSlots: [[beforeExisting, beforeRemoved]],
+      childSlots: [[beforeExisting, beforeRemoved]],
     });
 
     const stream = hydrateBackground(before, rootInstance);
@@ -424,7 +425,7 @@ export function runCaseByName(name: string): unknown {
     rootInstance.appendChild(rawText);
 
     const before = createHydrationTemplate(-1, 'root', {
-      elementSlots: [[createHydrationRawTextChild(3, '')]],
+      childSlots: [[createHydrationRawTextChild(3, '')]],
     });
     const stream = hydrateBackground(before, rootInstance);
 
@@ -453,7 +454,7 @@ export function runCaseByName(name: string): unknown {
     const beforeMissingNonString = createHydrationRawTextChild(-3, 456);
 
     const before = createHydrationTemplate(rootInstance.instanceId, 'root', {
-      elementSlots: [[
+      childSlots: [[
         beforeExistingString,
         beforeExistingNonString,
         beforeMissingString,
@@ -473,14 +474,14 @@ export function runCaseByName(name: string): unknown {
 
     // Background side has a child living at slot 1 that the serialized payload
     // never mentions. The hydrate loop in `hydrate.ts` extends its slot count
-    // via `Math.max(serializedSlots.length, instance.elementSlots.length)` and
+    // via `Math.max(serializedSlots.length, instance.childSlots.length)` and
     // synthesizes a create + insert for the background-only child at slot 1.
     const rootInstance = new BackgroundElementTemplateInstance('root');
     const slot1Child = new BackgroundElementTemplateInstance('child');
     slot1Child.__slotIndex = 1;
     rootInstance.appendChild(slot1Child);
 
-    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[]] });
+    const before = createHydrationTemplate(-1, 'root', { childSlots: [[]] });
     const stream = hydrateBackground(before, rootInstance);
     return { stream };
   });
@@ -493,7 +494,7 @@ export function runCaseByName(name: string): unknown {
 
     const rootInstance = new BackgroundElementTemplateInstance('root');
 
-    const before = createHydrationTemplate(-1, 'root', { elementSlots: [[]] });
+    const before = createHydrationTemplate(-1, 'root', { childSlots: [[]] });
     const stream = hydrateBackground(before, rootInstance);
     return { stream };
   });
@@ -517,7 +518,7 @@ export function runCaseByName(name: string): unknown {
     const beforeChildB = createHydrationChild(childB.instanceId, 'b');
     const beforeChildC = createHydrationChild(childC.instanceId, 'c');
     const before = createHydrationTemplate(rootInstance.instanceId, 'root', {
-      elementSlots: [[beforeChildA, beforeChildB, beforeChildC]],
+      childSlots: [[beforeChildA, beforeChildB, beforeChildC]],
     });
 
     const stream = hydrateBackground(before, rootInstance);

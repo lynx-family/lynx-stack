@@ -41,14 +41,12 @@ export type { Config } from './config/index.js'
 
 // Dev
 export type { Dev } from './config/dev/index.js'
-export type { Client as DevClient } from './config/dev/client.js'
 
 // Output
 export type {
   CssModules,
   CssModuleLocalsConvention,
 } from './config/output/css-modules.js'
-export type { DistPath } from './config/output/dist-path.js'
 export type {
   BundleFilename,
   BundleFilenameContext,

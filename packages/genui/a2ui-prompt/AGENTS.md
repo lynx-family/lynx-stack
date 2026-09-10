@@ -1,6 +1,6 @@
 # a2ui-prompt
 
-Keep `packages/genui/server/agent` as the source of truth for built-in A2UI
+Keep `packages/genui/server/agent/a2ui` as the source of truth for built-in A2UI
 prompt and catalog logic. Do not copy the built-in catalog JSON, prompt text, or
 example definitions into this package.
 

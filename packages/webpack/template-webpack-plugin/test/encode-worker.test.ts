@@ -60,7 +60,25 @@ function isEncodeTraceRow(value: unknown): value is EncodeTraceRow {
 // TASM and run everywhere.
 const testWithNativeTasm = supportNapi() ? test : test.skip;
 
-describe('encode worker trace configuration', () => {
+const elementTemplateEncodeOptions = {
+  ...encodeOptions,
+  compilerOptions: {
+    ...encodeOptions.compilerOptions,
+    enableFiberArch: true,
+    enableElementTemplate: true,
+  },
+  sourceContent: {
+    ...encodeOptions.sourceContent,
+    config: { enableElementTemplate: true },
+  },
+  lepusCode: {
+    root: '',
+    lepusChunk: {},
+    filename: 'main-thread.js',
+  },
+};
+
+describe('encode worker', () => {
   afterEach(() => {
     rs.restoreAllMocks();
     rs.unstubAllEnvs();
@@ -112,6 +130,42 @@ describe('encode worker trace configuration', () => {
     expect(typeof encodeRow?.duration_ms).toBe('number');
     expect(traceRows.some(row => row.name === 'ParseEncodeOptions')).toBe(true);
   });
+
+  testWithNativeTasm(
+    'encodes elementSlotIndex through the resolved TASM package',
+    async () => {
+      const encodeChildSlot = async (slot: Record<string, number>) => {
+        const result = await encode({
+          encodeOptions: {
+            ...elementTemplateEncodeOptions,
+            elementTemplate: {
+              test: [{
+                kind: 'element',
+                type: 'view',
+                attributesArray: [],
+                children: [{
+                  kind: 'childSlot',
+                  type: 'slot',
+                  ...slot,
+                }],
+              }],
+            },
+          },
+        });
+
+        expect(result.status).toBe(0);
+        return result.buffer;
+      };
+
+      const elementSlotOne = await encodeChildSlot({ elementSlotIndex: 1 });
+      const elementSlotTwo = await encodeChildSlot({ elementSlotIndex: 2 });
+      const runtimeNamedSlot = await encodeChildSlot({ childSlotIndex: 1 });
+      const slotWithoutIndex = await encodeChildSlot({});
+
+      expect(elementSlotOne.equals(elementSlotTwo)).toBe(false);
+      expect(runtimeNamedSlot.equals(slotWithoutIndex)).toBe(true);
+    },
+  );
 
   test('does not print the TASM encode trace when disabled', async () => {
     rs.stubEnv('DEBUG', 'rspeedy');

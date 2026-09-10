@@ -4,6 +4,9 @@ import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
 import { Component, createElement } from 'preact/compat';
 
+import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../../src/core/main-thread-ref.js';
+import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
+import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
@@ -11,6 +14,7 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
+  uninstallElementTemplateCommitHookForTesting,
 } from '../../../../src/element-template/background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import {
@@ -32,7 +36,10 @@ import {
   enqueueDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../../src/core/thread-function-call/main-thread.js';
-import { onFunctionCall } from '../../../../src/core/thread-function-call/return-value.js';
+import {
+  onFunctionCall,
+  resetFunctionCallReturnListener,
+} from '../../../../src/core/thread-function-call/return-value.js';
 import {
   InitDataConsumer,
   InitDataProvider,
@@ -43,7 +50,6 @@ import {
 } from '../../../../src/element-template/index.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { clearRefState, queueRefAttrUpdate } from '../../../../src/element-template/prop-adapters/ref.js';
-import { flushCoreContextEvents } from '../../test-utils/mock/mockNativePapi/context.js';
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -108,16 +114,22 @@ function installDataChangeHarness() {
 describe('ElementTemplate commit hook', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: unknown[] = [];
+  let originalLynxSdkVersion: string | undefined;
 
   const onUpdate = (event: { data: unknown }) => {
     updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   beforeEach(() => {
+    originalLynxSdkVersion = SystemInfo.lynxSdkVersion;
     resetElementTemplateCommitState();
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearRefState();
+    SystemInfo.lynxSdkVersion = '4.0';
+    clearMainThreadRefLastIdForTesting();
+    clearMtsConfigCacheForTesting();
+    takeMainThreadRefInitValuePatch();
     updateEvents = [];
     envManager.resetEnv('background');
     installElementTemplateCommitHook();
@@ -135,7 +147,11 @@ describe('ElementTemplate commit hook', () => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     clearRefState();
+    takeMainThreadRefInitValuePatch();
     takeDelayedRunOnMainThreadData();
+    resetFunctionCallReturnListener();
+    SystemInfo.lynxSdkVersion = originalLynxSdkVersion;
+    clearMtsConfigCacheForTesting();
   });
 
   it('dispatches update after commit when hydrated', () => {
@@ -206,38 +222,64 @@ describe('ElementTemplate commit hook', () => {
     expect(takeDelayedRunOnMainThreadData()).toEqual([]);
   });
 
-  it('drops only the failed delayed runOnMainThread return when update dispatch throws', async () => {
+  it('dispatches MainThreadRef init-value patch after commit when hydrated', () => {
     markElementTemplateHydrated();
-    const dispatchError = new Error('update dispatch failed');
-    const coreContext = lynx.getCoreContext();
-    const removeEventListener = vi.spyOn(coreContext, 'removeEventListener');
-    vi.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
-      throw dispatchError;
-    });
-    const worklet = { _wkltId: 'failed-commit-main-thread-function' };
-    let keptResolveId = 0;
-    const keptPromise = new Promise(resolve => {
-      keptResolveId = onFunctionCall(resolve);
-    });
+    new MainThreadRef('commit-init');
 
-    enqueueDelayedRunOnMainThreadData({
-      worklet,
-      params: [],
-      resolveId: onFunctionCall(vi.fn()),
-    });
-
-    expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
-    expect(takeDelayedRunOnMainThreadData()).toEqual([]);
-    expect(removeEventListener).not.toHaveBeenCalled();
+    options.__c?.({} as unknown as object, []);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: WorkletEvents.FunctionCallRet,
-      data: JSON.stringify({ resolveId: keptResolveId, returnValue: 'kept' }),
-    });
-    flushCoreContextEvents();
+    expect(updateEvents).toEqual([
+      {
+        ops: [],
+        flushOptions: { emptyPatch: true },
+        flowIds: undefined,
+        reloadVersion: getReloadVersion(),
+        mainThreadRefInitValuePatch: [[1, 'commit-init']],
+      },
+    ]);
     envManager.switchToBackground();
-    await expect(keptPromise).resolves.toBe('kept');
+    expect(takeMainThreadRefInitValuePatch()).toEqual([]);
+  });
+
+  it('cleans commit state when update serialization throws', () => {
+    vi.useFakeTimers();
+    globalThis.__ALOG__ = false;
+    const serializeError = new Error('update serialization failed');
+    const throwingValue = {
+      toJSON() {
+        throw serializeError;
+      },
+    } as unknown as string;
+    const ref = vi.fn();
+    const removedRoot = new BackgroundElementTemplateInstance('removed');
+    const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
+
+    try {
+      markElementTemplateHydrated();
+      queueRefAttrUpdate(null, ref, -2, 0);
+      markRemovedSubtreeForPostDispatchTeardown(removedRoot);
+      globalCommitContext.ops = createRawTextOps(1, throwingValue);
+      enqueueDelayedRunOnMainThreadData({
+        worklet: { _wkltId: 'failed-serialize-main-thread-function' },
+        params: [],
+        resolveId: onFunctionCall(vi.fn()),
+      });
+
+      expect(() => options.__c?.({} as unknown as object, [])).toThrow(serializeError);
+      expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+      expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
+      expect(globalCommitContext.ops).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
+
+      options.__c?.({} as unknown as object, []);
+      expect(ref).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(10000);
+      expect(backgroundElementTemplateInstanceManager.get(removedRoot.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('dispatches triggerDataUpdated when useInitData observes a data change', () => {
@@ -423,7 +465,12 @@ describe('ElementTemplate commit hook', () => {
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
       data: {
-        instances: [],
+        page: {
+          tag: 'page',
+          attributes: null,
+          childSlots: [[]],
+          uid: 0,
+        },
         reloadVersion: getReloadVersion(),
       },
     });
@@ -510,7 +557,7 @@ describe('ElementTemplate commit hook', () => {
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       options.__c?.({} as unknown as object, []);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
 
@@ -591,6 +638,7 @@ describe('ElementTemplate commit hook', () => {
         0,
         root.instanceId,
         0,
+        null,
       ]);
     } finally {
       vi.useRealTimers();
@@ -684,7 +732,7 @@ describe('ElementTemplate commit hook', () => {
 
     resetElementTemplateHydrationListener();
 
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([root]);
   });
 
   it('cancels scheduled removed subtree cleanup on background destroy', () => {
@@ -704,57 +752,49 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
-  it('resets commit state when update dispatch throws', () => {
-    vi.useFakeTimers();
-    const dispatchError = new Error('update dispatch failed');
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
-      throw dispatchError;
-    });
-
-    try {
-      markElementTemplateHydrated();
-      const root = new BackgroundElementTemplateInstance('root');
-      markRemovedSubtreeForPostDispatchTeardown(root);
-      globalCommitContext.ops = createRawTextOps(1, 'flush');
-
-      expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
-      expect(globalCommitContext.ops).toEqual([]);
-      expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
-
-      vi.advanceTimersByTime(10000);
-      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
-    } finally {
-      dispatchSpy.mockRestore();
-      vi.useRealTimers();
-    }
-  });
-
-  it('clears pending refs when update dispatch throws', () => {
-    const ref = vi.fn();
-    const dispatchError = new Error('update dispatch failed');
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
-      throw dispatchError;
-    });
-
-    try {
-      markElementTemplateHydrated();
-      queueRefAttrUpdate(null, ref, -2, 0);
-      globalCommitContext.ops = createRawTextOps(1, 'flush');
-
-      expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
-      expect(ref).not.toHaveBeenCalled();
-
-      globalCommitContext.ops = [];
-      options.__c?.({} as unknown as object, []);
-      expect(ref).not.toHaveBeenCalled();
-    } finally {
-      dispatchSpy.mockRestore();
-    }
-  });
-
   it('is idempotent', () => {
     installElementTemplateCommitHook();
+    const wrapped = options.__c;
     installElementTemplateCommitHook();
-    expect(true).toBe(true);
+    expect(options.__c).toBe(wrapped);
+  });
+
+  it('can be uninstalled and reinstalled', () => {
+    installElementTemplateCommitHook();
+    const wrapped = options.__c;
+    uninstallElementTemplateCommitHookForTesting();
+    const original = options.__c;
+    expect(original).not.toBe(wrapped);
+
+    uninstallElementTemplateCommitHookForTesting();
+    expect(options.__c).toBe(original);
+
+    installElementTemplateCommitHook();
+    expect(options.__c).not.toBe(original);
+    uninstallElementTemplateCommitHookForTesting();
+    expect(options.__c).toBe(original);
+    installElementTemplateCommitHook();
+  });
+
+  it('deletes the commit option when none existed before install', () => {
+    uninstallElementTemplateCommitHookForTesting();
+    const hadCommit = '__c' in options;
+    const original = options.__c;
+    try {
+      delete options.__c;
+
+      installElementTemplateCommitHook();
+      expect(typeof options.__c).toBe('function');
+      uninstallElementTemplateCommitHookForTesting();
+      expect('__c' in options).toBe(false);
+    } finally {
+      uninstallElementTemplateCommitHookForTesting();
+      if (hadCommit && original) {
+        options.__c = original;
+      } else {
+        delete options.__c;
+      }
+      installElementTemplateCommitHook();
+    }
   });
 });

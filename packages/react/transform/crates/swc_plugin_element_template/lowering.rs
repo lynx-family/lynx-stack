@@ -58,7 +58,7 @@ where
             } else {
               value
             }
-          } else if let AttrName::WorkletRef = attr_name {
+          } else if let AttrName::UnsupportedNamespacedRef = attr_name {
             quote!("null" as Expr)
           } else {
             value

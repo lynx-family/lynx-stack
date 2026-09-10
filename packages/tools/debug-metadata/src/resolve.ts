@@ -78,7 +78,7 @@ export function findBytecodeDebugInfo(
  * @public
  */
 export interface QueryParams {
-  /** Bundler-relative asset path (e.g. `.rspeedy/main/main-thread.js.map`). */
+  /** Bundler-relative asset path (e.g. `.lynx/main/main-thread.js.map`). */
   path?: string;
   /** Asset basename (e.g. `main-thread.js`). */
   filename?: string;

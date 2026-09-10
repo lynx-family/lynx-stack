@@ -13,6 +13,7 @@ import * as CSS from '@lynx-js/css-serializer';
 
 export { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 export type {
+  CustomSectionNaming,
   LynxTemplatePluginOptions,
   TemplateHooks,
   EncodeOptions,

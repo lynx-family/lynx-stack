@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export type ProtocolName = 'a2ui' | 'openui' | 'mcp-apps';
+export type ProtocolName =
+  | 'a2ui'
+  | 'openui'
+  | 'mcp-apps'
+  | 'lynx-xml'
+  | 'html';
 
 export interface Protocol {
   name: ProtocolName;
@@ -13,6 +18,8 @@ export const PROTOCOLS: Record<ProtocolName, Protocol> = {
   a2ui: { name: 'a2ui', version: '0.9' },
   openui: { name: 'openui', version: '0.5' },
   'mcp-apps': { name: 'mcp-apps', version: '2026-01-26' },
+  'lynx-xml': { name: 'lynx-xml', version: '0.1' },
+  html: { name: 'html', version: '5' },
 };
 
 export const DEFAULT_PROTOCOL: Protocol = PROTOCOLS.a2ui;
@@ -20,5 +27,7 @@ export const DEFAULT_PROTOCOL: Protocol = PROTOCOLS.a2ui;
 export function getProtocol(name: string | null | undefined): Protocol {
   if (name === 'openui') return PROTOCOLS.openui;
   if (name === 'mcp-apps') return PROTOCOLS['mcp-apps'];
+  if (name === 'lynx-xml') return PROTOCOLS['lynx-xml'];
+  if (name === 'html') return PROTOCOLS.html;
   return PROTOCOLS.a2ui;
 }

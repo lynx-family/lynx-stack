@@ -26,6 +26,11 @@ export const RuntimeGlobals = {
   lynxChunkEntries: 'lynx.__chunk_entries__',
 
   /**
+   * Runtime-readable build configuration.
+   */
+  lynxRuntimeConfig: 'lynx.__runtime_configs__',
+
+  /**
    * A function to process the eval result of a lazy bundle.
    *
    * @deprecated Unreliable when multiple lazy bundles load — each overwrites it.

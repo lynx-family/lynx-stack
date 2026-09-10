@@ -28,10 +28,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       // from the `output.filename.bundle` field.
       filename: getFilename(config.output?.filename),
 
-      sourceMap: {
-        css: true,
-      },
-
       // inlineScripts defaults to false when chunk splitting is enabled, true otherwise
       inlineScripts: !enableChunkSplitting,
 
@@ -65,7 +61,7 @@ function getEnableChunkSplitting(config: Config): boolean {
 
 const DEFAULT_FILENAME = '[name].[platform].bundle'
 
-function getFilename(filename: string | Filename | undefined): Filename {
+export function getFilename(filename: string | Filename | undefined): Filename {
   if (typeof filename === 'string') {
     return {
       bundle: filename,

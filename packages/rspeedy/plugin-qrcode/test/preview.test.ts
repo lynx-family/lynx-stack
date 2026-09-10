@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild, logger } from '@rsbuild/core'
+import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import type { Config, ExposedAPI, RsbuildPlugin } from '@lynx-js/rspeedy'
 
 import { getRandomNumberInRange } from './port.js'
@@ -13,6 +15,26 @@ vi.mock('uqr')
 vi.mock('@clack/prompts')
 
 const exit = vi.fn()
+
+// `pluginQRCode` reads the Lynx config the build engine exposes, so the stub
+// applies the engine's config plugin the way a real Lynx build does.
+const exposeLynxConfig = (api: RsbuildPluginAPI): void => {
+  let lynx: unknown
+
+  for (const plugin of pluginLynx()) {
+    void plugin.setup({
+      expose(_id: string | symbol, value: unknown) {
+        lynx = value
+      },
+    } as unknown as RsbuildPluginAPI)
+
+    if (lynx) {
+      break
+    }
+  }
+
+  api.expose(Symbol.for('@lynx-js/rsbuild-plugin:config'), lynx)
+}
 
 const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
   name: 'lynx:rsbuild:api',
@@ -24,6 +46,8 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
+
+    exposeLynxConfig(api)
   },
 })
 
@@ -88,6 +112,61 @@ describe('Preview', () => {
     expect(renderUnicodeCompact).toBeCalled()
     expect(renderUnicodeCompact).toBeCalledWith(
       'http://example.com/main.lynx.bundle',
+    )
+
+    await server.close()
+    await vi.waitFor(() => {
+      expect(exit).toBeCalledTimes(1)
+    })
+  })
+
+  test('preview with NODE_ENV=production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const { renderUnicodeCompact } = await import('uqr')
+
+    const { selectKey, isCancel } = await import('@clack/prompts')
+    vi.mocked(selectKey).mockResolvedValue('foo')
+    vi.mocked(isCancel).mockReturnValue(true)
+    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+
+    const port = getRandomNumberInRange(3000, 60000)
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        source: {
+          entry: {
+            main: './fixtures/hello-world/index.js',
+          },
+        },
+        plugins: [
+          {
+            name: 'lynx:rsbuild:api',
+            setup(api) {
+              api.expose<ExposedAPI>(Symbol.for('rspeedy.api'), {
+                config: {},
+                debug: vi.fn(),
+                exit,
+                logger,
+                version: '1.0.0',
+              })
+            },
+          } satisfies RsbuildPlugin,
+          ...pluginLynx(),
+          pluginQRCode(),
+        ],
+        environments: {
+          lynx: {},
+        },
+        server: {
+          port,
+        },
+      },
+    })
+
+    const { server } = await rsbuild.preview({ checkDistDir: false })
+
+    expect(renderUnicodeCompact).toBeCalled()
+    expect(vi.mocked(renderUnicodeCompact).mock.calls[0]?.[0]).toMatch(
+      new RegExp(`^http://[^/]+:${port}/main\\.lynx\\.bundle$`),
     )
 
     await server.close()

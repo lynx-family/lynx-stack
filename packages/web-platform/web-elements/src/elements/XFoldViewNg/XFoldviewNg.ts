@@ -63,8 +63,10 @@ export class XFoldviewNg extends HTMLElement {
   setFoldExpanded(params: { offset: string; smooth: boolean }) {
     const { offset, smooth = true } = params;
     const offsetValue = parseFloat(offset);
+    // `scrollTo` is the native method and does not go through the `scrollTop`
+    // setter above, so the offset has to be clamped here as well.
     this.scrollTo({
-      top: offsetValue,
+      top: Math.min(Math.max(offsetValue, 0), this[scrollableLength]),
       behavior: smooth ? 'smooth' : 'instant',
     });
   }

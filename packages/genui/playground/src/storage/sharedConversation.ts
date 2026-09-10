@@ -18,6 +18,8 @@ export const SHARED_CONVERSATION_KIND = 'a2ui-conversation';
 export interface SharedConversationMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
 }
@@ -57,6 +59,12 @@ export function serializeConversation(
         role: message.role,
         content: message.content,
       };
+      if (message.lynxXmlFragment) {
+        next.lynxXmlFragment = message.lynxXmlFragment;
+      }
+      if (message.lynxXmlModelOutput) {
+        next.lynxXmlModelOutput = message.lynxXmlModelOutput;
+      }
       if (message.previewPayloadUrls) {
         next.previewPayloadUrls = message.previewPayloadUrls;
       }
@@ -100,6 +108,10 @@ function isSharedConversationMessage(
       || message.role === 'assistant'
       || message.role === 'system')
     && typeof message.content === 'string'
+    && (message.lynxXmlFragment === undefined
+      || typeof message.lynxXmlFragment === 'string')
+    && (message.lynxXmlModelOutput === undefined
+      || typeof message.lynxXmlModelOutput === 'string')
   );
 }
 
@@ -124,6 +136,8 @@ export function resolveSharedConversationProtocol(
     doc.protocol === 'a2ui'
     || doc.protocol === 'openui'
     || doc.protocol === 'mcp-apps'
+    || doc.protocol === 'lynx-xml'
+    || doc.protocol === 'html'
   ) {
     return doc.protocol;
   }

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Hono } from 'hono';
 
-import { getA2UIAgentService } from '../../../service/a2ui-agent';
+import { getA2UIAgentService } from '../../../service/a2ui/a2ui-agent.js';
 import {
   validateConversation,
   validateMessages,
@@ -59,6 +59,7 @@ async function postA2UIChat(req: Request) {
         messages,
         opts,
         validatedConversation.conversation,
+        req.signal,
       );
       return jsonWithCors(req, {
         ok: true,
@@ -73,13 +74,17 @@ async function postA2UIChat(req: Request) {
       messages,
       opts,
       validatedConversation.conversation,
+      undefined,
+      req.signal,
     );
     return jsonWithCors(req, {
       ...validatedResult,
       cachedTokens: extractUsageMetrics(validatedResult.usage).cachedTokens,
     });
   } catch (err: unknown) {
-    const { message, name } = errorMessage(err);
+    const { message, name } = errorMessage(err, {
+      secrets: [body.apiKey, opts.apiKey],
+    });
     return jsonWithCors(req, { ok: false, error: message, name });
   }
 }

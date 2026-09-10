@@ -13,7 +13,7 @@ import { NEXT_STATE } from '../../../src/shared/render-constants';
 describe('installComponentCompat', () => {
   let originalJS: boolean;
   let originalDisableWarning: boolean | undefined;
-  let originalTT: any;
+  let originalGetApp: any;
   let originalReportError: typeof lynx.reportError;
   let originalGetElementById: typeof lynx.getElementById;
   let originalCreateSelectorQuery: typeof lynx.createSelectorQuery;
@@ -26,7 +26,7 @@ describe('installComponentCompat', () => {
   beforeEach(() => {
     originalJS = __JS__;
     originalDisableWarning = globalThis.__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__;
-    originalTT = lynxCoreInject.tt;
+    originalGetApp = lynx.getApp;
     originalReportError = lynx.reportError;
     originalGetElementById = lynx.getElementById;
     originalCreateSelectorQuery = lynx.createSelectorQuery;
@@ -45,7 +45,7 @@ describe('installComponentCompat', () => {
   afterEach(() => {
     globalThis.__JS__ = originalJS;
     globalThis.__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__ = originalDisableWarning;
-    lynxCoreInject.tt = originalTT;
+    lynx.getApp = originalGetApp;
     lynx.reportError = originalReportError;
     lynx.getElementById = originalGetElementById;
     lynx.createSelectorQuery = originalCreateSelectorQuery;
@@ -88,7 +88,7 @@ describe('installComponentCompat', () => {
     const selectorQuery = {};
     const element = {};
 
-    lynxCoreInject.tt = {
+    const app = {
       _nativeApp: nativeApp,
       _reactLynx: {
         ReactComponent: {
@@ -102,6 +102,7 @@ describe('installComponentCompat', () => {
       registerModule: vi.fn(),
       getJSModule: vi.fn(() => GlobalEventEmitter),
     };
+    lynx.getApp = () => app as unknown as LynxApp;
     lynx.getElementById = vi.fn(() => element);
     lynx.createSelectorQuery = vi.fn(() => selectorQuery);
 
@@ -109,13 +110,13 @@ describe('installComponentCompat', () => {
 
     const component = new Component({}, {}) as any;
 
-    expect(component._reactAppInstance).toBe(lynxCoreInject.tt);
+    expect(component._reactAppInstance).toBe(lynx.getApp());
     expect(component.getNodeRef('#target', true)).toEqual({
       receiver: {
         _type: '',
         _nativeApp: nativeApp,
         _uiModule: uiModule,
-        _reactAppInstance: lynxCoreInject.tt,
+        _reactAppInstance: lynx.getApp(),
       },
       selector: '#target',
       single: true,
@@ -125,13 +126,13 @@ describe('installComponentCompat', () => {
         _type: '',
         _nativeApp: nativeApp,
         _uiModule: uiModule,
-        _reactAppInstance: lynxCoreInject.tt,
+        _reactAppInstance: lynx.getApp(),
       },
       selector: '#root',
     });
 
     component.registerModule('module', module);
-    expect(lynxCoreInject.tt.registerModule).toHaveBeenCalledWith('module', module);
+    expect(lynx.getApp().registerModule).toHaveBeenCalledWith('module', module);
     expect(component.getJSModule('GlobalEventEmitter')).toBe(GlobalEventEmitter);
 
     const listener = vi.fn();

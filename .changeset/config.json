@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
   "changelog": [
     "@svitejs/changesets-changelog-github-compact",
     {
@@ -7,6 +7,7 @@
     }
   ],
   "commit": false,
+  "format": "dprint",
   "fixed": [
     [
       "@lynx-js/web-core",

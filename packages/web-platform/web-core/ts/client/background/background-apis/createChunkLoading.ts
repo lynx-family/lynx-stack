@@ -128,6 +128,7 @@ export function createChunkLoading(
       'clearInterval',
       'clearTimeout',
       'NativeModules',
+      'console',
       ...(cardType !== 'react' ? ['Component'] : []),
       'ReactLynx',
       'nativeAppId',
@@ -177,6 +178,9 @@ export function createChunkLoading(
           tt.clearInterval,
           tt.clearTimeout,
           tt.NativeModules,
+          tt.NativeModules?.LynxConsoleModule
+            ?? tt.sharedConsole
+            ?? globalThis.console,
           ...(cardType !== 'react' ? [tt.Component.bind(tt)] : []),
           tt.ReactLynx,
           tt.nativeAppId,

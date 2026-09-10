@@ -147,6 +147,33 @@ body[data-panel-resize] iframe {
   height: 100%;
 }
 
+html[data-playground-entry="render"],
+html[data-playground-entry="render"] body,
+html[data-playground-entry="render"] #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.renderLynx,
+.lynxXmlRenderView {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lynxXmlRenderError {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  place-items: center;
+  color: #666;
+  font: 14px/1.5 system-ui, sans-serif;
+  text-align: center;
+}
+
 a {
   color: inherit;
   text-decoration: none;

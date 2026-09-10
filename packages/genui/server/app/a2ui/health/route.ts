@@ -4,28 +4,39 @@
 
 import { Hono } from 'hono';
 
+import { readArkImageGenerationConfig } from '../../../agent/common/ark-image-generation-tool.js';
+import { readDoubaoSearchConfig } from '../../../agent/common/doubao-search-tool.js';
 import { readModelConfig } from '../../../service/common/model-config.js';
 import { jsonWithCors } from '../../common/cors';
 
 function getA2UIHealth(req: Request) {
+  const search = readDoubaoSearchConfig();
+  const webSearchReady = search.ok && search.enabled;
+  const imageSearchReady = webSearchReady;
   const result = readModelConfig();
   if (!result.ok) {
     return jsonWithCors(req, {
       ok: false,
       provider: 'openai',
       hasKey: false,
+      imageSearchReady,
+      webSearchReady,
       error: result.error,
     });
   }
 
   const { defaultModel, models } = result.config;
   const { apiKey } = models[defaultModel]!;
+  const imageGeneration = readArkImageGenerationConfig();
 
   return jsonWithCors(req, {
     ok: true,
     provider: 'openai',
     hasKey: Boolean(apiKey),
     modelName: defaultModel,
+    imageGenerationReady: imageGeneration.ok,
+    imageSearchReady,
+    webSearchReady,
   });
 }
 

@@ -4,6 +4,7 @@
 import { __injectElementApi } from './inject.ts';
 import '../../../src/lynx.ts';
 import { document } from '../../../src/document.ts';
+import { SnapshotInstance } from '../../../src/snapshot/index.ts';
 
 import { afterEach, expect } from 'vitest';
 
@@ -15,6 +16,18 @@ function inject() {
 }
 
 inject();
+
+// A SnapshotInstance carries `$$typeof` so that `isValidElement` accepts it,
+// which would otherwise make pretty-format print it as a React element and hide
+// its fields. Keep printing it as a plain object.
+expect.addSnapshotSerializer({
+  test(val) {
+    return val instanceof SnapshotInstance;
+  },
+  print(val, serialize) {
+    return serialize(val.toJSON());
+  },
+});
 
 expect.addSnapshotSerializer({
   test(val) {

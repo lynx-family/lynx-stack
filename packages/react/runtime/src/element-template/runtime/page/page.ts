@@ -2,24 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export let __page: ElementRef;
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from '../../protocol/page.js';
 
-const ELEMENT_TEMPLATE_PAGE_TYPE = 'page';
-const ELEMENT_TEMPLATE_PAGE_UID = '0';
-const ELEMENT_TEMPLATE_PAGE_ROOT_SLOT = 0;
+export let __page: ElementTemplateHandle;
 
-export function createElementTemplatePage(): ElementRef {
-  return __CreateTypedElementTemplate(ELEMENT_TEMPLATE_PAGE_TYPE, null, null, ELEMENT_TEMPLATE_PAGE_UID, null);
+export function createElementTemplatePage(): ElementTemplateHandle {
+  return __CreateTypedElementTemplate(
+    ELEMENT_TEMPLATE_PAGE_TYPE,
+    null,
+    null,
+    ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
+    null,
+  );
 }
 
-export function setupPage(page: ElementRef): void {
+export function setupPage(page: ElementTemplateHandle): void {
   __page = page;
-}
-
-export function insertRootIntoPage(rootRef: ElementRef): void {
-  __InsertNodeToElementTemplate(__page, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT, rootRef, null);
-}
-
-export function removeRootFromPage(rootRef: ElementRef): void {
-  __RemoveNodeFromElementTemplate(__page, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT, rootRef);
 }

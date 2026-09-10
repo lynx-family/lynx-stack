@@ -16,7 +16,7 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
 ) => {
   const __createElement =
     (__MAIN_THREAD__ ? createElementMainThread : createElementBackground) as typeof createElementBackground;
-  const childrenRef = useRef<BackgroundSnapshotInstance>();
+  const childrenRef = useRef<BackgroundSnapshotInstance | undefined>(undefined);
 
   const newChildren = __createElement(
     'wrapper',

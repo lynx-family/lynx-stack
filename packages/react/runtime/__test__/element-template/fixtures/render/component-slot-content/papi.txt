@@ -4,7 +4,7 @@
     "page",
     null,
     null,
-    "0",
+    0,
     null
   ],
   [
@@ -17,7 +17,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_04020ede3da7",
+    "_et_49c2d60c49a6",
     null,
     null,
     [
@@ -36,7 +36,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_d7c09654e316",
+    "_et_955a06fee137",
     null,
     null,
     [
@@ -69,7 +69,7 @@
               ]
             }
           ],
-          "templateId": "_et_04020ede3da7"
+          "templateId": "_et_49c2d60c49a6"
         }
       ]
     ],
@@ -79,7 +79,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_d7c09654e316 />",
+    "<_et_955a06fee137 />",
     null
   ]
 ]

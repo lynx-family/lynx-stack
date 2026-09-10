@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/genui-lynx-xml",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Headless Lynx XML prompt and fragment conversion utilities for GenUI.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/lynx-xml"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "@lynx-js/skill-vanilla-lynx": "0.2.0",
+    "acorn": "^8.17.0",
+    "acorn-walk": "^8.3.5",
+    "eslint-scope": "^8.4.0",
+    "fast-xml-parser": "^5.11.1"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/eslint-scope": "^3.7.7",
+    "@types/node": "^24.13.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

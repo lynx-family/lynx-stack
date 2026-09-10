@@ -40,15 +40,15 @@ function reportRefDeprecationError(fnName: string, newFnName: string) {
 }
 
 function getReactAppInstance(): ReactAppInstance {
-  return lynxCoreInject.tt as unknown as ReactAppInstance;
+  return lynx.getApp() as unknown as ReactAppInstance;
 }
 
 function getLegacyNativeApp(): LegacyNativeApp {
-  return (lynxCoreInject.tt as any)._nativeApp;
+  return (lynx.getApp() as any)._nativeApp;
 }
 
 function getLegacyReactComponent(): LegacyReactComponent {
-  return (lynxCoreInject.tt as any)._reactLynx.ReactComponent.prototype;
+  return (lynx.getApp() as any)._reactLynx.ReactComponent.prototype;
 }
 
 function createLegacyComponentReceiver(

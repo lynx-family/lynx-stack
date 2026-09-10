@@ -52,16 +52,23 @@ pnpm dev
 
 `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, and `TOS_REGION` are required;
 payload publishing stays disabled when any of them is missing.
-`TOS_STORAGE_PREFIX` defaults to `a2ui`, and `TOS_OPENUI_STORAGE_PREFIX`
-defaults to `openui`. The native TOS endpoint defaults to
-`tos-${TOS_REGION}.volces.com`; set `TOS_ENDPOINT` to a host (an optional
+`TOS_STORAGE_PREFIX` defaults to `a2ui`, `TOS_OPENUI_STORAGE_PREFIX` defaults
+to `openui`, and `TOS_MCP_APPS_STORAGE_PREFIX` defaults to `mcp-apps`. These
+values select the method segment for each protocol. The native TOS endpoint
+defaults to `tos-${TOS_REGION}.volces.com`; set `TOS_ENDPOINT` to a host (an optional
 `http://` or `https://` scheme is accepted) when the bucket uses a different
 endpoint. An optional `TOS_SECURITY_TOKEN` enables temporary STS credentials.
 
-The server writes objects such as:
+The server separates the protocol method from the payload type. It writes
+objects using these layouts:
 
 ```text
-a2ui/<id>/messages.json
+a2ui/preview/<uuid>/messages.json
+a2ui/preview/<uuid>/actionMocks.json
+openui/preview/<uuid>/raw.txt
+a2ui/conversation/<uuid>/messages.json
+openui/conversation/<uuid>/messages.json
+mcp-apps/conversation/<uuid>/messages.json
 ```
 
 The upload request is signed with the server-only credential and does not set a

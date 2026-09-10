@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE lynx>
-<lynx version="5.4.2">
-<style><![CDATA[
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
   /*
     Card-wide custom properties are declared on the page's own class. `:root`
     would work too - a markup card's CSS is tokenized, so `:root` is rewritten
@@ -65,9 +64,9 @@
     flex-direction: column;
     padding: 0.75rem;
   }
-]]></style>
+</style>
 
-<script main-thread="true"><![CDATA[
+<script thread="main">
   const days = [
     // Day 1's detail carries an embedded newline on purpose: raw text has to
     // reach the DOM with the break intact, neither collapsed into a space nor
@@ -183,9 +182,9 @@
 
   engine.addEventListener('__RenderPage', onRenderPage);
   engine.addEventListener('__DestroyLifetime', cleanup);
-]]></script>
+</script>
 
-<script background="true"><![CDATA[
+<script thread="background">
   const mainThread = lynx.getCoreContext();
 
   function cleanupBackground() {
@@ -193,5 +192,5 @@
   }
 
   mainThread.addEventListener('__DestroyLifetime', cleanupBackground);
-]]></script>
+</script>
 </lynx>

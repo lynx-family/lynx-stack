@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/kitten-lynx-test-infra",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A testing framework executing the Lynx explorer Android application",
   "keywords": [
     "Lynx",
@@ -43,7 +43,7 @@
     "@yume-chan/adb-server-node-tcp": "catalog:adb"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

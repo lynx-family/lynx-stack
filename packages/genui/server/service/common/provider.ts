@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto';
 
 import { readModelConfig } from './model-config.js';
-import type { ChatOptions, OpenAIReasoningEffort } from './types';
+import type { ChatOptions, OpenAIReasoningEffort } from './types.js';
 
 const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'none',
@@ -65,6 +65,10 @@ function createProviderCacheKey(
     opts.model ?? 'default',
     hashApiKey(opts.apiKey),
     opts.api ?? 'default',
+    opts.enableWebSearch === false ? 'search-disabled' : 'search-enabled',
+    opts.enableImageGeneration === false
+      ? 'image-generation-disabled'
+      : 'image-generation-enabled',
   ].join(':');
   return variant === undefined ? baseKey : `${baseKey}:${variant}`;
 }
@@ -141,6 +145,22 @@ export function resolveReasoningEffort(
     ? opts.model
     : config.config.defaultModel;
   return config.config.models[modelName]!.reasoningEffort;
+}
+
+export function resolveModelOutputTokenBudget(
+  opts: ChatOptions,
+  desiredMaxOutputTokens: number,
+): number {
+  const config = readModelConfig();
+  if (!config.ok) return desiredMaxOutputTokens;
+  if (opts.model && !config.config.models[opts.model]) {
+    return desiredMaxOutputTokens;
+  }
+  const modelName = opts.model ?? config.config.defaultModel;
+  const configuredLimit = config.config.models[modelName]!.maxOutputTokens;
+  return configuredLimit === undefined
+    ? desiredMaxOutputTokens
+    : Math.min(desiredMaxOutputTokens, configuredLimit);
 }
 
 export function buildResourceRunOptions(

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/vanilla-rsbuild-plugin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
   "keywords": [
     "rsbuild",
@@ -41,10 +41,23 @@
     "@lynx-js/template-webpack-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/core": "catalog:rstest"
+  },
+  "peerDependencies": {
+    "@lynx-js/rspeedy": "^0.17.0",
+    "@rsbuild/core": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/rspeedy": {
+      "optional": true
+    },
+    "@rsbuild/core": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=18"

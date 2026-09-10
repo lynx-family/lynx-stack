@@ -15,6 +15,7 @@ import {
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
+import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
 import { takeDelayedRunOnMainThreadData } from '../../../../src/core/thread-function-call/main-thread.js';
 import { resetFunctionCallReturnListener } from '../../../../src/core/thread-function-call/return-value.js';
 import { resetElementTemplateBackgroundFunctionRuntime } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
@@ -29,6 +30,7 @@ describe('ElementTemplate runOnMainThread', () => {
     vi.clearAllMocks();
     envManager.resetEnv('background');
     SystemInfo.lynxSdkVersion = '4.0';
+    clearMtsConfigCacheForTesting();
     resetElementTemplateCommitState();
   });
 

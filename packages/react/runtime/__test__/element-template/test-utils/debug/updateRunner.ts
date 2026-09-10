@@ -8,6 +8,7 @@ import type { FormattedElementTemplateUpdateCommand } from '../../../../src/elem
 import { root } from '../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
+  ElementTemplateHydrateCommitContext,
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
   SerializedEtNode,
@@ -35,14 +36,14 @@ type FormattedUpdateEntry =
     id: number;
     template: string;
     attributeSlots: unknown;
-    elementSlots: unknown;
+    childSlots: unknown;
   }
   | {
     type: 'createTypedElement';
     id: number;
     elementType: string;
     attributes: unknown;
-    elementSlots: unknown;
+    childSlots: unknown;
     options: unknown;
   }
   | {
@@ -69,16 +70,23 @@ type FormattedUpdateEntry =
     value: unknown;
   }
   | {
+    type: 'setMainThreadEvent' | 'setMainThreadRef';
+    id: number;
+    attrSlotIndex: number;
+    value: unknown;
+  }
+  | {
     type: 'insertNode';
     id: number;
-    elementSlotIndex: number;
+    childSlotIndex: number;
     child: unknown;
     reference: unknown;
+    attachedSubtreeHandleIds: unknown;
   }
   | {
     type: 'removeNode';
     id: number;
-    elementSlotIndex: number;
+    childSlotIndex: number;
     child: unknown;
     removedSubtreeHandleIds: unknown;
   }
@@ -110,14 +118,15 @@ export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): 
 
 function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): FormattedUpdateEntry {
   switch (entry.op) {
-    case 'createTemplate':
+    case 'createTemplate': {
       return {
         type: 'create',
         id: entry.handleId,
         template: entry.templateKey,
         attributeSlots: entry.attributeSlots,
-        elementSlots: entry.elementSlots,
+        childSlots: entry.childSlots,
       };
+    }
 
     case 'createTypedElement':
       return {
@@ -125,13 +134,22 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         id: entry.handleId,
         elementType: entry.type,
         attributes: entry.attributes,
-        elementSlots: entry.elementSlots,
+        childSlots: entry.childSlots,
         options: entry.options,
       };
 
     case 'setAttribute':
       return {
         type: 'setAttribute',
+        id: entry.targetId,
+        attrSlotIndex: entry.attrSlotIndex,
+        value: entry.value,
+      };
+
+    case 'setMainThreadEvent':
+    case 'setMainThreadRef':
+      return {
+        type: entry.op,
         id: entry.targetId,
         attrSlotIndex: entry.attrSlotIndex,
         value: entry.value,
@@ -164,16 +182,17 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
       return {
         type: 'insertNode',
         id: entry.targetId,
-        elementSlotIndex: entry.elementSlotIndex,
+        childSlotIndex: entry.childSlotIndex,
         child: entry.childId,
         reference: entry.referenceId,
+        attachedSubtreeHandleIds: entry.attachedSubtreeHandleIds,
       };
 
     case 'removeNode':
       return {
         type: 'removeNode',
         id: entry.targetId,
-        elementSlotIndex: entry.elementSlotIndex,
+        childSlotIndex: entry.childSlotIndex,
         child: entry.childId,
         removedSubtreeHandleIds: entry.removedSubtreeHandleIds,
       };
@@ -210,8 +229,8 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
   const hydrationData: SerializedEtNode[] = [];
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
-  const onHydrate = (event: { data: { instances: SerializedEtNode[] } }) => {
-    hydrationData.push(...event.data.instances);
+  const onHydrate = (event: { data: ElementTemplateHydrateCommitContext }) => {
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

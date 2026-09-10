@@ -8,18 +8,26 @@ import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 import type { MainThreadScriptEvent } from '../ts/types/index.js';
 
+function queuedCallbacksDone(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    queueMicrotask(() => queueMicrotask(() => resolve()));
+  });
+}
+
 /**
  * Fire a real DOM `click` on `node`. `click` is the W3C event that
  * `W3cEventNameToLynx` maps to the Lynx `tap` event, so this is what a `tap`
- * listener must observe.
+ * listener must observe. The returned promise settles after callbacks queued
+ * by the dispatch, including nested cleanup microtasks, have run.
  */
-function clickOn(node: HTMLElement): void {
+function clickOn(node: HTMLElement): Promise<void> {
   node.dispatchEvent(
     new (globalThis as any).MouseEvent('click', {
       bubbles: true,
       cancelable: true,
     }),
   );
+  return queuedCallbacksDone();
 }
 
 describe('__AddEventListener / __RemoveEventListener', () => {
@@ -53,18 +61,33 @@ describe('__AddEventListener / __RemoveEventListener', () => {
     expect(mts.__AddEventListener).not.toBe(mts.__AddEvent);
   });
 
-  test('a tap callback fires on a real DOM click', () => {
+  test('a tap callback fires on a real DOM click', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const handler = rstest.fn();
 
     mts.__AddEventListener(node, 'tap', handler, {});
-    clickOn(node);
+    await clickOn(node);
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  test('the callback receives a Lynx event object', () => {
+  test('callbacks are delayed by one microtask', async () => {
+    const node = mts.__CreateView(0);
+    rootDom.appendChild(node);
+    const order: string[] = [];
+
+    mts.__AddEventListener(node, 'tap', () => order.push('callback'), {});
+    const callbacksDone = clickOn(node);
+    order.push('synchronous');
+
+    expect(order).toStrictEqual(['synchronous']);
+    await Promise.resolve();
+    expect(order).toStrictEqual(['synchronous', 'callback']);
+    await callbacksDone;
+  });
+
+  test('the callback receives a Lynx event object', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     let received: MainThreadScriptEvent | undefined;
@@ -72,7 +95,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
     mts.__AddEventListener(node, 'tap', (e) => {
       received = e;
     }, {});
-    clickOn(node);
+    await clickOn(node);
 
     // `click` is surfaced under its Lynx name
     expect(received?.type).toBe('tap');
@@ -86,29 +109,46 @@ describe('__AddEventListener / __RemoveEventListener', () => {
     );
   });
 
-  test('__RemoveEventListener stops the callback', () => {
+  test('queued callbacks keep their own current target', async () => {
+    const parent = mts.__CreateView(0);
+    const child = mts.__CreateView(0);
+    mts.__AppendElement(parent, child);
+    rootDom.appendChild(parent);
+    const currentTargets: unknown[] = [];
+    const recordCurrentTarget = (event: MainThreadScriptEvent) => {
+      currentTargets.push(event.currentTarget?.elementRefptr);
+    };
+
+    mts.__AddEventListener(child, 'tap', recordCurrentTarget, {});
+    mts.__AddEventListener(parent, 'tap', recordCurrentTarget, {});
+    await clickOn(child);
+
+    expect(currentTargets).toStrictEqual([child, parent]);
+  });
+
+  test('__RemoveEventListener stops the callback', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const handler = rstest.fn();
     const options = {};
 
     mts.__AddEventListener(node, 'tap', handler, options);
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
 
     mts.__RemoveEventListener(node, 'tap', handler, options);
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  test('removing an unrelated callback leaves the registered one intact', () => {
+  test('removing an unrelated callback leaves the registered one intact', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const handler = rstest.fn();
 
     mts.__AddEventListener(node, 'tap', handler, {});
     mts.__RemoveEventListener(node, 'tap', rstest.fn(), {});
-    clickOn(node);
+    await clickOn(node);
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
@@ -120,7 +160,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       .not.toThrow();
   });
 
-  test('multiple callbacks on one element and event all fire', () => {
+  test('multiple callbacks on one element and event all fire', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const a = rstest.fn();
@@ -128,35 +168,35 @@ describe('__AddEventListener / __RemoveEventListener', () => {
 
     mts.__AddEventListener(node, 'tap', a, {});
     mts.__AddEventListener(node, 'tap', b, {});
-    clickOn(node);
+    await clickOn(node);
 
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(1);
 
     // each is removable independently
     mts.__RemoveEventListener(node, 'tap', a, {});
-    clickOn(node);
+    await clickOn(node);
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(2);
   });
 
-  test('re-adding the same callback does not double-invoke it', () => {
+  test('re-adding the same callback does not double-invoke it', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const handler = rstest.fn();
 
     mts.__AddEventListener(node, 'tap', handler, {});
     mts.__AddEventListener(node, 'tap', handler, {});
-    clickOn(node);
+    await clickOn(node);
 
     expect(handler).toHaveBeenCalledTimes(1);
     // and a single remove clears it
     mts.__RemoveEventListener(node, 'tap', handler, {});
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  test('listeners are scoped to their own element', () => {
+  test('listeners are scoped to their own element', async () => {
     const a = mts.__CreateView(0);
     const b = mts.__CreateView(0);
     rootDom.appendChild(a);
@@ -164,64 +204,64 @@ describe('__AddEventListener / __RemoveEventListener', () => {
     const handlerA = rstest.fn();
 
     mts.__AddEventListener(a, 'tap', handlerA, {});
-    clickOn(b);
+    await clickOn(b);
     expect(handlerA).not.toHaveBeenCalled();
-    clickOn(a);
+    await clickOn(a);
     expect(handlerA).toHaveBeenCalledTimes(1);
   });
 
-  test('the event name is case-insensitive', () => {
+  test('the event name is case-insensitive', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const handler = rstest.fn();
 
     mts.__AddEventListener(node, 'TAP', handler, {});
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
 
     // and matches on removal regardless of the casing used
     mts.__RemoveEventListener(node, 'tap', handler, {});
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  test('omitting options is allowed', () => {
+  test('omitting options is allowed', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     const handler = rstest.fn();
 
     mts.__AddEventListener(node, 'tap', handler);
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
 
     mts.__RemoveEventListener(node, 'tap', handler);
-    clickOn(node);
+    await clickOn(node);
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  test('a non-function callback with the default closure type is ignored', () => {
+  test('a non-function callback with the default closure type is ignored', async () => {
     const node = mts.__CreateView(0);
     rootDom.appendChild(node);
     // closure_type defaults to kNone, which requires a callable
     expect(() => mts.__AddEventListener(node, 'tap', 'handlerName', {}))
       .not.toThrow();
-    expect(() => clickOn(node)).not.toThrow();
+    await clickOn(node);
   });
 
   describe('options', () => {
-    test('once fires the callback a single time', () => {
+    test('once fires the callback a single time', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
 
       mts.__AddEventListener(node, 'tap', handler, { once: true });
-      clickOn(node);
-      clickOn(node);
+      await clickOn(node);
+      await clickOn(node);
 
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    test('re-adding the same once listener is a no-op', () => {
+    test('re-adding the same once listener is a no-op', async () => {
       // Registration identity is (element, name, callback, capture), so a second
       // add of the same triple must not file a second wrapper: the callback
       // would run twice, and the first wrapper would be orphaned where
@@ -232,38 +272,38 @@ describe('__AddEventListener / __RemoveEventListener', () => {
 
       mts.__AddEventListener(node, 'tap', handler, { once: true });
       mts.__AddEventListener(node, 'tap', handler, { once: true });
-      clickOn(node);
+      await clickOn(node);
 
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    test('adding once over a plain registration keeps one listener', () => {
+    test('adding once over a plain registration keeps one listener', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
 
       mts.__AddEventListener(node, 'tap', handler, {});
       mts.__AddEventListener(node, 'tap', handler, { once: true });
-      clickOn(node);
+      await clickOn(node);
 
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    test('adding plain over a once registration keeps one listener', () => {
+    test('adding plain over a once registration keeps one listener', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
 
       mts.__AddEventListener(node, 'tap', handler, { once: true });
       mts.__AddEventListener(node, 'tap', handler, {});
-      clickOn(node);
-      clickOn(node);
+      await clickOn(node);
+      await clickOn(node);
 
       // The plain registration wins, so it keeps firing.
       expect(handler).toHaveBeenCalledTimes(2);
     });
 
-    test('once listeners for different events do not collide', () => {
+    test('once listeners for different events do not collide', async () => {
       // The wrapper bookkeeping is keyed by (event name, event type, callback).
       // Keyed by callback alone, the second registration would be mistaken for a
       // duplicate of the first and dropped, so `tap` would be the only one left.
@@ -275,7 +315,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       mts.__AddEventListener(node, 'longpress', handler, { once: true });
 
       // Each event fires its own registration exactly once.
-      clickOn(node);
+      await clickOn(node);
       expect(handler).toHaveBeenCalledTimes(1);
       // `longpress` has no W3C alias, so it is dispatched under its own name.
       node.dispatchEvent(
@@ -284,22 +324,23 @@ describe('__AddEventListener / __RemoveEventListener', () => {
           cancelable: true,
         }),
       );
+      await queuedCallbacksDone();
       expect(handler).toHaveBeenCalledTimes(2);
     });
 
-    test('removing a once listener before it fires prevents it', () => {
+    test('removing a once listener before it fires prevents it', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
 
       mts.__AddEventListener(node, 'tap', handler, { once: true });
       mts.__RemoveEventListener(node, 'tap', handler, { once: true });
-      clickOn(node);
+      await clickOn(node);
 
       expect(handler).not.toHaveBeenCalled();
     });
 
-    test('capture listeners run before bubble listeners on an ancestor', () => {
+    test('capture listeners run before bubble listeners on an ancestor', async () => {
       const parent = mts.__CreateView(0);
       const child = mts.__CreateView(0);
       mts.__AppendElement(parent, child);
@@ -310,12 +351,12 @@ describe('__AddEventListener / __RemoveEventListener', () => {
         capture: true,
       });
       mts.__AddEventListener(parent, 'tap', () => order.push('bubble'), {});
-      clickOn(child);
+      await clickOn(child);
 
       expect(order).toStrictEqual(['capture', 'bubble']);
     });
 
-    test('capture is part of listener identity on removal', () => {
+    test('capture is part of listener identity on removal', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
@@ -323,15 +364,15 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       mts.__AddEventListener(node, 'tap', handler, { capture: true });
       // a bubble-phase removal must not detach the capture registration
       mts.__RemoveEventListener(node, 'tap', handler, {});
-      clickOn(node);
+      await clickOn(node);
       expect(handler).toHaveBeenCalledTimes(1);
 
       mts.__RemoveEventListener(node, 'tap', handler, { capture: true });
-      clickOn(node);
+      await clickOn(node);
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    test('the same callback can be registered in both phases', () => {
+    test('the same callback can be registered in both phases', async () => {
       const parent = mts.__CreateView(0);
       const child = mts.__CreateView(0);
       mts.__AppendElement(parent, child);
@@ -340,23 +381,23 @@ describe('__AddEventListener / __RemoveEventListener', () => {
 
       mts.__AddEventListener(parent, 'tap', handler, { capture: true });
       mts.__AddEventListener(parent, 'tap', handler, {});
-      clickOn(child);
+      await clickOn(child);
 
       expect(handler).toHaveBeenCalledTimes(2);
     });
 
-    test('passive is accepted', () => {
+    test('passive is accepted', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
 
       mts.__AddEventListener(node, 'tap', handler, { passive: true });
-      clickOn(node);
+      await clickOn(node);
 
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    test('bind_type kBubbleCatch stops propagation to an ancestor', () => {
+    test('bind_type kBubbleCatch stops propagation to an ancestor', async () => {
       const parent = mts.__CreateView(0);
       const child = mts.__CreateView(0);
       mts.__AppendElement(parent, child);
@@ -370,7 +411,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
         bind_type: 4,
       });
       mts.__AddEventListener(parent, 'tap', parentHandler, {});
-      clickOn(child);
+      await clickOn(child);
 
       expect(childHandler).toHaveBeenCalledTimes(1);
       expect(parentHandler).not.toHaveBeenCalled();
@@ -421,14 +462,14 @@ describe('__AddEventListener / __RemoveEventListener', () => {
   });
 
   describe('disposal', () => {
-    test('disposeEventListeners detaches callbacks added via the PAPI', () => {
+    test('disposeEventListeners detaches callbacks added via the PAPI', async () => {
       const node = mts.__CreateView(0);
       rootDom.appendChild(node);
       const handler = rstest.fn();
 
       mts.__AddEventListener(node, 'tap', handler, {});
       mtsBinding.disposeEventListeners();
-      clickOn(node);
+      await clickOn(node);
 
       expect(handler).not.toHaveBeenCalled();
     });
@@ -446,7 +487,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
   });
 
   describe('interop with __AddEvent', () => {
-    test('a catch bound via __AddEvent stops a callback on an ancestor', () => {
+    test('a catch bound via __AddEvent stops a callback on an ancestor', async () => {
       // Both binding forms are filed in the same handler table, so the
       // dispatcher can stop one with the other. Binding callbacks directly with
       // `element.addEventListener` would put them in a parallel dispatch that
@@ -459,12 +500,12 @@ describe('__AddEventListener / __RemoveEventListener', () => {
 
       mts.__AddEventListener(parent, 'tap', onParent, {});
       mts.__AddEvent(child, 'catchEvent', 'tap', 'childCatch');
-      clickOn(child);
+      await clickOn(child);
 
       expect(onParent).not.toHaveBeenCalled();
     });
 
-    test('a callback bound with catch stops an __AddEvent handler above it', () => {
+    test('a callback bound with catch stops an __AddEvent handler above it', async () => {
       const parent = mts.__CreateView(0);
       const child = mts.__CreateView(0);
       mts.__AppendElement(parent, child);
@@ -475,7 +516,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       mts.__AddEvent(parent, 'bindEvent', 'tap', 'parentHandler');
       // BindType::kBubbleCatch === 4
       mts.__AddEventListener(child, 'tap', rstest.fn(), { bind_type: 4 });
-      clickOn(child);
+      await clickOn(child);
 
       expect(publishEvent).not.toHaveBeenCalled();
       publishEvent.mockRestore();
@@ -483,7 +524,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
   });
 
   describe('elements without a Lynx unique id', () => {
-    test('are ignored instead of sharing a registry key', () => {
+    test('are ignored instead of sharing a registry key', async () => {
       // Elements not built through the Element PAPIs carry no unique id. Keying
       // them anyway would put every such element under the same key, so a
       // listener added on one would be reachable - and removable - through
@@ -497,7 +538,7 @@ describe('__AddEventListener / __RemoveEventListener', () => {
       expect(() => {
         mts.__AddEventListener(foreign, 'tap', handler, {});
       }).not.toThrow();
-      clickOn(foreign);
+      await clickOn(foreign);
       expect(handler).not.toHaveBeenCalled();
 
       // Removing through a different id-less element must not throw either.

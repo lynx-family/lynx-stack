@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../src/shared/attribute-name.js';
 
 afterEach(() => {
-  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
+  lynx.__runtime_configs__ = { transformBuiltinAttributeNames: false };
 });
 
 describe('transformAttrName', () => {
@@ -28,14 +28,8 @@ describe('transformAttrName', () => {
     expect(transformAttrName('bindtap')).toBe('bindtap');
   });
 
-  it('does not transform names when the compile-time config is unavailable', () => {
-    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
-
-    expect(transformAttrName('textMaxline')).toBe('textMaxline');
-  });
-
   it('applies the default builtin and event mappings', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     expect(transformAttrName('bindTap')).toBe('bindTap');
     expect(transformAttrName('onClick')).toBe('bindtap');
@@ -48,7 +42,7 @@ describe('transformAttrName', () => {
   });
 
   it('does not treat invalid React-style event names as events', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     expect(transformAttrName('onclick')).toBe('onclick');
     expect(transformAttrName('on')).toBe('on');
@@ -65,7 +59,7 @@ describe('transformAttrName', () => {
         textMaxline: 'custom-maxline',
       },
     };
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = config;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: config };
 
     expect(transformAttrName('textMaxline')).toBe('custom-maxline');
     expect(transformAttrName('handleTap')).toBe('bindtap');
@@ -74,8 +68,10 @@ describe('transformAttrName', () => {
     expect(transformAttrName('accessibilityLabel')).toBe(
       'accessibility-label',
     );
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
-      mode: 'mapping-only',
+    lynx.__runtime_configs__ = {
+      transformBuiltinAttributeNames: {
+        mode: 'mapping-only',
+      },
     };
     expect(transformAttrName('accessibilityLabel')).toBe('accessibilityLabel');
   });

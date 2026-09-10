@@ -4,25 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
-    "build:consumer": "rspeedy build --config lynx.config.consumer.js",
-    "build:producer": "rspeedy build --config lynx.config.producer.js",
+    "build": "pnpm run build:producer && pnpm run build:consumer",
+    "build:consumer": "rsbuild build --config rsbuild.config.consumer.js",
+    "build:producer": "rsbuild build --config rsbuild.config.producer.js",
     "dev": "node scripts/serve.mjs dev",
-    "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
-    "dev:producer": "rspeedy dev --config lynx.config.producer.js",
+    "dev:consumer": "rsbuild dev --config rsbuild.config.consumer.js",
+    "dev:producer": "rsbuild dev --config rsbuild.config.producer.js",
     "preview": "node scripts/serve.mjs preview",
-    "preview:consumer": "rspeedy preview --config lynx.config.consumer.js",
-    "preview:producer": "rspeedy preview --config lynx.config.producer.js"
+    "preview:consumer": "rsbuild preview --config rsbuild.config.consumer.js",
+    "preview:producer": "rsbuild preview --config rsbuild.config.producer.js"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260721114100-d7da994",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
     "@types/react": "^19.2.18"
   }
 }

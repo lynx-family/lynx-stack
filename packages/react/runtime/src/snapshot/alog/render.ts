@@ -9,6 +9,7 @@ import { getDisplayName } from '../../utils.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 export function initRenderAlog(): void {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldAfterDiff = options[DIFFED];
   options[DIFFED] = function(vnode: VNode & { [DOM]: SnapshotInstance }) {
     // Only log on component vnode

@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -474,6 +475,22 @@ describe('missing definitions injection', () => {
     );
 
     expect(content).not.toContain('registerAsyncOnly;');
+  });
+
+  it('keeps the boundary import of one compiler out of the next', () => {
+    // rsbuild compiles every environment in one process. A boundary recorded
+    // while one compiler injected the lazy chunk's definitions must not make
+    // the next compiler's loader import a virtual module it never wrote. The
+    // build runs in plain Node so the plugin and its loaders share one module
+    // instance, as they do outside the test runner.
+    const result = spawnSync(
+      process.execPath,
+      [path.join(__dirname, 'fixtures/build-lazy-case-twice.mjs')],
+      { encoding: 'utf-8' },
+    );
+
+    expect(result.stdout + result.stderr).toContain('build #2: ok');
+    expect(result.status).toBe(0);
   });
 
   it('keeps the definitions of each entry apart', async () => {

@@ -4,11 +4,11 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import type { A2UIChatOptions } from '../service/a2ui-agent.js';
-import { createA2UIBenchAdapter } from '../service/genui-bench/a2ui-adapter.js';
+import type { A2UIChatOptions } from '../service/a2ui/a2ui-agent.js';
+import { createA2UIBenchAdapter } from '../service/a2ui/a2ui-bench-adapter.js';
 import type {
   ProtocolBenchAdapterInput,
-} from '../service/genui-bench/protocol-adapter.js';
+} from '../service/common/bench/protocol-adapter.js';
 
 function adapterInput(maxAttempts = 2): ProtocolBenchAdapterInput {
   return {
@@ -96,6 +96,8 @@ describe('A2UI matched-core bench adapter', () => {
     expect(receivedOptions).toMatchObject({
       apiKey: 'request-scoped-key',
       disableAgentCache: true,
+      enableWebSearch: false,
+      enableImageGeneration: false,
       inheritReasoningEffort: false,
     });
     expect(receivedSignal).toBe(abortController.signal);

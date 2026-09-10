@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component, Fragment, createContext, h, options } from 'preact';
-import { Suspense } from 'preact/compat';
+import { Suspense, use } from 'preact/compat';
 import { useState } from '@lynx-js/react/lepus/hooks';
 import { describe, expect, it } from 'vitest';
 
@@ -10,10 +10,13 @@ import {
   __OpAttr,
   __OpBegin,
   __OpEnd,
+  __OpPageEnd,
+  __OpPageStart,
   __OpSlot,
   __OpText,
   renderToString,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes';
+import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page';
 import { DIFFED, PARENT } from '../../../../src/shared/render-constants';
 
 describe('Element Template renderToOpcodes', () => {
@@ -23,6 +26,55 @@ describe('Element Template renderToOpcodes', () => {
     expect(__OpAttr).toBe(2);
     expect(__OpText).toBe(3);
     expect(__OpSlot).toBe(4);
+    expect(__OpPageStart).toBe(5);
+    expect(__OpPageEnd).toBe(6);
+  });
+
+  it('lets use() read a context', () => {
+    const Ctx = createContext('default');
+
+    function Reader() {
+      return use(Ctx);
+    }
+
+    expect(
+      renderToString(h(Ctx.Provider, { value: 'provided' }, h(Reader, null))),
+    ).toContain('provided');
+    expect(renderToString(h(Reader, null))).toContain('default');
+  });
+
+  it('lets use() read a context from a class that declares contextType', () => {
+    const Ctx = createContext('default');
+    const seen = [];
+
+    class Reader extends Component {
+      static contextType = Ctx;
+      render() {
+        seen.push(['this.context', this.context], ['use', use(Ctx)]);
+        return 'ok';
+      }
+    }
+
+    renderToString(h(Ctx.Provider, { value: 'provided' }, h(Reader, null)));
+
+    expect(seen).toEqual([['this.context', 'provided'], ['use', 'provided']]);
+  });
+
+  it('lets use() read a context from a function that declares contextType', () => {
+    const Ctx = createContext('default');
+    const seen = [];
+
+    function Reader(_props, context) {
+      seen.push(['arg', context], ['use', use(Ctx)]);
+      return 'ok';
+    }
+    Reader.contextType = Ctx;
+
+    renderToString(h(Ctx.Provider, { value: 'provided' }, h(Reader, null)));
+
+    // `context` is the resolved contextType value here, so `use` has to read
+    // the provider map from `_globalContext` instead.
+    expect(seen).toEqual([['arg', 'provided'], ['use', 'provided']]);
   });
 
   it('emits slot opcodes for ET host nodes using $N named props', () => {
@@ -33,6 +85,79 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes).toContain(__OpSlot);
     expect(opcodes[opcodes.indexOf(__OpSlot) + 1]).toBe(3);
     expect(opcodes).toContain(__OpEnd);
+  });
+
+  it.each([
+    ['_et_compiled', 'attributeSlots', ['title']],
+    ['list', 'attributes', { id: 'feed' }],
+  ])('emits one attribute payload for %s without a name entry', (type, propName, attributes) => {
+    const opcodes = renderToString(h(type, { [propName]: attributes }));
+
+    expect(opcodes).toEqual([
+      __OpBegin,
+      expect.objectContaining({ type }),
+      __OpAttr,
+      attributes,
+      __OpEnd,
+    ]);
+    expect(opcodes[3]).toBe(attributes);
+    expect(renderToString(h(type, {}))).toEqual([
+      __OpBegin,
+      expect.objectContaining({ type }),
+      __OpEnd,
+    ]);
+  });
+
+  it('emits prepared outermost page attrs as root metadata and keeps children transparent', () => {
+    const Template = '_et_page_child';
+    const opcodes = renderToString(
+      <__ElementTemplatePage
+        attributes={{ id: 'screen' }}
+        $0={<Template />}
+      />,
+    );
+
+    expect(opcodes.slice(0, 2)).toEqual([
+      __OpPageStart,
+      { id: 'screen' },
+    ]);
+    expect(opcodes[2]).toBe(__OpBegin);
+    expect(opcodes[3]).toMatchObject({ type: Template });
+    expect(opcodes.at(-2)).toBe(__OpEnd);
+    expect(opcodes.at(-1)).toBe(__OpPageEnd);
+  });
+
+  it.each(['direct', 'spread'])('prepares %s page refs from typed attributes', mode => {
+    const ref = () => {};
+    const attributes = mode === 'direct'
+      ? { id: 'screen', ref }
+      : { id: 'screen', ...{ ref } };
+    const vnode = h(__ElementTemplatePage, { attributes });
+
+    expect(renderToString(vnode).slice(0, 2)).toEqual([
+      __OpPageStart,
+      { id: 'screen', ref: '0-0' },
+    ]);
+  });
+
+  it('does not emit the development page-end instruction in production', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      const opcodes = renderToString(
+        <__ElementTemplatePage attributes={{ id: 'screen' }} $0='content' />,
+      );
+
+      expect(opcodes.slice(0, 2)).toEqual([
+        __OpPageStart,
+        { id: 'screen' },
+      ]);
+      expect(opcodes.at(-2)).toBe(__OpText);
+      expect(opcodes.at(-1)).toBe('content');
+      expect(opcodes).not.toContain(__OpPageEnd);
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
   });
 
   it('skips empty $N slots and renders only the populated indices', () => {
@@ -82,12 +207,11 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes[0]).toBe(__OpBegin);
     expect(opcodes[1]).toMatchObject({ type: 'list' });
     expect(opcodes[2]).toBe(__OpAttr);
-    expect(opcodes[3]).toBe('typedAttributes');
-    expect(opcodes[4]).toBe(attributes);
-    expect(opcodes[5]).toBe(__OpSlot);
-    expect(opcodes[6]).toBe(0);
-    expect(opcodes[7]).toBe(__OpBegin);
-    expect(opcodes[8]).toMatchObject({
+    expect(opcodes[3]).toBe(attributes);
+    expect(opcodes[4]).toBe(__OpSlot);
+    expect(opcodes[5]).toBe(0);
+    expect(opcodes[6]).toBe(__OpBegin);
+    expect(opcodes[7]).toMatchObject({
       type: ItemTemplate,
       props: {
         __listItemPlatformInfo: itemPlatformInfo,

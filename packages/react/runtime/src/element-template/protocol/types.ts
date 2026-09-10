@@ -5,6 +5,8 @@
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { ElementTemplateUpdateOps } from './opcodes.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from './page.js';
+import type { MainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 
 export type SerializableValue =
   | string
@@ -16,7 +18,7 @@ export type SerializableValue =
 
 export type RuntimeOptionValue =
   | SerializableValue
-  | ElementRef
+  | FiberElement
   | RuntimeOptionValue[]
   | { [key: string]: RuntimeOptionValue };
 
@@ -32,11 +34,11 @@ export type RuntimeTypedElementAttributes = Record<string, RuntimeAttributeSlotV
 
 export type TypedElementAttributesCommand = Record<string, SerializableValue>;
 
-export type RuntimeElementSlots = Array<ElementRef[] | null | undefined>;
+export type RuntimeChildSlots = Array<ElementTemplateHandle[] | null | undefined>;
 
 export type ElementTemplateHandleSlotsCommand = Array<number[] | null | undefined>;
 
-export type SerializedEtNodeSlots = Array<SerializedEtNode[] | null | undefined>;
+export type SerializedEtNodeChildSlots = Array<SerializedEtNode[] | null | undefined>;
 
 export interface ElementTemplateHandleRefCommandValue {
   __etHandleRef: number;
@@ -46,26 +48,31 @@ export interface ElementTemplateHandleRefCommandValue {
 export interface UpdateTypedListItemCommand extends ElementTemplateHandleRefCommandValue {
   type: string;
   platformInfo: Record<string, SerializableValue>;
+  subtreeHandleIds: number[];
 }
 
-// Typed list create carries logical item records here, and MTS resolves their
-// handle refs before native create.
-export interface RuntimeOptionsCommand extends Record<string, SerializableValue> {
-  listChildren?: UpdateTypedListItemCommand[];
+export type RuntimeOptionsCommand = Record<string, SerializableValue>;
+
+// Deferred typed-list create carries logical item records here. Its future
+// main-thread consumer resolves these refs into the list-specific runtime carrier.
+export interface TypedListOptionsCommand extends RuntimeOptionsCommand {
+  listChildren: UpdateTypedListItemCommand[];
 }
 
-export type SerializedRuntimeOptionValue =
-  | SerializableValue
-  | SerializedEtNode
-  | SerializedRuntimeOptionValue[]
-  | { [key: string]: SerializedRuntimeOptionValue };
+export interface RuntimeTypedListOptions {
+  listChildren: ElementTemplateHandle[];
+}
 
-export type SerializedRuntimeOptions = Record<string, SerializedRuntimeOptionValue>;
+export type SerializedRuntimeOptions = Record<string, SerializableValue>;
+
+export interface SerializedTypedListOptions {
+  listChildren: SerializedEtNode[];
+}
 
 export interface SerializedEtNodeBase {
   attributeSlots?: SerializableValue[] | null;
-  elementSlots?: SerializedEtNodeSlots | null;
-  uid: number | string;
+  childSlots?: SerializedEtNodeChildSlots | null;
+  uid: number;
   options?: SerializedRuntimeOptions | null;
 }
 
@@ -81,16 +88,23 @@ export interface SerializedTypedNode extends SerializedEtNodeBase {
   attributes?: TypedElementAttributesCommand | null;
 }
 
-export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
-
-export interface ElementTemplateHydrateCommitContext {
-  instances: SerializedEtNode[];
-  reloadVersion: number;
+export interface SerializedTypedListNode extends Omit<SerializedEtNodeBase, 'options'> {
+  tag: 'list';
+  attributes?: TypedElementAttributesCommand | null;
+  options?: SerializedTypedListOptions | null;
 }
 
-// Legacy compiled-node alias kept for fixture helpers. Its child slots can now
-// contain typed nodes because hydrate dispatch accepts the RFC-level union.
-export interface SerializedElementTemplate extends SerializedCompiledNode {}
+export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode | SerializedTypedListNode;
+
+export interface SerializedPageRoot extends SerializedTypedNode {
+  tag: typeof ELEMENT_TEMPLATE_PAGE_TYPE;
+  uid: typeof ELEMENT_TEMPLATE_PAGE_HANDLE_ID;
+}
+
+export interface ElementTemplateHydrateCommitContext {
+  page: SerializedPageRoot;
+  reloadVersion: number;
+}
 
 export type CreateTemplateCommand = [
   typeof ElementTemplateUpdateOps.createTemplate,
@@ -98,7 +112,7 @@ export type CreateTemplateCommand = [
   templateKey: string,
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+  childSlots: ElementTemplateHandleSlotsCommand | null | undefined,
 ];
 
 export type SetAttributeCommand = [
@@ -108,18 +122,33 @@ export type SetAttributeCommand = [
   value: SerializableValue | null,
 ];
 
+export type SetMainThreadEventCommand = [
+  typeof ElementTemplateUpdateOps.setMainThreadEvent,
+  targetHandleId: number,
+  attrSlotIndex: number,
+  value: SerializableValue | null,
+];
+
+export type SetMainThreadRefCommand = [
+  typeof ElementTemplateUpdateOps.setMainThreadRef,
+  targetHandleId: number,
+  attrSlotIndex: number,
+  value: SerializableValue | null,
+];
+
 export type InsertNodeCommand = [
   typeof ElementTemplateUpdateOps.insertNode,
   targetHandleId: number,
-  elementSlotIndex: number,
+  childSlotIndex: number,
   childHandleId: number,
   referenceHandleId: number,
+  attachedSubtreeHandleIds: number[] | null,
 ];
 
 export type RemoveNodeCommand = [
   typeof ElementTemplateUpdateOps.removeNode,
   targetHandleId: number,
-  elementSlotIndex: number,
+  childSlotIndex: number,
   childHandleId: number,
   removedSubtreeHandleIds: number[],
 ];
@@ -129,8 +158,8 @@ export type CreateTypedElementCommand = [
   handleId: number,
   type: string,
   attributes: TypedElementAttributesCommand | null | undefined,
-  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
-  options: RuntimeOptionsCommand | null | undefined,
+  childSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+  options: RuntimeOptionsCommand | TypedListOptionsCommand | null | undefined,
 ];
 
 export type InsertTypedListItemCommand = [
@@ -156,6 +185,8 @@ export type UpdateTypedListItemInfoCommand = [
 export type ElementTemplateUpdateCommand =
   | CreateTemplateCommand
   | SetAttributeCommand
+  | SetMainThreadEventCommand
+  | SetMainThreadRefCommand
   | InsertNodeCommand
   | RemoveNodeCommand
   | CreateTypedElementCommand
@@ -194,4 +225,5 @@ export interface ElementTemplateUpdateCommitContext {
   isHydration?: boolean | undefined;
   reloadVersion?: number | undefined;
   delayedRunOnMainThreadData?: RunWorkletCtxData[] | undefined;
+  mainThreadRefInitValuePatch?: MainThreadRefInitValuePatch | undefined;
 }

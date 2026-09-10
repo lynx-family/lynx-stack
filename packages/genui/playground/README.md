@@ -1,9 +1,56 @@
 # GenUI Playground
 
 Interactive playground for the Lynx **GenUI** toolchain. Chat with an agent to
-generate A2UI / OpenUI surfaces, browse ready-made examples, and preview the
-result on the web or a real device — then rename, delete, or **share** any
-conversation as a durable preview link.
+generate A2UI / OpenUI surfaces or standalone HTML documents, browse ready-made
+examples (including zero-build Lynx XML artifacts), and preview the result on
+the web or a real device — then rename, delete, or **share** any conversation
+as a durable preview link.
+
+The Lynx XML protocol exposes a streaming **Create** surface at `#/lynx-xml`,
+an **Examples** surface at `#/lynx-xml/examples`, and the shared **Bench** tab
+at `#/bench`. Create calls the GenUI
+server's `/lynx-xml/stream` endpoint, shows the `.lynxml` source as it arrives,
+and loads the complete zero-build artifact in a directly mounted `<lynx-view>`.
+Generated XML never enters the A2UI/OpenUI renderer; the shared `render.html`
+entry selects the direct XML path through `protocol=lynx-xml`. Each example uses
+the same single-file format with Lynx CSS plus main-thread and, where needed,
+background-thread JavaScript.
+
+Lynx XML Create offers an **XML fragment** selector, disabled by default.
+With `enableHtmlFragment: true`, the model writes a template, styles, and
+interaction code in one response. The server compiles and assembles the final
+`.lynxml` without a conversion tool or a second model request. Shared search or
+image tools can still require their own model rounds. Bench exposes the same
+choice per comparison group. Preview receives only the compiled final document;
+the artifact viewer shows Original by default for the original model output and
+lets users switch to Transformed. Without conversion, it shows Source.
+
+All generation agents and UI Judge share model-step logging. To diagnose token usage, inspect the server's `agent.model.started`,
+`agent.model.step.completed`, and `agent.model.completed` events. They share an
+`invocationId`; Create also has the stream request ID, while Bench's `resourceId`
+identifies its run and attempt. Step logs include usage, tool status and content
+lengths; `toolErrors` records failed call IDs, tool names, and sanitized error
+messages, including failures missing from `toolResults`. Completion logs compare
+`stepUsageTotal` with `totalUsage`. Lengths are
+character counts, not token estimates. Unavailable provider details remain
+unknown. Prompts, XML, reasoning text, and tool result bodies are not logged.
+
+The bundled cases are Counter, Travel Plan, Product Card, Weather Card, and
+Todo List. Together they cover main-thread interaction, subtree re-rendering,
+background-thread computation, selection state, and dynamic-list updates
+without external media assets. Their cards use the same flow-grid arrangement
+and shared card styles as A2UI Playground Examples. The Element PAPI trees
+attach an explicitly styled business root directly to an unstyled `page`; each
+layout container enables Flex instead of relying on Lynx's default Linear
+layout. Examples that can exceed one viewport use that business root itself as
+a vertical scroll view.
+
+The HTML protocol exposes a **Create** surface at `#/html`. It calls the GenUI
+server's `/html/stream` endpoint, shows the standalone document source while it
+streams, and renders the complete HTML through a Web `iframe` `srcDoc`. The
+iframe uses `sandbox="allow-scripts"` without same-origin access, so generated
+interactions work without exposing the Playground DOM, cookies, or local
+storage. HTML never enters the Lynx renderer or native preview path.
 
 > Private development app; it is not published to npm. For the published library
 > see [`@lynx-js/genui`](../README.md).
@@ -18,12 +65,17 @@ pnpm install
 ```
 
 The **Create** (chat) tab talks to the GenUI server for agent responses and
-preview publishing. Start it on port `3060` with one server-owned model
-configuration:
+preview publishing. Start it on port `3060`. This example provides one
+server-owned model configuration:
 
 ```bash
 # 2. Start the GenUI server → http://localhost:3060
 GENUI_MODEL_CONFIG_JSON='{"GPT-5.4":{"model":"gpt-5.4","apiKey":"sk-...","baseURL":"https://api.openai.com/v1","api":"responses","default":true}}' \
+  IMG_GEN_ARK_API_KEY='...' \
+  IMG_GEN_ARK_IMAGE_MODEL='doubao-seedream-...' \
+  IMG_GEN_ARK_IMAGE_BASE_URL='https://ark.cn-beijing.volces.com/api/v3' \
+  SEARCH_INFINITY_API_KEY='...' \
+  LYNX_USE_PORT=3060 \
   pnpm -C packages/genui/server dev
 ```
 
@@ -35,32 +87,152 @@ Then start the playground and open the URL it prints (defaults to
 pnpm -C packages/genui/playground dev
 ```
 
-On `localhost`, the Create tab automatically targets your local server on
-`:3060`. To use the **hosted** agent without running a server of your own,
-append the endpoint override to the playground URL:
+The playground targets `http://localhost:3060` by default. Set the build-time
+`GENUI_SERVER_URL` environment variable to use another GenUI server origin:
+
+```bash
+GENUI_SERVER_URL=https://genui.example.com \
+  pnpm -C packages/genui/playground dev
+```
+
+The configured origin is shared by Create, Bench, health checks, and preview
+payload publishing. It must be an `http` or `https` origin without credentials,
+a path, query parameters, or a fragment.
+
+Create and Bench also retain their URL query overrides for local diagnosis:
 
 ```text
-?a2uiEndpoint=https://genui-server.vercel.app/a2ui/stream
+?a2uiEndpoint=http://localhost:3060/a2ui/stream
+?openuiEndpoint=http://localhost:3060/openui/stream
+?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
+?lynx-xmlEndpoint=http://localhost:3060/lynx-xml/stream
+?htmlEndpoint=http://localhost:3060/html/stream
+?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
 ```
+
+### Client environment
+
+| Variable                                 | Purpose                                     | Default                    |
+| ---------------------------------------- | ------------------------------------------- | -------------------------- |
+| `GENUI_SERVER_URL`                       | GenUI server origin used by all APIs        | `http://localhost:3060`    |
+| `PORT`                                   | Playground development server port          | `3000`                     |
+| `ASSET_PREFIX`                           | Hosted static asset prefix                  | —                          |
+| `A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH` | Set to `0` to disable the dev payload store | enabled outside production |
 
 ### Server environment
 
-| Variable                                                       | Purpose                                          | Default             |
-| -------------------------------------------------------------- | ------------------------------------------------ | ------------------- |
-| `GENUI_MODEL_CONFIG_JSON`                                      | Map of model names to provider configurations    | —                   |
-| `UI_JUDGE_SERVER_URL`                                          | Rust UI Judge sidecar for Bench scoring          | disabled            |
-| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge       | hosted GenUI bundle |
-| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS | disabled            |
-| `PEXELS_API_KEY`                                               | Stock-image search in generated UIs              | —                   |
+| Variable                                                       | Purpose                                             | Default             |
+| -------------------------------------------------------------- | --------------------------------------------------- | ------------------- |
+| `GENUI_MODEL_CONFIG_JSON`                                      | Optional map of server-owned model configurations   | disabled            |
+| `IMG_GEN_ARK_API_KEY`                                          | Server-side Volcengine Ark image-generation key     | —                   |
+| `IMG_GEN_ARK_IMAGE_MODEL`                                      | Ark image-generation model/endpoint id              | —                   |
+| `IMG_GEN_ARK_IMAGE_BASE_URL`                                   | Ark image-generation HTTPS API base URL             | —                   |
+| `IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS`                         | Timeout in ms (integer from 1 through 600000)       | `120000`            |
+| `SEARCH_INFINITY_API_KEY`                                      | Optional Doubao Custom subscription/post-paid key   | disabled            |
+| `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
+| `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
+| `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
 
-The Create tab loads its model selector from the server's `GET /models`
-endpoint. Provider credentials, upstream model ids, and upstream API URLs
-remain server-only.
+The Create tab and Bench runner load their model selectors from the server's `GET /models`
+endpoint. Server-owned provider credentials, upstream model ids, and upstream
+API URLs remain server-only. The selector also exposes a `Custom API key`
+option with model and API key fields plus an approved-provider endpoint
+selector. An empty custom model falls back to `gpt-5.6-terra`, and the endpoint
+defaults to `https://api.openai.com/v1`. Custom
+model, API key, and base URL values remain only in the current page session and
+survive protocol switches within that page. A refresh restores the model and
+base URL defaults and clears the API key; none of these fields are written to
+browser storage.
 
-Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
-enabled only when that sidecar is ready. See
-[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
-startup and model environment.
+Changing the custom endpoint also fills its default model: OpenAI uses
+`gpt-5.6-terra`, Google Gemini uses `gemini-3.7-flash`, and OpenRouter uses
+`openrouter/auto`. The model field remains editable after it is filled.
+
+When `GENUI_MODEL_CONFIG_JSON` is unset, the Create tab opens directly in this
+custom-provider form instead of requiring a server-owned model. A complete
+custom configuration can make model requests without
+`GENUI_MODEL_CONFIG_JSON`.
+
+Custom base URLs are requested by the GenUI server and must match the approved
+OpenAI, Google Gemini, or OpenRouter OpenAI-compatible endpoint. Alternate
+origins, ports, paths, credentials, queries, and fragments are rejected. Use
+`GENUI_MODEL_CONFIG_JSON` for an intentionally private, HTTP, or custom
+endpoint. Public deployments must still protect model routes with
+authentication; the allow-list specifically limits custom-provider SSRF
+exposure.
+
+The configured text model must support tool/function calls:
+the A2UI agent invokes its `generate_image` tool and copies the generated Ark
+URL into the final `Image.url` value. One request may invoke the image tool at
+most four times across initial generation and validation repairs. Arbitrary
+image URLs invented by the text model are rejected. `IMG_GEN_ARK_API_KEY`,
+`IMG_GEN_ARK_IMAGE_MODEL`, and `IMG_GEN_ARK_IMAGE_BASE_URL` must all be
+configured explicitly. See the
+[Volcengine Ark image-generation API](https://www.volcengine.com/docs/82379/1541523?lang=zh)
+for model/endpoint setup.
+
+When `SEARCH_INFINITY_API_KEY` is configured, A2UI, OpenUI, Lynx XML, HTML,
+and MCP Apps generation agents can call the same server-side `web_search`
+and `image_search` tools. Web search retrieves current
+or explicitly requested public-web information; image search returns existing
+image URLs with source and quality metadata. All generation agents can use
+searched images. A2UI additionally supports image generation, preferring image
+search unless the user explicitly requests original generated artwork. The key
+is never sent to the Playground. Each generation may perform
+at most three searches combined across the initial response and validation
+repairs; each call returns at most five normalized results. Agents are instructed
+to use source links and image URLs from user/host
+input or the current request's tool results; A2UI additionally enforces source
+provenance during streaming and final validation. Search is disabled for both
+A2UI and OpenUI Bench runs. `generate_image` remains A2UI-only. The server uses
+the Custom search API so both subscription-plan and
+post-paid keys are supported. See the [Doubao Search Custom API documentation](https://www.volcengine.com/docs/87772/2272953?lang=zh)
+and [Doubao Search console](https://console.volcengine.com/search-infinity) for
+service activation and API-key management.
+
+Bench Tokens can be hovered for a preview or expanded for input, output, cache read/write,
+reasoning, and cache hit rate. Totals include generation steps and repair attempts and
+exclude UI Judge. Comparison-group details use the same planned-run average as Tokens.
+Missing provider fields and unavailable historical breakdowns display `Not recorded`;
+cache and reasoning tokens are already included in input and output respectively.
+
+Bench supports A2UI, OpenUI, and Lynx XML comparison groups. Lynx XML uses
+the native profile without a component catalog, reuses the XML generation
+service, and submits the resulting source to UI Judge's `/screenshot/lynxml`
+endpoint for capture. Template and XML screenshot requests use multipart with
+shared viewport, timing, and initial-data fields. Search and image generation are disabled in all Bench
+groups. The same GenUI scoring and report pipeline evaluates each protocol;
+browser render timing metrics remain disabled. Protocol comparisons preserve
+the selected baseline and offer protocols not yet present in the job.
+
+Bench is a regular GenUI top-level tab. Its Create-style history rail keeps
+drafts, completed runs, and report screenshots in the shared local IndexedDB
+(`a2ui-playground`, `benchHistory` store). Database migration and reads/writes
+are maintained in `src/storage/benchRepo.ts`; history types, normalization, and
+React state remain in `src/pages/bench`. Existing `a2ui-bench-history` localStorage
+data is imported once and removed only after the database transaction commits.
+New Bench immediately creates
+and selects the first draft item; completion updates that item in place.
+Completed entries restore their configuration and report as read-only, so a
+new run starts from a new Bench draft instead of rerunning history. Runner
+presents three default editable scenarios (with custom scenario append),
+comparison groups created by Protocol, Model, or Prompt direction, and inline
+run configuration in one scrollable workflow surface. A compact fixed footer
+shows the live plan next to Start run, then switches to real-time progress next
+to Pause while a job is active. Bench is English-only until the Playground
+adopts site-wide localization; it has no page-local locale prop or translation
+layer and does not expose separate Runner, History, or language-switching
+views.
+
+Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
+Judge. A credential-free HTTP(S) URL is saved only in browser local storage;
+it is never sent to GenUI Server and has no server environment fallback. The
+Playground checks `/health`, requests each screenshot directly with multipart,
+and uploads the resulting BMP to GenUI Server for PNG conversion and model
+scoring. Keep the Bench page open during evaluation. The screenshot service or
+its gateway must permit the Playground origin through CORS, and its URL must
+be reachable under the browser's HTTPS and local-network policies. See
+[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for service startup.
 
 Conversation **share** links and Web / Native Preview upload through the GenUI
 server and consume the public URL returned by it. The playground does not

@@ -4,8 +4,28 @@
 
 import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 
+import type { LynxPluginOptions } from '@lynx-js/rsbuild-plugin'
+
 import type { Config } from '../config/index.js'
 import { debug, isDebug } from '../debug.js'
+
+function toLynxPluginOptions(config: Config): LynxPluginOptions {
+  const filename = config.output?.filename
+  const bundle = typeof filename === 'string'
+    ? filename
+    : filename?.bundle ?? filename?.template
+
+  const { profile } = config.performance ?? {}
+
+  return {
+    output: {
+      ...bundle === undefined ? {} : { filename: { bundle } },
+    },
+    performance: {
+      ...profile === undefined ? {} : { profile },
+    },
+  }
+}
 
 async function applyDebugPlugins(
   rsbuildInstance: RsbuildInstance,
@@ -30,14 +50,6 @@ export async function applyDefaultPlugins(
   const defaultPlugins = Object.freeze<Promise<RsbuildPlugin>[]>([
     import('./api.plugin.js').then(({ pluginAPI }) => pluginAPI(config)),
 
-    import('@lynx-js/debug-metadata-rsbuild-plugin').then(
-      ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
-    ),
-
-    import('./dev.plugin.js').then(({ pluginDev }) =>
-      pluginDev(config.dev, config.server)
-    ),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
     ),
@@ -49,8 +61,22 @@ export async function applyDefaultPlugins(
 
   const promises: Promise<void>[] = [
     Promise.all(defaultPlugins).then(async plugins => {
-      const { pluginLynx } = await import('@lynx-js/rsbuild-plugin')
-      rsbuildInstance.addPlugins([...pluginLynx(), ...plugins])
+      const { isPluginLynxRegistered, pluginLynx } = await import(
+        '@lynx-js/rsbuild-plugin'
+      )
+
+      // A user who needs to configure the build engine applies `pluginLynx`
+      // themselves. Applying it again here would build a second config from
+      // the Rspeedy options and overwrite theirs.
+      rsbuildInstance.addPlugins([
+        ...isPluginLynxRegistered(
+            rsbuildInstance,
+            Object.keys(config.environments ?? {}),
+          )
+          ? []
+          : pluginLynx(toLynxPluginOptions(config)),
+        ...plugins,
+      ])
     }),
   ]
 
@@ -60,12 +86,4 @@ export async function applyDefaultPlugins(
   }
 
   await Promise.all(promises)
-
-  // If no `@rsbuild/plugin-css-minimizer` is applied, apply it
-  const { pluginCssMinimizer, PLUGIN_CSS_MINIMIZER_NAME } = await import(
-    '@rsbuild/plugin-css-minimizer'
-  )
-  if (!rsbuildInstance.isPluginExists(PLUGIN_CSS_MINIMIZER_NAME)) {
-    rsbuildInstance.addPlugins([pluginCssMinimizer()])
-  }
 }

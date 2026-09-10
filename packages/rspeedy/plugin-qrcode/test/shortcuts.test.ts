@@ -4,18 +4,45 @@
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
+
 import { registerConsoleShortcuts } from '../src/shortcuts.js'
 
 vi.mock('@clack/prompts')
+
+// Built by `pluginLynx` itself, so the resolver under test is the real one
+// rather than a stub that fabricates it.
+function createLynxConfig(): LynxConfig {
+  let config: LynxConfig | undefined
+
+  for (const plugin of pluginLynx()) {
+    // `pluginConfig.setup` is synchronous, so the config is set before the
+    // check below.
+    void plugin.setup({
+      expose(_id: string | symbol, value: unknown) {
+        config = value as LynxConfig
+      },
+    } as unknown as RsbuildPluginAPI)
+
+    if (config) {
+      break
+    }
+  }
+
+  if (!config) {
+    throw new Error('pluginLynx exposed no Lynx config')
+  }
+
+  return config
+}
 
 describe('PluginQRCode - CLI Shortcuts', () => {
   const mockedRsbuildAPI = {
     getNormalizedConfig: vi.fn().mockReturnValue({
       dev: { assetPrefix: 'https://example.com/' },
     }),
-    useExposed: vi.fn().mockReturnValue({
-      config: { filename: '[name].[platform].bundle' },
-    }),
+    useExposed: vi.fn().mockReturnValue(createLynxConfig()),
   } as unknown as RsbuildPluginAPI
 
   beforeEach(() => {

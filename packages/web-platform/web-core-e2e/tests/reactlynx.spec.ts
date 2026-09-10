@@ -2715,6 +2715,48 @@ test.describe('reactlynx3 tests', () => {
         });
       });
 
+      test(
+        'basic-element-text-bindselectionchange',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          const inlineText = page.locator('#inline-target');
+          await expect(inlineText).toBeAttached();
+          await wait(200);
+          const selectInlineText = (
+            anchorOffset: number,
+            focusOffset: number,
+          ) =>
+            inlineText.evaluate((inlineText, { anchorOffset, focusOffset }) => {
+              const textNode = inlineText.querySelector('raw-text')?.firstChild;
+              if (!textNode) throw new Error('Missing inline text node');
+              document.getSelection()?.setBaseAndExtent(
+                textNode,
+                anchorOffset,
+                textNode,
+                focusOffset,
+              );
+              document.dispatchEvent(new Event('selectionchange'));
+            }, { anchorOffset, focusOffset });
+
+          await selectInlineText(1, 4);
+
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-forward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-forward',
+          );
+
+          await selectInlineText(4, 1);
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-backward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-backward',
+          );
+        },
+      );
+
       test('basic-element-text-maxline', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(100);
@@ -2979,6 +3021,31 @@ test.describe('reactlynx3 tests', () => {
             title,
             'should-be-scrolled-by-method',
           );
+        },
+      );
+      test(
+        'basic-element-x-foldview-ng-method-setFoldExpanded-overflow',
+        async ({ page }, {
+          title,
+        }) => {
+          await goto(page, title);
+          await page.locator('#tap').click();
+          await wait(100);
+          // the header is 400px and the toolbar is 200px, so the foldview can
+          // only be scrolled by 200px however large the requested offset is
+          const scrollTop = await page.locator('#foldview').evaluate((
+            element,
+          ) => element.scrollTop);
+          expect(scrollTop).toBe(200);
+        },
+      );
+      test(
+        'basic-element-x-foldview-ng-header-width',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          // the header is out of flow, it still has to fill the foldview
+          await expect(page.locator('#header')).toHaveCSS('width', '300px');
         },
       );
     });

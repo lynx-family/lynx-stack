@@ -11,6 +11,7 @@ import {
   ArrowUpRight,
   ChevronLeft,
   Copy,
+  FileText,
   History,
   Maximize2,
   MessageSquarePlus,
@@ -26,6 +27,7 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  TriangleAlert,
   X,
   Zap,
 } from 'lucide-react';
@@ -36,6 +38,7 @@ export {
   ArrowUpRight,
   ChevronLeft,
   Copy,
+  FileText,
   History,
   Maximize2,
   MessageSquarePlus,
@@ -51,6 +54,7 @@ export {
   Sparkles,
   Sun,
   Trash2,
+  TriangleAlert,
   X,
   Zap,
 };

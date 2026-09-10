@@ -21,7 +21,7 @@ export function createElement(type, props, children) {
     i;
   for (i in props) {
     if (i == 'key') key = props[i];
-    else if (i == 'ref') ref = props[i];
+    else if (i == 'ref' && typeof type != 'function') ref = props[i];
     else normalizedProps[i] = props[i];
   }
 
@@ -65,7 +65,7 @@ export function cloneElement(vnode, props, children) {
 
   for (i in props) {
     if (i == 'key') key = props[i];
-    else if (i == 'ref') ref = props[i];
+    else if (i == 'ref' && typeof vnode.type != 'function') ref = props[i];
     else if (props[i] === undefined && defaultProps !== undefined) {
       normalizedProps[i] = defaultProps[i];
     } else {

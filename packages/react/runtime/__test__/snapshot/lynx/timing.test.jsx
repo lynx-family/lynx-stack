@@ -80,7 +80,7 @@ describe('setState timing api', () => {
     render(<Comp />, __root);
 
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
     mtCallbacks = [];
     comp.setState({
@@ -181,7 +181,7 @@ describe('attribute timing api', () => {
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     lynx.performance.__functionCallHistory = [];
 
     mtCallbacks = [];
@@ -333,7 +333,7 @@ describe('attribute timing api', () => {
     render(<Comp />, __root);
 
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     lynx.performance.__functionCallHistory = [];
 
     mtCallbacks = [];
@@ -440,7 +440,7 @@ describe('attribute timing api', () => {
 
     mtCallbacks = [];
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     await waitSchedule();
 
     expect(lynx.performance.__functionCallHistory).toMatchInlineSnapshot(`
@@ -544,7 +544,7 @@ describe('attribute timing api', () => {
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     lynx.performance.__functionCallHistory = [];
 
     // update xxx
@@ -716,7 +716,7 @@ describe('attribute timing api', () => {
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     lynx.performance.__functionCallHistory = [];
 
     {
@@ -935,7 +935,7 @@ describe('timing api compatibility', () => {
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
     // LifecycleConstant.firstScreen
-    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     lynx.performance.__functionCallHistory = [];
 
     mtCallbacks = [];

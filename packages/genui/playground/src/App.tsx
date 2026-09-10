@@ -11,15 +11,8 @@ import {
 
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
-import {
-  readBenchLocale,
-  writeBenchLocale,
-} from './pages/bench/benchLocale.js';
-import type { BenchLocale } from './pages/bench/benchLocale.js';
-import { BenchResultPage } from './pages/bench/BenchResultPage.js';
-import { BenchRunnerPage } from './pages/bench/BenchRunnerPage.js';
-import { BenchShell } from './pages/bench/BenchShell.js';
-import { PhaseTwoReportPage } from './pages/bench/PhaseTwoReportPage.js';
+import { BenchPage } from './pages/bench/BenchPage.js';
+import { PublishedReportRoute } from './pages/bench/PublishedReportRoute.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
@@ -52,7 +45,19 @@ const GENUI_TABS: TabDef[] = [
   { id: 'bench', label: 'Bench' },
 ];
 
-const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
+const CREATE_EXAMPLES_TABS: TabDef[] = [
+  { id: 'create', label: 'Create' },
+  { id: 'examples', label: 'Examples' },
+];
+
+const LYNX_XML_TABS: TabDef[] = [
+  ...CREATE_EXAMPLES_TABS,
+  { id: 'bench', label: 'Bench' },
+];
+
+const CREATE_ONLY_TABS: TabDef[] = [
+  { id: 'create', label: 'Create' },
+];
 
 function ensureDefaultRouteHash(): void {
   if (!isEmptyRouteHash(window.location.hash)) return;
@@ -117,12 +122,18 @@ export function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     return getForcedTheme() ?? getInitialTheme();
   });
-  const [benchLocale, setBenchLocale] = useState<BenchLocale>(readBenchLocale);
   const embedded = useMemo(() => isEmbedded(), []);
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
-  const tabs = protocol.name === 'mcp-apps' ? MCP_APPS_TABS : GENUI_TABS;
+  let tabs = GENUI_TABS;
+  if (protocol.name === 'html') {
+    tabs = CREATE_ONLY_TABS;
+  } else if (protocol.name === 'mcp-apps') {
+    tabs = CREATE_EXAMPLES_TABS;
+  } else if (protocol.name === 'lynx-xml') {
+    tabs = LYNX_XML_TABS;
+  }
 
   useLayoutEffect(() => {
     ensureDefaultRouteHash();
@@ -138,10 +149,6 @@ export function App() {
       // Ignore localStorage errors.
     }
   }, [theme, forcedTheme]);
-
-  useEffect(() => {
-    writeBenchLocale(benchLocale);
-  }, [benchLocale]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -161,8 +168,15 @@ export function App() {
   }, []);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    if (name === 'mcp-apps') {
+    if (name === 'html') {
       window.location.hash = buildRouteHash(name, 'create');
+      return;
+    }
+    if (name === 'mcp-apps' || name === 'lynx-xml') {
+      window.location.hash = buildRouteHash(
+        name,
+        route.tab === 'examples' ? 'examples' : 'create',
+      );
       return;
     }
     window.location.hash = buildRouteHash(name, route.tab);
@@ -191,7 +205,47 @@ export function App() {
       />
     );
 
-    if (protocol.name === 'mcp-apps') return createPage;
+    if (protocol.name === 'html') return createPage;
+
+    if (protocol.name === 'mcp-apps') {
+      if (route.tab !== 'examples') return createPage;
+      return route.demoId
+        ? (
+          <DemosPage
+            key='mcp-apps-examples-detail'
+            protocol={protocol}
+            demoId={route.demoId}
+            theme={theme}
+          />
+        )
+        : (
+          <DemosListPage
+            key='mcp-apps-examples-index'
+            protocol={protocol}
+            theme={theme}
+          />
+        );
+    }
+
+    if (protocol.name === 'lynx-xml') {
+      if (route.tab !== 'examples') return createPage;
+      return route.demoId
+        ? (
+          <DemosPage
+            key='lynx-xml-examples-detail'
+            protocol={protocol}
+            demoId={route.demoId}
+            theme={theme}
+          />
+        )
+        : (
+          <DemosListPage
+            key='lynx-xml-examples-index'
+            protocol={protocol}
+            theme={theme}
+          />
+        );
+    }
 
     if (protocol.name === 'openui') {
       switch (route.tab) {
@@ -228,40 +282,15 @@ export function App() {
 
     switch (route.tab) {
       case 'bench': {
-        let benchPage = (
-          <BenchRunnerPage key='bench-runner' locale={benchLocale} />
-        );
-        switch (route.benchSlug) {
-          case undefined:
-          case 'runner':
-            break;
-          case 'phase-1':
-            benchPage = (
-              <BenchResultPage key='bench-phase-1' locale={benchLocale} />
-            );
-            break;
-          case 'phase-2':
-            benchPage = (
-              <PhaseTwoReportPage
-                key='bench-phase-2-report'
-                locale={benchLocale}
-              />
-            );
-            break;
-          default:
-            break;
+        if (route.benchReportId !== undefined) {
+          return (
+            <PublishedReportRoute
+              key={route.benchReportId}
+              reportId={route.benchReportId}
+            />
+          );
         }
-        return (
-          <BenchShell
-            activeSlug={route.benchSlug}
-            locale={benchLocale}
-            theme={theme}
-            onChangeLocale={setBenchLocale}
-            onToggleTheme={handleThemeToggle}
-          >
-            {benchPage}
-          </BenchShell>
-        );
+        return <BenchPage key='bench' />;
       }
       case 'examples':
         return route.demoId
@@ -296,12 +325,10 @@ export function App() {
     embedded,
     protocol,
     route.tab,
+    route.benchReportId,
     route.componentName,
     route.demoId,
-    route.benchSlug,
-    benchLocale,
     theme,
-    handleThemeToggle,
   ]);
 
   const protocolVersionControl = (
@@ -317,13 +344,17 @@ export function App() {
         <option value='mcp-apps'>
           MCP Apps v{PROTOCOLS['mcp-apps'].version}
         </option>
+        <option value='lynx-xml'>
+          Lynx XML v{PROTOCOLS['lynx-xml'].version}
+        </option>
+        <option value='html'>HTML v{PROTOCOLS.html.version}</option>
       </select>
     </div>
   );
 
   return (
     <div className={embedded ? 'appShell appShellEmbedded' : 'appShell'}>
-      {embedded || route.tab === 'bench' ? null : (
+      {embedded ? null : (
         <div className='topBar'>
           <div className='brandGroup'>
             <img
@@ -351,7 +382,7 @@ export function App() {
 
           <div className='spacer' />
 
-          {protocolVersionControl}
+          {route.tab === 'bench' ? null : protocolVersionControl}
 
           <Button
             variant='ghost'
