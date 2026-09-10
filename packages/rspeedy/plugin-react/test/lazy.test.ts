@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
@@ -26,6 +27,7 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 function withLeakedCoverageCountersStubbed<T>(
   code: string,
   run: () => T,
+  counterTarget: Record<string, unknown> = globalThis,
 ): T {
   type CoverageCounterSink = () => CoverageCounterSink
   const sink: CoverageCounterSink = new Proxy(
@@ -38,8 +40,8 @@ function withLeakedCoverageCountersStubbed<T>(
   ) as unknown as CoverageCounterSink
   const added: string[] = []
   for (const name of new Set(code.match(/\bcov_\d+\b/g) ?? [])) {
-    if (!(name in globalThis)) {
-      ;(globalThis as Record<string, unknown>)[name] = () => sink
+    if (!(name in counterTarget)) {
+      counterTarget[name] = () => sink
       added.push(name)
     }
   }
@@ -47,7 +49,7 @@ function withLeakedCoverageCountersStubbed<T>(
     return run()
   } finally {
     for (const name of added) {
-      delete (globalThis as Record<string, unknown>)[name]
+      delete counterTarget[name]
     }
   }
 }
@@ -220,6 +222,200 @@ describe('Lazy', () => {
       expect(exports['default'].name).toBe('LazyBundleComp')
 
       rstest.unstubAllEnvs()
+    })
+  })
+  ;(['development', 'production'] as const).forEach(mode => {
+    test(`Element Template standalone lazy bundle reuses the host runtime in ${mode}`, async () => {
+      rstest.stubEnv('NODE_ENV', mode)
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const tmpRoot = fileURLToPath(
+        new URL('../../../../.tmp/', import.meta.url),
+      )
+      await fs.mkdir(tmpRoot, { recursive: true })
+      const tmp = await fs.mkdtemp(
+        path.join(tmpRoot, 'rspeedy-react-test-et-standalone-'),
+      )
+      let backgroundCode = ''
+      let mainThreadCode = ''
+
+      try {
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            mode,
+            source: {
+              entry: {
+                main: fileURLToPath(
+                  new URL(
+                    './fixtures/standalone-lazy-bundle/element-template.tsx',
+                    import.meta.url,
+                  ),
+                ),
+              },
+            },
+            dev: { hmr: false, liveReload: false },
+            output: { distPath: { root: tmp } },
+            plugins: [
+              pluginReactLynx({
+                experimental_isLazyBundle: true,
+                experimental_useElementTemplate: true,
+              }),
+            ],
+            tools: {
+              rspack: {
+                plugins: [{
+                  name: 'capture-standalone-et-runtime',
+                  apply(compiler) {
+                    compiler.hooks.compilation.tap(
+                      'capture-standalone-et-runtime',
+                      compilation => {
+                        const hooks = LynxTemplatePlugin
+                          .getLynxTemplatePluginHooks(
+                            compilation as unknown as Parameters<
+                              typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                            >[0],
+                          )
+                        hooks.beforeEmit.tap(
+                          'capture-standalone-et-runtime',
+                          args => {
+                            mainThreadCode = args.finalEncodeOptions.lepusCode
+                              ?.root ?? ''
+                            const manifest = args.finalEncodeOptions.manifest
+                            const background = Object.keys(manifest).find(
+                              name => /background.*?\.js$/.test(name),
+                            )
+                            backgroundCode = background
+                              ? manifest[background]!
+                              : ''
+                            return args
+                          },
+                        )
+                      },
+                    )
+                  },
+                } as Rspack.RspackPluginInstance],
+              },
+            },
+          },
+        })
+        await rsbuild.build()
+        expect(backgroundCode).not.toBe('')
+        expect(mainThreadCode).not.toBe('')
+
+        for (const thread of ['background', 'main-thread']) {
+          const app = {
+            callDestroyLifetimeFun: rstest.fn(),
+            publishEvent: rstest.fn(),
+            publicComponentEvent: rstest.fn(),
+            updateGlobalProps: rstest.fn(),
+            updateCardData: rstest.fn(),
+            onAppReload: rstest.fn(),
+          }
+          const originalCallbacks = { ...app }
+          const vnode = {}
+          const hostReact = {
+            default: {},
+            root: { render: rstest.fn() },
+            useEffect: rstest.fn(),
+            useState: rstest.fn(),
+          }
+          const hostInternal = { __root: {}, options: {} }
+          const hostJSX = { jsx: rstest.fn(() => vnode) }
+          const hostJSXDev = { jsxDEV: rstest.fn(() => vnode) }
+          const expectedRuntime = {
+            ...hostReact,
+            ...hostInternal,
+            ...hostJSX,
+            ...hostJSXDev,
+          }
+          // The emitted module reads the real lazy ABI. A finite host makes any
+          // accidental native initialization fail instead of absorbing it.
+          const target: Record<string | symbol, unknown> = {
+            bundleSupportLoadScript: true,
+            Promise,
+            getApp: () => app,
+          }
+          const backend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__')
+          target[backend] = 'Element Template'
+          for (
+            const [entry, value] of Object.entries({
+              '@lynx-js/react': hostReact,
+              '@lynx-js/react/lepus': {},
+              '@lynx-js/react/internal': hostInternal,
+              '@lynx-js/react/jsx-runtime': hostJSX,
+              '@lynx-js/react/jsx-dev-runtime': hostJSXDev,
+            })
+          ) {
+            target[Symbol.for(`__REACT_LYNX_EXPORTS__(${entry})`)] = value
+          }
+
+          const execute = () => {
+            const lynx = target
+            const factories = new Map<string, (...args: unknown[]) => void>()
+            const tt = {
+              define: (name: string, factory: (...args: unknown[]) => void) => {
+                factories.set(name, factory)
+              },
+              require: (name: string) => {
+                const mockModule = { exports: {} }
+                const args: unknown[] = Array(18).fill(undefined)
+                args[1] = mockModule
+                args[2] = mockModule.exports
+                args[10] = console
+                args[16] = lynx
+                factories.get(name)!(...args)
+                return mockModule.exports
+              },
+            }
+            const code = thread === 'background'
+              ? backgroundCode
+              : mainThreadCode
+            return withLeakedCoverageCountersStubbed(code, () => {
+              if (thread === 'background') {
+                const bundle = runInNewContext(code, target) as {
+                  init: (context: { tt: typeof tt }) => unknown
+                }
+                return bundle.init({ tt })
+              }
+              const bundle = runInNewContext(code, target) as (
+                entry: string,
+              ) => unknown
+              return bundle('standalone-et')
+            }, target) as {
+              runtime: typeof expectedRuntime
+              default: () => unknown
+            }
+          }
+
+          const bundleExports = execute()
+          for (
+            const key of Object.keys(
+              expectedRuntime,
+            ) as (keyof typeof expectedRuntime)[]
+          ) {
+            expect(bundleExports.runtime[key]).toBe(expectedRuntime[key])
+          }
+          expect(bundleExports.default()).toBe(vnode)
+          for (const key of Object.keys(app) as (keyof typeof app)[]) {
+            expect(app[key]).toBe(originalCallbacks[key])
+            expect(app[key]).not.toHaveBeenCalled()
+          }
+
+          Object.defineProperty(target, backend, {
+            value: 'Snapshot',
+            configurable: true,
+          })
+          expect(execute).toThrow(
+            'Snapshot and Element Template templates cannot share lazy bundles.',
+          )
+          expect(target[backend]).toBe('Snapshot')
+          for (const key of Object.keys(app) as (keyof typeof app)[]) {
+            expect(app[key]).toBe(originalCallbacks[key])
+          }
+        }
+      } finally {
+        rstest.unstubAllEnvs()
+        await fs.rm(tmp, { recursive: true, force: true })
+      }
     })
   })
 
