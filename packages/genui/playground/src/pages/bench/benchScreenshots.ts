@@ -4,13 +4,75 @@
 
 /* eslint-disable n/no-unsupported-features/node-builtins -- Browser screenshot transport uses Web APIs. */
 
+import { strToU8, zipSync } from 'fflate';
+
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024 + 1024;
+const MAX_CAPTURE_FORM_BYTES = 10 * 1024 * 1024;
 const CAPTURE_ID = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
 
 interface ScreenshotRequest {
-  path: 'screenshot/template' | 'screenshot/lynxml';
+  path: 'screenshot/zip/url' | 'screenshot/zip/upload';
   fields: Record<string, string>;
   timeoutMs: number;
+  source?: string;
+}
+
+function screenshotForm(request: ScreenshotRequest): FormData {
+  const upload = request.path === 'screenshot/zip/upload';
+  const allowedFields = new Set([
+    'entry',
+    'width',
+    'height',
+    'initData',
+    ...(upload ? [] : ['url', 'globalProps']),
+  ]);
+  const form = new FormData();
+  let bytes = 0;
+  for (const [name, value] of Object.entries(request.fields)) {
+    if (!allowedFields.has(name) || typeof value !== 'string') {
+      throw new Error('Invalid screenshot parameter.');
+    }
+    bytes += strToU8(value).byteLength;
+    form.set(name, value);
+  }
+  if (upload) {
+    if (
+      request.fields.entry !== 'index.lynxml'
+      || typeof request.source !== 'string'
+      || request.source.trim().length === 0
+    ) {
+      throw new Error(
+        'XML screenshot task requires source and entry=index.lynxml.',
+      );
+    }
+    if (request.source.length > MAX_CAPTURE_FORM_BYTES) {
+      throw new Error('Screenshot request exceeds the 10 MiB form limit.');
+    }
+    const source = strToU8(request.source);
+    if (bytes + source.byteLength > MAX_CAPTURE_FORM_BYTES) {
+      throw new Error('Screenshot request exceeds the 10 MiB form limit.');
+    }
+    // Store XML without compression to stay below UI Judge's archive ratio
+    // limit even for very repetitive generated source.
+    const archive = zipSync({ 'index.lynxml': source }, {
+      level: 0,
+      mtime: new Date(1980, 0, 1),
+    });
+    bytes += archive.byteLength;
+    form.set(
+      'file',
+      new Blob([new Uint8Array(archive)], { type: 'application/zip' }),
+      'page.zip',
+    );
+  } else if (request.fields.entry !== 'template.js' || !request.fields.url) {
+    throw new Error(
+      'Template screenshot task requires a ZIP URL and entry=template.js.',
+    );
+  }
+  if (bytes > MAX_CAPTURE_FORM_BYTES) {
+    throw new Error('Screenshot request exceeds the 10 MiB form limit.');
+  }
+  return form;
 }
 
 function message(error: unknown): string {
@@ -118,19 +180,13 @@ export function createBenchScreenshotRelay(options: {
     let contentType: string;
     try {
       if (
-        !['screenshot/template', 'screenshot/lynxml'].includes(request.path)
+        !['screenshot/zip/url', 'screenshot/zip/upload'].includes(request.path)
         || !request.fields || typeof request.fields !== 'object'
         || !Number.isFinite(request.timeoutMs) || request.timeoutMs <= 0
       ) {
         throw new Error('Invalid screenshot task.');
       }
-      const form = new FormData();
-      for (const [name, value] of Object.entries(request.fields)) {
-        if (typeof value !== 'string') {
-          throw new Error('Invalid screenshot parameter.');
-        }
-        form.set(name, value);
-      }
+      const form = screenshotForm(request);
       const signal = AbortSignal.any([
         options.signal,
         AbortSignal.timeout(Math.min(1_200_000, request.timeoutMs)),

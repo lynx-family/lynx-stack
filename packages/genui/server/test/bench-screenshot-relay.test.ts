@@ -34,9 +34,10 @@ function setup(timeoutMs = 1000) {
   };
   const job = store.createJob(request, 1);
   const capture = {
-    path: 'screenshot/lynxml' as const,
+    path: 'screenshot/zip/upload' as const,
+    source: '<lynx>https://example.com/path</lynx>',
     fields: {
-      source: '<lynx>https://example.com/path</lynx>',
+      entry: 'index.lynxml',
       width: '390',
       height: '844',
     },

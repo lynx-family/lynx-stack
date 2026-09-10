@@ -16,10 +16,9 @@ import type {
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 
-const DEFAULT_OPENUI_BUNDLE_URL = 'https://lynx-stack.dev/genui/openui.lynx.js';
+const DEFAULT_OPENUI_ZIP_URL = 'https://lynx-stack.dev/genui/openui.lynx.zip';
 const DEFAULT_UI_JUDGE_ATTEMPT_COUNT = 2;
 const DEFAULT_UI_JUDGE_RETRY_DELAY_MS = 5_000;
-const SCREENSHOT_SETTLE_MS = 1_000;
 const UNSAFE_OPENUI_RESOURCE_URL =
   /(?:^|[\s("'=])(?:data|file|https?):(?:\/\/)?/iu;
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
@@ -145,14 +144,14 @@ export async function resolveGenuiBenchUiJudge(
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
-  const bundleUrl = protocol === 'a2ui'
-    ? env.UI_JUDGE_A2UI_BUNDLE_URL?.trim()
-      ?? env.UI_JUDGE_BUNDLE_URL?.trim()
-    : env.UI_JUDGE_OPENUI_BUNDLE_URL?.trim()
-      ?? DEFAULT_OPENUI_BUNDLE_URL;
+  const zipUrl = protocol === 'a2ui'
+    ? env.UI_JUDGE_A2UI_ZIP_URL?.trim()
+      ?? env.UI_JUDGE_ZIP_URL?.trim()
+    : env.UI_JUDGE_OPENUI_ZIP_URL?.trim()
+      ?? DEFAULT_OPENUI_ZIP_URL;
   return await resolveBenchUiJudge({
     ...(protocol === 'lynx-xml' ? { sourceKind: 'lynx-xml' as const } : {}),
-    ...(bundleUrl ? { bundleUrl } : {}),
+    ...(zipUrl ? { zipUrl } : {}),
     env,
   });
 }
@@ -172,7 +171,6 @@ export async function runGenuiBenchUiJudge(
             includeScreenshot: true,
             messages,
             scenario: options.scenario,
-            screenshotSettleMs: SCREENSHOT_SETTLE_MS,
             session: options.session,
             ...(options.signal ? { signal: options.signal } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
@@ -217,7 +215,6 @@ export async function runGenuiBenchUiJudge(
           },
           includeScreenshot: true,
           scenario: options.scenario,
-          screenshotSettleMs: SCREENSHOT_SETTLE_MS,
           session: options.session,
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),

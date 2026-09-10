@@ -5,6 +5,7 @@
 /* eslint-disable n/no-unsupported-features/node-builtins -- Browser screenshot transport uses Web APIs. */
 
 import { expect, rstest, test } from '@rstest/core';
+import { strFromU8, unzipSync } from 'fflate';
 
 import {
   checkBenchScreenshotService,
@@ -35,20 +36,27 @@ test.each(['a2ui', 'openui', 'lynx-xml'])(
   'captures %s in the browser and uploads BMP, deduplicating SSE replay',
   async (protocol) => {
     const path = protocol === 'lynx-xml'
-      ? 'screenshot/lynxml'
-      : 'screenshot/template';
+      ? 'screenshot/zip/upload'
+      : 'screenshot/zip/url';
     const fields = {
       entry: protocol === 'lynx-xml' ? 'index.lynxml' : 'template.js',
       width: '390',
       height: '844',
       ...(protocol === 'lynx-xml'
-        ? { source: '<lynx/>' }
-        : { url: `https://assets.test/${protocol}.js`, globalProps: '{}' }),
+        ? {}
+        : { url: `https://assets.test/${protocol}.zip`, globalProps: '{}' }),
     };
     const bytes = new Uint8Array([66, 77, 1, 2]);
     const onError = rstest.fn();
     const fetchImpl = rstest.fn<typeof fetch>()
-      .mockResolvedValueOnce(Response.json({ path, fields, timeoutMs: 1000 }))
+      .mockResolvedValueOnce(
+        Response.json({
+          path,
+          fields,
+          ...(protocol === 'lynx-xml' ? { source: '<lynx>杭州</lynx>' } : {}),
+          timeoutMs: 1000,
+        }),
+      )
       .mockResolvedValueOnce(
         new Response(bytes, { headers: { 'Content-Type': 'image/bmp' } }),
       )
@@ -68,9 +76,21 @@ test.each(['a2ui', 'openui', 'lynx-xml'])(
     );
     const init = fetchImpl.mock.calls[1]?.[1];
     expect(init?.body).toBeInstanceOf(FormData);
-    expect(Object.fromEntries((init?.body as FormData).entries())).toEqual(
-      fields,
-    );
+    const form = init?.body as FormData;
+    expect(new Headers(init?.headers).get('Content-Type')).toBeNull();
+    if (protocol === 'lynx-xml') {
+      const file = form.get('file') as File;
+      expect(file.type).toBe('application/zip');
+      const archive = unzipSync(new Uint8Array(await file.arrayBuffer()));
+      expect(Object.keys(archive)).toEqual(['index.lynxml']);
+      expect(strFromU8(archive['index.lynxml']!)).toBe('<lynx>杭州</lynx>');
+      expect(form.get('source')).toBeNull();
+      expect(form.get('globalProps')).toBeNull();
+      form.delete('file');
+    } else {
+      expect(form.get('file')).toBeNull();
+    }
+    expect(Object.fromEntries(form.entries())).toEqual(fields);
     expect(init).toMatchObject({ credentials: 'omit', redirect: 'error' });
     const upload = fetchImpl.mock.calls[2];
     expect(upload?.[0]).toBe(`${jobUrl}/screenshots/${captureId}`);
@@ -84,7 +104,12 @@ test.each(['a2ui', 'openui', 'lynx-xml'])(
 test('uploads capture failures so the server can finish the failed run', async () => {
   const fetchImpl = rstest.fn<typeof fetch>()
     .mockResolvedValueOnce(
-      Response.json({ path: 'screenshot/lynxml', fields: {}, timeoutMs: 1000 }),
+      Response.json({
+        path: 'screenshot/zip/upload',
+        source: '<lynx/>',
+        fields: { entry: 'index.lynxml' },
+        timeoutMs: 1000,
+      }),
     )
     .mockRejectedValueOnce(new TypeError('Failed to fetch'))
     .mockResolvedValueOnce(Response.json({ ok: true }));
@@ -106,7 +131,12 @@ test('retries upload without recapturing and ignores work after cancellation', a
   const controller = new AbortController();
   const fetchImpl = rstest.fn<typeof fetch>()
     .mockResolvedValueOnce(
-      Response.json({ path: 'screenshot/lynxml', fields: {}, timeoutMs: 1000 }),
+      Response.json({
+        path: 'screenshot/zip/upload',
+        source: '<lynx/>',
+        fields: { entry: 'index.lynxml' },
+        timeoutMs: 1000,
+      }),
     )
     .mockResolvedValueOnce(
       new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
@@ -129,3 +159,50 @@ test('retries upload without recapturing and ignores work after cancellation', a
   relay('22345678-1234-1234-1234-123456789abc');
   expect(fetchImpl).toHaveBeenCalledTimes(4);
 });
+
+test.each([
+  {
+    fields: { entry: 'index.lynxml', screenshotSettleMs: '1000' },
+    source: '<lynx/>',
+    error: 'Invalid screenshot parameter',
+  },
+  {
+    fields: { entry: '../index.lynxml' },
+    source: '<lynx/>',
+    error: 'entry=index.lynxml',
+  },
+  {
+    fields: { entry: 'index.lynxml' },
+    source: '界'.repeat(3_500_000),
+    error: '10 MiB',
+  },
+])(
+  'reports invalid XML ZIP input without requesting capture: $error',
+  async (input) => {
+    const fetchImpl = rstest.fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({
+          path: 'screenshot/zip/upload',
+          ...input,
+          timeoutMs: 1000,
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const relay = createBenchScreenshotRelay({
+      jobUrl,
+      serverUrl,
+      signal: new AbortController().signal,
+      onError: rstest.fn(),
+      fetch: fetchImpl,
+    });
+    relay(captureId);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(2);
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
+      `${jobUrl}/screenshots/${captureId}`,
+    );
+    const failure = JSON.parse(
+      fetchImpl.mock.calls[1]?.[1]?.body as string,
+    ) as { error: string };
+    expect(failure.error).toContain(input.error);
+  },
+);

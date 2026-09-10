@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "rsbuild build",
-    "build:lynx": "rspeedy build && pnpm run build:lynx:lazy",
+    "build:lynx": "rspeedy build && pnpm run build:lynx:lazy && node scripts/build-bench-zips.mjs",
     "build:lynx:lazy": "rspeedy build -c lynx-lazy.config.ts",
     "dev": "pnpm run build:lynx && rsbuild dev",
     "dev:lynx": "pnpm run build:lynx:lazy && rspeedy dev",
@@ -25,6 +25,7 @@
     "@openuidev/lang-core": "^0.2.11",
     "@radix-ui/react-select": "^2.3.7",
     "@uiw/react-codemirror": "^4.25.11",
+    "fflate": "0.8.2",
     "html-to-image": "1.11.13",
     "idb": "^8.0.3",
     "lucide-react": "^1.38.0",

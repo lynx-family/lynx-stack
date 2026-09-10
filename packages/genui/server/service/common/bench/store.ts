@@ -27,7 +27,7 @@ import type { BenchScreenshotRequest } from '../../a2ui/a2ui-bench-judge.js';
 const MAX_EVENT_HISTORY = 500;
 const MAX_RETAINED_JOBS = 20;
 
-export const MAX_ACTIVE_BENCH_JOBS = 2;
+export const MAX_ACTIVE_BENCH_JOBS = 8;
 
 type BenchEventListener = (event: BenchJobEvent) => void;
 
