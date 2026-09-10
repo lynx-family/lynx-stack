@@ -1,9 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { AppEvents } from '../../core/app-events.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { markTiming, setPipeline } from '../../core/performance.js';
+import { sendToBackground } from '../../core/send-to-background.js';
 import { __root, setRoot } from '../../root.js';
+import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import {
   firstScreenEventIdSwap,
@@ -124,6 +127,11 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   }
 
   applyUpdatePageData(data, options);
+  // Same condition `applyUpdatePageData` uses, so the background thread is
+  // told exactly when the data actually changed.
+  if (typeof data === 'object' && data !== null && !isEmptyObject(data)) {
+    sendToBackground(AppEvents.cardData, [data, options]);
+  }
 
   const flushOptions = options ?? {};
   if (!isFirstScreenSynced) {
@@ -166,7 +174,8 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   __FlushElementTree(__page, flushOptions);
 }
 
-function updateGlobalProps(_data: any, options?: UpdatePageOption): void {
+function updateGlobalProps(data: any, options?: UpdatePageOption): void {
+  sendToBackground(AppEvents.globalProps, [data]);
   if (options) {
     __FlushElementTree(__page, options);
   } else {

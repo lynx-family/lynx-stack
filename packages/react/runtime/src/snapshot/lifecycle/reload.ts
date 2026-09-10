@@ -11,7 +11,9 @@ import { render } from 'preact';
 
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
+import { AppEvents } from '../../core/app-events.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { sendToBackground } from '../../core/send-to-background.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
@@ -31,6 +33,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   }
 
   increaseReloadVersion();
+  sendToBackground(AppEvents.appReload, [data]);
 
   if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
     Object.assign(lynx.__initData, data);

@@ -291,7 +291,7 @@ describe('reload', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynx.getApp().onAppReload({ text: 'Enjoy' });
+      // the main thread already forwarded __OnAppReload
       expect(lynx.getNativeApp().callLepusMethod).not.toBeCalled();
     }
 
@@ -709,7 +709,7 @@ describe('reload', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynx.getApp().onAppReload({ text: 'Enjoy' });
+      // the main thread already forwarded __OnAppReload
       expect(lynx.getNativeApp().callLepusMethod).not.toBeCalled();
     }
 
@@ -1316,7 +1316,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__snapshot_a94a8_test_3",2,0,"__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,null,4,4,4,["Hello 2"],1,3,4,null,0,0,null,5,4,5,["World"],1,3,5,null,1,0,"__snapshot_a94a8_test_1",6,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,2,1,2,3,null,0,1,-11,2,null,0],"id":21}]}",
+          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__snapshot_a94a8_test_3",2,0,"__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,null,4,4,4,["Hello 2"],1,3,4,null,0,0,null,5,4,5,["World"],1,3,5,null,1,0,"__snapshot_a94a8_test_1",6,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,2,1,2,3,null,0,1,-11,2,null,0],"id":23}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -1326,7 +1326,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
               "pipelineOrigin": "reactLynxHydrate",
               "stage": "hydrate",
             },
-            "reloadVersion": 5,
+            "reloadVersion": 6,
           },
         }
       `);
@@ -1519,7 +1519,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[],"id":23}]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":25}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -1529,7 +1529,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
               "pipelineOrigin": "reactLynxHydrate",
               "stage": "hydrate",
             },
-            "reloadVersion": 5,
+            "reloadVersion": 6,
           },
         }
       `);
@@ -1683,7 +1683,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[],"id":25}]}",
+          "data": "{"patchList":[{"snapshotPatch":[],"id":27}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -1693,7 +1693,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
               "pipelineOrigin": "reactLynxHydrate",
               "stage": "hydrate",
             },
-            "reloadVersion": 5,
+            "reloadVersion": 6,
           },
         }
       `);
@@ -1876,7 +1876,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__snapshot_a94a8_test_3",2,0,"__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,null,4,4,4,["Hello 2"],1,3,4,null,0,0,null,5,4,5,["World"],1,3,5,null,1,0,"__snapshot_a94a8_test_1",6,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,2,1,2,3,null,0,1,-11,2,null,0],"id":27}]}",
+          "data": "{"patchList":[{"snapshotPatch":[2,-11,-12,0,"__snapshot_a94a8_test_3",2,0,"__snapshot_a94a8_test_2",3,4,3,[{"dataX":"WorldX"}],0,null,4,4,4,["Hello 2"],1,3,4,null,0,0,null,5,4,5,["World"],1,3,5,null,1,0,"__snapshot_a94a8_test_1",6,4,6,[{"attr":{"dataX":"WorldX"}}],1,3,6,null,2,1,2,3,null,0,1,-11,2,null,0],"id":33}]}",
           "patchOptions": {
             "isHydration": true,
             "pipelineOptions": {
@@ -1886,7 +1886,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
               "pipelineOrigin": "reactLynxHydrate",
               "stage": "hydrate",
             },
-            "reloadVersion": 7,
+            "reloadVersion": 10,
           },
         }
       `);
