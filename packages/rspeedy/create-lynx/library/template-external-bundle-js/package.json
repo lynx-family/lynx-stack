@@ -1,4 +1,7 @@
 {
+  "files": [
+    "dist-external-bundle"
+  ],
   "scripts": {
     "build:external-bundle": "rslib build --config rslib.external-bundle.config.js"
   },
