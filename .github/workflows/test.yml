@@ -321,8 +321,18 @@ jobs:
             rslib-*) ;;
             *) run_script "$bin" build --mode development ;;
           esac
-          run_script "$bin" lint
+          case ",$tools," in *,eslint,*|*,rslint,*) run_script "$bin" lint ;; esac
           run_script "$bin" test
+          # A new project must pass the formatters it ships with.
+          case ",$tools," in *,prettier,*) npx prettier --check . ;; esac
+          case ",$tools," in *,biome,*) npx biome check . ;; esac
+          case "$template" in rslib-*-ts) npx tsc -p tests ;; esac
+          case ",$tools," in
+            *,external-bundle,*)
+              run_script "$bin" build:external-bundle
+              npm pack --dry-run --json | jq -e '.[0].files | map(.path) | any(startswith("dist-external-bundle/"))'
+              ;;
+          esac
         }
 
         # Every template. The tests go through `@lynx-js/react/testing-library`,
@@ -334,7 +344,12 @@ jobs:
 
         # A library can also be packed into a Lynx External Bundle.
         smoke_test pnpm rslib-react-ts eslint,external-bundle create-lynx-rslib-external-bundle --skill lynx-devtool
-        run_script pnpm build:external-bundle
+
+        # The loop above only picks ESLint. Each formatter and Rslint must
+        # also leave a new project clean, alone and combined.
+        smoke_test pnpm rsbuild-react-ts rslint,biome create-lynx-rslint-biome --skill lynx-devtool
+        smoke_test pnpm rspeedy-react-js prettier create-lynx-prettier --skill lynx-devtool
+        smoke_test pnpm rslib-react-js biome,prettier create-lynx-biome-prettier --skill lynx-devtool
 
         # The loop above stays on pnpm. Each package manager lays `node_modules`
         # out differently, so they do not agree on which undeclared transitive
