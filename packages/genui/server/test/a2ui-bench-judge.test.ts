@@ -16,6 +16,7 @@ import {
   runBenchUiJudge,
   runBenchUiJudgeRequest,
 } from '../service/a2ui/a2ui-bench-judge.js';
+import { BenchTaskPool } from '../service/common/bench/concurrency.js';
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
@@ -123,6 +124,49 @@ function geqiResponse(score: number): {
     score,
   };
 }
+
+test('excludes capture and scoring queue waits from the execution timeout', async () => {
+  const scheduling = {
+    capture: new BenchTaskPool(1),
+    evaluation: new BenchTaskPool(1),
+  };
+  const releaseCapture = await scheduling.capture.acquire();
+  const releaseEvaluation = await scheduling.evaluation.acquire();
+  let now = 0;
+  const clock = rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const timeout = rstest.spyOn(AbortSignal, 'timeout');
+  const capture = rstest.fn(() =>
+    Promise.resolve(evaluationResponse(geqiResponse(4)))
+  );
+  const running = runBenchUiJudgeRequest({
+    globalProps: {},
+    scenario: { prompt: 'Build a card' },
+    session: {
+      screenshotPath: 'screenshot/zip/url',
+      zipUrl: 'https://assets.test/app.zip',
+    },
+    timeoutMs: 1_000,
+    scheduling,
+  }, capture);
+  try {
+    expect(capture).not.toHaveBeenCalled();
+    expect(timeout).not.toHaveBeenCalled();
+    now = 10_000;
+    releaseCapture();
+    // Waiting for the same slot also waits for capture decoding to finish.
+    await scheduling.capture.run(() => Promise.resolve());
+    now = 20_000;
+    releaseEvaluation();
+    const result = await running;
+    expect(result.status).toBe('complete');
+    expect(timeout.mock.calls).toEqual([[2_000], [2_000]]);
+  } finally {
+    releaseCapture();
+    releaseEvaluation();
+    clock.mockRestore();
+    timeout.mockRestore();
+  }
+});
 
 describe('resolveBenchUiJudge', () => {
   test('resolves capture inputs without using a screenshot service URL', async () => {

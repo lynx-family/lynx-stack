@@ -178,13 +178,14 @@ describe('OpenUI Bench adapter', () => {
       api: 'responses',
       baseURL: 'https://provider.test/v1',
       disableAgentCache: true,
+      maxRetries: 0,
       enableWebSearch: false,
       enableImageGeneration: false,
-      inheritReasoningEffort: false,
       model: 'test-model',
       promptRoot: 'Column',
       promptOptions: OPENUI_BENCH_PROMPT_OPTIONS,
     });
+    expect(receivedOptions?.inheritReasoningEffort).not.toBe(false);
     expect(receivedOptions?.systemAppendix).toContain(
       'Matched-core benchmark',
     );
@@ -307,7 +308,11 @@ describe('OpenUI Bench adapter', () => {
         receivedMessages.push(messages.map((message) => message.content));
         callCount += 1;
         if (callCount === 1) {
-          return Promise.reject(new Error('provider temporarily unavailable'));
+          return Promise.reject(
+            Object.assign(new Error('provider temporarily unavailable'), {
+              statusCode: 503,
+            }),
+          );
         }
         return Promise.resolve({
           text: VALID_OPENUI,
@@ -327,7 +332,7 @@ describe('OpenUI Bench adapter', () => {
     await backoffStarted;
 
     expect(callCount).toBe(1);
-    expect(sleepCalls).toEqual([10_000]);
+    expect(sleepCalls).toEqual([1_000]);
     releaseBackoff?.();
     const result = await generation;
     expect(callCount).toBe(2);
@@ -357,7 +362,11 @@ describe('OpenUI Bench adapter', () => {
     const adapter = createOpenUIBenchAdapter({
       generateRaw: () => {
         callCount += 1;
-        return Promise.reject(new Error('provider temporarily unavailable'));
+        return Promise.reject(
+          Object.assign(new Error('provider temporarily unavailable'), {
+            statusCode: 503,
+          }),
+        );
       },
       now: sequenceNow([0, 5]),
       sleep() {
@@ -387,7 +396,9 @@ describe('OpenUI Bench adapter', () => {
         receivedMessages.push(messages.map((message) => message.content));
         callCount += 1;
         return Promise.reject(
-          new Error('request failed for api-key-must-not-leak'),
+          Object.assign(new Error('request failed for api-key-must-not-leak'), {
+            statusCode: 503,
+          }),
         );
       },
       now: sequenceNow([2, 7, 7, 12]),

@@ -2,13 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test } from '@rstest/core';
+import { afterEach, describe, expect, rstest, test } from '@rstest/core';
 
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import {
   ProviderAgentCache,
   buildOpenAIRunOptions,
   createStableValueHash,
+  resolveReasoningEffort,
 } from '../service/common/provider.js';
+
+afterEach(() => {
+  rstest.unstubAllEnvs();
+});
 
 describe('ProviderAgentCache', () => {
   test('reuses an in-flight creation for identical requests', async () => {
@@ -100,6 +106,59 @@ describe('createStableValueHash', () => {
 });
 
 describe('buildOpenAIRunOptions', () => {
+  test('keeps SDK retry overrides scoped to the invocation', () => {
+    expect(buildOpenAIRunOptions({ maxRetries: 0 }).modelSettings).toEqual({
+      maxRetries: 0,
+    });
+    expect(buildOpenAIRunOptions({})).not.toHaveProperty('modelSettings');
+  });
+  test('resolves effort per selected model while preserving explicit overrides', () => {
+    rstest.stubEnv(
+      GENUI_MODEL_CONFIG_ENV,
+      JSON.stringify({
+        Fast: {
+          apiKey: 'test-secret',
+          baseURL: 'https://api.openai.com/v1',
+          model: 'gpt-5',
+          reasoningEffort: 'low',
+        },
+        Default: {
+          apiKey: 'test-secret',
+          baseURL: 'https://api.openai.com/v1',
+          model: 'gpt-5',
+        },
+      }),
+    );
+    expect(resolveReasoningEffort({})).toBe('low');
+    expect(resolveReasoningEffort({ model: 'Default' })).toBeUndefined();
+    expect(resolveReasoningEffort({ reasoningEffort: 'none' })).toBe('none');
+    expect(resolveReasoningEffort({ inheritReasoningEffort: false }))
+      .toBeUndefined();
+    expect(resolveReasoningEffort({
+      inheritReasoningEffort: false,
+      reasoningEffort: 'high',
+    })).toBe('high');
+    expect(buildOpenAIRunOptions({ model: 'Fast' }).providerOptions).toEqual({
+      openai: { reasoningEffort: 'low' },
+    });
+    expect(buildOpenAIRunOptions({ model: 'Default' }))
+      .not.toHaveProperty('providerOptions');
+    const custom = {
+      model: 'Fast',
+      apiKey: 'custom-secret',
+      baseURL: 'https://custom.example.com/v1',
+    };
+    expect(resolveReasoningEffort(custom)).toBeUndefined();
+    expect(resolveReasoningEffort({ ...custom, reasoningEffort: 'low' })).toBe(
+      'low',
+    );
+  });
+
+  test('omits reasoning options without configuration', () => {
+    rstest.stubEnv(GENUI_MODEL_CONFIG_ENV, undefined);
+    expect(buildOpenAIRunOptions({})).not.toHaveProperty('providerOptions');
+  });
+
   test('passes the request abort signal to model runs', () => {
     const controller = new AbortController();
 

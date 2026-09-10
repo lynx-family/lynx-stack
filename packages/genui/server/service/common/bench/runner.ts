@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { BenchTaskPool } from './concurrency.js';
+import type { BenchJudgeScheduling } from './concurrency.js';
 import { resolveGenuiBenchUiJudge, runGenuiBenchUiJudge } from './judge.js';
+import type { GenuiBenchJudgeArtifact } from './judge.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchJudgePayload,
@@ -55,6 +58,11 @@ interface BenchRunItem {
 
 interface BenchRunSample {
   items: BenchRunItem[];
+}
+
+interface GeneratedBenchRun {
+  result: BenchRunResult;
+  judgeArtifact?: GenuiBenchJudgeArtifact;
 }
 
 export interface BenchRunnerDependencies {
@@ -217,7 +225,6 @@ async function generateA2UINative(
         disableAgentCache: true,
         enableWebSearch: false,
         enableImageGeneration: false,
-        inheritReasoningEffort: false,
       },
       undefined,
       signal,
@@ -268,9 +275,8 @@ async function runA2UINativeOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
-  judgeCapability: BenchUiJudgeCapability,
   signal: AbortSignal,
-): Promise<BenchRunResult> {
+): Promise<GeneratedBenchRun> {
   const store = getBenchJobStore();
   const runId = `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`;
   const model = pickRunModel(request, item.group);
@@ -304,37 +310,6 @@ async function runA2UINativeOne(
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
     const outputChars = result.text.length;
-    const judgeSession = judgeCapability.session;
-    const judge: BenchUiJudgeResult | {
-      errors: [];
-      score: 0;
-      status: 'skipped';
-      warnings: [];
-    } = result.ok
-        && request.settings.judgeEnabled
-        && judgeSession
-        && !signal.aborted
-      ? await (async () => {
-        emitRunPhase(jobId, item, 'judge');
-        return await runGenuiBenchUiJudge(
-          {
-            model,
-            artifact: {
-              protocol: 'a2ui',
-              messages: result.messages ?? [],
-            },
-            scenario: item.scenario,
-            session: judgeSession,
-            signal,
-            timeoutMs: request.settings.timeoutMs,
-          },
-          (capture, captureSignal) =>
-            store.requestScreenshot(jobId, capture, captureSignal),
-        );
-      })()
-      : { errors: [], score: 0, status: 'skipped', warnings: [] };
-    const runErrors = [...result.errors, ...judge.errors];
-    const runOk = result.ok && judge.status !== 'failed';
     /*
     const preview = result.ok
       ? await runBenchPreviewForItem(jobId, request, item, result.messages)
@@ -346,100 +321,92 @@ async function runA2UINativeOne(
         ttiMs: 0,
       };
     */
-    return sanitizeBenchPublicValue({
-      id: runId,
-      groupId: item.group.id,
-      groupName: item.group.name,
-      role: item.group.role,
-      protocol: 'a2ui',
-      profile: 'native',
-      scenarioId: item.scenario.id,
-      scenarioName: item.scenario.name,
-      repeatIndex: item.repeatIndex,
-      status: runOk ? 'complete' : 'failed',
-      ok: runOk,
-      model: model ?? defaultModelName() ?? 'server default',
-      catalog: catalogLabel,
-      tokens: result.usage.reduce<number>(
-        (total, usage) => total + benchAttemptTokenCounts(usage).totalTokens,
-        0,
-      ),
-      agentMs: Math.round(agentMs),
-      // fmpMs: preview.fmpMs,
-      fmpMs: 0,
-      // ttiMs: preview.ttiMs,
-      ttiMs: 0,
-      // renderMs: preview.renderMs,
-      renderMs: 0,
-      attempts: result.attempts,
-      ...(judge.status === 'complete' && 'dimensions' in judge
-          && judge.dimensions
-        ? { judgeDimensions: judge.dimensions }
+    return {
+      ...(result.ok
+        ? {
+          judgeArtifact: {
+            protocol: 'a2ui' as const,
+            messages: result.messages,
+          },
+        }
         : {}),
-      ...(judge.status === 'complete' && 'geqiScore' in judge
-          && judge.geqiScore !== undefined
-        ? { judgeGeqiScore: judge.geqiScore }
-        : {}),
-      judgeScore: judge.status === 'complete' ? judge.score : 0,
-      judgeStatus: judge.status,
-      ...(judge.status === 'complete' && 'reason' in judge && judge.reason
-        ? { judgeReason: judge.reason }
-        : {}),
-      ...(judge.status === 'complete' && 'summary' in judge && judge.summary
-        ? { judgeSummary: judge.summary }
-        : {}),
-      ...([...result.warnings, ...judge.warnings].length > 0
-        ? { judgeWarnings: [...result.warnings, ...judge.warnings] }
-        : {}),
-      messageCount: result.messages.length,
-      outputChars,
-      errors: runErrors,
-      ...(runOk
-        ? {}
-        : {
-          error: runErrors.join('; ')
-            || (judge.status === 'failed'
-              ? 'UI Judge failed'
-              : 'A2UI output failed validation'),
-        }),
-      finishReason: result.finishReason,
-      usage: result.usage,
-      messages: result.messages,
-      ...('screenshotDataUrl' in judge && judge.screenshotDataUrl
-        ? { screenshotDataUrl: judge.screenshotDataUrl }
-        : {}),
-      text: result.text,
-    }, request.provider) as BenchRunResult;
+      result: sanitizeBenchPublicValue({
+        id: runId,
+        groupId: item.group.id,
+        groupName: item.group.name,
+        role: item.group.role,
+        protocol: 'a2ui',
+        profile: 'native',
+        scenarioId: item.scenario.id,
+        scenarioName: item.scenario.name,
+        repeatIndex: item.repeatIndex,
+        status: result.ok ? 'complete' : 'failed',
+        ok: result.ok,
+        model: model ?? defaultModelName() ?? 'server default',
+        catalog: catalogLabel,
+        tokens: result.usage.reduce<number>(
+          (total, usage) => total + benchAttemptTokenCounts(usage).totalTokens,
+          0,
+        ),
+        agentMs: Math.round(agentMs),
+        // fmpMs: preview.fmpMs,
+        fmpMs: 0,
+        // ttiMs: preview.ttiMs,
+        ttiMs: 0,
+        // renderMs: preview.renderMs,
+        renderMs: 0,
+        attempts: result.attempts,
+        judgeScore: 0,
+        judgeStatus: 'skipped',
+        ...(result.warnings.length > 0
+          ? { judgeWarnings: result.warnings }
+          : {}),
+        messageCount: result.messages.length,
+        outputChars,
+        errors: result.errors,
+        ...(result.ok
+          ? {}
+          : {
+            error: result.errors.join('; ') || 'A2UI output failed validation',
+          }),
+        finishReason: result.finishReason,
+        usage: result.usage,
+        messages: result.messages,
+        text: result.text,
+      }, request.provider) as BenchRunResult,
+    };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
-    return sanitizeBenchPublicValue({
-      id: runId,
-      groupId: item.group.id,
-      groupName: item.group.name,
-      role: item.group.role,
-      protocol: 'a2ui',
-      profile: 'native',
-      scenarioId: item.scenario.id,
-      scenarioName: item.scenario.name,
-      repeatIndex: item.repeatIndex,
-      status: 'failed',
-      ok: false,
-      model: model ?? defaultModelName() ?? 'server default',
-      catalog: catalogLabel,
-      tokens: 0,
-      agentMs: Math.round(agentMs),
-      fmpMs: 0,
-      ttiMs: 0,
-      renderMs: 0,
-      attempts: 0,
-      judgeScore: 0,
-      judgeStatus: 'skipped',
-      messageCount: 0,
-      outputChars: 0,
-      errors: [message],
-      error: message,
-    }, request.provider) as BenchRunResult;
+    return {
+      result: sanitizeBenchPublicValue({
+        id: runId,
+        groupId: item.group.id,
+        groupName: item.group.name,
+        role: item.group.role,
+        protocol: 'a2ui',
+        profile: 'native',
+        scenarioId: item.scenario.id,
+        scenarioName: item.scenario.name,
+        repeatIndex: item.repeatIndex,
+        status: 'failed',
+        ok: false,
+        model: model ?? defaultModelName() ?? 'server default',
+        catalog: catalogLabel,
+        tokens: 0,
+        agentMs: Math.round(agentMs),
+        fmpMs: 0,
+        ttiMs: 0,
+        renderMs: 0,
+        attempts: 0,
+        judgeScore: 0,
+        judgeStatus: 'skipped',
+        messageCount: 0,
+        outputChars: 0,
+        errors: [message],
+        error: message,
+      }, request.provider) as BenchRunResult,
+    };
   }
 }
 
@@ -469,10 +436,9 @@ async function runProtocolAdapterOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
-  judgeCapability: BenchUiJudgeCapability,
   adapter: ProtocolBenchAdapter | undefined,
   signal: AbortSignal,
-): Promise<BenchRunResult> {
+): Promise<GeneratedBenchRun> {
   const store = getBenchJobStore();
   const runId = `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`;
   const protocol = protocolForGroup(item.group);
@@ -519,48 +485,12 @@ async function runProtocolAdapterOne(
       },
     }, signal);
     emitRunPhase(jobId, item, 'validate');
+    const agentMs = performance.now() - startedAt;
 
     const judgePayload: ProtocolBenchJudgePayload | undefined =
       artifact.finalValid
         ? artifact.judgePayload
         : undefined;
-    const judge: BenchUiJudgeResult | {
-      errors: [];
-      score: 0;
-      status: 'skipped';
-      warnings: [];
-    } = request.settings.judgeEnabled
-        && judgeCapability.session
-        && judgePayload
-        && !signal.aborted
-      ? await (async () => {
-        emitRunPhase(jobId, item, 'judge');
-        return await runGenuiBenchUiJudge(
-          {
-            model,
-            artifact: judgePayload.kind === 'a2ui-messages'
-              ? {
-                protocol: 'a2ui',
-                messages: judgePayload.messages as NonNullable<
-                  BenchRunResult['messages']
-                >,
-              }
-              : {
-                protocol: judgePayload.kind === 'lynx-xml-source'
-                  ? 'lynx-xml'
-                  : 'openui',
-                rawText: judgePayload.rawText,
-              },
-            scenario: item.scenario,
-            session: judgeCapability.session!,
-            signal,
-            timeoutMs: request.settings.timeoutMs,
-          },
-          (capture, captureSignal) =>
-            store.requestScreenshot(jobId, capture, captureSignal),
-        );
-      })()
-      : { errors: [], score: 0, status: 'skipped', warnings: [] };
     const attempts = artifact.attempts;
     const tokens = attempts.reduce(
       (total, attempt) => total + attempt.totalTokens,
@@ -569,13 +499,7 @@ async function runProtocolAdapterOne(
     const messages = judgePayload?.kind === 'a2ui-messages'
       ? judgePayload.messages as NonNullable<BenchRunResult['messages']>
       : undefined;
-    const judgeWarnings = [
-      ...(artifact.warnings ?? []),
-      ...judge.warnings,
-    ];
-    const agentMs = performance.now() - startedAt;
-    const runErrors = [...artifact.finalErrors, ...judge.errors];
-    const runOk = artifact.finalValid && judge.status !== 'failed';
+    const judgeWarnings = artifact.warnings ?? [];
     const result: BenchRunResult = {
       id: runId,
       groupId: item.group.id,
@@ -586,8 +510,8 @@ async function runProtocolAdapterOne(
       scenarioId: item.scenario.id,
       scenarioName: item.scenario.name,
       repeatIndex: item.repeatIndex,
-      status: runOk ? 'complete' : 'failed',
-      ok: runOk,
+      status: artifact.finalValid ? 'complete' : 'failed',
+      ok: artifact.finalValid,
       model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens,
@@ -596,35 +520,19 @@ async function runProtocolAdapterOne(
       ttiMs: 0,
       renderMs: 0,
       attempts: attempts.length,
-      ...(judge.status === 'complete' && 'dimensions' in judge
-          && judge.dimensions
-        ? { judgeDimensions: judge.dimensions }
-        : {}),
-      ...(judge.status === 'complete' && 'geqiScore' in judge
-          && judge.geqiScore !== undefined
-        ? { judgeGeqiScore: judge.geqiScore }
-        : {}),
-      judgeScore: judge.status === 'complete' ? judge.score : 0,
-      judgeStatus: judge.status,
-      ...(judge.status === 'complete' && 'reason' in judge && judge.reason
-        ? { judgeReason: judge.reason }
-        : {}),
-      ...(judge.status === 'complete' && 'summary' in judge && judge.summary
-        ? { judgeSummary: judge.summary }
-        : {}),
+      judgeScore: 0,
+      judgeStatus: 'skipped',
       ...(judgeWarnings.length > 0 ? { judgeWarnings } : {}),
       messageCount: messages?.length ?? 0,
       outputChars: artifact.finalText?.length
         ?? attempts[attempts.length - 1]?.outputChars
         ?? 0,
-      errors: runErrors,
-      ...(runOk
+      errors: artifact.finalErrors,
+      ...(artifact.finalValid
         ? {}
         : {
-          error: runErrors.join('; ')
-            || (judge.status === 'failed'
-              ? 'UI Judge failed'
-              : `${protocol} output failed validation`),
+          error: artifact.finalErrors.join('; ')
+            || `${protocol} output failed validation`,
         }),
       ...(attempts[attempts.length - 1]?.finishReason === undefined
         ? {}
@@ -636,61 +544,76 @@ async function runProtocolAdapterOne(
         totalTokens: tokens,
       },
       ...(messages ? { messages } : {}),
-      ...('screenshotDataUrl' in judge && judge.screenshotDataUrl
-        ? { screenshotDataUrl: judge.screenshotDataUrl }
-        : {}),
       ...(artifact.metadata
         ? { adapterMetadata: artifact.metadata }
         : {}),
       ...(artifact.finalText ? { text: artifact.finalText } : {}),
     };
-    return sanitizeBenchPublicValue(
-      result,
-      request.provider,
-    ) as BenchRunResult;
+    return {
+      result: sanitizeBenchPublicValue(
+        result,
+        request.provider,
+      ) as BenchRunResult,
+      ...(judgePayload
+        ? {
+          judgeArtifact: judgePayload.kind === 'a2ui-messages'
+            ? {
+              protocol: 'a2ui' as const,
+              messages: judgePayload.messages as NonNullable<
+                BenchRunResult['messages']
+              >,
+            }
+            : {
+              protocol: judgePayload.kind === 'lynx-xml-source'
+                ? 'lynx-xml' as const
+                : 'openui' as const,
+              rawText: judgePayload.rawText,
+            },
+        }
+        : {}),
+    };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
-    return sanitizeBenchPublicValue({
-      id: runId,
-      groupId: item.group.id,
-      groupName: item.group.name,
-      role: item.group.role,
-      protocol,
-      profile,
-      scenarioId: item.scenario.id,
-      scenarioName: item.scenario.name,
-      repeatIndex: item.repeatIndex,
-      status: 'failed',
-      ok: false,
-      model: model ?? defaultModelName() ?? 'server default',
-      catalog: catalogLabel,
-      tokens: 0,
-      agentMs: Math.round(agentMs),
-      fmpMs: 0,
-      ttiMs: 0,
-      renderMs: 0,
-      attempts: 0,
-      judgeScore: 0,
-      judgeStatus: 'skipped',
-      messageCount: 0,
-      outputChars: 0,
-      errors: [message],
-      error: message,
-    }, request.provider) as BenchRunResult;
+    return {
+      result: sanitizeBenchPublicValue({
+        id: runId,
+        groupId: item.group.id,
+        groupName: item.group.name,
+        role: item.group.role,
+        protocol,
+        profile,
+        scenarioId: item.scenario.id,
+        scenarioName: item.scenario.name,
+        repeatIndex: item.repeatIndex,
+        status: 'failed',
+        ok: false,
+        model: model ?? defaultModelName() ?? 'server default',
+        catalog: catalogLabel,
+        tokens: 0,
+        agentMs: Math.round(agentMs),
+        fmpMs: 0,
+        ttiMs: 0,
+        renderMs: 0,
+        attempts: 0,
+        judgeScore: 0,
+        judgeStatus: 'skipped',
+        messageCount: 0,
+        outputChars: 0,
+        errors: [message],
+        error: message,
+      }, request.provider) as BenchRunResult,
+    };
   }
 }
 
-async function runOne(
+async function generateOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
-  judgeCapabilities: BenchJudgeCapabilities,
   adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>>,
   signal: AbortSignal,
-): Promise<BenchRunResult> {
-  const capability = judgeCapabilities.get(judgeCapabilityKey(item.group))
-    ?? { enabled: false };
+): Promise<GeneratedBenchRun> {
   if (
     protocolForGroup(item.group) === 'a2ui'
     && profileForGroup(item.group) === 'native'
@@ -699,7 +622,6 @@ async function runOne(
       jobId,
       request,
       item,
-      capability,
       signal,
     );
   }
@@ -707,10 +629,79 @@ async function runOne(
     jobId,
     request,
     item,
-    capability,
     adapters[protocolForGroup(item.group)],
     signal,
   );
+}
+
+async function finishRun(
+  jobId: string,
+  request: BenchJobRequest,
+  item: BenchRunItem,
+  generated: GeneratedBenchRun,
+  judgeCapabilities: BenchJudgeCapabilities,
+  scheduling: BenchJudgeScheduling,
+  signal: AbortSignal,
+): Promise<BenchRunResult> {
+  const { result, judgeArtifact } = generated;
+  const session = judgeCapabilities.get(judgeCapabilityKey(item.group))
+    ?.session;
+  if (
+    !request.settings.judgeEnabled || !judgeArtifact || !session
+    || signal.aborted
+  ) {
+    return result;
+  }
+  emitRunPhase(jobId, item, 'judge');
+  let judge: BenchUiJudgeResult;
+  try {
+    judge = await runGenuiBenchUiJudge(
+      {
+        model: pickRunModel(request, item.group),
+        artifact: judgeArtifact,
+        scenario: item.scenario,
+        session,
+        signal,
+        timeoutMs: request.settings.timeoutMs,
+        scheduling,
+      },
+      (capture, captureSignal) =>
+        getBenchJobStore().requestScreenshot(jobId, capture, captureSignal),
+    );
+  } catch (error) {
+    judge = {
+      status: 'failed',
+      score: 0,
+      errors: [error instanceof Error ? error.message : String(error)],
+      warnings: [],
+    };
+  }
+  const errors = [...result.errors, ...judge.errors];
+  const warnings = [...(result.judgeWarnings ?? []), ...judge.warnings];
+  const ok = result.ok && judge.status !== 'failed';
+  return sanitizeBenchPublicValue({
+    ...result,
+    ok,
+    status: ok ? 'complete' : 'failed',
+    errors,
+    ...(ok ? {} : { error: errors.join('; ') || 'UI Judge failed' }),
+    judgeScore: judge.status === 'complete' ? judge.score : 0,
+    judgeStatus: judge.status,
+    ...(judge.status === 'complete'
+      ? {
+        ...(judge.dimensions ? { judgeDimensions: judge.dimensions } : {}),
+        ...(judge.geqiScore === undefined
+          ? {}
+          : { judgeGeqiScore: judge.geqiScore }),
+        ...(judge.reason ? { judgeReason: judge.reason } : {}),
+        ...(judge.summary ? { judgeSummary: judge.summary } : {}),
+      }
+      : {}),
+    ...(warnings.length > 0 ? { judgeWarnings: warnings } : {}),
+    ...(judge.screenshotDataUrl
+      ? { screenshotDataUrl: judge.screenshotDataUrl }
+      : {}),
+  }, request.provider) as BenchRunResult;
 }
 
 /*
@@ -1030,42 +1021,88 @@ export async function runBenchJob(
       mixedProtocols ? 1 : request.settings.parallelism,
       samples.length,
     );
+    const scheduling: BenchJudgeScheduling = {
+      capture: new BenchTaskPool(1),
+      evaluation: new BenchTaskPool(Math.max(1, workerCount)),
+    };
+    // Reserve space before generation: at most one run per generation worker
+    // and scoring worker, plus one capture, may retain artifacts at once.
+    const inFlight = new BenchTaskPool(workerCount * 2 + 1);
+    const pending = new Set<Promise<void>>();
+    const failureController = new AbortController();
+    const signal = AbortSignal.any([
+      activeJob.abortController.signal,
+      failureController.signal,
+    ]);
+    let failure: { error: unknown } | undefined;
+    const fail = (error: unknown) => {
+      if (signal.aborted) return;
+      failure = { error };
+      failureController.abort(error);
+    };
+
+    function publishResult(result: BenchRunResult): void {
+      if (signal.aborted) return;
+      const updated = store.addResult(jobId, result);
+      if (!updated) return;
+      const storedResult = updated.results[updated.results.length - 1]
+        ?? result;
+      const eventResult = { ...storedResult };
+      delete eventResult.screenshotDataUrl;
+      store.emit(jobId, storedResult.ok ? 'run-complete' : 'run-error', {
+        result: eventResult,
+        progress: updated.progress,
+      });
+    }
 
     async function worker(): Promise<void> {
-      while (!activeJob.abortController.signal.aborted) {
+      while (!signal.aborted) {
         const index = nextIndex++;
         const sample = samples[index];
         if (!sample) return;
 
         for (const item of sample.items) {
-          if (activeJob.abortController.signal.aborted) return;
-          const result = await runOne(
-            jobId,
-            request,
-            item,
-            judgeCapabilities,
-            adapters,
-            activeJob.abortController.signal,
-          );
-          if (activeJob.abortController.signal.aborted) return;
-          const updated = store.addResult(jobId, result);
-          if (!updated) return;
-          const storedResult = updated.results[updated.results.length - 1]
-            ?? result;
-          const eventResult = { ...storedResult };
-          delete eventResult.screenshotDataUrl;
-          const event = storedResult.ok ? 'run-complete' : 'run-error';
-          store.emit(jobId, event, {
-            result: eventResult,
-            progress: updated.progress,
-          });
+          if (signal.aborted) return;
+          const release = await inFlight.acquire(signal);
+          let handedOff = false;
+          try {
+            if (signal.aborted) return;
+            const generated = await generateOne(
+              jobId,
+              request,
+              item,
+              adapters,
+              signal,
+            );
+            if (signal.aborted) return;
+            const completion = finishRun(
+              jobId,
+              request,
+              item,
+              generated,
+              judgeCapabilities,
+              scheduling,
+              signal,
+            ).then(publishResult).catch(fail).finally(() => {
+              release();
+              pending.delete(completion);
+            });
+            pending.add(completion);
+            handedOff = true;
+          } finally {
+            if (!handedOff) release();
+          }
         }
       }
     }
 
     await Promise.all(
-      Array.from({ length: workerCount }, () => worker()),
+      Array.from({ length: workerCount }, () => worker().catch(fail)),
     );
+    // A terminal report releases the job slot and credentials, so all stages
+    // must settle first, including cancellation and unexpected worker failures.
+    await Promise.all(pending);
+    if (failure) throw failure.error;
 
     const latest = store.getJob(jobId);
     if (!latest) return;

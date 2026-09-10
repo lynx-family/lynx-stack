@@ -11,6 +11,10 @@ import {
   JUDGE_DIMENSIONS,
   evaluateScreenshot,
 } from '../../agent/common/ui-judge-agent.js';
+import type {
+  BenchJudgeScheduling,
+  BenchTaskPool,
+} from '../common/bench/concurrency.js';
 import {
   convertCapturedBmp,
   readBenchScreenshotDataUrl,
@@ -99,6 +103,7 @@ interface RunBenchUiJudgeOptions {
   session: BenchUiJudgeSession;
   signal?: AbortSignal;
   timeoutMs?: number;
+  scheduling?: BenchJudgeScheduling;
 }
 
 export interface RunBenchUiJudgeRequestOptions {
@@ -112,6 +117,7 @@ export interface RunBenchUiJudgeRequestOptions {
   session: BenchUiJudgeSession;
   signal?: AbortSignal;
   timeoutMs?: number;
+  scheduling?: BenchJudgeScheduling;
   warnings?: string[];
 }
 
@@ -309,6 +315,7 @@ export async function runBenchUiJudge(
       includeScreenshot: options.includeScreenshot,
       scenario: options.scenario,
       session: options.session,
+      scheduling: options.scheduling,
       ...(options.signal ? { signal: options.signal } : {}),
       ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
       warnings: sanitized.warnings,
@@ -339,10 +346,6 @@ export async function runBenchUiJudgeRequest(
       warnings,
     };
   }
-  const timeoutSignal = AbortSignal.timeout(requestTimeoutMs);
-  const requestSignal = options.signal
-    ? AbortSignal.any([options.signal, timeoutSignal])
-    : timeoutSignal;
   if (options.signal?.aborted) {
     return {
       errors: [],
@@ -350,6 +353,30 @@ export async function runBenchUiJudgeRequest(
       status: 'failed',
       warnings,
     };
+  }
+  // Keep the existing total execution budget, excluding admission waits.
+  let remainingMs = requestTimeoutMs;
+  async function runStage<T>(
+    pool: BenchTaskPool | undefined,
+    run: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
+    const execute = async () => {
+      options.signal?.throwIfAborted();
+      if (remainingMs <= 0) {
+        throw new Error('UI Judge execution timed out.');
+      }
+      const timeoutSignal = AbortSignal.timeout(Math.ceil(remainingMs));
+      const signal = options.signal
+        ? AbortSignal.any([options.signal, timeoutSignal])
+        : timeoutSignal;
+      const startedAt = performance.now();
+      try {
+        return await run(signal);
+      } finally {
+        remainingMs -= performance.now() - startedAt;
+      }
+    };
+    return await (pool ? pool.run(execute, options.signal) : execute());
   }
   const fields: Record<string, string> = {};
   if (options.lynxXmlSource === undefined) {
@@ -371,51 +398,45 @@ export async function runBenchUiJudgeRequest(
   fields.width = String(viewport.width);
   fields.height = String(viewport.height);
 
-  let response: Response;
-  try {
-    response = await captureScreenshot({
-      path: options.session.screenshotPath,
-      fields,
-      ...(options.lynxXmlSource === undefined
-        ? {}
-        : { source: options.lynxXmlSource }),
-      timeoutMs: requestTimeoutMs,
-    }, requestSignal);
-  } catch (error) {
-    if (options.signal?.aborted) {
+  async function capture(requestSignal: AbortSignal): Promise<
+    BenchUiJudgeResult | {
+      screenshotDataUrl: string;
+      reportScreenshot?: string;
+    }
+  > {
+    let response: Response;
+    try {
+      response = await captureScreenshot({
+        path: options.session.screenshotPath,
+        fields,
+        ...(options.lynxXmlSource === undefined
+          ? {}
+          : { source: options.lynxXmlSource }),
+        timeoutMs: requestTimeoutMs,
+      }, requestSignal);
+    } catch (error) {
       return {
-        errors: [],
+        errors: options.signal?.aborted
+          ? []
+          : [`ui-judge request failed: ${toErrorMessage(error)}`],
         score: 0,
         status: 'failed',
         warnings,
       };
     }
-    return {
-      errors: [`ui-judge request failed: ${toErrorMessage(error)}`],
-      score: 0,
-      status: 'failed',
-      warnings,
-    };
-  }
-
-  if (!response.ok) {
-    const detail = readResponseError(await readJson(response));
-    return {
-      errors: [
-        `ui-judge request returned HTTP ${response.status}${
-          detail ? `: ${detail}` : ''
-        }`,
-      ],
-      score: 0,
-      status: 'failed',
-      warnings,
-    };
-  }
-
-  let screenshotDataUrl: string | undefined;
-  let reportScreenshot: string | undefined;
-  let payload: ScreenshotEvaluation;
-  try {
+    if (!response.ok) {
+      const detail = readResponseError(await readJson(response));
+      return {
+        errors: [
+          `ui-judge request returned HTTP ${response.status}${
+            detail ? `: ${detail}` : ''
+          }`,
+        ],
+        score: 0,
+        status: 'failed',
+        warnings,
+      };
+    }
     const contentType = response.headers.get('content-type')?.split(';')[0]
       ?.trim();
     if (contentType !== 'image/bmp') {
@@ -423,18 +444,31 @@ export async function runBenchUiJudgeRequest(
       throw new Error('Expected a BMP screenshot.');
     }
     const bmp = await readScreenshotBytes(response, requestSignal);
-    screenshotDataUrl = await convertCapturedBmp(bmp);
+    const screenshotDataUrl = await convertCapturedBmp(bmp);
     if (!screenshotDataUrl) throw new Error('Invalid or oversized screenshot.');
-    reportScreenshot = options.includeScreenshot
+    const reportScreenshot = options.includeScreenshot
       ? await readBenchScreenshotDataUrl(screenshotDataUrl)
       : undefined;
     requestSignal.throwIfAborted();
-    payload = await evaluate({
-      screenshotDataUrl,
-      task: options.scenario.judgeTask ?? options.scenario.prompt,
-      model: options.model,
-      signal: requestSignal,
-    });
+    return { screenshotDataUrl, reportScreenshot };
+  }
+
+  let reportScreenshot: string | undefined;
+  let payload: ScreenshotEvaluation;
+  try {
+    const captured = await runStage(options.scheduling?.capture, capture);
+    if ('status' in captured) return captured;
+    reportScreenshot = captured.reportScreenshot;
+    payload = await runStage(
+      options.scheduling?.evaluation,
+      (signal) =>
+        evaluate({
+          screenshotDataUrl: captured.screenshotDataUrl,
+          task: options.scenario.judgeTask ?? options.scenario.prompt,
+          model: options.model,
+          signal,
+        }),
+    );
   } catch {
     return {
       errors: options.signal?.aborted

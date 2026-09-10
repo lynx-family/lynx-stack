@@ -155,7 +155,7 @@ export async function evaluateScreenshot(
   const signal = request.signal
     ? AbortSignal.any([request.signal, controller.signal])
     : controller.signal;
-  const results = await Promise.all(JUDGE_DIMENSIONS.map(async (dimension) => {
+  const evaluations = JUDGE_DIMENSIONS.map(async (dimension) => {
     const response = await agent.generate([{
       role: 'user',
       content: [
@@ -181,10 +181,14 @@ export async function evaluateScreenshot(
       structuredOutput: { schema: resultSchema },
     });
     return resultSchema.parse(response.object);
-  })).catch((error: unknown) => {
-    controller.abort();
-    throw error;
   });
+  const results = await Promise.all(evaluations).catch(
+    async (error: unknown) => {
+      controller.abort();
+      await Promise.allSettled(evaluations);
+      throw error;
+    },
+  );
   signal.throwIfAborted();
   const primary = results[0]!;
   const dimensions = JUDGE_DIMENSIONS.slice(1).map((dimension, index) => ({

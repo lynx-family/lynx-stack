@@ -122,10 +122,11 @@ describe('Lynx XML Bench adapter', () => {
         expect(options).toMatchObject({
           model: 'test-model',
           disableAgentCache: true,
+          maxRetries: 0,
           enableWebSearch: false,
           enableImageGeneration: false,
-          inheritReasoningEffort: false,
         });
+        expect(options.inheritReasoningEffort).not.toBe(false);
         return Promise.resolve({
           text: conversations.length === 1
             ? '<!doctype lynx>'
@@ -164,7 +165,9 @@ describe('Lynx XML Bench adapter', () => {
       retryDelayMs: 0,
       generateRaw() {
         calls++;
-        return Promise.reject(new Error('provider unavailable'));
+        return Promise.reject(
+          Object.assign(new Error('provider unavailable'), { statusCode: 503 }),
+        );
       },
     });
     const artifact = await adapter.generate({ ...INPUT, maxAttempts: 99 });
@@ -181,7 +184,9 @@ describe('Lynx XML Bench adapter', () => {
       generateRaw() {
         calls++;
         setTimeout(() => controller.abort(), 0);
-        return Promise.reject(new Error('provider unavailable'));
+        return Promise.reject(
+          Object.assign(new Error('provider unavailable'), { statusCode: 503 }),
+        );
       },
     });
     await expect(adapter.generate(INPUT, controller.signal)).rejects

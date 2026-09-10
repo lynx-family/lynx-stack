@@ -96,10 +96,11 @@ describe('A2UI matched-core bench adapter', () => {
     expect(receivedOptions).toMatchObject({
       apiKey: 'request-scoped-key',
       disableAgentCache: true,
+      maxRetries: 0,
       enableWebSearch: false,
       enableImageGeneration: false,
-      inheritReasoningEffort: false,
     });
+    expect(receivedOptions?.inheritReasoningEffort).not.toBe(false);
     expect(receivedSignal).toBe(abortController.signal);
     expect(receivedOptions?.catalog?.examples).toEqual([]);
     expect(receivedOptions?.catalog?.functions).toEqual([]);
@@ -189,7 +190,11 @@ describe('A2UI matched-core bench adapter', () => {
         receivedMessages.push(messages.map((message) => message.content));
         callCount += 1;
         if (callCount === 1) {
-          return Promise.reject(new Error('provider temporarily unavailable'));
+          return Promise.reject(
+            Object.assign(new Error('provider temporarily unavailable'), {
+              statusCode: 503,
+            }),
+          );
         }
         return Promise.resolve({
           text: validA2UIOutput(options.catalog?.id),
@@ -212,7 +217,7 @@ describe('A2UI matched-core bench adapter', () => {
     await backoffStarted;
 
     expect(callCount).toBe(1);
-    expect(sleepCalls).toEqual([10_000]);
+    expect(sleepCalls).toEqual([1_000]);
     releaseBackoff?.();
     const artifact = await generation;
     expect(callCount).toBe(2);
@@ -238,7 +243,11 @@ describe('A2UI matched-core bench adapter', () => {
     const adapter = createA2UIBenchAdapter({
       generateRaw() {
         callCount += 1;
-        return Promise.reject(new Error('provider temporarily unavailable'));
+        return Promise.reject(
+          Object.assign(new Error('provider temporarily unavailable'), {
+            statusCode: 503,
+          }),
+        );
       },
       sleep() {
         markBackoffStarted?.();
@@ -295,7 +304,9 @@ describe('A2UI matched-core bench adapter', () => {
       generateRaw() {
         callCount += 1;
         return Promise.reject(
-          new Error(`provider failure ${callCount}`),
+          Object.assign(new Error(`provider failure ${callCount}`), {
+            statusCode: 503,
+          }),
         );
       },
       retryDelayMs: 0,
