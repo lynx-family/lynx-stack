@@ -5636,7 +5636,9 @@ test.describe('reactlynx3 tests', () => {
       const publicPath = `http://localhost:${
         process.env['PORT'] ?? 3080
       }/resources/external-bundle/`;
-      await expect(page.locator('#target')).toContainText(publicPath);
+      await expect(page.locator('#target')).toHaveText(
+        `hello-from-external|${publicPath}`,
+      );
       const mainThreadTarget = page.locator('#main-thread-public-path');
       await mainThreadTarget.click();
       await expect(mainThreadTarget).toHaveAttribute(

@@ -769,7 +769,11 @@ const externalBundleRsbuildPlugin = ({
             .entry(entryName)
             .add({
               ...entryValue,
-              filename: path.posix.join(intermediateDir, `${entryName}.js`),
+              // Web sections execute beside the bundle, so their automatic
+              // public path must not undo the native staging directory.
+              filename: target === 'web'
+                ? `${encodeURIComponent(entryName)}.js`
+                : path.posix.join(intermediateDir, `${entryName}.js`),
             })
             .end()
         }
