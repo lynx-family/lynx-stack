@@ -5,6 +5,10 @@
 import { describe, expect, test } from '@rstest/core';
 
 import type { ProtocolBenchAdapterInput } from '../service/common/bench/protocol-adapter.js';
+import {
+  GenerationPostprocessError,
+  GenerationUpstreamError,
+} from '../service/common/result.js';
 import type { ChatMessage } from '../service/common/types.js';
 import { createLynxXmlBenchAdapter } from '../service/lynx-xml/lynx-xml-bench-adapter.js';
 
@@ -27,6 +31,87 @@ const INPUT: ProtocolBenchAdapterInput = {
 };
 
 describe('Lynx XML Bench adapter', () => {
+  test('keeps usage on upstream failure without treating it as an XML validation failure', async () => {
+    const adapter = createLynxXmlBenchAdapter({
+      generateRaw() {
+        throw new GenerationUpstreamError(new Error('Invalid input'), {
+          text: '',
+          usage: { inputTokens: 10, outputTokens: 20 },
+          finishReason: 'error',
+        });
+      },
+    });
+    const result = await adapter.generate({ ...INPUT, maxAttempts: 1 });
+    expect(result.finalValid).toBe(false);
+    expect(result.finalErrors).toEqual(['Invalid input']);
+    expect(result.attempts[0]).toMatchObject({
+      totalTokens: 30,
+      usage: { inputTokens: 10, outputTokens: 20 },
+      finishReason: 'error',
+      outputChars: 0,
+    });
+    expect(result.judgePayload).toBeUndefined();
+  });
+
+  test('repairs compilation failures with original output and counts the failed generation', async () => {
+    const source =
+      '<!doctype lynx><lynx engine-version="4.2"><template><view></template></lynx>';
+    let calls = 0;
+    const adapter = createLynxXmlBenchAdapter({
+      retryDelayMs: 0,
+      generateRaw(messages) {
+        if (++calls === 1) {
+          throw new GenerationPostprocessError(
+            new Error('Invalid XML fragment'),
+            {
+              text: source,
+              usage: { inputTokens: 10, outputTokens: 5 },
+              finishReason: 'stop',
+            },
+          );
+        }
+        expect(messages[1]?.content).toBe(source);
+        expect(messages[2]?.content).toContain('Invalid XML fragment');
+        return Promise.resolve({
+          text: SOURCE,
+          usage: { inputTokens: 20, outputTokens: 8 },
+          finishReason: 'stop',
+        });
+      },
+    });
+    const result = await adapter.generate({
+      ...INPUT,
+      enableHtmlFragment: true,
+    });
+    expect(result.finalValid).toBe(true);
+    expect(result.attempts.map(attempt => attempt.totalTokens)).toEqual([
+      15,
+      28,
+    ]);
+    expect(result.attempts[0]?.outputChars).toBe(source.length);
+  });
+  test.each([undefined, false, true])(
+    'passes fragment selection through every repair: %s',
+    async (enabled) => {
+      let calls = 0;
+      const adapter = createLynxXmlBenchAdapter({
+        generateRaw(_messages, options) {
+          expect(options.enableHtmlFragment).toBe(enabled === true);
+          return Promise.resolve({
+            text: ++calls === 1 ? '<!doctype lynx>' : SOURCE,
+            usage: undefined,
+            finishReason: 'stop',
+          });
+        },
+      });
+      await adapter.generate({
+        ...INPUT,
+        ...(enabled === undefined ? {} : { enableHtmlFragment: enabled }),
+      });
+      expect(calls).toBe(2);
+    },
+  );
+
   test('repairs the document contract and preserves token usage and source', async () => {
     const conversations: ChatMessage[][] = [];
     const controller = new AbortController();

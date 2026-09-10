@@ -162,6 +162,7 @@ describe('A2UI Bench UI Judge integration', () => {
       protocol: 'lynx-xml',
       profile: 'native',
       model: 'xml-model',
+      enableHtmlFragment: true,
     }];
     const store = getBenchJobStore();
     const job = store.createJob(benchRequest, 1);
@@ -169,8 +170,9 @@ describe('A2UI Bench UI Judge integration', () => {
       adapters: {
         'lynx-xml': {
           protocol: 'lynx-xml',
-          generate: () =>
-            Promise.resolve({
+          generate: (input) => {
+            expect(input.enableHtmlFragment).toBe(true);
+            return Promise.resolve({
               attempts: [{
                 index: 1,
                 durationMs: 10,
@@ -190,7 +192,8 @@ describe('A2UI Bench UI Judge integration', () => {
               finalText: rawText,
               finalErrors: [],
               judgePayload: { kind: 'lynx-xml-source', rawText },
-            }),
+            });
+          },
         },
       },
     });

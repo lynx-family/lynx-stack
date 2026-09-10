@@ -52,7 +52,7 @@ export class McpAppsAgentService {
     );
     const result = await agent.generate(
       modelMessages,
-      buildCapabilityRunOptions(opts, abortSignal),
+      buildCapabilityRunOptions(opts, abortSignal, 'mcp-apps'),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

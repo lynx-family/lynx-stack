@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { runInNewContext } from 'node:vm';
+
 import { describe, expect, test } from '@rstest/core';
 
 import {
@@ -10,72 +12,168 @@ import {
 } from '../src/index.js';
 
 describe('Lynx XML HTML fragment utilities', () => {
-  test('generates ordered Element PAPI calls and id bindings', () => {
+  test('creates the ordered tree and retains only explicit ids without per-node variables', () => {
     const result = generateMainThreadScriptResult(`
       <scroll-view class="feed" id="root" style="height: 100vh;" scroll-orientation="vertical">
         <view class="card" data-kind="featured">
-          <text id="greeting" aria-label="Greeting">Hello &amp; welcome</text>
+          <text id="greeting" accessibility-label="Greeting">Hello &amp; welcome</text>
           <image src="https://example.com/cover.png" />
         </view>
       </scroll-view>
+      <input value="42" />
     `);
-
-    expect(result.bindings).toEqual({ root: 'node0', greeting: 'node2' });
-    expect(result.javascript).toBe(`const node0 = __CreateScrollView(pageId);
-__SetClasses(node0, "feed");
-__SetID(node0, "root");
-__SetInlineStyles(node0, "height: 100vh;");
-__SetAttribute(node0, "scroll-orientation", "vertical");
-const node1 = __CreateView(pageId);
-__SetClasses(node1, "card");
-__AddDataset(node1, "kind", "featured");
-const node2 = __CreateText(pageId);
-__SetID(node2, "greeting");
-__SetAttribute(node2, "aria-label", "Greeting");
-__AppendElement(node2, __CreateRawText("Hello & welcome"));
-__AppendElement(node1, node2);
-const node3 = __CreateImage(pageId);
-__SetAttribute(node3, "src", "https://example.com/cover.png");
-__AppendElement(node1, node3);
-__AppendElement(node0, node1);
-__AppendElement(page, node0);`);
+    interface Node {
+      tag: string;
+      children: Node[];
+      values: Record<string, string>;
+    }
+    const create = (tag: string): Node => ({ tag, children: [], values: {} });
+    const page = create('page');
+    const context = {
+      page,
+      pageId: 0,
+      __CreateScrollView: () => create('scroll-view'),
+      __CreateView: () => create('view'),
+      __CreateText: () => create('text'),
+      __CreateImage: () => create('image'),
+      __CreateElement: create,
+      __CreateRawText: (value: string) => ({
+        ...create('raw-text'),
+        values: { text: value },
+      }),
+      __AppendElement: (parent: Node, child: Node) =>
+        parent.children.push(child),
+      __SetID: (node: Node, value: string) => {
+        node.values['id'] = value;
+      },
+      __SetClasses: (node: Node, value: string) => {
+        node.values['class'] = value;
+      },
+      __SetInlineStyles: (node: Node, value: string) => {
+        node.values['style'] = value;
+      },
+      __SetAttribute: (node: Node, name: string, value: string) => {
+        node.values[name] = value;
+      },
+      __AddDataset: (node: Node, name: string, value: string) => {
+        node.values[`data-${name}`] = value;
+      },
+    };
+    const map = runInNewContext(
+      result.javascript + '\nnodeMap;',
+      context,
+    ) as Record<string, Node>;
+    expect(Object.keys(map)).toEqual(['root', 'greeting']);
+    expect(result.bindings).toEqual({
+      root: 'nodeMap["root"]',
+      greeting: 'nodeMap["greeting"]',
+    });
+    expect(result.javascript).not.toMatch(/\bnode\d+\b/u);
+    expect(result.javascript.match(/let element;/gu)).toHaveLength(1);
+    expect(page.children.map(node => node.tag)).toEqual([
+      'scroll-view',
+      'input',
+    ]);
+    expect(map['root']).toBe(page.children[0]);
+    expect(map['root']?.values).toEqual({
+      class: 'feed',
+      id: 'root',
+      style: 'height: 100vh;',
+      'scroll-orientation': 'vertical',
+    });
+    const card = map['root']!.children[0]!;
+    expect(card.values).toEqual({ class: 'card', 'data-kind': 'featured' });
+    expect(card.children.map(node => node.tag)).toEqual(['text', 'image']);
+    expect(map['greeting']).toBe(card.children[0]);
+    expect(map['greeting']?.children[0]?.values['text']).toBe(
+      'Hello & welcome',
+    );
+    expect(card.children[1]?.values['src']).toBe(
+      'https://example.com/cover.png',
+    );
+    expect(page.children[1]?.values['value']).toBe('42');
   });
 
-  test('separates hoisted node declarations from render assignments when requested', () => {
+  test('wraps text outside text elements and leaves purely static nodes out of the map', () => {
+    const javascript = generateMainThreadScript(
+      '<view>Before<text>inside</text>after</view>',
+    );
+    expect(javascript).not.toContain('nodeMap[');
+    expect(javascript).not.toMatch(/\bnode\d+\b/u);
+    expect(javascript.match(/__CreateText\(pageId\)/gu)).toHaveLength(3);
+    expect(javascript).toContain('__CreateRawText("Before")');
+    expect(javascript).toContain('__CreateRawText("inside")');
+    expect(javascript).toContain('__CreateRawText("after")');
+  });
+
+  test('creates real raw-text leaves from content and text attributes in source order', () => {
     const result = generateMainThreadScriptResult(
-      '<view>content<text id="dateText">Today</text></view>',
-      { nodeScope: 'script' },
+      '<text id="label">Before<raw-text id="value" text="26° &amp; 晴"/><raw-text> </raw-text><raw-text>&lt;/script&gt;</raw-text>After</text>',
     );
-    expect(result.bindings).toEqual({ dateText: 'node2' });
-    expect(result.declarations).toBe('var node0, node1, node2;');
-    expect(result.javascript).not.toContain('const node');
-    expect(result.javascript).toContain('node0 = __CreateView(pageId);');
-    expect(result.javascript).toContain('node1 = __CreateText(pageId);');
-    expect(result.javascript).toContain('node2 = __CreateText(pageId);');
-    expect(generateMainThreadScriptResult('<view/>')).not.toHaveProperty(
-      'declarations',
-    );
+    interface Node {
+      children: unknown[];
+    }
+    const page: Node = { children: [] };
+    const nodes: Record<string, unknown> = {};
+    runInNewContext(result.javascript, {
+      page,
+      pageId: 0,
+      __CreateText: (): Node => ({ children: [] }),
+      __CreateRawText: (text: string) => ({ text }),
+      __SetID: (node: unknown, id: string) => {
+        nodes[id] = node;
+      },
+      __AppendElement: (parent: Node, child: unknown) =>
+        parent.children.push(child),
+    });
+    expect((page.children[0] as Node).children).toEqual([
+      { text: 'Before' },
+      { text: '26° & 晴' },
+      { text: ' ' },
+      { text: '</script>' },
+      { text: 'After' },
+    ]);
+    expect(nodes['label']).toBe(page.children[0]);
+    expect(nodes['value']).toBe((page.children[0] as Node).children[1]);
+    expect(Object.keys(result.bindings)).toEqual(['label', 'value']);
+    expect(result.javascript).not.toContain('__CreateElement("raw-text"');
+    expect(result.javascript).toContain('__CreateRawText("<\\/script>")');
   });
 
-  test('supports multiple roots, text content, and generic element tags', () => {
-    expect(
+  test('wraps a standalone raw-text leaf in a text element', () => {
+    interface Node {
+      children: unknown[];
+    }
+    const page: Node = { children: [] };
+    runInNewContext(
       generateMainThreadScript(
-        '<view>Before<text>inside</text>after</view><input value="42" />',
+        '<view><raw-text text="Hello"/></view><raw-text>World</raw-text>',
       ),
-    ).toBe(`const node0 = __CreateView(pageId);
-const node1 = __CreateText(pageId);
-__AppendElement(node1, __CreateRawText("Before"));
-__AppendElement(node0, node1);
-const node2 = __CreateText(pageId);
-__AppendElement(node2, __CreateRawText("inside"));
-__AppendElement(node0, node2);
-const node3 = __CreateText(pageId);
-__AppendElement(node3, __CreateRawText("after"));
-__AppendElement(node0, node3);
-__AppendElement(page, node0);
-const node4 = __CreateElement("input", pageId);
-__SetAttribute(node4, "value", "42");
-__AppendElement(page, node4);`);
+      {
+        page,
+        pageId: 0,
+        __CreateView: (): Node => ({ children: [] }),
+        __CreateText: (): Node => ({ children: [] }),
+        __CreateRawText: (text: string) => text,
+        __AppendElement: (parent: Node, child: unknown) =>
+          parent.children.push(child),
+      },
+    );
+    expect(page.children).toEqual([
+      { children: [{ children: ['Hello'] }] },
+      { children: ['World'] },
+    ]);
+  });
+
+  test.each([
+    ['<text><raw-text><view/></raw-text></text>', 'only literal text'],
+    ['<text><raw-text text="A">B</raw-text></text>', 'not both'],
+    [
+      '<text><raw-text class="title">A</raw-text></text>',
+      'parent text element',
+    ],
+  ])('rejects invalid raw-text: %s', (fragment, message) => {
+    expect(() => generateMainThreadScript(fragment)).toThrow(message);
   });
 
   test('preserves meaningful text whitespace and ignores whitespace-only nodes', () => {

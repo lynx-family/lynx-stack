@@ -42,6 +42,7 @@ export function BenchComparisonGroupsSection(props: {
   modelOptions: readonly BenchModelOption[];
   onAdd: (direction: BenchComparisonDirection) => void;
   onCatalogChange: (id: string, catalog: string) => void;
+  onFragmentChange: (id: string, enabled: boolean) => void;
   onEnabledChange: (id: string, enabled: boolean) => void;
   onModelChange: (id: string, model: string) => void;
   onNameChange: (id: string, name: string) => void;
@@ -269,6 +270,27 @@ export function BenchComparisonGroupsSection(props: {
                       )}
                   </div>
                 </div>
+                {group.protocol === 'lynx-xml' && (
+                  <div
+                    className='benchField'
+                    title='Convert the initial XML fragment to Element PAPI using the agent tool.'
+                  >
+                    <span className='benchFieldLabel'>XML fragment</span>
+                    <BenchDropdown
+                      ariaLabel={`${groupName} XML fragment`}
+                      value={group.enableHtmlFragment === true
+                        ? 'on'
+                        : 'off'}
+                      disabled={props.locked}
+                      options={[{ value: 'off', label: 'Off' }, {
+                        value: 'on',
+                        label: 'On',
+                      }]}
+                      onChange={(value) =>
+                        props.onFragmentChange(group.id, value === 'on')}
+                    />
+                  </div>
+                )}
                 <label className='benchField'>
                   <span className='benchFieldLabel'>
                     Additional prompt instructions

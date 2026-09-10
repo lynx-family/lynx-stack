@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { redactModelConfigSecrets } from '../../service/common/model-config.js';
+import { GenerationUpstreamError } from '../../service/common/result.js';
 
 export interface ErrorMessageOptions {
   secrets?: readonly (string | undefined)[];
@@ -11,13 +12,28 @@ export interface ErrorMessageOptions {
 export function errorMessage(
   err: unknown,
   options: ErrorMessageOptions = {},
-): { message: string; name?: string } {
+): {
+  message: string;
+  name?: string;
+  statusCode?: number;
+  upstreamRequestId?: string;
+} {
   const redact = (value: string) =>
     redactModelConfigSecrets(value, options.secrets);
   if (err instanceof Error) {
     return {
       message: redact(err.message),
       name: redact(err.name),
+      ...(err instanceof GenerationUpstreamError
+        ? {
+          ...(err.statusCode === undefined
+            ? {}
+            : { statusCode: err.statusCode }),
+          ...(err.upstreamRequestId === undefined ? {} : {
+            upstreamRequestId: redact(err.upstreamRequestId),
+          }),
+        }
+        : {}),
     };
   }
   return { message: redact(String(err)) };

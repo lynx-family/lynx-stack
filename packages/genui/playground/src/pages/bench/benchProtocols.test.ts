@@ -6,6 +6,7 @@ import { describe, expect, test } from '@rstest/core';
 
 import {
   createDefaultBenchGroups,
+  getBenchGroupDifferences,
   getBenchProtocolLabel,
   nextBenchComparisonProtocol,
   usesCatalog,
@@ -14,6 +15,35 @@ import {
 import { createBenchGroupsFromReport } from './benchHistory.js';
 
 describe('Bench protocol selection', () => {
+  test('restores enabled conversion and reports it as a comparison difference', () => {
+    const baseline = withBenchProtocol(
+      createDefaultBenchGroups('model')[0]!,
+      'lynx-xml',
+    );
+    const enabled = {
+      ...baseline,
+      id: 'enabled',
+      enableHtmlFragment: true,
+    };
+    expect(getBenchGroupDifferences(enabled, baseline)).toEqual([
+      'XML fragment',
+    ]);
+    expect(
+      createBenchGroupsFromReport({
+        groups: [enabled],
+        env: { apiKeyConfigured: false, model: 'model' },
+      })[0]
+        ?.enableHtmlFragment,
+    ).toBe(true);
+    const { enableHtmlFragment: _flag, ...legacy } = baseline;
+    expect(
+      createBenchGroupsFromReport({
+        groups: [legacy],
+        env: { apiKeyConfigured: false, model: 'model' },
+      })[0]
+        ?.enableHtmlFragment,
+    ).toBe(false);
+  });
   test('switches to XML native without retaining a component catalog', () => {
     const original = createDefaultBenchGroups('test-model')[0]!;
     const xml = withBenchProtocol(

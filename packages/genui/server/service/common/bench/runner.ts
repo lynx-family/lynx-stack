@@ -499,6 +499,9 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      ...(protocol === 'lynx-xml'
+        ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
+        : {}),
       runId,
       pairId: `${item.scenario.id}-repeat-${item.repeatIndex}`,
       scenario: adapterScenarioFor(item.group, item.scenario),

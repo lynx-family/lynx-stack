@@ -30,6 +30,7 @@ import {
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
 } from '../../agent/common/doubao-search-tool.js';
+import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -91,6 +92,7 @@ function buildA2UIRunOptions(
 ) {
   return {
     ...buildOpenAIRunOptions(opts, abortSignal),
+    ...createAgentStepLogger(opts, 'a2ui'),
     requestContext: imageGenerationScope.requestContext,
   };
 }

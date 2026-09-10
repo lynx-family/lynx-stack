@@ -13,6 +13,10 @@ import type {
 } from '../common/bench/protocol-adapter.js';
 import type { ProtocolBenchAttemptResult } from '../common/bench/protocol-types.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import {
+  GenerationPostprocessError,
+  GenerationUpstreamError,
+} from '../common/result.js';
 import type { ChatMessage } from '../common/types.js';
 
 export interface LynxXmlBenchAdapterOptions {
@@ -20,7 +24,14 @@ export interface LynxXmlBenchAdapterOptions {
     messages: ChatMessage[],
     options: LynxXmlChatOptions,
     signal?: AbortSignal,
-  ) => Promise<{ text: string; usage: unknown; finishReason: unknown }>;
+  ) => Promise<
+    {
+      text: string;
+      usage: unknown;
+      finishReason: unknown;
+      metadata?: { modelOutput: string };
+    }
+  >;
   retryDelayMs?: number;
 }
 
@@ -34,7 +45,9 @@ function buildPrompt(input: ProtocolBenchAdapterInput): string {
     '',
     input.scenario.prompt,
     '',
-    'Return only the complete Lynx XML artifact, without benchmark metadata.',
+    input.enableHtmlFragment === true
+      ? 'Return the complete intermediate fragment document with one <template> directly inside <lynx>, plus styles and scripts, following the system fragment contract.'
+      : 'Return only the complete Lynx XML artifact, without benchmark metadata.',
     'Use local content and interactions. Do not load external resources, open URLs, or use network requests. Use a non-image presentation for image requests.',
   ].join('\n');
 }
@@ -71,7 +84,8 @@ export function createLynxXmlBenchAdapter(
       for (let index = 1; index <= maxAttempts; index++) {
         signal?.throwIfAborted();
         const startedAt = performance.now();
-        let generated;
+        let generated: Awaited<ReturnType<typeof generateRaw>>;
+        let postprocessError: GenerationPostprocessError | undefined;
         try {
           generated = await generateRaw(messages, {
             ...input.provider,
@@ -79,30 +93,43 @@ export function createLynxXmlBenchAdapter(
             disableAgentCache: true,
             enableWebSearch: false,
             enableImageGeneration: false,
+            enableHtmlFragment: input.enableHtmlFragment === true,
             inheritReasoningEffort: false,
           }, signal);
           signal?.throwIfAborted();
         } catch (error) {
           signal?.throwIfAborted();
-          finalErrors = [
-            error instanceof Error ? error.message : String(error),
-          ];
-          attempts.push({
-            index,
-            durationMs: Math.round(performance.now() - startedAt),
-            ...benchAttemptTokenCounts(undefined),
-            valid: false,
-            validationErrors: [...finalErrors],
-            outputChars: 0,
-          });
-          if (index < maxAttempts) {
-            await sleep(retryDelayMs, undefined, { signal });
+          if (error instanceof GenerationPostprocessError) {
+            generated = error.result;
+            postprocessError = error;
+          } else {
+            const failed = error instanceof GenerationUpstreamError
+              ? error.result
+              : undefined;
+            finalErrors = [
+              error instanceof Error ? error.message : String(error),
+            ];
+            attempts.push({
+              index,
+              durationMs: Math.round(performance.now() - startedAt),
+              ...benchAttemptTokenCounts(failed?.usage),
+              ...(failed
+                ? { usage: failed.usage, finishReason: failed.finishReason }
+                : {}),
+              valid: false,
+              validationErrors: [...finalErrors],
+              outputChars: failed?.text.length ?? 0,
+            });
+            if (index < maxAttempts) {
+              await sleep(retryDelayMs, undefined, { signal });
+            }
+            continue;
           }
-          continue;
         }
 
         finalText = generated.text;
         try {
+          if (postprocessError) throw postprocessError;
           finalText = normalizeLynxXmlArtifact(generated.text);
           finalErrors = [];
           finalValid = true;
@@ -123,7 +150,10 @@ export function createLynxXmlBenchAdapter(
         });
         if (finalValid) break;
         if (index < maxAttempts) {
-          messages.push({ role: 'assistant', content: generated.text });
+          messages.push({
+            role: 'assistant',
+            content: generated.metadata?.modelOutput ?? generated.text,
+          });
           messages.push({
             role: 'user',
             content:

@@ -16,6 +16,25 @@ entry selects the direct XML path through `protocol=lynx-xml`. Each example uses
 the same single-file format with Lynx CSS plus main-thread and, where needed,
 background-thread JavaScript.
 
+Lynx XML Create offers an **XML fragment** selector, disabled by default.
+With `enableHtmlFragment: true`, the model writes a template, styles, and
+interaction code in one response. The server compiles and assembles the final
+`.lynxml` without a conversion tool or a second model request. Shared search or
+image tools can still require their own model rounds. Bench exposes the same
+choice per comparison group. Preview receives only the compiled final document;
+the artifact viewer shows Original by default for the original model output and
+lets users switch to Transformed. Without conversion, it shows Source.
+
+All generation agents and UI Judge share model-step logging. To diagnose token usage, inspect the server's `agent.model.started`,
+`agent.model.step.completed`, and `agent.model.completed` events. They share an
+`invocationId`; Create also has the stream request ID, while Bench's `resourceId`
+identifies its run and attempt. Step logs include usage, tool status and content
+lengths; `toolErrors` records failed call IDs, tool names, and sanitized error
+messages, including failures missing from `toolResults`. Completion logs compare
+`stepUsageTotal` with `totalUsage`. Lengths are
+character counts, not token estimates. Unavailable provider details remain
+unknown. Prompts, XML, reasoning text, and tool result bodies are not logged.
+
 The bundled cases are Counter, Travel Plan, Product Card, Weather Card, and
 Todo List. Together they cover main-thread interaction, subtree re-rendering,
 background-thread computation, selection state, and dynamic-list updates

@@ -3,21 +3,38 @@
 // LICENSE file in the root directory of this source tree.
 
 import { Agent } from '@mastra/core/agent';
+import type {
+  LLMStepResult,
+  MastraOnFinishCallbackArgs,
+} from '@mastra/core/stream';
 
-import { LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT } from '@lynx-js/genui-lynx-xml';
+import {
+  LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT,
+  LYNX_XML_SYSTEM_PROMPT,
+} from '@lynx-js/genui-lynx-xml';
 
-import { createHtmlFragmentToMainThreadScriptTool } from './html-fragment-to-main-thread-script-tool.js';
-import type { HtmlFragmentScriptRunScope } from './html-fragment-to-main-thread-script-tool.js';
 import { createAgentCapabilities } from '../common/agent-capabilities.js';
 import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
+import type { SearchRunScope } from '../common/doubao-search-tool.js';
 import { createLLMProvider } from '../common/openai-provider.js';
 
+export interface LynxXmlFragmentOptions {
+  /** Generate an XML fragment for deterministic postprocessing; defaults to false. */
+  enableHtmlFragment?: boolean | undefined;
+}
+
+export interface LynxXmlAgentOptions
+  extends GenerationAgentOptions, LynxXmlFragmentOptions
+{}
+
 interface LynxXmlAgentRunOptions {
+  onStepFinish?: (step: LLMStepResult & { runId?: string }) => void;
+  onFinish?: (result: MastraOnFinishCallbackArgs) => void;
   abortSignal?: AbortSignal | undefined;
   modelSettings?: {
     maxOutputTokens?: number | undefined;
   } | undefined;
-  requestContext: HtmlFragmentScriptRunScope['requestContext'];
+  requestContext: SearchRunScope['requestContext'];
   resourceId?: string | undefined;
 }
 
@@ -32,24 +49,21 @@ export interface LynxXmlAgent {
   ) => unknown;
 }
 
-/** Create the provider-backed Lynx XML agent and its fragment conversion tool. */
-export function createLynxXmlAgent(opts: GenerationAgentOptions = {}) {
+/** Create the provider-backed Lynx XML agent with the selected output contract. */
+export function createLynxXmlAgent(opts: LynxXmlAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
   const capabilities = createAgentCapabilities(opts);
-  const htmlFragmentToMainThreadScript =
-    createHtmlFragmentToMainThreadScriptTool();
   const agent = new Agent({
     id: 'lynx-xml-agent',
     name: 'LynxXmlAgent',
     instructions: [
-      LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT,
+      opts.enableHtmlFragment === true
+        ? LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT
+        : LYNX_XML_SYSTEM_PROMPT,
       capabilities.instructions,
     ].filter(Boolean).join('\n\n'),
     model: buildModel(model),
-    tools: {
-      ...capabilities.tools,
-      html_fragment_to_main_thread_script: htmlFragmentToMainThreadScript,
-    },
+    tools: capabilities.tools,
     defaultOptions: {
       maxSteps: 5,
       toolCallConcurrency: 1,

@@ -216,17 +216,17 @@ as a missing XML tag. The final artifact must start with lowercase
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
 
-The SSE `done` payload optionally includes `metadata.xmlFragment`, containing
-the exact original XML passed to `html_fragment_to_main_thread_script` before
-conversion. It is separate from `text`, which remains the complete expanded and
-validated `.lynxml` artifact. `xmlFragment` is omitted when the tool was not used.
-The service's `generateRaw` result exposes the same metadata. Tool inputs are
-request-scoped and are not added to text deltas or the model-visible tool result.
+`enableHtmlFragment` defaults to false. When enabled, the model outputs one
+intermediate document with one root-child `<template>` plus styles and scripts in any order;
+the service compiles the template and injects an id-based `createFragment`
+helper before final validation. Conversion is deterministic postprocessing,
+not a Mastra tool. Keep shared search/image capability scopes independent of it.
 
-`metadata.modelOutput` preserves the exact final model text before placeholder
-expansion, node declarations, binding repair, and document normalization. Return
-it from streaming finalization and `generateRaw`, even without fragment conversion.
-It is client-facing display metadata and must not be fed back into model history.
+Return the exact model text in `metadata.modelOutput` and the successful
+original fragment in `metadata.xmlFragment`; omit fragment metadata when off.
+Stream model text for source inspection, but deliver only the compiled document
+to preview and Judge. Preserve usage and finish reason on compilation failure
+so configured Bench repairs count the failed generation.
 
 ## HTML Generation
 

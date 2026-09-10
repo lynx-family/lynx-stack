@@ -56,25 +56,20 @@ const { bindings, javascript } = generateMainThreadScriptResult(
 );
 ```
 
-For handlers defined outside `renderPage()`, pass `{ nodeScope: 'script' }` as
-the second argument. The result then includes `declarations` containing hoisted
-one `var node0, node1, ...;` declaration. Place it at the start of the main-thread
-script, after any directives such as `"use strict"`, and put
-`javascript` inside `renderPage()` after creating `page` and `pageId`. The GenUI
-server's conversion tool handles this assembly automatically. Nodes are assigned
-on each render; handlers may use the returned bindings after rendering and must
-not redeclare or shadow those names. Omitting the option keeps the original local
-`const` declaration behavior.
+Generate an intermediate document with `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT`
+and pass it to `compileLynxXmlFragment(source)`. It requires one `<template>` directly inside `<lynx>`, in any order alongside
+normal style and script blocks. Static nodes do not need ids; only nodes used by
+handlers, updates, or cleanup need unique ids. The model
+calls the server-provided `createFragment(page, pageId)` once during rendering
+and retains its return value for handlers, for example `nodes["root"]`.
 
-Bindings map XML ids to JavaScript variable names: `{ cityText: 'node5' }`
-means updates should reference `node5`. Setting an XML id does not declare
-`cityText`. When assembling the script, consumers may
-call `resolveFragmentBindings(javascript, bindings, declarations)` to insert the
-combined declaration after directives and convert undeclared XML-id
-references into generated node references. The server does this before delivery.
-The resolver preserves locally declared variables and property names, and rejects
-references whose generated node name is shadowed. Fragment roots are already
-appended to `page`; do not append them again after inserting the fragment.
+Compilation removes the template and injects a deterministic helper that
+creates and appends the tree, then returns the id-to-node map. The helper reuses one temporary element reference and a parent stack,
+retaining only nodes with explicit ids in its returned map. No per-element
+nodeN variables are generated; the model keeps the map in script-scoped `nodes`. Styles, state, lifecycle, and interactions
+remain model-authored. No generated script or bindings need a model round trip.
+The result contains the complete `text` and the original `xmlFragment`.
 
-The package intentionally has no model-provider, agent-runtime, or renderer
-dependencies. Consumers own those integration concerns.
+The converter preserves nonempty text whitespace and source order, checks XML,
+rejects duplicate ids, and bounds fragment length and nesting. Compilation does
+not execute JavaScript. Final rendering remains the consumer's responsibility.

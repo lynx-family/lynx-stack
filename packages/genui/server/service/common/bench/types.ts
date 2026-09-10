@@ -56,6 +56,7 @@ export interface BenchSettings {
 }
 
 export interface BenchGroupRequest {
+  enableHtmlFragment?: boolean;
   id: string;
   role: BenchRole;
   name: string;

@@ -57,6 +57,7 @@ export interface ProviderModel {
 }
 
 export interface ProviderSettings {
+  enableHtmlFragment?: boolean;
   provider: string;
   apiKey: string;
   baseURL: string;
@@ -73,6 +74,7 @@ export interface ProviderRequestOptions {
 }
 
 export interface PersistedProviderSettings {
+  enableHtmlFragment?: boolean;
   provider: string;
 }
 
@@ -112,9 +114,14 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
   ) {
     provider = record.model;
   }
+  const enableHtmlFragment = record.enableHtmlFragment
+    ?? record.enableHtmlFragmentTool;
   return {
     ...createDefaultProviderSettings(),
     provider,
+    ...(typeof enableHtmlFragment === 'boolean'
+      ? { enableHtmlFragment }
+      : {}),
     // Never restore custom-provider fields from browser storage. Older
     // versions wrote them here, so ignoring them also migrates those values
     // out when the settings are serialized again.
@@ -139,6 +146,9 @@ export function serializeProviderSettings(
 ): PersistedProviderSettings {
   return {
     provider: settings.provider,
+    ...(settings.enableHtmlFragment === undefined
+      ? {}
+      : { enableHtmlFragment: settings.enableHtmlFragment }),
   };
 }
 

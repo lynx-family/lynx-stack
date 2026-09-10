@@ -173,19 +173,10 @@ For the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy b
 
 Keep Bench database migration and persistence in `packages/genui/playground/src/storage/benchRepo.ts`, with schema upgrades in the existing `storage/db.ts`. Keep Bench history types, normalization, React hooks, and Bench-specific tests in `packages/genui/playground/src/pages/bench`. Upgrade the existing database without replacing conversation stores. Import legacy `a2ui-bench-history` localStorage records and the fallback report selection in one transaction; remove the legacy copy only after commit, and do not overwrite existing database IDs. Wait for hydration before enabling Bench mutations, serialize writes against the last successful snapshot, and apply record-level deltas so another tab’s unrelated entries survive. Keep report selection tab-local in sessionStorage, notify detail tabs after committed writes, and open the blank detail tab synchronously before awaiting database writes.
 
-For Lynx XML results, read the optional SSE `done.metadata.xmlFragment` as display-only
-artifact data. Offer a separate XML Fragment view alongside the final Source using
-the shared artifact viewer and Copy control. Preserve the original string and
-persist it as `lynxXmlFragment` in local and shared assistant history so reopened
-conversations retain the switch. Keep it out of runtime preview sources and model
-conversation inputs; older results and local examples without it show only Source.
-
-Offer Raw and Formatted display modes for XML Fragment through the shared artifact
-viewer. Copy the text currently displayed, derive formatted text only in the
-Playground, and persist only the original fragment. Support multiple roots and
-mixed text; malformed legacy fragments must remain readable in Raw mode.
-
-Show `done.metadata.modelOutput` as a separate Model Output artifact view without
-trimming or normalizing it. Persist it as `lynxXmlModelOutput` in local and shared
-assistant history. Keep it out of preview sources and model request history;
-older results without this metadata must not fabricate it from expanded Source.
+For converted Lynx XML results, show the exact `done.metadata.modelOutput` as
+Original by default and the final Source as Transformed in the
+shared artifact viewer. Copy the selected view's text. Do not show a separate
+XML Fragment view. Preserve `lynxXmlFragment` and `lynxXmlModelOutput` in local
+and shared assistant history, keeping both out of runtime preview sources and
+model conversation inputs. Results without conversion metadata show only Source;
+older converted results without model output must not fabricate a before view.

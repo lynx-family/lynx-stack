@@ -16,6 +16,7 @@ export type BenchComparisonDirection = Extract<
   'model' | 'prompt' | 'protocol'
 >;
 export interface BenchGroup {
+  enableHtmlFragment?: boolean;
   catalog: string;
   enabled: boolean;
   extraInstruction: string;
@@ -69,7 +70,15 @@ export function withBenchProtocol(
   let catalog = group.catalog === 'none' ? 'Full Catalog' : group.catalog;
   if (profile === 'matched-core') catalog = 'Core Catalog';
   if (protocol === 'lynx-xml') catalog = 'none';
-  return { ...group, protocol, profile, catalog };
+  return {
+    ...group,
+    protocol,
+    profile,
+    catalog,
+    ...(protocol === 'lynx-xml'
+      ? { enableHtmlFragment: group.enableHtmlFragment === true }
+      : {}),
+  };
 }
 
 export function nextBenchComparisonProtocol(
@@ -205,6 +214,13 @@ export function getBenchGroupDifferences(
   if (group.protocol !== baseline.protocol) differences.push('Protocol');
   if (group.profile !== baseline.profile) differences.push('Profile');
   if (group.model !== baseline.model) differences.push('Model');
+  if (
+    group.protocol === 'lynx-xml' && baseline.protocol === 'lynx-xml'
+    && (group.enableHtmlFragment === true)
+      !== (baseline.enableHtmlFragment === true)
+  ) {
+    differences.push('XML fragment');
+  }
   if (
     usesCatalog(group) && usesCatalog(baseline)
     && group.catalog !== baseline.catalog

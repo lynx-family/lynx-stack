@@ -26,6 +26,35 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([undefined, false, true])(
+    'normalizes fragment conversion with default off: %s',
+    (enabled) => {
+      const result = normalizeBenchJobRequest(
+        body([{
+          id: 'xml',
+          protocol: 'lynx-xml',
+          enableHtmlFragment: enabled,
+        }]),
+      );
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.request.groups[0]?.enableHtmlFragment).toBe(
+          enabled === true,
+        );
+      }
+    },
+  );
+  test('rejects non-boolean fragment selection', () => {
+    expect(
+      normalizeBenchJobRequest(
+        body([{
+          id: 'xml',
+          protocol: 'lynx-xml',
+          enableHtmlFragment: 'false',
+        }]),
+      ),
+    ).toMatchObject({ ok: false, status: 400 });
+  });
   test('accepts Lynx XML native alongside both component protocols', () => {
     const normalized = normalizeBenchJobRequest(body(
       ['a2ui', 'openui', 'lynx-xml'].map((protocol) => ({
