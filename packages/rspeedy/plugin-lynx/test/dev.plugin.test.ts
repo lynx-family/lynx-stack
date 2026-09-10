@@ -303,6 +303,59 @@ describe('pluginDev', () => {
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('10.0.0.2')
   })
 
+  test('dev.assetPrefix set by a plugin is kept', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      plugins: [
+        {
+          name: 'test:asset-prefix',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                dev: { assetPrefix: 'http://my-cdn/' },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).toBe('http://my-cdn/')
+  })
+
+  test('dev.assetPrefix set by a plugin wins over the config', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      dev: { assetPrefix: 'http://from-config/' },
+      plugins: [
+        {
+          name: 'test:asset-prefix',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                dev: { assetPrefix: 'http://my-cdn/' },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).toBe('http://my-cdn/')
+  })
+
+  test('server.base does not count as a plugin-set dev.assetPrefix', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      server: { base: '/sub' },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output!.publicPath as string).toMatch(/^http:\/\/.+\/sub\/$/)
+  })
+
   test('provide HMR variables', async () => {
     const rsbuild = await createDevStubRsbuild()
 
