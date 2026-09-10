@@ -1,3 +1,4 @@
+import { options } from 'preact';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
@@ -12,7 +13,7 @@ import {
   isElementTemplateRendering,
 } from '../../../../src/element-template/background/render-scope.js';
 import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
-import { root, useState } from '../../../../src/element-template/index.js';
+import { root, useEffect, useState } from '../../../../src/element-template/index.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page.js';
@@ -59,6 +60,58 @@ describe('ElementTemplate root render timing', () => {
     const { performance } = lynx;
     expect(performance.profileStart).toHaveBeenCalledWith('ReactLynx::renderBackground');
     expect(performance.profileEnd).toHaveBeenCalled();
+  });
+
+  it('flushes passive effects and ordinary unmount cleanup without waiting for a frame', async () => {
+    const calls: string[] = [];
+    function App() {
+      useEffect(() => {
+        calls.push('effect');
+        return () => {
+          calls.push('cleanup');
+        };
+      }, []);
+      return null;
+    }
+
+    root.render(<App />);
+    expect(calls).toEqual([]);
+
+    // Only drain microtasks: act() replaces Preact's scheduler, and the existing
+    // waitSchedule() also waits for frames and timers, hiding this regression.
+    await Promise.resolve();
+    expect(calls).toEqual(['effect']);
+
+    root.render(null);
+    expect(calls).toEqual(['effect']);
+
+    await Promise.resolve();
+    expect(calls).toEqual(['effect', 'cleanup']);
+  });
+
+  it('flushes passive cleanup synchronously on background destroy', async () => {
+    const effect = vi.fn();
+    const cleanup = vi.fn();
+    function App() {
+      useEffect(() => {
+        effect();
+        return cleanup;
+      }, []);
+      return null;
+    }
+
+    root.render(<App />);
+    await Promise.resolve();
+    expect(effect).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+
+    const scheduler = options.requestAnimationFrame;
+    callDestroyLifetimeFun();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(options.requestAnimationFrame).toBe(scheduler);
+
+    await Promise.resolve();
+    expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
   it('keeps render scope hook installation idempotent', () => {
