@@ -18,7 +18,7 @@
     "target": "es2022",
 
     "rootDir": "./src",
-    "noEmit": true,
+    "noEmit": true
   },
-  "include": ["./src"],
+  "include": ["./src"]
 }

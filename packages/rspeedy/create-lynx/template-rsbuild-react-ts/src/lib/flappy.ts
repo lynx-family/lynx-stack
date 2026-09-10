@@ -8,24 +8,24 @@
 
 export interface FlappyOptions {
   /** Downward acceleration per frame (default 0.6) */
-  gravity?: number
+  gravity?: number;
   /** Upward impulse per tap — negative value (default -12) */
-  jumpForce?: number
+  jumpForce?: number;
   /** Impulse stacking factor for rapid taps (default 0.6) */
-  stackFactor?: number
+  stackFactor?: number;
   /** Frame interval in ms (default 16 ≈ 60fps) */
-  frameMs?: number
+  frameMs?: number;
 }
 
-export type OnUpdate = (y: number) => void
+export type OnUpdate = (y: number) => void;
 
 export interface FlappyEngine {
   /** Call on each tap to apply upward impulse. */
-  jump(): void
+  jump(): void;
   /** Current Y offset (0 = ground, negative = airborne). */
-  getY(): number
+  getY(): number;
   /** Stop the game loop and clean up. */
-  destroy(): void
+  destroy(): void;
 }
 
 export function createFlappy(
@@ -37,40 +37,40 @@ export function createFlappy(
     jumpForce = -12,
     stackFactor = 0.6,
     frameMs = 16,
-  } = options
+  } = options;
 
-  let y = 0
-  let velocity = 0
-  let timer: ReturnType<typeof setTimeout> | null = null
+  let y = 0;
+  let velocity = 0;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
   function loop() {
-    velocity += gravity
-    y += velocity
+    velocity += gravity;
+    y += velocity;
     if (y >= 0) {
-      y = 0
-      velocity = 0
-      timer = null
-      onUpdate(y)
-      return
+      y = 0;
+      velocity = 0;
+      timer = null;
+      onUpdate(y);
+      return;
     }
-    onUpdate(y)
-    timer = setTimeout(loop, frameMs)
+    onUpdate(y);
+    timer = setTimeout(loop, frameMs);
   }
 
   function jump() {
     // Stack impulse on rapid taps, clamped to one full jumpForce
-    velocity = Math.max(velocity + jumpForce * stackFactor, jumpForce)
+    velocity = Math.max(velocity + jumpForce * stackFactor, jumpForce);
     if (!timer) {
-      loop()
+      loop();
     }
   }
 
   function destroy() {
     if (timer) {
-      clearTimeout(timer)
-      timer = null
+      clearTimeout(timer);
+      timer = null;
     }
   }
 
-  return { jump, getY: () => y, destroy }
+  return { jump, getY: () => y, destroy };
 }

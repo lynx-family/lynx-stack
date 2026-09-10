@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from '@lynx-js/react'
+import { useCallback, useEffect, useRef, useState } from '@lynx-js/react';
 
-import { createFlappy } from './lib/flappy.js'
+import { createFlappy } from './lib/flappy.js';
 
 /**
  * React hook for flappy-bird physics.
@@ -13,25 +13,25 @@ import { createFlappy } from './lib/flappy.js'
  * @returns {[number, () => void]}
  */
 export function useFlappy(options) {
-  const [y, setY] = useState(0)
-  const engineRef = useRef(null)
+  const [y, setY] = useState(0);
+  const engineRef = useRef(null);
 
   if (engineRef.current == null) {
     engineRef.current = createFlappy((newY) => {
-      setY(newY)
-    }, options)
+      setY(newY);
+    }, options);
   }
 
   useEffect(() => {
     return () => {
-      engineRef.current?.destroy()
-    }
-  }, [])
+      engineRef.current?.destroy();
+    };
+  }, []);
 
   const jump = useCallback(() => {
-    'background only'
-    engineRef.current?.jump()
-  }, [])
+    'background only';
+    engineRef.current?.jump();
+  }, []);
 
-  return [y, jump]
+  return [y, jump];
 }

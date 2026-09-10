@@ -1,7 +1,7 @@
-import { useState } from '@lynx-js/react'
+import { useState } from '@lynx-js/react';
 
 export function Counter({ initialCount = 0 }) {
-  const [count, setCount] = useState(initialCount)
+  const [count, setCount] = useState(initialCount);
 
   return (
     <view
@@ -31,5 +31,5 @@ export function Counter({ initialCount = 0 }) {
         </text>
       </view>
     </view>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 export default defineExternalBundleRslibConfig({
   id: 'library',
@@ -14,4 +14,4 @@ export default defineExternalBundleRslibConfig({
       reactlynx: true,
     },
   },
-})
+});

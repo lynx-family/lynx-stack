@@ -20,5 +20,9 @@
     "core/test/cli/fixtures/**",
     "packages/rspeedy/core/test/**/*.css",
     "core/bin/rspeedy.js",
+
+    // Scaffolded projects are formatted by the tools they ship with
+    "create-lynx/template-*/**",
+    "create-lynx/library/template-*/**",
   ],
 }

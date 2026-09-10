@@ -1,15 +1,15 @@
-import '@testing-library/jest-dom'
-import { expect, test } from '@rstest/core'
-import { fireEvent, render } from '@lynx-js/react/testing-library'
+import '@testing-library/jest-dom';
+import { fireEvent, render } from '@lynx-js/react/testing-library';
+import { expect, test } from '@rstest/core';
 
-import { Counter } from '../src/Counter.jsx'
+import { Counter } from '../src/Counter.jsx';
 
 test('Counter', async () => {
-  const { findByText } = render(<Counter initialCount={1} />)
+  const { findByText } = render(<Counter initialCount={1} />);
 
-  expect(await findByText('Count: 1')).toBeInTheDocument()
+  expect(await findByText('Count: 1')).toBeInTheDocument();
 
-  fireEvent.tap(await findByText('+1'))
+  fireEvent.tap(await findByText('+1'));
 
-  expect(await findByText('Count: 2')).toBeInTheDocument()
-})
+  expect(await findByText('Count: 2')).toBeInTheDocument();
+});

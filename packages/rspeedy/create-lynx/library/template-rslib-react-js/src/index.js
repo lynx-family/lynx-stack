@@ -1,1 +1,1 @@
-export { Counter } from './Counter.jsx'
+export { Counter } from './Counter.jsx';

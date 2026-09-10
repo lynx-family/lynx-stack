@@ -19,40 +19,40 @@ export function createFlappy(onUpdate, options = {}) {
     jumpForce = -12,
     stackFactor = 0.6,
     frameMs = 16,
-  } = options
+  } = options;
 
-  let y = 0
-  let velocity = 0
-  let timer = null
+  let y = 0;
+  let velocity = 0;
+  let timer = null;
 
   function loop() {
-    velocity += gravity
-    y += velocity
+    velocity += gravity;
+    y += velocity;
     if (y >= 0) {
-      y = 0
-      velocity = 0
-      timer = null
-      onUpdate(y)
-      return
+      y = 0;
+      velocity = 0;
+      timer = null;
+      onUpdate(y);
+      return;
     }
-    onUpdate(y)
-    timer = setTimeout(loop, frameMs)
+    onUpdate(y);
+    timer = setTimeout(loop, frameMs);
   }
 
   function jump() {
     // Stack impulse on rapid taps, clamped to one full jumpForce
-    velocity = Math.max(velocity + jumpForce * stackFactor, jumpForce)
+    velocity = Math.max(velocity + jumpForce * stackFactor, jumpForce);
     if (!timer) {
-      loop()
+      loop();
     }
   }
 
   function destroy() {
     if (timer) {
-      clearTimeout(timer)
-      timer = null
+      clearTimeout(timer);
+      timer = null;
     }
   }
 
-  return { jump, getY: () => y, destroy }
+  return { jump, getY: () => y, destroy };
 }
