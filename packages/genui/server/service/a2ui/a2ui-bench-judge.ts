@@ -17,15 +17,16 @@ import {
 } from '../common/bench/screenshot.js';
 import type { BenchScenarioRequest } from '../common/bench/types.js';
 
-const DEFAULT_A2UI_BUNDLE_URL = 'https://lynx-stack.dev/genui/a2ui.lynx.js';
+const DEFAULT_A2UI_ZIP_URL = 'https://lynx-stack.dev/genui/a2ui.lynx.zip';
 const DEFAULT_OPERATION_TIMEOUT_MS = 60_000;
 const DEFAULT_SCREENSHOT_WIDTH = 390;
 const DEFAULT_SCREENSHOT_HEIGHT = 844;
 
 export interface BenchScreenshotRequest {
-  path: 'screenshot/template' | 'screenshot/lynxml';
+  path: 'screenshot/zip/url' | 'screenshot/zip/upload';
   fields: Record<string, string>;
   timeoutMs: number;
+  source?: string;
 }
 
 /** The browser captures the page and relays its response to the waiting run. */
@@ -35,7 +36,7 @@ export type BenchScreenshotCapture = (
 ) => Promise<Response>;
 
 export interface BenchUiJudgeSession {
-  bundleUrl?: string;
+  zipUrl?: string;
   screenshotPath: BenchScreenshotRequest['path'];
 }
 
@@ -95,7 +96,6 @@ interface RunBenchUiJudgeOptions {
   messages: A2UIMessage[];
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
-  screenshotSettleMs?: number;
   session: BenchUiJudgeSession;
   signal?: AbortSignal;
   timeoutMs?: number;
@@ -109,7 +109,6 @@ export interface RunBenchUiJudgeRequestOptions {
   lynxXmlSource?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
-  screenshotSettleMs?: number;
   session: BenchUiJudgeSession;
   signal?: AbortSignal;
   timeoutMs?: number;
@@ -128,7 +127,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeBundleUrl(raw: string): string | null {
+function normalizeZipUrl(raw: string): string | null {
   try {
     const url = new URL(raw);
     if (
@@ -249,34 +248,34 @@ function containsOpenUrlCall(
 
 export function resolveBenchUiJudge(
   options: {
-    bundleUrl?: string;
+    zipUrl?: string;
     sourceKind?: 'lynx-xml';
     env?: NodeJS.ProcessEnv;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
   const env = options.env ?? process.env;
-  const configuredBundleUrl = options.bundleUrl?.trim()
-    ?? env.UI_JUDGE_BUNDLE_URL?.trim();
-  const rawBundleUrl =
-    configuredBundleUrl !== undefined && configuredBundleUrl.length > 0
-      ? configuredBundleUrl
-      : DEFAULT_A2UI_BUNDLE_URL;
-  const bundleUrl = options.sourceKind === 'lynx-xml'
+  const configuredZipUrl = options.zipUrl?.trim()
+    ?? env.UI_JUDGE_ZIP_URL?.trim();
+  const rawZipUrl =
+    configuredZipUrl !== undefined && configuredZipUrl.length > 0
+      ? configuredZipUrl
+      : DEFAULT_A2UI_ZIP_URL;
+  const zipUrl = options.sourceKind === 'lynx-xml'
     ? undefined
-    : normalizeBundleUrl(rawBundleUrl);
-  if (options.sourceKind !== 'lynx-xml' && !bundleUrl) {
+    : normalizeZipUrl(rawZipUrl);
+  if (options.sourceKind !== 'lynx-xml' && !zipUrl) {
     return Promise.resolve({
       enabled: false,
-      reason: 'UI_JUDGE_BUNDLE_URL must be an HTTP(S) URL without credentials.',
+      reason: 'UI_JUDGE_ZIP_URL must be an HTTP(S) URL without credentials.',
     });
   }
   return Promise.resolve({
     enabled: true,
     session: {
-      ...(bundleUrl ? { bundleUrl } : {}),
+      ...(zipUrl ? { zipUrl } : {}),
       screenshotPath: options.sourceKind === 'lynx-xml'
-        ? 'screenshot/lynxml'
-        : 'screenshot/template',
+        ? 'screenshot/zip/upload'
+        : 'screenshot/zip/url',
     },
   });
 }
@@ -309,9 +308,6 @@ export async function runBenchUiJudge(
       },
       includeScreenshot: options.includeScreenshot,
       scenario: options.scenario,
-      ...(options.screenshotSettleMs === undefined
-        ? {}
-        : { screenshotSettleMs: options.screenshotSettleMs }),
       session: options.session,
       ...(options.signal ? { signal: options.signal } : {}),
       ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
@@ -358,13 +354,12 @@ export async function runBenchUiJudgeRequest(
   const fields: Record<string, string> = {};
   if (options.lynxXmlSource === undefined) {
     fields.entry = 'template.js';
-    if (options.session.bundleUrl !== undefined) {
-      fields.url = options.session.bundleUrl;
+    if (options.session.zipUrl !== undefined) {
+      fields.url = options.session.zipUrl;
     }
     fields.globalProps = JSON.stringify(options.globalProps);
   } else {
     fields.entry = 'index.lynxml';
-    fields.source = options.lynxXmlSource;
   }
   if (options.initData !== undefined) {
     fields.initData = JSON.stringify(options.initData);
@@ -375,18 +370,15 @@ export async function runBenchUiJudgeRequest(
   };
   fields.width = String(viewport.width);
   fields.height = String(viewport.height);
-  if (options.screenshotSettleMs !== undefined) {
-    fields.screenshotSettleMs = String(options.screenshotSettleMs);
-  }
-  if (options.timeoutMs !== undefined) {
-    fields.timeoutMs = String(options.timeoutMs);
-  }
 
   let response: Response;
   try {
     response = await captureScreenshot({
       path: options.session.screenshotPath,
       fields,
+      ...(options.lynxXmlSource === undefined
+        ? {}
+        : { source: options.lynxXmlSource }),
       timeoutMs: requestTimeoutMs,
     }, requestSignal);
   } catch (error) {

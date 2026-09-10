@@ -148,7 +148,7 @@ describe('A2UI Bench UI Judge integration', () => {
       '<!doctype lynx><lynx engine-version="4.2"><script thread="main"></script></lynx>';
     rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
-      session: { screenshotPath: 'screenshot/lynxml' },
+      session: { screenshotPath: 'screenshot/zip/upload' },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
       errors: [],
@@ -279,8 +279,8 @@ describe('A2UI Bench UI Judge integration', () => {
     rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/bench.lynx.js',
-        screenshotPath: 'screenshot/template',
+        zipUrl: 'https://bundle.example/bench.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -430,8 +430,8 @@ describe('A2UI Bench UI Judge integration', () => {
     rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValue({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/bench.lynx.js',
-        screenshotPath: 'screenshot/template',
+        zipUrl: 'https://bundle.example/bench.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValue({
@@ -536,8 +536,8 @@ describe('A2UI Bench UI Judge integration', () => {
     rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/openui.lynx.js',
-        screenshotPath: 'screenshot/template',
+        zipUrl: 'https://bundle.example/openui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -746,8 +746,8 @@ describe('A2UI Bench UI Judge integration', () => {
     rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        screenshotPath: 'screenshot/template',
+        zipUrl: 'https://bundle.example/a2ui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -831,8 +831,8 @@ describe('A2UI Bench UI Judge integration', () => {
     rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        screenshotPath: 'screenshot/template',
+        zipUrl: 'https://bundle.example/a2ui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({

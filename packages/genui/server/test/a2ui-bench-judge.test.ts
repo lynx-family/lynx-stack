@@ -130,14 +130,14 @@ describe('resolveBenchUiJudge', () => {
       await resolveBenchUiJudge({
         env: {
           UI_JUDGE_SERVER_URL: 'file:///unreachable',
-          UI_JUDGE_BUNDLE_URL: 'https://assets.test/a2ui.lynx.js',
+          UI_JUDGE_ZIP_URL: 'https://assets.test/a2ui.lynx.zip',
         },
       }),
     ).toEqual({
       enabled: true,
       session: {
-        bundleUrl: 'https://assets.test/a2ui.lynx.js',
-        screenshotPath: 'screenshot/template',
+        zipUrl: 'https://assets.test/a2ui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
   });
@@ -145,20 +145,20 @@ describe('resolveBenchUiJudge', () => {
     expect(
       await resolveBenchUiJudge({
         env: {},
-        bundleUrl: 'https://assets.test/openui.lynx.js',
+        zipUrl: 'https://assets.test/openui.lynx.zip',
       }),
     )
       .toEqual({
         enabled: true,
         session: {
-          bundleUrl: 'https://assets.test/openui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/openui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       });
   });
   test('rejects an invalid bundle URL', async () => {
     expect(
-      await resolveBenchUiJudge({ env: {}, bundleUrl: 'file:///template.js' }),
+      await resolveBenchUiJudge({ env: {}, zipUrl: 'file:///template.js' }),
     ).toMatchObject({ enabled: false });
   });
 });
@@ -177,8 +177,8 @@ describe('runBenchUiJudge', () => {
           prompt: 'Build a greeting',
         },
         session: {
-          bundleUrl: 'https://assets.test/openui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/openui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       (request) => {
@@ -196,7 +196,7 @@ describe('runBenchUiJudge', () => {
         rawText: 'root = TextContent("Hello")',
         theme: 'light',
       },
-      url: 'https://assets.test/openui.lynx.js',
+      url: 'https://assets.test/openui.lynx.zip',
     });
     expect(result).toEqual({
       dimensions: geqiResponse(5).dimensions,
@@ -215,8 +215,8 @@ describe('runBenchUiJudge', () => {
         includeScreenshot: true,
         scenario: { prompt: 'Build a greeting' },
         session: {
-          bundleUrl: 'https://assets.test/openui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/openui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () =>
@@ -274,8 +274,8 @@ describe('runBenchUiJudge', () => {
           type: 'Action',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
         timeoutMs: 45_000,
       },
@@ -292,7 +292,7 @@ describe('runBenchUiJudge', () => {
       },
     );
 
-    expect(requestUrl).toBe('screenshot/template');
+    expect(requestUrl).toBe('screenshot/zip/url');
     expect(requestBody).toEqual({
       entry: 'template.js',
       width: 390,
@@ -310,8 +310,7 @@ describe('runBenchUiJudge', () => {
         speed: 0,
         theme: 'light',
       },
-      timeoutMs: 45_000,
-      url: 'https://assets.test/a2ui.lynx.js',
+      url: 'https://assets.test/a2ui.lynx.zip',
     });
     expect(result).toEqual({
       dimensions: geqiResponse(4).dimensions,
@@ -336,8 +335,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () =>
@@ -375,8 +374,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () => Promise.resolve(evaluationResponse(response)),
@@ -408,8 +407,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () => Promise.resolve(evaluationResponse(response)),
@@ -437,8 +436,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () => Promise.resolve(evaluationResponse(response)),
@@ -464,8 +463,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () =>
@@ -507,7 +506,7 @@ describe('runBenchUiJudge', () => {
                 component: 'McpApp',
                 id: 'mcp',
                 mcpAppData: {},
-                url: 'https://untrusted.test/app.lynx.js',
+                url: 'https://untrusted.test/app.lynx.zip',
               },
               {
                 component: 'Text',
@@ -545,8 +544,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       (request) => {
@@ -618,8 +617,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
       },
       () => {
@@ -652,8 +651,8 @@ describe('runBenchUiJudge', () => {
           type: 'Information',
         },
         session: {
-          bundleUrl: 'https://assets.test/a2ui.lynx.js',
-          screenshotPath: 'screenshot/template',
+          zipUrl: 'https://assets.test/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
         },
         signal: controller.signal,
       },
@@ -683,8 +682,8 @@ describe('runBenchUiJudge', () => {
 
 describe('screenshot evaluation boundary', () => {
   const session = {
-    bundleUrl: 'https://assets.test/a2ui.lynx.js',
-    screenshotPath: 'screenshot/template' as const,
+    zipUrl: 'https://assets.test/a2ui.lynx.zip',
+    screenshotPath: 'screenshot/zip/url' as const,
   };
 
   test('keeps task and model in GenUI and sends the same converted PNG to scoring and the report', async () => {
@@ -703,7 +702,7 @@ describe('screenshot evaluation boundary', () => {
       entry: 'template.js',
       width: 390,
       height: 844,
-      url: session.bundleUrl,
+      url: session.zipUrl,
       globalProps: {
         benchMode: true,
         instant: true,
@@ -901,8 +900,8 @@ test.each([
         ...(viewport ? { viewport } : {}),
         scenario: { prompt: 'Greeting' },
         session: {
-          screenshotPath: `screenshot/${xml ? 'lynxml' : 'template'}`,
-          ...(xml ? {} : { bundleUrl: 'https://assets.test/a2ui.lynx.js' }),
+          screenshotPath: `screenshot/zip/${xml ? 'upload' : 'url'}`,
+          ...(xml ? {} : { zipUrl: 'https://assets.test/a2ui.lynx.zip' }),
         },
       }, (request) => {
         expect(readScreenshotForm(request)).toMatchObject({ width, height });
@@ -913,7 +912,7 @@ test.each([
 );
 
 test.each(['a2ui', 'openui', 'lynx-xml'])(
-  'passes explicit multipart screenshot options for %s',
+  'passes supported ZIP fields and keeps timeout client-side for %s',
   async (protocol) => {
     const xml = protocol === 'lynx-xml';
     await runBenchUiJudgeRequest({
@@ -921,29 +920,28 @@ test.each(['a2ui', 'openui', 'lynx-xml'])(
       ...(xml ? { lynxXmlSource: '<lynx/>' } : {}),
       initData: { count: 1 },
       viewport: { width: 375, height: 812 },
-      screenshotSettleMs: 25,
       timeoutMs: 4321,
       scenario: { prompt: 'Greeting' },
       session: {
-        screenshotPath: `screenshot/${xml ? 'lynxml' : 'template'}`,
+        screenshotPath: `screenshot/zip/${xml ? 'upload' : 'url'}`,
         ...(xml
           ? {}
-          : { bundleUrl: `https://assets.test/${protocol}.lynx.js` }),
+          : { zipUrl: `https://assets.test/${protocol}.lynx.zip` }),
       },
     }, (request) => {
+      expect(request.source).toBe(xml ? '<lynx/>' : undefined);
+      expect(request.timeoutMs).toBe(8642);
       expect(readScreenshotForm(request)).toEqual({
         entry: xml ? 'index.lynxml' : 'template.js',
         ...(xml
-          ? { source: '<lynx/>' }
+          ? {}
           : {
-            url: `https://assets.test/${protocol}.lynx.js`,
+            url: `https://assets.test/${protocol}.lynx.zip`,
             globalProps: { ready: true },
           }),
         initData: { count: 1 },
         width: 375,
         height: 812,
-        screenshotSettleMs: 25,
-        timeoutMs: 4321,
       });
       return Promise.resolve(evaluationResponse(geqiResponse(4)));
     });
