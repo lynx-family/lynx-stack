@@ -14,5 +14,5 @@
 
     "noEmit": true
   },
-  "include": ["./rsbuild.config.ts"]
+  "include": ["./rsbuild.config.ts", "./rstest.config.ts"]
 }
