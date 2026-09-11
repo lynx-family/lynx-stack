@@ -1,7 +1,7 @@
 {
   "name": "create-rspeedy",
   "version": "0.17.1",
-  "description": "Create Rspeedy-powered ReactLynx apps with one command",
+  "description": "Deprecated: use @lynx-js/create-lynx instead",
   "keywords": [
     "webpack",
     "rspack",
@@ -35,7 +35,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@rstackjs/create-toolkit": "2.1.4"
+    "@rstackjs/create-toolkit": "2.2.7"
   },
   "devDependencies": {
     "@lynx-js/preact-devtools": "catalog:lynxjs",

@@ -178,7 +178,7 @@ export type RenderResult<Q extends Queries = typeof queries> = {
  *
  * @public
  */
-export function render<Q extends Queries>(
+export function render<Q extends Queries = typeof queries>(
   ui: React.ReactNode,
   options?: RenderOptions<Q>,
 ): RenderResult<Q>;

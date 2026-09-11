@@ -141,6 +141,7 @@ catalogs:
   # Rstest monorepo packages
   rstest:
     "@rstest/adapter-rsbuild": "0.11.12"
+    "@rstest/adapter-rslib": "0.11.12"
     "@rstest/coverage-istanbul": "0.11.12"
     "@rstest/core": "0.11.12"
 

@@ -1,0 +1,11 @@
+{
+  "name": "rslint-react-js",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "rslint"
+  },
+  "devDependencies": {
+    "@rslint/core": "^0.9.0"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "@lynx-js/create-lynx",
+  "version": "0.1.0",
+  "description": "Create a Lynx app or library with one command",
+  "keywords": [
+    "create",
+    "Lynx",
+    "ReactLynx",
+    "rsbuild",
+    "rspeedy",
+    "rslib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/create-lynx"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": null,
+  "bin": {
+    "create-lynx": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "template-*/**",
+    "library/template-*/**",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "@rstackjs/create-toolkit": "2.2.7"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/preact-devtools": "catalog:lynxjs",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/test-tools": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "2.1.0",
+    "@rsbuild/plugin-type-check": "1.6.0",
+    "@rslib/core": "catalog:rslib",
+    "@rstest/adapter-rslib": "catalog:rstest",
+    "@rstest/core": "catalog:rstest",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@types/react": "^19.2.18",
+    "happy-dom": "20.14.0",
+    "jsdom": "^27.4.0",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

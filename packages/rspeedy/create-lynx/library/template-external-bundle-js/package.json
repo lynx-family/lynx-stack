@@ -1,0 +1,11 @@
+{
+  "files": [
+    "dist-external-bundle"
+  ],
+  "scripts": {
+    "build:external-bundle": "rslib build --config rslib.external-bundle.config.js"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*"
+  }
+}

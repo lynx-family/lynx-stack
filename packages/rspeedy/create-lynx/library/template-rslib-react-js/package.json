@@ -1,0 +1,31 @@
+{
+  "name": "lynx-rslib-react-js",
+  "version": "0.0.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.jsx"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "rstest run"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@rsbuild/plugin-react": "workspace:*",
+    "@rslib/core": "workspace:*",
+    "@rstest/adapter-rslib": "workspace:*",
+    "@rstest/core": "workspace:*",
+    "@testing-library/dom": "workspace:*",
+    "@testing-library/jest-dom": "workspace:*",
+    "happy-dom": "workspace:*"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": ">=0.100.0"
+  }
+}

@@ -293,12 +293,18 @@ jobs:
         # not agree on which undeclared transitive dependency a package can
         # still resolve. Smoke-test all of them to catch phantom dependencies.
         smoke_test() {
-          local pm=$1 tools=$2 dir=$3
-          shift 3
+          local pm=$1 template=$2 tools=$3 dir=$4
+          shift 4
           cd `mktemp -d`
-          npx --registry http://localhost:4873 create-rspeedy-canary@latest --template react --dir "$dir" --tools "$tools" "$@"
+          npx --registry http://localhost:4873 @lynx-js/create-lynx-canary@latest --template "$template" --dir "$dir" --tools "$tools" "$@"
           cd "$dir"
-          npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+          # `upgrade-rspeedy` bumps the Rspeedy dependencies of a project, so it
+          # has nothing to do in an Rsbuild one.
+          case "$template" in
+            rspeedy-*)
+              npx --registry http://localhost:4873 upgrade-rspeedy-canary@latest
+              ;;
+          esac
           if [ "$pm" = pnpm ]; then
             # pnpm 11 reads these typed settings from pnpm-workspace.yaml.
             printf '%s\n' \
@@ -310,17 +316,46 @@ jobs:
           install_with "$pm"
           local bin=${pm%%-*}
           run_script "$bin" build
-          run_script "$bin" build --mode development
-          run_script "$bin" lint
+          # A library has one output, an app also has a development one.
+          case "$template" in
+            rslib-*) ;;
+            *) run_script "$bin" build --mode development ;;
+          esac
+          case ",$tools," in *,eslint,*|*,rslint,*) run_script "$bin" lint ;; esac
+          run_script "$bin" test
+          # A new project must pass the formatters it ships with.
+          case ",$tools," in *,prettier,*) npx prettier --check . ;; esac
+          case ",$tools," in *,biome,*) npx biome check . ;; esac
+          case "$template" in rslib-*-ts) npx tsc -p tests ;; esac
+          case ",$tools," in
+            *,external-bundle,*)
+              run_script "$bin" build:external-bundle
+              npm pack --dry-run --json | jq -e '.[0].files | map(.path) | any(startswith("dist-external-bundle/"))'
+              ;;
+          esac
         }
 
-        smoke_test pnpm eslint create-rspeedy-regression --skill lynx-devtool
-        smoke_test pnpm eslint,vitest-rltl create-rspeedy-regression-vitest-rltl
-        run_script pnpm test
-        smoke_test pnpm eslint,rstest-rltl create-rspeedy-regression-rstest-rltl
-        run_script pnpm test
-        smoke_test npm eslint create-rspeedy-regression-npm --skill lynx-devtool
-        smoke_test yarn eslint create-rspeedy-regression-yarn --skill lynx-devtool
+        # Every template. The tests go through `@lynx-js/react/testing-library`,
+        # which reads whichever config file the build tool owns, so each
+        # template has to be exercised.
+        for template in rsbuild-react-ts rsbuild-react-js rspeedy-react-ts rspeedy-react-js rslib-react-ts rslib-react-js; do
+          smoke_test pnpm "$template" eslint "create-lynx-$template" --skill lynx-devtool
+        done
+
+        # A library can also be packed into a Lynx External Bundle.
+        smoke_test pnpm rslib-react-ts eslint,external-bundle create-lynx-rslib-external-bundle --skill lynx-devtool
+
+        # The loop above only picks ESLint. Each formatter and Rslint must
+        # also leave a new project clean, alone and combined.
+        smoke_test pnpm rsbuild-react-ts rslint,biome create-lynx-rslint-biome
+        smoke_test pnpm rspeedy-react-js prettier create-lynx-prettier
+        smoke_test pnpm rslib-react-js biome,prettier create-lynx-biome-prettier
+
+        # The loop above stays on pnpm. Each package manager lays `node_modules`
+        # out differently, so they do not agree on which undeclared transitive
+        # dependency a package can still resolve.
+        smoke_test npm rsbuild-react-ts eslint create-lynx-regression-npm --skill lynx-devtool
+        smoke_test yarn rspeedy-react-ts eslint create-lynx-regression-yarn --skill lynx-devtool
   test-react:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
