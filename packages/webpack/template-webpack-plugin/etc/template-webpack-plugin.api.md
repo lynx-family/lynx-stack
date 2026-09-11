@@ -174,6 +174,7 @@ export interface TemplateHooks {
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
         encodeData: EncodeRawData;
+        lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
         filenameTemplate: string;
         chunkGroups: ChunkGroup[];
         intermediate: string;

@@ -1353,6 +1353,8 @@ describe('debug info outside', () => {
         sourceContent: Record<string, unknown>
       }
       expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
+      expect(tasmJson.compilerOptions['isExternalBundle']).toBe(true)
+      expect(tasmJson.compilerOptions['isLazy']).toBe(false)
       // The style sheet lands after the elements exist.
       expect(tasmJson.compilerOptions['enableCSSInvalidation']).toBe(true)
       // An external bundle is loaded by an application, not rendered as one.

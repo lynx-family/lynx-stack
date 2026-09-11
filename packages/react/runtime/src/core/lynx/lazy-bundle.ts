@@ -116,7 +116,9 @@ export const loadLazyBundle: <
     ? loadLazyBundleWithFetchBundle
     : loadLazyBundleWithQueryComponent;
 
-  lynx.loadLazyBundle = impl;
+  if (typeof lynx !== 'undefined') {
+    lynx.loadLazyBundle = impl;
+  }
 
   function loadLazyBundleWithQueryComponent<
     T extends { default: React.ComponentType<any> },
@@ -140,7 +142,7 @@ export const loadLazyBundle: <
       // We also should keep promise shape
       r.then = makeSyncThen(result);
       return r;
-    } else if (__JS__) {
+    } else if (typeof __JS__ === 'undefined' || __JS__) {
       if (__DEV__ && mode !== undefined) {
         throw new Error(
           `Lazy bundle import \`mode: '${mode}'\` requires FetchBundle, but the current build uses QueryComponent. `
@@ -193,19 +195,19 @@ export const loadLazyBundle: <
   function loadLazyBundleWithFetchBundle<
     T extends { default: React.ComponentType<any> },
   >(source: string, mode?: LazyBundleMode, host?: string): Promise<T> {
-    if (__MAIN_THREAD__) {
+    if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       if (mode !== 'sync') {
         // Fire the fetch and ignore the result so the request goes out early
         // and warms the native bundle cache; the background `async` path then
         // waits less. The main thread renders nothing here.
         try {
-          lynx.fetchBundle(source, {});
+          lynx.fetchBundle(source, { isLazyBundle: true });
         } catch {}
         return new Promise(() => {});
       }
       let response;
       try {
-        response = lynx.fetchBundle(source, {}).wait(
+        response = lynx.fetchBundle(source, { isLazyBundle: true }).wait(
           LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
         );
       } catch {
@@ -219,9 +221,14 @@ export const loadLazyBundle: <
         result = lynx.loadScript<(entry: string) => T>(SECTION_MAIN_THREAD, {
           bundleName: response.url,
         })(source);
-        const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
-        if (styleSheet !== null) {
-          __AdoptStyleSheet(styleSheet);
+        if (
+          typeof __LoadStyleSheet === 'function'
+          && typeof __AdoptStyleSheet === 'function'
+        ) {
+          const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+          if (styleSheet !== null) {
+            __AdoptStyleSheet(styleSheet);
+          }
         }
       } catch {
         return new Promise(() => {});
@@ -229,7 +236,7 @@ export const loadLazyBundle: <
       const r: Promise<T> = Promise.resolve(result);
       r.then = makeSyncThen(result);
       return r;
-    } else if (__JS__) {
+    } else if (typeof __JS__ === 'undefined' || __JS__) {
       const cached = fetchBundleBgCache.get(source);
       if (cached !== undefined) {
         const r: Promise<T> = Promise.resolve(cached as T);
@@ -239,7 +246,7 @@ export const loadLazyBundle: <
       if (mode === 'sync') {
         let response;
         try {
-          response = lynx.fetchBundle(source, {}).wait(
+          response = lynx.fetchBundle(source, { isLazyBundle: true }).wait(
             LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
           );
         } catch (e) {
@@ -282,7 +289,7 @@ export const loadLazyBundle: <
       return new Promise<T>((resolve, reject) => {
         let handler;
         try {
-          handler = lynx.fetchBundle(source, {});
+          handler = lynx.fetchBundle(source, { isLazyBundle: true });
         } catch (e) {
           reject(e instanceof Error ? e : new Error(String(e)));
           return;

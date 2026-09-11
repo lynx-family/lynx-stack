@@ -693,6 +693,30 @@ const externalBundleRsbuildPlugin = ({
 
     const { LynxTemplatePlugin } = exposed
 
+    api.modifyRspackConfig((config, { appendPlugins }) => {
+      appendPlugins({
+        apply(compiler: Rspack.Compiler) {
+          compiler.hooks.thisCompilation.tap(
+            'lynx:external-bundle',
+            compilation => {
+              LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
+                .beforeEncode.tap(
+                  'lynx:external-bundle',
+                  options => {
+                    Object.assign(options.encodeData.compilerOptions, {
+                      isExternalBundle: true,
+                      isLazy: false,
+                    })
+                    return options
+                  },
+                )
+            },
+          )
+        },
+      })
+      return config
+    })
+
     const lynxConfig = api.useExposed<LynxConfig>(
       Symbol.for('@lynx-js/rsbuild-plugin:config'),
     )
@@ -745,7 +769,11 @@ const externalBundleRsbuildPlugin = ({
             .entry(entryName)
             .add({
               ...entryValue,
-              filename: path.posix.join(intermediateDir, `${entryName}.js`),
+              // Web sections execute beside the bundle, so their automatic
+              // public path must not undo the native staging directory.
+              filename: target === 'web'
+                ? `${encodeURIComponent(entryName)}.js`
+                : path.posix.join(intermediateDir, `${entryName}.js`),
             })
             .end()
         }

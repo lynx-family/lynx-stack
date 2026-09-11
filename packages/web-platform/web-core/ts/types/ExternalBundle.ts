@@ -18,6 +18,12 @@ export interface ExternalBundleResponse {
   errorMsg: string;
 }
 
+export interface FetchBundleOptions {
+  /** Decode the bundle as a lazy component instead of an external container. */
+  isLazyBundle?: boolean;
+  [key: string]: unknown;
+}
+
 /**
  * The external-bundle runtime APIs exposed on the `lynx` object in both the
  * main-thread and background JS realms.
@@ -30,7 +36,10 @@ export interface ExternalBundleLynxAPIs {
    * an {@link ExternalBundleResponse}. The synchronous `.wait()` usage is not
    * supported on web.
    */
-  fetchBundle(url: string, options?: unknown): Promise<ExternalBundleResponse>;
+  fetchBundle(
+    url: string,
+    options?: FetchBundleOptions,
+  ): Promise<ExternalBundleResponse>;
 
   /**
    * Synchronously evaluate the JS of the custom section `sectionPath` from the
@@ -40,4 +49,13 @@ export interface ExternalBundleLynxAPIs {
     sectionPath: string,
     options: { bundleName: string },
   ): unknown;
+
+  /**
+   * Fetch, decode, and execute a lazy bundle, returning its module exports.
+   */
+  loadLazyBundle(
+    source: string,
+    mode?: 'sync' | 'async',
+    host?: string,
+  ): Promise<unknown>;
 }
