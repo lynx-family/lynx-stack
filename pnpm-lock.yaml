@@ -1551,6 +1551,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0

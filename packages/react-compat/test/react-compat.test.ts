@@ -1,8 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { describe, expect, it, rstest } from '@rstest/core';
 import semver from 'semver';
-import { describe, expect, it, vi } from 'vitest';
 
 import { createElement } from '@lynx-js/react';
 import reactPkg from '@lynx-js/react/package.json' with { type: 'json' };
@@ -47,7 +47,7 @@ describe('@lynx-js/react-compat', () => {
   });
 
   it('runs `useInsertionEffect` when a component renders', () => {
-    const effect = vi.fn();
+    const effect = rstest.fn();
     function App() {
       useInsertionEffect(effect, []);
       return null;

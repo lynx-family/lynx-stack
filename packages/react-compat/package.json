@@ -46,10 +46,11 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest"
+    "test": "rstest run"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
+    "@rstest/core": "catalog:rstest",
     "@types/semver": "^7.8.0",
     "semver": "^7.8.5"
   },

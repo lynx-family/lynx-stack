@@ -79,7 +79,6 @@ export default defineConfig({
       'packages/i18n/*/vitest.config.ts',
       'packages/tailwind-preset/vitest.config.ts',
       'packages/tools/*/vitest.config.ts',
-      'packages/react-compat/vitest.config.ts',
       'packages/use-sync-external-store/vitest.config.ts',
       'packages/lynx/*/vitest.config.ts',
       'packages/motion/vitest.config.ts',
