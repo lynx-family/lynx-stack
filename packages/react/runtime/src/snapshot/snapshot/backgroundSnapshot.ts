@@ -441,9 +441,9 @@ export class BackgroundSnapshotInstance {
     valueToCommit: unknown;
   } {
     if (!newValue) {
-      // `oldValue` can't be a spread.
-      if (oldValue && typeof oldValue === 'object' && '__ref' in oldValue) {
-        queueRefAttrUpdate(oldValue as Ref, null, this, index);
+      const oldRef = getRefFromValue(oldValue);
+      if (oldRef) {
+        queueRefAttrUpdate(oldRef, null, this, index);
       }
       return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
     }

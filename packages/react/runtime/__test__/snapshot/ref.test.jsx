@@ -2170,7 +2170,7 @@ describe('applyRef before hydration', () => {
   });
 });
 
-describe.each([false, true])('shared callback ref bindings (hydrated: %s)', (hydrated) => {
+describe.each([false, true])('callback ref bindings (hydrated: %s)', (hydrated) => {
   function applyMainThreadUpdates() {
     const updates = lynx.getNativeApp().callLepusMethod.mock.calls.slice();
     lynx.getNativeApp().callLepusMethod.mockClear();
@@ -2214,6 +2214,53 @@ describe.each([false, true])('shared callback ref bindings (hydrated: %s)', (hyd
     });
     return { callback, active, cleanups };
   }
+
+  it.each([
+    { clearedRef: null, returnsCleanup: false },
+    { clearedRef: undefined, returnsCleanup: false },
+    { clearedRef: null, returnsCleanup: true },
+    { clearedRef: undefined, returnsCleanup: true },
+  ])(
+    'cleans a callback ref set to $clearedRef (returns cleanup: $returnsCleanup)',
+    ({ clearedRef, returnsCleanup }) => {
+      const cleanup = vi.fn();
+      const callback = vi.fn(() => returnsCleanup ? cleanup : undefined);
+
+      function App({ elementRef }) {
+        return <view ref={elementRef} />;
+      }
+
+      mount(() => <App elementRef={callback} />);
+      expect(callback).toHaveBeenCalledTimes(1);
+      const [[node]] = callback.mock.calls;
+      expect(node).toBeInstanceOf(RefProxy);
+      expect(cleanup).not.toHaveBeenCalled();
+
+      update(<App elementRef={clearedRef} />);
+      const detachedCalls = returnsCleanup ? [[node]] : [[node], [null]];
+      expect(callback.mock.calls).toEqual(detachedCalls);
+      expect(cleanup).toHaveBeenCalledTimes(returnsCleanup ? 1 : 0);
+
+      update(<App elementRef={clearedRef} />);
+      expect(callback.mock.calls).toEqual(detachedCalls);
+      expect(cleanup).toHaveBeenCalledTimes(returnsCleanup ? 1 : 0);
+
+      update(<App elementRef={callback} />);
+      const [reboundNode] = callback.mock.calls.at(-1);
+      expect(reboundNode).toBeInstanceOf(RefProxy);
+      expect(callback.mock.calls).toEqual([...detachedCalls, [reboundNode]]);
+      expect(cleanup).toHaveBeenCalledTimes(returnsCleanup ? 1 : 0);
+
+      update(<App elementRef={clearedRef} />);
+      const finalCalls = [...detachedCalls, [reboundNode], ...(returnsCleanup ? [] : [[null]])];
+      expect(callback.mock.calls).toEqual(finalCalls);
+      expect(cleanup).toHaveBeenCalledTimes(returnsCleanup ? 2 : 0);
+
+      update(null);
+      expect(callback.mock.calls).toEqual(finalCalls);
+      expect(cleanup).toHaveBeenCalledTimes(returnsCleanup ? 2 : 0);
+    },
+  );
 
   it('replaces one ref slot without cleaning another slot using the same callback', () => {
     const shared = trackRefBindings();
