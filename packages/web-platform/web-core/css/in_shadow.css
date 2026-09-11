@@ -9,3 +9,25 @@
 [lynx-default-overflow-visible="true"] x-view {
   overflow: visible;
 }
+
+/* Keep specificity low enough for authored text styles to override inheritance.
+ * Gradient text also needs the background and clipping used by x-text.css. */
+[lynx-enable-css-inheritance="true"]
+  :where(x-view > x-text, x-view > lynx-wrapper, x-view
+    > lynx-wrapper
+    > x-text) {
+  color: inherit;
+  --lynx-text-bg-color: inherit;
+  background-clip: inherit;
+  -webkit-background-clip: inherit;
+  direction: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration: inherit;
+  text-shadow: inherit;
+}
