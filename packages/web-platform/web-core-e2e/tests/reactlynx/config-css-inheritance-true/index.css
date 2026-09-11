@@ -1,0 +1,31 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree. */
+.typography {
+  color: red;
+  direction: rtl;
+  font-family: monospace;
+  font-size: 24px;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 2px;
+  line-height: 32px;
+  text-align: right;
+  text-decoration: underline;
+  text-shadow: 1px 2px 3px blue;
+}
+
+.gradient {
+  color: linear-gradient(red, blue);
+}
+
+.override {
+  color: green;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.updated {
+  color: linear-gradient(green, blue);
+  font-size: 30px;
+}

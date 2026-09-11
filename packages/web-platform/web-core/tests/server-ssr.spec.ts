@@ -55,6 +55,24 @@ const X_ELEMENT_COMPATIBLE_TAGS = [
 ] as const;
 
 describe('Server SSR', () => {
+  it.each([true, false, undefined])(
+    'serializes CSS inheritance config %s',
+    (enableCSSInheritance) => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const { globalThisAPIs: api, wasmContext } = createElementAPI(
+        binding,
+        undefined,
+        '',
+        { ...X_ELEMENT_TEST_CONFIG, enableCSSInheritance },
+      );
+      api.__CreatePage('0', 0);
+      api.__FlushElementTree();
+      expect(binding.ssrResult.includes('lynx-enable-css-inheritance="true"'))
+        .toBe(enableCSSInheritance === true);
+      wasmContext.free();
+    },
+  );
+
   it('should generate html correctly', () => {
     const binding: SSRBinding = {
       ssrResult: '',

@@ -8,6 +8,7 @@ import {
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
   lynxDisposedAttribute,
+  lynxEnableCSSInheritanceAttribute,
   lynxEntryNameAttribute,
   uniqueIdSymbol,
 } from '../../../constants.js';
@@ -85,6 +86,7 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
+  config_enable_css_inheritance = false,
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -306,6 +308,9 @@ export function createElementAPI(
         dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
       }
       dom.setAttribute('part', 'page');
+      if (config_enable_css_inheritance) {
+        dom.setAttribute(lynxEnableCSSInheritanceAttribute, 'true');
+      }
       page = dom;
       return dom;
     },

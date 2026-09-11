@@ -32,6 +32,7 @@ export function executeTemplate(
     viewAttributes ?? '',
     {
       enableCSSSelector: config['enableCSSSelector'] === 'true',
+      enableCSSInheritance: config['enableCSSInheritance'] === 'true',
       defaultOverflowVisible: config['defaultOverflowVisible'] === 'true',
       defaultDisplayLinear: config['defaultDisplayLinear'] !== 'false', // Default to true if not present or 'true'
       transformVW: transformVW,
