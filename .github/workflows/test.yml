@@ -347,9 +347,9 @@ jobs:
 
         # The loop above only picks ESLint. Each formatter and Rslint must
         # also leave a new project clean, alone and combined.
-        smoke_test pnpm rsbuild-react-ts rslint,biome create-lynx-rslint-biome --skill lynx-devtool
-        smoke_test pnpm rspeedy-react-js prettier create-lynx-prettier --skill lynx-devtool
-        smoke_test pnpm rslib-react-js biome,prettier create-lynx-biome-prettier --skill lynx-devtool
+        smoke_test pnpm rsbuild-react-ts rslint,biome create-lynx-rslint-biome
+        smoke_test pnpm rspeedy-react-js prettier create-lynx-prettier
+        smoke_test pnpm rslib-react-js biome,prettier create-lynx-biome-prettier
 
         # The loop above stays on pnpm. Each package manager lays `node_modules`
         # out differently, so they do not agree on which undeclared transitive
