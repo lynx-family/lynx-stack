@@ -2210,12 +2210,6 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(jsdom@30.0.1)
-      '@types/semver':
-        specifier: ^7.8.0
-        version: 7.8.0
-      semver:
-        specifier: ^7.8.5
-        version: 7.8.5
 
   packages/rspeedy/plugin-vanilla:
     dependencies:

@@ -5,7 +5,6 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import gte from 'semver/functions/gte.js'
 
 export interface Options {
   lazy?: boolean | undefined
@@ -32,7 +31,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
         paths: [rootPath ?? api.context.rootPath],
       })
-      const { version } = require(reactLynxPkg) as { version: string }
 
       const reactLynxDir = path.dirname(reactLynxPkg)
 
@@ -95,9 +93,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/hooks'),
           resolve('@lynx-js/react'),
           resolve('@lynx-js/react/lepus'),
-          gte(version, '0.111.9999')
-            ? resolve('@lynx-js/react/compat')
-            : Promise.resolve(null),
+          resolve('@lynx-js/react/compat'),
           elementTemplate
             ? resolve('@lynx-js/react/element-template')
             : Promise.resolve(null),
@@ -213,7 +209,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         if (!chain.resolve.alias.has('react$')) {
           chain.resolve.alias.set(
             'react$',
-            reactCompat ?? reactLynx.background,
+            reactCompat,
           )
         }
 
@@ -260,15 +256,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             )
         }
 
-        if (reactCompat) {
-          chain
-            .resolve
-            .alias
-            .set(
-              '@lynx-js/react/compat$',
-              reactCompat,
-            )
-        }
+        chain
+          .resolve
+          .alias
+          .set(
+            '@lynx-js/react/compat$',
+            reactCompat,
+          )
 
         const preactEntries = [
           'preact',
