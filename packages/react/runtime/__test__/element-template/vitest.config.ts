@@ -105,6 +105,7 @@ const config: UserConfigExport = defineConfig({
   },
   test: {
     name: 'react/runtime-et',
+    root: path.resolve(__dirname, '../..'),
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
       include: ['src/element-template/**', 'lazy/element-template*.js'],
