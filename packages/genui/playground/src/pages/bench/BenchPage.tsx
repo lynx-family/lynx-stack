@@ -16,19 +16,17 @@ import {
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   MAX_BENCH_GROUPS,
+  createBenchPresetGroups,
   createCustomBenchScenario,
-  createDefaultBenchGroups,
   findComparableBaseline,
   getBenchProtocolLabel,
   inferBenchVariable,
-  nextBenchComparisonProtocol,
   usesCatalog,
   withBenchProtocol,
 } from './benchData.js';
 import type {
-  BenchComparisonDirection,
   BenchGroup,
-  BenchProfile,
+  BenchPreset,
   BenchProtocol,
   BenchScenario,
   BenchSettings,
@@ -717,7 +715,7 @@ export function BenchPage() {
     readBenchUiJudgeServerUrl,
   );
   const [groups, setGroups] = useState<BenchGroup[]>(() =>
-    createDefaultBenchGroups(DEFAULT_ENV.model)
+    createBenchPresetGroups('protocol', DEFAULT_ENV.model)
   );
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
     () => cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS),
@@ -1148,9 +1146,7 @@ export function BenchPage() {
     [],
   );
 
-  const addComparisonGroup = useCallback((
-    direction: BenchComparisonDirection,
-  ) => {
+  const addComparisonGroup = useCallback(() => {
     setGroups((current) => {
       if (current.length >= MAX_BENCH_GROUPS) return current;
       const baseline = current.find((group) => group.role === 'control')
@@ -1158,31 +1154,26 @@ export function BenchPage() {
       if (!baseline) return current;
 
       const model = baseline.model || selectedModel || DEFAULT_ENV.model;
-      const nextModel = direction === 'model'
-        ? (env.models.find((item) => item.id !== model)?.id ?? model)
-        : model;
-      const nextProtocol = direction === 'protocol'
-        ? nextBenchComparisonProtocol(current, baseline)
-        : baseline.protocol;
-      const protocolGroup = withBenchProtocol(baseline, nextProtocol);
       const nextGroup: BenchGroup = {
         ...baseline,
-        id: createId(`${direction}-comparison`),
+        id: createId('group'),
         role: 'experiment',
-        protocol: protocolGroup.protocol,
-        profile: protocolGroup.profile,
-        name: `${direction} comparison`,
-        variable: direction,
-        model: nextModel,
-        catalog: protocolGroup.catalog,
-        extraInstruction: direction === 'prompt'
-          ? 'Use concise copy and minimize unnecessary UI structure while preserving the requested content and interaction.'
-          : baseline.extraInstruction,
+        name: `Group-${current.length + 1}`,
+        variable: 'custom',
+        model,
         enabled: true,
       };
 
       return [...current, nextGroup];
     });
+  }, [selectedModel]);
+
+  const applyBenchPreset = useCallback((preset: BenchPreset) => {
+    setGroups(createBenchPresetGroups(
+      preset,
+      selectedModel || DEFAULT_ENV.model,
+      env.models.map((item) => item.id),
+    ));
   }, [env.models, selectedModel]);
 
   const updateGroupProtocol = useCallback(
@@ -1191,25 +1182,6 @@ export function BenchPage() {
         current.map((group) =>
           group.id === id
             ? withBenchProtocol(group, protocol)
-            : group
-        )
-      );
-    },
-    [],
-  );
-
-  const updateGroupProfile = useCallback(
-    (id: string, profile: BenchProfile) => {
-      setGroups((current) =>
-        current.map((group) =>
-          group.id === id
-            ? {
-              ...group,
-              profile,
-              catalog: profile === 'matched-core'
-                ? 'Core Catalog'
-                : group.catalog,
-            }
             : group
         )
       );
@@ -1261,7 +1233,7 @@ export function BenchPage() {
   const resetBench = useCallback(() => {
     void cancelActiveBenchJob();
     const nextGroups = reconcileBenchGroupModels(
-      createDefaultBenchGroups(DEFAULT_ENV.model),
+      createBenchPresetGroups('protocol', DEFAULT_ENV.model),
       env,
     );
     const nextScenarios = cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS);
@@ -1833,6 +1805,27 @@ export function BenchPage() {
     setHistoryItems((current) => current.filter((entry) => entry.id !== id));
   }, [setHistoryItems]);
 
+  const copyHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
+    const draft = createBenchDraftHistoryEntry(
+      entry.config.groups,
+      entry.config.scenarios,
+      entry.config.settings,
+    );
+    const copied = { ...draft, title: `${entry.title} copy` };
+    setGroups(cloneBenchGroups(copied.config.groups));
+    setScenarios(cloneBenchScenarios(copied.config.scenarios));
+    setSettings(cloneBenchSettings(copied.config.settings));
+    setReport(null);
+    setReportPlanSignature(null);
+    setStatus('idle');
+    setProgress(0);
+    setRunProgress([]);
+    setJobTiming(null);
+    setRunMessage({ code: 'ready' });
+    setActiveHistoryId(copied.id);
+    setHistoryItems((current) => saveBenchHistoryEntry(current, copied));
+  }, [setHistoryItems]);
+
   const clearHistory = useCallback(() => {
     setActiveHistoryId(null);
     setHistoryItems([]);
@@ -1912,6 +1905,7 @@ export function BenchPage() {
           reportNotice={historyReportNotice}
           storageNotice={historyStorageNotice}
           onDelete={deleteHistoryEntry}
+          onCopy={copyHistoryEntry}
           onNew={resetBench}
           onRestore={restoreHistoryEntry}
         />
@@ -1949,6 +1943,7 @@ export function BenchPage() {
                 locked={planLocked}
                 modelOptions={env.models}
                 onAdd={addComparisonGroup}
+                onPresetChange={applyBenchPreset}
                 onFragmentChange={(id, enabled) =>
                   updateGroup(
                     id,
@@ -1961,7 +1956,6 @@ export function BenchPage() {
                 onModelChange={(id, model) =>
                   updateGroup(id, groupPatch('model', model))}
                 onNameChange={(id, name) => updateGroup(id, { name })}
-                onProfileChange={updateGroupProfile}
                 onPromptChange={(id, extraInstruction) =>
                   updateGroup(
                     id,
@@ -1969,8 +1963,6 @@ export function BenchPage() {
                   )}
                 onProtocolChange={updateGroupProtocol}
                 onRemove={removeGroup}
-                onRoleChange={(id, role) =>
-                  updateGroup(id, groupPatch('role', role))}
               />
             </div>
             <BenchRunFooter

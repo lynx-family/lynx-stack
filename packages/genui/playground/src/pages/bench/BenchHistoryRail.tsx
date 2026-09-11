@@ -4,7 +4,7 @@
 import { formatBenchDuration } from './benchTiming.js';
 import { Button } from '../../components/Button.js';
 import {
-  FileText,
+  Copy,
   History,
   MessageSquarePlus,
   Trash2,
@@ -31,6 +31,7 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
   onClear: () => void;
   onOpenReport: (entry: T) => void;
   onDelete: (id: string) => void;
+  onCopy?: (entry: T) => void;
   onNew: () => void;
   onRestore: (entry: T) => void;
   reportNotice?: string;
@@ -93,11 +94,11 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
                     variant='ghost'
                     size='sm'
                     iconOnly
-                    iconBefore={FileText}
-                    disabled={props.disabled || !entry.report}
-                    aria-label={`View report details for ${entry.title} (opens in a new tab)`}
-                    title='View report details in a new tab'
-                    onClick={() => props.onOpenReport(entry)}
+                    iconBefore={Copy}
+                    disabled={props.disabled || !props.onCopy}
+                    aria-label={`Copy ${entry.title}`}
+                    title='Copy as new Bench'
+                    onClick={() => props.onCopy?.(entry)}
                   />
                   <Button
                     variant='danger'
