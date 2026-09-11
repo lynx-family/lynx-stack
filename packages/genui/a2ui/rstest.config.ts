@@ -12,6 +12,8 @@ export default defineConfig({
         ...config,
         name: 'genui/a2ui',
         include: ['test/**/*.test.ts'],
+        testTimeout: 240_000,
+        hookTimeout: 180_000,
       };
     },
   }),

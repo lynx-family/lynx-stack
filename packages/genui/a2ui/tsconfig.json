@@ -8,7 +8,7 @@
     "jsx": "preserve",
     "jsxImportSource": "@lynx-js/react",
     "noEmit": true,
-    "types": ["@rstest/core/globals"],
+    "types": ["@rstest/core/globals", "node"],
   },
   "include": ["src", "test", "rstest.config.ts"],
   "references": [],
