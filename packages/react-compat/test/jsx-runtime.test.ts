@@ -17,6 +17,8 @@ describe('@lynx-js/react-compat/jsx-runtime', () => {
   });
 
   it('re-exports the `@lynx-js/react` JSX dev runtime', () => {
+    expect(jsxDevRuntime.jsx).toBe(lynxJsxDevRuntime.jsx);
+    expect(jsxDevRuntime.jsxs).toBe(lynxJsxDevRuntime.jsxs);
     expect(jsxDevRuntime.jsxDEV).toBe(lynxJsxDevRuntime.jsxDEV);
     expect(jsxDevRuntime.Fragment).toBe(lynxJsxDevRuntime.Fragment);
   });
