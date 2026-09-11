@@ -54,7 +54,7 @@ jobs:
   # See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache
   build-all:
     concurrency:
-      group: ${{ github.workflow }}-build-${{ github.ref }}
+      group: ${{ github.workflow }}-build-${{ matrix.runs-on.name }}-${{ github.ref }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
