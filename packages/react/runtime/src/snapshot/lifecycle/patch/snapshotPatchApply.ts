@@ -87,13 +87,59 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
       }
       case SnapshotOperation.SetAttribute: {
         const id = snapshotPatch[++i] as number;
-        const dynamicPartIndex = snapshotPatch[++i] as number;
+        const dynamicPartIndex = snapshotPatch[++i] as number | string;
         const value = snapshotPatch[++i];
         const si = snapshotInstanceManager.values.get(id);
         if (si) {
           si.setAttribute(dynamicPartIndex, value);
         } else {
           sendCtxNotFoundEventToBackground(id);
+        }
+        break;
+      }
+      case SnapshotOperation.SetAttributeRun: {
+        const dynamicPartIndex = snapshotPatch[++i];
+        const firstId = snapshotPatch[++i];
+        const idStep = snapshotPatch[++i];
+        const values = snapshotPatch[++i];
+        if (
+          (typeof dynamicPartIndex !== 'number' && typeof dynamicPartIndex !== 'string')
+          || typeof firstId !== 'number'
+          || !Number.isSafeInteger(firstId)
+          || typeof idStep !== 'number'
+          || !Number.isSafeInteger(idStep)
+          || !Array.isArray(values)
+          || values.length < 2
+          || !Number.isSafeInteger(
+            firstId + idStep * (values.length - 1),
+          )
+          || values.some(value =>
+            value !== null
+            && value !== undefined
+            && typeof value !== 'string'
+            && typeof value !== 'number'
+            && typeof value !== 'boolean'
+          )
+        ) {
+          lynx.reportError(
+            new Error('snapshotPatchApply failed: invalid SetAttributeRun'),
+          );
+          break;
+        }
+        const validFirstId = firstId as number;
+        const validIdStep = idStep as number;
+        const validValues = values as unknown[];
+        for (
+          let batchIndex = 0, id = validFirstId;
+          batchIndex < validValues.length;
+          batchIndex++, id += validIdStep
+        ) {
+          const si = snapshotInstanceManager.values.get(id);
+          if (si) {
+            si.setAttribute(dynamicPartIndex, validValues[batchIndex]);
+          } else {
+            sendCtxNotFoundEventToBackground(id);
+          }
         }
         break;
       }
