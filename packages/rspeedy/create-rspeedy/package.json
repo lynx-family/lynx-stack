@@ -35,7 +35,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@rstackjs/create-toolkit": "2.2.6"
+    "@rstackjs/create-toolkit": "2.2.7"
   },
   "devDependencies": {
     "@lynx-js/preact-devtools": "catalog:lynxjs",
