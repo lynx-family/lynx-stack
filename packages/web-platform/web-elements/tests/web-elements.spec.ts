@@ -1711,6 +1711,88 @@ test.describe('web-elements test suite', () => {
     });
   });
   test.describe('x-image', () => {
+    for (const tagName of ['x-image', 'inline-image']) {
+      test(`${tagName} defers detached load events until connected`, async ({ page }) => {
+        await gotoWebComponentPage(page, 'x-image/basic');
+        const result = await page.evaluate(async (tagName) => {
+          const host = document.createElement(tagName);
+          const fragment = document.createDocumentFragment();
+          fragment.append(host);
+          const img = host.shadowRoot!.querySelector<HTMLImageElement>('#img')!;
+          const events: {
+            width: number;
+            height: number;
+            connected: boolean;
+            targetIsHost: boolean;
+          }[] = [];
+          host.addEventListener('load', (event) => {
+            const { width, height } = (event as CustomEvent).detail;
+            events.push({
+              width,
+              height,
+              connected: host.isConnected,
+              targetIsHost: event.target === host,
+            });
+          });
+          const load = async (width: number, height: number) => {
+            const loaded = new Promise<void>((resolve) => {
+              img.addEventListener('load', () => resolve(), { once: true });
+            });
+            host.setAttribute(
+              'src',
+              `data:image/svg+xml,${
+                encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"/>`,
+                )
+              }`,
+            );
+            await loaded;
+          };
+
+          await load(8, 6);
+          await load(12, 9);
+          const beforeConnect = events.slice();
+          document.body.append(fragment);
+          const afterConnect = events.slice();
+
+          host.remove();
+          document.body.append(host);
+          const afterReconnect = events.slice();
+
+          await load(16, 10);
+          const afterConnectedLoad = events.slice();
+          host.remove();
+          await load(20, 15);
+          const afterDetachedLoad = events.slice();
+          document.body.append(host);
+
+          return {
+            beforeConnect,
+            afterConnect,
+            afterReconnect,
+            afterConnectedLoad,
+            afterDetachedLoad,
+            afterReattach: events,
+          };
+        }, tagName);
+
+        const expectedEvents = [[8, 6], [12, 9], [16, 10], [20, 15]].map(
+          ([width, height]) => ({
+            width,
+            height,
+            connected: true,
+            targetIsHost: true,
+          }),
+        );
+        expect(result.beforeConnect).toEqual([]);
+        expect(result.afterConnect).toEqual(expectedEvents.slice(0, 2));
+        expect(result.afterReconnect).toEqual(result.afterConnect);
+        expect(result.afterConnectedLoad).toEqual(expectedEvents.slice(0, 3));
+        expect(result.afterDetachedLoad).toEqual(result.afterConnectedLoad);
+        expect(result.afterReattach).toEqual(expectedEvents);
+      });
+    }
+
     test('basic', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);

@@ -15,6 +15,7 @@ export class ImageEvents
 {
   static observedAttributes = [];
   #dom: HTMLElement;
+  #pendingLoadEvents: CustomEvent[] = [];
 
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
@@ -26,6 +27,7 @@ export class ImageEvents
       });
     } else {
       this.#getImg().removeEventListener('load', this.#teleportLoadEvent);
+      this.#pendingLoadEvents = [];
     }
   }
 
@@ -41,16 +43,26 @@ export class ImageEvents
   }
 
   #teleportLoadEvent = () => {
-    this.#dom.dispatchEvent(
-      new CustomEvent('load', {
-        ...commonComponentEventSetting,
-        detail: {
-          width: this.#getImg().naturalWidth,
-          height: this.#getImg().naturalHeight,
-        },
-      }),
-    );
+    const event = new CustomEvent('load', {
+      ...commonComponentEventSetting,
+      detail: {
+        width: this.#getImg().naturalWidth,
+        height: this.#getImg().naturalHeight,
+      },
+    });
+    if (this.#dom.isConnected) {
+      this.#dom.dispatchEvent(event);
+    } else {
+      // Preserve the dimensions at load time until the host joins the document.
+      this.#pendingLoadEvents.push(event);
+    }
   };
+
+  connectedCallback() {
+    while (this.#dom.isConnected && this.#pendingLoadEvents.length) {
+      this.#dom.dispatchEvent(this.#pendingLoadEvents.shift()!);
+    }
+  }
 
   #teleportErrorEvent = () => {
     this.#dom.dispatchEvent(
