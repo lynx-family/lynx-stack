@@ -154,7 +154,11 @@ export function setupComponentStack(): void {
   };
 
   options.vnode = (vnode: PatchedVNode) => {
-    vnode._owner = ownerStack.length > 0 ? ownerStack[ownerStack.length - 1]! : null;
+    // Scheduled component updates clone the vnode before entering its render scope.
+    // Preserve the original owner when Preact invokes this hook for that clone.
+    if (vnode._owner === undefined) {
+      vnode._owner = ownerStack.length > 0 ? ownerStack[ownerStack.length - 1]! : null;
+    }
     if (oldVNode) oldVNode(vnode);
   };
 
