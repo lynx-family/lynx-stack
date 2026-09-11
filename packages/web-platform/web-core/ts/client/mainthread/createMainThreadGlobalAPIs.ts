@@ -10,7 +10,6 @@ import type {
   MainThreadLynx,
 } from '../../types/index.js';
 import { getExecutionSourceURL } from '../executionSourceURL.js';
-import { templateManager } from './TemplateManager.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
 
@@ -43,9 +42,7 @@ function createMainThreadLynx(
     },
     __globalProps: lynxViewInstance.globalprops,
     getCustomSectionSync(key: string) {
-      return (templateManager.getBundle(
-        lynxViewInstance.templateUrl,
-      )?.customSections as any)?.[key]
+      return (lynxViewInstance.template?.customSections as any)?.[key]
         ?.content;
     },
     markPipelineTiming: lynxViewInstance.backgroundThread.markTiming.bind(

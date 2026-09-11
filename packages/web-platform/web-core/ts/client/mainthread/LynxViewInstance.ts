@@ -14,6 +14,7 @@ import type {
   NapiModulesMap,
   NativeModulesMap,
   PageConfig,
+  DecodedTemplate,
 } from '../../types/index.js';
 import {
   EngineMessageEventType,
@@ -90,7 +91,8 @@ export class LynxViewInstance implements AsyncDisposable {
     string,
     Promise<ExternalBundleResponse>
   >();
-  #bundleDecodeQueue = new Map<string, Promise<void>>();
+  #bundleDecodeQueue = new Map<string, Promise<DecodedTemplate>>();
+  template?: DecodedTemplate;
   #pageConfig?: PageConfig;
   #nativeModulesMap: NativeModulesMap;
   #napiModulesMap: NapiModulesMap;
@@ -183,9 +185,10 @@ export class LynxViewInstance implements AsyncDisposable {
 
   onStyleInfoReady(
     currentUrl: string,
+    bundle: DecodedTemplate,
   ) {
     if (this.mtsWasmBinding.wasmContext) {
-      const resource = templateManager.getStyleSheet(currentUrl);
+      const resource = bundle.styleSheet;
       if (resource) {
         this.mtsWasmBinding.wasmContext.push_style_sheet(
           resource,
@@ -195,10 +198,13 @@ export class LynxViewInstance implements AsyncDisposable {
     }
   }
 
-  async onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
+  async onMTSScriptsLoaded(
+    currentUrl: string,
+    isLazy: boolean,
+    bundle: DecodedTemplate,
+  ) {
     this.backgroundThread.markTiming('lepus_execute_start');
-    const urlMap = templateManager.getBundle(currentUrl)
-      ?.lepusCode as Record<string, string>;
+    const urlMap = bundle.lepusCode as Record<string, string>;
     this.lepusCodeUrls.set(
       currentUrl,
       urlMap,
@@ -245,8 +251,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.backgroundThread.startWebWorker(
       processedData,
       this.globalprops,
-      templateManager.getBundle(this.templateUrl)!.config!.cardType,
-      templateManager.getBundle(this.templateUrl)?.customSections as Record<
+      this.template!.config!.cardType,
+      this.template?.customSections as Record<
         string,
         Cloneable
       >,
@@ -264,12 +270,15 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mainThreadGlobalThis.__FlushElementTree();
   }
 
-  async onBTSScriptsLoaded(url: string, isExternalBundle = false) {
-    const btsUrls = templateManager.getBundle(url)
-      ?.backgroundCode as Record<
-        string,
-        string
-      >;
+  async onBTSScriptsLoaded(
+    url: string,
+    isExternalBundle: boolean,
+    bundle: DecodedTemplate,
+  ) {
+    const btsUrls = bundle.backgroundCode as Record<
+      string,
+      string
+    >;
     await this.backgroundThread.updateBTSChunk(
       url,
       btsUrls,
@@ -304,8 +313,8 @@ export class LynxViewInstance implements AsyncDisposable {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
       },
     )
-      .then(async () => {
-        const urlMap = this.lepusCodeUrls.get(url);
+      .then(async bundle => {
+        const urlMap = bundle.lepusCode;
         const rootUrl = urlMap?.['root'];
         if (!rootUrl) {
           throw new Error(`[lynx-web] Missing root URL for component: ${url}`);
@@ -377,7 +386,7 @@ export class LynxViewInstance implements AsyncDisposable {
   #decodeBundle(
     url: string,
     overrideConfig: Record<string, string>,
-  ): Promise<void> {
+  ): Promise<DecodedTemplate> {
     const previous = this.#bundleDecodeQueue.get(url);
     const promise = (previous?.catch(() => undefined) ?? Promise.resolve())
       .then(() =>
@@ -398,7 +407,7 @@ export class LynxViewInstance implements AsyncDisposable {
     return promise;
   }
 
-  #removeBundleDecode(url: string, promise: Promise<void>): void {
+  #removeBundleDecode(url: string, promise: Promise<DecodedTemplate>): void {
     if (this.#bundleDecodeQueue.get(url) === promise) {
       this.#bundleDecodeQueue.delete(url);
     }

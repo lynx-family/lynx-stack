@@ -199,6 +199,9 @@ self.onmessage = async (
       transformVH,
       transformREM,
     } = data;
+    const send = (message: MainMessage, transfer?: Transferable[]) => {
+      postMessage({ ...message, decodeKey: data.decodeKey }, transfer ?? []);
+    };
     try {
       const response = await fetch(fetchUrl, {
         headers: {
@@ -216,10 +219,11 @@ self.onmessage = async (
         transformVH,
         transformREM,
         overrideConfig,
+        send,
       );
-      postMessage({ type: 'done', url } as MainMessage);
+      send({ type: 'done', url } as MainMessage);
     } catch (error) {
-      postMessage(
+      send(
         { type: 'error', url, error: (error as Error).message } as MainMessage,
       );
     }
@@ -231,7 +235,8 @@ async function handleStream(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
-  overrideConfig?: Partial<PageConfig>,
+  overrideConfig: Partial<PageConfig> | undefined,
+  send: (message: MainMessage, transfer?: Transferable[]) => void,
 ) {
   const streamReader = new StreamReader(reader);
   let config: Partial<PageConfig> = {};
@@ -255,6 +260,7 @@ async function handleStream(
       transformVH,
       transformREM,
       overrideConfig,
+      send,
     );
     return;
   }
@@ -281,6 +287,7 @@ async function handleStream(
       transformVH,
       transformREM,
       overrideConfig,
+      send,
     );
     return;
   }
@@ -337,7 +344,7 @@ async function handleStream(
           decodeJSONMap<string>(content),
           overrideConfig,
         );
-        postMessage(
+        send(
           { type: 'section', label, url, data: config } as MainMessage,
         );
         break;
@@ -352,7 +359,7 @@ async function handleStream(
           transformVH,
           transformREM,
         );
-        postMessage(
+        send(
           {
             type: 'section',
             label,
@@ -360,9 +367,7 @@ async function handleStream(
             data: buffer.buffer,
             config,
           } as MainMessage,
-          {
-            transfer: [buffer.buffer],
-          },
+          [buffer.buffer],
         );
         break;
       }
@@ -380,24 +385,22 @@ async function handleStream(
           );
           blobMap[key] = URL.createObjectURL(blob);
         }
-        postMessage(
+        send(
           { type: 'section', label, url, data: blobMap, config } as MainMessage,
         );
         break;
       }
       case TemplateSectionLabel.ElementTemplates: {
-        postMessage(
+        send(
           { type: 'section', label, url, data: content } as MainMessage,
           [content.buffer],
         );
         break;
       }
       case TemplateSectionLabel.CustomSections: {
-        postMessage(
+        send(
           { type: 'section', label, url, data: content.buffer } as MainMessage,
-          {
-            transfer: [content.buffer],
-          },
+          [content.buffer],
         );
         break;
       }
@@ -416,7 +419,7 @@ async function handleStream(
           });
           blobMap[key] = URL.createObjectURL(blob);
         }
-        postMessage(
+        send(
           { type: 'section', label, url, data: blobMap, config } as MainMessage,
         );
         break;
@@ -494,7 +497,8 @@ async function handleMarkup(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
-  overrideConfig?: Partial<PageConfig>,
+  overrideConfig: Partial<PageConfig> | undefined,
+  send: (message: MainMessage, transfer?: Transferable[]) => void,
 ) {
   const bytes = new Uint8Array(head.length + rest.length);
   bytes.set(head);
@@ -535,6 +539,7 @@ async function handleMarkup(
     transformVH,
     transformREM,
     overrideConfig,
+    send,
   );
 }
 
@@ -544,7 +549,8 @@ async function handleJSON(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
-  overrideConfig?: Partial<PageConfig>,
+  overrideConfig: Partial<PageConfig> | undefined,
+  send: (message: MainMessage, transfer?: Transferable[]) => void,
 ) {
   // Configurations
   let config: Partial<PageConfig> = {};
@@ -565,7 +571,7 @@ async function handleJSON(
   config = Object.fromEntries(
     Object.entries(config).map(([key, value]) => [key, value.toString()]),
   );
-  postMessage({
+  send({
     type: 'section',
     label: TemplateSectionLabel.Configurations,
     url,
@@ -583,7 +589,7 @@ async function handleJSON(
       transformREM,
       getCSSScopeEntry(config, url),
     );
-    postMessage(
+    send(
       {
         type: 'section',
         label: TemplateSectionLabel.StyleInfo,
@@ -591,9 +597,7 @@ async function handleJSON(
         data: buffer.buffer,
         config,
       } as MainMessage,
-      {
-        transfer: [buffer.buffer],
-      },
+      [buffer.buffer],
     );
   }
 
@@ -612,7 +616,7 @@ async function handleJSON(
       );
       blobMap[key] = URL.createObjectURL(blob);
     }
-    postMessage({
+    send({
       type: 'section',
       label: TemplateSectionLabel.LepusCode,
       url,
@@ -631,7 +635,7 @@ async function handleJSON(
       });
       blobMap[key] = URL.createObjectURL(blob);
     }
-    postMessage({
+    send({
       type: 'section',
       label: TemplateSectionLabel.Manifest,
       url,
@@ -647,7 +651,7 @@ async function handleJSON(
     // But TemplateManager expects buffer?
     // TemplateManager: case CustomSections: #setCustomSection(url, data). data: any.
     // So passing object is fine!
-    postMessage({
+    send({
       type: 'section',
       label: TemplateSectionLabel.CustomSections,
       url,

@@ -61,6 +61,7 @@ function mockBundleFetch() {
         (await instancePromise).lepusCodeUrls.set(url, { root: 'blob:root' });
       }
       active = false;
+      return { lepusCode: { root: 'blob:root' } };
     });
 }
 
@@ -101,7 +102,7 @@ test('an external load followed by a lazy load keeps both results', async () => 
 test('FetchBundle keeps lazy and external decode modes independent', async () => {
   const instance = createInstance(rstest.fn());
   const fetchBundle = rstest.spyOn(templateManager, 'fetchBundle')
-    .mockResolvedValue();
+    .mockResolvedValue({});
   const url = 'https://cdn.example.com/catalog.web.bundle';
 
   await Promise.all([
@@ -131,6 +132,7 @@ test('a rejected lazy load can be retried', async () => {
     .mockRejectedValueOnce(new Error('transient failure'))
     .mockImplementationOnce(async (url, instancePromise) => {
       (await instancePromise).lepusCodeUrls.set(url, { root: 'blob:root' });
+      return { lepusCode: { root: 'blob:root' } };
     });
   const url = 'https://cdn.example.com/catalog.web.bundle';
 
@@ -146,7 +148,7 @@ test('a rejected external load can be retried', async () => {
   const instance = createInstance(rstest.fn());
   const fetchBundle = rstest.spyOn(templateManager, 'fetchBundle')
     .mockRejectedValueOnce(new Error('transient failure'))
-    .mockResolvedValueOnce();
+    .mockResolvedValueOnce({});
   const url = 'https://cdn.example.com/catalog.web.bundle';
 
   await expect(instance.loadExternalBundle(url)).resolves.toEqual({

@@ -1,5 +1,13 @@
 import './jsdom.js';
-import { describe, test, expect, rstest, beforeEach } from '@rstest/core';
+import { resolveObjectURL } from 'node:buffer';
+import {
+  describe,
+  test,
+  expect,
+  rstest,
+  beforeEach,
+  afterEach,
+} from '@rstest/core';
 import {
   encode,
   encodeLynxXML,
@@ -10,7 +18,8 @@ import {
   MagicHeader1,
   TemplateSectionLabel,
 } from '../ts/constants.js';
-import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import type { LynxViewElement } from '../ts/client/mainthread/LynxView.js';
 import type { HeartbreakMessage } from '../ts/client/decodeWorker/types.js';
 
 // Import the worker script to execute it and register the handler
@@ -68,6 +77,209 @@ describe('Template Manager', () => {
   beforeEach(() => {
     rstest.clearAllMocks();
     globalThis.fetch = rstest.fn();
+  });
+  afterEach(() => rstest.unstubAllGlobals());
+
+  test.each(
+    [
+      ['external', false, false],
+      ['lazy', false, false],
+      ['external', true, false],
+      ['lazy', true, false],
+      ['external', true, true],
+    ] as const,
+  )(
+    'keeps real decoded modes distinct (%s first, concurrent=%s, separate instances=%s)',
+    async (first, concurrent, separateInstances) => {
+      const url =
+        `http://example.com/mixed-${first}-${concurrent}-${separateInstances}.bundle`;
+      const encoded = encode({
+        ...sampleTasm,
+        lepusCode: { root: '(function () { return "lazy"; })' },
+        styleInfo: {
+          '0': [{
+            type: 'StyleRule',
+            selectorText: { value: '.mode-probe' },
+            style: [{ name: 'background-color', value: 'red' }],
+            variables: {},
+          }],
+        },
+      });
+      rstest.mocked(globalThis.fetch).mockImplementation(async () =>
+        new Response(encoded)
+      );
+      const modes = first === 'external'
+        ? ['external', 'lazy']
+        : ['lazy', 'external'];
+      const load = (mode: string) =>
+        templateManager.fetchBundle(
+          url,
+          Promise.resolve(
+            separateInstances
+              ? { ...mockLynxViewInstance }
+              : mockLynxViewInstance,
+          ),
+          false,
+          false,
+          false,
+          {
+            isLazy: mode === 'lazy' ? 'true' : 'false',
+            isExternalBundle: mode === 'external' ? 'true' : 'false',
+          },
+        );
+      const bundles = concurrent
+        ? await Promise.all(modes.map(load))
+        : [await load(modes[0]!), await load(modes[1]!)];
+      expect(
+        rstest.mocked(mockLynxViewInstance.onPageConfigReady).mock.calls.map((
+          [config],
+        ) => config.isLazy),
+      ).toEqual(
+        modes.map(mode => mode === 'lazy' ? 'true' : 'false'),
+      );
+      const { wasmInstance } = await import('../ts/client/wasm.js');
+      for (const [index, bundle] of bundles.entries()) {
+        const lazy = modes[index] === 'lazy';
+        expect(bundle.config?.isLazy).toBe(lazy ? 'true' : 'false');
+        const root = document.createElement('div').attachShadow({
+          mode: 'open',
+        });
+        const context = new wasmInstance.MainThreadWasmContext(
+          root,
+          {} as any,
+          true,
+        );
+        context.push_style_sheet(bundle.styleSheet!);
+        const css = root.querySelector('style')!.textContent!;
+        expect(css.includes(`l-e-name="${url}"`)).toBe(lazy);
+        const code = await resolveObjectURL(bundle.lepusCode!.root!)!.text();
+        expect(code).toContain(`${url}/root`);
+        const module = { exports: undefined as unknown };
+        new Function('module', code)(module);
+        if (lazy) expect((module.exports as () => string)()).toBe('lazy');
+        else expect(module.exports).toEqual({});
+        expect(await load(modes[index]!)).toBe(bundle);
+        context.free();
+      }
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  test.each([true, false])(
+    'queryComponent retains its decoded root alongside an external load (external first=%s)',
+    async externalFirst => {
+      const url = `http://example.com/instance-mixed-${externalFirst}.bundle`;
+      const encoded = encode({
+        ...sampleTasm,
+        lepusCode: { root: '(function () { return "lazy"; })' },
+        styleInfo: {
+          '0': [{
+            type: 'StyleRule',
+            selectorText: { value: '.instance-probe' },
+            style: [{ name: 'background-color', value: 'red' }],
+            variables: {},
+          }],
+        },
+      });
+      rstest.mocked(globalThis.fetch).mockImplementation(async () =>
+        new Response(encoded)
+      );
+      const parent = document.createElement('div') as LynxViewElement;
+      rstest.stubGlobal('cancelAnimationFrame', rstest.fn());
+      const root = parent.attachShadow({ mode: 'open' });
+      const instance = new LynxViewInstance(
+        parent,
+        {},
+        {},
+        'http://example.com/host.bundle',
+        root,
+        {
+          globalWindow: {} as typeof globalThis,
+          loadScript: async blobUrl => {
+            const module = { exports: undefined as unknown };
+            new Function('module', await resolveObjectURL(blobUrl)!.text())(
+              module,
+            );
+            return module.exports;
+          },
+          loadScriptSync: rstest.fn(),
+        },
+        false,
+        undefined,
+      );
+      instance.onPageConfigReady({ enableCSSSelector: 'true' });
+      // The host is already running; keep the test at the bundle loading boundary.
+      rstest.spyOn(instance, 'onMTSScriptsExecuted').mockImplementation(
+        () => {},
+      );
+      rstest.spyOn(instance.backgroundThread, 'updateBTSChunk')
+        .mockResolvedValue();
+      rstest.spyOn(instance.backgroundThread, 'startBTS').mockImplementation(
+        () => {},
+      );
+      const external = () => instance.loadExternalBundle(url);
+      const lazy = () => instance.queryComponent(url);
+      const results = await Promise.all(
+        externalFirst ? [external(), lazy()] : [lazy(), external()],
+      );
+      const lazyResult = results[externalFirst ? 1 : 0] as () => string;
+      expect(lazyResult()).toBe('lazy');
+      expect(results[externalFirst ? 0 : 1]).toEqual({
+        url,
+        code: 0,
+        errorMsg: '',
+      });
+      const styles = Array.from(
+        root.querySelectorAll('style'),
+        style => style.textContent!,
+      );
+      expect(styles.some(css => css.includes(`l-e-name="${url}"`))).toBe(true);
+      expect(
+        styles.some(css =>
+          css.includes('instance-probe') && !css.includes(`l-e-name="${url}"`)
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test('retains root custom sections without a main-thread section', async () => {
+    const url = 'http://example.com/background-only.json';
+    const customSections = { metadata: { content: 'background-only' } };
+    rstest.mocked(globalThis.fetch).mockImplementation(async () =>
+      new Response(JSON.stringify({
+        pageConfig: { cardType: 'react', isLazy: false },
+        manifest: { '/app-service.js': 'module.exports = {};' },
+        customSections,
+      }))
+    );
+    const instance = {
+      ...mockLynxViewInstance,
+      templateUrl: url,
+    } as LynxViewInstance;
+    const bundle = await templateManager.fetchBundle(
+      url,
+      Promise.resolve(instance),
+      false,
+      false,
+      false,
+    );
+    expect(bundle.lepusCode).toBeUndefined();
+    expect(instance.template).toBe(bundle);
+    expect(instance.template?.customSections).toEqual(customSections);
+    const cachedInstance = {
+      ...mockLynxViewInstance,
+      templateUrl: url,
+    } as LynxViewInstance;
+    expect(
+      await templateManager.fetchBundle(
+        url,
+        Promise.resolve(cachedInstance),
+        false,
+        false,
+        false,
+      ),
+    ).toBe(bundle);
+    expect(cachedInstance.template).toBe(bundle);
   });
 
   test('should exchange worker-level heartbreak ack messages', async () => {
@@ -165,6 +377,7 @@ describe('Template Manager', () => {
         onMTSScriptsLoaded: rstest.fn(async () => {
           expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(
             templateUrl,
+            expect.any(Object),
           );
           expect(templateManager.getStyleSheet(templateUrl)).toBeDefined();
           expect(instance.backgroundThread.markTiming).toHaveBeenCalledWith(
@@ -418,6 +631,7 @@ describe('Template Manager', () => {
     expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
       templateUrl,
       true,
+      expect.any(Object),
     );
   });
 
@@ -463,180 +677,13 @@ describe('Template Manager', () => {
     expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
       templateUrl,
       false,
+      expect.any(Object),
     );
     expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
       templateUrl,
       true,
+      expect.any(Object),
     );
-  });
-
-  test('should reuse a bundle and ignore a later overrideConfig', async () => {
-    const templateUrl = 'http://example.com/template_override_blob_test';
-    const encoded = encode({
-      ...sampleTasm,
-      manifest: {
-        '/app-service.js': 'module.exports = "background";',
-      },
-    });
-
-    (globalThis.fetch as any).mockImplementation(() => {
-      const stream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(encoded);
-          controller.close();
-        },
-      });
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        body: stream,
-      });
-    });
-
-    await templateManager.fetchBundle(
-      templateUrl,
-      Promise.resolve(mockLynxViewInstance),
-      false,
-      false,
-      false,
-      {
-        cardType: 'first-card',
-        enableCSSSelector: 'true',
-      },
-    );
-
-    const oldBundle = templateManager.getBundle(templateUrl);
-    expect(Object.values(oldBundle?.lepusCode ?? {}).length).toBeGreaterThan(0);
-    expect(Object.values(oldBundle?.backgroundCode ?? {}).length)
-      .toBeGreaterThan(0);
-
-    const createBundleSpy = rstest.spyOn(templateManager, 'createBundle');
-    const revokeObjectURLSpy = rstest.spyOn(URL, 'revokeObjectURL');
-    try {
-      await templateManager.fetchBundle(
-        templateUrl,
-        Promise.resolve(mockLynxViewInstance),
-        false,
-        false,
-        false,
-        {
-          cardType: 'ignored-card',
-        },
-      );
-
-      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-      expect(templateManager.getBundle(templateUrl)).toBe(oldBundle);
-      expect(templateManager.getBundle(templateUrl)?.config?.cardType)
-        .toBe('first-card');
-      expect(createBundleSpy).not.toHaveBeenCalled();
-      expect(revokeObjectURLSpy).not.toHaveBeenCalled();
-    } finally {
-      createBundleSpy.mockRestore();
-      revokeObjectURLSpy.mockRestore();
-    }
-  });
-
-  test('should not dispose a cached bundle for a later overrideConfig', async () => {
-    const templateUrl = 'http://example.com/template_override_conflict_test';
-    const encoded = encode(sampleTasm);
-
-    (globalThis.fetch as any).mockImplementation(() => {
-      const stream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(encoded);
-          controller.close();
-        },
-      });
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        body: stream,
-      });
-    });
-
-    await templateManager.fetchBundle(
-      templateUrl,
-      Promise.resolve(mockLynxViewInstance),
-      false,
-      false,
-      false,
-      { cardType: 'first-card' },
-    );
-
-    const oldBundle = templateManager.getBundle(templateUrl);
-    expect(oldBundle?.styleSheet).toBeDefined();
-    const createBundleSpy = rstest.spyOn(templateManager, 'createBundle');
-    const revokeObjectURLSpy = rstest.spyOn(URL, 'revokeObjectURL');
-    const freeStyleSheetSpy = rstest.spyOn(oldBundle!.styleSheet!, 'free');
-    try {
-      await templateManager.fetchBundle(
-        templateUrl,
-        Promise.resolve(mockLynxViewInstance),
-        false,
-        false,
-        false,
-        { cardType: 'ignored-card' },
-      );
-
-      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-      expect(templateManager.getBundle(templateUrl)).toBe(oldBundle);
-      expect(templateManager.getBundle(templateUrl)?.config?.cardType)
-        .toBe('first-card');
-      expect(createBundleSpy).not.toHaveBeenCalled();
-      expect(revokeObjectURLSpy).not.toHaveBeenCalled();
-      expect(freeStyleSheetSpy).not.toHaveBeenCalled();
-    } finally {
-      createBundleSpy.mockRestore();
-      revokeObjectURLSpy.mockRestore();
-      freeStyleSheetSpy.mockRestore();
-    }
-  });
-
-  test('should ignore a later overrideConfig while the URL is loading', async () => {
-    const templateUrl =
-      'http://example.com/template_concurrent_override_conflict_test';
-    const encoded = encode(sampleTasm);
-    let streamController!: ReadableStreamDefaultController<Uint8Array>;
-    const stream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        streamController = controller;
-      },
-    });
-
-    (globalThis.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      body: stream,
-    });
-
-    const firstLoad = templateManager.fetchBundle(
-      templateUrl,
-      Promise.resolve(mockLynxViewInstance),
-      false,
-      false,
-      false,
-      { cardType: 'first-card' },
-    );
-
-    const secondLoad = templateManager.fetchBundle(
-      templateUrl,
-      Promise.resolve(mockLynxViewInstance),
-      false,
-      false,
-      false,
-      { cardType: 'ignored-card' },
-    );
-
-    streamController.enqueue(encoded);
-    streamController.close();
-    await Promise.all([firstLoad, secondLoad]);
-
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-    expect(templateManager.getBundle(templateUrl)?.config?.cardType)
-      .toBe('first-card');
   });
 
   test('should load web-core.main-thread.json correctly', async () => {
@@ -725,6 +772,7 @@ describe('Template Manager', () => {
     expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
       templateUrl,
       true,
+      expect.any(Object),
     );
   });
 
@@ -921,14 +969,19 @@ describe('Template Manager', () => {
 
       // Same callbacks, same order, as a bundle card.
       expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalled();
-      expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(url);
+      expect(mockLynxViewInstance.onStyleInfoReady).toHaveBeenCalledWith(
+        url,
+        expect.any(Object),
+      );
       expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
         url,
         false,
+        expect.any(Object),
       );
       expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
         url,
         false,
+        expect.any(Object),
       );
     });
 
@@ -945,6 +998,7 @@ describe('Template Manager', () => {
       expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
         url,
         false,
+        expect.any(Object),
       );
     });
 
