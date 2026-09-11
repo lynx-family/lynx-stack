@@ -31,6 +31,7 @@
   "files": [
     "src",
     "dist",
+    "!dist/.lynx",
     "CHANGELOG.md",
     "README.md"
   ],
