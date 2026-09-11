@@ -9,6 +9,7 @@ import {
   assertAllowedCustomProviderBaseURL,
   createCustomProviderFetch,
 } from './custom-provider-security.js';
+import { createResponsesCompatFetch } from './openai-responses-compat.js';
 import { isOfficialOpenAIBaseURL } from './openai-utils.js';
 import { resolveModelConfig } from '../../service/common/model-config.js';
 import type { ChatMessage } from '../../service/common/types.js';
@@ -100,7 +101,9 @@ export function createLLMProvider(
     : undefined;
   const providerFetch = isOfficial
     ? customProviderFetch
-    : createCompatFetch(customProviderFetch);
+    : (api === 'responses'
+      ? createResponsesCompatFetch(customProviderFetch)
+      : createCompatFetch(customProviderFetch));
 
   const providerSettings = {
     apiKey,
