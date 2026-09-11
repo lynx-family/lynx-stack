@@ -28,7 +28,7 @@ export type GenuiBenchProtocol = BenchProtocol;
 
 export type GenuiBenchJudgeArtifact =
   | { messages: A2UIMessage[]; protocol: 'a2ui' }
-  | { protocol: 'openui' | 'lynx-xml'; rawText: string };
+  | { protocol: 'openui' | 'lynx-xml' | 'html'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
   model?: string;
@@ -145,6 +145,9 @@ export async function resolveGenuiBenchUiJudge(
     env?: NodeJS.ProcessEnv;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
+  if (protocol === 'html') {
+    return { enabled: true, session: { screenshotPath: 'browser/html' } };
+  }
   const env = options.env ?? process.env;
   const zipUrl = protocol === 'a2ui'
     ? env.UI_JUDGE_A2UI_ZIP_URL?.trim()
@@ -185,8 +188,9 @@ export async function runGenuiBenchUiJudge(
 
   const rawText = options.artifact.rawText;
   if (
-    UNSAFE_OPENUI_RESOURCE_URL.test(rawText)
-    || UNSAFE_OPENUI_HOST_CALL.test(rawText)
+    options.artifact.protocol !== 'html'
+    && (UNSAFE_OPENUI_RESOURCE_URL.test(rawText)
+      || UNSAFE_OPENUI_HOST_CALL.test(rawText))
   ) {
     return {
       errors: [
@@ -208,6 +212,9 @@ export async function runGenuiBenchUiJudge(
           model: options.model,
           ...(options.artifact.protocol === 'lynx-xml'
             ? { lynxXmlSource: rawText }
+            : {}),
+          ...(options.artifact.protocol === 'html'
+            ? { htmlSource: rawText }
             : {}),
           globalProps: {
             benchMode: true,

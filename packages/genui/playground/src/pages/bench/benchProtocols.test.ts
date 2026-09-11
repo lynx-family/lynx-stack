@@ -95,3 +95,28 @@ describe('Bench protocol selection', () => {
     expect(restored).toEqual([original]);
   });
 });
+
+test('HTML comparison uses native, has no catalog and survives report restoration', () => {
+  const baseline = createDefaultBenchGroups('html-model')[0]!;
+  const html = withBenchProtocol(withBenchProtocol(baseline, 'openui'), 'html');
+  expect(html).toMatchObject({
+    protocol: 'html',
+    profile: 'native',
+    catalog: 'none',
+  });
+  expect(getBenchProtocolLabel('html')).toBe('HTML');
+  expect(usesCatalog(html)).toBe(false);
+  expect(
+    createBenchGroupsFromReport({
+      groups: [html],
+      env: { model: 'html-model', apiKeyConfigured: false },
+    }),
+  ).toEqual([html]);
+  expect(
+    nextBenchComparisonProtocol([
+      baseline,
+      withBenchProtocol(baseline, 'openui'),
+      withBenchProtocol(baseline, 'lynx-xml'),
+    ], baseline),
+  ).toBe('html');
+});

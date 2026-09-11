@@ -101,6 +101,18 @@ function request(
 }
 
 function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
+  const judgePayloads = {
+    a2ui: { kind: 'a2ui-messages', messages: [] },
+    openui: { kind: 'openui-text', rawText: 'root = Text("Ready")' },
+    'lynx-xml': {
+      kind: 'lynx-xml-source',
+      rawText: '<!doctype lynx><lynx><script thread="main"></script></lynx>',
+    },
+    html: {
+      kind: 'html-source',
+      rawText: '<!doctype html><html><body>Ready</body></html>',
+    },
+  } satisfies Record<BenchProtocol, ProtocolBenchRunArtifact['judgePayload']>;
   return {
     attempts: [{
       index: 1,
@@ -115,15 +127,7 @@ function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
     finalValid: true,
     finalText: 'Generated source',
     finalErrors: [],
-    judgePayload: protocol === 'a2ui'
-      ? { kind: 'a2ui-messages', messages: [] }
-      : (protocol === 'openui'
-        ? { kind: 'openui-text', rawText: 'root = Text("Ready")' }
-        : {
-          kind: 'lynx-xml-source',
-          rawText:
-            '<!doctype lynx><lynx><script thread="main"></script></lynx>',
-        }),
+    judgePayload: judgePayloads[protocol],
   };
 }
 
@@ -154,6 +158,7 @@ describe('Bench generation, capture and scoring pipeline', () => {
       ['a2ui', 'matched-core'],
       ['openui', 'matched-core'],
       ['lynx-xml', 'native'],
+      ['html', 'native'],
     ] as const,
   )(
     'overlaps stages and waits for all scores for %s/%s',

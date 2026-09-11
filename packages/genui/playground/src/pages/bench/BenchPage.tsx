@@ -39,6 +39,7 @@ import {
 } from './benchHistory.js';
 import type { BenchHistoryEntry } from './benchHistory.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { startBenchHtmlCapture } from './benchHtmlCapture.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport, BenchStatus } from './benchReportTypes.js';
@@ -871,14 +872,19 @@ export function BenchPage() {
     }
     return undefined;
   }, [activeGroups, env]);
+  const hasHtmlGroups = activeGroups.some((group) => group.protocol === 'html');
+  const needsScreenshotService = activeGroups.some((group) =>
+    group.protocol !== 'html'
+  );
   const uiJudgeServerUrlValidationError = useMemo(() => {
+    if (!needsScreenshotService || !settings.judgeEnabled) return '';
     if (normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl) === null) {
       return 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.';
     }
     return settings.judgeEnabled && !uiJudgeServerUrl.trim()
       ? 'Enter the screenshot service URL to enable UI Judge.'
       : '';
-  }, [uiJudgeServerUrl, settings.judgeEnabled]);
+  }, [needsScreenshotService, uiJudgeServerUrl, settings.judgeEnabled]);
   const providerConfigured = useMemo(
     () => isProviderConfigured(env),
     [env],
@@ -1323,32 +1329,46 @@ export function BenchPage() {
     setReportPlanSignature(null);
     setScreenshotsOpen(false);
 
+    // Begin cancellation synchronously, then acquire capture from this click's
+    // user activation before awaiting anything (required by getDisplayMedia).
+    const previousCancellation = cancelActiveBenchJob({
+      invalidatePendingStart: false,
+    });
+    const screenshotController = new AbortController();
+    screenshotAbortRef.current = screenshotController;
+    const htmlCapture = settings.judgeEnabled && hasHtmlGroups
+      ? startBenchHtmlCapture(screenshotController.signal)
+      : Promise.resolve(undefined);
+    // Attach a rejection handler immediately while previous cancellation settles.
+    const captureReady = htmlCapture.then(
+      (capture) => ({ capture }),
+      (error: unknown) => ({ error }),
+    );
     void (async () => {
-      const previousJobsCancelled = await cancelActiveBenchJob({
-        invalidatePendingStart: false,
-      });
-      if (
-        !previousJobsCancelled
-        || benchOperationIdRef.current !== operationId
-      ) {
+      let connected = false;
+      try {
+        const previousJobsCancelled = await previousCancellation;
         if (
           !previousJobsCancelled
-          && benchOperationIdRef.current === operationId
+          || benchOperationIdRef.current !== operationId
         ) {
-          setStatus('failed');
+          if (
+            !previousJobsCancelled
+            && benchOperationIdRef.current === operationId
+          ) {
+            setStatus('failed');
+          }
+          return;
         }
-        return;
-      }
 
-      setRunMessage({ code: 'creating-job' });
-      try {
+        setRunMessage({ code: 'creating-job' });
+        const captureResult = await captureReady;
+        if ('error' in captureResult) throw captureResult.error;
         const jobsEndpoint = getA2UIBenchJobsEndpoint();
         const normalizedUiJudgeServerUrl = normalizeBenchUiJudgeServerUrl(
           uiJudgeServerUrl,
         );
-        const screenshotController = new AbortController();
-        screenshotAbortRef.current = screenshotController;
-        if (settings.judgeEnabled) {
+        if (settings.judgeEnabled && needsScreenshotService) {
           await checkBenchScreenshotService(
             normalizedUiJudgeServerUrl ?? '',
             screenshotController.signal,
@@ -1430,8 +1450,10 @@ export function BenchPage() {
           jobUrl: `${jobsEndpoint}/${encodeURIComponent(jobId)}`,
           serverUrl: normalizedUiJudgeServerUrl ?? '',
           signal: screenshotController.signal,
+          captureHtml: captureResult.capture,
           onError: (text) => setRunMessage({ code: 'raw', text }),
         });
+        connected = true;
         source.addEventListener('screenshot-requested', (event) => {
           const task = readEventData<{ captureId?: unknown }>(
             event as MessageEvent<unknown>,
@@ -1592,9 +1614,13 @@ export function BenchPage() {
         screenshotAbortRef.current?.abort();
         setStatus('failed');
         setRunMessage({ code: 'raw', text: getErrorMessage(error) });
+      } finally {
+        if (!connected) screenshotController.abort();
       }
     })();
   }, [
+    hasHtmlGroups,
+    needsScreenshotService,
     setHistoryItems,
     activeHistoryEntry,
     benchRunBlockers.length,
@@ -1861,6 +1887,8 @@ export function BenchPage() {
                   setSettings((current) => ({ ...current, ...patch }))}
                 onUiJudgeServerUrlChange={setUiJudgeServerUrl}
                 settings={settings}
+                hasHtmlGroups={hasHtmlGroups}
+                needsScreenshotService={needsScreenshotService}
                 uiJudgeServerUrl={uiJudgeServerUrl}
                 uiJudgeServerUrlValidationError={uiJudgeServerUrlValidationError}
               />

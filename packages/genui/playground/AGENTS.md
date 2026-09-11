@@ -99,7 +99,7 @@ node a vertical scroll view instead of adding another wrapper.
 
 ## HTML Create
 
-The `html` protocol exposes only Create. Keep its hook-free adapter in
+The `html` protocol exposes Create and the shared Bench tab. Keep its hook-free adapter in
 `src/pages/chat/html.ts`, stream source from `/html/stream`, and update the
 artifact viewer for every partial beginning with the HTML doctype. Send only a
 complete document to preview so incomplete markup or scripts are not executed.
@@ -108,7 +108,14 @@ Render generated HTML directly through `PreviewViewport` and `HtmlView` using
 an iframe `srcDoc`. Keep the sandbox at `allow-scripts` without
 `allow-same-origin`; do not route HTML through `render.html`, `<lynx-view>`,
 init data, global props, native preview URLs, or protocol renderer bundles.
-HTML has no Examples, Catalog, Bench, or native preview surface.
+HTML has no Examples, Catalog, or native preview surface.
+
+In Bench, HTML uses browser-native Element Capture of its sandboxed iframe.
+Request current-tab sharing directly from Start run, before asynchronous work,
+and validate the selected tab before creating a server job. HTML-only runs
+need no screenshot sidecar; mixed runs still require it for Lynx protocols.
+Serialize HTML capture on the shared track, send only restricted pixels through
+the existing BMP transport, and release tracks and frames on every terminal path.
 
 ## Common Commands
 

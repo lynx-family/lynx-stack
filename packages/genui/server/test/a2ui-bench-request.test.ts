@@ -58,7 +58,7 @@ describe('A2UI Bench request protocol groups', () => {
   });
   test('accepts Lynx XML native alongside both component protocols', () => {
     const normalized = normalizeBenchJobRequest(body(
-      ['a2ui', 'openui', 'lynx-xml'].map((protocol) => ({
+      ['a2ui', 'openui', 'lynx-xml', 'html'].map((protocol) => ({
         id: protocol,
         protocol,
         catalog: 'Core Catalog',
@@ -73,8 +73,10 @@ describe('A2UI Bench request protocol groups', () => {
       ['a2ui', 'native'],
       ['openui', 'matched-core'],
       ['lynx-xml', 'native'],
+      ['html', 'native'],
     ]);
     expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
+    expect(normalized.request.groups[3]).not.toHaveProperty('catalog');
     expect(normalized.request.settings.parallelism).toBe(1);
   });
 
@@ -334,4 +336,29 @@ describe('A2UI Bench request protocol groups', () => {
         'UI Judge requires a browser screenshot client. Start this Bench from the Playground.',
     });
   });
+});
+
+test('rejects matched-core for HTML and omits XML-only options', () => {
+  expect(
+    normalizeBenchJobRequest(
+      body([{ id: 'html', protocol: 'html', profile: 'matched-core' }]),
+    ),
+  ).toMatchObject({ ok: false });
+  const result = normalizeBenchJobRequest(
+    body([{
+      id: 'html',
+      protocol: 'html',
+      enableHtmlFragment: true,
+      catalog: 'Full Catalog',
+    }]),
+  );
+  expect(result.ok).toBe(true);
+  if (result.ok) {
+    expect(result.request.groups[0]).toMatchObject({
+      protocol: 'html',
+      profile: 'native',
+    });
+    expect(result.request.groups[0]).not.toHaveProperty('catalog');
+    expect(result.request.groups[0]).not.toHaveProperty('enableHtmlFragment');
+  }
 });

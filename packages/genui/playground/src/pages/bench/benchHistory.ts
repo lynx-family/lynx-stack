@@ -68,7 +68,8 @@ function isBenchVariable(value: unknown): value is BenchVariable {
 }
 
 function isBenchProtocol(value: unknown): value is BenchProtocol {
-  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml';
+  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml'
+    || value === 'html';
 }
 
 function isBenchProfile(value: unknown): value is BenchProfile {
@@ -134,7 +135,7 @@ export function createBenchGroupsFromReport(
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
-      catalog: protocol === 'lynx-xml'
+      catalog: protocol === 'lynx-xml' || protocol === 'html'
         ? 'none'
         : item.catalog ?? 'Full Catalog',
       extraInstruction: item.extraInstruction ?? '',

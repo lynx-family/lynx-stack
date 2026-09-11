@@ -6,12 +6,14 @@
 
 import { strToU8, zipSync } from 'fflate';
 
+import type { BenchHtmlCapture } from './benchHtmlCapture.js';
+
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024 + 1024;
 const MAX_CAPTURE_FORM_BYTES = 10 * 1024 * 1024;
 const CAPTURE_ID = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
 
 interface ScreenshotRequest {
-  path: 'screenshot/zip/url' | 'screenshot/zip/upload';
+  path: 'screenshot/zip/url' | 'screenshot/zip/upload' | 'browser/html';
   fields: Record<string, string>;
   timeoutMs: number;
   source?: string;
@@ -157,6 +159,7 @@ export function createBenchScreenshotRelay(options: {
   signal: AbortSignal;
   onError: (error: string) => void;
   fetch?: typeof fetch;
+  captureHtml?: BenchHtmlCapture;
 }) {
   const fetchImpl = options.fetch ?? fetch;
   const handled = new Set<string>();
@@ -180,43 +183,65 @@ export function createBenchScreenshotRelay(options: {
     let contentType: string;
     try {
       if (
-        !['screenshot/zip/url', 'screenshot/zip/upload'].includes(request.path)
+        !['screenshot/zip/url', 'screenshot/zip/upload', 'browser/html']
+          .includes(request.path)
         || !request.fields || typeof request.fields !== 'object'
         || !Number.isFinite(request.timeoutMs) || request.timeoutMs <= 0
       ) {
         throw new Error('Invalid screenshot task.');
       }
-      const form = screenshotForm(request);
       const signal = AbortSignal.any([
         options.signal,
         AbortSignal.timeout(Math.min(1_200_000, request.timeoutMs)),
       ]);
-      const screenshot = await fetchImpl(
-        new URL(request.path, options.serverUrl),
-        {
-          method: 'POST',
-          body: form,
-          credentials: 'omit',
-          redirect: 'error',
-          signal,
-        },
-      );
-      if (!screenshot.ok) {
-        const detail = await screenshot.text();
-        throw new Error(
-          `Screenshot service returned HTTP ${screenshot.status}: ${
-            detail.slice(0, 1000)
-          }`,
+      if (request.path === 'browser/html') {
+        if (
+          !options.captureHtml || typeof request.source !== 'string'
+          || Object.keys(request.fields).some((key) =>
+            key !== 'width' && key !== 'height'
+          )
+        ) {
+          throw new Error(
+            'HTML capture is unavailable or the task is invalid. Start a new run and share this tab.',
+          );
+        }
+        body = await options.captureHtml({
+          source: request.source,
+          width: Number(request.fields.width),
+          height: Number(request.fields.height),
+        }, signal);
+        if (body.type !== 'image/bmp' || body.size > MAX_SCREENSHOT_BYTES) {
+          throw new Error('Invalid or oversized HTML screenshot.');
+        }
+      } else {
+        const form = screenshotForm(request);
+        const screenshot = await fetchImpl(
+          new URL(request.path, options.serverUrl),
+          {
+            method: 'POST',
+            body: form,
+            credentials: 'omit',
+            redirect: 'error',
+            signal,
+          },
         );
+        if (!screenshot.ok) {
+          const detail = await screenshot.text();
+          throw new Error(
+            `Screenshot service returned HTTP ${screenshot.status}: ${
+              detail.slice(0, 1000)
+            }`,
+          );
+        }
+        if (
+          screenshot.headers.get('content-type')?.split(';')[0]?.trim()
+            !== 'image/bmp'
+        ) {
+          await screenshot.body?.cancel().catch(() => undefined);
+          throw new Error('Screenshot service did not return a BMP image.');
+        }
+        body = await screenshotBlob(screenshot, signal);
       }
-      if (
-        screenshot.headers.get('content-type')?.split(';')[0]?.trim()
-          !== 'image/bmp'
-      ) {
-        await screenshot.body?.cancel().catch(() => undefined);
-        throw new Error('Screenshot service did not return a BMP image.');
-      }
-      body = await screenshotBlob(screenshot, signal);
       contentType = 'image/bmp';
     } catch (error) {
       options.signal.throwIfAborted();
