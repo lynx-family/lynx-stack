@@ -7,12 +7,14 @@ import {
 import { resetElementTemplateBackgroundFunctionRuntime } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
 import {
   __etAttrPlanMap,
+  adaptEventAttrSlot,
   adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
   type EtAttrAdapter,
+  type EtAttrPlan,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
 import type { MTRefNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-ref-ctx.js';
@@ -315,6 +317,98 @@ describe('ElementTemplate attr slot plan registry', () => {
     }));
   });
 
+  it('reuses the ref subplan across instances without rescanning unrelated adapters', () => {
+    const readAdapter = vi.fn(() => adaptEventAttrSlot);
+    const attrPlan: EtAttrPlan = [0, adaptEventAttrSlot, 1, adaptRefAttrSlot, 2, adaptSpreadAttrSlot];
+    Object.defineProperty(attrPlan, 1, { get: readAdapter });
+    __etAttrPlanMap._et_ref = attrPlan;
+
+    queueRefAttributeSlotUpdates('_et_ref', -2);
+    expect(readAdapter).toHaveBeenCalledTimes(1);
+    readAdapter.mockClear();
+
+    const effects: string[] = [];
+    const spreadRef = vi.fn(() => {
+      effects.push('spread');
+    });
+    const directRef = vi.fn(() => {
+      effects.push('direct');
+    });
+    queueRefAttributeSlotUpdates('_et_ref', -3, undefined, [vi.fn(), directRef, { ref: spreadRef }]);
+    flushPendingRefs();
+
+    expect(readAdapter).not.toHaveBeenCalled();
+    expect(effects).toEqual(['direct', 'spread']);
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({ selector: '[ref=-3-1]' }));
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({ selector: '[ref=-3-2]' }));
+  });
+
+  it('reuses an empty ref subplan and follows replacement and cleared registry entries', () => {
+    const readAdapter = vi.fn(() => adaptEventAttrSlot);
+    const eventPlan: EtAttrPlan = [0, adaptEventAttrSlot];
+    Object.defineProperty(eventPlan, 1, { get: readAdapter });
+    __etAttrPlanMap._et_ref = eventPlan;
+    queueRefAttributeSlotUpdates('_et_ref', -2);
+    queueRefAttributeSlotUpdates('_et_ref', -3);
+    expect(readAdapter).toHaveBeenCalledTimes(1);
+
+    const directRef = vi.fn();
+    __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
+    queueRefAttributeSlotUpdates('_et_ref', -4, undefined, [directRef]);
+    flushPendingRefs();
+    expect(directRef).toHaveBeenCalledWith(expect.objectContaining({ selector: '[ref=-4-0]' }));
+
+    clearEtAttrPlanMap();
+    queueRefAttributeSlotUpdates('_et_ref', -4, [directRef]);
+    flushPendingRefs();
+    expect(directRef).toHaveBeenCalledTimes(1);
+
+    const spreadRef = vi.fn();
+    __etAttrPlanMap._et_ref = [1, adaptSpreadAttrSlot];
+    queueRefAttributeSlotUpdates('_et_ref', -5, undefined, [null, { ref: spreadRef }]);
+    flushPendingRefs();
+    expect(spreadRef).toHaveBeenCalledWith(expect.objectContaining({ selector: '[ref=-5-1]' }));
+  });
+
+  it('uses the explicit typed-host plan independently from the registered template plan', () => {
+    const ref = vi.fn();
+    __etAttrPlanMap._et_ref = [1, adaptRefAttrSlot];
+
+    queueRefAttributeSlotUpdates('_et_ref', -2);
+    queueRefAttributeSlotUpdates('_et_ref', -3, undefined, [{ ref }], [0, adaptSpreadAttrSlot]);
+    flushPendingRefs();
+
+    expect(ref).toHaveBeenCalledWith(expect.objectContaining({ selector: '[ref=-3-0]' }));
+  });
+
+  it('validates each spread ref once when queuing updates', () => {
+    const checkRef = vi.fn(Reflect.has);
+    const ref = new Proxy({ current: null }, { has: checkRef });
+    __etAttrPlanMap._et_ref = [0, adaptSpreadAttrSlot];
+
+    queueRefAttributeSlotUpdates('_et_ref', -2, undefined, [{ ref }]);
+    expect(checkRef).toHaveBeenCalledTimes(1);
+    flushPendingRefs();
+    const proxy = ref.current;
+    checkRef.mockClear();
+
+    queueRefAttributeSlotUpdates('_et_ref', -2, [{ ref }], [{ ref }]);
+    expect(checkRef).toHaveBeenCalledTimes(2);
+    flushPendingRefs();
+    expect(ref.current).toBe(proxy);
+  });
+
+  it.each([
+    ['direct', adaptRefAttrSlot, false],
+    ['spread', adaptSpreadAttrSlot, { ref: false }],
+  ])('rejects invalid %s refs when queuing updates', (_, adapter, value) => {
+    __etAttrPlanMap._et_ref = [0, adapter as EtAttrAdapter];
+    const error = 'Elements\' "ref" property should be a function, or an object created by createRef()';
+
+    expect(() => queueRefAttributeSlotUpdates('_et_ref', -2, undefined, [value])).toThrowError(error);
+    expect(() => queueRefAttributeSlotUpdates('_et_ref', -2, [value])).toThrowError(error);
+  });
+
   it('queues every ref-bearing attr slot independently', () => {
     const directRef = vi.fn();
     const objectRef = { current: null };
@@ -370,4 +464,17 @@ describe('ElementTemplate attr slot plan registry', () => {
     expect(directRef).not.toHaveBeenCalled();
     expect(spreadRef).toHaveBeenCalledWith(null);
   });
+
+  it.each([{}, { ref: undefined }, { ref: null }, undefined, null])(
+    'clears a spread ref when the next value is %j',
+    (nextValue) => {
+      const ref = vi.fn();
+      __etAttrPlanMap._et_ref = [0, adaptSpreadAttrSlot];
+
+      queueRefAttributeSlotUpdates('_et_ref', -2, [{ ref }], [nextValue]);
+      flushPendingRefs();
+
+      expect(ref).toHaveBeenCalledExactlyOnceWith(null);
+    },
+  );
 });
