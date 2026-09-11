@@ -5,7 +5,7 @@ import type { Plugin, UserConfigExport } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
-const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts');
+const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts').split(path.sep).join('/');
 
 function transformReactLynxPlugin(): Plugin {
   return {
