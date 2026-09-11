@@ -2205,9 +2205,9 @@ describe.each([false, true])('callback ref bindings (hydrated: %s)', (hydrated) 
   function trackRefBindings() {
     const active = new Set();
     const cleanups = new Map();
-    const callback = vi.fn((node) => {
+    const callback = rs.fn((node) => {
       active.add(node);
-      const cleanup = vi.fn(() => {
+      const cleanup = rs.fn(() => {
         active.delete(node);
       });
       cleanups.set(node, cleanup);
@@ -2224,8 +2224,8 @@ describe.each([false, true])('callback ref bindings (hydrated: %s)', (hydrated) 
   ])(
     'cleans a callback ref set to $clearedRef (returns cleanup: $returnsCleanup)',
     ({ clearedRef, returnsCleanup }) => {
-      const cleanup = vi.fn();
-      const callback = vi.fn(() => returnsCleanup ? cleanup : undefined);
+      const cleanup = rs.fn();
+      const callback = rs.fn(() => returnsCleanup ? cleanup : undefined);
 
       function App({ elementRef }) {
         return <view ref={elementRef} />;

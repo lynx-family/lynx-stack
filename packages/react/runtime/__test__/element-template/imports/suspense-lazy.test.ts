@@ -252,7 +252,7 @@ describe('element-template Suspense and lazy imports', () => {
 
   it('reuses host exports without reinitializing the runtime in standalone producers', async () => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rs.resetModules();
     await import('../../../lazy/element-template-import.js');
 
     const appDescriptors = Object.getOwnPropertyDescriptors(lynx.getApp());
@@ -273,21 +273,27 @@ describe('element-template Suspense and lazy imports', () => {
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);
   });
 
+  // Static `import()` specifiers: `rs.resetModules()` does not reach modules
+  // loaded through a variable specifier, so each case would reuse the first
+  // one's module graph.
   it.each([
-    '../../../lazy/element-template.js',
-    '../../../lazy/element-template-internal.js',
-    '../../../lazy/element-template-jsx-runtime.js',
-    '../../../lazy/element-template-jsx-dev-runtime.js',
-  ])('rejects a Snapshot host before reading exports from %s', async (entry) => {
+    ['../../../lazy/element-template.js', () => import('../../../lazy/element-template.js')],
+    ['../../../lazy/element-template-internal.js', () => import('../../../lazy/element-template-internal.js')],
+    ['../../../lazy/element-template-jsx-runtime.js', () => import('../../../lazy/element-template-jsx-runtime.js')],
+    [
+      '../../../lazy/element-template-jsx-dev-runtime.js',
+      () => import('../../../lazy/element-template-jsx-dev-runtime.js'),
+    ],
+  ])('rejects a Snapshot host before reading exports from %s', async (_entry, load) => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rs.resetModules();
     Object.defineProperty(lynx, sRuntimeBackend, {
       value: 'Snapshot',
       configurable: true,
     });
     const appDescriptors = Object.getOwnPropertyDescriptors(lynx.getApp());
 
-    await expect(import(entry)).rejects.toThrow(
+    await expect(load()).rejects.toThrow(
       'Snapshot and Element Template templates cannot share lazy bundles.',
     );
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);

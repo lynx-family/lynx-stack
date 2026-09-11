@@ -2397,6 +2397,9 @@ importers:
       '@testing-library/jest-dom':
         specifier: ^7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)
+      expect-type:
+        specifier: ^1.4.0
+        version: 1.4.0
 
   packages/testing-library/examples/library:
     dependencies:
