@@ -6,6 +6,7 @@ export interface BenchRunPanelSettings {
   judgeEnabled: boolean;
   repairEnabled: boolean;
   repeats: number;
+  uiJudgeModel?: string;
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -15,6 +16,7 @@ function clampNumber(value: number, min: number, max: number): number {
 
 export function BenchRunPanel(props: {
   locked: boolean;
+  modelOptions?: readonly { id: string; label: string }[];
   hasHtmlGroups?: boolean;
   needsScreenshotService?: boolean;
   onSettingsChange: (patch: Partial<BenchRunPanelSettings>) => void;
@@ -23,6 +25,12 @@ export function BenchRunPanel(props: {
   uiJudgeServerUrl: string;
   uiJudgeServerUrlValidationError?: string;
 }) {
+  const modelOptions = props.modelOptions ?? [];
+  const configuredJudgeModel = props.settings.uiJudgeModel;
+  const selectedJudgeModel = configuredJudgeModel
+      && modelOptions.some((model) => model.id === configuredJudgeModel)
+    ? configuredJudgeModel
+    : modelOptions[0]?.id ?? '';
   return (
     <section className='benchPlanSection benchRunSection'>
       <div className='benchRunPanel'>
@@ -46,6 +54,24 @@ export function BenchRunPanel(props: {
           <div className='benchInlineConfigGrid'>
             <section className='benchInlineConfigGroup'>
               <h4>UI Judge</h4>
+              <label className='benchField'>
+                <span className='benchFieldLabel'>Judge model</span>
+                <select
+                  className='benchInput'
+                  value={selectedJudgeModel}
+                  disabled={props.locked || modelOptions.length === 0}
+                  onChange={(event) =>
+                    props.onSettingsChange({
+                      uiJudgeModel: event.target.value,
+                    })}
+                >
+                  {modelOptions.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
               {props.needsScreenshotService !== false && (
                 <>
                   <label className='benchField'>

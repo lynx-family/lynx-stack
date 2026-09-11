@@ -42,6 +42,8 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../../../agent/common/ark-image-generation-tool.js';
+import { createScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
+import type { ScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
 import { getA2UIAgentService } from '../../a2ui/a2ui-agent.js';
 import { createA2UIBenchAdapter } from '../../a2ui/a2ui-bench-adapter.js';
 import { resolveBenchCatalog } from '../../a2ui/a2ui-bench-catalog.js';
@@ -630,6 +632,7 @@ async function finishRun(
   judgeCapabilities: BenchJudgeCapabilities,
   scheduling: BenchJudgeScheduling,
   signal: AbortSignal,
+  evaluate?: ScreenshotEvaluator,
 ): Promise<BenchRunResult> {
   const { result, judgeArtifact } = generated;
   const session = judgeCapabilities.get(judgeCapabilityKey(item.group))
@@ -645,7 +648,8 @@ async function finishRun(
   try {
     judge = await runGenuiBenchUiJudge(
       {
-        model: pickRunModel(request, item.group),
+        model: request.settings.uiJudgeModel
+          ?? pickRunModel(request, item.group),
         artifact: judgeArtifact,
         scenario: item.scenario,
         session,
@@ -653,6 +657,7 @@ async function finishRun(
         timeoutMs: request.settings.timeoutMs,
         scheduling,
         onPhase: phase => emitRunPhase(jobId, item, phase),
+        ...(evaluate ? { evaluate } : {}),
       },
       (capture, captureSignal) =>
         getBenchJobStore().requestScreenshot(jobId, capture, captureSignal),
@@ -1008,6 +1013,10 @@ export async function runBenchJob(
     const scheduling: BenchJudgeScheduling = {
       evaluation: evaluationPool,
     };
+    const judgeEvaluator = request.settings.judgeEnabled
+        && request.settings.uiJudgeModel
+      ? createScreenshotEvaluator(request.settings.uiJudgeModel).evaluate
+      : undefined;
     // Reserve space before generation so announced browser tasks and pending
     // scores stay bounded even when the client drains its capture queue slowly.
     const inFlight = new BenchTaskPool(
@@ -1071,6 +1080,7 @@ export async function runBenchJob(
               judgeCapabilities,
               scheduling,
               signal,
+              judgeEvaluator,
             ).then(publishResult).catch(fail).finally(() => {
               release();
               pending.delete(completion);

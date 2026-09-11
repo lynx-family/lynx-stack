@@ -93,6 +93,10 @@ export function createBenchSettingsFromReport(
       reportSettings.judgeEnabled,
       DEFAULT_BENCH_SETTINGS.judgeEnabled,
     ),
+    ...(typeof reportSettings.uiJudgeModel === 'string'
+        && reportSettings.uiJudgeModel.trim().length > 0
+      ? { uiJudgeModel: reportSettings.uiJudgeModel.trim() }
+      : {}),
     collectLiveRenderMetrics: readBoolean(
       reportSettings.collectLiveRenderMetrics,
       readBoolean(

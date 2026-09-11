@@ -770,3 +770,30 @@ test('HTML-only Judge shows current-tab sharing guidance without requiring a sid
   expect(markup).toContain('share this tab');
   expect(markup).not.toContain('UI_JUDGE_SERVER_URL');
 });
+
+test('UI Judge selects from the complete model list and defaults to the first model', () => {
+  const followGenerationMarkup = renderToStaticMarkup(
+    React.createElement(BenchRunPanel, {
+      locked: false,
+      modelOptions: [{ id: 'judge-model', label: 'Judge model' }],
+      settings: DEFAULT_BENCH_SETTINGS,
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }),
+  );
+  expect(followGenerationMarkup).toContain('value="judge-model"');
+  expect(followGenerationMarkup).toContain('Judge model');
+
+  const dedicatedMarkup = renderToStaticMarkup(
+    React.createElement(BenchRunPanel, {
+      locked: false,
+      modelOptions: [{ id: 'judge-model', label: 'Judge model' }],
+      settings: { ...DEFAULT_BENCH_SETTINGS, uiJudgeModel: 'judge-model' },
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }),
+  );
+  expect(dedicatedMarkup).toContain('value="judge-model"');
+});

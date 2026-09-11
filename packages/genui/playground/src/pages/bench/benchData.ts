@@ -103,6 +103,7 @@ export interface BenchSettings {
   judgeEnabled: boolean;
   repairEnabled: boolean;
   repeats: number;
+  uiJudgeModel?: string;
 }
 
 export const BENCH_CATALOG_OPTIONS = [

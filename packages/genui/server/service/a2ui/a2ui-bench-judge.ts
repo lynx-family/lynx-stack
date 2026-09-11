@@ -515,11 +515,11 @@ export async function runBenchUiJudgeRequest(
         });
       },
     );
-  } catch {
+  } catch (error) {
     return {
       errors: options.signal?.aborted
         ? []
-        : ['GenUI screenshot evaluation failed.'],
+        : [`GenUI screenshot evaluation failed: ${toErrorMessage(error)}`],
       score: 0,
       status: 'failed',
       ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),

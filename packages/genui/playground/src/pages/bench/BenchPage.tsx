@@ -1387,6 +1387,8 @@ export function BenchPage() {
         const normalizedUiJudgeServerUrl = normalizeBenchUiJudgeServerUrl(
           uiJudgeServerUrl,
         );
+        const uiJudgeModel = settings.uiJudgeModel
+          ?? runGroups[0]?.model;
         if (settings.judgeEnabled && needsScreenshotService) {
           await checkBenchScreenshotService(
             normalizedUiJudgeServerUrl ?? '',
@@ -1408,6 +1410,9 @@ export function BenchPage() {
               maxRepairAttempts: settings.repairEnabled ? 2 : 0,
               repairEnabled: settings.repairEnabled,
               judgeEnabled: settings.judgeEnabled,
+              ...(uiJudgeModel
+                ? { uiJudgeModel }
+                : {}),
               renderMetricsEnabled: settings.collectLiveRenderMetrics,
             },
             groups: createBenchRequestGroups(runGroups),
@@ -1918,6 +1923,7 @@ export function BenchPage() {
             <div className='benchWorkflowScroll'>
               <BenchRunPanel
                 locked={planLocked}
+                modelOptions={env.models}
                 onSettingsChange={(patch) =>
                   setSettings((current) => ({ ...current, ...patch }))}
                 onUiJudgeServerUrlChange={setUiJudgeServerUrl}

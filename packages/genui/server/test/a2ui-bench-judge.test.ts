@@ -880,7 +880,9 @@ describe('screenshot evaluation boundary', () => {
         expect(result).toMatchObject({
           status: 'failed',
           score: 0,
-          errors: ['GenUI screenshot evaluation failed.'],
+          errors: [
+            expect.stringContaining('GenUI screenshot evaluation failed:'),
+          ],
         });
         expect(cancel).toHaveBeenCalledTimes(1);
         expect(pull).not.toHaveBeenCalled();
@@ -899,7 +901,9 @@ describe('screenshot evaluation boundary', () => {
       expect(result).toMatchObject({
         status: 'failed',
         score: 0,
-        errors: ['GenUI screenshot evaluation failed.'],
+        errors: [
+          expect.stringContaining('GenUI screenshot evaluation failed:'),
+        ],
       });
       expect(evaluate).not.toHaveBeenCalled();
     });
