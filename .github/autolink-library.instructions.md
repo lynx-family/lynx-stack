@@ -6,6 +6,11 @@ applyTo:
 
 # Lynx Library Instructions
 
+Keep the public type entry aligned with the runtime entry by re-exporting the
+generated module objects. Annotated class declarations describe codegen inputs,
+not constructible public module APIs. Validate both platform and N-API module
+calls through the package entry after codegen.
+
 Use the current Lynx library package names and marker names when creating or
 updating Lynx libraries.
 
