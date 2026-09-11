@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../..');
 const elementTemplateRuntimePkg = require.resolve(
   '../../src/element-template/internal.ts',
-);
+).split(path.sep).join('/');
 
 // The ReactLynx SWC transform has to see the untouched JSX source, so it runs
 // as an `order: 'pre'` transform — ahead of rspack's own SWC pass.

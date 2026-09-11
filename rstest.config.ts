@@ -65,6 +65,7 @@ export default defineConfig({
     // would also sweep in `react/testing-library`'s own suite, which cannot
     // join this aggregator (see the note below).
     'packages/react/runtime/rstest.config.ts',
+    'packages/react/runtime/__test__/element-template/rstest.config.ts',
     'packages/react/transform/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/tailwind-preset/rstest.config.ts',
