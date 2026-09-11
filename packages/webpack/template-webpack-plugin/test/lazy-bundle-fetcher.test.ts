@@ -27,6 +27,7 @@ const CONTEXT = dirname(fileURLToPath(import.meta.url));
 
 interface CapturedEncode {
   outputName: string;
+  pageConfig: Record<string, unknown> | undefined;
   customSections: Record<string, { content: unknown; encoding?: string }>;
 }
 
@@ -38,6 +39,9 @@ function captureBeforeEmit() {
       hooks.beforeEmit.tapPromise('cap', (args) => {
         captured.push({
           outputName: args.outputName,
+          pageConfig: args.finalEncodeOptions['pageConfig'] as
+            | Record<string, unknown>
+            | undefined,
           customSections: args.finalEncodeOptions.customSections as Record<
             string,
             { content: unknown; encoding?: string }
@@ -54,6 +58,7 @@ function buildConfig(
   capturePlugin: (compiler: webpack.Compiler) => void,
   mode: 'development' | 'production',
   normalizeWebManifest = false,
+  lazyBundleFetcher: 'FetchBundle' | 'QueryComponent' = 'FetchBundle',
 ): webpack.Configuration {
   // Each build gets its own temp output dir so parallel/serial test runs
   // don't clobber each other (or the package's `dist/`).
@@ -68,7 +73,7 @@ function buildConfig(
       capturePlugin,
       new LynxTemplatePlugin({
         ...LynxTemplatePlugin.defaultOptions,
-        lazyBundleFetcher: 'FetchBundle',
+        lazyBundleFetcher,
         intermediate: '.rspeedy/main',
       }),
       normalizeWebManifest
@@ -162,6 +167,20 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
     process.env['DEBUG'] = 'unrelated';
     expect(await runAndGetMtEncoding('production')).toBe('JsBytecode');
   });
+
+  test.each(['FetchBundle', 'QueryComponent'] as const)(
+    'web encodes the selected %s CSS mode',
+    async lazyBundleFetcher => {
+      const { captured, plugin } = captureBeforeEmit();
+      await runWebpack(
+        buildConfig(plugin, 'production', true, lazyBundleFetcher),
+      );
+      const lazy = captured.find(entry =>
+        entry.outputName.startsWith('lazy-bundle/')
+      );
+      expect(lazy?.pageConfig?.lazyBundleFetcher).toBe(lazyBundleFetcher);
+    },
+  );
 
   test('web-normalized lazy entry remains the background section', async () => {
     const { captured, plugin } = captureBeforeEmit();

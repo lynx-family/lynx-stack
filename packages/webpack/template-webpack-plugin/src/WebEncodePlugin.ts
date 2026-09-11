@@ -108,6 +108,9 @@ export class WebEncodePlugin {
             pageConfig: {
               ...encodeData.compilerOptions,
               ...encodeData.sourceContent.config,
+              ...(encodeData['lazyBundleFetcher'] === undefined ? {} : {
+                lazyBundleFetcher: encodeData['lazyBundleFetcher'],
+              }),
             },
           });
           return encodeOptions;

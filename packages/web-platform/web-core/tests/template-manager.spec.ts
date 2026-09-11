@@ -165,6 +165,54 @@ describe('Template Manager', () => {
     },
   );
 
+  test.each([undefined, 'QueryComponent', 'FetchBundle'] as const)(
+    'uses authored %s CSS mode without changing the lazy wrapper',
+    async lazyBundleFetcher => {
+      const url = `http://example.com/css-mode-${lazyBundleFetcher}.bundle`;
+      const encoded = encode({
+        ...sampleTasm,
+        pageConfig: {
+          enableCSSSelector: true,
+          enableRemoveCSSScope: true,
+          ...(lazyBundleFetcher ? { lazyBundleFetcher } : {}),
+        },
+        lepusCode: { root: '(function () { return "lazy"; })' },
+        styleInfo: {
+          '0': [{
+            type: 'StyleRule',
+            selectorText: { value: '.mode-probe' },
+            style: [{ name: 'background-color', value: 'red' }],
+            variables: {},
+          }],
+        },
+      });
+      rstest.mocked(globalThis.fetch).mockResolvedValue(new Response(encoded));
+      const bundle = await templateManager.fetchBundle(
+        url,
+        Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
+        false,
+      );
+      const { wasmInstance } = await import('../ts/client/wasm.js');
+      const root = document.createElement('div').attachShadow({ mode: 'open' });
+      const context = new wasmInstance.MainThreadWasmContext(
+        root,
+        {} as any,
+        true,
+      );
+      context.push_style_sheet(bundle.styleSheet!);
+      expect(
+        root.querySelector('style')!.textContent!.includes(`l-e-name="${url}"`),
+      ).toBe(lazyBundleFetcher !== 'FetchBundle');
+      const code = await resolveObjectURL(bundle.lepusCode!.root!)!.text();
+      const module = { exports: undefined as unknown };
+      new Function('module', code)(module);
+      expect((module.exports as () => string)()).toBe('lazy');
+      context.free();
+    },
+  );
+
   test.each([true, false])(
     'queryComponent retains its decoded root alongside an external load (external first=%s)',
     async externalFirst => {

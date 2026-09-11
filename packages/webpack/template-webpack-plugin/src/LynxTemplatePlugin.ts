@@ -1283,6 +1283,7 @@ class LynxTemplatePluginImpl {
     const intermediatePosix = intermediate.replace(/\\/g, '/');
 
     const encodeRawData: EncodeRawData = {
+      lazyBundleFetcher: this.#options.lazyBundleFetcher,
       compilerOptions: {
         enableFiberArch: true,
         useLepusNG: true,

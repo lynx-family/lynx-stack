@@ -8,6 +8,8 @@ export interface PageConfig {
   defaultOverflowVisible: 'true' | 'false';
   enableJSDataProcessor: 'true' | 'false';
   isLazy: 'true' | 'false';
+  /** FetchBundle components render without a per-bundle CSS entry scope. */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
   appType?: string;
   cardType: string;
   /**

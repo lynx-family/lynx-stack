@@ -9,6 +9,7 @@ export function getCSSScopeEntry(
   url: string,
 ): string | undefined {
   return config.isLazy === 'true' && config.isExternalBundle !== 'true'
+      && config.lazyBundleFetcher !== 'FetchBundle'
     ? url
     : undefined;
 }
