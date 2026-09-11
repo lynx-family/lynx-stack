@@ -79,7 +79,8 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
-          const { encodeData, intermediateAssets } = encodeOptions;
+          const { encodeData, intermediateAssets, lazyBundleFetcher } =
+            encodeOptions;
 
           // A bundle assembled from sections packs every background chunk, so
           // none of them stays on disk. A card keeps its split chunks.
@@ -108,8 +109,8 @@ export class WebEncodePlugin {
             pageConfig: {
               ...encodeData.compilerOptions,
               ...encodeData.sourceContent.config,
-              ...(encodeData['lazyBundleFetcher'] === undefined ? {} : {
-                lazyBundleFetcher: encodeData['lazyBundleFetcher'],
+              ...(lazyBundleFetcher === undefined ? {} : {
+                lazyBundleFetcher,
               }),
             },
           });

@@ -104,6 +104,7 @@ export interface TemplateHooks {
    */
   beforeEncode: AsyncSeriesWaterfallHook<{
     encodeData: EncodeRawData;
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     filenameTemplate: string;
     /**
      * The chunk groups covered by this template.
@@ -1283,7 +1284,6 @@ class LynxTemplatePluginImpl {
     const intermediatePosix = intermediate.replace(/\\/g, '/');
 
     const encodeRawData: EncodeRawData = {
-      lazyBundleFetcher: this.#options.lazyBundleFetcher,
       compilerOptions: {
         enableFiberArch: true,
         useLepusNG: true,
@@ -1358,6 +1358,7 @@ class LynxTemplatePluginImpl {
 
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
+      lazyBundleFetcher: this.#options.lazyBundleFetcher,
       filenameTemplate,
       chunkGroups,
       intermediate,

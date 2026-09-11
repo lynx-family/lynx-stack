@@ -27,6 +27,7 @@ const CONTEXT = dirname(fileURLToPath(import.meta.url));
 
 interface CapturedEncode {
   outputName: string;
+  lazyBundleFetcher: unknown;
   pageConfig: Record<string, unknown> | undefined;
   customSections: Record<string, { content: unknown; encoding?: string }>;
 }
@@ -39,6 +40,7 @@ function captureBeforeEmit() {
       hooks.beforeEmit.tapPromise('cap', (args) => {
         captured.push({
           outputName: args.outputName,
+          lazyBundleFetcher: args.finalEncodeOptions['lazyBundleFetcher'],
           pageConfig: args.finalEncodeOptions['pageConfig'] as
             | Record<string, unknown>
             | undefined,
@@ -179,6 +181,7 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
         entry.outputName.startsWith('lazy-bundle/')
       );
       expect(lazy?.pageConfig?.lazyBundleFetcher).toBe(lazyBundleFetcher);
+      expect(lazy?.lazyBundleFetcher).toBeUndefined();
     },
   );
 
@@ -202,6 +205,8 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
     );
     const background = lazy?.customSections['background']?.content;
 
+    expect(lazy?.lazyBundleFetcher).toBeUndefined();
+    expect(lazy?.pageConfig).toBeUndefined();
     expect(background).toEqual(expect.any(String));
     expect(background).toContain('"background"');
     expect(background).not.toContain('tt.define(\'/app-service.js\'');
