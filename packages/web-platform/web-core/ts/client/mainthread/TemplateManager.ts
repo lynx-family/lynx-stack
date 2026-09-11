@@ -243,6 +243,8 @@ export class TemplateManager {
       await this.#sectionQueues.get(url);
       const bundle = this.#loadingBundles.get(url);
       const instance = await lynxViewInstancePromise;
+      instance.backgroundThread.markTiming('decode_end');
+      instance.backgroundThread.markTiming('load_template_start');
       if (bundle) {
         // LepusCode may precede StyleInfo in the stream. Register all sections
         // before executing scripts so the first render can query its styles.
@@ -262,8 +264,6 @@ export class TemplateManager {
         this.#loadingBundles.delete(url);
       }
       this.#resolvePromise(url);
-      instance.backgroundThread.markTiming('decode_end');
-      instance.backgroundThread.markTiming('load_template_start');
     } catch (error) {
       this.#removeBundle(url);
       this.#rejectPromise(url, error);

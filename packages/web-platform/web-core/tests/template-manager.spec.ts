@@ -167,6 +167,12 @@ describe('Template Manager', () => {
             templateUrl,
           );
           expect(templateManager.getStyleSheet(templateUrl)).toBeDefined();
+          expect(instance.backgroundThread.markTiming).toHaveBeenCalledWith(
+            'decode_end',
+          );
+          expect(instance.backgroundThread.markTiming).toHaveBeenCalledWith(
+            'load_template_start',
+          );
           if (reject) throw new Error('main-thread execution failed');
         }),
       } as unknown as LynxViewInstance;
