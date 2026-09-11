@@ -1,5 +1,16 @@
 # @lynx-js/web-core
 
+## 0.26.1
+
+### Patch Changes
+
+- Fix page child events being dispatched as component events by registering the page element unique ID in the Web host. ([#3842](https://github.com/lynx-family/lynx-stack/pull/3842))
+
+- Support `enableCSSInheritance` for text inside views, including gradient text colors, in client rendering and SSR. ([#3907](https://github.com/lynx-family/lynx-stack/pull/3907))
+- Updated dependencies [[`8321c8f`](https://github.com/lynx-family/lynx-stack/commit/8321c8f58346223d33130ca342686adc92a0fd35), [`8419cb6`](https://github.com/lynx-family/lynx-stack/commit/8419cb6becd191cd49acb092507eeee7b77b3fcd)]:
+  - @lynx-js/web-elements@0.12.11
+  - @lynx-js/web-worker-rpc@0.26.1
+
 ## 0.26.0
 
 ### Minor Changes

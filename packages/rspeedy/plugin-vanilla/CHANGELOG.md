@@ -1,5 +1,12 @@
 # `@lynx-js/vanilla-rsbuild-plugin`
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`b900a78`](https://github.com/lynx-family/lynx-stack/commit/b900a78a43914adf2aae60849e2d6433be5eb797)]:
+  - @lynx-js/template-webpack-plugin@0.16.1
+
 ## 0.1.0
 
 ### Minor Changes

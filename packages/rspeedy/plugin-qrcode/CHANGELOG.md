@@ -1,5 +1,11 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.7.2
+
+### Patch Changes
+
+- Quit the shortcuts with `q` when the plugin runs on the Rsbuild CLI instead of Rspeedy, where no Rspeedy API is exposed to end the process. ([#3843](https://github.com/lynx-family/lynx-stack/pull/3843))
+
 ## 0.7.1
 
 ### Patch Changes
