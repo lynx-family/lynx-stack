@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 export type BenchRole = 'control' | 'experiment';
-export type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml';
+export type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml' | 'html';
 export type BenchProfile = 'matched-core' | 'native';
 export type BenchVariable =
   | 'catalog'
@@ -46,7 +46,12 @@ export const BENCH_PROTOCOL_OPTIONS = [
     label: 'Lynx XML',
     description: 'Self-contained Lynx XML page',
   },
+  { value: 'html', label: 'HTML', description: 'Self-contained HTML page' },
 ] as const;
+
+export function isDocumentBenchProtocol(protocol: BenchProtocol): boolean {
+  return protocol === 'lynx-xml' || protocol === 'html';
+}
 
 export function getBenchProtocolLabel(
   protocol: BenchProtocol = 'a2ui',
@@ -66,10 +71,10 @@ export function withBenchProtocol(
   }
   let profile = group.profile;
   if (protocol === 'openui') profile = 'matched-core';
-  if (protocol === 'lynx-xml') profile = 'native';
+  if (isDocumentBenchProtocol(protocol)) profile = 'native';
   let catalog = group.catalog === 'none' ? 'Full Catalog' : group.catalog;
   if (profile === 'matched-core') catalog = 'Core Catalog';
-  if (protocol === 'lynx-xml') catalog = 'none';
+  if (isDocumentBenchProtocol(protocol)) catalog = 'none';
   return {
     ...group,
     protocol,

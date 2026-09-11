@@ -72,7 +72,7 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
     /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
   );
   expect(markup).toContain(
-    'title="Lynx XML generates a complete page without a component catalog."',
+    'title="This protocol generates a complete page without a component catalog."',
   );
   expect(markup).not.toContain('<p class="benchFieldHint">');
   expect(markup).toMatch(
@@ -730,4 +730,18 @@ describe('BenchPage', () => {
       '"report":null',
     );
   });
+});
+
+test('HTML-only Judge shows current-tab sharing guidance without requiring a sidecar', () => {
+  const markup = renderToStaticMarkup(React.createElement(BenchRunPanel, {
+    locked: false,
+    hasHtmlGroups: true,
+    needsScreenshotService: false,
+    settings: DEFAULT_BENCH_SETTINGS,
+    uiJudgeServerUrl: '',
+    onSettingsChange: noop,
+    onUiJudgeServerUrlChange: noop,
+  }));
+  expect(markup).toContain('share this tab');
+  expect(markup).not.toContain('UI_JUDGE_SERVER_URL');
 });

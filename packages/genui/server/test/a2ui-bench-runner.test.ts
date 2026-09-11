@@ -143,6 +143,90 @@ function screenshotDataUrlForBytes(bytes: number): string {
 }
 
 describe('A2UI Bench UI Judge integration', () => {
+  test('routes HTML source to Judge and preserves HTML results and summaries', async () => {
+    const rawText =
+      '<!doctype html><html><head></head><body>Hello</body></html>';
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
+      enabled: true,
+      session: { screenshotPath: 'browser/html' },
+    });
+    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      errors: [],
+      score: 4,
+      status: 'complete',
+      warnings: [],
+    });
+    const benchRequest = request();
+    benchRequest.groups = [{
+      ...group,
+      protocol: 'html',
+      profile: 'native',
+      model: 'html-model',
+    }];
+    const store = getBenchJobStore();
+    const job = store.createJob(benchRequest, 1);
+    await runBenchJob(job.id, {
+      adapters: {
+        'html': {
+          protocol: 'html',
+          generate: (input) => {
+            expect(input.enableHtmlFragment).toBeUndefined();
+            return Promise.resolve({
+              attempts: [{
+                index: 1,
+                durationMs: 10,
+                inputTokens: 2,
+                outputTokens: 3,
+                totalTokens: 5,
+                usage: {
+                  inputTokens: 2,
+                  outputTokens: 3,
+                  inputTokenDetails: { cacheReadTokens: 1 },
+                },
+                valid: true,
+                validationErrors: [],
+                outputChars: rawText.length,
+              }],
+              finalValid: true,
+              finalText: rawText,
+              finalErrors: [],
+              judgePayload: { kind: 'html-source', rawText },
+            });
+          },
+        },
+      },
+    });
+    expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'html-model',
+        artifact: { protocol: 'html', rawText },
+      }),
+      expect.any(Function),
+    );
+    const report = store.getJob(job.id)?.report;
+    expect(report?.results[0]).toMatchObject({
+      protocol: 'html',
+      profile: 'native',
+      catalog: 'none',
+      text: rawText,
+      tokens: 5,
+      usage: {
+        inputTokens: 2,
+        outputTokens: 3,
+        totalTokens: 5,
+        cachedTokens: 1,
+      },
+      judgeScore: 4,
+      status: 'complete',
+      ok: true,
+    });
+    expect(report?.summaries[0]).toMatchObject({
+      protocol: 'html',
+      profile: 'native',
+      judgeRunCount: 1,
+    });
+  });
+
   test('routes XML source to Judge and preserves XML results and summaries', async () => {
     const rawText =
       '<!doctype lynx><lynx engine-version="4.2"><script thread="main"></script></lynx>';

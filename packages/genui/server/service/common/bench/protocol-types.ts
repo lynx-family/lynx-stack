@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-export const BENCH_PROTOCOLS = ['a2ui', 'openui', 'lynx-xml'] as const;
+export const BENCH_PROTOCOLS = ['a2ui', 'openui', 'lynx-xml', 'html'] as const;
 
 export type BenchProtocol = (typeof BENCH_PROTOCOLS)[number];
 

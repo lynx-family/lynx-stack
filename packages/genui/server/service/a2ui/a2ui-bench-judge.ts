@@ -27,7 +27,7 @@ const DEFAULT_SCREENSHOT_WIDTH = 390;
 const DEFAULT_SCREENSHOT_HEIGHT = 844;
 
 export interface BenchScreenshotRequest {
-  path: 'screenshot/zip/url' | 'screenshot/zip/upload';
+  path: 'screenshot/zip/url' | 'screenshot/zip/upload' | 'browser/html';
   fields: Record<string, string>;
   timeoutMs: number;
   source?: string;
@@ -112,6 +112,7 @@ export interface RunBenchUiJudgeRequestOptions {
   initData?: Record<string, unknown>;
   viewport?: { width?: number; height?: number };
   lynxXmlSource?: string;
+  htmlSource?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   session: BenchUiJudgeSession;
@@ -379,13 +380,13 @@ export async function runBenchUiJudgeRequest(
     return await (pool ? pool.run(execute, options.signal) : execute());
   }
   const fields: Record<string, string> = {};
-  if (options.lynxXmlSource === undefined) {
+  if (options.htmlSource === undefined && options.lynxXmlSource === undefined) {
     fields.entry = 'template.js';
     if (options.session.zipUrl !== undefined) {
       fields.url = options.session.zipUrl;
     }
     fields.globalProps = JSON.stringify(options.globalProps);
-  } else {
+  } else if (options.lynxXmlSource !== undefined) {
     fields.entry = 'index.lynxml';
   }
   if (options.initData !== undefined) {
@@ -409,9 +410,9 @@ export async function runBenchUiJudgeRequest(
       response = await captureScreenshot({
         path: options.session.screenshotPath,
         fields,
-        ...(options.lynxXmlSource === undefined
+        ...((options.htmlSource ?? options.lynxXmlSource) === undefined
           ? {}
-          : { source: options.lynxXmlSource }),
+          : { source: options.htmlSource ?? options.lynxXmlSource }),
         timeoutMs: requestTimeoutMs,
       }, requestSignal);
     } catch (error) {

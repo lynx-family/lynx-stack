@@ -6,6 +6,7 @@ import {
   findComparableBaseline,
   getBenchGroupDifferences,
   getBenchProtocolLabel,
+  isDocumentBenchProtocol,
   usesCatalog,
 } from './benchData.js';
 import type {
@@ -240,18 +241,18 @@ export function BenchComparisonGroupsSection(props: {
                   </div>
                   <div
                     className='benchField'
-                    title={group.protocol === 'lynx-xml'
-                      ? 'Lynx XML generates a complete page without a component catalog.'
+                    title={isDocumentBenchProtocol(group.protocol)
+                      ? 'This protocol generates a complete page without a component catalog.'
                       : undefined}
                   >
                     <span className='benchFieldLabel'>Catalog</span>
                     <BenchDropdown
                       ariaLabel={`${groupName} Catalog`}
-                      value={group.protocol === 'lynx-xml'
+                      value={isDocumentBenchProtocol(group.protocol)
                         ? 'none'
                         : group.catalog}
                       disabled={props.locked || !usesCatalog(group)}
-                      options={group.protocol === 'lynx-xml'
+                      options={isDocumentBenchProtocol(group.protocol)
                         ? [{ value: 'none', label: 'Not applicable' }]
                         : props.catalogOptions.map((catalog) => ({
                           value: catalog,
@@ -260,7 +261,8 @@ export function BenchComparisonGroupsSection(props: {
                       onChange={(catalog) =>
                         props.onCatalogChange(group.id, catalog)}
                     />
-                    {usesCatalog(group) || group.protocol === 'lynx-xml'
+                    {usesCatalog(group)
+                        || isDocumentBenchProtocol(group.protocol)
                       ? null
                       : (
                         <p className='benchFieldHint'>

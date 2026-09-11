@@ -16,6 +16,8 @@ function clampNumber(value: number, min: number, max: number): number {
 
 export function BenchRunPanel(props: {
   locked: boolean;
+  hasHtmlGroups?: boolean;
+  needsScreenshotService?: boolean;
   onSettingsChange: (patch: Partial<BenchRunPanelSettings>) => void;
   onUiJudgeServerUrlChange: (value: string) => void;
   settings: BenchRunPanelSettings;
@@ -45,32 +47,44 @@ export function BenchRunPanel(props: {
           <div className='benchInlineConfigGrid'>
             <section className='benchInlineConfigGroup'>
               <h4>UI Judge</h4>
-              <label className='benchField'>
-                <span className='benchFieldLabel'>UI_JUDGE_SERVER_URL</span>
-                <input
-                  className='benchInput'
-                  type='url'
-                  value={props.uiJudgeServerUrl}
-                  placeholder='http://127.0.0.1:8080'
-                  readOnly={props.locked}
-                  aria-invalid={props.uiJudgeServerUrlValidationError
-                    ? 'true'
-                    : undefined}
-                  onChange={(event) =>
-                    props.onUiJudgeServerUrlChange(event.target.value)}
-                />
-              </label>
-              <p className='benchFieldHint'>
-                Your browser connects to this service and uploads screenshots
-                for scoring. The address is saved only in this browser.
-              </p>
-              {props.uiJudgeServerUrlValidationError
-                ? (
-                  <p className='benchFieldError' role='alert'>
-                    {props.uiJudgeServerUrlValidationError}
+              {props.needsScreenshotService !== false && (
+                <>
+                  <label className='benchField'>
+                    <span className='benchFieldLabel'>UI_JUDGE_SERVER_URL</span>
+                    <input
+                      className='benchInput'
+                      type='url'
+                      value={props.uiJudgeServerUrl}
+                      placeholder='http://127.0.0.1:8080'
+                      readOnly={props.locked}
+                      aria-invalid={props.uiJudgeServerUrlValidationError
+                        ? 'true'
+                        : undefined}
+                      onChange={(event) =>
+                        props.onUiJudgeServerUrlChange(event.target.value)}
+                    />
+                  </label>
+                  <p className='benchFieldHint'>
+                    Your browser connects to this service and uploads
+                    screenshots for scoring. The address is saved only in this
+                    browser.
                   </p>
-                )
-                : null}
+                  {props.uiJudgeServerUrlValidationError
+                    ? (
+                      <p className='benchFieldError' role='alert'>
+                        {props.uiJudgeServerUrlValidationError}
+                      </p>
+                    )
+                    : null}
+                </>
+              )}
+              {props.hasHtmlGroups && (
+                <p className='benchFieldHint'>
+                  HTML uses your browser's screenshot capability. When UI Judge
+                  is on, Start run asks you to share this tab. Use desktop
+                  Chrome 132+ and keep this page open until the run finishes.
+                </p>
+              )}
             </section>
 
             <section className='benchInlineConfigGroup'>

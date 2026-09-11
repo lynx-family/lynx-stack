@@ -45,6 +45,7 @@ import type {
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 // import { runBenchPreview } from '../../a2ui/a2ui-bench-preview.js';
+import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
 import { defaultModelName } from '../model-config.js';
@@ -444,7 +445,7 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = protocol === 'lynx-xml'
+  const catalogLabel = protocol === 'lynx-xml' || protocol === 'html'
     ? 'none' as const
     : (profile === 'matched-core'
       ? 'matched-core' as const
@@ -566,7 +567,9 @@ async function runProtocolAdapterOne(
             : {
               protocol: judgePayload.kind === 'lynx-xml-source'
                 ? 'lynx-xml' as const
-                : 'openui' as const,
+                : (judgePayload.kind === 'html-source'
+                  ? 'html' as const
+                  : 'openui' as const),
               rawText: judgePayload.rawText,
             },
         }
@@ -935,12 +938,13 @@ function resolveProtocolAdapters(
   );
   const adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>> = {};
   for (const protocol of protocols) {
-    adapters[protocol] = overrides?.[protocol]
-      ?? (protocol === 'a2ui'
-        ? createA2UIBenchAdapter()
-        : (protocol === 'openui'
-          ? createOpenUIBenchAdapter()
-          : createLynxXmlBenchAdapter()));
+    const factories = {
+      a2ui: createA2UIBenchAdapter,
+      openui: createOpenUIBenchAdapter,
+      'lynx-xml': createLynxXmlBenchAdapter,
+      html: createHtmlBenchAdapter,
+    };
+    adapters[protocol] = overrides?.[protocol] ?? factories[protocol]();
   }
   return adapters;
 }

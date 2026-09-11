@@ -206,3 +206,51 @@ test.each([
     expect(failure.error).toContain(input.error);
   },
 );
+
+test.each([false, true])(
+  'HTML capture bypasses the sidecar and uploads pixels or capture errors: %s',
+  async (fail) => {
+    const captureHtml = rstest.fn().mockImplementation(() =>
+      fail
+        ? Promise.reject(new Error('Sharing stopped'))
+        : Promise.resolve(
+          new Blob([new Uint8Array([66, 77])], { type: 'image/bmp' }),
+        )
+    );
+    const fetchImpl = rstest.fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({
+          path: 'browser/html',
+          fields: { width: '390', height: '844' },
+          source: '<!doctype html><html><head></head><body>Hello</body></html>',
+          timeoutMs: 1000,
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const relay = createBenchScreenshotRelay({
+      jobUrl,
+      serverUrl: '',
+      signal: new AbortController().signal,
+      captureHtml,
+      fetch: fetchImpl,
+      onError: rstest.fn(),
+    });
+    relay(captureId);
+    relay(captureId);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(2);
+    expect(captureHtml).toHaveBeenCalledTimes(1);
+    expect(captureHtml).toHaveBeenCalledWith(
+      expect.objectContaining({ width: 390, height: 844 }),
+      expect.any(AbortSignal),
+    );
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+      `${jobUrl}/screenshots/${captureId}`,
+      `${jobUrl}/screenshots/${captureId}`,
+    ]);
+    const upload = fetchImpl.mock.calls[1]![1]!;
+    expect(upload.headers).toEqual({
+      'Content-Type': fail ? 'application/json' : 'image/bmp',
+    });
+    if (fail) expect(upload.body).toContain('Sharing stopped');
+  },
+);

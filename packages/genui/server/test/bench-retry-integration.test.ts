@@ -9,6 +9,7 @@ import { resolveBenchCatalog } from '../service/a2ui/a2ui-bench-catalog.js';
 import type { ProtocolBenchAdapterInput } from '../service/common/bench/protocol-adapter.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import { GenerationUpstreamError } from '../service/common/result.js';
+import { createHtmlBenchAdapter } from '../service/html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../service/lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../service/openui/openui-bench-adapter.js';
 
@@ -52,6 +53,11 @@ const protocols = [
       },
     ])],
   ['openui', createOpenUIBenchAdapter, () => 'root = Column([Text("Hello")])'],
+  [
+    'html',
+    createHtmlBenchAdapter,
+    () => '<!doctype html><html><head></head><body>Hello</body></html>',
+  ],
   [
     'lynx-xml',
     createLynxXmlBenchAdapter,
@@ -200,6 +206,12 @@ for (const api of ['chat', 'responses'] as const) {
           throw new Error('Expected a JSON body');
         }
         calls.push(init.body);
+        const body = JSON.parse(init.body) as Record<string, unknown>;
+        if (api === 'chat') {
+          expect(body.reasoning_effort).toBe('low');
+        } else {
+          expect(body.reasoning).toEqual({ effort: 'low' });
+        }
         // A second SDK request before the adapter wait would violate the budget.
         expect(calls.length).toBe(waits.length + 1);
         const status = calls.length === 1 ? 429 : 503;

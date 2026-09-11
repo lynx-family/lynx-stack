@@ -309,6 +309,18 @@ export function normalizeBenchJobRequest(
     };
   }
 
+  if (
+    enabledGroups.some((group) =>
+      group.protocol === 'html' && group.profile !== 'native'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'html groups require the "native" profile',
+    };
+  }
+
   const scenarios = normalizeScenarios(value.scenarios);
   if (scenarios.length === 0) {
     return {
@@ -329,6 +341,7 @@ export function normalizeBenchJobRequest(
       || enabledGroups.some((group) =>
         group.profile === 'matched-core'
         || group.protocol === 'lynx-xml'
+        || group.protocol === 'html'
       ))
     && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
   ) {
