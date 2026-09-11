@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import {
   BENCH_PROTOCOL_OPTIONS,
+  MAX_BENCH_GROUPS,
   findComparableBaseline,
   getBenchGroupDifferences,
   getBenchProtocolLabel,
@@ -81,7 +82,10 @@ export function BenchComparisonGroupsSection(props: {
           {(['protocol', 'model', 'prompt'] as const).map((direction) => (
             <button
               type='button'
-              disabled={props.locked}
+              disabled={props.locked || props.groups.length >= MAX_BENCH_GROUPS}
+              title={props.groups.length >= MAX_BENCH_GROUPS
+                ? `Up to ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`
+                : undefined}
               key={direction}
               onClick={() => props.onAdd(direction)}
             >

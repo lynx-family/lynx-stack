@@ -18,6 +18,7 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
 import {
@@ -128,6 +129,59 @@ afterEach(() => {
 });
 
 describe('local historical Bench reports', () => {
+  test('preserves task timing in history and displays it in reports and the history list', () => {
+    const report = {
+      ...reportFixture(),
+      startedAt: '2026-09-07T09:35:00.000Z',
+      durationMs: 88_049,
+    };
+    const stored = sanitizeBenchReportValue(report) as BenchReport;
+    const entry = historyEntry(stored);
+    expect(getHistoryReport(entry)).toMatchObject({
+      startedAt: report.startedAt,
+      completedAt: report.completedAt,
+      durationMs: 88_049,
+    });
+    const pages = [
+      React.createElement(PublishedReportPage, { report: stored }),
+      React.createElement(BenchReportPanel, {
+        report: stored,
+        reportIsStale: false,
+        settings: stored.settings,
+        onOpenScreenshots: noop,
+      }),
+    ];
+    for (const page of pages) {
+      const html = renderToStaticMarkup(page);
+      expect(html).toContain('Total time');
+      expect(html).toContain('1m 28s');
+      expect(html).toContain(`dateTime="${report.startedAt}"`);
+      expect(html).toContain(`dateTime="${report.completedAt}"`);
+    }
+    const history = renderToStaticMarkup(React.createElement(BenchHistoryRail, {
+      activeId: entry.id,
+      disabled: false,
+      entries: [entry],
+      onClear: noop,
+      onDelete: noop,
+      onNew: noop,
+      onOpenReport: noop,
+      onRestore: noop,
+    }));
+    expect(history).toContain('Total time: 1m 28s');
+  });
+
+  test('does not infer zero duration from legacy report creation timestamps or show obsolete parallelism', () => {
+    const report = reportFixture();
+    Object.assign(report.settings, { parallelism: 8 });
+    const html = renderToStaticMarkup(
+      React.createElement(PublishedReportPage, { report }),
+    );
+    expect(html).toContain('<dt>Total time</dt><dd>Not recorded</dd>');
+    expect(html).toContain('<dt>Started</dt><dd>Not recorded</dd>');
+    expect(html).not.toContain('Parallelism');
+  });
+
   test('reads the matching saved snapshot without fetching', async () => {
     const entry = historyEntry();
     rstest.mocked(readBenchHistory).mockResolvedValue([entry]);

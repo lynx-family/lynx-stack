@@ -123,6 +123,34 @@ describe('BenchPage', () => {
     }]);
     expect(restored[0]?.config.settings.repeats).toBe(5);
   });
+  test('ignores legacy concurrency in restored configuration without rewriting recorded runs', () => {
+    const entry = createCompletedHistoryEntry(
+      'saved-concurrency',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const saved = {
+      ...entry,
+      report: { ...entry.report, settings: { parallelism: 8 } },
+      config: {
+        ...entry.config,
+        settings: { ...DEFAULT_BENCH_SETTINGS, parallelism: 8 },
+      },
+    };
+    const [draft, completed] = migrateBenchHistoryEntries([
+      { ...saved, id: 'draft-concurrency', report: null },
+      saved,
+    ]);
+    expect(draft?.config.settings).not.toHaveProperty('parallelism');
+    expect(completed?.config.settings).not.toHaveProperty('parallelism');
+    expect(completed?.report?.settings).toHaveProperty('parallelism', 8);
+    expect(saved.config.settings.parallelism).toBe(8);
+  });
+  test('blocks restored plans with more than eight groups, including disabled groups', () => {
+    expect(getBenchRunBlockers(8, 1, 1, 1, 8)).toEqual([]);
+    expect(getBenchRunBlockers(8, 1, 1, 1, 9)).toContain(
+      'Bench supports at most 8 comparison groups, including the baseline.',
+    );
+  });
   test('renders one English page with history and a new Bench workflow', () => {
     const markup = renderToStaticMarkup(
       React.createElement(BenchPage),
@@ -518,7 +546,6 @@ describe('BenchPage', () => {
           },
           settings: {
             repeats: 1,
-            parallelism: 1,
             repairEnabled: true,
             judgeEnabled: true,
             collectLiveRenderMetrics: false,
@@ -542,7 +569,6 @@ describe('BenchPage', () => {
           },
           settings: {
             repeats: 1,
-            parallelism: 1,
             repairEnabled: true,
             judgeEnabled: true,
             collectLiveRenderMetrics: false,
@@ -713,7 +739,6 @@ describe('BenchPage', () => {
         env: { apiKeyConfigured: false, model: 'test-model' },
         settings: {
           repeats: 3,
-          parallelism: 1,
           repairEnabled: true,
           judgeEnabled: true,
           collectLiveRenderMetrics: false,

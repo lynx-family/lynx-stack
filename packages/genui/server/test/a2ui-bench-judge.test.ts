@@ -127,17 +127,21 @@ function geqiResponse(score: number): {
 
 test('excludes capture and scoring queue waits from the execution timeout', async () => {
   const scheduling = {
-    capture: new BenchTaskPool(1),
     evaluation: new BenchTaskPool(1),
   };
-  const releaseCapture = await scheduling.capture.acquire();
+  let startCapture!: () => void;
+  const started = new Promise<void>((resolve) => {
+    startCapture = resolve;
+  });
+  const queueEvaluation = rstest.spyOn(scheduling.evaluation, 'run');
   const releaseEvaluation = await scheduling.evaluation.acquire();
   let now = 0;
   const clock = rstest.spyOn(performance, 'now').mockImplementation(() => now);
   const timeout = rstest.spyOn(AbortSignal, 'timeout');
-  const capture = rstest.fn(() =>
-    Promise.resolve(evaluationResponse(geqiResponse(4)))
-  );
+  const capture = rstest.fn(() => ({
+    started,
+    response: Promise.resolve(evaluationResponse(geqiResponse(4))),
+  }));
   const running = runBenchUiJudgeRequest({
     globalProps: {},
     scenario: { prompt: 'Build a card' },
@@ -149,22 +153,22 @@ test('excludes capture and scoring queue waits from the execution timeout', asyn
     scheduling,
   }, capture);
   try {
-    expect(capture).not.toHaveBeenCalled();
+    expect(capture).toHaveBeenCalledTimes(1);
     expect(timeout).not.toHaveBeenCalled();
     now = 10_000;
-    releaseCapture();
-    // Waiting for the same slot also waits for capture decoding to finish.
-    await scheduling.capture.run(() => Promise.resolve());
+    startCapture();
+    await rstest.waitUntil(() => queueEvaluation.mock.calls.length === 1);
     now = 20_000;
     releaseEvaluation();
     const result = await running;
     expect(result.status).toBe('complete');
     expect(timeout.mock.calls).toEqual([[2_000], [2_000]]);
   } finally {
-    releaseCapture();
+    startCapture();
     releaseEvaluation();
     clock.mockRestore();
     timeout.mockRestore();
+    queueEvaluation.mockRestore();
   }
 });
 

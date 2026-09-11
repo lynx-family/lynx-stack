@@ -101,7 +101,6 @@ export function nextBenchComparisonProtocol(
 export interface BenchSettings {
   collectLiveRenderMetrics: boolean;
   judgeEnabled: boolean;
-  parallelism: number;
   repairEnabled: boolean;
   repeats: number;
 }
@@ -114,11 +113,13 @@ export const BENCH_CATALOG_OPTIONS = [
 
 export const DEFAULT_BENCH_SETTINGS: Readonly<BenchSettings> = {
   repeats: 2,
-  parallelism: 2,
   repairEnabled: true,
   judgeEnabled: true,
   collectLiveRenderMetrics: true,
 };
+
+// Keep this aligned with the server's Bench request limit.
+export const MAX_BENCH_GROUPS = 8;
 
 export const DEFAULT_BENCH_SCENARIOS: readonly BenchScenario[] = [
   {

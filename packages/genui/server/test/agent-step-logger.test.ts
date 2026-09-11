@@ -2,12 +2,142 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createOpenAI } from '@ai-sdk/openai';
 import { Agent } from '@mastra/core/agent';
 import { createTool } from '@mastra/core/tools';
 import { expect, rstest, test } from '@rstest/core';
 import { z } from 'zod';
 
 import { createAgentStepLogger } from '../service/common/agent-step-logger.js';
+import { extractGenerationResult } from '../service/common/result.js';
+
+test.each([
+  {
+    name: 'malformed JSON',
+    contentType: 'text/html',
+    body: '<html>private-response</html>',
+    causeName: 'AI_JSONParseError',
+  },
+  {
+    name: 'schema mismatch',
+    contentType: 'application/json',
+    body: JSON.stringify({
+      id: 'response-1',
+      output: [{ type: 'reasoning', id: 'reasoning-1' }],
+      privateField: 'private-response',
+    }),
+    causeName: 'AI_TypeValidationError',
+  },
+])(
+  'diagnoses a real SDK $name failure without logging its response body',
+  async ({
+    contentType,
+    body,
+    causeName,
+  }) => {
+    const log = rstest.fn((
+      _event: string,
+      _details?: Record<string, unknown>,
+    ) => undefined);
+    const fetch = rstest.fn<typeof globalThis.fetch>(() =>
+      Promise.resolve(
+        new Response(body, {
+          headers: {
+            'content-type': contentType,
+            'x-request-id': 'upstream-request',
+          },
+        }),
+      )
+    );
+    const provider = createOpenAI({ apiKey: 'test-secret-key', fetch });
+    const agent = new Agent({
+      id: 'response-diagnostics-test',
+      name: 'Response diagnostics test',
+      instructions: 'Return a greeting.',
+      model: provider.responses('diagnostic-model'),
+    });
+    const quiet = rstest.spyOn(console, 'error').mockImplementation(() =>
+      undefined
+    );
+    try {
+      await expect(async () => {
+        const result = await agent.generate('Hello', {
+          modelSettings: { maxRetries: 0 },
+          ...createAgentStepLogger<unknown>(
+            { onPerformanceEvent: log },
+            'test-agent',
+          ),
+        });
+        await extractGenerationResult(result);
+      }).rejects.toThrow('Invalid JSON response');
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const failed = log.mock.calls.find(([event]) =>
+        event === 'agent.model.error'
+      )?.[1];
+      expect(failed).toMatchObject({
+        failed: true,
+        error: {
+          statusCode: 200,
+          upstreamRequestId: 'upstream-request',
+          responseContentType: contentType,
+          responseBodyChars: body.length,
+          cause: { name: causeName },
+        },
+      });
+      expect(JSON.stringify(log.mock.calls)).not.toContain('private-response');
+      if (causeName === 'AI_TypeValidationError') {
+        expect(JSON.stringify(failed)).toContain('summary');
+      }
+    } finally {
+      quiet.mockRestore();
+    }
+  },
+);
+
+test('logs upstream failure diagnostics without provider bodies, headers, or credentials', () => {
+  const log = rstest.fn();
+  const callbacks = createAgentStepLogger({
+    apiKey: 'test-secret-key',
+    onPerformanceEvent: log,
+  }, 'test-agent');
+  callbacks.onFinish({
+    runId: 'failed-run',
+    finishReason: 'error',
+    error: Object.assign(new Error('Invalid JSON response: test-secret-key'), {
+      statusCode: 200,
+      responseHeaders: {
+        'x-request-id': 'upstream-request',
+        authorization: 'private-header',
+      },
+      requestBodyValues: { input: 'private-input' },
+      responseBody: 'private-response',
+      cause: new SyntaxError('Unexpected end of JSON input'),
+    }),
+  } as never);
+  expect(log).toHaveBeenLastCalledWith(
+    'agent.model.completed',
+    expect.objectContaining({ failed: true }),
+  );
+  expect(log.mock.calls.at(-1)?.[1]).toMatchObject({
+    error: {
+      name: 'Error',
+      statusCode: 200,
+      upstreamRequestId: 'upstream-request',
+      cause: { name: 'SyntaxError', message: 'Unexpected end of JSON input' },
+    },
+  });
+  const output = JSON.stringify(log.mock.calls);
+  for (
+    const privateValue of [
+      'test-secret-key',
+      'private-header',
+      'private-input',
+      'private-response',
+    ]
+  ) {
+    expect(output).not.toContain(privateValue);
+  }
+});
 
 test('logs per-step usage and safe tool sizes with a matching aggregate', () => {
   const log = rstest.fn((_event: string, _details?: Record<string, unknown>) =>

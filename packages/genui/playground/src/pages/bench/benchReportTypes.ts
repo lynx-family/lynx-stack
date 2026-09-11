@@ -17,6 +17,28 @@ export type BenchStatus =
   | 'idle'
   | 'running';
 
+export type BenchStageStatus =
+  | 'pending'
+  | 'queued'
+  | 'running'
+  | 'complete'
+  | 'failed'
+  | 'skipped'
+  | 'cancelled'
+  | 'unknown';
+
+export interface BenchRunProgress {
+  groupId: string;
+  scenarioId: string;
+  repeatIndex: number;
+  revision: number;
+  phase: string;
+  generation: BenchStageStatus;
+  screenshot: BenchStageStatus;
+  judge: BenchStageStatus;
+  error?: string;
+}
+
 export interface BenchJudgeDimensionResult {
   dimension: string;
   dimensionLabel: string;
@@ -89,6 +111,8 @@ export interface BenchReport {
   };
   completedAt?: string;
   createdAt: string;
+  startedAt?: string;
+  durationMs?: number;
   env: {
     apiKeyConfigured: boolean;
     clientOverrideAccepted?: boolean;
@@ -98,6 +122,7 @@ export interface BenchReport {
   id: string;
   jobId?: string;
   results: BenchResult[];
+  runProgress?: BenchRunProgress[];
   scenarios: BenchScenario[];
   settings: BenchSettings;
   status?: BenchStatus;

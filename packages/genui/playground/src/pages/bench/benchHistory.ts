@@ -85,10 +85,6 @@ export function createBenchSettingsFromReport(
       reportSettings.repeats,
       DEFAULT_BENCH_SETTINGS.repeats,
     ),
-    parallelism: readFiniteNumber(
-      reportSettings.parallelism,
-      DEFAULT_BENCH_SETTINGS.parallelism,
-    ),
     repairEnabled: readBoolean(
       reportSettings.repairEnabled,
       DEFAULT_BENCH_SETTINGS.repairEnabled,

@@ -33,11 +33,17 @@ export interface BenchScreenshotRequest {
   source?: string;
 }
 
-/** The browser captures the page and relays its response to the waiting run. */
+export interface BenchScreenshotTask {
+  /** Resolves when the browser takes this task out of its queue, or it settles. */
+  started: Promise<void>;
+  response: Promise<Response>;
+}
+
+/** Immediate captures return a promise; browser captures acknowledge their start separately. */
 export type BenchScreenshotCapture = (
   request: BenchScreenshotRequest,
   signal: AbortSignal,
-) => Promise<Response>;
+) => Promise<Response> | BenchScreenshotTask;
 
 export interface BenchUiJudgeSession {
   zipUrl?: string;
@@ -91,11 +97,19 @@ export interface BenchUiJudgeScenario
   type?: string;
 }
 
+export type BenchJudgePhase =
+  | 'screenshot-queued'
+  | 'screenshot'
+  | 'judge-queued'
+  | 'judge-retry'
+  | 'judge';
+
 const GEQI_DIMENSION_WEIGHTS = new Map<string, number>(
   JUDGE_DIMENSIONS.slice(1).map(({ id, weight }) => [id, weight]),
 );
 
 interface RunBenchUiJudgeOptions {
+  onPhase?: (phase: BenchJudgePhase) => void;
   model?: string;
   messages: A2UIMessage[];
   scenario: BenchUiJudgeScenario;
@@ -107,6 +121,7 @@ interface RunBenchUiJudgeOptions {
 }
 
 export interface RunBenchUiJudgeRequestOptions {
+  onPhase?: (phase: BenchJudgePhase) => void;
   model?: string;
   globalProps: Record<string, unknown>;
   initData?: Record<string, unknown>;
@@ -317,6 +332,7 @@ export async function runBenchUiJudge(
       scenario: options.scenario,
       session: options.session,
       scheduling: options.scheduling,
+      onPhase: options.onPhase,
       ...(options.signal ? { signal: options.signal } : {}),
       ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
       warnings: sanitized.warnings,
@@ -399,7 +415,10 @@ export async function runBenchUiJudgeRequest(
   fields.width = String(viewport.width);
   fields.height = String(viewport.height);
 
-  async function capture(requestSignal: AbortSignal): Promise<
+  async function capture(
+    pendingResponse: Promise<Response>,
+    requestSignal: AbortSignal,
+  ): Promise<
     BenchUiJudgeResult | {
       screenshotDataUrl: string;
       reportScreenshot?: string;
@@ -407,14 +426,7 @@ export async function runBenchUiJudgeRequest(
   > {
     let response: Response;
     try {
-      response = await captureScreenshot({
-        path: options.session.screenshotPath,
-        fields,
-        ...((options.htmlSource ?? options.lynxXmlSource) === undefined
-          ? {}
-          : { source: options.htmlSource ?? options.lynxXmlSource }),
-        timeoutMs: requestTimeoutMs,
-      }, requestSignal);
+      response = await pendingResponse;
     } catch (error) {
       return {
         errors: options.signal?.aborted
@@ -456,19 +468,52 @@ export async function runBenchUiJudgeRequest(
 
   let reportScreenshot: string | undefined;
   let payload: ScreenshotEvaluation;
+  const captureController = new AbortController();
   try {
-    const captured = await runStage(options.scheduling?.capture, capture);
+    options.onPhase?.('screenshot-queued');
+    const task = captureScreenshot(
+      {
+        path: options.session.screenshotPath,
+        fields,
+        ...((options.htmlSource ?? options.lynxXmlSource) === undefined
+          ? {}
+          : { source: options.htmlSource ?? options.lynxXmlSource }),
+        timeoutMs: requestTimeoutMs,
+      },
+      options.signal
+        ? AbortSignal.any([options.signal, captureController.signal])
+        : captureController.signal,
+    );
+    const pendingResponse = 'response' in task ? task.response : task;
+    // The upload can fail before the browser starts. Observe that rejection
+    // while waiting for admission; capture() still handles the original promise.
+    void pendingResponse.catch(() => undefined);
+    if ('started' in task) await task.started;
+    const captured = await runStage(undefined, async (signal) => {
+      options.onPhase?.('screenshot');
+      const abort = () => captureController.abort(signal.reason);
+      signal.addEventListener('abort', abort, { once: true });
+      try {
+        signal.throwIfAborted();
+        return await capture(pendingResponse, signal);
+      } finally {
+        signal.removeEventListener('abort', abort);
+      }
+    });
     if ('status' in captured) return captured;
     reportScreenshot = captured.reportScreenshot;
+    options.onPhase?.('judge-queued');
     payload = await runStage(
       options.scheduling?.evaluation,
-      (signal) =>
-        evaluate({
+      (signal) => {
+        options.onPhase?.('judge');
+        return evaluate({
           screenshotDataUrl: captured.screenshotDataUrl,
           task: options.scenario.judgeTask ?? options.scenario.prompt,
           model: options.model,
           signal,
-        }),
+        });
+      },
     );
   } catch {
     return {
@@ -480,6 +525,8 @@ export async function runBenchUiJudgeRequest(
       ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
       warnings,
     };
+  } finally {
+    captureController.abort();
   }
   const result = payload as UiJudgeResponse;
   const errors: string[] = [];

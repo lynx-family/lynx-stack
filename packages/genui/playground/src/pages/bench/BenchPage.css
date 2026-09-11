@@ -312,6 +312,25 @@
   justify-content: space-between;
 }
 
+.benchTaskTiming {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 0 0 20px;
+  font-size: 12px;
+}
+
+.benchTaskTiming dt {
+  margin-bottom: 4px;
+  color: var(--geist-secondary);
+}
+
+.benchTaskTiming dd {
+  margin: 0;
+  color: var(--geist-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
 .benchReportActions {
   display: flex;
   flex-wrap: wrap;
@@ -670,10 +689,170 @@
   color: var(--geist-secondary);
 }
 
+.benchRunTiming {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchRunTiming strong {
+  margin-left: 6px;
+  color: var(--geist-foreground);
+}
+
 .benchRunProgress {
   min-width: 0;
   display: grid;
   gap: 7px;
+}
+
+.benchRunProgressToggle.btn {
+  min-width: 0;
+  height: auto;
+  justify-content: space-between;
+  padding: 2px 0;
+  text-align: left;
+}
+
+.benchRunProgressToggle .btnLabel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.benchRunProgressToggle svg {
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+
+.benchRunProgressToggle[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.benchRunWorkflow {
+  grid-column: 1 / -1;
+  min-height: 0;
+  max-height: min(420px, 45vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--geist-border);
+  scrollbar-width: thin;
+}
+
+.benchWorkflowGroup > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 2px;
+  cursor: pointer;
+  color: var(--geist-foreground);
+  font-size: 12px;
+}
+
+.benchWorkflowGroup > summary::before {
+  content: "›";
+  flex-shrink: 0;
+}
+
+.benchWorkflowGroup[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.benchWorkflowGroup > summary strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchWorkflowGroup > summary span {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchWorkflowRuns,
+.benchWorkflowStages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.benchWorkflowRun {
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+}
+
+.benchWorkflowRunHeading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.benchWorkflowRunHeading > span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.benchWorkflowRunHeading small {
+  color: var(--geist-secondary);
+  white-space: nowrap;
+}
+
+.benchWorkflowRunHeading > strong {
+  color: var(--geist-secondary);
+  font-size: 10px;
+}
+
+.benchWorkflowStages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.benchWorkflowStages > li {
+  display: grid;
+  gap: 4px;
+  padding-left: 8px;
+  border-left: 2px solid var(--geist-border);
+  color: var(--geist-secondary);
+  font-size: 10px;
+}
+
+.benchWorkflowStages strong {
+  font-weight: 500;
+}
+
+.benchWorkflowStages [data-status="running"] {
+  border-color: var(--geist-foreground);
+  color: var(--geist-foreground);
+}
+
+.benchWorkflowStages [data-status="complete"] {
+  border-color: var(--geist-success, #16803c);
+}
+
+.benchWorkflowStages [data-status="failed"],
+.benchWorkflowRun[data-phase="failed"] .benchWorkflowRunHeading > strong {
+  border-color: var(--geist-error, #c0392b);
+  color: var(--geist-error, #c0392b);
+}
+
+.benchWorkflowError {
+  margin: 8px 0 0;
+  color: var(--geist-error, #c0392b);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .benchScenarioList {

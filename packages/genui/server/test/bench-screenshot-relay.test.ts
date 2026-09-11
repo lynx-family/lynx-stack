@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, expect, test } from '@rstest/core';
+import { afterEach, expect, rstest, test } from '@rstest/core';
 
 import { BenchJobStore } from '../service/common/bench/store.js';
 import type { BenchJobRequest } from '../service/common/bench/types.js';
@@ -13,6 +13,7 @@ const globals = globalThis as typeof globalThis & {
 };
 afterEach(() => {
   delete globals.__A2UI_BENCH_JOB_STORE__;
+  rstest.useRealTimers();
 });
 
 function setup(timeoutMs = 1000) {
@@ -25,7 +26,6 @@ function setup(timeoutMs = 1000) {
     playground: { browserScreenshots: true },
     settings: {
       repeats: 1,
-      parallelism: 1,
       maxRepairAttempts: 0,
       repairEnabled: false,
       judgeEnabled: true,
@@ -43,14 +43,22 @@ function setup(timeoutMs = 1000) {
     },
     timeoutMs,
   };
-  const pending = store.requestScreenshot(
+  const task = store.requestScreenshot(
     job.id,
     capture,
     new AbortController().signal,
   );
   const captureId = [...job.screenshots.keys()][0]!;
   const path = `/a2ui/bench/jobs/${job.id}/screenshots/${captureId}`;
-  return { store, job, capture, captureId, pending, path };
+  return {
+    store,
+    job,
+    capture,
+    captureId,
+    pending: task.response,
+    started: task.started,
+    path,
+  };
 }
 
 test('replays task IDs, serves original capture fields, and accepts a BMP exactly once', async () => {
@@ -115,10 +123,44 @@ test('rejects oversized uploads and cancels pending captures with their job', as
 });
 
 test('expires tasks when the browser never uploads a screenshot', async () => {
-  const { pending, job } = setup(5);
+  const { store, captureId, pending, job } = setup(5);
+  store.startScreenshot(job.id, captureId);
   await expect(pending).rejects.toThrow(
     'Timed out waiting for the browser screenshot',
   );
+  expect(job.screenshots.size).toBe(0);
+});
+
+test('starts the execution deadline when the browser dequeues the task and never resets it on replay', async () => {
+  rstest.useFakeTimers();
+  const { job, pending, started, path } = setup(1000);
+  const rejected = expect(pending).rejects.toThrow(
+    'Timed out waiting for the browser screenshot.',
+  );
+  await rstest.advanceTimersByTimeAsync(2000);
+  expect(job.screenshots.size).toBe(1);
+  const startResponse = await route.request(path);
+  expect(startResponse.status).toBe(200);
+  await started;
+  await rstest.advanceTimersByTimeAsync(600);
+  const replayResponse = await route.request(path);
+  expect(replayResponse.status).toBe(200);
+  await rstest.advanceTimersByTimeAsync(399);
+  expect(job.screenshots.size).toBe(1);
+  await rstest.advanceTimersByTimeAsync(1);
+  await rejected;
+  const expiredResponse = await route.request(path);
+  expect(expiredResponse.status).toBe(404);
+});
+
+test('bounds waiting for a missing browser and settles both task promises', async () => {
+  rstest.useFakeTimers();
+  const { pending, started, job } = setup(1000);
+  const rejected = expect(pending).rejects.toThrow(
+    'Timed out waiting for the browser to start the screenshot.',
+  );
+  await rstest.advanceTimersByTimeAsync(4000);
+  await Promise.all([rejected, started]);
   expect(job.screenshots.size).toBe(0);
 });
 

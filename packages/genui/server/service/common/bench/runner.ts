@@ -2,10 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { BenchTaskPool } from './concurrency.js';
+import {
+  BenchTaskPool,
+  MAX_BENCH_GROUPS,
+  MAX_BENCH_JUDGE_CONCURRENCY,
+  benchInFlightLimit,
+} from './concurrency.js';
 import type { BenchJudgeScheduling } from './concurrency.js';
 import { resolveGenuiBenchUiJudge, runGenuiBenchUiJudge } from './judge.js';
 import type { GenuiBenchJudgeArtifact } from './judge.js';
+import { benchProgressSummary } from './progress.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchJudgePayload,
@@ -57,10 +63,6 @@ interface BenchRunItem {
   repeatIndex: number;
 }
 
-interface BenchRunSample {
-  items: BenchRunItem[];
-}
-
 interface GeneratedBenchRun {
   result: BenchRunResult;
   judgeArtifact?: GenuiBenchJudgeArtifact;
@@ -71,6 +73,10 @@ export interface BenchRunnerDependencies {
 }
 
 type BenchJudgeCapabilities = Map<string, BenchUiJudgeCapability>;
+
+// Shared by all jobs in this process. Admission waits stay outside Agent/Judge time.
+const generationPool = new BenchTaskPool(MAX_BENCH_GROUPS);
+const evaluationPool = new BenchTaskPool(MAX_BENCH_JUDGE_CONCURRENCY);
 
 function averagePlanned(values: number[], plannedRuns: number): number {
   if (plannedRuns === 0) return 0;
@@ -88,32 +94,6 @@ function profileForGroup(group: BenchGroupRequest): BenchProfile {
 
 function judgeCapabilityKey(group: BenchGroupRequest): string {
   return `${protocolForGroup(group)}:${profileForGroup(group)}`;
-}
-
-function buildRunSamples(request: BenchJobRequest): BenchRunSample[] {
-  const enabledGroups = request.groups.filter((group) => group.enabled);
-  const samples: BenchRunSample[] = [];
-  let sampleOrdinal = 0;
-  for (const scenario of request.scenarios) {
-    for (
-      let repeatIndex = 1;
-      repeatIndex <= request.settings.repeats;
-      repeatIndex++
-    ) {
-      const offset = enabledGroups.length === 0
-        ? 0
-        : sampleOrdinal % enabledGroups.length;
-      const groups = [
-        ...enabledGroups.slice(offset),
-        ...enabledGroups.slice(0, offset),
-      ];
-      samples.push({
-        items: groups.map((group) => ({ group, scenario, repeatIndex })),
-      });
-      sampleOrdinal++;
-    }
-  }
-  return samples;
 }
 
 function buildBenchPrompt(
@@ -160,6 +140,7 @@ function emitRunPhase(
   phase: BenchRunPhase,
 ): void {
   const store = getBenchJobStore();
+  if (store.getJob(jobId)?.abortController.signal.aborted) return;
   const job = store.updateProgress(jobId, {
     current: {
       groupId: item.group.id,
@@ -174,7 +155,11 @@ function emitRunPhase(
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
     phase,
-    progress: job.progress,
+    runProgress: job.progress.runs?.find(run =>
+      run.groupId === item.group.id && run.scenarioId === item.scenario.id
+      && run.repeatIndex === item.repeatIndex
+    ),
+    progress: benchProgressSummary(job.progress),
   });
 }
 
@@ -289,7 +274,7 @@ async function runA2UINativeOne(
     groupId: item.group.id,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
-    progress: store.getJob(jobId)?.progress,
+    progress: benchProgressSummary(store.getJob(jobId)!.progress),
   });
 
   const messages: ChatMessage[] = [
@@ -458,7 +443,7 @@ async function runProtocolAdapterOne(
     profile,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
-    progress: store.getJob(jobId)?.progress,
+    progress: benchProgressSummary(store.getJob(jobId)!.progress),
   });
   emitRunPhase(jobId, item, 'agent');
   const startedAt = performance.now();
@@ -655,7 +640,7 @@ async function finishRun(
   ) {
     return result;
   }
-  emitRunPhase(jobId, item, 'judge');
+  emitRunPhase(jobId, item, 'screenshot-queued');
   let judge: BenchUiJudgeResult;
   try {
     judge = await runGenuiBenchUiJudge(
@@ -667,6 +652,7 @@ async function finishRun(
         signal,
         timeoutMs: request.settings.timeoutMs,
         scheduling,
+        onPhase: phase => emitRunPhase(jobId, item, phase),
       },
       (capture, captureSignal) =>
         getBenchJobStore().requestScreenshot(jobId, capture, captureSignal),
@@ -958,14 +944,18 @@ export async function runBenchJob(
   if (!job) return;
   const activeJob = job;
   const request = activeJob.request;
-  const samples = buildRunSamples(request);
-  const totalRuns = samples.reduce(
-    (total, sample) => total + sample.items.length,
-    0,
-  );
+  const groups = request.groups.filter((group) => group.enabled);
+  const workerCount = groups.length;
+  const totalRuns = workerCount * request.scenarios.length
+    * request.settings.repeats;
   let judgeCapabilities: BenchJudgeCapabilities = new Map();
 
   try {
+    if (request.groups.length > MAX_BENCH_GROUPS) {
+      throw new Error(
+        `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+      );
+    }
     if (
       activeJob.abortController.signal.aborted
       || store.getJob(jobId)?.status === 'cancelled'
@@ -1015,23 +1005,14 @@ export async function runBenchJob(
       }
     }
 
-    let nextIndex = 0;
-    const mixedProtocols = new Set(
-      request.groups.filter((group) => group.enabled).map((group) =>
-        protocolForGroup(group)
-      ),
-    ).size > 1;
-    const workerCount = Math.min(
-      mixedProtocols ? 1 : request.settings.parallelism,
-      samples.length,
-    );
     const scheduling: BenchJudgeScheduling = {
-      capture: new BenchTaskPool(1),
-      evaluation: new BenchTaskPool(Math.max(1, workerCount)),
+      evaluation: evaluationPool,
     };
-    // Reserve space before generation: at most one run per generation worker
-    // and scoring worker, plus one capture, may retain artifacts at once.
-    const inFlight = new BenchTaskPool(workerCount * 2 + 1);
+    // Reserve space before generation so announced browser tasks and pending
+    // scores stay bounded even when the client drains its capture queue slowly.
+    const inFlight = new BenchTaskPool(
+      benchInFlightLimit(workerCount),
+    );
     const pending = new Set<Promise<void>>();
     const failureController = new AbortController();
     const signal = AbortSignal.any([
@@ -1055,27 +1036,30 @@ export async function runBenchJob(
       delete eventResult.screenshotDataUrl;
       store.emit(jobId, storedResult.ok ? 'run-complete' : 'run-error', {
         result: eventResult,
-        progress: updated.progress,
+        runProgress: updated.progress.runs?.find(run =>
+          run.groupId === storedResult.groupId
+          && run.scenarioId === storedResult.scenarioId
+          && run.repeatIndex === storedResult.repeatIndex
+        ),
+        progress: benchProgressSummary(updated.progress),
       });
     }
 
-    async function worker(): Promise<void> {
-      while (!signal.aborted) {
-        const index = nextIndex++;
-        const sample = samples[index];
-        if (!sample) return;
-
-        for (const item of sample.items) {
+    async function worker(group: BenchGroupRequest): Promise<void> {
+      for (const scenario of request.scenarios) {
+        for (
+          let repeatIndex = 1;
+          repeatIndex <= request.settings.repeats;
+          repeatIndex++
+        ) {
           if (signal.aborted) return;
+          const item = { group, scenario, repeatIndex };
           const release = await inFlight.acquire(signal);
           let handedOff = false;
           try {
             if (signal.aborted) return;
-            const generated = await generateOne(
-              jobId,
-              request,
-              item,
-              adapters,
+            const generated = await generationPool.run(
+              () => generateOne(jobId, request, item, adapters, signal),
               signal,
             );
             if (signal.aborted) return;
@@ -1101,7 +1085,7 @@ export async function runBenchJob(
     }
 
     await Promise.all(
-      Array.from({ length: workerCount }, () => worker().catch(fail)),
+      groups.map((group) => worker(group).catch(fail)),
     );
     // A terminal report releases the job slot and credentials, so all stages
     // must settle first, including cancellation and unexpected worker failures.
@@ -1127,6 +1111,7 @@ export async function runBenchJob(
     }
 
     latest.progress = {
+      ...latest.progress,
       completedRuns: latest.results.length,
       totalRuns,
     };

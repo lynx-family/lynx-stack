@@ -4,7 +4,6 @@
 export interface BenchRunPanelSettings {
   collectLiveRenderMetrics: boolean;
   judgeEnabled: boolean;
-  parallelism: number;
   repairEnabled: boolean;
   repeats: number;
 }
@@ -105,25 +104,6 @@ export function BenchRunPanel(props: {
                           Number(event.target.value),
                           1,
                           10,
-                        ),
-                      })}
-                  />
-                </label>
-                <label className='benchField'>
-                  <span className='benchFieldLabel'>Concurrency</span>
-                  <input
-                    className='benchInput'
-                    type='number'
-                    min={1}
-                    max={8}
-                    value={props.settings.parallelism}
-                    readOnly={props.locked}
-                    onChange={(event) =>
-                      props.onSettingsChange({
-                        parallelism: clampNumber(
-                          Number(event.target.value),
-                          1,
-                          8,
                         ),
                       })}
                   />
