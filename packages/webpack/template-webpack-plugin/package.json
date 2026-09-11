@@ -44,7 +44,7 @@
     "@rspack/lite-tapable": "1.1.5",
     "css-tree": "^3.2.1",
     "object.groupby": "^1.0.3",
-    "tinypool": "^2.1.0"
+    "tinypool": "^2.1.2"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
