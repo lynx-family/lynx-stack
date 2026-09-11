@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -332,7 +333,7 @@ describe('create-lynx-library', () => {
       's.platform = :ios, \'10.0\'',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
-      'export * from \'./platform-native-module\';',
+      'export { ButtonModule } from \'../generated/ButtonModule\';',
     );
     expect(read(dir, 'types/platform-native-module.d.ts')).toContain(
       '/** @lynxmodule */',
@@ -717,6 +718,38 @@ describe('create-lynx-library', () => {
       stdio: 'pipe',
     });
 
+    fs.writeFileSync(
+      path.join(dir, 'consumer.ts'),
+      `
+import { StorageModule, StorageModuleNapi } from '@example/dual-native-modules';
+StorageModule.setValue('key', 'value');
+const value: string | null = StorageModule.getValue('key');
+StorageModule.clear();
+StorageModuleNapi.setValue('key', 'value');
+const napiValue: string | null = StorageModuleNapi.getValue('key');
+StorageModuleNapi.clear();
+// @ts-expect-error Modules are objects, not constructors.
+new StorageModule();
+// @ts-expect-error Values must be strings.
+StorageModuleNapi.setValue('key', 123);
+`,
+    );
+    const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
+    execFileSync(process.execPath, [
+      tsc,
+      '--ignoreConfig',
+      '--noEmit',
+      '--strict',
+      '--skipLibCheck',
+      '--target',
+      'ES2022',
+      '--module',
+      'preserve',
+      '--moduleResolution',
+      'bundler',
+      'consumer.ts',
+    ], { cwd: dir, stdio: 'pipe' });
+
     expect(read(dir, 'generated/StorageModule.ts')).not.toContain(
       'setNativeModules(new Proxy',
     );
@@ -760,7 +793,7 @@ describe('create-lynx-library', () => {
       'android/src/main/java/com/example/storage/StorageModule.java',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
-      'export * from \'./napi-native-module\';',
+      'export { StorageModule } from \'../generated/StorageModule\';',
     );
     expect(read(dir, 'types/napi-native-module.d.ts')).toContain(
       'export declare class StorageModule',
