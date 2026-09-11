@@ -174,6 +174,73 @@ describe('BenchPage report recovery', () => {
     return container.querySelector('[aria-label="Bench Report"]')?.textContent;
   }
 
+  test('removes legacy draft Concurrency and caps comparison groups at eight', async () => {
+    const entry = createHistoryEntry(
+      'Draft Bench',
+      createReport(JOB_ID, 'Baseline'),
+    );
+    Object.assign(entry.config.settings, { parallelism: 3 });
+    window.localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify([{ ...entry, report: null }]),
+    );
+    await mountPage();
+
+    const concurrency = [...container.querySelectorAll('label')]
+      .find((label) => label.textContent === 'Concurrency')
+      ?.querySelector('input');
+    expect(concurrency).toBeUndefined();
+
+    const addProtocol = [...container.querySelectorAll<HTMLButtonElement>(
+      '[aria-label="New comparison group direction"] button',
+    )].find((button) =>
+      button.querySelector('strong')?.textContent === 'Protocol'
+    );
+    expect(addProtocol).toBeDefined();
+    await React.act(async () => addProtocol!.click());
+    expect(container.querySelectorAll('.benchGroupDetails')).toHaveLength(2);
+
+    for (const protocol of ['OpenUI', 'A2UI', 'Lynx XML']) {
+      await React.act(async () =>
+        container.querySelector<HTMLButtonElement>(
+          'button[aria-label="Baseline Protocol"]',
+        )!.click()
+      );
+      const option = [...container.querySelectorAll<HTMLButtonElement>(
+        '.benchDropdownMenu[aria-label="Baseline Protocol"] button',
+      )].find((button) =>
+        button.querySelector('span')?.textContent === protocol
+      );
+      expect(option).toBeDefined();
+      await React.act(async () => option!.click());
+      expect(
+        container.querySelector('button[aria-label="Baseline Protocol"]')
+          ?.textContent,
+      ).toBe(protocol);
+    }
+
+    await rstest.waitFor(async () => {
+      expect(await readBenchHistory()).toMatchObject([{
+        report: null,
+        config: {
+          groups: [{ protocol: 'lynx-xml' }, { protocol: 'openui' }],
+        },
+      }]);
+    });
+    for (let index = 2; index < 8; index++) {
+      await React.act(async () => addProtocol!.click());
+    }
+    expect(container.querySelectorAll('.benchGroupDetails')).toHaveLength(8);
+    expect(addProtocol?.disabled).toBe(true);
+    await React.act(async () => addProtocol!.click());
+    expect(container.querySelectorAll('.benchGroupDetails')).toHaveLength(8);
+    await rstest.waitFor(async () => {
+      const history = await readBenchHistory();
+      expect(history[0]?.config.groups).toHaveLength(8);
+      expect(history[0]?.config.settings).not.toHaveProperty('parallelism');
+    });
+  });
+
   test('keeps both redacted histories readable without requesting their job IDs', async () => {
     const entries = [
       createHistoryEntry(

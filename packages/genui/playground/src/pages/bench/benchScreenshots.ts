@@ -163,7 +163,14 @@ export function createBenchScreenshotRelay(options: {
 }) {
   const fetchImpl = options.fetch ?? fetch;
   const handled = new Set<string>();
+  const queue: string[] = [];
+  let running = false;
+  options.signal.addEventListener('abort', () => {
+    queue.length = 0;
+    handled.clear();
+  }, { once: true });
   const execute = async (captureId: string) => {
+    options.signal.throwIfAborted();
     const endpoint = `${options.jobUrl}/screenshots/${
       encodeURIComponent(captureId)
     }`;
@@ -274,17 +281,34 @@ export function createBenchScreenshotRelay(options: {
     }
     throw uploadError;
   };
+  const drain = async () => {
+    if (running) return;
+    running = true;
+    try {
+      while (queue.length > 0 && !options.signal.aborted) {
+        const captureId = queue.shift()!;
+        try {
+          // Fetching the task acknowledges its start and begins the server's
+          // capture timeout. Leave queued IDs unfetched until their turn.
+          await execute(captureId);
+        } catch (error) {
+          if (!options.signal.aborted) {
+            handled.delete(captureId);
+            options.onError(message(error));
+          }
+        }
+      }
+    } finally {
+      running = false;
+    }
+  };
   return (captureId: unknown): void => {
     if (
       typeof captureId !== 'string' || !CAPTURE_ID.test(captureId)
       || handled.has(captureId) || options.signal.aborted
     ) return;
     handled.add(captureId);
-    void execute(captureId).catch((error: unknown) => {
-      if (!options.signal.aborted) {
-        handled.delete(captureId);
-        options.onError(message(error));
-      }
-    });
+    queue.push(captureId);
+    void drain();
   };
 }

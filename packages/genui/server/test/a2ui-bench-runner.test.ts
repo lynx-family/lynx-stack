@@ -53,7 +53,6 @@ function request(judgeEnabled = true): BenchJobRequest {
     settings: {
       judgeEnabled,
       maxRepairAttempts: 0,
-      parallelism: 1,
       renderMetricsEnabled: false,
       repairEnabled: false,
       repeats: 1,
@@ -436,77 +435,117 @@ describe('A2UI Bench UI Judge integration', () => {
     expect(report?.summaries[0]?.avgJudgeGeqiScore).toBeUndefined();
   });
 
-  test('runs mixed protocol arms serially and rotates their order per sample', async () => {
-    const order: string[] = [];
-    const adapter = (
-      protocol: 'a2ui' | 'openui',
-    ): ProtocolBenchAdapter => ({
-      protocol,
-      generate(input) {
-        order.push(`${input.repeatIndex}:${protocol}`);
-        return Promise.resolve({
-          attempts: [{
-            index: 1,
-            durationMs: 1,
-            inputTokens: 2,
-            outputTokens: 3,
-            totalTokens: 5,
-            valid: true,
-            validationErrors: [],
-            outputChars: 10,
-          }],
-          finalValid: true,
-          finalText: `${protocol} output`,
-          finalErrors: [],
-          judgePayload: protocol === 'a2ui'
-            ? { kind: 'a2ui-messages', messages: [] }
-            : { kind: 'openui-text', rawText: 'root = Text("ready")' },
-        });
-      },
-    });
-    const benchRequest = request(false);
-    benchRequest.groups = [
-      {
-        ...group,
-        id: 'a2ui',
-        name: 'A2UI',
-        protocol: 'a2ui',
-        profile: 'matched-core',
-        variable: 'protocol',
-      },
-      {
-        ...group,
-        id: 'openui',
-        name: 'OpenUI',
-        protocol: 'openui',
-        profile: 'matched-core',
-        variable: 'protocol',
-      },
-    ];
-    benchRequest.settings.repeats = 2;
-    benchRequest.settings.parallelism = 4;
-    const store = getBenchJobStore();
-    const job = store.createJob(benchRequest, 4);
-
-    await runBenchJob(job.id, {
-      adapters: {
-        a2ui: adapter('a2ui'),
-        openui: adapter('openui'),
-      },
-    });
-
-    expect(order).toEqual([
-      '1:a2ui',
-      '1:openui',
-      '2:openui',
-      '2:a2ui',
-    ]);
-    expect(store.getJob(job.id)?.report?.summary).toMatchObject({
-      totalRuns: 4,
-      completedRuns: 4,
-      failedRuns: 0,
-    });
-  });
+  test.each([1, 4, 8])(
+    'starts one worker per enabled group and keeps scenario/repeat order with %s groups',
+    async (groupCount) => {
+      const orders = new Map<string, string[]>();
+      const activeGroups = new Set<string>();
+      let active = 0;
+      let maxActive = 0;
+      let releaseGeneration!: () => void;
+      const generationGate = new Promise<void>((resolve) => {
+        releaseGeneration = resolve;
+      });
+      const adapter = (
+        protocol: 'a2ui' | 'openui' | 'lynx-xml',
+      ): ProtocolBenchAdapter => ({
+        protocol,
+        async generate(input) {
+          const model = input.provider.model!;
+          expect(activeGroups.has(model)).toBe(false);
+          activeGroups.add(model);
+          active++;
+          maxActive = Math.max(maxActive, active);
+          const order = orders.get(model) ?? [];
+          order.push(`${input.scenario.id}:${input.repeatIndex}`);
+          orders.set(model, order);
+          try {
+            await generationGate;
+            return {
+              attempts: [{
+                index: 1,
+                durationMs: 1,
+                inputTokens: 2,
+                outputTokens: 3,
+                totalTokens: 5,
+                valid: true,
+                validationErrors: [],
+                outputChars: 10,
+              }],
+              finalValid: true,
+              finalText: `${protocol} output`,
+              finalErrors: [],
+            };
+          } finally {
+            active--;
+            activeGroups.delete(model);
+          }
+        },
+      });
+      const benchRequest = request(false);
+      const protocols = ['a2ui', 'openui', 'lynx-xml'] as const;
+      benchRequest.groups = Array.from({ length: groupCount }, (_, index) => {
+        const protocol = protocols[index % protocols.length]!;
+        return {
+          ...group,
+          id: `group-${index}`,
+          model: `model-${index}`,
+          protocol,
+          profile: protocol === 'lynx-xml' ? 'native' : 'matched-core',
+          enabled: !(groupCount === 4 && index === 3),
+        };
+      });
+      benchRequest.scenarios.push({
+        ...benchRequest.scenarios[0]!,
+        id: 'second',
+      });
+      benchRequest.settings.repeats = 2;
+      const workerCount = groupCount === 4 ? 3 : groupCount;
+      const totalRuns = workerCount * 4;
+      const store = getBenchJobStore();
+      const job = store.createJob(benchRequest, totalRuns);
+      const running = runBenchJob(job.id, {
+        adapters: {
+          a2ui: adapter('a2ui'),
+          openui: adapter('openui'),
+          'lynx-xml': adapter('lynx-xml'),
+        },
+      });
+      try {
+        await rstest.waitUntil(() => active === workerCount);
+        expect(activeGroups.size).toBe(workerCount);
+        expect([...orders.values()]).toEqual(
+          Array.from({ length: workerCount }, () => ['scenario:1']),
+        );
+      } finally {
+        releaseGeneration();
+        await running;
+      }
+      expect(maxActive).toBe(workerCount);
+      expect(activeGroups.size).toBe(0);
+      expect([...orders.keys()]).toEqual(
+        Array.from({ length: workerCount }, (_, index) => `model-${index}`),
+      );
+      for (const order of orders.values()) {
+        expect(order).toEqual([
+          'scenario:1',
+          'scenario:2',
+          'second:1',
+          'second:2',
+        ]);
+      }
+      const report = store.getJob(job.id)?.report;
+      expect(report?.settings).not.toHaveProperty('parallelism');
+      expect(new Set(report?.results.map((run) => run.id)).size).toBe(
+        totalRuns,
+      );
+      expect(report?.summary).toMatchObject({
+        totalRuns,
+        completedRuns: totalRuns,
+        failedRuns: 0,
+      });
+    },
+  );
 
   test('uses each group model and stores the Judge scoring frame for both protocols', async () => {
     const screenshotDataUrl =

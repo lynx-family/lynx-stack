@@ -8,6 +8,7 @@ import { getBenchProtocolLabel } from './benchData.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
 import { createBenchScreenshotReader } from './benchScreenshot.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import { BenchTaskTiming } from './BenchTaskTiming.js';
 import { BenchTokens } from './BenchTokens.js';
 import {
   groupBenchTokenUsage,
@@ -97,13 +98,13 @@ export function PublishedReportPage(
             scenarios · {report.settings.repeats} repeats
           </p>
           <p className='publishedReportRecordDate'>
-            <time dateTime={report.completedAt ?? report.createdAt}>
-              {new Date(report.completedAt ?? report.createdAt).toLocaleString(
-                'en-US',
-              )}
-            </time>
             <span>{report.jobId}</span>
           </p>
+          <BenchTaskTiming
+            startedAt={report.startedAt}
+            completedAt={report.completedAt}
+            durationMs={report.durationMs}
+          />
           <p className='publishedReportShareNote'>
             Read-only report. No model requests or benchmark runs are started by
             this page. Data and screenshots come only from history saved in this
@@ -280,10 +281,9 @@ export function PublishedReportPage(
             </div>
           </div>
           <p className='publishedReportShareNote'>
-            Parallelism: {report.settings.parallelism} · Repair:{' '}
-            {report.settings.repairEnabled ? 'enabled' : 'disabled'} · UI Judge:
+            Repair: {report.settings.repairEnabled ? 'enabled' : 'disabled'}
             {' '}
-            {report.settings.judgeEnabled
+            · UI Judge: {report.settings.judgeEnabled
                 && report.capabilities?.judge !== 'disabled'
               ? 'enabled'
               : 'disabled'}

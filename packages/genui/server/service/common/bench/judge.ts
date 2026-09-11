@@ -12,6 +12,7 @@ import {
   runBenchUiJudgeRequest,
 } from '../../a2ui/a2ui-bench-judge.js';
 import type {
+  BenchJudgePhase,
   BenchScreenshotCapture,
   BenchUiJudgeCapability,
   BenchUiJudgeResult,
@@ -31,6 +32,7 @@ export type GenuiBenchJudgeArtifact =
   | { protocol: 'openui' | 'lynx-xml' | 'html'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
+  onPhase?: (phase: BenchJudgePhase) => void;
   model?: string;
   artifact: GenuiBenchJudgeArtifact;
   scenario: Pick<
@@ -104,7 +106,7 @@ function isSafetyWarning(warning: string): boolean {
 async function runWithBoundedRetry(
   options: Pick<
     RunGenuiBenchUiJudgeOptions,
-    'attemptCount' | 'retryDelayMs' | 'signal'
+    'attemptCount' | 'retryDelayMs' | 'signal' | 'onPhase'
   >,
   run: () => Promise<BenchUiJudgeResult>,
 ): Promise<BenchUiJudgeResult> {
@@ -122,6 +124,7 @@ async function runWithBoundedRetry(
     attempt++
   ) {
     if (isLocalSafetyRejection(result)) break;
+    options.onPhase?.('judge-retry');
     if (!await waitForRetry(retryDelayMs, options.signal)) break;
 
     result = await run();
@@ -178,6 +181,7 @@ export async function runGenuiBenchUiJudge(
             scenario: options.scenario,
             session: options.session,
             scheduling: options.scheduling,
+            onPhase: options.onPhase,
             ...(options.signal ? { signal: options.signal } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
@@ -227,6 +231,7 @@ export async function runGenuiBenchUiJudge(
           scenario: options.scenario,
           session: options.session,
           scheduling: options.scheduling,
+          onPhase: options.onPhase,
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },

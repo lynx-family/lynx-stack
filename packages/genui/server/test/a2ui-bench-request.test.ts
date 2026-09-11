@@ -13,7 +13,6 @@ function body(groups: unknown[]) {
     playground: { browserScreenshots: true },
     settings: {
       repeats: 1,
-      parallelism: 3,
       maxRepairAttempts: 1,
     },
     groups,
@@ -77,7 +76,8 @@ describe('A2UI Bench request protocol groups', () => {
     ]);
     expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
     expect(normalized.request.groups[3]).not.toHaveProperty('catalog');
-    expect(normalized.request.settings.parallelism).toBe(1);
+    expect(normalized.request.settings).not.toHaveProperty('parallelism');
+    expect(normalized.warnings).toEqual([]);
   });
 
   test('rejects a matched-core profile for Lynx XML', () => {
@@ -156,10 +156,53 @@ describe('A2UI Bench request protocol groups', () => {
     expect(normalized.request.groups[1]).not.toHaveProperty('model');
     expect(normalized.request.groups[0]).not.toHaveProperty('catalog');
     expect(normalized.request.groups[1]).not.toHaveProperty('catalog');
-    expect(normalized.request.settings.parallelism).toBe(1);
-    expect(normalized.warnings).toContain(
-      'Mixed-protocol jobs run one sample at a time so benchmark arms remain paired; settings.parallelism was set to 1.',
+    expect(normalized.request.settings).not.toHaveProperty('parallelism');
+    expect(normalized.warnings).toEqual([]);
+  });
+
+  test.each([undefined, 1, 4, 99])(
+    'ignores legacy parallelism %s without persisting it',
+    (parallelism) => {
+      const input = body([
+        { id: 'a2ui', protocol: 'a2ui' },
+        { id: 'xml', protocol: 'lynx-xml' },
+        { id: 'disabled', protocol: 'openui', enabled: false },
+      ]);
+      const result = normalizeBenchJobRequest({
+        ...input,
+        settings: { ...input.settings, parallelism },
+      });
+      expect(result).toMatchObject({
+        ok: true,
+        totalRuns: 2,
+      });
+      if (result.ok) {
+        expect(result.request.settings).not.toHaveProperty('parallelism');
+      }
+    },
+  );
+
+  test('accepts eight groups and rejects a ninth without silently dropping it', () => {
+    const groups = Array.from(
+      { length: 8 },
+      (_, index) => ({ id: `group-${index}` }),
     );
+    const accepted = normalizeBenchJobRequest(body(groups));
+    expect(accepted).toMatchObject({
+      ok: true,
+      totalRuns: 8,
+    });
+    if (accepted.ok) expect(accepted.request.groups).toHaveLength(8);
+    expect(
+      normalizeBenchJobRequest(
+        body([...groups, { id: 'ninth', enabled: false }]),
+      ),
+    ).toMatchObject({
+      ok: false,
+      status: 422,
+      error:
+        'Bench supports at most 8 comparison groups, including the baseline.',
+    });
   });
 
   test('ignores custom provider settings and unconfigured group models', () => {

@@ -2,6 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+export const MAX_BENCH_GROUPS = 8;
+export const MAX_BENCH_JUDGE_CONCURRENCY = 2;
+
+export function benchInFlightLimit(groupCount: number): number {
+  return Math.max(1, groupCount) + MAX_BENCH_JUDGE_CONCURRENCY + 1;
+}
+
 /** FIFO admission; cancellation removes queued work without releasing active work early. */
 export class BenchTaskPool {
   private active = 0;
@@ -61,6 +68,5 @@ export class BenchTaskPool {
 }
 
 export interface BenchJudgeScheduling {
-  capture: BenchTaskPool;
   evaluation: BenchTaskPool;
 }

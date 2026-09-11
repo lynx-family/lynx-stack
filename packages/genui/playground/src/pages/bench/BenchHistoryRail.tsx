@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { formatBenchDuration } from './benchTiming.js';
 import { Button } from '../../components/Button.js';
 import {
   FileText,
@@ -14,6 +15,7 @@ interface BenchHistoryRailEntry {
   config: { env: { model: string } };
   id: string;
   report: {
+    durationMs?: number;
     jobId?: string;
     results: readonly unknown[];
     summary?: { totalRuns: number };
@@ -80,6 +82,11 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
                       ? `${totalRuns} Runs · ${entry.config.env.model}`
                       : `Draft · ${entry.config.env.model}`}
                   </small>
+                  {entry.report && (
+                    <small>
+                      Total time: {formatBenchDuration(entry.report.durationMs)}
+                    </small>
+                  )}
                 </button>
                 <div className='benchHistoryRailItemActions'>
                   <Button

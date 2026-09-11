@@ -15,6 +15,7 @@ import {
   BENCH_CATALOG_OPTIONS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
+  MAX_BENCH_GROUPS,
   createCustomBenchScenario,
   createDefaultBenchGroups,
   findComparableBaseline,
@@ -40,18 +41,25 @@ import {
 import type { BenchHistoryEntry } from './benchHistory.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
 import { startBenchHtmlCapture } from './benchHtmlCapture.js';
+import { mergeBenchRunProgress } from './benchProgress.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
-import type { BenchReport, BenchStatus } from './benchReportTypes.js';
+import type {
+  BenchReport,
+  BenchRunProgress,
+  BenchStatus,
+} from './benchReportTypes.js';
 import { BenchRunFooter } from './BenchRunFooter.js';
 import { BenchRunNotice } from './BenchRunNotice.js';
 import { BenchRunPanel } from './BenchRunPanel.js';
+import { BenchRunWorkflow } from './BenchRunWorkflow.js';
 import { BenchScenarioSection } from './BenchScenarioSection.js';
 import {
   checkBenchScreenshotService,
   createBenchScreenshotRelay,
 } from './benchScreenshots.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import type { BenchLiveTiming } from './benchTiming.js';
 import { useBenchHistory } from './useBenchHistory.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
@@ -191,6 +199,7 @@ type BenchHealthError =
 interface BenchJobCreated {
   ok?: boolean;
   jobId?: string;
+  durationMs?: number;
   eventsUrl?: string;
   reportUrl?: string;
   error?: string;
@@ -201,6 +210,7 @@ interface BenchJobSnapshot {
   ok?: boolean;
   status?: BenchStatus;
   progress?: {
+    runs?: BenchRunProgress[];
     completedRuns?: number;
     totalRuns?: number;
     current?: {
@@ -671,8 +681,14 @@ export function getBenchRunBlockers(
   enabledControlCount: number,
   scenarioCount: number,
   repeats: number,
+  groupCount = activeGroupCount,
 ): string[] {
   const issues: string[] = [];
+  if (groupCount > MAX_BENCH_GROUPS) {
+    issues.push(
+      `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+    );
+  }
   if (activeGroupCount === 0) {
     issues.push(
       'Enable at least one comparison group.',
@@ -711,6 +727,8 @@ export function BenchPage() {
   );
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
+  const [runProgress, setRunProgress] = useState<BenchRunProgress[]>([]);
+  const [jobTiming, setJobTiming] = useState<BenchLiveTiming | null>(null);
   const [runMessage, setRunMessage] = useState<BenchRunMessage>({
     code: 'ready',
   });
@@ -899,6 +917,7 @@ export function BenchPage() {
         enabledControlGroupCount,
         scenarios.length,
         settings.repeats,
+        groups.length,
       ),
       ...(modelValidationError ? [modelValidationError] : []),
       ...(uiJudgeServerUrlValidationError
@@ -908,6 +927,7 @@ export function BenchPage() {
     [
       activeGroups.length,
       enabledControlGroupCount,
+      groups.length,
       historyReady,
       modelValidationError,
       scenarios.length,
@@ -1132,6 +1152,7 @@ export function BenchPage() {
     direction: BenchComparisonDirection,
   ) => {
     setGroups((current) => {
+      if (current.length >= MAX_BENCH_GROUPS) return current;
       const baseline = current.find((group) => group.role === 'control')
         ?? current[0];
       if (!baseline) return current;
@@ -1162,9 +1183,6 @@ export function BenchPage() {
 
       return [...current, nextGroup];
     });
-    if (direction === 'protocol') {
-      setSettings((current) => ({ ...current, parallelism: 1 }));
-    }
   }, [env.models, selectedModel]);
 
   const updateGroupProtocol = useCallback(
@@ -1176,9 +1194,6 @@ export function BenchPage() {
             : group
         )
       );
-      if (protocol !== 'a2ui') {
-        setSettings((current) => ({ ...current, parallelism: 1 }));
-      }
     },
     [],
   );
@@ -1261,6 +1276,8 @@ export function BenchPage() {
     setSettings(nextSettings);
     setStatus('idle');
     setProgress(0);
+    setJobTiming(null);
+    setRunProgress([]);
     setRunMessage({ code: 'ready' });
     setReport(null);
     setReportPlanSignature(null);
@@ -1320,6 +1337,8 @@ export function BenchPage() {
     const operationId = ++benchOperationIdRef.current;
     setStatus('running');
     setProgress(0);
+    setJobTiming(null);
+    setRunProgress([]);
     setRunMessage(
       activeJobIdRef.current || pendingCancellationJobIdsRef.current.size > 0
         ? { code: 'stopping-previous-job' }
@@ -1386,7 +1405,6 @@ export function BenchPage() {
             provider: {},
             settings: {
               repeats: settings.repeats,
-              parallelism: settings.parallelism,
               maxRepairAttempts: settings.repairEnabled ? 2 : 0,
               repairEnabled: settings.repairEnabled,
               judgeEnabled: settings.judgeEnabled,
@@ -1431,6 +1449,15 @@ export function BenchPage() {
         }
 
         const jobId = payload.jobId;
+        if (
+          typeof payload.durationMs === 'number'
+          && Number.isFinite(payload.durationMs) && payload.durationMs >= 0
+        ) {
+          setJobTiming({
+            durationMs: payload.durationMs,
+            receivedAtMs: performance.now(),
+          });
+        }
         activeJobIdRef.current = jobId;
         pendingCancellationJobIdsRef.current.delete(jobId);
         setRunMessage(
@@ -1492,7 +1519,7 @@ export function BenchPage() {
             : undefined;
           const phase = typeof record.phase === 'string'
             ? record.phase
-            : 'agent';
+            : (typeof record.status === 'string' ? record.status : 'agent');
           return {
             code: 'run-progress',
             group: runGroups.find((group) => group.id === groupId),
@@ -1507,6 +1534,9 @@ export function BenchPage() {
             event as MessageEvent<unknown>,
           );
           if (!snapshot) return;
+          setRunProgress(current =>
+            mergeBenchRunProgress(current, snapshot.progress?.runs)
+          );
           updateProgress(snapshot.progress);
           if (snapshot.status === 'failed') {
             setStatus('failed');
@@ -1531,7 +1561,10 @@ export function BenchPage() {
             event as MessageEvent<unknown>,
           );
           if (!data) return;
-          setRunMessage(describeRun(data));
+          setRunProgress(current =>
+            mergeBenchRunProgress(current, data.runProgress)
+          );
+          setRunMessage(describeRun(data.runProgress ?? data.result ?? data));
           const progressPayload = data.progress as BenchJobSnapshot['progress'];
           updateProgress(progressPayload);
         };
@@ -1685,6 +1718,8 @@ export function BenchPage() {
   }, [historyItems, historyReady, saveHistory]);
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     void cancelActiveBenchJob();
+    setJobTiming(null);
+    setRunProgress([]);
     setActiveHistoryId(entry.id);
     const restoredSignature = createBenchPlanSignature(
       entry.config.groups,
@@ -1933,6 +1968,8 @@ export function BenchPage() {
               />
             </div>
             <BenchRunFooter
+              durationMs={report?.durationMs}
+              liveTiming={jobTiming}
               groupCount={activeGroups.length}
               messageText={getBenchRunMessageText(runMessage)}
               onAction={status === 'running' ? pauseBench : () => startBench()}
@@ -1943,6 +1980,17 @@ export function BenchPage() {
               runCount={runCount}
               scenarioCount={scenarios.length}
               status={status}
+              workflow={
+                <BenchRunWorkflow
+                  groups={runGroups}
+                  scenarios={scenarios}
+                  repeats={settings.repeats}
+                  runs={report ? report.runProgress ?? [] : runProgress}
+                  results={report?.results}
+                  judgeEnabled={settings.judgeEnabled}
+                  status={status}
+                />
+              }
             />
           </div>
         </main>

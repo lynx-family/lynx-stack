@@ -92,7 +92,6 @@ function request(
     settings: {
       judgeEnabled: true,
       maxRepairAttempts: 0,
-      parallelism: 1,
       renderMetricsEnabled: false,
       repairEnabled: false,
       repeats: 1,
@@ -135,6 +134,7 @@ function uploadNext(jobId: string): void {
   const store = getBenchJobStore();
   const captureId = store.getJob(jobId)?.screenshots.keys().next().value;
   expect(captureId).toBeDefined();
+  store.startScreenshot(jobId, captureId!);
   expect(store.submitScreenshot(
     jobId,
     captureId!,
@@ -152,6 +152,49 @@ afterEach(() => {
 });
 
 describe('Bench generation, capture and scoring pipeline', () => {
+  test('one group keeps generating and announcing screenshot tasks until its in-flight limit is reached', async () => {
+    const benchRequest = request('lynx-xml', 'native', 1);
+    benchRequest.settings.repeats = 6;
+    const generate = rstest.fn(() => Promise.resolve(artifact('lynx-xml')));
+    rstest.mocked(evaluateScreenshot).mockResolvedValue(score(4));
+    const store = getBenchJobStore();
+    const job = store.createJob(benchRequest, 6);
+    const running = runBenchJob(job.id, {
+      adapters: { 'lynx-xml': { protocol: 'lynx-xml', generate } },
+    });
+    try {
+      await rstest.waitUntil(() => job.screenshots.size === 4);
+      expect(generate).toHaveBeenCalledTimes(4);
+      expect(evaluateScreenshot).not.toHaveBeenCalled();
+      expect(job.progress.runs?.map(run => run.phase)).toEqual([
+        'screenshot-queued',
+        'screenshot-queued',
+        'screenshot-queued',
+        'screenshot-queued',
+        'queued',
+        'queued',
+      ]);
+      expect(
+        job.events.filter((event) => event.event === 'screenshot-requested'),
+      ).toHaveLength(4);
+      for (let index = 0; index < 6; index++) {
+        await rstest.waitUntil(() => job.screenshots.size > 0);
+        uploadNext(job.id);
+      }
+      await running;
+      expect(job.report?.summary).toMatchObject({
+        completedRuns: 6,
+        failedRuns: 0,
+      });
+      expect(
+        job.events.filter((event) => event.event === 'screenshot-requested'),
+      ).toHaveLength(6);
+    } finally {
+      store.cancelJob(job.id);
+      await running;
+    }
+  });
+
   test.each(
     [
       ['a2ui', 'native'],
@@ -165,19 +208,20 @@ describe('Bench generation, capture and scoring pipeline', () => {
     async (protocol, profile) => {
       let now = 0;
       let generations = 0;
+      const generationGate = deferred<void>();
       rstest.spyOn(performance, 'now').mockImplementation(() => now);
-      const generate = rstest.fn(() => {
-        now += 10;
+      const generate = rstest.fn(async () => {
         generations++;
-        return Promise.resolve(artifact(protocol));
+        await generationGate.promise;
+        return artifact(protocol);
       });
       rstest.mocked(getA2UIAgentService).mockReturnValue({
-        generateRaw(
+        async generateRaw(
           _messages: unknown,
           options: { catalog?: { id?: string } },
         ) {
-          now += 10;
           generations++;
+          await generationGate.promise;
           return Promise.resolve({
             text: JSON.stringify([
               {
@@ -220,31 +264,87 @@ describe('Bench generation, capture and scoring pipeline', () => {
         adapters: { [protocol]: { protocol, generate } },
       });
 
+      await rstest.waitUntil(() => generations === 2);
+      expect(job.progress.runs?.map(run => run.generation)).toEqual([
+        'running',
+        'running',
+      ]);
+      now = 10;
+      generationGate.resolve();
       await rstest.waitUntil(() =>
-        generations === 2 && job.screenshots.size === 1
+        generations === 2 && job.screenshots.size === 2
       );
-      // The second generation finishes while the first browser capture is pending.
+      // Both completed generations are announced before either browser upload.
       expect(job.results).toHaveLength(0);
       expect(job.report).toBeUndefined();
+      expect(
+        job.events.filter((event) => event.event === 'screenshot-requested'),
+      ).toHaveLength(2);
       now = 10_000;
+      expect(store.getSnapshot(job.id)).toMatchObject({
+        startedAt: job.createdAt,
+        durationMs: 10_000,
+      });
       uploadNext(job.id);
       await rstest.waitUntil(() =>
         rstest.mocked(evaluateScreenshot).mock.calls.length === 1
         && job.screenshots.size === 1
       );
       expect(job.workerActive).toBe(true);
+      expect(job.progress.runs).toMatchObject([
+        {
+          groupId: 'group-0',
+          generation: 'complete',
+          screenshot: 'complete',
+          judge: 'running',
+        },
+        {
+          groupId: 'group-1',
+          generation: 'complete',
+          screenshot: 'queued',
+          judge: 'pending',
+        },
+      ]);
       uploadNext(job.id);
-      expect(evaluateScreenshot).toHaveBeenCalledTimes(1);
-      scores[0]!.resolve(score(4));
       await rstest.waitUntil(() =>
         rstest.mocked(evaluateScreenshot).mock.calls.length === 2
       );
+      scores[0]!.resolve(score(4));
+      await rstest.waitUntil(() => job.results.length === 1);
       expect(job.report).toBeUndefined();
       scores[1]!.resolve(score(3));
       await running;
 
       expect(job.report?.status).toBe('complete');
+      expect(job.report?.runProgress).toMatchObject([
+        {
+          groupId: 'group-0',
+          phase: 'complete',
+          generation: 'complete',
+          screenshot: 'complete',
+          judge: 'complete',
+        },
+        {
+          groupId: 'group-1',
+          phase: 'complete',
+          generation: 'complete',
+          screenshot: 'complete',
+          judge: 'complete',
+        },
+      ]);
       expect(job.workerActive).toBe(false);
+      expect(job.report).toMatchObject({
+        startedAt: job.createdAt,
+        completedAt: job.updatedAt,
+        durationMs: 10_000,
+      });
+      now = 20_000;
+      expect(store.getSnapshot(job.id)).toMatchObject({
+        completedAt: job.report?.completedAt,
+        durationMs: 10_000,
+      });
+      expect(job.events.find((event) => event.event === 'report')?.data)
+        .toMatchObject({ startedAt: job.createdAt, durationMs: 10_000 });
       expect(
         job.report?.results.map((result) => ({
           model: result.model,
@@ -269,9 +369,10 @@ describe('Bench generation, capture and scoring pipeline', () => {
   );
 
   test('bounds generation and retained work, cancels queued stages, and drains active scoring', async () => {
-    const benchRequest = request('openui', 'matched-core', 1);
-    benchRequest.settings.parallelism = 2;
-    benchRequest.settings.repeats = 8;
+    let now = 0;
+    rstest.spyOn(performance, 'now').mockImplementation(() => now);
+    const benchRequest = request('openui', 'matched-core');
+    benchRequest.settings.repeats = 4;
     const generationGate = deferred<void>();
     let activeGeneration = 0;
     let maxGeneration = 0;
@@ -296,35 +397,43 @@ describe('Bench generation, capture and scoring pipeline', () => {
     expect(maxGeneration).toBe(2);
     generationGate.resolve();
     await rstest.waitUntil(() =>
-      generate.mock.calls.length === 5 && job.screenshots.size === 1
+      generate.mock.calls.length === 5 && job.screenshots.size === 5
     );
     uploadNext(job.id);
     await rstest.waitUntil(() =>
-      scoreSignals.length === 1 && job.screenshots.size === 1
+      scoreSignals.length === 1 && job.screenshots.size === 4
     );
     uploadNext(job.id);
     await rstest.waitUntil(() =>
-      scoreSignals.length === 2 && job.screenshots.size === 1
+      scoreSignals.length === 2 && job.screenshots.size === 3
     );
     uploadNext(job.id);
-    await rstest.waitUntil(() => job.screenshots.size === 1);
+    await rstest.waitUntil(() => job.screenshots.size === 2);
     expect(generate).toHaveBeenCalledTimes(5);
     expect(evaluateScreenshot).toHaveBeenCalledTimes(2);
 
+    now = 10_000;
     store.cancelJob(job.id);
     expect(scoreSignals.every((signal) => signal.aborted)).toBe(true);
     expect(job.screenshots.size).toBe(0);
     expect(job.report).toBeUndefined();
     expect(job.workerActive).toBe(true);
+    now = 12_000;
+    expect(store.getSnapshot(job.id)?.durationMs).toBe(12_000);
     scoreGate.resolve(score(4));
     await running;
     expect(generate).toHaveBeenCalledTimes(5);
     expect(evaluateScreenshot).toHaveBeenCalledTimes(2);
     expect(job.report?.status).toBe('cancelled');
+    expect(job.report?.runProgress?.every(run => run.phase === 'cancelled'))
+      .toBe(true);
+    expect(job.report?.runProgress?.some(run => run.generation === 'cancelled'))
+      .toBe(true);
+    expect(job.report?.durationMs).toBe(12_000);
     expect(job.report?.results).toEqual([]);
     expect(job.workerActive).toBe(false);
     expect(job.events.filter((event) => event.event === 'screenshot-requested'))
-      .toHaveLength(4);
+      .toHaveLength(5);
     expect(job.events.filter((event) => event.event === 'report')).toHaveLength(
       1,
     );
@@ -335,6 +444,8 @@ describe('Bench generation, capture and scoring pipeline', () => {
     ).toBe(false);
   });
   test('drains sibling generation before reporting an unexpected pipeline failure', async () => {
+    let now = 0;
+    rstest.spyOn(performance, 'now').mockImplementation(() => now);
     const generationGate = deferred<void>();
     let siblingSignal: AbortSignal | undefined;
     const generate = rstest.fn<ProtocolBenchAdapter['generate']>(
@@ -362,14 +473,115 @@ describe('Bench generation, capture and scoring pipeline', () => {
     await rstest.waitUntil(() => siblingSignal?.aborted);
     expect(job.report).toBeUndefined();
     expect(job.workerActive).toBe(true);
+    now = 9000;
     generationGate.resolve();
     await running;
     expect(job.report?.status).toBe('failed');
+    expect(job.report?.durationMs).toBe(9000);
     expect(job.workerActive).toBe(false);
     expect(job.request.provider).toEqual({});
     expect(job.events.filter((event) => event.event === 'report')).toHaveLength(
       1,
     );
+  });
+
+  test('shares eight generation slots across jobs and removes cancelled group workers from the queue', async () => {
+    const generationGate = deferred<void>();
+    const firstGenerate = rstest.fn(async () => {
+      await generationGate.promise;
+      return artifact('openui');
+    });
+    const nextGenerate = rstest.fn(async () => {
+      await generationGate.promise;
+      return artifact('openui');
+    });
+    const firstRequest = request('openui', 'matched-core', 8);
+    firstRequest.settings.judgeEnabled = false;
+    const nextRequest = request('openui', 'matched-core', 8);
+    nextRequest.settings.judgeEnabled = false;
+    const store = getBenchJobStore();
+    const first = store.createJob(firstRequest, 8);
+    const firstRun = runBenchJob(first.id, {
+      adapters: { openui: { protocol: 'openui', generate: firstGenerate } },
+    });
+    let nextRun: Promise<void> | undefined;
+    try {
+      await rstest.waitUntil(() => firstGenerate.mock.calls.length === 8);
+      const next = store.createJob(nextRequest, 8);
+      nextRun = runBenchJob(next.id, {
+        adapters: { openui: { protocol: 'openui', generate: nextGenerate } },
+      });
+      // All admission microtasks settle while the first job holds the slots.
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      expect(nextGenerate).not.toHaveBeenCalled();
+      store.cancelJob(next.id);
+      await nextRun;
+      expect(next.report?.status).toBe('cancelled');
+      expect(first.abortController.signal.aborted).toBe(false);
+    } finally {
+      generationGate.resolve();
+      await Promise.all([firstRun, nextRun]);
+    }
+    expect(nextGenerate).not.toHaveBeenCalled();
+    expect(first.report?.summary).toMatchObject({
+      completedRuns: 8,
+      failedRuns: 0,
+    });
+  });
+
+  test('shares two scoring slots across jobs and retains slots until aborted scoring settles', async () => {
+    const scoreGates = Array.from(
+      { length: 3 },
+      () => deferred<ScreenshotEvaluation>(),
+    );
+    const scoreSignals: AbortSignal[] = [];
+    rstest.mocked(evaluateScreenshot).mockImplementation((input) => {
+      const gate = scoreGates[scoreSignals.length]!;
+      scoreSignals.push(input.signal!);
+      return gate.promise;
+    });
+    const store = getBenchJobStore();
+    const jobs = Array.from(
+      { length: 3 },
+      () => store.createJob(request('openui', 'matched-core', 1), 1),
+    );
+    const runs = jobs.map((job) =>
+      runBenchJob(job.id, {
+        adapters: {
+          openui: {
+            protocol: 'openui',
+            generate: () => Promise.resolve(artifact('openui')),
+          },
+        },
+      })
+    );
+    try {
+      for (let index = 0; index < jobs.length; index++) {
+        const job = jobs[index]!;
+        await rstest.waitUntil(() => job.screenshots.size === 1);
+        uploadNext(job.id);
+        if (index < 2) {
+          await rstest.waitUntil(() => scoreSignals.length === index + 1);
+        }
+      }
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      expect(scoreSignals).toHaveLength(2);
+      store.cancelJob(jobs[0]!.id);
+      expect(scoreSignals[0]?.aborted).toBe(true);
+      expect(scoreSignals[1]?.aborted).toBe(false);
+      expect(jobs[0]?.report).toBeUndefined();
+      expect(scoreSignals).toHaveLength(2);
+      scoreGates[0]!.resolve(score(4));
+      await rstest.waitUntil(() => scoreSignals.length === 3);
+    } finally {
+      scoreGates.forEach((gate) => gate.resolve(score(4)));
+      await Promise.all(runs);
+    }
+    expect(jobs.map((job) => job.report?.status)).toEqual([
+      'cancelled',
+      'complete',
+      'complete',
+    ]);
   });
 });
 
