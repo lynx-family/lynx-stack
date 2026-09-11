@@ -4,8 +4,8 @@
 import { expect, test } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 
-const goto = async (page: Page) => {
-  await page.goto('/tests/fixtures/x-text/inline-image.html', {
+const goto = async (page: Page, fixtureName: string) => {
+  await page.goto(`/tests/fixtures/x-text/${fixtureName}.html`, {
     waitUntil: 'load',
   });
   await page.evaluate(() => document.fonts.ready);
@@ -14,7 +14,7 @@ const goto = async (page: Page) => {
 for (const parent of ['x-text', 'inline-truncation']) {
   for (const wrapped of [false, true]) {
     test(`x-svg inline layout in ${parent}, wrapped=${wrapped}`, async ({ page }) => {
-      await goto(page);
+      await goto(page, 'inline-image');
       await page.evaluate(({ parent, wrapped }) => {
         document.body.replaceChildren();
         const src = 'data:image/svg+xml,'
@@ -113,7 +113,7 @@ for (const parent of ['x-text', 'inline-truncation']) {
 }
 
 test('x-svg counts as one character and is restored after truncation changes', async ({ page }) => {
-  await goto(page);
+  await goto(page, 'inline-image');
   await page.evaluate(() => {
     const text = document.querySelector('x-text')!;
     text.replaceChildren();
@@ -142,11 +142,7 @@ test('x-svg counts as one character and is restored after truncation changes', a
 
 test('x-svg sizes custom line truncation like x-image', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(
-    '/tests/fixtures/x-text/inline-truncation-with-inline-image.html',
-    { waitUntil: 'load' },
-  );
-  await page.evaluate(() => document.fonts.ready);
+  await goto(page, 'inline-truncation-with-inline-image');
   const truncation = page.locator('inline-truncation');
   await expect(truncation).toBeVisible();
   const before = await truncation.boundingBox();
