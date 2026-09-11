@@ -121,13 +121,13 @@ describe('Preview', () => {
   })
 
   test('preview with NODE_ENV=production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rs.stubEnv('NODE_ENV', 'production')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rs.mocked(selectKey).mockResolvedValue('foo')
+    rs.mocked(isCancel).mockReturnValue(true)
+    rs.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const port = getRandomNumberInRange(3000, 60000)
     const rsbuild = await createRsbuild({
@@ -143,7 +143,7 @@ describe('Preview', () => {
             setup(api) {
               api.expose<ExposedAPI>(Symbol.for('rspeedy.api'), {
                 config: {},
-                debug: vi.fn(),
+                debug: rs.fn(),
                 exit,
                 logger,
                 version: '1.0.0',
@@ -165,12 +165,12 @@ describe('Preview', () => {
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
     expect(renderUnicodeCompact).toBeCalled()
-    expect(vi.mocked(renderUnicodeCompact).mock.calls[0]?.[0]).toMatch(
+    expect(rs.mocked(renderUnicodeCompact).mock.calls[0]?.[0]).toMatch(
       new RegExp(`^http://[^/]+:${port}/main\\.lynx\\.bundle$`),
     )
 
     await server.close()
-    await vi.waitFor(() => {
+    await rs.waitFor(() => {
       expect(exit).toBeCalledTimes(1)
     })
   })

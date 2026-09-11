@@ -163,7 +163,7 @@ export default defineConfig({
       'debug/**',
       'jsx-runtime/**',
       'jsx-dev-runtime/**',
-      'lazy/element-template-import.js',
+      'lazy/element-template*.js',
       'lepus/jsx-dev-runtime/**',
       'lepus/index.d.ts',
       'rstest.config.ts',

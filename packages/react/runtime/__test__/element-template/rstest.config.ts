@@ -165,7 +165,7 @@ const config: RstestConfig = defineConfig({
     // `v8`, matching the Vitest config this replaced: the source carries
     // `/* v8 ignore start|stop */` markers, which istanbul does not honour.
     provider: 'v8',
-    include: ['src/element-template/**'],
+    include: ['src/element-template/**', 'lazy/element-template*.js'],
     exclude: [
       'src/element-template/**/*.d.ts',
       'src/element-template/protocol/types.ts',

@@ -1950,13 +1950,13 @@ describe('BackgroundElementTemplateInstance', () => {
   it.each(['direct', 'spread'])(
     'keeps shared %s ref cleanups isolated through hydration, moves and replacement',
     (kind) => {
-      const cleanupA = vi.fn();
-      const cleanupB = vi.fn();
-      const replacementCleanup = vi.fn();
-      const ref = vi.fn<(value: { selector: string } | null) => () => void>()
+      const cleanupA = rs.fn();
+      const cleanupB = rs.fn();
+      const replacementCleanup = rs.fn();
+      const ref = rs.fn<(value: { selector: string } | null) => () => void>()
         .mockReturnValueOnce(cleanupA)
         .mockReturnValueOnce(cleanupB);
-      const replacement = vi.fn(() => replacementCleanup);
+      const replacement = rs.fn(() => replacementCleanup);
       const slots = (value: unknown) => [kind === 'spread' ? { ref: value } : value];
       __etAttrPlanMap.view = [0, kind === 'spread' ? adaptSpreadAttrSlot : adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('root');
@@ -2050,9 +2050,9 @@ describe('BackgroundElementTemplateInstance', () => {
   );
 
   it('keeps a shared callback cleanup separate for direct and spread slots on the same instance', () => {
-    const directCleanup = vi.fn();
-    const spreadCleanup = vi.fn();
-    const ref = vi.fn()
+    const directCleanup = rs.fn();
+    const spreadCleanup = rs.fn();
+    const ref = rs.fn()
       .mockReturnValueOnce(directCleanup)
       .mockReturnValueOnce(spreadCleanup);
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
