@@ -53,5 +53,11 @@ describe('@lynx-js/react/compat - alias', () => {
     expect(config?.resolve?.alias ?? {}).not.toHaveProperty(
       '@lynx-js/react/compat$',
     )
+    expect(config?.resolve?.alias ?? {}).toHaveProperty(
+      'react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+      ),
+    )
   })
 })

@@ -213,7 +213,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         if (!chain.resolve.alias.has('react$')) {
           chain.resolve.alias.set(
             'react$',
-            reactLepus.background,
+            reactCompat ?? reactLepus.background,
           )
         }
 

@@ -1,0 +1,59 @@
+{
+  "name": "@lynx-js/react-compat",
+  "version": "19.2.0",
+  "description": "A React-versioned alias of `@lynx-js/react/compat` that satisfies the `react` peer dependency of React libraries in ReactLynx projects.",
+  "keywords": [
+    "react",
+    "lynx",
+    "ReactLynx",
+    "compat"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/react-compat"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Yiming Li",
+    "email": "yimingli.cs@gmail.com"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./jsx-runtime.d.ts",
+      "default": "./jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./jsx-dev-runtime.d.ts",
+      "default": "./jsx-dev-runtime.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "index.d.ts",
+  "files": [
+    "index.d.ts",
+    "index.js",
+    "jsx-runtime.d.ts",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.d.ts",
+    "jsx-dev-runtime.js",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@types/semver": "^7.8.0",
+    "semver": "^7.8.5"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": ">=0.112.0"
+  }
+}

@@ -1546,6 +1546,18 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  packages/react-compat:
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+      '@types/semver':
+        specifier: ^7.8.0
+        version: 7.8.0
+      semver:
+        specifier: ^7.8.5
+        version: 7.8.5
+
   packages/react-signals:
     dependencies:
       '@preact/signals':
