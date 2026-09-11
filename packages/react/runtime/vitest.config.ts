@@ -134,6 +134,7 @@ export default defineConfig({
         '__test__/snapshot/utils/**',
         '__test__/test-utils/**',
         'lib/**',
+        'scripts/**',
         'worklet-runtime/**',
         'src/element-template/**',
         'src/core/hooks/mainThread.ts',

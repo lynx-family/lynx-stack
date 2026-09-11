@@ -34,12 +34,15 @@ export function isEmptyDiffResult<K>(diffResult: DiffResult<K>): boolean {
   return !hasChanged;
 }
 
-export function diffArrayLepus<A extends Typed, B extends Typed>(
+export function diffArrayLepus<A, B extends Typed>(
   before: A[],
   after: B[],
   isSameType: (a: A, b: B) => boolean,
   onDiffChildren: (a: A, b: B, oldIndex: number, newIndex: number) => void,
   isListHasItemKey: boolean,
+  getBeforeType: (node: A) => string | null = node => (node as unknown as Typed).type,
+  getBeforeListItemPlatformInfo: (node: A) => PlatformInfo | undefined = node =>
+    (node as unknown as Typed).__listItemPlatformInfo,
 ): DiffResult<B> {
   let lastPlacedIndex = 0;
   const result: DiffResult<B> = {
@@ -53,8 +56,8 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
   for (let i = 0; i < before.length; i++) {
     const node = before[i]!;
     const key = isListHasItemKey
-      ? node.__listItemPlatformInfo?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
-      : node.type;
+      ? getBeforeListItemPlatformInfo(node)?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
+      : String(getBeforeType(node));
     (beforeMap[key] ??= new Set()).add([node, i]);
   }
 
@@ -62,7 +65,7 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
     const afterNode = after[i]!;
     const key = isListHasItemKey
       ? afterNode.__listItemPlatformInfo?.['item-key'] ?? UNREACHABLE_ITEM_KEY_NOT_FOUND
-      : afterNode.type;
+      : String(afterNode.type);
     const beforeNodes = beforeMap[key];
     let beforeNode: [A, number];
 
