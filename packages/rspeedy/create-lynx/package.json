@@ -17,7 +17,12 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "exports": null,
+  "exports": {
+    ".": {
+      "types": "./dist/create.d.ts",
+      "default": "./dist/create.js"
+    }
+  },
   "bin": {
     "create-lynx": "./dist/index.js"
   },
