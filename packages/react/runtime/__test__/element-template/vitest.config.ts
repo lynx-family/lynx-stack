@@ -107,6 +107,8 @@ const config: UserConfigExport = defineConfig({
     name: 'react/runtime-et',
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
+      // Both backends run before upload; do not overwrite Snapshot/core coverage.
+      reportsDirectory: './coverage/element-template',
       include: ['src/element-template/**', 'lazy/element-template*.js'],
       exclude: [
         'src/element-template/**/*.d.ts',
