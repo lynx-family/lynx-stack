@@ -125,6 +125,9 @@ function readStringArray(value: unknown): string[] | undefined {
 
 function normalizeSettings(value: unknown): BenchSettings {
   const record = isRecord(value) ? value : {};
+  const uiJudgeModel = configuredModelName(
+    readOptionalString(record.uiJudgeModel, 240),
+  );
   const maxRepairAttempts = 'maxRepairAttempts' in record
     ? clampInt(record.maxRepairAttempts, 2, 0, 4)
     : (record.repairEnabled === false ? 0 : 2);
@@ -133,6 +136,7 @@ function normalizeSettings(value: unknown): BenchSettings {
     maxRepairAttempts,
     repairEnabled: maxRepairAttempts > 0,
     judgeEnabled: record.judgeEnabled === true,
+    ...(uiJudgeModel ? { uiJudgeModel } : {}),
     renderMetricsEnabled: record.renderMetricsEnabled === true
       || record.collectLiveRenderMetrics === true,
     ...(record.timeoutMs === undefined

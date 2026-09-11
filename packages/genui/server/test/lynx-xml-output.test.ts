@@ -30,6 +30,11 @@ describe('Lynx XML model output', () => {
     )).toBe('<!doctype lynx>\n<lynx engine-version="4.2">');
   });
 
+  test('repairs a missing doctype when the Lynx root is present', () => {
+    const withoutDoctype = VALID_ARTIFACT.replace(/^<!doctype lynx>\n/u, '');
+    expect(normalizeLynxXmlArtifact(withoutDoctype)).toBe(VALID_ARTIFACT);
+  });
+
   test('rejects incomplete and non-canonical final artifacts', () => {
     expect(() => normalizeLynxXmlArtifact('No source')).toThrow(
       'returned no <!doctype lynx> artifact',

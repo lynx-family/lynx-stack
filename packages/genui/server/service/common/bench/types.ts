@@ -76,6 +76,7 @@ export interface BenchSettings {
   maxRepairAttempts: number;
   repairEnabled: boolean;
   judgeEnabled: boolean;
+  uiJudgeModel?: string;
   renderMetricsEnabled: boolean;
   timeoutMs?: number;
 }

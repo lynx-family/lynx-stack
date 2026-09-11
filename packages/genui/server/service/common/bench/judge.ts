@@ -6,6 +6,7 @@ import type { BenchJudgeScheduling } from './concurrency.js';
 import type { BenchProtocol } from './protocol-types.js';
 import type { BenchScenarioRequest } from './types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
+import type { ScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
 import {
   resolveBenchUiJudge,
   runBenchUiJudge,
@@ -51,6 +52,7 @@ export interface RunGenuiBenchUiJudgeOptions {
    * Test seam for the retry backoff. Production callers use the 5s default.
    */
   retryDelayMs?: number;
+  evaluate?: ScreenshotEvaluator;
 }
 
 function normalizedAttemptCount(value: number | undefined): number {
@@ -183,6 +185,7 @@ export async function runGenuiBenchUiJudge(
             scheduling: options.scheduling,
             onPhase: options.onPhase,
             ...(options.signal ? { signal: options.signal } : {}),
+            ...(options.evaluate ? { evaluate: options.evaluate } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
           captureScreenshot,
@@ -233,6 +236,7 @@ export async function runGenuiBenchUiJudge(
           scheduling: options.scheduling,
           onPhase: options.onPhase,
           ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.evaluate ? { evaluate: options.evaluate } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },
         captureScreenshot,

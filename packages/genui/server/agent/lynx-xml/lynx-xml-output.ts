@@ -25,14 +25,19 @@ function countOccurrences(source: string, value: string): number {
  * itself canonical for the runtime.
  */
 export function extractLynxXmlArtifact(value: string): string {
-  const start = value.indexOf(LYNX_XML_DOCTYPE);
-  if (start === -1) return '';
+  const doctypeStart = value.indexOf(LYNX_XML_DOCTYPE);
+  const rootStart = value.search(/<lynx\b/u);
+  const start = doctypeStart >= 0 ? doctypeStart : rootStart;
+  if (start < 0) return '';
 
   const end = value.lastIndexOf(LYNX_XML_ROOT_END);
-  return value.slice(
+  const artifact = value.slice(
     start,
     end >= start ? end + LYNX_XML_ROOT_END.length : undefined,
   ).trimEnd();
+  return doctypeStart >= 0
+    ? artifact
+    : `${LYNX_XML_DOCTYPE}\n${artifact}`;
 }
 
 /**
