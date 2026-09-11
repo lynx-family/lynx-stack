@@ -94,6 +94,13 @@ jobs:
           # dedicated directory so that raw profile can be collected as an
           # artifact below.
           TMPDIR: ${{ runner.temp }}/codspeed-valgrind-tmp
+          # pnpm 12's native binary sizes its rayon pool at 2x the CPU count
+          # and its tokio runtime at the CPU count, which on the larger
+          # physical-exclusive runners exceeds Valgrind's default
+          # --max-threads=500 and makes Valgrind abort before pnpm prints
+          # anything. The codspeed runner does not forward Valgrind flags,
+          # so raise the limit through the variable Valgrind reads itself.
+          VALGRIND_OPTS: --max-threads=4096
         run: |
           export HOME=/root
           . "$HOME/.cargo/env"
