@@ -2,6 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+
+export function collectBackgroundSubtreeHandleIds(node: BackgroundElementTemplateInstance): number[] {
+  return [node.instanceId, ...node.childNodes.flatMap(collectBackgroundSubtreeHandleIds)];
+}
+
 export function serializeToJSX(element: any, indent: string = ''): string {
   if (!element) return '';
   if (element.type === 'rawText') {
