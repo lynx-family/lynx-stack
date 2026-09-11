@@ -473,6 +473,7 @@ impl MainThreadServerContext {
             let template_str: Option<Cow<'static, str>> = match element.tag_name.as_str() {
               "scroll-view" => Some(Cow::Borrowed(web_elements::template::TEMPLATE_SCROLL_VIEW)),
               "x-audio-tt" => Some(Cow::Borrowed(web_elements::template::TEMPLATE_X_AUDIO_TT)),
+              "x-video" => Some(Cow::Borrowed(web_elements::template::TEMPLATE_X_VIDEO)),
               "x-image" => web_elements::template::template_x_image(
                 element.attributes.get("src").map(|s| s.as_str()),
               )

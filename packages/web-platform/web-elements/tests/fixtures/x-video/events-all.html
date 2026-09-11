@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- Copyright 2024 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>x-video events-all</title>
+    <link href="/main.css" rel="stylesheet" />
+    <script type="module">
+    const eventTypes = [
+        'firstframe',
+        'playing',
+        'paused',
+        'stopped',
+        'timeupdate',
+        'ended',
+        'looped',
+        'error',
+        'buffering',
+      ];
+
+      window.__events = [];
+      window.__methodResults = {};
+
+      function setup() {
+        const xVideo = document.querySelector('x-video');
+        const inner = xVideo.shadowRoot.querySelector('video');
+
+        eventTypes.forEach((type) => {
+          xVideo.addEventListener(type, (e) => {
+            window.__events.push({ type, detail: e.detail });
+          });
+        });
+
+        // Stub HTML5 media element so synthetic dispatch works without a codec.
+        Object.defineProperty(inner, 'duration', {
+          configurable: true,
+          get: () => window.__duration ?? 10,
+        });
+        Object.defineProperty(inner, 'error', {
+          configurable: true,
+          get: () => window.__error ?? null,
+        });
+        Object.defineProperty(inner, 'buffered', {
+          configurable: true,
+          get: () => ({
+            length: 1,
+            start: () => 0,
+            end: () => window.__bufferedEnd ?? 5,
+          }),
+        });
+        Object.defineProperty(inner, 'paused', {
+          configurable: true,
+          get: () => window.__paused ?? true,
+        });
+        inner.play = () => {
+          window.__paused = false;
+          return Promise.resolve();
+        };
+        inner.pause = () => {
+          window.__paused = true;
+        };
+
+        window.__inner = inner;
+        window.__xVideo = xVideo;
+
+        window.__dispatch = (type) => {
+          inner.dispatchEvent(new Event(type));
+        };
+        window.__setCurrentTime = (t) => {
+          inner.currentTime = t;
+        };
+
+        window.__call = (name, ...args) => {
+          const r = xVideo[name](...args);
+          window.__methodResults[name] = r;
+          return r;
+        };
+
+        window.__ready = true;
+      }
+
+      // The custom element upgrade may run after DOMContentLoaded depending on
+      // bundler chunking, so wait until shadowRoot is attached.
+      const tick = () => {
+        const xVideo = document.querySelector('x-video');
+        if (
+          xVideo && xVideo.shadowRoot
+          && xVideo.shadowRoot.querySelector('video')
+        ) {
+          setup();
+        } else {
+          requestAnimationFrame(tick);
+        }
+      };
+      tick();
+    </script>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page column">
+      <x-video
+        id="video"
+        timeupdate-interval="0.1"
+      ></x-video>
+    </x-view>
+  </body>
+</html>
