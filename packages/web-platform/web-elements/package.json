@@ -147,7 +147,7 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "dependencies": {
-    "dompurify": "^3.4.13",
+    "dompurify": "^3.4.15",
     "markdown-it": "^15.0.1"
   },
   "devDependencies": {
