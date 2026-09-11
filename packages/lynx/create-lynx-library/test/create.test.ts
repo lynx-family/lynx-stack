@@ -722,6 +722,18 @@ describe('create-lynx-library', () => {
       path.join(dir, 'consumer.ts'),
       `
 import { StorageModule, StorageModuleNapi } from '@example/dual-native-modules';
+declare global {
+  interface NativeModules {
+    bridge: {
+      call(name: string, params: Record<string, unknown>, cb: (...args: unknown[]) => void): void;
+      on(name: string, cb: (...args: unknown[]) => void): void;
+    };
+  }
+  var NativeModules: NativeModules;
+}
+globalThis.NativeModules.bridge.call('test', {}, () => {});
+// @ts-expect-error The shim must not weaken the host's global type.
+globalThis.NativeModules = {};
 StorageModule.setValue('key', 'value');
 const value: string | null = StorageModule.getValue('key');
 StorageModule.clear();

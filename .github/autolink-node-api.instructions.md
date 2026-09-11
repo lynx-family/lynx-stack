@@ -10,3 +10,7 @@ and may otherwise throw `proxy: inconsistent get`.
 
 Keep `lynx.getModuleLoader()` as the standard Node-API loader fallback in
 addition to compatibility loaders exposed on `globalThis`.
+
+Type-check generated module entries with a host ambient NativeModules declaration
+that requires bridge. Internal dynamic global access must not intersect with that
+host type or weaken the consumer's global declaration.
