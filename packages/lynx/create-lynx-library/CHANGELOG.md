@@ -1,5 +1,19 @@
 # create-lynx-library
 
+## 0.6.1
+
+### Patch Changes
+
+- Export generated module objects from the public type entry to match the runtime ([#3910](https://github.com/lynx-family/lynx-stack/pull/3910))
+  entry. Keep annotated class declarations as codegen inputs, not consumer-facing
+  constructors, for both platform and N-API native modules.
+- Type and validate platform-selected Lynxtron `targets`, with each target ([#3760](https://github.com/lynx-family/lynx-stack/pull/3760))
+  declaring `files`, macOS `frameworks`, and signed macOS `appBundles` as needed.
+  Generate the same manifest shape and `dist/<os>/<arch>` output layout in new
+  Lynxtron library projects.
+- Updated dependencies [[`297a7f7`](https://github.com/lynx-family/lynx-stack/commit/297a7f74bc5a9161f9393d81a4b717b4cfd853a0), [`b17c566`](https://github.com/lynx-family/lynx-stack/commit/b17c566f96d4233cf700fb266910b2e3478bcc87)]:
+  - @lynx-js/autolink-codegen@0.6.0
+
 ## 0.6.0
 
 ### Minor Changes

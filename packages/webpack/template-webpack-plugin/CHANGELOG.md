@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.1
+
+### Patch Changes
+
+- Fix the JavaScript chunk of a lazy bundle ignoring `output.filenameHash`. It is now named like the entry of its layer, so `background.[contenthash:8].js` is emitted next to `main-thread.js` in production, and the chunk of a non-Lynx environment stays in that environment's output root instead of `.lynx/`. ([#3883](https://github.com/lynx-family/lynx-stack/pull/3883))
+- Updated dependencies [[`c5d8272`](https://github.com/lynx-family/lynx-stack/commit/c5d8272e621a2622d783d98836c05c509252e55c), [`8d0b358`](https://github.com/lynx-family/lynx-stack/commit/8d0b358bf35ba6f2958c61da5b81dffa5c422c2d)]:
+  - @lynx-js/web-core@0.26.1
+
 ## 0.16.0
 
 ### Minor Changes

@@ -1,5 +1,24 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.1.2
+
+### Patch Changes
+
+- Fix `dev.assetPrefix` set by another plugin being replaced with the dev server address. It was resolved from the original user config only, so a plugin pointing the Lynx client at a proxy or a tunnel had its value silently discarded. ([#3897](https://github.com/lynx-family/lynx-stack/pull/3897))
+
+- Turn Rsbuild's lazy compilation off for a Lynx build, which cannot run the proxy module it serves in place of a dynamic import. ([#3843](https://github.com/lynx-family/lynx-stack/pull/3843))
+
+  Apply the dev plugin to `rsbuild preview` as well, so it prints the bundle URLs and resolves `dev.assetPrefix` to an address a device can reach. Rspeedy never needed this because it initializes its plugins before the action is known, which leaves the plugin's `apply` filter out of the picture.
+- Fix the CSS output defaults overwriting the values another plugin had already set. `output.distPath.css`, `output.filename.css` and `output.legalComments` were merged per environment at the default hook order, so under the Rspeedy CLI, where `pluginLynx` is applied after user plugins, a plugin's value was silently discarded. ([#3865](https://github.com/lynx-family/lynx-stack/pull/3865))
+
+- Use the active Rsbuild environments and their resolved entries when printing dev server URLs. This fixes startup failures when `--environment` excludes an environment declared in the configuration. ([#3901](https://github.com/lynx-family/lynx-stack/pull/3901))
+
+- Fix the CSS source map default overwriting the value another plugin had already set. `output.sourceMap.css` was enabled per environment at the default hook order, so under the Rspeedy CLI, where `pluginLynx` is applied after user plugins, a plugin's value was silently discarded. ([#3866](https://github.com/lynx-family/lynx-stack/pull/3866))
+- Updated dependencies [[`b900a78`](https://github.com/lynx-family/lynx-stack/commit/b900a78a43914adf2aae60849e2d6433be5eb797), [`2150f25`](https://github.com/lynx-family/lynx-stack/commit/2150f254528a5a575a6e3148b47ef422386f444e)]:
+  - @lynx-js/template-webpack-plugin@0.16.1
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.2.3
+  - @lynx-js/web-rsbuild-server-middleware@0.26.1
+
 ## 0.1.1
 
 ### Patch Changes

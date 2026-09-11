@@ -1,6 +1,6 @@
 {
   "name": "create-rspeedy",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "Deprecated: use @lynx-js/create-lynx instead",
   "keywords": [
     "webpack",

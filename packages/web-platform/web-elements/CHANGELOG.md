@@ -1,5 +1,13 @@
 # @lynx-js/web-elements
 
+## 0.12.11
+
+### Patch Changes
+
+- Defer `x-image` and `inline-image` load events received while detached until the host connects to the document, preserving the image dimensions at load time. ([#3906](https://github.com/lynx-family/lynx-stack/pull/3906))
+
+- Apply inline image layout styles to `x-svg` inside text and custom truncation content. ([#3899](https://github.com/lynx-family/lynx-stack/pull/3899))
+
 ## 0.12.10
 
 ### Patch Changes
