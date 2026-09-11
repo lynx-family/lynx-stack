@@ -1854,8 +1854,8 @@ importers:
   packages/rspeedy/create-lynx:
     dependencies:
       '@rstackjs/create-toolkit':
-        specifier: 2.1.4
-        version: 2.1.4
+        specifier: 2.2.6
+        version: 2.2.6
     devDependencies:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
@@ -6225,6 +6225,10 @@ packages:
 
   '@rstackjs/create-toolkit@2.1.4':
     resolution: {integrity: sha512-kwPhfMdgWN7z/Op5UKMszhmZy7+hzqXeiQPli4uycYYTLxCVUGLlEW3etoGoZlrM2t5zLqXZQAgL60PTUR/ocw==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+
+  '@rstackjs/create-toolkit@2.2.6':
+    resolution: {integrity: sha512-kBJ6btUXKpJEqq1c6sSCfukjb2NK4zWpl3sKj4pk91cdI6L5If7NFaov6RRpTP/EuVW37wkVV5FlXJKZQPEC3Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
   '@rstest/adapter-rsbuild@0.11.12':
@@ -16220,6 +16224,8 @@ snapshots:
       '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
   '@rstackjs/create-toolkit@2.1.4': {}
+
+  '@rstackjs/create-toolkit@2.2.6': {}
 
   '@rstest/adapter-rsbuild@0.11.12(@rsbuild/core@2.2.4(core-js@3.50.0))(@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1))':
     dependencies:

@@ -89,6 +89,24 @@ describe('lintTemplateOf', () => {
   })
 })
 
+describe('rslint configs', () => {
+  test('ships one for every template language', () => {
+    for (const template of TEMPLATES) {
+      const config = lintTemplateOf(template)
+      expect(
+        fs.existsSync(
+          path.join(
+            packageRoot,
+            'template-rslint',
+            `${config}`,
+            'rslint.config.ts',
+          ),
+        ),
+      ).toBe(true)
+    }
+  })
+})
+
 describe('templateRoot', () => {
   test('keeps apps and libraries in their own template root', () => {
     expect(templateRoot(packageRoot, 'rsbuild')).toBe(packageRoot)

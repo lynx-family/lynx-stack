@@ -151,7 +151,26 @@ void create({
         addAgentsMdSearchDirs(from)
       },
     },
+    {
+      value: 'rslint',
+      label: 'Rslint - linting',
+      order: 'pre',
+      action: ({ templateName, distFolder, addAgentsMdSearchDirs }) => {
+        const root = path.join(packageRoot, 'template-rslint')
+        const config = lintTemplateOf(templateName)
+        if (config === null) {
+          return
+        }
+        copyFolder({
+          from: path.join(root, config),
+          to: distFolder,
+          isMergePackageJson: true,
+        })
+        addAgentsMdSearchDirs(root)
+      },
+    },
   ],
+  builtinTools: ['eslint', 'biome', 'prettier'],
   extraSkills: [
     {
       label: 'Lynx DevTool',
@@ -160,5 +179,4 @@ void create({
     },
   ],
   mapESLintTemplate: lintTemplateOf,
-  mapRslintTemplate: lintTemplateOf,
 })
