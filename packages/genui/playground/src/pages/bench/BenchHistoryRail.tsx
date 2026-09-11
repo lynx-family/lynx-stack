@@ -3,13 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { formatBenchDuration } from './benchTiming.js';
 import { Button } from '../../components/Button.js';
-import {
-  FileText,
-  History,
-  MessageSquarePlus,
-  Trash2,
-} from '../../components/Icon.js';
-import { PageHeader } from '../../components/PageHeader.js';
+import { HistoryRailShell } from '../../components/HistoryRailShell.js';
+import { Copy, History, Trash2 } from '../../components/Icon.js';
 
 interface BenchHistoryRailEntry {
   config: { env: { model: string } };
@@ -31,113 +26,106 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
   onClear: () => void;
   onOpenReport: (entry: T) => void;
   onDelete: (id: string) => void;
+  onCopy?: (entry: T) => void;
   onNew: () => void;
   onRestore: (entry: T) => void;
   reportNotice?: string;
   storageNotice?: string;
 }) {
   return (
-    <aside className='benchHistoryRail' aria-label='Bench history'>
-      <div className='benchHistoryRailCreate'>
-        <Button
-          variant='secondary'
-          size='lg'
-          fullWidth
-          iconBefore={MessageSquarePlus}
-          disabled={props.disabled}
-          onClick={props.onNew}
-        >
-          New Bench
-        </Button>
-      </div>
-      <PageHeader
-        className='benchHistoryRailHeader'
-        title='History'
-        topContent={<span>{props.entries.length}</span>}
-      />
-      <div className='benchHistoryRailList'>
-        {props.entries.length > 0
-          ? props.entries.map((entry) => {
-            const totalRuns = entry.report?.summary?.totalRuns
-              ?? entry.report?.results.length
-              ?? 0;
-            return (
-              <article
-                className='benchHistoryRailItem'
-                data-active={props.activeId === entry.id || undefined}
-                key={entry.id}
-              >
-                <button
-                  type='button'
-                  className='benchHistoryRailItemMain'
-                  disabled={props.disabled}
-                  onClick={() => props.onRestore(entry)}
-                >
-                  <strong>{entry.title}</strong>
-                  <span>
-                    {new Date(entry.savedAt).toLocaleString('en-US')}
-                  </span>
-                  <small>
-                    {entry.report
-                      ? `${totalRuns} Runs · ${entry.config.env.model}`
-                      : `Draft · ${entry.config.env.model}`}
-                  </small>
-                  {entry.report && (
-                    <small>
-                      Total time: {formatBenchDuration(entry.report.durationMs)}
-                    </small>
-                  )}
-                </button>
-                <div className='benchHistoryRailItemActions'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    iconOnly
-                    iconBefore={FileText}
-                    disabled={props.disabled || !entry.report}
-                    aria-label={`View report details for ${entry.title} (opens in a new tab)`}
-                    title='View report details in a new tab'
-                    onClick={() => props.onOpenReport(entry)}
-                  />
-                  <Button
-                    variant='danger'
-                    size='sm'
-                    iconOnly
-                    iconBefore={Trash2}
-                    disabled={props.disabled}
-                    aria-label={`Delete ${entry.title}`}
-                    title='Delete'
-                    onClick={() => props.onDelete(entry.id)}
-                  />
-                </div>
-              </article>
-            );
-          })
-          : (
-            <div className='benchHistoryRailEmpty'>
-              <History aria-hidden='true' />
-              <span>Completed runs will appear here</span>
-            </div>
+    <HistoryRailShell
+      className='benchHistoryRail'
+      ariaLabel='Bench history'
+      createLabel='New Bench'
+      count={props.entries.length}
+      disabled={props.disabled}
+      listClassName='benchHistoryRailList'
+      onCreate={props.onNew}
+      empty={
+        <div className='benchHistoryRailEmpty'>
+          <History aria-hidden='true' />
+          <span>Completed runs will appear here</span>
+        </div>
+      }
+      footer={
+        <>
+          {props.reportNotice && (
+            <p className='benchHistoryShareNotice' role='status'>
+              {props.reportNotice}
+            </p>
           )}
-      </div>
-      {props.reportNotice && (
-        <p className='benchHistoryShareNotice' role='status'>
-          {props.reportNotice}
-        </p>
-      )}
-      {props.storageNotice && (
-        <p className='benchHistoryShareNotice' role='alert'>
-          {props.storageNotice}
-        </p>
-      )}
-      <button
-        type='button'
-        className='benchHistoryRailClear'
-        disabled={props.disabled || props.entries.length === 0}
-        onClick={props.onClear}
-      >
-        Clear history
-      </button>
-    </aside>
+          {props.storageNotice && (
+            <p className='benchHistoryShareNotice' role='alert'>
+              {props.storageNotice}
+            </p>
+          )}
+          <button
+            type='button'
+            className='benchHistoryRailClear'
+            disabled={props.disabled || props.entries.length === 0}
+            onClick={props.onClear}
+          >
+            Clear history
+          </button>
+        </>
+      }
+    >
+      {props.entries.map((entry) => {
+        const totalRuns = entry.report?.summary?.totalRuns
+          ?? entry.report?.results.length
+          ?? 0;
+        return (
+          <article
+            className='benchHistoryRailItem'
+            data-active={props.activeId === entry.id || undefined}
+            key={entry.id}
+          >
+            <button
+              type='button'
+              className='benchHistoryRailItemMain'
+              disabled={props.disabled}
+              onClick={() => props.onRestore(entry)}
+            >
+              <strong>{entry.title}</strong>
+              <span>
+                {new Date(entry.savedAt).toLocaleString('en-US')}
+              </span>
+              <small>
+                {entry.report
+                  ? `${totalRuns} Runs · ${entry.config.env.model}`
+                  : `Draft · ${entry.config.env.model}`}
+              </small>
+              {entry.report && (
+                <small>
+                  Total time: {formatBenchDuration(entry.report.durationMs)}
+                </small>
+              )}
+            </button>
+            <div className='benchHistoryRailItemActions'>
+              <Button
+                variant='ghost'
+                size='sm'
+                iconOnly
+                iconBefore={Copy}
+                disabled={props.disabled || !props.onCopy}
+                aria-label={`Copy ${entry.title}`}
+                title='Copy as new Bench'
+                onClick={() => props.onCopy?.(entry)}
+              />
+              <Button
+                variant='danger'
+                size='sm'
+                iconOnly
+                iconBefore={Trash2}
+                disabled={props.disabled}
+                aria-label={`Delete ${entry.title}`}
+                title='Delete'
+                onClick={() => props.onDelete(entry.id)}
+              />
+            </div>
+          </article>
+        );
+      })}
+    </HistoryRailShell>
   );
 }

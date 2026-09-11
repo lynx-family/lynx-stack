@@ -456,7 +456,7 @@ describe('fixed read-only report template', () => {
     expect(html).not.toContain('View local report');
   });
 
-  test('enables local report viewing for reports, including old redacted IDs, but not drafts', () => {
+  test('does not render a separate history report details action', () => {
     const entry = historyEntry();
     const render = (report: BenchReport | null) =>
       renderToStaticMarkup(React.createElement(BenchHistoryRail, {
@@ -469,16 +469,13 @@ describe('fixed read-only report template', () => {
         onNew: noop,
         onRestore: noop,
       }));
-    expect(render(entry.report)).toContain(
-      'aria-label="View report details for History result (opens in a new tab)"',
-    );
-    expect(render(entry.report)).not.toMatch(
-      /disabled=""[^>]*aria-label="View report details/u,
+    expect(render(entry.report)).not.toContain(
+      'View report details for History result (opens in a new tab)',
     );
     expect(render({ ...entry.report, jobId: '[redacted credential]' })).not
-      .toMatch(/disabled=""[^>]*aria-label="View report details/u);
-    expect(render(null)).toMatch(
-      /disabled=""[^>]*aria-label="View report details/u,
+      .toContain('View report details for History result');
+    expect(render(null)).not.toContain(
+      'View report details for History result',
     );
   });
 });

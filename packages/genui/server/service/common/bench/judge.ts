@@ -22,9 +22,12 @@ import type {
 const DEFAULT_OPENUI_ZIP_URL = 'https://lynx-stack.dev/genui/openui.lynx.zip';
 const DEFAULT_UI_JUDGE_ATTEMPT_COUNT = 2;
 const DEFAULT_UI_JUDGE_RETRY_DELAY_MS = 5_000;
-const UNSAFE_OPENUI_RESOURCE_URL =
-  /(?:^|[\s("'=])(?:data|file|https?):(?:\/\/)?/iu;
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
+
+function findUnsafeResourceMarker(rawText: string): string | null {
+  const match = /\b(?:data|file|https?):/iu.exec(rawText);
+  return match?.[0] ?? null;
+}
 
 export type GenuiBenchProtocol = BenchProtocol;
 
@@ -194,21 +197,26 @@ export async function runGenuiBenchUiJudge(
   }
 
   const rawText = options.artifact.rawText;
-  if (
-    options.artifact.protocol !== 'html'
-    && (UNSAFE_OPENUI_RESOURCE_URL.test(rawText)
-      || UNSAFE_OPENUI_HOST_CALL.test(rawText))
-  ) {
-    return {
-      errors: [
-        `ui-judge rejected ${
-          options.artifact.protocol === 'lynx-xml' ? 'Lynx XML' : 'OpenUI'
-        } output containing an external resource URL or openUrl call.`,
-      ],
-      score: 0,
-      status: 'failed',
-      warnings: [],
-    };
+  if (options.artifact.protocol !== 'html') {
+    const unsafeResourceMarker = findUnsafeResourceMarker(rawText);
+    const hasOpenUrlCall = UNSAFE_OPENUI_HOST_CALL.test(rawText);
+    const rejectionReason = unsafeResourceMarker
+      ? `external resource URL (${unsafeResourceMarker})`
+      : (hasOpenUrlCall
+        ? 'openUrl call'
+        : null);
+    if (rejectionReason) {
+      return {
+        errors: [
+          `ui-judge rejected ${
+            options.artifact.protocol === 'lynx-xml' ? 'Lynx XML' : 'OpenUI'
+          } output containing ${rejectionReason}.`,
+        ],
+        score: 0,
+        status: 'failed',
+        warnings: [],
+      };
+    }
   }
 
   return await runWithBoundedRetry(

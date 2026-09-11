@@ -58,28 +58,19 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       onEnabledChange: noop,
       onModelChange: noop,
       onNameChange: noop,
-      onProfileChange: noop,
       onPromptChange: noop,
       onProtocolChange: noop,
       onRemove: noop,
-      onRoleChange: noop,
     }),
   );
-  expect(markup).toContain('data-protocol="lynx-xml"');
   expect(markup).toContain('Lynx XML');
-  expect(markup).toContain('Not applicable');
   expect(markup).toMatch(
     /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
   );
-  expect(markup).toContain(
-    'title="This protocol generates a complete page without a component catalog."',
-  );
   expect(markup).not.toContain('<p class="benchFieldHint">');
-  expect(markup).toMatch(
-    /aria-label="Baseline Profile" disabled=""><span>native<\/span>/u,
-  );
-  expect(markup).toMatch(/aria-label="Baseline Catalog" disabled=""/u);
-  expect(markup).not.toContain('fixed shared catalog');
+  expect(markup).not.toContain('Baseline Profile');
+  expect(markup).not.toContain('Baseline Catalog');
+  expect(markup).not.toContain('Not applicable');
 });
 
 function createCompletedHistoryEntry(id: string, jobId: string) {
@@ -237,11 +228,9 @@ describe('BenchPage', () => {
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -289,11 +278,9 @@ describe('BenchPage', () => {
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -311,8 +298,6 @@ describe('BenchPage', () => {
     expect(groupMarkup).toContain('Baseline Model');
     expect(groupMarkup).toContain('Model comparison Model');
     expect(groupMarkup).toContain('Test model');
-    expect(groupMarkup).toContain('title="test-model"');
-    expect(groupMarkup).toContain('title="other-model"');
     expect(groupMarkup).toContain('Other model');
     expect(groupMarkup).not.toContain('Custom model');
     expect(runMarkup).not.toContain('Provider');

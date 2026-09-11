@@ -73,6 +73,7 @@ export interface UseConversationReturn {
   isPersistent: boolean;
   switchTo: (id: string) => Promise<void>;
   createNew: () => Promise<string>;
+  clearAll: () => Promise<void>;
   importShared: (doc: SharedConversationDoc) => Promise<string>;
   remove: (id: string) => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
@@ -557,6 +558,18 @@ export function useConversation(
     [conversations, createNew, protocol, switchTo],
   );
 
+  const clearAll = useCallback(async () => {
+    const ids = conversations.map((item) => item.id);
+    if (persistentRef.current) {
+      await Promise.all(ids.map((id) => deleteConversation(id, protocol)));
+    } else {
+      conversationHotStateMapRef.current.clear();
+    }
+    setConversations([]);
+    const nextId = await createNew();
+    await switchTo(nextId);
+  }, [conversations, createNew, protocol, switchTo]);
+
   const rename = useCallback(async (id: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
@@ -774,6 +787,7 @@ export function useConversation(
     isPersistent,
     switchTo,
     createNew,
+    clearAll,
     importShared,
     remove,
     rename,

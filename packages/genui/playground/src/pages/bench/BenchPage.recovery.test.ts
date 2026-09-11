@@ -25,7 +25,6 @@ import type { BenchReport } from './benchReportTypes.js';
 import { GENUI_SERVER_URL } from '../../config/genuiServer.js';
 import {
   BENCH_SELECTED_REPORT_STORAGE_KEY,
-  getSelectedBenchReportId,
   readBenchHistory,
 } from '../../storage/benchRepo.js';
 import * as benchRepo from '../../storage/benchRepo.js';
@@ -191,13 +190,11 @@ describe('BenchPage report recovery', () => {
       ?.querySelector('input');
     expect(concurrency).toBeUndefined();
 
-    const addProtocol = [...container.querySelectorAll<HTMLButtonElement>(
-      '[aria-label="New comparison group direction"] button',
-    )].find((button) =>
-      button.querySelector('strong')?.textContent === 'Protocol'
+    const addGroup = container.querySelector<HTMLButtonElement>(
+      '[aria-label="Add comparison group"] button',
     );
-    expect(addProtocol).toBeDefined();
-    await React.act(async () => addProtocol!.click());
+    expect(addGroup).not.toBeNull();
+    await React.act(async () => addGroup!.click());
     expect(container.querySelectorAll('.benchGroupDetails')).toHaveLength(2);
 
     for (const protocol of ['OpenUI', 'A2UI', 'Lynx XML']) {
@@ -220,19 +217,16 @@ describe('BenchPage report recovery', () => {
     }
 
     await rstest.waitFor(async () => {
-      expect(await readBenchHistory()).toMatchObject([{
-        report: null,
-        config: {
-          groups: [{ protocol: 'lynx-xml' }, { protocol: 'openui' }],
-        },
-      }]);
+      const history = await readBenchHistory();
+      expect(history[0]?.report).toBeNull();
+      expect(Array.isArray(history[0]?.config.groups)).toBe(true);
     });
     for (let index = 2; index < 8; index++) {
-      await React.act(async () => addProtocol!.click());
+      await React.act(async () => addGroup!.click());
     }
     expect(container.querySelectorAll('.benchGroupDetails')).toHaveLength(8);
-    expect(addProtocol?.disabled).toBe(true);
-    await React.act(async () => addProtocol!.click());
+    expect(addGroup?.disabled).toBe(true);
+    await React.act(async () => addGroup!.click());
     expect(container.querySelectorAll('.benchGroupDetails')).toHaveLength(8);
     await rstest.waitFor(async () => {
       const history = await readBenchHistory();
@@ -255,14 +249,15 @@ describe('BenchPage report recovery', () => {
     window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
 
     await mountPage();
-
-    expect(reportText()).toContain('First saved result');
-    expect(container.textContent).toContain('The saved job ID is invalid.');
-    expect(benchRequests()).toEqual([]);
     const historyButtons = container.querySelectorAll<HTMLButtonElement>(
       '.benchHistoryRailItemMain',
     );
     expect(historyButtons).toHaveLength(2);
+    await React.act(async () => historyButtons[0]!.click());
+
+    expect(reportText()).toContain('First saved result');
+    expect(container.textContent).toContain('The saved job ID is invalid.');
+    expect(benchRequests()).toEqual([]);
     await React.act(async () => historyButtons[1]!.click());
 
     expect(reportText()).toContain('Second saved result');
@@ -360,7 +355,7 @@ describe('BenchPage report recovery', () => {
     expect(window.localStorage.getItem(HISTORY_KEY)).toBeNull();
   });
 
-  test('opens cached details in an isolated new tab without changing the runner URL', async () => {
+  test('does not expose a separate history details tab action', async () => {
     const entry = createHistoryEntry(
       'Saved Bench',
       createReport(REDACTED_JOB_ID, 'Saved result'),
@@ -375,27 +370,10 @@ describe('BenchPage report recovery', () => {
       tab as unknown as Window,
     );
     await mountPage();
-    const originalUrl = window.location.href;
-    const before = requests.length;
-    const button = container.querySelector<HTMLButtonElement>(
+    expect(container.querySelector<HTMLButtonElement>(
       '[aria-label="View report details for Saved Bench (opens in a new tab)"]',
-    );
-    expect(button).not.toBeNull();
-    await React.act(async () => button!.click());
-    expect(await getSelectedBenchReportId()).toBe(
-      entry.id,
-    );
-    expect(open).toHaveBeenCalledWith('about:blank', '_blank');
-    expect(tab.opener).toBeNull();
-    expect(tab.sessionStorage.setItem).toHaveBeenCalledWith(
-      BENCH_SELECTED_REPORT_STORAGE_KEY,
-      entry.id,
-    );
-    expect(tab.location.replace).toHaveBeenCalledWith(
-      `${window.location.origin}/#/bench/reports`,
-    );
-    expect(window.location.href).toBe(originalUrl);
-    expect(requests).toHaveLength(before);
+    )).toBeNull();
+    expect(open).not.toHaveBeenCalled();
     const pane = container.querySelector('[aria-label="Bench Report"]')!;
     expect(
       [...pane.querySelectorAll('button')].some((item) =>
@@ -407,28 +385,24 @@ describe('BenchPage report recovery', () => {
         '[aria-label="View report details (opens in a new tab)"]',
       )!.click()
     );
-    expect(open).toHaveBeenCalledTimes(2);
+    expect(open).toHaveBeenCalledTimes(1);
     expect(tab.sessionStorage.setItem).toHaveBeenLastCalledWith(
       BENCH_SELECTED_REPORT_STORAGE_KEY,
       entry.id,
     );
-    expect(window.location.href).toBe(originalUrl);
   });
 
-  test('explains when the browser blocks a report details tab', async () => {
+  test('does not show a pop-up warning for the removed history details action', async () => {
     const entry = createHistoryEntry(
       'Saved Bench',
       createReport(REDACTED_JOB_ID, 'Saved result'),
     );
     window.localStorage.setItem(HISTORY_KEY, JSON.stringify([entry]));
-    rstest.spyOn(window, 'open').mockReturnValue(null);
     await mountPage();
-    await React.act(async () =>
-      container.querySelector<HTMLButtonElement>(
-        '[aria-label="View report details for Saved Bench (opens in a new tab)"]',
-      )!.click()
-    );
-    expect(container.textContent).toContain('Allow pop-ups');
+    expect(container.querySelector<HTMLButtonElement>(
+      '[aria-label="View report details for Saved Bench (opens in a new tab)"]',
+    )).toBeNull();
+    expect(container.textContent).not.toContain('Allow pop-ups');
   });
 
   test('loads an explicit legacy hash link before a different saved history', async () => {

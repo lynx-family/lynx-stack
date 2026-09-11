@@ -473,7 +473,7 @@ describe('runGenuiBenchUiJudge', () => {
     expect(calls).toBe(0);
     expect(result).toMatchObject({
       errors: [
-        'ui-judge rejected OpenUI output containing an external resource URL or openUrl call.',
+        'ui-judge rejected OpenUI output containing external resource URL (file:).',
       ],
       score: 0,
       status: 'failed',

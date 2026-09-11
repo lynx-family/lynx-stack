@@ -559,6 +559,7 @@ export function ChatController<
   const {
     activeId,
     buildConversationContext,
+    clearAll,
     conversations,
     createNew,
     importShared,
@@ -1632,6 +1633,7 @@ export function ChatController<
         disabled: !isReady || busy,
         isPersistent,
         onCreate: handleCreateConversation,
+        onClear: () => void clearAll(),
         onSwitch: handleSwitchConversation,
         onShare: (id) => void shareConversation(id),
         onRename: handleRenameConversation,

@@ -123,6 +123,7 @@
 }
 
 .conversationPanelHeader,
+.historyRailCreate,
 .conversationPanelCreateRow {
   display: flex;
   align-items: center;
@@ -133,6 +134,10 @@
   border-bottom: 1px solid
     color-mix(in srgb, var(--geist-border) 68%, transparent);
   background: color-mix(in srgb, var(--geist-background) 62%, transparent);
+}
+
+.historyRailHeader {
+  flex-shrink: 0;
 }
 
 /* conversationNewButton: replaced by <Button variant="secondary" size="lg" fullWidth>. */
@@ -285,6 +290,30 @@
   transition:
     opacity var(--geist-transition),
     transform var(--geist-transition);
+}
+
+.historyRailClear,
+.conversationHistoryClear {
+  margin: 8px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--geist-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+}
+
+.historyRailClear:hover:not(:disabled),
+.conversationHistoryClear:hover:not(:disabled) {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+.historyRailClear:disabled,
+.conversationHistoryClear:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .conversationListItem:hover .conversationListItemActions,
