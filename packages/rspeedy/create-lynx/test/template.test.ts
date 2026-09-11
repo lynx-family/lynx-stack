@@ -180,16 +180,16 @@ describe('templates on disk', () => {
     }
   })
 
-  // `src/index.ts` turns each version into a caret range when it scaffolds, so
-  // a range here would reach the generated project twice.
-  test('pins every version exactly', () => {
+  // `src/index.ts` adds a caret to each exact version when it scaffolds and
+  // passes a caret range through, so a project never gets a wider range.
+  test('pins every version or gives it a caret range', () => {
     const versions = readManifest(packageRoot)['devDependencies'] ?? {}
 
     for (const [name, range] of Object.entries(versions)) {
       expect(
-        /^(?:\d|workspace:\*$|catalog:)/.test(range),
-        `${name} is "${range}", but this package may only pin an exact version, `
-          + 'workspace:* or catalog:',
+        /^(?:\^?\d|workspace:\*$|catalog:)/.test(range),
+        `${name} is "${range}", but this package may only use an exact version, `
+          + 'a caret range, workspace:* or catalog:',
       ).toBe(true)
     }
   })

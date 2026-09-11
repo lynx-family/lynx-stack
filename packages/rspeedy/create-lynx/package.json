@@ -51,12 +51,12 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/adapter-rslib": "catalog:rstest",
     "@rstest/core": "catalog:rstest",
-    "@testing-library/dom": "10.4.1",
-    "@testing-library/jest-dom": "7.0.0",
-    "@types/react": "19.2.18",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@types/react": "^19.2.18",
     "happy-dom": "20.14.0",
-    "jsdom": "27.4.0",
-    "typescript": "6.0.3"
+    "jsdom": "^27.4.0",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

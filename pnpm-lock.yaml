@@ -1903,29 +1903,29 @@ importers:
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
       '@testing-library/dom':
-        specifier: 10.4.1
+        specifier: ^10.4.1
         version: 10.4.1
       '@testing-library/jest-dom':
-        specifier: 7.0.0
+        specifier: ^7.0.0
         version: 7.0.0(@testing-library/dom@10.4.1)
       '@types/react':
-        specifier: 19.2.18
+        specifier: ^19.2.18
         version: 19.2.18
       happy-dom:
         specifier: 20.14.0
         version: 20.14.0
       jsdom:
-        specifier: 27.4.0
+        specifier: ^27.4.0
         version: 27.4.0(supports-color@10.2.2)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/rspeedy/create-rspeedy:
     dependencies:
       '@rstackjs/create-toolkit':
-        specifier: 2.1.4
-        version: 2.1.4
+        specifier: 2.2.6
+        version: 2.2.6
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
@@ -6222,10 +6222,6 @@ packages:
     peerDependenciesMeta:
       '@rspress/core':
         optional: true
-
-  '@rstackjs/create-toolkit@2.1.4':
-    resolution: {integrity: sha512-kwPhfMdgWN7z/Op5UKMszhmZy7+hzqXeiQPli4uycYYTLxCVUGLlEW3etoGoZlrM2t5zLqXZQAgL60PTUR/ocw==}
-    engines: {node: ^20.19.0 || >=22.12.0}
 
   '@rstackjs/create-toolkit@2.2.6':
     resolution: {integrity: sha512-kBJ6btUXKpJEqq1c6sSCfukjb2NK4zWpl3sKj4pk91cdI6L5If7NFaov6RRpTP/EuVW37wkVV5FlXJKZQPEC3Q==}
@@ -16222,8 +16218,6 @@ snapshots:
   '@rstack-dev/doc-ui@1.14.8(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
     optionalDependencies:
       '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
-
-  '@rstackjs/create-toolkit@2.1.4': {}
 
   '@rstackjs/create-toolkit@2.2.6': {}
 
