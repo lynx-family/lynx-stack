@@ -2,6 +2,8 @@
 applyTo: "packages/genui/server/**"
 ---
 
+Apply the selected model's `reasoningEffort` through the shared run options for all generation agents, including streaming, tool continuations, and Bench repair attempts. Leave it omitted when unconfigured; never force a global effort default or inherit server model settings into a complete custom provider. For compatible providers with configured effort, enable the SDK's reasoning-model override so opaque upstream model aliases retain the parameter, preserve the system-message role, and do not implicitly request reasoning summaries. Log the resolved effort with the shared agent diagnostics, and verify serialized Chat Completions and Responses requests with deterministic provider mocks.
+
 # GenUI Server Architecture
 
 Organize both `agent` and `service` into `common`, `a2ui`, `openui`, `html`, `lynx-xml`, and `mcp-apps`. Keep protocol factories, prompts, catalogs, parsing, validation, and custom tools in `agent/<protocol>`, and generation services and protocol-specific Bench adapters in `service/<protocol>`. Shared provider helpers, Mastra storage, search/image tools, and screenshot evaluation belong in `agent/common`. Cross-protocol Bench scheduling, request normalization, report storage/types, redaction, screenshot conversion, and Judge orchestration belong in `service/common/bench`; this orchestration may wire protocol implementations, while ordinary common helpers remain independent of protocol services. Move files without changing runtime behavior or leaving old-path forwarding modules. Update consumers, mocks, documentation scopes, and the A2UI prompt package's exports, TypeScript includes, and Turbo inputs together.

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { BenchJudgeScheduling } from './concurrency.js';
 import type { BenchProtocol } from './protocol-types.js';
 import type { BenchScenarioRequest } from './types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
@@ -39,6 +40,7 @@ export interface RunGenuiBenchUiJudgeOptions {
   session: NonNullable<BenchUiJudgeCapability['session']>;
   signal?: AbortSignal;
   timeoutMs?: number;
+  scheduling?: BenchJudgeScheduling;
   /**
    * Test seam for the bounded sidecar retry. Values are clamped to 1–2.
    */
@@ -172,6 +174,7 @@ export async function runGenuiBenchUiJudge(
             messages,
             scenario: options.scenario,
             session: options.session,
+            scheduling: options.scheduling,
             ...(options.signal ? { signal: options.signal } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
@@ -216,6 +219,7 @@ export async function runGenuiBenchUiJudge(
           includeScreenshot: true,
           scenario: options.scenario,
           session: options.session,
+          scheduling: options.scheduling,
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },

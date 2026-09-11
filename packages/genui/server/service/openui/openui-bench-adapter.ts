@@ -25,7 +25,13 @@ import type {
   ProtocolBenchAttemptResult,
   ProtocolBenchScenario,
 } from '../common/bench/protocol-types.js';
+import {
+  resolveBenchRetryDelay,
+  waitForBenchRetry,
+} from '../common/bench/retry.js';
+import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { GenerationUpstreamError } from '../common/result.js';
 import type { ChatMessage } from '../common/types.js';
 
 export { OPENUI_BENCH_MATCHED_COMPONENTS, OPENUI_BENCH_ROOT_COMPONENT };
@@ -48,10 +54,7 @@ export type OpenUIBenchGenerateRaw = (
   signal?: AbortSignal,
 ) => Promise<OpenUIBenchGenerationResult>;
 
-export type OpenUIBenchRetrySleep = (
-  delayMs: number,
-  signal?: AbortSignal,
-) => Promise<void>;
+export type OpenUIBenchRetrySleep = BenchRetrySleep;
 
 export interface OpenUIBenchGenerateAttemptInput {
   index: number;
@@ -69,6 +72,8 @@ export interface OpenUIBenchAttemptResult extends ProtocolBenchAttemptResult {
   warnings: string[];
   complexity: OpenUIBenchComplexity;
   generationFailed: boolean;
+  /** Sanitized retry decision; never retain the provider error in the artifact. */
+  retryDelayMs?: number | undefined;
 }
 
 export interface OpenUIBenchRunArtifact extends ProtocolBenchRunArtifact {
@@ -102,8 +107,6 @@ export interface OpenUIBenchAdapterOptions {
   sleep?: OpenUIBenchRetrySleep;
   validator?: OpenUIBenchValidator;
 }
-
-const DEFAULT_TRANSPORT_RETRY_DELAY_MS = 10_000;
 
 export const OPENUI_BENCH_SYSTEM_APPENDIX = [
   'Matched-core benchmark constraints (these override any broader catalog examples above):',
@@ -206,76 +209,6 @@ function normalizedAttemptLimit(maxAttempts: number): number {
   return Math.min(4, Math.max(1, Math.floor(maxAttempts)));
 }
 
-function normalizedRetryDelayMs(retryDelayMs: number | undefined): number {
-  if (retryDelayMs === undefined || !Number.isFinite(retryDelayMs)) {
-    return DEFAULT_TRANSPORT_RETRY_DELAY_MS;
-  }
-  return Math.max(0, Math.floor(retryDelayMs));
-}
-
-function abortError(signal: AbortSignal): Error {
-  return signal.reason instanceof Error
-    ? signal.reason
-    : new DOMException('The operation was aborted.', 'AbortError');
-}
-
-const defaultRetrySleep: OpenUIBenchRetrySleep = (
-  delayMs,
-  signal,
-) => {
-  signal?.throwIfAborted();
-  if (delayMs === 0) return Promise.resolve();
-
-  return new Promise<void>((resolve, reject) => {
-    let settled = false;
-    const timeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      signal?.removeEventListener('abort', onAbort);
-      resolve();
-    }, delayMs);
-    const onAbort = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      signal?.removeEventListener('abort', onAbort);
-      reject(signal ? abortError(signal) : new Error('Retry was aborted.'));
-    };
-
-    signal?.addEventListener('abort', onAbort, { once: true });
-    if (signal?.aborted) onAbort();
-  });
-};
-
-async function waitForTransportRetry(
-  sleep: OpenUIBenchRetrySleep,
-  delayMs: number,
-  signal?: AbortSignal,
-): Promise<void> {
-  signal?.throwIfAborted();
-  if (!signal) {
-    await sleep(delayMs);
-    return;
-  }
-
-  let onAbort: (() => void) | undefined;
-  const aborted = new Promise<never>((_resolve, reject) => {
-    onAbort = () => reject(abortError(signal));
-    signal.addEventListener('abort', onAbort, { once: true });
-    if (signal.aborted) onAbort();
-  });
-
-  try {
-    await Promise.race([
-      Promise.resolve().then(() => sleep(delayMs, signal)),
-      aborted,
-    ]);
-  } finally {
-    if (onAbort) signal.removeEventListener('abort', onAbort);
-  }
-  signal.throwIfAborted();
-}
-
 function redactMessage(
   error: unknown,
   secrets: (string | undefined)[],
@@ -293,8 +226,8 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
 
   private readonly generateRaw: OpenUIBenchGenerateRaw;
   private readonly now: () => number;
-  private readonly retryDelayMs: number;
-  private readonly sleep: OpenUIBenchRetrySleep;
+  private readonly retryDelayMs: number | undefined;
+  private readonly sleep: OpenUIBenchRetrySleep | undefined;
   private readonly validator: OpenUIBenchValidator;
 
   public constructor(options: OpenUIBenchAdapterOptions) {
@@ -307,8 +240,8 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
           signal,
         ));
     this.now = options.now ?? (() => performance.now());
-    this.retryDelayMs = normalizedRetryDelayMs(options.retryDelayMs);
-    this.sleep = options.sleep ?? defaultRetrySleep;
+    this.retryDelayMs = options.retryDelayMs;
+    this.sleep = options.sleep;
     this.validator = options.validator ?? createOpenUIBenchValidator();
     this.componentNames = this.validator.componentNames;
   }
@@ -327,9 +260,9 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
       generated = await this.generateRaw(input.messages, {
         ...input.provider,
         disableAgentCache: true,
+        maxRetries: 0,
         enableWebSearch: false,
         enableImageGeneration: false,
-        inheritReasoningEffort: false,
         resourceId: input.resourceId,
         promptComponentNames: OPENUI_BENCH_MATCHED_COMPONENTS,
         promptOptions: OPENUI_BENCH_PROMPT_OPTIONS,
@@ -347,26 +280,27 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
           'Retry the benchmark run after checking the configured model endpoint.',
       };
       const emptyValidation = this.validator.validate('');
+      const failed = error instanceof GenerationUpstreamError
+        ? error.result
+        : undefined;
       return {
         index: input.index,
         durationMs,
-        inputTokens: 0,
-        outputTokens: 0,
-        totalTokens: 0,
+        ...benchAttemptTokenCounts(failed?.usage),
+        ...(failed ? { finishReason: failed.finishReason } : {}),
         valid: false,
         validationErrors: [formatOpenUIBenchError(normalizedError)],
-        outputChars: 0,
+        outputChars: failed?.text.length ?? 0,
         rawText: '',
-        usage: undefined,
-        normalizedUsage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          totalTokens: 0,
-        },
+        usage: failed?.usage,
+        normalizedUsage: normalizeOpenUIBenchUsage(failed?.usage),
         normalizedErrors: [normalizedError],
         warnings: [],
         complexity: emptyValidation.complexity,
         generationFailed: true,
+        retryDelayMs: resolveBenchRetryDelay(error, input.index, {
+          retryDelayMs: this.retryDelayMs,
+        }),
       };
     }
 
@@ -420,12 +354,8 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
       attempts.push(attempt);
       if (attempt.valid) break;
       if (attempt.generationFailed) {
-        if (index < maxAttempts) {
-          await waitForTransportRetry(
-            this.sleep,
-            this.retryDelayMs,
-            signal,
-          );
+        if (index < maxAttempts && attempt.retryDelayMs !== undefined) {
+          await waitForBenchRetry(attempt.retryDelayMs, signal, this.sleep);
           continue;
         }
         break;

@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { setTimeout as sleep } from 'node:timers/promises';
-
 import { getLynxXmlAgentService } from './lynx-xml-agent.js';
 import type { LynxXmlChatOptions } from './lynx-xml-agent.js';
 import { normalizeLynxXmlArtifact } from '../../agent/lynx-xml/lynx-xml-output.js';
@@ -12,6 +10,11 @@ import type {
   ProtocolBenchAdapterInput,
 } from '../common/bench/protocol-adapter.js';
 import type { ProtocolBenchAttemptResult } from '../common/bench/protocol-types.js';
+import {
+  resolveBenchRetryDelay,
+  waitForBenchRetry,
+} from '../common/bench/retry.js';
+import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
 import {
   GenerationPostprocessError,
@@ -33,6 +36,7 @@ export interface LynxXmlBenchAdapterOptions {
     }
   >;
   retryDelayMs?: number;
+  sleep?: BenchRetrySleep;
 }
 
 function buildPrompt(input: ProtocolBenchAdapterInput): string {
@@ -63,9 +67,6 @@ export function createLynxXmlBenchAdapter(
         undefined,
         signal,
       ));
-  const retryDelayMs = Number.isFinite(options.retryDelayMs)
-    ? Math.max(0, options.retryDelayMs!)
-    : 10_000;
   return {
     protocol: 'lynx-xml',
     async generate(input, signal) {
@@ -91,10 +92,10 @@ export function createLynxXmlBenchAdapter(
             ...input.provider,
             resourceId: `genui-bench:${input.runId}:attempt-${index}`,
             disableAgentCache: true,
+            maxRetries: 0,
             enableWebSearch: false,
             enableImageGeneration: false,
             enableHtmlFragment: input.enableHtmlFragment === true,
-            inheritReasoningEffort: false,
           }, signal);
           signal?.throwIfAborted();
         } catch (error) {
@@ -120,10 +121,12 @@ export function createLynxXmlBenchAdapter(
               validationErrors: [...finalErrors],
               outputChars: failed?.text.length ?? 0,
             });
-            if (index < maxAttempts) {
-              await sleep(retryDelayMs, undefined, { signal });
+            const retryDelayMs = resolveBenchRetryDelay(error, index, options);
+            if (index < maxAttempts && retryDelayMs !== undefined) {
+              await waitForBenchRetry(retryDelayMs, signal, options.sleep);
+              continue;
             }
-            continue;
+            break;
           }
         }
 

@@ -12,6 +12,7 @@ import type {
 import { readBenchTokenUsage, sumBenchTokenUsage } from './bench/usage.js';
 import type { BenchTokenUsage } from './bench/usage.js';
 import { redactModelConfigSecrets } from './model-config.js';
+import { resolveReasoningEffort } from './provider.js';
 import type { ChatOptions } from './types.js';
 
 function record(value: unknown): Record<string, unknown> {
@@ -122,6 +123,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   configuration?: Record<string, boolean>,
 ) {
   const invocationId = randomUUID();
+  const reasoningEffort = resolveReasoningEffort(opts);
   const startedAt = performance.now();
   let previousStepAt = startedAt;
   const usages: BenchTokenUsage[] = [];
@@ -131,6 +133,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
       invocationId,
       resourceId: opts.resourceId,
       model: opts.model,
+      reasoningEffort,
       configuration,
       ...details,
     };

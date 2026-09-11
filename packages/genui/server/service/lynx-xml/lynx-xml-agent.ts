@@ -22,7 +22,7 @@ import {
 } from '../common/messages.js';
 import {
   ProviderAgentCache,
-  buildResourceRunOptions,
+  buildOpenAIRunOptions,
   resolveModelOutputTokenBudget,
 } from '../common/provider.js';
 import {
@@ -58,9 +58,10 @@ export function buildLynxXmlRunOptions(
     opts,
     LYNX_XML_MAX_OUTPUT_TOKENS,
   );
+  const runOptions = buildOpenAIRunOptions(opts, abortSignal);
   return {
-    ...buildResourceRunOptions(opts, abortSignal),
-    modelSettings: { maxOutputTokens },
+    ...runOptions,
+    modelSettings: { ...runOptions.modelSettings, maxOutputTokens },
   };
 }
 

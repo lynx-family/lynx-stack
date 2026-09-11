@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createAgentStepLogger } from './agent-step-logger.js';
-import { buildResourceRunOptions, pickProviderConfig } from './provider.js';
+import { buildOpenAIRunOptions, pickProviderConfig } from './provider.js';
 import type { ChatOptions } from './types.js';
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
@@ -25,7 +25,7 @@ export function buildCapabilityRunOptions(
   const scope = createSearchRunScope();
   initializeArkImageGenerationRunScope(scope);
   return {
-    ...buildResourceRunOptions(opts, abortSignal),
+    ...buildOpenAIRunOptions(opts, abortSignal),
     ...scope,
     ...createAgentStepLogger(opts, agent),
   };

@@ -32,6 +32,8 @@ export interface ChatOptions
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /** SDK retries per model call; Bench owns retries and explicitly sets zero. */
+  maxRetries?: number | undefined;
   /** Do not retain request-scoped provider credentials in the shared cache. */
   disableAgentCache?: boolean | undefined;
   /**

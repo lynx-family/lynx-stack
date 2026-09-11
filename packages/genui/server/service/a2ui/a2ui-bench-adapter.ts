@@ -18,7 +18,13 @@ import type {
   ProtocolBenchRunArtifact,
 } from '../common/bench/protocol-adapter.js';
 import type { ProtocolBenchAttemptResult } from '../common/bench/protocol-types.js';
+import {
+  resolveBenchRetryDelay,
+  waitForBenchRetry,
+} from '../common/bench/retry.js';
+import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { GenerationUpstreamError } from '../common/result.js';
 import type { ChatMessage } from '../common/types.js';
 
 export type A2UIBenchGenerateRaw = (
@@ -28,18 +34,13 @@ export type A2UIBenchGenerateRaw = (
   imageGenerationScope?: ArkImageGenerationRunScope,
 ) => Promise<{ text: string; usage: unknown; finishReason: unknown }>;
 
-export type A2UIBenchRetrySleep = (
-  delayMs: number,
-  signal?: AbortSignal,
-) => Promise<void>;
+export type A2UIBenchRetrySleep = BenchRetrySleep;
 
 export interface A2UIBenchAdapterOptions {
   generateRaw?: A2UIBenchGenerateRaw;
   retryDelayMs?: number;
   sleep?: A2UIBenchRetrySleep;
 }
-
-const DEFAULT_TRANSPORT_RETRY_DELAY_MS = 10_000;
 
 const MATCHED_CORE_COMPONENTS = new Set([
   'Text',
@@ -75,76 +76,6 @@ function createMatchedCoreCatalog(): A2UICatalog {
 function normalizedAttemptLimit(maxAttempts: number): number {
   if (!Number.isFinite(maxAttempts)) return 1;
   return Math.min(4, Math.max(1, Math.floor(maxAttempts)));
-}
-
-function normalizedRetryDelayMs(retryDelayMs: number | undefined): number {
-  if (retryDelayMs === undefined || !Number.isFinite(retryDelayMs)) {
-    return DEFAULT_TRANSPORT_RETRY_DELAY_MS;
-  }
-  return Math.max(0, Math.floor(retryDelayMs));
-}
-
-function abortError(signal: AbortSignal): Error {
-  return signal.reason instanceof Error
-    ? signal.reason
-    : new DOMException('The operation was aborted.', 'AbortError');
-}
-
-const defaultRetrySleep: A2UIBenchRetrySleep = (
-  delayMs,
-  signal,
-) => {
-  signal?.throwIfAborted();
-  if (delayMs === 0) return Promise.resolve();
-
-  return new Promise<void>((resolve, reject) => {
-    let settled = false;
-    const timeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      signal?.removeEventListener('abort', onAbort);
-      resolve();
-    }, delayMs);
-    const onAbort = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      signal?.removeEventListener('abort', onAbort);
-      reject(signal ? abortError(signal) : new Error('Retry was aborted.'));
-    };
-
-    signal?.addEventListener('abort', onAbort, { once: true });
-    if (signal?.aborted) onAbort();
-  });
-};
-
-async function waitForTransportRetry(
-  sleep: A2UIBenchRetrySleep,
-  delayMs: number,
-  signal?: AbortSignal,
-): Promise<void> {
-  signal?.throwIfAborted();
-  if (!signal) {
-    await sleep(delayMs);
-    return;
-  }
-
-  let onAbort: (() => void) | undefined;
-  const aborted = new Promise<never>((_resolve, reject) => {
-    onAbort = () => reject(abortError(signal));
-    signal.addEventListener('abort', onAbort, { once: true });
-    if (signal.aborted) onAbort();
-  });
-
-  try {
-    await Promise.race([
-      Promise.resolve().then(() => sleep(delayMs, signal)),
-      aborted,
-    ]);
-  } finally {
-    if (onAbort) signal.removeEventListener('abort', onAbort);
-  }
-  signal.throwIfAborted();
 }
 
 function buildPrompt(input: ProtocolBenchAdapterInput): string {
@@ -188,8 +119,6 @@ export function createA2UIBenchAdapter(
         signal,
         imageGenerationScope,
       ));
-  const retryDelayMs = normalizedRetryDelayMs(options.retryDelayMs);
-  const sleep = options.sleep ?? defaultRetrySleep;
   return {
     protocol: 'a2ui',
     async generate(input, signal) {
@@ -230,9 +159,9 @@ export function createA2UIBenchAdapter(
               api: input.provider.api,
               catalog,
               disableAgentCache: true,
+              maxRetries: 0,
               enableWebSearch: false,
               enableImageGeneration: false,
-              inheritReasoningEffort: false,
             },
             signal,
             imageGenerationScope,
@@ -274,21 +203,26 @@ export function createA2UIBenchAdapter(
             ? error.message
             : String(error);
           finalErrors = [message];
+          const failed = error instanceof GenerationUpstreamError
+            ? error.result
+            : undefined;
           attempts.push({
             index,
             durationMs: Math.max(
               0,
               Math.round(performance.now() - startedAt),
             ),
-            inputTokens: 0,
-            outputTokens: 0,
-            totalTokens: 0,
+            ...benchAttemptTokenCounts(failed?.usage),
+            ...(failed
+              ? { usage: failed.usage, finishReason: failed.finishReason }
+              : {}),
             valid: false,
             validationErrors: [message],
-            outputChars: 0,
+            outputChars: failed?.text.length ?? 0,
           });
-          if (index < maxAttempts) {
-            await waitForTransportRetry(sleep, retryDelayMs, signal);
+          const retryDelayMs = resolveBenchRetryDelay(error, index, options);
+          if (index < maxAttempts && retryDelayMs !== undefined) {
+            await waitForBenchRetry(retryDelayMs, signal, options.sleep);
             continue;
           }
           break;
