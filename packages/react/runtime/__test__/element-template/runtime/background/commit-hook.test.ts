@@ -257,7 +257,7 @@ describe('ElementTemplate commit hook', () => {
 
     try {
       markElementTemplateHydrated();
-      queueRefAttrUpdate(null, ref, -2, 0);
+      queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
       markRemovedSubtreeForPostDispatchTeardown(removedRoot);
       globalCommitContext.ops = createRawTextOps(1, throwingValue);
       enqueueDelayedRunOnMainThreadData({
@@ -677,7 +677,7 @@ describe('ElementTemplate commit hook', () => {
   it('flushes ref-only updates without dispatching native ops', () => {
     const ref = vi.fn();
     markElementTemplateHydrated();
-    queueRefAttrUpdate(null, ref, -2, 0);
+    queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
 
     options.__c?.({} as unknown as object, []);
 
@@ -693,7 +693,7 @@ describe('ElementTemplate commit hook', () => {
     const ref = vi.fn();
     markElementTemplateHydrated();
     globalCommitContext.flushOptions = { triggerDataUpdated: true };
-    queueRefAttrUpdate(null, ref, -2, 0);
+    queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
 
     options.__c?.({} as unknown as object, []);
 
@@ -714,7 +714,7 @@ describe('ElementTemplate commit hook', () => {
 
   it('flushes pre-hydration ref effects on commit without dispatching native ops', () => {
     const ref = vi.fn();
-    queueRefAttrUpdate(null, ref, 1, 0);
+    queueRefAttrUpdate(null, ref, { instanceId: 1 }, 0);
 
     options.__c?.({} as unknown as object, []);
 

@@ -2170,6 +2170,144 @@ describe('applyRef before hydration', () => {
   });
 });
 
+describe.each([false, true])('shared callback ref bindings (hydrated: %s)', (hydrated) => {
+  function applyMainThreadUpdates() {
+    const updates = lynx.getNativeApp().callLepusMethod.mock.calls.slice();
+    lynx.getNativeApp().callLepusMethod.mockClear();
+    globalEnvManager.switchToMainThread();
+    updates.forEach(([name, data]) => globalThis[name](data));
+    globalEnvManager.switchToBackground();
+  }
+
+  function mount(createJsx) {
+    globalThis.__OnLifecycleEvent.mockClear();
+    lynx.getNativeApp().callLepusMethod.mockClear();
+    if (hydrated) {
+      __root.__jsx = createJsx();
+      renderPage();
+    }
+    globalEnvManager.switchToBackground();
+    render(createJsx(), __root);
+    if (hydrated) {
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      applyMainThreadUpdates();
+    }
+  }
+
+  function update(jsx) {
+    render(jsx, __root);
+    if (hydrated) {
+      applyMainThreadUpdates();
+    }
+  }
+
+  function trackRefBindings() {
+    const active = new Set();
+    const cleanups = new Map();
+    const callback = vi.fn((node) => {
+      active.add(node);
+      const cleanup = vi.fn(() => {
+        active.delete(node);
+      });
+      cleanups.set(node, cleanup);
+      return cleanup;
+    });
+    return { callback, active, cleanups };
+  }
+
+  it('replaces one ref slot without cleaning another slot using the same callback', () => {
+    const shared = trackRefBindings();
+    const replacement = trackRefBindings();
+
+    function App({ firstRef }) {
+      return (
+        <view>
+          <view ref={firstRef} />
+          <view ref={shared.callback} />
+        </view>
+      );
+    }
+
+    mount(() => <App firstRef={shared.callback} />);
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    const [[first], [second]] = shared.callback.mock.calls;
+    expect(first).toBeInstanceOf(RefProxy);
+    expect(second).toBeInstanceOf(RefProxy);
+    expect(first.selector).not.toBe(second.selector);
+    expect(shared.active).toEqual(new Set([first, second]));
+    expect(shared.cleanups.get(first)).not.toHaveBeenCalled();
+    expect(shared.cleanups.get(second)).not.toHaveBeenCalled();
+
+    update(<App firstRef={replacement.callback} />);
+    expect(shared.cleanups.get(first)).toHaveBeenCalledTimes(1);
+    expect(shared.cleanups.get(second)).not.toHaveBeenCalled();
+    expect(shared.active).toEqual(new Set([second]));
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    expect(replacement.callback).toHaveBeenCalledTimes(1);
+    const [[replaced]] = replacement.callback.mock.calls;
+    expect(replaced.selector).toBe(first.selector);
+    expect(replacement.active).toEqual(new Set([replaced]));
+
+    update(<App firstRef={replacement.callback} />);
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    expect(replacement.callback).toHaveBeenCalledTimes(1);
+    expect(shared.cleanups.get(second)).not.toHaveBeenCalled();
+    expect(replacement.cleanups.get(replaced)).not.toHaveBeenCalled();
+
+    update(null);
+    expect(shared.cleanups.get(first)).toHaveBeenCalledTimes(1);
+    expect(shared.cleanups.get(second)).toHaveBeenCalledTimes(1);
+    expect(replacement.cleanups.get(replaced)).toHaveBeenCalledTimes(1);
+    expect(shared.active.size).toBe(0);
+    expect(replacement.active.size).toBe(0);
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    expect(replacement.callback).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps shared bindings through a keyed move and cleans only the removed item', () => {
+    const shared = trackRefBindings();
+
+    function Item({ id }) {
+      return <view id={id} ref={shared.callback} />;
+    }
+
+    function App({ ids }) {
+      return <view id='items'>{ids.map(id => <Item key={id} id={id} />)}</view>;
+    }
+
+    mount(() => <App ids={['first', 'second']} />);
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    const [[first], [second]] = shared.callback.mock.calls;
+    expect(shared.active).toEqual(new Set([first, second]));
+    expect(shared.cleanups.get(first)).not.toHaveBeenCalled();
+    expect(shared.cleanups.get(second)).not.toHaveBeenCalled();
+
+    update(<App ids={['second', 'first']} />);
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    expect(shared.active).toEqual(new Set([first, second]));
+    expect(shared.cleanups.get(first)).not.toHaveBeenCalled();
+    expect(shared.cleanups.get(second)).not.toHaveBeenCalled();
+    if (hydrated) {
+      expect(elementTree.getElementById('items').children.map(node => node.props.id)).toEqual(['second', 'first']);
+    }
+
+    update(<App ids={['second']} />);
+    expect(shared.cleanups.get(first)).toHaveBeenCalledTimes(1);
+    expect(shared.cleanups.get(second)).not.toHaveBeenCalled();
+    expect(shared.active).toEqual(new Set([second]));
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+    if (hydrated) {
+      expect(elementTree.getElementById('items').children.map(node => node.props.id)).toEqual(['second']);
+    }
+
+    update(null);
+    expect(shared.cleanups.get(first)).toHaveBeenCalledTimes(1);
+    expect(shared.cleanups.get(second)).toHaveBeenCalledTimes(1);
+    expect(shared.active.size).toBe(0);
+    expect(shared.callback).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('runDelayedUiOps helper', () => {
   it('should reset shouldDelayUiOps when no tasks queued', () => {
     // flush any queued tasks from previous tests
