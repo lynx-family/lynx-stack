@@ -52,8 +52,12 @@ export const backgroundElementTemplateInstanceManager: {
     instance.instanceId = newId;
     this.values.set(newId, instance);
 
-    // DevTools event emission can be added here later
-    // if (__DEV__) { ... }
+    // `@lynx-js/preact-devtools` keys the instance by this id and re-keys it here.
+    if (__DEV__ || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__)) {
+      lynx.getJSModule('GlobalEventEmitter').emit('onBackgroundElementTemplateInstanceUpdateId', [
+        { oldId, newId },
+      ]);
+    }
   },
 
   get(id: number): BackgroundElementTemplateInstance | undefined {
