@@ -60,7 +60,7 @@
     "@testing-library/jest-dom": "^7.0.0",
     "@types/react": "^19.2.18",
     "happy-dom": "20.14.0",
-    "jsdom": "^27.4.0",
+    "jsdom": "^30.0.1",
     "typescript": "catalog:"
   },
   "engines": {
