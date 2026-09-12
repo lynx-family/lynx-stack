@@ -1,13 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { BUNDLE_STATS_JSON_OPTIONS } from './statsJsonOptions.js'
 import type { Config } from '../config/index.js'
+import { writeJson } from '../utils/write-json.js'
 
 export function pluginStatsJson(config: Config): RsbuildPlugin {
   return {
@@ -24,10 +25,7 @@ export function pluginStatsJson(config: Config): RsbuildPlugin {
 
         const statsPath = path.join(api.context.distPath, 'stats.json')
         await mkdir(path.dirname(statsPath), { recursive: true })
-        await writeFile(
-          statsPath,
-          JSON.stringify(stats.toJson(BUNDLE_STATS_JSON_OPTIONS)),
-        )
+        await writeJson(statsPath, stats.toJson(BUNDLE_STATS_JSON_OPTIONS))
       })
     },
   }
