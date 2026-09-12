@@ -20,9 +20,9 @@ describe('writeJson', () => {
     await rm(dir, { recursive: true, force: true })
   })
 
-  async function write(value: unknown, depth?: number): Promise<string> {
+  async function write(value: unknown): Promise<string> {
     const file = path.join(dir, 'stats.json')
-    await writeJson(file, value, depth)
+    await writeJson(file, value)
     return readFile(file, 'utf-8')
   }
 
@@ -42,7 +42,7 @@ describe('writeJson', () => {
           name: 'lynx',
           modules: [
             { id: 1, name: './a.js', nested: { deep: [1, [2, [3]]] } },
-            { id: 2, name: 'ünicode "quoted"\n ', skipped: undefined },
+            { id: 2, name: 'ünicode "quoted"\n ', skipped: undefined },
           ],
           empty: [],
           emptyObject: {},
@@ -51,20 +51,32 @@ describe('writeJson', () => {
       sparse: [undefined, () => 1, 'x'],
     }
 
-    for (const depth of [0, 1, 2, 4, 8]) {
-      expect(await write(value, depth)).toBe(JSON.stringify(value))
-    }
+    expect(await write(value)).toBe(JSON.stringify(value))
   })
 
-  test('writes a value larger than one chunk', async () => {
+  test('passes the property name or index to toJSON', async () => {
     const value = {
-      children: [{
-        modules: Array.from({ length: 50_000 }, (_, id) => ({
-          id,
-          name: `./src/module-${id}.js`,
-          size: id,
-        })),
-      }],
+      named: { toJSON: (key: string) => `named:${key}` },
+      list: [{ toJSON: (key: string) => `index:${key}` }],
+      gone: { toJSON: () => undefined },
+    }
+
+    expect(await write(value)).toBe(JSON.stringify(value))
+  })
+
+  test('writes a deeply nested value larger than one chunk', async () => {
+    const value = {
+      a: {
+        b: {
+          c: {
+            modules: Array.from({ length: 50_000 }, (_, id) => ({
+              id,
+              name: `./src/module-${id}.js`,
+              size: id,
+            })),
+          },
+        },
+      },
     }
 
     expect(await write(value)).toBe(JSON.stringify(value))

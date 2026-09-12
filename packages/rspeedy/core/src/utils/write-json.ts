@@ -7,11 +7,18 @@ import { pipeline } from 'node:stream/promises'
 
 const CHUNK_SIZE = 1 << 20
 
-function* serialize(value: unknown, depth: number): Generator<string> {
+function applyToJSON(value: unknown, key: string): unknown {
   if (
-    depth === 0 || value === null || typeof value !== 'object'
-    || typeof (value as { toJSON?: unknown }).toJSON === 'function'
+    value !== null && typeof value === 'object'
+    && typeof (value as { toJSON?: unknown }).toJSON === 'function'
   ) {
+    return (value as { toJSON: (key: string) => unknown }).toJSON(key)
+  }
+  return value
+}
+
+function* serialize(value: unknown): Generator<string> {
+  if (value === null || typeof value !== 'object') {
     yield JSON.stringify(value) ?? 'null'
     return
   }
@@ -22,7 +29,7 @@ function* serialize(value: unknown, depth: number): Generator<string> {
       if (i > 0) {
         yield ','
       }
-      yield* serialize(value[i], depth - 1)
+      yield* serialize(applyToJSON(value[i], String(i)))
     }
     yield ']'
     return
@@ -30,7 +37,8 @@ function* serialize(value: unknown, depth: number): Generator<string> {
 
   yield '{'
   let first = true
-  for (const [key, item] of Object.entries(value)) {
+  for (const [key, raw] of Object.entries(value)) {
+    const item = applyToJSON(raw, key)
     if (
       item === undefined || typeof item === 'function'
       || typeof item === 'symbol'
@@ -39,7 +47,7 @@ function* serialize(value: unknown, depth: number): Generator<string> {
     }
     yield `${first ? '' : ','}${JSON.stringify(key)}:`
     first = false
-    yield* serialize(item, depth - 1)
+    yield* serialize(item)
   }
   yield '}'
 }
@@ -66,10 +74,9 @@ function* buffered(chunks: Iterable<string>): Generator<string> {
 export async function writeJson(
   filePath: string,
   value: unknown,
-  depth = 4,
 ): Promise<void> {
   await pipeline(
-    Readable.from(buffered(serialize(value, depth))),
+    Readable.from(buffered(serialize(applyToJSON(value, '')))),
     createWriteStream(filePath),
   )
 }
