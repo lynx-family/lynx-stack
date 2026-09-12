@@ -103,7 +103,7 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.58.12"
+  "@microsoft/api-extractor": "7.59.1"
   typescript: &typescript-version "6.0.3"
 
 catalogs:
