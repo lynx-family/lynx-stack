@@ -1,6 +1,6 @@
 import { isValidElement as coreIsValidElement } from 'preact';
 import { isValidElement } from 'preact/compat';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { cloneElement, createElement } from '../../lepus';
 import { jsx } from '../../lepus/jsx-runtime';

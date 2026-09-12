@@ -4,7 +4,7 @@
 
 import { Component } from 'preact';
 import { jsx as backgroundJsx } from 'preact/jsx-runtime';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
 import '../../src/index';
 import { createElement, cloneElement } from '../../lepus';

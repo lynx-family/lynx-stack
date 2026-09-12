@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 
 import { getEventValue } from '../../../../src/element-template/prop-adapters/event-value.js';
 import { prepareSpreadAttrSlot } from '../../../../src/element-template/prop-adapters/spread.js';
@@ -14,10 +14,10 @@ describe('ElementTemplate spread prop adapter', () => {
     const prepared = prepareSpreadAttrSlot(-1, 0, {
       textMaxline: 2,
       tailColorConvert: false,
-      onClick: vi.fn(),
-      onCatchTap: vi.fn(),
+      onClick: rs.fn(),
+      onCatchTap: rs.fn(),
       onReady: null,
-      bindchange: vi.fn(),
+      bindchange: rs.fn(),
     });
 
     expect(prepared).toEqual({
@@ -40,7 +40,7 @@ describe('ElementTemplate spread prop adapter', () => {
         },
       },
     };
-    const ref = vi.fn();
+    const ref = rs.fn();
 
     expect(
       prepareSpreadAttrSlot(-2, 0, {
@@ -56,10 +56,10 @@ describe('ElementTemplate spread prop adapter', () => {
   });
 
   it('normalizes host spread keys and emits ordinary event values', () => {
-    const handleTap = vi.fn();
-    const unsupportedWorkletEvent = vi.fn();
-    const unsupportedFunctionProp = vi.fn();
-    const ref = vi.fn();
+    const handleTap = rs.fn();
+    const unsupportedWorkletEvent = rs.fn();
+    const unsupportedFunctionProp = rs.fn();
+    const ref = rs.fn();
 
     const prepared = prepareSpreadAttrSlot(
       -1,
@@ -109,7 +109,7 @@ describe('ElementTemplate spread prop adapter', () => {
   });
 
   it('emits ordinary ref markers from spread values', () => {
-    const ref = vi.fn();
+    const ref = rs.fn();
     const prepared = prepareSpreadAttrSlot(-4, 1, {
       id: 'cta',
       ref,
@@ -134,7 +134,7 @@ describe('ElementTemplate spread prop adapter', () => {
   });
 
   it('ignores inherited spread refs', () => {
-    const spread = Object.create({ ref: vi.fn() }) as Record<string, unknown>;
+    const spread = Object.create({ ref: rs.fn() }) as Record<string, unknown>;
     spread.id = 'cta';
 
     expect(prepareSpreadAttrSlot(-4, 1, spread)).toEqual({ id: 'cta' });
@@ -147,11 +147,11 @@ describe('ElementTemplate spread prop adapter', () => {
 
   it('ignores non-host spread props', () => {
     const prepared = prepareSpreadAttrSlot(-5, 0, {
-      'worklet:ref': vi.fn(),
-      'main-thread:ref': vi.fn(),
-      'main-thread:bindtap': vi.fn(),
+      'worklet:ref': rs.fn(),
+      'main-thread:ref': rs.fn(),
+      'main-thread:bindtap': rs.fn(),
       'main-thread:gesture': {},
-      onReady: vi.fn(),
+      onReady: rs.fn(),
       title: 'hello',
     });
 

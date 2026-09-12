@@ -36,6 +36,7 @@ export function installElementTemplateRenderScopeHooks(): void {
 
 function onPreactRenderHook<T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T): void {
   old?.(...args);
+  /* v8 ignore next */
   if (__BACKGROUND__) {
     markPreactRenderInProgress();
   }

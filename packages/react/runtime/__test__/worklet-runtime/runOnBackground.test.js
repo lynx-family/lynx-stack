@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
@@ -100,7 +100,7 @@ describe('runOnBackground', () => {
     expect(firstScreenWorklet._jsFn._jsFn2._execId).toBe(8);
 
     // If the functions are used in the first screen, they will be hydrated
-    const task = vi.fn();
+    const task = rs.fn();
     globalThis.registerWorklet('main-thread', 'ctx1', function() {
       const { _jsFn1 } = this._jsFn;
       globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayRunOnBackground(
@@ -115,7 +115,7 @@ describe('runOnBackground', () => {
     ).toMatchInlineSnapshot(`
       [
         {
-          "task": [MockFunction spy],
+          "task": [MockFunction rstest.fn()],
         },
       ]
     `);
@@ -130,7 +130,7 @@ describe('runOnBackground', () => {
             "_execId": 8,
             "_jsFnId": 1,
           },
-          "task": [MockFunction spy],
+          "task": [MockFunction rstest.fn()],
         },
       ]
     `);
@@ -165,7 +165,7 @@ describe('runOnBackground', () => {
       },
       _execId: 8,
     };
-    const task = vi.fn();
+    const task = rs.fn();
     globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
       .delayedBackgroundFunctionArray[1] = { task };
 
@@ -182,5 +182,16 @@ describe('runOnBackground', () => {
       task,
     });
     expect(task).not.toHaveBeenCalled();
+  });
+  it('skips delayed entries that never got a js function handle', () => {
+    const task = rs.fn();
+    const impl = globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl;
+    impl.delayedBackgroundFunctionArray.length = 0;
+    impl.delayedBackgroundFunctionArray.push({ task });
+
+    impl.runDelayedBackgroundFunctions();
+
+    expect(task).not.toHaveBeenCalled();
+    expect(impl.delayedBackgroundFunctionArray.length).toBe(0);
   });
 });

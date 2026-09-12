@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from '@rstest/core';
 
 import { BackgroundSnapshotInstance } from '../../src/snapshot';
 

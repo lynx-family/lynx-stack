@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { Component, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { createProcessData } from '../../../src/core/lynx-data-processors';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
@@ -23,7 +23,7 @@ import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 beforeAll(() => {
   replaceCommitHook();
-  globalThis.__FlushElementTree = vi.fn();
+  globalThis.__FlushElementTree = rs.fn();
 });
 
 beforeEach(() => {
@@ -33,7 +33,7 @@ beforeEach(() => {
 afterEach(() => {
   deinitGlobalSnapshotPatch();
   elementTree.clear();
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
 });
 
 describe('main-thread updatePage initData', () => {
@@ -596,7 +596,7 @@ describe('triggerDataUpdated', () => {
    * 7. **Final Update:** Applies the changes to the main thread and verifies the UI is updated.
    */
   it('should send triggerDataUpdated when using withInitDataInState', async function() {
-    const willUnmount = vi.fn();
+    const willUnmount = rs.fn();
 
     class App extends Component {
       componentWillUnmount() {
@@ -1076,7 +1076,7 @@ describe('flush pending `renderComponent` before hydrate', () => {
     {
       globalEnvManager.switchToBackground();
 
-      const spy = vi.spyOn(Component.prototype, 'setState');
+      const spy = rs.spyOn(Component.prototype, 'setState');
       lynx.getApp().updateCardData({ msg: 'update' });
       expect(spy).toBeCalled();
       spy.mockRestore();
@@ -1178,7 +1178,7 @@ describe('flush pending `renderComponent` before hydrate', () => {
     {
       globalEnvManager.switchToBackground();
       // LifecycleConstant.firstScreen
-      const spy = vi.spyOn(lynx, 'reportError');
+      const spy = rs.spyOn(lynx, 'reportError');
       lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(spy.mock.calls).toMatchInlineSnapshot(`
         [

@@ -4,7 +4,7 @@
 /**
  * @jest-environment jsdom
  */
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from '@rstest/core';
 
 import { createSocketURL } from '../../client/createSocketURL.js';
 import { parseURL } from '../../client/parseURL.js';

@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { globalEnvManager } from './envManager.js';
 
@@ -59,15 +59,15 @@ class EventEmitter {
     this.name = name;
   }
 
-  addEventListener = vi.fn(this._addEventListener);
+  addEventListener = rs.fn(this._addEventListener);
 
-  removeEventListener = vi.fn(this._removeEventListener);
+  removeEventListener = rs.fn(this._removeEventListener);
 
-  dispatchEvent = vi.fn(this._dispatchEvent);
+  dispatchEvent = rs.fn(this._dispatchEvent);
 }
 
 const coreContext = new EventEmitter('coreContext');
 const jsContext = new EventEmitter('jsContext');
 
-globalThis.lynx.getCoreContext = vi.fn(() => coreContext);
-globalThis.lynx.getJSContext = vi.fn(() => jsContext);
+globalThis.lynx.getCoreContext = rs.fn(() => coreContext);
+globalThis.lynx.getJSContext = rs.fn(() => jsContext);

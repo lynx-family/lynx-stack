@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { jsx } from '@lynx-js/react/element-template/jsx-runtime';
 import { jsxDEV } from '@lynx-js/react/element-template/jsx-dev-runtime';
@@ -40,6 +40,17 @@ describe('element-template jsx-runtime', () => {
       ref: 'ref',
       extra: 1,
     });
+  });
+
+  it('keeps an explicitly provided prop over its defaultProps value', () => {
+    function Foo() {
+      return null;
+    }
+    Foo.defaultProps = { foo: 'bar' };
+
+    const vnode = jsx(Foo, { foo: 'explicit' });
+
+    expect(vnode.props).toEqual({ foo: 'explicit' });
   });
 
   it('strips ref for class components', () => {

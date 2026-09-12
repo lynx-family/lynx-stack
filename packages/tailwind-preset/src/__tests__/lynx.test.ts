@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rs } from '@rstest/core';
 
 import {
   LYNX_PLUGIN_MAP,
@@ -47,7 +47,7 @@ describe('createLynxPreset', () => {
   });
 
   it('invokes console.debug when debug is true', () => {
-    const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    const spy = rs.spyOn(console, 'debug').mockImplementation(() => {});
     createLynxPreset({ debug: true });
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
@@ -66,7 +66,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
 
   it('includes UI plugin if enabled (true)', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
 
     // Mock the plugin function
@@ -81,7 +81,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('includes UI plugin if enabled with options', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
     const mockOptions: FirstUIPluginOptions = { prefixes: ['bar'] };
 
@@ -96,7 +96,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('does not include UI plugin if disabled', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
 
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
@@ -110,7 +110,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('does not include UI plugin if global UI plugins disabled', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
 
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
@@ -122,7 +122,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('includes UI plugin when lynxUIPlugins = true (default options)', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
 
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
@@ -134,12 +134,12 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('prints debug info when UI plugin is enabled and debug is true', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
 
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
     LYNX_UI_PLUGIN_MAP[firstUIPlugin] = spy;
 
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    const debugSpy = rs.spyOn(console, 'debug').mockImplementation(() => {});
 
     createLynxPreset({
       lynxUIPlugins: { [firstUIPlugin]: true },
@@ -156,10 +156,10 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('enables uiVariants by default (no options passed)', () => {
-    const handler = vi.fn();
+    const handler = rs.fn();
     const pluginObject = { handler } as const;
 
-    const spy = vi
+    const spy = rs
       .spyOn(LYNX_UI_PLUGIN_MAP, 'uiVariants')
       .mockImplementation((_opts?: UIVariantsOptions) => pluginObject);
 
@@ -178,7 +178,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('does NOT enable uiVariants when explicitly disabled', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP.uiVariants;
     LYNX_UI_PLUGIN_MAP.uiVariants = spy;
 
@@ -193,7 +193,7 @@ describe('createLynxPreset - Lynx UI plugin behavior', () => {
   });
 
   it('enables uiVariants by default even when lynxUIPlugins is an empty object', () => {
-    const spy = Object.assign(vi.fn(), { __isOptionsFunction: true as const });
+    const spy = Object.assign(rs.fn(), { __isOptionsFunction: true as const });
     const original = LYNX_UI_PLUGIN_MAP.uiVariants;
     LYNX_UI_PLUGIN_MAP.uiVariants = spy;
 
@@ -211,7 +211,7 @@ describe('createLynxPreset - defensive branches', () => {
   const firstUIPlugin = ORDERED_LYNX_UI_PLUGIN_NAMES[0]!;
 
   it('prints debug when invariant is broken (missing plugin impl)', () => {
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    const debugSpy = rs.spyOn(console, 'debug').mockImplementation(() => {});
 
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
     // Simulate missing plugin implementation
@@ -234,7 +234,7 @@ describe('createLynxPreset - defensive branches', () => {
   });
 
   it('logs warning when UI plugin throws during initialization', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = rs.spyOn(console, 'warn').mockImplementation(() => {});
     const original = LYNX_UI_PLUGIN_MAP[firstUIPlugin];
 
     // Simulate plugin throwing an error

@@ -14,6 +14,7 @@ import { SnapshotInstance } from '../snapshot/snapshot.js';
 function renderMainThread(): void {
   let opcodes;
   try {
+    /* v8 ignore next */
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::renderMainThread');
     }
@@ -23,11 +24,13 @@ function renderMainThread(): void {
     opcodes = [];
     (__root as SnapshotInstance).removeChildren();
   } finally {
+    /* v8 ignore next */
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
   }
 
+  /* v8 ignore next */
   if (__ENABLE_SSR__) {
     __root.__opcodes = opcodes;
   }

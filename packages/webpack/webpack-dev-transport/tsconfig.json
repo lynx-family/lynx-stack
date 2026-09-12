@@ -8,6 +8,6 @@
     "client",
     "test",
     "index.d.ts",
-    "vitest.config.ts",
+    "rstest.config.ts",
   ],
 }

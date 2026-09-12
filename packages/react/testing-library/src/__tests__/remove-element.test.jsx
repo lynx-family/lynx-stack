@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
-import { test } from 'vitest';
+import { rs } from '@rstest/core';
+import { test } from '@rstest/core';
 import { act, render } from '..';
 import { useState } from 'preact/hooks';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
 test('render calls useEffect immediately', async () => {
   lynxTestingEnv.switchToMainThread();
-  vi.spyOn(lynxTestingEnv.mainThread.globalThis, '__RemoveElement');
+  rs.spyOn(lynxTestingEnv.mainThread.globalThis, '__RemoveElement');
 
   let _setLen;
   function Comp() {

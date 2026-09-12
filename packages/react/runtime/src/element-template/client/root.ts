@@ -56,10 +56,12 @@ export const root: Root = {
   render: (jsx: ReactNode): void => {
     __root.__jsx = jsx;
     if (__BACKGROUND__) {
+      /* v8 ignore next */
       if (__PROFILE__) {
         profileStart('ReactLynx::renderBackground');
       }
       render(jsx as ComponentChild, __root as unknown as ContainerNode);
+      /* v8 ignore next */
       if (__PROFILE__) {
         profileEnd();
       }

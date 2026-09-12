@@ -1,5 +1,5 @@
 /** @jsxImportSource ../../lepus */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
@@ -338,6 +338,20 @@ describe(`list "update-list-info"`, () => {
           ],
         }
       `);
+    }
+
+    {
+      // Two removals in one batch: exercises the `removeAction` sort comparator.
+      __pendingListUpdates.clearAttachedLists();
+      const [first, , third] = b1.childNodes;
+      b1.removeChild(first);
+      b1.removeChild(third);
+
+      const [update] = JSON.parse(
+        JSON.stringify(__pendingListUpdates.values),
+      )['-8'];
+      expect(update.removeAction).toHaveLength(2);
+      expect(update.removeAction[0]).toBeLessThan(update.removeAction[1]);
     }
   });
 
@@ -1304,7 +1318,7 @@ describe(`list componentAtIndex`, () => {
 
     __pendingListUpdates.flush();
 
-    const fn = vi.fn();
+    const fn = rs.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       const { elementID, listReuseNotification: { itemKey } = {} } = options;
@@ -2512,6 +2526,22 @@ describe('list bug', () => {
       `);
     }
 
+    {
+      // Same old SDK version, but the list is no longer a `list-container`:
+      // the full-rewrite path must not kick in.
+      __pendingListUpdates.clearAttachedLists();
+      const listElement = b1.__elements[b1.__snapshot_def.slot[0][1]];
+      __SetAttribute(listElement, 'custom-list-name', 'plain-list');
+
+      b1.insertBefore(new SnapshotInstance(s3));
+
+      const [update] = JSON.parse(
+        JSON.stringify(__pendingListUpdates.values),
+      )['-7'];
+      expect(update.updateAction).toEqual([]);
+      expect(update.insertAction).toHaveLength(1);
+    }
+
     SystemInfo.lynxSdkVersion = undefined;
   });
 });
@@ -3142,7 +3172,7 @@ describe('list componentAtIndexes', () => {
     b1.insertBefore(d2);
     __pendingListUpdates.flush();
 
-    const fn = vi.fn();
+    const fn = rs.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       fn(options);
@@ -3222,7 +3252,7 @@ describe('list componentAtIndexes', () => {
     b1.insertBefore(d2);
     __pendingListUpdates.flush();
 
-    const fn = vi.fn();
+    const fn = rs.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       fn(options);
@@ -3294,7 +3324,7 @@ describe('list componentAtIndexes', () => {
       elementTree.triggerEnqueueComponent(listRef, component[2]);
     }
 
-    const fn = vi.fn();
+    const fn = rs.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       const { listReuseNotification } = options;
@@ -3389,7 +3419,7 @@ describe('list componentAtIndexes', () => {
       elementTree.triggerEnqueueComponent(listRef, component[2]);
     }
 
-    const fn = vi.fn();
+    const fn = rs.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       fn(options);
@@ -3463,8 +3493,8 @@ describe('list componentAtIndexes', () => {
     const recycleMap = gRecycleMap[listID];
 
     {
-      const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
-      const signMapSetSpy = vi.spyOn(signMap, 'set');
+      const flushElementTreeSpy = rs.spyOn(globalThis, '__FlushElementTree');
+      const signMapSetSpy = rs.spyOn(signMap, 'set');
 
       const component = [];
       component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
@@ -3482,8 +3512,8 @@ describe('list componentAtIndexes', () => {
     }
 
     // re-spy
-    const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
-    const signMapSetSpy = vi.spyOn(signMap, 'set');
+    const flushElementTreeSpy = rs.spyOn(globalThis, '__FlushElementTree');
+    const signMapSetSpy = rs.spyOn(signMap, 'set');
     const recycleSignMap = recycleMap.get(s1);
     expect(Array.from(recycleSignMap.keys()).length).toBe(2);
     // reuse occurs
@@ -3502,11 +3532,11 @@ describe('list-item with "defer" attribute', () => {
   beforeEach(() => {
     globalEnvManager.resetEnv();
     elementTree.clear();
-    vi.useFakeTimers();
+    rs.useFakeTimers();
   });
 
   it('basic deferred <list-item/>', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rs.fn();
 
     const jsx = (
       <list id='list' custom-list-name='list-container'>
@@ -3597,7 +3627,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('basic deferred <list-item/> - componentAtIndex continuously should throw', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rs.fn();
 
     const jsx = (
       <list id='list' custom-list-name='list-container'>
@@ -3619,7 +3649,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('basic deferred <list-item/> - componentAtIndexes', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rs.fn();
 
     const jsx = (
       <list id='list' custom-list-name='list-container'>
@@ -3640,8 +3670,8 @@ describe('list-item with "defer" attribute', () => {
     __pendingListUpdates.flush();
 
     const listRef = elementTree.getElementById('list');
-    const __FlushElementTree = vi.fn();
-    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
+    const __FlushElementTree = rs.fn();
+    rs.stubGlobal('__FlushElementTree', __FlushElementTree);
     elementTree.triggerComponentAtIndexes(listRef, [0, 1, 2], [11, 22, 33], false, true);
 
     // a list-item which is not deferred should trigger two flush
@@ -3798,7 +3828,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('basic deferred <list-item/> - should unmount when reused', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rs.fn();
 
     const child = __SNAPSHOT__(<text>Hello World</text>);
     const jsx = (
@@ -3994,7 +4024,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('should throw without custom-list-name="list-container"', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rs.fn();
 
     const jsx = (
       <list id='list'>
@@ -4925,7 +4955,7 @@ describe('list worklet ref lifecycle', () => {
     const item = new SnapshotInstance(itemSnapshot);
     const replacement = new SnapshotInstance(itemSnapshot);
     const workletRef = { _wvid: 1 };
-    const updateWorkletRef = vi.fn();
+    const updateWorkletRef = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
 
     globalThis.lynxWorkletImpl = {
@@ -4952,5 +4982,12 @@ describe('list worklet ref lifecycle', () => {
     } finally {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
+  });
+  it('is a no-op while updates are suspended by runWithoutUpdates', () => {
+    __pendingListUpdates.runWithoutUpdates(() => {
+      expect(() => __pendingListUpdates.clear(-8)).not.toThrow();
+      expect(() => __pendingListUpdates.clearAttachedLists()).not.toThrow();
+      expect(() => __pendingListUpdates.flush()).not.toThrow();
+    });
   });
 });

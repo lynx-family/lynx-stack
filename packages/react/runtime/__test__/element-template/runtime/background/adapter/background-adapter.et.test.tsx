@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { setupBackgroundElementTemplateDocument } from '../../../../../src/element-template/background/document.js';
 import type { BackgroundElementTemplateDocument } from '../../../../../src/element-template/background/document.js';
@@ -11,7 +11,7 @@ describe('Background Element Template Adapter', () => {
   let doc: BackgroundElementTemplateDocument;
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    rs.resetAllMocks();
     doc = setupBackgroundElementTemplateDocument();
   });
 

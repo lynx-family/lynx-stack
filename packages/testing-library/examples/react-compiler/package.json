@@ -7,7 +7,7 @@
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "rstest": "rstest",
-    "test": "vitest"
+    "test": "rstest run -c rstest.config.compiler-enabled.ts && rstest run -c rstest.config.compiler-disabled.ts"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*",

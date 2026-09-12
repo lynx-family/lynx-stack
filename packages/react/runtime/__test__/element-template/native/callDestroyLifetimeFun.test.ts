@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { getReloadVersion } from '../../../src/core/reload-version.js';
 import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../src/core/main-thread-ref.js';
@@ -26,7 +26,7 @@ describe('callDestroyLifetimeFun', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     clearMainThreadRefLastIdForTesting();

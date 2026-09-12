@@ -222,6 +222,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
   // );
   // console.debug('commitPatchUpdate:', prettyFormatSnapshotPatch(patchList.patchList[0]?.snapshotPatch));
 
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::commitChanges');
   }
@@ -241,6 +242,7 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
     obj.patchOptions.pipelineOptions = globalPipelineOptions;
     setPipeline(undefined);
   }
+  /* v8 ignore next */
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }

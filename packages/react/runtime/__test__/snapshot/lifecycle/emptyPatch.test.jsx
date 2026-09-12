@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { useState } from '../../../src/index';
 import { installComponentCompat } from '../../../src/core/component';
@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -40,7 +40,7 @@ function mountAndHydrate(jsx) {
   lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
   globalEnvManager.switchToMainThread();
-  globalThis.__FlushElementTree = vi.fn();
+  globalThis.__FlushElementTree = rs.fn();
   const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
   globalThis[rLynxChange[0]](rLynxChange[1]);
   const hydrateFlushOptions = globalThis.__FlushElementTree.mock.calls.at(-1)[1];
@@ -53,7 +53,7 @@ function mountAndHydrate(jsx) {
 function flushLatestUpdate() {
   const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
   globalEnvManager.switchToMainThread();
-  globalThis.__FlushElementTree = vi.fn();
+  globalThis.__FlushElementTree = rs.fn();
   globalThis[rLynxChange[0]](rLynxChange[1]);
   const flushOptions = globalThis.__FlushElementTree.mock.calls.at(-1)[1];
   globalEnvManager.switchToBackground();

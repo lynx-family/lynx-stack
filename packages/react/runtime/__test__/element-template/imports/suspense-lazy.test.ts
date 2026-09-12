@@ -1,5 +1,5 @@
 import type { ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import ElementTemplateRuntime, * as ElementTemplateRoot from '@lynx-js/react/element-template';
 import { Suspense, lazy } from '@lynx-js/react/element-template';
@@ -125,7 +125,7 @@ describe('element-template Suspense and lazy imports', () => {
   let originalLazyTargetDescriptors: Map<symbol, PropertyDescriptor | undefined>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     envManager.resetEnv('background');
 
     originalQueryComponent = (lynx as LynxWithDynamicImportMocks).QueryComponent;
@@ -176,10 +176,10 @@ describe('element-template Suspense and lazy imports', () => {
   });
 
   it('routes ET component dynamic imports through loadLazyBundle', async () => {
-    const QueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const QueryComponent = rs.fn((source: string, callback: QueryComponentCallback) => {
       callback({ code: 0, detail: { schema: source } });
     });
-    const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
+    const getDynamicComponentExports = rs.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithDynamicImportMocks).QueryComponent = QueryComponent;
     (lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: DynamicExportsGetter;
@@ -196,7 +196,7 @@ describe('element-template Suspense and lazy imports', () => {
   });
 
   it('routes ET plain dynamic imports through lynx.requireModuleAsync', async () => {
-    const requireModuleAsync = vi.fn((
+    const requireModuleAsync = rs.fn((
       source: string,
       callback: (error: Error | null, data?: { data: string }) => void,
     ) => {
@@ -212,7 +212,7 @@ describe('element-template Suspense and lazy imports', () => {
 
   it('populates standalone lazy target symbols with ET root/internal and lazy ABI exports', async () => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rs.resetModules();
 
     await import('../../../lazy/element-template-import.js');
     const [
@@ -252,7 +252,7 @@ describe('element-template Suspense and lazy imports', () => {
 
   it('reuses host exports without reinitializing the runtime in standalone producers', async () => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rs.resetModules();
     await import('../../../lazy/element-template-import.js');
 
     const appDescriptors = Object.getOwnPropertyDescriptors(lynx.getApp());
@@ -273,21 +273,27 @@ describe('element-template Suspense and lazy imports', () => {
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);
   });
 
+  // Static `import()` specifiers: `rs.resetModules()` does not reach modules
+  // loaded through a variable specifier, so each case would reuse the first
+  // one's module graph.
   it.each([
-    '../../../lazy/element-template.js',
-    '../../../lazy/element-template-internal.js',
-    '../../../lazy/element-template-jsx-runtime.js',
-    '../../../lazy/element-template-jsx-dev-runtime.js',
-  ])('rejects a Snapshot host before reading exports from %s', async (entry) => {
+    ['../../../lazy/element-template.js', () => import('../../../lazy/element-template.js')],
+    ['../../../lazy/element-template-internal.js', () => import('../../../lazy/element-template-internal.js')],
+    ['../../../lazy/element-template-jsx-runtime.js', () => import('../../../lazy/element-template-jsx-runtime.js')],
+    [
+      '../../../lazy/element-template-jsx-dev-runtime.js',
+      () => import('../../../lazy/element-template-jsx-dev-runtime.js'),
+    ],
+  ])('rejects a Snapshot host before reading exports from %s', async (_entry, load) => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rs.resetModules();
     Object.defineProperty(lynx, sRuntimeBackend, {
       value: 'Snapshot',
       configurable: true,
     });
     const appDescriptors = Object.getOwnPropertyDescriptors(lynx.getApp());
 
-    await expect(import(entry)).rejects.toThrow(
+    await expect(load()).rejects.toThrow(
       'Snapshot and Element Template templates cannot share lazy bundles.',
     );
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);
