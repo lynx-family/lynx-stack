@@ -389,6 +389,54 @@
   text-transform: uppercase;
 }
 
+.benchFieldLabelWithHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.benchFieldHintIcon {
+  position: relative;
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+  font-size: 9px;
+  line-height: 1;
+  cursor: help;
+  text-transform: none;
+}
+
+.benchFieldHintIcon::after {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 260px;
+  padding: 8px 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-surface);
+  box-shadow: var(--geist-shadow-md);
+  color: var(--geist-foreground);
+  content: attr(data-tooltip);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  text-transform: none;
+  transition: opacity var(--geist-transition);
+}
+
+.benchFieldHintIcon:hover::after,
+.benchFieldHintIcon:focus-visible::after {
+  opacity: 1;
+}
+
 .benchFieldHint,
 .benchFieldError {
   margin: 7px 0 0;
@@ -588,13 +636,29 @@
 .benchRunnerGrid,
 .benchGroupFields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
 .benchRunnerGrid .benchField + .benchField,
 .benchGroupFields .benchField + .benchField {
   margin-top: 0;
+}
+
+.benchGroupFields {
+  gap: 0;
+}
+
+.benchGroupFields .benchField + .benchField {
+  margin-top: 10px;
+}
+
+.benchXmlFragmentField {
+  margin-top: 10px;
+}
+
+.benchAdditionalPromptField {
+  margin-top: 10px;
 }
 
 .benchToggle {
@@ -1034,6 +1098,50 @@
   align-items: center;
 }
 
+.benchPresetField {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0 auto;
+}
+
+.benchPresetField .benchFieldLabel {
+  white-space: nowrap;
+}
+
+.benchPresetField .benchInput {
+  width: 100%;
+  min-width: 120px;
+  height: 28px;
+  padding: 0 34px 0 12px;
+  border-radius: 0;
+  background: var(--geist-background);
+  font-size: 13px;
+  font-weight: 500;
+  appearance: none;
+}
+
+.benchPresetSelect {
+  position: relative;
+  display: block;
+  width: max-content;
+  min-width: 140px;
+}
+
+.benchPresetSelect::after {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentcolor;
+  border-bottom: 1px solid currentcolor;
+  content: "";
+  pointer-events: none;
+  transform: rotate(45deg);
+}
+
 .benchSetupHeading {
   min-width: 0;
   display: flex;
@@ -1102,43 +1210,8 @@
 }
 
 .benchDirectionPicker {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(96px, 1fr));
-  gap: 6px;
-}
-
-.benchDirectionPicker button {
-  min-width: 0;
-  min-height: 46px;
-  display: grid;
-  align-content: center;
-  gap: 2px;
-  padding: 7px 11px;
-  border: 1px solid var(--geist-border);
-  background: var(--geist-background);
-  color: var(--geist-foreground);
-  cursor: pointer;
-  font: inherit;
-  text-align: left;
-  transition:
-    border-color var(--geist-transition),
-    background var(--geist-transition);
-}
-
-.benchDirectionPicker button:hover,
-.benchDirectionPicker button:focus-visible {
-  border-color: var(--geist-foreground);
-  background: var(--geist-surface);
-}
-
-.benchDirectionPicker strong {
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.benchDirectionPicker span {
-  color: var(--geist-secondary);
-  font-size: 10px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .benchInlineConfigGrid {
@@ -1183,6 +1256,15 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
+}
+
+.benchGroupTop > button {
+  grid-column: 3;
+}
+
+.benchGroupNameInput {
+  min-width: 0;
+  font-weight: 700;
 }
 
 .benchSwitch {
@@ -1289,16 +1371,11 @@
   flex: 0 1 auto;
   min-width: 0;
   max-width: 160px;
-  height: 24px;
-  padding: 0 8px;
   overflow: hidden;
-  border: 1px solid var(--geist-border);
-  border-radius: 999px;
-  background: var(--geist-surface);
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 650;
-  line-height: 22px;
+  line-height: 24px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1330,45 +1407,11 @@
 .benchGroupDetails {
   border-top: 1px solid
     color-mix(in srgb, var(--geist-border) 72%, transparent);
-  padding-top: 4px;
-}
-
-.benchGroupDetails summary {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  color: var(--geist-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-}
-
-.benchGroupDetails summary::-webkit-details-marker {
-  display: none;
-}
-
-.benchGroupDetails:not([open]) > :not(summary) {
-  display: none;
-}
-
-.benchGroupDetails summary::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  margin-right: 8px;
-  border-right: 1.5px solid currentcolor;
-  border-bottom: 1.5px solid currentcolor;
-  transform: rotate(-45deg);
-  transition: transform var(--geist-transition);
-}
-
-.benchGroupDetails[open] summary::before {
-  transform: rotate(45deg);
+  padding-top: 10px;
 }
 
 .benchGroupDetails .benchGroupFields {
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 .benchGroupDetails .benchGroupFields + .benchGroupFields {
@@ -2296,6 +2339,16 @@
   .benchDirectionPicker {
     width: 100%;
   }
+
+  .benchPresetField {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .benchPresetField .benchInput {
+    flex: 1;
+    width: auto;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2310,7 +2363,7 @@
   }
 
   .benchDirectionPicker {
-    grid-template-columns: 1fr;
+    justify-content: stretch;
   }
 }
 

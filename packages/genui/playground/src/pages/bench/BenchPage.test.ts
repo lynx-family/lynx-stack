@@ -58,11 +58,9 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       onEnabledChange: noop,
       onModelChange: noop,
       onNameChange: noop,
-      onProfileChange: noop,
       onPromptChange: noop,
       onProtocolChange: noop,
       onRemove: noop,
-      onRoleChange: noop,
     }),
   );
   expect(markup).toContain('data-protocol="lynx-xml"');
@@ -237,11 +235,9 @@ describe('BenchPage', () => {
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -289,11 +285,9 @@ describe('BenchPage', () => {
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(

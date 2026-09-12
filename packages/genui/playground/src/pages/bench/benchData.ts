@@ -38,6 +38,21 @@ export interface BenchScenario {
   type: string;
 }
 
+export type BenchPreset =
+  | 'protocol'
+  | 'model'
+  | 'prompt'
+  | 'catalog'
+  | 'platform';
+
+export const BENCH_PRESET_OPTIONS = [
+  { value: 'protocol', label: 'Protocol' },
+  { value: 'model', label: 'Model' },
+  { value: 'prompt', label: 'Prompt' },
+  { value: 'catalog', label: 'Catalog' },
+  { value: 'platform', label: 'Platform' },
+] as const;
+
 export const BENCH_PROTOCOL_OPTIONS = [
   { value: 'a2ui', label: 'A2UI', description: 'Structured message stream' },
   { value: 'openui', label: 'OpenUI', description: 'OpenUI Lang' },
@@ -155,18 +170,142 @@ export const DEFAULT_BENCH_SCENARIOS: readonly BenchScenario[] = [
 export function createDefaultBenchGroups(model: string): BenchGroup[] {
   return [
     {
-      id: 'control-empty',
+      id: 'a2ui-default',
       role: 'control',
       protocol: 'a2ui',
       profile: 'native',
-      name: 'Baseline',
+      name: 'Group-A2UI',
       variable: 'custom',
       model,
       catalog: 'Full Catalog',
       extraInstruction: '',
       enabled: true,
     },
+    {
+      id: 'openui-default',
+      role: 'experiment',
+      protocol: 'openui',
+      profile: 'native',
+      name: 'Group-OpenUI',
+      variable: 'custom',
+      model,
+      catalog: 'none',
+      extraInstruction: '',
+      enabled: true,
+    },
+    {
+      id: 'lynx-xml-default',
+      role: 'experiment',
+      protocol: 'lynx-xml',
+      profile: 'native',
+      name: 'Group-Lynx XML',
+      variable: 'custom',
+      model,
+      catalog: 'none',
+      extraInstruction: '',
+      enabled: true,
+    },
+    {
+      id: 'html-default',
+      role: 'experiment',
+      protocol: 'html',
+      profile: 'native',
+      name: 'Group-HTML',
+      variable: 'custom',
+      model,
+      catalog: 'none',
+      extraInstruction: '',
+      enabled: true,
+    },
   ];
+}
+
+export function createBenchPresetGroups(
+  preset: BenchPreset,
+  model: string,
+  models: readonly string[] = [],
+): BenchGroup[] {
+  const base = createDefaultBenchGroups(model)[0]!;
+  const group = (name: string, patch: Partial<BenchGroup>): BenchGroup => ({
+    ...base,
+    ...patch,
+    id: `preset-${name.toLowerCase().replaceAll(' ', '-')}`,
+    name: `Group-${name}`,
+  });
+  switch (preset) {
+    case 'protocol':
+      return [
+        group('A2UI', { role: 'control', variable: 'protocol' }),
+        group('OpenUI', {
+          protocol: 'openui',
+          profile: 'matched-core',
+          catalog: 'Core Catalog',
+          role: 'experiment',
+          variable: 'protocol',
+        }),
+        group('Lynx XML', {
+          protocol: 'lynx-xml',
+          catalog: 'none',
+          role: 'experiment',
+          variable: 'protocol',
+        }),
+      ];
+    case 'model':
+      return (models.length > 0 ? models : [model]).slice(0, 3).map((
+        item,
+        index,
+      ) =>
+        group(item, {
+          id: `preset-model-${index + 1}`,
+          model: item,
+          role: index === 0 ? 'control' : 'experiment',
+          variable: 'model',
+        })
+      );
+    case 'prompt':
+      return [
+        group('Base', { role: 'control', variable: 'prompt' }),
+        group('Concise', {
+          role: 'experiment',
+          variable: 'prompt',
+          extraInstruction:
+            'Use concise copy and minimize unnecessary UI structure while preserving the requested content and interaction.',
+        }),
+        group('Detailed', {
+          role: 'experiment',
+          variable: 'prompt',
+          extraInstruction:
+            'Include helpful details, clear hierarchy, and polished interaction guidance.',
+        }),
+      ];
+    case 'catalog':
+      return ['Full Catalog', 'Core Catalog', 'Minimal Catalog'].map((
+        catalog,
+        index,
+      ) =>
+        group(catalog, {
+          id: `preset-catalog-${index + 1}`,
+          catalog,
+          role: index === 0 ? 'control' : 'experiment',
+          variable: 'catalog',
+        })
+      );
+    case 'platform':
+      return [
+        group('HTML', {
+          protocol: 'html',
+          catalog: 'none',
+          role: 'control',
+          variable: 'protocol',
+        }),
+        group('Lynx XML', {
+          protocol: 'lynx-xml',
+          catalog: 'none',
+          role: 'experiment',
+          variable: 'protocol',
+        }),
+      ];
+  }
 }
 
 export function createCustomBenchScenario(id: string): BenchScenario {
