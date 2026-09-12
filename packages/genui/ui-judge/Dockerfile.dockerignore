@@ -1,0 +1,6 @@
+*
+!ui-judge-server
+!start.sh
+!lynx_core.js
+!lib/
+!lib/libLynx_clay.so

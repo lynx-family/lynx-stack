@@ -98,6 +98,57 @@ jobs:
       contents: read
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  publish-ui-judge-image:
+    name: Publish UI Judge image
+    needs: [build, test-rust]
+    runs-on: lynx-ubuntu-26.04-xlarge
+    timeout-minutes: 60
+    if: github.repository == 'lynx-family/lynx-stack'
+    concurrency:
+      group: ${{ github.workflow }}-ui-judge-image-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Setup Rust
+        uses: $/.github/actions/rustup
+        with:
+          key: ui-judge-image
+          save-if: ${{ github.ref_name == 'main' }}
+      - name: Build UI Judge bundle
+        env:
+          UI_JUDGE_OUTPUT_DIR: ${{ runner.temp }}/ui-judge-linux-amd64
+        run: packages/genui/ui-judge/build.sh
+      - name: Generate image metadata
+        id: metadata
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ghcr.io/lynx-family/ui-judge
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha,format=long
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Build and push image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ runner.temp }}/ui-judge-linux-amd64
+          file: ${{ github.workspace }}/packages/genui/ui-judge/Dockerfile
+          labels: ${{ steps.metadata.outputs.labels }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
   coverage:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
