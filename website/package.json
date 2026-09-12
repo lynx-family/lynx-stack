@@ -40,7 +40,7 @@
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "@microsoft/api-documenter": "~7.30.0",
-    "@microsoft/api-extractor-model": "^7.33.10",
+    "@microsoft/api-extractor-model": "^7.33.12",
     "@rsbuild/plugin-sass": "2.0.1",
     "@rsbuild/plugin-type-check": "1.6.0",
     "@rsbuild/plugin-typed-css-modules": "1.2.4",
