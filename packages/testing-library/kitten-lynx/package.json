@@ -47,7 +47,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.2.1",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "execa": "^10.0.1",
