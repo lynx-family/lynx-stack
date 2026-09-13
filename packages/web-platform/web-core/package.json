@@ -75,7 +75,7 @@
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
-    "wasm-feature-detect": "^1.8.0"
+    "wasm-feature-detect": "^1.9.0"
   },
   "devDependencies": {
     "@lynx-js/animax": "0.1.0-alpha.0",
