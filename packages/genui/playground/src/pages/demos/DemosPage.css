@@ -725,6 +725,11 @@
   transition: height 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+.playbackSplitter[hidden],
+.playbackSection[hidden] {
+  display: none;
+}
+
 /* When playback sits above the editor, drop the top border — the page header
    already separates it and the splitter handles the bottom edge. */
 .playbackSection.top {
