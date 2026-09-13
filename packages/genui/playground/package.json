@@ -22,7 +22,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
-    "@openuidev/lang-core": "^0.2.11",
+    "@openuidev/lang-core": "^0.2.18",
     "@radix-ui/react-select": "^2.3.7",
     "@uiw/react-codemirror": "^4.25.11",
     "fflate": "0.8.2",
