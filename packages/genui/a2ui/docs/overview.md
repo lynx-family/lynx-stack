@@ -330,4 +330,4 @@ Lifecycle notes that save debugging time:
   the contract, add manifests, and register your own components.
 - [System prompts](./system-prompts.md) — generate the model instructions
   that pair an Agent with your catalog.
-- [Open the GenUI playground](https://lynxjs.org/genui) — try it live.
+- [Open the GenUI playground](https://lynx-stack.dev/genui/) — try it live.
