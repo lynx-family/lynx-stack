@@ -252,6 +252,8 @@ export const transformClasses: readonly string[] = [
   '-translate-x-4',
   'skew-x-3',
   'skew-y-3',
+  'skew-x-12',
+  'skew-y-6',
   '-skew-x-3',
   'transform',
   'transform-cpu',
