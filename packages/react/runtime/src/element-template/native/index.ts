@@ -14,6 +14,7 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { setupComponentStack } from '../../shared/component-stack.js';
 import { lynxQueueMicrotask } from '../../utils.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
@@ -64,6 +65,9 @@ function init(): void {
   }
 
   if (__BACKGROUND__) {
+    if (__DEV__) {
+      setupComponentStack();
+    }
     options.requestAnimationFrame = lynxQueueMicrotask;
     console.log('experimental_useElementTemplate:', __USE_ELEMENT_TEMPLATE__);
     setRoot(new BackgroundPageRootInstance());
