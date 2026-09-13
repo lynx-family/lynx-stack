@@ -78,9 +78,16 @@ export function applyOrdinaryRef<T>(
 export class OrdinaryRefEffectQueue<TProxy, TToken> {
   // A host instance survives hydration's numeric ID remapping. Each ref slot
   // owns its cleanup independently, even when callbacks are shared.
-  private readonly bindings = new WeakMap<object, Map<number, OrdinaryRefBinding>>();
-  private readonly refsToClear: Array<[ref: OrdinaryRef<TProxy>, binding: OrdinaryRefBinding]> = [];
-  private readonly refsToApply: Array<[ref: OrdinaryRef<TProxy>, token: TToken, binding: OrdinaryRefBinding]> = [];
+  private readonly bindings = new WeakMap<object, Map<number, OrdinaryRefEffectBinding<TProxy>>>();
+  private readonly refsToClear: Array<[
+    binding: OrdinaryRefEffectBinding<TProxy>,
+    attachment: OrdinaryRefAttachment<TProxy>,
+  ]> = [];
+  private readonly refsToApply: Array<[
+    ref: OrdinaryRef<TProxy>,
+    token: TToken,
+    binding: OrdinaryRefEffectBinding<TProxy>,
+  ]> = [];
 
   queue(
     oldRef: OrdinaryRef<TProxy> | null | undefined,
@@ -94,14 +101,14 @@ export class OrdinaryRefEffectQueue<TProxy, TToken> {
     }
     let slots = this.bindings.get(owner);
     if (!slots) {
-      this.bindings.set(owner, slots = new Map<number, OrdinaryRefBinding>());
+      this.bindings.set(owner, slots = new Map<number, OrdinaryRefEffectBinding<TProxy>>());
     }
     let binding = slots.get(slot);
     if (!binding) {
       slots.set(slot, binding = {});
     }
-    if (oldRef) {
-      this.refsToClear.push([oldRef, binding]);
+    if (binding.attachment) {
+      this.refsToClear.push([binding, binding.attachment]);
     }
     if (newRef) {
       this.refsToApply.push([newRef, token, binding]);
@@ -116,22 +123,41 @@ export class OrdinaryRefEffectQueue<TProxy, TToken> {
     const refsToClearNow = this.refsToClear.splice(0);
     const refsToApplyNow = this.refsToApply.splice(0);
 
-    for (const [ref, binding] of refsToClearNow) {
-      applyOrdinaryRef(ref, null, binding);
+    for (const [binding, attachment] of refsToClearNow) {
+      // A stale raw ref or duplicate detach must not consume a new attachment
+      // established by a reentrant callback, even when its ref is unchanged.
+      if (binding.attachment === attachment) {
+        binding.attachment = undefined;
+        applyOrdinaryRef(attachment.ref, null, binding);
+      }
     }
     for (const [ref, token, binding] of refsToApplyNow) {
-      applyOrdinaryRef(ref, createValue(token), binding);
+      const value = createValue(token);
+      binding.attachment = { ref };
+      applyOrdinaryRef(ref, value, binding);
     }
   }
 
   clear(): void {
     this.refsToClear.length = 0;
+    this.discardPendingAttachments();
+  }
+
+  discardPendingAttachments(): void {
     this.refsToApply.length = 0;
   }
 
   hasPending(): boolean {
     return this.refsToClear.length > 0 || this.refsToApply.length > 0;
   }
+}
+
+interface OrdinaryRefEffectBinding<T> extends OrdinaryRefBinding {
+  attachment?: OrdinaryRefAttachment<T> | undefined;
+}
+
+interface OrdinaryRefAttachment<T> {
+  readonly ref: OrdinaryRef<T>;
 }
 
 export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> {
