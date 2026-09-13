@@ -79,7 +79,7 @@
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
-    "typescript": "5.1.6 - 6.0.x"
+    "typescript": "5.1.6 - 7.0.x"
   },
   "peerDependenciesMeta": {
     "typescript": {
