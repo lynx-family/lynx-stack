@@ -63,7 +63,7 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/jest-dom": "^7.0.1",
     "@types/jsdom": "^28.0.3",
     "rsbuild-plugin-publint": "1.0.0"
   }

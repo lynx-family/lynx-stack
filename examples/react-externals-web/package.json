@@ -19,7 +19,7 @@
     "@lynx-js/preact-devtools": "catalog:lynxjs",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-umd": "workspace:*",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.2.1",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
