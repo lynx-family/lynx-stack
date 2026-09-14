@@ -20,6 +20,23 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ## 用法
 
+使用 Rsbuild 时，在 `rsbuild.config.ts` 中注册：
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+  },
+  plugins: [pluginReactLynx(), pluginExternalBundle()],
+})
+```
+
+使用 Rspeedy 时，在 `lynx.config.ts` 中设置：
+
 ```ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy'
 import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'

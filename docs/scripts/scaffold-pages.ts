@@ -184,6 +184,23 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ## Usage
 
+With Rsbuild, register it in \`rsbuild.config.ts\`:
+
+\`\`\`ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { ${p.fn} } from '@lynx-js/${p.id}'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+  },
+  plugins: [pluginReactLynx(), ${p.fn}()],
+})
+\`\`\`
+
+With Rspeedy, set it in \`lynx.config.ts\`:
+
 \`\`\`ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy'
 import { ${p.fn} } from '@lynx-js/${p.id}'
