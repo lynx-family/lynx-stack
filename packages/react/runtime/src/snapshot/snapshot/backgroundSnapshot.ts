@@ -35,6 +35,7 @@ import {
   SnapshotOperation,
   __globalSnapshotPatch,
   initGlobalSnapshotPatch,
+  pushSetAttributeOperation,
   takeGlobalSnapshotPatch,
 } from '../lifecycle/patch/snapshotPatch.js';
 import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
@@ -353,8 +354,7 @@ export class BackgroundSnapshotInstance {
               index,
             );
             if (needUpdate) {
-              __globalSnapshotPatch.push(
-                SnapshotOperation.SetAttribute,
+              pushSetAttributeOperation(
                 this.__id,
                 index,
                 valueToCommit,
@@ -414,12 +414,9 @@ export class BackgroundSnapshotInstance {
       (this.__values ??= [])[key] = value;
       this.syncListItemPlatformInfo();
     }
-    __globalSnapshotPatch?.push(
-      SnapshotOperation.SetAttribute,
-      this.__id,
-      key,
-      value,
-    );
+    if (__globalSnapshotPatch) {
+      pushSetAttributeOperation(this.__id, key, value);
+    }
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
@@ -581,8 +578,7 @@ export function hydrate(
                 },
               });
               try {
-                __globalSnapshotPatch!.push(
-                  SnapshotOperation.SetAttribute,
+                pushSetAttributeOperation(
                   after.__id,
                   index,
                   value,
@@ -591,8 +587,7 @@ export function hydrate(
                 profileEnd();
               }
             } else {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.SetAttribute,
+              pushSetAttributeOperation(
                 after.__id,
                 index,
                 value,
@@ -619,8 +614,7 @@ export function hydrate(
                 },
               });
               try {
-                __globalSnapshotPatch!.push(
-                  SnapshotOperation.SetAttribute,
+                pushSetAttributeOperation(
                   after.__id,
                   key,
                   value,
@@ -629,8 +623,7 @@ export function hydrate(
                 profileEnd();
               }
             } else {
-              __globalSnapshotPatch!.push(
-                SnapshotOperation.SetAttribute,
+              pushSetAttributeOperation(
                 after.__id,
                 key,
                 value,
