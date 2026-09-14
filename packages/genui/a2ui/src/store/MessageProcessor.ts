@@ -3,15 +3,23 @@
 // LICENSE file in the root directory of this source tree.
 import type * as v0_9 from '@a2ui/web_core/v0_9';
 
+import type { Signal } from '@lynx-js/react-signals';
+import { signal } from '@lynx-js/react-signals';
+
+import { expandMessage } from './protocol.js';
 import { resolveBindingPath } from './resolveDynamic.js';
 import { createResource } from './Resource.js';
 import { SignalStore } from './SignalStore.js';
 import type {
   ComponentInstance,
+  FunctionResponse,
+  ProtocolFunctionCall,
+  RendererToAgentMessage,
   ServerToClientMessage,
   Surface,
 } from './types.js';
 import { isObject } from './utils.js';
+import type { Catalog } from '../catalog/defineCatalog.js';
 
 /**
  * Event envelope emitted by `MessageProcessor.dispatch`.
@@ -36,11 +44,165 @@ function isMeaningfulResponse(value: unknown): boolean {
 }
 
 /**
- * Stateful A2UI protocol processor that turns raw v0.9 messages into
+ * Stateful A2UI protocol processor that turns v0.9 and v1.0 messages into
  * renderable surfaces, resources, data-model signals, and user-action events.
  */
 export class MessageProcessor {
   surfaces: Map<string, Surface>;
+  private catalogs = new Map<string, Catalog>();
+  private functionValues = new Map<string, Signal<unknown>>();
+  private nextFunctionCallId = 0;
+  private pendingCalls = new Map<
+    string,
+    {
+      surfaceId: string;
+      resolve: (value: unknown) => void;
+      reject: (error: Error) => void;
+      timer: ReturnType<typeof setTimeout>;
+    }
+  >();
+
+  /** Register a trusted catalog for qualified v1.0 function resolution. */
+  registerCatalog(catalogId: string, catalog: Catalog): void {
+    this.catalogs.set(catalogId, catalog);
+  }
+
+  /** Resolve a catalog by its exact wire identifier. */
+  getCatalog(catalogId: string | undefined): Catalog | undefined {
+    return catalogId === undefined ? undefined : this.catalogs.get(catalogId);
+  }
+
+  /** Send a v1.0 event through the host transport. */
+  sendMessage(message: RendererToAgentMessage): Promise<unknown> {
+    return this.dispatch(message);
+  }
+
+  /** Metadata accompanying renderer events for opted-in surfaces. */
+  getDataModelMetadata(): Record<string, unknown> {
+    return {
+      a2uiRendererDataModel: {
+        version: 'v1.0',
+        surfaces: Object.fromEntries(
+          [...this.surfaces].filter(([, surface]) =>
+            surface.sendDataModel && surface.version === 'v1.0'
+          ).map(([id, surface]) => [id, surface.store.getDataModel() ?? {}]),
+        ),
+      },
+    };
+  }
+
+  /** Invoke an agent function and correlate its streamed response. */
+  callAgentFunction(
+    surfaceId: string,
+    callFunction: ProtocolFunctionCall,
+  ): Promise<unknown> {
+    const functionCallId = `renderer-${++this.nextFunctionCallId}`;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingCalls.delete(functionCallId);
+        reject(new Error('Agent function response timed out'));
+      }, 30_000);
+      this.pendingCalls.set(functionCallId, {
+        surfaceId,
+        resolve,
+        reject,
+        timer,
+      });
+      void this.sendMessage({
+        version: 'v1.0',
+        callAgentFunction: { surfaceId, functionCallId, callFunction },
+      });
+    });
+  }
+
+  /** Read an asynchronous agent expression; undefined represents pending or failed. */
+  resolveAgentFunction(
+    surfaceId: string,
+    callFunction: ProtocolFunctionCall,
+  ): unknown {
+    const key = JSON.stringify([surfaceId, callFunction]);
+    let result = this.functionValues.get(key);
+    if (!result) {
+      result = signal<unknown>(undefined);
+      this.functionValues.set(key, result);
+      const target = result;
+      void this.callAgentFunction(surfaceId, callFunction).then(value => {
+        target.value = value;
+      }, error => {
+        console.warn('[a2ui] Agent function failed:', error);
+      });
+    }
+    return result.value;
+  }
+
+  private completeFunctionCall(response: FunctionResponse): void {
+    const pending = this.pendingCalls.get(response.functionCallId);
+    if (!pending) return;
+    this.pendingCalls.delete(response.functionCallId);
+    clearTimeout(pending.timer);
+    if (response.error) pending.reject(new Error(response.error.message));
+    else pending.resolve(response.value);
+  }
+
+  private cancelFunctionCalls(surfaceId?: string): void {
+    for (const [functionCallId, pending] of this.pendingCalls) {
+      if (surfaceId === undefined || pending.surfaceId === surfaceId) {
+        this.completeFunctionCall({
+          functionCallId,
+          error: { code: 'CANCELLED', message: 'Surface was removed' },
+        });
+      }
+    }
+  }
+
+  private async callRendererFunction(
+    request: {
+      functionCallId: string;
+      callFunction: ProtocolFunctionCall & { catalogId: string };
+    },
+  ): Promise<void> {
+    const { functionCallId, callFunction } = request;
+    const entry = this.getCatalog(callFunction.catalogId)?.functions.find(fn =>
+      fn.name === callFunction.call
+    );
+    if (
+      !entry
+      || !['agentOnly', 'rendererOrAgent'].includes(
+        entry.definition?.allowedCallers ?? 'rendererOnly',
+      )
+    ) {
+      await this.sendMessage({
+        version: 'v1.0',
+        error: {
+          code: 'INVALID_FUNCTION_CALL',
+          message:
+            `Function "${callFunction.call}" is not callable by the agent`,
+          functionCallId,
+        },
+      });
+      return;
+    }
+    let response: FunctionResponse;
+    try {
+      response = {
+        functionCallId,
+        value: (await entry.impl(callFunction.args ?? {})) ?? null,
+      };
+    } catch (error) {
+      response = {
+        functionCallId,
+        error: {
+          code: 'EXECUTION_FAILED',
+          message: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+    await this.sendMessage({
+      version: 'v1.0',
+      rendererFunctionResponse: response,
+    });
+  }
+
   private eventListeners: Set<(event: A2UIEvent) => void> = new Set();
   private updateListeners: Set<(data: Record<string, unknown>) => void> =
     new Set();
@@ -116,6 +278,8 @@ export class MessageProcessor {
   }
 
   clearSurfaces(): void {
+    this.cancelFunctionCalls();
+    this.functionValues.clear();
     this.surfaces.clear();
   }
 
@@ -279,12 +443,63 @@ export class MessageProcessor {
 
   processMessages(messages: ServerToClientMessage[]): void {
     for (const message of messages) {
+      if (
+        message.version === 'v1.0' && 'createSurface' in message
+        && this.surfaces.has(message.createSurface.surfaceId)
+      ) {
+        void this.sendMessage({
+          version: 'v1.0',
+          error: {
+            code: 'VALIDATION_FAILED',
+            surfaceId: message.createSurface.surfaceId,
+            message: 'Surface already exists',
+          },
+        });
+        continue;
+      }
+      this.processExpandedMessages(expandMessage(message));
+    }
+  }
+
+  private processExpandedMessages(messages: ServerToClientMessage[]): void {
+    for (const message of messages) {
+      if ('callRendererFunction' in message) {
+        void this.callRendererFunction(message.callRendererFunction);
+        continue;
+      }
+      if ('agentFunctionResponse' in message) {
+        this.completeFunctionCall(message.agentFunctionResponse);
+        continue;
+      }
+      if (message.version === 'v1.0') {
+        const payload = Object.values(message).find((
+          value,
+        ): value is { surfaceId: string } =>
+          value !== null && typeof value === 'object' && 'surfaceId' in value
+        );
+        if (
+          payload && !('createSurface' in message)
+          && !this.surfaces.has(payload.surfaceId)
+        ) {
+          void this.sendMessage({
+            version: 'v1.0',
+            error: {
+              code: 'VALIDATION_FAILED',
+              surfaceId: payload.surfaceId,
+              message: 'Surface must be created exactly once before updates',
+            },
+          });
+          continue;
+        }
+      }
       if ('createSurface' in message && message.createSurface) {
         const createSurface = (message as unknown as Record<string, unknown>)[
           'createSurface'
         ] as Record<string, unknown>;
         const surfaceId = createSurface['surfaceId'] as string;
         const surface = this.getOrCreateSurface(surfaceId);
+        surface.version = message.version;
+        if (message.version === 'v1.0') surface.store.enableTypedDataModel();
         const catId = createSurface['catalogId'];
         if (catId !== undefined) surface.catalogId = catId as string;
         const t = createSurface['theme'];
@@ -348,7 +563,7 @@ export class MessageProcessor {
         if (!surface.rootComponentId) {
           if (surface.components.has('root')) {
             surface.rootComponentId = 'root';
-          } else if (updatesMap.size > 0) {
+          } else if (message.version !== 'v1.0' && updatesMap.size > 0) {
             surface.rootComponentId = updatesMap.keys().next().value ?? null;
           }
 
@@ -381,6 +596,12 @@ export class MessageProcessor {
             surfaceId,
           });
         }
+        if (message.version === 'v1.0') {
+          this.processMessages([{
+            version: 'v1.0',
+            updateDataModel: { surfaceId, value: surface.store.getDataModel() },
+          }]);
+        }
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
@@ -393,7 +614,10 @@ export class MessageProcessor {
 
         const updates: { path: string; value: unknown }[] = [];
 
-        if (value !== undefined) {
+        if (message.version === 'v1.0') {
+          surface.store.enableTypedDataModel();
+          surface.store.update(path === '' ? '/' : path ?? '/', value);
+        } else if (value !== undefined) {
           const basePath = path && path !== '' ? path : '/';
           this.flattenValue(value, basePath, updates);
         } else if (path) {
@@ -492,6 +716,12 @@ export class MessageProcessor {
           messageId,
         });
 
+        this.cancelFunctionCalls(surfaceId);
+        for (const key of this.functionValues.keys()) {
+          if ((JSON.parse(key) as unknown[])[0] === surfaceId) {
+            this.functionValues.delete(key);
+          }
+        }
         this.surfaces.delete(surfaceId);
       }
     }

@@ -29,6 +29,7 @@ export type ComponentInstance = v0_9.AnyComponent & {
  */
 export interface Surface {
   surfaceId: SurfaceId;
+  version?: ProtocolVersion;
   catalogId?: string;
   theme?: Readonly<Record<string, unknown>>;
   sendDataModel?: boolean | undefined;
@@ -54,12 +55,80 @@ export interface ResourceInfo {
 
 export type Resource = GenericResource<ResourceInfo>;
 
-export type ServerToClientMessage = v0_9.A2uiMessage & {
-  /**
-   * Message id injected by the client.
-   */
+/** Supported wire protocol versions. */
+export type ProtocolVersion = 'v0.9' | 'v0.9.1' | 'v1.0';
+
+/** Catalog-qualified function invocation. */
+export interface ProtocolFunctionCall {
+  call: string;
+  /** Legacy v0.9 annotation; v1.0 infers return types from the catalog. */
+  returnType?: string;
+  catalogId?: string;
+  args?: Record<string, unknown>;
+}
+
+/** Correlated result of a protocol function invocation. */
+export type FunctionResponse =
+  & { functionCallId: string }
+  & (
+    | { value: unknown; error?: never }
+    | { error: { code: string; message: string }; value?: never }
+  );
+
+/** v1.0 messages, sharing the existing component representation. */
+export type V1Message =
+  & { version: 'v1.0' }
+  & (
+    | {
+      createSurface: {
+        surfaceId: string;
+        catalogId?: string;
+        sendDataModel?: boolean;
+        components?: ComponentInstance[];
+        dataModel?: Record<string, unknown>;
+      };
+    }
+    | {
+      updateComponents: { surfaceId: string; components: ComponentInstance[] };
+    }
+    | { updateDataModel: { surfaceId: string; path?: string; value: unknown } }
+    | { deleteSurface: { surfaceId: string } }
+    | {
+      callRendererFunction: {
+        functionCallId: string;
+        callFunction: ProtocolFunctionCall & { catalogId: string };
+      };
+    }
+    | { agentFunctionResponse: FunctionResponse }
+  );
+
+export type ServerToClientMessage = (v0_9.A2uiMessage | V1Message) & {
+  /** Message id injected by the client. */
   messageId?: string;
 };
+
+/** Renderer-to-agent v1.0 wire envelope. Transport metadata is separate. */
+export type RendererToAgentMessage =
+  & { version: 'v1.0' }
+  & (
+    | { action: UserActionPayload }
+    | {
+      callAgentFunction: {
+        surfaceId: string;
+        functionCallId: string;
+        callFunction: ProtocolFunctionCall;
+      };
+    }
+    | { rendererFunctionResponse: FunctionResponse }
+    | {
+      error: {
+        code: string;
+        message: string;
+        functionCallId?: string;
+        surfaceId?: string;
+      };
+    }
+  );
 
 /**
  * Normalized user action forwarded from rendered catalog components to the
@@ -74,6 +143,7 @@ export interface UserActionPayload {
 }
 
 export type A2UIClientEventMessage =
+  | RendererToAgentMessage
   | string
   | {
     text?: string;

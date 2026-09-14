@@ -51,7 +51,7 @@ export interface ButtonProps extends GenericComponentProps {
         | 'any'
         | 'void';
     };
-    message: string;
+    message?: string;
   }>;
 }
 

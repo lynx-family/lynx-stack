@@ -129,7 +129,8 @@ export function normalizePayloadToMessages(
 
       if (
         v['createSurface'] || v['updateComponents'] || v['updateDataModel']
-        || v['deleteSurface']
+        || v['deleteSurface'] || v['callRendererFunction']
+        || v['agentFunctionResponse']
       ) {
         add(v);
         return;

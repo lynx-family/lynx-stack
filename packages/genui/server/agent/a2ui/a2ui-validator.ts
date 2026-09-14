@@ -40,11 +40,13 @@ type A2UIComponent = z.infer<typeof ComponentBase> & {
 };
 
 const CreateSurfaceMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
   createSurface: z
     .object({
       surfaceId: z.string().min(1),
-      catalogId: z.string().min(1),
+      catalogId: z.string().min(1).optional(),
+      components: z.array(ComponentBase).optional(),
+      dataModel: z.record(z.string(), z.unknown()).optional(),
       theme: z.record(z.string(), z.any()).optional(),
       sendDataModel: z.boolean().optional(),
     })
@@ -52,17 +54,17 @@ const CreateSurfaceMessage = z.object({
 }).strict();
 
 const UpdateComponentsMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
   updateComponents: z
     .object({
       surfaceId: z.string().min(1),
-      components: z.array(ComponentBase).min(1),
+      components: z.array(ComponentBase),
     })
     .passthrough(),
 }).strict();
 
 const UpdateDataModelMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
   updateDataModel: z
     .object({
       surfaceId: z.string().min(1),
@@ -73,7 +75,7 @@ const UpdateDataModelMessage = z.object({
 }).strict();
 
 const DeleteSurfaceMessage = z.object({
-  version: z.literal('v0.9'),
+  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
   deleteSurface: z
     .object({
       surfaceId: z.string().min(1),
@@ -81,15 +83,106 @@ const DeleteSurfaceMessage = z.object({
     .passthrough(),
 }).strict();
 
+const ProtocolFunctionCall = z.object({
+  call: z.string().min(1),
+  catalogId: z.string().min(1),
+  args: z.record(z.string(), z.unknown()).optional(),
+}).strict();
+
+const CallRendererFunctionMessage = z.object({
+  version: z.literal('v1.0'),
+  callRendererFunction: z.object({
+    functionCallId: z.string().min(1),
+    callFunction: ProtocolFunctionCall,
+  }).strict(),
+}).strict();
+
+const AgentFunctionResponseMessage = z.object({
+  version: z.literal('v1.0'),
+  agentFunctionResponse: z.object({
+    functionCallId: z.string().min(1),
+    value: z.unknown().optional(),
+    error: z.object({ code: z.string(), message: z.string() }).strict()
+      .optional(),
+  }).strict().refine(
+    value => ('value' in value) !== ('error' in value),
+    'Exactly one of value or error is required',
+  ),
+}).strict();
+
 const A2UIMessage = z.union([
   CreateSurfaceMessage,
   UpdateComponentsMessage,
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
-]);
+  CallRendererFunctionMessage,
+  AgentFunctionResponseMessage,
+]).superRefine((message, context) => {
+  if ('createSurface' in message) {
+    const surface = message.createSurface;
+    if (message.version === 'v1.0' && 'theme' in surface) {
+      context.addIssue({
+        code: 'custom',
+        message:
+          'v1.0 styling belongs to the host; createSurface.theme is not supported',
+      });
+    }
+    if (message.version !== 'v1.0' && !surface.catalogId) {
+      context.addIssue({
+        code: 'custom',
+        message: 'catalogId is required for v0.9',
+      });
+    }
+    if (
+      message.version !== 'v1.0'
+      && (surface.components !== undefined || surface.dataModel !== undefined)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Inline initialization requires v1.0',
+      });
+    }
+  }
+  if (
+    'updateDataModel' in message && message.version === 'v1.0'
+    && message.updateDataModel.value === undefined
+  ) {
+    context.addIssue({
+      code: 'custom',
+      message: 'v1.0 updateDataModel requires value (use null to delete)',
+    });
+  }
+});
 
 export const A2UIMessageArray = z.array(A2UIMessage).min(1);
 export type A2UIMessage = z.infer<typeof A2UIMessage>;
+
+/** Normalize v1.0 inline initialization for the existing validation/stream pipeline. */
+export function expandA2UIMessage(message: A2UIMessage): A2UIMessage[] {
+  if (message.version !== 'v1.0' || !('createSurface' in message)) {
+    return [message];
+  }
+  const { components, dataModel, ...createSurface } = message.createSurface;
+  const { version } = message;
+  return [
+    { version, createSurface },
+    ...(dataModel === undefined
+      ? []
+      : [{
+        version,
+        updateDataModel: {
+          surfaceId: createSurface.surfaceId,
+          value: dataModel,
+        },
+      }]),
+    ...(components === undefined
+      ? []
+      : [{
+        version,
+        updateComponents: { surfaceId: createSurface.surfaceId, components },
+      }]),
+  ];
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -295,7 +388,9 @@ export function validateA2UIOutput(
       ...message,
       createSurface: {
         ...message.createSurface,
-        catalogId: normalizeCatalogId(message.createSurface.catalogId),
+        ...(message.createSurface.catalogId === undefined
+          ? {}
+          : { catalogId: normalizeCatalogId(message.createSurface.catalogId) }),
       },
     };
   });
@@ -314,7 +409,7 @@ export function validateA2UIOutput(
   const requireCreateSurface = options.requireCreateSurface ?? true;
   if (firstIsCreate) {
     const catalogId = firstMessage.createSurface.catalogId;
-    if (catalogId !== catalog.id) {
+    if (catalogId !== undefined && catalogId !== catalog.id) {
       errors.push(
         `createSurface.catalogId must equal "${catalog.id}"; received "${catalogId}".`,
       );
@@ -324,6 +419,7 @@ export function validateA2UIOutput(
   }
 
   const surfaces = new Set<string>(options.existingSurfaceIds ?? []);
+  const catalogBySurface = new Map<string, string | undefined>();
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
   const dataModelBySurface = new Map<string, unknown>();
   const allPaths: { surfaceId: string; path: string }[] = [];
@@ -341,9 +437,16 @@ export function validateA2UIOutput(
     }
   }
 
-  for (const msg of messages) {
+  for (const msg of messages.flatMap(message => expandA2UIMessage(message))) {
     if ('createSurface' in msg && msg.createSurface) {
+      if (msg.version === 'v1.0' && surfaces.has(msg.createSurface.surfaceId)) {
+        errors.push(`Surface "${msg.createSurface.surfaceId}" already exists.`);
+      }
       surfaces.add(msg.createSurface.surfaceId);
+      catalogBySurface.set(
+        msg.createSurface.surfaceId,
+        msg.createSurface.catalogId,
+      );
     } else if ('updateComponents' in msg && msg.updateComponents) {
       const sId = msg.updateComponents.surfaceId;
       if (!surfaces.has(sId)) {
@@ -356,7 +459,19 @@ export function validateA2UIOutput(
       const idsInMessage = new Set<string>();
       for (const rawComponent of msg.updateComponents.components) {
         const comp = rawComponent as A2UIComponent;
+        if (
+          msg.version === 'v1.0'
+          && (comp.catalogId ?? catalogBySurface.get(sId)
+              ?? (options.existingSurfaceIds?.includes(sId)
+                ? catalog.id
+                : undefined)) !== catalog.id
+        ) {
+          errors.push(
+            `Component "${comp.id}" must resolve to catalog "${catalog.id}".`,
+          );
+        }
         for (const fn of collectFunctionCalls(comp, `component.${comp.id}`)) {
+          if (msg.version === 'v1.0' && fn.name === '@index') continue;
           if (!knownFunctions.has(fn.name)) {
             const allowed = knownFunctions.size > 0
               ? [...knownFunctions].join(', ')
@@ -458,6 +573,7 @@ export function validateA2UIOutput(
           dataModelBySurface.get(sId),
           basePath,
           updateDataModel.value,
+          msg.version === 'v1.0',
         ),
       );
       for (
@@ -467,6 +583,19 @@ export function validateA2UIOutput(
         )
       ) {
         providedPaths.push({ surfaceId: sId, path: p });
+      }
+    } else if ('callRendererFunction' in msg) {
+      const call = msg.callRendererFunction.callFunction;
+      const definition = catalog.functions?.find(fn => fn.name === call.call);
+      if (
+        call.catalogId !== catalog.id || !definition
+        || !['agentOnly', 'rendererOrAgent'].includes(
+          definition.allowedCallers ?? 'rendererOnly',
+        )
+      ) {
+        errors.push(
+          `Invalid agent invocation of renderer function "${call.call}".`,
+        );
       }
     } else if ('deleteSurface' in msg && msg.deleteSurface) {
       surfaces.delete(msg.deleteSurface.surfaceId);
@@ -732,6 +861,8 @@ function validateComponentAgainstCatalog(
   const allowed = new Set([
     'id',
     'component',
+    'catalogId',
+    'accessibility',
     ...spec.props.map((p) => p.name),
   ]);
   for (const key of Object.keys(comp)) {
@@ -1027,6 +1158,7 @@ function setDataModelValue(
   current: unknown,
   path: string,
   value: unknown,
+  deleteNull = false,
 ): unknown {
   const segments = dataPathSegments(path);
   if (segments.length === 0) return value;
@@ -1043,7 +1175,15 @@ function setDataModelValue(
     } else {
       nextContainer = {};
     }
-    const child = (nextContainer as Record<string, unknown>)[segment];
+    if (deleteNull && value === null && index === segments.length - 1) {
+      if (Array.isArray(nextContainer)) {
+        nextContainer.splice(Number(segment), 1);
+      } else delete nextContainer[segment];
+      return nextContainer;
+    }
+    const child = Object.hasOwn(nextContainer, segment)
+      ? (nextContainer as Record<string, unknown>)[segment]
+      : undefined;
     (nextContainer as Record<string, unknown>)[segment] = setAt(
       child,
       index + 1,

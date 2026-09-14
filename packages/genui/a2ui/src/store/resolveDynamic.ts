@@ -127,6 +127,7 @@ function resolveSignal(
   const resolvedPath = processor.resolvePath(path, dataContextPath);
   const signal = store.getSignal(resolvedPath);
   const raw = signal.value;
+  if (surface.version === 'v1.0') return raw;
   if (raw === undefined || raw === null) return raw;
   if (typeof raw !== 'string') return raw;
   try {

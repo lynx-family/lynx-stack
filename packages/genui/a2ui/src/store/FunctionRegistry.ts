@@ -37,6 +37,7 @@ export type FunctionImpl = (
  */
 export interface FunctionDefinition {
   name: string;
+  allowedCallers?: 'rendererOnly' | 'agentOnly' | 'rendererOrAgent';
   description?: string;
   parameters: Record<string, unknown>;
   returnType:
@@ -46,7 +47,8 @@ export interface FunctionDefinition {
     | 'array'
     | 'object'
     | 'any'
-    | 'void';
+    | 'void'
+    | 'validationResult';
 }
 
 /**

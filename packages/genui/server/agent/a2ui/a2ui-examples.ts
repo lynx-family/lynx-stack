@@ -20,21 +20,21 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
     user: 'Generate a login card with email, password, and a submit button.',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           value: { form: { email: '', password: '' } },
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -84,14 +84,14 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
     user: 'Show three trip ideas as a compact vertical group.',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           path: '/items',
@@ -106,7 +106,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -160,14 +160,14 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
     user: 'Show weekly active users as a line chart.',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           value: {
@@ -179,7 +179,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -216,7 +216,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
       'A2UI_USER_ACTION: {"surfaceId":"main","action":{"name":"submit_login","context":{"email":"me@example.com"}}}',
     messages: [
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateDataModel: {
           surfaceId: 'main',
           path: '/status',
@@ -227,7 +227,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [

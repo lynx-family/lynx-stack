@@ -40,7 +40,7 @@ export interface TextFieldProps extends GenericComponentProps {
         returnType?: 'boolean';
       };
     /** The error message to display if the check fails. */
-    message: string;
+    message?: string;
   }>;
 }
 

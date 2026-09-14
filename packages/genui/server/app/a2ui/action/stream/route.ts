@@ -47,10 +47,16 @@ import { readJsonBodyWithLimit } from '../../../common/request';
 import { encodeSSE, sseHeaders } from '../../../common/sse';
 import { createStreamLogger } from '../../../common/stream-logger';
 import { extractUsageMetrics } from '../../../common/usage';
-import { pickA2UIChatOptions, validateAction } from '../../_shared';
+import {
+  normalizeRendererEvent,
+  pickA2UIChatOptions,
+  rejectUnknownAgentFunction,
+  validateAction,
+} from '../../_shared';
+import type { A2UIRendererEventBody } from '../../_shared';
 import { publishA2UIPayload } from '../../payload-publisher';
 
-interface A2UIActionStreamBody {
+interface A2UIActionStreamBody extends A2UIRendererEventBody {
   conversation?: unknown;
   surfaceId?: string;
   action?: unknown;
@@ -98,7 +104,18 @@ async function postA2UIActionStream(req: Request) {
       { status: parsed.status },
     );
   }
-  const body = parsed.body;
+  const body = normalizeRendererEvent(parsed.body);
+  const functionResponse = rejectUnknownAgentFunction(body);
+  if (functionResponse?.status === 200) {
+    return new Response(encodeSSE('done', functionResponse.body), {
+      headers: sseHeaders(req),
+    });
+  }
+  if (functionResponse) {
+    return jsonWithCors(req, functionResponse.body, {
+      status: functionResponse.status,
+    });
+  }
 
   const validationStartedAt = performance.now();
   const validatedAction = validateAction(body.action);

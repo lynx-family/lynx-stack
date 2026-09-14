@@ -2,11 +2,19 @@
 
 [English](./README.md) | 简体中文
 
-`@lynx-js/genui/a2ui` 是面向 A2UI v0.9 的 ReactLynx 客户端运行时。它消费经过校验的
+`@lynx-js/genui/a2ui` 是支持 A2UI v1.0 和 v0.9 的 ReactLynx 客户端运行时。它消费经过校验的
 A2UI server-to-client JSON messages，并在你的应用中渲染可信的 ReactLynx 组件。
 
 当你已经有、或准备构建一个返回 A2UI messages 的 Agent 服务时，使用这个包。它不托管 Agent，不调用
 LLM，不拥有后端路由，也不提供 chat shell。你的应用负责传输层，并把消息写入 renderer。
+
+GenUI server 默认生成 `v1.0`，同时兼容 v0.9。客户端支持 `createSurface` 内嵌
+`components` 和 `dataModel`、保留 JSON 类型的数据子树替换、`null` 删除和结构化校验结果。
+通过 `onMessage(message, metadata)` 转发 v1.0 协议事件，再把响应写入 `messageStore`。
+现有 `onAction` 回调继续可用；发送 action 时只使用其中一个回调，避免重复请求。
+自定义 catalog 通过 `catalogId` 指定。只有显式声明 `allowedCallers` 为 `agentOnly`
+或 `rendererOrAgent` 的 renderer 函数可以被 agent 调用。Server 尚未注册 agent 端的
+catalog 函数，对这类调用返回带原始请求 ID 的 `UNKNOWN_FUNCTION`。
 
 如果你第一次接触 A2UI，可以先这样理解：
 

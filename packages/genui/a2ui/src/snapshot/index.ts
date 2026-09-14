@@ -1,6 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import {
+  expandMessage,
+  flattenDataModel,
+  replaceDataModel,
+} from '../store/protocol.js';
 import type {
   ComponentInstance,
   ServerToClientMessage,
@@ -36,6 +41,7 @@ interface SnapshotTemplateInfo {
 
 interface SnapshotSurfaceState {
   surfaceId: string;
+  version?: 'v0.9' | 'v0.9.1' | 'v1.0';
   catalogId?: string;
   theme?: Readonly<Record<string, unknown>>;
   sendDataModel?: boolean;
@@ -161,6 +167,7 @@ function getTemplateInfo(
 
 function readDataValue(surface: SnapshotSurfaceState, path: string): unknown {
   const raw = surface.dataModel.get(path);
+  if (surface.version === 'v1.0') return raw;
   if (raw === undefined || raw === null) return raw;
   if (typeof raw !== 'string') return raw;
   try {
@@ -382,7 +389,7 @@ function createSurfaceMessage(
     createSurface['sendDataModel'] = surface.sendDataModel;
   }
   return {
-    version: 'v0.9',
+    version: surface.version ?? 'v0.9',
     createSurface,
   } as ServerToClientMessage;
 }
@@ -391,6 +398,7 @@ function createDataMessage(
   surfaceId: string,
   path: string,
   value: unknown,
+  version: ServerToClientMessage['version'] = 'v0.9',
 ): ServerToClientMessage {
   const updateDataModel: JsonRecord = {
     surfaceId,
@@ -398,7 +406,7 @@ function createDataMessage(
   };
   if (path !== '/') updateDataModel['path'] = path;
   return {
-    version: 'v0.9',
+    version,
     updateDataModel,
   } as ServerToClientMessage;
 }
@@ -406,9 +414,10 @@ function createDataMessage(
 function createComponentsMessage(
   surfaceId: string,
   components: ComponentInstance[],
+  version: ServerToClientMessage['version'] = 'v0.9',
 ): ServerToClientMessage {
   return {
-    version: 'v0.9',
+    version,
     updateComponents: {
       surfaceId,
       components: components.map(component =>
@@ -422,7 +431,9 @@ class A2UISnapshotMachine {
   private surfaces = new Map<string, SnapshotSurfaceState>();
 
   applyAll(messages: readonly ServerToClientMessage[]): void {
-    for (const message of messages) this.apply(message);
+    for (const message of messages.flatMap(message => expandMessage(message))) {
+      this.apply(message);
+    }
   }
 
   apply(message: ServerToClientMessage): void {
@@ -453,6 +464,11 @@ class A2UISnapshotMachine {
       for (const component of reachableComponents) {
         collectDataPaths(component, component.dataContextPath, retainedPaths);
       }
+      // Preserve typed containers, collection context and sendDataModel state.
+      if (surface.version === 'v1.0') {
+        retainedPaths.clear();
+        retainedPaths.add('/');
+      }
       const retainedExistingPaths = [...retainedPaths]
         .filter(path => surface.dataModel.has(path))
         .sort(comparePaths);
@@ -467,12 +483,14 @@ class A2UISnapshotMachine {
           surface.surfaceId,
           path,
           surface.dataModel.get(path),
+          surface.version,
         ));
       }
       if (reachableComponents.length > 0) {
         messages.push(createComponentsMessage(
           surface.surfaceId,
           reachableComponents,
+          surface.version,
         ));
       }
 
@@ -522,6 +540,7 @@ class A2UISnapshotMachine {
     if (typeof surfaceId !== 'string' || surfaceId.length === 0) return;
 
     const surface = this.getOrCreateSurface(surfaceId);
+    surface.version = message.version;
     if (typeof createSurface['catalogId'] === 'string') {
       surface.catalogId = createSurface['catalogId'];
     }
@@ -592,6 +611,17 @@ class A2UISnapshotMachine {
     const value = updateDataModel['value'];
     const updates: Array<{ path: string; value: unknown }> = [];
 
+    if (message.version === 'v1.0') {
+      surface.dataModel = flattenDataModel(
+        replaceDataModel(
+          surface.dataModel.get('/'),
+          typeof path === 'string' ? path : '/',
+          value,
+        ),
+      );
+      this.expandTemplates(surface);
+      return;
+    }
     if (value !== undefined) {
       const basePath = typeof path === 'string' && path !== ''
         ? normalizePath(path)

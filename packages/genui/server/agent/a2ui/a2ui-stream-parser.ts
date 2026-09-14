@@ -2,7 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isLoadableImageSource } from './a2ui-validator.js';
+import {
+  A2UIMessageArray,
+  expandA2UIMessage,
+  isLoadableImageSource,
+} from './a2ui-validator.js';
 import type { A2UIMessage } from './a2ui-validator.js';
 
 type A2UIUpdateComponentsMessage = Extract<
@@ -43,12 +47,20 @@ function hasRecordKey(
 }
 
 function isA2UIMessage(value: unknown): value is A2UIMessage {
-  if (!isRecord(value) || value.version !== 'v0.9') return false;
+  if (
+    !isRecord(value)
+    || !['v0.9', 'v0.9.1', 'v1.0'].includes(value.version as string)
+  ) return false;
+  if ('callRendererFunction' in value || 'agentFunctionResponse' in value) {
+    return A2UIMessageArray.safeParse([value]).success;
+  }
 
+  const version = value.version;
   if (hasRecordKey(value, 'createSurface')) {
     const createSurface = value.createSurface;
     return typeof createSurface.surfaceId === 'string'
-      && typeof createSurface.catalogId === 'string';
+      && (typeof createSurface.catalogId === 'string'
+        || (version === 'v1.0' && createSurface.catalogId === undefined));
   }
 
   if (hasRecordKey(value, 'updateComponents')) {
@@ -139,9 +151,12 @@ function createPlaceholderComponent(id: string): ComponentRecord {
   return { id, component: 'Loading', variant: 'block' };
 }
 
-function createSurfaceLoadingMessage(surfaceId: string): A2UIMessage {
+function createSurfaceLoadingMessage(
+  surfaceId: string,
+  version: A2UIMessage['version'],
+): A2UIMessage {
   return {
-    version: 'v0.9',
+    version,
     updateComponents: {
       surfaceId,
       components: [
@@ -205,6 +220,7 @@ interface JsonFrame {
   key: string;
   expectingKey: boolean;
   surfaceId?: string;
+  version?: A2UIMessage['version'];
 }
 
 function childFrameRole(
@@ -237,6 +253,7 @@ export class A2UIProtocolMessageStreamParser {
   private escaped = false;
   private stringStart = 0;
   private frames: JsonFrame[] = [];
+  private versions = new Map<string, A2UIMessage['version']>();
   private surfaces = new Map<string, SurfaceComponents>();
   private createdSurfaceIds = new Set<string>();
 
@@ -264,6 +281,11 @@ export class A2UIProtocolMessageStreamParser {
             if (frame.expectingKey) {
               frame.key = this.parse(this.stringStart, i) as string;
               frame.expectingKey = false;
+            } else if (frame.role === 'message' && frame.key === 'version') {
+              const value = this.parse(this.stringStart, i);
+              if (value === 'v0.9' || value === 'v0.9.1' || value === 'v1.0') {
+                frame.version = value;
+              }
             } else if (frame.role === 'update' && frame.key === 'surfaceId') {
               const value = this.parse(this.stringStart, i);
               if (typeof value === 'string') frame.surfaceId = value;
@@ -290,7 +312,9 @@ export class A2UIProtocolMessageStreamParser {
         this.frames.pop();
         if (frame.role === 'component') {
           const update = this.frames.at(-2);
-          if (update?.surfaceId) {
+          const envelope = this.frames.at(-3);
+          if (update?.surfaceId && envelope?.version) {
+            this.versions.set(update.surfaceId, envelope.version);
             this.addComponent(update.surfaceId, this.parse(frame.start, i));
           }
         } else if (frame.role === 'message') {
@@ -337,7 +361,18 @@ export class A2UIProtocolMessageStreamParser {
 
   private completeMessage(value: unknown, messages: A2UIMessage[]): void {
     if (!isA2UIMessage(value)) return;
+    if (
+      'createSurface' in value && value.version === 'v1.0'
+      && (value.createSurface.components !== undefined
+        || value.createSurface.dataModel !== undefined)
+    ) {
+      for (const message of expandA2UIMessage(value)) {
+        this.completeMessage(message, messages);
+      }
+      return;
+    }
     if (isUpdateComponentsMessage(value)) {
+      this.versions.set(value.updateComponents.surfaceId, value.version);
       // Also handle legal JSON with surfaceId after components. A component is
       // only streamed early when its enclosing update has already identified it.
       for (const component of value.updateComponents.components) {
@@ -353,7 +388,8 @@ export class A2UIProtocolMessageStreamParser {
       const id = value.createSurface.surfaceId;
       this.surfaces.delete(id);
       this.createdSurfaceIds.add(id);
-      messages.push(value, createSurfaceLoadingMessage(id));
+      this.versions.set(id, value.version);
+      messages.push(value, createSurfaceLoadingMessage(id, value.version));
     } else {
       if ('deleteSurface' in value && value.deleteSurface) {
         const id = value.deleteSurface.surfaceId;
@@ -431,7 +467,7 @@ export class A2UIProtocolMessageStreamParser {
       }
       if (changed.length > 0) {
         messages.push({
-          version: 'v0.9',
+          version: this.versions.get(surfaceId) ?? 'v1.0',
           updateComponents: { surfaceId, components: changed },
         });
       }

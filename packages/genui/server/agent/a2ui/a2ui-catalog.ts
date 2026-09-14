@@ -50,6 +50,7 @@ export interface A2UICatalog {
  * Prompt-facing schema for a client-side function the agent may call.
  */
 export interface A2UIFunctionSpec {
+  allowedCallers?: 'rendererOnly' | 'agentOnly' | 'rendererOrAgent';
   description?: string;
   name: string;
   parameters: JsonSchema;
@@ -60,7 +61,8 @@ export interface A2UIFunctionSpec {
     | 'array'
     | 'object'
     | 'any'
-    | 'void';
+    | 'void'
+    | 'validationResult';
 }
 
 /**
@@ -344,8 +346,8 @@ export function createA2UICatalogFromManifests(options: {
 
 export const BASIC_CATALOG: A2UICatalog = {
   id: BASIC_CATALOG_ID,
-  label: 'Lynx A2UI basic catalog (v0.9)',
-  version: 'v0.9',
+  label: 'Lynx A2UI basic catalog (v1.0)',
+  version: 'v1.0',
   components: componentManifestsFromGeneratedCatalog(generatedCatalog)
     .map((manifest) => componentFromManifest(manifest))
     .filter((component): component is A2UIComponentSpec => component !== null),
@@ -402,8 +404,8 @@ function createA2UICatalogFromExtractedManifest(
     catalogId: manifest.catalogId ?? BASIC_CATALOG_ID,
     componentManifests: componentManifestsFromGeneratedCatalog(manifest),
     functions: functionsFromGeneratedCatalog(manifest),
-    label: 'Lynx A2UI basic catalog (v0.9)',
-    version: 'v0.9',
+    label: 'Lynx A2UI basic catalog (v1.0)',
+    version: 'v1.0',
     extraRules: [
       'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
       'The implemented checkbox component is named "CheckBox" with a capital B.',

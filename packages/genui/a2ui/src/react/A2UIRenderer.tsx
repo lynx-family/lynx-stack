@@ -8,6 +8,7 @@ import { useA2UIContext } from './useA2UIContext.js';
 import { useAction } from './useAction.js';
 import { useCatalog } from './useCatalog.js';
 import { splitUnsupportedProps, useResolvedProps } from './useDataBinding.js';
+import { resolveCatalog } from '../catalog/defineCatalog.js';
 import { Loading } from '../catalog/Loading/index.jsx';
 import type { LoadingProps } from '../catalog/Loading/index.jsx';
 import type { ComponentInstance, Resource, Surface } from '../store/types.js';
@@ -247,7 +248,7 @@ function NodeRendererImpl(
     renderUnsupported,
   } = props;
   const { catalog: activeCatalog, processor } = useA2UIContext();
-  const catalog = useCatalog();
+  const defaultCatalog = useCatalog();
 
   const resource = surface.resources.get(initialComponent.id!);
 
@@ -264,6 +265,19 @@ function NodeRendererImpl(
       && component.dataContextPath !== initialComponent.dataContextPath
     ? { ...component, dataContextPath: initialComponent.dataContextPath }
     : component;
+
+  const qualifiedCatalog = processor.getCatalog(
+    typeof effectiveComponent['catalogId'] === 'string'
+      ? effectiveComponent['catalogId']
+      : surface.catalogId,
+  );
+  const catalog = useMemo(
+    () =>
+      surface.version === 'v1.0'
+        ? (qualifiedCatalog ? resolveCatalog(qualifiedCatalog) : new Map())
+        : defaultCatalog,
+    [surface.version, qualifiedCatalog, defaultCatalog],
+  );
 
   useEffect(() => {
     const tag = effectiveComponent.component;
@@ -307,7 +321,11 @@ function NodeRendererImpl(
       resolvedProps,
       setValue,
       (a: Record<string, unknown>) => {
-        void sendAction(a as unknown as Parameters<typeof sendAction>[0]);
+        void sendAction(a as unknown as Parameters<typeof sendAction>[0]).catch(
+          error => {
+            console.warn('[a2ui] Action failed:', error);
+          },
+        );
       },
       suppressActionDispatch,
     )

@@ -5,9 +5,9 @@
 import type { A2UICatalog } from './a2ui-catalog.js';
 import { loadBasicCatalog, renderCatalogReference } from './a2ui-catalog.js';
 
-export const A2UI_PROTOCOL_VERSION = 'v0.9';
+export const A2UI_PROTOCOL_VERSION = 'v1.0';
 
-const PROTOCOL_OVERVIEW = `# A2UI (Agent-to-UI) Protocol v0.9
+const PROTOCOL_OVERVIEW = `# A2UI (Agent-to-UI) Protocol v1.0
 
 A2UI is a JSON-based, streaming UI protocol from Google
 (https://github.com/google/A2UI). It lets an LLM agent describe a user interface
@@ -15,8 +15,8 @@ by emitting a sequence of declarative JSON messages that a renderer turns into
 native widgets. There is NO arbitrary code: the renderer only knows the
 components in the agreed-upon catalog.
 
-## Official v0.9 design principles
-- Prompt-first: v0.9 is meant to be embedded directly in the model prompt, so
+## Official v1.0 design principles
+- Prompt-first: v1.0 is meant to be embedded directly in the model prompt, so
   emit JSON that follows the in-context schema and examples exactly.
 - Safe like data, expressive like code: describe UI intent using trusted catalog
   components only. Never emit JavaScript, HTML, CSS, event handlers or scripts.
@@ -29,7 +29,7 @@ components in the agreed-upon catalog.
   validation and transport convenience.
 
 ## Server-to-client message types
-Every message MUST be a top-level JSON object with the field "version": "v0.9"
+Every message MUST be a top-level JSON object with the field "version": "v1.0"
 and exactly ONE of the following keys:
 
 1. "createSurface"   – initialise a new UI surface.
@@ -48,14 +48,19 @@ and exactly ONE of the following keys:
 
 ## Envelope semantics
 - createSurface creates a surface. Once created, its surfaceId and catalogId are
-  fixed. To change catalog/theme, delete and recreate the surface.
+  fixed. To change catalog, delete and recreate the surface. Styling belongs to the host; do not emit createSurface.theme.
 - updateComponents adds or replaces component definitions for that surface. It
   may reference data paths, but for smooth streaming those paths SHOULD already
   be populated by an earlier updateDataModel in the same response.
 - updateDataModel has shape:
-    { "version": "v0.9",
-      "updateDataModel": { "surfaceId": string, "path"?: string, "value"?: any } }
-  "path" defaults to "/" and "value" may be any JSON value.
+    { "version": "v1.0",
+      "updateDataModel": { "surfaceId": string, "path"?: string, "value": any } }
+  "path" defaults to "/". Replace the entire subtree at the path; null deletes it.
+- createSurface may include "components" and "dataModel" to initialize a surface
+  in one message. Prefer separate updates for progressive streaming.
+- v1.0 supports callRendererFunction and agentFunctionResponse envelopes. Only
+  invoke renderer functions explicitly declared agentOnly or rendererOrAgent
+  in the selected catalog; the built-in functions default to rendererOnly.
 - deleteSurface removes a surface when the UI is no longer needed.
 
 ## Component model
@@ -123,7 +128,7 @@ function buildHardRules(catalogId: string): string {
   return `## Hard rules
 1. Output MUST be a JSON ARRAY of A2UI messages. No prose, no Markdown, no
    code fences, no XML. First character '[' – last character ']'.
-2. Each element MUST include "version": "v0.9".
+2. Each element MUST include "version": "v1.0".
 3. Output pretty-printed JSON with 2-space indentation. Do NOT emit minified
    single-line JSON. Put each message object and each component object on its
    own lines so brackets and braces stay balanced.
@@ -234,7 +239,7 @@ export function buildA2UISystemPrompt(
   }
   const parts = [
     'You are an A2UI (Agent-to-UI) generation agent. Translate the user\'s',
-    'natural-language request into a stream of A2UI v0.9 JSON messages that a',
+    'natural-language request into a stream of A2UI v1.0 JSON messages that a',
     'client renderer can consume. A downstream validator will reject malformed',
     'output – if you violate the protocol the user sees nothing.',
     '',

@@ -22,7 +22,7 @@ import { isDataBinding, isFunctionCall } from '../store/utils.js';
  */
 export interface CheckLike {
   condition: unknown;
-  message: string;
+  message?: string;
 }
 
 function evaluateCondition(
@@ -31,7 +31,7 @@ function evaluateCondition(
   surfaceId: string,
   dataContextPath?: string,
   functions?: readonly CatalogFunctionEntry[],
-): boolean {
+): unknown {
   if (typeof condition === 'boolean') return condition;
   if (isFunctionCall(condition)) {
     const result = executeFunctionCall(
@@ -41,27 +41,26 @@ function evaluateCondition(
       dataContextPath,
       { functions },
     );
-    return Boolean(result);
+    return result;
   }
   if (isDataBinding(condition)) {
-    return Boolean(
-      resolveDynamicValue(
-        processor,
-        condition,
-        surfaceId,
-        dataContextPath,
-        {
-          functions,
-          resolveFunctionCall: executeFunctionCall,
-        },
-      ),
+    return resolveDynamicValue(
+      processor,
+      condition,
+      surfaceId,
+      dataContextPath,
+      {
+        functions,
+        resolveFunctionCall: executeFunctionCall,
+      },
     );
   }
   // Unknown shape — treat as passing rather than blocking the user.
   return true;
 }
 
-function evaluateChecks(
+/** Evaluate legacy boolean checks and v1.0 ValidationResult values. @internal */
+export function evaluateChecks(
   processor: MessageProcessor,
   checks: CheckLike[] | undefined,
   surface: Surface | undefined,
@@ -73,19 +72,23 @@ function evaluateChecks(
   }
   const failures: CheckFailure[] = [];
   for (const rule of checks) {
-    const ok = evaluateCondition(
+    const result = evaluateCondition(
       processor,
       rule.condition,
       surface.surfaceId,
       dataContextPath,
       functions,
     );
+    const validation = result && typeof result === 'object' && 'valid' in result
+      ? result as { valid: boolean; message?: string }
+      : undefined;
+    const ok = validation ? validation.valid : Boolean(result);
     if (!ok) {
       failures.push({
         call: isFunctionCall(rule.condition)
           ? rule.condition.call
           : 'condition',
-        message: rule.message,
+        message: validation?.message ?? rule.message ?? 'Validation failed',
       });
     }
   }

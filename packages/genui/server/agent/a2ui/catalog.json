@@ -143,8 +143,7 @@
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
@@ -335,8 +334,7 @@
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
@@ -598,8 +596,7 @@
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -819,8 +816,7 @@
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -1858,8 +1854,7 @@
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -2109,8 +2104,7 @@
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },

@@ -140,3 +140,103 @@ export function validateAction(value: unknown):
     error: 'action.name is required',
   };
 }
+
+/** Common transport fields accepted alongside v1.0 renderer envelopes. */
+export interface A2UIRendererEventBody {
+  version?: string;
+  surfaceId?: string;
+  action?: unknown;
+  callAgentFunction?: unknown;
+  rendererFunctionResponse?: unknown;
+  error?: unknown;
+  metadata?: unknown;
+  conversation?: unknown;
+}
+
+/** Adapt a v1.0 action and transport metadata to the existing stateless service. */
+export function normalizeRendererEvent<T extends A2UIRendererEventBody>(
+  body: T,
+): T & A2UIRendererEventBody {
+  if (body.version !== 'v1.0') return body;
+  const response = body.rendererFunctionResponse;
+  const feedback = body.error;
+  let action = body.action;
+  if (
+    action === undefined && isRecord(response)
+    && typeof response.functionCallId === 'string'
+    && (('value' in response) !== ('error' in response))
+  ) {
+    action = { name: 'rendererFunctionResponse', context: response };
+  } else if (
+    action === undefined && isRecord(feedback)
+    && typeof feedback.code === 'string' && typeof feedback.message === 'string'
+  ) {
+    action = { name: 'rendererError', context: feedback };
+  }
+  const surfaceId =
+    isRecord(body.action) && typeof body.action.surfaceId === 'string'
+      ? body.action.surfaceId
+      : body.surfaceId;
+  const model = isRecord(body.metadata)
+    ? body.metadata.a2uiRendererDataModel
+    : undefined;
+  const surfaces =
+    isRecord(model) && model.version === 'v1.0' && isRecord(model.surfaces)
+      ? model.surfaces
+      : undefined;
+  return {
+    ...body,
+    ...(action === undefined ? {} : { action }),
+    ...(surfaceId === undefined ? {} : { surfaceId }),
+    ...(surfaceId && surfaces && Object.hasOwn(surfaces, surfaceId)
+        && (body.conversation === undefined || isRecord(body.conversation))
+      ? {
+        conversation: {
+          ...(isRecord(body.conversation) ? body.conversation : {}),
+          dataModel: surfaces[surfaceId],
+        },
+      }
+      : {}),
+  };
+}
+
+/** The service has no agent-side catalog functions; reject RPCs deterministically. */
+export function rejectUnknownAgentFunction(
+  body: A2UIRendererEventBody,
+): { status: number; body: unknown } | undefined {
+  if (body.callAgentFunction === undefined) return undefined;
+  const request = body.callAgentFunction;
+  if (
+    body.version !== 'v1.0' || body.action !== undefined || !isRecord(request)
+    || typeof request.functionCallId !== 'string' || !request.functionCallId
+    || typeof request.surfaceId !== 'string' || !request.surfaceId
+    || !isRecord(request.callFunction)
+    || typeof request.callFunction.call !== 'string'
+    || !request.callFunction.call
+  ) {
+    return {
+      status: 400,
+      body: { ok: false, error: 'Invalid callAgentFunction envelope' },
+    };
+  }
+  const invalidArgs = request.callFunction.args !== undefined
+    && !isRecord(request.callFunction.args);
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      messages: [{
+        version: 'v1.0',
+        agentFunctionResponse: {
+          functionCallId: request.functionCallId,
+          error: {
+            code: invalidArgs ? 'INVALID_FUNCTION_CALL' : 'UNKNOWN_FUNCTION',
+            message: invalidArgs
+              ? 'Function args must be an object'
+              : `No agent implementation registered for "${request.callFunction.call}"`,
+          },
+        },
+      }],
+    },
+  };
+}

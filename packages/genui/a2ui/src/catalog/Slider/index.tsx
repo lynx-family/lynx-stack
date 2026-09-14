@@ -75,7 +75,7 @@ export interface SliderProps extends GenericComponentProps {
         | 'void';
     };
     /** The error message to display if the check fails. */
-    message: string;
+    message?: string;
   }>;
 }
 

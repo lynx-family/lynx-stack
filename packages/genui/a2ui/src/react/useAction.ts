@@ -37,7 +37,7 @@ export function useAction(
           action.functionCall,
           surfaceId,
           dataContext,
-          { functions: catalog.functions },
+          { functions: catalog.functions, awaitResult: true },
         ));
       }
 
@@ -55,7 +55,10 @@ export function useAction(
               value,
               surfaceId,
               dataContext,
-              { functions: catalog.functions },
+              {
+                functions: catalog.functions,
+                resolveFunctionCall: executeFunctionCall,
+              },
             );
           }
           context = resolvedContext;
@@ -73,7 +76,9 @@ export function useAction(
       // Dispatch through the processor — `<A2UI>` listens via
       // `processor.onEvent` and forwards the action to its `onAction`
       // prop, which the developer wires to their agent.
-      return processor.dispatch({ userAction });
+      return processor.getOrCreateSurface(surfaceId).version === 'v1.0'
+        ? processor.sendMessage({ version: 'v1.0', action: userAction })
+        : processor.dispatch({ userAction });
     },
     [id, surfaceId, dataContext, processor, catalog.functions],
   );
