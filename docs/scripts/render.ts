@@ -49,14 +49,16 @@ export interface Locale {
   untranslated: string;
   source: string;
   changelog: string;
-  lynxOptions: string;
-  rsbuildOptions: string;
-  rsbuildOptionsIntro: string;
   lynxDefault: string;
-  rsbuildDocs: string;
+  rsbuildDefault: string;
   rsbuildDocsBase: string;
+  defaultsDiffer: string;
+  overviewLegend: string;
+  usage: string;
   withPluginLynx: string;
+  withRspeedy: string;
   rspeedyOnly: string;
+  options: string;
   lynxBadge: string;
 }
 
@@ -84,15 +86,17 @@ export const EN: Locale = {
   untranslated: 'EN',
   source: 'Source',
   changelog: 'Changelog',
-  lynxOptions: 'Lynx-specific options',
-  rsbuildOptions: 'Rsbuild options',
-  rsbuildOptionsIntro:
-    'Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.',
   lynxDefault: 'Lynx default',
-  rsbuildDocs: 'Rsbuild docs',
+  rsbuildDefault: 'Rsbuild default',
   rsbuildDocsBase: 'https://rsbuild.rs/config/',
-  withPluginLynx: 'With Rsbuild, pass this option to {link}.',
-  rspeedyOnly: 'Available only in `lynx.config.ts` (Rspeedy).',
+  defaultsDiffer: 'Defaults that differ from Rsbuild',
+  overviewLegend:
+    'Options marked {badge} are specific to Lynx and have their own page here; the others link to the Rsbuild documentation.',
+  usage: 'Usage',
+  withPluginLynx: 'With Rsbuild, pass it to {link}:',
+  withRspeedy: 'With Rspeedy, set it in `lynx.config.ts`:',
+  rspeedyOnly: 'Available only in `lynx.config.ts` (Rspeedy):',
+  options: 'Options',
   lynxBadge: 'Lynx',
 };
 
@@ -120,15 +124,17 @@ export const ZH: Locale = {
   untranslated: '待翻译',
   source: '源码',
   changelog: '更新日志',
-  lynxOptions: 'Lynx 特有配置',
-  rsbuildOptions: 'Rsbuild 配置',
-  rsbuildOptionsIntro:
-    '以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。',
   lynxDefault: 'Lynx 默认值',
-  rsbuildDocs: 'Rsbuild 文档',
+  rsbuildDefault: 'Rsbuild 默认值',
   rsbuildDocsBase: 'https://rsbuild.rs/zh/config/',
-  withPluginLynx: '使用 Rsbuild 构建时，将此选项传给 {link}。',
-  rspeedyOnly: '仅在 `lynx.config.ts`（Rspeedy）中可用。',
+  defaultsDiffer: '与 Rsbuild 默认值不同的配置',
+  overviewLegend:
+    '标有 {badge} 的是 Lynx 特有配置，在本站有单独的页面；其余配置链接到 Rsbuild 文档。',
+  usage: '使用方式',
+  withPluginLynx: '使用 Rsbuild 构建时，将它传给 {link}：',
+  withRspeedy: '使用 Rspeedy 时，在 `lynx.config.ts` 中设置：',
+  rspeedyOnly: '仅在 `lynx.config.ts`（Rspeedy）中可用：',
+  options: '选项',
   lynxBadge: 'Lynx',
 };
 
@@ -479,39 +485,19 @@ function showLynxDefault(
   return plainDefault(literal) !== plainDefault(rsbuild ?? '');
 }
 
-function firstSentence(text: string): string {
-  let inCode = false;
-  let depth = 0;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i]!;
-    if (ch === '`') inCode = !inCode;
-    if (inCode) continue;
-    if (ch === '(' || ch === '[') depth++;
-    else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
-    else if (depth === 0) {
-      if (ch === '。') return text.slice(0, i + 1);
-      if (ch === '\n' && text[i + 1] === '\n') return text.slice(0, i);
-      if (
-        ch === '.' && (i + 1 === text.length || /\s/.test(text[i + 1]!))
-        && !/(?:e\.g|i\.e|etc)$/.test(text.slice(0, i))
-      ) return text.slice(0, i + 1);
-    }
-  }
-  return text;
+export function configPageUrl(path: string): string {
+  const [ns = '', ...rest] = path.split('.');
+  return rest.length > 0
+    ? `/config/${ns}/${rest.map(s => kebab(s)).join('-')}`
+    : `/config/${kebab(ns)}`;
 }
 
-function pluginLynxNote(path: string, m: ApiMember, ctx: Ctx): string {
-  const site = ctx.site?.get(`rsbuild-plugin|${path}`);
-  if (site) {
-    const [page = ''] = site.url.split('#');
-    const url = page === ctx.page
-      ? site.url.slice(page.length)
-      : `${ctx.prefix ?? ''}${site.url}`;
-    return `${
-      ctx.l.withPluginLynx.replace('{link}', `[\`pluginLynx\`](${url})`)
-    }\n\n`;
-  }
-  return m.deprecated === undefined ? `${ctx.l.rspeedyOnly}\n\n` : '';
+function rsbuildDefaultCell(text: string, ctx: Ctx): string {
+  const t = text.trim();
+  const fenced = /^```[a-z]*\n([\s\S]*?)\n```$/.exec(t)?.[1];
+  const source = fenced ?? (t.includes('`') ? undefined : t);
+  if (source === undefined) return flat(md(t, ctx));
+  return code(source.replace(/\/\/[^\n]*/g, '').replace(/\s+/g, ' ').trim());
 }
 
 interface ConfigItem {
@@ -550,76 +536,213 @@ function collectLynx(
   }
 }
 
-function renderConfig(
-  members: ApiMember[],
-  prefix: string,
-  depth: number,
-  ctx: Ctx,
-  owner: string,
-  rsbuild: RsbuildOptions,
-): string {
-  const pathOf = (m: ApiMember) => prefix ? `${prefix}.${m.name}` : m.name;
-  const rows = members.filter(m => isRsbuild(pathOf(m), rsbuild));
-  const lynx: ConfigItem[] = [];
-  collectLynx(members, prefix, owner, ctx, rsbuild, new Set([owner]), lynx);
-  for (const m of rows) {
-    ctx.anchors.set(pathOf(m), slug(pathOf(m)));
-    const e = expandable(m, ctx);
-    if (e && !ctx.anchors.has(e.name)) ctx.anchors.set(e.name, slug(pathOf(m)));
-  }
-  for (const { m, path } of lynx) {
-    ctx.anchors.set(path, slug(path));
-    const e = expandable(m, ctx);
-    if (e) {
-      if (!ctx.anchors.has(e.name)) ctx.anchors.set(e.name, slug(path));
-      registerAnchors(e.members ?? [], path, ctx);
+interface ConfigGroup {
+  name: string;
+  items: (ConfigItem & { lynx: boolean })[];
+}
+
+const CONFIG_GROUP_ORDER = [
+  'base',
+  'source',
+  'output',
+  'dev',
+  'server',
+  'resolve',
+  'performance',
+  'tools',
+];
+
+function groupRank(name: string): number {
+  const i = CONFIG_GROUP_ORDER.indexOf(name);
+  return i === -1 ? CONFIG_GROUP_ORDER.length : i;
+}
+
+function configGroups(ctx: Ctx, rsbuild: RsbuildOptions): ConfigGroup[] {
+  const root = findExport(ctx, 'Config');
+  if (!root?.members) throw new Error(`${ctx.api.id} has no Config interface`);
+  const base: ConfigGroup = { name: 'base', items: [] };
+  const groups: ConfigGroup[] = [base];
+  for (const top of root.members) {
+    const ns = top.type === top.ref ? expandable(top, ctx) : undefined;
+    if (!ns) {
+      base.items.push({
+        m: top,
+        path: top.name,
+        owner: root.name,
+        lynx: !isRsbuild(top.name, rsbuild),
+      });
+      continue;
     }
-  }
-  const h = '#'.repeat(Math.max(depth - 1, 2));
-  let s = '';
-  if (lynx.length > 0) {
-    s += `${h} ${ctx.l.lynxOptions} \\{#lynx-options\\}\n\n`;
-    for (const { m, path, owner: o } of lynx) {
-      const key = `${o}.${m.name}`;
-      s += heading(depth, path, m, ctx, key);
-      s += metaList(m, ctx, key);
-      s += body(m, ctx, key);
-      s += pluginLynxNote(path, m, ctx);
-      if (m.params) s += paramsTable(m.params, ctx, key);
-      const e = expandable(m, ctx);
+    const group: ConfigGroup = { name: top.name, items: [] };
+    for (const m of ns.members ?? []) {
+      const path = `${top.name}.${m.name}`;
+      const lynx = !isRsbuild(path, rsbuild);
+      group.items.push({ m, path, owner: ns.name, lynx });
+      const e = lynx ? undefined : expandable(m, ctx);
       if (e) {
-        s += renderOptions(
+        const nested: ConfigItem[] = [];
+        collectLynx(
           e.members ?? [],
           path,
-          depth + 1,
-          ctx,
           e.name,
-          new Set([o, e.name]),
+          ctx,
+          rsbuild,
+          new Set([ns.name, e.name]),
+          nested,
         );
+        group.items.push(...nested.map(i => ({ ...i, lynx: true })));
       }
     }
+    groups.push(group);
   }
-  if (rows.length > 0) {
-    s +=
-      `${h} ${ctx.l.rsbuildOptions} \\{#rsbuild-options\\}\n\n${ctx.l.rsbuildOptionsIntro}\n\n`;
-    s +=
-      `| ${ctx.l.name} | ${ctx.l.type} | ${ctx.l.lynxDefault} | ${ctx.l.description} |\n| --- | --- | --- | --- |\n`;
-    for (const m of rows) {
-      const path = pathOf(m);
-      const key = `${owner}.${m.name}`;
-      const summary = tr(ctx, `${key}.summary`, m.summary);
-      const def = showLynxDefault(m.default, rsbuild[path]?.default)
-        ? pipe(flat(md(tr(ctx, `${key}.default`, m.default), ctx)))
-        : '';
-      const desc = [
-        summary ? flat(md(firstSentence(summary), ctx)) : '',
-        `[${ctx.l.rsbuildDocs}](${rsbuildUrl(path, ctx)})`,
-      ].filter(Boolean).join(' ');
-      s += `| <a id="${slug(path)}"></a>${code(m.name)}${badges(m, ctx)}${
-        untranslated(ctx, `${key}.summary`)
-      } | ${pipe(typeCell(m, ctx))} | ${def} | ${pipe(desc)} |\n`;
+  return groups.filter(g => g.items.length > 0).sort((a, b) =>
+    groupRank(a.name) - groupRank(b.name) || a.name.localeCompare(b.name)
+  );
+}
+
+export function lynxConfigPaths(dataDir: string): string[] {
+  const ctx: Ctx = {
+    api: loadApi(dataDir, 'rspeedy'),
+    l: EN,
+    anchors: new Map(),
+    stale: new Set(),
+  };
+  const rsbuild = loadRsbuild(join(dataDir, 'rsbuild-config.json'));
+  return configGroups(ctx, rsbuild).flatMap(g =>
+    g.items.filter(i => i.lynx).map(i => i.path)
+  );
+}
+
+function renderConfigOverview(ctx: Ctx, rsbuild: RsbuildOptions): string {
+  const badge =
+    `<span className="api-badge api-badge-lynx">${ctx.l.lynxBadge}</span>`;
+  const differs: ConfigItem[] = [];
+  let s = `${ctx.l.overviewLegend.replace('{badge}', badge)}\n\n`;
+  s += '<div className="api-config-overview">\n\n';
+  for (const g of configGroups(ctx, rsbuild)) {
+    s += `<div className="api-config-group" id="${
+      slug(g.name)
+    }">\n\n**${g.name}**\n\n`;
+    for (const item of g.items) {
+      const { m, path, lynx } = item;
+      const url = lynx
+        ? `${ctx.prefix ?? ''}${configPageUrl(path)}`
+        : rsbuildUrl(path, ctx);
+      s += `- <span id="${slug(path)}"></span>[${code(path)}](${url})${
+        badges(m, ctx)
+      }${lynx ? ` ${badge}` : ''}\n`;
+      if (!lynx && showLynxDefault(m.default, rsbuild[path]?.default)) {
+        differs.push(item);
+      }
     }
-    s += '\n';
+    s += '\n</div>\n\n';
+  }
+  s += '</div>\n\n';
+  if (differs.length === 0) return s;
+  s += `## ${ctx.l.defaultsDiffer} \\{#lynx-defaults\\}\n\n`;
+  s +=
+    `| ${ctx.l.name} | ${ctx.l.lynxDefault} | ${ctx.l.rsbuildDefault} |\n| --- | --- | --- |\n`;
+  for (const { m, path, owner } of differs) {
+    const rs = rsbuild[path]?.default;
+    s += `| [${code(path)}](${rsbuildUrl(path, ctx)}) | ${
+      pipe(flat(md(tr(ctx, `${owner}.${m.name}.default`, m.default), ctx)))
+    } | ${rs ? pipe(rsbuildDefaultCell(rs, ctx)) : ''} |\n`;
+  }
+  return s + '\n';
+}
+
+function resolveConfigMember(
+  ctx: Ctx,
+  path: string,
+): { m: ApiMember; owner: string } {
+  const root = findExport(ctx, 'Config');
+  let list = root?.members ?? [];
+  let owner = root?.name ?? 'Config';
+  const segs = path.split('.');
+  for (const [i, seg] of segs.entries()) {
+    const m = list.find(x => x.name === seg);
+    if (!m) break;
+    if (i === segs.length - 1) return { m, owner };
+    const e = expandable(m, ctx);
+    if (!e) break;
+    list = e.members ?? [];
+    owner = e.name;
+  }
+  throw new Error(`ConfigOption: ${path} not found`);
+}
+
+function objectLines(segs: string[], value: string, depth: number): string[] {
+  const pad = '  '.repeat(depth);
+  const [head = '', ...rest] = segs;
+  return rest.length === 0
+    ? [`${pad}${head}: ${value},`]
+    : [`${pad}${head}: {`, ...objectLines(rest, value, depth + 1), `${pad}},`];
+}
+
+function configUsage(path: string, m: ApiMember, ctx: Ctx): string {
+  if (m.deprecated !== undefined) return '';
+  const segs = path.split('.');
+  const literal = /^`([^`]+)`$/.exec(m.default?.trim() ?? '')?.[1];
+  const value = literal && literal !== 'undefined'
+    ? literal
+    : (/^boolean\b/.test(m.type) ? 'true' : '{}');
+  const lynxConfig = [
+    '```ts title="lynx.config.ts"',
+    'import { defineConfig } from \'@lynx-js/rspeedy\'',
+    '',
+    'export default defineConfig({',
+    ...objectLines(segs, value, 1),
+    '})',
+    '```',
+  ].join('\n');
+  const s = `## ${ctx.l.usage} \\{#usage\\}\n\n`;
+  const plugin = ctx.site?.get(`rsbuild-plugin|${path}`);
+  if (!plugin) return `${s}${ctx.l.rspeedyOnly}\n\n${lynxConfig}\n\n`;
+  const rsbuildConfig = [
+    '```ts title="rsbuild.config.ts"',
+    'import { defineConfig } from \'@rsbuild/core\'',
+    'import { pluginLynx } from \'@lynx-js/rsbuild-plugin\'',
+    '',
+    'export default defineConfig({',
+    '  plugins: [',
+    '    pluginLynx({',
+    ...objectLines(segs, value, 3),
+    '    }),',
+    '  ],',
+    '})',
+    '```',
+  ].join('\n');
+  const link = `[\`pluginLynx\`](${ctx.prefix ?? ''}${plugin.url})`;
+  return `${s}${
+    ctx.l.withPluginLynx.replace('{link}', link)
+  }\n\n${rsbuildConfig}\n\n${ctx.l.withRspeedy}\n\n${lynxConfig}\n\n`;
+}
+
+function renderConfigOption(ctx: Ctx, path: string): string {
+  const { m, owner } = resolveConfigMember(ctx, path);
+  const key = `${owner}.${m.name}`;
+  ctx.anchors.set(path, '');
+  const e = expandable(m, ctx);
+  if (e) {
+    ctx.anchors.set(e.name, '');
+    registerAnchors(e.members ?? [], path, ctx);
+  }
+  let s = metaList(m, ctx, key) + body(m, ctx, key);
+  const mark = untranslated(ctx, `${key}.summary`).trim();
+  if (mark) s = `${mark}\n\n${s}`;
+  s += configUsage(path, m, ctx);
+  if (m.params) s += paramsTable(m.params, ctx, key);
+  if (e) {
+    s += `## ${ctx.l.options} \\{#options\\}\n\n${
+      renderOptions(
+        e.members ?? [],
+        path,
+        3,
+        ctx,
+        e.name,
+        new Set([owner, e.name]),
+      )
+    }`;
   }
   return s;
 }
@@ -802,30 +925,6 @@ export function renderExports(
   return s;
 }
 
-export function renderOverview(
-  members: ApiMember[],
-  prefix: string,
-  ctx: Ctx,
-  owner: string,
-): string {
-  let s =
-    `| ${ctx.l.name} | ${ctx.l.type} | ${ctx.l.description} |\n| --- | --- | --- |\n`;
-  for (const m of members) {
-    const path = prefix ? `${prefix}.${m.name}` : m.name;
-    const target = linkTarget(ctx, path)
-      ?? (ctx.site ? undefined : `#${slug(path)}`);
-    const lynxOnly = ctx.rsbuild && !isRsbuild(path, ctx.rsbuild)
-      ? ` <span className="api-badge api-badge-lynx">${ctx.l.lynxBadge}</span>`
-      : '';
-    s += `| ${target ? `[${code(m.name)}](${target})` : code(m.name)}${
-      badges(m, ctx)
-    }${lynxOnly} | ${pipe(typeCell(m, ctx))} | ${
-      pipe(flat(md(tr(ctx, `${owner}.${m.name}.summary`, m.summary), ctx)))
-    } |\n`;
-  }
-  return s + '\n';
-}
-
 export function renderHeader(ctx: Ctx): string {
   const a = ctx.api;
   const npm = `https://www.npmjs.com/package/${a.package}`;
@@ -891,57 +990,15 @@ function renderBody(d: Directive, ctx: Ctx): string {
         renderOptions(e.members, '', depth, ctx, e.name)
       }`;
     }
-    case 'ConfigOptions':
-    case 'ConfigOverview': {
-      const root = findExport(ctx, d.attrs['type'] ?? 'Config');
-      if (!root?.members) {
-        throw new Error(`${d.name}: no interface ${d.attrs['type']}`);
+    case 'ConfigOverview':
+      if (!ctx.rsbuild) {
+        throw new Error(
+          'ConfigOverview: api-data/rsbuild-config.json is missing',
+        );
       }
-      const path = d.attrs['path'];
-      let members = root.members;
-      let prefix = '';
-      let owner = root.name;
-      let namespace: string | undefined;
-      if (path) {
-        let cur: ApiMember | undefined;
-        let list = root.members;
-        let leaf = false;
-        let listOwner = root.name;
-        let parentOwner = root.name;
-        for (const seg of path.split('.')) {
-          cur = list.find(m => m.name === seg);
-          if (!cur) throw new Error(`${d.name}: path ${path} not found`);
-          const e = expandable(cur, ctx);
-          leaf = !e;
-          parentOwner = listOwner;
-          list = e?.members ?? [];
-          listOwner = e?.name ?? listOwner;
-        }
-        if (leaf && cur) {
-          members = [cur];
-          prefix = path.split('.').slice(0, -1).join('.');
-          owner = parentOwner;
-        } else {
-          members = list;
-          prefix = path;
-          owner = listOwner;
-          namespace = path;
-        }
-      }
-      if (d.name === 'ConfigOverview') {
-        if (!ctx.site) registerAnchors(members, prefix, ctx);
-        return renderOverview(members, prefix, ctx, owner);
-      }
-      if (namespace) {
-        ctx.anchors.set(namespace, '');
-        if (!ctx.anchors.has(owner)) ctx.anchors.set(owner, '');
-      }
-      if (ctx.rsbuild) {
-        return renderConfig(members, prefix, depth, ctx, owner, ctx.rsbuild);
-      }
-      registerAnchors(members, prefix, ctx);
-      return renderOptions(members, prefix, depth, ctx, owner);
-    }
+      return renderConfigOverview(ctx, ctx.rsbuild);
+    case 'ConfigOption':
+      return renderConfigOption(ctx, d.attrs['path']!);
     case 'ApiExports': {
       const exclude = d.attrs['exclude']?.split(',').map(s => s.trim()).filter(
         Boolean,

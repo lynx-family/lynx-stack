@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "filename-bundle",
+    "label": "output.filename.bundle"
+  },
+  {
+    "type": "file",
+    "name": "filename-template",
+    "label": "output.filename.template"
+  },
+  {
+    "type": "file",
+    "name": "minify-background-options",
+    "label": "output.minify.backgroundOptions"
+  },
+  {
+    "type": "file",
+    "name": "minify-main-thread-options",
+    "label": "output.minify.mainThreadOptions"
+  }
+]

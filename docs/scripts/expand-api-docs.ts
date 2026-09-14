@@ -11,6 +11,7 @@ import {
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { syncConfigPages } from './config-pages.ts';
 import { EN, ZH, renderDirective } from './render.ts';
 import type { Directive, SiteAnchors, Translations } from './render.ts';
 
@@ -50,7 +51,7 @@ function pagePath(root: string, file: string): string {
 }
 
 const PRIORITY: Record<string, number> = {
-  ConfigOptions: 0,
+  ConfigOption: 0,
   ApiOptions: 0,
   ApiExports: 1,
 };
@@ -89,6 +90,8 @@ function collectSiteAnchors(): SiteAnchors {
   }
   return site;
 }
+
+syncConfigPages(DOCS);
 
 const site = collectSiteAnchors();
 

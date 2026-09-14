@@ -1,0 +1,79 @@
+---
+title: output.minify.mainThreadOptions
+---
+
+# output.minify.mainThreadOptions
+
+{/* @api ConfigOption package="rspeedy" path="output.minify.mainThreadOptions" */}
+
+- **Type:** `SwcJsMinimizerRspackPluginOptions` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `undefined`
+
+`Minify.mainThreadOptions` is used to override
+`Minify.jsOptions` for main-thread bundles.
+
+This option is deep-merged into `Minify.jsOptions`.
+It is mainly used together with ReactLynx dual-thread outputs so that
+main-thread and background-thread bundles can use different compress rules.
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['console.log'],
+          },
+        },
+      },
+      mainThreadOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+## Usage \{#usage\}
+
+With Rsbuild, pass it to [`pluginLynx`](/plugins/plugin-lynx#output-minify-mainthreadoptions):
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      output: {
+        minify: {
+          mainThreadOptions: {},
+        },
+      },
+    }),
+  ],
+})
+```
+
+With Rspeedy, set it in `lynx.config.ts`:
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      mainThreadOptions: {},
+    },
+  },
+})
+```
+
+{/* @api-end */}

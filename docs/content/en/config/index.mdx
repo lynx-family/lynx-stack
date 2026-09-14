@@ -1,8 +1,9 @@
 ---
-title: Build configuration
+title: Config overview
+pageType: doc-wide
 ---
 
-# Build configuration
+# Config overview
 
 The options for building a Lynx app. The same options apply whichever way you build:
 
@@ -45,28 +46,158 @@ export default defineConfig({
 })
 ```
 
-Most options are standard [Rsbuild options](https://rsbuild.rs/config/): each page lists them with a link to the Rsbuild documentation and the Lynx default where it differs. The options specific to Lynx are described in full, with where to set them when you build with Rsbuild. Rsbuild options that would break a Lynx bundle (`html`, `security`, `moduleFederation`, the polyfill settings) are not supported.
+Most options are standard [Rsbuild options](https://rsbuild.rs/config/) and link straight to the Rsbuild documentation. The options specific to Lynx have their own pages here, with how to set them in both setups. Rsbuild options that would break a Lynx bundle (`html`, `security`, `moduleFederation`, the polyfill settings) are not supported.
 
 ## All options
 
 {/* @api ConfigOverview package="rspeedy" type="Config" */}
 
-| Name | Type | Description |
+Options marked <span className="api-badge api-badge-lynx">Lynx</span> are specific to Lynx and have their own page here; the others link to the Rsbuild documentation.
+
+<div className="api-config-overview">
+
+<div className="api-config-group" id="base">
+
+**base**
+
+- <span id="environments"></span>[`environments`](https://rsbuild.rs/config/environments)
+- <span id="mode"></span>[`mode`](https://rsbuild.rs/config/mode)
+- <span id="plugins"></span>[`plugins`](https://rsbuild.rs/config/plugins)
+- <span id="splitchunks"></span>[`splitChunks`](https://rsbuild.rs/config/split-chunks)
+
+</div>
+
+<div className="api-config-group" id="source">
+
+**source**
+
+- <span id="source-alias"></span>[`source.alias`](/config/source/alias) <span className="api-badge api-badge-deprecated">Deprecated</span> <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="source-assetsinclude"></span>[`source.assetsInclude`](https://rsbuild.rs/config/source/assets-include)
+- <span id="source-decorators"></span>[`source.decorators`](https://rsbuild.rs/config/source/decorators)
+- <span id="source-define"></span>[`source.define`](https://rsbuild.rs/config/source/define)
+- <span id="source-entry"></span>[`source.entry`](https://rsbuild.rs/config/source/entry)
+- <span id="source-exclude"></span>[`source.exclude`](https://rsbuild.rs/config/source/exclude)
+- <span id="source-include"></span>[`source.include`](https://rsbuild.rs/config/source/include)
+- <span id="source-preentry"></span>[`source.preEntry`](https://rsbuild.rs/config/source/pre-entry)
+- <span id="source-transformimport"></span>[`source.transformImport`](https://rsbuild.rs/config/source/transform-import)
+- <span id="source-tsconfigpath"></span>[`source.tsconfigPath`](https://rsbuild.rs/config/source/tsconfig-path)
+
+</div>
+
+<div className="api-config-group" id="output">
+
+**output**
+
+- <span id="output-assetprefix"></span>[`output.assetPrefix`](https://rsbuild.rs/config/output/asset-prefix)
+- <span id="output-cleandistpath"></span>[`output.cleanDistPath`](https://rsbuild.rs/config/output/clean-dist-path)
+- <span id="output-copy"></span>[`output.copy`](https://rsbuild.rs/config/output/copy)
+- <span id="output-cssmodules"></span>[`output.cssModules`](https://rsbuild.rs/config/output/css-modules)
+- <span id="output-dataurilimit"></span>[`output.dataUriLimit`](https://rsbuild.rs/config/output/data-uri-limit)
+- <span id="output-distpath"></span>[`output.distPath`](https://rsbuild.rs/config/output/dist-path)
+- <span id="output-filename"></span>[`output.filename`](https://rsbuild.rs/config/output/filename)
+- <span id="output-filename-bundle"></span>[`output.filename.bundle`](/config/output/filename-bundle) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-filename-template"></span>[`output.filename.template`](/config/output/filename-template) <span className="api-badge api-badge-deprecated">Deprecated</span> <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-filenamehash"></span>[`output.filenameHash`](https://rsbuild.rs/config/output/filename-hash)
+- <span id="output-inlinescripts"></span>[`output.inlineScripts`](https://rsbuild.rs/config/output/inline-scripts)
+- <span id="output-legalcomments"></span>[`output.legalComments`](https://rsbuild.rs/config/output/legal-comments)
+- <span id="output-minify"></span>[`output.minify`](https://rsbuild.rs/config/output/minify)
+- <span id="output-minify-backgroundoptions"></span>[`output.minify.backgroundOptions`](/config/output/minify-background-options) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-minify-mainthreadoptions"></span>[`output.minify.mainThreadOptions`](/config/output/minify-main-thread-options) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-sourcemap"></span>[`output.sourceMap`](https://rsbuild.rs/config/output/source-map)
+
+</div>
+
+<div className="api-config-group" id="dev">
+
+**dev**
+
+- <span id="dev-assetprefix"></span>[`dev.assetPrefix`](https://rsbuild.rs/config/dev/asset-prefix)
+- <span id="dev-hmr"></span>[`dev.hmr`](https://rsbuild.rs/config/dev/hmr)
+- <span id="dev-livereload"></span>[`dev.liveReload`](https://rsbuild.rs/config/dev/live-reload)
+- <span id="dev-progressbar"></span>[`dev.progressBar`](https://rsbuild.rs/config/dev/progress-bar)
+- <span id="dev-watchfiles"></span>[`dev.watchFiles`](https://rsbuild.rs/config/dev/watch-files)
+- <span id="dev-writetodisk"></span>[`dev.writeToDisk`](https://rsbuild.rs/config/dev/write-to-disk)
+
+</div>
+
+<div className="api-config-group" id="server">
+
+**server**
+
+- <span id="server-base"></span>[`server.base`](https://rsbuild.rs/config/server/base)
+- <span id="server-compress"></span>[`server.compress`](https://rsbuild.rs/config/server/compress)
+- <span id="server-cors"></span>[`server.cors`](https://rsbuild.rs/config/server/cors)
+- <span id="server-headers"></span>[`server.headers`](https://rsbuild.rs/config/server/headers)
+- <span id="server-host"></span>[`server.host`](https://rsbuild.rs/config/server/host)
+- <span id="server-port"></span>[`server.port`](https://rsbuild.rs/config/server/port)
+- <span id="server-proxy"></span>[`server.proxy`](https://rsbuild.rs/config/server/proxy)
+- <span id="server-strictport"></span>[`server.strictPort`](https://rsbuild.rs/config/server/strict-port)
+
+</div>
+
+<div className="api-config-group" id="resolve">
+
+**resolve**
+
+- <span id="resolve-alias"></span>[`resolve.alias`](https://rsbuild.rs/config/resolve/alias)
+- <span id="resolve-aliasstrategy"></span>[`resolve.aliasStrategy`](https://rsbuild.rs/config/resolve/alias-strategy)
+- <span id="resolve-dedupe"></span>[`resolve.dedupe`](https://rsbuild.rs/config/resolve/dedupe)
+- <span id="resolve-extensions"></span>[`resolve.extensions`](https://rsbuild.rs/config/resolve/extensions)
+
+</div>
+
+<div className="api-config-group" id="performance">
+
+**performance**
+
+- <span id="performance-buildcache"></span>[`performance.buildCache`](https://rsbuild.rs/config/performance/build-cache) <span className="api-badge api-badge-beta">Beta</span>
+- <span id="performance-chunksplit"></span>[`performance.chunkSplit`](https://rsbuild.rs/config/split-chunks) <span className="api-badge api-badge-deprecated">Deprecated</span>
+- <span id="performance-printfilesize"></span>[`performance.printFileSize`](https://rsbuild.rs/config/performance/print-file-size)
+- <span id="performance-profile"></span>[`performance.profile`](/config/performance/profile) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="performance-removeconsole"></span>[`performance.removeConsole`](https://rsbuild.rs/config/performance/remove-console)
+
+</div>
+
+<div className="api-config-group" id="tools">
+
+**tools**
+
+- <span id="tools-bundlerchain"></span>[`tools.bundlerChain`](https://rsbuild.rs/config/tools/bundler-chain)
+- <span id="tools-cssextract"></span>[`tools.cssExtract`](https://rsbuild.rs/config/tools/css-extract)
+- <span id="tools-cssloader"></span>[`tools.cssLoader`](https://rsbuild.rs/config/tools/css-loader)
+- <span id="tools-rsdoctor"></span>[`tools.rsdoctor`](/config/tools/rsdoctor) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="tools-rspack"></span>[`tools.rspack`](https://rsbuild.rs/config/tools/rspack)
+- <span id="tools-swc"></span>[`tools.swc`](https://rsbuild.rs/config/tools/swc)
+
+</div>
+
+</div>
+
+## Defaults that differ from Rsbuild \{#lynx-defaults\}
+
+| Name | Lynx default | Rsbuild default |
 | --- | --- | --- |
-| [`dev`](/config/dev) | [`Dev`](/config/dev) | The [`Dev`](/config/dev) option is used to control the behavior related with development. Including: HMR, DevServer, etc. |
-| [`environments`](/config/environments#environments) | `Record<string, EnvironmentConfig>` (from typescript) | The [`Config.environments`](/config/environments#environments) option is used to set the output environment. |
-| [`mode`](/config/mode#mode) | `"production" \| "development" \| "none"` | Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations. |
-| [`output`](/config/output) | [`Output`](/config/output) | The [`Output`](/config/output) option is used to set how and where should the bundles and assets output. |
-| [`performance`](/config/performance) | [`Performance`](/config/performance) | The [`Performance`](/config/performance) option is used to optimize the build-time and runtime performance. |
-| [`plugins`](/config/plugins#plugins) | `RsbuildPlugins` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `plugins` option is used to customize the build process in a variety of ways. |
-| [`resolve`](/config/resolve) | [`Resolve`](/config/resolve) | The [`Resolve`](/config/resolve) option is used to control the resolution behavior of Rspack. |
-| [`server`](/config/server) | [`Server`](/config/server) | The [`Server`](/config/server) option changes the behavior of dev-server. |
-| [`source`](/config/source) | [`Source`](/config/source) | The [`Source`](/config/source) option changes the behavior of source files. |
-| [`splitChunks`](/config/splitChunks#splitchunks) | `false \| SplitChunksConfig` | Configure chunk splitting. |
-| [`tools`](/config/tools) | [`Tools`](/config/tools) | The [`Tools`](/config/tools) options changes the behavior of various building tools. |
+| [`environments`](https://rsbuild.rs/config/environments) | When this option is unset, Rspeedy passes `{ lynx: {} }` to Rsbuild. |  |
+| [`mode`](https://rsbuild.rs/config/mode) | Depends on `process.env.NODE_ENV`: `'production'` when `NODE_ENV` is `'production'`, `'development'` when `NODE_ENV` is `'development'`, and `'none'` otherwise. When using Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, while `rspeedy build` defaults to `'production'`. | Depends on `process.env.NODE_ENV`: - `'production'` if NODE_ENV is 'production' - `'development'` if NODE_ENV is 'development' - otherwise `'none'` |
+| [`splitChunks`](https://rsbuild.rs/config/split-chunks) | Rspeedy defaults this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option. See [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks) for details. |  |
+| [`source.entry`](https://rsbuild.rs/config/source/entry) | `'./src/index.js'` | `{ index: './src/index.js', }` |
+| [`source.include`](https://rsbuild.rs/config/source/include) | When unset, Rsbuild compiles JavaScript files in the current directory and TypeScript or JSX files in all directories, while excluding JavaScript files under `node_modules`. | `[ { and: [rootPath, { not: /[\\/]node_modules[\\/]/ }], }, /\.(?:ts\|tsx\|jsx\|mts\|cts)$/, ];` |
+| [`output.cleanDistPath`](https://rsbuild.rs/config/output/clean-dist-path) | Automatically enabled when `output.distPath.root` is a subdirectory of the project root; otherwise disabled. | `'auto'` |
+| [`output.dataUriLimit`](https://rsbuild.rs/config/output/data-uri-limit) | `2048` | `{ svg: 4096, font: 4096, image: 4096, media: 4096, assets: 4096 }` |
+| [`output.distPath`](https://rsbuild.rs/config/output/dist-path) | Uses Rsbuild's default distPath configuration with `root: 'dist'`. |  |
+| [`output.filename`](https://rsbuild.rs/config/output/filename) | `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }` |  |
+| [`output.filenameHash`](https://rsbuild.rs/config/output/filename-hash) | In production web builds, Rsbuild defaults this option to `true`; development builds and non-web outputs omit hashes by default. | `true` |
+| [`output.inlineScripts`](https://rsbuild.rs/config/output/inline-scripts) | Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option. | `false` |
+| [`output.legalComments`](https://rsbuild.rs/config/output/legal-comments) | `'none'` | `'linked'` |
+| [`output.sourceMap`](https://rsbuild.rs/config/output/source-map) | When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit. | `const defaultSourceMap = { js: isDev ? 'cheap-module-source-map' : false, css: false, extract: false, };` |
+| [`dev.progressBar`](https://rsbuild.rs/config/dev/progress-bar) | `true` | `false` |
+| [`dev.writeToDisk`](https://rsbuild.rs/config/dev/write-to-disk) | `true` | `false` |
+| [`server.cors`](https://rsbuild.rs/config/server/cors) | Uses Rsbuild's default CORS options. - Set to an object to enable CORS with the specified options. - Set to `true` to enable CORS with the default options (allows all origins, not recommended). - Set to `false` to disable CORS. See [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors) for details. | `{ origin: defaultAllowedOrigins }` where `defaultAllowedOrigins` includes: - `localhost` - `127.0.0.1` - `[::1]` |
+| [`server.host`](https://rsbuild.rs/config/server/host) | `"0.0.0.0"` | `'localhost'` |
+| [`server.port`](https://rsbuild.rs/config/server/port) | Rsbuild defaults this option to `3000`. | `3000` |
+| [`server.strictPort`](https://rsbuild.rs/config/server/strict-port) | `false By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.` | `false` |
+| [`resolve.extensions`](https://rsbuild.rs/config/resolve/extensions) | `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']` For example, if importing './index', Rsbuild will try to resolve using the following order: - `./index.ts` - `./index.tsx` - `./index.mjs` - `./index.js` - `./index.jsx` - `./index.json` - `./index.cjs` | `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']` |
+| [`performance.chunkSplit`](https://rsbuild.rs/config/split-chunks) | For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.  Use the top-level `Config.splitChunks` option instead. |  |
+| [`tools.cssLoader`](https://rsbuild.rs/config/tools/css-loader) | Uses defaults derived from `output.cssModules` and `output.sourceMap`, with `importLoaders` set to `1` for CSS files and `2` for Sass/Less files. |  |
 
 {/* @api-end */}
-
-## Namespaces
-
-- [dev](/config/dev) · [environments](/config/environments) · [mode](/config/mode) · [output](/config/output) · [performance](/config/performance) · [plugins](/config/plugins) · [resolve](/config/resolve) · [server](/config/server) · [source](/config/source) · [splitChunks](/config/splitChunks) · [tools](/config/tools)

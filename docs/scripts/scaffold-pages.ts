@@ -52,78 +52,21 @@ function readmeIntro(dir: string): string {
   return paras.join('\n\n').replace(/\{/g, '\\{').replace(/\}/g, '\\}');
 }
 
-const CONFIG_INTROS: Record<string, string> = {
-  dev:
-    'Options for the development server and hot module replacement: what the dev client connects to, how updates are delivered to the device and whether the bundle is written to disk while developing.',
-  environments:
-    'Rspeedy builds one Lynx bundle per Rsbuild environment. `environments` is the [Rsbuild `environments` option](https://rsbuild.rs/config/environments); the environment name becomes the `[platform]` placeholder of `output.filename.bundle`.',
-  mode:
-    'The build mode. It is the [Rsbuild `mode` option](https://rsbuild.rs/config/mode) and defaults to `production` for `rspeedy build` and `development` for `rspeedy dev`.',
-  performance:
-    'Options that trade build output for runtime performance: chunk splitting, console removal, runtime profiling and the bundle analyzer.',
-  plugins:
-    'The list of Rsbuild plugins to apply. It is the [Rsbuild `plugins` option](https://rsbuild.rs/config/plugins); Rspeedy applies [`pluginLynx`](/plugins/plugin-lynx) itself before the plugins listed here.',
-  resolve:
-    'Options for how module specifiers are resolved: aliases, extensions and the `lynx` export condition that Rspeedy adds by default.',
-  server:
-    'Options for the local server that serves the bundle to the device during development: host, port, headers and the base path.',
-  source:
-    'Options for what goes into the build: entries, `define` constants, `include`/`exclude` rules and the TypeScript path aliases Rspeedy reads from `tsconfig.json`.',
-  splitChunks:
-    'Chunk splitting is the [Rsbuild `performance.chunkSplit` option](https://rsbuild.rs/config/performance/chunk-split) lifted to the top level. Enabling it turns off `output.inlineScripts` so that background-thread chunks are emitted as separate files.',
-  tools:
-    'Escape hatches to the underlying tools: modify the Rspack configuration, the SWC options or the Rsbuild config directly when an option is not exposed by Rspeedy.',
-};
-
-for (const ns of Object.keys(CONFIG_INTROS)) {
-  write(
-    `config/${ns}.mdx`,
-    `---
-title: ${ns}
----
-
-# ${ns}
-
-${CONFIG_INTROS[ns]}
-
-{/* @api ConfigOptions package="rspeedy" type="Config" path="${ns}" */}
-{/* @api-end */}
-`,
-  );
-}
-
 write(
   'config/index.mdx',
   `---
-title: Configuration
+title: Config overview
+pageType: doc-wide
 ---
 
-# Configuration
+# Config overview
 
-Rspeedy reads \`lynx.config.ts\` (or \`.js\`, \`.mjs\`) from the project root. Wrap the object in \`defineConfig\` from \`@lynx-js/rspeedy\` to get completion and type checking:
-
-\`\`\`ts title="lynx.config.ts"
-import { defineConfig } from '@lynx-js/rspeedy'
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-
-export default defineConfig({
-  source: {
-    entry: './src/index.tsx',
-  },
-  plugins: [pluginReactLynx()],
-})
-\`\`\`
-
-The options are a subset of the [Rsbuild configuration](https://rsbuild.rs/config/). Options that would break a Lynx bundle (\`html\`, \`security\`, \`moduleFederation\`, the polyfill settings) are not exposed; the ones below are, with Lynx-specific defaults where they differ from Rsbuild.
+The options for building a Lynx app, whether with Rsbuild and \`pluginLynx\` or with Rspeedy.
 
 ## All options
 
-{/* @api ConfigOverview package="rspeedy" type="Config" */}
+{/* @api ConfigOverview package="rspeedy" */}
 {/* @api-end */}
-
-## Namespaces
-
-- [dev](/config/dev) · [environments](/config/environments) · [mode](/config/mode) · [output](/config/output) · [performance](/config/performance) · [plugins](/config/plugins) · [resolve](/config/resolve) · [server](/config/server) · [source](/config/source) · [splitChunks](/config/splitChunks) · [tools](/config/tools)
 `,
 );
 

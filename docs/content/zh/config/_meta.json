@@ -2,17 +2,26 @@
   {
     "type": "file",
     "name": "index",
-    "label": "总览"
+    "label": "概览"
   },
-  "dev",
-  "environments",
-  "mode",
-  "output",
-  "performance",
-  "plugins",
-  "resolve",
-  "server",
-  "source",
-  "splitChunks",
-  "tools"
+  {
+    "type": "dir-section-header",
+    "name": "source",
+    "label": "source"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "output",
+    "label": "output"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "performance",
+    "label": "performance"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "tools",
+    "label": "tools"
+  }
 ]

@@ -36,17 +36,17 @@ const WEBPACK_PACKAGES = [
 const API_DOCUMENTER_REDIRECTS = [
   {
     from: '^/(zh/)?api/rspeedy\\.config\\.splitchunks(\\.html)?$',
-    to: '/$1config/splitChunks',
+    to: '/$1config/',
   },
   {
     from:
       '^/(zh/)?api/rspeedy\\.config\\.(environments|mode|plugins)(\\.html)?$',
-    to: '/$1config/$2',
+    to: '/$1config/',
   },
   {
     from:
       '^/(zh/)?api/rspeedy\\.(dev|output|performance|resolve|server|source|tools)(\\..*)?$',
-    to: '/$1config/$2',
+    to: '/$1config/',
   },
   { from: '^/(zh/)?api/rspeedy(\\..*)?$', to: '/$1packages/rspeedy' },
   {
@@ -75,6 +75,11 @@ const API_DOCUMENTER_REDIRECTS = [
 ];
 
 const MOVED_SECTION_REDIRECTS = [
+  {
+    from:
+      '^/(zh/)?(?:rspeedy/)?config/(?:dev|environments|mode|output|performance|plugins|resolve|server|source|splitChunks|tools)(?:\\.html)?$',
+    to: '/$1config/',
+  },
   { from: '^/(zh/)?rspeedy/config(/.*)?$', to: '/$1config$2' },
   { from: '^/(zh/)?rspeedy/plugins(/.*)?$', to: '/$1plugins$2' },
   { from: '^/(zh/)?rspeedy/api(/.*)?$', to: '/$1packages/rspeedy' },

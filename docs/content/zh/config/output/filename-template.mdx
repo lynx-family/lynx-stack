@@ -1,0 +1,55 @@
+---
+title: output.filename.template
+---
+
+# output.filename.template
+
+{/* @api ConfigOption package="rspeedy" path="output.filename.template" */}
+
+- **类型:** `string`
+- **默认值:** `'[name].[platform].bundle'`
+
+:::warning 已废弃
+已废弃。
+:::
+
+模板文件的名称。
+
+
+
+请使用 `Filename.bundle` 代替。
+
+支持以下占位符：
+
+- `[name]`：入口名称。
+- `[contenthash]`：模板的 contenthash。
+
+- 在 bundle 文件名中使用 content hash：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- 在 bundle 文件名中使用指定长度的 content hash：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+{/* @api-end */}

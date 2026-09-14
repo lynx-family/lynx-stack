@@ -1,0 +1,52 @@
+---
+title: tools.rsdoctor
+---
+
+# tools.rsdoctor
+
+{/* @api ConfigOption package="rspeedy" path="tools.rsdoctor" */}
+
+- **Type:** `RsdoctorRspackPluginOptions`
+- **Default:** `undefined`
+
+The `Tools.rsdoctor` controls the options of [Rsdoctor](https://rsdoctor.dev/).
+
+Setting `RSDOCTOR=true` enables Rsdoctor. When it is enabled, Rspeedy merges additional plugin defaults during config normalization.
+
+- Use the built-in Rsdoctor.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rsdoctor: {
+      disableClientServer: true,
+    },
+  },
+})
+```
+
+See [Rsdoctor - Configuration](https://rsdoctor.dev/config/options/options) for details.
+
+## Usage \{#usage\}
+
+Available only in `lynx.config.ts` (Rspeedy):
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rsdoctor: {},
+  },
+})
+```
+
+## Options \{#options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="tools-rsdoctor-linter"></a>`linter` | `{ extends?: unknown[]; level?: "Ignore" \| "Warn" \| "Error"; rules?: Record<string, unknown> }` |  |  |
+
+{/* @api-end */}

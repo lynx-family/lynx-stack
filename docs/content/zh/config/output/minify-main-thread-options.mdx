@@ -1,0 +1,79 @@
+---
+title: output.minify.mainThreadOptions
+---
+
+# output.minify.mainThreadOptions
+
+{/* @api ConfigOption package="rspeedy" path="output.minify.mainThreadOptions" */}
+
+- **类型:** `SwcJsMinimizerRspackPluginOptions` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** `undefined`
+
+`Minify.mainThreadOptions` 用于为主线程 bundle 覆盖
+`Minify.jsOptions`。
+
+该选项会被深度合并到 `Minify.jsOptions` 中。
+它主要与 ReactLynx 的双线程产物配合使用，使
+主线程和后台线程的 bundle 可以使用不同的压缩规则。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['console.log'],
+          },
+        },
+      },
+      mainThreadOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+## 使用方式 \{#usage\}
+
+使用 Rsbuild 构建时，将它传给 [`pluginLynx`](/zh/plugins/plugin-lynx#output-minify-mainthreadoptions)：
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      output: {
+        minify: {
+          mainThreadOptions: {},
+        },
+      },
+    }),
+  ],
+})
+```
+
+使用 Rspeedy 时，在 `lynx.config.ts` 中设置：
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      mainThreadOptions: {},
+    },
+  },
+})
+```
+
+{/* @api-end */}

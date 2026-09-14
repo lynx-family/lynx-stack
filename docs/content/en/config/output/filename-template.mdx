@@ -1,0 +1,55 @@
+---
+title: output.filename.template
+---
+
+# output.filename.template
+
+{/* @api ConfigOption package="rspeedy" path="output.filename.template" */}
+
+- **Type:** `string`
+- **Default:** `'[name].[platform].bundle'`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+The name of the template files.
+
+
+
+Use `Filename.bundle` instead.
+
+The following placeholder is supported:
+
+- `[name]`: the name of the entry.
+- `[contenthash]`: the contenthash of the template.
+
+- Using content hash in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- Using content hash with length in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+{/* @api-end */}
