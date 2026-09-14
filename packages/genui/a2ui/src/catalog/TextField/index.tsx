@@ -38,6 +38,8 @@ export interface TextFieldProps extends GenericComponentProps {
         catalogId?: string;
         args?: Record<string, string | number | boolean | { path: string }>;
       };
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 

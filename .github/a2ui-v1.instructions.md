@@ -9,3 +9,5 @@ For v1.0 data models, preserve JSON scalar types and update ancestor containers 
 Resolve remotely invoked renderer functions against an explicitly registered catalog and enforce allowedCallers, defaulting to rendererOnly. Keep functionCallId unchanged in responses. The GenUI service currently has no agent-side catalog functions; return UNKNOWN_FUNCTION without asking a model to simulate execution. Preserve SSE framing for RPC replies on the streaming endpoint.
 
 Catalog generation and serialization use protocolVersion 1.0, $id, and maps of component/function schemas. Put function returnType and allowedCallers outside properties; function calls carry only call, catalogId, and args. The pinned upstream dependency is used only for basic function implementations and argument schemas, never its message processor or capabilities envelope. Adapt built-in validation functions to ValidationResult objects.
+
+A2UI v1.0 CheckRule.message remains an optional fallback. Prefer ValidationResult.message, then the rule message, then a generic error. Preserve this field in component prop types and generated catalogs; it is not a legacy protocol feature.

@@ -295,6 +295,48 @@ describe('A2UI v1.0', () => {
     ).toBe(true);
   });
 
+  test.each([
+    {
+      resultMessage: 'Expired card',
+      fallback: 'Invalid card',
+      expected: 'Expired card',
+    },
+    {
+      resultMessage: undefined,
+      fallback: 'Invalid card',
+      expected: 'Invalid card',
+    },
+    {
+      resultMessage: undefined,
+      fallback: undefined,
+      expected: 'Validation failed',
+    },
+  ])(
+    'uses validation message precedence: $expected',
+    ({ resultMessage, fallback, expected }) => {
+      const processor = new MessageProcessor();
+      processor.processMessages([initial]);
+      const surface = processor.getOrCreateSurface('s');
+      surface.store.update('/validation', {
+        valid: false,
+        ...(resultMessage === undefined ? {} : { message: resultMessage }),
+      });
+      const rule = {
+        condition: { path: '/validation' },
+        ...(fallback === undefined ? {} : { message: fallback }),
+      };
+      expect(evaluateChecks(processor, [rule], surface)).toEqual({
+        ok: false,
+        failures: [{ call: 'condition', message: expected }],
+      });
+      surface.store.update('/validation', { valid: true });
+      expect(evaluateChecks(processor, [rule], surface)).toEqual({
+        ok: true,
+        failures: [],
+      });
+    },
+  );
+
   test('duplicate inline creation cannot overwrite an existing surface', () => {
     const processor = new MessageProcessor();
     processor.processMessages([initial, {

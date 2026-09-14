@@ -15,12 +15,14 @@ import type { Surface } from '../store/types.js';
 import { isDataBinding, isFunctionCall } from '../store/utils.js';
 
 /**
- * A v1.0 `CheckRule` is `{ condition }` where `condition` is a
+ * A v1.0 `CheckRule` is `{ condition, message? }` where `condition` is a
  * `DataBinding` or a `FunctionCall`. We accept the loose
  * `unknown` shape so component props can pass dynamic checks through.
  */
 export interface CheckLike {
   condition: unknown;
+  /** Fallback when the validation result does not include a message. */
+  message?: string;
 }
 
 function evaluateCondition(
@@ -86,7 +88,9 @@ export function evaluateChecks(
           : 'condition',
         message: typeof validation?.message === 'string'
           ? validation.message
-          : 'Validation failed',
+          : (typeof rule.message === 'string'
+            ? rule.message
+            : 'Validation failed'),
       });
     }
   }

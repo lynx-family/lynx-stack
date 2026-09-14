@@ -117,6 +117,10 @@
                     "additionalProperties": false
                   }
                 ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
@@ -275,6 +279,10 @@
                     "additionalProperties": false
                   }
                 ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
@@ -494,6 +502,10 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
@@ -689,6 +701,10 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
@@ -1457,6 +1473,10 @@
                     "additionalProperties": false
                   }
                 ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
@@ -1659,6 +1679,10 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
@@ -1890,6 +1914,10 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [

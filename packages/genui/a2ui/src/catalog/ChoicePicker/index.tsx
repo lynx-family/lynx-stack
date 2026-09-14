@@ -78,6 +78,8 @@ export interface ChoicePickerProps extends GenericComponentProps {
       catalogId?: string;
       args: Record<string, unknown>;
     };
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 
