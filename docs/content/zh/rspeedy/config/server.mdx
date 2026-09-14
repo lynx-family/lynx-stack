@@ -15,10 +15,10 @@ title: server
 | [`base`](#server-base) | `string` | 配置服务器的基础路径。 |
 | [`compress`](#server-compress) | `boolean \| CompressOptions` | 配置是否对开发服务器或预览服务器提供的静态资源启用 [gzip 压缩](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression)。 |
 | [`cors`](#server-cors) | `boolean \| CorsOptions` | 为开发服务器或预览服务器配置 CORS。 |
-| [`headers`](#server-headers) | `Record<string, string \| string[]>` | 为所有响应添加响应头。 |
+| [`headers`](#server-headers) | `Record<string, string \| string[]>` (来自 typescript) | 为所有响应添加响应头。 |
 | [`host`](#server-host) | `string` | 指定 Rspeedy Server 监听的 host。 |
 | [`port`](#server-port) | `number` | 指定 Rspeedy Server 监听的端口。 |
-| [`proxy`](#server-proxy) | `ProxyConfig` | 为开发服务器或预览服务器配置代理规则，将请求代理到指定的服务。 |
+| [`proxy`](#server-proxy) | `ProxyConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | 为开发服务器或预览服务器配置代理规则，将请求代理到指定的服务。 |
 | [`strictPort`](#server-strictport) | `boolean` | 当端口被占用时，Rspeedy 会自动递增端口号，直到找到可用的端口。 |
 
 {/* @api-end */}

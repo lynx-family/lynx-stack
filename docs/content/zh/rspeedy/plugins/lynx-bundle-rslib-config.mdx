@@ -33,9 +33,11 @@ export default defineConfig({
 
 {/* @api ApiOptions package="lynx-bundle-rslib-config" type="ExternalBundleLibConfig" */}
 
+<a id="externalbundlelibconfig"></a>
+
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="output"></a>`output` | `OutputConfig` |  |  |
+| <a id="output"></a>`output` | [`OutputConfig`](#outputconfig) |  |  |
 
 {/* @api-end */}
 
@@ -115,8 +117,8 @@ export default defineExternalBundleRslibConfig({
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `userLibConfig` | `ExternalBundleLibConfig` |  |
-| `encodeOptions` | `EncodeOptions` |  |
+| `userLibConfig` | [`ExternalBundleLibConfig`](#externalbundlelibconfig) |  |
+| `encodeOptions` | [`EncodeOptions`](#encodeoptions) |  |
 
 **返回值:** `RslibConfig`
 
@@ -207,7 +209,7 @@ external 映射的对象形式。
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="externalspresetdefinition-extends"></a>`extends?` | `string \| string[]` | 在应用当前预设之前需要包含的其他预设名称。 |
-| <a id="externalspresetdefinition-externals"></a>`externals?` | `Externals` | 该预设提供的 externals。 |
+| <a id="externalspresetdefinition-externals"></a>`externals?` | [`Externals`](#externals) | 该预设提供的 externals。 |
 
 ### `MainThreadRuntimeWrapperWebpackPluginOptions` \{#mainthreadruntimewrapperwebpackpluginoptions\}
 

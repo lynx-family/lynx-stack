@@ -27,18 +27,18 @@ export default defineConfig({
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
-| [`assetPrefix`](#output-assetprefix) | `string` | [`Output.assetPrefix`](#output-assetprefix) 用于设置静态资源的 URL 前缀。 |
-| [`cleanDistPath`](#output-cleandistpath) | `boolean` | [`Output.cleanDistPath`](#output-cleandistpath) 选项用于决定是否在构建开始前清空产物目录（默认为 `dist`）中的所有文件。 |
-| [`copy`](#output-copy) | `CopyRspackPluginOptions \| (string \| Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]` | [`Output.copy`](#output-copy) 选项用于将文件复制到产物目录。 |
-| [`cssModules`](#output-cssmodules) | `CssModules` | [`CssModules`](#output-cssmodules) 选项用于自定义 CSS Modules 配置。 |
-| [`dataUriLimit`](#output-dataurilimit) | `number \| DataUriLimit` | [`Output.dataUriLimit`](#output-dataurilimit) 选项用于设置图片、字体等静态资源内联的体积阈值。 |
-| [`distPath`](#output-distpath) | `DistPathConfig` | 设置产物文件的目录。 |
-| [`filename`](#output-filename) | `string \| Filename` | [`Filename`](#filename) 决定输出的 JavaScript bundle 文件的名称。这些 bundle 会被写入 output.path 指定的目录中。 |
-| [`filenameHash`](#output-filenamehash) | `string \| boolean` | [`Output.filenameHash`](#output-filenamehash) 选项用于控制生产环境构建后是否在文件名中添加 hash 值。 |
-| [`inlineScripts`](#output-inlinescripts) | `InlineChunkConfig` | [`Output.inlineScripts`](#output-inlinescripts) 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。 |
-| [`legalComments`](#output-legalcomments) | `"none" \| "inline" \| "linked"` | [`Output.legalComments`](#output-legalcomments) 用于控制如何处理法律注释（legal comment）。 |
-| [`minify`](#output-minify) | `boolean \| Minify` | [`Minify`](#minify) 用于配置是否在生产环境构建中启用代码压缩，或配置压缩器选项。 |
-| [`sourceMap`](#output-sourcemap) | `boolean \| SourceMap` | [`SourceMap`](#sourcemap) 用于配置是否为产物生成 source map，以及如何生成。 |
+| [`assetPrefix`](#output-assetprefix) | `string` | `Output.assetPrefix` 用于设置静态资源的 URL 前缀。 |
+| [`cleanDistPath`](#output-cleandistpath) | `boolean` | `Output.cleanDistPath` 选项用于决定是否在构建开始前清空产物目录（默认为 `dist`）中的所有文件。 |
+| [`copy`](#output-copy) | `CopyRspackPluginOptions \| (string \| Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]` | `Output.copy` 选项用于将文件复制到产物目录。 |
+| [`cssModules`](#output-cssmodules) | [`CssModules`](#output-cssmodules) | [`CssModules`](#output-cssmodules) 选项用于自定义 CSS Modules 配置。 |
+| [`dataUriLimit`](#output-dataurilimit) | `number \| DataUriLimit` | `Output.dataUriLimit` 选项用于设置图片、字体等静态资源内联的体积阈值。 |
+| [`distPath`](#output-distpath) | `DistPathConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | 设置产物文件的目录。 |
+| [`filename`](#output-filename) | `string \| `[`Filename`](#output-filename) | [`Filename`](#output-filename) 决定输出的 JavaScript bundle 文件的名称。这些 bundle 会被写入 output.path 指定的目录中。 |
+| [`filenameHash`](#output-filenamehash) | `string \| boolean` | `Output.filenameHash` 选项用于控制生产环境构建后是否在文件名中添加 hash 值。 |
+| [`inlineScripts`](#output-inlinescripts) | `InlineChunkConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Output.inlineScripts` 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。 |
+| [`legalComments`](#output-legalcomments) | `"none" \| "inline" \| "linked"` | `Output.legalComments` 用于控制如何处理法律注释（legal comment）。 |
+| [`minify`](#output-minify) | `boolean \| `[`Minify`](#output-minify) | [`Minify`](#output-minify) 用于配置是否在生产环境构建中启用代码压缩，或配置压缩器选项。 |
+| [`sourceMap`](#output-sourcemap) | `boolean \| `[`SourceMap`](#output-sourcemap) | [`SourceMap`](#output-sourcemap) 用于配置是否为产物生成 source map，以及如何生成。 |
 
 {/* @api-end */}
 
@@ -51,9 +51,9 @@ export default defineConfig({
 - **类型:** `string`
 - **默认值:** `undefined`
 
-[`Output.assetPrefix`](#output-assetprefix) 用于设置静态资源的 URL 前缀。
+`Output.assetPrefix` 用于设置静态资源的 URL 前缀。
 
-[`Output.assetPrefix`](#output-assetprefix) 的功能与 Rspack 的 [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
+`Output.assetPrefix` 的功能与 Rspack 的 [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
 配置基本相同，区别如下：
 
 - `output.assetPrefix` 仅在生产环境构建时生效。
@@ -76,7 +76,7 @@ export default defineConfig({
 - **类型:** `boolean`
 - **默认值:** 当 `output.distPath.root` 为项目根目录的子目录时自动启用，否则禁用。
 
-[`Output.cleanDistPath`](#output-cleandistpath) 选项用于决定是否在构建开始前清空产物目录（默认为 `dist`）中的所有文件。
+`Output.cleanDistPath` 选项用于决定是否在构建开始前清空产物目录（默认为 `dist`）中的所有文件。
 
 默认情况下，如果产物目录是项目根路径的子目录，Rspeedy 会自动清空构建目录中的所有文件。
 
@@ -109,7 +109,7 @@ export default defineConfig({
 - **类型:** `CopyRspackPluginOptions | (string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]`
 - **默认值:** `undefined`
 
-[`Output.copy`](#output-copy) 选项用于将文件复制到产物目录。
+`Output.copy` 选项用于将文件复制到产物目录。
 
 更多选项请参考 [Rspack.CopyRspackPlugin](https://rspack.rs/plugins/rspack/copy-rspack-plugin)。
 
@@ -295,7 +295,7 @@ export default defineConfig({
 - **类型:** `number | DataUriLimit`
 - **默认值:** `2048`
 
-[`Output.dataUriLimit`](#output-dataurilimit) 选项用于设置图片、字体等静态资源内联的体积阈值。
+`Output.dataUriLimit` 选项用于设置图片、字体等静态资源内联的体积阈值。
 
 内联所有小于 4kB 的静态资源：
 
@@ -369,12 +369,12 @@ export default defineConfig({
 
 ### `output.filename` \{#output-filename\}
 
-- **类型:** `string | Filename`
+- **类型:** `string | `[`Filename`](#output-filename)
 - **默认值:** `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
 
-[`Filename`](#filename) 决定输出的 JavaScript bundle 文件的名称。这些 bundle 会被写入 output.path 指定的目录中。
+[`Filename`](#output-filename) 决定输出的 JavaScript bundle 文件的名称。这些 bundle 会被写入 output.path 指定的目录中。
 
-如果传入字符串，它将被用作 [`Filename.bundle`](#filename-bundle)。
+如果传入字符串，它将被用作 [`Filename.bundle`](#output-filename-bundle)。
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -385,14 +385,193 @@ export default defineConfig({
 })
 ```
 
+#### `output.filename.bundle` \{#output-filename-bundle\}
+
+- **类型:** `BundleFilename`
+- **默认值:** `'[name].[platform].bundle'`
+
+bundle 文件的名称。
+
+支持以下占位符：
+
+- `[name]`：入口名称。
+- `[contenthash]`：bundle 的 contenthash。
+- `[platform]`：bundle 的 environment 名称。
+
+- 在 bundle 文件名中使用 content hash：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- 在 bundle 文件名中使用指定长度的 content hash：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+- 使用函数分别控制主 bundle 和 lazy bundle
+  （例如将 lazy bundle 输出到另一个目录，并附加 git
+  commit hash）：
+
+```js
+import { execSync } from 'node:child_process'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: ({ lazyBundle, platform }) =>
+        lazyBundle
+          ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+          : `[name].${platform}.bundle`,
+    },
+  },
+})
+```
+
+#### `output.filename.css` \{#output-filename-css\}
+
+- **类型:** `Filename` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** `'[name]/[name].css'`
+
+CSS 文件的名称。
+
+- 使用函数根据文件信息动态设置文件名：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      css: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].css' : '[name].css';
+        }
+        return '/some-path/[name].css';
+      },
+    },
+  },
+})
+```
+
+#### `output.filename.js` \{#output-filename-js\}
+
+- **类型:** `Filename` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** 开发环境下为 `'[name].js'`，生产环境 web 构建为 `'[name].[contenthash:8].js'`，生产环境 node 构建为 `'[name].js'`
+
+JavaScript 文件的名称。
+
+- 使用函数根据文件信息动态设置文件名：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      js: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].js' : '[name].js';
+        }
+        return '/some-path/[name].js';
+      },
+    },
+  },
+})
+```
+
+#### `output.filename.template` <span className="api-badge api-badge-deprecated">已废弃</span> \{#output-filename-template\}
+
+- **类型:** `string`
+- **默认值:** `'[name].[platform].bundle'`
+
+:::warning 已废弃
+已废弃。
+:::
+
+模板文件的名称。
+
+
+
+请使用 [`Filename.bundle`](#output-filename-bundle) 代替。
+
+支持以下占位符：
+
+- `[name]`：入口名称。
+- `[contenthash]`：模板的 contenthash。
+
+- 在 bundle 文件名中使用 content hash：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- 在 bundle 文件名中使用指定长度的 content hash：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+#### 其他选项 \{#output-filename-other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="output-filename-assets"></a>`assets` | `Filename` (来自 [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | 其他静态资源的名称，不包括上述类型（image、svg、font、html、wasm...） |
+| <a id="output-filename-font"></a>`font` | `Filename` (来自 [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | 字体文件的名称。 |
+| <a id="output-filename-image"></a>`image` | `Filename` (来自 [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | 非 SVG 图片的名称。 |
+| <a id="output-filename-media"></a>`media` | `Filename` (来自 [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | 媒体资源（如视频）的名称。 |
+| <a id="output-filename-svg"></a>`svg` | `Filename` (来自 [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8].svg'` | SVG 图片的名称。 |
+| <a id="output-filename-wasm"></a>`wasm` | `string` | `'[contenthash:8].module.wasm'` | WebAssembly 文件的名称。 |
+
 ### `output.filenameHash` \{#output-filenamehash\}
 
 - **类型:** `string | boolean`
 - **默认值:** 在生产环境 web 构建中，Rsbuild 默认将该选项设置为 `true`；开发环境构建和非 web 产物默认不添加 hash。
 
-[`Output.filenameHash`](#output-filenamehash) 选项用于控制生产环境构建后是否在文件名中添加 hash 值。
+`Output.filenameHash` 选项用于控制生产环境构建后是否在文件名中添加 hash 值。
 
-[`Output.filename`](#output-filename) 的优先级高于 [`Output.filenameHash`](#output-filenamehash)。
+`Output.filename` 的优先级高于 `Output.filenameHash`。
 
 - 禁用 hash
 
@@ -431,7 +610,7 @@ export default defineConfig({
 - **类型:** `InlineChunkConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/))
 - **默认值:** Rspeedy 默认将其设置为 `true`，仅当用户显式启用顶层的 `splitChunks` 选项时才会切换为 `false`。
 
-[`Output.inlineScripts`](#output-inlinescripts) 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。
+`Output.inlineScripts` 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。
 
 这与 [output.inlineScripts](https://rsbuild.rs/config/output/inline-scripts) 不同，因为我们通常希望将脚本内联到 Lynx bundle（`.lynx.bundle`）中。
 
@@ -458,7 +637,7 @@ export default defineConfig({
 - **类型:** `"none" | "inline" | "linked"`
 - **默认值:** `'none'`
 
-[`Output.legalComments`](#output-legalcomments) 用于控制如何处理法律注释（legal comment）。
+`Output.legalComments` 用于控制如何处理法律注释（legal comment）。
 
 这与 Rsbuild 不同，因为我们通常不希望 Lynx 产物中出现 `.LEGAL.txt` 文件。
 
@@ -472,10 +651,10 @@ export default defineConfig({
 
 ### `output.minify` \{#output-minify\}
 
-- **类型:** `boolean | Minify`
+- **类型:** `boolean | `[`Minify`](#output-minify)
 - **默认值:** 生产环境构建中为 `true`，其他情况为 `false`
 
-[`Minify`](#minify) 用于配置是否在生产环境构建中启用代码压缩，或配置压缩器选项。
+[`Minify`](#output-minify) 用于配置是否在生产环境构建中启用代码压缩，或配置压缩器选项。
 
 禁用压缩。
 
@@ -488,10 +667,208 @@ export default defineConfig({
 })
 ```
 
-### 其他选项 \{#output-other-options\}
+#### `output.minify.backgroundOptions` \{#output-minify-backgroundoptions\}
 
-| 名称 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| <a id="output-sourcemap"></a>`sourceMap` | `boolean \| SourceMap` | 在 Lynx 构建中未设置该选项时，JavaScript source map 在开发环境使用 `'cheap-module-source-map'`，在生产环境使用 `'source-map'`；同时也会生成 CSS source map。所有 `.map` 资源都会在输出前被移除。 | [`SourceMap`](#sourcemap) 用于配置是否为产物生成 source map，以及如何生成。 |
+- **类型:** `SwcJsMinimizerRspackPluginOptions` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** `undefined`
+
+[`Minify.backgroundOptions`](#output-minify-backgroundoptions) 用于为后台线程 bundle 覆盖
+[`Minify.jsOptions`](#output-minify-jsoptions)。
+
+该选项会被深度合并到 [`Minify.jsOptions`](#output-minify-jsoptions) 中。
+它主要与 ReactLynx 的双线程产物配合使用，使
+主线程和后台线程的 bundle 可以使用不同的压缩规则。
+
+#### `output.minify.css` \{#output-minify-css\}
+
+- **类型:** `boolean`
+- **默认值:** 当启用 `output.minify` 且未设置 `css` 时，默认为 `true`。
+
+是否启用 CSS 压缩。
+
+在生产环境构建时，会使用 [@rsbuild/plugin-css-minimizer](https://github.com/rspack-contrib/rsbuild-plugin-css-minimizer) 压缩 CSS 资源，以提升传输效率。
+
+- 禁用 CSS 压缩。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      css: false,
+    },
+  },
+})
+```
+
+#### `output.minify.js` \{#output-minify-js\}
+
+- **类型:** `boolean`
+- **默认值:** 当启用 `output.minify` 且未设置 `js` 时，默认为 `true`。
+
+是否启用 JavaScript 压缩。
+
+- 禁用 JavaScript 压缩。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      js: false,
+    },
+  },
+})
+```
+
+#### `output.minify.jsOptions` \{#output-minify-jsoptions\}
+
+- **类型:** `SwcJsMinimizerRspackPluginOptions` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** 当启用 JavaScript 压缩且未设置 `jsOptions` 时，默认为 `{}`。
+
+[`Minify.jsOptions`](#output-minify-jsoptions) 用于配置 SWC 的压缩选项。
+
+详细配置请参考 [SwcJsMinimizerRspackPlugin](https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin)。
+
+- 禁用 mangle 功能。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          mangle: false,
+        },
+      },
+    },
+  },
+})
+```
+
+#### `output.minify.mainThreadOptions` \{#output-minify-mainthreadoptions\}
+
+- **类型:** `SwcJsMinimizerRspackPluginOptions` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** `undefined`
+
+[`Minify.mainThreadOptions`](#output-minify-mainthreadoptions) 用于为主线程 bundle 覆盖
+[`Minify.jsOptions`](#output-minify-jsoptions)。
+
+该选项会被深度合并到 [`Minify.jsOptions`](#output-minify-jsoptions) 中。
+它主要与 ReactLynx 的双线程产物配合使用，使
+主线程和后台线程的 bundle 可以使用不同的压缩规则。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['console.log'],
+          },
+        },
+      },
+      mainThreadOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+### `output.sourceMap` \{#output-sourcemap\}
+
+- **类型:** `boolean | `[`SourceMap`](#output-sourcemap)
+- **默认值:** 在 Lynx 构建中未设置该选项时，JavaScript source map 在开发环境使用 `'cheap-module-source-map'`，在生产环境使用 `'source-map'`；同时也会生成 CSS source map。所有 `.map` 资源都会在输出前被移除。
+
+[`SourceMap`](#output-sourcemap) 用于配置是否为产物生成 source map，以及如何生成。
+
+#### `output.sourceMap.css` \{#output-sourcemap-css\}
+
+- **类型:** `boolean`
+- **默认值:** 在 Lynx environment 中为 `true`，其他情况下为 `false`。
+
+是否生成 CSS source map。
+
+Lynx environment 中会启用 CSS source map，以便将 CSS 诊断信息
+映射回源码；所有 `.map` 资源都会在输出前被移除。
+
+禁用 CSS source map。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      css: false,
+    },
+  },
+})
+```
+
+#### `output.sourceMap.js` \{#output-sourcemap-js\}
+
+- **类型:** `DevTool` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** 当 `output.sourceMap` 为对象且未设置 `js` 时，开发环境下默认为 `'cheap-module-source-map'`。生产环境下，Lynx environment 默认为 `'source-map'`，其他情况下默认为 `false`。
+
+source map 的生成方式。设置为 `false` 将禁用 source map。
+
+详见 [Rspack - Devtool](https://rspack.rs/config/devtool)。
+
+- 在生产环境中启用高质量的 source map：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: process.env['NODE_ENV'] === 'production'
+        ? 'source-map'
+        : 'cheap-module-source-map',
+    },
+  },
+})
+```
+
+- 禁用 source map 生成：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: false,
+    },
+  },
+})
+```
+
+- 在所有环境中使用高质量的 source map：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: 'source-map',
+    },
+  },
+})
+```
 
 {/* @api-end */}

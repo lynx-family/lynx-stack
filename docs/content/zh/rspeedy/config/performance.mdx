@@ -12,8 +12,8 @@ title: performance
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
-| [`buildCache`](#performance-buildcache) <span className="api-badge api-badge-beta">Beta</span> | `boolean \| BuildCache` | 启用或配置持久化构建缓存。 |
-| [`chunkSplit`](#performance-chunksplit) <span className="api-badge api-badge-deprecated">已废弃</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | [`Performance.chunkSplit`](#performance-chunksplit) 用于配置 chunk 拆分策略。 |
+| [`buildCache`](#performance-buildcache) <span className="api-badge api-badge-beta">Beta</span> | `boolean \| `[`BuildCache`](#performance-buildcache) | 启用或配置持久化构建缓存。 |
+| [`chunkSplit`](#performance-chunksplit) <span className="api-badge api-badge-deprecated">已废弃</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | `Performance.chunkSplit` 用于配置 chunk 拆分策略。 |
 | [`printFileSize`](#performance-printfilesize) | `boolean \| PrintFileSizeOptions` | 是否在生产环境构建后打印文件大小。 |
 | [`profile`](#performance-profile) | `boolean` | 是否在 ReactLynx 等 Lynx 运行时集成中采集耗时信息。 |
 | [`removeConsole`](#performance-removeconsole) | `boolean \| ConsoleType[]` | 是否在生产环境构建中移除 `console.[methodName]`。 |
@@ -26,7 +26,7 @@ title: performance
 
 ### `performance.buildCache` <span className="api-badge api-badge-beta">Beta</span> \{#performance-buildcache\}
 
-- **类型:** `boolean | BuildCache`
+- **类型:** `boolean | `[`BuildCache`](#performance-buildcache)
 - **默认值:** ```ts
 false
 
@@ -62,25 +62,75 @@ export default defineConfig({
 })
 ```
 
+#### `performance.buildCache.buildDependencies` <span className="api-badge api-badge-beta">Beta</span> \{#performance-buildcache-builddependencies\}
+
+- **类型:** `string[]`
+- **默认值:** `['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`；使用 Rspeedy CLI 且启用了 `performance.buildCache` 时，还会添加当前加载的 `lynx.config.*` 文件。
+
+包含构建依赖的文件数组。
+Rspack 会使用其中每个文件的 hash 来使持久化缓存失效。
+
+将 `postcss.config.js` 添加到构建依赖中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      buildDependencies: ['postcss.config.js'],
+    },
+  },
+})
+```
+
+#### `performance.buildCache.cacheDigest` <span className="api-badge api-badge-beta">Beta</span> \{#performance-buildcache-cachedigest\}
+
+- **类型:** `(string | undefined)[]`
+- **默认值:** `undefined`
+
+添加额外的缓存摘要，当数组中的任意值发生变化时，
+之前的构建缓存将会失效。
+
+将 `process.env.SOME_ENV` 添加到缓存摘要中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      cacheDigest: [process.env.SOME_ENV],
+    },
+  },
+})
+```
+
+#### 其他选项 \{#performance-buildcache-other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="performance-buildcache-cachedirectory"></a>`cacheDirectory` <span className="api-badge api-badge-beta">Beta</span> | `string` | `'node_modules/.cache'` | 缓存文件的输出目录。 |
+
 ### `performance.chunkSplit` <span className="api-badge api-badge-deprecated">已废弃</span> \{#performance-chunksplit\}
 
 - **类型:** `ChunkSplit | ChunkSplitBySize | ChunkSplitCustom`
 - **默认值:** 对于 web 构建，未设置该选项时 Rsbuild 当前使用 `{ strategy: 'split-by-experience' }`。
 
- 请使用顶层的 [`Config.splitChunks`](#config-splitchunks) 选项代替。
+ 请使用顶层的 [`Config.splitChunks`](/zh/rspeedy/config/splitChunks#splitchunks) 选项代替。
 
 :::warning 已废弃
 已废弃。
 :::
 
-[`Performance.chunkSplit`](#performance-chunksplit) 用于配置 chunk 拆分策略。
+`Performance.chunkSplit` 用于配置 chunk 拆分策略。
 
 ### `performance.printFileSize` \{#performance-printfilesize\}
 
 - **类型:** `boolean | PrintFileSizeOptions`
 - **默认值:** true
 
-[`Performance.printFileSize`](#performance-printfilesize)
+`Performance.printFileSize`
 
 详见 [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size)。
 

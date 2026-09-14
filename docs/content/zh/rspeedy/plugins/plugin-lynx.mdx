@@ -69,6 +69,8 @@ rsbuild build
 
 {/* @api ApiOptions package="rsbuild-plugin" type="LynxPluginOptions" */}
 
+<a id="lynxpluginoptions"></a>
+
 ### `output` \{#output\}
 
 - **类型:** [`LynxOutput`](#output)
@@ -83,7 +85,7 @@ rsbuild build
 
 ##### `output.filename.bundle` \{#output-filename-bundle\}
 
-- **类型:** `BundleFilename`
+- **类型:** [`BundleFilename`](#bundlefilename)
 - **默认值:** `'[name].[platform].bundle'`
 
 bundle 文件的名称。
@@ -157,7 +159,7 @@ pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `LynxPluginOptions` |  |
+| `options` | [`LynxPluginOptions`](#lynxpluginoptions) |  |
 
 **返回值:** `RsbuildPlugin[]`
 
@@ -204,8 +206,8 @@ const filename = lynx.resolveBundleFilename({
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | `LynxOutput` | 构建产物。 |
-| <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | `LynxPerformance` | 性能选项。 |
+| <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | [`LynxOutput`](#output) | 构建产物。 |
+| <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | [`LynxPerformance`](#performance) | 性能选项。 |
 | <a id="lynxconfig-resolvebundlefilename"></a>`resolveBundleFilename` | `resolveBundleFilename(context: { entryName: string; platform: string }): string` | 解析入口的 bundle 文件名。 |
 | <a id="lynxconfig-resolveintermediatedir"></a>`resolveIntermediateDir` | `resolveIntermediateDir(context?: { entryName?: string }): string` | 解析中间产物所在的目录。 |
 | <a id="lynxconfig-resolvelazybundlefilename"></a>`resolveLazyBundleFilename` | `resolveLazyBundleFilename(context: { platform: string }): string \| undefined` | 解析 lazy bundle 文件的名称。 |

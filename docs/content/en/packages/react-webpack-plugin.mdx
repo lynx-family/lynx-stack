@@ -43,8 +43,8 @@ export default {
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="reactwebpackplugin-constructor"></a>`constructor` | `constructor(options?: ReactWebpackPluginOptions): ReactWebpackPlugin` |  |
-| <a id="reactwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<ReactWebpackPluginOptions>>` | `defaultOptions` is the default options that the [`ReactWebpackPlugin`](#reactwebpackplugin) uses. |
-| <a id="reactwebpackplugin-loaders"></a>`loaders` | `Record<keyof typeof LAYERS \| "TESTING", string>` | The loaders for ReactLynx. |
+| <a id="reactwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`ReactWebpackPluginOptions`](#reactwebpackpluginoptions)`>>` (from typescript) | `defaultOptions` is the default options that the [`ReactWebpackPlugin`](#reactwebpackplugin) uses. |
+| <a id="reactwebpackplugin-loaders"></a>`loaders` | `Record<keyof typeof LAYERS \| "TESTING", string>` (from typescript) | The loaders for ReactLynx. |
 | <a id="reactwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
 
 ## Constants \{#constants\}
@@ -97,7 +97,7 @@ The options for ReactWebpackPlugin
 | <a id="reactwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` | Whether to enable lazy bundle. |
 | <a id="reactwebpackpluginoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` <span className="api-badge api-badge-beta">Experimental</span> | `boolean \| TransformBuiltinAttributeNamesOptions` | The builtin attribute-name transform configuration used by runtime spread attributes. |
 | <a id="reactwebpackpluginoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">Experimental</span> | `boolean` | Whether to enable Element Template compilation. |
-| <a id="reactwebpackpluginoptions-extractstr"></a>`extractStr?` | `boolean \| Partial<ExtractStrConfig>` | Merge same string literals in JS and Lepus to reduce output bundle size. Set to `false` to disable. |
+| <a id="reactwebpackpluginoptions-extractstr"></a>`extractStr?` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | Merge same string literals in JS and Lepus to reduce output bundle size. Set to `false` to disable. |
 | <a id="reactwebpackpluginoptions-firstscreensynctiming"></a>`firstScreenSyncTiming?` | `"immediately" \| "jsReady" \| "manual"` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming` |
 | <a id="reactwebpackpluginoptions-globalpropsmode"></a>`globalPropsMode?` | `"reactive" \| "event"` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode` |
 | <a id="reactwebpackpluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` | Resolved lazy-bundle fetcher mode. Decided by the caller (e.g. `pluginReactLynx`) from the host engine version and any `REACT_LAZY_BUNDLE_FETCHER` env override. |

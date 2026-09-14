@@ -190,6 +190,9 @@
           "optional": true,
           "type": "Dev",
           "ref": "Dev",
+          "refs": [
+            "Dev"
+          ],
           "summary": "The [`Dev`](api:Dev) option is used to control the behavior related with development. Including: HMR, DevServer, etc.",
           "default": "`undefined`",
           "kind": "property"
@@ -225,6 +228,9 @@
           "optional": true,
           "type": "Output",
           "ref": "Output",
+          "refs": [
+            "Output"
+          ],
           "summary": "The [`Output`](api:Output) option is used to set how and where should the bundles and assets output.",
           "default": "`undefined`",
           "kind": "property"
@@ -234,6 +240,9 @@
           "optional": true,
           "type": "Performance",
           "ref": "Performance",
+          "refs": [
+            "Performance"
+          ],
           "summary": "The [`Performance`](api:Performance) option is used to optimize the build-time and runtime performance.",
           "default": "`undefined`",
           "kind": "property"
@@ -253,6 +262,9 @@
           "optional": true,
           "type": "Resolve",
           "ref": "Resolve",
+          "refs": [
+            "Resolve"
+          ],
           "summary": "The [`Resolve`](api:Resolve) option is used to control the resolution behavior of Rspack.",
           "default": "`undefined`",
           "kind": "property"
@@ -262,6 +274,9 @@
           "optional": true,
           "type": "Server",
           "ref": "Server",
+          "refs": [
+            "Server"
+          ],
           "summary": "The [`Server`](api:Server) option changes the behavior of dev-server.",
           "default": "`undefined`",
           "kind": "property"
@@ -271,6 +286,9 @@
           "optional": true,
           "type": "Source",
           "ref": "Source",
+          "refs": [
+            "Source"
+          ],
           "summary": "The [`Source`](api:Source) option changes the behavior of source files.",
           "default": "`undefined`",
           "kind": "property"
@@ -288,6 +306,9 @@
           "optional": true,
           "type": "Tools",
           "ref": "Tools",
+          "refs": [
+            "Tools"
+          ],
           "summary": "The [`Tools`](api:Tools) options changes the behavior of various building tools.",
           "default": "`undefined`",
           "kind": "property"
@@ -363,6 +384,9 @@
           "optional": true,
           "type": "Config",
           "ref": "Config",
+          "refs": [
+            "Config"
+          ],
           "summary": "The config of Rspeedy.",
           "kind": "property"
         }
@@ -379,6 +403,9 @@
           "optional": true,
           "type": "CssExtractRspackLoaderOptions",
           "ref": "CssExtractRspackLoaderOptions",
+          "refs": [
+            "CssExtractRspackLoaderOptions"
+          ],
           "summary": "`@lynx-js/css-extract-webpack-plugin#LoaderOptions`",
           "default": "`undefined`",
           "kind": "property"
@@ -388,6 +415,9 @@
           "optional": true,
           "type": "CssExtractRspackPluginOptions",
           "ref": "CssExtractRspackPluginOptions",
+          "refs": [
+            "CssExtractRspackPluginOptions"
+          ],
           "summary": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions`",
           "default": "`undefined`",
           "kind": "property"
@@ -456,6 +486,10 @@
           "name": "modules",
           "optional": true,
           "type": "boolean | \"local\" | \"global\" | \"pure\" | \"icss\" | CssLoaderModules",
+          "ref": "CssLoaderModules",
+          "refs": [
+            "CssLoaderModules"
+          ],
           "summary": "The [`cssLoader.modules`](api:CssLoaderModules) option enables/disables the CSS Modules specification and setup basic behavior.",
           "examples": [
             "Using `false` value to increase performance because we avoid parsing CSS Modules features, it will be useful for developers who use vanilla css or use other technologies.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: false,\n    },\n  },\n})\n```",
@@ -486,6 +520,9 @@
           "optional": true,
           "type": "CssModuleLocalsConvention",
           "ref": "CssModuleLocalsConvention",
+          "refs": [
+            "CssModuleLocalsConvention"
+          ],
           "summary": "`CssModules.exportLocalsConvention`",
           "default": "`'camelCase'`",
           "kind": "property"
@@ -543,6 +580,9 @@
           "optional": true,
           "type": "CssModuleLocalsConvention",
           "ref": "CssModuleLocalsConvention",
+          "refs": [
+            "CssModuleLocalsConvention"
+          ],
           "summary": "The style of exported class names.",
           "remarks": "Given the various `exportLocalsConvention` values, the behavior is described as follows:\n\n- `'asIs'`:\tClass names will be exported as is.\n\n- `'camelCase'`: Class names will be camelized, the original class name will not to be removed from the locals\n\n- `'camelCaseOnly'`: Class names will be camelized, the original class name will be removed from the locals\n\n- `'dashes'`: Only dashes in class names will be camelized\n\n- `'dashesOnly'`: Dashes in class names will be camelized, the original class name will be removed from the locals\n\nSee [css-loader#exportLocalsConvention](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportlocalsconvention) for details.",
           "default": "`'camelCase'`",
@@ -712,6 +752,9 @@
           "name": "config",
           "type": "Config",
           "ref": "Config",
+          "refs": [
+            "Config"
+          ],
           "summary": "The user config.",
           "kind": "property"
         },
@@ -770,6 +813,9 @@
           "optional": true,
           "type": "BundleFilename",
           "ref": "BundleFilename",
+          "refs": [
+            "BundleFilename"
+          ],
           "summary": "The name of the bundle files.",
           "remarks": "The following placeholder is supported:\n\n- `[name]`: the name of the entry.\n- `[contenthash]`: the contenthash of the bundle.\n- `[platform]`: the environment name of the bundle.",
           "examples": [
@@ -904,6 +950,9 @@
           "name": "content",
           "type": "Config",
           "ref": "Config",
+          "refs": [
+            "Config"
+          ],
           "summary": "The configuration object that exported from the configuration file.",
           "remarks": "The returned object has already been validated.",
           "kind": "property"
@@ -1026,6 +1075,9 @@
           "optional": true,
           "type": "CssModules",
           "ref": "CssModules",
+          "refs": [
+            "CssModules"
+          ],
           "summary": "The [`CssModules`](api:CssModules) option is used for the customization of CSS Modules configurations.",
           "remarks": "The CSS module is enabled for `*.module.css`, `*.module.scss` and `*.module.less`.\nUse [`CssModules.auto`](api:CssModules.auto) to customize the filtering behavior.",
           "examples": [
@@ -1066,6 +1118,10 @@
           "name": "filename",
           "optional": true,
           "type": "string | Filename",
+          "ref": "Filename",
+          "refs": [
+            "Filename"
+          ],
           "summary": "The [`Filename`](api:Filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.",
           "remarks": "If a string is provided, it will be used as [`Filename.bundle`](api:Filename.bundle).",
           "examples": [
@@ -1113,6 +1169,10 @@
           "name": "minify",
           "optional": true,
           "type": "boolean | Minify",
+          "ref": "Minify",
+          "refs": [
+            "Minify"
+          ],
           "summary": "The [`Minify`](api:Minify) configures whether to enable code minification in the production build, or to configure minimizer options.",
           "examples": [
             "Disable minification.\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    minify: false,\n  },\n})\n```"
@@ -1124,6 +1184,10 @@
           "name": "sourceMap",
           "optional": true,
           "type": "boolean | SourceMap",
+          "ref": "SourceMap",
+          "refs": [
+            "SourceMap"
+          ],
           "summary": "The [`SourceMap`](api:SourceMap) configures whether and how to generate source-map for outputs.",
           "default": "When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.",
           "kind": "property"
@@ -1140,6 +1204,10 @@
           "name": "buildCache",
           "optional": true,
           "type": "boolean | BuildCache",
+          "ref": "BuildCache",
+          "refs": [
+            "BuildCache"
+          ],
           "summary": "Enable or configure persistent build cache.",
           "examples": [
             "Enable persistent build cache.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: true,\n  },\n})\n```",
@@ -1153,6 +1221,11 @@
           "name": "chunkSplit",
           "optional": true,
           "type": "ChunkSplit | ChunkSplitBySize | ChunkSplitCustom",
+          "refs": [
+            "ChunkSplit",
+            "ChunkSplitBySize",
+            "ChunkSplitCustom"
+          ],
           "summary": "[`Performance.chunkSplit`](api:Performance.chunkSplit) is used to configure the chunk splitting strategy.",
           "deprecated": "Deprecated.",
           "default": "For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.\n\n Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
@@ -1189,6 +1262,9 @@
           "name": "removeConsole",
           "optional": true,
           "type": "boolean | ConsoleType[]",
+          "refs": [
+            "ConsoleType"
+          ],
           "summary": "Whether to remove `console.[methodName]` in production build.",
           "examples": [
             "- Remove all `console` methods\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    removeConsole: true,\n  },\n})\n```",
@@ -1404,6 +1480,9 @@
           "optional": true,
           "type": "Decorators",
           "ref": "Decorators",
+          "refs": [
+            "Decorators"
+          ],
           "summary": "Used to configure the decorators syntax.",
           "remarks": "See [`Decorators.version`](api:Decorators.version) for more information.",
           "default": "`undefined`",
@@ -1429,6 +1508,9 @@
           "optional": true,
           "type": "Entry",
           "ref": "Entry",
+          "refs": [
+            "Entry"
+          ],
           "summary": "The [`Entry`](api:Entry) option is used to set the entry module.",
           "examples": [
             "- Use a single entry:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  },\n})\n```",
@@ -1481,6 +1563,9 @@
           "name": "transformImport",
           "optional": true,
           "type": "TransformImport[]",
+          "refs": [
+            "TransformImport"
+          ],
           "summary": "The [`TransformImport`](api:TransformImport) option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by [babel-plugin-import](https://npmjs.com/package/babel-plugin-import).",
           "examples": [
             "When using the TUX component library, you can import components on demand with the following config:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    transformImport: [\n      {\n        libraryName: 'foo',\n        customName: 'foo/src/components/{{ member }}/{{ member }}',\n      },\n    ],\n  },\n})\n```\n\nThis will transform the following source code:\n\n```js\nimport { Button } from 'foo'\n```\n\nto:\n\n```js\nimport { Button } from 'foo/src/components/Button/Button'\n```"
@@ -1560,6 +1645,9 @@
           "optional": true,
           "type": "CssExtract",
           "ref": "CssExtract",
+          "refs": [
+            "CssExtract"
+          ],
           "summary": "The [`CssExtract`](api:CssExtract) controls the options of [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin)",
           "default": "`undefined`",
           "kind": "property"
@@ -1569,6 +1657,9 @@
           "optional": true,
           "type": "CssLoader",
           "ref": "CssLoader",
+          "refs": [
+            "CssLoader"
+          ],
           "summary": "The [`CssLoader`](api:CssLoader) controls the options of [css-loader](https://github.com/webpack-contrib/css-loader).",
           "remarks": "The default option is as follow:\n\n```js\nconst defaultOptions = {\n  modules: {\n    auto: true,\n    namedExport: false,\n    exportLocalsConvention: 'camelCase',\n    localIdentName: output.cssModules.localIdentName,\n  },\n  sourceMap: output.sourceMap,\n  // importLoaders is `1` when compiling css files, and is `2` when compiling sass/less files\n  importLoaders: 1 || 2,\n};\n```",
           "default": "Uses defaults derived from `output.cssModules` and `output.sourceMap`, with `importLoaders` set to `1` for CSS files and `2` for Sass/Less files.",
@@ -1579,6 +1670,9 @@
           "optional": true,
           "type": "RsdoctorRspackPluginOptions",
           "ref": "RsdoctorRspackPluginOptions",
+          "refs": [
+            "RsdoctorRspackPluginOptions"
+          ],
           "summary": "The [`Tools.rsdoctor`](api:Tools.rsdoctor) controls the options of [Rsdoctor](https://rsdoctor.dev/).",
           "remarks": "Setting `RSDOCTOR=true` enables Rsdoctor. When it is enabled, Rspeedy merges additional plugin defaults during config normalization.",
           "examples": [
@@ -1674,6 +1768,9 @@
       "name": "BundleFilename",
       "kind": "typealias",
       "type": "string | ((context: BundleFilenameContext) => string)",
+      "refs": [
+        "BundleFilenameContext"
+      ],
       "summary": "The name of the bundle files.\n\nIt can be a string with placeholders (`[name]`, `[contenthash]`,\n`[platform]`), or a function that returns a string based on the\n[`BundleFilenameContext`](api:BundleFilenameContext)."
     },
     {
@@ -1699,6 +1796,9 @@
       "name": "Entry",
       "kind": "typealias",
       "type": "string | string[] | Record<string, string | string[] | EntryDescription>",
+      "refs": [
+        "EntryDescription"
+      ],
       "summary": "`Source.entry`",
       "examples": [
         "- Use a single entry:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  }\n})\n```",
@@ -1736,11 +1836,18 @@
             {
               "name": "options",
               "type": "CreateRspeedyOptions",
+              "ref": "CreateRspeedyOptions",
+              "refs": [
+                "CreateRspeedyOptions"
+              ],
               "description": "[`CreateRspeedyOptions`](api:CreateRspeedyOptions)"
             }
           ],
           "returns": {
             "type": "Promise<RspeedyInstance>",
+            "refs": [
+              "RspeedyInstance"
+            ],
             "description": "- Rspeedy instance."
           },
           "summary": "The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.",
@@ -1765,11 +1872,18 @@
             {
               "name": "config",
               "type": "Config",
+              "ref": "Config",
+              "refs": [
+                "Config"
+              ],
               "description": "The config of Rspeedy."
             }
           ],
           "returns": {
             "type": "Config",
+            "refs": [
+              "Config"
+            ],
             "description": "- The identical config as the input config."
           },
           "summary": "The `defineConfig` method is a helper function used to get TypeScript intellisense.",
@@ -1783,11 +1897,19 @@
             {
               "name": "config",
               "type": "(params: ConfigParams) => Config",
+              "refs": [
+                "ConfigParams",
+                "Config"
+              ],
               "description": "The function that returns a config of Rspeedy."
             }
           ],
           "returns": {
             "type": "(params: ConfigParams) => Config",
+            "refs": [
+              "ConfigParams",
+              "Config"
+            ],
             "description": "- The identical function as the input."
           },
           "summary": "The `defineConfig` method is a helper function used to get TypeScript intellisense.",
@@ -1802,11 +1924,18 @@
             {
               "name": "config",
               "type": "Promise<Config>",
+              "refs": [
+                "Config"
+              ],
+              "external": "typescript",
               "description": "The promise that resolves to a config of Rspeedy."
             }
           ],
           "returns": {
             "type": "Promise<Config>",
+            "refs": [
+              "Config"
+            ],
             "description": "- The identical promise as the input."
           },
           "summary": "The `defineConfig` method is a helper function used to get TypeScript intellisense.",
@@ -1820,11 +1949,19 @@
             {
               "name": "config",
               "type": "(params: ConfigParams) => Promise<Config>",
+              "refs": [
+                "ConfigParams",
+                "Config"
+              ],
               "description": "The function that returns a promise that resolves to a config of Rspeedy."
             }
           ],
           "returns": {
             "type": "(params: ConfigParams) => Promise<Config>",
+            "refs": [
+              "ConfigParams",
+              "Config"
+            ],
             "description": "- The identical function as the input."
           },
           "summary": "The `defineConfig` method is a helper function used to get TypeScript intellisense.",
@@ -1850,11 +1987,18 @@
             {
               "name": "loadConfigOptions",
               "type": "LoadConfigOptions",
+              "ref": "LoadConfigOptions",
+              "refs": [
+                "LoadConfigOptions"
+              ],
               "description": "the options of `loadConfig` method."
             }
           ],
           "returns": {
             "type": "Promise<LoadConfigResult>",
+            "refs": [
+              "LoadConfigResult"
+            ],
             "description": "Build config."
           },
           "summary": "Load the build config by the config path.",
@@ -1879,11 +2023,17 @@
             {
               "name": "configs",
               "type": "Config[]",
+              "refs": [
+                "Config"
+              ],
               "description": "The Rspeedy configuration objects to merge."
             }
           ],
           "returns": {
             "type": "Config",
+            "refs": [
+              "Config"
+            ],
             "description": "The merged Rspeedy configuration object."
           },
           "summary": "Merge multiple Rspeedy configuration objects.",

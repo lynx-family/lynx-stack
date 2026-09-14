@@ -27,18 +27,18 @@ When building with Rsbuild and [`pluginLynx`](/rspeedy/plugins/plugin-lynx) inst
 
 | Name | Type | Description |
 | --- | --- | --- |
-| [`assetPrefix`](#output-assetprefix) | `string` | The [`Output.assetPrefix`](#output-assetprefix) is used to set the URL prefix for static assets. |
-| [`cleanDistPath`](#output-cleandistpath) | `boolean` | The [`Output.cleanDistPath`](#output-cleandistpath) option determines whether all files in the output directory (default: `dist`) are removed before the build starts. |
-| [`copy`](#output-copy) | `CopyRspackPluginOptions \| (string \| Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]` | The [`Output.copy`](#output-copy) option is used for copying files to the dist directory. |
-| [`cssModules`](#output-cssmodules) | `CssModules` | The [`CssModules`](#output-cssmodules) option is used for the customization of CSS Modules configurations. |
-| [`dataUriLimit`](#output-dataurilimit) | `number \| DataUriLimit` | The [`Output.dataUriLimit`](#output-dataurilimit) option is used to set the size threshold to inline static assets such as images and fonts. |
-| [`distPath`](#output-distpath) | `DistPathConfig` | Set the directory of the dist files. |
-| [`filename`](#output-filename) | `string \| Filename` | The [`Filename`](#filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path. |
-| [`filenameHash`](#output-filenamehash) | `string \| boolean` | The [`Output.filenameHash`](#output-filenamehash) option controls whether to add a hash value to the filename after the production build. |
-| [`inlineScripts`](#output-inlinescripts) | `InlineChunkConfig` | The [`Output.inlineScripts`](#output-inlinescripts) option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`). |
-| [`legalComments`](#output-legalcomments) | `"none" \| "inline" \| "linked"` | The [`Output.legalComments`](#output-legalcomments) controls how to handle the legal comment. |
-| [`minify`](#output-minify) | `boolean \| Minify` | The [`Minify`](#minify) configures whether to enable code minification in the production build, or to configure minimizer options. |
-| [`sourceMap`](#output-sourcemap) | `boolean \| SourceMap` | The [`SourceMap`](#sourcemap) configures whether and how to generate source-map for outputs. |
+| [`assetPrefix`](#output-assetprefix) | `string` | The `Output.assetPrefix` is used to set the URL prefix for static assets. |
+| [`cleanDistPath`](#output-cleandistpath) | `boolean` | The `Output.cleanDistPath` option determines whether all files in the output directory (default: `dist`) are removed before the build starts. |
+| [`copy`](#output-copy) | `CopyRspackPluginOptions \| (string \| Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]` | The `Output.copy` option is used for copying files to the dist directory. |
+| [`cssModules`](#output-cssmodules) | [`CssModules`](#output-cssmodules) | The [`CssModules`](#output-cssmodules) option is used for the customization of CSS Modules configurations. |
+| [`dataUriLimit`](#output-dataurilimit) | `number \| DataUriLimit` | The `Output.dataUriLimit` option is used to set the size threshold to inline static assets such as images and fonts. |
+| [`distPath`](#output-distpath) | `DistPathConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Set the directory of the dist files. |
+| [`filename`](#output-filename) | `string \| `[`Filename`](#output-filename) | The [`Filename`](#output-filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path. |
+| [`filenameHash`](#output-filenamehash) | `string \| boolean` | The `Output.filenameHash` option controls whether to add a hash value to the filename after the production build. |
+| [`inlineScripts`](#output-inlinescripts) | `InlineChunkConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Output.inlineScripts` option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`). |
+| [`legalComments`](#output-legalcomments) | `"none" \| "inline" \| "linked"` | The `Output.legalComments` controls how to handle the legal comment. |
+| [`minify`](#output-minify) | `boolean \| `[`Minify`](#output-minify) | The [`Minify`](#output-minify) configures whether to enable code minification in the production build, or to configure minimizer options. |
+| [`sourceMap`](#output-sourcemap) | `boolean \| `[`SourceMap`](#output-sourcemap) | The [`SourceMap`](#output-sourcemap) configures whether and how to generate source-map for outputs. |
 
 {/* @api-end */}
 
@@ -51,9 +51,9 @@ When building with Rsbuild and [`pluginLynx`](/rspeedy/plugins/plugin-lynx) inst
 - **Type:** `string`
 - **Default:** `undefined`
 
-The [`Output.assetPrefix`](#output-assetprefix) is used to set the URL prefix for static assets.
+The `Output.assetPrefix` is used to set the URL prefix for static assets.
 
-The functionality of [`Output.assetPrefix`](#output-assetprefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
+The functionality of `Output.assetPrefix` is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
 config in Rspack. With the following differences:
 
 - `output.assetPrefix` only takes effect in the production build.
@@ -76,7 +76,7 @@ export default defineConfig({
 - **Type:** `boolean`
 - **Default:** Automatically enabled when `output.distPath.root` is a subdirectory of the project root; otherwise disabled.
 
-The [`Output.cleanDistPath`](#output-cleandistpath) option determines whether all files in the output directory (default: `dist`) are removed before the build starts.
+The `Output.cleanDistPath` option determines whether all files in the output directory (default: `dist`) are removed before the build starts.
 
 By default, if the output directory is a subdirectory of the project root path, Rspeedy will automatically clean all files in the build directory.
 
@@ -109,7 +109,7 @@ export default defineConfig({
 - **Type:** `CopyRspackPluginOptions | (string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]`
 - **Default:** `undefined`
 
-The [`Output.copy`](#output-copy) option is used for copying files to the dist directory.
+The `Output.copy` option is used for copying files to the dist directory.
 
 For more options, see [Rspack.CopyRspackPlugin](https://rspack.rs/plugins/rspack/copy-rspack-plugin).
 
@@ -295,7 +295,7 @@ export default defineConfig({
 - **Type:** `number | DataUriLimit`
 - **Default:** `2048`
 
-The [`Output.dataUriLimit`](#output-dataurilimit) option is used to set the size threshold to inline static assets such as images and fonts.
+The `Output.dataUriLimit` option is used to set the size threshold to inline static assets such as images and fonts.
 
 Inline all static assets less than 4kB:
 
@@ -369,12 +369,12 @@ export default defineConfig({
 
 ### `output.filename` \{#output-filename\}
 
-- **Type:** `string | Filename`
+- **Type:** `string | `[`Filename`](#output-filename)
 - **Default:** `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
 
-The [`Filename`](#filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
+The [`Filename`](#output-filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
 
-If a string is provided, it will be used as [`Filename.bundle`](#filename-bundle).
+If a string is provided, it will be used as [`Filename.bundle`](#output-filename-bundle).
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -385,14 +385,193 @@ export default defineConfig({
 })
 ```
 
+#### `output.filename.bundle` \{#output-filename-bundle\}
+
+- **Type:** `BundleFilename`
+- **Default:** `'[name].[platform].bundle'`
+
+The name of the bundle files.
+
+The following placeholder is supported:
+
+- `[name]`: the name of the entry.
+- `[contenthash]`: the contenthash of the bundle.
+- `[platform]`: the environment name of the bundle.
+
+- Using content hash in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- Using content hash with length in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+- Using a function to control the main bundle and the lazy bundles
+  separately (e.g. emit lazy bundles into another directory with a git
+  commit hash appended):
+
+```js
+import { execSync } from 'node:child_process'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: ({ lazyBundle, platform }) =>
+        lazyBundle
+          ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+          : `[name].${platform}.bundle`,
+    },
+  },
+})
+```
+
+#### `output.filename.css` \{#output-filename-css\}
+
+- **Type:** `Filename` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `'[name]/[name].css'`
+
+The name of the CSS files.
+
+- Using a function to dynamically set the filename based on the file information:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      css: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].css' : '[name].css';
+        }
+        return '/some-path/[name].css';
+      },
+    },
+  },
+})
+```
+
+#### `output.filename.js` \{#output-filename-js\}
+
+- **Type:** `Filename` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `'[name].js'` in development, `'[name].[contenthash:8].js'` in production web builds, and `'[name].js'` in production node builds
+
+The name of the JavaScript files.
+
+- Using a function to dynamically set the filename based on the file information:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      js: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].js' : '[name].js';
+        }
+        return '/some-path/[name].js';
+      },
+    },
+  },
+})
+```
+
+#### `output.filename.template` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#output-filename-template\}
+
+- **Type:** `string`
+- **Default:** `'[name].[platform].bundle'`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+The name of the template files.
+
+
+
+Use [`Filename.bundle`](#output-filename-bundle) instead.
+
+The following placeholder is supported:
+
+- `[name]`: the name of the entry.
+- `[contenthash]`: the contenthash of the template.
+
+- Using content hash in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- Using content hash with length in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+#### Other options \{#output-filename-other-options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="output-filename-assets"></a>`assets` | `Filename` (from [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | The name of other assets, except for above (image, svg, font, html, wasm...) |
+| <a id="output-filename-font"></a>`font` | `Filename` (from [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | The name of the font files. |
+| <a id="output-filename-image"></a>`image` | `Filename` (from [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | The name of non-SVG images. |
+| <a id="output-filename-media"></a>`media` | `Filename` (from [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8][ext]'` | The name of media assets, such as video. |
+| <a id="output-filename-svg"></a>`svg` | `Filename` (from [@rspack/core](https://rspack.rs/config/)) | `'[name].[contenthash:8].svg'` | The name of the SVG images. |
+| <a id="output-filename-wasm"></a>`wasm` | `string` | `'[contenthash:8].module.wasm'` | The name of WebAssembly files. |
+
 ### `output.filenameHash` \{#output-filenamehash\}
 
 - **Type:** `string | boolean`
 - **Default:** In production web builds, Rsbuild defaults this option to `true`; development builds and non-web outputs omit hashes by default.
 
-The [`Output.filenameHash`](#output-filenamehash) option controls whether to add a hash value to the filename after the production build.
+The `Output.filenameHash` option controls whether to add a hash value to the filename after the production build.
 
-[`Output.filename`](#output-filename) has a higher priority than [`Output.filenameHash`](#output-filenamehash).
+`Output.filename` has a higher priority than `Output.filenameHash`.
 
 - Disable hash
 
@@ -431,7 +610,7 @@ The available hash formats are:
 - **Type:** `InlineChunkConfig` (from [@rsbuild/core](https://rsbuild.rs/config/))
 - **Default:** Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option.
 
-The [`Output.inlineScripts`](#output-inlinescripts) option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
+The `Output.inlineScripts` option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
 
 This is different with [output.inlineScripts](https://rsbuild.rs/config/output/inline-scripts) since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
 
@@ -457,7 +636,7 @@ export default defineConfig({
 - **Type:** `"none" | "inline" | "linked"`
 - **Default:** `'none'`
 
-The [`Output.legalComments`](#output-legalcomments) controls how to handle the legal comment.
+The `Output.legalComments` controls how to handle the legal comment.
 
 This is different with Rsbuild since we normally do not want a `.LEGAL.txt` file in Lynx outputs.
 
@@ -471,10 +650,10 @@ This behavior can be configured by using one of the following options:
 
 ### `output.minify` \{#output-minify\}
 
-- **Type:** `boolean | Minify`
+- **Type:** `boolean | `[`Minify`](#output-minify)
 - **Default:** `true` in production builds and `false` otherwise
 
-The [`Minify`](#minify) configures whether to enable code minification in the production build, or to configure minimizer options.
+The [`Minify`](#output-minify) configures whether to enable code minification in the production build, or to configure minimizer options.
 
 Disable minification.
 ```js
@@ -486,10 +665,208 @@ export default defineConfig({
 })
 ```
 
-### Other options \{#output-other-options\}
+#### `output.minify.backgroundOptions` \{#output-minify-backgroundoptions\}
 
-| Name | Type | Default | Description |
-| --- | --- | --- | --- |
-| <a id="output-sourcemap"></a>`sourceMap` | `boolean \| SourceMap` | When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit. | The [`SourceMap`](#sourcemap) configures whether and how to generate source-map for outputs. |
+- **Type:** `SwcJsMinimizerRspackPluginOptions` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `undefined`
+
+[`Minify.backgroundOptions`](#output-minify-backgroundoptions) is used to override
+[`Minify.jsOptions`](#output-minify-jsoptions) for background-thread bundles.
+
+This option is deep-merged into [`Minify.jsOptions`](#output-minify-jsoptions).
+It is mainly used together with ReactLynx dual-thread outputs so that
+main-thread and background-thread bundles can use different compress rules.
+
+#### `output.minify.css` \{#output-minify-css\}
+
+- **Type:** `boolean`
+- **Default:** When `output.minify` is enabled and `css` is unset, this defaults to `true`.
+
+Whether enable the CSS minification.
+
+When building for production, [@rsbuild/plugin-css-minimizer](https://github.com/rspack-contrib/rsbuild-plugin-css-minimizer) is used to minify CSS assets for better transmission efficiency.
+
+- Disable the CSS minification.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      css: false,
+    },
+  },
+})
+```
+
+#### `output.minify.js` \{#output-minify-js\}
+
+- **Type:** `boolean`
+- **Default:** When `output.minify` is enabled and `js` is unset, this defaults to `true`.
+
+Whether enable the JavaScript minification.
+
+- Disable the JavaScript minification.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      js: false,
+    },
+  },
+})
+```
+
+#### `output.minify.jsOptions` \{#output-minify-jsoptions\}
+
+- **Type:** `SwcJsMinimizerRspackPluginOptions` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** When JavaScript minification is enabled and `jsOptions` is unset, this defaults to `{}`.
+
+[`Minify.jsOptions`](#output-minify-jsoptions) is used to configure SWC minification options.
+
+For detailed configurations, please refer to [SwcJsMinimizerRspackPlugin](https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin).
+
+- Disable the mangle feature.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          mangle: false,
+        },
+      },
+    },
+  },
+})
+```
+
+#### `output.minify.mainThreadOptions` \{#output-minify-mainthreadoptions\}
+
+- **Type:** `SwcJsMinimizerRspackPluginOptions` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `undefined`
+
+[`Minify.mainThreadOptions`](#output-minify-mainthreadoptions) is used to override
+[`Minify.jsOptions`](#output-minify-jsoptions) for main-thread bundles.
+
+This option is deep-merged into [`Minify.jsOptions`](#output-minify-jsoptions).
+It is mainly used together with ReactLynx dual-thread outputs so that
+main-thread and background-thread bundles can use different compress rules.
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['console.log'],
+          },
+        },
+      },
+      mainThreadOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+### `output.sourceMap` \{#output-sourcemap\}
+
+- **Type:** `boolean | `[`SourceMap`](#output-sourcemap)
+- **Default:** When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.
+
+The [`SourceMap`](#output-sourcemap) configures whether and how to generate source-map for outputs.
+
+#### `output.sourceMap.css` \{#output-sourcemap-css\}
+
+- **Type:** `boolean`
+- **Default:** `true` in Lynx environments, `false` otherwise.
+
+Whether to generate CSS source maps.
+
+Lynx environments enable CSS source maps so that CSS diagnostics can be
+mapped back to the source; all `.map` assets are removed before emit.
+
+Disable CSS sourcemap.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      css: false,
+    },
+  },
+})
+```
+
+#### `output.sourceMap.js` \{#output-sourcemap-js\}
+
+- **Type:** `DevTool` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** When `output.sourceMap` is an object and `js` is unset, it defaults to `'cheap-module-source-map'` in development. In production, it defaults to `'source-map'` for Lynx environments and `false` otherwise.
+
+How the source map should be generated. Setting it to `false` will disable the source map.
+
+See [Rspack - Devtool](https://rspack.rs/config/devtool) for details.
+
+- Enable high-quality source-maps for production:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: process.env['NODE_ENV'] === 'production'
+        ? 'source-map'
+        : 'cheap-module-source-map',
+    },
+  },
+})
+```
+
+- Disable source-map generation:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: false,
+    },
+  },
+})
+```
+
+- Use high-quality source-maps for all environments:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: 'source-map',
+    },
+  },
+})
+```
 
 {/* @api-end */}

@@ -23,7 +23,10 @@
             }
           ],
           "returns": {
-            "type": "MainThreadRef<T>"
+            "type": "MainThreadRef<T>",
+            "refs": [
+              "MainThreadRef"
+            ]
           }
         },
         {
@@ -45,7 +48,8 @@
           "params": [
             {
               "name": "element",
-              "type": "ReactElement<Props>"
+              "type": "ReactElement<Props>",
+              "external": "@types/react"
             },
             {
               "name": "props",
@@ -129,6 +133,9 @@
           "optional": true,
           "type": "DataProcessors",
           "ref": "DataProcessors",
+          "refs": [
+            "DataProcessors"
+          ],
           "summary": "Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
           "kind": "property"
         },
@@ -136,6 +143,10 @@
           "name": "defaultDataProcessor",
           "optional": true,
           "type": "(rawInitData: InitDataRaw) => InitData",
+          "refs": [
+            "InitDataRaw",
+            "InitData"
+          ],
           "summary": "You can custom input and output type of `defaultDataProcessor` by extends [`InitDataRaw`](api:InitDataRaw) and [`InitData`](api:InitData)\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
           "kind": "property"
         }
@@ -206,6 +217,9 @@
         {
           "name": "registerDataProcessors",
           "type": "(dataProcessorDefinition?: DataProcessorDefinition) => void",
+          "refs": [
+            "DataProcessorDefinition"
+          ],
           "summary": "Register DataProcessors. You MUST call this before `root.render()`.",
           "examples": [
             "You MUST call `lynx.registerDataProcessors` before calling `root.render()`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\n// You MUST call this before `root.render()`\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {...} // default DataProcessor\n  dataProcessors: {\n    getScreenMetricsOverride: () => {...} // named DataProcessor\n  }\n})\n\nroot.render(<App/>);\n```",
@@ -232,6 +246,9 @@
         {
           "name": "registerDataProcessors",
           "type": "(dataProcessorDefinition: DataProcessorDefinition) => void",
+          "refs": [
+            "DataProcessorDefinition"
+          ],
           "summary": "Register DataProcessors. You MUST call this before `root.render()`.",
           "deprecated": "Deprecated.",
           "kind": "property"
@@ -259,12 +276,18 @@
       "kind": "variable",
       "type": "ReactLynxChildren",
       "ref": "ReactLynxChildren",
+      "refs": [
+        "ReactLynxChildren"
+      ],
       "summary": "ReactLynx children utilities.\n\nArrays returned by `map`, `forEach`, and `toArray` are frozen."
     },
     {
       "name": "cloneElement",
       "kind": "function",
       "type": "cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>",
+      "refs": [
+        "CloneElement"
+      ],
       "summary": "Clones a ReactLynx element using the snapshot runtime.",
       "signatures": [
         {
@@ -272,7 +295,8 @@
           "params": [
             {
               "name": "element",
-              "type": "ReactElement<Props>"
+              "type": "ReactElement<Props>",
+              "external": "@types/react"
             },
             {
               "name": "props",
@@ -295,6 +319,9 @@
       "name": "createElement",
       "kind": "function",
       "type": "createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>",
+      "refs": [
+        "CreateElement"
+      ],
       "summary": "Creates a ReactLynx element using the snapshot runtime.",
       "signatures": [
         {
@@ -347,6 +374,9 @@
       "name": "GlobalPropsConsumer",
       "kind": "variable",
       "type": "Consumer<GlobalProps>",
+      "refs": [
+        "GlobalProps"
+      ],
       "external": "@types/react",
       "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.\nThis should be used with [`GlobalPropsProvider`](api:GlobalPropsProvider)"
     },
@@ -364,6 +394,9 @@
       "name": "InitDataConsumer",
       "kind": "variable",
       "type": "Consumer<InitData>",
+      "refs": [
+        "InitData"
+      ],
       "external": "@types/react",
       "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `initData`.\nThis should be used with [`InitDataProvider`](api:InitDataProvider)"
     },
@@ -382,6 +415,9 @@
       "kind": "variable",
       "type": "Root",
       "ref": "Root",
+      "refs": [
+        "Root"
+      ],
       "summary": "The default and only root of ReactLynx for you to render JSX",
       "examples": [
         "```ts\nimport { root } from \"@lynx-js/react\"\n```"
@@ -399,11 +435,13 @@
             {
               "name": "effect",
               "type": "EffectCallback",
+              "external": "@types/react",
               "description": "Imperative function that can return a cleanup function"
             },
             {
               "name": "deps",
               "type": "DependencyList",
+              "external": "@types/react",
               "optional": true,
               "description": "If present, effect will only activate if the values in the list change (using ===)."
             }
@@ -418,6 +456,9 @@
       "name": "useGlobalProps",
       "kind": "function",
       "type": "useGlobalProps(): GlobalProps",
+      "refs": [
+        "GlobalProps"
+      ],
       "summary": "A React Hooks for you to get `lynx.__globalProps`.\nIf `lynx.__globalProps` is changed, a re-render will be triggered automatically.",
       "examples": [
         "```ts\nfunction App() {\n  const globalProps = useGlobalProps();\n\n  globalProps.someProperty // use it\n}\n```"
@@ -427,7 +468,10 @@
           "text": "useGlobalProps(): GlobalProps",
           "params": [],
           "returns": {
-            "type": "GlobalProps"
+            "type": "GlobalProps",
+            "refs": [
+              "GlobalProps"
+            ]
           }
         }
       ]
@@ -436,6 +480,9 @@
       "name": "useGlobalPropsChanged",
       "kind": "function",
       "type": "useGlobalPropsChanged(callback: (data: GlobalProps) => void): void",
+      "refs": [
+        "GlobalProps"
+      ],
       "summary": "A React Hooks for you to get notified when `__globalProps` changed.",
       "examples": [
         "```ts\nfunction App() {\n  useGlobalPropsChanged((data) => {\n    lynx.__globalProps.someProperty // can use lynx.__globalProps\n    data.someProperty // can use data\n  })\n}\n```"
@@ -446,7 +493,10 @@
           "params": [
             {
               "name": "callback",
-              "type": "(data: GlobalProps) => void"
+              "type": "(data: GlobalProps) => void",
+              "refs": [
+                "GlobalProps"
+              ]
             }
           ],
           "returns": {
@@ -459,6 +509,9 @@
       "name": "useInitData",
       "kind": "function",
       "type": "useInitData(): InitData",
+      "refs": [
+        "InitData"
+      ],
       "summary": "A React Hooks for you to get `initData`.\nIf `initData` is changed, a re-render will be triggered automatically.",
       "examples": [
         "```ts\nfunction App() {\n  const initData = useInitData();\n\n  initData.someProperty // use it\n}\n```"
@@ -468,7 +521,10 @@
           "text": "useInitData(): InitData",
           "params": [],
           "returns": {
-            "type": "InitData"
+            "type": "InitData",
+            "refs": [
+              "InitData"
+            ]
           }
         }
       ]
@@ -477,6 +533,9 @@
       "name": "useInitDataChanged",
       "kind": "function",
       "type": "useInitDataChanged(callback: (data: InitData) => void): void",
+      "refs": [
+        "InitData"
+      ],
       "summary": "A React Hooks for you to get notified when `initData` changed.",
       "examples": [
         "```ts\nfunction App() {\n  useInitDataChanged((data) => {\n    data.someProperty // can use it\n  })\n}\n```"
@@ -487,7 +546,10 @@
           "params": [
             {
               "name": "callback",
-              "type": "(data: InitData) => void"
+              "type": "(data: InitData) => void",
+              "refs": [
+                "InitData"
+              ]
             }
           ],
           "returns": {
@@ -509,11 +571,13 @@
             {
               "name": "effect",
               "type": "EffectCallback",
+              "external": "@types/react",
               "description": "Imperative function that can return a cleanup function"
             },
             {
               "name": "deps",
               "type": "DependencyList",
+              "external": "@types/react",
               "optional": true,
               "description": "If present, effect will only activate if the values in the list change (using ===).\n\n\n\n `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React."
             }
@@ -676,7 +740,10 @@
             }
           ],
           "returns": {
-            "type": "MainThreadRef<T>"
+            "type": "MainThreadRef<T>",
+            "refs": [
+              "MainThreadRef"
+            ]
           },
           "summary": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
           "examples": [
@@ -704,7 +771,10 @@
           "text": "useMainThreadRef(): MainThreadRef<T | undefined>",
           "params": [],
           "returns": {
-            "type": "MainThreadRef<T | undefined>"
+            "type": "MainThreadRef<T | undefined>",
+            "refs": [
+              "MainThreadRef"
+            ]
           },
           "summary": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
           "examples": [
@@ -728,6 +798,7 @@
             {
               "name": "App",
               "type": "ComponentClass<P, S>",
+              "external": "@types/react",
               "description": "The class component to be wrapped by the HOC."
             }
           ],

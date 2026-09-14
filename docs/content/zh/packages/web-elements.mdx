@@ -42,7 +42,7 @@ registerAttributeHandler(key: string, args: [boolean]): (this: T, target: Attrib
 | `key` | `string` |  |
 | `args` | `[boolean]` |  |
 
-**返回值:** `(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
+**返回值:** `(this: T, target: `[`AttributeChangeHandler`](#attributechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
 
 ### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
 
@@ -59,7 +59,7 @@ registerEventEnableStatusChangeHandler(key: string, args: []): (this: T, target:
 | `key` | `string` |  |
 | `args` | `[]` |  |
 
-**返回值:** `(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
+**返回值:** `(this: T, target: `[`EventStatusChangeHandler`](#eventstatuschangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
 
 ### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
 
@@ -76,7 +76,7 @@ registerStyleChangeHandler(key: string, args: []): (this: T, target: StyleChange
 | `key` | `string` |  |
 | `args` | `[]` |  |
 
-**返回值:** `(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
+**返回值:** `(this: T, target: `[`StyleChangeHandler`](#stylechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
 
 ### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
 
@@ -91,8 +91,8 @@ bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, even
 | `this` | `T` |  |
 | `elementGetter` | `(this: T) => HTMLElement` |  |
 | `eventName` | `string` |  |
-| `eventListener` | `EventListener` |  |
-| `options?` | `AddEventListenerOptions` |  |
+| `eventListener` | `EventListener` (来自 typescript) |  |
+| `options?` | `AddEventListenerOptions` (来自 typescript) |  |
 
 **返回值:** `(this: T, enable: boolean) => void`
 
@@ -141,7 +141,7 @@ boostedQueueMicrotask(foo: CallableFunction, that?: any): void
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `foo` | `CallableFunction` |  |
+| `foo` | `CallableFunction` (来自 typescript) |  |
 | `that?` | `any` |  |
 
 ### `Component()` \{#component\}
@@ -155,7 +155,7 @@ Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `tag` | `string` |  |
-| `attributeReactiveClassesOptional` | `(AttributeReactiveClass<T> \| undefined)[]` |  |
+| `attributeReactiveClassesOptional` | `(`[`AttributeReactiveClass`](#attributereactiveclass)`<T> \| undefined)[]` |  |
 | `template?` | `string` |  |
 
 **返回值:** `(target: T, context: ClassDecoratorContext<T>) => T`
@@ -186,7 +186,7 @@ html(strings: TemplateStringsArray, values: any[]): string
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `strings` | `TemplateStringsArray` |  |
+| `strings` | `TemplateStringsArray` (来自 typescript) |  |
 | `values` | `any[]` |  |
 
 **返回值:** `string`
@@ -257,10 +257,10 @@ const useScrollEnd: boolean
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
-| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | 对于 attribute="false"， 默认会执行 removeAttribute； 在此设置以禁用该行为； |
+| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` (来自 typescript) | 对于 attribute="false"， 默认会执行 removeAttribute； 在此设置以禁用该行为； |
 | <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
 | <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
-| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: AttributeReactiveClass<WebComponentClass>) => void` |  |
+| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: `[`AttributeReactiveClass`](#attributereactiveclass)`<`[`WebComponentClass`](#webcomponentclass)`>) => void` |  |
 
 ### `AttributeChangeHandler` \{#attributechangehandler\}
 

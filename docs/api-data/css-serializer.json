@@ -64,6 +64,9 @@
           "name": "keyLoc",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         },
         {
@@ -75,6 +78,9 @@
           "name": "valLoc",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         },
         {
@@ -138,6 +144,9 @@
         {
           "name": "style",
           "type": "Declaration[]",
+          "refs": [
+            "Declaration"
+          ],
           "kind": "property"
         },
         {
@@ -178,11 +187,17 @@
           "name": "name",
           "type": "Value",
           "ref": "Value",
+          "refs": [
+            "Value"
+          ],
           "kind": "property"
         },
         {
           "name": "styles",
           "type": "KeyframesStyle[]",
+          "refs": [
+            "KeyframesStyle"
+          ],
           "kind": "property"
         },
         {
@@ -201,11 +216,17 @@
           "name": "keyText",
           "type": "Value",
           "ref": "Value",
+          "refs": [
+            "Value"
+          ],
           "kind": "property"
         },
         {
           "name": "style",
           "type": "Declaration[]",
+          "refs": [
+            "Declaration"
+          ],
           "kind": "property"
         },
         {
@@ -226,11 +247,17 @@
           "optional": true,
           "type": "Value",
           "ref": "Value",
+          "refs": [
+            "Value"
+          ],
           "kind": "property"
         },
         {
           "name": "rules",
           "type": "LynxStyleNode[]",
+          "refs": [
+            "LynxStyleNode"
+          ],
           "kind": "property"
         },
         {
@@ -266,11 +293,17 @@
           "name": "prelude",
           "type": "Value",
           "ref": "Value",
+          "refs": [
+            "Value"
+          ],
           "kind": "property"
         },
         {
           "name": "rules",
           "type": "LynxStyleNode[]",
+          "refs": [
+            "LynxStyleNode"
+          ],
           "kind": "property"
         },
         {
@@ -305,11 +338,17 @@
           "name": "range",
           "type": "Range",
           "ref": "Range",
+          "refs": [
+            "Range"
+          ],
           "kind": "property"
         },
         {
           "name": "severity",
           "type": "Severity",
+          "refs": [
+            "Severity"
+          ],
           "kind": "property"
         }
       ]
@@ -332,11 +371,15 @@
           "params": [
             {
               "name": "root",
-              "type": "StyleSheet"
+              "type": "StyleSheet",
+              "external": "@types/css-tree"
             },
             {
               "name": "context",
-              "type": "{ report: (error: ParserError) => void }"
+              "type": "{ report: (error: ParserError) => void }",
+              "refs": [
+                "ParserError"
+              ]
             }
           ],
           "returns": {
@@ -354,12 +397,18 @@
           "name": "end",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         },
         {
           "name": "start",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         }
       ]
@@ -373,11 +422,17 @@
           "name": "selectorText",
           "type": "Value",
           "ref": "Value",
+          "refs": [
+            "Value"
+          ],
           "kind": "property"
         },
         {
           "name": "style",
           "type": "Declaration[]",
+          "refs": [
+            "Declaration"
+          ],
           "kind": "property"
         },
         {
@@ -402,11 +457,17 @@
           "name": "prelude",
           "type": "Value",
           "ref": "Value",
+          "refs": [
+            "Value"
+          ],
           "kind": "property"
         },
         {
           "name": "rules",
           "type": "LynxStyleNode[]",
+          "refs": [
+            "LynxStyleNode"
+          ],
           "kind": "property"
         },
         {
@@ -425,6 +486,9 @@
           "name": "loc",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         },
         {
@@ -456,6 +520,9 @@
           "name": "keyLoc",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         },
         {
@@ -472,6 +539,9 @@
           "name": "valLoc",
           "type": "Location",
           "ref": "Location",
+          "refs": [
+            "Location"
+          ],
           "kind": "property"
         },
         {
@@ -484,12 +554,25 @@
     {
       "name": "Declaration",
       "kind": "typealias",
-      "type": "BaseDeclaration | VariableDeclaration"
+      "type": "BaseDeclaration | VariableDeclaration",
+      "refs": [
+        "BaseDeclaration",
+        "VariableDeclaration"
+      ]
     },
     {
       "name": "LynxStyleNode",
       "kind": "typealias",
-      "type": "StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule"
+      "type": "StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule",
+      "refs": [
+        "StyleRule",
+        "FontFaceRule",
+        "ImportRule",
+        "KeyframesRule",
+        "MediaRule",
+        "SupportsRule",
+        "LayerRule"
+      ]
     },
     {
       "name": "cssChunksToMap",
@@ -505,7 +588,10 @@
             },
             {
               "name": "plugins",
-              "type": "Plugin[]"
+              "type": "Plugin[]",
+              "refs": [
+                "Plugin"
+              ]
             },
             {
               "name": "enableCSSSelector",
@@ -513,7 +599,10 @@
             }
           ],
           "returns": {
-            "type": "{ contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }"
+            "type": "{ contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }",
+            "refs": [
+              "LynxStyleNode"
+            ]
           },
           "summary": "Convert CSS chunks into `cssMap` / `cssSource`.\n\n`loc` fields remain in bundle CSS coordinates so they can be resolved later\nvia `main.css.map`.\n\n`cssSource` intentionally keeps the historical `/cssId/<id>.css` shape."
         }
@@ -534,11 +623,18 @@
             },
             {
               "name": "options",
-              "type": "{ filename?: string; plugins?: Plugin[]; projectRoot?: string }"
+              "type": "{ filename?: string; plugins?: Plugin[]; projectRoot?: string }",
+              "refs": [
+                "Plugin"
+              ]
             }
           ],
           "returns": {
-            "type": "{ errors: ParserError[]; root: LynxStyleNode[] }"
+            "type": "{ errors: ParserError[]; root: LynxStyleNode[] }",
+            "refs": [
+              "ParserError",
+              "LynxStyleNode"
+            ]
           }
         }
       ]

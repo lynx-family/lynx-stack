@@ -15,10 +15,10 @@ Options for the local server that serves the bundle to the device during develop
 | [`base`](#server-base) | `string` | Configure the base path of the server. |
 | [`compress`](#server-compress) | `boolean \| CompressOptions` | Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server. |
 | [`cors`](#server-cors) | `boolean \| CorsOptions` | Configure CORS for the dev server or preview server. |
-| [`headers`](#server-headers) | `Record<string, string \| string[]>` | Adds headers to all responses. |
+| [`headers`](#server-headers) | `Record<string, string \| string[]>` (from typescript) | Adds headers to all responses. |
 | [`host`](#server-host) | `string` | Specify the host that the Rspeedy Server listens to. |
 | [`port`](#server-port) | `number` | Specify the port that the Rspeedy Server listens to. |
-| [`proxy`](#server-proxy) | `ProxyConfig` | Configure proxy rules for the dev server or preview server to proxy requests to the specified service. |
+| [`proxy`](#server-proxy) | `ProxyConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Configure proxy rules for the dev server or preview server to proxy requests to the specified service. |
 | [`strictPort`](#server-strictport) | `boolean` | When a port is occupied, Rspeedy will automatically increment the port number until an available port is found. |
 
 {/* @api-end */}

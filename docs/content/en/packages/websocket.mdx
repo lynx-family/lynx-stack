@@ -35,10 +35,10 @@ This only works in environment that has `NativeModules.LynxWebSocketModule`.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="websocket-constructor"></a>`constructor` | `constructor(url: string, protocols?: string \| string[], options: { headers?: Record<string, string> }): WebSocket` |  |
-| <a id="websocket-closed"></a>`CLOSED` | `ReadyState` | `@lynx-js/websocket#ReadyState.CLOSED` |
-| <a id="websocket-closing"></a>`CLOSING` | `ReadyState` | `@lynx-js/websocket#ReadyState.CLOSING` |
-| <a id="websocket-connecting"></a>`CONNECTING` | `ReadyState` | `@lynx-js/websocket#ReadyState.CONNECTING` |
-| <a id="websocket-open"></a>`OPEN` | `ReadyState` | `@lynx-js/websocket#ReadyState.OPEN` |
+| <a id="websocket-closed"></a>`CLOSED` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSED` |
+| <a id="websocket-closing"></a>`CLOSING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSING` |
+| <a id="websocket-connecting"></a>`CONNECTING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CONNECTING` |
+| <a id="websocket-open"></a>`OPEN` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.OPEN` |
 | <a id="websocket-onclose"></a>`onclose` | `((event: Event<"close"> & { code: number; reason: string }) => void) \| null` | onclose is the Web-style callback of [`WebSocket`](#websocket). |
 | <a id="websocket-onerror"></a>`onerror` | `((event: Event<"error"> & { message: string }) => void) \| null` | onerror is the Web-style callback of [`WebSocket`](#websocket). |
 | <a id="websocket-onmessage"></a>`onmessage` | `((event: Event<"message"> & { data: string }) => void) \| null` | onmessage is the Web-style callback of [`WebSocket`](#websocket). |

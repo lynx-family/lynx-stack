@@ -21,16 +21,26 @@
             {
               "name": "options",
               "type": "LynxCacheEventsPluginOptions",
+              "ref": "LynxCacheEventsPluginOptions",
+              "refs": [
+                "LynxCacheEventsPluginOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "LynxCacheEventsPlugin"
+            "type": "LynxCacheEventsPlugin",
+            "refs": [
+              "LynxCacheEventsPlugin"
+            ]
           }
         },
         {
           "name": "defaultOptions",
           "type": "Readonly<Required<LynxCacheEventsPluginOptions>>",
+          "refs": [
+            "LynxCacheEventsPluginOptions"
+          ],
           "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`LynxCacheEventsPlugin`](api:LynxCacheEventsPlugin) uses.",
           "examples": [
@@ -46,6 +56,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

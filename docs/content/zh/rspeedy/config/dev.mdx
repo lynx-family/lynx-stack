@@ -12,7 +12,7 @@ title: dev
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
-| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | [`Dev.assetPrefix`](#dev-assetprefix) 用于设置开发环境下静态资源的 URL 前缀。 |
+| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | `Dev.assetPrefix` 用于设置开发环境下静态资源的 URL 前缀。 |
 | [`hmr`](#dev-hmr) | `boolean` | 是否启用模块热替换（HMR）。 |
 | [`liveReload`](#dev-livereload) | `boolean` | 是否启用 live reload 功能。 |
 | [`progressBar`](#dev-progressbar) | `boolean \| { id?: string }` | 是否在编译过程中显示进度条。 |
@@ -30,11 +30,11 @@ title: dev
 - **类型:** `string | boolean`
 - **默认值:** `undefined`
 
-[`Dev.assetPrefix`](#dev-assetprefix) 用于设置开发环境下静态资源的 URL 前缀。
+`Dev.assetPrefix` 用于设置开发环境下静态资源的 URL 前缀。
 
 在 `rspeedy dev` 期间，如果该选项未设置为 `false`，dev 插件会将其规范化为 `http://<detected-host>:<port>/`，并在配置了 `server.base` 时将其追加到末尾。
 
-[`Dev.assetPrefix`](#dev-assetprefix) 的功能与 Rspack 中的 [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
+`Dev.assetPrefix` 的功能与 Rspack 中的 [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
 配置基本相同，区别如下：
 
 - `dev.assetPrefix` 仅在开发环境下生效。
@@ -89,7 +89,7 @@ export default defineConfig({
 
 是否启用模块热替换（HMR）。
 
-默认情况下，Rspeedy 优先使用 HMR 来更新模块。如果 HMR 被禁用或在某些场景下无法使用，将自动回退到 [`Dev.liveReload`](#dev-livereload)。
+默认情况下，Rspeedy 优先使用 HMR 来更新模块。如果 HMR 被禁用或在某些场景下无法使用，将自动回退到 `Dev.liveReload`。
 
 如需完全禁用 HMR 和 live reload，请将 `dev.hmr` 和 `dev.liveReload` 都设置为 `false`。此时页面不会向开发服务器发起 WebSocket 请求，文件变化时页面也不会自动刷新。
 
@@ -123,7 +123,7 @@ export default defineConfig({
 - **类型:** `boolean`
 - **默认值:** true
 
-当 [`Dev.hmr`](#dev-hmr) 被禁用或在某些场景下无法使用时，live reload 将作为回退方案。启用后，源文件变化时页面会自动刷新。
+当 `Dev.hmr` 被禁用或在某些场景下无法使用时，live reload 将作为回退方案。启用后，源文件变化时页面会自动刷新。
 
 如需完全禁用 HMR 和 live reload，请将 `dev.hmr` 和 `dev.liveReload` 都设置为 `false`。此时页面不会向开发服务器发起 WebSocket 请求，文件变化时页面也不会自动刷新。
 

@@ -33,9 +33,11 @@ export default defineConfig({
 
 {/* @api ApiOptions package="react-rsbuild-plugin" type="PluginReactLynxOptions" */}
 
+<a id="pluginreactlynxoptions"></a>
+
 ### `compat` \{#compat\}
 
-- **类型:** `Partial<CompatVisitorConfig> & { disableCreateSelectorQueryIncompatibleWarning?: boolean }`
+- **类型:** `Partial<`[`CompatVisitorConfig`](#compatvisitorconfig)`> & { disableCreateSelectorQueryIncompatibleWarning?: boolean }`
 - **默认值:** `undefined`
 
 `compat` 选项用于控制与旧版 ReactLynx 的兼容性。
@@ -48,7 +50,7 @@ export default defineConfig({
 - **类型:** `string[]`
 - **默认值:** `undefined`
 
-启用 [`PluginReactLynxOptions.enableCSSInheritance`](#pluginreactlynxoptions-enablecssinheritance) 后，可以通过 `customCSSInheritanceList` 控制哪些属性可继承，而不仅限于默认属性。
+启用 [`PluginReactLynxOptions.enableCSSInheritance`](#enablecssinheritance) 后，可以通过 `customCSSInheritanceList` 控制哪些属性可继承，而不仅限于默认属性。
 
 设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。
 
@@ -107,7 +109,7 @@ enableCSSInheritance 用于启用默认的继承属性。
 
 - `text-shadow`
 
-推荐与 [`PluginReactLynxOptions.customCSSInheritanceList`](#pluginreactlynxoptions-customcssinheritancelist) 一起使用，以避免性能问题。
+推荐与 [`PluginReactLynxOptions.customCSSInheritanceList`](#customcssinheritancelist) 一起使用，以避免性能问题。
 
 ### `enableCSSInvalidation` \{#enablecssinvalidation\}
 
@@ -127,7 +129,7 @@ If a descendant selector `.a .b` is defined in a CSS file, then when an element'
 
 ### `experimental_transformBuiltinAttributeNames` <span className="api-badge api-badge-beta">实验性</span> \{#experimental-transformbuiltinattributenames\}
 
-- **类型:** `boolean | TransformBuiltinAttributeNamesOptions`
+- **类型:** `boolean | `[`TransformBuiltinAttributeNamesOptions`](#experimental-transformbuiltinattributenames)
 - **默认值:** `false`
 
 转换 Lynx 内置元素上的属性名。
@@ -143,13 +145,19 @@ dash-case。传入对象时可提供可序列化的自定义规则。`rename` �
 属性会在运行时按照相同的
 规则转换。
 
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="experimental-transformbuiltinattributenames-mode"></a>`mode` | `"dash-case" \| "mapping-only"` | `'dash-case'` | 未在 `rename` 或 `preserve` 中列出的属性名的兜底行为。 `'dash-case'` 还会应用默认的 React 风格事件映射。 `'mapping-only'` 会保持其余名称不变。 |
+| <a id="experimental-transformbuiltinattributenames-preserve"></a>`preserve` | `readonly string[]` |  | 应保持不变的属性名，除非同时存在精确的 `rename` 条目。 |
+| <a id="experimental-transformbuiltinattributenames-rename"></a>`rename` | `Readonly<Record<string, string>>` (来自 typescript) |  | 从源属性名到转换后属性名的精确映射。 |
+
 ### `targetSdkVersion` <span className="api-badge api-badge-deprecated">已废弃</span> \{#targetsdkversion\}
 
 - **类型:** `string`
 - **默认值:** `'3.2'`
 
 
- `targetSdkVersion` 现在是 [`PluginReactLynxOptions.engineVersion`](#pluginreactlynxoptions-engineversion) 的别名。请改用 [`PluginReactLynxOptions.engineVersion`](#pluginreactlynxoptions-engineversion)。
+ `targetSdkVersion` 现在是 [`PluginReactLynxOptions.engineVersion`](#engineversion) 的别名。请改用 [`PluginReactLynxOptions.engineVersion`](#engineversion)。
 
 :::warning 已废弃
 已废弃。
@@ -162,7 +170,7 @@ targetSdkVersion 用于指定 App bundle 可运行的最低 Lynx Engine 版本�
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | <a id="defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` | `true` | defaultDisplayLinear 控制 CSS 中 `display` 的默认值是否为 `linear`。 如果 `defaultDisplayLinear === false`，`display` 的默认值将为 `flex` 而非 `linear`。 |
-| <a id="definedce"></a>`defineDCE` | `Partial<DefineDceVisitorConfig>` (来自 typescript) | `undefined` | 类似各类打包工具中的 `define`，但它在转换阶段执行，并会执行一次死代码消除（DCE）。 |
+| <a id="definedce"></a>`defineDCE` | `Partial<`[`DefineDceVisitorConfig`](#definedcevisitorconfig)`>` (来自 typescript) | `undefined` | 类似各类打包工具中的 `define`，但它在转换阶段执行，并会执行一次死代码消除（DCE）。 |
 | <a id="enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` | `false` | enableAccessibilityElement 用于设置所有 `<view />` 元素的 `accessibility-element` 默认值。 |
 | <a id="enablecssselector"></a>`enableCSSSelector` | `boolean` | `true` | enableCSSSelector 控制是否启用新的 CSS 实现。 |
 | <a id="enablenewgesture"></a>`enableNewGesture` | `boolean` | `false` | enableNewGesture 用于启用新的手势系统。 |
@@ -172,12 +180,12 @@ targetSdkVersion 用于指定 App bundle 可运行的最低 Lynx Engine 版本�
 | <a id="engineversion"></a>`engineVersion` | `string` | `'3.2'` | `engineVersion` 指定 App bundle 正常运行所需的最低 Lynx Engine 版本。 |
 | <a id="experimental-islazybundle"></a>`experimental_isLazyBundle` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` | `false` | 生成独立的 lazy bundle。 |
 | <a id="experimental-useelementtemplate"></a>`experimental_useElementTemplate` <span className="api-badge api-badge-beta">实验性</span> | `boolean` | `false` | 启用 Element Template 的编译与运行时入口。 |
-| <a id="extractstr"></a>`extractStr` | `boolean \| Partial<ExtractStrConfig>` | `false` | 合并 JS 和 Lepus 中相同的字符串字面量，以减小产物 bundle 体积。 设置为 `false` 可禁用。 |
+| <a id="extractstr"></a>`extractStr` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | 合并 JS 和 Lepus 中相同的字符串字面量，以减小产物 bundle 体积。 设置为 `false` 可禁用。 |
 | <a id="firstscreensynctiming"></a>`firstScreenSyncTiming` | `"immediately" \| "jsReady" \| "manual"` | `"immediately"` | 此标志控制首屏之后主线程（Lepus）何时将控制权移交给后台线程 此标志有三个选项： `"immediately"`：立即移交 `"jsReady"`：在后台线程（JS Runtime）就绪时移交 `"manual"`：在业务调用 `@lynx-js/react` 导出的 `markFirstScreenSyncReady()` API 时 移交，移交时机完全由用户控制 移交控制权后，主线程（Lepus）运行时将无法再响应数据更新， 数据更新会被转发到后台线程（JS Runtime）并 __异步__ 处理 |
 | <a id="globalpropsmode"></a>`globalPropsMode` | `"reactive" \| "event"` | `'reactive'` | 配置 `lynx.__globalProps` 的更新模式。 此标志有两个选项： `'reactive'`：`UpdateGlobalProps` 会自动触发更新。 `'event'`：`UpdateGlobalProps` 会触发全局事件，用户需要在事件处理函数中触发更新。 |
 | <a id="optimizebundlesize"></a>`optimizeBundleSize` | `boolean \| { background?: boolean; mainThread?: boolean }` | `false` | 通过 Minify.mainThreadOptions 和 Minify.backgroundOptions 移除未使用的代码，以优化 bundle 体积。 当 optimizeBundleSize 或 optimizeBundleSize.mainThread 为 true 时，会优化主线程代码。 当 optimizeBundleSize 或 optimizeBundleSize.background 为 true 时，会优化后台线程代码。 |
 | <a id="removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` | `true` | removeDescendantSelectorScope 用于移除后代选择器的作用域。 |
-| <a id="shake"></a>`shake` | `Partial<ShakeVisitorConfig>` (来自 typescript) | `undefined` | 控制如何对主线程代码进行 shake。 |
+| <a id="shake"></a>`shake` | `Partial<`[`ShakeVisitorConfig`](#shakevisitorconfig)`>` (来自 typescript) | `undefined` | 控制如何对主线程代码进行 shake。 |
 
 {/* @api-end */}
 
@@ -205,7 +213,7 @@ export default {
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `userOptions?` | `PluginReactLynxOptions` |  |
+| `userOptions?` | [`PluginReactLynxOptions`](#pluginreactlynxoptions) |  |
 
 **返回值:** `RsbuildPlugin[]`
 
@@ -235,7 +243,7 @@ const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread"
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="compatvisitorconfig-addcomponentelement"></a>`addComponentElement` | `boolean \| AddComponentElementConfig` | 控制是否为组件添加包裹元素 |
+| <a id="compatvisitorconfig-addcomponentelement"></a>`addComponentElement` | `boolean \| `[`AddComponentElementConfig`](#addcomponentelementconfig) | 控制是否为组件添加包裹元素 |
 | <a id="compatvisitorconfig-additionalcomponentattributes"></a>`additionalComponentAttributes` | `string[]` | 指定额外的组件属性列表，这些属性会传递给包裹的 `<view>`，而不是组件本身。 |
 | <a id="compatvisitorconfig-componentspkg"></a>`componentsPkg` | `string[]` | 指定需要进行兼容处理的组件包名列表 |
 | <a id="compatvisitorconfig-darkmode"></a>`darkMode?` <span className="api-badge api-badge-deprecated">已废弃</span> | `boolean \| DarkModeConfig` | 深色模式配置 **已废弃.** 已废弃。 |
@@ -253,7 +261,7 @@ const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread"
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="definedcevisitorconfig-define"></a>`define` | `Record<string, string>` | 在编译时将代码中的变量替换为其他值或表达式。 |
+| <a id="definedcevisitorconfig-define"></a>`define` | `Record<string, string>` (来自 typescript) | 在编译时将代码中的变量替换为其他值或表达式。 |
 
 ### `ExtractStrConfig` \{#extractstrconfig\}
 
@@ -269,7 +277,7 @@ const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread"
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => TemplateHooks` |  |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) |  |
 
 ### `ShakeVisitorConfig` \{#shakevisitorconfig\}
 
@@ -309,11 +317,11 @@ class MyPlugin {
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | 在模板输出之后调用。 |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | 获取异步 chunk 的真实名称。具有相同 `asyncChunkName` 的文件会被放入同一个模板中。 |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | 在模板输出之前调用。可用于修改模板。 |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | 在 encode 过程之前调用。可用于修改 encode 选项。 |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | 调用 encode 过程。 |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` (来自 @rspack/lite-tapable) | 在模板输出之后调用。 |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` (来自 @rspack/lite-tapable) | 获取异步 chunk 的真实名称。具有相同 `asyncChunkName` 的文件会被放入同一个模板中。 |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` (来自 @rspack/lite-tapable) | 在模板输出之前调用。可用于修改模板。 |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` (来自 @rspack/lite-tapable) | 在 encode 过程之前调用。可用于修改 encode 选项。 |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` (来自 @rspack/lite-tapable) | 调用 encode 过程。 |
 
 ### `TransformBuiltinAttributeNamesOptions` \{#transformbuiltinattributenamesoptions\}
 
@@ -326,6 +334,6 @@ class MyPlugin {
 | --- | --- | --- |
 | <a id="transformbuiltinattributenamesoptions-mode"></a>`mode?` | `"dash-case" \| "mapping-only"` | 未在 `rename` 或 `preserve` 中列出的属性名的兜底行为。 `'dash-case'` 还会应用默认的 React 风格事件映射。 `'mapping-only'` 会保持其余名称不变。 |
 | <a id="transformbuiltinattributenamesoptions-preserve"></a>`preserve?` | `readonly string[]` | 应保持不变的属性名，除非同时存在精确的 `rename` 条目。 |
-| <a id="transformbuiltinattributenamesoptions-rename"></a>`rename?` | `Readonly<Record<string, string>>` | 从源属性名到转换后属性名的精确映射。 |
+| <a id="transformbuiltinattributenamesoptions-rename"></a>`rename?` | `Readonly<Record<string, string>>` (来自 typescript) | 从源属性名到转换后属性名的精确映射。 |
 
 {/* @api-end */}

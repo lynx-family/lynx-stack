@@ -33,9 +33,11 @@ export default defineConfig({
 
 {/* @api ApiOptions package="vanilla-rsbuild-plugin" type="PluginVanillaLynxOptions" */}
 
+<a id="pluginvanillalynxoptions"></a>
+
 ### `bundleFilename` \{#bundlefilename\}
 
-- **Type:** `VanillaBundleFilename`
+- **Type:** [`VanillaBundleFilename`](#vanillabundlefilename)
 
 Override the final `.bundle` filename.
 
@@ -44,7 +46,7 @@ The default outside Rspeedy is `[name].[platform].bundle`.
 
 ### `entries` \{#entries\}
 
-- **Type:** `Record<string, VanillaLynxEntry>` (from typescript)
+- **Type:** `Record<string, `[`VanillaLynxEntry`](#vanillalynxentry)`>` (from typescript)
 
 Explicit two-thread entries.
 
@@ -60,7 +62,7 @@ discovered by convention.
 Deprecated.
 :::
 
-Alias of [`PluginVanillaLynxOptions.engineVersion`](#pluginvanillalynxoptions-engineversion).
+Alias of [`PluginVanillaLynxOptions.engineVersion`](#engineversion).
 
  Use `engineVersion` instead.
 
@@ -93,7 +95,7 @@ discovered by convention.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `options` | `PluginVanillaLynxOptions` |  |
+| `options` | [`PluginVanillaLynxOptions`](#pluginvanillalynxoptions) |  |
 
 **Returns:** `RsbuildPlugin`
 
@@ -115,7 +117,7 @@ Rspack layers used by Vanilla Lynx entries.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => TemplateHooks` |  |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) |  |
 
 ### `TemplateHooks` \{#templatehooks\}
 
@@ -144,11 +146,11 @@ class MyPlugin {
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` (from @rspack/lite-tapable) | Called after the template is emitted. |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` (from @rspack/lite-tapable) | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` (from @rspack/lite-tapable) | Called before the template is emitted. Can be used to modify the template. |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` (from @rspack/lite-tapable) | Called before the encode process. Can be used to modify the encode options. |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` (from @rspack/lite-tapable) | Call the encode process. |
 
 ### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
 

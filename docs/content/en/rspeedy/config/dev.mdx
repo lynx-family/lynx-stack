@@ -12,7 +12,7 @@ Options for the development server and hot module replacement: what the dev clie
 
 | Name | Type | Description |
 | --- | --- | --- |
-| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | The [`Dev.assetPrefix`](#dev-assetprefix) is used to set the URL prefix for static assets during development. |
+| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | The `Dev.assetPrefix` is used to set the URL prefix for static assets during development. |
 | [`hmr`](#dev-hmr) | `boolean` | Whether to enable Hot Module Replacement (HMR). |
 | [`liveReload`](#dev-livereload) | `boolean` | Whether to enable live reload functionality. |
 | [`progressBar`](#dev-progressbar) | `boolean \| { id?: string }` | Whether to display progress bar during compilation. |
@@ -30,11 +30,11 @@ Options for the development server and hot module replacement: what the dev clie
 - **Type:** `string | boolean`
 - **Default:** `undefined`
 
-The [`Dev.assetPrefix`](#dev-assetprefix) is used to set the URL prefix for static assets during development.
+The `Dev.assetPrefix` is used to set the URL prefix for static assets during development.
 
 During `rspeedy dev`, if this option is not set to `false`, the dev plugin normalizes it to `http://<detected-host>:<port>/` and appends `server.base` when configured.
 
-The functionality of [`Dev.assetPrefix`](#dev-assetprefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
+The functionality of `Dev.assetPrefix` is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
 config in Rspack. With the following differences:
 
 - `dev.assetPrefix` only takes effect during development.
@@ -89,7 +89,7 @@ export default defineConfig({
 
 Whether to enable Hot Module Replacement (HMR).
 
-By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to [`Dev.liveReload`](#dev-livereload).
+By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to `Dev.liveReload`.
 
 To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
 
@@ -123,7 +123,7 @@ export default defineConfig({
 - **Type:** `boolean`
 - **Default:** true
 
-Live reload is used as a fallback when [`Dev.hmr`](#dev-hmr) is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
+Live reload is used as a fallback when `Dev.hmr` is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
 
 To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
 

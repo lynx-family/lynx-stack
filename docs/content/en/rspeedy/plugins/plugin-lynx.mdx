@@ -69,6 +69,8 @@ Everything else in `output`, `source`, `dev` and `server` keeps the Rsbuild shap
 
 {/* @api ApiOptions package="rsbuild-plugin" type="LynxPluginOptions" */}
 
+<a id="lynxpluginoptions"></a>
+
 ### `output` \{#output\}
 
 - **Type:** [`LynxOutput`](#output)
@@ -83,7 +85,7 @@ The names of the emitted files.
 
 ##### `output.filename.bundle` \{#output-filename-bundle\}
 
-- **Type:** `BundleFilename`
+- **Type:** [`BundleFilename`](#bundlefilename)
 - **Default:** `'[name].[platform].bundle'`
 
 The name of the bundle files.
@@ -157,7 +159,7 @@ pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `options` | `LynxPluginOptions` |  |
+| `options` | [`LynxPluginOptions`](#lynxpluginoptions) |  |
 
 **Returns:** `RsbuildPlugin[]`
 
@@ -204,8 +206,8 @@ const filename = lynx.resolveBundleFilename({
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | `LynxOutput` | The build outputs. |
-| <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | `LynxPerformance` | The performance options. |
+| <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | [`LynxOutput`](#output) | The build outputs. |
+| <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | [`LynxPerformance`](#performance) | The performance options. |
 | <a id="lynxconfig-resolvebundlefilename"></a>`resolveBundleFilename` | `resolveBundleFilename(context: { entryName: string; platform: string }): string` | Resolve the name of the bundle file of an entry. |
 | <a id="lynxconfig-resolveintermediatedir"></a>`resolveIntermediateDir` | `resolveIntermediateDir(context?: { entryName?: string }): string` | Resolve the directory of the intermediate files. |
 | <a id="lynxconfig-resolvelazybundlefilename"></a>`resolveLazyBundleFilename` | `resolveLazyBundleFilename(context: { platform: string }): string \| undefined` | Resolve the name of the lazy bundle files. |

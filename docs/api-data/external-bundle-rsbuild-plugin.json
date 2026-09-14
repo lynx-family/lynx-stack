@@ -45,6 +45,9 @@
           "name": "resolveExternals",
           "optional": true,
           "type": "(value: boolean | object, context: ExternalsPresetContext) => Record<string, ExternalValue>",
+          "refs": [
+            "ExternalsPresetContext"
+          ],
           "summary": "Resolve external request mappings contributed by this preset.",
           "kind": "property"
         },
@@ -52,6 +55,9 @@
           "name": "resolveManagedAssets",
           "optional": true,
           "type": "(value: boolean | object, context: ExternalsPresetContext) => Map<string, string> | Record<string, string>",
+          "refs": [
+            "ExternalsPresetContext"
+          ],
           "summary": "Resolve managed bundle assets contributed by this preset.",
           "kind": "property"
         }
@@ -67,6 +73,10 @@
           "name": "reactlynx",
           "optional": true,
           "type": "boolean | ReactLynxExternalsPresetOptions",
+          "ref": "ReactLynxExternalsPresetOptions",
+          "refs": [
+            "ReactLynxExternalsPresetOptions"
+          ],
           "summary": "Load the ReactLynx runtime bundle and wire its standard module globals.",
           "kind": "property"
         }
@@ -89,6 +99,9 @@
           "name": "externals",
           "optional": true,
           "type": "Record<string, PluginExternalConfig>",
+          "refs": [
+            "PluginExternalConfig"
+          ],
           "external": "typescript",
           "summary": "Additional explicit externals to load.",
           "kind": "property"
@@ -98,6 +111,9 @@
           "optional": true,
           "type": "ExternalsPresetDefinitions",
           "ref": "ExternalsPresetDefinitions",
+          "refs": [
+            "ExternalsPresetDefinitions"
+          ],
           "summary": "Definitions for custom externals presets enabled by `externalsPresets`.\n\nUse this to add business-specific presets such as `lynxUi`, or to extend a\nbuilt-in preset through `extends`.",
           "kind": "property"
         },
@@ -106,6 +122,9 @@
           "optional": true,
           "type": "ExternalsPresets",
           "ref": "ExternalsPresets",
+          "refs": [
+            "ExternalsPresets"
+          ],
           "summary": "Presets for external libraries.\n\nSame as https://rspack.rs/config/externals#externalspresets but for Lynx.",
           "kind": "property"
         },
@@ -253,6 +272,9 @@
       "name": "ExternalsPresetDefinitions",
       "kind": "typealias",
       "type": "Record<string, ExternalsPresetDefinition>",
+      "refs": [
+        "ExternalsPresetDefinition"
+      ],
       "external": "typescript",
       "summary": "Available externals preset definitions."
     },
@@ -260,6 +282,10 @@
       "name": "PluginExternalConfig",
       "kind": "typealias",
       "type": "PluginExternalValue | string",
+      "ref": "PluginExternalValue",
+      "refs": [
+        "PluginExternalValue"
+      ],
       "summary": "External bundle shorthand accepted by `pluginExternalBundle`.\n\nWhen a string is provided, it is treated as `bundlePath` and the plugin will\ninfer:\n- `libraryName`: the external request key\n- `background.sectionPath`: the external request key\n- `mainThread.sectionPath`: `${request}__main-thread`"
     },
     {
@@ -267,6 +293,9 @@
       "kind": "variable",
       "type": "ExternalsPresetDefinitions",
       "ref": "ExternalsPresetDefinitions",
+      "refs": [
+        "ExternalsPresetDefinitions"
+      ],
       "summary": "Built-in externals preset definitions.",
       "default": "..."
     },
@@ -301,7 +330,11 @@
           "params": [
             {
               "name": "options",
-              "type": "PluginExternalBundleOptions"
+              "type": "PluginExternalBundleOptions",
+              "ref": "PluginExternalBundleOptions",
+              "refs": [
+                "PluginExternalBundleOptions"
+              ]
             }
           ],
           "returns": {

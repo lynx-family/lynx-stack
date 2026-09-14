@@ -41,8 +41,8 @@ Animate a sequence
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `sequence` | `AnimationSequence` |  |
-| `options?` | `SequenceOptions` |  |
+| `sequence` | `AnimationSequence` (from framer-motion) |  |
+| `options?` | `SequenceOptions` (from framer-motion) |  |
 
 **Returns:** `AnimationPlaybackControlsWithThen`
 
@@ -72,10 +72,10 @@ mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `inputValue` | `MotionValue<number>` |  |
-| `inputRange` | `MapInputRange` |  |
+| `inputValue` | `MotionValue<number>` (from motion-dom) |  |
+| `inputRange` | `MapInputRange` (from motion-dom) |  |
 | `outputRange` | `O[]` |  |
-| `options?` | `TransformOptions<O>` |  |
+| `options?` | `TransformOptions<O>` (from motion-dom) |  |
 
 **Returns:** `MotionValue<O>`
 
@@ -106,7 +106,7 @@ motionValue(init: V, options?: MotionValueOptions): MotionValue<V>
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `init` | `V` |  |
-| `options?` | `MotionValueOptions` |  |
+| `options?` | `MotionValueOptions` (from motion-dom) |  |
 
 **Returns:** `MotionValue<V>`
 
@@ -151,7 +151,7 @@ springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `source` | `T \| MotionValue<T>` |  |
-| `options?` | `SpringOptions` |  |
+| `options?` | `SpringOptions` (from motion-dom) |  |
 
 **Returns:** `MotionValue<T>`
 
@@ -180,7 +180,7 @@ styleEffect(subject: string | ElementOrElements, values: Record<string, MotionVa
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `subject` | `string \| ElementOrElements` |  |
-| `values` | `Record<string, MotionValue>` |  |
+| `values` | `Record<string, MotionValue>` (from typescript) |  |
 
 **Returns:** `() => void`
 

@@ -20,11 +20,18 @@
           "params": [
             {
               "name": "options",
-              "type": "Readonly<RuntimeConfigWebpackPluginOptions>"
+              "type": "Readonly<RuntimeConfigWebpackPluginOptions>",
+              "refs": [
+                "RuntimeConfigWebpackPluginOptions"
+              ],
+              "external": "typescript"
             }
           ],
           "returns": {
-            "type": "RuntimeConfigWebpackPlugin"
+            "type": "RuntimeConfigWebpackPlugin",
+            "refs": [
+              "RuntimeConfigWebpackPlugin"
+            ]
           }
         },
         {
@@ -35,6 +42,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

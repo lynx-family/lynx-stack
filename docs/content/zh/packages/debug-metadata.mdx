@@ -66,9 +66,9 @@ buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceL
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `uiSourceMap` | `UiSourceMapData` |  |
+| `uiSourceMap` | [`UiSourceMapData`](#uisourcemapdata) |  |
 
-**返回值:** `Map<number, Omit<UiSourceLocation, "repo">>`
+**返回值:** `Map<number, Omit<`[`UiSourceLocation`](#uisourcelocation)`, "repo">>`
 
 ### `findArtifact()` \{#findartifact\}
 
@@ -81,10 +81,10 @@ findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifac
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename: string }` |  |
 
-**返回值:** `Artifact | undefined`
+**返回值:** [`Artifact`](#artifact)` | undefined`
 
 ### `findBytecodeDebugInfo()` \{#findbytecodedebuginfo\}
 
@@ -97,10 +97,10 @@ findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string })
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename: string }` |  |
 
-**返回值:** `BytecodeDebugInfoSource | undefined`
+**返回值:** [`BytecodeDebugInfoSource`](#bytecodedebuginfosource)` | undefined`
 
 ### `findSourceMap()` \{#findsourcemap\}
 
@@ -115,10 +115,10 @@ findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: st
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename?: string; key?: string; path?: string }` |  |
 
-**返回值:** `SourceMapDebugSource | undefined`
+**返回值:** [`SourceMapDebugSource`](#sourcemapdebugsource)` | undefined`
 
 ### `isUiSourceMapData()` \{#isuisourcemapdata\}
 
@@ -180,10 +180,10 @@ remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUi
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `root` | `UiNode` |  |
-| `loadMetadata` | `DebugMetadataLoader` |  |
+| `root` | [`UiNode`](#uinode) |  |
+| `loadMetadata` | [`DebugMetadataLoader`](#debugmetadataloader) |  |
 
-**返回值:** `Promise<RemappedUiNode>`
+**返回值:** `Promise<`[`RemappedUiNode`](#remappeduinode)`>`
 
 ### `resolveField()` \{#resolvefield\}
 
@@ -202,11 +202,11 @@ resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): 
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `field` | `string` |  |
-| `params` | `QueryParams` |  |
+| `params` | [`QueryParams`](#queryparams) |  |
 
-**返回值:** `ResolveResult | undefined`
+**返回值:** [`ResolveResult`](#resolveresult)` | undefined`
 
 ## 常量 \{#\}
 
@@ -263,7 +263,7 @@ key（尤其是 `customSections` 下的 key）本身可能包含点号，
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="artifact-debugsources"></a>`debugSources` | `DebugSource[]` | 该产物的调试数据源，顺序与 反向符号化（reverse symbolication）的解码链一致。 使用方从运行时位置出发、希望还原原始源码时， 按从左到右的顺序遍历此列表： 1. `bytecode-debug-info`（如果存在）将字节码 PC 偏移    映射回编码后 JS 源码的 `(line, column)`。 2. 随后 `source-map` 将该 `(line, column)` 映射回    原始编写的文件。 |
+| <a id="artifact-debugsources"></a>`debugSources` | [`DebugSource`](#debugsource)`[]` | 该产物的调试数据源，顺序与 反向符号化（reverse symbolication）的解码链一致。 使用方从运行时位置出发、希望还原原始源码时， 按从左到右的顺序遍历此列表： 1. `bytecode-debug-info`（如果存在）将字节码 PC 偏移    映射回编码后 JS 源码的 `(line, column)`。 2. 随后 `source-map` 将该 `(line, column)` 映射回    原始编写的文件。 |
 | <a id="artifact-filename"></a>`filename` | `string` | 该产物的寻址名称：产出文件的文件名（basename）， 或当 bundle 将其作为自定义 section 携带时的 section 名称。 |
 | <a id="artifact-kind"></a>`kind` | `"main-thread" \| "background" \| "css"` | 该资源在 `tasm.json` 中所属的 encoder 分类： - `main-thread` — 运行在 lepusNG 主线程上的 JS   （编译进 `lepusCode` section）。 - `background` — 运行在后台 JS 引擎上的 JS   （位于 `manifest` section）。 - `css` — 抽取出的 CSS chunk（位于 `css` section）。 |
 | <a id="artifact-path"></a>`path` | `string` | 产出资源本身相对于 bundler 的路径（例如 `.lynx/main/main-thread.js`）。区别于 [`SourceMapDebugSource.path`](#sourcemapdebugsource)，后者指向 同级的 `.map` 文件。 |
@@ -276,7 +276,7 @@ key（尤其是 `customSections` 下的 key）本身可能包含点号，
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="bytecodedebuginfosource-debuginfo"></a>`debugInfo` | `LepusNGDebugInfo` | 字节码调试数据。目前始终为 lepusNG 格式； 如果将来需要支持其他 encoder（`quickjs` 等）并存， 会新增一个 `target` 判别字段。 |
+| <a id="bytecodedebuginfosource-debuginfo"></a>`debugInfo` | [`LepusNGDebugInfo`](#lepusngdebuginfo) | 字节码调试数据。目前始终为 lepusNG 格式； 如果将来需要支持其他 encoder（`quickjs` 等）并存， 会新增一个 `target` 判别字段。 |
 | <a id="bytecodedebuginfosource-kind"></a>`kind` | `"bytecode-debug-info"` |  |
 
 ### `DebugMetadataAsset` \{#debugmetadataasset\}
@@ -298,9 +298,9 @@ CSS / 字节码 bundle 一项），而 `uiSourceMap` 是**按入口**组织的
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="debugmetadataasset-artifacts"></a>`artifacts` | `Artifact[]` | 每个携带调试数据的构建产物对应一项。 当产出方尚未接入填充逻辑时为空； 使用方应将空数组视为“没有可用的源码级调试数据”， 而非错误。 |
-| <a id="debugmetadataasset-buildinfo"></a>`buildInfo` | `{ git?: GitMetadata; rspeedy?: RspeedyMeta }` | 构建时 / 上下文信息。目前为封闭结构—— 如需扩展，请在该接口中添加具名字段（并升级 schema）， 而不是在运行时塞入任意 key。 |
-| <a id="debugmetadataasset-uisourcemap"></a>`uiSourceMap` | `UiSourceMapData` | 入口运行时 UI 树的紧凑 UI source map。 |
+| <a id="debugmetadataasset-artifacts"></a>`artifacts` | [`Artifact`](#artifact)`[]` | 每个携带调试数据的构建产物对应一项。 当产出方尚未接入填充逻辑时为空； 使用方应将空数组视为“没有可用的源码级调试数据”， 而非错误。 |
+| <a id="debugmetadataasset-buildinfo"></a>`buildInfo` | `{ git?: `[`GitMetadata`](#gitmetadata)`; rspeedy?: `[`RspeedyMeta`](#rspeedymeta)` }` | 构建时 / 上下文信息。目前为封闭结构—— 如需扩展，请在该接口中添加具名字段（并升级 schema）， 而不是在运行时塞入任意 key。 |
+| <a id="debugmetadataasset-uisourcemap"></a>`uiSourceMap` | [`UiSourceMapData`](#uisourcemapdata) | 入口运行时 UI 树的紧凑 UI source map。 |
 
 ### `FieldResolver` \{#fieldresolver\}
 
@@ -339,7 +339,7 @@ key，以便使用方（Lynx 运行时、反向符号化服务）
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lepusngdebuginfo-lepusng-debug-info"></a>`lepusNG_debug_info` | `LepusNGDebugInfoBody` |  |
+| <a id="lepusngdebuginfo-lepusng-debug-info"></a>`lepusNG_debug_info` | [`LepusNGDebugInfoBody`](#lepusngdebuginfobody) |  |
 
 ### `LepusNGDebugInfoBody` \{#lepusngdebuginfobody\}
 
@@ -349,7 +349,7 @@ key，以便使用方（Lynx 运行时、反向符号化服务）
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="lepusngdebuginfobody-end-line-num"></a>`end_line_num` | `number` | 编译单元覆盖的最后一行源码。 |
-| <a id="lepusngdebuginfobody-function-info"></a>`function_info` | `LepusNGFunctionInfo[]` | 每个函数的调试数据。 |
+| <a id="lepusngdebuginfobody-function-info"></a>`function_info` | [`LepusNGFunctionInfo`](#lepusngfunctioninfo)`[]` | 每个函数的调试数据。 |
 | <a id="lepusngdebuginfobody-function-number"></a>`function_number` | `number` | 编译后的函数数量；等于 `function_info.length`。 |
 | <a id="lepusngdebuginfobody-function-source"></a>`function_source` | `string` | 输入给字节码编译器的完整 JS 源码。 |
 
@@ -366,7 +366,7 @@ key，以便使用方（Lynx 运行时、反向符号化服务）
 | <a id="lepusngfunctioninfo-function-name"></a>`function_name` | `string` |  |
 | <a id="lepusngfunctioninfo-line-col"></a>`line_col` | `{ column: number; line: number }[]` | 解码后的行/列对，编译器每产出一个源码位置对应一项。 `line_col.length` 与 `pc2line_buf` 中编码的映射数量一致。 |
 | <a id="lepusngfunctioninfo-line-number"></a>`line_number` | `number` | 函数定义起始处的源码行号（从 1 开始）。 |
-| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` | 可选的 PC 偏移 → 调用方源码片段映射。key 为字符串化的 PC 偏移；value 为该字节码内联来源的原始函数体。 可用于对调用栈进行反内联。 |
+| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` (来自 typescript) | 可选的 PC 偏移 → 调用方源码片段映射。key 为字符串化的 PC 偏移；value 为该字节码内联来源的原始函数体。 可用于对调用栈进行反内联。 |
 | <a id="lepusngfunctioninfo-pc2line-buf"></a>`pc2line_buf` | `number[]` | PC 到行号映射表的变长编码。 解码规则见 lepusNG 字节码 debug-info 规范。 |
 | <a id="lepusngfunctioninfo-pc2line-len"></a>`pc2line_len` | `number` | `pc2line_buf` 的字节长度。 |
 
@@ -388,7 +388,7 @@ key，以便使用方（Lynx 运行时、反向符号化服务）
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="remappeduinode-children"></a>`children?` | `RemappedUiNode[]` | 子节点，会被递归遍历。 |
+| <a id="remappeduinode-children"></a>`children?` | [`RemappedUiNode`](#remappeduinode)`[]` | 子节点，会被递归遍历。 |
 | <a id="remappeduinode-column"></a>`column?` | `number` |  |
 | <a id="remappeduinode-debugmetadataurl"></a>`debugMetadataUrl?` | `string` | 覆盖该节点的 `debug-metadata.json` 的 URL/路径。 |
 | <a id="remappeduinode-line"></a>`line?` | `number` |  |
@@ -427,7 +427,7 @@ Source Map v3 数据，遵循 [Source Map Revision 3 提案](https://sourcemaps.
 | <a id="sourcemap-file"></a>`file?` | `string` | 该 map 所描述的生成产物文件名。 |
 | <a id="sourcemap-mappings"></a>`mappings` | `string` | VLQ 编码的映射数据。 |
 | <a id="sourcemap-names"></a>`names` | `string[]` | `mappings` 中引用的符号名称。 |
-| <a id="sourcemap-sections"></a>`sections?` | `SourceMapSection[]` | index map 的 section 列表，与简单 map 结构互斥。 生产方要么设置 `sections`（index map），要么设置其他字段，不能同时设置。 |
+| <a id="sourcemap-sections"></a>`sections?` | [`SourceMapSection`](#sourcemapsection)`[]` | index map 的 section 列表，与简单 map 结构互斥。 生产方要么设置 `sections`（index map），要么设置其他字段，不能同时设置。 |
 | <a id="sourcemap-sourceroot"></a>`sourceRoot?` | `string` | 添加到 `sources` 中每一项前面的可选前缀。 |
 | <a id="sourcemap-sources"></a>`sources` | `string[]` | 原始源文件的 URL / 标识符。 |
 | <a id="sourcemap-sourcescontent"></a>`sourcesContent?` | `(string \| null)[]` | 内联的源码内容，与 `sources` 一一对应。 |
@@ -442,7 +442,7 @@ Source Map v3 数据，遵循 [Source Map Revision 3 提案](https://sourcemaps.
 | <a id="sourcemapdebugsource-filename"></a>`filename` | `string` | `.map` 文件的文件名，例如 `main-thread.js.map`。 |
 | <a id="sourcemapdebugsource-key"></a>`key` | `string` | 平台侧反向符号化用于匹配该 map 的标识符。 默认为产出该 map 的 chunk 的 hash，与运行时 `__DEBUG_METADATA_RELEASE__` banner 上报的 `release` 一致。 |
 | <a id="sourcemapdebugsource-kind"></a>`kind` | `"source-map"` |  |
-| <a id="sourcemapdebugsource-map"></a>`map` | `SourceMap` | 完整的 Source Map v3 数据。 |
+| <a id="sourcemapdebugsource-map"></a>`map` | [`SourceMap`](#sourcemap) | 完整的 Source Map v3 数据。 |
 | <a id="sourcemapdebugsource-path"></a>`path` | `string` | `.map` 文件相对于 bundler 的路径，例如 `.lynx/main/main-thread.js.map`。 |
 
 ### `SourceMapSection` \{#sourcemapsection\}
@@ -451,7 +451,7 @@ index source map 中的一个 section。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="sourcemapsection-map"></a>`map` | `SourceMap` |  |
+| <a id="sourcemapsection-map"></a>`map` | [`SourceMap`](#sourcemap) |  |
 | <a id="sourcemapsection-offset"></a>`offset` | `{ column: number; line: number }` |  |
 
 ### `UiNode` \{#uinode\}
@@ -465,7 +465,7 @@ Lynx 引擎导出的 UI 树中的一个节点——即
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="uinode-children"></a>`children?` | `UiNode[]` | 子节点，会被递归遍历。 |
+| <a id="uinode-children"></a>`children?` | [`UiNode`](#uinode)`[]` | 子节点，会被递归遍历。 |
 | <a id="uinode-debugmetadataurl"></a>`debugMetadataUrl?` | `string` | 覆盖该节点的 `debug-metadata.json` 的 URL/路径。 |
 | <a id="uinode-nodeindex"></a>`nodeIndex?` | `number` | 编译期的节点标识，用于在 UI source map 中查找。 |
 

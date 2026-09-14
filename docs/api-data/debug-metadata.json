@@ -16,6 +16,9 @@
         {
           "name": "debugSources",
           "type": "DebugSource[]",
+          "refs": [
+            "DebugSource"
+          ],
           "summary": "Debug sources for this artifact, ordered to match the\nreverse-symbolication decode chain. A consumer that starts with a\nruntime location and wants to recover the original source iterates\nthis list left-to-right:\n\n1. `bytecode-debug-info` (if present) maps the bytecode PC offset\n   back to the encoded JS source's `(line, column)`.\n2. `source-map` then maps that `(line, column)` back to the\n   original authored file.",
           "kind": "property"
         },
@@ -55,6 +58,9 @@
           "name": "debugInfo",
           "type": "LepusNGDebugInfo",
           "ref": "LepusNGDebugInfo",
+          "refs": [
+            "LepusNGDebugInfo"
+          ],
           "summary": "Bytecode debug payload. Today always lepusNG-shaped; if/when other\nencoders (`quickjs`, …) need to coexist, a `target` discriminator\nwill be added.",
           "kind": "property"
         },
@@ -74,12 +80,19 @@
         {
           "name": "artifacts",
           "type": "Artifact[]",
+          "refs": [
+            "Artifact"
+          ],
           "summary": "One entry per build artifact that ships debug data. Empty when the\nemitter has not yet been wired to populate it; consumers should\ntreat an empty array as \"no source-level debug data available\"\nrather than an error.",
           "kind": "property"
         },
         {
           "name": "buildInfo",
           "type": "{ git?: GitMetadata; rspeedy?: RspeedyMeta }",
+          "refs": [
+            "GitMetadata",
+            "RspeedyMeta"
+          ],
           "summary": "Build-time / context info. Closed-shape today — extend by adding\nnamed fields to this interface (and bumping the schema) rather than\nby stuffing arbitrary keys at runtime.",
           "kind": "property"
         },
@@ -87,6 +100,9 @@
           "name": "uiSourceMap",
           "type": "UiSourceMapData",
           "ref": "UiSourceMapData",
+          "refs": [
+            "UiSourceMapData"
+          ],
           "summary": "Compact UI source map for the entry's runtime UI tree.",
           "kind": "property"
         }
@@ -120,11 +136,19 @@
           "params": [
             {
               "name": "metadata",
-              "type": "DebugMetadataAsset"
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
             },
             {
               "name": "params",
-              "type": "QueryParams"
+              "type": "QueryParams",
+              "ref": "QueryParams",
+              "refs": [
+                "QueryParams"
+              ]
             }
           ],
           "returns": {
@@ -172,6 +196,9 @@
           "name": "lepusNG_debug_info",
           "type": "LepusNGDebugInfoBody",
           "ref": "LepusNGDebugInfoBody",
+          "refs": [
+            "LepusNGDebugInfoBody"
+          ],
           "kind": "property"
         }
       ]
@@ -191,6 +218,9 @@
         {
           "name": "function_info",
           "type": "LepusNGFunctionInfo[]",
+          "refs": [
+            "LepusNGFunctionInfo"
+          ],
           "summary": "Per-function debug data.",
           "kind": "property"
         },
@@ -307,6 +337,9 @@
           "name": "children",
           "optional": true,
           "type": "RemappedUiNode[]",
+          "refs": [
+            "RemappedUiNode"
+          ],
           "summary": "Child nodes, walked recursively.",
           "kind": "property"
         },
@@ -420,6 +453,9 @@
           "name": "sections",
           "optional": true,
           "type": "SourceMapSection[]",
+          "refs": [
+            "SourceMapSection"
+          ],
           "summary": "Index-map sections, exclusive with the simple-map shape. Producers\neither set `sections` (index map) or the other fields, not both.",
           "kind": "property"
         },
@@ -477,6 +513,9 @@
           "name": "map",
           "type": "SourceMap",
           "ref": "SourceMap",
+          "refs": [
+            "SourceMap"
+          ],
           "summary": "Full Source Map v3 payload.",
           "kind": "property"
         },
@@ -498,6 +537,9 @@
           "name": "map",
           "type": "SourceMap",
           "ref": "SourceMap",
+          "refs": [
+            "SourceMap"
+          ],
           "kind": "property"
         },
         {
@@ -517,6 +559,9 @@
           "name": "children",
           "optional": true,
           "type": "UiNode[]",
+          "refs": [
+            "UiNode"
+          ],
           "summary": "Child nodes, walked recursively.",
           "kind": "property"
         },
@@ -628,18 +673,28 @@
       "name": "DebugMetadataLoader",
       "kind": "typealias",
       "type": "(debugMetadataUrl: string) => Promise<DebugMetadataAsset>",
+      "refs": [
+        "DebugMetadataAsset"
+      ],
       "summary": "Loads the [`DebugMetadataAsset`](api:DebugMetadataAsset) a node's `debugMetadataUrl` points\nat. Supplied by the caller so the core stays free of I/O (the CLI wires\nup `fetch` / `fs`); only called once per distinct URL."
     },
     {
       "name": "DebugSource",
       "kind": "typealias",
       "type": "SourceMapDebugSource | BytecodeDebugInfoSource",
+      "refs": [
+        "SourceMapDebugSource",
+        "BytecodeDebugInfoSource"
+      ],
       "summary": "One debug data source attached to an [`Artifact`](api:Artifact).\n\nTagged union so future debug data kinds (e.g. WASM debug info,\nR-source-map) can be added without restructuring `artifacts[]`."
     },
     {
       "name": "FIELDS",
       "kind": "variable",
       "type": "Map<string, FieldResolver>",
+      "refs": [
+        "FieldResolver"
+      ],
       "external": "typescript",
       "summary": "Field name → resolver. **HTTP layers read this directly.** Mutations\nare honoured by the next request — the export is a live `Map` so\nplugins can register their own fields at startup.\n\nAdding a new field is a one-line `FIELDS.set('your-name', { ... })`.",
       "default": "..."
@@ -686,11 +741,18 @@
           "params": [
             {
               "name": "uiSourceMap",
-              "type": "UiSourceMapData"
+              "type": "UiSourceMapData",
+              "ref": "UiSourceMapData",
+              "refs": [
+                "UiSourceMapData"
+              ]
             }
           ],
           "returns": {
-            "type": "Map<number, Omit<UiSourceLocation, \"repo\">>"
+            "type": "Map<number, Omit<UiSourceLocation, \"repo\">>",
+            "refs": [
+              "UiSourceLocation"
+            ]
           },
           "summary": "Build a `nodeIndex -> {source, line, column}` lookup from a\n[`UiSourceMapData`](api:UiSourceMapData). The payload is column-oriented: `uiMaps[i]`\nis the nodeIndex, and the matching `mappings[i]` entry holds\n`[sourceIndex, line, column]`, with `sourceIndex` indexing `sources`."
         }
@@ -707,7 +769,11 @@
           "params": [
             {
               "name": "metadata",
-              "type": "DebugMetadataAsset"
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
             },
             {
               "name": "query",
@@ -715,7 +781,10 @@
             }
           ],
           "returns": {
-            "type": "Artifact | undefined"
+            "type": "Artifact | undefined",
+            "refs": [
+              "Artifact"
+            ]
           },
           "summary": "Find an [`Artifact`](api:Artifact) by `filename` (e.g. `main-thread.js`,\n`background.fd311de1.js`, `main.css`)."
         }
@@ -732,7 +801,11 @@
           "params": [
             {
               "name": "metadata",
-              "type": "DebugMetadataAsset"
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
             },
             {
               "name": "query",
@@ -740,7 +813,10 @@
             }
           ],
           "returns": {
-            "type": "BytecodeDebugInfoSource | undefined"
+            "type": "BytecodeDebugInfoSource | undefined",
+            "refs": [
+              "BytecodeDebugInfoSource"
+            ]
           },
           "summary": "Find a `bytecode-debug-info` source attached to the artifact named\n`filename`."
         }
@@ -757,7 +833,11 @@
           "params": [
             {
               "name": "metadata",
-              "type": "DebugMetadataAsset"
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
             },
             {
               "name": "query",
@@ -765,7 +845,10 @@
             }
           ],
           "returns": {
-            "type": "SourceMapDebugSource | undefined"
+            "type": "SourceMapDebugSource | undefined",
+            "refs": [
+              "SourceMapDebugSource"
+            ]
           },
           "summary": "Find a `source-map` [`SourceMapDebugSource`](api:SourceMapDebugSource) by `path`,\n`filename`, or `key`. At least one of the three should be set;\nevery comparison is an exact equality on the field of the same\nname on [`SourceMapDebugSource`](api:SourceMapDebugSource)."
         }
@@ -840,15 +923,26 @@
           "params": [
             {
               "name": "root",
-              "type": "UiNode"
+              "type": "UiNode",
+              "ref": "UiNode",
+              "refs": [
+                "UiNode"
+              ]
             },
             {
               "name": "loadMetadata",
-              "type": "DebugMetadataLoader"
+              "type": "DebugMetadataLoader",
+              "ref": "DebugMetadataLoader",
+              "refs": [
+                "DebugMetadataLoader"
+              ]
             }
           ],
           "returns": {
-            "type": "Promise<RemappedUiNode>"
+            "type": "Promise<RemappedUiNode>",
+            "refs": [
+              "RemappedUiNode"
+            ]
           },
           "summary": "Reverse-resolve a UI node tree dumped by the Lynx engine.\n\nEvery node carrying both a `nodeIndex` and a `debugMetadataUrl` whose\n`uiSourceMap` knows that index is annotated with [`UiSourceLocation`](api:UiSourceLocation)\nfields (`repo`, `source`, `line`, `column`). All other fields — and nodes\nthat cannot be resolved — pass through verbatim. The input is not\nmutated; a new tree is returned."
         }
@@ -865,7 +959,11 @@
           "params": [
             {
               "name": "metadata",
-              "type": "DebugMetadataAsset"
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
             },
             {
               "name": "field",
@@ -873,11 +971,18 @@
             },
             {
               "name": "params",
-              "type": "QueryParams"
+              "type": "QueryParams",
+              "ref": "QueryParams",
+              "refs": [
+                "QueryParams"
+              ]
             }
           ],
           "returns": {
-            "type": "ResolveResult | undefined"
+            "type": "ResolveResult | undefined",
+            "refs": [
+              "ResolveResult"
+            ]
           },
           "summary": "Resolve a `?field=…` query against parsed metadata.\n\n- Returns `undefined` when the field is not registered — HTTP layer\n  responds `400 invalid_field` and lists `knownFields()`.\n- Returns `{found: false}` when the field is valid but no value\n  matched — HTTP layer responds `404`.\n- Returns `{found: true, payload}` when matched. `payload` is the\n  already-unwrapped value (resolver's `payload` hook applied)."
         }

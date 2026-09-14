@@ -8,6 +8,7 @@ export interface PackageEntry {
   tsconfig?: string;
   section: 'rspeedy' | 'react' | 'packages';
   internal?: boolean;
+  includeExternals?: boolean;
 }
 
 export const PACKAGES: PackageEntry[] = [
@@ -52,6 +53,7 @@ export const PACKAGES: PackageEntry[] = [
     dir: 'packages/rspeedy/plugin-config',
     entry: 'src/index.ts',
     section: 'rspeedy',
+    includeExternals: true,
   },
   {
     id: 'debug-metadata-rsbuild-plugin',

@@ -153,7 +153,7 @@ function escapeInline(line: string): string {
       i = close + n;
       continue;
     }
-    if (ch === '<' && /[A-Z/!]/i.test(line[i + 1] ?? '')) res += '\\<';
+    if (ch === '<') res += '\\<';
     else if (ch === '{') res += '\\{';
     else if (ch === '}') res += '\\}';
     else res += ch;
@@ -181,12 +181,17 @@ export interface Translation {
 }
 export type Translations = Record<string, Translation>;
 
+export type SiteAnchors = Map<string, { url: string; priority: number }>;
+
 interface Ctx {
   api: ApiData;
   l: Locale;
   anchors: Map<string, string>;
   tr?: Translations | undefined;
   stale: Set<string>;
+  site?: SiteAnchors | undefined;
+  page?: string | undefined;
+  prefix?: string | undefined;
 }
 
 export function hashText(text: string): string {
@@ -213,14 +218,16 @@ function untranslated(ctx: Ctx, key: string): string {
 }
 
 function resolveLinks(md: string, ctx: Ctx): string {
-  return md.replace(/\]\(api:([^)]+)\)/g, (_, target: string) => {
-    const a = ctx.anchors.get(target);
-    if (a) return `](#${a})`;
-    const top = target.split('.')[0]!;
-    const tA = ctx.anchors.get(top);
-    if (tA) return `](#${tA})`;
-    return `](#${slug(target)})`;
-  });
+  return md.replace(
+    /\[([^\]]*)\]\(api:([^)]+)\)/g,
+    (_, text: string, target: string) => {
+      const [top, ...rest] = target.split('.');
+      const t = linkTarget(ctx, target)
+        ?? (rest.length > 0 ? linkTarget(ctx, rest.join('.')) : undefined)
+        ?? linkTarget(ctx, top!);
+      return t ? `[${text}](${t})` : text;
+    },
+  );
 }
 
 function md(text: string | undefined, ctx: Ctx): string {
@@ -228,13 +235,49 @@ function md(text: string | undefined, ctx: Ctx): string {
   return escapeMdx(resolveLinks(text, ctx));
 }
 
+function linkTarget(ctx: Ctx, name: string): string | undefined {
+  const local = ctx.anchors.get(name);
+  if (local) return `#${local}`;
+  const site = ctx.site?.get(`${ctx.api.id}|${name}`);
+  if (!site) return undefined;
+  const [page, anchor] = site.url.split('#');
+  if (page === ctx.page) return anchor ? `#${anchor}` : undefined;
+  return `${ctx.prefix ?? ''}${site.url}`;
+}
+
+const spaced = (s: string) =>
+  code(s.replace(/^ +| +$/g, m => ' '.repeat(m.length)));
+
+function linkedType(type: string, names: string[], ctx: Ctx): string {
+  const targets = new Map<string, string>();
+  for (const n of names) {
+    const t = linkTarget(ctx, n);
+    if (t) targets.set(n, t);
+  }
+  if (targets.size === 0) return code(type);
+  const alternatives = [...targets.keys()].map(n =>
+    n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
+  const re = new RegExp(
+    `(?<![\\w$.])(?:${alternatives.join('|')})(?![\\w$])`,
+    'g',
+  );
+  let out = '';
+  let last = 0;
+  for (const m of type.matchAll(re)) {
+    if (m.index > last) out += spaced(type.slice(last, m.index));
+    out += `[${code(m[0])}](${targets.get(m[0])})`;
+    last = m.index + m[0].length;
+  }
+  if (last < type.length) out += spaced(type.slice(last));
+  return out;
+}
+
 function typeCell(
-  m: Pick<ApiMember, 'type' | 'ref' | 'external'>,
+  m: Pick<ApiMember, 'type' | 'ref' | 'refs' | 'external'>,
   ctx: Ctx,
 ): string {
-  const ref = m.ref && ctx.anchors.get(m.ref);
-  const c = code(m.type);
-  if (ref) return `[${c}](#${ref})`;
+  const c = linkedType(m.type, m.refs ?? (m.ref ? [m.ref] : []), ctx);
   if (m.external) {
     const url = EXTERNAL_DOCS[m.external];
     return url
@@ -361,6 +404,7 @@ export function renderOptions(
   depth: number,
   ctx: Ctx,
   owner: string,
+  ancestors: ReadonlySet<string> = new Set([owner]),
 ): string {
   let s = '';
   const full = members.filter(m => !isCompact(m, ctx));
@@ -374,7 +418,16 @@ export function renderOptions(
     s += metaList(m, ctx, key);
     s += bodyText;
     if (m.params) s += paramsTable(m.params, ctx, key);
-    if (e) s += renderOptions(e.members ?? [], path, depth + 1, ctx, e.name);
+    if (e && !ancestors.has(e.name)) {
+      s += renderOptions(
+        e.members ?? [],
+        path,
+        depth + 1,
+        ctx,
+        e.name,
+        new Set([...ancestors, e.name]),
+      );
+    }
   }
   if (compact.length > 0) {
     if (full.length > 0) {
@@ -407,7 +460,7 @@ function paramsTable(params: ApiParam[], ctx: Ctx, key: string): string {
     `| ${ctx.l.parameters} | ${ctx.l.type} | ${ctx.l.description} |\n| --- | --- | --- |\n`;
   for (const p of params) {
     s += `| ${code(p.name + (p.optional ? '?' : ''))} | ${
-      pipe(code(p.type))
+      pipe(typeCell(p, ctx))
     } | ${
       pipe(flat(md(tr(ctx, `${key}.params.${p.name}`, p.description), ctx)))
     } |\n`;
@@ -431,7 +484,7 @@ function membersTable(members: ApiMember[], ctx: Ctx, parent: string): string {
     ].filter(Boolean).join(' ');
     s += `| <a id="${slug(parent + '.' + m.name)}"></a>${
       code(m.name + (m.optional ? '?' : ''))
-    }${badges(m, ctx)} | ${pipe(code(m.type))} | ${
+    }${badges(m, ctx)} | ${pipe(typeCell(m, ctx))} | ${
       pipe(flat(md(desc, ctx)))
     } |\n`;
   }
@@ -467,7 +520,7 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
   if (sig) {
     s += paramsTable(sig.params, ctx, key);
     if (sig.returns.type && sig.returns.type !== 'void') {
-      s += `**${ctx.l.returns}:** ${code(sig.returns.type)}${
+      s += `**${ctx.l.returns}:** ${typeCell(sig.returns, ctx)}${
         sig.returns.description
           ? ' — '
             + md(tr(ctx, `${key}.returns`, sig.returns.description), ctx)
@@ -533,9 +586,11 @@ export function renderOverview(
     `| ${ctx.l.name} | ${ctx.l.type} | ${ctx.l.description} |\n| --- | --- | --- |\n`;
   for (const m of members) {
     const path = prefix ? `${prefix}.${m.name}` : m.name;
-    s += `| [${code(m.name)}](#${slug(path)})${badges(m, ctx)} | ${
-      pipe(code(m.type))
-    } | ${
+    const target = linkTarget(ctx, path)
+      ?? (ctx.site ? undefined : `#${slug(path)}`);
+    s += `| ${target ? `[${code(m.name)}](${target})` : code(m.name)}${
+      badges(m, ctx)
+    } | ${pipe(typeCell(m, ctx))} | ${
       pipe(flat(md(tr(ctx, `${owner}.${m.name}.summary`, m.summary), ctx)))
     } |\n`;
   }
@@ -553,11 +608,19 @@ export interface Directive {
   attrs: Record<string, string>;
 }
 
+export interface RenderOptions {
+  site?: SiteAnchors;
+  page?: string;
+  prefix?: string;
+  onAnchors?: (id: string, anchors: ReadonlyMap<string, string>) => void;
+}
+
 export function renderDirective(
   d: Directive,
   dataDir: string,
   locale: Locale,
   translations?: Translations,
+  options: RenderOptions = {},
 ): string {
   const api = loadApi(dataDir, d.attrs['package']!);
   const ctx: Ctx = {
@@ -566,7 +629,16 @@ export function renderDirective(
     anchors: new Map(),
     tr: translations,
     stale: new Set(),
+    site: options.site,
+    page: options.page,
+    prefix: options.prefix,
   };
+  const out = renderBody(d, ctx);
+  options.onAnchors?.(api.id, ctx.anchors);
+  return out;
+}
+
+function renderBody(d: Directive, ctx: Ctx): string {
   const depth = d.attrs['depth'] ? Number(d.attrs['depth']) : 3;
   switch (d.name) {
     case 'PackageHeader':
@@ -580,8 +652,11 @@ export function renderDirective(
           }`,
         );
       }
+      ctx.anchors.set(e.name, slug(e.name));
       registerAnchors(e.members, '', ctx);
-      return renderOptions(e.members, '', depth, ctx, e.name);
+      return `<a id="${slug(e.name)}"></a>\n\n${
+        renderOptions(e.members, '', depth, ctx, e.name)
+      }`;
     }
     case 'ConfigOptions':
     case 'ConfigOverview': {
@@ -593,6 +668,7 @@ export function renderDirective(
       let members = root.members;
       let prefix = '';
       let owner = root.name;
+      let namespace: string | undefined;
       if (path) {
         let cur: ApiMember | undefined;
         let list = root.members;
@@ -616,11 +692,17 @@ export function renderDirective(
           members = list;
           prefix = path;
           owner = listOwner;
+          namespace = path;
         }
       }
-      registerAnchors(members, prefix, ctx);
       if (d.name === 'ConfigOverview') {
+        if (!ctx.site) registerAnchors(members, prefix, ctx);
         return renderOverview(members, prefix, ctx, owner);
+      }
+      registerAnchors(members, prefix, ctx);
+      if (namespace) {
+        ctx.anchors.set(namespace, '');
+        if (!ctx.anchors.has(owner)) ctx.anchors.set(owner, '');
       }
       return renderOptions(members, prefix, depth, ctx, owner);
     }
@@ -633,7 +715,10 @@ export function renderDirective(
       );
       if (d.attrs['optionsType']) {
         const e = findExport(ctx, d.attrs['optionsType']);
-        if (e?.members) registerAnchors(e.members, '', ctx);
+        if (e?.members) {
+          ctx.anchors.set(e.name, slug(e.name));
+          registerAnchors(e.members, '', ctx);
+        }
       }
       return renderExports(ctx, { exclude, include, depth });
     }

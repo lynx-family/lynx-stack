@@ -24,16 +24,26 @@
             {
               "name": "options",
               "type": "ReactWebpackPluginOptions",
+              "ref": "ReactWebpackPluginOptions",
+              "refs": [
+                "ReactWebpackPluginOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "ReactWebpackPlugin"
+            "type": "ReactWebpackPlugin",
+            "refs": [
+              "ReactWebpackPlugin"
+            ]
           }
         },
         {
           "name": "defaultOptions",
           "type": "Readonly<Required<ReactWebpackPluginOptions>>",
+          "refs": [
+            "ReactWebpackPluginOptions"
+          ],
           "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`ReactWebpackPlugin`](api:ReactWebpackPlugin) uses.",
           "kind": "property"
@@ -57,6 +67,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],
@@ -226,6 +237,9 @@
           "name": "extractStr",
           "optional": true,
           "type": "boolean | Partial<ExtractStrConfig>",
+          "refs": [
+            "ExtractStrConfig"
+          ],
           "summary": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
           "default": "`false`",
           "kind": "property"

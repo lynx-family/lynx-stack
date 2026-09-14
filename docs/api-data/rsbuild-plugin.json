@@ -49,6 +49,9 @@
           "name": "output",
           "type": "LynxOutput",
           "ref": "LynxOutput",
+          "refs": [
+            "LynxOutput"
+          ],
           "summary": "The build outputs.",
           "beta": true,
           "kind": "property"
@@ -57,6 +60,9 @@
           "name": "performance",
           "type": "LynxPerformance",
           "ref": "LynxPerformance",
+          "refs": [
+            "LynxPerformance"
+          ],
           "summary": "The performance options.",
           "beta": true,
           "kind": "property"
@@ -126,6 +132,9 @@
           "optional": true,
           "type": "BundleFilename",
           "ref": "BundleFilename",
+          "refs": [
+            "BundleFilename"
+          ],
           "summary": "The name of the bundle files.",
           "remarks": "The following placeholders are supported:\n\n- `[name]`: the name of the entry.\n- `[platform]`: the name of the Rsbuild environment.",
           "default": "`'[name].[platform].bundle'`",
@@ -169,6 +178,9 @@
           "optional": true,
           "type": "LynxFilename",
           "ref": "LynxFilename",
+          "refs": [
+            "LynxFilename"
+          ],
           "summary": "The names of the emitted files.",
           "kind": "property"
         },
@@ -177,6 +189,9 @@
           "optional": true,
           "type": "LynxMinify",
           "ref": "LynxMinify",
+          "refs": [
+            "LynxMinify"
+          ],
           "summary": "The per-thread minifier options.",
           "kind": "property"
         }
@@ -209,6 +224,9 @@
           "optional": true,
           "type": "LynxOutput",
           "ref": "LynxOutput",
+          "refs": [
+            "LynxOutput"
+          ],
           "summary": "The build outputs.",
           "kind": "property"
         },
@@ -217,6 +235,9 @@
           "optional": true,
           "type": "LynxPerformance",
           "ref": "LynxPerformance",
+          "refs": [
+            "LynxPerformance"
+          ],
           "summary": "The performance options.",
           "kind": "property"
         }
@@ -226,6 +247,9 @@
       "name": "BundleFilename",
       "kind": "typealias",
       "type": "string | ((context: BundleFilenameContext) => string)",
+      "refs": [
+        "BundleFilenameContext"
+      ],
       "summary": "The name of the bundle files."
     },
     {
@@ -274,7 +298,11 @@
           "params": [
             {
               "name": "options",
-              "type": "LynxPluginOptions"
+              "type": "LynxPluginOptions",
+              "ref": "LynxPluginOptions",
+              "refs": [
+                "LynxPluginOptions"
+              ]
             }
           ],
           "returns": {

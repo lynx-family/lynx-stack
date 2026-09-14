@@ -12,7 +12,7 @@ Rspeedy builds one Lynx bundle per Rsbuild environment. `environments` is the [R
 
 | Name | Type | Description |
 | --- | --- | --- |
-| [`environments`](#environments) | `Record<string, EnvironmentConfig>` | The [`Config.environments`](#config-environments) option is used to set the output environment. |
+| [`environments`](#environments) | `Record<string, EnvironmentConfig>` (from typescript) | The [`Config.environments`](#environments) option is used to set the output environment. |
 
 {/* @api-end */}
 
@@ -25,7 +25,7 @@ Rspeedy builds one Lynx bundle per Rsbuild environment. `environments` is the [R
 - **Type:** `Record<string, EnvironmentConfig>` (from typescript)
 - **Default:** When this option is unset, Rspeedy passes `{ lynx: {} }` to Rsbuild.
 
-The [`Config.environments`](#config-environments) option is used to set the output environment.
+The [`Config.environments`](#environments) option is used to set the output environment.
 
 Normally you don't need this if you are not using Lynx for Web.
 

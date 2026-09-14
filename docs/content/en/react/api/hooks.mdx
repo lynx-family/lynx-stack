@@ -27,7 +27,7 @@ function App() {
 }
 ```
 
-**Returns:** `InitData`
+**Returns:** [`InitData`](/react/api/types#initdata)
 
 ### `useInitDataChanged()` \{#useinitdatachanged\}
 
@@ -47,7 +47,7 @@ function App() {
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `callback` | `(data: InitData) => void` |  |
+| `callback` | `(data: `[`InitData`](/react/api/types#initdata)`) => void` |  |
 
 ### `useGlobalProps()` \{#useglobalprops\}
 
@@ -66,7 +66,7 @@ function App() {
 }
 ```
 
-**Returns:** `GlobalProps`
+**Returns:** [`GlobalProps`](/react/api/types#globalprops)
 
 ### `useGlobalPropsChanged()` \{#useglobalpropschanged\}
 
@@ -87,7 +87,7 @@ function App() {
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `callback` | `(data: GlobalProps) => void` |  |
+| `callback` | `(data: `[`GlobalProps`](/react/api/types#globalprops)`) => void` |  |
 
 ### `useLynxGlobalEventListener()` \{#uselynxglobaleventlistener\}
 
@@ -164,7 +164,7 @@ export function App() {
 | --- | --- | --- |
 | `initValue` | `T` | The init value of the `MainThreadRef`. |
 
-**Returns:** `MainThreadRef<T>`
+**Returns:** [`MainThreadRef`](/react/api/types#mainthreadref)`<T>`
 
 ### `useEffect()` \{#useeffect\}
 
@@ -177,8 +177,8 @@ The effects run after main thread dom update without blocking it.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===). |
+| `effect` | `EffectCallback` (from @types/react) | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` (from @types/react) | If present, effect will only activate if the values in the list change (using ===). |
 
 ### `useLayoutEffect()` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#uselayouteffect\}
 
@@ -196,8 +196,8 @@ Accepts a function that contains imperative, possibly effectful code. The effect
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
+| `effect` | `EffectCallback` (from @types/react) | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` (from @types/react) | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
 
 {/* @api-end */}
 

@@ -64,7 +64,7 @@ Clones a ReactLynx element using the snapshot runtime.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `ReactElement<Props>` |  |
+| `element` | `ReactElement<Props>` (from @types/react) |  |
 | `props?` | `Partial<Props> & Attributes \| null` |  |
 | `children` | `ReactNode[]` |  |
 
@@ -151,7 +151,7 @@ export default withInitDataInState(App);
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `App` | `ComponentClass<P, S>` | The class component to be wrapped by the HOC. |
+| `App` | `ComponentClass<P, S>` (from @types/react) | The class component to be wrapped by the HOC. |
 
 **Returns:** `ComponentClass<P, S>` — The original component if it is not a class component, otherwise a new class component          with `initData` injection and state update functionality.
 

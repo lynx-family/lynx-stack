@@ -44,10 +44,10 @@ cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableC
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `cssChunks` | `(string \| CSSChunkAsset)[]` |  |
-| `plugins` | `Plugin[]` |  |
+| `plugins` | [`Plugin`](#plugin)`[]` |  |
 | `enableCSSSelector` | `boolean` |  |
 
-**返回值:** `{ contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }`
+**返回值:** `{ contentMap: Map<number, string[]>; cssMap: Record<string, `[`LynxStyleNode`](#lynxstylenode)`[]>; cssSource: Record<string, string> }`
 
 ### `parse()` \{#parse\}
 
@@ -60,9 +60,9 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `content` | `string` |  |
-| `options` | `{ filename?: string; plugins?: Plugin[]; projectRoot?: string }` |  |
+| `options` | `{ filename?: string; plugins?: `[`Plugin`](#plugin)`[]; projectRoot?: string }` |  |
 
-**返回值:** `{ errors: ParserError[]; root: LynxStyleNode[] }`
+**返回值:** `{ errors: `[`ParserError`](#parsererror)`[]; root: `[`LynxStyleNode`](#lynxstylenode)`[] }`
 
 ## 类型 \{#\}
 
@@ -93,9 +93,9 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="basedeclaration-keyloc"></a>`keyLoc` | `Location` |  |
+| <a id="basedeclaration-keyloc"></a>`keyLoc` | [`Location`](#location) |  |
 | <a id="basedeclaration-name"></a>`name` | `string` |  |
-| <a id="basedeclaration-valloc"></a>`valLoc` | `Location` |  |
+| <a id="basedeclaration-valloc"></a>`valLoc` | [`Location`](#location) |  |
 | <a id="basedeclaration-value"></a>`value` | `string` |  |
 
 ### `CSSSourceMap` \{#csssourcemap\}
@@ -118,7 +118,7 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="fontfacerule-style"></a>`style` | `Declaration[]` |  |
+| <a id="fontfacerule-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
 | <a id="fontfacerule-type"></a>`type` | `"FontFaceRule"` |  |
 
 ### `ImportRule` \{#importrule\}
@@ -137,8 +137,8 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="keyframesrule-name"></a>`name` | `Value` |  |
-| <a id="keyframesrule-styles"></a>`styles` | `KeyframesStyle[]` |  |
+| <a id="keyframesrule-name"></a>`name` | [`Value`](#value) |  |
+| <a id="keyframesrule-styles"></a>`styles` | [`KeyframesStyle`](#keyframesstyle)`[]` |  |
 | <a id="keyframesrule-type"></a>`type` | `"KeyframesRule"` |  |
 
 ### `KeyframesStyle` \{#keyframesstyle\}
@@ -147,9 +147,9 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="keyframesstyle-keytext"></a>`keyText` | `Value` |  |
-| <a id="keyframesstyle-style"></a>`style` | `Declaration[]` |  |
-| <a id="keyframesstyle-variables"></a>`variables` | `Record<string, string>` |  |
+| <a id="keyframesstyle-keytext"></a>`keyText` | [`Value`](#value) |  |
+| <a id="keyframesstyle-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
+| <a id="keyframesstyle-variables"></a>`variables` | `Record<string, string>` (来自 typescript) |  |
 
 ### `LayerRule` \{#layerrule\}
 
@@ -157,8 +157,8 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="layerrule-prelude"></a>`prelude?` | `Value` |  |
-| <a id="layerrule-rules"></a>`rules` | `LynxStyleNode[]` |  |
+| <a id="layerrule-prelude"></a>`prelude?` | [`Value`](#value) |  |
+| <a id="layerrule-rules"></a>`rules` | [`LynxStyleNode`](#lynxstylenode)`[]` |  |
 | <a id="layerrule-type"></a>`type` | `"LayerRule"` |  |
 
 ### `Location` \{#location\}
@@ -176,8 +176,8 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="mediarule-prelude"></a>`prelude` | `Value` |  |
-| <a id="mediarule-rules"></a>`rules` | `LynxStyleNode[]` |  |
+| <a id="mediarule-prelude"></a>`prelude` | [`Value`](#value) |  |
+| <a id="mediarule-rules"></a>`rules` | [`LynxStyleNode`](#lynxstylenode)`[]` |  |
 | <a id="mediarule-type"></a>`type` | `"MediaRule"` |  |
 
 ### `ParserError` \{#parsererror\}
@@ -189,8 +189,8 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | <a id="parsererror-detail"></a>`detail?` | `string` |  |
 | <a id="parsererror-message"></a>`message` | `string` |  |
 | <a id="parsererror-name"></a>`name` | `string` |  |
-| <a id="parsererror-range"></a>`range` | `Range` |  |
-| <a id="parsererror-severity"></a>`severity` | `Severity` |  |
+| <a id="parsererror-range"></a>`range` | [`Range`](#range) |  |
+| <a id="parsererror-severity"></a>`severity` | [`Severity`](#severity) |  |
 
 ### `Plugin` \{#plugin\}
 
@@ -207,8 +207,8 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="range-end"></a>`end` | `Location` |  |
-| <a id="range-start"></a>`start` | `Location` |  |
+| <a id="range-end"></a>`end` | [`Location`](#location) |  |
+| <a id="range-start"></a>`start` | [`Location`](#location) |  |
 
 ### `StyleRule` \{#stylerule\}
 
@@ -216,10 +216,10 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="stylerule-selectortext"></a>`selectorText` | `Value` |  |
-| <a id="stylerule-style"></a>`style` | `Declaration[]` |  |
+| <a id="stylerule-selectortext"></a>`selectorText` | [`Value`](#value) |  |
+| <a id="stylerule-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
 | <a id="stylerule-type"></a>`type` | `"StyleRule"` |  |
-| <a id="stylerule-variables"></a>`variables` | `Record<string, string>` |  |
+| <a id="stylerule-variables"></a>`variables` | `Record<string, string>` (来自 typescript) |  |
 
 ### `SupportsRule` \{#supportsrule\}
 
@@ -227,8 +227,8 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="supportsrule-prelude"></a>`prelude` | `Value` |  |
-| <a id="supportsrule-rules"></a>`rules` | `LynxStyleNode[]` |  |
+| <a id="supportsrule-prelude"></a>`prelude` | [`Value`](#value) |  |
+| <a id="supportsrule-rules"></a>`rules` | [`LynxStyleNode`](#lynxstylenode)`[]` |  |
 | <a id="supportsrule-type"></a>`type` | `"SupportsRule"` |  |
 
 ### `Value` \{#value\}
@@ -237,7 +237,7 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="value-loc"></a>`loc` | `Location` |  |
+| <a id="value-loc"></a>`loc` | [`Location`](#location) |  |
 | <a id="value-value"></a>`value` | `string` |  |
 
 ### `VariableDeclaration` \{#variabledeclaration\}
@@ -247,11 +247,11 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="variabledeclaration-defaultvalue"></a>`defaultValue?` | `string` |  |
-| <a id="variabledeclaration-defaultvaluemap"></a>`defaultValueMap?` | `Record<string, string>` |  |
-| <a id="variabledeclaration-keyloc"></a>`keyLoc` | `Location` |  |
+| <a id="variabledeclaration-defaultvaluemap"></a>`defaultValueMap?` | `Record<string, string>` (来自 typescript) |  |
+| <a id="variabledeclaration-keyloc"></a>`keyLoc` | [`Location`](#location) |  |
 | <a id="variabledeclaration-name"></a>`name` | `string` |  |
 | <a id="variabledeclaration-type"></a>`type` | `"css_var"` |  |
-| <a id="variabledeclaration-valloc"></a>`valLoc` | `Location` |  |
+| <a id="variabledeclaration-valloc"></a>`valLoc` | [`Location`](#location) |  |
 | <a id="variabledeclaration-value"></a>`value` | `string` |  |
 
 ### `Declaration` \{#declaration\}

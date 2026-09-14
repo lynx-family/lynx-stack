@@ -21,7 +21,10 @@
             }
           ],
           "returns": {
-            "type": "CommonEventsAndMethods"
+            "type": "CommonEventsAndMethods",
+            "refs": [
+              "CommonEventsAndMethods"
+            ]
           }
         },
         {
@@ -66,7 +69,8 @@
           "params": [
             {
               "name": "dom",
-              "type": "InstanceType<T>"
+              "type": "InstanceType<T>",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -124,6 +128,10 @@
           "name": "registerPlugin",
           "optional": true,
           "type": "(reactiveClass: AttributeReactiveClass<WebComponentClass>) => void",
+          "refs": [
+            "AttributeReactiveClass",
+            "WebComponentClass"
+          ],
           "kind": "property"
         }
       ]
@@ -181,6 +189,9 @@
       "name": "registerAttributeHandler",
       "kind": "function",
       "type": "registerAttributeHandler(key: string, args: [boolean]): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+      "refs": [
+        "AttributeChangeHandler"
+      ],
       "signatures": [
         {
           "text": "registerAttributeHandler(key: string, args: [boolean]): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
@@ -195,7 +206,10 @@
             }
           ],
           "returns": {
-            "type": "(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any"
+            "type": "(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+            "refs": [
+              "AttributeChangeHandler"
+            ]
           }
         }
       ],
@@ -205,6 +219,9 @@
       "name": "registerEventEnableStatusChangeHandler",
       "kind": "function",
       "type": "registerEventEnableStatusChangeHandler(key: string, args: []): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+      "refs": [
+        "EventStatusChangeHandler"
+      ],
       "signatures": [
         {
           "text": "registerEventEnableStatusChangeHandler(key: string, args: []): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
@@ -219,7 +236,10 @@
             }
           ],
           "returns": {
-            "type": "(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any"
+            "type": "(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+            "refs": [
+              "EventStatusChangeHandler"
+            ]
           }
         }
       ],
@@ -229,6 +249,9 @@
       "name": "registerStyleChangeHandler",
       "kind": "function",
       "type": "registerStyleChangeHandler(key: string, args: []): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+      "refs": [
+        "StyleChangeHandler"
+      ],
       "signatures": [
         {
           "text": "registerStyleChangeHandler(key: string, args: []): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
@@ -243,7 +266,10 @@
             }
           ],
           "returns": {
-            "type": "(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any"
+            "type": "(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+            "refs": [
+              "StyleChangeHandler"
+            ]
           }
         }
       ],
@@ -283,11 +309,13 @@
             },
             {
               "name": "eventListener",
-              "type": "EventListener"
+              "type": "EventListener",
+              "external": "typescript"
             },
             {
               "name": "options",
               "type": "AddEventListenerOptions",
+              "external": "typescript",
               "optional": true
             }
           ],
@@ -376,7 +404,8 @@
           "params": [
             {
               "name": "foo",
-              "type": "CallableFunction"
+              "type": "CallableFunction",
+              "external": "typescript"
             },
             {
               "name": "that",
@@ -404,7 +433,10 @@
             },
             {
               "name": "attributeReactiveClassesOptional",
-              "type": "(AttributeReactiveClass<T> | undefined)[]"
+              "type": "(AttributeReactiveClass<T> | undefined)[]",
+              "refs": [
+                "AttributeReactiveClass"
+              ]
             },
             {
               "name": "template",
@@ -467,7 +499,8 @@
           "params": [
             {
               "name": "strings",
-              "type": "TemplateStringsArray"
+              "type": "TemplateStringsArray",
+              "external": "typescript"
             },
             {
               "name": "values",

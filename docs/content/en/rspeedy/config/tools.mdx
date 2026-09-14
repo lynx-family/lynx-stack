@@ -12,12 +12,12 @@ Escape hatches to the underlying tools: modify the Rspack configuration, the SWC
 
 | Name | Type | Description |
 | --- | --- | --- |
-| [`bundlerChain`](#tools-bundlerchain) | `ToolsBundlerChainConfig` | The [`Tools.bundlerChain`](#tools-bundlerchain) changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain). |
-| [`cssExtract`](#tools-cssextract) | `CssExtract` | The [`CssExtract`](#tools-cssextract) controls the options of [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) |
-| [`cssLoader`](#tools-cssloader) | `CssLoader` | The [`CssLoader`](#tools-cssloader) controls the options of [css-loader](https://github.com/webpack-contrib/css-loader). |
-| [`rsdoctor`](#tools-rsdoctor) | `RsdoctorRspackPluginOptions` | The [`Tools.rsdoctor`](#tools-rsdoctor) controls the options of [Rsdoctor](https://rsdoctor.dev/). |
-| [`rspack`](#tools-rspack) | `ToolsRspackConfig` | The [`Tools.rspack`](#tools-rspack) controls the options of [Rspack](https://rspack.rs/). |
-| [`swc`](#tools-swc) | `ToolsSwcConfig` | The [`Tools.swc`](#tools-swc) controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader). |
+| [`bundlerChain`](#tools-bundlerchain) | `ToolsBundlerChainConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Tools.bundlerChain` changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain). |
+| [`cssExtract`](#tools-cssextract) | [`CssExtract`](#tools-cssextract) | The [`CssExtract`](#tools-cssextract) controls the options of [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) |
+| [`cssLoader`](#tools-cssloader) | [`CssLoader`](#tools-cssloader) | The [`CssLoader`](#tools-cssloader) controls the options of [css-loader](https://github.com/webpack-contrib/css-loader). |
+| [`rsdoctor`](#tools-rsdoctor) | [`RsdoctorRspackPluginOptions`](#tools-rsdoctor) | The `Tools.rsdoctor` controls the options of [Rsdoctor](https://rsdoctor.dev/). |
+| [`rspack`](#tools-rspack) | `ToolsRspackConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Tools.rspack` controls the options of [Rspack](https://rspack.rs/). |
+| [`swc`](#tools-swc) | `ToolsSwcConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Tools.swc` controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader). |
 
 {/* @api-end */}
 
@@ -30,7 +30,7 @@ Escape hatches to the underlying tools: modify the Rspack configuration, the SWC
 - **Type:** `ToolsBundlerChainConfig` (from [@rsbuild/core](https://rsbuild.rs/config/))
 - **Default:** `undefined`
 
-The [`Tools.bundlerChain`](#tools-bundlerchain) changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain).
+The `Tools.bundlerChain` changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain).
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -141,10 +141,10 @@ See [css-loader#import-loaders](https://github.com/webpack-contrib/css-loader?ta
 
 #### `tools.cssLoader.modules` \{#tools-cssloader-modules\}
 
-- **Type:** `boolean | "local" | "global" | "pure" | "icss" | CssLoaderModules`
+- **Type:** `boolean | "local" | "global" | "pure" | "icss" | `[`CssLoaderModules`](#tools-cssloader-modules)
 - **Default:** Enables CSS Modules with automatic `*.module.*` detection, camelCase exports, `namedExport: false`, and `localIdentName` inherited from `output.cssModules.localIdentName`.
 
-The [`cssLoader.modules`](#cssloadermodules) option enables/disables the CSS Modules specification and setup basic behavior.
+The [`cssLoader.modules`](#tools-cssloader-modules) option enables/disables the CSS Modules specification and setup basic behavior.
 
 Using `false` value to increase performance because we avoid parsing CSS Modules features, it will be useful for developers who use vanilla css or use other technologies.
 
@@ -174,7 +174,7 @@ export default defineConfig({
 })
 ```
 
-Using object value to enable CSS Modules based-on [`CssLoaderModules.auto`](#cssloadermodules-auto) option and setup more configurations about CSS Modules.
+Using object value to enable CSS Modules based-on [`CssLoaderModules.auto`](#tools-cssloader-modules-auto) option and setup more configurations about CSS Modules.
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -190,12 +190,56 @@ export default defineConfig({
 })
 ```
 
+##### `tools.cssLoader.modules.namedExport` \{#tools-cssloader-modules-namedexport\}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enables/disables ES modules named export for locals.
+
+- `style.css`
+
+```css
+.foo-baz {
+  color: red;
+}
+.bar {
+  color: blue;
+}
+.default {
+  color: green;
+}
+```
+
+- `index.js`
+
+```js
+import * as styles from "./styles.css";
+
+// If using `exportLocalsConvention: "as-is"` (default value):
+console.log(styles["foo-baz"], styles.bar);
+
+// If using `exportLocalsConvention: "camel-case-only"`:
+console.log(styles.fooBaz, styles.bar);
+
+// For the `default` class name
+console.log(styles["_default"]);
+```
+
+##### Other options \{#tools-cssloader-modules-other-options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="tools-cssloader-modules-auto"></a>`auto` | `boolean \| RegExp \| ((filename: string) => boolean)` | `true` | `CssModules.auto` |
+| <a id="tools-cssloader-modules-exportlocalsconvention"></a>`exportLocalsConvention` | `CssModuleLocalsConvention` | `'camelCase'` | `CssModules.exportLocalsConvention` |
+| <a id="tools-cssloader-modules-localidentname"></a>`localIdentName` | `string` | `'[local]-[hash:base64:6]'` | `CssModules.localIdentName` |
+
 ### `tools.rsdoctor` \{#tools-rsdoctor\}
 
 - **Type:** [`RsdoctorRspackPluginOptions`](#tools-rsdoctor)
 - **Default:** `undefined`
 
-The [`Tools.rsdoctor`](#tools-rsdoctor) controls the options of [Rsdoctor](https://rsdoctor.dev/).
+The `Tools.rsdoctor` controls the options of [Rsdoctor](https://rsdoctor.dev/).
 
 Setting `RSDOCTOR=true` enables Rsdoctor. When it is enabled, Rspeedy merges additional plugin defaults during config normalization.
 
@@ -224,7 +268,7 @@ See [Rsdoctor - Configuration](https://rsdoctor.dev/config/options/options) for 
 - **Type:** `ToolsRspackConfig` (from [@rsbuild/core](https://rsbuild.rs/config/))
 - **Default:** `undefined`
 
-The [`Tools.rspack`](#tools-rspack) controls the options of [Rspack](https://rspack.rs/).
+The `Tools.rspack` controls the options of [Rspack](https://rspack.rs/).
 
 - Use object config
 
@@ -304,6 +348,6 @@ See [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#appendplugin
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| <a id="tools-swc"></a>`swc` | `ToolsSwcConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | `undefined` | The [`Tools.swc`](#tools-swc) controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader). |
+| <a id="tools-swc"></a>`swc` | `ToolsSwcConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | `undefined` | The `Tools.swc` controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader). |
 
 {/* @api-end */}

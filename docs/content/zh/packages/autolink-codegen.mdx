@@ -37,9 +37,9 @@ generate(options: CodegenOptions): GeneratedFile[]
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `CodegenOptions` |  |
+| `options` | [`CodegenOptions`](#codegenoptions) |  |
 
-**返回值:** `GeneratedFile[]`
+**返回值:** [`GeneratedFile`](#generatedfile)`[]`
 
 ### `parseNativeModules()` \{#parsenativemodules\}
 
@@ -54,7 +54,7 @@ parseNativeModules(source: string, filename: string): NativeModuleSpec[]
 | `source` | `string` |  |
 | `filename` | `string` |  |
 
-**返回值:** `NativeModuleSpec[]`
+**返回值:** [`NativeModuleSpec`](#nativemodulespec)`[]`
 
 ### `runCodegen()` \{#runcodegen\}
 
@@ -66,9 +66,9 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `CodegenOptions` |  |
+| `options` | [`CodegenOptions`](#codegenoptions) |  |
 
-**返回值:** `GeneratedFile[]`
+**返回值:** [`GeneratedFile`](#generatedfile)`[]`
 
 ## 类型 \{#\}
 
@@ -96,7 +96,7 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lynxtronplatformmanifest-targets"></a>`targets` | `LynxtronRuntimeTarget[]` |  |
+| <a id="lynxtronplatformmanifest-targets"></a>`targets` | [`LynxtronRuntimeTarget`](#lynxtronruntimetarget)`[]` |  |
 
 ### `LynxtronRuntimeTarget` \{#lynxtronruntimetarget\}
 
@@ -117,8 +117,8 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="nativemodulemethod-name"></a>`name` | `string` |  |
-| <a id="nativemodulemethod-params"></a>`params` | `NativeModuleParam[]` |  |
-| <a id="nativemodulemethod-returntype"></a>`returnType` | `NativeModuleType` |  |
+| <a id="nativemodulemethod-params"></a>`params` | [`NativeModuleParam`](#nativemoduleparam)`[]` |  |
+| <a id="nativemodulemethod-returntype"></a>`returnType` | [`NativeModuleType`](#nativemoduletype) |  |
 | <a id="nativemodulemethod-source"></a>`source?` | `NativeModuleSourceLocation` |  |
 
 ### `NativeModuleObjectProperty` \{#nativemoduleobjectproperty\}
@@ -129,7 +129,7 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 | --- | --- | --- |
 | <a id="nativemoduleobjectproperty-name"></a>`name` | `string` |  |
 | <a id="nativemoduleobjectproperty-optional"></a>`optional?` | `boolean` |  |
-| <a id="nativemoduleobjectproperty-type"></a>`type` | `NativeModuleType` |  |
+| <a id="nativemoduleobjectproperty-type"></a>`type` | [`NativeModuleType`](#nativemoduletype) |  |
 
 ### `NativeModuleObjectSpec` \{#nativemoduleobjectspec\}
 
@@ -138,7 +138,7 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="nativemoduleobjectspec-name"></a>`name` | `string` |  |
-| <a id="nativemoduleobjectspec-properties"></a>`properties` | `NativeModuleObjectProperty[]` |  |
+| <a id="nativemoduleobjectspec-properties"></a>`properties` | [`NativeModuleObjectProperty`](#nativemoduleobjectproperty)`[]` |  |
 
 ### `NativeModuleParam` \{#nativemoduleparam\}
 
@@ -149,7 +149,7 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 | <a id="nativemoduleparam-name"></a>`name` | `string` |  |
 | <a id="nativemoduleparam-optional"></a>`optional?` | `boolean` |  |
 | <a id="nativemoduleparam-source"></a>`source?` | `NativeModuleSourceLocation` |  |
-| <a id="nativemoduleparam-type"></a>`type` | `NativeModuleType` |  |
+| <a id="nativemoduleparam-type"></a>`type` | [`NativeModuleType`](#nativemoduletype) |  |
 
 ### `NativeModuleSpec` \{#nativemodulespec\}
 
@@ -157,8 +157,8 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="nativemodulespec-interfaces"></a>`interfaces?` | `NativeModuleObjectSpec[]` |  |
-| <a id="nativemodulespec-methods"></a>`methods` | `NativeModuleMethod[]` |  |
+| <a id="nativemodulespec-interfaces"></a>`interfaces?` | [`NativeModuleObjectSpec`](#nativemoduleobjectspec)`[]` |  |
+| <a id="nativemodulespec-methods"></a>`methods` | [`NativeModuleMethod`](#nativemodulemethod)`[]` |  |
 | <a id="nativemodulespec-name"></a>`name` | `string` |  |
 | <a id="nativemodulespec-source"></a>`source?` | `NativeModuleSourceLocation` |  |
 
@@ -168,7 +168,7 @@ runCodegen(options: CodegenOptions): GeneratedFile[]
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="nativemoduletype-name"></a>`name` | `NativeModuleTypeName` |  |
+| <a id="nativemoduletype-name"></a>`name` | [`NativeModuleTypeName`](#nativemoduletypename) |  |
 | <a id="nativemoduletype-nullable"></a>`nullable` | `boolean` |  |
 | <a id="nativemoduletype-referencename"></a>`referenceName?` | `string` |  |
 

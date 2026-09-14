@@ -16,11 +16,13 @@
           "params": [
             {
               "name": "sequence",
-              "type": "AnimationSequence"
+              "type": "AnimationSequence",
+              "external": "framer-motion"
             },
             {
               "name": "options",
               "type": "SequenceOptions",
+              "external": "framer-motion",
               "optional": true
             }
           ],
@@ -38,11 +40,13 @@
             },
             {
               "name": "keyframes",
-              "type": "DOMKeyframesDefinition"
+              "type": "DOMKeyframesDefinition",
+              "external": "motion-dom"
             },
             {
               "name": "options",
               "type": "AnimationOptions",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -65,6 +69,7 @@
             {
               "name": "options",
               "type": "ValueAnimationTransition<string>",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -87,6 +92,7 @@
             {
               "name": "options",
               "type": "ValueAnimationTransition<number>",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -109,6 +115,7 @@
             {
               "name": "options",
               "type": "ValueAnimationTransition<V>",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -126,11 +133,13 @@
             },
             {
               "name": "keyframes",
-              "type": "ObjectTarget<O>"
+              "type": "ObjectTarget<O>",
+              "external": "framer-motion"
             },
             {
               "name": "options",
               "type": "AnimationOptions",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -148,11 +157,13 @@
             },
             {
               "name": "keyframes",
-              "type": "DOMKeyframesDefinition"
+              "type": "DOMKeyframesDefinition",
+              "external": "motion-dom"
             },
             {
               "name": "options",
               "type": "AnimationOptions",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -201,11 +212,13 @@
           "params": [
             {
               "name": "inputValue",
-              "type": "MotionValue<number>"
+              "type": "MotionValue<number>",
+              "external": "motion-dom"
             },
             {
               "name": "inputRange",
-              "type": "MapInputRange"
+              "type": "MapInputRange",
+              "external": "motion-dom"
             },
             {
               "name": "outputRange",
@@ -214,6 +227,7 @@
             {
               "name": "options",
               "type": "TransformOptions<O>",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -281,6 +295,7 @@
             {
               "name": "options",
               "type": "MotionValueOptions",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -351,6 +366,7 @@
             {
               "name": "options",
               "type": "SpringOptions",
+              "external": "motion-dom",
               "optional": true
             }
           ],
@@ -393,7 +409,8 @@
             },
             {
               "name": "values",
-              "type": "Record<string, MotionValue>"
+              "type": "Record<string, MotionValue>",
+              "external": "typescript"
             }
           ],
           "returns": {

@@ -32,6 +32,10 @@
         {
           "name": "addComponentElement",
           "type": "boolean | AddComponentElementConfig",
+          "ref": "AddComponentElementConfig",
+          "refs": [
+            "AddComponentElementConfig"
+          ],
           "summary": "Controls whether to add wrapper elements for components",
           "examples": [
             "Add a `<view>` wrapper element for all components during runtime.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      compat: {\n        addComponentElement: true\n      },\n    })\n  ],\n})\n```",
@@ -193,6 +197,9 @@
         {
           "name": "getLynxTemplatePluginHooks",
           "type": "(compilation: Compilation) => TemplateHooks",
+          "refs": [
+            "TemplateHooks"
+          ],
           "kind": "property"
         }
       ]
@@ -207,6 +214,9 @@
           "name": "compat",
           "optional": true,
           "type": "Partial<CompatVisitorConfig> & { disableCreateSelectorQueryIncompatibleWarning?: boolean }",
+          "refs": [
+            "CompatVisitorConfig"
+          ],
           "summary": "The `compat` option controls compatibilities with legacy ReactLynx.",
           "remarks": "These options should only be used for migrating from ReactLynx2.0 or\ntargeting legacy ReactLynx3 runtimes.",
           "default": "`undefined`",
@@ -244,6 +254,9 @@
           "name": "defineDCE",
           "optional": true,
           "type": "Partial<DefineDceVisitorConfig>",
+          "refs": [
+            "DefineDceVisitorConfig"
+          ],
           "external": "typescript",
           "summary": "Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.",
           "default": "`undefined`",
@@ -339,6 +352,10 @@
           "name": "experimental_transformBuiltinAttributeNames",
           "optional": true,
           "type": "boolean | TransformBuiltinAttributeNamesOptions",
+          "ref": "TransformBuiltinAttributeNamesOptions",
+          "refs": [
+            "TransformBuiltinAttributeNamesOptions"
+          ],
           "summary": "Transform attribute names on Lynx builtin elements.",
           "remarks": "`false` disables the conversion. `true` applies the default rule:\n`onClick` becomes `bindtap`, `onCatchTap` becomes `catchtap`, other\n`onXXX` names become `bindxxx`, and remaining camelCase names become\ndash-case. An object provides serializable custom rules. Exact entries in\n`rename` take precedence over `preserve`, followed by the fallback behavior\nselected by `mode`.\n\nExplicit JSX attributes are transformed at compile time. Attributes\nsupplied through JSX spreads are transformed at runtime with the same\nrules.",
           "default": "`false`",
@@ -358,6 +375,9 @@
           "name": "extractStr",
           "optional": true,
           "type": "boolean | Partial<ExtractStrConfig>",
+          "refs": [
+            "ExtractStrConfig"
+          ],
           "summary": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
           "default": "`false`",
           "kind": "property"
@@ -398,6 +418,9 @@
           "name": "shake",
           "optional": true,
           "type": "Partial<ShakeVisitorConfig>",
+          "refs": [
+            "ShakeVisitorConfig"
+          ],
           "external": "typescript",
           "summary": "How main-thread code will be shaken.",
           "default": "`undefined`",
@@ -564,6 +587,10 @@
             {
               "name": "userOptions",
               "type": "PluginReactLynxOptions",
+              "ref": "PluginReactLynxOptions",
+              "refs": [
+                "PluginReactLynxOptions"
+              ],
               "optional": true
             }
           ],

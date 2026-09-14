@@ -12,7 +12,7 @@ title: resolve
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
-| [`alias`](#resolve-alias) | `Record<string, string \| false \| string[]>` | 创建别名，以便更方便地 `import` 或 `require` 某些模块。 |
+| [`alias`](#resolve-alias) | `Record<string, string \| false \| string[]>` (来自 typescript) | 创建别名，以便更方便地 `import` 或 `require` 某些模块。 |
 | [`aliasStrategy`](#resolve-aliasstrategy) | `"prefer-tsconfig" \| "prefer-alias"` | 设置路径别名解析的策略，用于控制 `tsconfig.json` 中的 `paths` 选项 与 Rsbuild 的 `resolve.alias` 选项之间的优先级关系。 |
 | [`dedupe`](#resolve-dedupe) | `string[]` | 强制从项目根目录解析指定的包，可用于对包进行去重并减小 bundle 体积。 |
 | [`extensions`](#resolve-extensions) | `string[]` | 导入模块时自动解析文件扩展名。这意味着你可以在导入文件时省略扩展名。 |
@@ -134,9 +134,9 @@ export default defineConfig({
 
 强制从项目根目录解析指定的包，可用于对包进行去重并减小 bundle 体积。
 
-[`Resolve.dedupe`](#resolve-dedupe) 基于 [`Resolve.alias`](#resolve-alias) 实现，它会在项目根目录下通过 `require.resolve` 获取指定包的路径，并将其设置为别名。
+`Resolve.dedupe` 基于 `Resolve.alias` 实现，它会在项目根目录下通过 `require.resolve` 获取指定包的路径，并将其设置为别名。
 
-[`Resolve.dedupe`](#resolve-dedupe) 生成的别名会与项目中配置的 [`Resolve.alias`](#resolve-alias) 合并，当 key 相同时，[`Resolve.alias`](#resolve-alias) 配置的优先级更高。
+`Resolve.dedupe` 生成的别名会与项目中配置的 `Resolve.alias` 合并，当 key 相同时，`Resolve.alias` 配置的优先级更高。
 
 使用项目根目录下的 `tslib`。
 

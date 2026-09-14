@@ -46,7 +46,8 @@
           "params": [
             {
               "name": "rspack",
-              "type": "Rspack"
+              "type": "Rspack",
+              "external": "@rspack/core"
             },
             {
               "name": "directory",
@@ -73,7 +74,11 @@
           "params": [
             {
               "name": "options",
-              "type": "Options"
+              "type": "Options",
+              "ref": "Options",
+              "refs": [
+                "Options"
+              ]
             }
           ],
           "returns": {

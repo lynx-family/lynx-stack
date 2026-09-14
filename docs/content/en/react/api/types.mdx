@@ -52,7 +52,7 @@ lynx.querySelectorAll(...);
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: DataProcessorDefinition) => void` | Register DataProcessors. You MUST call this before `root.render()`. |
+| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void` | Register DataProcessors. You MUST call this before `root.render()`. |
 | <a id="lynx-triggerglobaleventfromlepus"></a>`triggerGlobalEventFromLepus` | `(eventName: string, params: any) => void` | An alias of `lynx.getJSModule("GlobalEventEmitter").trigger(eventName, params)` only in Lepus |
 
 ### `Root` \{#root\}
@@ -61,7 +61,7 @@ The default root exported by `@lynx-js/react` for you to render a JSX
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">Deprecated</span> | `(dataProcessorDefinition: DataProcessorDefinition) => void` | Register DataProcessors. You MUST call this before `root.render()`. **Deprecated.** Deprecated. |
+| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">Deprecated</span> | `(dataProcessorDefinition: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void` | Register DataProcessors. You MUST call this before `root.render()`. **Deprecated.** Deprecated. |
 | <a id="root-render"></a>`render` | `(jsx: ReactNode) => void` | Use this API to pass in your JSX to render |
 
 ### `DataProcessors` \{#dataprocessors\}
@@ -102,8 +102,8 @@ Definition of DataProcessor(s)
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | `DataProcessors` | Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx). |
-| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: InitDataRaw) => InitData` | You can custom input and output type of `defaultDataProcessor` by extends [`InitDataRaw`](#initdataraw) and [`InitData`](#initdata) Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx). |
+| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | [`DataProcessors`](#dataprocessors) | Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx). |
+| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: `[`InitDataRaw`](#initdataraw)`) => `[`InitData`](#initdata) | You can custom input and output type of `defaultDataProcessor` by extends [`InitDataRaw`](#initdataraw) and [`InitData`](#initdata) Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx). |
 
 ### `CloneElement` \{#cloneelement\}
 
@@ -115,7 +115,7 @@ The call signature of ReactLynx `cloneElement`.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `ReactElement<Props>` |  |
+| `element` | `ReactElement<Props>` (from @types/react) |  |
 | `props?` | `Partial<Props> & Attributes \| null` |  |
 | `children` | `ReactNode[]` |  |
 

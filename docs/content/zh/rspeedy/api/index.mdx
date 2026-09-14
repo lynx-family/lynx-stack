@@ -43,9 +43,9 @@ void async function () {
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `CreateRspeedyOptions` | [`CreateRspeedyOptions`](#createrspeedyoptions) |
+| `options` | [`CreateRspeedyOptions`](#createrspeedyoptions) | [`CreateRspeedyOptions`](#createrspeedyoptions) |
 
-**返回值:** `Promise<RspeedyInstance>` — - Rspeedy 实例。
+**返回值:** `Promise<`[`RspeedyInstance`](#rspeedyinstance)`>` — - Rspeedy 实例。
 
 ### `defineConfig()` \{#defineconfig\}
 
@@ -92,9 +92,9 @@ void async function () {
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `loadConfigOptions` | `LoadConfigOptions` | the options of `loadConfig` method. |
+| `loadConfigOptions` | [`LoadConfigOptions`](#loadconfigoptions) | the options of `loadConfig` method. |
 
-**返回值:** `Promise<LoadConfigResult>` — 构建配置。
+**返回值:** `Promise<`[`LoadConfigResult`](#loadconfigresult)`>` — 构建配置。
 
 ### `mergeRspeedyConfig()` \{#mergerspeedyconfig\}
 
@@ -188,8 +188,8 @@ const version: string
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `@lynx-js/css-extract-webpack-plugin#LoaderOptions` |
-| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions` |
+| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | [`CssExtractRspackLoaderOptions`](/zh/rspeedy/config/tools#tools-cssextract-loaderoptions) | `@lynx-js/css-extract-webpack-plugin#LoaderOptions` |
+| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | [`CssExtractRspackPluginOptions`](/zh/rspeedy/config/tools#tools-cssextract-pluginoptions) | `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions` |
 
 ### `CssLoader` \{#cssloader\}
 
@@ -198,7 +198,7 @@ const version: string
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="cssloader-importloaders"></a>`importLoaders?` | `0 \| 1 \| 2` | `importLoaders` 选项用于配置在 `css-loader` 之前，有多少个 loader 应用于 `@imported` 资源和 CSS Modules 导入。 |
-| <a id="cssloader-modules"></a>`modules?` | `boolean \| "local" \| "global" \| "pure" \| "icss" \| CssLoaderModules` | [`cssLoader.modules`](#cssloadermodules) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。 |
+| <a id="cssloader-modules"></a>`modules?` | `boolean \| "local" \| "global" \| "pure" \| "icss" \| `[`CssLoaderModules`](#cssloadermodules) | [`cssLoader.modules`](#cssloadermodules) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。 |
 
 ### `CssLoaderModules` \{#cssloadermodules\}
 
@@ -238,9 +238,9 @@ const RsbuildPlugin = {
 | --- | --- | --- |
 | <a id="exposedapi-config"></a>`config` | `Config` | 用户配置。 |
 | <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | 打印调试日志。 |
-| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | 用于让 qrcode 插件从自定义的 environment 中获取入口，而不是从默认的 lynx environment 中获取。 |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | 用于让 qrcode 插件从自定义的 environment 中获取入口，而不是从默认的 lynx environment 中获取。 |
 | <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | 退出进程。 |
-| <a id="exposedapi-logger"></a>`logger` | `Logger` | 获取 Rspeedy 的 logger。 |
+| <a id="exposedapi-logger"></a>`logger` | `Logger` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | 获取 Rspeedy 的 logger。 |
 | <a id="exposedapi-version"></a>`version` | `string` | Rspeedy 的版本。 |
 
 ### `LoadConfigOptions` \{#loadconfigoptions\}

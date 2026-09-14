@@ -11,7 +11,296 @@
       "kind": "interface",
       "type": "unknown",
       "summary": "A configuration interface for Lynx Config defined by `@lynx-js/type-config`.",
-      "members": []
+      "members": [
+        {
+          "name": "alignMouseEventWithW3C",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Decodes a page-level desktop mouse-event compatibility switch intended for W3C-aligned semantics on macOS and Windows. Runtime behavior depends on downstream desktop event handling consuming the stored PageConfig value.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "disableLongpressAfterScroll",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls iOS long-press recognition after scroll gestures. When enabled, Lynx requires long press to wait for a decelerating scroll view pan recognizer to fail, suppressing long press during inertial scrolling.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableA11y",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether Android turns on the helper-based Lynx accessibility path for the page. When enabled, LynxAccessibilityWrapper initializes the accessibility helper and a11y-id based lookup path; when disabled, runtime falls back to the default or delegate-based accessibility behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableAccessibilityElement",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls the default accessibility-element status for Android Lynx views. When enabled, views whose own a11y status is default inherit important-for-accessibility behavior from page config; when disabled, those views stay out of the default accessibility tree unless explicitly marked.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "enableCSSInheritance",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether the style system applies the CSS inheritance path during style propagation. When enabled, Fiber style propagation and inherited-property updates respect CSS inheritance; when disabled, inherited style propagation stays off.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableCSSInlineVariables",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether runtime treats inline style values as CSS variables and resolves them through the inline-variable path. When enabled, decoded page config turns on inline CSS variable support for runtime CSS readers and style resolution; when disabled, inline style values are handled as ordinary static styles. If the field is omitted, the setting can still be driven by native or settings fallback.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableCSSRule",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls unified CSS rule support in template CSS encoding and decoding. When enabled, CSS rules such as style, media, supports, keyframes, font-face, and layer rules are parsed and decoded through the unified rule path.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableEndGestureAtLastFingerUp",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether iOS multi-finger touch handling ends only after the last finger is lifted. When enabled, the touch recognizer reports ended or cancelled when the final finger leaves; when disabled, the legacy earlier-ending behavior remains.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableEventHandleRefactor",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether runtime uses the refactored event-listener and dispatch path. When enabled, element decode, Radon event processing, and touch dispatch use the newer listener registration flow that supports rebinding and interception; when disabled, runtime stays on the legacy event hookup path. If the field is omitted, decoder falls back to the settings source.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableEventThrough",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether touches on the root area can pass through the Lynx page instead of being consumed by Lynx. When enabled, root touch dispatch returns false and overlay or host views underneath can receive the event; when disabled, Lynx keeps normal touch consumption.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableEventThroughInheritFromPage",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether descendants whose event-through value is undefined can inherit event-through from the page node. When disabled, event-through inheritance stops before the page node to preserve the legacy behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableFetchAPIStandardStreaming",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls standard HTTP streaming support for the Lynx Fetch API. When enabled through page or native config, Fetch requests use the standard streaming response path; when disabled or unset, Fetch keeps the non-standard streaming fallback unless a legacy streaming flag is present.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "enableFixedNew",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls the newer fixed-position layout path. When enabled, fixed nodes participate in the new fixed layout and container insertion logic; when disabled, fixed elements keep the legacy positioning behavior unless unified fixed behavior is enabled.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableFlexBasisZeroPercent",
+          "optional": true,
+          "type": "boolean",
+          "summary": "When enabled, flex-basis defaults to 0% instead of 0 when omitted in flex shorthand, matching web browser behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableGridPlacementShorthands",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether the CSS parser accepts grid-column and grid-row shorthand syntax. When enabled, grid shorthand handlers parse placement shorthands into style values; when disabled, those shorthand declarations are rejected.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableJsBindingApiThrowException",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether JS binding APIs surface binding failures as JS exceptions. When enabled, the runtime bundle turns on throw-exception behavior for JSI bindings; when disabled, bindings keep the older non-throwing behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableLayoutOnlyEventThrough",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether layout-only nodes are excluded as hit-test targets in Fragment Layer Render while their non-layout-only descendants remain eligible. When disabled, layout-only nodes keep the existing PlatformEventTarget hit-test behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableListNewArchitecture",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether list nodes are created through the newer Radon diff list architecture. When enabled, renderer functions can build RadonDiffListNode2 and decoder falls back to the settings value if the page omits it; when disabled, runtime keeps the older list architecture.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableMouseDragScroll",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether dragging scrollable content with a mouse scrolls the container on Clay platforms. When disabled, mouse wheel and scrollbar scrolling remain available. For target SDK 4.3 and above, the default override is disabled.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "enableMultiTouch",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether Lynx touch events carry multi-finger state instead of collapsing to single-touch behavior. When enabled, touch events include information for multiple active fingers; when disabled, runtime keeps the single-touch event model.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableNativeList",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether list rendering prefers the native C++ list implementation instead of the older platform list path. When enabled, list elements resolve to native-list mode in shell or page config; when disabled, runtime keeps the legacy platform implementation. When unset, native config can still decide the flag.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "enableNewGesture",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether runtime enables the new gesture arena and handler integration instead of the legacy touch-only gesture path. When enabled, platform UI owners initialize new gesture handlers and Radon or Fiber gesture updates take the new path; when disabled, scrolling and touch handling keep the legacy behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableNewIntersectionObserver",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether intersection observers use the newer detection logic instead of the older scroll-bound path. When enabled, intersection managers add observers to the dedicated run loop and observe without depending on scroll-event binding; when disabled, runtime keeps the legacy observer logic. When unset, settings can still decide the flag.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "enableNewTransformOrigin",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether iOS uses the newer transform-origin calculation for transforms and background positioning. When enabled, `LynxUI`, `LynxConverter+Transform`, and background handling use the new origin algorithm; when disabled, iOS keeps the legacy transform-origin math. From target SDK 2.6 onward, the default override is enabled.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "enableParseIntFlex",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls CSS parser handling for numeric flex shorthand input. When enabled, numeric flex values preserve integer-style parsing; when disabled, numeric flex shorthand keeps the legacy numeric parsing behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableReloadLifecycle",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether reload patching triggers the LynxUI onNodeReload lifecycle on affected elements. When enabled, refresh patching walks reloaded elements and calls onNodeReload; when disabled, reload updates skip that lifecycle callback.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableSimultaneousTap",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether iOS Lynx tap gestures can fire at the same time as outer native tap gestures. When enabled, LynxTap and host tap gestures are allowed to recognize together; when disabled, Lynx keeps the default mutual-exclusion behavior.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableTextOverflow",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether platform text renderers treat text overflow as visible instead of clipping to bounds. When enabled, page config forwards the flag to platform text contexts and iOS or Harmony text rendering allows visible overflow; when disabled, text keeps the older clipped overflow behavior. From target SDK 2.8 onward, the default override is enabled.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "enableTransformedTouchPosition",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether touch event coordinates account for element transforms. When enabled, Lynx and Canvas touch dispatch convert root touch points into the transformed target view coordinate space; when disabled, touch positions keep the legacy untransformed calculation.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "fontScaleEffectiveOnlyOnSp",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether font scale applies only to `sp` units. When enabled, non-sp font-relevant lengths use a font scale of 1 while `sp` values keep font-scale behavior; when disabled, font scale can affect broader text sizing.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "includeFontPadding",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether Android text measurement includes the font's top and bottom padding. When enabled, page config forwards `includeFontPadding` to text shadow nodes and text height or vertical centering includes font padding; when disabled, text metrics exclude that padding. When omitted, Android falls back to the historical SDK-based default (`true` for 2.4 <= target SDK < 2.9).",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "keyboardCallbackPassRelativeHeight",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls the Android PageConfig flag returned by `useRelativeKeyboardHeightApi()` for keyboard height callbacks. When enabled, keyboard APIs can report height relative to the Lynx view bottom to handle decor-view offset changes; when disabled, callbacks keep the default height semantics.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "longPressDuration",
+          "optional": true,
+          "type": "number",
+          "summary": "Controls the platform long-press timeout before Lynx fires a `longpress` event. Smaller values make long-press recognition fire sooner, while the default or negative handling keeps the platform timeout behavior.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "removeDescendantSelectorScope",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether descendant selectors are allowed to cross component scope boundaries during style resolution. When enabled, `AttributeHolder` and `StyleResolver` stop constraining descendant selectors to the current component scope; when disabled, descendant selectors only match inside the component scope. In Fiber, manual decode keeps the default off unless explicitly set.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "tapSlop",
+          "optional": true,
+          "type": "string",
+          "summary": "Controls the movement threshold used by platform gesture recognizers before a tap is canceled. When pointer movement exceeds this distance, Android or Harmony tap handling no longer treats the interaction as a tap; smaller movement keeps the tap path eligible.",
+          "default": "`\"50px\"`",
+          "kind": "property"
+        },
+        {
+          "name": "unifyVWVHBehavior",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Controls whether `vw` and `vh` values use the unified viewport calculation path across layout and dynamic style updates. When enabled, Fiber elements and dynamic CSS updates recompute viewport units from the current viewport consistently; when disabled, some properties keep the older behavior. From target SDK 2.3 onward, the default override is enabled.",
+          "default": "`false`",
+          "kind": "property"
+        }
+      ]
     },
     {
       "name": "Options",
@@ -55,6 +344,9 @@
           "name": "validate",
           "optional": true,
           "type": "(input: unknown) => Config",
+          "refs": [
+            "Config"
+          ],
           "summary": "Custom validation function for the Lynx config.",
           "kind": "property"
         }
@@ -71,11 +363,19 @@
             {
               "name": "config",
               "type": "Config",
+              "ref": "Config",
+              "refs": [
+                "Config"
+              ],
               "description": "The Lynx config to set."
             },
             {
               "name": "options",
               "type": "Options",
+              "ref": "Options",
+              "refs": [
+                "Options"
+              ],
               "optional": true
             }
           ],

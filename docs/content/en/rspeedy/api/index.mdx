@@ -43,9 +43,9 @@ void async function () {
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `options` | `CreateRspeedyOptions` | [`CreateRspeedyOptions`](#createrspeedyoptions) |
+| `options` | [`CreateRspeedyOptions`](#createrspeedyoptions) | [`CreateRspeedyOptions`](#createrspeedyoptions) |
 
-**Returns:** `Promise<RspeedyInstance>` — - Rspeedy instance.
+**Returns:** `Promise<`[`RspeedyInstance`](#rspeedyinstance)`>` — - Rspeedy instance.
 
 ### `defineConfig()` \{#defineconfig\}
 
@@ -92,9 +92,9 @@ void async function () {
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `loadConfigOptions` | `LoadConfigOptions` | the options of `loadConfig` method. |
+| `loadConfigOptions` | [`LoadConfigOptions`](#loadconfigoptions) | the options of `loadConfig` method. |
 
-**Returns:** `Promise<LoadConfigResult>` — Build config.
+**Returns:** `Promise<`[`LoadConfigResult`](#loadconfigresult)`>` — Build config.
 
 ### `mergeRspeedyConfig()` \{#mergerspeedyconfig\}
 
@@ -188,8 +188,8 @@ The options of `createRspeedy` method.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `@lynx-js/css-extract-webpack-plugin#LoaderOptions` |
-| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions` |
+| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | [`CssExtractRspackLoaderOptions`](/rspeedy/config/tools#tools-cssextract-loaderoptions) | `@lynx-js/css-extract-webpack-plugin#LoaderOptions` |
+| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | [`CssExtractRspackPluginOptions`](/rspeedy/config/tools#tools-cssextract-pluginoptions) | `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions` |
 
 ### `CssLoader` \{#cssloader\}
 
@@ -198,7 +198,7 @@ The options of `createRspeedy` method.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="cssloader-importloaders"></a>`importLoaders?` | `0 \| 1 \| 2` | The option `importLoaders` allows you to configure how many loaders before `css-loader` should be applied to `@imported` resources and CSS modules imports. |
-| <a id="cssloader-modules"></a>`modules?` | `boolean \| "local" \| "global" \| "pure" \| "icss" \| CssLoaderModules` | The [`cssLoader.modules`](#cssloadermodules) option enables/disables the CSS Modules specification and setup basic behavior. |
+| <a id="cssloader-modules"></a>`modules?` | `boolean \| "local" \| "global" \| "pure" \| "icss" \| `[`CssLoaderModules`](#cssloadermodules) | The [`cssLoader.modules`](#cssloadermodules) option enables/disables the CSS Modules specification and setup basic behavior. |
 
 ### `CssLoaderModules` \{#cssloadermodules\}
 
@@ -238,9 +238,9 @@ const RsbuildPlugin = {
 | --- | --- | --- |
 | <a id="exposedapi-config"></a>`config` | `Config` | The user config. |
 | <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | Print debug logs. |
-| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment. |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment. |
 | <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | Exit the process. |
-| <a id="exposedapi-logger"></a>`logger` | `Logger` | Get the Rspeedy logger. |
+| <a id="exposedapi-logger"></a>`logger` | `Logger` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Get the Rspeedy logger. |
 | <a id="exposedapi-version"></a>`version` | `string` | The version of Rspeedy. |
 
 ### `LoadConfigOptions` \{#loadconfigoptions\}

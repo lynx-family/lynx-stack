@@ -38,9 +38,9 @@ Parses, source-map-resolves, and deduplicates TASM CSS diagnostics.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `__namedParameters` | `ProcessTasmCSSDiagnosticsOptions` |  |
+| `__namedParameters` | [`ProcessTasmCSSDiagnosticsOptions`](#processtasmcssdiagnosticsoptions) |  |
 
-**Returns:** `ResolvedTasmCSSDiagnostic[]`
+**Returns:** [`ResolvedTasmCSSDiagnostic`](#resolvedtasmcssdiagnostic)`[]`
 
 ## Classes \{#classes\}
 
@@ -53,9 +53,9 @@ LynxEncodePlugin
 | <a id="lynxencodeplugin-constructor"></a>`constructor` | `constructor(options?: LynxEncodePluginOptions): LynxEncodePlugin` |  |
 | <a id="lynxencodeplugin-before-emit-stage"></a>`BEFORE_EMIT_STAGE` | `number` | The stage of the beforeEmit hook. |
 | <a id="lynxencodeplugin-before-encode-stage"></a>`BEFORE_ENCODE_STAGE` | `number` | The stage of the beforeEncode hook. |
-| <a id="lynxencodeplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<LynxEncodePluginOptions>>` | `defaultOptions` is the default options that the [`LynxEncodePlugin`](#lynxencodeplugin) uses. |
+| <a id="lynxencodeplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`LynxEncodePluginOptions`](#lynxencodepluginoptions)`>>` (from typescript) | `defaultOptions` is the default options that the [`LynxEncodePlugin`](#lynxencodeplugin) uses. |
 | <a id="lynxencodeplugin-encode-stage"></a>`ENCODE_STAGE` | `number` | The stage of the encode hook. |
-| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` | Shared TASM encode worker pool: multiple entries (and multiple `LynxEncodePlugin` instances in the same process) share its worker slots for parallel encode; watch-mode rebuilds keep the same workers warm. `availableParallelism()` honors cgroup CPU limits (containers, CI runners), so we don't need to subtract a core ourselves. |
+| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` (from tinypool) | Shared TASM encode worker pool: multiple entries (and multiple `LynxEncodePlugin` instances in the same process) share its worker slots for parallel encode; watch-mode rebuilds keep the same workers warm. `availableParallelism()` honors cgroup CPU limits (containers, CI runners), so we don't need to subtract a core ourselves. |
 | <a id="lynxencodeplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
 
 ### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
@@ -65,7 +65,7 @@ LynxTemplatePlugin
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="lynxtemplateplugin-constructor"></a>`constructor` | `constructor(options?: LynxTemplatePluginOptions): LynxTemplatePlugin` |  |
-| <a id="lynxtemplateplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<LynxTemplatePluginOptions>>` | `defaultOptions` is the default options that the [`LynxTemplatePlugin`](#lynxtemplateplugin) uses. |
+| <a id="lynxtemplateplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`LynxTemplatePluginOptions`](#lynxtemplatepluginoptions)`>>` (from typescript) | `defaultOptions` is the default options that the [`LynxTemplatePlugin`](#lynxtemplateplugin) uses. |
 | <a id="lynxtemplateplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
 | <a id="lynxtemplateplugin-convertcsschunkstomap"></a>`convertCSSChunksToMap` | `convertCSSChunksToMap(cssChunks: (string \| { content: string })[], plugins: Plugin[], enableCSSSelector: boolean): { cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }` | Convert the css chunks to css map. |
 | <a id="lynxtemplateplugin-getasyncchunklayoutname"></a>`getAsyncChunkLayoutName` | `getAsyncChunkLayoutName(compilation: Compilation, chunkId: string \| number): string \| undefined` | Map an async chunk id to `<lazy bundle name>/<layer>`, used to route a lazy bundle's intermediate js/css/hmr outputs into a single per-bundle directory. Returns undefined for non-lazy chunks. |
@@ -145,11 +145,11 @@ The options for encoding a Lynx bundle.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="encodeoptions-compileroptions"></a>`compilerOptions` | `Record<string, string \| boolean>` |  |
-| <a id="encodeoptions-customsections"></a>`customSections` | `Record<string, { content: string \| Record<string, unknown> \| undefined; encoding?: "JsBytecode" \| "CSS"; type?: "lazy" }>` |  |
-| <a id="encodeoptions-elementtemplate"></a>`elementTemplate?` | `Record<string, unknown>` | Element template data used by encoders that support element template output. |
+| <a id="encodeoptions-compileroptions"></a>`compilerOptions` | `Record<string, string \| boolean>` (from typescript) |  |
+| <a id="encodeoptions-customsections"></a>`customSections` | `Record<string, { content: string \| Record<string, unknown> \| undefined; encoding?: "JsBytecode" \| "CSS"; type?: "lazy" }>` (from typescript) |  |
+| <a id="encodeoptions-elementtemplate"></a>`elementTemplate?` | `Record<string, unknown>` (from typescript) | Element template data used by encoders that support element template output. |
 | <a id="encodeoptions-lepuscode"></a>`lepusCode` | `{ filename: string \| undefined; lepusChunk: Record<string, string>; root: string \| undefined } \| undefined` |  |
-| <a id="encodeoptions-manifest"></a>`manifest?` | `Record<string, string \| undefined>` |  |
+| <a id="encodeoptions-manifest"></a>`manifest?` | `Record<string, string \| undefined>` (from typescript) |  |
 
 ### `LynxEncodePluginOptions` \{#lynxencodepluginoptions\}
 
@@ -169,7 +169,7 @@ The options for LynxTemplatePlugin
 | <a id="lynxtemplatepluginoptions-chunks"></a>`chunks?` | `"all" \| string[]` | List all entries which should be injected |
 | <a id="lynxtemplatepluginoptions-cssplugins"></a>`cssPlugins` | `Plugin[]` | plugins passed to parser |
 | <a id="lynxtemplatepluginoptions-customcssinheritancelist"></a>`customCSSInheritanceList` | `string[] \| undefined` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList` |
-| <a id="lynxtemplatepluginoptions-customsectionnaming"></a>`customSectionNaming?` | `(compilation: Compilation) => CustomSectionNaming` | Assemble every chunk into a custom section, named by this strategy. |
+| <a id="lynxtemplatepluginoptions-customsectionnaming"></a>`customSectionNaming?` | `(compilation: Compilation) => `[`CustomSectionNaming`](#customsectionnaming) | Assemble every chunk into a custom section, named by this strategy. |
 | <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside` |
 | <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear` |
 | <a id="lynxtemplatepluginoptions-defaultoverflowvisible"></a>`defaultOverflowVisible?` | `boolean` | When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`. |
@@ -200,7 +200,7 @@ Options for [`processTasmCSSDiagnostics`](#processtasmcssdiagnostics).
 | <a id="processtasmcssdiagnosticsoptions-context"></a>`context` | `string` | The webpack compiler context used to resolve relative source paths. |
 | <a id="processtasmcssdiagnosticsoptions-cssdiagnostics"></a>`cssDiagnostics` | `unknown` | The raw `css_diagnostics` value returned by TASM. |
 | <a id="processtasmcssdiagnosticsoptions-csssourcemaps"></a>`cssSourceMaps` | `string[]` | CSS source map contents from the CSS chunks for the current template. |
-| <a id="processtasmcssdiagnosticsoptions-emittedwarnings"></a>`emittedWarnings?` | `Set<string>` | A mutable set used to skip diagnostics that were already emitted. |
+| <a id="processtasmcssdiagnosticsoptions-emittedwarnings"></a>`emittedWarnings?` | `Set<string>` (from typescript) | A mutable set used to skip diagnostics that were already emitted. |
 | <a id="processtasmcssdiagnosticsoptions-fileexists"></a>`fileExists?` | `(path: string) => boolean` | A file existence check used before attaching a mapped source location. |
 
 ### `ResolvedTasmCSSDiagnostic` \{#resolvedtasmcssdiagnostic\}
@@ -257,10 +257,10 @@ class MyPlugin {
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` (from @rspack/lite-tapable) | Called after the template is emitted. |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` (from @rspack/lite-tapable) | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: `[`EncodeOptions`](#encodeoptions)`; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` (from @rspack/lite-tapable) | Called before the template is emitted. Can be used to modify the template. |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` (from @rspack/lite-tapable) | Called before the encode process. Can be used to modify the encode options. |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: `[`EncodeOptions`](#encodeoptions)`; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` (from @rspack/lite-tapable) | Call the encode process. |
 
 {/* @api-end */}

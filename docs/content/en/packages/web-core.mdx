@@ -36,7 +36,7 @@ html(strings: TemplateStringsArray, values: any[]): string
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `strings` | `TemplateStringsArray` |  |
+| `strings` | `TemplateStringsArray` (from typescript) |  |
 | `values` | `any[]` |  |
 
 **Returns:** `string`
@@ -54,7 +54,7 @@ registerAttributeHandler(key: string, args_0: boolean): (this: T, target: Attrib
 | `key` | `string` |  |
 | `args_0` | `boolean` |  |
 
-**Returns:** `(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+**Returns:** `(this: T, target: `[`AttributeChangeHandler`](#attributechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
 
 ### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
 
@@ -68,7 +68,7 @@ registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStat
 | --- | --- | --- |
 | `key` | `string` |  |
 
-**Returns:** `(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+**Returns:** `(this: T, target: `[`EventStatusChangeHandler`](#eventstatuschangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
 
 ### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
 
@@ -82,7 +82,7 @@ registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | 
 | --- | --- | --- |
 | `key` | `string` |  |
 
-**Returns:** `(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+**Returns:** `(this: T, target: `[`StyleChangeHandler`](#stylechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
 
 ### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
 
@@ -97,8 +97,8 @@ bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, even
 | `this` | `T` |  |
 | `elementGetter` | `(this: T) => HTMLElement` |  |
 | `eventName` | `string` |  |
-| `eventListener` | `EventListener` |  |
-| `options?` | `AddEventListenerOptions` |  |
+| `eventListener` | `EventListener` (from typescript) |  |
+| `options?` | `AddEventListenerOptions` (from typescript) |  |
 
 **Returns:** `(this: T, enable: boolean) => void`
 
@@ -147,7 +147,7 @@ boostedQueueMicrotask(foo: CallableFunction, that?: any): void
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `foo` | `CallableFunction` |  |
+| `foo` | `CallableFunction` (from typescript) |  |
 | `that?` | `any` |  |
 
 ### `Component()` \{#component\}
@@ -161,7 +161,7 @@ Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `tag` | `string` |  |
-| `attributeReactiveClassesOptional` | `(AttributeReactiveClass<T> \| undefined)[]` |  |
+| `attributeReactiveClassesOptional` | `(`[`AttributeReactiveClass`](#attributereactiveclass)`<T> \| undefined)[]` |  |
 | `template?` | `string` |  |
 
 **Returns:** `(target: T, context: ClassDecoratorContext<T>) => T`
@@ -298,10 +298,10 @@ React 19 Example
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
-| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | for attribute="false", we will do removeAttribute by default; set here for dont do this; |
+| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` (from typescript) | for attribute="false", we will do removeAttribute by default; set here for dont do this; |
 | <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
 | <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
-| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: AttributeReactiveClass<WebComponentClass>) => void` |  |
+| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: `[`AttributeReactiveClass`](#attributereactiveclass)`<`[`WebComponentClass`](#webcomponentclass)`>) => void` |  |
 
 ### `AttributeChangeHandler` \{#attributechangehandler\}
 

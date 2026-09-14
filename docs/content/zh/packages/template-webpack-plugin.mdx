@@ -38,9 +38,9 @@ processTasmCSSDiagnostics(__namedParameters: ProcessTasmCSSDiagnosticsOptions): 
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `__namedParameters` | `ProcessTasmCSSDiagnosticsOptions` |  |
+| `__namedParameters` | [`ProcessTasmCSSDiagnosticsOptions`](#processtasmcssdiagnosticsoptions) |  |
 
-**返回值:** `ResolvedTasmCSSDiagnostic[]`
+**返回值:** [`ResolvedTasmCSSDiagnostic`](#resolvedtasmcssdiagnostic)`[]`
 
 ## 类 \{#\}
 
@@ -53,9 +53,9 @@ LynxEncodePlugin
 | <a id="lynxencodeplugin-constructor"></a>`constructor` | `constructor(options?: LynxEncodePluginOptions): LynxEncodePlugin` |  |
 | <a id="lynxencodeplugin-before-emit-stage"></a>`BEFORE_EMIT_STAGE` | `number` | beforeEmit 钩子的阶段。 |
 | <a id="lynxencodeplugin-before-encode-stage"></a>`BEFORE_ENCODE_STAGE` | `number` | beforeEncode 钩子的阶段。 |
-| <a id="lynxencodeplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<LynxEncodePluginOptions>>` | `defaultOptions` 是 [`LynxEncodePlugin`](#lynxencodeplugin) 使用的默认选项。 |
+| <a id="lynxencodeplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`LynxEncodePluginOptions`](#lynxencodepluginoptions)`>>` (来自 typescript) | `defaultOptions` 是 [`LynxEncodePlugin`](#lynxencodeplugin) 使用的默认选项。 |
 | <a id="lynxencodeplugin-encode-stage"></a>`ENCODE_STAGE` | `number` | encode 钩子的阶段。 |
-| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` | 共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位 以并行编码； watch 模式下的重新构建会复用同一批已预热的 worker。 `availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner）， 因此无需自行减去一个核心。 |
+| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` (来自 tinypool) | 共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位 以并行编码； watch 模式下的重新构建会复用同一批已预热的 worker。 `availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner）， 因此无需自行减去一个核心。 |
 | <a id="lynxencodeplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
 
 ### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
@@ -65,7 +65,7 @@ LynxTemplatePlugin
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="lynxtemplateplugin-constructor"></a>`constructor` | `constructor(options?: LynxTemplatePluginOptions): LynxTemplatePlugin` |  |
-| <a id="lynxtemplateplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<LynxTemplatePluginOptions>>` | `defaultOptions` 是 [`LynxTemplatePlugin`](#lynxtemplateplugin) 使用的默认选项。 |
+| <a id="lynxtemplateplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`LynxTemplatePluginOptions`](#lynxtemplatepluginoptions)`>>` (来自 typescript) | `defaultOptions` 是 [`LynxTemplatePlugin`](#lynxtemplateplugin) 使用的默认选项。 |
 | <a id="lynxtemplateplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
 | <a id="lynxtemplateplugin-convertcsschunkstomap"></a>`convertCSSChunksToMap` | `convertCSSChunksToMap(cssChunks: (string \| { content: string })[], plugins: Plugin[], enableCSSSelector: boolean): { cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }` | 将 CSS chunk 转换为 CSS map。 |
 | <a id="lynxtemplateplugin-getasyncchunklayoutname"></a>`getAsyncChunkLayoutName` | `getAsyncChunkLayoutName(compilation: Compilation, chunkId: string \| number): string \| undefined` | 将异步 chunk id 映射为 `<lazy bundle name>/<layer>`， 用于将 lazy bundle 的中间 js/css/hmr 产物归入每个 bundle 独立的目录。 对于非 lazy chunk 返回 undefined。 |
@@ -145,11 +145,11 @@ const CSSPlugins: { parserPlugins: typeof Plugins }
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="encodeoptions-compileroptions"></a>`compilerOptions` | `Record<string, string \| boolean>` |  |
-| <a id="encodeoptions-customsections"></a>`customSections` | `Record<string, { content: string \| Record<string, unknown> \| undefined; encoding?: "JsBytecode" \| "CSS"; type?: "lazy" }>` |  |
-| <a id="encodeoptions-elementtemplate"></a>`elementTemplate?` | `Record<string, unknown>` | 供支持 element template 输出的编码器使用的 element template 数据。 |
+| <a id="encodeoptions-compileroptions"></a>`compilerOptions` | `Record<string, string \| boolean>` (来自 typescript) |  |
+| <a id="encodeoptions-customsections"></a>`customSections` | `Record<string, { content: string \| Record<string, unknown> \| undefined; encoding?: "JsBytecode" \| "CSS"; type?: "lazy" }>` (来自 typescript) |  |
+| <a id="encodeoptions-elementtemplate"></a>`elementTemplate?` | `Record<string, unknown>` (来自 typescript) | 供支持 element template 输出的编码器使用的 element template 数据。 |
 | <a id="encodeoptions-lepuscode"></a>`lepusCode` | `{ filename: string \| undefined; lepusChunk: Record<string, string>; root: string \| undefined } \| undefined` |  |
-| <a id="encodeoptions-manifest"></a>`manifest?` | `Record<string, string \| undefined>` |  |
+| <a id="encodeoptions-manifest"></a>`manifest?` | `Record<string, string \| undefined>` (来自 typescript) |  |
 
 ### `LynxEncodePluginOptions` \{#lynxencodepluginoptions\}
 
@@ -169,7 +169,7 @@ LynxTemplatePlugin 的选项
 | <a id="lynxtemplatepluginoptions-chunks"></a>`chunks?` | `"all" \| string[]` | 列出所有需要注入的入口 |
 | <a id="lynxtemplatepluginoptions-cssplugins"></a>`cssPlugins` | `Plugin[]` | 传递给 parser 的插件 |
 | <a id="lynxtemplatepluginoptions-customcssinheritancelist"></a>`customCSSInheritanceList` | `string[] \| undefined` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList` |
-| <a id="lynxtemplatepluginoptions-customsectionnaming"></a>`customSectionNaming?` | `(compilation: Compilation) => CustomSectionNaming` | 将每个 chunk 组装为自定义 section，并按此策略命名。 |
+| <a id="lynxtemplatepluginoptions-customsectionnaming"></a>`customSectionNaming?` | `(compilation: Compilation) => `[`CustomSectionNaming`](#customsectionnaming) | 将每个 chunk 组装为自定义 section，并按此策略命名。 |
 | <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside` |
 | <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear` |
 | <a id="lynxtemplatepluginoptions-defaultoverflowvisible"></a>`defaultOverflowVisible?` | `boolean` | 启用后，view 和组件的默认 overflow CSS 属性为 `'visible'`，否则为 `'hidden'`。 |
@@ -200,7 +200,7 @@ LynxTemplatePlugin 的选项
 | <a id="processtasmcssdiagnosticsoptions-context"></a>`context` | `string` | 用于解析相对源码路径的 webpack compiler context。 |
 | <a id="processtasmcssdiagnosticsoptions-cssdiagnostics"></a>`cssDiagnostics` | `unknown` | TASM 返回的原始 `css_diagnostics` 值。 |
 | <a id="processtasmcssdiagnosticsoptions-csssourcemaps"></a>`cssSourceMaps` | `string[]` | 当前 template 对应的 CSS chunk 中的 CSS source map 内容。 |
-| <a id="processtasmcssdiagnosticsoptions-emittedwarnings"></a>`emittedWarnings?` | `Set<string>` | 一个可变的 Set，用于跳过已输出过的诊断。 |
+| <a id="processtasmcssdiagnosticsoptions-emittedwarnings"></a>`emittedWarnings?` | `Set<string>` (来自 typescript) | 一个可变的 Set，用于跳过已输出过的诊断。 |
 | <a id="processtasmcssdiagnosticsoptions-fileexists"></a>`fileExists?` | `(path: string) => boolean` | 在附加映射后的源码位置之前，用于检查文件是否存在的函数。 |
 
 ### `ResolvedTasmCSSDiagnostic` \{#resolvedtasmcssdiagnostic\}
@@ -257,10 +257,10 @@ class MyPlugin {
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | 在 template 输出后调用。 |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | 获取异步 chunk 的真实名称。具有相同 `asyncChunkName` 的文件会被放入同一个 template。 |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | 在 template 输出前调用，可用于修改 template。 |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | 在编码流程开始前调用，可用于修改编码选项。 |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | 调用编码流程。 |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` (来自 @rspack/lite-tapable) | 在 template 输出后调用。 |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` (来自 @rspack/lite-tapable) | 获取异步 chunk 的真实名称。具有相同 `asyncChunkName` 的文件会被放入同一个 template。 |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: `[`EncodeOptions`](#encodeoptions)`; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` (来自 @rspack/lite-tapable) | 在 template 输出前调用，可用于修改 template。 |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` (来自 @rspack/lite-tapable) | 在编码流程开始前调用，可用于修改编码选项。 |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: `[`EncodeOptions`](#encodeoptions)`; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` (来自 @rspack/lite-tapable) | 调用编码流程。 |
 
 {/* @api-end */}

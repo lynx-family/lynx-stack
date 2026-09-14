@@ -24,11 +24,18 @@
             {
               "name": "options",
               "type": "ReactRefreshRspackPluginOptions",
+              "ref": "ReactRefreshRspackPluginOptions",
+              "refs": [
+                "ReactRefreshRspackPluginOptions"
+              ],
               "description": "The options for react refresh."
             }
           ],
           "returns": {
-            "type": "ReactRefreshRspackPlugin"
+            "type": "ReactRefreshRspackPlugin",
+            "refs": [
+              "ReactRefreshRspackPlugin"
+            ]
           }
         },
         {
@@ -49,6 +56,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the rspack compiler"
             }
           ],

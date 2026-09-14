@@ -12,8 +12,8 @@ Options that trade build output for runtime performance: chunk splitting, consol
 
 | Name | Type | Description |
 | --- | --- | --- |
-| [`buildCache`](#performance-buildcache) <span className="api-badge api-badge-beta">Beta</span> | `boolean \| BuildCache` | Enable or configure persistent build cache. |
-| [`chunkSplit`](#performance-chunksplit) <span className="api-badge api-badge-deprecated">Deprecated</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | [`Performance.chunkSplit`](#performance-chunksplit) is used to configure the chunk splitting strategy. |
+| [`buildCache`](#performance-buildcache) <span className="api-badge api-badge-beta">Beta</span> | `boolean \| `[`BuildCache`](#performance-buildcache) | Enable or configure persistent build cache. |
+| [`chunkSplit`](#performance-chunksplit) <span className="api-badge api-badge-deprecated">Deprecated</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | `Performance.chunkSplit` is used to configure the chunk splitting strategy. |
 | [`printFileSize`](#performance-printfilesize) | `boolean \| PrintFileSizeOptions` | Whether to print the file sizes after production build. |
 | [`profile`](#performance-profile) | `boolean` | Whether capture timing information in Lynx runtime integrations such as ReactLynx. |
 | [`removeConsole`](#performance-removeconsole) | `boolean \| ConsoleType[]` | Whether to remove `console.[methodName]` in production build. |
@@ -26,7 +26,7 @@ Options that trade build output for runtime performance: chunk splitting, consol
 
 ### `performance.buildCache` <span className="api-badge api-badge-beta">Beta</span> \{#performance-buildcache\}
 
-- **Type:** `boolean | BuildCache`
+- **Type:** `boolean | `[`BuildCache`](#performance-buildcache)
 - **Default:** ```ts
 false
 
@@ -62,25 +62,75 @@ export default defineConfig({
 })
 ```
 
+#### `performance.buildCache.buildDependencies` <span className="api-badge api-badge-beta">Beta</span> \{#performance-buildcache-builddependencies\}
+
+- **Type:** `string[]`
+- **Default:** `['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`; when using the Rspeedy CLI with `performance.buildCache` enabled, the loaded `lynx.config.*` file is also added.
+
+An array of files containing build dependencies.
+Rspack will use the hash of each of these files to invalidate the persistent cache.
+
+Add `postcss.config.js` to the build dependencies.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      buildDependencies: ['postcss.config.js'],
+    },
+  },
+})
+```
+
+#### `performance.buildCache.cacheDigest` <span className="api-badge api-badge-beta">Beta</span> \{#performance-buildcache-cachedigest\}
+
+- **Type:** `(string | undefined)[]`
+- **Default:** `undefined`
+
+Add additional cache digests, the previous build cache will be invalidated
+when any value in the array changes.
+
+Add `process.env.SOME_ENV` to the cache digest.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      cacheDigest: [process.env.SOME_ENV],
+    },
+  },
+})
+```
+
+#### Other options \{#performance-buildcache-other-options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="performance-buildcache-cachedirectory"></a>`cacheDirectory` <span className="api-badge api-badge-beta">Beta</span> | `string` | `'node_modules/.cache'` | The output directory of the cache files. |
+
 ### `performance.chunkSplit` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#performance-chunksplit\}
 
 - **Type:** `ChunkSplit | ChunkSplitBySize | ChunkSplitCustom`
 - **Default:** For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
 
- Use the top-level [`Config.splitChunks`](#config-splitchunks) option instead.
+ Use the top-level [`Config.splitChunks`](/rspeedy/config/splitChunks#splitchunks) option instead.
 
 :::warning Deprecated
 Deprecated.
 :::
 
-[`Performance.chunkSplit`](#performance-chunksplit) is used to configure the chunk splitting strategy.
+`Performance.chunkSplit` is used to configure the chunk splitting strategy.
 
 ### `performance.printFileSize` \{#performance-printfilesize\}
 
 - **Type:** `boolean | PrintFileSizeOptions`
 - **Default:** true
 
-[`Performance.printFileSize`](#performance-printfilesize)
+`Performance.printFileSize`
 
 See [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size) for details.
 

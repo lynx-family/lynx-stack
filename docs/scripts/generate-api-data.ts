@@ -8,13 +8,23 @@ import { fileURLToPath } from 'node:url';
 
 import {
   Application,
+  ArrayType,
+  ConditionalType,
+  IndexedAccessType,
+  IntersectionType,
   LiteralType,
+  MappedType,
+  NamedTupleMember,
+  OptionalType,
   ReferenceType,
   Reflection,
   ReflectionKind,
   ReflectionType,
+  RestType,
   TSConfigReader,
+  TupleType,
   TypeDocReader,
+  TypeOperatorType,
   UnionType,
 } from 'typedoc';
 import type {
@@ -37,6 +47,7 @@ export interface ApiMember {
   optional?: boolean;
   type: string;
   ref?: string;
+  refs?: string[];
   external?: string;
   default?: string;
   summary?: string;
@@ -47,7 +58,7 @@ export interface ApiMember {
   alpha?: boolean;
   experimental?: boolean;
   params?: ApiParam[];
-  returns?: { type: string; description?: string };
+  returns?: { type: string; refs?: string[]; description?: string };
   members?: ApiMember[];
   kind?: string;
 }
@@ -55,6 +66,9 @@ export interface ApiMember {
 export interface ApiParam {
   name: string;
   type: string;
+  ref?: string;
+  refs?: string[];
+  external?: string;
   optional?: boolean;
   description?: string;
 }
@@ -68,7 +82,7 @@ export interface ApiExport extends ApiMember {
 export interface ApiSignature {
   text: string;
   params: ApiParam[];
-  returns: { type: string; description?: string };
+  returns: { type: string; refs?: string[]; description?: string };
   summary?: string;
   remarks?: string;
   examples?: string[];
@@ -144,37 +158,100 @@ function stripUndefined(t: string): string {
   return t.replace(/\s*\|\s*undefined$/, '').replace(/^undefined\s*\|\s*/, '');
 }
 
+const LINKABLE = ReflectionKind.Interface | ReflectionKind.TypeAlias
+  | ReflectionKind.Class | ReflectionKind.Enum;
+const EXPANDABLE = ReflectionKind.Interface | ReflectionKind.TypeAlias
+  | ReflectionKind.Class;
+
+function collectRefs(type: Type | undefined, out: ReferenceType[]): void {
+  if (!type) return;
+  if (type instanceof ReferenceType) {
+    out.push(type);
+    for (const t of type.typeArguments ?? []) collectRefs(t, out);
+  } else if (type instanceof UnionType || type instanceof IntersectionType) {
+    for (const t of type.types) collectRefs(t, out);
+  } else if (type instanceof TupleType) {
+    for (const t of type.elements) collectRefs(t, out);
+  } else if (
+    type instanceof ArrayType || type instanceof OptionalType
+    || type instanceof RestType
+  ) {
+    collectRefs(type.elementType, out);
+  } else if (type instanceof NamedTupleMember) {
+    collectRefs(type.element, out);
+  } else if (type instanceof TypeOperatorType) {
+    collectRefs(type.target, out);
+  } else if (type instanceof IndexedAccessType) {
+    collectRefs(type.objectType, out);
+    collectRefs(type.indexType, out);
+  } else if (type instanceof ConditionalType) {
+    for (
+      const t of [
+        type.checkType,
+        type.extendsType,
+        type.trueType,
+        type.falseType,
+      ]
+    ) collectRefs(t, out);
+  } else if (type instanceof MappedType) {
+    collectRefs(type.parameterType, out);
+    collectRefs(type.templateType, out);
+  } else if (type instanceof ReflectionType) {
+    const d = type.declaration;
+    for (const s of d.signatures ?? []) {
+      for (const p of s.parameters ?? []) collectRefs(p.type, out);
+      collectRefs(s.type, out);
+    }
+    for (const c of d.children ?? []) collectRefs(c.type, out);
+    for (const s of d.indexSignatures ?? []) collectRefs(s.type, out);
+  }
+}
+
+function localName(
+  r: ReferenceType,
+  project: ProjectReflection,
+  kinds: ReflectionKind,
+): string | undefined {
+  const refl = r.reflection;
+  return refl && refl.parent === project && refl.kindOf(kinds)
+    ? refl.name
+    : undefined;
+}
+
+function uniqueLocalNames(
+  refs: ReferenceType[],
+  project: ProjectReflection,
+  kinds: ReflectionKind,
+): string[] {
+  return [
+    ...new Set(
+      refs.map(r => localName(r, project, kinds)).filter(n => n !== undefined),
+    ),
+  ];
+}
+
 function typeInfo(
   type: Type | undefined,
   project: ProjectReflection,
-): Pick<ApiMember, 'type' | 'ref' | 'external'> {
+): Pick<ApiMember, 'type' | 'ref' | 'refs' | 'external'> {
   if (!type) return { type: 'unknown' };
-  const text = type.toString();
-  const refs: ReferenceType[] = [];
-  type.visit({
-    reference: r => {
-      refs.push(r);
-    },
-  });
-  const inner = refs.length > 0
-    ? refs
-    : (type instanceof ReferenceType ? [type] : []);
-  const out: Pick<ApiMember, 'type' | 'ref' | 'external'> = { type: text };
-  for (const r of inner) {
-    const refl = r.reflection;
-    if (
-      refl && refl.parent === project
-      && refl.kindOf(
-        ReflectionKind.Interface | ReflectionKind.TypeAlias
-          | ReflectionKind.Class,
-      )
-    ) {
-      out.ref = refl.name;
-      break;
-    }
-    if (!refl && r.package && !r.package.startsWith('@lynx-js/')) {
-      out.external = r.package;
-    }
+  const out: Pick<ApiMember, 'type' | 'ref' | 'refs' | 'external'> = {
+    type: type.toString(),
+  };
+  const top = (type instanceof UnionType ? type.types : [type]).filter(t =>
+    t instanceof ReferenceType
+  );
+  const expandable = uniqueLocalNames(top, project, EXPANDABLE);
+  if (expandable.length === 1) out.ref = expandable[0]!;
+  const all: ReferenceType[] = [];
+  collectRefs(type, all);
+  const refs = uniqueLocalNames(all, project, LINKABLE);
+  if (refs.length > 0) out.refs = refs;
+  if (
+    type instanceof ReferenceType && !type.reflection && type.package
+    && !type.package.startsWith('@lynx-js/')
+  ) {
+    out.external = type.package;
   }
   return out;
 }
@@ -202,13 +279,21 @@ function commentFields(comment: Comment | undefined): Partial<ApiMember> {
   return out;
 }
 
-function signature(sig: SignatureReflection): ApiSignature {
-  const params: ApiParam[] = (sig.parameters ?? []).map(p => ({
-    name: p.name,
-    type: stripUndefined(p.type?.toString() ?? 'unknown'),
-    ...(p.flags.isOptional ? { optional: true } : {}),
-    ...(p.comment ? { description: partsToMd(p.comment.summary) } : {}),
-  }));
+function signature(
+  sig: SignatureReflection,
+  project: ProjectReflection,
+): ApiSignature {
+  const params: ApiParam[] = (sig.parameters ?? []).map(p => {
+    const t = typeInfo(p.type, project);
+    return {
+      name: p.name,
+      ...t,
+      type: stripUndefined(t.type),
+      ...(p.flags.isOptional ? { optional: true } : {}),
+      ...(p.comment ? { description: partsToMd(p.comment.summary) } : {}),
+    };
+  });
+  const ret = sig.type ? typeInfo(sig.type, project) : undefined;
   const returnsDesc = tag(sig.comment, '@returns');
   const text = `${sig.parent?.name ?? sig.name}(${
     params.map(p => `${p.name}${p.optional ? '?' : ''}: ${p.type}`).join(', ')
@@ -219,6 +304,7 @@ function signature(sig: SignatureReflection): ApiSignature {
     params,
     returns: {
       type: sig.type?.toString() ?? 'void',
+      ...(ret?.refs ? { refs: ret.refs } : {}),
       ...(returnsDesc ? { description: returnsDesc } : {}),
     },
     ...(c.summary ? { summary: c.summary } : {}),
@@ -245,7 +331,7 @@ function member(
     r.kindOf(ReflectionKind.Method | ReflectionKind.Constructor)
     && r.signatures?.[0]
   ) {
-    const s = signature(r.signatures[0]);
+    const s = signature(r.signatures[0], project);
     m.type = s.text;
     m.params = s.params;
     m.returns = s.returns;
@@ -279,8 +365,8 @@ function exportOf(
   if (fnSignatures.length > 0 && (r.signatures?.length ?? 0) === 0) {
     e.kind = 'function';
     const signatures: ApiSignature[] = fnSignatures.map(s => ({
-      ...signature(s),
-      text: signature(s).text.replace(/^__type/, r.name),
+      ...signature(s, project),
+      text: signature(s, project).text.replace(/^__type/, r.name),
     }));
     e.signatures = signatures;
     const first = signatures[0]!;
@@ -290,7 +376,7 @@ function exportOf(
     e.type = first.text;
   }
   if (r.signatures && r.signatures.length > 0) {
-    e.signatures = r.signatures.map(s => signature(s));
+    e.signatures = r.signatures.map(s => signature(s, project));
     const first = e.signatures[0]!;
     if (!e.summary && first.summary) e.summary = first.summary;
     if (!e.remarks && first.remarks) e.remarks = first.remarks;
@@ -348,8 +434,13 @@ async function generate(entry: PackageEntry): Promise<ApiData | null> {
   }
   const tsconfig = join(dir, entry.tsconfig ?? 'tsconfig.json');
   const base = existsSync(tsconfig) ? tsconfig : join(ROOT, 'tsconfig.json');
-  const project = await convert(entries, base)
-    ?? await convert(entries, entryOnlyTsconfig(entry.id, base, entries));
+  const includeExternals = entry.includeExternals ?? false;
+  const project = await convert(entries, base, includeExternals)
+    ?? await convert(
+      entries,
+      entryOnlyTsconfig(entry.id, base, entries),
+      includeExternals,
+    );
   if (!project) {
     console.warn(`  skip ${entry.id}: convert failed`);
     return null;
@@ -409,13 +500,14 @@ function entryOnlyTsconfig(
 async function convert(
   entries: string[],
   tsconfig: string,
+  includeExternals: boolean,
 ): Promise<ProjectReflection | undefined> {
   const app = await Application.bootstrapWithPlugins({
     entryPoints: entries,
     tsconfig,
     excludePrivate: true,
     excludeProtected: true,
-    excludeExternals: true,
+    excludeExternals: !includeExternals,
     excludeInternal: true,
     disableSources: true,
     logLevel: 'Warn',

@@ -25,6 +25,9 @@
           "optional": true,
           "type": "CustomizedSchemaFn",
           "ref": "CustomizedSchemaFn",
+          "refs": [
+            "CustomizedSchemaFn"
+          ],
           "summary": "Customize the generated schema.",
           "examples": [
             "```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return `lynx://${url}?dev=1`\n      },\n    }),\n  ],\n})\n```",
@@ -51,6 +54,10 @@
             {
               "name": "options",
               "type": "PluginQRCodeOptions",
+              "ref": "PluginQRCodeOptions",
+              "refs": [
+                "PluginQRCodeOptions"
+              ],
               "optional": true
             }
           ],

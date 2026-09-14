@@ -33,6 +33,8 @@ export default defineConfig({
 
 {/* @api ApiOptions package="react-alias-rsbuild-plugin" type="Options" */}
 
+<a id="options"></a>
+
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | <a id="elementtemplate"></a>`elementTemplate` | `boolean` |  |  |
@@ -58,7 +60,7 @@ createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]):
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `rspack` | `Rspack` |  |
+| `rspack` | `Rspack` (来自 [@rspack/core](https://rspack.rs/config/)) |  |
 | `directory` | `string` |  |
 | `conditionNames` | `string[]` |  |
 
@@ -74,7 +76,7 @@ pluginReactAlias(options: Options): RsbuildPlugin
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `Options` |  |
+| `options` | [`Options`](#options) |  |
 
 **返回值:** `RsbuildPlugin`
 

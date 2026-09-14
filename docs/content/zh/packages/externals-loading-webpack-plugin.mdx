@@ -76,7 +76,7 @@ export default {
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="externalsloadingpluginoptions-backgroundlayer"></a>`backgroundLayer` | `string` | 后台 layer 的名称。 |
-| <a id="externalsloadingpluginoptions-externals"></a>`externals` | `Record<string, ExternalValue>` | 指定要加载的 externals。externals 应为 Lynx Bundle。 |
+| <a id="externalsloadingpluginoptions-externals"></a>`externals` | `Record<string, `[`ExternalValue`](#externalvalue)`>` (来自 typescript) | 指定要加载的 externals。externals 应为 Lynx Bundle。 |
 | <a id="externalsloadingpluginoptions-globalobject"></a>`globalObject?` | `"lynx" \| "globalThis"` | 该选项指定用于挂载库的全局对象。 在 Lynx 中，库默认会挂载到 `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]`。 如果启用了共享 JS 上下文（share js context），并希望通过挂载到全局对象来复用该库，可以将该选项设置为 `'globalThis'`。 |
 | <a id="externalsloadingpluginoptions-mainthreadlayer"></a>`mainThreadLayer` | `string` | 主线程 layer 的名称。 |
 | <a id="externalsloadingpluginoptions-retries"></a>`retries?` | `number` | 获取外部 bundle 超时（`response.code === -2`）时的额外重试次数。 |
@@ -89,10 +89,10 @@ externals 的值项。
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="externalvalue-async"></a>`async?` | `boolean` | 是否异步加载资源。 |
-| <a id="externalvalue-background"></a>`background?` | `LayerOptions` | 后台 layer 的选项。 |
+| <a id="externalvalue-background"></a>`background?` | [`LayerOptions`](#layeroptions) | 后台 layer 的选项。 |
 | <a id="externalvalue-bundlepath"></a>`bundlePath?` | `string` | 相对于运行时 public path 解析的 bundle 路径。 当 bundle 需要跟随当前生效的 `publicPath` 时，优先使用该选项而非 `url`。运行时会通过 `publicPath + bundlePath` 加载， 从而使外部 bundle 的解析与当前构建 产物保持一致，而无需在生成的运行时代码中硬编码绝对 URL。 |
 | <a id="externalvalue-libraryname"></a>`libraryName?` | `string \| string[]` | 库的名称。与 https://webpack.js.org/configuration/externals/#string 相同。 默认情况下，库名称与 externals 的 key 相同。例如： 配置 `ExternalsLoadingPlugin({ externals: { lodash: { url: '……', } } })` 会生成如下 webpack externals 配置： ```js externals: {   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash', } ``` 如果一个外部 bundle 包含多个模块，应设置相同的库名称，以确保只加载一次。例如： ```js ExternalsLoadingPlugin({   externals: {     lodash: {       libraryName: 'Lodash',       url: '……',     },     'lodash-es': {       libraryName: 'Lodash',       url: '……',     }   } }) ``` 会生成如下 webpack externals 配置： ```js externals: {   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',   'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash', } ``` 可以传入数组来指定 external 的子路径。与 https://webpack.js.org/configuration/externals/#string-1 相同。例如： ```js ExternalsLoadingPlugin({   externals: {     preact: {       libraryName: ['ReactLynx', 'Preact'],       url: '……',     },   } }) ``` 会生成如下 webpack externals 配置： ```js externals: {   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact', } ``` |
-| <a id="externalvalue-mainthread"></a>`mainThread?` | `LayerOptions` | 主线程 layer 的选项。 |
+| <a id="externalvalue-mainthread"></a>`mainThread?` | [`LayerOptions`](#layeroptions) | 主线程 layer 的选项。 |
 | <a id="externalvalue-retries"></a>`retries?` | `number` | 获取外部 bundle 超时（`response.code === -2`）时的额外重试次数。 |
 | <a id="externalvalue-timeout"></a>`timeout?` | `number` | 等待时间，单位为毫秒。 |
 | <a id="externalvalue-url"></a>`url?` | `string` | 运行时直接获取的最终 bundle URL。 当外部 bundle 托管在当前构建 产物之外（例如 CDN 上）时使用。如果同时提供了 `url` 和 `bundlePath`， 则优先使用 `url`，因为它已经是完全解析的地址。 |

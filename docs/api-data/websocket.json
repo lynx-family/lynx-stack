@@ -68,30 +68,45 @@
             }
           ],
           "returns": {
-            "type": "WebSocket"
+            "type": "WebSocket",
+            "refs": [
+              "WebSocket"
+            ]
           }
         },
         {
           "name": "CLOSED",
           "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
           "summary": "`@lynx-js/websocket#ReadyState.CLOSED`",
           "kind": "property"
         },
         {
           "name": "CLOSING",
           "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
           "summary": "`@lynx-js/websocket#ReadyState.CLOSING`",
           "kind": "property"
         },
         {
           "name": "CONNECTING",
           "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
           "summary": "`@lynx-js/websocket#ReadyState.CONNECTING`",
           "kind": "property"
         },
         {
           "name": "OPEN",
           "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
           "summary": "`@lynx-js/websocket#ReadyState.OPEN`",
           "kind": "property"
         },
@@ -150,6 +165,9 @@
             {
               "name": "callback",
               "type": "(event: EventMap[T]) => void",
+              "refs": [
+                "EventMap"
+              ],
               "optional": true,
               "description": "The function that receives a notification. See `@lynx-js/websocket#EventMap` for details of events."
             }
@@ -205,6 +223,9 @@
             {
               "name": "callback",
               "type": "(event: EventMap[T]) => void",
+              "refs": [
+                "EventMap"
+              ],
               "description": "The function to remove as an event listener."
             }
           ],

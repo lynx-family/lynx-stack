@@ -440,7 +440,10 @@
             }
           ],
           "returns": {
-            "type": "LynxTestingEnv"
+            "type": "LynxTestingEnv",
+            "refs": [
+              "LynxTestingEnv"
+            ]
           }
         },
         {
@@ -606,6 +609,9 @@
           "name": "value",
           "optional": true,
           "type": "{ max?: number; min?: number; now?: number; text?: Matcher }",
+          "refs": [
+            "Matcher"
+          ],
           "kind": "property"
         }
       ]
@@ -712,11 +718,18 @@
           "params": [
             {
               "name": "existingConfig",
-              "type": "Config"
+              "type": "Config",
+              "ref": "Config",
+              "refs": [
+                "Config"
+              ]
             }
           ],
           "returns": {
-            "type": "Partial<Config>"
+            "type": "Partial<Config>",
+            "refs": [
+              "Config"
+            ]
           }
         }
       ],
@@ -777,6 +790,9 @@
           "optional": true,
           "type": "NormalizerFn",
           "ref": "NormalizerFn",
+          "refs": [
+            "NormalizerFn"
+          ],
           "kind": "property"
         },
         {
@@ -811,6 +827,9 @@
           "optional": true,
           "type": "NormalizerFn",
           "ref": "NormalizerFn",
+          "refs": [
+            "NormalizerFn"
+          ],
           "kind": "property"
         },
         {
@@ -971,6 +990,9 @@
           "optional": true,
           "type": "NormalizerFn",
           "ref": "NormalizerFn",
+          "refs": [
+            "NormalizerFn"
+          ],
           "kind": "property"
         },
         {
@@ -1004,6 +1026,9 @@
           "name": "queryArgs",
           "type": "QueryArgs",
           "ref": "QueryArgs",
+          "refs": [
+            "QueryArgs"
+          ],
           "kind": "property"
         },
         {
@@ -1080,22 +1105,38 @@
     {
       "name": "AllByAttribute",
       "kind": "typealias",
-      "type": "(attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement[]"
+      "type": "(attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement[]",
+      "refs": [
+        "Matcher",
+        "MatcherOptions"
+      ]
     },
     {
       "name": "AllByBoundAttribute",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions) => T[]"
+      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions) => T[]",
+      "refs": [
+        "Matcher",
+        "MatcherOptions"
+      ]
     },
     {
       "name": "AllByRole",
       "kind": "typealias",
-      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T[]"
+      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T[]",
+      "refs": [
+        "ByRoleMatcher",
+        "ByRoleOptions"
+      ]
     },
     {
       "name": "AllByText",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T[]"
+      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T[]",
+      "refs": [
+        "Matcher",
+        "SelectorMatcherOptions"
+      ]
     },
     {
       "name": "BoundFunction",
@@ -1105,12 +1146,22 @@
     {
       "name": "BoundFunctions",
       "kind": "typealias",
-      "type": "Q extends typeof queries ? { findAllByAltText: any; findAllByDisplayValue: any; findAllByLabelText: any; findAllByPlaceholderText: any; findAllByRole: any; findAllByTestId: any; findAllByText: any; findAllByTitle: any; findByAltText: any; findByDisplayValue: any; findByLabelText: any; findByPlaceholderText: any; findByRole: any; findByTestId: any; findByText: any; findByTitle: any; getAllByAltText: any; getAllByDisplayValue: any; getAllByLabelText: any; getAllByPlaceholderText: any; getAllByRole: any; getAllByTestId: any; getAllByText: any; getAllByTitle: any; getByAltText: any; getByDisplayValue: any; getByLabelText: any; getByPlaceholderText: any; getByRole: any; getByTestId: any; getByText: any; getByTitle: any; queryAllByAltText: any; queryAllByDisplayValue: any; queryAllByLabelText: any; queryAllByPlaceholderText: any; queryAllByRole: any; queryAllByTestId: any; queryAllByText: any; queryAllByTitle: any; queryByAltText: any; queryByDisplayValue: any; queryByLabelText: any; queryByPlaceholderText: any; queryByRole: any; queryByTestId: any; queryByText: any; queryByTitle: any } & { [P in keyof Q]: BoundFunction<Q[P]> } : { [P in keyof Q]: BoundFunction<Q[P]> }"
+      "type": "Q extends typeof queries ? { findAllByAltText: any; findAllByDisplayValue: any; findAllByLabelText: any; findAllByPlaceholderText: any; findAllByRole: any; findAllByTestId: any; findAllByText: any; findAllByTitle: any; findByAltText: any; findByDisplayValue: any; findByLabelText: any; findByPlaceholderText: any; findByRole: any; findByTestId: any; findByText: any; findByTitle: any; getAllByAltText: any; getAllByDisplayValue: any; getAllByLabelText: any; getAllByPlaceholderText: any; getAllByRole: any; getAllByTestId: any; getAllByText: any; getAllByTitle: any; getByAltText: any; getByDisplayValue: any; getByLabelText: any; getByPlaceholderText: any; getByRole: any; getByTestId: any; getByText: any; getByTitle: any; queryAllByAltText: any; queryAllByDisplayValue: any; queryAllByLabelText: any; queryAllByPlaceholderText: any; queryAllByRole: any; queryAllByTestId: any; queryAllByText: any; queryAllByTitle: any; queryByAltText: any; queryByDisplayValue: any; queryByLabelText: any; queryByPlaceholderText: any; queryByRole: any; queryByTestId: any; queryByText: any; queryByTitle: any } & { [P in keyof Q]: BoundFunction<Q[P]> } : { [P in keyof Q]: BoundFunction<Q[P]> }",
+      "refs": [
+        "BoundFunction"
+      ]
     },
     {
       "name": "BuiltQueryMethods",
       "kind": "typealias",
-      "type": "[QueryBy<Arguments>, GetAllBy<Arguments>, GetBy<Arguments>, FindAllBy<Arguments>, FindBy<Arguments>]"
+      "type": "[QueryBy<Arguments>, GetAllBy<Arguments>, GetBy<Arguments>, FindAllBy<Arguments>, FindBy<Arguments>]",
+      "refs": [
+        "QueryBy",
+        "GetAllBy",
+        "GetBy",
+        "FindAllBy",
+        "FindBy"
+      ]
     },
     {
       "name": "ByRoleMatcher",
@@ -1181,43 +1232,81 @@
       "name": "FindAllBy",
       "kind": "typealias",
       "type": "QueryMethod<[Arguments[0], Arguments[1]?, waitForOptions?], Promise<HTMLElement[]>>",
-      "ref": "QueryMethod"
+      "ref": "QueryMethod",
+      "refs": [
+        "QueryMethod",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindAllByBoundAttribute",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>"
+      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>",
+      "refs": [
+        "Matcher",
+        "MatcherOptions",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindAllByRole",
       "kind": "typealias",
-      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>"
+      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>",
+      "refs": [
+        "ByRoleMatcher",
+        "ByRoleOptions",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindAllByText",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>"
+      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>",
+      "refs": [
+        "Matcher",
+        "SelectorMatcherOptions",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindBy",
       "kind": "typealias",
       "type": "QueryMethod<[Arguments[0], Arguments[1]?, waitForOptions?], Promise<HTMLElement>>",
-      "ref": "QueryMethod"
+      "ref": "QueryMethod",
+      "refs": [
+        "QueryMethod",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindByBoundAttribute",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>"
+      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>",
+      "refs": [
+        "Matcher",
+        "MatcherOptions",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindByRole",
       "kind": "typealias",
-      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T>"
+      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T>",
+      "refs": [
+        "ByRoleMatcher",
+        "ByRoleOptions",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FindByText",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>"
+      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>",
+      "refs": [
+        "Matcher",
+        "SelectorMatcherOptions",
+        "waitForOptions"
+      ]
     },
     {
       "name": "FireFunction",
@@ -1227,34 +1316,55 @@
     {
       "name": "FireObject",
       "kind": "typealias",
-      "type": "{ [K in EventType]: FireObject_2[EventType_2] }"
+      "type": "{ [K in EventType]: FireObject_2[EventType_2] }",
+      "refs": [
+        "EventType"
+      ]
     },
     {
       "name": "GetAllBy",
       "kind": "typealias",
       "type": "QueryMethod<Arguments, HTMLElement[]>",
-      "ref": "QueryMethod"
+      "ref": "QueryMethod",
+      "refs": [
+        "QueryMethod"
+      ]
     },
     {
       "name": "GetBy",
       "kind": "typealias",
       "type": "QueryMethod<Arguments, HTMLElement>",
-      "ref": "QueryMethod"
+      "ref": "QueryMethod",
+      "refs": [
+        "QueryMethod"
+      ]
     },
     {
       "name": "GetByBoundAttribute",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions) => T"
+      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions) => T",
+      "refs": [
+        "Matcher",
+        "MatcherOptions"
+      ]
     },
     {
       "name": "GetByRole",
       "kind": "typealias",
-      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T"
+      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T",
+      "refs": [
+        "ByRoleMatcher",
+        "ByRoleOptions"
+      ]
     },
     {
       "name": "GetByText",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T"
+      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T",
+      "refs": [
+        "Matcher",
+        "SelectorMatcherOptions"
+      ]
     },
     {
       "name": "GetErrorFunction",
@@ -1264,12 +1374,20 @@
     {
       "name": "Match",
       "kind": "typealias",
-      "type": "(textToMatch: string, node: HTMLElement | null, matcher: Matcher, options?: MatcherOptions) => boolean"
+      "type": "(textToMatch: string, node: HTMLElement | null, matcher: Matcher, options?: MatcherOptions) => boolean",
+      "refs": [
+        "Matcher",
+        "MatcherOptions"
+      ]
     },
     {
       "name": "Matcher",
       "kind": "typealias",
-      "type": "MatcherFunction | RegExp | number | string"
+      "type": "MatcherFunction | RegExp | number | string",
+      "ref": "MatcherFunction",
+      "refs": [
+        "MatcherFunction"
+      ]
     },
     {
       "name": "MatcherFunction",
@@ -1312,33 +1430,55 @@
     {
       "name": "QueryArgs",
       "kind": "typealias",
-      "type": "[string, QueryOptions?]"
+      "type": "[string, QueryOptions?]",
+      "refs": [
+        "QueryOptions"
+      ]
     },
     {
       "name": "QueryBy",
       "kind": "typealias",
       "type": "QueryMethod<Arguments, HTMLElement | null>",
-      "ref": "QueryMethod"
+      "ref": "QueryMethod",
+      "refs": [
+        "QueryMethod"
+      ]
     },
     {
       "name": "QueryByAttribute",
       "kind": "typealias",
-      "type": "(attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement | null"
+      "type": "(attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement | null",
+      "refs": [
+        "Matcher",
+        "MatcherOptions"
+      ]
     },
     {
       "name": "QueryByBoundAttribute",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions) => T | null"
+      "type": "(container: HTMLElement, id: Matcher, options?: MatcherOptions) => T | null",
+      "refs": [
+        "Matcher",
+        "MatcherOptions"
+      ]
     },
     {
       "name": "QueryByRole",
       "kind": "typealias",
-      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T | null"
+      "type": "(container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T | null",
+      "refs": [
+        "ByRoleMatcher",
+        "ByRoleOptions"
+      ]
     },
     {
       "name": "QueryByText",
       "kind": "typealias",
-      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T | null"
+      "type": "(container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T | null",
+      "refs": [
+        "Matcher",
+        "SelectorMatcherOptions"
+      ]
     },
     {
       "name": "QueryMethod",
@@ -1350,12 +1490,18 @@
       "name": "RenderResult",
       "kind": "typealias",
       "type": "{ asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => boolean } & { [P in keyof Q]: BoundFunction<Q[P]> }",
+      "refs": [
+        "BoundFunction"
+      ],
       "summary": "The result of [`render`](api:render)"
     },
     {
       "name": "Screen",
       "kind": "typealias",
-      "type": "BoundFunctions<Q> & { debug: (element?: (Element | HTMLDocument)[] | Element | HTMLDocument, maxLength?: number, options?: prettyFormat) => void; logTestingPlaygroundURL: (element?: Element | HTMLDocument) => string }"
+      "type": "BoundFunctions<Q> & { debug: (element?: (Element | HTMLDocument)[] | Element | HTMLDocument, maxLength?: number, options?: prettyFormat) => void; logTestingPlaygroundURL: (element?: Element | HTMLDocument) => string }",
+      "refs": [
+        "BoundFunctions"
+      ]
     },
     {
       "name": "Variant",
@@ -1378,12 +1524,20 @@
     {
       "name": "createEvent",
       "kind": "variable",
-      "type": "CreateObject & CreateFunction"
+      "type": "CreateObject & CreateFunction",
+      "refs": [
+        "CreateObject",
+        "CreateFunction"
+      ]
     },
     {
       "name": "fireEvent",
       "kind": "variable",
-      "type": "FireFunction & FireObject"
+      "type": "FireFunction & FireObject",
+      "refs": [
+        "FireFunction",
+        "FireObject"
+      ]
     },
     {
       "name": "prettyFormat",
@@ -1394,19 +1548,28 @@
       "name": "queryAllByAttribute",
       "kind": "variable",
       "type": "AllByAttribute",
-      "ref": "AllByAttribute"
+      "ref": "AllByAttribute",
+      "refs": [
+        "AllByAttribute"
+      ]
     },
     {
       "name": "queryByAttribute",
       "kind": "variable",
       "type": "QueryByAttribute",
-      "ref": "QueryByAttribute"
+      "ref": "QueryByAttribute",
+      "refs": [
+        "QueryByAttribute"
+      ]
     },
     {
       "name": "screen",
       "kind": "variable",
       "type": "Screen",
-      "ref": "Screen"
+      "ref": "Screen",
+      "refs": [
+        "Screen"
+      ]
     },
     {
       "name": "within",
@@ -1423,19 +1586,34 @@
           "params": [
             {
               "name": "queryAllBy",
-              "type": "GetAllBy<Arguments>"
+              "type": "GetAllBy<Arguments>",
+              "ref": "GetAllBy",
+              "refs": [
+                "GetAllBy"
+              ]
             },
             {
               "name": "getMultipleError",
-              "type": "GetErrorFunction<Arguments>"
+              "type": "GetErrorFunction<Arguments>",
+              "ref": "GetErrorFunction",
+              "refs": [
+                "GetErrorFunction"
+              ]
             },
             {
               "name": "getMissingError",
-              "type": "GetErrorFunction<Arguments>"
+              "type": "GetErrorFunction<Arguments>",
+              "ref": "GetErrorFunction",
+              "refs": [
+                "GetErrorFunction"
+              ]
             }
           ],
           "returns": {
-            "type": "BuiltQueryMethods<Arguments>"
+            "type": "BuiltQueryMethods<Arguments>",
+            "refs": [
+              "BuiltQueryMethods"
+            ]
           }
         }
       ]
@@ -1466,7 +1644,8 @@
           "params": [
             {
               "name": "element",
-              "type": "Element"
+              "type": "Element",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -1485,7 +1664,12 @@
           "params": [
             {
               "name": "configDelta",
-              "type": "ConfigFn | Partial<Config>"
+              "type": "ConfigFn | Partial<Config>",
+              "ref": "ConfigFn",
+              "refs": [
+                "ConfigFn",
+                "Config"
+              ]
             }
           ],
           "returns": {
@@ -1504,7 +1688,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1523,7 +1712,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1542,7 +1736,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1561,7 +1760,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1580,7 +1784,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "ByRoleOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1599,7 +1807,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1618,7 +1831,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1637,7 +1855,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1656,7 +1879,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1675,7 +1903,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1694,7 +1927,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1713,7 +1951,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1732,7 +1975,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "ByRoleOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1751,7 +1998,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1770,7 +2022,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1789,7 +2046,12 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions",
+                "waitForOptions"
+              ]
             }
           ],
           "returns": {
@@ -1808,7 +2070,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1827,7 +2093,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1846,7 +2116,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1865,7 +2139,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1884,7 +2162,10 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]"
+              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]",
+              "refs": [
+                "ByRoleOptions"
+              ]
             }
           ],
           "returns": {
@@ -1903,7 +2184,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1922,7 +2207,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1941,7 +2230,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1960,7 +2253,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1979,7 +2276,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -1998,7 +2299,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2017,7 +2322,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2036,7 +2345,10 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]"
+              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]",
+              "refs": [
+                "ByRoleOptions"
+              ]
             }
           ],
           "returns": {
@@ -2055,7 +2367,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2074,7 +2390,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2093,7 +2413,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2111,7 +2435,10 @@
           "text": "getConfig(): Config",
           "params": [],
           "returns": {
-            "type": "Config"
+            "type": "Config",
+            "refs": [
+              "Config"
+            ]
           }
         }
       ]
@@ -2127,11 +2454,18 @@
             {
               "name": "options",
               "type": "DefaultNormalizerOptions",
+              "ref": "DefaultNormalizerOptions",
+              "refs": [
+                "DefaultNormalizerOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "NormalizerFn"
+            "type": "NormalizerFn",
+            "refs": [
+              "NormalizerFn"
+            ]
           }
         }
       ]
@@ -2150,7 +2484,8 @@
             },
             {
               "name": "container",
-              "type": "HTMLElement"
+              "type": "HTMLElement",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -2169,7 +2504,8 @@
           "params": [
             {
               "name": "node",
-              "type": "HTMLElement"
+              "type": "HTMLElement",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -2188,7 +2524,8 @@
           "params": [
             {
               "name": "element",
-              "type": "HTMLElement"
+              "type": "HTMLElement",
+              "external": "typescript"
             },
             {
               "name": "queriesToBind",
@@ -2197,7 +2534,10 @@
             }
           ],
           "returns": {
-            "type": "BoundFunctions<T>"
+            "type": "BoundFunctions<T>",
+            "refs": [
+              "BoundFunctions"
+            ]
           }
         }
       ]
@@ -2212,7 +2552,8 @@
           "params": [
             {
               "name": "container",
-              "type": "HTMLElement"
+              "type": "HTMLElement",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -2231,21 +2572,33 @@
           "params": [
             {
               "name": "element",
-              "type": "HTMLElement"
+              "type": "HTMLElement",
+              "external": "typescript"
             },
             {
               "name": "variant",
               "type": "Variant",
+              "ref": "Variant",
+              "refs": [
+                "Variant"
+              ],
               "optional": true
             },
             {
               "name": "method",
               "type": "Method",
+              "ref": "Method",
+              "refs": [
+                "Method"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "Suggestion | undefined"
+            "type": "Suggestion | undefined",
+            "refs": [
+              "Suggestion"
+            ]
           }
         }
       ]
@@ -2260,7 +2613,8 @@
           "params": [
             {
               "name": "element",
-              "type": "Element"
+              "type": "Element",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -2292,6 +2646,10 @@
             {
               "name": "options",
               "type": "PrettyDOMOptions",
+              "ref": "PrettyDOMOptions",
+              "refs": [
+                "PrettyDOMOptions"
+              ],
               "optional": true
             }
           ],
@@ -2311,11 +2669,16 @@
           "params": [
             {
               "name": "container",
-              "type": "HTMLElement"
+              "type": "HTMLElement",
+              "external": "typescript"
             },
             {
               "name": "options",
               "type": "LogRolesOptions",
+              "ref": "LogRolesOptions",
+              "refs": [
+                "LogRolesOptions"
+              ],
               "optional": true
             }
           ],
@@ -2346,6 +2709,10 @@
             {
               "name": "options",
               "type": "PrettyDOMOptions",
+              "ref": "PrettyDOMOptions",
+              "refs": [
+                "PrettyDOMOptions"
+              ],
               "optional": true
             }
           ],
@@ -2365,7 +2732,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2384,7 +2755,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2403,7 +2778,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2422,7 +2801,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2441,7 +2824,10 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]"
+              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]",
+              "refs": [
+                "ByRoleOptions"
+              ]
             }
           ],
           "returns": {
@@ -2460,7 +2846,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2479,7 +2869,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2498,7 +2892,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2517,7 +2915,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2536,7 +2938,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2555,7 +2961,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2574,7 +2984,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2593,7 +3007,10 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]"
+              "type": "[container: HTMLElement, role: any, options?: ByRoleOptions]",
+              "refs": [
+                "ByRoleOptions"
+              ]
             }
           ],
           "returns": {
@@ -2612,7 +3029,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2631,7 +3052,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]",
+              "refs": [
+                "Matcher",
+                "SelectorMatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2650,7 +3075,11 @@
           "params": [
             {
               "name": "args",
-              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]"
+              "type": "[container: HTMLElement, id: Matcher, options?: MatcherOptions]",
+              "refs": [
+                "Matcher",
+                "MatcherOptions"
+              ]
             }
           ],
           "returns": {
@@ -2674,11 +3103,18 @@
             {
               "name": "options",
               "type": "RenderOptions<Q>",
+              "ref": "RenderOptions",
+              "refs": [
+                "RenderOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "RenderResult<Q>"
+            "type": "RenderResult<Q>",
+            "refs": [
+              "RenderResult"
+            ]
           },
           "summary": "Render into the page. It should be used with cleanup.",
           "examples": [
@@ -2706,11 +3142,18 @@
             {
               "name": "options",
               "type": "RenderHookOptions<Props>",
+              "ref": "RenderHookOptions",
+              "refs": [
+                "RenderHookOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "RenderHookResult<Result, Props>"
+            "type": "RenderHookResult<Result, Props>",
+            "refs": [
+              "RenderHookResult"
+            ]
           },
           "summary": "Allows you to render a hook within a test React component without having to\ncreate that component yourself.",
           "examples": [
@@ -2738,6 +3181,10 @@
             {
               "name": "options",
               "type": "waitForOptions",
+              "ref": "waitForOptions",
+              "refs": [
+                "waitForOptions"
+              ],
               "optional": true
             }
           ],
@@ -2762,6 +3209,10 @@
             {
               "name": "options",
               "type": "waitForOptions",
+              "ref": "waitForOptions",
+              "refs": [
+                "waitForOptions"
+              ],
               "optional": true
             }
           ],

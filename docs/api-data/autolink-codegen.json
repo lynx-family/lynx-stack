@@ -50,6 +50,9 @@
         {
           "name": "targets",
           "type": "LynxtronRuntimeTarget[]",
+          "refs": [
+            "LynxtronRuntimeTarget"
+          ],
           "kind": "property"
         }
       ]
@@ -102,12 +105,18 @@
         {
           "name": "params",
           "type": "NativeModuleParam[]",
+          "refs": [
+            "NativeModuleParam"
+          ],
           "kind": "property"
         },
         {
           "name": "returnType",
           "type": "NativeModuleType",
           "ref": "NativeModuleType",
+          "refs": [
+            "NativeModuleType"
+          ],
           "kind": "property"
         },
         {
@@ -138,6 +147,9 @@
           "name": "type",
           "type": "NativeModuleType",
           "ref": "NativeModuleType",
+          "refs": [
+            "NativeModuleType"
+          ],
           "kind": "property"
         }
       ]
@@ -155,6 +167,9 @@
         {
           "name": "properties",
           "type": "NativeModuleObjectProperty[]",
+          "refs": [
+            "NativeModuleObjectProperty"
+          ],
           "kind": "property"
         }
       ]
@@ -185,6 +200,9 @@
           "name": "type",
           "type": "NativeModuleType",
           "ref": "NativeModuleType",
+          "refs": [
+            "NativeModuleType"
+          ],
           "kind": "property"
         }
       ]
@@ -198,11 +216,17 @@
           "name": "interfaces",
           "optional": true,
           "type": "NativeModuleObjectSpec[]",
+          "refs": [
+            "NativeModuleObjectSpec"
+          ],
           "kind": "property"
         },
         {
           "name": "methods",
           "type": "NativeModuleMethod[]",
+          "refs": [
+            "NativeModuleMethod"
+          ],
           "kind": "property"
         },
         {
@@ -227,6 +251,9 @@
           "name": "name",
           "type": "NativeModuleTypeName",
           "ref": "NativeModuleTypeName",
+          "refs": [
+            "NativeModuleTypeName"
+          ],
           "kind": "property"
         },
         {
@@ -286,11 +313,18 @@
           "params": [
             {
               "name": "options",
-              "type": "CodegenOptions"
+              "type": "CodegenOptions",
+              "ref": "CodegenOptions",
+              "refs": [
+                "CodegenOptions"
+              ]
             }
           ],
           "returns": {
-            "type": "GeneratedFile[]"
+            "type": "GeneratedFile[]",
+            "refs": [
+              "GeneratedFile"
+            ]
           },
           "summary": "Builds the generated JS facade and platform spec file contents for a library package."
         }
@@ -315,7 +349,10 @@
             }
           ],
           "returns": {
-            "type": "NativeModuleSpec[]"
+            "type": "NativeModuleSpec[]",
+            "refs": [
+              "NativeModuleSpec"
+            ]
           },
           "summary": "Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source."
         }
@@ -332,11 +369,18 @@
           "params": [
             {
               "name": "options",
-              "type": "CodegenOptions"
+              "type": "CodegenOptions",
+              "ref": "CodegenOptions",
+              "refs": [
+                "CodegenOptions"
+              ]
             }
           ],
           "returns": {
-            "type": "GeneratedFile[]"
+            "type": "GeneratedFile[]",
+            "refs": [
+              "GeneratedFile"
+            ]
           },
           "summary": "Writes generated files to disk and returns the generated file descriptors."
         }

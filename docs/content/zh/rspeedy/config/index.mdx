@@ -26,17 +26,17 @@ export default defineConfig({
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
-| [`dev`](#dev) | `Dev` | [`Dev`](#dev) 选项用于控制与开发相关的行为，包括 HMR、DevServer 等。 |
-| [`environments`](#environments) | `Record<string, EnvironmentConfig>` | [`Config.environments`](#config-environments) 选项用于设置输出的 environment。 |
-| [`mode`](#mode) | `"production" \| "development" \| "none"` | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 |
-| [`output`](#output) | `Output` | [`Output`](#output) 选项用于设置 bundle 和静态资源的输出方式与输出位置。 |
-| [`performance`](#performance) | `Performance` | [`Performance`](#performance) 选项用于优化构建时和运行时的性能。 |
-| [`plugins`](#plugins) | `RsbuildPlugins` | `plugins` 选项用于以多种方式自定义构建流程。 |
-| [`resolve`](#resolve) | `Resolve` | [`Resolve`](#resolve) 选项用于控制 Rspack 的模块解析行为。 |
-| [`server`](#server) | `Server` | [`Server`](#server) 选项用于修改开发服务器的行为。 |
-| [`source`](#source) | `Source` | [`Source`](#source) 选项用于修改源文件相关的行为。 |
-| [`splitChunks`](#splitchunks) | `false \| SplitChunksConfig` | 配置 chunk 拆分。 |
-| [`tools`](#tools) | `Tools` | [`Tools`](#tools) 选项用于修改各类构建工具的行为。 |
+| [`dev`](/zh/rspeedy/config/dev) | [`Dev`](/zh/rspeedy/config/dev) | [`Dev`](/zh/rspeedy/config/dev) 选项用于控制与开发相关的行为，包括 HMR、DevServer 等。 |
+| [`environments`](/zh/rspeedy/config/environments#environments) | `Record<string, EnvironmentConfig>` (来自 typescript) | [`Config.environments`](/zh/rspeedy/config/environments#environments) 选项用于设置输出的 environment。 |
+| [`mode`](/zh/rspeedy/config/mode#mode) | `"production" \| "development" \| "none"` | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 |
+| [`output`](/zh/rspeedy/config/output) | [`Output`](/zh/rspeedy/config/output) | [`Output`](/zh/rspeedy/config/output) 选项用于设置 bundle 和静态资源的输出方式与输出位置。 |
+| [`performance`](/zh/rspeedy/config/performance) | [`Performance`](/zh/rspeedy/config/performance) | [`Performance`](/zh/rspeedy/config/performance) 选项用于优化构建时和运行时的性能。 |
+| [`plugins`](/zh/rspeedy/config/plugins#plugins) | `RsbuildPlugins` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `plugins` 选项用于以多种方式自定义构建流程。 |
+| [`resolve`](/zh/rspeedy/config/resolve) | [`Resolve`](/zh/rspeedy/config/resolve) | [`Resolve`](/zh/rspeedy/config/resolve) 选项用于控制 Rspack 的模块解析行为。 |
+| [`server`](/zh/rspeedy/config/server) | [`Server`](/zh/rspeedy/config/server) | [`Server`](/zh/rspeedy/config/server) 选项用于修改开发服务器的行为。 |
+| [`source`](/zh/rspeedy/config/source) | [`Source`](/zh/rspeedy/config/source) | [`Source`](/zh/rspeedy/config/source) 选项用于修改源文件相关的行为。 |
+| [`splitChunks`](/zh/rspeedy/config/splitChunks#splitchunks) | `false \| SplitChunksConfig` | 配置 chunk 拆分。 |
+| [`tools`](/zh/rspeedy/config/tools) | [`Tools`](/zh/rspeedy/config/tools) | [`Tools`](/zh/rspeedy/config/tools) 选项用于修改各类构建工具的行为。 |
 
 {/* @api-end */}
 

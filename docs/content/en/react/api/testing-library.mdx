@@ -43,11 +43,11 @@ buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `queryAllBy` | `GetAllBy<Arguments>` |  |
-| `getMultipleError` | `GetErrorFunction<Arguments>` |  |
-| `getMissingError` | `GetErrorFunction<Arguments>` |  |
+| `queryAllBy` | [`GetAllBy`](#getallby)`<Arguments>` |  |
+| `getMultipleError` | [`GetErrorFunction`](#geterrorfunction)`<Arguments>` |  |
+| `getMissingError` | [`GetErrorFunction`](#geterrorfunction)`<Arguments>` |  |
 
-**Returns:** `BuiltQueryMethods<Arguments>`
+**Returns:** [`BuiltQueryMethods`](#builtquerymethods)`<Arguments>`
 
 ### `cleanup()` \{#cleanup\}
 
@@ -67,7 +67,7 @@ computeHeadingLevel(element: Element): number | undefined
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `Element` |  |
+| `element` | `Element` (from typescript) |  |
 
 **Returns:** `number | undefined`
 
@@ -81,7 +81,7 @@ configure(configDelta: ConfigFn | Partial<Config>): void
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `configDelta` | `ConfigFn \| Partial<Config>` |  |
+| `configDelta` | [`ConfigFn`](#configfn)` \| Partial<`[`Config`](#config)`>` |  |
 
 ### `findAllByAltText()` \{#findallbyalttext\}
 
@@ -93,7 +93,7 @@ findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOp
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -107,7 +107,7 @@ findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matc
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -121,7 +121,7 @@ findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Selecto
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -135,7 +135,7 @@ findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: M
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -149,7 +149,7 @@ findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions,
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -163,7 +163,7 @@ findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -177,7 +177,7 @@ findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatc
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -191,7 +191,7 @@ findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T[]>`
 
@@ -205,7 +205,7 @@ findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -219,7 +219,7 @@ findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matcher
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -233,7 +233,7 @@ findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMa
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -247,7 +247,7 @@ findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Matc
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -261,7 +261,7 @@ findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, wa
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -275,7 +275,7 @@ findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -289,7 +289,7 @@ findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcher
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -303,7 +303,7 @@ findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **Returns:** `Promise<T>`
 
@@ -317,7 +317,7 @@ getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -331,7 +331,7 @@ getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Match
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -345,7 +345,7 @@ getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Selector
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -359,7 +359,7 @@ getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Ma
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -373,7 +373,7 @@ getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions])
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -387,7 +387,7 @@ getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -401,7 +401,7 @@ getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatch
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -415,7 +415,7 @@ getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -429,7 +429,7 @@ getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -443,7 +443,7 @@ getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherO
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -457,7 +457,7 @@ getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMat
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -471,7 +471,7 @@ getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Match
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -485,7 +485,7 @@ getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **Returns:** `T`
 
@@ -499,7 +499,7 @@ getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -513,7 +513,7 @@ getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherO
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -527,7 +527,7 @@ getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T`
 
@@ -539,7 +539,7 @@ getConfig(): Config
 
 *No description yet.*
 
-**Returns:** `Config`
+**Returns:** [`Config`](#config)
 
 ### `getDefaultNormalizer()` \{#getdefaultnormalizer\}
 
@@ -551,9 +551,9 @@ getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `options?` | `DefaultNormalizerOptions` |  |
+| `options?` | [`DefaultNormalizerOptions`](#defaultnormalizeroptions) |  |
 
-**Returns:** `NormalizerFn`
+**Returns:** [`NormalizerFn`](#normalizerfn)
 
 ### `getElementError()` \{#getelementerror\}
 
@@ -566,7 +566,7 @@ getElementError(message: string | null, container: HTMLElement): Error
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `message` | `string \| null` |  |
-| `container` | `HTMLElement` |  |
+| `container` | `HTMLElement` (from typescript) |  |
 
 **Returns:** `Error`
 
@@ -580,7 +580,7 @@ getNodeText(node: HTMLElement): string
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `node` | `HTMLElement` |  |
+| `node` | `HTMLElement` (from typescript) |  |
 
 **Returns:** `string`
 
@@ -594,10 +594,10 @@ getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `HTMLElement` |  |
+| `element` | `HTMLElement` (from typescript) |  |
 | `queriesToBind?` | `T` |  |
 
-**Returns:** `BoundFunctions<T>`
+**Returns:** [`BoundFunctions`](#boundfunctions)`<T>`
 
 ### `getRoles()` \{#getroles\}
 
@@ -609,7 +609,7 @@ getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `container` | `HTMLElement` |  |
+| `container` | `HTMLElement` (from typescript) |  |
 
 **Returns:** `{ [index: string]: HTMLElement[] }`
 
@@ -623,11 +623,11 @@ getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Sug
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `HTMLElement` |  |
-| `variant?` | `Variant` |  |
-| `method?` | `Method` |  |
+| `element` | `HTMLElement` (from typescript) |  |
+| `variant?` | [`Variant`](#variant) |  |
+| `method?` | [`Method`](#method) |  |
 
-**Returns:** `Suggestion | undefined`
+**Returns:** [`Suggestion`](#suggestion)` | undefined`
 
 ### `isInaccessible()` \{#isinaccessible\}
 
@@ -639,7 +639,7 @@ https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `Element` |  |
+| `element` | `Element` (from typescript) |  |
 
 **Returns:** `boolean`
 
@@ -655,7 +655,7 @@ logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOpti
 | --- | --- | --- |
 | `dom?` | `Element \| HTMLDocument` |  |
 | `maxLength?` | `number` |  |
-| `options?` | `PrettyDOMOptions` |  |
+| `options?` | [`PrettyDOMOptions`](#prettydomoptions) |  |
 
 ### `logRoles()` \{#logroles\}
 
@@ -667,8 +667,8 @@ logRoles(container: HTMLElement, options?: LogRolesOptions): string
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `container` | `HTMLElement` |  |
-| `options?` | `LogRolesOptions` |  |
+| `container` | `HTMLElement` (from typescript) |  |
+| `options?` | [`LogRolesOptions`](#logrolesoptions) |  |
 
 **Returns:** `string`
 
@@ -684,7 +684,7 @@ prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMO
 | --- | --- | --- |
 | `dom?` | `Element \| HTMLDocument` |  |
 | `maxLength?` | `number` |  |
-| `options?` | `PrettyDOMOptions` |  |
+| `options?` | [`PrettyDOMOptions`](#prettydomoptions) |  |
 
 **Returns:** `string | false`
 
@@ -698,7 +698,7 @@ queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherO
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -712,7 +712,7 @@ queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Mat
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -726,7 +726,7 @@ queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Select
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -740,7 +740,7 @@ queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: 
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -754,7 +754,7 @@ queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -768,7 +768,7 @@ queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOp
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -782,7 +782,7 @@ queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMat
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -796,7 +796,7 @@ queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T[]`
 
@@ -810,7 +810,7 @@ queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -824,7 +824,7 @@ queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matche
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -838,7 +838,7 @@ queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorM
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -852,7 +852,7 @@ queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Mat
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -866,7 +866,7 @@ queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]):
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -880,7 +880,7 @@ queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -894,7 +894,7 @@ queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatche
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -908,7 +908,7 @@ queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **Returns:** `T | null`
 
@@ -948,9 +948,9 @@ expect(container.firstChild).toMatchInlineSnapshot(`
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `ui` | `ReactNode` |  |
-| `options?` | `RenderOptions<Q>` |  |
+| `options?` | [`RenderOptions`](#renderoptions)`<Q>` |  |
 
-**Returns:** `RenderResult<Q>`
+**Returns:** [`RenderResult`](#renderresult)`<Q>`
 
 ### `renderHook()` \{#renderhook\}
 
@@ -983,9 +983,9 @@ expect(result.current).toEqual('provided');
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `render` | `(initialProps: Props) => Result` |  |
-| `options?` | `RenderHookOptions<Props>` |  |
+| `options?` | [`RenderHookOptions`](#renderhookoptions)`<Props>` |  |
 
-**Returns:** `RenderHookResult<Result, Props>`
+**Returns:** [`RenderHookResult`](#renderhookresult)`<Result, Props>`
 
 ### `waitFor()` \{#waitfor\}
 
@@ -998,7 +998,7 @@ waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `callback` | `() => T \| Promise<T>` |  |
-| `options?` | `waitForOptions` |  |
+| `options?` | [`waitForOptions`](#waitforoptions) |  |
 
 **Returns:** `Promise<T>`
 
@@ -1013,7 +1013,7 @@ waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Pr
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `callback` | `T \| (() => T)` |  |
-| `options?` | `waitForOptions` |  |
+| `options?` | [`waitForOptions`](#waitforoptions) |  |
 
 **Returns:** `Promise<void>`
 
@@ -1236,7 +1236,7 @@ const within: typeof getQueriesForElement
 | <a id="byroleoptions-queryfallbacks"></a>`queryFallbacks?` | `boolean` | Includes every role used in the `role` attribute For example *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`. |
 | <a id="byroleoptions-selected"></a>`selected?` | `boolean` | If true only includes elements in the query set that are marked as selected in the accessibility tree, i.e., `aria-selected="true"` |
 | <a id="byroleoptions-suggest"></a>`suggest?` | `boolean` | suppress suggestions for a specific query |
-| <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: Matcher }` |  |
+| <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: `[`Matcher`](#matcher)` }` |  |
 
 ### `Config` \{#config\}
 
@@ -1266,9 +1266,9 @@ ConfigFn(existingConfig: Config): Partial<Config>
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `existingConfig` | `Config` |  |
+| `existingConfig` | [`Config`](#config) |  |
 
-**Returns:** `Partial<Config>`
+**Returns:** `Partial<`[`Config`](#config)`>`
 
 ### `DefaultNormalizerOptions` \{#defaultnormalizeroptions\}
 
@@ -1295,7 +1295,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 | --- | --- | --- |
 | <a id="matcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
 | <a id="matcheroptions-exact"></a>`exact?` | `boolean` |  |
-| <a id="matcheroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="matcheroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
 | <a id="matcheroptions-suggest"></a>`suggest?` | `boolean` | suppress suggestions for a specific query |
 | <a id="matcheroptions-trim"></a>`trim?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
 
@@ -1306,7 +1306,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="normalizeroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` |  |
-| <a id="normalizeroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="normalizeroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
 | <a id="normalizeroptions-trim"></a>`trim?` | `boolean` |  |
 
 ### `PrettyDOMOptions` \{#prettydomoptions\}
@@ -1364,7 +1364,7 @@ The options for [`render`](#render).
 | <a id="selectormatcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
 | <a id="selectormatcheroptions-exact"></a>`exact?` | `boolean` |  |
 | <a id="selectormatcheroptions-ignore"></a>`ignore?` | `string \| boolean` |  |
-| <a id="selectormatcheroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="selectormatcheroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
 | <a id="selectormatcheroptions-selector"></a>`selector?` | `string` |  |
 | <a id="selectormatcheroptions-suggest"></a>`suggest?` | `boolean` | suppress suggestions for a specific query |
 | <a id="selectormatcheroptions-trim"></a>`trim?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
@@ -1375,7 +1375,7 @@ The options for [`render`](#render).
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="suggestion-queryargs"></a>`queryArgs` | `QueryArgs` |  |
+| <a id="suggestion-queryargs"></a>`queryArgs` | [`QueryArgs`](#queryargs) |  |
 | <a id="suggestion-querymethod"></a>`queryMethod` | `string` |  |
 | <a id="suggestion-queryname"></a>`queryName` | `string` |  |
 | <a id="suggestion-variant"></a>`variant` | `string` |  |
@@ -1388,9 +1388,9 @@ The options for [`render`](#render).
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` |  |
+| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` (from typescript) |  |
 | <a id="waitforoptions-interval"></a>`interval?` | `number` |  |
-| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` |  |
+| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` (from typescript) |  |
 | <a id="waitforoptions-ontimeout"></a>`onTimeout?` | `(error: Error) => Error` |  |
 | <a id="waitforoptions-timeout"></a>`timeout?` | `number` |  |
 

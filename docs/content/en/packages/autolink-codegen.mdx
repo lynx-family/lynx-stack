@@ -37,9 +37,9 @@ Builds the generated JS facade and platform spec file contents for a library pac
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `options` | `CodegenOptions` |  |
+| `options` | [`CodegenOptions`](#codegenoptions) |  |
 
-**Returns:** `GeneratedFile[]`
+**Returns:** [`GeneratedFile`](#generatedfile)`[]`
 
 ### `parseNativeModules()` \{#parsenativemodules\}
 
@@ -54,7 +54,7 @@ Parses native module declarations marked with `@lynxmodule` from a TypeScript de
 | `source` | `string` |  |
 | `filename` | `string` |  |
 
-**Returns:** `NativeModuleSpec[]`
+**Returns:** [`NativeModuleSpec`](#nativemodulespec)`[]`
 
 ### `runCodegen()` \{#runcodegen\}
 
@@ -66,9 +66,9 @@ Writes generated files to disk and returns the generated file descriptors.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `options` | `CodegenOptions` |  |
+| `options` | [`CodegenOptions`](#codegenoptions) |  |
 
-**Returns:** `GeneratedFile[]`
+**Returns:** [`GeneratedFile`](#generatedfile)`[]`
 
 ## Types \{#types\}
 
@@ -96,7 +96,7 @@ Writes generated files to disk and returns the generated file descriptors.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynxtronplatformmanifest-targets"></a>`targets` | `LynxtronRuntimeTarget[]` |  |
+| <a id="lynxtronplatformmanifest-targets"></a>`targets` | [`LynxtronRuntimeTarget`](#lynxtronruntimetarget)`[]` |  |
 
 ### `LynxtronRuntimeTarget` \{#lynxtronruntimetarget\}
 
@@ -117,8 +117,8 @@ Writes generated files to disk and returns the generated file descriptors.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="nativemodulemethod-name"></a>`name` | `string` |  |
-| <a id="nativemodulemethod-params"></a>`params` | `NativeModuleParam[]` |  |
-| <a id="nativemodulemethod-returntype"></a>`returnType` | `NativeModuleType` |  |
+| <a id="nativemodulemethod-params"></a>`params` | [`NativeModuleParam`](#nativemoduleparam)`[]` |  |
+| <a id="nativemodulemethod-returntype"></a>`returnType` | [`NativeModuleType`](#nativemoduletype) |  |
 | <a id="nativemodulemethod-source"></a>`source?` | `NativeModuleSourceLocation` |  |
 
 ### `NativeModuleObjectProperty` \{#nativemoduleobjectproperty\}
@@ -129,7 +129,7 @@ Writes generated files to disk and returns the generated file descriptors.
 | --- | --- | --- |
 | <a id="nativemoduleobjectproperty-name"></a>`name` | `string` |  |
 | <a id="nativemoduleobjectproperty-optional"></a>`optional?` | `boolean` |  |
-| <a id="nativemoduleobjectproperty-type"></a>`type` | `NativeModuleType` |  |
+| <a id="nativemoduleobjectproperty-type"></a>`type` | [`NativeModuleType`](#nativemoduletype) |  |
 
 ### `NativeModuleObjectSpec` \{#nativemoduleobjectspec\}
 
@@ -138,7 +138,7 @@ Writes generated files to disk and returns the generated file descriptors.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="nativemoduleobjectspec-name"></a>`name` | `string` |  |
-| <a id="nativemoduleobjectspec-properties"></a>`properties` | `NativeModuleObjectProperty[]` |  |
+| <a id="nativemoduleobjectspec-properties"></a>`properties` | [`NativeModuleObjectProperty`](#nativemoduleobjectproperty)`[]` |  |
 
 ### `NativeModuleParam` \{#nativemoduleparam\}
 
@@ -149,7 +149,7 @@ Writes generated files to disk and returns the generated file descriptors.
 | <a id="nativemoduleparam-name"></a>`name` | `string` |  |
 | <a id="nativemoduleparam-optional"></a>`optional?` | `boolean` |  |
 | <a id="nativemoduleparam-source"></a>`source?` | `NativeModuleSourceLocation` |  |
-| <a id="nativemoduleparam-type"></a>`type` | `NativeModuleType` |  |
+| <a id="nativemoduleparam-type"></a>`type` | [`NativeModuleType`](#nativemoduletype) |  |
 
 ### `NativeModuleSpec` \{#nativemodulespec\}
 
@@ -157,8 +157,8 @@ Writes generated files to disk and returns the generated file descriptors.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="nativemodulespec-interfaces"></a>`interfaces?` | `NativeModuleObjectSpec[]` |  |
-| <a id="nativemodulespec-methods"></a>`methods` | `NativeModuleMethod[]` |  |
+| <a id="nativemodulespec-interfaces"></a>`interfaces?` | [`NativeModuleObjectSpec`](#nativemoduleobjectspec)`[]` |  |
+| <a id="nativemodulespec-methods"></a>`methods` | [`NativeModuleMethod`](#nativemodulemethod)`[]` |  |
 | <a id="nativemodulespec-name"></a>`name` | `string` |  |
 | <a id="nativemodulespec-source"></a>`source?` | `NativeModuleSourceLocation` |  |
 
@@ -168,7 +168,7 @@ Writes generated files to disk and returns the generated file descriptors.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="nativemoduletype-name"></a>`name` | `NativeModuleTypeName` |  |
+| <a id="nativemoduletype-name"></a>`name` | [`NativeModuleTypeName`](#nativemoduletypename) |  |
 | <a id="nativemoduletype-nullable"></a>`nullable` | `boolean` |  |
 | <a id="nativemoduletype-referencename"></a>`referenceName?` | `string` |  |
 

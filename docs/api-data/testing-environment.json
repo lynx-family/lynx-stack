@@ -18,7 +18,10 @@
           "kind": "constructor",
           "params": [],
           "returns": {
-            "type": "GlobalEventEmitter"
+            "type": "GlobalEventEmitter",
+            "refs": [
+              "GlobalEventEmitter"
+            ]
           }
         },
         {
@@ -38,7 +41,8 @@
             },
             {
               "name": "listener",
-              "type": "Function"
+              "type": "Function",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -98,7 +102,8 @@
             },
             {
               "name": "listener",
-              "type": "Function"
+              "type": "Function",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -160,17 +165,27 @@
             {
               "name": "env",
               "type": "LynxEnv",
+              "ref": "LynxEnv",
+              "refs": [
+                "LynxEnv"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "LynxTestingEnv"
+            "type": "LynxTestingEnv",
+            "refs": [
+              "LynxTestingEnv"
+            ]
           }
         },
         {
           "name": "backgroundThread",
           "type": "LynxGlobalThis",
           "ref": "LynxGlobalThis",
+          "refs": [
+            "LynxGlobalThis"
+          ],
           "summary": "The global object for the background thread.",
           "examples": [
             "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```"
@@ -181,11 +196,18 @@
           "name": "env",
           "type": "LynxEnv",
           "ref": "LynxEnv",
+          "refs": [
+            "LynxEnv"
+          ],
           "kind": "property"
         },
         {
           "name": "mainThread",
           "type": "LynxGlobalThis & ElementTreeGlobals",
+          "refs": [
+            "LynxGlobalThis",
+            "ElementTreeGlobals"
+          ],
           "summary": "The global object for the main thread.",
           "examples": [
             "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```"
@@ -263,6 +285,9 @@
           "name": "firstChild",
           "type": "LynxElement",
           "ref": "LynxElement",
+          "refs": [
+            "LynxElement"
+          ],
           "summary": "Returns the first child.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild)",
           "kind": "property"
         },
@@ -277,6 +302,9 @@
           "name": "nextSibling",
           "type": "LynxElement",
           "ref": "LynxElement",
+          "refs": [
+            "LynxElement"
+          ],
           "summary": "Returns the next sibling.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling)",
           "kind": "property"
         },
@@ -284,6 +312,9 @@
           "name": "parentNode",
           "type": "LynxElement",
           "ref": "LynxElement",
+          "refs": [
+            "LynxElement"
+          ],
           "summary": "Returns the parent.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode)",
           "kind": "property"
         }
@@ -312,6 +343,9 @@
           "name": "globalThis",
           "type": "LynxGlobalThis",
           "ref": "LynxGlobalThis",
+          "refs": [
+            "LynxGlobalThis"
+          ],
           "summary": "The globalThis object.",
           "kind": "property"
         }
@@ -329,6 +363,10 @@
       "kind": "typealias",
       "type": "PickUnderscoreKeys<ElementTree>",
       "ref": "PickUnderscoreKeys",
+      "refs": [
+        "PickUnderscoreKeys",
+        "ElementTree"
+      ],
       "summary": "The Element PAPI Types"
     },
     {
@@ -340,6 +378,9 @@
       "name": "PickUnderscoreKeys",
       "kind": "typealias",
       "type": "Pick<T, FilterUnderscoreKeys<T>>",
+      "refs": [
+        "FilterUnderscoreKeys"
+      ],
       "external": "typescript"
     },
     {
@@ -366,11 +407,19 @@
           "params": [
             {
               "name": "target",
-              "type": "typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }"
+              "type": "typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }",
+              "refs": [
+                "LynxEnv",
+                "LynxTestingEnv"
+              ]
             },
             {
               "name": "env",
-              "type": "LynxEnv"
+              "type": "LynxEnv",
+              "ref": "LynxEnv",
+              "refs": [
+                "LynxEnv"
+              ]
             }
           ],
           "returns": {
@@ -391,7 +440,11 @@
           "params": [
             {
               "name": "target",
-              "type": "typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }"
+              "type": "typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }",
+              "refs": [
+                "LynxEnv",
+                "LynxTestingEnv"
+              ]
             }
           ],
           "returns": {

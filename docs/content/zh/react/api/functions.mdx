@@ -64,7 +64,7 @@ cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes |
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `ReactElement<Props>` |  |
+| `element` | `ReactElement<Props>` (来自 @types/react) |  |
 | `props?` | `Partial<Props> & Attributes \| null` |  |
 | `children` | `ReactNode[]` |  |
 
@@ -151,7 +151,7 @@ export default withInitDataInState(App);
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `App` | `ComponentClass<P, S>` | The class component to be wrapped by the HOC. |
+| `App` | `ComponentClass<P, S>` (来自 @types/react) | The class component to be wrapped by the HOC. |
 
 **返回值:** `ComponentClass<P, S>` — 若传入的不是类组件，则返回原组件；否则返回一个新的类组件，          该组件具备 `initData` 注入和 state 更新功能。
 

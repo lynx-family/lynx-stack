@@ -47,8 +47,8 @@ installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTesti
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `target` | `typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }` |  |
-| `env` | `LynxEnv` |  |
+| `target` | `typeof globalThis & { lynxEnv?: `[`LynxEnv`](#lynxenv)`; lynxTestingEnv?: `[`LynxTestingEnv`](#lynxtestingenv)`; Node?: () => Node }` |  |
+| `env` | [`LynxEnv`](#lynxenv) |  |
 
 ### `uninstallLynxTestingEnv()` \{#uninstalllynxtestingenv\}
 
@@ -60,7 +60,7 @@ uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTes
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `target` | `typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }` |  |
+| `target` | `typeof globalThis & { lynxEnv?: `[`LynxEnv`](#lynxenv)`; lynxTestingEnv?: `[`LynxTestingEnv`](#lynxtestingenv)`; Node?: () => Node }` |  |
 
 ## 类 \{#\}
 
@@ -73,7 +73,7 @@ Lynx 的 `GlobalEventEmitter` 模块，可通过 `lynx.getJSModule('GlobalEventE
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="globaleventemitter-constructor"></a>`constructor` | `constructor(): GlobalEventEmitter` |  |
-| <a id="globaleventemitter-listeners"></a>`listeners` | `Record<string, Function[]>` |  |
+| <a id="globaleventemitter-listeners"></a>`listeners` | `Record<string, Function[]>` (来自 typescript) |  |
 | <a id="globaleventemitter-addlistener"></a>`addListener` | `addListener(eventName: string, listener: Function): void` |  |
 | <a id="globaleventemitter-clear"></a>`clear` | `clear(): void` |  |
 | <a id="globaleventemitter-emit"></a>`emit` | `emit(eventName: string, args: any[]): void` |  |
@@ -104,9 +104,9 @@ __AppendElement(page, view);
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
-| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | `LynxGlobalThis` | 后台线程的全局对象。 |
-| <a id="lynxtestingenv-env"></a>`env` | `LynxEnv` |  |
-| <a id="lynxtestingenv-mainthread"></a>`mainThread` | `LynxGlobalThis & ElementTreeGlobals` | 主线程的全局对象。 |
+| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | [`LynxGlobalThis`](#lynxglobalthis) | 后台线程的全局对象。 |
+| <a id="lynxtestingenv-env"></a>`env` | [`LynxEnv`](#lynxenv) |  |
+| <a id="lynxtestingenv-mainthread"></a>`mainThread` | [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals) | 主线程的全局对象。 |
 | <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
 | <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
 | <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
@@ -125,10 +125,10 @@ __AppendElement(page, view);
 | --- | --- | --- |
 | <a id="lynxelement-cssid"></a>`cssId?` | `string` | 元素的 cssId |
 | <a id="lynxelement-eventmap"></a>`eventMap?` | `{ [key: string]: any }` | 绑定到该元素的事件映射表。 |
-| <a id="lynxelement-firstchild"></a>`firstChild` | `LynxElement` | 返回第一个子节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/firstChild) |
+| <a id="lynxelement-firstchild"></a>`firstChild` | [`LynxElement`](#lynxelement) | 返回第一个子节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/firstChild) |
 | <a id="lynxelement-gesture"></a>`gesture?` | `{ [key: string]: any }` | 绑定到该元素的手势。 |
-| <a id="lynxelement-nextsibling"></a>`nextSibling` | `LynxElement` | 返回下一个兄弟节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/nextSibling) |
-| <a id="lynxelement-parentnode"></a>`parentNode` | `LynxElement` | 返回父节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/parentNode) |
+| <a id="lynxelement-nextsibling"></a>`nextSibling` | [`LynxElement`](#lynxelement) | 返回下一个兄弟节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/nextSibling) |
+| <a id="lynxelement-parentnode"></a>`parentNode` | [`LynxElement`](#lynxelement) | 返回父节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/parentNode) |
 
 ### `LynxEnv` \{#lynxenv\}
 
@@ -144,7 +144,7 @@ Lynx 双线程环境的 `globalThis` 对象。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lynxglobalthis-globalthis"></a>`globalThis` | `LynxGlobalThis` | globalThis 对象。 |
+| <a id="lynxglobalthis-globalthis"></a>`globalThis` | [`LynxGlobalThis`](#lynxglobalthis) | globalThis 对象。 |
 
 ### `ElementTree` \{#elementtree\}
 

@@ -22,7 +22,10 @@
           "kind": "constructor",
           "params": [],
           "returns": {
-            "type": "default"
+            "type": "default",
+            "refs": [
+              "default"
+            ]
           }
         },
         {

@@ -12,7 +12,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { EN, ZH, renderDirective } from './render.ts';
-import type { Directive, Translations } from './render.ts';
+import type { Directive, SiteAnchors, Translations } from './render.ts';
 
 const DOCS = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = join(DOCS, 'api-data');
@@ -22,7 +22,7 @@ function resolve(...p: string[]) {
 }
 
 function walk(dir: string, out: string[] = []): string[] {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).sort()) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p, out);
     else if (/\.mdx?$/.test(name)) out.push(p);
@@ -40,6 +40,58 @@ function parseAttrs(s: string): Record<string, string> {
   return attrs;
 }
 
+function pagePath(root: string, file: string): string {
+  const rel = relative(root, file).split('\\').join('/').replace(
+    /\.mdx?$/,
+    '',
+  );
+  if (rel === 'index') return '/';
+  return `/${rel.endsWith('/index') ? rel.slice(0, -'index'.length) : rel}`;
+}
+
+const PRIORITY: Record<string, number> = {
+  ConfigOptions: 0,
+  ApiOptions: 0,
+  ApiExports: 1,
+};
+
+function collectSiteAnchors(): SiteAnchors {
+  const site: SiteAnchors = new Map();
+  const root = join(DOCS, 'content', 'en');
+  if (!existsSync(root)) return site;
+  for (const file of walk(root)) {
+    const src = readFileSync(file, 'utf8');
+    if (!src.includes('{/* @api ')) continue;
+    const page = pagePath(root, file);
+    for (const m of src.matchAll(BEGIN)) {
+      const d: Directive = { name: m[1]!, attrs: parseAttrs(m[2] ?? '') };
+      const priority = PRIORITY[d.name];
+      if (priority === undefined) continue;
+      try {
+        renderDirective(d, DATA, EN, undefined, {
+          onAnchors: (id, anchors) => {
+            for (const [name, anchor] of anchors) {
+              const key = `${id}|${name}`;
+              const prev = site.get(key);
+              if (!prev || priority < prev.priority) {
+                site.set(key, {
+                  url: anchor ? `${page}#${anchor}` : page,
+                  priority,
+                });
+              }
+            }
+          },
+        });
+      } catch {
+        continue;
+      }
+    }
+  }
+  return site;
+}
+
+const site = collectSiteAnchors();
+
 let changed = 0;
 let total = 0;
 const errors: string[] = [];
@@ -54,6 +106,7 @@ for (const locale of ['en', 'zh'] as const) {
   for (const file of files) {
     const src = readFileSync(file, 'utf8');
     if (!src.includes('{/* @api ')) continue;
+    const page = pagePath(root, file);
     let out = '';
     let last = 0;
     for (const m of src.matchAll(BEGIN)) {
@@ -76,6 +129,7 @@ for (const locale of ['en', 'zh'] as const) {
           DATA,
           locale === 'zh' ? ZH : EN,
           locale === 'zh' ? translations ?? {} : undefined,
+          { site, page, prefix: locale === 'zh' ? '/zh' : '' },
         );
       } catch (err) {
         errors.push(`${relative(DOCS, file)}: ${(err as Error).message}`);

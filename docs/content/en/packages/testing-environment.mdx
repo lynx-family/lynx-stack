@@ -47,8 +47,8 @@ Installs a `LynxTestingEnv` instance and its required globals onto a target.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `target` | `typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }` |  |
-| `env` | `LynxEnv` |  |
+| `target` | `typeof globalThis & { lynxEnv?: `[`LynxEnv`](#lynxenv)`; lynxTestingEnv?: `[`LynxTestingEnv`](#lynxtestingenv)`; Node?: () => Node }` |  |
+| `env` | [`LynxEnv`](#lynxenv) |  |
 
 ### `uninstallLynxTestingEnv()` \{#uninstalllynxtestingenv\}
 
@@ -60,7 +60,7 @@ Removes the globals installed by `installLynxTestingEnv`.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `target` | `typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }` |  |
+| `target` | `typeof globalThis & { lynxEnv?: `[`LynxEnv`](#lynxenv)`; lynxTestingEnv?: `[`LynxTestingEnv`](#lynxtestingenv)`; Node?: () => Node }` |  |
 
 ## Classes \{#classes\}
 
@@ -73,7 +73,7 @@ Framework testing libraries can use this to trigger and listen to cross-thread e
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="globaleventemitter-constructor"></a>`constructor` | `constructor(): GlobalEventEmitter` |  |
-| <a id="globaleventemitter-listeners"></a>`listeners` | `Record<string, Function[]>` |  |
+| <a id="globaleventemitter-listeners"></a>`listeners` | `Record<string, Function[]>` (from typescript) |  |
 | <a id="globaleventemitter-addlistener"></a>`addListener` | `addListener(eventName: string, listener: Function): void` |  |
 | <a id="globaleventemitter-clear"></a>`clear` | `clear(): void` |  |
 | <a id="globaleventemitter-emit"></a>`emit` | `emit(eventName: string, args: any[]): void` |  |
@@ -104,9 +104,9 @@ __AppendElement(page, view);
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
-| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | `LynxGlobalThis` | The global object for the background thread. |
-| <a id="lynxtestingenv-env"></a>`env` | `LynxEnv` |  |
-| <a id="lynxtestingenv-mainthread"></a>`mainThread` | `LynxGlobalThis & ElementTreeGlobals` | The global object for the main thread. |
+| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | [`LynxGlobalThis`](#lynxglobalthis) | The global object for the background thread. |
+| <a id="lynxtestingenv-env"></a>`env` | [`LynxEnv`](#lynxenv) |  |
+| <a id="lynxtestingenv-mainthread"></a>`mainThread` | [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals) | The global object for the main thread. |
 | <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
 | <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
 | <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
@@ -125,10 +125,10 @@ Any Lynx Element, such as `view`, `text`, `image`, etc.
 | --- | --- | --- |
 | <a id="lynxelement-cssid"></a>`cssId?` | `string` | The cssId of the element |
 | <a id="lynxelement-eventmap"></a>`eventMap?` | `{ [key: string]: any }` | The map of events bound to the element. |
-| <a id="lynxelement-firstchild"></a>`firstChild` | `LynxElement` | Returns the first child. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild) |
+| <a id="lynxelement-firstchild"></a>`firstChild` | [`LynxElement`](#lynxelement) | Returns the first child. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild) |
 | <a id="lynxelement-gesture"></a>`gesture?` | `{ [key: string]: any }` | The gestures bound to the element. |
-| <a id="lynxelement-nextsibling"></a>`nextSibling` | `LynxElement` | Returns the next sibling. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling) |
-| <a id="lynxelement-parentnode"></a>`parentNode` | `LynxElement` | Returns the parent. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode) |
+| <a id="lynxelement-nextsibling"></a>`nextSibling` | [`LynxElement`](#lynxelement) | Returns the next sibling. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling) |
+| <a id="lynxelement-parentnode"></a>`parentNode` | [`LynxElement`](#lynxelement) | Returns the parent. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode) |
 
 ### `LynxEnv` \{#lynxenv\}
 
@@ -144,7 +144,7 @@ The `globalThis` object of Lynx dual thread environment.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynxglobalthis-globalthis"></a>`globalThis` | `LynxGlobalThis` | The globalThis object. |
+| <a id="lynxglobalthis-globalthis"></a>`globalThis` | [`LynxGlobalThis`](#lynxglobalthis) | The globalThis object. |
 
 ### `ElementTree` \{#elementtree\}
 

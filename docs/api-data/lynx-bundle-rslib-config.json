@@ -19,11 +19,18 @@
           "params": [
             {
               "name": "options",
-              "type": "Partial<MainThreadRuntimeWrapperWebpackPluginOptions>"
+              "type": "Partial<MainThreadRuntimeWrapperWebpackPluginOptions>",
+              "refs": [
+                "MainThreadRuntimeWrapperWebpackPluginOptions"
+              ],
+              "external": "typescript"
             }
           ],
           "returns": {
-            "type": "MainThreadRuntimeWrapperWebpackPlugin"
+            "type": "MainThreadRuntimeWrapperWebpackPlugin",
+            "refs": [
+              "MainThreadRuntimeWrapperWebpackPlugin"
+            ]
           }
         },
         {
@@ -33,7 +40,8 @@
           "params": [
             {
               "name": "compiler",
-              "type": "Compiler"
+              "type": "Compiler",
+              "external": "@rspack/core"
             }
           ],
           "returns": {
@@ -104,6 +112,9 @@
           "optional": true,
           "type": "OutputConfig",
           "ref": "OutputConfig",
+          "refs": [
+            "OutputConfig"
+          ],
           "kind": "property"
         }
       ]
@@ -148,6 +159,9 @@
           "optional": true,
           "type": "Externals",
           "ref": "Externals",
+          "refs": [
+            "Externals"
+          ],
           "summary": "Externals contributed by this preset.",
           "kind": "property"
         }
@@ -172,6 +186,9 @@
       "name": "Externals",
       "kind": "typealias",
       "type": "Record<string, string | string[] | ExternalObject>",
+      "refs": [
+        "ExternalObject"
+      ],
       "external": "typescript",
       "summary": "External module to global-name mappings used when building Lynx external\nbundles."
     },
@@ -179,6 +196,9 @@
       "name": "ExternalsPresetDefinitions",
       "kind": "typealias",
       "type": "Record<string, ExternalsPresetDefinition>",
+      "refs": [
+        "ExternalsPresetDefinition"
+      ],
       "external": "typescript",
       "summary": "Available externals preset definitions."
     },
@@ -186,6 +206,9 @@
       "name": "ExternalsPresets",
       "kind": "typealias",
       "type": "{ reactlynx?: ExternalsPresetValue } & Record<string, ExternalsPresetValue>",
+      "refs": [
+        "ExternalsPresetValue"
+      ],
       "summary": "Enabled externals presets.\n\nPreset names are resolved from the built-in preset definitions plus any\ncustom definitions passed to [`defineExternalBundleRslibConfig`](api:defineExternalBundleRslibConfig)."
     },
     {
@@ -198,6 +221,11 @@
       "name": "OutputConfig",
       "kind": "typealias",
       "type": "Required<LibConfig>[\"output\"] & { externals?: Externals; externalsPresetDefinitions?: ExternalsPresetDefinitions; externalsPresets?: ExternalsPresets; globalObject?: \"lynx\" | \"globalThis\" }",
+      "refs": [
+        "Externals",
+        "ExternalsPresetDefinitions",
+        "ExternalsPresets"
+      ],
       "summary": "Output config accepted by Lynx external bundle builds."
     },
     {
@@ -205,6 +233,9 @@
       "kind": "variable",
       "type": "ExternalsPresetDefinitions",
       "ref": "ExternalsPresetDefinitions",
+      "refs": [
+        "ExternalsPresetDefinitions"
+      ],
       "summary": "Built-in externals preset definitions.",
       "default": "..."
     },
@@ -221,6 +252,9 @@
       "kind": "variable",
       "type": "ExposedLayers",
       "ref": "ExposedLayers",
+      "refs": [
+        "ExposedLayers"
+      ],
       "summary": "The layer names an entry is split by without a DSL plugin.",
       "default": "..."
     },
@@ -229,6 +263,9 @@
       "kind": "variable",
       "type": "Externals",
       "ref": "Externals",
+      "refs": [
+        "Externals"
+      ],
       "summary": "Standard ReactLynx external mappings used by the built-in `reactlynx`\npreset.",
       "default": "..."
     },
@@ -242,11 +279,19 @@
           "params": [
             {
               "name": "userLibConfig",
-              "type": "ExternalBundleLibConfig"
+              "type": "ExternalBundleLibConfig",
+              "ref": "ExternalBundleLibConfig",
+              "refs": [
+                "ExternalBundleLibConfig"
+              ]
             },
             {
               "name": "encodeOptions",
-              "type": "EncodeOptions"
+              "type": "EncodeOptions",
+              "ref": "EncodeOptions",
+              "refs": [
+                "EncodeOptions"
+              ]
             }
           ],
           "returns": {

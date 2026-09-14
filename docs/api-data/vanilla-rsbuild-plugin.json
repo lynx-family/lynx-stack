@@ -14,6 +14,9 @@
         {
           "name": "getLynxTemplatePluginHooks",
           "type": "(compilation: Compilation) => TemplateHooks",
+          "refs": [
+            "TemplateHooks"
+          ],
           "kind": "property"
         }
       ]
@@ -29,6 +32,9 @@
           "optional": true,
           "type": "VanillaBundleFilename",
           "ref": "VanillaBundleFilename",
+          "refs": [
+            "VanillaBundleFilename"
+          ],
           "summary": "Override the final `.bundle` filename.",
           "remarks": "When omitted under Rspeedy, `output.filename.bundle` is used.\nThe default outside Rspeedy is `[name].[platform].bundle`.",
           "kind": "property"
@@ -45,6 +51,9 @@
           "name": "entries",
           "optional": true,
           "type": "Record<string, VanillaLynxEntry>",
+          "refs": [
+            "VanillaLynxEntry"
+          ],
           "external": "typescript",
           "summary": "Explicit two-thread entries.",
           "remarks": "When omitted, every Rsbuild `source.entry` is treated as a main-thread\nentry and optional sibling `background.ts` and `style.css` files are\ndiscovered by convention.",
@@ -172,6 +181,9 @@
       "name": "VanillaBundleFilename",
       "kind": "typealias",
       "type": "string | ((context: VanillaBundleFilenameContext) => string)",
+      "refs": [
+        "VanillaBundleFilenameContext"
+      ],
       "summary": "The final Vanilla Lynx bundle filename."
     },
     {
@@ -192,7 +204,11 @@
           "params": [
             {
               "name": "options",
-              "type": "PluginVanillaLynxOptions"
+              "type": "PluginVanillaLynxOptions",
+              "ref": "PluginVanillaLynxOptions",
+              "refs": [
+                "PluginVanillaLynxOptions"
+              ]
             }
           ],
           "returns": {

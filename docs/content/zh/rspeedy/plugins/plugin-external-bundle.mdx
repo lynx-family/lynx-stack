@@ -33,6 +33,8 @@ export default defineConfig({
 
 {/* @api ApiOptions package="external-bundle-rsbuild-plugin" type="PluginExternalBundleOptions" */}
 
+<a id="pluginexternalbundleoptions"></a>
+
 ### `externalsPresets` \{#externalspresets\}
 
 - **类型:** [`ExternalsPresets`](#externalspresets)
@@ -41,17 +43,44 @@ export default defineConfig({
 
 与 https://rspack.rs/config/externals#externalspresets 相同，但适用于 Lynx。
 
+#### `externalsPresets.reactlynx` \{#externalspresets-reactlynx\}
+
+- **类型:** `boolean | `[`ReactLynxExternalsPresetOptions`](#externalspresets-reactlynx)
+
+加载 ReactLynx 运行时 bundle，并配置其标准模块全局变量。
+
+##### `externalsPresets.reactlynx.url` <span className="api-badge api-badge-deprecated">已废弃</span> \{#externalspresets-reactlynx-url\}
+
+- **类型:** `string`
+
+:::warning 已废弃
+已废弃。
+:::
+
+直接覆盖运行时 bundle 的 URL。
+
+仅当 ReactLynx 运行时托管在当前
+构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译
+产出任何额外资源。
+
+ 建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并支持自动产出资源。
+
+##### 其他选项 \{#externalspresets-reactlynx-other-options\}
+
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="externalspresets-reactlynx"></a>`reactlynx` | `boolean \| ReactLynxExternalsPresetOptions` |  | 加载 ReactLynx 运行时 bundle，并配置其标准模块全局变量。 |
+| <a id="externalspresets-reactlynx-async"></a>`async` | `boolean` | `false` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载， 使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。 启用后还会解析 web 编码的 `@lynx-js/react-umd/{dev,prod}-web` bundle，并将 `bundlePath` 默认设为 `react.web.bundle`。 |
+| <a id="externalspresets-reactlynx-bundlepath"></a>`bundlePath` | `string` | `'react.lynx.bundle'` | 将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过 生成的运行时 public path 加载。 对于常规 Rspeedy 项目，优先使用该选项而非 `url`。除了让 运行时基于 `publicPath` 解析最终 URL 之外，插件还会将 对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中， 因此应用 bundle 可以直接引用它，发布时无需额外的手动 复制步骤。 |
+| <a id="externalspresets-reactlynx-reactumdpackagename"></a>`reactUmdPackageName` | `string` | `'@lynx-js/react-umd'` | 提供 ReactLynx 运行时 bundle 的包名。 为其他发行版封装该插件时（例如 `@byted-lynx/react-umd`），可覆盖该选项。 |
 
 ### 其他选项 \{#other-options\}
 
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | <a id="externalbundleroot"></a>`externalBundleRoot` | `string` |  | 存放项目自有 external bundle 的根目录，这些 bundle 由 `bundlePath` 引用。 `pluginExternalBundle` 在开发环境提供服务和构建时产出资源时都会使用该目录。 当 external bundle 被构建到单独的输出目录（例如 `dist-external-bundle`）时， 建议显式设置该选项。 |
-| <a id="externals"></a>`externals` | `Record<string, PluginExternalConfig>` (来自 typescript) |  | 额外需要加载的显式 externals。 |
-| <a id="externalspresetdefinitions"></a>`externalsPresetDefinitions` | `ExternalsPresetDefinitions` |  | 由 `externalsPresets` 启用的自定义 externals 预设的定义。 可用于添加业务专属的预设（例如 `lynxUi`），或通过 `extends` 扩展内置预设。 |
+| <a id="externals"></a>`externals` | `Record<string, `[`PluginExternalConfig`](#pluginexternalconfig)`>` (来自 typescript) |  | 额外需要加载的显式 externals。 |
+| <a id="externalspresetdefinitions"></a>`externalsPresetDefinitions` | [`ExternalsPresetDefinitions`](#externalspresetdefinitions) |  | 由 `externalsPresets` 启用的自定义 externals 预设的定义。 可用于添加业务专属的预设（例如 `lynxUi`），或通过 `extends` 扩展内置预设。 |
 | <a id="globalobject"></a>`globalObject` | `"lynx" \| "globalThis"` | `'lynx'` | 该选项指定用于挂载库的全局对象。 在 Lynx 中，库默认挂载到 `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` 上。 如果启用了 share js context，并希望通过挂载到全局对象来复用该库，可以将该选项设置为 `'globalThis'`。 |
 | <a id="retries"></a>`retries` | `number` | `0` | 加载 external bundle 超时（`response.code === -2`）时的额外重试次数。 |
 | <a id="timeout"></a>`timeout` | `number` | `2000` | 加载 externals 的超时时间，单位为毫秒。 |
@@ -112,7 +141,7 @@ export default {
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `PluginExternalBundleOptions` |  |
+| `options` | [`PluginExternalBundleOptions`](#pluginexternalbundleoptions) |  |
 
 **返回值:** `RsbuildPlugin`
 
@@ -144,8 +173,8 @@ const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="externalspresetdefinition-extends"></a>`extends?` | `string \| string[]` | 在当前预设之前应用的其他预设名称。 |
-| <a id="externalspresetdefinition-resolveexternals"></a>`resolveExternals?` | `(value: boolean \| object, context: ExternalsPresetContext) => Record<string, ExternalValue>` | 解析该预设提供的 external 请求映射。 |
-| <a id="externalspresetdefinition-resolvemanagedassets"></a>`resolveManagedAssets?` | `(value: boolean \| object, context: ExternalsPresetContext) => Map<string, string> \| Record<string, string>` | 解析该预设提供的托管 bundle 资源。 |
+| <a id="externalspresetdefinition-resolveexternals"></a>`resolveExternals?` | `(value: boolean \| object, context: `[`ExternalsPresetContext`](#externalspresetcontext)`) => Record<string, ExternalValue>` | 解析该预设提供的 external 请求映射。 |
+| <a id="externalspresetdefinition-resolvemanagedassets"></a>`resolveManagedAssets?` | `(value: boolean \| object, context: `[`ExternalsPresetContext`](#externalspresetcontext)`) => Map<string, string> \| Record<string, string>` | 解析该预设提供的托管 bundle 资源。 |
 
 ### `ExternalsPresets` \{#externalspresets\}
 
@@ -153,7 +182,7 @@ external bundle 依赖的预设。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="externalspresets-reactlynx"></a>`reactlynx?` | `boolean \| ReactLynxExternalsPresetOptions` | 加载 ReactLynx 运行时 bundle，并配置其标准模块全局变量。 |
+| <a id="externalspresets-reactlynx"></a>`reactlynx?` | `boolean \| `[`ReactLynxExternalsPresetOptions`](#reactlynxexternalspresetoptions) | 加载 ReactLynx 运行时 bundle，并配置其标准模块全局变量。 |
 
 ### `PluginExternalValue` \{#pluginexternalvalue\}
 

@@ -66,9 +66,9 @@ is the nodeIndex, and the matching `mappings[i]` entry holds
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `uiSourceMap` | `UiSourceMapData` |  |
+| `uiSourceMap` | [`UiSourceMapData`](#uisourcemapdata) |  |
 
-**Returns:** `Map<number, Omit<UiSourceLocation, "repo">>`
+**Returns:** `Map<number, Omit<`[`UiSourceLocation`](#uisourcelocation)`, "repo">>`
 
 ### `findArtifact()` \{#findartifact\}
 
@@ -81,10 +81,10 @@ Find an [`Artifact`](#artifact) by `filename` (e.g. `main-thread.js`,
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename: string }` |  |
 
-**Returns:** `Artifact | undefined`
+**Returns:** [`Artifact`](#artifact)` | undefined`
 
 ### `findBytecodeDebugInfo()` \{#findbytecodedebuginfo\}
 
@@ -97,10 +97,10 @@ Find a `bytecode-debug-info` source attached to the artifact named
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename: string }` |  |
 
-**Returns:** `BytecodeDebugInfoSource | undefined`
+**Returns:** [`BytecodeDebugInfoSource`](#bytecodedebuginfosource)` | undefined`
 
 ### `findSourceMap()` \{#findsourcemap\}
 
@@ -115,10 +115,10 @@ name on [`SourceMapDebugSource`](#sourcemapdebugsource).
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename?: string; key?: string; path?: string }` |  |
 
-**Returns:** `SourceMapDebugSource | undefined`
+**Returns:** [`SourceMapDebugSource`](#sourcemapdebugsource)` | undefined`
 
 ### `isUiSourceMapData()` \{#isuisourcemapdata\}
 
@@ -180,10 +180,10 @@ mutated; a new tree is returned.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `root` | `UiNode` |  |
-| `loadMetadata` | `DebugMetadataLoader` |  |
+| `root` | [`UiNode`](#uinode) |  |
+| `loadMetadata` | [`DebugMetadataLoader`](#debugmetadataloader) |  |
 
-**Returns:** `Promise<RemappedUiNode>`
+**Returns:** `Promise<`[`RemappedUiNode`](#remappeduinode)`>`
 
 ### `resolveField()` \{#resolvefield\}
 
@@ -202,11 +202,11 @@ Resolve a `?field=…` query against parsed metadata.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `metadata` | `DebugMetadataAsset` |  |
+| `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `field` | `string` |  |
-| `params` | `QueryParams` |  |
+| `params` | [`QueryParams`](#queryparams) |  |
 
-**Returns:** `ResolveResult | undefined`
+**Returns:** [`ResolveResult`](#resolveresult)` | undefined`
 
 ## Constants \{#constants\}
 
@@ -263,7 +263,7 @@ and cannot be safely collapsed into a dotted string. Examples:
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="artifact-debugsources"></a>`debugSources` | `DebugSource[]` | Debug sources for this artifact, ordered to match the reverse-symbolication decode chain. A consumer that starts with a runtime location and wants to recover the original source iterates this list left-to-right: 1. `bytecode-debug-info` (if present) maps the bytecode PC offset    back to the encoded JS source's `(line, column)`. 2. `source-map` then maps that `(line, column)` back to the    original authored file. |
+| <a id="artifact-debugsources"></a>`debugSources` | [`DebugSource`](#debugsource)`[]` | Debug sources for this artifact, ordered to match the reverse-symbolication decode chain. A consumer that starts with a runtime location and wants to recover the original source iterates this list left-to-right: 1. `bytecode-debug-info` (if present) maps the bytecode PC offset    back to the encoded JS source's `(line, column)`. 2. `source-map` then maps that `(line, column)` back to the    original authored file. |
 | <a id="artifact-filename"></a>`filename` | `string` | The name this artifact is addressed by: the emitted file's basename, or the section name when the bundle carries it as a custom section. |
 | <a id="artifact-kind"></a>`kind` | `"main-thread" \| "background" \| "css"` | Which encoder bucket this asset belongs to in `tasm.json`: - `main-thread` — JS that runs on the lepusNG main thread (compiled   into the `lepusCode` section). - `background` — JS that runs on the background JS engine (lives in   the `manifest` section). - `css` — extracted CSS chunk (lives in the `css` section). |
 | <a id="artifact-path"></a>`path` | `string` | Bundler-relative path of the emitted asset itself (e.g. `.lynx/main/main-thread.js`). Distinct from [`SourceMapDebugSource.path`](#sourcemapdebugsource), which points at the sibling `.map` file. |
@@ -276,7 +276,7 @@ Bytecode debug info for a main-thread artifact compiled to lepusNG
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="bytecodedebuginfosource-debuginfo"></a>`debugInfo` | `LepusNGDebugInfo` | Bytecode debug payload. Today always lepusNG-shaped; if/when other encoders (`quickjs`, …) need to coexist, a `target` discriminator will be added. |
+| <a id="bytecodedebuginfosource-debuginfo"></a>`debugInfo` | [`LepusNGDebugInfo`](#lepusngdebuginfo) | Bytecode debug payload. Today always lepusNG-shaped; if/when other encoders (`quickjs`, …) need to coexist, a `target` discriminator will be added. |
 | <a id="bytecodedebuginfosource-kind"></a>`kind` | `"bytecode-debug-info"` |  |
 
 ### `DebugMetadataAsset` \{#debugmetadataasset\}
@@ -298,9 +298,9 @@ Different consumers read different fields:
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="debugmetadataasset-artifacts"></a>`artifacts` | `Artifact[]` | One entry per build artifact that ships debug data. Empty when the emitter has not yet been wired to populate it; consumers should treat an empty array as "no source-level debug data available" rather than an error. |
-| <a id="debugmetadataasset-buildinfo"></a>`buildInfo` | `{ git?: GitMetadata; rspeedy?: RspeedyMeta }` | Build-time / context info. Closed-shape today — extend by adding named fields to this interface (and bumping the schema) rather than by stuffing arbitrary keys at runtime. |
-| <a id="debugmetadataasset-uisourcemap"></a>`uiSourceMap` | `UiSourceMapData` | Compact UI source map for the entry's runtime UI tree. |
+| <a id="debugmetadataasset-artifacts"></a>`artifacts` | [`Artifact`](#artifact)`[]` | One entry per build artifact that ships debug data. Empty when the emitter has not yet been wired to populate it; consumers should treat an empty array as "no source-level debug data available" rather than an error. |
+| <a id="debugmetadataasset-buildinfo"></a>`buildInfo` | `{ git?: `[`GitMetadata`](#gitmetadata)`; rspeedy?: `[`RspeedyMeta`](#rspeedymeta)` }` | Build-time / context info. Closed-shape today — extend by adding named fields to this interface (and bumping the schema) rather than by stuffing arbitrary keys at runtime. |
+| <a id="debugmetadataasset-uisourcemap"></a>`uiSourceMap` | [`UiSourceMapData`](#uisourcemapdata) | Compact UI source map for the entry's runtime UI tree. |
 
 ### `FieldResolver` \{#fieldresolver\}
 
@@ -339,7 +339,7 @@ legacy `debug-info.json` file as the same shape.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lepusngdebuginfo-lepusng-debug-info"></a>`lepusNG_debug_info` | `LepusNGDebugInfoBody` |  |
+| <a id="lepusngdebuginfo-lepusng-debug-info"></a>`lepusNG_debug_info` | [`LepusNGDebugInfoBody`](#lepusngdebuginfobody) |  |
 
 ### `LepusNGDebugInfoBody` \{#lepusngdebuginfobody\}
 
@@ -349,7 +349,7 @@ debug data the lepusNG encoder produces for one compilation unit.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="lepusngdebuginfobody-end-line-num"></a>`end_line_num` | `number` | Last source line covered by the compilation unit. |
-| <a id="lepusngdebuginfobody-function-info"></a>`function_info` | `LepusNGFunctionInfo[]` | Per-function debug data. |
+| <a id="lepusngdebuginfobody-function-info"></a>`function_info` | [`LepusNGFunctionInfo`](#lepusngfunctioninfo)`[]` | Per-function debug data. |
 | <a id="lepusngdebuginfobody-function-number"></a>`function_number` | `number` | Number of compiled functions; equals `function_info.length`. |
 | <a id="lepusngdebuginfobody-function-source"></a>`function_source` | `string` | Full JS source that was fed to the bytecode compiler. |
 
@@ -366,7 +366,7 @@ Debug data for one lepusNG function: maps bytecode PC offsets back to
 | <a id="lepusngfunctioninfo-function-name"></a>`function_name` | `string` |  |
 | <a id="lepusngfunctioninfo-line-col"></a>`line_col` | `{ column: number; line: number }[]` | Decoded line/column pairs, one per source position emitted by the compiler. `line_col.length` matches the number of mappings encoded in `pc2line_buf`. |
 | <a id="lepusngfunctioninfo-line-number"></a>`line_number` | `number` | Source line where the function definition starts (1-based). |
-| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` | Optional PC offset → caller source snippet. Keys are stringified PC offsets; values are the original function bodies the bytecode was inlined from. Useful for de-inlining stack traces. |
+| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` (from typescript) | Optional PC offset → caller source snippet. Keys are stringified PC offsets; values are the original function bodies the bytecode was inlined from. Useful for de-inlining stack traces. |
 | <a id="lepusngfunctioninfo-pc2line-buf"></a>`pc2line_buf` | `number[]` | Variable-length encoding of the PC-to-line table. Decode rules are documented in the lepusNG bytecode debug-info spec. |
 | <a id="lepusngfunctioninfo-pc2line-len"></a>`pc2line_len` | `number` | Length of `pc2line_buf` in bytes. |
 
@@ -388,7 +388,7 @@ known to their `debugMetadataUrl`'s UI source map gain the
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="remappeduinode-children"></a>`children?` | `RemappedUiNode[]` | Child nodes, walked recursively. |
+| <a id="remappeduinode-children"></a>`children?` | [`RemappedUiNode`](#remappeduinode)`[]` | Child nodes, walked recursively. |
 | <a id="remappeduinode-column"></a>`column?` | `number` |  |
 | <a id="remappeduinode-debugmetadataurl"></a>`debugMetadataUrl?` | `string` | URL/path of the `debug-metadata.json` covering this node. |
 | <a id="remappeduinode-line"></a>`line?` | `number` |  |
@@ -427,7 +427,7 @@ the ~200 kB `source-map` runtime just for a TypeScript type.
 | <a id="sourcemap-file"></a>`file?` | `string` | Generated output filename this map describes. |
 | <a id="sourcemap-mappings"></a>`mappings` | `string` | VLQ-encoded mapping data. |
 | <a id="sourcemap-names"></a>`names` | `string[]` | Symbol names referenced from `mappings`. |
-| <a id="sourcemap-sections"></a>`sections?` | `SourceMapSection[]` | Index-map sections, exclusive with the simple-map shape. Producers either set `sections` (index map) or the other fields, not both. |
+| <a id="sourcemap-sections"></a>`sections?` | [`SourceMapSection`](#sourcemapsection)`[]` | Index-map sections, exclusive with the simple-map shape. Producers either set `sections` (index map) or the other fields, not both. |
 | <a id="sourcemap-sourceroot"></a>`sourceRoot?` | `string` | Optional prefix prepended to every entry in `sources`. |
 | <a id="sourcemap-sources"></a>`sources` | `string[]` | Original source file URLs / identifiers. |
 | <a id="sourcemap-sourcescontent"></a>`sourcesContent?` | `(string \| null)[]` | Inline source contents, parallel to `sources`. |
@@ -442,7 +442,7 @@ Source Map v3 debug data attached to a JS / CSS artifact.
 | <a id="sourcemapdebugsource-filename"></a>`filename` | `string` | Basename of the `.map` file, e.g. `main-thread.js.map`. |
 | <a id="sourcemapdebugsource-key"></a>`key` | `string` | Identifier that platform-side reverse symbolication uses to match this map. Defaults to the producing chunk's hash, matching the `release` the `__DEBUG_METADATA_RELEASE__` banner reports at runtime. |
 | <a id="sourcemapdebugsource-kind"></a>`kind` | `"source-map"` |  |
-| <a id="sourcemapdebugsource-map"></a>`map` | `SourceMap` | Full Source Map v3 payload. |
+| <a id="sourcemapdebugsource-map"></a>`map` | [`SourceMap`](#sourcemap) | Full Source Map v3 payload. |
 | <a id="sourcemapdebugsource-path"></a>`path` | `string` | Bundler-relative path of the `.map` file, e.g. `.lynx/main/main-thread.js.map`. |
 
 ### `SourceMapSection` \{#sourcemapsection\}
@@ -451,7 +451,7 @@ One section of an index source map.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="sourcemapsection-map"></a>`map` | `SourceMap` |  |
+| <a id="sourcemapsection-map"></a>`map` | [`SourceMap`](#sourcemap) |  |
 | <a id="sourcemapsection-offset"></a>`offset` | `{ column: number; line: number }` |  |
 
 ### `UiNode` \{#uinode\}
@@ -465,7 +465,7 @@ nodes pass through untouched. Every other field is opaque.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="uinode-children"></a>`children?` | `UiNode[]` | Child nodes, walked recursively. |
+| <a id="uinode-children"></a>`children?` | [`UiNode`](#uinode)`[]` | Child nodes, walked recursively. |
 | <a id="uinode-debugmetadataurl"></a>`debugMetadataUrl?` | `string` | URL/path of the `debug-metadata.json` covering this node. |
 | <a id="uinode-nodeindex"></a>`nodeIndex?` | `number` | Compile-time node identity, looked up in the UI source map. |
 

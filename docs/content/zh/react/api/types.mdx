@@ -52,7 +52,7 @@ lynx.querySelectorAll(...);
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: DataProcessorDefinition) => void` | 注册 DataProcessor。必须在 `root.render()` 之前调用。 |
+| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void` | 注册 DataProcessor。必须在 `root.render()` 之前调用。 |
 | <a id="lynx-triggerglobaleventfromlepus"></a>`triggerGlobalEventFromLepus` | `(eventName: string, params: any) => void` | 仅在 Lepus 中可用，是 `lynx.getJSModule("GlobalEventEmitter").trigger(eventName, params)` 的别名 |
 
 ### `Root` \{#root\}
@@ -61,7 +61,7 @@ lynx.querySelectorAll(...);
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">已废弃</span> | `(dataProcessorDefinition: DataProcessorDefinition) => void` | 注册 DataProcessor。必须在 `root.render()` 之前调用。 **已废弃.** 已废弃。 |
+| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">已废弃</span> | `(dataProcessorDefinition: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void` | 注册 DataProcessor。必须在 `root.render()` 之前调用。 **已废弃.** 已废弃。 |
 | <a id="root-render"></a>`render` | `(jsx: ReactNode) => void` | 使用此 API 传入要渲染的 JSX |
 
 ### `DataProcessors` \{#dataprocessors\}
@@ -102,8 +102,8 @@ DataProcessor 的定义
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | `DataProcessors` | 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
-| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: InitDataRaw) => InitData` | 可以通过扩展 [`InitDataRaw`](#initdataraw) 和 [`InitData`](#initdata) 来自定义 `defaultDataProcessor` 的输入和输出类型 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
+| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | [`DataProcessors`](#dataprocessors) | 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
+| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: `[`InitDataRaw`](#initdataraw)`) => `[`InitData`](#initdata) | 可以通过扩展 [`InitDataRaw`](#initdataraw) 和 [`InitData`](#initdata) 来自定义 `defaultDataProcessor` 的输入和输出类型 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
 
 ### `CloneElement` \{#cloneelement\}
 
@@ -115,7 +115,7 @@ ReactLynx `cloneElement` 的调用签名。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `ReactElement<Props>` |  |
+| `element` | `ReactElement<Props>` (来自 @types/react) |  |
 | `props?` | `Partial<Props> & Attributes \| null` |  |
 | `children` | `ReactNode[]` |  |
 

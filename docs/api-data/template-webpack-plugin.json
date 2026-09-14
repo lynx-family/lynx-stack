@@ -138,11 +138,18 @@
             {
               "name": "options",
               "type": "LynxEncodePluginOptions",
+              "ref": "LynxEncodePluginOptions",
+              "refs": [
+                "LynxEncodePluginOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "LynxEncodePlugin"
+            "type": "LynxEncodePlugin",
+            "refs": [
+              "LynxEncodePlugin"
+            ]
           }
         },
         {
@@ -160,6 +167,9 @@
         {
           "name": "defaultOptions",
           "type": "Readonly<Required<LynxEncodePluginOptions>>",
+          "refs": [
+            "LynxEncodePluginOptions"
+          ],
           "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`LynxEncodePlugin`](api:LynxEncodePlugin) uses.",
           "examples": [
@@ -188,6 +198,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],
@@ -212,16 +223,26 @@
             {
               "name": "options",
               "type": "LynxTemplatePluginOptions",
+              "ref": "LynxTemplatePluginOptions",
+              "refs": [
+                "LynxTemplatePluginOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "LynxTemplatePlugin"
+            "type": "LynxTemplatePlugin",
+            "refs": [
+              "LynxTemplatePlugin"
+            ]
           }
         },
         {
           "name": "defaultOptions",
           "type": "Readonly<Required<LynxTemplatePluginOptions>>",
+          "refs": [
+            "LynxTemplatePluginOptions"
+          ],
           "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`LynxTemplatePlugin`](api:LynxTemplatePlugin) uses.",
           "examples": [
@@ -237,6 +258,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],
@@ -281,7 +303,8 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation"
+              "type": "Compilation",
+              "external": "@rspack/core"
             },
             {
               "name": "chunkId",
@@ -300,11 +323,15 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation"
+              "type": "Compilation",
+              "external": "@rspack/core"
             }
           ],
           "returns": {
-            "type": "TemplateHooks"
+            "type": "TemplateHooks",
+            "refs": [
+              "TemplateHooks"
+            ]
           },
           "summary": "Returns all public hooks of the Lynx template webpack plugin for the given compilation"
         }
@@ -321,7 +348,10 @@
           "kind": "constructor",
           "params": [],
           "returns": {
-            "type": "WebEncodePlugin"
+            "type": "WebEncodePlugin",
+            "refs": [
+              "WebEncodePlugin"
+            ]
           }
         },
         {
@@ -346,7 +376,8 @@
           "params": [
             {
               "name": "compiler",
-              "type": "Compiler"
+              "type": "Compiler",
+              "external": "@rspack/core"
             }
           ],
           "returns": {
@@ -360,7 +391,8 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation"
+              "type": "Compilation",
+              "external": "@rspack/core"
             },
             {
               "name": "assets",
@@ -533,6 +565,9 @@
           "name": "customSectionNaming",
           "optional": true,
           "type": "(compilation: Compilation) => CustomSectionNaming",
+          "refs": [
+            "CustomSectionNaming"
+          ],
           "summary": "Assemble every chunk into a custom section, named by this strategy.",
           "remarks": "A bundle assembled this way carries no `lepusCode`, and only the chunks\nleft unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled\nthis way by default, under the three section names its runtime resolves.",
           "kind": "property"
@@ -839,6 +874,9 @@
         {
           "name": "beforeEmit",
           "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>",
+          "refs": [
+            "EncodeOptions"
+          ],
           "external": "@rspack/lite-tapable",
           "summary": "Called before the template is emitted. Can be used to modify the template.",
           "alpha": true,
@@ -855,6 +893,9 @@
         {
           "name": "encode",
           "type": "AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>",
+          "refs": [
+            "EncodeOptions"
+          ],
           "external": "@rspack/lite-tapable",
           "summary": "Call the encode process.",
           "alpha": true,
@@ -878,11 +919,18 @@
           "params": [
             {
               "name": "__namedParameters",
-              "type": "ProcessTasmCSSDiagnosticsOptions"
+              "type": "ProcessTasmCSSDiagnosticsOptions",
+              "ref": "ProcessTasmCSSDiagnosticsOptions",
+              "refs": [
+                "ProcessTasmCSSDiagnosticsOptions"
+              ]
             }
           ],
           "returns": {
-            "type": "ResolvedTasmCSSDiagnostic[]"
+            "type": "ResolvedTasmCSSDiagnostic[]",
+            "refs": [
+              "ResolvedTasmCSSDiagnostic"
+            ]
           },
           "summary": "Parses, source-map-resolves, and deduplicates TASM CSS diagnostics."
         }

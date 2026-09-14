@@ -20,16 +20,26 @@
           "params": [
             {
               "name": "options",
-              "type": "Partial<RuntimeWrapperWebpackPluginOptions>"
+              "type": "Partial<RuntimeWrapperWebpackPluginOptions>",
+              "refs": [
+                "RuntimeWrapperWebpackPluginOptions"
+              ],
+              "external": "typescript"
             }
           ],
           "returns": {
-            "type": "RuntimeWrapperWebpackPlugin"
+            "type": "RuntimeWrapperWebpackPlugin",
+            "refs": [
+              "RuntimeWrapperWebpackPlugin"
+            ]
           }
         },
         {
           "name": "defaultOptions",
           "type": "Readonly<Required<RuntimeWrapperWebpackPluginOptions>>",
+          "refs": [
+            "RuntimeWrapperWebpackPluginOptions"
+          ],
           "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`RuntimeWrapperWebpackPlugin`](api:RuntimeWrapperWebpackPlugin) uses.",
           "kind": "property"
@@ -42,6 +52,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

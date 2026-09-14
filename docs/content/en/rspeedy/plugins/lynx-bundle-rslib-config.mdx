@@ -33,9 +33,11 @@ export default defineConfig({
 
 {/* @api ApiOptions package="lynx-bundle-rslib-config" type="ExternalBundleLibConfig" */}
 
+<a id="externalbundlelibconfig"></a>
+
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| <a id="output"></a>`output` | `OutputConfig` |  |  |
+| <a id="output"></a>`output` | [`OutputConfig`](#outputconfig) |  |  |
 
 {/* @api-end */}
 
@@ -114,8 +116,8 @@ Then you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' 
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `userLibConfig` | `ExternalBundleLibConfig` |  |
-| `encodeOptions` | `EncodeOptions` |  |
+| `userLibConfig` | [`ExternalBundleLibConfig`](#externalbundlelibconfig) |  |
+| `encodeOptions` | [`EncodeOptions`](#encodeoptions) |  |
 
 **Returns:** `RslibConfig`
 
@@ -206,7 +208,7 @@ Definition for a named externals preset.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="externalspresetdefinition-extends"></a>`extends?` | `string \| string[]` | Other preset names to include before applying the current preset. |
-| <a id="externalspresetdefinition-externals"></a>`externals?` | `Externals` | Externals contributed by this preset. |
+| <a id="externalspresetdefinition-externals"></a>`externals?` | [`Externals`](#externals) | Externals contributed by this preset. |
 
 ### `MainThreadRuntimeWrapperWebpackPluginOptions` \{#mainthreadruntimewrapperwebpackpluginoptions\}
 

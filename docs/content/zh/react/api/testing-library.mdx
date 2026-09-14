@@ -43,11 +43,11 @@ buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `queryAllBy` | `GetAllBy<Arguments>` |  |
-| `getMultipleError` | `GetErrorFunction<Arguments>` |  |
-| `getMissingError` | `GetErrorFunction<Arguments>` |  |
+| `queryAllBy` | [`GetAllBy`](#getallby)`<Arguments>` |  |
+| `getMultipleError` | [`GetErrorFunction`](#geterrorfunction)`<Arguments>` |  |
+| `getMissingError` | [`GetErrorFunction`](#geterrorfunction)`<Arguments>` |  |
 
-**返回值:** `BuiltQueryMethods<Arguments>`
+**返回值:** [`BuiltQueryMethods`](#builtquerymethods)`<Arguments>`
 
 ### `cleanup()` \{#cleanup\}
 
@@ -67,7 +67,7 @@ computeHeadingLevel(element: Element): number | undefined
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `Element` |  |
+| `element` | `Element` (来自 typescript) |  |
 
 **返回值:** `number | undefined`
 
@@ -81,7 +81,7 @@ configure(configDelta: ConfigFn | Partial<Config>): void
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `configDelta` | `ConfigFn \| Partial<Config>` |  |
+| `configDelta` | [`ConfigFn`](#configfn)` \| Partial<`[`Config`](#config)`>` |  |
 
 ### `findAllByAltText()` \{#findallbyalttext\}
 
@@ -93,7 +93,7 @@ findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOp
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -107,7 +107,7 @@ findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matc
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -121,7 +121,7 @@ findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Selecto
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -135,7 +135,7 @@ findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: M
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -149,7 +149,7 @@ findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions,
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -163,7 +163,7 @@ findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -177,7 +177,7 @@ findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatc
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -191,7 +191,7 @@ findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T[]>`
 
@@ -205,7 +205,7 @@ findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -219,7 +219,7 @@ findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matcher
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -233,7 +233,7 @@ findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMa
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -247,7 +247,7 @@ findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Matc
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -261,7 +261,7 @@ findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, wa
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -275,7 +275,7 @@ findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -289,7 +289,7 @@ findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcher
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -303,7 +303,7 @@ findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
 
 **返回值:** `Promise<T>`
 
@@ -317,7 +317,7 @@ getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -331,7 +331,7 @@ getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Match
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -345,7 +345,7 @@ getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Selector
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -359,7 +359,7 @@ getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Ma
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -373,7 +373,7 @@ getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions])
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -387,7 +387,7 @@ getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -401,7 +401,7 @@ getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatch
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -415,7 +415,7 @@ getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -429,7 +429,7 @@ getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -443,7 +443,7 @@ getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherO
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -457,7 +457,7 @@ getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMat
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -471,7 +471,7 @@ getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Match
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -485,7 +485,7 @@ getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **返回值:** `T`
 
@@ -499,7 +499,7 @@ getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -513,7 +513,7 @@ getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherO
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -527,7 +527,7 @@ getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T`
 
@@ -539,7 +539,7 @@ getConfig(): Config
 
 *暂无说明。*
 
-**返回值:** `Config`
+**返回值:** [`Config`](#config)
 
 ### `getDefaultNormalizer()` \{#getdefaultnormalizer\}
 
@@ -551,9 +551,9 @@ getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options?` | `DefaultNormalizerOptions` |  |
+| `options?` | [`DefaultNormalizerOptions`](#defaultnormalizeroptions) |  |
 
-**返回值:** `NormalizerFn`
+**返回值:** [`NormalizerFn`](#normalizerfn)
 
 ### `getElementError()` \{#getelementerror\}
 
@@ -566,7 +566,7 @@ getElementError(message: string | null, container: HTMLElement): Error
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `message` | `string \| null` |  |
-| `container` | `HTMLElement` |  |
+| `container` | `HTMLElement` (来自 typescript) |  |
 
 **返回值:** `Error`
 
@@ -580,7 +580,7 @@ getNodeText(node: HTMLElement): string
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `node` | `HTMLElement` |  |
+| `node` | `HTMLElement` (来自 typescript) |  |
 
 **返回值:** `string`
 
@@ -594,10 +594,10 @@ getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `HTMLElement` |  |
+| `element` | `HTMLElement` (来自 typescript) |  |
 | `queriesToBind?` | `T` |  |
 
-**返回值:** `BoundFunctions<T>`
+**返回值:** [`BoundFunctions`](#boundfunctions)`<T>`
 
 ### `getRoles()` \{#getroles\}
 
@@ -609,7 +609,7 @@ getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `container` | `HTMLElement` |  |
+| `container` | `HTMLElement` (来自 typescript) |  |
 
 **返回值:** `{ [index: string]: HTMLElement[] }`
 
@@ -623,11 +623,11 @@ getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Sug
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `HTMLElement` |  |
-| `variant?` | `Variant` |  |
-| `method?` | `Method` |  |
+| `element` | `HTMLElement` (来自 typescript) |  |
+| `variant?` | [`Variant`](#variant) |  |
+| `method?` | [`Method`](#method) |  |
 
-**返回值:** `Suggestion | undefined`
+**返回值:** [`Suggestion`](#suggestion)` | undefined`
 
 ### `isInaccessible()` \{#isinaccessible\}
 
@@ -639,7 +639,7 @@ https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `Element` |  |
+| `element` | `Element` (来自 typescript) |  |
 
 **返回值:** `boolean`
 
@@ -655,7 +655,7 @@ logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOpti
 | --- | --- | --- |
 | `dom?` | `Element \| HTMLDocument` |  |
 | `maxLength?` | `number` |  |
-| `options?` | `PrettyDOMOptions` |  |
+| `options?` | [`PrettyDOMOptions`](#prettydomoptions) |  |
 
 ### `logRoles()` \{#logroles\}
 
@@ -667,8 +667,8 @@ logRoles(container: HTMLElement, options?: LogRolesOptions): string
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `container` | `HTMLElement` |  |
-| `options?` | `LogRolesOptions` |  |
+| `container` | `HTMLElement` (来自 typescript) |  |
+| `options?` | [`LogRolesOptions`](#logrolesoptions) |  |
 
 **返回值:** `string`
 
@@ -684,7 +684,7 @@ prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMO
 | --- | --- | --- |
 | `dom?` | `Element \| HTMLDocument` |  |
 | `maxLength?` | `number` |  |
-| `options?` | `PrettyDOMOptions` |  |
+| `options?` | [`PrettyDOMOptions`](#prettydomoptions) |  |
 
 **返回值:** `string | false`
 
@@ -698,7 +698,7 @@ queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherO
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -712,7 +712,7 @@ queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Mat
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -726,7 +726,7 @@ queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Select
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -740,7 +740,7 @@ queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: 
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -754,7 +754,7 @@ queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -768,7 +768,7 @@ queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOp
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -782,7 +782,7 @@ queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMat
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -796,7 +796,7 @@ queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T[]`
 
@@ -810,7 +810,7 @@ queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -824,7 +824,7 @@ queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matche
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -838,7 +838,7 @@ queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorM
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -852,7 +852,7 @@ queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Mat
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -866,7 +866,7 @@ queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]):
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -880,7 +880,7 @@ queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -894,7 +894,7 @@ queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatche
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -908,7 +908,7 @@ queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
 
 **返回值:** `T | null`
 
@@ -948,9 +948,9 @@ expect(container.firstChild).toMatchInlineSnapshot(`
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `ui` | `ReactNode` |  |
-| `options?` | `RenderOptions<Q>` |  |
+| `options?` | [`RenderOptions`](#renderoptions)`<Q>` |  |
 
-**返回值:** `RenderResult<Q>`
+**返回值:** [`RenderResult`](#renderresult)`<Q>`
 
 ### `renderHook()` \{#renderhook\}
 
@@ -983,9 +983,9 @@ expect(result.current).toEqual('provided');
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `render` | `(initialProps: Props) => Result` |  |
-| `options?` | `RenderHookOptions<Props>` |  |
+| `options?` | [`RenderHookOptions`](#renderhookoptions)`<Props>` |  |
 
-**返回值:** `RenderHookResult<Result, Props>`
+**返回值:** [`RenderHookResult`](#renderhookresult)`<Result, Props>`
 
 ### `waitFor()` \{#waitfor\}
 
@@ -998,7 +998,7 @@ waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `callback` | `() => T \| Promise<T>` |  |
-| `options?` | `waitForOptions` |  |
+| `options?` | [`waitForOptions`](#waitforoptions) |  |
 
 **返回值:** `Promise<T>`
 
@@ -1013,7 +1013,7 @@ waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Pr
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `callback` | `T \| (() => T)` |  |
-| `options?` | `waitForOptions` |  |
+| `options?` | [`waitForOptions`](#waitforoptions) |  |
 
 **返回值:** `Promise<void>`
 
@@ -1236,7 +1236,7 @@ const within: typeof getQueriesForElement
 | <a id="byroleoptions-queryfallbacks"></a>`queryFallbacks?` | `boolean` | 包含 `role` 属性中使用的所有角色 例如 *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`。 |
 | <a id="byroleoptions-selected"></a>`selected?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 selected 的元素，即 `aria-selected="true"` |
 | <a id="byroleoptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
-| <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: Matcher }` |  |
+| <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: `[`Matcher`](#matcher)` }` |  |
 
 ### `Config` \{#config\}
 
@@ -1266,9 +1266,9 @@ ConfigFn(existingConfig: Config): Partial<Config>
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `existingConfig` | `Config` |  |
+| `existingConfig` | [`Config`](#config) |  |
 
-**返回值:** `Partial<Config>`
+**返回值:** `Partial<`[`Config`](#config)`>`
 
 ### `DefaultNormalizerOptions` \{#defaultnormalizeroptions\}
 
@@ -1295,7 +1295,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 | --- | --- | --- |
 | <a id="matcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
 | <a id="matcheroptions-exact"></a>`exact?` | `boolean` |  |
-| <a id="matcheroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="matcheroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
 | <a id="matcheroptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
 | <a id="matcheroptions-trim"></a>`trim?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
 
@@ -1306,7 +1306,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="normalizeroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` |  |
-| <a id="normalizeroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="normalizeroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
 | <a id="normalizeroptions-trim"></a>`trim?` | `boolean` |  |
 
 ### `PrettyDOMOptions` \{#prettydomoptions\}
@@ -1364,7 +1364,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 | <a id="selectormatcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
 | <a id="selectormatcheroptions-exact"></a>`exact?` | `boolean` |  |
 | <a id="selectormatcheroptions-ignore"></a>`ignore?` | `string \| boolean` |  |
-| <a id="selectormatcheroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="selectormatcheroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
 | <a id="selectormatcheroptions-selector"></a>`selector?` | `string` |  |
 | <a id="selectormatcheroptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
 | <a id="selectormatcheroptions-trim"></a>`trim?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
@@ -1375,7 +1375,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="suggestion-queryargs"></a>`queryArgs` | `QueryArgs` |  |
+| <a id="suggestion-queryargs"></a>`queryArgs` | [`QueryArgs`](#queryargs) |  |
 | <a id="suggestion-querymethod"></a>`queryMethod` | `string` |  |
 | <a id="suggestion-queryname"></a>`queryName` | `string` |  |
 | <a id="suggestion-variant"></a>`variant` | `string` |  |
@@ -1388,9 +1388,9 @@ ConfigFn(existingConfig: Config): Partial<Config>
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` |  |
+| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` (来自 typescript) |  |
 | <a id="waitforoptions-interval"></a>`interval?` | `number` |  |
-| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` |  |
+| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` (来自 typescript) |  |
 | <a id="waitforoptions-ontimeout"></a>`onTimeout?` | `(error: Error) => Error` |  |
 | <a id="waitforoptions-timeout"></a>`timeout?` | `number` |  |
 

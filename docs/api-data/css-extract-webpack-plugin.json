@@ -24,16 +24,26 @@
             {
               "name": "options",
               "type": "CssExtractRspackPluginOptions",
+              "ref": "CssExtractRspackPluginOptions",
+              "refs": [
+                "CssExtractRspackPluginOptions"
+              ],
               "optional": true
             }
           ],
           "returns": {
-            "type": "CssExtractRspackPlugin"
+            "type": "CssExtractRspackPlugin",
+            "refs": [
+              "CssExtractRspackPlugin"
+            ]
           }
         },
         {
           "name": "defaultOptions",
           "type": "Readonly<CssExtractRspackPluginOptions & Pick<Required<CssExtractRspackPluginOptions>, \"cssPlugins\">>",
+          "refs": [
+            "CssExtractRspackPluginOptions"
+          ],
           "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) uses.",
           "kind": "property"
@@ -56,6 +66,7 @@
             {
               "name": "compiler",
               "type": "Compiler",
+              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

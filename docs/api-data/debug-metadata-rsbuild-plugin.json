@@ -54,7 +54,8 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation"
+              "type": "Compilation",
+              "external": "@rspack/core"
             },
             {
               "name": "args",
@@ -63,6 +64,10 @@
             {
               "name": "options",
               "type": "RewriteSourceMappingURLsOptions",
+              "ref": "RewriteSourceMappingURLsOptions",
+              "refs": [
+                "RewriteSourceMappingURLsOptions"
+              ],
               "optional": true
             }
           ],

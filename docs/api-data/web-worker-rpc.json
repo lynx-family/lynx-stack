@@ -28,7 +28,10 @@
             }
           ],
           "returns": {
-            "type": "Rpc"
+            "type": "Rpc",
+            "refs": [
+              "Rpc"
+            ]
           }
         },
         {
@@ -188,7 +191,11 @@
           "params": [
             {
               "name": "rpc",
-              "type": "RpcEndpoint<unknown[], unknown>"
+              "type": "RpcEndpoint<unknown[], unknown>",
+              "ref": "RpcEndpoint",
+              "refs": [
+                "RpcEndpoint"
+              ]
             }
           ],
           "returns": {
@@ -203,7 +210,8 @@
           "params": [
             {
               "name": "port",
-              "type": "MessagePort"
+              "type": "MessagePort",
+              "external": "typescript"
             }
           ],
           "returns": {
@@ -356,12 +364,25 @@
     {
       "name": "RpcCallType",
       "kind": "typealias",
-      "type": "E extends RpcEndpointSync<unknown[], unknown> ? (args: E[\"_TypeParameters\"]) => E[\"_TypeReturn\"] : E extends RpcEndpointSyncVoid<unknown[]> ? (args: E[\"_TypeParameters\"]) => void : E extends RpcEndpointAsync<unknown[], unknown> ? (args: E[\"_TypeParameters\"]) => Promise<E[\"_TypeReturn\"]> : E extends RpcEndpointAsyncVoid<unknown[]> ? (args: E[\"_TypeParameters\"]) => void : never"
+      "type": "E extends RpcEndpointSync<unknown[], unknown> ? (args: E[\"_TypeParameters\"]) => E[\"_TypeReturn\"] : E extends RpcEndpointSyncVoid<unknown[]> ? (args: E[\"_TypeParameters\"]) => void : E extends RpcEndpointAsync<unknown[], unknown> ? (args: E[\"_TypeParameters\"]) => Promise<E[\"_TypeReturn\"]> : E extends RpcEndpointAsyncVoid<unknown[]> ? (args: E[\"_TypeParameters\"]) => void : never",
+      "refs": [
+        "RpcEndpointSync",
+        "RpcEndpointSyncVoid",
+        "RpcEndpointAsync",
+        "RpcEndpointAsyncVoid"
+      ]
     },
     {
       "name": "RpcEndpoint",
       "kind": "typealias",
-      "type": "RpcEndpointSyncVoid<Parameters> | RpcEndpointSync<Parameters, Return> | RpcEndpointAsync<Parameters, Return> | RpcEndpointAsyncVoid<Parameters> | RpcEndpointAsyncWithTransfer<Parameters, Return>"
+      "type": "RpcEndpointSyncVoid<Parameters> | RpcEndpointSync<Parameters, Return> | RpcEndpointAsync<Parameters, Return> | RpcEndpointAsyncVoid<Parameters> | RpcEndpointAsyncWithTransfer<Parameters, Return>",
+      "refs": [
+        "RpcEndpointSyncVoid",
+        "RpcEndpointSync",
+        "RpcEndpointAsync",
+        "RpcEndpointAsyncVoid",
+        "RpcEndpointAsyncWithTransfer"
+      ]
     },
     {
       "name": "RpcEndpointAsyncVoid",
@@ -395,7 +416,10 @@
             }
           ],
           "returns": {
-            "type": "RpcEndpointAsyncVoid<Parameters>"
+            "type": "RpcEndpointAsyncVoid<Parameters>",
+            "refs": [
+              "RpcEndpointAsyncVoid"
+            ]
           }
         },
         {
@@ -415,7 +439,10 @@
             }
           ],
           "returns": {
-            "type": "RpcEndpointAsync<Parameters, Return>"
+            "type": "RpcEndpointAsync<Parameters, Return>",
+            "refs": [
+              "RpcEndpointAsync"
+            ]
           }
         },
         {
@@ -439,7 +466,10 @@
             }
           ],
           "returns": {
-            "type": "RpcEndpointAsync<Parameters, Return>"
+            "type": "RpcEndpointAsync<Parameters, Return>",
+            "refs": [
+              "RpcEndpointAsync"
+            ]
           }
         },
         {
@@ -463,7 +493,10 @@
             }
           ],
           "returns": {
-            "type": "RpcEndpointAsyncWithTransfer<Parameters, Return>"
+            "type": "RpcEndpointAsyncWithTransfer<Parameters, Return>",
+            "refs": [
+              "RpcEndpointAsyncWithTransfer"
+            ]
           }
         },
         {
@@ -483,7 +516,10 @@
             }
           ],
           "returns": {
-            "type": "RpcEndpointSyncVoid<Parameters>"
+            "type": "RpcEndpointSyncVoid<Parameters>",
+            "refs": [
+              "RpcEndpointSyncVoid"
+            ]
           }
         },
         {
@@ -511,7 +547,10 @@
             }
           ],
           "returns": {
-            "type": "RpcEndpointSync<Parameters, Return>"
+            "type": "RpcEndpointSync<Parameters, Return>",
+            "refs": [
+              "RpcEndpointSync"
+            ]
           }
         }
       ]

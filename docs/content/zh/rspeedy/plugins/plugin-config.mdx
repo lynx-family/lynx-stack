@@ -33,6 +33,8 @@ export default defineConfig({
 
 {/* @api ApiOptions package="config-rsbuild-plugin" type="Options" */}
 
+<a id="options"></a>
+
 ### `dslPluginName2PkgName` \{#dslpluginname2pkgname\}
 
 - **类型:** `Record<string, string>` (来自 typescript)
@@ -52,7 +54,7 @@ DSL 插件名到其包名的映射。
 | <a id="compileroptionskeys"></a>`compilerOptionsKeys` | `string[]` |  | 要设置的编译器选项的 key。 |
 | <a id="configkeys"></a>`configKeys` | `string[]` |  | 要设置的配置选项的 key。 |
 | <a id="upgraderspeedylink"></a>`upgradeRspeedyLink` | `string` |  | 升级 Rspeedy 的链接。 |
-| <a id="validate"></a>`validate` | `(input: unknown) => Config` |  | Lynx 配置的自定义校验函数。 |
+| <a id="validate"></a>`validate` | `(input: unknown) => `[`Config`](#config) |  | Lynx 配置的自定义校验函数。 |
 
 {/* @api-end */}
 
@@ -85,8 +87,8 @@ export default defineConfig({
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `config` | `Config` | The Lynx config to set. |
-| `options?` | `Options` |  |
+| `config` | [`Config`](#config) | The Lynx config to set. |
+| `options?` | [`Options`](#options) |  |
 
 **返回值:** `RsbuildPlugin`
 
@@ -95,5 +97,44 @@ export default defineConfig({
 ### `Config` \{#config\}
 
 由 `@lynx-js/type-config` 定义的 Lynx Config 配置接口。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="config-alignmouseeventwithw3c"></a>`alignMouseEventWithW3C?` | `boolean` | 页面级的桌面端鼠标事件兼容开关，用于在 macOS 和 Windows 上对齐 W3C 语义。实际运行时行为取决于下游桌面事件处理是否读取存储在 PageConfig 中的该值。 |
+| <a id="config-disablelongpressafterscroll"></a>`disableLongpressAfterScroll?` | `boolean` | 控制 iOS 在滚动手势之后的长按识别。开启后，Lynx 要求长按等待正在减速的 scroll view 拖动识别器失败，从而在惯性滚动期间抑制长按。 |
+| <a id="config-enablea11y"></a>`enableA11y?` | `boolean` | 控制 Android 是否为页面开启基于 helper 的 Lynx 无障碍路径。开启后，LynxAccessibilityWrapper 会初始化无障碍 helper 和基于 a11y-id 的查找路径；关闭时，运行时回退到默认或基于 delegate 的无障碍行为。 |
+| <a id="config-enableaccessibilityelement"></a>`enableAccessibilityElement?` | `boolean` | 控制 Android Lynx 视图默认的无障碍元素状态。开启后，自身 a11y 状态为默认的视图会从页面配置继承 important-for-accessibility 行为；关闭时，这些视图除非显式标记，否则不会进入默认的无障碍树。 |
+| <a id="config-enablecssinheritance"></a>`enableCSSInheritance?` | `boolean` | 控制样式系统在样式传播过程中是否走 CSS 继承路径。开启后，Fiber 的样式传播和可继承属性更新会遵循 CSS 继承；关闭时，继承样式传播保持关闭。 |
+| <a id="config-enablecssinlinevariables"></a>`enableCSSInlineVariables?` | `boolean` | 控制运行时是否把内联样式值当作 CSS 变量，并通过内联变量路径解析。开启后，解码后的页面配置会为运行时 CSS 读取和样式解析启用内联 CSS 变量支持；关闭时，内联样式值按普通静态样式处理。如果省略该字段，该设置仍可由 native 或 settings 回退值决定。 |
+| <a id="config-enablecssrule"></a>`enableCSSRule?` | `boolean` | 控制模板 CSS 编码与解码中的统一 CSS 规则支持。开启后，style、media、supports、keyframes、font-face、layer 等 CSS 规则都会通过统一规则路径解析和解码。 |
+| <a id="config-enableendgestureatlastfingerup"></a>`enableEndGestureAtLastFingerUp?` | `boolean` | 控制 iOS 多指触摸处理是否在最后一根手指抬起后才结束。开启后，触摸识别器会在最后一根手指离开时上报 ended 或 cancelled；关闭时保持旧的提前结束行为。 |
+| <a id="config-enableeventhandlerefactor"></a>`enableEventHandleRefactor?` | `boolean` | 控制运行时是否使用重构后的事件监听与分发路径。开启后，元素解码、Radon 事件处理和触摸分发都会使用支持重新绑定和拦截的新监听注册流程；关闭时，运行时保持旧的事件挂接路径。如果省略该字段，解码器会回退到 settings 中的值。 |
+| <a id="config-enableeventthrough"></a>`enableEventThrough?` | `boolean` | 控制根区域上的触摸能否穿透 Lynx 页面，而不被 Lynx 消费。开启后，根节点的触摸分发返回 false，下方的浮层或宿主视图可以收到事件；关闭时，Lynx 保持正常的触摸消费。 |
+| <a id="config-enableeventthroughinheritfrompage"></a>`enableEventThroughInheritFromPage?` | `boolean` | 控制 event-through 值未定义的后代节点能否从页面节点继承 event-through。关闭时，event-through 的继承在页面节点之前停止，以保留旧行为。 |
+| <a id="config-enablefetchapistandardstreaming"></a>`enableFetchAPIStandardStreaming?` | `boolean` | 控制 Lynx Fetch API 的标准 HTTP 流式支持。通过页面或 native 配置开启后，Fetch 请求使用标准的流式响应路径；关闭或未设置时，除非存在旧版流式标志，Fetch 会保持非标准的流式回退。 |
+| <a id="config-enablefixednew"></a>`enableFixedNew?` | `boolean` | 控制新的 fixed 定位布局路径。开启后，fixed 节点参与新的 fixed 布局和容器插入逻辑；关闭时，除非开启了统一 fixed 行为，fixed 元素保持旧的定位行为。 |
+| <a id="config-enableflexbasiszeropercent"></a>`enableFlexBasisZeroPercent?` | `boolean` | 开启后，flex 简写中省略 flex-basis 时默认为 0% 而不是 0，与 Web 浏览器行为一致。 |
+| <a id="config-enablegridplacementshorthands"></a>`enableGridPlacementShorthands?` | `boolean` | 控制 CSS 解析器是否接受 grid-column 和 grid-row 简写语法。开启后，grid 简写处理器会把位置简写解析为样式值；关闭时，这些简写声明会被拒绝。 |
+| <a id="config-enablejsbindingapithrowexception"></a>`enableJsBindingApiThrowException?` | `boolean` | 控制 JS binding API 是否以 JS 异常的形式抛出绑定失败。开启后，运行时 bundle 会为 JSI 绑定开启抛异常行为；关闭时，绑定保持旧的不抛异常行为。 |
+| <a id="config-enablelayoutonlyeventthrough"></a>`enableLayoutOnlyEventThrough?` | `boolean` | 控制在 Fragment Layer Render 中是否将 layout-only 节点排除在命中测试目标之外，同时其非 layout-only 的后代节点仍可被命中。关闭时，layout-only 节点保持现有的 PlatformEventTarget 命中测试行为。 |
+| <a id="config-enablelistnewarchitecture"></a>`enableListNewArchitecture?` | `boolean` | 控制 list 节点是否通过新的 Radon diff list 架构创建。开启后，renderer 函数可以构建 RadonDiffListNode2，且页面省略该字段时解码器会回退到 settings 中的值；关闭时，运行时保持旧的 list 架构。 |
+| <a id="config-enablemousedragscroll"></a>`enableMouseDragScroll?` | `boolean` | 控制在 Clay 平台上用鼠标拖动可滚动内容时是否滚动容器。关闭时，鼠标滚轮和滚动条滚动仍然可用。对于 target SDK 4.3 及以上，默认覆盖值为关闭。 |
+| <a id="config-enablemultitouch"></a>`enableMultiTouch?` | `boolean` | 控制 Lynx 触摸事件是否携带多指状态，而不是退化为单指行为。开启后，触摸事件包含多个活跃手指的信息；关闭时，运行时保持单指事件模型。 |
+| <a id="config-enablenativelist"></a>`enableNativeList?` | `boolean` | 控制 list 渲染是否优先使用 native C++ list 实现，而不是旧的平台 list 路径。开启后，list 元素在 shell 或页面配置中解析为 native-list 模式；关闭时，运行时保持旧的平台实现。未设置时，仍可由 native 配置决定该标志。 |
+| <a id="config-enablenewgesture"></a>`enableNewGesture?` | `boolean` | 控制运行时是否启用新的手势竞技场和处理器集成，而不是旧的纯触摸手势路径。开启后，平台 UI owner 会初始化新的手势处理器，Radon 或 Fiber 的手势更新走新路径；关闭时，滚动和触摸处理保持旧行为。 |
+| <a id="config-enablenewintersectionobserver"></a>`enableNewIntersectionObserver?` | `boolean` | 控制 intersection observer 是否使用新的检测逻辑，而不是旧的绑定滚动事件的路径。开启后，intersection manager 会把 observer 加入专用的 run loop，不依赖滚动事件绑定即可观察；关闭时，运行时保持旧的 observer 逻辑。未设置时，仍可由 settings 决定该标志。 |
+| <a id="config-enablenewtransformorigin"></a>`enableNewTransformOrigin?` | `boolean` | 控制 iOS 在 transform 和背景定位中是否使用新的 transform-origin 计算。开启后，`LynxUI`、`LynxConverter+Transform` 和背景处理使用新的原点算法；关闭时，iOS 保持旧的 transform-origin 计算。从 target SDK 2.6 起，默认覆盖值为开启。 |
+| <a id="config-enableparseintflex"></a>`enableParseIntFlex?` | `boolean` | 控制 CSS 解析器对数值型 flex 简写的处理。开启后，数值型 flex 值保留整数风格的解析；关闭时，数值型 flex 简写保持旧的数值解析行为。 |
+| <a id="config-enablereloadlifecycle"></a>`enableReloadLifecycle?` | `boolean` | 控制 reload patch 是否在受影响的元素上触发 LynxUI 的 onNodeReload 生命周期。开启后，刷新 patch 会遍历被重新加载的元素并调用 onNodeReload；关闭时，reload 更新会跳过该生命周期回调。 |
+| <a id="config-enablesimultaneoustap"></a>`enableSimultaneousTap?` | `boolean` | 控制 iOS 上 Lynx 的 tap 手势能否与外层 native tap 手势同时触发。开启后，LynxTap 和宿主 tap 手势可以同时识别；关闭时，Lynx 保持默认的互斥行为。 |
+| <a id="config-enabletextoverflow"></a>`enableTextOverflow?` | `boolean` | 控制平台文本渲染器是否将文本溢出视为可见，而不是裁剪到边界内。开启后，页面配置会把该标志传给平台文本上下文，iOS 或 Harmony 的文本渲染允许溢出可见；关闭时，文本保持旧的裁剪行为。从 target SDK 2.8 起，默认覆盖值为开启。 |
+| <a id="config-enabletransformedtouchposition"></a>`enableTransformedTouchPosition?` | `boolean` | 控制触摸事件坐标是否考虑元素的 transform。开启后，Lynx 和 Canvas 的触摸分发会把根节点触摸点转换到经过 transform 的目标视图坐标空间；关闭时，触摸位置保持旧的未变换计算方式。 |
+| <a id="config-fontscaleeffectiveonlyonsp"></a>`fontScaleEffectiveOnlyOnSp?` | `boolean` | 控制字体缩放是否只作用于 `sp` 单位。开启后，非 sp 的字体相关长度使用 1 倍字体缩放，而 `sp` 值保留字体缩放行为；关闭时，字体缩放可能影响更广泛的文本尺寸。 |
+| <a id="config-includefontpadding"></a>`includeFontPadding?` | `boolean` | 控制 Android 文本测量是否包含字体的上下内边距。开启后，页面配置会把 `includeFontPadding` 传给文本 shadow 节点，文本高度和垂直居中都会包含字体内边距；关闭时，文本度量不包含该内边距。省略时，Android 会回退到历史上基于 SDK 的默认值（2.4 \<= target SDK \< 2.9 时为 `true`）。 |
+| <a id="config-keyboardcallbackpassrelativeheight"></a>`keyboardCallbackPassRelativeHeight?` | `boolean` | 控制 Android PageConfig 中由 `useRelativeKeyboardHeightApi()` 返回、供键盘高度回调使用的标志。开启后，键盘 API 可以报告相对于 Lynx 视图底部的高度，以处理 decor view 偏移变化；关闭时，回调保持默认的高度语义。 |
+| <a id="config-longpressduration"></a>`longPressDuration?` | `number` | 控制 Lynx 触发 `longpress` 事件前的平台长按超时时间。值越小，长按识别越早触发；默认值或负值会保持平台的超时行为。 |
+| <a id="config-removedescendantselectorscope"></a>`removeDescendantSelectorScope?` | `boolean` | 控制样式解析时后代选择器能否跨越组件作用域边界。开启后，`AttributeHolder` 和 `StyleResolver` 不再把后代选择器限制在当前组件作用域内；关闭时，后代选择器只在组件作用域内匹配。在 Fiber 中，除非显式设置，手动解码保持默认关闭。 |
+| <a id="config-tapslop"></a>`tapSlop?` | `string` | 控制平台手势识别器在取消 tap 之前允许的移动阈值。指针移动超过该距离后，Android 或 Harmony 的 tap 处理不再把这次交互视为 tap；移动距离较小时仍可按 tap 处理。 |
+| <a id="config-unifyvwvhbehavior"></a>`unifyVWVHBehavior?` | `boolean` | 控制 `vw` 和 `vh` 是否在布局和动态样式更新中都使用统一的视口计算路径。开启后，Fiber 元素和动态 CSS 更新会基于当前视口一致地重新计算视口单位；关闭时，部分属性保持旧行为。从 target SDK 2.3 起，默认覆盖值为开启。 |
 
 {/* @api-end */}

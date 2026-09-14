@@ -33,9 +33,11 @@ export default defineConfig({
 
 {/* @api ApiOptions package="vanilla-rsbuild-plugin" type="PluginVanillaLynxOptions" */}
 
+<a id="pluginvanillalynxoptions"></a>
+
 ### `bundleFilename` \{#bundlefilename\}
 
-- **类型:** `VanillaBundleFilename`
+- **类型:** [`VanillaBundleFilename`](#vanillabundlefilename)
 
 覆盖最终的 `.bundle` 文件名。
 
@@ -44,7 +46,7 @@ export default defineConfig({
 
 ### `entries` \{#entries\}
 
-- **类型:** `Record<string, VanillaLynxEntry>` (来自 typescript)
+- **类型:** `Record<string, `[`VanillaLynxEntry`](#vanillalynxentry)`>` (来自 typescript)
 
 显式声明的双线程入口。
 
@@ -60,7 +62,7 @@ export default defineConfig({
 已废弃。
 :::
 
-[`PluginVanillaLynxOptions.engineVersion`](#pluginvanillalynxoptions-engineversion) 的别名。
+[`PluginVanillaLynxOptions.engineVersion`](#engineversion) 的别名。
 
  请改用 `engineVersion`。
 
@@ -93,7 +95,7 @@ pluginVanillaLynx(options: PluginVanillaLynxOptions): RsbuildPlugin
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `options` | `PluginVanillaLynxOptions` |  |
+| `options` | [`PluginVanillaLynxOptions`](#pluginvanillalynxoptions) |  |
 
 **返回值:** `RsbuildPlugin`
 
@@ -115,7 +117,7 @@ Vanilla Lynx 入口使用的 Rspack layer。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => TemplateHooks` |  |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) |  |
 
 ### `TemplateHooks` \{#templatehooks\}
 
@@ -144,11 +146,11 @@ class MyPlugin {
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | 在 template 输出后调用。 |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | 获取异步 chunk 的真实名称。`asyncChunkName` 相同的文件会被放入同一个 template。 |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | 在 template 输出前调用，可用于修改 template。 |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | 在编码流程开始前调用，可用于修改编码选项。 |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | 执行编码流程。 |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` (来自 @rspack/lite-tapable) | 在 template 输出后调用。 |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` (来自 @rspack/lite-tapable) | 获取异步 chunk 的真实名称。`asyncChunkName` 相同的文件会被放入同一个 template。 |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` (来自 @rspack/lite-tapable) | 在 template 输出前调用，可用于修改 template。 |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` (来自 @rspack/lite-tapable) | 在编码流程开始前调用，可用于修改编码选项。 |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` (来自 @rspack/lite-tapable) | 执行编码流程。 |
 
 ### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
 

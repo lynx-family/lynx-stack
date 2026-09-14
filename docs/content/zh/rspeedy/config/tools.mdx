@@ -12,12 +12,12 @@ title: tools
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
-| [`bundlerChain`](#tools-bundlerchain) | `ToolsBundlerChainConfig` | [`Tools.bundlerChain`](#tools-bundlerchain) 通过 [rspack-chain](https://github.com/rspack-contrib/rspack-chain) 修改 [Rspack](https://rspack.rs) 的选项。 |
-| [`cssExtract`](#tools-cssextract) | `CssExtract` | [`CssExtract`](#tools-cssextract) 用于控制 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) 的选项。 |
-| [`cssLoader`](#tools-cssloader) | `CssLoader` | [`CssLoader`](#tools-cssloader) 用于控制 [css-loader](https://github.com/webpack-contrib/css-loader) 的选项。 |
-| [`rsdoctor`](#tools-rsdoctor) | `RsdoctorRspackPluginOptions` | [`Tools.rsdoctor`](#tools-rsdoctor) 用于控制 [Rsdoctor](https://rsdoctor.dev/) 的选项。 |
-| [`rspack`](#tools-rspack) | `ToolsRspackConfig` | [`Tools.rspack`](#tools-rspack) 用于控制 [Rspack](https://rspack.rs/) 的选项。 |
-| [`swc`](#tools-swc) | `ToolsSwcConfig` | [`Tools.swc`](#tools-swc) 用于控制 [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader) 的选项。 |
+| [`bundlerChain`](#tools-bundlerchain) | `ToolsBundlerChainConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Tools.bundlerChain` 通过 [rspack-chain](https://github.com/rspack-contrib/rspack-chain) 修改 [Rspack](https://rspack.rs) 的选项。 |
+| [`cssExtract`](#tools-cssextract) | [`CssExtract`](#tools-cssextract) | [`CssExtract`](#tools-cssextract) 用于控制 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) 的选项。 |
+| [`cssLoader`](#tools-cssloader) | [`CssLoader`](#tools-cssloader) | [`CssLoader`](#tools-cssloader) 用于控制 [css-loader](https://github.com/webpack-contrib/css-loader) 的选项。 |
+| [`rsdoctor`](#tools-rsdoctor) | [`RsdoctorRspackPluginOptions`](#tools-rsdoctor) | `Tools.rsdoctor` 用于控制 [Rsdoctor](https://rsdoctor.dev/) 的选项。 |
+| [`rspack`](#tools-rspack) | `ToolsRspackConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Tools.rspack` 用于控制 [Rspack](https://rspack.rs/) 的选项。 |
+| [`swc`](#tools-swc) | `ToolsSwcConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Tools.swc` 用于控制 [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader) 的选项。 |
 
 {/* @api-end */}
 
@@ -30,7 +30,7 @@ title: tools
 - **类型:** `ToolsBundlerChainConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/))
 - **默认值:** `undefined`
 
-[`Tools.bundlerChain`](#tools-bundlerchain) 通过 [rspack-chain](https://github.com/rspack-contrib/rspack-chain) 修改 [Rspack](https://rspack.rs) 的选项。
+`Tools.bundlerChain` 通过 [rspack-chain](https://github.com/rspack-contrib/rspack-chain) 修改 [Rspack](https://rspack.rs) 的选项。
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -141,10 +141,10 @@ const defaultOptions = {
 
 #### `tools.cssLoader.modules` \{#tools-cssloader-modules\}
 
-- **类型:** `boolean | "local" | "global" | "pure" | "icss" | CssLoaderModules`
+- **类型:** `boolean | "local" | "global" | "pure" | "icss" | `[`CssLoaderModules`](#tools-cssloader-modules)
 - **默认值:** 启用 CSS Modules，自动识别 `*.module.*` 文件，使用 camelCase 导出、`namedExport: false`，`localIdentName` 继承自 `output.cssModules.localIdentName`。
 
-[`cssLoader.modules`](#cssloadermodules) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。
+[`cssLoader.modules`](#tools-cssloader-modules) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。
 
 使用 `false` 值可以提升性能，因为这样会跳过对 CSS Modules 特性的解析，适用于使用原生 CSS 或其他技术的开发者。
 
@@ -174,7 +174,7 @@ export default defineConfig({
 })
 ```
 
-使用对象值，基于 [`CssLoaderModules.auto`](#cssloadermodules-auto) 选项启用 CSS Modules，并对 CSS Modules 进行更多配置。
+使用对象值，基于 [`CssLoaderModules.auto`](#tools-cssloader-modules-auto) 选项启用 CSS Modules，并对 CSS Modules 进行更多配置。
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -190,12 +190,56 @@ export default defineConfig({
 })
 ```
 
+##### `tools.cssLoader.modules.namedExport` \{#tools-cssloader-modules-namedexport\}
+
+- **类型:** `boolean`
+- **默认值:** `false`
+
+启用/禁用 locals 的 ES modules 具名导出。
+
+- `style.css`
+
+```css
+.foo-baz {
+  color: red;
+}
+.bar {
+  color: blue;
+}
+.default {
+  color: green;
+}
+```
+
+- `index.js`
+
+```js
+import * as styles from "./styles.css";
+
+// If using `exportLocalsConvention: "as-is"` (default value):
+console.log(styles["foo-baz"], styles.bar);
+
+// If using `exportLocalsConvention: "camel-case-only"`:
+console.log(styles.fooBaz, styles.bar);
+
+// For the `default` class name
+console.log(styles["_default"]);
+```
+
+##### 其他选项 \{#tools-cssloader-modules-other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="tools-cssloader-modules-auto"></a>`auto` | `boolean \| RegExp \| ((filename: string) => boolean)` | `true` | `CssModules.auto` |
+| <a id="tools-cssloader-modules-exportlocalsconvention"></a>`exportLocalsConvention` | `CssModuleLocalsConvention` | `'camelCase'` | `CssModules.exportLocalsConvention` |
+| <a id="tools-cssloader-modules-localidentname"></a>`localIdentName` | `string` | `'[local]-[hash:base64:6]'` | `CssModules.localIdentName` |
+
 ### `tools.rsdoctor` \{#tools-rsdoctor\}
 
 - **类型:** [`RsdoctorRspackPluginOptions`](#tools-rsdoctor)
 - **默认值:** `undefined`
 
-[`Tools.rsdoctor`](#tools-rsdoctor) 用于控制 [Rsdoctor](https://rsdoctor.dev/) 的选项。
+`Tools.rsdoctor` 用于控制 [Rsdoctor](https://rsdoctor.dev/) 的选项。
 
 设置 `RSDOCTOR=true` 可启用 Rsdoctor。启用后，Rspeedy 会在配置规范化阶段合并额外的插件默认配置。
 
@@ -224,7 +268,7 @@ export default defineConfig({
 - **类型:** `ToolsRspackConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/))
 - **默认值:** `undefined`
 
-[`Tools.rspack`](#tools-rspack) 用于控制 [Rspack](https://rspack.rs/) 的选项。
+`Tools.rspack` 用于控制 [Rspack](https://rspack.rs/) 的选项。
 
 - 使用对象配置
 
@@ -304,6 +348,6 @@ export default defineConfig({
 
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="tools-swc"></a>`swc` | `ToolsSwcConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `undefined` | [`Tools.swc`](#tools-swc) 用于控制 [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader) 的选项。 |
+| <a id="tools-swc"></a>`swc` | `ToolsSwcConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `undefined` | `Tools.swc` 用于控制 [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader) 的选项。 |
 
 {/* @api-end */}
