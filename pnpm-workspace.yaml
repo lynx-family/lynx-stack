@@ -38,6 +38,9 @@ publicHoistPattern: []
 resolutionMode: "lowest-direct"
 strictPeerDependencies: true
 
+# Temporary for PR #3043 preview validation; remove before merge.
+blockExoticSubdeps: false
+
 # Treat workspace topology and filter mistakes as hard errors.
 disallowWorkspaceCycles: true
 failIfNoMatch: true
