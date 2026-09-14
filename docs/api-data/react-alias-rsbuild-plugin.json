@@ -1,7 +1,7 @@
 {
   "id": "react-alias-rsbuild-plugin",
   "package": "@lynx-js/react-alias-rsbuild-plugin",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "description": "A rsbuild plugin for making alias in ReactLynx",
   "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react-alias",

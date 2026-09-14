@@ -1,7 +1,7 @@
 {
   "id": "vanilla-rsbuild-plugin",
   "package": "@lynx-js/vanilla-rsbuild-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
   "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla",

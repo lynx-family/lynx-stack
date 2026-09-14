@@ -1,28 +1,28 @@
 {
   "rsbuild-plugin": {
     "package": "@lynx-js/rsbuild-plugin",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "group": "build",
     "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
     "exports": 11
   },
   "react-rsbuild-plugin": {
     "package": "@lynx-js/react-rsbuild-plugin",
-    "version": "0.20.1",
+    "version": "0.20.2",
     "group": "build",
     "description": "A rsbuild plugin for ReactLynx",
     "exports": 11
   },
   "vanilla-rsbuild-plugin": {
     "package": "@lynx-js/vanilla-rsbuild-plugin",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "group": "build",
     "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
     "exports": 8
   },
   "qrcode-rsbuild-plugin": {
     "package": "@lynx-js/qrcode-rsbuild-plugin",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "group": "build",
     "description": "A rsbuild plugin for printing QRCode in terminal",
     "exports": 3
@@ -43,14 +43,14 @@
   },
   "debug-metadata-rsbuild-plugin": {
     "package": "@lynx-js/debug-metadata-rsbuild-plugin",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "group": "build",
     "description": "An rsbuild plugin that emits Lynx debug metadata (debug-metadata.json) alongside template builds.",
     "exports": 4
   },
   "react-alias-rsbuild-plugin": {
     "package": "@lynx-js/react-alias-rsbuild-plugin",
-    "version": "0.20.1",
+    "version": "0.20.2",
     "group": "build",
     "description": "A rsbuild plugin for making alias in ReactLynx",
     "exports": 3
@@ -64,14 +64,14 @@
   },
   "rspeedy": {
     "package": "@lynx-js/rspeedy",
-    "version": "0.17.1",
+    "version": "0.17.2",
     "group": "build",
     "description": "A webpack/rspack-based frontend toolchain for Lynx",
     "exports": 42
   },
   "react": {
     "package": "@lynx-js/react",
-    "version": "0.126.0",
+    "version": "0.126.1",
     "group": "react",
     "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
     "exports": 32
@@ -105,14 +105,14 @@
   },
   "web-core": {
     "package": "@lynx-js/web-core",
-    "version": "0.26.0",
+    "version": "0.26.1",
     "group": "web",
     "description": "The Web Platform of Lynx / Lynx for Web",
     "exports": 25
   },
   "web-elements": {
     "package": "@lynx-js/web-elements",
-    "version": "0.12.10",
+    "version": "0.12.11",
     "group": "web",
     "exports": 24
   },
@@ -125,7 +125,7 @@
   },
   "web-rsbuild-server-middleware": {
     "package": "@lynx-js/web-rsbuild-server-middleware",
-    "version": "0.26.0",
+    "version": "0.26.1",
     "group": "web",
     "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
     "exports": 1
@@ -138,7 +138,7 @@
   },
   "web-worker-rpc": {
     "package": "@lynx-js/web-worker-rpc",
-    "version": "0.26.0",
+    "version": "0.26.1",
     "group": "web",
     "exports": 9
   },
@@ -186,7 +186,7 @@
   },
   "autolink-codegen": {
     "package": "@lynx-js/autolink-codegen",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "group": "libraries",
     "description": "Lynx library code generator",
     "exports": 14
@@ -200,7 +200,7 @@
   },
   "template-webpack-plugin": {
     "package": "@lynx-js/template-webpack-plugin",
-    "version": "0.16.0",
+    "version": "0.16.1",
     "group": "internals",
     "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
     "exports": 14
@@ -228,7 +228,7 @@
   },
   "react-webpack-plugin": {
     "package": "@lynx-js/react-webpack-plugin",
-    "version": "0.11.3",
+    "version": "0.11.4",
     "group": "internals",
     "description": "A webpack plugin for ReactLynx",
     "exports": 5

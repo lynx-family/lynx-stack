@@ -1,7 +1,7 @@
 {
   "id": "web-elements",
   "package": "@lynx-js/web-elements",
-  "version": "0.12.10",
+  "version": "0.12.11",
   "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-elements",
   "exports": [

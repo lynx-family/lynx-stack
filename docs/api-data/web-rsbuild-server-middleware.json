@@ -1,7 +1,7 @@
 {
   "id": "web-rsbuild-server-middleware",
   "package": "@lynx-js/web-rsbuild-server-middleware",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
   "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-server-middleware",

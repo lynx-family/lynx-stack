@@ -1,7 +1,7 @@
 {
   "id": "web-core",
   "package": "@lynx-js/web-core",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "The Web Platform of Lynx / Lynx for Web",
   "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core",
