@@ -37,7 +37,7 @@
     "build": "rslib build"
   },
   "dependencies": {
-    "@preact/signals": "^2.9.4",
+    "@preact/signals": "^2.11.2",
     "@preact/signals-core": "^1.14.4"
   },
   "devDependencies": {
