@@ -1,17 +1,16 @@
 import json,re,sys,os
-S='/private/tmp/claude-501/-Users-bytedance-projects-lynx-stack-docs-all-in-one/940f018a-b91e-4da2-bdb4-5c14e4908668/scratchpad/'
 FENCE=re.compile(r'(```[^\n]*\n[\s\S]*?\n```)')
 def segments(en):
     parts=FENCE.split(en)
     return parts  # even idx = prose, odd idx = fence
-def dump(pkg):
+def dump(pkg, out_dir):
     d=json.load(open(f'api-data/zh/{pkg}.json')); lines=[]
     for k,v in d.items():
         if v.get('text'): continue
         for i,seg in enumerate(segments(v['en'])):
             if i%2==0 and seg.strip():
                 lines.append(f"{k}\t{i}\t{seg.strip().replace(chr(10),' ⏎ ')}")
-    open(S+f'seg-{pkg}.tsv','w').write('\n'.join(lines)); return len(lines), sum(len(l) for l in lines)
+    open(os.path.join(out_dir,f'seg-{pkg}.tsv'),'w').write('\n'.join(lines)); return len(lines), sum(len(l) for l in lines)
 def apply(pkg, tsv):
     d=json.load(open(f'api-data/zh/{pkg}.json'))
     tr={}
@@ -45,7 +44,8 @@ if __name__=='__main__':
     if cmd=='apply-dir':
         apply_dir(sys.argv[2])
     elif cmd=='dump':
-        for p in sys.argv[2:]:
-            n,c=dump(p); print(f"{p:34s} {n:4d} segments {c:6d} chars")
+        out_dir=sys.argv[2]; os.makedirs(out_dir,exist_ok=True)
+        for p in sys.argv[3:]:
+            n,c=dump(p,out_dir); print(f"{p:34s} {n:4d} segments {c:6d} chars")
     else:
         pkg,tsv=sys.argv[2],sys.argv[3]; print(pkg,'applied',apply(pkg,tsv))

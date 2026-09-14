@@ -45,8 +45,8 @@ Generated text is translated through sidecar files, one per package: `api-data/z
 
 ```sh
 pnpm --filter docs i18n:extract          # add new/changed strings to api-data/zh/*.json
-pnpm --filter docs i18n:dump <package>   # write the untranslated prose segments to a TSV
-pnpm --filter docs i18n:apply <dir>      # read seg-*.zh.tsv files back into the sidecars
+pnpm --filter docs i18n:dump <dir> <package>   # write the untranslated prose segments to <dir>/seg-<package>.tsv
+pnpm --filter docs i18n:apply <dir>             # read <dir>/seg-*.zh.tsv back into the sidecars
 pnpm --filter docs generate              # re-render the pages
 ```
 
