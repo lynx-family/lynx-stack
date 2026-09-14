@@ -14,6 +14,7 @@ import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
+const S_APPLIED = Symbol.for('lynx:debug-metadata')
 
 function isDebugMode(): boolean {
   const debug = process.env['DEBUG']
@@ -158,6 +159,9 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
   return {
     name: PLUGIN_NAME,
     setup(api) {
+      if (api.useExposed(S_APPLIED)) return
+      api.expose(S_APPLIED, true)
+
       const compilerHandle: CompilerHandle = { compiler: null }
 
       api.onAfterCreateCompiler(({ compiler }) => {
