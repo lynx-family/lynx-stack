@@ -1,4 +1,4 @@
-import { beforeAll, test, expect } from 'vitest';
+import { beforeAll, test, expect } from '@rstest/core';
 
 let render;
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree } from './utils/nativeMethod';
 import { setupPage, snapshotInstanceManager, backgroundSnapshotInstanceManager } from '../../src/snapshot';
@@ -94,7 +94,7 @@ describe('addComponentElement', () => {
 
     const jsx = wrapWithLynxComponent(
       snapshotSpread,
-      <C id='1' className='2' style='flex: 3' bindtap={vi.fn()} data-a='1' />,
+      <C id='1' className='2' style='flex: 3' bindtap={rs.fn()} data-a='1' />,
     );
 
     scratch.ensureElements();
@@ -144,7 +144,7 @@ describe('addComponentElement', () => {
     }
     const jsx = wrapWithLynxComponent(
       snapshotSpread,
-      <C id='1' className='2' style='flex: 3' bindtap={vi.fn()} data-a='1' removeComponentElement={true} />,
+      <C id='1' className='2' style='flex: 3' bindtap={rs.fn()} data-a='1' removeComponentElement={true} />,
     );
 
     scratch.ensureElements();
@@ -166,7 +166,7 @@ describe('addComponentElement', () => {
     }
     const jsx = wrapWithLynxComponent(
       snapshotSpread,
-      <C id='1' className='2' style='flex: 3' bindtap={vi.fn()} data-a='1' removeComponentElement={false} />,
+      <C id='1' className='2' style='flex: 3' bindtap={rs.fn()} data-a='1' removeComponentElement={false} />,
     );
 
     scratch.ensureElements();
@@ -195,5 +195,24 @@ describe('addComponentElement', () => {
         </view>
       </page>
     `);
+  });
+  it('drops props that are not component attributes', () => {
+    class C extends ComponentFromReactRuntime {
+      render() {
+        return <view />;
+      }
+    }
+
+    const jsx = wrapWithLynxComponent(
+      snapshotSpread,
+      <C id='1' notAComponentAttr='x' />,
+    );
+
+    scratch.ensureElements();
+    render(jsx, scratch);
+
+    expect(scratch.__element_root.children[0].props).not.toHaveProperty(
+      'notAComponentAttr',
+    );
   });
 });

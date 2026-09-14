@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 
-import { test, expect } from 'vitest';
+import { test, expect } from '@rstest/core';
 
 import { parse } from '../src/index.js';
 import { readCode } from './utils.js';

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { options, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { useState } from '../../../src/index';
 import { __root } from '../../../src/root';
@@ -24,7 +24,7 @@ beforeEach(() => {
 
 afterEach(() => {
   removeCommitHookForTesting();
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   elementTree.clear();
 });
 

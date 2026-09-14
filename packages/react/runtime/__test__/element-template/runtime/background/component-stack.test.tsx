@@ -1,6 +1,6 @@
 import { options } from 'preact';
 import type { ComponentChildren } from 'preact';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { installElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
 import { isElementTemplateRendering } from '../../../../src/element-template/background/render-scope.js';
@@ -11,7 +11,7 @@ describe('ElementTemplate background component stack', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     envManager.resetEnv('background');
   });
 
@@ -19,7 +19,7 @@ describe('ElementTemplate background component stack', () => {
     const scheduledRenders: Array<() => void> = [];
     const previousDebounce = options.debounceRendering;
     const previousProfile = globalThis.__PROFILE__;
-    const dispatchEvent = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchEvent = rs.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     options.debounceRendering = callback => scheduledRenders.push(callback);
     globalThis.__PROFILE__ = false;
     const { root, useState } = await import('../../../../src/element-template/index.js');

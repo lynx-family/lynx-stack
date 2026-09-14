@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
 import {
   getFromWorkletRefMap,
@@ -324,5 +324,14 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe(
       'background-thread-init-2',
     );
+  });
+  it('keeps an existing ref when the same id arrives again', () => {
+    updateWorkletRefInitValueChanges([[1, 'ref1']]);
+    const first = getFromWorkletRefMap({ _wvid: 1 });
+
+    updateWorkletRefInitValueChanges([[1, 'ref1-again']]);
+
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(first);
+    expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('ref1');
   });
 });

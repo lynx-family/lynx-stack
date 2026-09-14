@@ -15,6 +15,7 @@ export const snapshotInstanceManager: {
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
+    /* v8 ignore next */
     if (__DEV__) {
       clearSnapshotVNodeSource();
     }

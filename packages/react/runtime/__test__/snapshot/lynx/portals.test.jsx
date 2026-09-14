@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { createContext, createPortal, useContext, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
@@ -40,7 +40,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rs.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -199,7 +199,7 @@ describe('createPortal', () => {
     // `child.parentNode.removeChild(child)` → our `fakeRoot.removeChild` →
     // `nodesRefRemoveChild` patch op. Apply that patch back on main thread
     // to exercise the `nodesRefRemoveChild` apply branch + `__RemoveElement`.
-    vi.useFakeTimers();
+    rs.useFakeTimers();
     const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     render(null, __root);
@@ -215,8 +215,8 @@ describe('createPortal', () => {
     // drain. This catches both the regular tree teardown AND the portal
     // subtree (via `fakeRoot.removeChild` enqueueing into
     // `globalBackgroundSnapshotInstancesToRemove`).
-    vi.advanceTimersByTime(10000);
-    vi.useRealTimers();
+    rs.advanceTimersByTime(10000);
+    rs.useRealTimers();
 
     // back to baseline (only the root SI on each side).
     expect(snapshotInstanceManager.values.size).toBe(1);
@@ -253,6 +253,32 @@ describe('createPortal', () => {
     render(<App show={false} />, __root);
 
     // Hydrate flushes the queue — the cancelled child must NOT appear.
+    globalEnvManager.switchToMainThread();
+    initGlobalSnapshotPatch();
+    clearPendingPortalInsertBefore();
+    expect(__globalSnapshotPatch).toEqual([]);
+  });
+
+  it('walks past unrelated queued portals when draining a cancelled one', () => {
+    const hostA = { selector: '[react-ref-first-test]' };
+    const hostB = { selector: '[react-ref-second-test]' };
+
+    function App({ showA, showB }) {
+      return (
+        <view>
+          {showA && createPortal(<text data-testid='first'>first</text>, hostA)}
+          {showB && createPortal(<text data-testid='second'>second</text>, hostB)}
+        </view>
+      );
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App showA={true} showB={true} />, __root);
+    // Dropping the second portal has to skip the first queued tuple.
+    render(<App showA={true} showB={false} />, __root);
+    // Drop the first one too so nothing leaks into later tests.
+    render(<App showA={false} showB={false} />, __root);
+
     globalEnvManager.switchToMainThread();
     initGlobalSnapshotPatch();
     clearPendingPortalInsertBefore();
@@ -328,7 +354,7 @@ describe('createPortal', () => {
     // Now unmount the portal via state change. `fakeRoot.removeChild` should
     // queue the portal child's BSI id into the cleanup list, which commit
     // captures and drains via a debounced 10s `tearDown`.
-    vi.useFakeTimers();
+    rs.useFakeTimers();
     before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
     globalEnvManager.switchToBackground();
     setShow(false);
@@ -337,8 +363,8 @@ describe('createPortal', () => {
     // Drive the debounced commit cleanup. Without the bg-side enqueue in
     // `fakeRoot.removeChild`, this advance is a no-op and the portal
     // child BSI stays in the manager.
-    vi.advanceTimersByTime(10000);
-    vi.useRealTimers();
+    rs.advanceTimersByTime(10000);
+    rs.useRealTimers();
 
     expect(backgroundSnapshotInstanceManager.values.size).toBe(sizeBeforeMount);
   });
@@ -647,6 +673,34 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     expect(listElement.componentAtIndex()).toBe(-1);
     expect(listElement.enqueueComponent()).toBeUndefined();
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
+  });
+
+  it('keeps the elements of an already-materialized portal child', () => {
+    globalEnvManager.switchToMainThread();
+    const hostType = __SNAPSHOT__(<view portal-host-marker='1' />);
+    const host = new SnapshotInstance(hostType);
+    __root.ensureElements();
+    __root.insertBefore(host);
+    host.ensureElements();
+
+    const childId = -9990;
+    snapshotPatchApply([
+      SnapshotOperation.CreateElement,
+      '__snapshot_a94a8_test_1',
+      childId,
+    ]);
+    const child = snapshotInstanceManager.values.get(childId);
+    child.ensureElements();
+    const elementsBefore = child.__elements;
+
+    snapshotPatchApply([
+      SnapshotOperation.nodesRefInsertBefore,
+      '[portal-host-marker]',
+      childId,
+      undefined,
+    ]);
+
+    expect(child.__elements).toBe(elementsBefore);
   });
 });
 

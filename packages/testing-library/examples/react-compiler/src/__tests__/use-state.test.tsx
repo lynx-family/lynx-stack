@@ -6,7 +6,7 @@ import { render, fireEvent, screen } from '@lynx-js/react/testing-library';
 import { useState } from '@lynx-js/react';
 // @ts-ignore
 import { expectLogsAndClear, log } from './expectLogs.jsx';
-import { test, expect } from 'vitest';
+import { test, expect } from '@rstest/core';
 
 function Counter() {
   let [state, setState] = useState(0);

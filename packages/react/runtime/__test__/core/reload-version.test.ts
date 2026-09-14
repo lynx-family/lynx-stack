@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { getReloadVersion, increaseReloadVersion } from '../../src/core/reload-version.js';
 

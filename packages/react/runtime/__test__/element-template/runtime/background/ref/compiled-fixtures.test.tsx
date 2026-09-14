@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,
@@ -117,7 +117,7 @@ describe('Compiled ordinary ref background updates', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     resetElementTemplateCommitState();
     resetElementTemplateHydrationListener();
     clearEtAttrPlanMap();
@@ -146,8 +146,8 @@ describe('Compiled ordinary ref background updates', () => {
     const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<DirectFixtureProps>>(
       DIRECT_REF_FIXTURE,
     );
-    const oldRef = vi.fn();
-    const newRef = vi.fn();
+    const oldRef = rs.fn();
+    const newRef = rs.fn();
 
     const host = renderOnBackground(backgroundModule, { hostRef: oldRef });
     expect(oldRef).toHaveBeenCalledTimes(1);
@@ -173,10 +173,10 @@ describe('Compiled ordinary ref background updates', () => {
     const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<SpreadAppProps>>(
       SPREAD_REF_FIXTURE,
     );
-    const stableRef = vi.fn();
-    const newRef = vi.fn();
-    const unsupportedMainThreadRef = vi.fn();
-    const unsupportedWorkletRef = vi.fn();
+    const stableRef = rs.fn();
+    const newRef = rs.fn();
+    const unsupportedMainThreadRef = rs.fn();
+    const unsupportedWorkletRef = rs.fn();
 
     const host = renderOnBackground(backgroundModule, {
       spread: {
@@ -237,9 +237,9 @@ describe('Compiled ordinary ref background updates', () => {
     const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<MultiRefAppProps>>(
       MULTI_REF_FIXTURE,
     );
-    const directRef = vi.fn();
+    const directRef = rs.fn();
     const objectRef: { current: unknown } = { current: null };
-    const spreadRef = vi.fn();
+    const spreadRef = rs.fn();
     const props = {
       directRef,
       objectRef,
@@ -278,8 +278,8 @@ describe('Compiled ordinary ref background updates', () => {
     spreadRef.mockClear();
     flushAndClearUpdateEvents();
 
-    const nextDirectRef = vi.fn();
-    const nextSpreadRef = vi.fn();
+    const nextDirectRef = rs.fn();
+    const nextSpreadRef = rs.fn();
     renderOnBackground(backgroundModule, {
       directRef: nextDirectRef,
       objectRef,
@@ -308,7 +308,7 @@ describe('Compiled ordinary ref background updates', () => {
       NAMESPACED_REF_FIXTURE,
     );
     const mainThreadRef = { _wvid: 7 };
-    const workletRef = vi.fn();
+    const workletRef = rs.fn();
 
     const props = { mainThreadRef, workletRef };
     const host = renderOnBackground(backgroundModule, props);

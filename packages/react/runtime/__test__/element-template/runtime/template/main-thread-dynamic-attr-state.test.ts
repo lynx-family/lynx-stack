@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 
 import {
   __etAttrPlanMap,
@@ -44,11 +44,11 @@ function registerMTRefSlots(handleId: number, ...slotIndexes: number[]): void {
 }
 
 function installJsFunctionLifecycleManager(): {
-  addRef: ReturnType<typeof vi.fn>;
+  addRef: ReturnType<typeof rs.fn>;
   restore: () => void;
 } {
   const previousWorkletImpl = globalThis.lynxWorkletImpl;
-  const addRef = vi.fn();
+  const addRef = rs.fn();
   globalThis.lynxWorkletImpl = {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {
@@ -64,11 +64,11 @@ function installJsFunctionLifecycleManager(): {
 }
 
 function installRefRuntime(): {
-  updateWorkletRef: ReturnType<typeof vi.fn>;
+  updateWorkletRef: ReturnType<typeof rs.fn>;
   restore: () => void;
 } {
   const previousWorkletImpl = globalThis.lynxWorkletImpl;
-  const updateWorkletRef = vi.fn();
+  const updateWorkletRef = rs.fn();
   globalThis.lynxWorkletImpl = {
     ...previousWorkletImpl,
     _refImpl: {
@@ -409,9 +409,9 @@ describe('main-thread dynamic attr state', () => {
     const { updateWorkletRef, restore } = installRefRuntime();
     const previousRunWorklet = globalThis.runWorklet;
     const ref = { _wvid: 7 };
-    const callbackCleanup = vi.fn();
+    const callbackCleanup = rs.fn();
     const callback = { _wkltId: 'ref-callback', _unmount: callbackCleanup };
-    globalThis.runWorklet = vi.fn(() => callbackCleanup);
+    globalThis.runWorklet = rs.fn(() => callbackCleanup);
 
     try {
       registerMTRefSlots(17, 0);
@@ -451,7 +451,7 @@ describe('main-thread dynamic attr state', () => {
   it('runs callback MTRef with null when cleanup has no unmount handle', () => {
     const previousRunWorklet = globalThis.runWorklet;
     const callback = { _wkltId: 'ref-callback-without-cleanup' };
-    globalThis.runWorklet = vi.fn();
+    globalThis.runWorklet = rs.fn();
 
     try {
       registerMTRefSlots(17, 0);
@@ -526,7 +526,7 @@ describe('main-thread dynamic attr state', () => {
   it('hydrates MTEvent state when hydration replaces native-held ctx', () => {
     const oldCtx = { _wkltId: 'tap', count: 1 };
     const nextCtx = { _wkltId: 'tap', count: 2 };
-    const hydrateCtx = vi.fn();
+    const hydrateCtx = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -547,7 +547,7 @@ describe('main-thread dynamic attr state', () => {
   it('does not hydrate MTEvent state for ordinary updates', () => {
     const oldCtx = { _wkltId: 'tap', count: 1 };
     const nextCtx = { _wkltId: 'tap', count: 2 };
-    const hydrateCtx = vi.fn();
+    const hydrateCtx = rs.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -563,5 +563,37 @@ describe('main-thread dynamic attr state', () => {
     } finally {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
+  });
+  it('keeps the sibling slot state when one of several ref slots is cleared', () => {
+    registerMTRefSlots(31, 0, 1);
+    setMTRefSlot(31, 0, { type: 'main-thread-ref', value: { _wvid: 1 } });
+    setMTRefSlot(31, 1, { type: 'main-thread-ref', value: { _wvid: 2 } });
+
+    setMTRefSlot(31, 0, null);
+
+    expect(getMainThreadDynamicAttrState(31, 0)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(31, 1)).toBeDefined();
+  });
+
+  it('detaches a materialized handle whose ref slot state is already gone', () => {
+    registerMTRefSlots(32, 0);
+    setMTRefSlot(32, 0, { type: 'main-thread-ref', value: { _wvid: 3 } });
+    attachMainThreadDynamicAttrRefsForSubtree([
+      { uid: 32, ref: TEST_NATIVE_REF },
+    ]);
+    setMTRefSlot(32, 0, null);
+
+    expect(() =>
+      detachMainThreadDynamicAttrRefsForSubtree([
+        { uid: 32, ref: TEST_NATIVE_REF },
+      ])
+    ).not.toThrow();
+  });
+  it('skips worklet ctx hydration when the slot has no previous value', () => {
+    registerMTRefSlots(33, 0);
+
+    setMTRefSlot(33, 0, { type: 'main-thread-ref', value: { _wvid: 9 } }, true);
+
+    expect(getMainThreadDynamicAttrState(33, 0)).toBeDefined();
   });
 });

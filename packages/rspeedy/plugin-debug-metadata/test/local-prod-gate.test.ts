@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, rs, test } from '@rstest/core'
 
 import { pluginLynxDebugMetadata } from '../src/pluginLynxDebugMetadata.js'
 
@@ -47,31 +47,31 @@ const LYNX_PROD: ChainUtils = {
 }
 
 beforeEach(() => {
-  vi.stubEnv('DEBUG', '')
-  vi.stubEnv('CI', '')
-  vi.stubEnv('CI_REPO_NAME', '')
-  vi.stubEnv('BUILD_VERSION', '')
+  rs.stubEnv('DEBUG', '')
+  rs.stubEnv('CI', '')
+  rs.stubEnv('CI_REPO_NAME', '')
+  rs.stubEnv('BUILD_VERSION', '')
 })
 
 afterEach(() => {
-  vi.unstubAllEnvs()
+  rs.unstubAllEnvs()
 })
 
 describe('pluginLynxDebugMetadata production gate', () => {
   test('emits on a CI production build', () => {
-    vi.stubEnv('CI', 'true')
+    rs.stubEnv('CI', 'true')
 
     expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
   })
 
   test('emits on a release pipeline that sets BUILD_VERSION but not CI', () => {
-    vi.stubEnv('BUILD_VERSION', '1.0.0.50')
+    rs.stubEnv('BUILD_VERSION', '1.0.0.50')
 
     expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
   })
 
   test('emits on a pipeline that sets CI_REPO_NAME but not CI', () => {
-    vi.stubEnv('CI_REPO_NAME', 'lynx-stack')
+    rs.stubEnv('CI_REPO_NAME', 'lynx-stack')
 
     expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
   })
@@ -81,13 +81,13 @@ describe('pluginLynxDebugMetadata production gate', () => {
   })
 
   test('emits on a local production build when DEBUG=rspeedy', () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rs.stubEnv('DEBUG', 'rspeedy')
 
     expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
   })
 
   test('emits on a local production build when DEBUG=lynx', () => {
-    vi.stubEnv('DEBUG', 'lynx')
+    rs.stubEnv('DEBUG', 'lynx')
 
     expect(runChain(LYNX_PROD)).toContain('lynx:debug-metadata')
   })
@@ -100,7 +100,7 @@ describe('pluginLynxDebugMetadata production gate', () => {
   })
 
   test('still skips a non-lynx environment on CI', () => {
-    vi.stubEnv('CI', 'true')
+    rs.stubEnv('CI', 'true')
 
     expect(runChain({ environment: { name: 'web', entry: {} }, isProd: true }))
       .not.toContain('lynx:debug-metadata')

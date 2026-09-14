@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { test, expect } from 'vitest';
+import { test, expect } from '@rstest/core';
 import { render } from '..';
 import { createRef } from '@lynx-js/react';
 import { Component } from 'preact';

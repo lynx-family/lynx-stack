@@ -1,6 +1,6 @@
 import { Component } from '@lynx-js/react';
 import { fireEvent, render } from '..';
-import { expect, vi } from 'vitest';
+import { expect, rs } from '@rstest/core';
 
 class StopWatch extends Component {
   state = { lapse: 0, running: false };
@@ -44,7 +44,7 @@ class StopWatch extends Component {
 const wait = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 test('unmounts a component', async () => {
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  rs.spyOn(console, 'error').mockImplementation(() => {});
 
   const { unmount, container, getByText } = render(<StopWatch />);
 

@@ -1,12 +1,49 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 import { format as prettyFormat } from 'pretty-format';
-import { expect, it } from 'vitest';
+import { expect, it } from '@rstest/core';
 
 const UPDATE_VALUES = new Set(['1', 'true', 'yes', 'on']);
+
+const FIXTURES_CONTEXT_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../fixtures',
+);
+
+declare const require: {
+  context: (
+    directory: string,
+    useSubdirectories: boolean,
+    regExp: RegExp,
+  ) => (id: string) => unknown;
+};
+
+const fixtureCaseContext = require.context(
+  '../../fixtures',
+  true,
+  /case\.tsx?$/,
+);
+
+/**
+ * Loads a fixture `case.ts`/`case.tsx` through the bundler.
+ *
+ * These are TypeScript sources that must go through the ReactLynx transform
+ * and this project's aliases. A dynamic `import(fileURL)` would bypass the
+ * bundler and hand the path to Node, which can neither parse `.tsx` nor
+ * resolve the fixtures' `.js`-suffixed specifiers (the files on disk are
+ * `.ts`). `require.context` bundles every case file up front so one can be
+ * selected by its relative path at run time.
+ */
+export function loadFixtureCaseModule<T>(casePath: string): T {
+  const specifier = path
+    .relative(FIXTURES_CONTEXT_ROOT, casePath)
+    .split(path.sep)
+    .join('/');
+  return fixtureCaseContext(`./${specifier}`) as T;
+}
 
 export interface FixtureContext {
   fixtureName: string;
@@ -116,7 +153,7 @@ export function runCaseModuleFixtureTests(options: {
         throw new Error(`Missing case file for fixture "${fixtureName}".`);
       }
 
-      const caseModule = (await import(pathToFileURL(casePath).href)) as CaseFixtureModule;
+      const caseModule = loadFixtureCaseModule<CaseFixtureModule>(casePath);
       const reportErrorCount = caseModule.reportErrorCount ?? 0;
       const result = await caseModule.run({ fixtureDir, fixtureName });
       const normalized = normalizeCaseFixtureResult(result);

@@ -28,11 +28,13 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/core": "catalog:rstest",
     "@testing-library/jest-dom": "^7.0.0",
     "rsbuild-plugin-publint": "1.0.0"
   },

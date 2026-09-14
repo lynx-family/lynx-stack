@@ -66,7 +66,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterAll, describe, expect, test } from 'vitest';
+import { afterAll, describe, expect, test } from '@rstest/core';
 
 import { generateHref, getFullPath } from '../src/generateHref.js';
 import { parse } from '../src/index.js';

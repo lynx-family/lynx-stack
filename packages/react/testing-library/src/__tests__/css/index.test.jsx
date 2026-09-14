@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { describe, expect, vi } from 'vitest';
+import { describe, expect, rs } from '@rstest/core';
 import { render } from '../..';
 
 import './style1.css';

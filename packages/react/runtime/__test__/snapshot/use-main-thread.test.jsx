@@ -6,7 +6,7 @@
 
 import { Component, createContext } from 'preact';
 import { use } from 'preact/compat';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { elementTree } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
@@ -27,7 +27,7 @@ describe('use() on the main thread', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     globalEnvManager.resetEnv();
     elementTree.clear();
     snapshotInstanceManager.clear();

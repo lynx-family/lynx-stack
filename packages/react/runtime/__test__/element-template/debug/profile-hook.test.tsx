@@ -1,11 +1,11 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { options } from 'preact';
+import { beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { Component, options } from 'preact';
 
 import { root } from '../../../src/element-template/index.js';
 import { initProfileHook } from '../../../src/element-template/debug/profile.js';
 import { globalCommitContext } from '../../../src/element-template/background/commit-context.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
-import { COMMIT } from '../../../src/shared/render-constants.js';
+import { BITS, COMMIT } from '../../../src/shared/render-constants.js';
 
 describe('element-template initProfileHook', () => {
   const envManager = new ElementTemplateEnvManager();
@@ -15,7 +15,7 @@ describe('element-template initProfileHook', () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     envManager.resetEnv('background');
   });
 
@@ -63,5 +63,17 @@ describe('element-template initProfileHook', () => {
     });
     expect(lynx.performance.profileEnd).toHaveBeenCalled();
     expect(globalCommitContext.flowIds).toBeUndefined();
+  });
+  it('does not profile setState for a component that is not marked dirty', () => {
+    const component = new Component();
+    component.state = {};
+    (component as unknown as Record<string, number>)[BITS] = 0;
+
+    component.setState({ value: 1 });
+
+    expect(lynx.performance.profileMark).not.toHaveBeenCalledWith(
+      'ReactLynx::setState',
+      expect.anything(),
+    );
   });
 });

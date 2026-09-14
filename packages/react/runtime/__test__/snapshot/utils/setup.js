@@ -6,7 +6,7 @@ import '../../../src/lynx.ts';
 import { document } from '../../../src/document.ts';
 import { SnapshotInstance } from '../../../src/snapshot/index.ts';
 
-import { afterEach, expect } from 'vitest';
+import { afterEach, expect } from '@rstest/core';
 
 function inject() {
   __injectElementApi();
