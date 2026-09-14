@@ -225,7 +225,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build"
+    "build": "rslib"
   },
   "dependencies": {
     "preact": "catalog:lynxjs"

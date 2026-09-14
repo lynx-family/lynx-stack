@@ -32,7 +32,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest",
     "test:type": "tsc6 --noEmit"
   },

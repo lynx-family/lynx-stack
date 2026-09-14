@@ -58,7 +58,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rsbuild build && rslib build",
+    "build": "rsbuild build && rslib",
     "build:wasm": "node ./scripts/build.js",
     "test": "rstest"
   },

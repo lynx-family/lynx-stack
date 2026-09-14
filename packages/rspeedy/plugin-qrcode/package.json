@@ -44,7 +44,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build",
+    "build": "rslib",
     "test": "pnpm -w run test --project rspeedy/qrcode"
   },
   "devDependencies": {

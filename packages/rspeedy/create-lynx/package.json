@@ -34,7 +34,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest run"
   },
   "dependencies": {

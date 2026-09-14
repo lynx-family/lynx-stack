@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc6 --noEmit && rslib build",
+    "build": "tsc6 --noEmit && rslib",
     "dev": "pnpm build && pnpm run --reporter=append-only \"/^dev:(build|server)$/\"",
-    "dev:build": "rslib build --watch",
+    "dev:build": "rslib --watch",
     "dev:server": "node --watch dist/index.js",
     "lint": "eslint --ignore-pattern dist .",
     "start": "node dist/index.js",

@@ -37,10 +37,10 @@
   ],
   "scripts": {
     "build": "rimraf dist && pnpm build:development && pnpm build:production && pnpm build:development:web && pnpm build:production:web",
-    "build:development": "cross-env NODE_ENV=development rslib build",
-    "build:development:web": "cross-env NODE_ENV=development EXTERNAL_BUNDLE_TARGET=web rslib build",
-    "build:production": "rslib build",
-    "build:production:web": "cross-env EXTERNAL_BUNDLE_TARGET=web rslib build"
+    "build:development": "cross-env NODE_ENV=development rslib",
+    "build:development:web": "cross-env NODE_ENV=development EXTERNAL_BUNDLE_TARGET=web rslib",
+    "build:production": "rslib",
+    "build:production:web": "cross-env EXTERNAL_BUNDLE_TARGET=web rslib"
   },
   "devDependencies": {
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",

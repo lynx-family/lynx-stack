@@ -57,8 +57,8 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "rstest": "rstest",
     "test": "vitest"
   },

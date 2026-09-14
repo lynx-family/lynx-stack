@@ -30,7 +30,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build",
+    "build": "rslib",
     "test": "vitest run"
   },
   "dependencies": {

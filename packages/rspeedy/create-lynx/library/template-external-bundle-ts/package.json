@@ -3,7 +3,7 @@
     "dist-external-bundle"
   ],
   "scripts": {
-    "build:external-bundle": "rslib build --config rslib.external-bundle.config.ts"
+    "build:external-bundle": "rslib --config rslib.external-bundle.config.ts"
   },
   "devDependencies": {
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*"

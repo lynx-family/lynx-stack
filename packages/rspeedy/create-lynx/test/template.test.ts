@@ -141,7 +141,9 @@ describe('templates on disk', () => {
       for (const dsl of DSLS) {
         for (const lang of LANGS) {
           const manifest = readManifest(templateDir(`${tool}-${dsl}-${lang}`))
-          expect(manifest['scripts']?.['build']).toBe(`${tool} build`)
+          expect(manifest['scripts']?.['build']).toBe(
+            tool === 'rslib' ? 'rslib' : `${tool} build`,
+          )
         }
       }
     }
@@ -175,7 +177,7 @@ describe('templates on disk', () => {
           ),
         )
         expect(manifest['scripts']?.['build:external-bundle']).toMatch(
-          /^rslib build --config /,
+          /^rslib --config /,
         )
       }
     }

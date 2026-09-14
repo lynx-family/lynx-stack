@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest run",
     "test:type": "tsc6 --noEmit"
   },
