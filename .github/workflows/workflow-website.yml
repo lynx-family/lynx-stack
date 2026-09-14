@@ -31,17 +31,17 @@ jobs:
           save-if: ${{ github.ref_name == 'main' }}
       - name: Build
         run: |
-          pnpm turbo --filter docs build
+          pnpm turbo --filter website build:docs
       - name: Build REPL
         run: |
           BASE_PATH='${{ steps.pages.outputs.base_path }}'
           export ASSET_PREFIX="${BASE_PATH%/}/repl/"
           pnpm --filter @lynx-js/repl build
-      - name: Copy REPL into docs output
+      - name: Copy REPL into website output
         run: |
-          rm -rf docs/doc_build/repl
-          mkdir -p docs/doc_build
-          cp -r packages/repl/dist docs/doc_build/repl
+          rm -rf website/doc_build/repl
+          mkdir -p website/doc_build
+          cp -r packages/repl/dist website/doc_build/repl
       - name: Build GenUI Playground dependencies
         run: |
           pnpm turbo --filter genui-playground^... build
@@ -55,13 +55,13 @@ jobs:
           BASE_PATH='${{ steps.pages.outputs.base_path }}'
           export ASSET_PREFIX="${BASE_PATH%/}/genui/"
           pnpm --filter genui-playground build
-      - name: Copy GenUI Playground into docs output
+      - name: Copy GenUI Playground into website output
         run: |
-          rm -rf docs/doc_build/genui docs/doc_build/zh/genui
-          mkdir -p docs/doc_build/zh
-          cp -r packages/genui/playground/dist docs/doc_build/genui
-          cp -r packages/genui/playground/dist docs/doc_build/zh/genui
+          rm -rf website/doc_build/genui website/doc_build/zh/genui
+          mkdir -p website/doc_build/zh
+          cp -r packages/genui/playground/dist website/doc_build/genui
+          cp -r packages/genui/playground/dist website/doc_build/zh/genui
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
-          path: docs/doc_build
+          path: website/doc_build

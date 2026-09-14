@@ -23,6 +23,7 @@ export default defineConfig({
         'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
+        'website/**',
         'docs/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',

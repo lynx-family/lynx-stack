@@ -44,15 +44,18 @@ export default tseslint.config(
       // error-remapping suite can read it — build artifacts, not source).
       'examples/*/dist-producer/**',
       'examples/*/dist-consumer/**',
+      'website/doc_build/**',
       'docs/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
+      'website/docs/en/api/**',
+      'website/docs/zh/api/**',
+      'website/docs/en/changelog/**',
+      'website/docs/zh/changelog/**',
       'packages/lynx-stack-docs/content/**',
       'docs/api-data/**',
       'docs/content/*/changelog/**',
-      'docs/api-data/**',
-      'docs/doc_build/**',
 
       // Test snapshots
       '**/expected/**',
@@ -356,6 +359,7 @@ export default tseslint.config(
     files: [
       'e2e/**',
       'examples/**/*.{js,mjs,cjs,jsx,ts,tsx}',
+      'website/**/*.{js,mjs,cjs,jsx,ts,tsx}',
       'docs/theme/**/*.{js,mjs,cjs,jsx,ts,tsx}',
     ],
     languageOptions: {

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build:docs": {
+      "env": [
+        "NODE_ENV"
+      ],
+      "dependsOn": [
+        "//#build",
+        "^build",
+        "docs"
+      ],
+      "outputs": [
+        "doc_build/**"
+      ]
+    },
+    "dev": {
+      "env": [
+        "NODE_ENV"
+      ],
+      "dependsOn": [
+        "docs"
+      ],
+      "cache": false,
+      "persistent": true
+    },
+    "docs": {
+      "dependsOn": [
+        "^api-extractor"
+      ],
+      "inputs": [
+        "temp/**"
+      ],
+      "outputs": [
+        "docs/en/api/**",
+        "docs/zh/api/**"
+      ]
+    },
+    "preview": {
+      "env": [
+        "NODE_ENV"
+      ],
+      "dependsOn": [
+        "build"
+      ],
+      "cache": false,
+      "persistent": false
+    }
+  }
+}

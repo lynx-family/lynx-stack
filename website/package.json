@@ -1,0 +1,58 @@
+{
+  "name": "website",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The website for lynx-stack",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build:docs": "rspress build",
+    "dev": "rspress dev",
+    "docs": "pnpm run --stream '/^docs:api:.*/'",
+    "docs:api:en": "api-documenter generate --input-folder temp --output-folder docs/en/api",
+    "docs:api:zh": "api-documenter generate --input-folder temp --output-folder docs/zh/api",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "@rstack-dev/doc-ui": "1.14.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
+    "@lynx-js/css-extract-webpack-plugin": "workspace:*",
+    "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
+    "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/genui": "workspace:*",
+    "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-webpack-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
+    "@lynx-js/webpack-runtime-globals": "workspace:*",
+    "@microsoft/api-documenter": "~7.30.0",
+    "@microsoft/api-extractor-model": "^7.33.12",
+    "@rsbuild/plugin-sass": "2.0.1",
+    "@rsbuild/plugin-type-check": "1.6.0",
+    "@rsbuild/plugin-typed-css-modules": "1.2.4",
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-client-redirects": "2.0.21",
+    "@shikijs/transformers": "4.4.3",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "change-case": "^5.4.4",
+    "tailwindcss": "^3.4.19"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}
