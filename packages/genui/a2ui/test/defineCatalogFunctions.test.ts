@@ -36,7 +36,7 @@ const requiredManifest = {
 describe('defineCatalog with function entries', () => {
   test('separates components and functions', () => {
     const catalog = defineCatalog([
-      MockComponent,
+      [MockComponent, { MockComponent: { type: 'object', properties: {} } }],
       defineFunction(namedImpl, requiredManifest),
     ]);
 
@@ -56,13 +56,15 @@ describe('defineCatalog with function entries', () => {
 
   test('serializeCatalog announces functions in the handshake', () => {
     const catalog = defineCatalog([
-      MockComponent,
+      [MockComponent, { MockComponent: { type: 'object', properties: {} } }],
       defineFunction(namedImpl, requiredManifest),
     ]);
 
     const serialized = serializeCatalog(catalog);
     expect(serialized.protocolVersion).toBe('1.0');
-    expect(serialized.components).toEqual({ MockComponent: {} });
+    expect(serialized.components['MockComponent']).toMatchObject({
+      properties: { component: { const: 'MockComponent' } },
+    });
     expect(serialized.functions?.['required']).toMatchObject({
       returnType: requiredManifest.required.returnType,
       properties: {
@@ -73,7 +75,7 @@ describe('defineCatalog with function entries', () => {
   });
 
   test('serializeCatalog omits functions map when definitions are absent', () => {
-    const catalog = defineCatalog([MockComponent, defineFunction(namedImpl)]);
+    const catalog = defineCatalog([defineFunction(namedImpl)]);
     const serialized = serializeCatalog(catalog);
     expect(serialized.functions).toBeUndefined();
   });

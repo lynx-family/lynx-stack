@@ -7,7 +7,7 @@ import { loadBasicCatalog } from '../agent/a2ui/a2ui-catalog.js';
 import { A2UI_PROTOCOL_VERSION } from '../agent/a2ui/a2ui-prompt.js';
 import { A2UIProtocolMessageStreamParser } from '../agent/a2ui/a2ui-stream-parser.js';
 import { validateA2UIOutput } from '../agent/a2ui/a2ui-validator.js';
-import { normalizeRendererEvent } from '../app/a2ui/_shared.js';
+import { normalizeRendererEvent, validateAction } from '../app/a2ui/_shared.js';
 import app from '../src/app.js';
 
 describe('A2UI v1.0 server', () => {
@@ -298,6 +298,16 @@ describe('A2UI v1.0 server', () => {
         ...parser.push(raw.slice(split)),
       ]).toEqual(valid);
     }
+  });
+
+  test('preserves resolved action userMessage for the agent', () => {
+    expect(validateAction({ name: 'select', userMessage: 'Selected item 2' }))
+      .toMatchObject({
+        ok: true,
+        action: { name: 'select', userMessage: 'Selected item 2' },
+      });
+    expect(validateAction({ name: 'select', userMessage: { path: '/label' } }))
+      .toMatchObject({ ok: false });
   });
 
   test('maps action surface and data-model metadata into the stateless conversation', () => {

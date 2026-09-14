@@ -101,6 +101,15 @@ describe('extractCatalogComponents', () => {
     }
     expect(readFullCatalogJson(outDir)).toEqual({
       $id: 'catalog.json',
+      catalogId: 'catalog.json',
+      $defs: {
+        anyComponent: {
+          oneOf: [{ $ref: '#/components/DemoCard' }, {
+            $ref: '#/components/DemoText',
+          }, { $ref: '#/components/QuickStartCard' }],
+        },
+        anyFunction: { not: {} },
+      },
       protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
@@ -139,6 +148,15 @@ describe('extractCatalogComponents', () => {
       ],
     })).toEqual({
       $id: 'https://example.com/catalog.json',
+      catalogId: 'https://example.com/catalog.json',
+      $defs: {
+        anyComponent: {
+          oneOf: [{ $ref: '#/components/DemoCard' }, {
+            $ref: '#/components/DemoText',
+          }, { $ref: '#/components/QuickStartCard' }],
+        },
+        anyFunction: { oneOf: [{ $ref: '#/functions/formatDisplayValue' }] },
+      },
       protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
@@ -164,7 +182,6 @@ describe('extractCatalogComponents', () => {
             },
           },
           required: ['call', 'args'],
-          unevaluatedProperties: false,
         },
       },
     });
@@ -190,28 +207,37 @@ describe('extractCatalogComponents', () => {
     )
       .toEqual({
         CliBadge: {
+          type: 'object',
           properties: {
+            component: { const: 'CliBadge' },
             label: {
               type: 'string',
               description: 'Badge label.',
             },
           },
-          required: ['label'],
+          required: ['component', 'label'],
           description: 'CLI badge fixture.',
         },
       });
     expect(readFullCatalogJson(path.join(cwd, 'catalog-out'))).toEqual({
       $id: 'catalog.json',
+      catalogId: 'catalog.json',
+      $defs: {
+        anyComponent: { oneOf: [{ $ref: '#/components/CliBadge' }] },
+        anyFunction: { not: {} },
+      },
       protocolVersion: '1.0',
       components: {
         CliBadge: {
+          type: 'object',
           properties: {
+            component: { const: 'CliBadge' },
             label: {
               type: 'string',
               description: 'Badge label.',
             },
           },
-          required: ['label'],
+          required: ['component', 'label'],
           description: 'CLI badge fixture.',
         },
       },

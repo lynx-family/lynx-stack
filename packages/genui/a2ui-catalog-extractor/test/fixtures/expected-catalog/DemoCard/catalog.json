@@ -1,6 +1,9 @@
 {
   "DemoCard": {
     "properties": {
+      "component": {
+        "const": "DemoCard"
+      },
       "title": {
         "oneOf": [
           {
@@ -100,9 +103,11 @@
       }
     },
     "required": [
+      "component",
       "title",
       "action"
     ],
-    "description": "Demo card fixture.\n\nGenerated from a TSX fixture."
+    "description": "Demo card fixture.\n\nGenerated from a TSX fixture.",
+    "type": "object"
   }
 }

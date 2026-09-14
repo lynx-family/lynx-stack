@@ -109,7 +109,14 @@ export function executeFunctionCall(
     const index = collection && typeof collection === 'object'
       ? Object.keys(collection).indexOf(key)
       : -1;
-    return index < 0 ? undefined : index + Number(fn.args?.['offset'] ?? 0);
+    const offset = resolveDynamicValue(
+      processor,
+      fn.args?.['offset'] ?? 0,
+      surfaceId,
+      dataContextPath,
+      { ...options, resolveFunctionCall: executeFunctionCall },
+    );
+    return index < 0 || typeof offset !== 'number' ? undefined : index + offset;
   }
   const catalogId = fn.catalogId ?? surface.catalogId;
   const catalog = processor.getCatalog(catalogId);

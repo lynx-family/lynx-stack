@@ -521,3 +521,5 @@ alias。
 - [A2UI v1.0 protocol](https://a2ui.org/specification/v1.0-a2ui/)
 - [TypeDoc custom tags](https://typedoc.org/documents/Tags.html)
 - [TypeDoc JSON output](https://typedoc.org/documents/Options.Output.html)
+
+子组件引用必须使用标准 ComponentId schema。给字符串 ID 属性添加 `@a2uiComponentId`，避免 TypeDoc 展开 TypeScript 字符串别名后丢失引用语义。静态数组或模板形式的子组件集合可使用 `ChildList` 类型别名。生成的 Catalog 包含 `catalogId`、`$id`、联合定义及必填的 `component` 判别属性。

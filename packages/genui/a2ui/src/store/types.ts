@@ -6,6 +6,13 @@ import type { Resource as GenericResource } from './Resource.js';
 import type { SignalStore } from './SignalStore.js';
 
 export type SurfaceId = string;
+/** Reference to a component in the same surface. */
+export type ComponentId = string;
+/** Static child references or a collection template. */
+export type ChildList = ComponentId[] | {
+  componentId: ComponentId;
+  path: string;
+};
 
 export interface ComponentInstance {
   id: string;
@@ -126,6 +133,7 @@ export type RendererToAgentMessage =
         message: string;
         functionCallId?: string;
         surfaceId?: string;
+        path?: string;
       };
     }
   );
@@ -140,6 +148,7 @@ export interface UserActionPayload {
   sourceComponentId: string;
   timestamp: string; // ISO 8601
   context: Record<string, unknown>;
+  userMessage?: string;
 }
 
 export interface DataBinding {
@@ -147,7 +156,11 @@ export interface DataBinding {
 }
 export type Action =
   | {
-    event: { name: string; context?: Record<string, unknown> };
+    event: {
+      name: string;
+      context?: Record<string, unknown>;
+      userMessage?: string | DataBinding | ProtocolFunctionCall;
+    };
     functionCall?: never;
   }
   | { functionCall: ProtocolFunctionCall; event?: never };

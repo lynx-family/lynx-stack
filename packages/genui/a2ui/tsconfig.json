@@ -10,6 +10,6 @@
     "noEmit": true,
     "types": ["@rstest/core/globals"],
   },
-  "include": ["src", "test", "rstest.config.ts"],
+  "include": ["src", "test", "test/**/*.json", "rstest.config.ts"],
   "references": [],
 }

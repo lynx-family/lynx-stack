@@ -145,17 +145,22 @@ describe('resolveCatalog', () => {
 });
 
 describe('serializeCatalog', () => {
-  test('emits version + components, omitting schema when absent', () => {
+  test('requires a schema when announcing a component', () => {
     const cat = defineCatalog([Text]);
-    const out = serializeCatalog(cat);
-    expect(out.protocolVersion).toBe('1.0');
-    expect(out.components).toEqual({ Text: {} });
+    expect(() => serializeCatalog(cat)).toThrow('without a schema');
   });
 
   test('attaches schema when present', () => {
     const cat = defineCatalog([[Text, TEXT_MANIFEST]]);
     const out = serializeCatalog(cat);
-    expect(out.components['Text']).toEqual(TEXT_MANIFEST['Text']);
+    expect(out.components['Text']).toMatchObject({
+      properties: { component: { const: 'Text' } },
+      required: ['component'],
+    });
+    expect(out.catalogId).toBe(out.$id);
+    expect(out.$defs['anyComponent']).toEqual({
+      oneOf: [{ $ref: '#/components/Text' }],
+    });
   });
 });
 

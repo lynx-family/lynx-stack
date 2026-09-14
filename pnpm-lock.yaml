@@ -1134,6 +1134,9 @@ importers:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
 
   packages/genui/a2ui-catalog-extractor:
     dependencies:

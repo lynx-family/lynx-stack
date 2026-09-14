@@ -13,3 +13,5 @@ Catalog generation and serialization use protocolVersion 1.0, $id, and maps of c
 A2UI v1.0 CheckRule.message remains an optional fallback. Prefer ValidationResult.message, then the rule message, then a generic error. Preserve this field in component prop types and generated catalogs; it is not a legacy protocol feature.
 
 Validate completed streaming envelopes with the shared message schema before delivery; final response validation runs too late to protect rendered state. Deleting a surface must clear all validator component, catalog, data-model, and binding-path state before the ID is reused.
+
+Check actual emitted messages and catalogs against pinned official v1.0 schemas. Logical functions must unwrap ValidationResult.valid before boolean operations. Preserve component reference semantics in generated schemas, and never advertise schema-less runtime components as empty schemas. The Lynx JavaScript engine does not support Unicode property escapes in regular expressions; keep interpolation tokenization compatible with the native build.

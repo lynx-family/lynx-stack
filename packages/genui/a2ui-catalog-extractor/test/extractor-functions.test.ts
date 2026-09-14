@@ -138,6 +138,5 @@ function createFunctionSchema(
       args: definition['parameters'],
     },
     required: ['call', 'args'],
-    unevaluatedProperties: false,
   };
 }

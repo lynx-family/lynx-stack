@@ -17,6 +17,8 @@ export {
 export type {
   A2UIClientEventMessage,
   ComponentInstance,
+  ComponentId,
+  ChildList,
   GenericComponentProps,
   Resource,
   ResourceInfo,

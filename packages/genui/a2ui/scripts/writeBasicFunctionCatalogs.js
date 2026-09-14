@@ -39,7 +39,6 @@ const functionSchemas = Object.fromEntries(
         args: stripSchemaDialect(parameters),
       },
       required: ['call', 'args'],
-      unevaluatedProperties: false,
     },
   ]),
 );
@@ -60,6 +59,11 @@ fs.rmSync(path.join(outDir, 'catalog', 'functions'), {
 if (fs.existsSync(catalogJsonPath)) {
   const catalog = JSON.parse(fs.readFileSync(catalogJsonPath, 'utf8'));
   catalog.functions = functionSchemas;
+  catalog.$defs.anyFunction = {
+    oneOf: Object.keys(functionSchemas).map(name => ({
+      $ref: `#/functions/${name}`,
+    })),
+  };
   fs.writeFileSync(catalogJsonPath, `${JSON.stringify(catalog, null, 2)}\n`);
 }
 

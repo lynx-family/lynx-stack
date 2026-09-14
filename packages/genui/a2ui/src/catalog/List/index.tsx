@@ -5,6 +5,7 @@
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import { useDataBinding } from '../../react/useDataBinding.js';
 import type {
+  ChildList,
   ComponentInstance,
   GenericComponentProps,
 } from '../../store/types.js';
@@ -18,7 +19,7 @@ import '../../../styles/catalog/List.css';
  */
 export interface ListProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
-  children: string[] | { componentId: string; path: string };
+  children: ChildList;
   direction?: 'horizontal' | 'vertical';
   align?: 'start' | 'center' | 'end' | 'stretch';
 }

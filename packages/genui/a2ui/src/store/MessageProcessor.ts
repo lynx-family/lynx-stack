@@ -397,10 +397,26 @@ export class MessageProcessor {
   processMessages(messages: ServerToClientMessage[]): void {
     for (const message of messages) {
       if (message.version !== 'v1.0') {
+        const source = Object.values(message).find((
+          value,
+        ): value is Record<string, unknown> =>
+          value !== null && typeof value === 'object'
+          && ('surfaceId' in value || 'functionCallId' in value)
+        );
+        const location = typeof source?.['surfaceId'] === 'string'
+          ? { surfaceId: source['surfaceId'] }
+          : (typeof source?.['functionCallId'] === 'string'
+            ? { functionCallId: source['functionCallId'] }
+            : undefined);
+        if (!location) {
+          console.warn('[a2ui] Only A2UI v1.0 is supported', message.version);
+          continue;
+        }
         void this.sendMessage({
           version: 'v1.0',
           error: {
-            code: 'VALIDATION_FAILED',
+            code: 'UNSUPPORTED_VERSION',
+            ...location,
             message: 'Only A2UI v1.0 is supported',
           },
         });
@@ -415,6 +431,7 @@ export class MessageProcessor {
           error: {
             code: 'VALIDATION_FAILED',
             surfaceId: message.createSurface.surfaceId,
+            path: '/createSurface/surfaceId',
             message: 'Surface already exists',
           },
         });
@@ -448,6 +465,7 @@ export class MessageProcessor {
           error: {
             code: 'VALIDATION_FAILED',
             surfaceId: payload.surfaceId,
+            path: '/',
             message: 'Surface must be created exactly once before updates',
           },
         });

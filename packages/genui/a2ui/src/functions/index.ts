@@ -6,6 +6,7 @@ import type { DataContext, FunctionImplementation } from '@a2ui/web_core/v0_9';
 import { BASIC_FUNCTIONS } from '@a2ui/web_core/v0_9/basic_catalog';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+import { formatString } from './formatString.js';
 import { defineFunction } from '../catalog/defineCatalog.js';
 import type {
   CatalogFunctionDefinition,
@@ -43,6 +44,12 @@ function createUpstreamContext(
   } as unknown as DataContext;
 }
 
+function validity(value: unknown): unknown {
+  return value !== null && typeof value === 'object' && 'valid' in value
+    ? value.valid === true
+    : value;
+}
+
 /**
  * Adapt an upstream `FunctionImplementation` (zod-typed args, returns a
  * raw value OR a Preact Signal, takes a `DataContext`) into the simpler
@@ -54,7 +61,20 @@ function adaptUpstreamImpl(impl: FunctionImplementation): FunctionImpl {
     if (impl.name === 'formatString' && args['value'] === undefined) {
       throw new Error('formatString requires a value argument');
     }
+    if (impl.name === 'and' || impl.name === 'or') {
+      args = {
+        ...args,
+        values: Array.isArray(args['values'])
+          ? args['values'].map(value => validity(value))
+          : args['values'],
+      };
+    } else if (impl.name === 'not') {
+      args = { ...args, value: validity(args['value']) };
+    }
     const safeArgs = impl.schema.parse(args) as Record<string, unknown>;
+    if (impl.name === 'formatString') {
+      return formatString(safeArgs['value'] as string, context);
+    }
     const result: unknown = impl.execute(
       safeArgs,
       createUpstreamContext(context),

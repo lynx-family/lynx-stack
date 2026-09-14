@@ -53,7 +53,7 @@ describe('A2UI v1.0', () => {
       expect(processor.getSurfaces().size).toBe(0);
       expect(events).toMatchObject([{
         version: 'v1.0',
-        error: { code: 'VALIDATION_FAILED' },
+        error: { code: 'UNSUPPORTED_VERSION', surfaceId: 'old' },
       }]);
       expect(() => compactA2UIMessagesToSnapshot(messages)).toThrow(
         'Only A2UI v1.0 is supported',

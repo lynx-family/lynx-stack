@@ -12,6 +12,7 @@ import type { ProjectReflection, TypeDocOptions } from 'typedoc';
  */
 export interface JsonSchema {
   $ref?: string;
+  not?: JsonSchema;
   additionalProperties?: boolean | JsonSchema;
   const?: unknown;
   default?: unknown;
@@ -66,6 +67,8 @@ export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
  */
 export interface A2UICatalog {
   $id: string;
+  catalogId: string;
+  $defs: { anyComponent: JsonSchema; anyFunction: JsonSchema };
   protocolVersion: '1.0';
   components?: Record<string, JsonSchema>;
   functions?: Record<string, JsonSchema>;
@@ -95,6 +98,7 @@ export interface CatalogFunction extends FunctionDefinition {
 }
 
 interface ParsedDoc {
+  componentId?: boolean;
   a2uiCatalogName?: string;
   a2uiFunctionName?: string;
   defaultValue?: unknown;
@@ -471,14 +475,28 @@ export function createA2UICatalog(options: {
     )
     : options.components;
 
+  const functions = createFunctionSchemas(options.functions ?? []);
   return {
     $id: options.catalogId,
+    catalogId: options.catalogId,
+    $defs: {
+      anyComponent: createUnionReferences('components', catalogComponents),
+      anyFunction: createUnionReferences('functions', functions),
+    },
     protocolVersion: '1.0',
     components: catalogComponents,
-    ...(options.functions
-      ? { functions: createFunctionSchemas(options.functions) }
-      : {}),
+    functions,
   };
+}
+
+function createUnionReferences(
+  section: string,
+  schemas: Record<string, JsonSchema>,
+): JsonSchema {
+  const names = Object.keys(schemas);
+  return names.length > 0
+    ? { oneOf: names.map(name => ({ $ref: `#/${section}/${name}` })) }
+    : { not: {} };
 }
 
 function createFunctionSchemas(
@@ -512,7 +530,6 @@ function createFunctionSchemas(
           args: stripSchemaDialect(parameters),
         },
         required: ['call', 'args'],
-        unevaluatedProperties: false,
       } as JsonSchema,
     ]),
   );
@@ -566,6 +583,7 @@ async function createTypeDocProject(
       ...OptionDefaults.blockTags,
       '@a2uiCatalog',
       '@a2uiFunction',
+      '@a2uiComponentId',
     ],
     entryPoints: sourceFiles,
     excludePrivate: false,
@@ -875,7 +893,15 @@ function createComponentSchema(
     );
   }
 
-  const schema: JsonSchema = { properties: {}, required: [] };
+  const name = parsedDoc.a2uiCatalogName !== undefined
+      && parsedDoc.a2uiCatalogName.length > 0
+    ? parsedDoc.a2uiCatalogName
+    : inferCatalogName(reflection.name);
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: { component: { const: name } },
+    required: ['component'],
+  };
   applyDocToSchema(schema, parsedDoc);
 
   for (const child of reflection.children) {
@@ -1110,6 +1136,12 @@ function parseReferenceType(
 ): JsonSchema {
   const typeName = String(type.name ?? type.qualifiedName ?? '');
   const typeArguments = type.typeArguments ?? [];
+  if (typeName === 'ComponentId' || typeName === 'ChildList') {
+    return {
+      $ref:
+        `https://a2ui.org/specification/v1_0/common_types.json#/$defs/${typeName}`,
+    };
+  }
 
   if (
     (typeName === 'Array' || typeName === 'ReadonlyArray')
@@ -1169,6 +1201,9 @@ function parseComment(comment: TypeDocComment | undefined): ParsedDoc {
       case '@a2uiCatalog':
         parsedDoc.a2uiCatalogName = content;
         break;
+      case '@a2uiComponentId':
+        parsedDoc.componentId = true;
+        break;
       case '@a2uiFunction':
         parsedDoc.a2uiFunctionName = content;
         break;
@@ -1197,6 +1232,10 @@ function parseComment(comment: TypeDocComment | undefined): ParsedDoc {
 }
 
 function applyDocToSchema(schema: JsonSchema, parsedDoc: ParsedDoc): void {
+  if (parsedDoc.componentId) {
+    schema.$ref =
+      'https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId';
+  }
   if (parsedDoc.description) {
     schema.description = parsedDoc.description;
   }

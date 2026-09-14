@@ -1,11 +1,168 @@
 {
   "$id": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+  "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+  "$defs": {
+    "anyComponent": {
+      "oneOf": [
+        {
+          "$ref": "#/components/Button"
+        },
+        {
+          "$ref": "#/components/Card"
+        },
+        {
+          "$ref": "#/components/CheckBox"
+        },
+        {
+          "$ref": "#/components/ChoicePicker"
+        },
+        {
+          "$ref": "#/components/Column"
+        },
+        {
+          "$ref": "#/components/DateTimeInput"
+        },
+        {
+          "$ref": "#/components/Divider"
+        },
+        {
+          "$ref": "#/components/Icon"
+        },
+        {
+          "$ref": "#/components/Image"
+        },
+        {
+          "$ref": "#/components/LazyComponent"
+        },
+        {
+          "$ref": "#/components/LineChart"
+        },
+        {
+          "$ref": "#/components/List"
+        },
+        {
+          "$ref": "#/components/Loading"
+        },
+        {
+          "$ref": "#/components/McpApp"
+        },
+        {
+          "$ref": "#/components/Modal"
+        },
+        {
+          "$ref": "#/components/PieChart"
+        },
+        {
+          "$ref": "#/components/RadioGroup"
+        },
+        {
+          "$ref": "#/components/Row"
+        },
+        {
+          "$ref": "#/components/Slider"
+        },
+        {
+          "$ref": "#/components/Tabs"
+        },
+        {
+          "$ref": "#/components/Text"
+        },
+        {
+          "$ref": "#/components/TextField"
+        }
+      ]
+    },
+    "anyFunction": {
+      "oneOf": [
+        {
+          "$ref": "#/functions/add"
+        },
+        {
+          "$ref": "#/functions/subtract"
+        },
+        {
+          "$ref": "#/functions/multiply"
+        },
+        {
+          "$ref": "#/functions/divide"
+        },
+        {
+          "$ref": "#/functions/equals"
+        },
+        {
+          "$ref": "#/functions/not_equals"
+        },
+        {
+          "$ref": "#/functions/greater_than"
+        },
+        {
+          "$ref": "#/functions/less_than"
+        },
+        {
+          "$ref": "#/functions/and"
+        },
+        {
+          "$ref": "#/functions/or"
+        },
+        {
+          "$ref": "#/functions/not"
+        },
+        {
+          "$ref": "#/functions/contains"
+        },
+        {
+          "$ref": "#/functions/starts_with"
+        },
+        {
+          "$ref": "#/functions/ends_with"
+        },
+        {
+          "$ref": "#/functions/required"
+        },
+        {
+          "$ref": "#/functions/regex"
+        },
+        {
+          "$ref": "#/functions/length"
+        },
+        {
+          "$ref": "#/functions/numeric"
+        },
+        {
+          "$ref": "#/functions/email"
+        },
+        {
+          "$ref": "#/functions/formatString"
+        },
+        {
+          "$ref": "#/functions/formatNumber"
+        },
+        {
+          "$ref": "#/functions/formatCurrency"
+        },
+        {
+          "$ref": "#/functions/formatDate"
+        },
+        {
+          "$ref": "#/functions/pluralize"
+        },
+        {
+          "$ref": "#/functions/openUrl"
+        }
+      ]
+    }
+  },
   "protocolVersion": "1.0",
   "components": {
     "Button": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Button"
+        },
         "child": {
-          "type": "string"
+          "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId"
         },
         "variant": {
           "type": "string",
@@ -27,6 +184,44 @@
                   "properties": {
                     "name": {
                       "type": "string"
+                    },
+                    "userMessage": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "path": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "call": {
+                              "type": "string"
+                            },
+                            "catalogId": {
+                              "type": "string"
+                            },
+                            "args": {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "call"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
                     },
                     "context": {
                       "type": "object",
@@ -131,15 +326,21 @@
         }
       },
       "required": [
+        "component",
         "child",
         "action"
       ],
       "description": "Props for the built-in Button catalog component."
     },
     "Card": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Card"
+        },
         "child": {
-          "type": "string"
+          "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId"
         },
         "variant": {
           "type": "string",
@@ -155,12 +356,17 @@
         }
       },
       "required": [
+        "component",
         "child"
       ],
       "description": "Props for the built-in Card catalog component."
     },
     "CheckBox": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "CheckBox"
+        },
         "label": {
           "oneOf": [
             {
@@ -293,13 +499,18 @@
         }
       },
       "required": [
+        "component",
         "label",
         "value"
       ],
       "description": "Props for the built-in CheckBox catalog component."
     },
     "ChoicePicker": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "ChoicePicker"
+        },
         "label": {
           "oneOf": [
             {
@@ -517,38 +728,20 @@
         }
       },
       "required": [
+        "component",
         "options",
         "value"
       ],
       "description": "Props for the built-in ChoicePicker catalog component."
     },
     "Column": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Column"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "align": {
@@ -574,12 +767,17 @@
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in Column catalog component."
     },
     "DateTimeInput": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "DateTimeInput"
+        },
         "value": {
           "oneOf": [
             {
@@ -716,12 +914,17 @@
         }
       },
       "required": [
+        "component",
         "value"
       ],
       "description": "Props for the built-in DateTimeInput catalog component."
     },
     "Divider": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Divider"
+        },
         "axis": {
           "type": "string",
           "enum": [
@@ -730,11 +933,17 @@
           ]
         }
       },
-      "required": [],
+      "required": [
+        "component"
+      ],
       "description": "Props for the built-in Divider catalog component."
     },
     "Icon": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Icon"
+        },
         "name": {
           "oneOf": [
             {
@@ -944,12 +1153,17 @@
         }
       },
       "required": [
+        "component",
         "name"
       ],
       "description": "Props for the built-in Icon catalog component."
     },
     "Image": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Image"
+        },
         "url": {
           "type": "string",
           "description": "Image URL or path binding."
@@ -989,12 +1203,17 @@
         }
       },
       "required": [
+        "component",
         "url"
       ],
       "description": "Props for the built-in Image catalog component."
     },
     "LazyComponent": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "LazyComponent"
+        },
         "url": {
           "type": "string",
           "description": "URL of a ReactLynx standalone lazy bundle. The bundle must default-export a React component. Used by native Lynx rendering."
@@ -1025,11 +1244,16 @@
         }
       },
       "required": [
+        "component",
         "url"
       ]
     },
     "LineChart": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "LineChart"
+        },
         "labels": {
           "oneOf": [
             {
@@ -1120,38 +1344,20 @@
         }
       },
       "required": [
+        "component",
         "labels",
         "series"
       ],
       "description": "Props for the built-in LineChart catalog component."
     },
     "List": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "List"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "direction": {
@@ -1172,12 +1378,17 @@
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in List catalog component."
     },
     "Loading": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Loading"
+        },
         "variant": {
           "type": "string",
           "enum": [
@@ -1187,11 +1398,17 @@
           "description": "Visual density for the skeleton placeholder."
         }
       },
-      "required": [],
+      "required": [
+        "component"
+      ],
       "description": "Props for the built-in Loading catalog component."
     },
     "McpApp": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "McpApp"
+        },
         "url": {
           "type": "string",
           "description": "URL of the trusted native Lynx bundle that renders the MCP App."
@@ -1231,30 +1448,42 @@
         }
       },
       "required": [
+        "component",
         "url",
         "mcpAppData"
       ],
       "description": "Props for the built-in MCP App frame host. Bundle URLs and render data must come from a host-registered, trusted MCP Apps resource. They must not be invented by an agent or accepted as arbitrary executable content."
     },
     "Modal": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Modal"
+        },
         "trigger": {
           "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId",
           "description": "The ID of the component that opens the modal when interacted with."
         },
         "content": {
           "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId",
           "description": "The ID of the component to display inside the modal."
         }
       },
       "required": [
+        "component",
         "trigger",
         "content"
       ],
       "description": "Props for the built-in Modal catalog component."
     },
     "PieChart": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "PieChart"
+        },
         "data": {
           "oneOf": [
             {
@@ -1335,12 +1564,17 @@
         }
       },
       "required": [
+        "component",
         "data"
       ],
       "description": "Props for the built-in PieChart catalog component."
     },
     "RadioGroup": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "RadioGroup"
+        },
         "items": {
           "oneOf": [
             {
@@ -1487,38 +1721,20 @@
         }
       },
       "required": [
+        "component",
         "items",
         "value"
       ],
       "description": "Props for the built-in RadioGroup catalog component."
     },
     "Row": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Row"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "justify": {
@@ -1544,12 +1760,17 @@
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in Row catalog component."
     },
     "Slider": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Slider"
+        },
         "label": {
           "oneOf": [
             {
@@ -1694,13 +1915,18 @@
         }
       },
       "required": [
+        "component",
         "max",
         "value"
       ],
       "description": "Props for the built-in Slider catalog component."
     },
     "Tabs": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Tabs"
+        },
         "tabs": {
           "type": "array",
           "items": {
@@ -1710,7 +1936,8 @@
                 "type": "string"
               },
               "child": {
-                "type": "string"
+                "type": "string",
+                "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId"
               }
             },
             "required": [
@@ -1722,12 +1949,17 @@
         }
       },
       "required": [
+        "component",
         "tabs"
       ],
       "description": "Props for the built-in Tabs catalog component."
     },
     "Text": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Text"
+        },
         "text": {
           "oneOf": [
             {
@@ -1790,12 +2022,17 @@
         }
       },
       "required": [
+        "component",
         "text"
       ],
       "description": "Props for the built-in Text catalog component."
     },
     "TextField": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "TextField"
+        },
         "label": {
           "oneOf": [
             {
@@ -1929,6 +2166,7 @@
         }
       },
       "required": [
+        "component",
         "label"
       ],
       "description": "Props for the built-in TextField catalog component."
@@ -1963,8 +2201,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "subtract": {
       "type": "object",
@@ -1994,8 +2231,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "multiply": {
       "type": "object",
@@ -2025,8 +2261,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "divide": {
       "type": "object",
@@ -2056,8 +2291,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "equals": {
       "type": "object",
@@ -2083,8 +2317,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "not_equals": {
       "type": "object",
@@ -2110,8 +2343,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "greater_than": {
       "type": "object",
@@ -2141,8 +2373,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "less_than": {
       "type": "object",
@@ -2172,8 +2403,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "and": {
       "type": "object",
@@ -2200,8 +2430,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "or": {
       "type": "object",
@@ -2228,8 +2457,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "not": {
       "type": "object",
@@ -2253,8 +2481,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "contains": {
       "type": "object",
@@ -2284,8 +2511,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "starts_with": {
       "type": "object",
@@ -2315,8 +2541,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "ends_with": {
       "type": "object",
@@ -2346,8 +2571,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "required": {
       "type": "object",
@@ -2371,8 +2595,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "regex": {
       "type": "object",
@@ -2402,8 +2625,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "length": {
       "type": "object",
@@ -2433,8 +2655,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "numeric": {
       "type": "object",
@@ -2466,8 +2687,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "email": {
       "type": "object",
@@ -2493,8 +2713,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatString": {
       "type": "object",
@@ -2520,8 +2739,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatNumber": {
       "type": "object",
@@ -2554,8 +2772,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatCurrency": {
       "type": "object",
@@ -2591,8 +2808,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatDate": {
       "type": "object",
@@ -2619,8 +2835,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "pluralize": {
       "type": "object",
@@ -2664,8 +2879,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "openUrl": {
       "type": "object",
@@ -2691,8 +2905,7 @@
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     }
   }
 }

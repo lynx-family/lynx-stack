@@ -22,6 +22,8 @@ export { createMessageStore, MessageProcessor } from './store/index.js';
 export type {
   A2UIClientEventMessage,
   ComponentInstance,
+  ComponentId,
+  ChildList,
   GenericComponentProps,
   MessageStore,
   MessageStoreOptions,

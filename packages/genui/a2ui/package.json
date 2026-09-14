@@ -171,7 +171,8 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rstest/core": "catalog:rstest",
-    "@types/react": "^19.2.18"
+    "@types/react": "^19.2.18",
+    "ajv": "^8.20.0"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

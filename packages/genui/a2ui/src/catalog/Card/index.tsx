@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
-import type { GenericComponentProps } from '../../store/types.js';
+import type { ComponentId, GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Card.css';
 
@@ -12,7 +12,8 @@ import '../../../styles/catalog/Card.css';
  * @a2uiCatalog Card
  */
 export interface CardProps extends GenericComponentProps {
-  child: string;
+  /** @a2uiComponentId */
+  child: ComponentId;
   variant?: 'elevated' | 'outlined' | 'filled' | 'ghost';
   weight?: number;
 }

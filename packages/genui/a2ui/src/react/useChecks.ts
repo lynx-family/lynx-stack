@@ -57,7 +57,7 @@ function evaluateCondition(
   return undefined;
 }
 
-/** Evaluate structured ValidationResult values. @internal */
+/** Evaluate ValidationResult objects or boolean results from logical functions. @internal */
 export function evaluateChecks(
   processor: MessageProcessor,
   checks: CheckLike[] | undefined,
@@ -80,7 +80,7 @@ export function evaluateChecks(
     const validation = result && typeof result === 'object' && 'valid' in result
       ? result as { valid: boolean; message?: string }
       : undefined;
-    const ok = validation?.valid === true;
+    const ok = result === true || validation?.valid === true;
     if (!ok) {
       failures.push({
         call: isFunctionCall(rule.condition)

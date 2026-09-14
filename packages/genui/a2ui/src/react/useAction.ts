@@ -64,12 +64,25 @@ export function useAction(
         }
       }
 
+      const userMessage = action.event?.userMessage === undefined
+        ? undefined
+        : resolveDynamicValue(
+          processor,
+          action.event.userMessage,
+          surfaceId,
+          dataContext,
+          {
+            functions: catalog.functions,
+            resolveFunctionCall: executeFunctionCall,
+          },
+        );
       const userAction: UserActionPayload = {
         name,
         surfaceId,
         sourceComponentId: id,
         timestamp: new Date().toISOString(),
         context,
+        ...(typeof userMessage === 'string' ? { userMessage } : {}),
       };
 
       // Dispatch through the processor — `<A2UI>` listens via

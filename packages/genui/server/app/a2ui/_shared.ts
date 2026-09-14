@@ -22,6 +22,7 @@ export interface A2UIChatBody {
 }
 
 export interface A2UIActionRequest {
+  userMessage?: string;
   name: string;
   context?: Record<string, unknown>;
 }
@@ -59,6 +60,16 @@ export function validateAction(value: unknown):
 
   if (typeof value.name === 'string' && value.name.length > 0) {
     const action: A2UIActionRequest = { name: value.name };
+    if (value.userMessage !== undefined) {
+      if (typeof value.userMessage !== 'string') {
+        return {
+          ok: false,
+          status: 400,
+          error: 'action.userMessage must be a string',
+        };
+      }
+      action.userMessage = value.userMessage;
+    }
     if ('context' in value) {
       if (!isRecord(value.context)) {
         return {
