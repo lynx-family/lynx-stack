@@ -12,14 +12,14 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { configPageUrl, lynxConfigPaths } from './render.ts';
+import { configPagePaths, configPageUrl } from './render.ts';
 
 const OVERVIEW_LABEL = { en: 'Overview', zh: '概览' } as const;
 const MARKER = '{/* @api ConfigOption ';
 
-const skeleton = (path: string) =>
+const skeleton = (path: string, lynx: boolean) =>
   `---
-title: ${path}
+title: ${path}${lynx ? '' : '\noutline: false'}
 ---
 
 # ${path}
@@ -52,8 +52,11 @@ function removeStale(dir: string, prefix: string, wanted: Set<string>): void {
 }
 
 export function syncConfigPages(docsRoot: string): void {
-  const pages = lynxConfigPaths(join(docsRoot, 'api-data')).map(path => ({
+  const pages = configPagePaths(join(docsRoot, 'api-data')).map((
+    { path, lynx },
+  ) => ({
     path,
+    lynx,
     rel: configPageUrl(path).slice('/config/'.length),
   }));
   const wanted = new Set(pages.map(p => p.rel));
@@ -64,11 +67,11 @@ export function syncConfigPages(docsRoot: string): void {
       { type: 'file', name: 'index', label: OVERVIEW_LABEL[locale] },
     ];
     const sections = new Map<string, unknown[]>();
-    for (const { path, rel } of pages) {
+    for (const { path, lynx, rel } of pages) {
       const file = join(root, `${rel}.mdx`);
       if (!existsSync(file)) {
         mkdirSync(dirname(file), { recursive: true });
-        writeFileSync(file, skeleton(path));
+        writeFileSync(file, skeleton(path, lynx));
       }
       const [ns, name] = rel.split('/');
       if (!name) {

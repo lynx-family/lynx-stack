@@ -1,0 +1,18 @@
+---
+title: output.sourceMap
+outline: false
+---
+
+# output.sourceMap
+
+{/* @api ConfigOption package="rspeedy" path="output.sourceMap" */}
+
+- **Type:** `boolean | SourceMap`
+- **Lynx default:** When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.
+- **Rsbuild default:** `const defaultSourceMap = { js: isDev ? 'cheap-module-source-map' : false, css: false, extract: false, };`
+
+The `SourceMap` configures whether and how to generate source-map for outputs.
+
+This is a standard Rsbuild option with a different default in Lynx builds. See the [Rsbuild documentation](https://rsbuild.rs/config/output/source-map) for the full description.
+
+{/* @api-end */}

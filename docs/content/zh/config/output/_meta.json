@@ -1,6 +1,16 @@
 [
   {
     "type": "file",
+    "name": "data-uri-limit",
+    "label": "output.dataUriLimit"
+  },
+  {
+    "type": "file",
+    "name": "filename",
+    "label": "output.filename"
+  },
+  {
+    "type": "file",
     "name": "filename-bundle",
     "label": "output.filename.bundle"
   },
@@ -11,6 +21,16 @@
   },
   {
     "type": "file",
+    "name": "inline-scripts",
+    "label": "output.inlineScripts"
+  },
+  {
+    "type": "file",
+    "name": "legal-comments",
+    "label": "output.legalComments"
+  },
+  {
+    "type": "file",
     "name": "minify-background-options",
     "label": "output.minify.backgroundOptions"
   },
@@ -18,5 +38,10 @@
     "type": "file",
     "name": "minify-main-thread-options",
     "label": "output.minify.mainThreadOptions"
+  },
+  {
+    "type": "file",
+    "name": "source-map",
+    "label": "output.sourceMap"
   }
 ]

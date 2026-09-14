@@ -57,6 +57,7 @@ write(
   `---
 title: Config overview
 pageType: doc-wide
+outline: false
 ---
 
 # Config overview

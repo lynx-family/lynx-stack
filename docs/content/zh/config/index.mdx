@@ -1,6 +1,7 @@
 ---
 title: 配置总览
 pageType: doc-wide
+outline: false
 ---
 
 # 配置总览
@@ -52,152 +53,125 @@ export default defineConfig({
 
 {/* @api ConfigOverview package="rspeedy" type="Config" */}
 
-标有 <span className="api-badge api-badge-lynx">Lynx</span> 的是 Lynx 特有配置，在本站有单独的页面；其余配置链接到 Rsbuild 文档。
+标有 <span className="api-badge api-badge-lynx">Lynx</span> 的是 Lynx 特有配置，标有 <span className="api-badge api-badge-default">默认值不同</span> 的是默认值与 Rsbuild 不同的 Rsbuild 配置，二者在本站都有单独的页面；其余配置链接到 Rsbuild 文档。
 
 <div className="api-config-overview">
 
 <div className="api-config-group" id="base">
 
-**base**
+<div className="api-config-group-title">base</div>
 
-- <span id="environments"></span>[`environments`](https://rsbuild.rs/zh/config/environments)
-- <span id="mode"></span>[`mode`](https://rsbuild.rs/zh/config/mode)
-- <span id="plugins"></span>[`plugins`](https://rsbuild.rs/zh/config/plugins)
-- <span id="splitchunks"></span>[`splitChunks`](https://rsbuild.rs/zh/config/split-chunks)
+- <span id="environments"></span>[environments](/zh/config/environments) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="mode"></span>[mode](/zh/config/mode) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="plugins"></span>[plugins](https://rsbuild.rs/zh/config/plugins)
+- <span id="splitchunks"></span>[splitChunks](/zh/config/split-chunks) <span className="api-badge api-badge-default">默认值不同</span>
 
 </div>
 
 <div className="api-config-group" id="source">
 
-**source**
+<div className="api-config-group-title">source</div>
 
-- <span id="source-alias"></span>[`source.alias`](/zh/config/source/alias) <span className="api-badge api-badge-deprecated">已废弃</span> <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="source-assetsinclude"></span>[`source.assetsInclude`](https://rsbuild.rs/zh/config/source/assets-include)
-- <span id="source-decorators"></span>[`source.decorators`](https://rsbuild.rs/zh/config/source/decorators)
-- <span id="source-define"></span>[`source.define`](https://rsbuild.rs/zh/config/source/define)
-- <span id="source-entry"></span>[`source.entry`](https://rsbuild.rs/zh/config/source/entry)
-- <span id="source-exclude"></span>[`source.exclude`](https://rsbuild.rs/zh/config/source/exclude)
-- <span id="source-include"></span>[`source.include`](https://rsbuild.rs/zh/config/source/include)
-- <span id="source-preentry"></span>[`source.preEntry`](https://rsbuild.rs/zh/config/source/pre-entry)
-- <span id="source-transformimport"></span>[`source.transformImport`](https://rsbuild.rs/zh/config/source/transform-import)
-- <span id="source-tsconfigpath"></span>[`source.tsconfigPath`](https://rsbuild.rs/zh/config/source/tsconfig-path)
+- <span id="source-alias"></span>[source.alias](/zh/config/source/alias) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="source-assetsinclude"></span>[source.assetsInclude](https://rsbuild.rs/zh/config/source/assets-include)
+- <span id="source-decorators"></span>[source.decorators](https://rsbuild.rs/zh/config/source/decorators)
+- <span id="source-define"></span>[source.define](https://rsbuild.rs/zh/config/source/define)
+- <span id="source-entry"></span>[source.entry](/zh/config/source/entry) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="source-exclude"></span>[source.exclude](https://rsbuild.rs/zh/config/source/exclude)
+- <span id="source-include"></span>[source.include](https://rsbuild.rs/zh/config/source/include)
+- <span id="source-preentry"></span>[source.preEntry](https://rsbuild.rs/zh/config/source/pre-entry)
+- <span id="source-transformimport"></span>[source.transformImport](https://rsbuild.rs/zh/config/source/transform-import)
+- <span id="source-tsconfigpath"></span>[source.tsconfigPath](https://rsbuild.rs/zh/config/source/tsconfig-path)
 
 </div>
 
 <div className="api-config-group" id="output">
 
-**output**
+<div className="api-config-group-title">output</div>
 
-- <span id="output-assetprefix"></span>[`output.assetPrefix`](https://rsbuild.rs/zh/config/output/asset-prefix)
-- <span id="output-cleandistpath"></span>[`output.cleanDistPath`](https://rsbuild.rs/zh/config/output/clean-dist-path)
-- <span id="output-copy"></span>[`output.copy`](https://rsbuild.rs/zh/config/output/copy)
-- <span id="output-cssmodules"></span>[`output.cssModules`](https://rsbuild.rs/zh/config/output/css-modules)
-- <span id="output-dataurilimit"></span>[`output.dataUriLimit`](https://rsbuild.rs/zh/config/output/data-uri-limit)
-- <span id="output-distpath"></span>[`output.distPath`](https://rsbuild.rs/zh/config/output/dist-path)
-- <span id="output-filename"></span>[`output.filename`](https://rsbuild.rs/zh/config/output/filename)
-- <span id="output-filename-bundle"></span>[`output.filename.bundle`](/zh/config/output/filename-bundle) <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="output-filename-template"></span>[`output.filename.template`](/zh/config/output/filename-template) <span className="api-badge api-badge-deprecated">已废弃</span> <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="output-filenamehash"></span>[`output.filenameHash`](https://rsbuild.rs/zh/config/output/filename-hash)
-- <span id="output-inlinescripts"></span>[`output.inlineScripts`](https://rsbuild.rs/zh/config/output/inline-scripts)
-- <span id="output-legalcomments"></span>[`output.legalComments`](https://rsbuild.rs/zh/config/output/legal-comments)
-- <span id="output-minify"></span>[`output.minify`](https://rsbuild.rs/zh/config/output/minify)
-- <span id="output-minify-backgroundoptions"></span>[`output.minify.backgroundOptions`](/zh/config/output/minify-background-options) <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="output-minify-mainthreadoptions"></span>[`output.minify.mainThreadOptions`](/zh/config/output/minify-main-thread-options) <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="output-sourcemap"></span>[`output.sourceMap`](https://rsbuild.rs/zh/config/output/source-map)
+- <span id="output-assetprefix"></span>[output.assetPrefix](https://rsbuild.rs/zh/config/output/asset-prefix)
+- <span id="output-cleandistpath"></span>[output.cleanDistPath](https://rsbuild.rs/zh/config/output/clean-dist-path)
+- <span id="output-copy"></span>[output.copy](https://rsbuild.rs/zh/config/output/copy)
+- <span id="output-cssmodules"></span>[output.cssModules](https://rsbuild.rs/zh/config/output/css-modules)
+- <span id="output-dataurilimit"></span>[output.dataUriLimit](/zh/config/output/data-uri-limit) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="output-distpath"></span>[output.distPath](https://rsbuild.rs/zh/config/output/dist-path)
+- <span id="output-filename"></span>[output.filename](/zh/config/output/filename) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="output-filename-bundle"></span>[output.filename.bundle](/zh/config/output/filename-bundle) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-filename-template"></span>[output.filename.template](/zh/config/output/filename-template) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-filenamehash"></span>[output.filenameHash](https://rsbuild.rs/zh/config/output/filename-hash)
+- <span id="output-inlinescripts"></span>[output.inlineScripts](/zh/config/output/inline-scripts) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="output-legalcomments"></span>[output.legalComments](/zh/config/output/legal-comments) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="output-minify"></span>[output.minify](https://rsbuild.rs/zh/config/output/minify)
+- <span id="output-minify-backgroundoptions"></span>[output.minify.backgroundOptions](/zh/config/output/minify-background-options) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-minify-mainthreadoptions"></span>[output.minify.mainThreadOptions](/zh/config/output/minify-main-thread-options) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="output-sourcemap"></span>[output.sourceMap](/zh/config/output/source-map) <span className="api-badge api-badge-default">默认值不同</span>
 
 </div>
 
 <div className="api-config-group" id="dev">
 
-**dev**
+<div className="api-config-group-title">dev</div>
 
-- <span id="dev-assetprefix"></span>[`dev.assetPrefix`](https://rsbuild.rs/zh/config/dev/asset-prefix)
-- <span id="dev-hmr"></span>[`dev.hmr`](https://rsbuild.rs/zh/config/dev/hmr)
-- <span id="dev-livereload"></span>[`dev.liveReload`](https://rsbuild.rs/zh/config/dev/live-reload)
-- <span id="dev-progressbar"></span>[`dev.progressBar`](https://rsbuild.rs/zh/config/dev/progress-bar)
-- <span id="dev-watchfiles"></span>[`dev.watchFiles`](https://rsbuild.rs/zh/config/dev/watch-files)
-- <span id="dev-writetodisk"></span>[`dev.writeToDisk`](https://rsbuild.rs/zh/config/dev/write-to-disk)
+- <span id="dev-assetprefix"></span>[dev.assetPrefix](https://rsbuild.rs/zh/config/dev/asset-prefix)
+- <span id="dev-hmr"></span>[dev.hmr](https://rsbuild.rs/zh/config/dev/hmr)
+- <span id="dev-livereload"></span>[dev.liveReload](https://rsbuild.rs/zh/config/dev/live-reload)
+- <span id="dev-progressbar"></span>[dev.progressBar](/zh/config/dev/progress-bar) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="dev-watchfiles"></span>[dev.watchFiles](https://rsbuild.rs/zh/config/dev/watch-files)
+- <span id="dev-writetodisk"></span>[dev.writeToDisk](/zh/config/dev/write-to-disk) <span className="api-badge api-badge-default">默认值不同</span>
 
 </div>
 
 <div className="api-config-group" id="server">
 
-**server**
+<div className="api-config-group-title">server</div>
 
-- <span id="server-base"></span>[`server.base`](https://rsbuild.rs/zh/config/server/base)
-- <span id="server-compress"></span>[`server.compress`](https://rsbuild.rs/zh/config/server/compress)
-- <span id="server-cors"></span>[`server.cors`](https://rsbuild.rs/zh/config/server/cors)
-- <span id="server-headers"></span>[`server.headers`](https://rsbuild.rs/zh/config/server/headers)
-- <span id="server-host"></span>[`server.host`](https://rsbuild.rs/zh/config/server/host)
-- <span id="server-port"></span>[`server.port`](https://rsbuild.rs/zh/config/server/port)
-- <span id="server-proxy"></span>[`server.proxy`](https://rsbuild.rs/zh/config/server/proxy)
-- <span id="server-strictport"></span>[`server.strictPort`](https://rsbuild.rs/zh/config/server/strict-port)
+- <span id="server-base"></span>[server.base](https://rsbuild.rs/zh/config/server/base)
+- <span id="server-compress"></span>[server.compress](https://rsbuild.rs/zh/config/server/compress)
+- <span id="server-cors"></span>[server.cors](https://rsbuild.rs/zh/config/server/cors)
+- <span id="server-headers"></span>[server.headers](https://rsbuild.rs/zh/config/server/headers)
+- <span id="server-host"></span>[server.host](/zh/config/server/host) <span className="api-badge api-badge-default">默认值不同</span>
+- <span id="server-port"></span>[server.port](https://rsbuild.rs/zh/config/server/port)
+- <span id="server-proxy"></span>[server.proxy](https://rsbuild.rs/zh/config/server/proxy)
+- <span id="server-strictport"></span>[server.strictPort](https://rsbuild.rs/zh/config/server/strict-port)
 
 </div>
 
 <div className="api-config-group" id="resolve">
 
-**resolve**
+<div className="api-config-group-title">resolve</div>
 
-- <span id="resolve-alias"></span>[`resolve.alias`](https://rsbuild.rs/zh/config/resolve/alias)
-- <span id="resolve-aliasstrategy"></span>[`resolve.aliasStrategy`](https://rsbuild.rs/zh/config/resolve/alias-strategy)
-- <span id="resolve-dedupe"></span>[`resolve.dedupe`](https://rsbuild.rs/zh/config/resolve/dedupe)
-- <span id="resolve-extensions"></span>[`resolve.extensions`](https://rsbuild.rs/zh/config/resolve/extensions)
+- <span id="resolve-alias"></span>[resolve.alias](https://rsbuild.rs/zh/config/resolve/alias)
+- <span id="resolve-aliasstrategy"></span>[resolve.aliasStrategy](https://rsbuild.rs/zh/config/resolve/alias-strategy)
+- <span id="resolve-dedupe"></span>[resolve.dedupe](https://rsbuild.rs/zh/config/resolve/dedupe)
+- <span id="resolve-extensions"></span>[resolve.extensions](/zh/config/resolve/extensions) <span className="api-badge api-badge-default">默认值不同</span>
 
 </div>
 
 <div className="api-config-group" id="performance">
 
-**performance**
+<div className="api-config-group-title">performance</div>
 
-- <span id="performance-buildcache"></span>[`performance.buildCache`](https://rsbuild.rs/zh/config/performance/build-cache) <span className="api-badge api-badge-beta">Beta</span>
-- <span id="performance-chunksplit"></span>[`performance.chunkSplit`](https://rsbuild.rs/zh/config/split-chunks) <span className="api-badge api-badge-deprecated">已废弃</span>
-- <span id="performance-printfilesize"></span>[`performance.printFileSize`](https://rsbuild.rs/zh/config/performance/print-file-size)
-- <span id="performance-profile"></span>[`performance.profile`](/zh/config/performance/profile) <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="performance-removeconsole"></span>[`performance.removeConsole`](https://rsbuild.rs/zh/config/performance/remove-console)
+- <span id="performance-buildcache"></span>[performance.buildCache](https://rsbuild.rs/zh/config/performance/build-cache)
+- <span id="performance-chunksplit"></span>[performance.chunkSplit](https://rsbuild.rs/zh/config/split-chunks)
+- <span id="performance-printfilesize"></span>[performance.printFileSize](https://rsbuild.rs/zh/config/performance/print-file-size)
+- <span id="performance-profile"></span>[performance.profile](/zh/config/performance/profile) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="performance-removeconsole"></span>[performance.removeConsole](https://rsbuild.rs/zh/config/performance/remove-console)
 
 </div>
 
 <div className="api-config-group" id="tools">
 
-**tools**
+<div className="api-config-group-title">tools</div>
 
-- <span id="tools-bundlerchain"></span>[`tools.bundlerChain`](https://rsbuild.rs/zh/config/tools/bundler-chain)
-- <span id="tools-cssextract"></span>[`tools.cssExtract`](https://rsbuild.rs/zh/config/tools/css-extract)
-- <span id="tools-cssloader"></span>[`tools.cssLoader`](https://rsbuild.rs/zh/config/tools/css-loader)
-- <span id="tools-rsdoctor"></span>[`tools.rsdoctor`](/zh/config/tools/rsdoctor) <span className="api-badge api-badge-lynx">Lynx</span>
-- <span id="tools-rspack"></span>[`tools.rspack`](https://rsbuild.rs/zh/config/tools/rspack)
-- <span id="tools-swc"></span>[`tools.swc`](https://rsbuild.rs/zh/config/tools/swc)
-
-</div>
+- <span id="tools-bundlerchain"></span>[tools.bundlerChain](https://rsbuild.rs/zh/config/tools/bundler-chain)
+- <span id="tools-cssextract"></span>[tools.cssExtract](https://rsbuild.rs/zh/config/tools/css-extract)
+- <span id="tools-cssloader"></span>[tools.cssLoader](https://rsbuild.rs/zh/config/tools/css-loader)
+- <span id="tools-rsdoctor"></span>[tools.rsdoctor](/zh/config/tools/rsdoctor) <span className="api-badge api-badge-lynx">Lynx</span>
+- <span id="tools-rspack"></span>[tools.rspack](https://rsbuild.rs/zh/config/tools/rspack)
+- <span id="tools-swc"></span>[tools.swc](https://rsbuild.rs/zh/config/tools/swc)
 
 </div>
 
-## 与 Rsbuild 默认值不同的配置 \{#lynx-defaults\}
-
-| 名称 | Lynx 默认值 | Rsbuild 默认值 |
-| --- | --- | --- |
-| [`environments`](https://rsbuild.rs/zh/config/environments) | 未设置该选项时，Rspeedy 会向 Rsbuild 传入 `{ lynx: {} }`。 |  |
-| [`mode`](https://rsbuild.rs/zh/config/mode) | 取决于 `process.env.NODE_ENV`：当 `NODE_ENV` 为 `'production'` 时为 `'production'`，为 `'development'` 时为 `'development'`，其他情况下为 `'none'`。使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，而 `rspeedy build` 默认为 `'production'`。 | Depends on `process.env.NODE_ENV`: - `'production'` if NODE_ENV is 'production' - `'development'` if NODE_ENV is 'development' - otherwise `'none'` |
-| [`splitChunks`](https://rsbuild.rs/zh/config/split-chunks) | Rspeedy 默认将其设置为 `false`；如果进行了配置，则由 Rsbuild 的顶层 `splitChunks` 选项处理。 详见 [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks)。 |  |
-| [`source.entry`](https://rsbuild.rs/zh/config/source/entry) | `'./src/index.js'` | `{ index: './src/index.js', }` |
-| [`source.include`](https://rsbuild.rs/zh/config/source/include) | 未设置时，Rsbuild 会编译当前目录下的 JavaScript 文件以及所有目录下的 TypeScript 或 JSX 文件，同时排除 `node_modules` 下的 JavaScript 文件。 | `[ { and: [rootPath, { not: /[\\/]node_modules[\\/]/ }], }, /\.(?:ts\|tsx\|jsx\|mts\|cts)$/, ];` |
-| [`output.cleanDistPath`](https://rsbuild.rs/zh/config/output/clean-dist-path) | 当 `output.distPath.root` 为项目根目录的子目录时自动启用，否则禁用。 | `'auto'` |
-| [`output.dataUriLimit`](https://rsbuild.rs/zh/config/output/data-uri-limit) | `2048` | `{ svg: 4096, font: 4096, image: 4096, media: 4096, assets: 4096 }` |
-| [`output.distPath`](https://rsbuild.rs/zh/config/output/dist-path) | 使用 Rsbuild 默认的 distPath 配置，并设置 `root: 'dist'`。 |  |
-| [`output.filename`](https://rsbuild.rs/zh/config/output/filename) | `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }` |  |
-| [`output.filenameHash`](https://rsbuild.rs/zh/config/output/filename-hash) | 在生产环境 web 构建中，Rsbuild 默认将该选项设置为 `true`；开发环境构建和非 web 产物默认不添加 hash。 | `true` |
-| [`output.inlineScripts`](https://rsbuild.rs/zh/config/output/inline-scripts) | Rspeedy 默认将其设置为 `true`，仅当用户显式启用顶层的 `splitChunks` 选项时才会切换为 `false`。 | `false` |
-| [`output.legalComments`](https://rsbuild.rs/zh/config/output/legal-comments) | `'none'` | `'linked'` |
-| [`output.sourceMap`](https://rsbuild.rs/zh/config/output/source-map) | 在 Lynx 构建中未设置该选项时，JavaScript source map 在开发环境使用 `'cheap-module-source-map'`，在生产环境使用 `'source-map'`；同时也会生成 CSS source map。所有 `.map` 资源都会在输出前被移除。 | `const defaultSourceMap = { js: isDev ? 'cheap-module-source-map' : false, css: false, extract: false, };` |
-| [`dev.progressBar`](https://rsbuild.rs/zh/config/dev/progress-bar) | `true` | `false` |
-| [`dev.writeToDisk`](https://rsbuild.rs/zh/config/dev/write-to-disk) | `true` | `false` |
-| [`server.cors`](https://rsbuild.rs/zh/config/server/cors) | 使用 Rsbuild 默认的 CORS 选项。 - 设置为对象时，使用指定的选项启用 CORS。 - 设置为 `true` 时，使用默认选项启用 CORS（允许所有来源，不推荐）。 - 设置为 `false` 时，禁用 CORS。 详见 [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors)。 | `{ origin: defaultAllowedOrigins }` where `defaultAllowedOrigins` includes: - `localhost` - `127.0.0.1` - `[::1]` |
-| [`server.host`](https://rsbuild.rs/zh/config/server/host) | `"0.0.0.0"` | `'localhost'` |
-| [`server.port`](https://rsbuild.rs/zh/config/server/port) | Rsbuild 默认将该选项设置为 `3000`。 | `3000` |
-| [`server.strictPort`](https://rsbuild.rs/zh/config/server/strict-port) | `false By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.` | `false` |
-| [`resolve.extensions`](https://rsbuild.rs/zh/config/resolve/extensions) | `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']` 例如，导入 './index' 时，Rsbuild 会按以下顺序尝试解析： - `./index.ts` - `./index.tsx` - `./index.mjs` - `./index.js` - `./index.jsx` - `./index.json` - `./index.cjs` | `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']` |
-| [`performance.chunkSplit`](https://rsbuild.rs/zh/config/split-chunks) | 对于 web 构建，未设置该选项时 Rsbuild 当前使用 `{ strategy: 'split-by-experience' }`。  请使用顶层的 `Config.splitChunks` 选项代替。 |  |
-| [`tools.cssLoader`](https://rsbuild.rs/zh/config/tools/css-loader) | 使用基于 `output.cssModules` 和 `output.sourceMap` 推导出的默认值，其中 CSS 文件的 `importLoaders` 设置为 `1`，Sass/Less 文件设置为 `2`。 |  |
+</div>
 
 {/* @api-end */}

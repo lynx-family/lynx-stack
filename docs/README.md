@@ -54,7 +54,7 @@ Code blocks are never sent for translation; only the prose around them is.
 
 ## Configuration pages
 
-The pages under `content/*/config` apply to both `rsbuild.config.ts` with `pluginLynx` and `lynx.config.ts`. `pnpm generate` writes `api-data/rsbuild-config.json`, the option paths of `RsbuildConfig` read from the installed `@rsbuild/core` types. The overview (`config/index.mdx`) groups every option the way the Rsbuild config overview does: options that Rsbuild also has link to the Rsbuild documentation, and a table lists the ones whose Lynx default differs. Each option that is specific to Lynx gets its own page under `config/<namespace>/`, created by `pnpm generate` (`scripts/config-pages.ts`) with how to set it through `pluginLynx` or `lynx.config.ts`; text added outside the generated region is kept.
+The pages under `content/*/config` apply to both `rsbuild.config.ts` with `pluginLynx` and `lynx.config.ts`. `pnpm generate` writes `api-data/rsbuild-config.json`, the option paths of `RsbuildConfig` read from the installed `@rsbuild/core` types. The overview (`config/index.mdx`) groups every option the way the Rsbuild config overview does: options that Rsbuild also has link to the Rsbuild documentation, and options whose Lynx default differs get a short page that shows both defaults and links to the Rsbuild documentation. Each option that is specific to Lynx gets its own page under `config/<namespace>/`, created by `pnpm generate` (`scripts/config-pages.ts`) with how to set it through `pluginLynx` or `lynx.config.ts`; text added outside the generated region is kept.
 
 ## Adding a package
 

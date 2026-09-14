@@ -3,5 +3,10 @@
     "type": "file",
     "name": "alias",
     "label": "source.alias"
+  },
+  {
+    "type": "file",
+    "name": "entry",
+    "label": "source.entry"
   }
 ]

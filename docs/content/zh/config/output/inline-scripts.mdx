@@ -1,0 +1,18 @@
+---
+title: output.inlineScripts
+outline: false
+---
+
+# output.inlineScripts
+
+{/* @api ConfigOption package="rspeedy" path="output.inlineScripts" */}
+
+- **类型:** `InlineChunkConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/))
+- **Lynx 默认值:** Rspeedy 默认将其设置为 `true`，仅当用户显式启用顶层的 `splitChunks` 选项时才会切换为 `false`。
+- **Rsbuild 默认值:** `false`
+
+`Output.inlineScripts` 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。
+
+这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/output/inline-scripts)。
+
+{/* @api-end */}

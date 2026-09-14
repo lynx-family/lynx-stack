@@ -1,0 +1,18 @@
+---
+title: output.dataUriLimit
+outline: false
+---
+
+# output.dataUriLimit
+
+{/* @api ConfigOption package="rspeedy" path="output.dataUriLimit" */}
+
+- **类型:** `number | DataUriLimit`
+- **Lynx 默认值:** `2048`
+- **Rsbuild 默认值:** `{ svg: 4096, font: 4096, image: 4096, media: 4096, assets: 4096 }`
+
+`Output.dataUriLimit` 选项用于设置图片、字体等静态资源内联的体积阈值。
+
+这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/output/data-uri-limit)。
+
+{/* @api-end */}

@@ -76,8 +76,12 @@ const API_DOCUMENTER_REDIRECTS = [
 
 const MOVED_SECTION_REDIRECTS = [
   {
+    from: '^/(zh/)?(?:rspeedy/)?config/splitChunks(?:\\.html)?$',
+    to: '/$1config/split-chunks',
+  },
+  {
     from:
-      '^/(zh/)?(?:rspeedy/)?config/(?:dev|environments|mode|output|performance|plugins|resolve|server|source|splitChunks|tools)(?:\\.html)?$',
+      '^/(zh/)?(?:rspeedy/)?config/(?:dev|output|performance|plugins|resolve|server|source|tools)(?:\\.html)?$',
     to: '/$1config/',
   },
   { from: '^/(zh/)?rspeedy/config(/.*)?$', to: '/$1config$2' },

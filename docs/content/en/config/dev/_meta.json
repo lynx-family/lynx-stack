@@ -1,0 +1,12 @@
+[
+  {
+    "type": "file",
+    "name": "progress-bar",
+    "label": "dev.progressBar"
+  },
+  {
+    "type": "file",
+    "name": "write-to-disk",
+    "label": "dev.writeToDisk"
+  }
+]
