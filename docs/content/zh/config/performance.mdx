@@ -1,0 +1,62 @@
+---
+title: performance
+---
+
+# performance
+
+在构建产物与运行时性能之间进行取舍的选项：chunk 拆分、移除 console、运行时性能分析以及 bundle 分析器。
+
+其中大多数是标准的 Rsbuild 配置：在 `rsbuild.config.ts` 的 `performance` 下设置，使用 Rspeedy 构建时则在 `lynx.config.ts` 中设置，详细说明请查看 Rsbuild 文档。Lynx 特有的配置项在下文完整说明，并注明使用 Rsbuild 构建时应在哪里设置。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="performance" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`buildCache`](#performance-buildcache) <span className="api-badge api-badge-beta">Beta</span> | `boolean \| `[`BuildCache`](#performance-buildcache) | 启用或配置持久化构建缓存。 |
+| [`chunkSplit`](#performance-chunksplit) <span className="api-badge api-badge-deprecated">已废弃</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | `Performance.chunkSplit` 用于配置 chunk 拆分策略。 |
+| [`printFileSize`](#performance-printfilesize) | `boolean \| PrintFileSizeOptions` | 是否在生产环境构建后打印文件大小。 |
+| [`profile`](#performance-profile) <span className="api-badge api-badge-lynx">Lynx</span> | `boolean` | 是否在 ReactLynx 等 Lynx 运行时集成中采集耗时信息。 |
+| [`removeConsole`](#performance-removeconsole) | `boolean \| ConsoleType[]` | 是否在生产环境构建中移除 `console.[methodName]`。 |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="performance" */}
+
+## Lynx 特有配置 \{#lynx-options\}
+
+### `performance.profile` \{#performance-profile\}
+
+- **类型:** `boolean`
+- **默认值:** 当 `DEBUG` 包含 `rspeedy` 时，Rspeedy 会将其设置为 `true`；否则不设置该选项。
+
+是否在 ReactLynx 等 Lynx 运行时集成中采集耗时信息。
+
+启用 profile。
+
+- ReactLynx 等框架会通过 `console.profile` 输出运行时信息。
+- Rspeedy 会在构建后输出 `dist/stats.json`，以兼容 bundle 分析工具。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: { profile: true },
+})
+```
+
+使用 Rsbuild 构建时，将此选项传给 [`pluginLynx`](/zh/plugins/plugin-lynx#performance-profile)。
+
+## Rsbuild 配置 \{#rsbuild-options\}
+
+以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。
+
+| 名称 | 类型 | Lynx 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="performance-buildcache"></a>`buildCache` <span className="api-badge api-badge-beta">Beta</span> | `boolean \| `[`BuildCache`](#performance-buildcache) |  | 启用或配置持久化构建缓存。 [Rsbuild 文档](https://rsbuild.rs/zh/config/performance/build-cache) |
+| <a id="performance-chunksplit"></a>`chunkSplit` <span className="api-badge api-badge-deprecated">已废弃</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | 对于 web 构建，未设置该选项时 Rsbuild 当前使用 `{ strategy: 'split-by-experience' }`。  请使用顶层的 [`Config.splitChunks`](/zh/config/splitChunks#splitchunks) 选项代替。 | `Performance.chunkSplit` 用于配置 chunk 拆分策略。 [Rsbuild 文档](https://rsbuild.rs/zh/config/split-chunks) |
+| <a id="performance-printfilesize"></a>`printFileSize` | `boolean \| PrintFileSizeOptions` |  | 是否在生产环境构建后打印文件大小。 [Rsbuild 文档](https://rsbuild.rs/zh/config/performance/print-file-size) |
+| <a id="performance-removeconsole"></a>`removeConsole` | `boolean \| ConsoleType[]` |  | 是否在生产环境构建中移除 `console.[methodName]`。 [Rsbuild 文档](https://rsbuild.rs/zh/config/performance/remove-console) |
+
+{/* @api-end */}

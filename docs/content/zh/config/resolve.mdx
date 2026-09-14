@@ -1,0 +1,37 @@
+---
+title: resolve
+---
+
+# resolve
+
+控制模块标识符解析方式的选项：别名、扩展名，以及默认添加的 `lynx` 导出条件。
+
+它们都是标准的 Rsbuild 配置：在 `rsbuild.config.ts` 的 `resolve` 下设置，使用 Rspeedy 构建时则在 `lynx.config.ts` 中设置。每一项都链接到 Rsbuild 文档，与 Rsbuild 默认值不同时注明 Lynx 的默认值。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="resolve" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`alias`](#resolve-alias) | `Record<string, string \| false \| string[]>` (来自 typescript) | 创建别名，以便更方便地 `import` 或 `require` 某些模块。 |
+| [`aliasStrategy`](#resolve-aliasstrategy) | `"prefer-tsconfig" \| "prefer-alias"` | 设置路径别名解析的策略，用于控制 `tsconfig.json` 中的 `paths` 选项 与 Rsbuild 的 `resolve.alias` 选项之间的优先级关系。 |
+| [`dedupe`](#resolve-dedupe) | `string[]` | 强制从项目根目录解析指定的包，可用于对包进行去重并减小 bundle 体积。 |
+| [`extensions`](#resolve-extensions) | `string[]` | 导入模块时自动解析文件扩展名。这意味着你可以在导入文件时省略扩展名。 |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="resolve" */}
+
+## Rsbuild 配置 \{#rsbuild-options\}
+
+以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。
+
+| 名称 | 类型 | Lynx 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="resolve-alias"></a>`alias` | `Record<string, string \| false \| string[]>` (来自 typescript) |  | 创建别名，以便更方便地 `import` 或 `require` 某些模块。 [Rsbuild 文档](https://rsbuild.rs/zh/config/resolve/alias) |
+| <a id="resolve-aliasstrategy"></a>`aliasStrategy` | `"prefer-tsconfig" \| "prefer-alias"` |  | 设置路径别名解析的策略，用于控制 `tsconfig.json` 中的 `paths` 选项 与 Rsbuild 的 `resolve.alias` 选项之间的优先级关系。 [Rsbuild 文档](https://rsbuild.rs/zh/config/resolve/alias-strategy) |
+| <a id="resolve-dedupe"></a>`dedupe` | `string[]` |  | 强制从项目根目录解析指定的包，可用于对包进行去重并减小 bundle 体积。 [Rsbuild 文档](https://rsbuild.rs/zh/config/resolve/dedupe) |
+| <a id="resolve-extensions"></a>`extensions` | `string[]` | `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']` 例如，导入 './index' 时，Rsbuild 会按以下顺序尝试解析： - `./index.ts` - `./index.tsx` - `./index.mjs` - `./index.js` - `./index.jsx` - `./index.json` - `./index.cjs` | 导入模块时自动解析文件扩展名。 [Rsbuild 文档](https://rsbuild.rs/zh/config/resolve/extensions) |
+
+{/* @api-end */}

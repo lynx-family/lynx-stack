@@ -1,0 +1,29 @@
+---
+title: mode
+---
+
+# mode
+
+The build mode. It is the standard [Rsbuild `mode` option](https://rsbuild.rs/config/mode). With Rspeedy, it defaults to `production` for `rspeedy build` and `development` for `rspeedy dev`.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="mode" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`mode`](#mode) | `"production" \| "development" \| "none"` | Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations. |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="mode" */}
+
+## Rsbuild options \{#rsbuild-options\}
+
+Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.
+
+| Name | Type | Lynx default | Description |
+| --- | --- | --- | --- |
+| <a id="mode"></a>`mode` | `"production" \| "development" \| "none"` | Depends on `process.env.NODE_ENV`: `'production'` when `NODE_ENV` is `'production'`, `'development'` when `NODE_ENV` is `'development'`, and `'none'` otherwise. When using Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, while `rspeedy build` defaults to `'production'`. | Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations. [Rsbuild docs](https://rsbuild.rs/config/mode) |
+
+{/* @api-end */}

@@ -62,7 +62,7 @@ const CONFIG_INTROS: Record<string, string> = {
   performance:
     'Options that trade build output for runtime performance: chunk splitting, console removal, runtime profiling and the bundle analyzer.',
   plugins:
-    'The list of Rsbuild plugins to apply. It is the [Rsbuild `plugins` option](https://rsbuild.rs/config/plugins); Rspeedy applies [`pluginLynx`](/rspeedy/plugins/plugin-lynx) itself before the plugins listed here.',
+    'The list of Rsbuild plugins to apply. It is the [Rsbuild `plugins` option](https://rsbuild.rs/config/plugins); Rspeedy applies [`pluginLynx`](/plugins/plugin-lynx) itself before the plugins listed here.',
   resolve:
     'Options for how module specifiers are resolved: aliases, extensions and the `lynx` export condition that Rspeedy adds by default.',
   server:
@@ -77,7 +77,7 @@ const CONFIG_INTROS: Record<string, string> = {
 
 for (const ns of Object.keys(CONFIG_INTROS)) {
   write(
-    `rspeedy/config/${ns}.mdx`,
+    `config/${ns}.mdx`,
     `---
 title: ${ns}
 ---
@@ -100,7 +100,7 @@ ${CONFIG_INTROS[ns]}
 }
 
 write(
-  'rspeedy/config/index.mdx',
+  'config/index.mdx',
   `---
 title: Configuration
 ---
@@ -130,12 +130,12 @@ The options are a subset of the [Rsbuild configuration](https://rsbuild.rs/confi
 
 ## Namespaces
 
-- [dev](/rspeedy/config/dev) · [environments](/rspeedy/config/environments) · [mode](/rspeedy/config/mode) · [output](/rspeedy/config/output) · [performance](/rspeedy/config/performance) · [plugins](/rspeedy/config/plugins) · [resolve](/rspeedy/config/resolve) · [server](/rspeedy/config/server) · [source](/rspeedy/config/source) · [splitChunks](/rspeedy/config/splitChunks) · [tools](/rspeedy/config/tools)
+- [dev](/config/dev) · [environments](/config/environments) · [mode](/config/mode) · [output](/config/output) · [performance](/config/performance) · [plugins](/config/plugins) · [resolve](/config/resolve) · [server](/config/server) · [source](/config/source) · [splitChunks](/config/splitChunks) · [tools](/config/tools)
 `,
 );
 
 write(
-  'rspeedy/api/index.mdx',
+  'packages/rspeedy.mdx',
   `---
 title: JavaScript API
 ---
@@ -173,7 +173,7 @@ const PLUGINS: {
     fn: 'pluginReactLynx',
     options: 'PluginReactLynxOptions',
     intro:
-      'The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/rspeedy/plugins/plugin-lynx) automatically when the build engine is not already there.',
+      'The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/plugins/plugin-lynx) automatically when the build engine is not already there.',
   },
   {
     file: 'plugin-qrcode',
@@ -213,7 +213,7 @@ const PLUGINS: {
     fn: 'pluginLynxDebugMetadata',
     options: 'PluginLynxDebugMetadataOptions',
     intro:
-      'Emits a `debug-metadata.json` next to the bundle with the information Lynx DevTool needs to map runtime errors back to the source. [`pluginLynx`](/rspeedy/plugins/plugin-lynx) applies it by default.',
+      'Emits a `debug-metadata.json` next to the bundle with the information Lynx DevTool needs to map runtime errors back to the source. [`pluginLynx`](/plugins/plugin-lynx) applies it by default.',
   },
   {
     file: 'plugin-react-alias',
@@ -236,7 +236,7 @@ const PLUGINS: {
 for (const p of PLUGINS) {
   const src = PACKAGES.find(e => e.id === p.id)!;
   write(
-    `rspeedy/plugins/${p.file}.mdx`,
+    `plugins/${p.file}.mdx`,
     `---
 title: ${p.fn}
 ---
@@ -442,7 +442,7 @@ ${
 ${
       entry.internal
         ? `:::tip Internal package
-This package is part of the Lynx build engine and is applied for you by [\`pluginLynx\`](/rspeedy/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
+This package is part of the Lynx build engine and is applied for you by [\`pluginLynx\`](/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
 :::
 `
         : ''
@@ -481,20 +481,20 @@ title: Packages
 
 Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack). Packages with a dedicated section link there.
 
-## Rspeedy and plugins
+## Build configuration and plugins
 
 | Package | |
 | --- | --- |
-| \`@lynx-js/rspeedy\` | [Configuration](/rspeedy/config/) · [JavaScript API](/rspeedy/api/) |
-| \`@lynx-js/rsbuild-plugin\` | [pluginLynx](/rspeedy/plugins/plugin-lynx) |
-| \`@lynx-js/react-rsbuild-plugin\` | [pluginReactLynx](/rspeedy/plugins/plugin-react) |
-| \`@lynx-js/qrcode-rsbuild-plugin\` | [pluginQRCode](/rspeedy/plugins/plugin-qrcode) |
-| \`@lynx-js/external-bundle-rsbuild-plugin\` | [pluginExternalBundle](/rspeedy/plugins/plugin-external-bundle) |
-| \`@lynx-js/vanilla-rsbuild-plugin\` | [pluginVanillaLynx](/rspeedy/plugins/plugin-vanilla) |
-| \`@lynx-js/config-rsbuild-plugin\` | [pluginLynxConfig](/rspeedy/plugins/plugin-config) |
-| \`@lynx-js/debug-metadata-rsbuild-plugin\` | [pluginLynxDebugMetadata](/rspeedy/plugins/plugin-debug-metadata) |
-| \`@lynx-js/react-alias-rsbuild-plugin\` | [pluginReactAlias](/rspeedy/plugins/plugin-react-alias) |
-| \`@lynx-js/lynx-bundle-rslib-config\` | [lynxBundle](/rspeedy/plugins/lynx-bundle-rslib-config) |
+| \`@lynx-js/rspeedy\` | [Configuration](/config/) · [JavaScript API](/packages/rspeedy) |
+| \`@lynx-js/rsbuild-plugin\` | [pluginLynx](/plugins/plugin-lynx) |
+| \`@lynx-js/react-rsbuild-plugin\` | [pluginReactLynx](/plugins/plugin-react) |
+| \`@lynx-js/qrcode-rsbuild-plugin\` | [pluginQRCode](/plugins/plugin-qrcode) |
+| \`@lynx-js/external-bundle-rsbuild-plugin\` | [pluginExternalBundle](/plugins/plugin-external-bundle) |
+| \`@lynx-js/vanilla-rsbuild-plugin\` | [pluginVanillaLynx](/plugins/plugin-vanilla) |
+| \`@lynx-js/config-rsbuild-plugin\` | [pluginLynxConfig](/plugins/plugin-config) |
+| \`@lynx-js/debug-metadata-rsbuild-plugin\` | [pluginLynxDebugMetadata](/plugins/plugin-debug-metadata) |
+| \`@lynx-js/react-alias-rsbuild-plugin\` | [pluginReactAlias](/plugins/plugin-react-alias) |
+| \`@lynx-js/lynx-bundle-rslib-config\` | [lynxBundle](/plugins/lynx-bundle-rslib-config) |
 
 ## ReactLynx
 

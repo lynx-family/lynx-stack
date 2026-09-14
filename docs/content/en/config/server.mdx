@@ -1,0 +1,45 @@
+---
+title: server
+---
+
+# server
+
+Options for the local server that serves the bundle to the device during development: host, port, headers and the base path.
+
+They are standard Rsbuild options: set them under `server` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy. Each one links to the Rsbuild documentation; the Lynx default is listed where it differs.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="server" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`base`](#server-base) | `string` | Configure the base path of the server. |
+| [`compress`](#server-compress) | `boolean \| CompressOptions` | Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server. |
+| [`cors`](#server-cors) | `boolean \| CorsOptions` | Configure CORS for the dev server or preview server. |
+| [`headers`](#server-headers) | `Record<string, string \| string[]>` (from typescript) | Adds headers to all responses. |
+| [`host`](#server-host) | `string` | Specify the host that the Rspeedy Server listens to. |
+| [`port`](#server-port) | `number` | Specify the port that the Rspeedy Server listens to. |
+| [`proxy`](#server-proxy) | `ProxyConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Configure proxy rules for the dev server or preview server to proxy requests to the specified service. |
+| [`strictPort`](#server-strictport) | `boolean` | When a port is occupied, Rspeedy will automatically increment the port number until an available port is found. |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="server" */}
+
+## Rsbuild options \{#rsbuild-options\}
+
+Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.
+
+| Name | Type | Lynx default | Description |
+| --- | --- | --- | --- |
+| <a id="server-base"></a>`base` | `string` |  | Configure the base path of the server. [Rsbuild docs](https://rsbuild.rs/config/server/base) |
+| <a id="server-compress"></a>`compress` | `boolean \| CompressOptions` |  | Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server. [Rsbuild docs](https://rsbuild.rs/config/server/compress) |
+| <a id="server-cors"></a>`cors` | `boolean \| CorsOptions` | Uses Rsbuild's default CORS options. - Set to an object to enable CORS with the specified options. - Set to `true` to enable CORS with the default options (allows all origins, not recommended). - Set to `false` to disable CORS. See [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors) for details. | Configure CORS for the dev server or preview server. [Rsbuild docs](https://rsbuild.rs/config/server/cors) |
+| <a id="server-headers"></a>`headers` | `Record<string, string \| string[]>` (from typescript) |  | Adds headers to all responses. [Rsbuild docs](https://rsbuild.rs/config/server/headers) |
+| <a id="server-host"></a>`host` | `string` | `"0.0.0.0"` | Specify the host that the Rspeedy Server listens to. [Rsbuild docs](https://rsbuild.rs/config/server/host) |
+| <a id="server-port"></a>`port` | `number` | Rsbuild defaults this option to `3000`. | Specify the port that the Rspeedy Server listens to. [Rsbuild docs](https://rsbuild.rs/config/server/port) |
+| <a id="server-proxy"></a>`proxy` | `ProxyConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) |  | Configure proxy rules for the dev server or preview server to proxy requests to the specified service. [Rsbuild docs](https://rsbuild.rs/config/server/proxy) |
+| <a id="server-strictport"></a>`strictPort` | `boolean` | `false By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.` | When a port is occupied, Rspeedy will automatically increment the port number until an available port is found. [Rsbuild docs](https://rsbuild.rs/config/server/strict-port) |
+
+{/* @api-end */}

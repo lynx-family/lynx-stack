@@ -1,0 +1,29 @@
+---
+title: mode
+---
+
+# mode
+
+构建模式。即标准的 [Rsbuild `mode` 配置](https://rsbuild.rs/zh/config/mode)。使用 Rspeedy 时，执行 `rspeedy build` 默认为 `production`，执行 `rspeedy dev` 默认为 `development`。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="mode" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`mode`](#mode) | `"production" \| "development" \| "none"` | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="mode" */}
+
+## Rsbuild 配置 \{#rsbuild-options\}
+
+以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。
+
+| 名称 | 类型 | Lynx 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="mode"></a>`mode` | `"production" \| "development" \| "none"` | 取决于 `process.env.NODE_ENV`：当 `NODE_ENV` 为 `'production'` 时为 `'production'`，为 `'development'` 时为 `'development'`，其他情况下为 `'none'`。使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，而 `rspeedy build` 默认为 `'production'`。 | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 [Rsbuild 文档](https://rsbuild.rs/zh/config/mode) |
+
+{/* @api-end */}

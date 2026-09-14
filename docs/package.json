@@ -16,21 +16,16 @@
     "preview": "rspress preview"
   },
   "dependencies": {
-    "@rstack-dev/doc-ui": "1.14.8",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/rspeedy": "workspace:*",
     "@rsbuild/plugin-sass": "2.0.1",
-    "@rsbuild/plugin-type-check": "1.6.0",
     "@rspress/core": "2.0.21",
     "@rspress/plugin-client-redirects": "2.0.21",
     "@shikijs/transformers": "4.4.3",
     "@types/react": "npm:@types/react@^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "tailwindcss": "^3.4.19",
     "typedoc": "^0.28.20",
     "typescript": "catalog:"
   },

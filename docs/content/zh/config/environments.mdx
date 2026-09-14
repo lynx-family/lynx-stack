@@ -1,0 +1,29 @@
+---
+title: environments
+---
+
+# environments
+
+每个 Rsbuild environment 会生成一个 Lynx bundle，environment 名称会作为 `output.filename.bundle` 中的 `[platform]` 占位符。`environments` 是标准的 [Rsbuild 配置](https://rsbuild.rs/zh/config/environments)，在 `rsbuild.config.ts` 或 `lynx.config.ts` 中设置。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="environments" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`environments`](#environments) | `Record<string, EnvironmentConfig>` (来自 typescript) | [`Config.environments`](#environments) 选项用于设置输出的 environment。 |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="environments" */}
+
+## Rsbuild 配置 \{#rsbuild-options\}
+
+以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。
+
+| 名称 | 类型 | Lynx 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="environments"></a>`environments` | `Record<string, EnvironmentConfig>` (来自 typescript) | 未设置该选项时，Rspeedy 会向 Rsbuild 传入 `{ lynx: {} }`。 | [`Config.environments`](#environments) 选项用于设置输出的 environment。 [Rsbuild 文档](https://rsbuild.rs/zh/config/environments) |
+
+{/* @api-end */}

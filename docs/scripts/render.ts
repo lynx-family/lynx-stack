@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type {
@@ -10,6 +10,7 @@ import type {
   ApiMember,
   ApiParam,
 } from './generate-api-data.ts';
+import type { RsbuildOption } from './rsbuild-config.ts';
 
 const cache = new Map<string, ApiData>();
 
@@ -48,6 +49,15 @@ export interface Locale {
   untranslated: string;
   source: string;
   changelog: string;
+  lynxOptions: string;
+  rsbuildOptions: string;
+  rsbuildOptionsIntro: string;
+  lynxDefault: string;
+  rsbuildDocs: string;
+  rsbuildDocsBase: string;
+  withPluginLynx: string;
+  rspeedyOnly: string;
+  lynxBadge: string;
 }
 
 export const EN: Locale = {
@@ -74,6 +84,16 @@ export const EN: Locale = {
   untranslated: 'EN',
   source: 'Source',
   changelog: 'Changelog',
+  lynxOptions: 'Lynx-specific options',
+  rsbuildOptions: 'Rsbuild options',
+  rsbuildOptionsIntro:
+    'Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.',
+  lynxDefault: 'Lynx default',
+  rsbuildDocs: 'Rsbuild docs',
+  rsbuildDocsBase: 'https://rsbuild.rs/config/',
+  withPluginLynx: 'With Rsbuild, pass this option to {link}.',
+  rspeedyOnly: 'Available only in `lynx.config.ts` (Rspeedy).',
+  lynxBadge: 'Lynx',
 };
 
 export const ZH: Locale = {
@@ -100,6 +120,16 @@ export const ZH: Locale = {
   untranslated: '待翻译',
   source: '源码',
   changelog: '更新日志',
+  lynxOptions: 'Lynx 特有配置',
+  rsbuildOptions: 'Rsbuild 配置',
+  rsbuildOptionsIntro:
+    '以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。',
+  lynxDefault: 'Lynx 默认值',
+  rsbuildDocs: 'Rsbuild 文档',
+  rsbuildDocsBase: 'https://rsbuild.rs/zh/config/',
+  withPluginLynx: '使用 Rsbuild 构建时，将此选项传给 {link}。',
+  rspeedyOnly: '仅在 `lynx.config.ts`（Rspeedy）中可用。',
+  lynxBadge: 'Lynx',
 };
 
 export const slug = (s: string) =>
@@ -192,6 +222,20 @@ interface Ctx {
   site?: SiteAnchors | undefined;
   page?: string | undefined;
   prefix?: string | undefined;
+  rsbuild?: RsbuildOptions | undefined;
+}
+
+type RsbuildOptions = Record<string, RsbuildOption>;
+
+const rsbuildCache = new Map<string, RsbuildOptions>();
+
+function loadRsbuild(path: string): RsbuildOptions {
+  let d = rsbuildCache.get(path);
+  if (!d) {
+    d = JSON.parse(readFileSync(path, 'utf8')) as RsbuildOptions;
+    rsbuildCache.set(path, d);
+  }
+  return d;
 }
 
 export function hashText(text: string): string {
@@ -398,6 +442,188 @@ function heading(
   } \\{#${slug(path)}\\}\n\n`;
 }
 
+const RSBUILD_PAGE_OVERRIDES: Record<string, string> = {
+  'performance.chunkSplit': 'split-chunks',
+};
+
+const kebab = (s: string) => s.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`);
+
+function rsbuildUrl(path: string, ctx: Ctx): string {
+  const [ns, option] = path.split('.');
+  const key = option ? `${ns}.${option}` : ns!;
+  const page = RSBUILD_PAGE_OVERRIDES[key]
+    ?? (option ? `${ns}/${kebab(option)}` : kebab(ns!));
+  return `${ctx.l.rsbuildDocsBase}${page}`;
+}
+
+function isRsbuild(path: string, rsbuild: RsbuildOptions): boolean {
+  if (path in rsbuild) return true;
+  const dot = path.lastIndexOf('.');
+  if (dot === -1) return false;
+  const parent = path.slice(0, dot);
+  return isRsbuild(parent, rsbuild)
+    && !Object.keys(rsbuild).some(k => k.startsWith(`${parent}.`));
+}
+
+const plainDefault = (s: string) =>
+  s.replace(/[`'"\s]/g, '').replace(/^\.\//, '');
+
+function showLynxDefault(
+  lynx: string | undefined,
+  rsbuild: string | undefined,
+): boolean {
+  const text = lynx?.trim().replace(/^```[a-z]*\s*/, '');
+  if (!text || /^`?undefined`?$/.test(text)) return false;
+  if (/\b(?:Rspeedy|Lynx)\b/.test(text)) return true;
+  const literal = /^`([^`]+)`/.exec(text)?.[1] ?? text.split(/\s+/)[0]!;
+  return plainDefault(literal) !== plainDefault(rsbuild ?? '');
+}
+
+function firstSentence(text: string): string {
+  let inCode = false;
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    if (ch === '`') inCode = !inCode;
+    if (inCode) continue;
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+    else if (depth === 0) {
+      if (ch === '。') return text.slice(0, i + 1);
+      if (ch === '\n' && text[i + 1] === '\n') return text.slice(0, i);
+      if (
+        ch === '.' && (i + 1 === text.length || /\s/.test(text[i + 1]!))
+        && !/(?:e\.g|i\.e|etc)$/.test(text.slice(0, i))
+      ) return text.slice(0, i + 1);
+    }
+  }
+  return text;
+}
+
+function pluginLynxNote(path: string, m: ApiMember, ctx: Ctx): string {
+  const site = ctx.site?.get(`rsbuild-plugin|${path}`);
+  if (site) {
+    const [page = ''] = site.url.split('#');
+    const url = page === ctx.page
+      ? site.url.slice(page.length)
+      : `${ctx.prefix ?? ''}${site.url}`;
+    return `${
+      ctx.l.withPluginLynx.replace('{link}', `[\`pluginLynx\`](${url})`)
+    }\n\n`;
+  }
+  return m.deprecated === undefined ? `${ctx.l.rspeedyOnly}\n\n` : '';
+}
+
+interface ConfigItem {
+  m: ApiMember;
+  path: string;
+  owner: string;
+}
+
+function collectLynx(
+  members: ApiMember[],
+  prefix: string,
+  owner: string,
+  ctx: Ctx,
+  rsbuild: RsbuildOptions,
+  ancestors: ReadonlySet<string>,
+  out: ConfigItem[],
+): void {
+  for (const m of members) {
+    const path = prefix ? `${prefix}.${m.name}` : m.name;
+    if (!isRsbuild(path, rsbuild)) {
+      out.push({ m, path, owner });
+      continue;
+    }
+    const e = expandable(m, ctx);
+    if (e && !ancestors.has(e.name)) {
+      collectLynx(
+        e.members ?? [],
+        path,
+        e.name,
+        ctx,
+        rsbuild,
+        new Set([...ancestors, e.name]),
+        out,
+      );
+    }
+  }
+}
+
+function renderConfig(
+  members: ApiMember[],
+  prefix: string,
+  depth: number,
+  ctx: Ctx,
+  owner: string,
+  rsbuild: RsbuildOptions,
+): string {
+  const pathOf = (m: ApiMember) => prefix ? `${prefix}.${m.name}` : m.name;
+  const rows = members.filter(m => isRsbuild(pathOf(m), rsbuild));
+  const lynx: ConfigItem[] = [];
+  collectLynx(members, prefix, owner, ctx, rsbuild, new Set([owner]), lynx);
+  for (const m of rows) {
+    ctx.anchors.set(pathOf(m), slug(pathOf(m)));
+    const e = expandable(m, ctx);
+    if (e && !ctx.anchors.has(e.name)) ctx.anchors.set(e.name, slug(pathOf(m)));
+  }
+  for (const { m, path } of lynx) {
+    ctx.anchors.set(path, slug(path));
+    const e = expandable(m, ctx);
+    if (e) {
+      if (!ctx.anchors.has(e.name)) ctx.anchors.set(e.name, slug(path));
+      registerAnchors(e.members ?? [], path, ctx);
+    }
+  }
+  const h = '#'.repeat(Math.max(depth - 1, 2));
+  let s = '';
+  if (lynx.length > 0) {
+    s += `${h} ${ctx.l.lynxOptions} \\{#lynx-options\\}\n\n`;
+    for (const { m, path, owner: o } of lynx) {
+      const key = `${o}.${m.name}`;
+      s += heading(depth, path, m, ctx, key);
+      s += metaList(m, ctx, key);
+      s += body(m, ctx, key);
+      s += pluginLynxNote(path, m, ctx);
+      if (m.params) s += paramsTable(m.params, ctx, key);
+      const e = expandable(m, ctx);
+      if (e) {
+        s += renderOptions(
+          e.members ?? [],
+          path,
+          depth + 1,
+          ctx,
+          e.name,
+          new Set([o, e.name]),
+        );
+      }
+    }
+  }
+  if (rows.length > 0) {
+    s +=
+      `${h} ${ctx.l.rsbuildOptions} \\{#rsbuild-options\\}\n\n${ctx.l.rsbuildOptionsIntro}\n\n`;
+    s +=
+      `| ${ctx.l.name} | ${ctx.l.type} | ${ctx.l.lynxDefault} | ${ctx.l.description} |\n| --- | --- | --- | --- |\n`;
+    for (const m of rows) {
+      const path = pathOf(m);
+      const key = `${owner}.${m.name}`;
+      const summary = tr(ctx, `${key}.summary`, m.summary);
+      const def = showLynxDefault(m.default, rsbuild[path]?.default)
+        ? pipe(flat(md(tr(ctx, `${key}.default`, m.default), ctx)))
+        : '';
+      const desc = [
+        summary ? flat(md(firstSentence(summary), ctx)) : '',
+        `[${ctx.l.rsbuildDocs}](${rsbuildUrl(path, ctx)})`,
+      ].filter(Boolean).join(' ');
+      s += `| <a id="${slug(path)}"></a>${code(m.name)}${badges(m, ctx)}${
+        untranslated(ctx, `${key}.summary`)
+      } | ${pipe(typeCell(m, ctx))} | ${def} | ${pipe(desc)} |\n`;
+    }
+    s += '\n';
+  }
+  return s;
+}
+
 export function renderOptions(
   members: ApiMember[],
   prefix: string,
@@ -588,9 +814,12 @@ export function renderOverview(
     const path = prefix ? `${prefix}.${m.name}` : m.name;
     const target = linkTarget(ctx, path)
       ?? (ctx.site ? undefined : `#${slug(path)}`);
+    const lynxOnly = ctx.rsbuild && !isRsbuild(path, ctx.rsbuild)
+      ? ` <span className="api-badge api-badge-lynx">${ctx.l.lynxBadge}</span>`
+      : '';
     s += `| ${target ? `[${code(m.name)}](${target})` : code(m.name)}${
       badges(m, ctx)
-    } | ${pipe(typeCell(m, ctx))} | ${
+    }${lynxOnly} | ${pipe(typeCell(m, ctx))} | ${
       pipe(flat(md(tr(ctx, `${owner}.${m.name}.summary`, m.summary), ctx)))
     } |\n`;
   }
@@ -632,6 +861,10 @@ export function renderDirective(
     site: options.site,
     page: options.page,
     prefix: options.prefix,
+    rsbuild: api.id === 'rspeedy'
+        && existsSync(join(dataDir, 'rsbuild-config.json'))
+      ? loadRsbuild(join(dataDir, 'rsbuild-config.json'))
+      : undefined,
   };
   const out = renderBody(d, ctx);
   options.onAnchors?.(api.id, ctx.anchors);
@@ -699,11 +932,14 @@ function renderBody(d: Directive, ctx: Ctx): string {
         if (!ctx.site) registerAnchors(members, prefix, ctx);
         return renderOverview(members, prefix, ctx, owner);
       }
-      registerAnchors(members, prefix, ctx);
       if (namespace) {
         ctx.anchors.set(namespace, '');
         if (!ctx.anchors.has(owner)) ctx.anchors.set(owner, '');
       }
+      if (ctx.rsbuild) {
+        return renderConfig(members, prefix, depth, ctx, owner, ctx.rsbuild);
+      }
+      registerAnchors(members, prefix, ctx);
       return renderOptions(members, prefix, depth, ctx, owner);
     }
     case 'ApiExports': {

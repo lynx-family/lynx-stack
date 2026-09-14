@@ -1,0 +1,29 @@
+---
+title: splitChunks
+---
+
+# splitChunks
+
+Chunk splitting. It is the standard [Rsbuild `splitChunks` option](https://rsbuild.rs/config/split-chunks). Rspeedy defaults it to `false`; enabling it turns off `output.inlineScripts` so that background-thread chunks are emitted as separate files.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="splitChunks" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`splitChunks`](#splitchunks) | `false \| SplitChunksConfig` | Configure chunk splitting. |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="splitChunks" */}
+
+## Rsbuild options \{#rsbuild-options\}
+
+Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.
+
+| Name | Type | Lynx default | Description |
+| --- | --- | --- | --- |
+| <a id="splitchunks"></a>`splitChunks` | `false \| SplitChunksConfig` | Rspeedy defaults this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option. See [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks) for details. | Configure chunk splitting. [Rsbuild docs](https://rsbuild.rs/config/split-chunks) |
+
+{/* @api-end */}

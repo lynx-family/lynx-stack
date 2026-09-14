@@ -6,57 +6,57 @@
   },
   {
     "type": "section-header",
-    "label": "Rspeedy 及插件"
+    "label": "构建配置与插件"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/rspeedy",
-    "link": "/zh/rspeedy/config/"
+    "type": "file",
+    "name": "rspeedy",
+    "label": "@lynx-js/rspeedy"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-lynx"
+    "link": "/zh/plugins/plugin-lynx"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/react-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-react"
+    "link": "/zh/plugins/plugin-react"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/qrcode-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-qrcode"
+    "link": "/zh/plugins/plugin-qrcode"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/external-bundle-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-external-bundle"
+    "link": "/zh/plugins/plugin-external-bundle"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/vanilla-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-vanilla"
+    "link": "/zh/plugins/plugin-vanilla"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/config-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-config"
+    "link": "/zh/plugins/plugin-config"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/debug-metadata-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-debug-metadata"
+    "link": "/zh/plugins/plugin-debug-metadata"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/react-alias-rsbuild-plugin",
-    "link": "/zh/rspeedy/plugins/plugin-react-alias"
+    "link": "/zh/plugins/plugin-react-alias"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/lynx-bundle-rslib-config",
-    "link": "/zh/rspeedy/plugins/lynx-bundle-rslib-config"
+    "link": "/zh/plugins/lynx-bundle-rslib-config"
   },
   {
     "type": "section-header",

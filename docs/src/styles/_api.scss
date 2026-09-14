@@ -23,6 +23,11 @@
   color: var(--rp-c-brand-dark, #2560a6);
 }
 
+.api-badge-lynx {
+  background: var(--rp-c-tip-soft, #e5f5ef);
+  color: var(--rp-c-tip, #16774b);
+}
+
 .api-badge-stale {
   background: var(--rp-c-warning-soft, #fbf1df);
   color: var(--rp-c-warning, #a4660f);

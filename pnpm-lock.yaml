@@ -402,9 +402,6 @@ importers:
 
   docs:
     dependencies:
-      '@rstack-dev/doc-ui':
-        specifier: 1.14.8
-        version: 1.14.8(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -412,18 +409,9 @@ importers:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
     devDependencies:
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/plugin-react
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/core
       '@rsbuild/plugin-sass':
         specifier: 2.0.1
         version: 2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))
-      '@rsbuild/plugin-type-check':
-        specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
       '@rspress/core':
         specifier: 2.0.21
         version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
@@ -439,9 +427,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.4
         version: 19.2.4(@types/react@19.2.18)
-      tailwindcss:
-        specifier: ^3.4.19
-        version: 3.4.19
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
@@ -6311,14 +6296,6 @@ packages:
 
   '@rspress/shared@2.0.21':
     resolution: {integrity: sha512-siCWkv1a4n6y7JdVRII+fwCRZGZtG5KGFfKi2w/Tt33UnIgh4XGqozZ5F/K0iZ/QUwg0wi93SoVdOQm2Q+wf8w==}
-
-  '@rstack-dev/doc-ui@1.14.8':
-    resolution: {integrity: sha512-CAibkpvCnJEcxsypu3ZE9JjtQw+1+iJGv9X09Yg4//9FevHpfaHW+b2onFG+Z/xOlUXGg83rJTb7CO6YbToP0w==}
-    peerDependencies:
-      '@rspress/core': '>=2.0.0'
-    peerDependenciesMeta:
-      '@rspress/core':
-        optional: true
 
   '@rstackjs/create-toolkit@2.2.7':
     resolution: {integrity: sha512-rxprP/B80f7iFjlCGAKjuR1BFDyXYBNKJU26l2rPdlJVnUqAcZ7Kal/cUHhgMR3QkWiSuxxafh+ckGFAyJl8sA==}
@@ -16260,10 +16237,6 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
       - supports-color
-
-  '@rstack-dev/doc-ui@1.14.8(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
-    optionalDependencies:
-      '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
   '@rstackjs/create-toolkit@2.2.7': {}
 

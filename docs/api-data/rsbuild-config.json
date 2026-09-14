@@ -1,0 +1,739 @@
+{
+  "_privateMeta": {},
+  "_privateMeta.configFileDependencies": {},
+  "_privateMeta.configFilePath": {},
+  "customLogger": {},
+  "customLogger.greet": {},
+  "customLogger.level": {},
+  "customLogger.options": {},
+  "customLogger.options.alignMultiline": {
+    "default": "false"
+  },
+  "customLogger.options.console": {
+    "default": "globalThis.console"
+  },
+  "customLogger.options.level": {
+    "default": "'info'"
+  },
+  "customLogger.options.prefix": {
+    "default": "undefined"
+  },
+  "customLogger.override": {},
+  "dev": {},
+  "dev.assetPrefix": {
+    "default": "`server.base`"
+  },
+  "dev.browserLogs": {
+    "default": "{ stackTrace: 'summary' }"
+  },
+  "dev.browserLogs.stackTrace": {
+    "default": "'summary'"
+  },
+  "dev.client": {},
+  "dev.client.host": {
+    "default": "location.hostname"
+  },
+  "dev.client.logLevel": {
+    "default": "'info'"
+  },
+  "dev.client.overlay": {
+    "default": "true"
+  },
+  "dev.client.overlay.errors": {
+    "default": "true"
+  },
+  "dev.client.overlay.runtime": {
+    "default": "false"
+  },
+  "dev.client.path": {
+    "default": "'/rsbuild-hmr'"
+  },
+  "dev.client.port": {
+    "default": "location.port"
+  },
+  "dev.client.protocol": {
+    "default": "location.protocol === 'https:' ? 'wss' : 'ws'"
+  },
+  "dev.client.reconnect": {
+    "default": "100"
+  },
+  "dev.client.webSocketUrlResolver": {},
+  "dev.cliShortcuts": {
+    "default": "true when using Rsbuild CLI, otherwise false"
+  },
+  "dev.cliShortcuts.custom": {},
+  "dev.cliShortcuts.help": {
+    "default": "true"
+  },
+  "dev.hmr": {
+    "default": "true"
+  },
+  "dev.lazyCompilation": {
+    "default": "{ imports: true, entries: false }"
+  },
+  "dev.liveReload": {
+    "default": "true"
+  },
+  "dev.liveReload.html": {
+    "default": "true"
+  },
+  "dev.progressBar": {
+    "default": "false"
+  },
+  "dev.progressBar.id": {},
+  "dev.setupMiddlewares": {
+    "default": "undefined"
+  },
+  "dev.watchFiles": {
+    "default": "undefined"
+  },
+  "dev.watchFiles.events": {
+    "default": "['add', 'change', 'unlink']"
+  },
+  "dev.watchFiles.options": {},
+  "dev.watchFiles.options.alwaysStat": {},
+  "dev.watchFiles.options.atomic": {},
+  "dev.watchFiles.options.awaitWriteFinish": {},
+  "dev.watchFiles.options.binaryInterval": {},
+  "dev.watchFiles.options.cwd": {},
+  "dev.watchFiles.options.depth": {},
+  "dev.watchFiles.options.followSymlinks": {},
+  "dev.watchFiles.options.ignored": {},
+  "dev.watchFiles.options.ignoreInitial": {},
+  "dev.watchFiles.options.ignorePermissionErrors": {},
+  "dev.watchFiles.options.interval": {},
+  "dev.watchFiles.options.persistent": {},
+  "dev.watchFiles.options.usePolling": {},
+  "dev.watchFiles.paths": {},
+  "dev.watchFiles.type": {
+    "default": "'reload-page'"
+  },
+  "dev.writeToDisk": {
+    "default": "false"
+  },
+  "environments": {},
+  "html": {},
+  "html.appIcon": {
+    "default": "undefined"
+  },
+  "html.appIcon.filename": {
+    "default": "'manifest.webmanifest'"
+  },
+  "html.appIcon.icons": {},
+  "html.appIcon.name": {},
+  "html.crossorigin": {
+    "default": "false"
+  },
+  "html.favicon": {
+    "default": "undefined"
+  },
+  "html.implementation": {
+    "default": "'js'"
+  },
+  "html.inject": {
+    "default": "'head'"
+  },
+  "html.meta": {
+    "default": "```js\nconst defaultMeta = {\n  charset: { charset: 'utf-8' },\n  viewport: 'width=device-width, initial-scale=1.0',\n};\n```"
+  },
+  "html.mountId": {
+    "default": "'root'"
+  },
+  "html.outputStructure": {
+    "default": "'flat'"
+  },
+  "html.scriptLoading": {
+    "default": "'defer'. If `output.module` is enabled, the value is always `'module'`."
+  },
+  "html.tags": {
+    "default": "undefined"
+  },
+  "html.tags.append": {
+    "default": "true"
+  },
+  "html.tags.attrs": {},
+  "html.tags.children": {},
+  "html.tags.hash": {
+    "default": "false"
+  },
+  "html.tags.head": {
+    "default": "Auto-detect: `true` for head-allowed elements, `false` otherwise"
+  },
+  "html.tags.metadata": {
+    "default": "undefined"
+  },
+  "html.tags.publicPath": {
+    "default": "true"
+  },
+  "html.tags.tag": {},
+  "html.template": {
+    "default": "A built-in HTML template"
+  },
+  "html.templateParameters": {},
+  "html.title": {
+    "default": "'Rsbuild App'"
+  },
+  "logLevel": {
+    "default": "'info'"
+  },
+  "mode": {
+    "default": "Depends on `process.env.NODE_ENV`:\n- `'production'` if NODE_ENV is 'production'\n- `'development'` if NODE_ENV is 'development'\n- otherwise `'none'`"
+  },
+  "moduleFederation": {},
+  "moduleFederation.options": {},
+  "output": {},
+  "output.assetPrefix": {
+    "default": "`server.base`"
+  },
+  "output.autoExternal": {
+    "default": "false"
+  },
+  "output.autoExternal.dependencies": {
+    "default": "true"
+  },
+  "output.autoExternal.devDependencies": {
+    "default": "false"
+  },
+  "output.autoExternal.exclude": {
+    "default": "undefined"
+  },
+  "output.autoExternal.optionalDependencies": {
+    "default": "true"
+  },
+  "output.autoExternal.packageJson": {
+    "default": "'<root>/package.json'"
+  },
+  "output.autoExternal.peerDependencies": {
+    "default": "true"
+  },
+  "output.charset": {
+    "default": "'utf8'"
+  },
+  "output.cleanDistPath": {
+    "default": "'auto'"
+  },
+  "output.cleanDistPath.enable": {
+    "default": "'auto'"
+  },
+  "output.cleanDistPath.keep": {
+    "default": "undefined"
+  },
+  "output.copy": {
+    "default": "undefined"
+  },
+  "output.cssModules": {},
+  "output.cssModules.auto": {
+    "default": "true"
+  },
+  "output.cssModules.exportGlobals": {
+    "default": "false"
+  },
+  "output.cssModules.exportLocalsConvention": {
+    "default": "'camelCase'"
+  },
+  "output.cssModules.localIdentName": {
+    "default": "isProd ? '[local]-[hash:base64:6]' : '[path][name]__[local]-[hash:base64:6]'"
+  },
+  "output.cssModules.mode": {
+    "default": "'local'"
+  },
+  "output.cssModules.namedExport": {
+    "default": "false"
+  },
+  "output.dataUriLimit": {
+    "default": "{ svg: 4096, font: 4096, image: 4096, media: 4096, assets: 4096 }"
+  },
+  "output.dataUriLimit.assets": {
+    "default": "4096"
+  },
+  "output.dataUriLimit.font": {
+    "default": "4096"
+  },
+  "output.dataUriLimit.image": {
+    "default": "4096"
+  },
+  "output.dataUriLimit.media": {
+    "default": "4096"
+  },
+  "output.dataUriLimit.svg": {
+    "default": "4096"
+  },
+  "output.distPath": {},
+  "output.distPath.assets": {
+    "default": "'static/assets'"
+  },
+  "output.distPath.css": {
+    "default": "'static/css'"
+  },
+  "output.distPath.cssAsync": {
+    "default": "'static/css/async'"
+  },
+  "output.distPath.favicon": {
+    "default": "'./'"
+  },
+  "output.distPath.font": {
+    "default": "'static/font'"
+  },
+  "output.distPath.html": {
+    "default": "'./'"
+  },
+  "output.distPath.image": {
+    "default": "'static/image'"
+  },
+  "output.distPath.js": {
+    "default": "'static/js'"
+  },
+  "output.distPath.jsAsync": {
+    "default": "'static/js/async'"
+  },
+  "output.distPath.media": {
+    "default": "'static/media'"
+  },
+  "output.distPath.root": {
+    "default": "'dist'"
+  },
+  "output.distPath.svg": {
+    "default": "'static/svg'"
+  },
+  "output.distPath.wasm": {
+    "default": "'static/wasm'"
+  },
+  "output.emitAssets": {
+    "default": "true"
+  },
+  "output.emitCss": {
+    "default": "`true` when `output.target` is `web`, otherwise `false`"
+  },
+  "output.externals": {
+    "default": "undefined"
+  },
+  "output.filename": {},
+  "output.filename.assets": {
+    "default": "'[name].[contenthash:10][ext]'"
+  },
+  "output.filename.css": {
+    "default": "- dev: '[name].css'\n- prod: '[name].[contenthash:10].css'"
+  },
+  "output.filename.font": {
+    "default": "'[name].[contenthash:10][ext]'"
+  },
+  "output.filename.html": {
+    "default": "`[name].html`"
+  },
+  "output.filename.image": {
+    "default": "'[name].[contenthash:10][ext]'"
+  },
+  "output.filename.js": {
+    "default": "- dev: '[name].js'\n- prod: '[name].[contenthash:10].js'"
+  },
+  "output.filename.media": {
+    "default": "'[name].[contenthash:10][ext]'"
+  },
+  "output.filename.svg": {
+    "default": "'[name].[contenthash:10].svg'"
+  },
+  "output.filename.wasm": {
+    "default": "'[hash].module.wasm'"
+  },
+  "output.filenameHash": {
+    "default": "true"
+  },
+  "output.filenameHash.enable": {
+    "default": "true"
+  },
+  "output.filenameHash.format": {
+    "default": "'contenthash:10'"
+  },
+  "output.injectStyles": {
+    "default": "false"
+  },
+  "output.inlineScripts": {
+    "default": "false"
+  },
+  "output.inlineScripts.enable": {},
+  "output.inlineScripts.test": {},
+  "output.inlineStyles": {
+    "default": "false"
+  },
+  "output.inlineStyles.enable": {},
+  "output.inlineStyles.test": {},
+  "output.legalComments": {
+    "default": "'linked'"
+  },
+  "output.manifest": {
+    "default": "false"
+  },
+  "output.manifest.filename": {
+    "default": "'manifest.json'"
+  },
+  "output.manifest.filter": {
+    "default": "(file: FileDescriptor) => !file.name.endsWith('.LICENSE.txt')"
+  },
+  "output.manifest.generate": {},
+  "output.manifest.prefix": {
+    "default": "true"
+  },
+  "output.minify": {
+    "default": "true"
+  },
+  "output.minify.css": {
+    "default": "true"
+  },
+  "output.minify.cssOptions": {
+    "default": "inherit from `tools.lightningcssLoader` config"
+  },
+  "output.minify.js": {
+    "default": "true"
+  },
+  "output.minify.jsOptions": {
+    "default": "{}"
+  },
+  "output.module": {
+    "default": "true when `output.target` is `node`, otherwise `false`"
+  },
+  "output.overrideBrowserslist": {
+    "default": "undefined"
+  },
+  "output.polyfill": {
+    "default": "'off'"
+  },
+  "output.sourceMap": {
+    "default": "```js\nconst defaultSourceMap = {\n  js: isDev ? 'cheap-module-source-map' : false,\n  css: false,\n  extract: false,\n};\n```"
+  },
+  "output.sourceMap.css": {
+    "default": "false"
+  },
+  "output.sourceMap.extract": {
+    "default": "false"
+  },
+  "output.sourceMap.extract.exclude": {},
+  "output.sourceMap.extract.include": {},
+  "output.sourceMap.extract.js": {},
+  "output.sourceMap.extract.test": {
+    "default": "/\\.(?:js|mjs|cjs|jsx)$/"
+  },
+  "output.sourceMap.js": {
+    "default": "isDev ? 'cheap-module-source-map' : false"
+  },
+  "output.target": {
+    "default": "'web'"
+  },
+  "performance": {},
+  "performance.buildCache": {
+    "default": "false"
+  },
+  "performance.buildCache.buildDependencies": {},
+  "performance.buildCache.cacheDigest": {
+    "default": "undefined"
+  },
+  "performance.buildCache.cacheDirectory": {
+    "default": "'node_modules/.cache'"
+  },
+  "performance.chunkSplit": {},
+  "performance.chunkSplit.forceSplitting": {},
+  "performance.chunkSplit.maxSize": {},
+  "performance.chunkSplit.minSize": {},
+  "performance.chunkSplit.override": {},
+  "performance.chunkSplit.splitChunks": {},
+  "performance.chunkSplit.strategy": {},
+  "performance.dnsPrefetch": {},
+  "performance.preconnect": {},
+  "performance.prefetch": {
+    "default": "undefined"
+  },
+  "performance.prefetch.exclude": {
+    "default": "/\\.(?:webmanifest|pdf|txt)$/i"
+  },
+  "performance.prefetch.include": {},
+  "performance.prefetch.type": {
+    "default": "'async-chunks'"
+  },
+  "performance.preload": {
+    "default": "undefined"
+  },
+  "performance.preload.dedupe": {
+    "default": "true"
+  },
+  "performance.preload.exclude": {
+    "default": "/\\.(?:webmanifest|pdf|txt)$/i"
+  },
+  "performance.preload.include": {},
+  "performance.preload.type": {
+    "default": "'async-chunks'"
+  },
+  "performance.printFileSize": {
+    "default": "true"
+  },
+  "performance.printFileSize.compressed": {
+    "default": "true"
+  },
+  "performance.printFileSize.detail": {
+    "default": "true"
+  },
+  "performance.printFileSize.diff": {
+    "default": "false"
+  },
+  "performance.printFileSize.exclude": {
+    "default": "(asset) => /\\.(?:map|LICENSE\\.txt|d\\.(?:ts|mts|cts))$/.test(asset.name)"
+  },
+  "performance.printFileSize.include": {
+    "default": "undefined"
+  },
+  "performance.printFileSize.total": {
+    "default": "true"
+  },
+  "performance.removeConsole": {
+    "default": "false"
+  },
+  "plugins": {},
+  "resolve": {},
+  "resolve.alias": {
+    "default": "{ '@swc/helpers': path.dirname(require.resolve('@swc/helpers/package.json')) }"
+  },
+  "resolve.aliasStrategy": {
+    "default": "'prefer-tsconfig'"
+  },
+  "resolve.conditionNames": {
+    "default": "Inherits from Rspack. See https://rspack.rs/config/resolve#resolveconditionnames"
+  },
+  "resolve.dedupe": {},
+  "resolve.extensions": {
+    "default": "['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']"
+  },
+  "resolve.mainFields": {
+    "default": "- If `output.target` is `'web'`, `'web-worker'`, or not specified, the default value is `[\"browser\", \"module\", \"main\"]`.\n- If `output.target` is `'node'`, the default value is `[\"module\", \"main\"]`."
+  },
+  "root": {
+    "default": "`process.cwd()`"
+  },
+  "security": {},
+  "security.nonce": {},
+  "security.sri": {},
+  "security.sri.algorithm": {
+    "default": "'sha384'"
+  },
+  "security.sri.enable": {
+    "default": "false"
+  },
+  "server": {},
+  "server.base": {
+    "default": "'/'"
+  },
+  "server.compress": {
+    "default": "true"
+  },
+  "server.compress.filter": {},
+  "server.compress.level": {
+    "default": "- 1 (fastest) for dev server (also known as `zlib.constants.Z_BEST_SPEED`)\n- 6 for preview server (also known as `zlib.constants.Z_DEFAULT_COMPRESSION`)"
+  },
+  "server.cors": {
+    "default": "```js\n{ origin: defaultAllowedOrigins }\n```\nwhere `defaultAllowedOrigins` includes:\n- `localhost`\n- `127.0.0.1`\n- `[::1]`"
+  },
+  "server.cors.allowedHeaders": {},
+  "server.cors.credentials": {},
+  "server.cors.exposedHeaders": {},
+  "server.cors.maxAge": {},
+  "server.cors.methods": {
+    "default": "'GET,HEAD,PUT,PATCH,POST,DELETE'"
+  },
+  "server.cors.optionsSuccessStatus": {
+    "default": "204"
+  },
+  "server.cors.origin": {
+    "default": "'*'"
+  },
+  "server.cors.preflightContinue": {
+    "default": "false"
+  },
+  "server.headers": {},
+  "server.historyApiFallback": {
+    "default": "false"
+  },
+  "server.historyApiFallback.disableDotRule": {
+    "default": "false"
+  },
+  "server.historyApiFallback.htmlAcceptHeaders": {
+    "default": "['text/html', '*\\/*']"
+  },
+  "server.historyApiFallback.index": {
+    "default": "'index.html'"
+  },
+  "server.historyApiFallback.rewrites": {},
+  "server.host": {
+    "default": "'localhost'"
+  },
+  "server.htmlFallback": {
+    "default": "'index'"
+  },
+  "server.https": {
+    "default": "undefined"
+  },
+  "server.middlewareMode": {
+    "default": "false"
+  },
+  "server.open": {
+    "default": "false"
+  },
+  "server.open.before": {},
+  "server.open.target": {},
+  "server.port": {
+    "default": "3000"
+  },
+  "server.printUrls": {
+    "default": "true"
+  },
+  "server.printUrls.maxRoutes": {
+    "default": "10"
+  },
+  "server.proxy": {},
+  "server.publicDir": {
+    "default": "{ name: 'public', copyOnBuild: 'auto', watch: false }"
+  },
+  "server.publicDir.copyOnBuild": {
+    "default": "'auto'"
+  },
+  "server.publicDir.ignore": {
+    "default": "[]"
+  },
+  "server.publicDir.name": {
+    "default": "'public'"
+  },
+  "server.publicDir.watch": {
+    "default": "false"
+  },
+  "server.setup": {
+    "default": "undefined"
+  },
+  "server.strictPort": {
+    "default": "false"
+  },
+  "source": {},
+  "source.assetsInclude": {
+    "default": "undefined"
+  },
+  "source.decorators": {},
+  "source.decorators.version": {
+    "default": "'2023-11'"
+  },
+  "source.define": {},
+  "source.entry": {
+    "default": "{\n  // Rsbuild also supports other suffixes by default, such as ts,\n  // tsx, jsx, mts, cts, mjs, cjs\n  index: './src/index.js',\n}"
+  },
+  "source.exclude": {},
+  "source.include": {
+    "default": "[\n  { and: [rootPath, { not: /[\\\\/]node_modules[\\\\/]/ }], },\n  /\\.(?:ts|tsx|jsx|mts|cts)$/,\n];"
+  },
+  "source.preEntry": {},
+  "source.transformImport": {},
+  "source.tsconfigPath": {
+    "default": "'tsconfig.json'"
+  },
+  "splitChunks": {},
+  "splitChunks.preset": {},
+  "tools": {},
+  "tools.bundlerChain": {},
+  "tools.cssExtract": {},
+  "tools.cssExtract.loaderOptions": {},
+  "tools.cssExtract.pluginOptions": {},
+  "tools.cssLoader": {},
+  "tools.cssLoader.esModule": {
+    "default": "true"
+  },
+  "tools.cssLoader.exportType": {
+    "default": "'array'"
+  },
+  "tools.cssLoader.import": {},
+  "tools.cssLoader.import.filter": {},
+  "tools.cssLoader.importLoaders": {
+    "default": "0"
+  },
+  "tools.cssLoader.modules": {},
+  "tools.cssLoader.modules.auto": {},
+  "tools.cssLoader.modules.exportGlobals": {},
+  "tools.cssLoader.modules.exportLocalsConvention": {},
+  "tools.cssLoader.modules.exportOnlyLocals": {},
+  "tools.cssLoader.modules.getJSON": {},
+  "tools.cssLoader.modules.getLocalIdent": {},
+  "tools.cssLoader.modules.localIdentContext": {},
+  "tools.cssLoader.modules.localIdentHashDigest": {},
+  "tools.cssLoader.modules.localIdentHashFunction": {},
+  "tools.cssLoader.modules.localIdentHashSalt": {},
+  "tools.cssLoader.modules.localIdentName": {},
+  "tools.cssLoader.modules.localIdentRegExp": {},
+  "tools.cssLoader.modules.mode": {},
+  "tools.cssLoader.modules.namedExport": {},
+  "tools.cssLoader.sourceMap": {},
+  "tools.cssLoader.url": {
+    "default": "true"
+  },
+  "tools.cssLoader.url.filter": {},
+  "tools.htmlPlugin": {},
+  "tools.htmlPlugin.cache": {
+    "default": "true"
+  },
+  "tools.htmlPlugin.chunks": {},
+  "tools.htmlPlugin.chunksSortMode": {
+    "default": "'auto'"
+  },
+  "tools.htmlPlugin.excludeChunks": {},
+  "tools.htmlPlugin.favicon": {},
+  "tools.htmlPlugin.filename": {
+    "default": "'index.html'"
+  },
+  "tools.htmlPlugin.hash": {},
+  "tools.htmlPlugin.inject": {},
+  "tools.htmlPlugin.meta": {},
+  "tools.htmlPlugin.minify": {},
+  "tools.htmlPlugin.publicPath": {},
+  "tools.htmlPlugin.scriptLoading": {
+    "default": "'defer'"
+  },
+  "tools.htmlPlugin.showErrors": {},
+  "tools.htmlPlugin.template": {},
+  "tools.htmlPlugin.templateContent": {},
+  "tools.htmlPlugin.templateParameters": {},
+  "tools.htmlPlugin.title": {},
+  "tools.htmlPlugin.xhtml": {},
+  "tools.lightningcssLoader": {},
+  "tools.postcss": {},
+  "tools.postcss.execute": {
+    "default": "undefined"
+  },
+  "tools.postcss.implementation": {
+    "default": "`@rsbuild/core/compiled/postcss`"
+  },
+  "tools.postcss.postcssOptions": {
+    "default": "undefined"
+  },
+  "tools.postcss.postcssOptions.config": {},
+  "tools.postcss.postcssOptions.document": {},
+  "tools.postcss.postcssOptions.from": {},
+  "tools.postcss.postcssOptions.map": {},
+  "tools.postcss.postcssOptions.parser": {},
+  "tools.postcss.postcssOptions.plugins": {},
+  "tools.postcss.postcssOptions.stringifier": {},
+  "tools.postcss.postcssOptions.syntax": {},
+  "tools.postcss.postcssOptions.to": {},
+  "tools.postcss.postcssOptions.unsafeMap": {},
+  "tools.postcss.sourceMap": {
+    "default": "`rsbuildConfig.output.sourceMap.css`"
+  },
+  "tools.rspack": {},
+  "tools.styleLoader": {},
+  "tools.styleLoader.attributes": {
+    "default": "{}"
+  },
+  "tools.styleLoader.esModule": {
+    "default": "true"
+  },
+  "tools.styleLoader.injectType": {
+    "default": "'styleTag'"
+  },
+  "tools.styleLoader.insert": {
+    "default": "'head'"
+  },
+  "tools.styleLoader.styleTagTransform": {
+    "default": "undefined"
+  },
+  "tools.swc": {}
+}

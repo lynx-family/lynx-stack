@@ -6,57 +6,57 @@
   },
   {
     "type": "section-header",
-    "label": "Rspeedy and plugins"
+    "label": "Build configuration and plugins"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/rspeedy",
-    "link": "/rspeedy/config/"
+    "type": "file",
+    "name": "rspeedy",
+    "label": "@lynx-js/rspeedy"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-lynx"
+    "link": "/plugins/plugin-lynx"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/react-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-react"
+    "link": "/plugins/plugin-react"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/qrcode-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-qrcode"
+    "link": "/plugins/plugin-qrcode"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/external-bundle-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-external-bundle"
+    "link": "/plugins/plugin-external-bundle"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/vanilla-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-vanilla"
+    "link": "/plugins/plugin-vanilla"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/config-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-config"
+    "link": "/plugins/plugin-config"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/debug-metadata-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-debug-metadata"
+    "link": "/plugins/plugin-debug-metadata"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/react-alias-rsbuild-plugin",
-    "link": "/rspeedy/plugins/plugin-react-alias"
+    "link": "/plugins/plugin-react-alias"
   },
   {
     "type": "custom-link",
     "label": "@lynx-js/lynx-bundle-rslib-config",
-    "link": "/rspeedy/plugins/lynx-bundle-rslib-config"
+    "link": "/plugins/lynx-bundle-rslib-config"
   },
   {
     "type": "section-header",

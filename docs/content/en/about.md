@@ -1,1 +1,0 @@
-# About Lynx Stack

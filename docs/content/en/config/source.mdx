@@ -1,0 +1,63 @@
+---
+title: source
+---
+
+# source
+
+Options for what goes into the build: entries, `define` constants, `include`/`exclude` rules and the TypeScript path aliases read from `tsconfig.json`.
+
+Most of them are standard Rsbuild options: set them under `source` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy, and see the Rsbuild documentation for the details. The options specific to Lynx are described below, each with where to set it when you build with Rsbuild.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="source" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`alias`](#source-alias) <span className="api-badge api-badge-deprecated">Deprecated</span> <span className="api-badge api-badge-lynx">Lynx</span> | `Record<string, string \| false \| string[]>` (from typescript) | `Resolve.alias`  - Use [`Resolve.alias`](/config/resolve) instead. |
+| [`assetsInclude`](#source-assetsinclude) | `RuleSetCondition` (from [@rspack/core](https://rspack.rs/config/)) | Include additional files that should be treated as static assets. |
+| [`decorators`](#source-decorators) | [`Decorators`](#source-decorators) | Used to configure the decorators syntax. |
+| [`define`](#source-define) | `DefinePluginOptions` (from [@rspack/core](https://rspack.rs/config/)) | The `define` options is used to define some values or expressions at compile time. |
+| [`entry`](#source-entry) | `Entry` | The `Entry` option is used to set the entry module. |
+| [`exclude`](#source-exclude) | `RuleSetCondition[]` | The `source.exclude` is used to specify JavaScript files that should be excluded from compilation. |
+| [`include`](#source-include) | `RuleSetCondition[]` | The `source.include` is used to specify additional JavaScript files that need to be compiled. |
+| [`preEntry`](#source-preentry) | `string \| string[]` | Add a script before the entry file of each page. This script will be executed before the page code. It can be used to execute global logics, such as injecting polyfills, setting global styles, etc. |
+| [`transformImport`](#source-transformimport) | `TransformImport[]` | The `TransformImport` option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by [babel-plugin-import](https://npmjs.com/package/babel-plugin-import). |
+| [`tsconfigPath`](#source-tsconfigpath) | `string` | Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path. |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="source" */}
+
+## Lynx-specific options \{#lynx-options\}
+
+### `source.alias` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#source-alias\}
+
+- **Type:** `Record<string, string | false | string[]>` (from typescript)
+- **Default:** `undefined`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+`Resolve.alias`
+
+ - Use [`Resolve.alias`](/config/resolve) instead.
+
+## Rsbuild options \{#rsbuild-options\}
+
+Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.
+
+| Name | Type | Lynx default | Description |
+| --- | --- | --- | --- |
+| <a id="source-assetsinclude"></a>`assetsInclude` | `RuleSetCondition` (from [@rspack/core](https://rspack.rs/config/)) |  | Include additional files that should be treated as static assets. [Rsbuild docs](https://rsbuild.rs/config/source/assets-include) |
+| <a id="source-decorators"></a>`decorators` | [`Decorators`](#source-decorators) |  | Used to configure the decorators syntax. [Rsbuild docs](https://rsbuild.rs/config/source/decorators) |
+| <a id="source-define"></a>`define` | `DefinePluginOptions` (from [@rspack/core](https://rspack.rs/config/)) |  | The `define` options is used to define some values or expressions at compile time. [Rsbuild docs](https://rsbuild.rs/config/source/define) |
+| <a id="source-entry"></a>`entry` | `Entry` | `'./src/index.js'` | The `Entry` option is used to set the entry module. [Rsbuild docs](https://rsbuild.rs/config/source/entry) |
+| <a id="source-exclude"></a>`exclude` | `RuleSetCondition[]` |  | The `source.exclude` is used to specify JavaScript files that should be excluded from compilation. [Rsbuild docs](https://rsbuild.rs/config/source/exclude) |
+| <a id="source-include"></a>`include` | `RuleSetCondition[]` | When unset, Rsbuild compiles JavaScript files in the current directory and TypeScript or JSX files in all directories, while excluding JavaScript files under `node_modules`. | The `source.include` is used to specify additional JavaScript files that need to be compiled. [Rsbuild docs](https://rsbuild.rs/config/source/include) |
+| <a id="source-preentry"></a>`preEntry` | `string \| string[]` |  | Add a script before the entry file of each page. [Rsbuild docs](https://rsbuild.rs/config/source/pre-entry) |
+| <a id="source-transformimport"></a>`transformImport` | `TransformImport[]` |  | The `TransformImport` option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by [babel-plugin-import](https://npmjs.com/package/babel-plugin-import). [Rsbuild docs](https://rsbuild.rs/config/source/transform-import) |
+| <a id="source-tsconfigpath"></a>`tsconfigPath` | `string` |  | Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path. [Rsbuild docs](https://rsbuild.rs/config/source/tsconfig-path) |
+
+{/* @api-end */}

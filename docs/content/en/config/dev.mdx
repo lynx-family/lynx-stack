@@ -1,0 +1,41 @@
+---
+title: dev
+---
+
+# dev
+
+Options for the development server and hot module replacement: what the dev client connects to, how updates are delivered to the device and whether the bundle is written to disk while developing.
+
+They are standard Rsbuild options: set them under `dev` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy. Each one links to the Rsbuild documentation; the Lynx default is listed where it differs.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="dev" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | The `Dev.assetPrefix` is used to set the URL prefix for static assets during development. |
+| [`hmr`](#dev-hmr) | `boolean` | Whether to enable Hot Module Replacement (HMR). |
+| [`liveReload`](#dev-livereload) | `boolean` | Whether to enable live reload functionality. |
+| [`progressBar`](#dev-progressbar) | `boolean \| { id?: string }` | Whether to display progress bar during compilation. |
+| [`watchFiles`](#dev-watchfiles) | `WatchFiles \| WatchFiles[]` | Watch specified files and directories for changes. When a file change is detected, it can trigger a page reload or restart the dev server. |
+| [`writeToDisk`](#dev-writetodisk) | `boolean \| ((filename: string) => boolean)` | Used to control whether the build artifacts of the development environment are written to the disk. |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="dev" */}
+
+## Rsbuild options \{#rsbuild-options\}
+
+Standard Rsbuild options. The Lynx default is listed where it differs from Rsbuild; see the Rsbuild documentation for the details.
+
+| Name | Type | Lynx default | Description |
+| --- | --- | --- | --- |
+| <a id="dev-assetprefix"></a>`assetPrefix` | `string \| boolean` |  | The `Dev.assetPrefix` is used to set the URL prefix for static assets during development. [Rsbuild docs](https://rsbuild.rs/config/dev/asset-prefix) |
+| <a id="dev-hmr"></a>`hmr` | `boolean` |  | Whether to enable Hot Module Replacement (HMR). [Rsbuild docs](https://rsbuild.rs/config/dev/hmr) |
+| <a id="dev-livereload"></a>`liveReload` | `boolean` |  | Whether to enable live reload functionality. [Rsbuild docs](https://rsbuild.rs/config/dev/live-reload) |
+| <a id="dev-progressbar"></a>`progressBar` | `boolean \| { id?: string }` | `true` | Whether to display progress bar during compilation. [Rsbuild docs](https://rsbuild.rs/config/dev/progress-bar) |
+| <a id="dev-watchfiles"></a>`watchFiles` | `WatchFiles \| WatchFiles[]` |  | Watch specified files and directories for changes. [Rsbuild docs](https://rsbuild.rs/config/dev/watch-files) |
+| <a id="dev-writetodisk"></a>`writeToDisk` | `boolean \| ((filename: string) => boolean)` | `true` | Used to control whether the build artifacts of the development environment are written to the disk. [Rsbuild docs](https://rsbuild.rs/config/dev/write-to-disk) |
+
+{/* @api-end */}

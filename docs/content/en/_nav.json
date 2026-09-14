@@ -1,13 +1,13 @@
 [
   {
-    "text": "Guide",
-    "link": "/guide/installation",
-    "activeMatch": "^/guide/(?!genui)"
+    "text": "Config",
+    "link": "/config/",
+    "activeMatch": "^/config/"
   },
   {
-    "text": "Rspeedy",
-    "link": "/rspeedy/config/",
-    "activeMatch": "^/rspeedy/"
+    "text": "Plugins",
+    "link": "/plugins/plugin-lynx",
+    "activeMatch": "^/plugins/"
   },
   {
     "text": "ReactLynx",
@@ -20,15 +20,6 @@
     "activeMatch": "^/packages/"
   },
   {
-    "text": "GenUI",
-    "link": "/guide/genui/",
-    "activeMatch": "^/guide/genui"
-  },
-  {
-    "text": "REPL",
-    "link": "/repl"
-  },
-  {
     "text": "Changelog",
     "link": "/changelog/lynx-js--react",
     "activeMatch": "^/changelog/"
@@ -37,12 +28,12 @@
     "text": "More",
     "items": [
       {
-        "text": "About",
-        "link": "/about"
+        "text": "REPL",
+        "link": "/repl"
       },
       {
-        "text": "Contribute",
-        "link": "/contribute"
+        "text": "GenUI Playground",
+        "link": "/genui"
       },
       {
         "text": "lynxjs.org",

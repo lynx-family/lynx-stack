@@ -57,7 +57,7 @@ function collectExport(e: ApiExport, out: Entry[]): void {
 let total = 0, todo = 0, stale = 0;
 for (
   const file of readdirSync(DATA).filter(f =>
-    f.endsWith('.json') && f !== 'index.json'
+    f.endsWith('.json') && f !== 'index.json' && f !== 'rsbuild-config.json'
   )
 ) {
   const api = JSON.parse(readFileSync(join(DATA, file), 'utf8')) as ApiData;

@@ -42,7 +42,6 @@
     "packages/lynx/headless-rust-test-runner/fixtures/**",
     "docs/api-data/**",
     "docs/content/*/changelog/**",
-    "docs/content/*/guide/genui/**",
     "docs/doc_build/**",
     "packages/web-platform/web-explorer/preinstalled/**",
 

@@ -50,7 +50,6 @@ export default tseslint.config(
       '**/etc/*.md',
       'docs/api-data/**',
       'docs/content/*/changelog/**',
-      'docs/content/*/guide/genui/**',
       'docs/api-data/**',
       'docs/doc_build/**',
 

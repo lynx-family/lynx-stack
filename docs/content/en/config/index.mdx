@@ -1,0 +1,72 @@
+---
+title: Build configuration
+---
+
+# Build configuration
+
+The options for building a Lynx app. The same options apply whichever way you build:
+
+- **Rsbuild with [`pluginLynx`](/plugins/plugin-lynx)**: `rsbuild.config.ts` holds the Rsbuild options, and the Lynx-specific options are passed to `pluginLynx`.
+- **Rspeedy**: `lynx.config.ts` holds all of them. Rspeedy applies `pluginLynx` for you and passes the Lynx-specific options on to it.
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: { main: './src/index.tsx' },
+  },
+  environments: {
+    lynx: {},
+  },
+  plugins: [
+    pluginLynx({
+      output: { filename: { bundle: '[name].[platform].bundle' } },
+    }),
+    pluginReactLynx(),
+  ],
+})
+```
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: './src/index.tsx',
+  },
+  output: {
+    filename: { bundle: '[name].[platform].bundle' },
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+Most options are standard [Rsbuild options](https://rsbuild.rs/config/): each page lists them with a link to the Rsbuild documentation and the Lynx default where it differs. The options specific to Lynx are described in full, with where to set them when you build with Rsbuild. Rsbuild options that would break a Lynx bundle (`html`, `security`, `moduleFederation`, the polyfill settings) are not supported.
+
+## All options
+
+{/* @api ConfigOverview package="rspeedy" type="Config" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`dev`](/config/dev) | [`Dev`](/config/dev) | The [`Dev`](/config/dev) option is used to control the behavior related with development. Including: HMR, DevServer, etc. |
+| [`environments`](/config/environments#environments) | `Record<string, EnvironmentConfig>` (from typescript) | The [`Config.environments`](/config/environments#environments) option is used to set the output environment. |
+| [`mode`](/config/mode#mode) | `"production" \| "development" \| "none"` | Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations. |
+| [`output`](/config/output) | [`Output`](/config/output) | The [`Output`](/config/output) option is used to set how and where should the bundles and assets output. |
+| [`performance`](/config/performance) | [`Performance`](/config/performance) | The [`Performance`](/config/performance) option is used to optimize the build-time and runtime performance. |
+| [`plugins`](/config/plugins#plugins) | `RsbuildPlugins` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `plugins` option is used to customize the build process in a variety of ways. |
+| [`resolve`](/config/resolve) | [`Resolve`](/config/resolve) | The [`Resolve`](/config/resolve) option is used to control the resolution behavior of Rspack. |
+| [`server`](/config/server) | [`Server`](/config/server) | The [`Server`](/config/server) option changes the behavior of dev-server. |
+| [`source`](/config/source) | [`Source`](/config/source) | The [`Source`](/config/source) option changes the behavior of source files. |
+| [`splitChunks`](/config/splitChunks#splitchunks) | `false \| SplitChunksConfig` | Configure chunk splitting. |
+| [`tools`](/config/tools) | [`Tools`](/config/tools) | The [`Tools`](/config/tools) options changes the behavior of various building tools. |
+
+{/* @api-end */}
+
+## Namespaces
+
+- [dev](/config/dev) · [environments](/config/environments) · [mode](/config/mode) · [output](/config/output) · [performance](/config/performance) · [plugins](/config/plugins) · [resolve](/config/resolve) · [server](/config/server) · [source](/config/source) · [splitChunks](/config/splitChunks) · [tools](/config/tools)

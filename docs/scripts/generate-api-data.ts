@@ -38,6 +38,7 @@ import type {
 
 import { PACKAGES } from './packages.ts';
 import type { PackageEntry } from './packages.ts';
+import { rsbuildConfigOptions } from './rsbuild-config.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUT_DIR = join(ROOT, 'docs/api-data');
@@ -590,3 +591,8 @@ if (only.length === 0) {
   );
 }
 if (failed.length > 0) console.info(`\nfailed: ${failed.join(', ')}`);
+
+writeFileSync(
+  join(OUT_DIR, 'rsbuild-config.json'),
+  JSON.stringify(rsbuildConfigOptions(ROOT), null, 2) + '\n',
+);

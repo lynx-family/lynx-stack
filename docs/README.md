@@ -1,6 +1,6 @@
 # docs
 
-The API reference site for lynx-stack, built with Rspress. It covers the Rspeedy configuration, the rsbuild plugins, `@lynx-js/react` and every other public `@lynx-js` package.
+The API reference site for lynx-stack, built with Rspress. It covers the Lynx build configuration, the Rsbuild plugins, `@lynx-js/react` and every other public `@lynx-js` package. It holds API reference only; guides live on [lynxjs.org](https://lynxjs.org).
 
 ```sh
 pnpm --filter docs dev        # http://localhost:3000
@@ -52,9 +52,13 @@ pnpm --filter docs generate              # re-render the pages
 
 Code blocks are never sent for translation; only the prose around them is.
 
+## Configuration pages
+
+The pages under `content/*/config` apply to both `rsbuild.config.ts` with `pluginLynx` and `lynx.config.ts`. `pnpm generate` writes `api-data/rsbuild-config.json`, the option paths of `RsbuildConfig` read from the installed `@rsbuild/core` types, and the renderer uses it to split each page: options that Rsbuild also has are listed in a table that links to the Rsbuild documentation and shows the Lynx default only where it differs, and the rest are described in full with a link to the matching `pluginLynx` option.
+
 ## Adding a package
 
-Add an entry to `scripts/packages.ts` with the package directory and its type entry point (a `src/index.ts` or a `.d.ts`), run `pnpm generate`, then create the page under `content/en/packages/` or `content/en/rspeedy/plugins/` with the directives above. `scripts/scaffold-pages.ts` creates a starting page for any package that does not have one yet; it never overwrites an existing file.
+Add an entry to `scripts/packages.ts` with the package directory and its type entry point (a `src/index.ts` or a `.d.ts`), run `pnpm generate`, then create the page under `content/en/packages/` or `content/en/plugins/` with the directives above. `scripts/scaffold-pages.ts` creates a starting page for any package that does not have one yet; it never overwrites an existing file.
 
 ## Keeping the generated regions current
 
@@ -62,4 +66,4 @@ CI runs `pnpm --filter docs check`, which regenerates everything and fails if `a
 
 ## Sync to lynxjs.org
 
-`content/en/rspeedy/config`, `content/en/rspeedy/plugins`, `content/en/rspeedy/api`, `content/en/react/api` and `content/en/packages` mirror the layout of `lynx-website/docs/en/`. They are copied there as-is; the generated content is already inside the files, so lynx-website needs no extra tooling. Links inside these pages are absolute (`/rspeedy/config/output`) and resolve on both sites.
+`content/en/config`, `content/en/plugins`, `content/en/react/api` and `content/en/packages` mirror the layout of `lynx-website/docs/en/`. They are copied there as-is; the generated content is already inside the files, so lynx-website needs no extra tooling. Links inside these pages are absolute (`/config/output`) and resolve on both sites.

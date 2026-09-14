@@ -14,7 +14,6 @@ import {
 } from '@shikijs/transformers';
 
 import { syncChangelogs } from './scripts/changelogs.ts';
-import { syncGenUIGuides } from './scripts/genui-guides.ts';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const contentRoot = join(root, 'content');
@@ -23,7 +22,6 @@ const isCI = Boolean(process.env['CI']);
 const CDN_HOST = 'lynx-family.github.io/lynx-stack';
 
 syncChangelogs(contentRoot);
-syncGenUIGuides({ repositoryRoot: join(root, '..'), contentRoot });
 
 const WEBPACK_PACKAGES = [
   'chunk-loading-webpack-plugin',
@@ -38,42 +36,92 @@ const WEBPACK_PACKAGES = [
 const API_DOCUMENTER_REDIRECTS = [
   {
     from: '^/(zh/)?api/rspeedy\\.config\\.splitchunks(\\.html)?$',
-    to: '/$1rspeedy/config/splitChunks',
+    to: '/$1config/splitChunks',
   },
   {
     from:
       '^/(zh/)?api/rspeedy\\.config\\.(environments|mode|plugins)(\\.html)?$',
-    to: '/$1rspeedy/config/$2',
+    to: '/$1config/$2',
   },
   {
     from:
       '^/(zh/)?api/rspeedy\\.(dev|output|performance|resolve|server|source|tools)(\\..*)?$',
-    to: '/$1rspeedy/config/$2',
+    to: '/$1config/$2',
   },
-  { from: '^/(zh/)?api/rspeedy(\\..*)?$', to: '/$1rspeedy/api/' },
+  { from: '^/(zh/)?api/rspeedy(\\..*)?$', to: '/$1packages/rspeedy' },
   {
     from: '^/(zh/)?api/react-rsbuild-plugin(\\..*)?$',
-    to: '/$1rspeedy/plugins/plugin-react',
+    to: '/$1plugins/plugin-react',
   },
   {
     from: '^/(zh/)?api/qrcode-rsbuild-plugin(\\..*)?$',
-    to: '/$1rspeedy/plugins/plugin-qrcode',
+    to: '/$1plugins/plugin-qrcode',
   },
   {
     from: '^/(zh/)?api/external-bundle-rsbuild-plugin(\\..*)?$',
-    to: '/$1rspeedy/plugins/plugin-external-bundle',
+    to: '/$1plugins/plugin-external-bundle',
   },
   {
     from: '^/(zh/)?api/(config-rsbuild-plugin|type-config)(\\..*)?$',
-    to: '/$1rspeedy/plugins/plugin-config',
+    to: '/$1plugins/plugin-config',
   },
   {
     from: '^/(zh/)?api/lynx-bundle-rslib-config(\\..*)?$',
-    to: '/$1rspeedy/plugins/lynx-bundle-rslib-config',
+    to: '/$1plugins/lynx-bundle-rslib-config',
   },
   { from: `^/(zh/)?api/(${WEBPACK_PACKAGES})(\\..*)?$`, to: '/$1packages/$2' },
   { from: '^/(zh/)?api/react([./].*)?$', to: '/$1react/api/' },
   { from: '^/(zh/)?api/?$', to: '/$1packages/' },
+];
+
+const MOVED_SECTION_REDIRECTS = [
+  { from: '^/(zh/)?rspeedy/config(/.*)?$', to: '/$1config$2' },
+  { from: '^/(zh/)?rspeedy/plugins(/.*)?$', to: '/$1plugins$2' },
+  { from: '^/(zh/)?rspeedy/api(/.*)?$', to: '/$1packages/rspeedy' },
+];
+
+const LYNXJS_GUIDES: Record<string, string> = {
+  'installation': 'rspeedy/',
+  'cli': 'rspeedy/cli.html',
+  'typescript': 'rspeedy/typescript.html',
+  'css': 'rspeedy/styling.html',
+  'assets': 'rspeedy/assets.html',
+  'output': 'rspeedy/output.html',
+  'resolve': 'rspeedy/resolve.html',
+  'plugin': 'rspeedy/plugin.html',
+  'upgrade-rspeedy': 'rspeedy/upgrade.html',
+  'build-profiling': 'rspeedy/build-profiling.html',
+  'use-rsdoctor': 'rspeedy/use-rsdoctor.html',
+  'hmr': 'rspeedy/',
+  'code-splitting': 'react/code-splitting.html',
+  'chunk-splitting': 'react/code-splitting.html',
+  'i18n': 'guide/inclusion/internationalization.html',
+  'glossary': 'guide/glossary.html',
+  'compatibility': 'guide/compatibility.html',
+};
+
+const REPOSITORY = 'https://github.com/lynx-family/lynx-stack';
+
+const REMOVED_PAGE_REDIRECTS = [
+  ...Object.entries(LYNXJS_GUIDES).flatMap(([guide, target]) => [
+    {
+      from: `^/guide/${guide}(\\.html)?$`,
+      to: `https://lynxjs.org/${target}`,
+    },
+    {
+      from: `^/zh/guide/${guide}(\\.html)?$`,
+      to: `https://lynxjs.org/zh/${target}`,
+    },
+  ]),
+  {
+    from: '^/(zh/)?guide/genui(/.*)?$',
+    to: `${REPOSITORY}/tree/main/packages/genui`,
+  },
+  { from: '^/(zh/)?about(\\.html)?$', to: REPOSITORY },
+  {
+    from: '^/(zh/)?contribute(\\.html)?$',
+    to: `${REPOSITORY}/blob/main/CONTRIBUTING.md`,
+  },
 ];
 
 export default defineConfig({
@@ -81,16 +129,8 @@ export default defineConfig({
   llms: true,
   lang: 'en',
   title: 'Lynx Stack',
-  description: 'A collection of tools for building Lynx applications',
-  logo: {
-    light: isCI
-      ? `https://${CDN_HOST}/rspeedy-navbar-logo.png`
-      : '/rspeedy-navbar-logo.png',
-    dark: isCI
-      ? `https://${CDN_HOST}/rspeedy-navbar-logo-dark.png`
-      : '/rspeedy-navbar-logo-dark.png',
-  },
-  icon: '/rspeedy.png',
+  description:
+    'API reference for the Lynx build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package',
   locales: [
     { lang: 'zh', label: '简体中文' },
     { lang: 'en', label: 'English' },
@@ -147,6 +187,8 @@ export default defineConfig({
       redirects: [
         { from: '^/a2ui(?:\\.html|/index\\.html|/)?$', to: '/genui' },
         ...API_DOCUMENTER_REDIRECTS,
+        ...MOVED_SECTION_REDIRECTS,
+        ...REMOVED_PAGE_REDIRECTS,
       ],
     }),
   ],
@@ -155,14 +197,13 @@ export default defineConfig({
     enableScrollToTop: true,
     lastUpdated: true,
     editLink: {
-      docRepoBaseUrl:
-        'https://github.com/lynx-family/lynx-stack/tree/main/docs/content',
+      docRepoBaseUrl: `${REPOSITORY}/tree/main/docs/content`,
     },
     socialLinks: [
       {
         icon: 'github',
         mode: 'link',
-        content: 'https://github.com/lynx-family/lynx-stack',
+        content: REPOSITORY,
       },
     ],
     footer: {
@@ -177,12 +218,6 @@ export default defineConfig({
   globalStyles: join(root, 'src/styles/global.scss'),
   builderConfig: {
     ...(isCI ? { output: { assetPrefix: `//${CDN_HOST}/` } } : {}),
-    resolve: {
-      alias: {
-        '@site': root,
-        '@components': join(root, 'src/components'),
-      },
-    },
     plugins: [pluginSass()],
   },
 });

@@ -1,0 +1,72 @@
+---
+title: 构建配置
+---
+
+# 构建配置
+
+构建 Lynx 应用的配置项。无论用哪种方式构建，配置项都是同一套：
+
+- **Rsbuild + [`pluginLynx`](/zh/plugins/plugin-lynx)**：`rsbuild.config.ts` 中放 Rsbuild 配置，Lynx 特有配置传给 `pluginLynx`。
+- **Rspeedy**：所有配置都放在 `lynx.config.ts` 中。Rspeedy 会自动应用 `pluginLynx`，并把 Lynx 特有配置转交给它。
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: { main: './src/index.tsx' },
+  },
+  environments: {
+    lynx: {},
+  },
+  plugins: [
+    pluginLynx({
+      output: { filename: { bundle: '[name].[platform].bundle' } },
+    }),
+    pluginReactLynx(),
+  ],
+})
+```
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: './src/index.tsx',
+  },
+  output: {
+    filename: { bundle: '[name].[platform].bundle' },
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+大多数配置项是标准的 [Rsbuild 配置](https://rsbuild.rs/zh/config/)：各页面会列出它们并链接到 Rsbuild 文档，与 Rsbuild 默认值不同时注明 Lynx 的默认值。Lynx 特有的配置项会完整说明，并注明使用 Rsbuild 构建时应在哪里设置。会破坏 Lynx bundle 的 Rsbuild 配置（`html`、`security`、`moduleFederation` 以及 polyfill 相关设置）不受支持。
+
+## 全部选项
+
+{/* @api ConfigOverview package="rspeedy" type="Config" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`dev`](/zh/config/dev) | [`Dev`](/zh/config/dev) | [`Dev`](/zh/config/dev) 选项用于控制与开发相关的行为，包括 HMR、DevServer 等。 |
+| [`environments`](/zh/config/environments#environments) | `Record<string, EnvironmentConfig>` (来自 typescript) | [`Config.environments`](/zh/config/environments#environments) 选项用于设置输出的 environment。 |
+| [`mode`](/zh/config/mode#mode) | `"production" \| "development" \| "none"` | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 |
+| [`output`](/zh/config/output) | [`Output`](/zh/config/output) | [`Output`](/zh/config/output) 选项用于设置 bundle 和静态资源的输出方式与输出位置。 |
+| [`performance`](/zh/config/performance) | [`Performance`](/zh/config/performance) | [`Performance`](/zh/config/performance) 选项用于优化构建时和运行时的性能。 |
+| [`plugins`](/zh/config/plugins#plugins) | `RsbuildPlugins` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `plugins` 选项用于以多种方式自定义构建流程。 |
+| [`resolve`](/zh/config/resolve) | [`Resolve`](/zh/config/resolve) | [`Resolve`](/zh/config/resolve) 选项用于控制 Rspack 的模块解析行为。 |
+| [`server`](/zh/config/server) | [`Server`](/zh/config/server) | [`Server`](/zh/config/server) 选项用于修改开发服务器的行为。 |
+| [`source`](/zh/config/source) | [`Source`](/zh/config/source) | [`Source`](/zh/config/source) 选项用于修改源文件相关的行为。 |
+| [`splitChunks`](/zh/config/splitChunks#splitchunks) | `false \| SplitChunksConfig` | 配置 chunk 拆分。 |
+| [`tools`](/zh/config/tools) | [`Tools`](/zh/config/tools) | [`Tools`](/zh/config/tools) 选项用于修改各类构建工具的行为。 |
+
+{/* @api-end */}
+
+## 命名空间
+
+- [dev](/zh/config/dev) · [environments](/zh/config/environments) · [mode](/zh/config/mode) · [output](/zh/config/output) · [performance](/zh/config/performance) · [plugins](/zh/config/plugins) · [resolve](/zh/config/resolve) · [server](/zh/config/server) · [source](/zh/config/source) · [splitChunks](/zh/config/splitChunks) · [tools](/zh/config/tools)

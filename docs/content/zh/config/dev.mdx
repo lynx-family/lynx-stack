@@ -1,0 +1,41 @@
+---
+title: dev
+---
+
+# dev
+
+开发服务器和模块热替换相关的选项：dev client 连接的目标、更新如何推送到设备，以及开发时是否将 bundle 写入磁盘。
+
+它们都是标准的 Rsbuild 配置：在 `rsbuild.config.ts` 的 `dev` 下设置，使用 Rspeedy 构建时则在 `lynx.config.ts` 中设置。每一项都链接到 Rsbuild 文档，与 Rsbuild 默认值不同时注明 Lynx 的默认值。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="dev" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | `Dev.assetPrefix` 用于设置开发环境下静态资源的 URL 前缀。 |
+| [`hmr`](#dev-hmr) | `boolean` | 是否启用模块热替换（HMR）。 |
+| [`liveReload`](#dev-livereload) | `boolean` | 是否启用 live reload 功能。 |
+| [`progressBar`](#dev-progressbar) | `boolean \| { id?: string }` | 是否在编译过程中显示进度条。 |
+| [`watchFiles`](#dev-watchfiles) | `WatchFiles \| WatchFiles[]` | 监听指定文件和目录的变化。当检测到文件变化时，可以触发页面重新加载或重启开发服务器。 |
+| [`writeToDisk`](#dev-writetodisk) | `boolean \| ((filename: string) => boolean)` | 用于控制是否将开发环境的构建产物写入磁盘。 |
+
+{/* @api-end */}
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="dev" */}
+
+## Rsbuild 配置 \{#rsbuild-options\}
+
+以下是标准的 Rsbuild 配置。与 Rsbuild 默认值不同时会列出 Lynx 的默认值，详细说明请查看 Rsbuild 文档。
+
+| 名称 | 类型 | Lynx 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="dev-assetprefix"></a>`assetPrefix` | `string \| boolean` |  | `Dev.assetPrefix` 用于设置开发环境下静态资源的 URL 前缀。 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/asset-prefix) |
+| <a id="dev-hmr"></a>`hmr` | `boolean` |  | 是否启用模块热替换（HMR）。 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/hmr) |
+| <a id="dev-livereload"></a>`liveReload` | `boolean` |  | 是否启用 live reload 功能。 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/live-reload) |
+| <a id="dev-progressbar"></a>`progressBar` | `boolean \| { id?: string }` | `true` | 是否在编译过程中显示进度条。 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/progress-bar) |
+| <a id="dev-watchfiles"></a>`watchFiles` | `WatchFiles \| WatchFiles[]` |  | 监听指定文件和目录的变化。 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/watch-files) |
+| <a id="dev-writetodisk"></a>`writeToDisk` | `boolean \| ((filename: string) => boolean)` | `true` | 用于控制是否将开发环境的构建产物写入磁盘。 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/write-to-disk) |
+
+{/* @api-end */}
