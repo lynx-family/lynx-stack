@@ -50,11 +50,7 @@
   line-height: 16px;
 }
 
-.api-badge-lynx {
-  background: var(--rp-c-brand-tint);
-  color: var(--rp-c-brand-dark);
-}
-
+.api-badge-lynx,
 .api-badge-default {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--rp-c-divider);
