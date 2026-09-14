@@ -126,6 +126,7 @@ export default class LynxXmlAgentService {
       createLynxXmlAgent({
         ...pickAgentCapabilityConfig(opts),
         enableHtmlFragment: opts.enableHtmlFragment,
+        enableDesignGuidance: opts.enableDesignGuidance,
       }).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(

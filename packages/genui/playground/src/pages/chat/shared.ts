@@ -57,6 +57,7 @@ export interface ProviderModel {
 }
 
 export interface ProviderSettings {
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   provider: string;
   apiKey: string;
@@ -68,12 +69,14 @@ export interface ProviderSettings {
 }
 
 export interface ProviderRequestOptions {
+  enableDesignGuidance?: boolean;
   apiKey?: string;
   baseURL?: string;
   model?: string;
 }
 
 export interface PersistedProviderSettings {
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   provider: string;
 }
@@ -116,11 +119,15 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
   }
   const enableHtmlFragment = record.enableHtmlFragment
     ?? record.enableHtmlFragmentTool;
+  const enableDesignGuidance = record.enableDesignGuidance;
   return {
     ...createDefaultProviderSettings(),
     provider,
     ...(typeof enableHtmlFragment === 'boolean'
       ? { enableHtmlFragment }
+      : {}),
+    ...(typeof enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance }
       : {}),
     // Never restore custom-provider fields from browser storage. Older
     // versions wrote them here, so ignoring them also migrates those values
@@ -146,6 +153,9 @@ export function serializeProviderSettings(
 ): PersistedProviderSettings {
   return {
     provider: settings.provider,
+    ...(settings.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
     ...(settings.enableHtmlFragment === undefined
       ? {}
       : { enableHtmlFragment: settings.enableHtmlFragment }),
@@ -186,7 +196,12 @@ export function toProviderRequestOptions(
 ): ProviderRequestOptions {
   if (settings.provider !== CUSTOM_PROVIDER_ID) {
     const model = settings.provider.trim();
-    return model ? { model } : {};
+    return {
+      ...(model ? { model } : {}),
+      ...(settings.enableDesignGuidance === false
+        ? { enableDesignGuidance: false }
+        : {}),
+    };
   }
 
   const validationError = getProviderSettingsValidationError(settings);
@@ -199,6 +214,9 @@ export function toProviderRequestOptions(
     apiKey,
     baseURL,
     model,
+    ...(settings.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
   };
 }
 
@@ -330,7 +348,15 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
       disabled: settings.status !== 'ready',
       options: providerOptions,
     };
-    if (settings.provider !== CUSTOM_PROVIDER_ID) return [providerControl];
+    const designControl = {
+      id: 'enableDesignGuidance',
+      label: 'Extra Design Skill',
+      value: settings.enableDesignGuidance === false ? 'off' : 'on',
+      kind: 'checkbox' as const,
+    };
+    if (settings.provider !== CUSTOM_PROVIDER_ID) {
+      return [providerControl, designControl];
+    }
     return [
       providerControl,
       {
@@ -354,9 +380,13 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
         kind: 'select' as const,
         options: CUSTOM_PROVIDER_BASE_URL_OPTIONS,
       },
+      designControl,
     ];
   },
   update(settings, id, next) {
+    if (id === 'enableDesignGuidance') {
+      return { ...settings, enableDesignGuidance: next !== 'off' };
+    }
     if (
       id === 'provider'
       && (settings.models.some((item) => item.id === next)

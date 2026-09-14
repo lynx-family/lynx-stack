@@ -57,6 +57,7 @@ export type OpenUIBenchGenerateRaw = (
 export type OpenUIBenchRetrySleep = BenchRetrySleep;
 
 export interface OpenUIBenchGenerateAttemptInput {
+  enableDesignGuidance?: boolean;
   index: number;
   messages: ChatMessage[];
   provider: ProtocolBenchProviderConfig;
@@ -263,6 +264,7 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
         maxRetries: 0,
         enableWebSearch: false,
         enableImageGeneration: false,
+        enableDesignGuidance: input.enableDesignGuidance !== false,
         resourceId: input.resourceId,
         promptComponentNames: OPENUI_BENCH_MATCHED_COMPONENTS,
         promptOptions: OPENUI_BENCH_PROMPT_OPTIONS,
@@ -346,6 +348,7 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
     for (let index = 1; index <= maxAttempts; index += 1) {
       const attempt = await this.generateAttempt({
         index,
+        enableDesignGuidance: input.enableDesignGuidance,
         messages,
         provider: input.provider,
         resourceId: `bench:${input.runId}:attempt:${index}`,

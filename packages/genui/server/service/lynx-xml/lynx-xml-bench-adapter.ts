@@ -95,6 +95,7 @@ export function createLynxXmlBenchAdapter(
             maxRetries: 0,
             enableWebSearch: false,
             enableImageGeneration: false,
+            enableDesignGuidance: input.enableDesignGuidance !== false,
             enableHtmlFragment: input.enableHtmlFragment === true,
           }, signal);
           signal?.throwIfAborted();

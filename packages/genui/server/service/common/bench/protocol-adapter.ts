@@ -28,6 +28,7 @@ export type ProtocolBenchJudgePayload =
   };
 
 export interface ProtocolBenchAdapterInput {
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   runId: string;
   pairId: string;

@@ -4,6 +4,7 @@
 
 import { Agent } from '@mastra/core/agent';
 
+import { GENUI_DESIGN_GUIDANCE } from '../../design/design-guidance.js';
 import { createAgentCapabilities } from '../common/agent-capabilities.js';
 import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { SearchRunScope } from '../common/doubao-search-tool.js';
@@ -39,7 +40,11 @@ export function createMcpAppsAgent(opts: GenerationAgentOptions = {}) {
   const agent = new Agent({
     id: 'mcp-apps-agent',
     name: 'McpAppsAgent',
-    instructions: [MCP_APPS_AGENT_INSTRUCTIONS, capabilities.instructions]
+    instructions: [
+      MCP_APPS_AGENT_INSTRUCTIONS,
+      opts.enableDesignGuidance === false ? undefined : GENUI_DESIGN_GUIDANCE,
+      capabilities.instructions,
+    ]
       .filter(
         Boolean,
       ).join('\n\n'),

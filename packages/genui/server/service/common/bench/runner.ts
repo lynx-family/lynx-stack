@@ -457,6 +457,7 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      enableDesignGuidance: item.group.enableDesignGuidance !== false,
       ...(protocol === 'lynx-xml'
         ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
         : {}),

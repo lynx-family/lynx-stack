@@ -166,6 +166,7 @@ function normalizeGroups(
         variable: readVariable(item.variable),
         enabled: item.enabled !== false,
         protocol,
+        enableDesignGuidance: item.enableDesignGuidance !== false,
         ...(protocol === 'lynx-xml'
           ? { enableHtmlFragment: item.enableHtmlFragment === true }
           : {}),
@@ -284,6 +285,20 @@ export function normalizeBenchJobRequest(
       ok: false,
       status: 400,
       error: 'enableHtmlFragment must be a boolean',
+    };
+  }
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some((group) =>
+      isRecord(group)
+      && group.enableDesignGuidance !== undefined
+      && typeof group.enableDesignGuidance !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableDesignGuidance must be a boolean',
     };
   }
   const enabledGroups = groups.filter((group) => group.enabled);

@@ -9,6 +9,7 @@ import type {
   BuildOpenUiSystemPromptOptions,
 } from '@lynx-js/genui-openui/openui-prompt';
 
+import { GENUI_DESIGN_GUIDANCE } from '../../design/design-guidance.js';
 import { createAgentCapabilities } from '../common/agent-capabilities.js';
 import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { SearchRunScope } from '../common/doubao-search-tool.js';
@@ -59,7 +60,11 @@ export function createOpenUIAgent(opts: OpenUIAgentOptions = {}) {
   const agent = new Agent({
     id: 'openui-agent',
     name: 'OpenUIAgent',
-    instructions: [instructions, capabilities.instructions].filter(Boolean)
+    instructions: [
+      instructions,
+      opts.enableDesignGuidance === false ? undefined : GENUI_DESIGN_GUIDANCE,
+      capabilities.instructions,
+    ].filter(Boolean)
       .join(
         '\n\n',
       ),

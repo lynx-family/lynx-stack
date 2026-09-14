@@ -92,6 +92,7 @@ export function createHtmlBenchAdapter(
             maxRetries: 0,
             enableWebSearch: false,
             enableImageGeneration: false,
+            enableDesignGuidance: input.enableDesignGuidance !== false,
           }, signal);
           signal?.throwIfAborted();
         } catch (error) {

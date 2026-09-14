@@ -26,6 +26,8 @@ export type OpenAIReasoningEffort =
 export interface ChatOptions
   extends SearchCapabilityOptions, ImageGenerationCapabilityOptions
 {
+  /** Include the shared product and mobile design guidance in generation prompts. */
+  enableDesignGuidance?: boolean | undefined;
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;

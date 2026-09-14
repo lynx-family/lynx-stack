@@ -123,6 +123,9 @@ export function createBenchGroupsFromReport(
       id: item.id ?? createId(`history-group-${index + 1}`),
       role: isBenchRole(item.role) ? item.role : 'experiment',
       protocol,
+      ...(item.enableDesignGuidance === false
+        ? { enableDesignGuidance: false }
+        : {}),
       ...(protocol === 'lynx-xml'
         ? {
           enableHtmlFragment:

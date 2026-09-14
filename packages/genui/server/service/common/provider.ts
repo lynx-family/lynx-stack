@@ -70,6 +70,9 @@ function createProviderCacheKey(
     opts.enableImageGeneration === false
       ? 'image-generation-disabled'
       : 'image-generation-enabled',
+    opts.enableDesignGuidance === false
+      ? 'design-guidance-disabled'
+      : 'design-guidance-enabled',
   ].join(':');
   return variant === undefined ? baseKey : `${baseKey}:${variant}`;
 }

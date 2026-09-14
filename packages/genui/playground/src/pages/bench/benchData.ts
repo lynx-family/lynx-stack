@@ -16,6 +16,7 @@ export type BenchComparisonDirection = Extract<
   'model' | 'prompt' | 'protocol'
 >;
 export interface BenchGroup {
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   catalog: string;
   enabled: boolean;
@@ -328,6 +329,12 @@ export function getBenchGroupDifferences(
   if (group.protocol !== baseline.protocol) differences.push('Protocol');
   if (group.profile !== baseline.profile) differences.push('Profile');
   if (group.model !== baseline.model) differences.push('Model');
+  if (
+    (group.enableDesignGuidance === false)
+      !== (baseline.enableDesignGuidance === false)
+  ) {
+    differences.push('Design skill');
+  }
   if (
     group.protocol === 'lynx-xml' && baseline.protocol === 'lynx-xml'
     && (group.enableHtmlFragment === true)

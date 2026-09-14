@@ -2,8 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 
+import {
+  appendChatInteraction,
+  chatInteractionLabel,
+  describeChatRequest,
+  serializeChatInteraction,
+} from './chatInteraction.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
   isA2UIRuntimeReadyMessage,
@@ -28,17 +34,25 @@ import {
 } from './shared.js';
 import type {
   ChatArtifact,
+  ChatInteractionLog,
   ChatMessageIcon,
   ChatMessageModel,
   ChatProtocolAdapter,
   ChatSettingsAdapter,
+  ChatSseEvent,
   ChatStreamAdapter,
   ChatStreamEmission,
   ChatTokenUsage,
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
+import {
+  ChevronDown,
+  Send,
+  Sparkles,
+  TriangleAlert,
+  Zap,
+} from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
@@ -101,6 +115,7 @@ interface ChatControllerProps<
 interface ConsumeResponseOptions<TOutput> {
   signal: AbortSignal;
   onEmission: (emission: ChatStreamEmission<TOutput>) => void;
+  onEvent?: (event: ChatSseEvent) => void;
 }
 
 type BrowserResponse = Awaited<ReturnType<typeof window.fetch>>;
@@ -163,6 +178,7 @@ async function consumeResponse<TState, TOutput>(
   const applyFrame = (frame: string) => {
     const parsed = parseSseFrame(frame);
     if (!parsed) return;
+    options.onEvent?.(parsed);
     if (parsed.event === 'error') {
       throw new Error(stream.error(parsed.data));
     }
@@ -192,6 +208,7 @@ async function consumeResponse<TState, TOutput>(
     if (buffer.trim()) applyFrame(buffer);
   } else {
     const payload: unknown = await response.json().catch(() => ({}));
+    options.onEvent?.({ event: 'json', data: payload });
     const step = stream.fromJson(payload);
     state = step.state;
     applyEmissions(step.emissions);
@@ -315,6 +332,107 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
   );
 }
 
+function AgentInteractionDetails(props: {
+  children: ReactNode;
+  log: ChatInteractionLog;
+  onCopy: (text: string) => void;
+}) {
+  const { children, log, onCopy } = props;
+  return (
+    <details className='chatAgentInteraction'>
+      <summary className='chatMessageBody chatAgentInteractionSummary'>
+        {children}
+        <ChevronDown
+          className='chatAgentInteractionChevron'
+          size={14}
+          aria-hidden='true'
+        />
+      </summary>
+      <div className='chatAgentInteractionDetails'>
+        <div className='chatAgentInteractionHeader'>
+          <span>Agent interaction</span>
+          <button
+            type='button'
+            className='chatJsonCopyButton'
+            onClick={() => onCopy(serializeChatInteraction(log))}
+          >
+            Copy details
+          </button>
+        </div>
+        {log.omittedEntries > 0
+          ? (
+            <p className='chatAgentInteractionNotice'>
+              {log.omittedEntries} earlier events omitted.
+            </p>
+          )
+          : null}
+        <ol
+          className='chatAgentInteractionEvents'
+          aria-label='Agent interaction events'
+        >
+          {log.entries.map((entry, index) => (
+            <li className='chatAgentInteractionEvent' key={index}>
+              <div className='chatAgentInteractionEventHeader'>
+                <span>{chatInteractionLabel(entry.event)}</span>
+                {entry.count > 1 ? <span>{entry.count} chunks</span> : null}
+                <span className='chatAgentInteractionTime'>
+                  +{(entry.elapsedMs / 1000).toFixed(2)}s
+                </span>
+              </div>
+              {entry.detail ? <pre>{entry.detail}</pre> : null}
+              {entry.truncated
+                ? (
+                  <p className='chatAgentInteractionNotice'>
+                    Event details truncated.
+                  </p>
+                )
+                : null}
+            </li>
+          ))}
+        </ol>
+        {log.rawOutput
+          ? (
+            <details className='chatAgentInteractionRaw'>
+              <summary className='chatAgentInteractionRawSummary'>
+                <span>Raw output</span>
+                <span>
+                  {log.rawOutput.count}{' '}
+                  {log.rawOutput.count === 1 ? 'chunk' : 'chunks'}
+                </span>
+                <span className='chatAgentInteractionTime'>
+                  +{(log.rawOutput.elapsedMs / 1000).toFixed(2)}s
+                </span>
+                <ChevronDown
+                  className='chatAgentInteractionChevron'
+                  size={14}
+                  aria-hidden='true'
+                />
+              </summary>
+              <div className='chatAgentInteractionRawContent'>
+                <button
+                  type='button'
+                  className='chatJsonCopyButton'
+                  onClick={() => onCopy(log.rawOutput?.detail ?? '')}
+                >
+                  Copy raw output
+                </button>
+                <pre>{log.rawOutput.detail}</pre>
+                {log.rawOutput.truncated
+                  ? (
+                    <p className='chatAgentInteractionNotice'>
+                      Raw output truncated.
+                    </p>
+                  )
+                  : null}
+              </div>
+            </details>
+          )
+          : null}
+      </div>
+    </details>
+  );
+}
+
 function MessageList(props: {
   messages: readonly ChatMessageModel[];
   onCopy: (text: string) => void;
@@ -341,40 +459,52 @@ function MessageList(props: {
         const payloadText = message.payload === undefined
           ? ''
           : safeStringifyPayload(message.payload);
+        const messageBody = (
+          <>
+            <MessageStatusIcon icon={message.icon} />
+            <span>
+              {message.text}
+              {message.code
+                ? (
+                  <>
+                    {' '}
+                    <code className='chatMessageStatusInline'>
+                      {message.code}
+                    </code>
+                  </>
+                )
+                : null}
+            </span>
+            {message.payload === undefined
+              ? null
+              : (
+                <button
+                  type='button'
+                  className='chatJsonCopyButton'
+                  onClick={() => onCopy(payloadText)}
+                >
+                  Copy all
+                </button>
+              )}
+          </>
+        );
         return (
           <div
             className={`chatMessage ${roleClassName}${
               message.side === 'right' ? ' chatMessageRight' : ''
-            }`}
+            }${message.interaction ? ' chatMessageWithInteraction' : ''}`}
             key={message.id ?? index}
           >
-            <div className='chatMessageBody'>
-              <MessageStatusIcon icon={message.icon} />
-              <span>
-                {message.text}
-                {message.code
-                  ? (
-                    <>
-                      {' '}
-                      <code className='chatMessageStatusInline'>
-                        {message.code}
-                      </code>
-                    </>
-                  )
-                  : null}
-              </span>
-              {message.payload === undefined
-                ? null
-                : (
-                  <button
-                    type='button'
-                    className='chatJsonCopyButton'
-                    onClick={() => onCopy(payloadText)}
-                  >
-                    Copy all
-                  </button>
-                )}
-            </div>
+            {message.interaction
+              ? (
+                <AgentInteractionDetails
+                  log={message.interaction}
+                  onCopy={onCopy}
+                >
+                  {messageBody}
+                </AgentInteractionDetails>
+              )
+              : <div className='chatMessageBody'>{messageBody}</div>}
             {message.payload === undefined
               ? null
               : (
@@ -1014,7 +1144,11 @@ export function ChatController<
       setMessages((current) =>
         current.map((message) =>
           message.id === pendingId
-            ? { ...adapter.transcript.progress(emission.text), id: pendingId }
+            ? {
+              ...message,
+              ...adapter.transcript.progress(emission.text),
+              id: pendingId,
+            }
             : message
         )
       );
@@ -1078,15 +1212,36 @@ export function ChatController<
     const previousOutput = outputRef.current;
     const userMessage: ModelChatMessage = { role: 'user', content: prompt };
     const pendingId = createMessageId(`${adapter.id}-pending`);
-    const pending = { ...adapter.transcript.pending(prompt), id: pendingId };
     const requestConversation = buildConversationContext();
     const startedAt = performance.now();
+    const pending = { ...adapter.transcript.pending(prompt), id: pendingId };
+    let interaction = appendChatInteraction(
+      { entries: [], omittedEntries: 0 },
+      'start',
+      0,
+      pending.text,
+    );
+    const recordInteraction = (event: string, data?: unknown) => {
+      if (controller.signal.aborted || runIdRef.current !== runId) return;
+      const next = appendChatInteraction(
+        interaction,
+        event,
+        performance.now() - startedAt,
+        data,
+      );
+      interaction = next;
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === pendingId ? { ...message, interaction: next } : message
+        )
+      );
+    };
 
     setInputValue('');
     setMessages((current) => [
       ...current,
       { kind: 'user', text: prompt },
-      pending,
+      { ...pending, interaction },
     ]);
     resetLivePreviewDelivery();
     setCurrentOutput(null);
@@ -1109,10 +1264,15 @@ export function ChatController<
           signal: controller.signal,
         });
         adapter.settings?.validateRequest?.(requestSettings, request.url);
+        recordInteraction('request', describeChatRequest(request));
         const response = await window.fetch(
           request.url,
           createChatRequestInit(request, controller.signal),
         );
+        recordInteraction('response', {
+          status: response.status,
+          contentType: response.headers.get('content-type'),
+        });
         if (!response.ok) {
           const payload: unknown = await response.json().catch(() => ({}));
           throw new Error(adapter.stream.error(payload));
@@ -1122,8 +1282,12 @@ export function ChatController<
           adapter.stream,
           {
             signal: controller.signal,
+            onEvent: (event) => recordInteraction(event.event, event.data),
             onEmission: (emission) => {
               if (runIdRef.current !== runId) return;
+              if (emission.type === 'usage') {
+                recordInteraction('usage', emission.usage);
+              }
               handleStreamEmission(emission, pendingId);
             },
           },
@@ -1158,19 +1322,24 @@ export function ChatController<
         });
         metricsPersistenceReadyRef.current = true;
         void updateLastAssistantPreviewMetrics(metricsRef.current);
+        recordInteraction('complete');
         setMessages((current) =>
           current.flatMap((message) =>
             message.id === pendingId
-              ? [...adapter.transcript.success(finalOutput)]
+              ? adapter.transcript.success(finalOutput).map((result, index) =>
+                index === 0 ? { ...result, id: pendingId, interaction } : result
+              )
               : [message]
           )
         );
       } catch (error) {
         if (controller.signal.aborted || runIdRef.current !== runId) return;
+        recordInteraction('error', getErrorMessage(error));
         setMessages((current) =>
           current.map((message) =>
             message.id === pendingId
               ? {
+                ...message,
                 ...adapter.transcript.failure(getErrorMessage(error)),
                 id: pendingId,
               }
@@ -1555,7 +1724,10 @@ export function ChatController<
     item.kind === 'select'
   );
   const fieldControls = settingsControls.filter((item) =>
-    item.kind !== 'select'
+    item.kind === 'text' || item.kind === 'password'
+  );
+  const checkboxControls = settingsControls.filter((item) =>
+    item.kind === 'checkbox'
   );
   const updateSetting = (id: string, value: string) => {
     const settingsAdapter = adapter.settings;
@@ -1853,7 +2025,11 @@ export function ChatController<
               )
               : null}
             <div className='chatComposerFooter'>
-              <div className='chatProviderControl'>
+              <div
+                className={checkboxControls.length > 1
+                  ? 'chatProviderControl chatProviderControlWrap'
+                  : 'chatProviderControl'}
+              >
                 {selectControls.map((control) => (
                   <select
                     key={control.id}
@@ -1871,6 +2047,21 @@ export function ChatController<
                       </option>
                     ))}
                   </select>
+                ))}
+                {checkboxControls.map((control) => (
+                  <label key={control.id} className='chatProviderCheckbox'>
+                    <input
+                      type='checkbox'
+                      checked={control.value === 'on'}
+                      disabled={busy || control.disabled}
+                      onChange={(event) =>
+                        updateSetting(
+                          control.id,
+                          event.target.checked ? 'on' : 'off',
+                        )}
+                    />
+                    <span>{control.label}</span>
+                  </label>
                 ))}
               </div>
               <Button

@@ -493,6 +493,9 @@ function createBenchRequestGroups(
     variable: group.variable,
     model: group.model,
     catalog: group.catalog,
+    ...(group.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
     ...(group.protocol === 'lynx-xml'
       ? { enableHtmlFragment: group.enableHtmlFragment === true }
       : {}),
@@ -532,6 +535,7 @@ function createBenchPlanSignature(
       name: group.name,
       model: group.model,
       catalog: usesCatalog(group) ? group.catalog : undefined,
+      enableDesignGuidance: group.enableDesignGuidance !== false,
       ...(group.protocol === 'lynx-xml'
         ? { enableHtmlFragment: group.enableHtmlFragment === true }
         : {}),
@@ -1948,6 +1952,8 @@ export function BenchPage() {
                     id,
                     groupPatch('enableHtmlFragment', enabled),
                   )}
+                onDesignGuidanceChange={(id, enabled) =>
+                  updateGroup(id, groupPatch('enableDesignGuidance', enabled))}
                 onCatalogChange={(id, catalog) =>
                   updateGroup(id, groupPatch('catalog', catalog))}
                 onEnabledChange={(id, enabled) =>

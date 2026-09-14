@@ -546,6 +546,136 @@
   border-bottom-left-radius: 4px;
 }
 
+.chatMessage.chatMessageWithInteraction {
+  width: 100%;
+  padding: 0;
+}
+
+.chatAgentInteraction {
+  width: 100%;
+  min-width: 0;
+}
+
+.chatMessageWithInteraction
+  .chatAgentInteraction
+  > .chatAgentInteractionSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.chatAgentInteractionSummary::-webkit-details-marker,
+.chatAgentInteractionRawSummary::-webkit-details-marker {
+  display: none;
+}
+
+.chatAgentInteractionSummary:focus-visible,
+.chatAgentInteractionRawSummary:focus-visible {
+  outline: 2px solid var(--geist-accent);
+  outline-offset: -2px;
+  border-radius: var(--geist-radius-md);
+}
+
+.chatAgentInteractionSummary .chatMessageActionSpinner {
+  margin-right: 0;
+}
+
+.chatAgentInteractionChevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--geist-secondary);
+}
+
+.chatAgentInteraction[open] > summary .chatAgentInteractionChevron,
+.chatAgentInteractionRaw[open] > summary .chatAgentInteractionChevron {
+  transform: rotate(180deg);
+}
+
+.chatAgentInteractionDetails {
+  padding: 0 12px 12px;
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-family: var(--geist-mono);
+}
+
+.chatAgentInteractionHeader,
+.chatAgentInteractionEventHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+}
+
+.chatAgentInteractionHeader {
+  padding: 8px 0;
+  border-top: 1px solid var(--geist-border);
+}
+
+.chatAgentInteractionEvents {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 360px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chatAgentInteractionEvent {
+  padding-left: 10px;
+  border-left: 2px solid var(--geist-border);
+}
+
+.chatAgentInteractionTime {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.chatAgentInteractionEvent pre,
+.chatAgentInteractionRawContent pre {
+  margin: 6px 0 0;
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
+.chatAgentInteractionRaw {
+  margin-top: 8px;
+  border-top: 1px solid var(--geist-border);
+}
+
+.chatAgentInteractionRawSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  cursor: pointer;
+  list-style: none;
+  color: var(--geist-secondary);
+  font-size: 11px;
+}
+
+.chatAgentInteractionRawContent {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.chatAgentInteractionNotice {
+  margin: 6px 0;
+  color: var(--geist-secondary);
+  font-size: 11px;
+}
+
 .chatMessageAction {
   align-self: flex-end;
   max-width: 90%;
@@ -1359,6 +1489,16 @@
   );
 }
 
+.chatProviderControlWrap {
+  flex: 1;
+  flex-wrap: wrap;
+  row-gap: 4px;
+  max-width: 440px;
+  min-height: 34px;
+  height: auto;
+  padding-block: 2px;
+}
+
 .chatProviderStatus {
   width: 7px;
   height: 7px;
@@ -1391,6 +1531,31 @@
 .chatProviderSelect:hover,
 .chatProviderSelect:focus {
   color: var(--geist-foreground);
+}
+
+.chatProviderCheckbox {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chatProviderCheckbox input {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  accent-color: var(--geist-secondary);
+  cursor: inherit;
+}
+
+.chatProviderCheckbox:has(input:disabled) {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* chatSendBtn / chatSendIcon: replaced by <Button variant="primary" size="lg"

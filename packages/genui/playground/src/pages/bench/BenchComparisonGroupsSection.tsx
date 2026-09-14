@@ -29,6 +29,7 @@ export function BenchComparisonGroupsSection(props: {
   onPresetChange?: (preset: BenchPreset) => void;
   onCatalogChange: (id: string, catalog: string) => void;
   onFragmentChange: (id: string, enabled: boolean) => void;
+  onDesignGuidanceChange: (id: string, enabled: boolean) => void;
   onEnabledChange: (id: string, enabled: boolean) => void;
   onModelChange: (id: string, model: string) => void;
   onNameChange: (id: string, name: string) => void;
@@ -190,6 +191,24 @@ export function BenchComparisonGroupsSection(props: {
                       />
                     </div>
                   )}
+                </div>
+                <div className='benchGroupFields'>
+                  <div className='benchField'>
+                    <span className='benchFieldLabel'>Design skill</span>
+                    <BenchDropdown
+                      ariaLabel={`${groupName} Design skill`}
+                      value={group.enableDesignGuidance === false
+                        ? 'off'
+                        : 'on'}
+                      disabled={props.locked}
+                      options={[{ value: 'on', label: 'On' }, {
+                        value: 'off',
+                        label: 'Off',
+                      }]}
+                      onChange={(value) =>
+                        props.onDesignGuidanceChange(group.id, value === 'on')}
+                    />
+                  </div>
                 </div>
                 {group.protocol === 'lynx-xml' && (
                   <div

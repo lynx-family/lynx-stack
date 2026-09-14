@@ -13,6 +13,7 @@ import {
   LYNX_XML_SYSTEM_PROMPT,
 } from '@lynx-js/genui-lynx-xml';
 
+import { GENUI_DESIGN_GUIDANCE } from '../../design/design-guidance.js';
 import { createAgentCapabilities } from '../common/agent-capabilities.js';
 import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { SearchRunScope } from '../common/doubao-search-tool.js';
@@ -60,6 +61,7 @@ export function createLynxXmlAgent(opts: LynxXmlAgentOptions = {}) {
       opts.enableHtmlFragment === true
         ? LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT
         : LYNX_XML_SYSTEM_PROMPT,
+      opts.enableDesignGuidance === false ? undefined : GENUI_DESIGN_GUIDANCE,
       capabilities.instructions,
     ].filter(Boolean).join('\n\n'),
     model: buildModel(model),
