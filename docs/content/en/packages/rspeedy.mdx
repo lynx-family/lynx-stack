@@ -238,9 +238,9 @@ const RsbuildPlugin = {
 | --- | --- | --- |
 | <a id="exposedapi-config"></a>`config` | `Config` | The user config. |
 | <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | Print debug logs. |
-| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment. |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment. |
 | <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | Exit the process. |
-| <a id="exposedapi-logger"></a>`logger` | `Logger` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Get the Rspeedy logger. |
+| <a id="exposedapi-logger"></a>`logger` | `Logger` | Get the Rspeedy logger. |
 | <a id="exposedapi-version"></a>`version` | `string` | The version of Rspeedy. |
 
 ### `LoadConfigOptions` \{#loadconfigoptions\}

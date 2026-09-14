@@ -79,7 +79,7 @@ path and enables automatic asset emission.
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | <a id="externalbundleroot"></a>`externalBundleRoot` | `string` |  | Root directory that stores project-owned external bundles referenced by `bundlePath`. `pluginExternalBundle` uses this directory for both development serving and build-time asset emission. Prefer setting this explicitly when external bundles are built into a separate output folder, such as `dist-external-bundle`. |
-| <a id="externals"></a>`externals` | `Record<string, `[`PluginExternalConfig`](#pluginexternalconfig)`>` (from typescript) |  | Additional explicit externals to load. |
+| <a id="externals"></a>`externals` | `Record<string, `[`PluginExternalConfig`](#pluginexternalconfig)`>` |  | Additional explicit externals to load. |
 | <a id="externalspresetdefinitions"></a>`externalsPresetDefinitions` | [`ExternalsPresetDefinitions`](#externalspresetdefinitions) |  | Definitions for custom externals presets enabled by `externalsPresets`. Use this to add business-specific presets such as `lynxUi`, or to extend a built-in preset through `extends`. |
 | <a id="globalobject"></a>`globalObject` | `"lynx" \| "globalThis"` | `'lynx'` | This option indicates what global object will be used to mount the library. In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default. If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`. |
 | <a id="retries"></a>`retries` | `number` | `0` | The number of additional attempts when fetching the external bundle times out (`response.code === -2`). |

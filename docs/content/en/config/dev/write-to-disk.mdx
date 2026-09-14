@@ -8,11 +8,8 @@ outline: false
 {/* @api ConfigOption package="rspeedy" path="dev.writeToDisk" */}
 
 - **Type:** `boolean | ((filename: string) => boolean)`
-- **Lynx default:** `true`
-- **Rsbuild default:** `false`
+- **Default:** `true`
 
-Used to control whether the build artifacts of the development environment are written to the disk.
-
-This is a standard Rsbuild option with a different default in Lynx builds. See the [Rsbuild documentation](https://rsbuild.rs/config/dev/write-to-disk) for the full description.
+Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the [Rsbuild documentation](https://rsbuild.rs/config/dev/write-to-disk).
 
 {/* @api-end */}

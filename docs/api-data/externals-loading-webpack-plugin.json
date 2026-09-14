@@ -44,8 +44,7 @@
           "params": [
             {
               "name": "compiler",
-              "type": "Compiler",
-              "external": "@rspack/core"
+              "type": "Compiler"
             }
           ],
           "returns": {
@@ -72,7 +71,6 @@
           "refs": [
             "ExternalValue"
           ],
-          "external": "typescript",
           "summary": "Specify the externals to be loaded. The externals should be Lynx Bundles.",
           "examples": [
             "Load `lodash` library in background layer and `main-thread` layer.\n\n```js\nmodule.exports = {\n plugins: [\n   new ExternalsLoadingPlugin({\n     externals: {\n       lodash: {\n         url: 'http://lodash.lynx.bundle',\n         background: { sectionPath: 'background' },\n         mainThread: { sectionPath: 'mainThread' },\n       },\n     },\n   }),\n ],\n};\n```",

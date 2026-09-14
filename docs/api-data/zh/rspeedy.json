@@ -196,8 +196,8 @@
     "text": "指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。"
   },
   "Config.mode.default": {
-    "hash": "30c3588c",
-    "text": "取决于 `process.env.NODE_ENV`：当 `NODE_ENV` 为 `'production'` 时为 `'production'`，为 `'development'` 时为 `'development'`，其他情况下为 `'none'`。使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，而 `rspeedy build` 默认为 `'production'`。"
+    "hash": "0c08a974",
+    "text": "取决于 `process.env.NODE_ENV`：\n\n- `NODE_ENV` 为 `'production'` 时为 `'production'`\n- `NODE_ENV` 为 `'development'` 时为 `'development'`\n- 其他情况为 `'none'`\n\n使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，`rspeedy build` 默认为 `'production'`。"
   },
   "Config.mode.example.0": {
     "hash": "100896b1",

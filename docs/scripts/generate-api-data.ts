@@ -49,7 +49,6 @@ export interface ApiMember {
   type: string;
   ref?: string;
   refs?: string[];
-  external?: string;
   default?: string;
   summary?: string;
   remarks?: string;
@@ -69,7 +68,6 @@ export interface ApiParam {
   type: string;
   ref?: string;
   refs?: string[];
-  external?: string;
   optional?: boolean;
   description?: string;
 }
@@ -234,9 +232,9 @@ function uniqueLocalNames(
 function typeInfo(
   type: Type | undefined,
   project: ProjectReflection,
-): Pick<ApiMember, 'type' | 'ref' | 'refs' | 'external'> {
+): Pick<ApiMember, 'type' | 'ref' | 'refs'> {
   if (!type) return { type: 'unknown' };
-  const out: Pick<ApiMember, 'type' | 'ref' | 'refs' | 'external'> = {
+  const out: Pick<ApiMember, 'type' | 'ref' | 'refs'> = {
     type: type.toString(),
   };
   const top = (type instanceof UnionType ? type.types : [type]).filter(t =>
@@ -248,12 +246,6 @@ function typeInfo(
   collectRefs(type, all);
   const refs = uniqueLocalNames(all, project, LINKABLE);
   if (refs.length > 0) out.refs = refs;
-  if (
-    type instanceof ReferenceType && !type.reflection && type.package
-    && !type.package.startsWith('@lynx-js/')
-  ) {
-    out.external = type.package;
-  }
   return out;
 }
 

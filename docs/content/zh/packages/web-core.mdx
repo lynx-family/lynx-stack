@@ -38,10 +38,10 @@ html(strings: TemplateStringsArray, values: any[]): string
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `strings` | `TemplateStringsArray` (来自 typescript) |  |
+| `strings` | `TemplateStringsArray` |  |
 | `values` | `any[]` |  |
 
-**返回值:** `string`
+**返回值：** `string`
 
 ### `registerAttributeHandler()` \{#registerattributehandler\}
 
@@ -56,7 +56,7 @@ registerAttributeHandler(key: string, args_0: boolean): (this: T, target: Attrib
 | `key` | `string` |  |
 | `args_0` | `boolean` |  |
 
-**返回值:** `(this: T, target: `[`AttributeChangeHandler`](#attributechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+**返回值：** `(this: T, target: `[`AttributeChangeHandler`](#attributechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
 
 ### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
 
@@ -70,7 +70,7 @@ registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStat
 | --- | --- | --- |
 | `key` | `string` |  |
 
-**返回值:** `(this: T, target: `[`EventStatusChangeHandler`](#eventstatuschangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+**返回值：** `(this: T, target: `[`EventStatusChangeHandler`](#eventstatuschangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
 
 ### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
 
@@ -84,7 +84,7 @@ registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | 
 | --- | --- | --- |
 | `key` | `string` |  |
 
-**返回值:** `(this: T, target: `[`StyleChangeHandler`](#stylechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+**返回值：** `(this: T, target: `[`StyleChangeHandler`](#stylechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
 
 ### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
 
@@ -99,10 +99,10 @@ bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, even
 | `this` | `T` |  |
 | `elementGetter` | `(this: T) => HTMLElement` |  |
 | `eventName` | `string` |  |
-| `eventListener` | `EventListener` (来自 typescript) |  |
-| `options?` | `AddEventListenerOptions` (来自 typescript) |  |
+| `eventListener` | `EventListener` |  |
+| `options?` | `AddEventListenerOptions` |  |
 
-**返回值:** `(this: T, enable: boolean) => void`
+**返回值：** `(this: T, enable: boolean) => void`
 
 ### `bindToAttribute()` \{#bindtoattribute\}
 
@@ -119,7 +119,7 @@ bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName:
 | `attributeName` | `string` |  |
 | `valProcessor?` | `(value: string \| null) => string \| null` |  |
 
-**返回值:** `(this: T, newVal: string | null) => void`
+**返回值：** `(this: T, newVal: string | null) => void`
 
 ### `bindToStyle()` \{#bindtostyle\}
 
@@ -137,7 +137,7 @@ bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string,
 | `valProcessor?` | `(value: string) => string` |  |
 | `important?` | `boolean` |  |
 
-**返回值:** `(this: T, newVal: string | null) => void`
+**返回值：** `(this: T, newVal: string | null) => void`
 
 ### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
 
@@ -149,7 +149,7 @@ boostedQueueMicrotask(foo: CallableFunction, that?: any): void
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `foo` | `CallableFunction` (来自 typescript) |  |
+| `foo` | `CallableFunction` |  |
 | `that?` | `any` |  |
 
 ### `Component()` \{#component\}
@@ -166,7 +166,7 @@ Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass
 | `attributeReactiveClassesOptional` | `(`[`AttributeReactiveClass`](#attributereactiveclass)`<T> \| undefined)[]` |  |
 | `template?` | `string` |  |
 
-**返回值:** `(target: T, context: ClassDecoratorContext<T>) => T`
+**返回值：** `(target: T, context: ClassDecoratorContext<T>) => T`
 
 ### `genDomGetter()` \{#gendomgetter\}
 
@@ -182,7 +182,7 @@ genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): Plain
 | `queryableElementGetter` | `() => ShadowRoot` |  |
 | `selector` | `string` |  |
 
-**返回值:** `InternalDomGetter<T>`
+**返回值：** `InternalDomGetter<T>`
 
 ## 类 \{#\}
 
@@ -301,7 +301,7 @@ React 19 示例
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
-| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` (来自 typescript) | 对于 attribute="false"， 默认会执行 removeAttribute； 在此处设置可禁用该行为； |
+| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | 对于 attribute="false"， 默认会执行 removeAttribute； 在此处设置可禁用该行为； |
 | <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
 | <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
 | <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: `[`AttributeReactiveClass`](#attributereactiveclass)`<`[`WebComponentClass`](#webcomponentclass)`>) => void` |  |

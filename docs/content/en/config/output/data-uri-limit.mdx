@@ -8,11 +8,8 @@ outline: false
 {/* @api ConfigOption package="rspeedy" path="output.dataUriLimit" */}
 
 - **Type:** `number | DataUriLimit`
-- **Lynx default:** `2048`
-- **Rsbuild default:** `{ svg: 4096, font: 4096, image: 4096, media: 4096, assets: 4096 }`
+- **Default:** `2048`
 
-The `Output.dataUriLimit` option is used to set the size threshold to inline static assets such as images and fonts.
-
-This is a standard Rsbuild option with a different default in Lynx builds. See the [Rsbuild documentation](https://rsbuild.rs/config/output/data-uri-limit) for the full description.
+Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the [Rsbuild documentation](https://rsbuild.rs/config/output/data-uri-limit).
 
 {/* @api-end */}

@@ -7,11 +7,12 @@ outline: false
 
 {/* @api ConfigOption package="rspeedy" path="environments" */}
 
-- **Type:** `Record<string, EnvironmentConfig>` (from typescript)
-- **Lynx default:** When this option is unset, Rspeedy passes `{ lynx: {} }` to Rsbuild.
+- **Type:** `Record<string, EnvironmentConfig>`
 
-The `Config.environments` option is used to set the output environment.
+Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the [Rsbuild documentation](https://rsbuild.rs/config/environments).
 
-This is a standard Rsbuild option with a different default in Lynx builds. See the [Rsbuild documentation](https://rsbuild.rs/config/environments) for the full description.
+## Default \{#default\}
+
+- When this option is unset, Rspeedy passes `{ lynx: {} }` to Rsbuild.
 
 {/* @api-end */}

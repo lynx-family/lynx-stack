@@ -232,7 +232,6 @@
         {
           "name": "variables",
           "type": "Record<string, string>",
-          "external": "typescript",
           "kind": "property"
         }
       ]
@@ -371,8 +370,7 @@
           "params": [
             {
               "name": "root",
-              "type": "StyleSheet",
-              "external": "@types/css-tree"
+              "type": "StyleSheet"
             },
             {
               "name": "context",
@@ -443,7 +441,6 @@
         {
           "name": "variables",
           "type": "Record<string, string>",
-          "external": "typescript",
           "kind": "property"
         }
       ]
@@ -513,7 +510,6 @@
           "name": "defaultValueMap",
           "optional": true,
           "type": "Record<string, string>",
-          "external": "typescript",
           "kind": "property"
         },
         {

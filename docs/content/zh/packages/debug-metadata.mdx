@@ -51,7 +51,7 @@ assertUiNode(value: unknown, path: string): asserts value is UiNode
 | `value` | `unknown` |  |
 | `path` | `string` |  |
 
-**返回值:** `asserts value is UiNode`
+**返回值：** `asserts value is UiNode`
 
 ### `buildUiSourceMapLookup()` \{#builduisourcemaplookup\}
 
@@ -68,7 +68,7 @@ buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceL
 | --- | --- | --- |
 | `uiSourceMap` | [`UiSourceMapData`](#uisourcemapdata) |  |
 
-**返回值:** `Map<number, Omit<`[`UiSourceLocation`](#uisourcelocation)`, "repo">>`
+**返回值：** `Map<number, Omit<`[`UiSourceLocation`](#uisourcelocation)`, "repo">>`
 
 ### `findArtifact()` \{#findartifact\}
 
@@ -84,7 +84,7 @@ findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifac
 | `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename: string }` |  |
 
-**返回值:** [`Artifact`](#artifact)` | undefined`
+**返回值：** [`Artifact`](#artifact)` | undefined`
 
 ### `findBytecodeDebugInfo()` \{#findbytecodedebuginfo\}
 
@@ -100,7 +100,7 @@ findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string })
 | `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename: string }` |  |
 
-**返回值:** [`BytecodeDebugInfoSource`](#bytecodedebuginfosource)` | undefined`
+**返回值：** [`BytecodeDebugInfoSource`](#bytecodedebuginfosource)` | undefined`
 
 ### `findSourceMap()` \{#findsourcemap\}
 
@@ -118,7 +118,7 @@ findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: st
 | `metadata` | [`DebugMetadataAsset`](#debugmetadataasset) |  |
 | `query` | `{ filename?: string; key?: string; path?: string }` |  |
 
-**返回值:** [`SourceMapDebugSource`](#sourcemapdebugsource)` | undefined`
+**返回值：** [`SourceMapDebugSource`](#sourcemapdebugsource)` | undefined`
 
 ### `isUiSourceMapData()` \{#isuisourcemapdata\}
 
@@ -135,7 +135,7 @@ isUiSourceMapData(value: unknown): value is UiSourceMapData
 | --- | --- | --- |
 | `value` | `unknown` |  |
 
-**返回值:** `value is UiSourceMapData`
+**返回值：** `value is UiSourceMapData`
 
 ### `knownFields()` \{#knownfields\}
 
@@ -146,7 +146,7 @@ knownFields(): string[]
 当前已注册的所有字段名。可用于 `400 invalid_field`
 响应，使列表在注册新字段时自动更新。
 
-**返回值:** `string[]`
+**返回值：** `string[]`
 
 ### `normalizeRepo()` \{#normalizerepo\}
 
@@ -162,7 +162,7 @@ normalizeRepo(remoteUrl: string | null): string | null
 | --- | --- | --- |
 | `remoteUrl` | `string \| null` |  |
 
-**返回值:** `string | null`
+**返回值：** `string | null`
 
 ### `remapUiTree()` \{#remapuitree\}
 
@@ -183,7 +183,7 @@ remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUi
 | `root` | [`UiNode`](#uinode) |  |
 | `loadMetadata` | [`DebugMetadataLoader`](#debugmetadataloader) |  |
 
-**返回值:** `Promise<`[`RemappedUiNode`](#remappeduinode)`>`
+**返回值：** `Promise<`[`RemappedUiNode`](#remappeduinode)`>`
 
 ### `resolveField()` \{#resolvefield\}
 
@@ -206,7 +206,7 @@ resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): 
 | `field` | `string` |  |
 | `params` | [`QueryParams`](#queryparams) |  |
 
-**返回值:** [`ResolveResult`](#resolveresult)` | undefined`
+**返回值：** [`ResolveResult`](#resolveresult)` | undefined`
 
 ## 常量 \{#\}
 
@@ -366,7 +366,7 @@ key，以便使用方（Lynx 运行时、反向符号化服务）
 | <a id="lepusngfunctioninfo-function-name"></a>`function_name` | `string` |  |
 | <a id="lepusngfunctioninfo-line-col"></a>`line_col` | `{ column: number; line: number }[]` | 解码后的行/列对，编译器每产出一个源码位置对应一项。 `line_col.length` 与 `pc2line_buf` 中编码的映射数量一致。 |
 | <a id="lepusngfunctioninfo-line-number"></a>`line_number` | `number` | 函数定义起始处的源码行号（从 1 开始）。 |
-| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` (来自 typescript) | 可选的 PC 偏移 → 调用方源码片段映射。key 为字符串化的 PC 偏移；value 为该字节码内联来源的原始函数体。 可用于对调用栈进行反内联。 |
+| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` | 可选的 PC 偏移 → 调用方源码片段映射。key 为字符串化的 PC 偏移；value 为该字节码内联来源的原始函数体。 可用于对调用栈进行反内联。 |
 | <a id="lepusngfunctioninfo-pc2line-buf"></a>`pc2line_buf` | `number[]` | PC 到行号映射表的变长编码。 解码规则见 lepusNG 字节码 debug-info 规范。 |
 | <a id="lepusngfunctioninfo-pc2line-len"></a>`pc2line_len` | `number` | `pc2line_buf` 的字节长度。 |
 

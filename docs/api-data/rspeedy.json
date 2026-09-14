@@ -201,7 +201,6 @@
           "name": "environments",
           "optional": true,
           "type": "Record<string, EnvironmentConfig>",
-          "external": "typescript",
           "summary": "The [`Config.environments`](api:Config.environments) option is used to set the output environment.",
           "remarks": "Normally you don't need this if you are not using Lynx for Web.",
           "examples": [
@@ -220,7 +219,7 @@
             "```ts\nIf the value of `mode` is `'development'`:\n\n- Enable HMR and register the {@link https://rspack.rs/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.\n\n- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap} for details.\n\n- The `process.env.NODE_ENV` in the source code will be replaced with `'development'`.\n\n- The `import.meta.env.MODE` in the source code will be replaced with `'development'`.\n\n- The `import.meta.env.DEV` in the source code will be replaced with `true`.\n\n- The `import.meta.env.PROD` in the source code will be replaced with `false`.\n```",
             "```ts\nIf the value of `mode` is `'production'`:\n\n- Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.\n\n- Generated JavaScript and CSS filenames will have hash suffixes, see {@link Output.filenameHash}.\n\n- Generated CSS Modules classnames will be shorter, see {@link CssModules.localIdentName}.\n\n- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.\n\n- The `process.env.NODE_ENV` in the source code will be replaced with `'production'`.\n\n- The `import.meta.env.MODE` in the source code will be replaced with `'production'`.\n\n- The `import.meta.env.DEV` in the source code will be replaced with `false`.\n\n- The `import.meta.env.PROD` in the source code will be replaced with `true`.\n```"
           ],
-          "default": "Depends on `process.env.NODE_ENV`: `'production'` when `NODE_ENV` is `'production'`, `'development'` when `NODE_ENV` is `'development'`, and `'none'` otherwise. When using Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, while `rspeedy build` defaults to `'production'`.",
+          "default": "Depends on `process.env.NODE_ENV`:\n\n- `'production'` when `NODE_ENV` is `'production'`\n- `'development'` when `NODE_ENV` is `'development'`\n- `'none'` otherwise\n\nWith Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, and `rspeedy build` defaults to `'production'`.",
           "kind": "property"
         },
         {
@@ -251,7 +250,6 @@
           "name": "plugins",
           "optional": true,
           "type": "RsbuildPlugins",
-          "external": "@rsbuild/core",
           "summary": "The `plugins` option is used to customize the build process in a variety of ways.",
           "remarks": "Rspeedy uses the plugin APIs from [Rsbuild](https://rsbuild.rs/plugins/dev/index). See the corresponding document for developing a plugin.",
           "default": "`undefined`",
@@ -768,7 +766,6 @@
           "name": "entries",
           "optional": true,
           "type": "RsbuildEntry",
-          "external": "@rsbuild/core",
           "summary": "Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment.",
           "kind": "property"
         },
@@ -781,7 +778,6 @@
         {
           "name": "logger",
           "type": "Logger",
-          "external": "@rsbuild/core",
           "summary": "Get the Rspeedy logger.",
           "kind": "property"
         },
@@ -803,7 +799,6 @@
           "name": "assets",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of other assets, except for above (image, svg, font, html, wasm...)",
           "default": "`'[name].[contenthash:8][ext]'`",
           "kind": "property"
@@ -830,7 +825,6 @@
           "name": "css",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of the CSS files.",
           "examples": [
             "- Using a function to dynamically set the filename based on the file information:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      css: (pathData, assetInfo) => {\n        console.log(pathData); // You can check the contents of pathData here\n\n        if (pathData.chunk?.name === 'index') {\n          return isProd ? '[name].[contenthash:8].css' : '[name].css';\n        }\n        return '/some-path/[name].css';\n      },\n    },\n  },\n})\n```"
@@ -842,7 +836,6 @@
           "name": "font",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of the font files.",
           "default": "`'[name].[contenthash:8][ext]'`",
           "kind": "property"
@@ -851,7 +844,6 @@
           "name": "image",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of non-SVG images.",
           "default": "`'[name].[contenthash:8][ext]'`",
           "kind": "property"
@@ -860,7 +852,6 @@
           "name": "js",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of the JavaScript files.",
           "examples": [
             "- Using a function to dynamically set the filename based on the file information:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      js: (pathData, assetInfo) => {\n        console.log(pathData); // You can check the contents of pathData here\n\n        if (pathData.chunk?.name === 'index') {\n          return isProd ? '[name].[contenthash:8].js' : '[name].js';\n        }\n        return '/some-path/[name].js';\n      },\n    },\n  },\n})\n```"
@@ -872,7 +863,6 @@
           "name": "media",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of media assets, such as video.",
           "default": "`'[name].[contenthash:8][ext]'`",
           "kind": "property"
@@ -881,7 +871,6 @@
           "name": "svg",
           "optional": true,
           "type": "Filename",
-          "external": "@rspack/core",
           "summary": "The name of the SVG images.",
           "default": "`'[name].[contenthash:8].svg'`",
           "kind": "property"
@@ -969,7 +958,6 @@
           "name": "backgroundOptions",
           "optional": true,
           "type": "SwcJsMinimizerRspackPluginOptions",
-          "external": "@rspack/core",
           "summary": "[`Minify.backgroundOptions`](api:Minify.backgroundOptions) is used to override\n[`Minify.jsOptions`](api:Minify.jsOptions) for background-thread bundles.",
           "remarks": "This option is deep-merged into [`Minify.jsOptions`](api:Minify.jsOptions).\nIt is mainly used together with ReactLynx dual-thread outputs so that\nmain-thread and background-thread bundles can use different compress rules.",
           "default": "`undefined`",
@@ -1002,7 +990,6 @@
           "name": "jsOptions",
           "optional": true,
           "type": "SwcJsMinimizerRspackPluginOptions",
-          "external": "@rspack/core",
           "summary": "[`Minify.jsOptions`](api:Minify.jsOptions) is used to configure SWC minification options.",
           "remarks": "For detailed configurations, please refer to [SwcJsMinimizerRspackPlugin](https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin).",
           "examples": [
@@ -1015,7 +1002,6 @@
           "name": "mainThreadOptions",
           "optional": true,
           "type": "SwcJsMinimizerRspackPluginOptions",
-          "external": "@rspack/core",
           "summary": "[`Minify.mainThreadOptions`](api:Minify.mainThreadOptions) is used to override\n[`Minify.jsOptions`](api:Minify.jsOptions) for main-thread bundles.",
           "remarks": "This option is deep-merged into [`Minify.jsOptions`](api:Minify.jsOptions).\nIt is mainly used together with ReactLynx dual-thread outputs so that\nmain-thread and background-thread bundles can use different compress rules.",
           "examples": [
@@ -1105,7 +1091,6 @@
           "name": "distPath",
           "optional": true,
           "type": "DistPathConfig",
-          "external": "@rsbuild/core",
           "summary": "Set the directory of the dist files.",
           "remarks": "More options can be found at [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path).",
           "examples": [
@@ -1147,7 +1132,6 @@
           "name": "inlineScripts",
           "optional": true,
           "type": "InlineChunkConfig",
-          "external": "@rsbuild/core",
           "summary": "The [`Output.inlineScripts`](api:Output.inlineScripts) option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).",
           "remarks": "This is different with [output.inlineScripts](https://rsbuild.rs/config/output/inline-scripts) since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).\n\nThere are two points that need to be especially noted:\n\n1. Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.\n\n2. Currently, when `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.",
           "examples": [
@@ -1285,7 +1269,6 @@
           "name": "alias",
           "optional": true,
           "type": "Record<string, string | false | string[]>",
-          "external": "typescript",
           "summary": "Create aliases to `import` or `require` certain modules more easily.",
           "examples": [
             "A trailing `$` can also be added to the given object's keys to signify an exact match:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  resolve: {\n    alias: {\n      xyz$: 'path/to/file.js',\n    },\n  },\n})\n```\n\nwhich would yield these results:\n\n```js\nimport Test1 from 'xyz'; // Exact match, so path/to/file.js is resolved and imported\nimport Test2 from 'xyz/file.js'; // Not an exact match, normal resolution takes place\n```",
@@ -1392,7 +1375,6 @@
           "name": "headers",
           "optional": true,
           "type": "Record<string, string | string[]>",
-          "external": "typescript",
           "summary": "Adds headers to all responses.",
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    headers: {\n      'Access-Control-Allow-Origin': '**',\n    },\n  },\n})\n```"
@@ -1428,7 +1410,6 @@
           "name": "proxy",
           "optional": true,
           "type": "ProxyConfig",
-          "external": "@rsbuild/core",
           "summary": "Configure proxy rules for the dev server or preview server to proxy requests to the specified service.",
           "examples": [
             "```js\nexport default {\n  server: {\n    proxy: {\n      // http://localhost:3000/api -> http://localhost:3000/api\n      // http://localhost:3000/api/foo -> http://localhost:3000/api/foo\n      '/api': 'http://localhost:3000',\n    },\n  },\n}\n```"
@@ -1456,7 +1437,6 @@
           "name": "alias",
           "optional": true,
           "type": "Record<string, string | false | string[]>",
-          "external": "typescript",
           "summary": "`Resolve.alias`\n\n - Use [`Resolve.alias`](api:Resolve.alias) instead.",
           "deprecated": "Deprecated.",
           "default": "`undefined`",
@@ -1466,7 +1446,6 @@
           "name": "assetsInclude",
           "optional": true,
           "type": "RuleSetCondition",
-          "external": "@rspack/core",
           "summary": "Include additional files that should be treated as static assets.",
           "remarks": "By default, Rsbuild treats common image, font, audio, and video files as static assets.\nThrough the source.assetsInclude config, you can specify additional file types that should be treated as static assets.\nThese added static assets are processed using the same rules as the built-in supported static assets。\n\nThe usage of `source.assetsInclude` is consistent with [Condition](https://rspack.rs/config/module#condition)\nin Rspack, which supports passing in strings, regular expressions, arrays of conditions, or logical conditions\nto match the module path or assets.",
           "examples": [
@@ -1492,7 +1471,6 @@
           "name": "define",
           "optional": true,
           "type": "DefinePluginOptions",
-          "external": "@rspack/core",
           "summary": "The `define` options is used to define some values or expressions at compile time.",
           "remarks": "- If the value provided is a string, it will be utilized as a code fragment.\n\n- If the value provided is an object, all its keys will be defined in the same manner.\n\n- If the value isn't a string, it will be stringified, with functions included.\n\n- Notably, if a `typeof` prefix is attached to the key, it will be exclusively defined for `typeof` calls.\"",
           "examples": [
@@ -1609,7 +1587,6 @@
           "name": "js",
           "optional": true,
           "type": "DevTool",
-          "external": "@rspack/core",
           "summary": "How the source map should be generated. Setting it to `false` will disable the source map.",
           "remarks": "See [Rspack - Devtool](https://rspack.rs/config/devtool) for details.",
           "examples": [
@@ -1632,7 +1609,6 @@
           "name": "bundlerChain",
           "optional": true,
           "type": "ToolsBundlerChainConfig",
-          "external": "@rsbuild/core",
           "summary": "The [`Tools.bundlerChain`](api:Tools.bundlerChain) changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain).",
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    bundlerChain(chain) {\n      chain.resolve.fullySpecified(true)\n    },\n  },\n})\n```\n\nSee [rspack-chain](https://github.com/rspack-contrib/rspack-chain) for details."
@@ -1685,7 +1661,6 @@
           "name": "rspack",
           "optional": true,
           "type": "ToolsRspackConfig",
-          "external": "@rsbuild/core",
           "summary": "The [`Tools.rspack`](api:Tools.rspack) controls the options of [Rspack](https://rspack.rs/).",
           "examples": [
             "- Use object config\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack: {\n      resolve: {\n        fullySpecified: true,\n      },\n    },\n  },\n})\n```\n\nSee [Rspack - Configuration](https://rspack.rs/config/index) for details.",
@@ -1700,7 +1675,6 @@
           "name": "swc",
           "optional": true,
           "type": "ToolsSwcConfig",
-          "external": "@rsbuild/core",
           "summary": "The [`Tools.swc`](api:Tools.swc) controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader).",
           "default": "`undefined`",
           "kind": "property"
@@ -1927,7 +1901,6 @@
               "refs": [
                 "Config"
               ],
-              "external": "typescript",
               "description": "The promise that resolves to a config of Rspeedy."
             }
           ],

@@ -170,7 +170,6 @@
           "refs": [
             "LynxEncodePluginOptions"
           ],
-          "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`LynxEncodePlugin`](api:LynxEncodePlugin) uses.",
           "examples": [
             "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
@@ -186,7 +185,6 @@
         {
           "name": "encodePool",
           "type": "Tinypool",
-          "external": "tinypool",
           "summary": "Shared TASM encode worker pool: multiple entries (and multiple\n`LynxEncodePlugin` instances in the same process) share its worker\nslots for parallel encode; watch-mode rebuilds keep the same workers\nwarm. `availableParallelism()` honors cgroup CPU limits (containers,\nCI runners), so we don't need to subtract a core ourselves.",
           "kind": "property"
         },
@@ -198,7 +196,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],
@@ -243,7 +240,6 @@
           "refs": [
             "LynxTemplatePluginOptions"
           ],
-          "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`LynxTemplatePlugin`](api:LynxTemplatePlugin) uses.",
           "examples": [
             "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxTemplatePlugin({\n      ...LynxTemplatePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
@@ -258,7 +254,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],
@@ -303,8 +298,7 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation",
-              "external": "@rspack/core"
+              "type": "Compilation"
             },
             {
               "name": "chunkId",
@@ -323,8 +317,7 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation",
-              "external": "@rspack/core"
+              "type": "Compilation"
             }
           ],
           "returns": {
@@ -376,8 +369,7 @@
           "params": [
             {
               "name": "compiler",
-              "type": "Compiler",
-              "external": "@rspack/core"
+              "type": "Compiler"
             }
           ],
           "returns": {
@@ -391,8 +383,7 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation",
-              "external": "@rspack/core"
+              "type": "Compilation"
             },
             {
               "name": "assets",
@@ -479,20 +470,17 @@
         {
           "name": "compilerOptions",
           "type": "Record<string, string | boolean>",
-          "external": "typescript",
           "kind": "property"
         },
         {
           "name": "customSections",
           "type": "Record<string, { content: string | Record<string, unknown> | undefined; encoding?: \"JsBytecode\" | \"CSS\"; type?: \"lazy\" }>",
-          "external": "typescript",
           "kind": "property"
         },
         {
           "name": "elementTemplate",
           "optional": true,
           "type": "Record<string, unknown>",
-          "external": "typescript",
           "summary": "Element template data used by encoders that support element template output.",
           "kind": "property"
         },
@@ -505,7 +493,6 @@
           "name": "manifest",
           "optional": true,
           "type": "Record<string, string | undefined>",
-          "external": "typescript",
           "kind": "property"
         }
       ]
@@ -738,7 +725,6 @@
           "name": "emittedWarnings",
           "optional": true,
           "type": "Set<string>",
-          "external": "typescript",
           "summary": "A mutable set used to skip diagnostics that were already emitted.",
           "kind": "property"
         },
@@ -858,7 +844,6 @@
         {
           "name": "afterEmit",
           "type": "AsyncSeriesWaterfallHook<{ outputName: string }>",
-          "external": "@rspack/lite-tapable",
           "summary": "Called after the template is emitted.",
           "alpha": true,
           "kind": "property"
@@ -866,7 +851,6 @@
         {
           "name": "asyncChunkName",
           "type": "SyncWaterfallHook<string>",
-          "external": "@rspack/lite-tapable",
           "summary": "Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.",
           "alpha": true,
           "kind": "property"
@@ -877,7 +861,6 @@
           "refs": [
             "EncodeOptions"
           ],
-          "external": "@rspack/lite-tapable",
           "summary": "Called before the template is emitted. Can be used to modify the template.",
           "alpha": true,
           "kind": "property"
@@ -885,7 +868,6 @@
         {
           "name": "beforeEncode",
           "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>",
-          "external": "@rspack/lite-tapable",
           "summary": "Called before the encode process. Can be used to modify the encode options.",
           "alpha": true,
           "kind": "property"
@@ -896,7 +878,6 @@
           "refs": [
             "EncodeOptions"
           ],
-          "external": "@rspack/lite-tapable",
           "summary": "Call the encode process.",
           "alpha": true,
           "kind": "property"

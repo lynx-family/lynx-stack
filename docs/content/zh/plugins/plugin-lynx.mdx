@@ -73,20 +73,20 @@ rsbuild build
 
 ### `output` \{#output\}
 
-- **类型:** [`LynxOutput`](#output)
+- **类型：** [`LynxOutput`](#output)
 
 构建产物。
 
 #### `output.filename` \{#output-filename\}
 
-- **类型:** [`LynxFilename`](#output-filename)
+- **类型：** [`LynxFilename`](#output-filename)
 
 输出文件的名称。
 
 ##### `output.filename.bundle` \{#output-filename-bundle\}
 
-- **类型:** [`BundleFilename`](#bundlefilename)
-- **默认值:** `'[name].[platform].bundle'`
+- **类型：** [`BundleFilename`](#bundlefilename)
+- **默认值：** `'[name].[platform].bundle'`
 
 bundle 文件的名称。
 
@@ -97,24 +97,24 @@ bundle 文件的名称。
 
 #### `output.minify` \{#output-minify\}
 
-- **类型:** [`LynxMinify`](#output-minify)
+- **类型：** [`LynxMinify`](#output-minify)
 
 按线程配置的压缩器选项。
 
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="output-minify-backgroundoptions"></a>`backgroundOptions` | `SwcJsMinimizerRspackPluginOptions` (来自 [@rspack/core](https://rspack.rs/config/)) |  | 后台线程的压缩器选项。 |
-| <a id="output-minify-mainthreadoptions"></a>`mainThreadOptions` | `SwcJsMinimizerRspackPluginOptions` (来自 [@rspack/core](https://rspack.rs/config/)) |  | 主线程的压缩器选项。 |
+| <a id="output-minify-backgroundoptions"></a>`backgroundOptions` | `SwcJsMinimizerRspackPluginOptions` |  | 后台线程的压缩器选项。 |
+| <a id="output-minify-mainthreadoptions"></a>`mainThreadOptions` | `SwcJsMinimizerRspackPluginOptions` |  | 主线程的压缩器选项。 |
 
 ### `performance` \{#performance\}
 
-- **类型:** [`LynxPerformance`](#performance)
+- **类型：** [`LynxPerformance`](#performance)
 
 性能选项。
 
 #### `performance.profile` \{#performance-profile\}
 
-- **类型:** `boolean`
+- **类型：** `boolean`
 
 是否在 Lynx 运行时集成（如
 ReactLynx）中采集耗时信息。
@@ -147,7 +147,7 @@ Lynx 构建引擎是否已注册。
 | `host` | `{ isPluginExists: any }` | The Rsbuild instance or plugin API to look it up on. |
 | `environments` | `string[]` | The names of the configured environments. |
 
-**返回值:** `boolean`
+**返回值：** `boolean`
 
 ### `pluginLynx()` \{#pluginlynx\}
 
@@ -161,7 +161,7 @@ pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]
 | --- | --- | --- |
 | `options` | [`LynxPluginOptions`](#lynxpluginoptions) |  |
 
-**返回值:** `RsbuildPlugin[]`
+**返回值：** `RsbuildPlugin[]`
 
 ## 常量 \{#\}
 

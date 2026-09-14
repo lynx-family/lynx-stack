@@ -7,12 +7,27 @@ outline: false
 
 {/* @api ConfigOption package="rspeedy" path="resolve.extensions" */}
 
-- **类型:** `string[]`
-- **Lynx 默认值:** `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']` 例如，导入 './index' 时，Rsbuild 会按以下顺序尝试解析： - `./index.ts` - `./index.tsx` - `./index.mjs` - `./index.js` - `./index.jsx` - `./index.json` - `./index.cjs`
-- **Rsbuild 默认值:** `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']`
+- **类型：** `string[]`
+- **默认值：** `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
 
-导入模块时自动解析文件扩展名。这意味着你可以在导入文件时省略扩展名。
+Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 [Rsbuild 文档](https://rsbuild.rs/zh/config/resolve/extensions)。
 
-这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/resolve/extensions)。
+## 默认值 \{#default\}
+
+例如，导入 './index' 时，Rsbuild 会按以下顺序尝试解析：
+
+- `./index.ts`
+
+- `./index.tsx`
+
+- `./index.mjs`
+
+- `./index.js`
+
+- `./index.jsx`
+
+- `./index.json`
+
+- `./index.cjs`
 
 {/* @api-end */}

@@ -60,11 +60,11 @@ createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]):
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `rspack` | `Rspack` (来自 [@rspack/core](https://rspack.rs/config/)) |  |
+| `rspack` | `Rspack` |  |
 | `directory` | `string` |  |
 | `conditionNames` | `string[]` |  |
 
-**返回值:** `(request: string) => Promise<string>`
+**返回值：** `(request: string) => Promise<string>`
 
 ### `pluginReactAlias()` \{#pluginreactalias\}
 
@@ -78,6 +78,6 @@ pluginReactAlias(options: Options): RsbuildPlugin
 | --- | --- | --- |
 | `options` | [`Options`](#options) |  |
 
-**返回值:** `RsbuildPlugin`
+**返回值：** `RsbuildPlugin`
 
 {/* @api-end */}

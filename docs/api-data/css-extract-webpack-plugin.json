@@ -44,7 +44,6 @@
           "refs": [
             "CssExtractRspackPluginOptions"
           ],
-          "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) uses.",
           "kind": "property"
         },
@@ -66,7 +65,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

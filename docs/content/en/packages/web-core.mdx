@@ -36,7 +36,7 @@ html(strings: TemplateStringsArray, values: any[]): string
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `strings` | `TemplateStringsArray` (from typescript) |  |
+| `strings` | `TemplateStringsArray` |  |
 | `values` | `any[]` |  |
 
 **Returns:** `string`
@@ -97,8 +97,8 @@ bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, even
 | `this` | `T` |  |
 | `elementGetter` | `(this: T) => HTMLElement` |  |
 | `eventName` | `string` |  |
-| `eventListener` | `EventListener` (from typescript) |  |
-| `options?` | `AddEventListenerOptions` (from typescript) |  |
+| `eventListener` | `EventListener` |  |
+| `options?` | `AddEventListenerOptions` |  |
 
 **Returns:** `(this: T, enable: boolean) => void`
 
@@ -147,7 +147,7 @@ boostedQueueMicrotask(foo: CallableFunction, that?: any): void
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `foo` | `CallableFunction` (from typescript) |  |
+| `foo` | `CallableFunction` |  |
 | `that?` | `any` |  |
 
 ### `Component()` \{#component\}
@@ -298,7 +298,7 @@ React 19 Example
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
-| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` (from typescript) | for attribute="false", we will do removeAttribute by default; set here for dont do this; |
+| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | for attribute="false", we will do removeAttribute by default; set here for dont do this; |
 | <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
 | <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
 | <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: `[`AttributeReactiveClass`](#attributereactiveclass)`<`[`WebComponentClass`](#webcomponentclass)`>) => void` |  |

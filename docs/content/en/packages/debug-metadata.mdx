@@ -366,7 +366,7 @@ Debug data for one lepusNG function: maps bytecode PC offsets back to
 | <a id="lepusngfunctioninfo-function-name"></a>`function_name` | `string` |  |
 | <a id="lepusngfunctioninfo-line-col"></a>`line_col` | `{ column: number; line: number }[]` | Decoded line/column pairs, one per source position emitted by the compiler. `line_col.length` matches the number of mappings encoded in `pc2line_buf`. |
 | <a id="lepusngfunctioninfo-line-number"></a>`line_number` | `number` | Source line where the function definition starts (1-based). |
-| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` (from typescript) | Optional PC offset → caller source snippet. Keys are stringified PC offsets; values are the original function bodies the bytecode was inlined from. Useful for de-inlining stack traces. |
+| <a id="lepusngfunctioninfo-pc2caller-info"></a>`pc2caller_info` | `Record<string, string>` | Optional PC offset → caller source snippet. Keys are stringified PC offsets; values are the original function bodies the bytecode was inlined from. Useful for de-inlining stack traces. |
 | <a id="lepusngfunctioninfo-pc2line-buf"></a>`pc2line_buf` | `number[]` | Variable-length encoding of the PC-to-line table. Decode rules are documented in the lepusNG bytecode debug-info spec. |
 | <a id="lepusngfunctioninfo-pc2line-len"></a>`pc2line_len` | `number` | Length of `pc2line_buf` in bytes. |
 

@@ -153,7 +153,6 @@
           "name": "backgroundOptions",
           "optional": true,
           "type": "SwcJsMinimizerRspackPluginOptions",
-          "external": "@rspack/core",
           "summary": "The minifier options of the background thread.",
           "kind": "property"
         },
@@ -161,7 +160,6 @@
           "name": "mainThreadOptions",
           "optional": true,
           "type": "SwcJsMinimizerRspackPluginOptions",
-          "external": "@rspack/core",
           "summary": "The minifier options of the main thread.",
           "kind": "property"
         }

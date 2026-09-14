@@ -27,8 +27,7 @@
               "type": "Partial<ChunkLoadingWebpackPluginOptions>",
               "refs": [
                 "ChunkLoadingWebpackPluginOptions"
-              ],
-              "external": "typescript"
+              ]
             }
           ],
           "returns": {
@@ -44,7 +43,6 @@
           "refs": [
             "ChunkLoadingWebpackPluginOptions"
           ],
-          "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`ChunkLoadingWebpackPlugin`](api:ChunkLoadingWebpackPlugin) uses.",
           "kind": "property"
         },
@@ -56,7 +54,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

@@ -27,7 +27,7 @@ function App() {
 }
 ```
 
-**返回值:** [`InitData`](/zh/react/api/types#initdata)
+**返回值：** [`InitData`](/zh/react/api/types#initdata)
 
 ### `useInitDataChanged()` \{#useinitdatachanged\}
 
@@ -66,7 +66,7 @@ function App() {
 }
 ```
 
-**返回值:** [`GlobalProps`](/zh/react/api/types#globalprops)
+**返回值：** [`GlobalProps`](/zh/react/api/types#globalprops)
 
 ### `useGlobalPropsChanged()` \{#useglobalpropschanged\}
 
@@ -164,7 +164,7 @@ export function App() {
 | --- | --- | --- |
 | `initValue` | `T` | The init value of the `MainThreadRef`. |
 
-**返回值:** [`MainThreadRef`](/zh/react/api/types#mainthreadref)`<T>`
+**返回值：** [`MainThreadRef`](/zh/react/api/types#mainthreadref)`<T>`
 
 ### `useEffect()` \{#useeffect\}
 
@@ -177,8 +177,8 @@ useEffect(effect: EffectCallback, deps?: DependencyList): void
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `effect` | `EffectCallback` (来自 @types/react) | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` (来自 @types/react) | If present, effect will only activate if the values in the list change (using ===). |
+| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===). |
 
 ### `useLayoutEffect()` <span className="api-badge api-badge-deprecated">已废弃</span> \{#uselayouteffect\}
 
@@ -196,8 +196,8 @@ useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `effect` | `EffectCallback` (来自 @types/react) | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` (来自 @types/react) | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
+| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
 
 {/* @api-end */}
 

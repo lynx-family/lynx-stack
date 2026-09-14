@@ -75,7 +75,13 @@ export interface Config {
   /**
    * Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations.
    *
-   * @defaultValue Depends on `process.env.NODE_ENV`: `'production'` when `NODE_ENV` is `'production'`, `'development'` when `NODE_ENV` is `'development'`, and `'none'` otherwise. When using Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, while `rspeedy build` defaults to `'production'`.
+   * @defaultValue Depends on `process.env.NODE_ENV`:
+   *
+   * - `'production'` when `NODE_ENV` is `'production'`
+   * - `'development'` when `NODE_ENV` is `'development'`
+   * - `'none'` otherwise
+   *
+   * With Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, and `rspeedy build` defaults to `'production'`.
    *
    * @example
    *

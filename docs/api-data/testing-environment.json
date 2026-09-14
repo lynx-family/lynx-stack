@@ -27,7 +27,6 @@
         {
           "name": "listeners",
           "type": "Record<string, Function[]>",
-          "external": "typescript",
           "kind": "property"
         },
         {
@@ -41,8 +40,7 @@
             },
             {
               "name": "listener",
-              "type": "Function",
-              "external": "typescript"
+              "type": "Function"
             }
           ],
           "returns": {
@@ -102,8 +100,7 @@
             },
             {
               "name": "listener",
-              "type": "Function",
-              "external": "typescript"
+              "type": "Function"
             }
           ],
           "returns": {
@@ -355,7 +352,6 @@
       "name": "ElementTree",
       "kind": "typealias",
       "type": "ReturnType<typeof initElementTree>",
-      "external": "typescript",
       "summary": "The lynx element tree"
     },
     {
@@ -380,8 +376,7 @@
       "type": "Pick<T, FilterUnderscoreKeys<T>>",
       "refs": [
         "FilterUnderscoreKeys"
-      ],
-      "external": "typescript"
+      ]
     },
     {
       "name": "initElementTree",

@@ -326,7 +326,6 @@
           "name": "dslPluginName2PkgName",
           "optional": true,
           "type": "Record<string, string>",
-          "external": "typescript",
           "summary": "A map from DSL plugin name to its package name.",
           "examples": [
             "```ts\n{\n  'lynx:react': '@lynx-js/react-rsbuild-plugin',\n}\n```"

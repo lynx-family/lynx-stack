@@ -67,7 +67,7 @@ computeHeadingLevel(element: Element): number | undefined
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `Element` (from typescript) |  |
+| `element` | `Element` |  |
 
 **Returns:** `number | undefined`
 
@@ -566,7 +566,7 @@ getElementError(message: string | null, container: HTMLElement): Error
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `message` | `string \| null` |  |
-| `container` | `HTMLElement` (from typescript) |  |
+| `container` | `HTMLElement` |  |
 
 **Returns:** `Error`
 
@@ -580,7 +580,7 @@ getNodeText(node: HTMLElement): string
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `node` | `HTMLElement` (from typescript) |  |
+| `node` | `HTMLElement` |  |
 
 **Returns:** `string`
 
@@ -594,7 +594,7 @@ getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `HTMLElement` (from typescript) |  |
+| `element` | `HTMLElement` |  |
 | `queriesToBind?` | `T` |  |
 
 **Returns:** [`BoundFunctions`](#boundfunctions)`<T>`
@@ -609,7 +609,7 @@ getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `container` | `HTMLElement` (from typescript) |  |
+| `container` | `HTMLElement` |  |
 
 **Returns:** `{ [index: string]: HTMLElement[] }`
 
@@ -623,7 +623,7 @@ getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Sug
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `HTMLElement` (from typescript) |  |
+| `element` | `HTMLElement` |  |
 | `variant?` | [`Variant`](#variant) |  |
 | `method?` | [`Method`](#method) |  |
 
@@ -639,7 +639,7 @@ https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `element` | `Element` (from typescript) |  |
+| `element` | `Element` |  |
 
 **Returns:** `boolean`
 
@@ -667,7 +667,7 @@ logRoles(container: HTMLElement, options?: LogRolesOptions): string
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `container` | `HTMLElement` (from typescript) |  |
+| `container` | `HTMLElement` |  |
 | `options?` | [`LogRolesOptions`](#logrolesoptions) |  |
 
 **Returns:** `string`
@@ -1388,9 +1388,9 @@ The options for [`render`](#render).
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` (from typescript) |  |
+| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` |  |
 | <a id="waitforoptions-interval"></a>`interval?` | `number` |  |
-| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` (from typescript) |  |
+| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` |  |
 | <a id="waitforoptions-ontimeout"></a>`onTimeout?` | `(error: Error) => Error` |  |
 | <a id="waitforoptions-timeout"></a>`timeout?` | `number` |  |
 

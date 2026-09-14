@@ -54,8 +54,7 @@
           "params": [
             {
               "name": "compilation",
-              "type": "Compilation",
-              "external": "@rspack/core"
+              "type": "Compilation"
             },
             {
               "name": "args",

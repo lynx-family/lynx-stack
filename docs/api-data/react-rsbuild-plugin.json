@@ -161,7 +161,6 @@
         {
           "name": "define",
           "type": "Record<string, string>",
-          "external": "typescript",
           "summary": "Replaces variables in your code with other values or expressions at compile time.",
           "remarks": "Caveat: differences between `source.define`\n\n`defineDCE` happens before transforming `background-only` directives.\nSo it's useful for eliminating code that is only used in the background from main-thread.",
           "examples": [
@@ -257,7 +256,6 @@
           "refs": [
             "DefineDceVisitorConfig"
           ],
-          "external": "typescript",
           "summary": "Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.",
           "default": "`undefined`",
           "kind": "property"
@@ -421,7 +419,6 @@
           "refs": [
             "ShakeVisitorConfig"
           ],
-          "external": "typescript",
           "summary": "How main-thread code will be shaken.",
           "default": "`undefined`",
           "kind": "property"
@@ -501,7 +498,6 @@
         {
           "name": "afterEmit",
           "type": "AsyncSeriesWaterfallHook<{ outputName: string }>",
-          "external": "@rspack/lite-tapable",
           "summary": "Called after the template is emitted.",
           "alpha": true,
           "kind": "property"
@@ -509,7 +505,6 @@
         {
           "name": "asyncChunkName",
           "type": "SyncWaterfallHook<string>",
-          "external": "@rspack/lite-tapable",
           "summary": "Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.",
           "alpha": true,
           "kind": "property"
@@ -517,7 +512,6 @@
         {
           "name": "beforeEmit",
           "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>",
-          "external": "@rspack/lite-tapable",
           "summary": "Called before the template is emitted. Can be used to modify the template.",
           "alpha": true,
           "kind": "property"
@@ -525,7 +519,6 @@
         {
           "name": "beforeEncode",
           "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>",
-          "external": "@rspack/lite-tapable",
           "summary": "Called before the encode process. Can be used to modify the encode options.",
           "alpha": true,
           "kind": "property"
@@ -533,7 +526,6 @@
         {
           "name": "encode",
           "type": "AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>",
-          "external": "@rspack/lite-tapable",
           "summary": "Call the encode process.",
           "alpha": true,
           "kind": "property"
@@ -565,7 +557,6 @@
           "name": "rename",
           "optional": true,
           "type": "Readonly<Record<string, string>>",
-          "external": "typescript",
           "summary": "Exact mappings from source attribute names to transformed attribute names.",
           "kind": "property"
         }

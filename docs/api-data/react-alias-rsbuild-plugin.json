@@ -46,8 +46,7 @@
           "params": [
             {
               "name": "rspack",
-              "type": "Rspack",
-              "external": "@rspack/core"
+              "type": "Rspack"
             },
             {
               "name": "directory",

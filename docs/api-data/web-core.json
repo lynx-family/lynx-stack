@@ -61,8 +61,7 @@
           "params": [
             {
               "name": "dom",
-              "type": "InstanceType<T>",
-              "external": "typescript"
+              "type": "InstanceType<T>"
             }
           ],
           "returns": {
@@ -379,7 +378,6 @@
           "name": "notToFilterFalseAttributes",
           "optional": true,
           "type": "Set<string>",
-          "external": "typescript",
           "summary": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
           "kind": "property"
         },
@@ -420,14 +418,12 @@
     {
       "name": "BindToAttributeProxy",
       "kind": "typealias",
-      "type": "ReturnType<typeof bindToAttribute>",
-      "external": "typescript"
+      "type": "ReturnType<typeof bindToAttribute>"
     },
     {
       "name": "BindToStyleProxy",
       "kind": "typealias",
-      "type": "ReturnType<typeof bindToStyle>",
-      "external": "typescript"
+      "type": "ReturnType<typeof bindToStyle>"
     },
     {
       "name": "EventStatusChangeHandler",
@@ -459,8 +455,7 @@
           "params": [
             {
               "name": "strings",
-              "type": "TemplateStringsArray",
-              "external": "typescript"
+              "type": "TemplateStringsArray"
             },
             {
               "name": "values",
@@ -589,13 +584,11 @@
             },
             {
               "name": "eventListener",
-              "type": "EventListener",
-              "external": "typescript"
+              "type": "EventListener"
             },
             {
               "name": "options",
               "type": "AddEventListenerOptions",
-              "external": "typescript",
               "optional": true
             }
           ],
@@ -684,8 +677,7 @@
           "params": [
             {
               "name": "foo",
-              "type": "CallableFunction",
-              "external": "typescript"
+              "type": "CallableFunction"
             },
             {
               "name": "that",

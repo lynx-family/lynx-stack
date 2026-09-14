@@ -43,14 +43,12 @@ export interface Locale {
   classes: string;
   constants: string;
   types: string;
-  from: string;
   noDescription: string;
   generated: string;
   untranslated: string;
   source: string;
   changelog: string;
   lynxDefault: string;
-  rsbuildDefault: string;
   rsbuildDocsBase: string;
   overviewLegend: string;
   usage: string;
@@ -59,6 +57,7 @@ export interface Locale {
   rspeedyOnly: string;
   options: string;
   lynxBadge: string;
+  colon: string;
   defaultBadge: string;
   rsbuildOption: string;
   rsbuildDocsLink: string;
@@ -82,14 +81,12 @@ export const EN: Locale = {
   classes: 'Classes',
   constants: 'Constants',
   types: 'Types',
-  from: 'from',
   noDescription: 'No description yet.',
   generated: 'Generated from',
   untranslated: 'EN',
   source: 'Source',
   changelog: 'Changelog',
   lynxDefault: 'Lynx default',
-  rsbuildDefault: 'Rsbuild default',
   rsbuildDocsBase: 'https://rsbuild.rs/config/',
   overviewLegend:
     'Options marked {lynx} are specific to Lynx, and options marked {default} are Rsbuild options with a different default. Both have their own page here; the others link to the Rsbuild documentation.',
@@ -99,9 +96,10 @@ export const EN: Locale = {
   rspeedyOnly: 'Available only in `lynx.config.ts` (Rspeedy):',
   options: 'Options',
   lynxBadge: 'Lynx',
+  colon: ':',
   defaultBadge: 'Default changed',
   rsbuildOption:
-    'This is a standard Rsbuild option with a different default in Lynx builds. See the {link} for the full description.',
+    'Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the {link}.',
   rsbuildDocsLink: 'Rsbuild documentation',
 };
 
@@ -123,14 +121,12 @@ export const ZH: Locale = {
   classes: '类',
   constants: '常量',
   types: '类型',
-  from: '来自',
   noDescription: '暂无说明。',
   generated: '生成自',
   untranslated: '待翻译',
   source: '源码',
   changelog: '更新日志',
   lynxDefault: 'Lynx 默认值',
-  rsbuildDefault: 'Rsbuild 默认值',
   rsbuildDocsBase: 'https://rsbuild.rs/zh/config/',
   overviewLegend:
     '标有 {lynx} 的是 Lynx 特有配置，标有 {default} 的是默认值与 Rsbuild 不同的 Rsbuild 配置，二者在本站都有单独的页面；其余配置链接到 Rsbuild 文档。',
@@ -140,20 +136,15 @@ export const ZH: Locale = {
   rspeedyOnly: '仅在 `lynx.config.ts`（Rspeedy）中可用：',
   options: '选项',
   lynxBadge: 'Lynx',
+  colon: '：',
   defaultBadge: '默认值不同',
   rsbuildOption:
-    '这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 {link}。',
+    'Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 {link}。',
   rsbuildDocsLink: 'Rsbuild 文档',
 };
 
 export const slug = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-const EXTERNAL_DOCS: Record<string, string> = {
-  '@rsbuild/core': 'https://rsbuild.rs/config/',
-  '@rspack/core': 'https://rspack.rs/config/',
-  '@rslib/core': 'https://rslib.rs/config/',
-};
 
 function escapeMdx(md: string): string {
   const out: string[] = [];
@@ -332,17 +323,10 @@ function linkedType(type: string, names: string[], ctx: Ctx): string {
 }
 
 function typeCell(
-  m: Pick<ApiMember, 'type' | 'ref' | 'refs' | 'external'>,
+  m: Pick<ApiMember, 'type' | 'ref' | 'refs'>,
   ctx: Ctx,
 ): string {
-  const c = linkedType(m.type, m.refs ?? (m.ref ? [m.ref] : []), ctx);
-  if (m.external) {
-    const url = EXTERNAL_DOCS[m.external];
-    return url
-      ? `${c} (${ctx.l.from} [${m.external}](${url}))`
-      : `${c} (${ctx.l.from} ${m.external})`;
-  }
-  return c;
+  return linkedType(m.type, m.refs ?? (m.ref ? [m.ref] : []), ctx);
 }
 
 function badges(m: ApiMember, ctx: Ctx): string {
@@ -394,10 +378,12 @@ function metaList(
   includeType = true,
 ): string {
   const rows: string[] = [];
-  if (includeType) rows.push(`- **${ctx.l.type}:** ${typeCell(m, ctx)}`);
+  if (includeType) {
+    rows.push(`- **${ctx.l.type}${ctx.l.colon}** ${typeCell(m, ctx)}`);
+  }
   if (m.default !== undefined) {
     rows.push(
-      `- **${ctx.l.default}:** ${
+      `- **${ctx.l.default}${ctx.l.colon}** ${
         md(tr(ctx, `${key}.default`, m.default), ctx)
       }`,
     );
@@ -502,14 +488,6 @@ export function configPageUrl(path: string): string {
   return rest.length > 0
     ? `/config/${ns}/${rest.map(s => kebab(s)).join('-')}`
     : `/config/${kebab(ns)}`;
-}
-
-function rsbuildDefaultCell(text: string, ctx: Ctx): string {
-  const t = text.trim();
-  const fenced = /^```[a-z]*\n([\s\S]*?)\n```$/.exec(t)?.[1];
-  const source = fenced ?? (t.includes('`') ? undefined : t);
-  if (source === undefined) return flat(md(t, ctx));
-  return code(source.replace(/\/\/[^\n]*/g, '').replace(/\s+/g, ' ').trim());
 }
 
 interface ConfigItem {
@@ -739,35 +717,84 @@ function configUsage(path: string, m: ApiMember, ctx: Ctx): string {
   }\n\n${rsbuildConfig}\n\n${ctx.l.withRspeedy}\n\n${lynxConfig}\n\n`;
 }
 
+function splitSentences(text: string): string[] {
+  const out: string[] = [];
+  let inCode = false;
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    if (ch === '`') inCode = !inCode;
+    if (inCode) continue;
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+    else if (
+      depth === 0 && (ch === '。'
+        || (ch === '.' && /\s/.test(text[i + 1] ?? ' ')
+          && !/(?:e\.g|i\.e|etc)$/.test(text.slice(start, i))))
+    ) {
+      out.push(text.slice(start, i + 1).trim());
+      start = i + 1;
+    }
+  }
+  const rest = text.slice(start).trim();
+  if (rest) out.push(rest);
+  return out;
+}
+
+function defaultParts(
+  m: ApiMember,
+  ctx: Ctx,
+  key: string,
+): { inline: string | undefined; section: string | undefined } {
+  const text = tr(ctx, `${key}.default`, m.default)?.trim();
+  if (!text || /^`?undefined`?$/.test(text)) {
+    return { inline: undefined, section: undefined };
+  }
+  const literal = /^`[^`]+`/.exec(text)?.[0];
+  const rest = (literal ? text.slice(literal.length) : text)
+    .replace(/^[\s.,;:，。；：]+/, '')
+    .trim();
+  const inline = literal ? md(literal, ctx) : undefined;
+  if (!rest) return { inline, section: undefined };
+  const section = rest.includes('\n')
+    ? md(rest, ctx)
+    : splitSentences(rest).map(x => `- ${md(x, ctx)}`).join('\n');
+  return { inline, section };
+}
+
+function configMeta(
+  m: ApiMember,
+  ctx: Ctx,
+  inline: string | undefined,
+): string {
+  const rows = [`- **${ctx.l.type}${ctx.l.colon}** ${typeCell(m, ctx)}`];
+  if (inline) rows.push(`- **${ctx.l.default}${ctx.l.colon}** ${inline}`);
+  return `${rows.join('\n')}\n\n`;
+}
+
+function defaultSection(ctx: Ctx, section: string | undefined): string {
+  return section ? `## ${ctx.l.default} \\{#default\\}\n\n${section}\n\n` : '';
+}
+
 function renderRsbuildDefault(
   ctx: Ctx,
   path: string,
   m: ApiMember,
   key: string,
-  rsbuild: RsbuildOptions,
 ): string {
   ctx.anchors.set(path, '');
-  const rows = [
-    `- **${ctx.l.type}:** ${typeCell(m, ctx)}`,
-    `- **${ctx.l.lynxDefault}:** ${
-      flat(md(tr(ctx, `${key}.default`, m.default), ctx))
-    }`,
-  ];
-  const rs = rsbuild[path]?.default;
-  if (rs) {
-    rows.push(`- **${ctx.l.rsbuildDefault}:** ${rsbuildDefaultCell(rs, ctx)}`);
-  }
+  const { inline, section } = defaultParts(m, ctx, key);
   const warning = m.deprecated === undefined
     ? ''
     : `:::warning ${ctx.l.deprecated}\n${
       md(tr(ctx, `${key}.deprecated`, m.deprecated), ctx)
     }\n:::\n\n`;
-  const summary = tr(ctx, `${key}.summary`, m.summary);
-  const mark = untranslated(ctx, `${key}.summary`).trim();
+  const mark = untranslated(ctx, `${key}.default`).trim();
   const link = `[${ctx.l.rsbuildDocsLink}](${rsbuildUrl(path, ctx)})`;
-  return `${mark ? `${mark}\n\n` : ''}${rows.join('\n')}\n\n${warning}${
-    summary ? `${md(summary, ctx)}\n\n` : ''
-  }${ctx.l.rsbuildOption.replace('{link}', link)}\n\n`;
+  return `${mark ? `${mark}\n\n` : ''}${configMeta(m, ctx, inline)}${warning}${
+    ctx.l.rsbuildOption.replace('{link}', link)
+  }\n\n${defaultSection(ctx, section)}`;
 }
 
 function renderConfigOption(
@@ -778,7 +805,7 @@ function renderConfigOption(
   const { m, owner } = resolveConfigMember(ctx, path);
   const key = `${owner}.${m.name}`;
   if (isRsbuild(path, rsbuild)) {
-    return renderRsbuildDefault(ctx, path, m, key, rsbuild);
+    return renderRsbuildDefault(ctx, path, m, key);
   }
   ctx.anchors.set(path, '');
   const e = expandable(m, ctx);
@@ -786,7 +813,9 @@ function renderConfigOption(
     ctx.anchors.set(e.name, '');
     registerAnchors(e.members ?? [], path, ctx);
   }
-  let s = metaList(m, ctx, key) + body(m, ctx, key);
+  const { inline, section } = defaultParts(m, ctx, key);
+  let s = configMeta(m, ctx, inline) + body(m, ctx, key)
+    + defaultSection(ctx, section);
   const mark = untranslated(ctx, `${key}.summary`).trim();
   if (mark) s = `${mark}\n\n${s}`;
   s += configUsage(path, m, ctx);
@@ -920,7 +949,7 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
   }
   s += bodyText;
   if (e.default !== undefined && e.kind !== 'variable') {
-    s += `- **${ctx.l.default}:** ${
+    s += `- **${ctx.l.default}${ctx.l.colon}** ${
       md(tr(ctx, `${key}.default`, e.default), ctx)
     }\n\n`;
   }
@@ -928,7 +957,7 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
   if (sig) {
     s += paramsTable(sig.params, ctx, key);
     if (sig.returns.type && sig.returns.type !== 'void') {
-      s += `**${ctx.l.returns}:** ${typeCell(sig.returns, ctx)}${
+      s += `**${ctx.l.returns}${ctx.l.colon}** ${typeCell(sig.returns, ctx)}${
         sig.returns.description
           ? ' — '
             + md(tr(ctx, `${key}.returns`, sig.returns.description), ctx)

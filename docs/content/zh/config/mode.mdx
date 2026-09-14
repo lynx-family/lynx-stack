@@ -7,12 +7,18 @@ outline: false
 
 {/* @api ConfigOption package="rspeedy" path="mode" */}
 
-- **类型:** `"production" | "development" | "none"`
-- **Lynx 默认值:** 取决于 `process.env.NODE_ENV`：当 `NODE_ENV` 为 `'production'` 时为 `'production'`，为 `'development'` 时为 `'development'`，其他情况下为 `'none'`。使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，而 `rspeedy build` 默认为 `'production'`。
-- **Rsbuild 默认值:** Depends on `process.env.NODE_ENV`: - `'production'` if NODE_ENV is 'production' - `'development'` if NODE_ENV is 'development' - otherwise `'none'`
+- **类型：** `"production" | "development" | "none"`
 
-指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。
+Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 [Rsbuild 文档](https://rsbuild.rs/zh/config/mode)。
 
-这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/mode)。
+## 默认值 \{#default\}
+
+取决于 `process.env.NODE_ENV`：
+
+- `NODE_ENV` 为 `'production'` 时为 `'production'`
+- `NODE_ENV` 为 `'development'` 时为 `'development'`
+- 其他情况为 `'none'`
+
+使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，`rspeedy build` 默认为 `'production'`。
 
 {/* @api-end */}

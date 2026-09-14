@@ -35,7 +35,7 @@ Context 仍会跨越 portal 边界传递，portal 内的状态更新也与其他
 | `vnode` | `ComponentChild` | The React node to render into `container`. |
 | `container` | `NodesRef` | The `NodesRef` target to render into. |
 
-**返回值:** `ReactNode` — 需要在调用处放入 JSX 中的 `ReactNode` 占位符； 渲染结果会输出到 `container` 中。
+**返回值：** `ReactNode` — 需要在调用处放入 JSX 中的 `ReactNode` 占位符； 渲染结果会输出到 `container` 中。
 
 ### `createElement()` \{#createelement\}
 
@@ -52,7 +52,7 @@ createElement(type: string | ComponentType<Props>, props?: Attributes & Props | 
 | `props?` | `IntrinsicElements[Type] \| null` |  |
 | `children` | `ReactNode[]` |  |
 
-**返回值:** `ReactElement<IntrinsicElements[Type], Type>`
+**返回值：** `ReactElement<IntrinsicElements[Type], Type>`
 
 ### `cloneElement()` \{#cloneelement\}
 
@@ -64,11 +64,11 @@ cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes |
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `element` | `ReactElement<Props>` (来自 @types/react) |  |
+| `element` | `ReactElement<Props>` |  |
 | `props?` | `Partial<Props> & Attributes \| null` |  |
 | `children` | `ReactNode[]` |  |
 
-**返回值:** `ReactElement<Props>`
+**返回值：** `ReactElement<Props>`
 
 ### `runOnMainThread()` \{#runonmainthread\}
 
@@ -94,7 +94,7 @@ async function someFunction() {
 | --- | --- | --- |
 | `fn` | `Fn` | The main thread functions to be called. |
 
-**返回值:** `(args: Parameters<Fn>) => Promise<R>` — 一个函数。以要传给该主线程函数的参数调用它，即可在主线程上触发该主线程函数。该函数返回一个 Promise，其 resolve 值为该主线程函数的返回值。
+**返回值：** `(args: Parameters<Fn>) => Promise<R>` — 一个函数。以要传给该主线程函数的参数调用它，即可在主线程上触发该主线程函数。该函数返回一个 Promise，其 resolve 值为该主线程函数的返回值。
 
 ### `runOnBackground()` \{#runonbackground\}
 
@@ -108,7 +108,7 @@ runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
 | --- | --- | --- |
 | `f` | `Fn` | The js function to be called. |
 
-**返回值:** `(args: Parameters<Fn>) => Promise<R>` — 一个函数。以要传给该 JS 函数的参数调用它，即可在后台线程上触发该 JS 函数。该函数返回一个 Promise，其 resolve 值为该 JS 函数的返回值。
+**返回值：** `(args: Parameters<Fn>) => Promise<R>` — 一个函数。以要传给该 JS 函数的参数调用它，即可在后台线程上触发该 JS 函数。该函数返回一个 Promise，其 resolve 值为该 JS 函数的返回值。
 
 ### `markFirstScreenSyncReady()` \{#markfirstscreensyncready\}
 
@@ -151,9 +151,9 @@ export default withInitDataInState(App);
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `App` | `ComponentClass<P, S>` (来自 @types/react) | The class component to be wrapped by the HOC. |
+| `App` | `ComponentClass<P, S>` | The class component to be wrapped by the HOC. |
 
-**返回值:** `ComponentClass<P, S>` — 若传入的不是类组件，则返回原组件；否则返回一个新的类组件，          该组件具备 `initData` 注入和 state 更新功能。
+**返回值：** `ComponentClass<P, S>` — 若传入的不是类组件，则返回原组件；否则返回一个新的类组件，          该组件具备 `initData` 注入和 state 更新功能。
 
 ## 常量 \{#\}
 

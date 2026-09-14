@@ -48,8 +48,7 @@
           "params": [
             {
               "name": "element",
-              "type": "ReactElement<Props>",
-              "external": "@types/react"
+              "type": "ReactElement<Props>"
             },
             {
               "name": "props",
@@ -295,8 +294,7 @@
           "params": [
             {
               "name": "element",
-              "type": "ReactElement<Props>",
-              "external": "@types/react"
+              "type": "ReactElement<Props>"
             },
             {
               "name": "props",
@@ -377,14 +375,12 @@
       "refs": [
         "GlobalProps"
       ],
-      "external": "@types/react",
       "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.\nThis should be used with [`GlobalPropsProvider`](api:GlobalPropsProvider)"
     },
     {
       "name": "GlobalPropsProvider",
       "kind": "variable",
       "type": "FC<{ children?: ReactNode }>",
-      "external": "@types/react",
       "summary": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`,\nyou must wrap your JSX inside it",
       "examples": [
         "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```"
@@ -397,14 +393,12 @@
       "refs": [
         "InitData"
       ],
-      "external": "@types/react",
       "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `initData`.\nThis should be used with [`InitDataProvider`](api:InitDataProvider)"
     },
     {
       "name": "InitDataProvider",
       "kind": "variable",
       "type": "FC<{ children?: ReactNode }>",
-      "external": "@types/react",
       "summary": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `initData`,\nyou must wrap your JSX inside it",
       "examples": [
         "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <InitDataConsumer children={(initData) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <InitDataProvider>\n     <App/>\n  </InitDataProvider>\n);\n\n```"
@@ -435,13 +429,11 @@
             {
               "name": "effect",
               "type": "EffectCallback",
-              "external": "@types/react",
               "description": "Imperative function that can return a cleanup function"
             },
             {
               "name": "deps",
               "type": "DependencyList",
-              "external": "@types/react",
               "optional": true,
               "description": "If present, effect will only activate if the values in the list change (using ===)."
             }
@@ -571,13 +563,11 @@
             {
               "name": "effect",
               "type": "EffectCallback",
-              "external": "@types/react",
               "description": "Imperative function that can return a cleanup function"
             },
             {
               "name": "deps",
               "type": "DependencyList",
-              "external": "@types/react",
               "optional": true,
               "description": "If present, effect will only activate if the values in the list change (using ===).\n\n\n\n `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React."
             }
@@ -798,7 +788,6 @@
             {
               "name": "App",
               "type": "ComponentClass<P, S>",
-              "external": "@types/react",
               "description": "The class component to be wrapped by the HOC."
             }
           ],

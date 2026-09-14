@@ -1072,7 +1072,6 @@
           "name": "container",
           "optional": true,
           "type": "HTMLElement",
-          "external": "typescript",
           "kind": "property"
         },
         {
@@ -1085,7 +1084,6 @@
           "name": "mutationObserverOptions",
           "optional": true,
           "type": "MutationObserverInit",
-          "external": "typescript",
           "kind": "property"
         },
         {
@@ -1182,7 +1180,6 @@
       "name": "ElementTree",
       "kind": "typealias",
       "type": "ReturnType<typeof initElementTree>",
-      "external": "typescript",
       "summary": "The lynx element tree"
     },
     {
@@ -1644,8 +1641,7 @@
           "params": [
             {
               "name": "element",
-              "type": "Element",
-              "external": "typescript"
+              "type": "Element"
             }
           ],
           "returns": {
@@ -2484,8 +2480,7 @@
             },
             {
               "name": "container",
-              "type": "HTMLElement",
-              "external": "typescript"
+              "type": "HTMLElement"
             }
           ],
           "returns": {
@@ -2504,8 +2499,7 @@
           "params": [
             {
               "name": "node",
-              "type": "HTMLElement",
-              "external": "typescript"
+              "type": "HTMLElement"
             }
           ],
           "returns": {
@@ -2524,8 +2518,7 @@
           "params": [
             {
               "name": "element",
-              "type": "HTMLElement",
-              "external": "typescript"
+              "type": "HTMLElement"
             },
             {
               "name": "queriesToBind",
@@ -2552,8 +2545,7 @@
           "params": [
             {
               "name": "container",
-              "type": "HTMLElement",
-              "external": "typescript"
+              "type": "HTMLElement"
             }
           ],
           "returns": {
@@ -2572,8 +2564,7 @@
           "params": [
             {
               "name": "element",
-              "type": "HTMLElement",
-              "external": "typescript"
+              "type": "HTMLElement"
             },
             {
               "name": "variant",
@@ -2613,8 +2604,7 @@
           "params": [
             {
               "name": "element",
-              "type": "Element",
-              "external": "typescript"
+              "type": "Element"
             }
           ],
           "returns": {
@@ -2669,8 +2659,7 @@
           "params": [
             {
               "name": "container",
-              "type": "HTMLElement",
-              "external": "typescript"
+              "type": "HTMLElement"
             },
             {
               "name": "options",

@@ -8,10 +8,8 @@ outline: false
 {/* @api ConfigOption package="rspeedy" path="output.filename" */}
 
 - **Type:** `string | Filename`
-- **Lynx default:** `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
+- **Default:** `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
 
-The `Filename` determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
-
-This is a standard Rsbuild option with a different default in Lynx builds. See the [Rsbuild documentation](https://rsbuild.rs/config/output/filename) for the full description.
+Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the [Rsbuild documentation](https://rsbuild.rs/config/output/filename).
 
 {/* @api-end */}

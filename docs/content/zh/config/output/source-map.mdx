@@ -7,12 +7,13 @@ outline: false
 
 {/* @api ConfigOption package="rspeedy" path="output.sourceMap" */}
 
-- **类型:** `boolean | SourceMap`
-- **Lynx 默认值:** 在 Lynx 构建中未设置该选项时，JavaScript source map 在开发环境使用 `'cheap-module-source-map'`，在生产环境使用 `'source-map'`；同时也会生成 CSS source map。所有 `.map` 资源都会在输出前被移除。
-- **Rsbuild 默认值:** `const defaultSourceMap = { js: isDev ? 'cheap-module-source-map' : false, css: false, extract: false, };`
+- **类型：** `boolean | SourceMap`
 
-`SourceMap` 用于配置是否为产物生成 source map，以及如何生成。
+Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 [Rsbuild 文档](https://rsbuild.rs/zh/config/output/source-map)。
 
-这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/output/source-map)。
+## 默认值 \{#default\}
+
+- 在 Lynx 构建中未设置该选项时，JavaScript source map 在开发环境使用 `'cheap-module-source-map'`，在生产环境使用 `'source-map'`；同时也会生成 CSS source map。
+- 所有 `.map` 资源都会在输出前被移除。
 
 {/* @api-end */}

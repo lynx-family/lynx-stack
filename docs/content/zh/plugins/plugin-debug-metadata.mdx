@@ -66,7 +66,7 @@ GET .../*.js.map    → transparently forwarded to ?field=source-map
 GET .../*.css.map   → transparently forwarded to ?field=source-map
 ```
 
-**返回值:** `RsbuildPlugin`
+**返回值：** `RsbuildPlugin`
 
 ### `rewriteSourceMappingURLs()` \{#rewritesourcemappingurls\}
 
@@ -80,7 +80,7 @@ rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGro
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `compilation` | `Compilation` (来自 [@rspack/core](https://rspack.rs/config/)) |  |
+| `compilation` | `Compilation` |  |
 | `args` | `{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }` |  |
 | `options?` | [`RewriteSourceMappingURLsOptions`](#rewritesourcemappingurlsoptions) |  |
 

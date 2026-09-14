@@ -177,8 +177,8 @@ The effects run after main thread dom update without blocking it.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `effect` | `EffectCallback` (from @types/react) | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` (from @types/react) | If present, effect will only activate if the values in the list change (using ===). |
+| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===). |
 
 ### `useLayoutEffect()` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#uselayouteffect\}
 
@@ -196,8 +196,8 @@ Accepts a function that contains imperative, possibly effectful code. The effect
 
 | Parameters | Type | Description |
 | --- | --- | --- |
-| `effect` | `EffectCallback` (from @types/react) | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` (from @types/react) | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
+| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
 
 {/* @api-end */}
 

@@ -41,7 +41,6 @@
           "refs": [
             "LynxCacheEventsPluginOptions"
           ],
-          "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`LynxCacheEventsPlugin`](api:LynxCacheEventsPlugin) uses.",
           "examples": [
             "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxCacheEventsPlugin({\n      ...LynxCacheEventsPlugin.defaultOptions,\n      setupListTransformer: (setupList) => setupList,\n    }),\n  ],\n}\n```"
@@ -56,7 +55,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

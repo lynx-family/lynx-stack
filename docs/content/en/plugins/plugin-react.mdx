@@ -149,7 +149,7 @@ rules.
 | --- | --- | --- | --- |
 | <a id="experimental-transformbuiltinattributenames-mode"></a>`mode` | `"dash-case" \| "mapping-only"` | `'dash-case'` | The fallback behavior for attribute names not listed in `rename` or `preserve`. `'dash-case'` also applies the default React-style event mappings. `'mapping-only'` leaves all remaining names unchanged. |
 | <a id="experimental-transformbuiltinattributenames-preserve"></a>`preserve` | `readonly string[]` |  | Attribute names that should remain unchanged unless an exact `rename` entry is also present. |
-| <a id="experimental-transformbuiltinattributenames-rename"></a>`rename` | `Readonly<Record<string, string>>` (from typescript) |  | Exact mappings from source attribute names to transformed attribute names. |
+| <a id="experimental-transformbuiltinattributenames-rename"></a>`rename` | `Readonly<Record<string, string>>` |  | Exact mappings from source attribute names to transformed attribute names. |
 
 ### `targetSdkVersion` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#targetsdkversion\}
 
@@ -170,7 +170,7 @@ targetSdkVersion is used to specify the minimal Lynx Engine version that a App b
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | <a id="defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` | `true` | defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`. If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`. |
-| <a id="definedce"></a>`defineDCE` | `Partial<`[`DefineDceVisitorConfig`](#definedcevisitorconfig)`>` (from typescript) | `undefined` | Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed. |
+| <a id="definedce"></a>`defineDCE` | `Partial<`[`DefineDceVisitorConfig`](#definedcevisitorconfig)`>` | `undefined` | Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed. |
 | <a id="enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` | `false` | enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements. |
 | <a id="enablecssselector"></a>`enableCSSSelector` | `boolean` | `true` | enableCSSSelector controls whether enabling the new CSS implementation. |
 | <a id="enablenewgesture"></a>`enableNewGesture` | `boolean` | `false` | enableNewGesture enables the new gesture system. |
@@ -185,7 +185,7 @@ targetSdkVersion is used to specify the minimal Lynx Engine version that a App b
 | <a id="globalpropsmode"></a>`globalPropsMode` | `"reactive" \| "event"` | `'reactive'` | Configure the update mode of `lynx.__globalProps`. This flag has two options: `'reactive'`: `UpdateGlobalProps` will trigger update automatically. `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler. |
 | <a id="optimizebundlesize"></a>`optimizeBundleSize` | `boolean \| { background?: boolean; mainThread?: boolean }` | `false` | Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions. When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized. When optimizeBundleSize or optimizeBundleSize.background is true, background code will be optimized. |
 | <a id="removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` | `true` | removeDescendantSelectorScope is used to remove the scope of descendant selectors. |
-| <a id="shake"></a>`shake` | `Partial<`[`ShakeVisitorConfig`](#shakevisitorconfig)`>` (from typescript) | `undefined` | How main-thread code will be shaken. |
+| <a id="shake"></a>`shake` | `Partial<`[`ShakeVisitorConfig`](#shakevisitorconfig)`>` | `undefined` | How main-thread code will be shaken. |
 
 {/* @api-end */}
 
@@ -261,7 +261,7 @@ const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread"
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="definedcevisitorconfig-define"></a>`define` | `Record<string, string>` (from typescript) | Replaces variables in your code with other values or expressions at compile time. |
+| <a id="definedcevisitorconfig-define"></a>`define` | `Record<string, string>` | Replaces variables in your code with other values or expressions at compile time. |
 
 ### `ExtractStrConfig` \{#extractstrconfig\}
 
@@ -317,11 +317,11 @@ class MyPlugin {
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` (from @rspack/lite-tapable) | Called after the template is emitted. |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` (from @rspack/lite-tapable) | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` (from @rspack/lite-tapable) | Called before the template is emitted. Can be used to modify the template. |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` (from @rspack/lite-tapable) | Called before the encode process. Can be used to modify the encode options. |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` (from @rspack/lite-tapable) | Call the encode process. |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
 
 ### `TransformBuiltinAttributeNamesOptions` \{#transformbuiltinattributenamesoptions\}
 
@@ -334,6 +334,6 @@ fallback behavior selected by `mode`.
 | --- | --- | --- |
 | <a id="transformbuiltinattributenamesoptions-mode"></a>`mode?` | `"dash-case" \| "mapping-only"` | The fallback behavior for attribute names not listed in `rename` or `preserve`. `'dash-case'` also applies the default React-style event mappings. `'mapping-only'` leaves all remaining names unchanged. |
 | <a id="transformbuiltinattributenamesoptions-preserve"></a>`preserve?` | `readonly string[]` | Attribute names that should remain unchanged unless an exact `rename` entry is also present. |
-| <a id="transformbuiltinattributenamesoptions-rename"></a>`rename?` | `Readonly<Record<string, string>>` (from typescript) | Exact mappings from source attribute names to transformed attribute names. |
+| <a id="transformbuiltinattributenamesoptions-rename"></a>`rename?` | `Readonly<Record<string, string>>` | Exact mappings from source attribute names to transformed attribute names. |
 
 {/* @api-end */}

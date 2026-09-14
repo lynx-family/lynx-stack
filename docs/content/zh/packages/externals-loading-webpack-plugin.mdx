@@ -76,7 +76,7 @@ export default {
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="externalsloadingpluginoptions-backgroundlayer"></a>`backgroundLayer` | `string` | 后台 layer 的名称。 |
-| <a id="externalsloadingpluginoptions-externals"></a>`externals` | `Record<string, `[`ExternalValue`](#externalvalue)`>` (来自 typescript) | 指定要加载的 externals。externals 应为 Lynx Bundle。 |
+| <a id="externalsloadingpluginoptions-externals"></a>`externals` | `Record<string, `[`ExternalValue`](#externalvalue)`>` | 指定要加载的 externals。externals 应为 Lynx Bundle。 |
 | <a id="externalsloadingpluginoptions-globalobject"></a>`globalObject?` | `"lynx" \| "globalThis"` | 该选项指定用于挂载库的全局对象。 在 Lynx 中，库默认会挂载到 `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]`。 如果启用了共享 JS 上下文（share js context），并希望通过挂载到全局对象来复用该库，可以将该选项设置为 `'globalThis'`。 |
 | <a id="externalsloadingpluginoptions-mainthreadlayer"></a>`mainThreadLayer` | `string` | 主线程 layer 的名称。 |
 | <a id="externalsloadingpluginoptions-retries"></a>`retries?` | `number` | 获取外部 bundle 超时（`response.code === -2`）时的额外重试次数。 |

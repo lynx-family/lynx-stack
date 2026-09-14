@@ -76,7 +76,7 @@ The options of the `ExternalsLoadingPlugin`.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="externalsloadingpluginoptions-backgroundlayer"></a>`backgroundLayer` | `string` | The name of the background layer. |
-| <a id="externalsloadingpluginoptions-externals"></a>`externals` | `Record<string, `[`ExternalValue`](#externalvalue)`>` (from typescript) | Specify the externals to be loaded. The externals should be Lynx Bundles. |
+| <a id="externalsloadingpluginoptions-externals"></a>`externals` | `Record<string, `[`ExternalValue`](#externalvalue)`>` | Specify the externals to be loaded. The externals should be Lynx Bundles. |
 | <a id="externalsloadingpluginoptions-globalobject"></a>`globalObject?` | `"lynx" \| "globalThis"` | This option indicates what global object will be used to mount the library. In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default. If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`. |
 | <a id="externalsloadingpluginoptions-mainthreadlayer"></a>`mainThreadLayer` | `string` | The name of the main thread layer. |
 | <a id="externalsloadingpluginoptions-retries"></a>`retries?` | `number` | The number of additional attempts when fetching the external bundle times out (`response.code === -2`). |

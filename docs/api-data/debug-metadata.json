@@ -280,7 +280,6 @@
         {
           "name": "pc2caller_info",
           "type": "Record<string, string>",
-          "external": "typescript",
           "summary": "Optional PC offset → caller source snippet. Keys are stringified\nPC offsets; values are the original function bodies the bytecode\nwas inlined from. Useful for de-inlining stack traces.",
           "kind": "property"
         },
@@ -695,7 +694,6 @@
       "refs": [
         "FieldResolver"
       ],
-      "external": "typescript",
       "summary": "Field name → resolver. **HTTP layers read this directly.** Mutations\nare honoured by the next request — the export is a live `Map` so\nplugins can register their own fields at startup.\n\nAdding a new field is a one-line `FIELDS.set('your-name', { ... })`.",
       "default": "..."
     },

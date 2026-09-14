@@ -8,11 +8,26 @@ outline: false
 {/* @api ConfigOption package="rspeedy" path="resolve.extensions" */}
 
 - **Type:** `string[]`
-- **Lynx default:** `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']` For example, if importing './index', Rsbuild will try to resolve using the following order: - `./index.ts` - `./index.tsx` - `./index.mjs` - `./index.js` - `./index.jsx` - `./index.json` - `./index.cjs`
-- **Rsbuild default:** `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']`
+- **Default:** `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
 
-Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions.
+Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the [Rsbuild documentation](https://rsbuild.rs/config/resolve/extensions).
 
-This is a standard Rsbuild option with a different default in Lynx builds. See the [Rsbuild documentation](https://rsbuild.rs/config/resolve/extensions) for the full description.
+## Default \{#default\}
+
+For example, if importing './index', Rsbuild will try to resolve using the following order:
+
+- `./index.ts`
+
+- `./index.tsx`
+
+- `./index.mjs`
+
+- `./index.js`
+
+- `./index.jsx`
+
+- `./index.json`
+
+- `./index.cjs`
 
 {/* @api-end */}

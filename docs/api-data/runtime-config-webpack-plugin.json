@@ -23,8 +23,7 @@
               "type": "Readonly<RuntimeConfigWebpackPluginOptions>",
               "refs": [
                 "RuntimeConfigWebpackPluginOptions"
-              ],
-              "external": "typescript"
+              ]
             }
           ],
           "returns": {
@@ -42,7 +41,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],
@@ -57,7 +55,6 @@
       "name": "RuntimeConfigWebpackPluginOptions",
       "kind": "typealias",
       "type": "Record<string, unknown>",
-      "external": "typescript",
       "summary": "Page-scoped runtime configuration contributed by a bundle.\n\nThe plugin deliberately leaves configuration keys and values to the DSL\nthat consumes them."
     }
   ]

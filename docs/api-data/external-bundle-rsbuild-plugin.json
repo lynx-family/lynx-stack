@@ -102,7 +102,6 @@
           "refs": [
             "PluginExternalConfig"
           ],
-          "external": "typescript",
           "summary": "Additional explicit externals to load.",
           "kind": "property"
         },
@@ -275,7 +274,6 @@
       "refs": [
         "ExternalsPresetDefinition"
       ],
-      "external": "typescript",
       "summary": "Available externals preset definitions."
     },
     {

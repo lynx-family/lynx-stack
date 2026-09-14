@@ -7,12 +7,9 @@ outline: false
 
 {/* @api ConfigOption package="rspeedy" path="dev.writeToDisk" */}
 
-- **类型:** `boolean | ((filename: string) => boolean)`
-- **Lynx 默认值:** `true`
-- **Rsbuild 默认值:** `false`
+- **类型：** `boolean | ((filename: string) => boolean)`
+- **默认值：** `true`
 
-用于控制是否将开发环境的构建产物写入磁盘。
-
-这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/write-to-disk)。
+Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 [Rsbuild 文档](https://rsbuild.rs/zh/config/dev/write-to-disk)。
 
 {/* @api-end */}

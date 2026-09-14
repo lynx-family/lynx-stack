@@ -22,8 +22,7 @@
               "type": "Partial<MainThreadRuntimeWrapperWebpackPluginOptions>",
               "refs": [
                 "MainThreadRuntimeWrapperWebpackPluginOptions"
-              ],
-              "external": "typescript"
+              ]
             }
           ],
           "returns": {
@@ -40,8 +39,7 @@
           "params": [
             {
               "name": "compiler",
-              "type": "Compiler",
-              "external": "@rspack/core"
+              "type": "Compiler"
             }
           ],
           "returns": {
@@ -189,7 +187,6 @@
       "refs": [
         "ExternalObject"
       ],
-      "external": "typescript",
       "summary": "External module to global-name mappings used when building Lynx external\nbundles."
     },
     {
@@ -199,7 +196,6 @@
       "refs": [
         "ExternalsPresetDefinition"
       ],
-      "external": "typescript",
       "summary": "Available externals preset definitions."
     },
     {
@@ -243,7 +239,6 @@
       "name": "defaultExternalBundleLibConfig",
       "kind": "variable",
       "type": "LibConfig",
-      "external": "@rslib/core",
       "summary": "The default lib config`LibConfig` for external bundle.",
       "default": "..."
     },

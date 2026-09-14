@@ -41,10 +41,10 @@ animate(value: ElementOrElements, keyframes: DOMKeyframesDefinition, options?: A
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `sequence` | `AnimationSequence` (来自 framer-motion) |  |
-| `options?` | `SequenceOptions` (来自 framer-motion) |  |
+| `sequence` | `AnimationSequence` |  |
+| `options?` | `SequenceOptions` |  |
 
-**返回值:** `AnimationPlaybackControlsWithThen`
+**返回值：** `AnimationPlaybackControlsWithThen`
 
 ### `clamp()` \{#clamp\}
 
@@ -60,7 +60,7 @@ clamp(min: number, max: number, v: number): number
 | `max` | `number` |  |
 | `v` | `number` |  |
 
-**返回值:** `number`
+**返回值：** `number`
 
 ### `mapValue()` \{#mapvalue\}
 
@@ -72,12 +72,12 @@ mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `inputValue` | `MotionValue<number>` (来自 motion-dom) |  |
-| `inputRange` | `MapInputRange` (来自 motion-dom) |  |
+| `inputValue` | `MotionValue<number>` |  |
+| `inputRange` | `MapInputRange` |  |
 | `outputRange` | `O[]` |  |
-| `options?` | `TransformOptions<O>` (来自 motion-dom) |  |
+| `options?` | `TransformOptions<O>` |  |
 
-**返回值:** `MotionValue<O>`
+**返回值：** `MotionValue<O>`
 
 ### `mix()` \{#mix\}
 
@@ -93,7 +93,7 @@ mix(from: number, to: number, p: number): number
 | `from` | `T` |  |
 | `to` | `T` |  |
 
-**返回值:** `Mixer<T>`
+**返回值：** `Mixer<T>`
 
 ### `motionValue()` \{#motionvalue\}
 
@@ -106,9 +106,9 @@ motionValue(init: V, options?: MotionValueOptions): MotionValue<V>
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `init` | `V` |  |
-| `options?` | `MotionValueOptions` (来自 motion-dom) |  |
+| `options?` | `MotionValueOptions` |  |
 
-**返回值:** `MotionValue<V>`
+**返回值：** `MotionValue<V>`
 
 ### `progress()` \{#progress\}
 
@@ -124,7 +124,7 @@ progress(from: number, to: number, value: number): number
 | `to` | `number` |  |
 | `value` | `number` |  |
 
-**返回值:** `number`
+**返回值：** `number`
 
 ### `spring()` \{#spring\}
 
@@ -138,7 +138,7 @@ spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, 
 | --- | --- | --- |
 | `args` | `[optionsOrVisualDuration?: number \| ValueAnimationOptions<number>, bounce?: number]` |  |
 
-**返回值:** `KeyframeGenerator<number>`
+**返回值：** `KeyframeGenerator<number>`
 
 ### `springValue()` \{#springvalue\}
 
@@ -151,9 +151,9 @@ springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `source` | `T \| MotionValue<T>` |  |
-| `options?` | `SpringOptions` (来自 motion-dom) |  |
+| `options?` | `SpringOptions` |  |
 
-**返回值:** `MotionValue<T>`
+**返回值：** `MotionValue<T>`
 
 ### `stagger()` \{#stagger\}
 
@@ -167,7 +167,7 @@ stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>
 | --- | --- | --- |
 | `args` | `[duration?: number, StaggerOptions?]` |  |
 
-**返回值:** `DynamicOption<number>`
+**返回值：** `DynamicOption<number>`
 
 ### `styleEffect()` \{#styleeffect\}
 
@@ -180,9 +180,9 @@ styleEffect(subject: string | ElementOrElements, values: Record<string, MotionVa
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `subject` | `string \| ElementOrElements` |  |
-| `values` | `Record<string, MotionValue>` (来自 typescript) |  |
+| `values` | `Record<string, MotionValue>` |  |
 
-**返回值:** `() => void`
+**返回值：** `() => void`
 
 ### `transformValue()` \{#transformvalue\}
 
@@ -196,7 +196,7 @@ transformValue(transform: () => O): MotionValue<O>
 | --- | --- | --- |
 | `transform` | `() => O` |  |
 
-**返回值:** `MotionValue<O>`
+**返回值：** `MotionValue<O>`
 
 ### `useMotionValueRef()` \{#usemotionvalueref\}
 
@@ -210,7 +210,7 @@ MainThreadRef 形式的 useMotionValue，高度实验性，可能会发生变化
 | --- | --- | --- |
 | `value` | `T` |  |
 
-**返回值:** `MainThreadRef<MotionValue<T>>`
+**返回值：** `MainThreadRef<MotionValue<T>>`
 
 ### `useMotionValueRefEvent()` \{#usemotionvaluerefevent\}
 

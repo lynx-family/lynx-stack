@@ -44,14 +44,12 @@
           "refs": [
             "ReactWebpackPluginOptions"
           ],
-          "external": "typescript",
           "summary": "`defaultOptions` is the default options that the [`ReactWebpackPlugin`](api:ReactWebpackPlugin) uses.",
           "kind": "property"
         },
         {
           "name": "loaders",
           "type": "Record<keyof typeof LAYERS | \"TESTING\", string>",
-          "external": "typescript",
           "summary": "The loaders for ReactLynx.",
           "remarks": "Note that this loader will only transform JSX/TSX to valid JavaScript.\nFor `.tsx` files, the type annotations would not be eliminated.\nYou should use `babel-loader` or `swc-loader` to load TypeScript files.",
           "examples": [
@@ -67,7 +65,6 @@
             {
               "name": "compiler",
               "type": "Compiler",
-              "external": "@rspack/core",
               "description": "the webpack compiler"
             }
           ],

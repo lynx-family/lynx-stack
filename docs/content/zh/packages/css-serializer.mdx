@@ -47,7 +47,7 @@ cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableC
 | `plugins` | [`Plugin`](#plugin)`[]` |  |
 | `enableCSSSelector` | `boolean` |  |
 
-**返回值:** `{ contentMap: Map<number, string[]>; cssMap: Record<string, `[`LynxStyleNode`](#lynxstylenode)`[]>; cssSource: Record<string, string> }`
+**返回值：** `{ contentMap: Map<number, string[]>; cssMap: Record<string, `[`LynxStyleNode`](#lynxstylenode)`[]>; cssSource: Record<string, string> }`
 
 ### `parse()` \{#parse\}
 
@@ -62,7 +62,7 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | `content` | `string` |  |
 | `options` | `{ filename?: string; plugins?: `[`Plugin`](#plugin)`[]; projectRoot?: string }` |  |
 
-**返回值:** `{ errors: `[`ParserError`](#parsererror)`[]; root: `[`LynxStyleNode`](#lynxstylenode)`[] }`
+**返回值：** `{ errors: `[`ParserError`](#parsererror)`[]; root: `[`LynxStyleNode`](#lynxstylenode)`[] }`
 
 ## 类型 \{#\}
 
@@ -149,7 +149,7 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | --- | --- | --- |
 | <a id="keyframesstyle-keytext"></a>`keyText` | [`Value`](#value) |  |
 | <a id="keyframesstyle-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
-| <a id="keyframesstyle-variables"></a>`variables` | `Record<string, string>` (来自 typescript) |  |
+| <a id="keyframesstyle-variables"></a>`variables` | `Record<string, string>` |  |
 
 ### `LayerRule` \{#layerrule\}
 
@@ -219,7 +219,7 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | <a id="stylerule-selectortext"></a>`selectorText` | [`Value`](#value) |  |
 | <a id="stylerule-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
 | <a id="stylerule-type"></a>`type` | `"StyleRule"` |  |
-| <a id="stylerule-variables"></a>`variables` | `Record<string, string>` (来自 typescript) |  |
+| <a id="stylerule-variables"></a>`variables` | `Record<string, string>` |  |
 
 ### `SupportsRule` \{#supportsrule\}
 
@@ -247,7 +247,7 @@ parse(content: string, options: { filename?: string; plugins?: Plugin[]; project
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="variabledeclaration-defaultvalue"></a>`defaultValue?` | `string` |  |
-| <a id="variabledeclaration-defaultvaluemap"></a>`defaultValueMap?` | `Record<string, string>` (来自 typescript) |  |
+| <a id="variabledeclaration-defaultvaluemap"></a>`defaultValueMap?` | `Record<string, string>` |  |
 | <a id="variabledeclaration-keyloc"></a>`keyLoc` | [`Location`](#location) |  |
 | <a id="variabledeclaration-name"></a>`name` | `string` |  |
 | <a id="variabledeclaration-type"></a>`type` | `"css_var"` |  |

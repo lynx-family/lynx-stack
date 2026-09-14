@@ -7,11 +7,9 @@ outline: false
 
 {/* @api ConfigOption package="rspeedy" path="output.filename" */}
 
-- **类型:** `string | Filename`
-- **Lynx 默认值:** `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
+- **类型：** `string | Filename`
+- **默认值：** `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
 
-`Filename` 决定输出的 JavaScript bundle 文件的名称。这些 bundle 会被写入 output.path 指定的目录中。
-
-这是标准的 Rsbuild 配置，在 Lynx 构建中默认值不同。完整说明请查看 [Rsbuild 文档](https://rsbuild.rs/zh/config/output/filename)。
+Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 [Rsbuild 文档](https://rsbuild.rs/zh/config/output/filename)。
 
 {/* @api-end */}

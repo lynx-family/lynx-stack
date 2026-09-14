@@ -15,7 +15,6 @@
       "name": "default",
       "kind": "variable",
       "type": "Partial<Config>",
-      "external": "typescript",
       "default": "..."
     },
     {

@@ -6,8 +6,7 @@ title: performance.profile
 
 {/* @api ConfigOption package="rspeedy" path="performance.profile" */}
 
-- **类型:** `boolean`
-- **默认值:** 当 `DEBUG` 包含 `rspeedy` 时，Rspeedy 会将其设置为 `true`；否则不设置该选项。
+- **类型：** `boolean`
 
 是否在 ReactLynx 等 Lynx 运行时集成中采集耗时信息。
 
@@ -23,6 +22,10 @@ export default defineConfig({
   performance: { profile: true },
 })
 ```
+
+## 默认值 \{#default\}
+
+- 当 `DEBUG` 包含 `rspeedy` 时，Rspeedy 会将其设置为 `true`；否则不设置该选项。
 
 ## 使用方式 \{#usage\}
 
