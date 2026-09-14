@@ -37,27 +37,6 @@ export default defineConfig({
 })
 ```
 
-## 概览
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="output" */}
-
-| 名称 | 类型 | 说明 |
-| --- | --- | --- |
-| [`assetPrefix`](#output-assetprefix) | `string` | `Output.assetPrefix` 用于设置静态资源的 URL 前缀。 |
-| [`cleanDistPath`](#output-cleandistpath) | `boolean` | `Output.cleanDistPath` 选项用于决定是否在构建开始前清空产物目录（默认为 `dist`）中的所有文件。 |
-| [`copy`](#output-copy) | `CopyRspackPluginOptions \| (string \| Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]` | `Output.copy` 选项用于将文件复制到产物目录。 |
-| [`cssModules`](#output-cssmodules) | [`CssModules`](#output-cssmodules) | [`CssModules`](#output-cssmodules) 选项用于自定义 CSS Modules 配置。 |
-| [`dataUriLimit`](#output-dataurilimit) | `number \| DataUriLimit` | `Output.dataUriLimit` 选项用于设置图片、字体等静态资源内联的体积阈值。 |
-| [`distPath`](#output-distpath) | `DistPathConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | 设置产物文件的目录。 |
-| [`filename`](#output-filename) | `string \| `[`Filename`](#output-filename) | [`Filename`](#output-filename) 决定输出的 JavaScript bundle 文件的名称。这些 bundle 会被写入 output.path 指定的目录中。 |
-| [`filenameHash`](#output-filenamehash) | `string \| boolean` | `Output.filenameHash` 选项用于控制生产环境构建后是否在文件名中添加 hash 值。 |
-| [`inlineScripts`](#output-inlinescripts) | `InlineChunkConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Output.inlineScripts` 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。 |
-| [`legalComments`](#output-legalcomments) | `"none" \| "inline" \| "linked"` | `Output.legalComments` 用于控制如何处理法律注释（legal comment）。 |
-| [`minify`](#output-minify) | `boolean \| `[`Minify`](#output-minify) | [`Minify`](#output-minify) 用于配置是否在生产环境构建中启用代码压缩，或配置压缩器选项。 |
-| [`sourceMap`](#output-sourcemap) | `boolean \| `[`SourceMap`](#output-sourcemap) | [`SourceMap`](#output-sourcemap) 用于配置是否为产物生成 source map，以及如何生成。 |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="output" */}
 
 ## Lynx 特有配置 \{#lynx-options\}

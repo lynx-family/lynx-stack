@@ -8,20 +8,6 @@ Options that trade build output for runtime performance: chunk splitting, consol
 
 Most of them are standard Rsbuild options: set them under `performance` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy, and see the Rsbuild documentation for the details. The options specific to Lynx are described below, each with where to set it when you build with Rsbuild.
 
-## At a glance
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="performance" */}
-
-| Name | Type | Description |
-| --- | --- | --- |
-| [`buildCache`](#performance-buildcache) <span className="api-badge api-badge-beta">Beta</span> | `boolean \| `[`BuildCache`](#performance-buildcache) | Enable or configure persistent build cache. |
-| [`chunkSplit`](#performance-chunksplit) <span className="api-badge api-badge-deprecated">Deprecated</span> | `ChunkSplit \| ChunkSplitBySize \| ChunkSplitCustom` | `Performance.chunkSplit` is used to configure the chunk splitting strategy. |
-| [`printFileSize`](#performance-printfilesize) | `boolean \| PrintFileSizeOptions` | Whether to print the file sizes after production build. |
-| [`profile`](#performance-profile) <span className="api-badge api-badge-lynx">Lynx</span> | `boolean` | Whether capture timing information in Lynx runtime integrations such as ReactLynx. |
-| [`removeConsole`](#performance-removeconsole) | `boolean \| ConsoleType[]` | Whether to remove `console.[methodName]` in production build. |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="performance" */}
 
 ## Lynx-specific options \{#lynx-options\}

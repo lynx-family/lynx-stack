@@ -8,21 +8,6 @@ Options for the development server and hot module replacement: what the dev clie
 
 They are standard Rsbuild options: set them under `dev` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy. Each one links to the Rsbuild documentation; the Lynx default is listed where it differs.
 
-## At a glance
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="dev" */}
-
-| Name | Type | Description |
-| --- | --- | --- |
-| [`assetPrefix`](#dev-assetprefix) | `string \| boolean` | The `Dev.assetPrefix` is used to set the URL prefix for static assets during development. |
-| [`hmr`](#dev-hmr) | `boolean` | Whether to enable Hot Module Replacement (HMR). |
-| [`liveReload`](#dev-livereload) | `boolean` | Whether to enable live reload functionality. |
-| [`progressBar`](#dev-progressbar) | `boolean \| { id?: string }` | Whether to display progress bar during compilation. |
-| [`watchFiles`](#dev-watchfiles) | `WatchFiles \| WatchFiles[]` | Watch specified files and directories for changes. When a file change is detected, it can trigger a page reload or restart the dev server. |
-| [`writeToDisk`](#dev-writetodisk) | `boolean \| ((filename: string) => boolean)` | Used to control whether the build artifacts of the development environment are written to the disk. |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="dev" */}
 
 ## Rsbuild options \{#rsbuild-options\}

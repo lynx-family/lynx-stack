@@ -37,27 +37,6 @@ export default defineConfig({
 })
 ```
 
-## At a glance
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="output" */}
-
-| Name | Type | Description |
-| --- | --- | --- |
-| [`assetPrefix`](#output-assetprefix) | `string` | The `Output.assetPrefix` is used to set the URL prefix for static assets. |
-| [`cleanDistPath`](#output-cleandistpath) | `boolean` | The `Output.cleanDistPath` option determines whether all files in the output directory (default: `dist`) are removed before the build starts. |
-| [`copy`](#output-copy) | `CopyRspackPluginOptions \| (string \| Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[]` | The `Output.copy` option is used for copying files to the dist directory. |
-| [`cssModules`](#output-cssmodules) | [`CssModules`](#output-cssmodules) | The [`CssModules`](#output-cssmodules) option is used for the customization of CSS Modules configurations. |
-| [`dataUriLimit`](#output-dataurilimit) | `number \| DataUriLimit` | The `Output.dataUriLimit` option is used to set the size threshold to inline static assets such as images and fonts. |
-| [`distPath`](#output-distpath) | `DistPathConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | Set the directory of the dist files. |
-| [`filename`](#output-filename) | `string \| `[`Filename`](#output-filename) | The [`Filename`](#output-filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path. |
-| [`filenameHash`](#output-filenamehash) | `string \| boolean` | The `Output.filenameHash` option controls whether to add a hash value to the filename after the production build. |
-| [`inlineScripts`](#output-inlinescripts) | `InlineChunkConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Output.inlineScripts` option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`). |
-| [`legalComments`](#output-legalcomments) | `"none" \| "inline" \| "linked"` | The `Output.legalComments` controls how to handle the legal comment. |
-| [`minify`](#output-minify) | `boolean \| `[`Minify`](#output-minify) | The [`Minify`](#output-minify) configures whether to enable code minification in the production build, or to configure minimizer options. |
-| [`sourceMap`](#output-sourcemap) | `boolean \| `[`SourceMap`](#output-sourcemap) | The [`SourceMap`](#output-sourcemap) configures whether and how to generate source-map for outputs. |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="output" */}
 
 ## Lynx-specific options \{#lynx-options\}

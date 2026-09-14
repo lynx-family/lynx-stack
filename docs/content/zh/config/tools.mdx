@@ -8,21 +8,6 @@ title: tools
 
 其中大多数是标准的 Rsbuild 配置：在 `rsbuild.config.ts` 的 `tools` 下设置，使用 Rspeedy 构建时则在 `lynx.config.ts` 中设置，详细说明请查看 Rsbuild 文档。Lynx 特有的配置项在下文完整说明，并注明使用 Rsbuild 构建时应在哪里设置。
 
-## 概览
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="tools" */}
-
-| 名称 | 类型 | 说明 |
-| --- | --- | --- |
-| [`bundlerChain`](#tools-bundlerchain) | `ToolsBundlerChainConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Tools.bundlerChain` 通过 [rspack-chain](https://github.com/rspack-contrib/rspack-chain) 修改 [Rspack](https://rspack.rs) 的选项。 |
-| [`cssExtract`](#tools-cssextract) | [`CssExtract`](#tools-cssextract) | [`CssExtract`](#tools-cssextract) 用于控制 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) 的选项。 |
-| [`cssLoader`](#tools-cssloader) | [`CssLoader`](#tools-cssloader) | [`CssLoader`](#tools-cssloader) 用于控制 [css-loader](https://github.com/webpack-contrib/css-loader) 的选项。 |
-| [`rsdoctor`](#tools-rsdoctor) <span className="api-badge api-badge-lynx">Lynx</span> | [`RsdoctorRspackPluginOptions`](#tools-rsdoctor) | `Tools.rsdoctor` 用于控制 [Rsdoctor](https://rsdoctor.dev/) 的选项。 |
-| [`rspack`](#tools-rspack) | `ToolsRspackConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Tools.rspack` 用于控制 [Rspack](https://rspack.rs/) 的选项。 |
-| [`swc`](#tools-swc) | `ToolsSwcConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/)) | `Tools.swc` 用于控制 [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader) 的选项。 |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="tools" */}
 
 ## Lynx 特有配置 \{#lynx-options\}

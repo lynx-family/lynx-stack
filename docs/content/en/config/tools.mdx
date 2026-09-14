@@ -8,21 +8,6 @@ Escape hatches to the underlying tools: modify the Rspack configuration, the SWC
 
 Most of them are standard Rsbuild options: set them under `tools` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy, and see the Rsbuild documentation for the details. The options specific to Lynx are described below, each with where to set it when you build with Rsbuild.
 
-## At a glance
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="tools" */}
-
-| Name | Type | Description |
-| --- | --- | --- |
-| [`bundlerChain`](#tools-bundlerchain) | `ToolsBundlerChainConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Tools.bundlerChain` changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain). |
-| [`cssExtract`](#tools-cssextract) | [`CssExtract`](#tools-cssextract) | The [`CssExtract`](#tools-cssextract) controls the options of [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) |
-| [`cssLoader`](#tools-cssloader) | [`CssLoader`](#tools-cssloader) | The [`CssLoader`](#tools-cssloader) controls the options of [css-loader](https://github.com/webpack-contrib/css-loader). |
-| [`rsdoctor`](#tools-rsdoctor) <span className="api-badge api-badge-lynx">Lynx</span> | [`RsdoctorRspackPluginOptions`](#tools-rsdoctor) | The `Tools.rsdoctor` controls the options of [Rsdoctor](https://rsdoctor.dev/). |
-| [`rspack`](#tools-rspack) | `ToolsRspackConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Tools.rspack` controls the options of [Rspack](https://rspack.rs/). |
-| [`swc`](#tools-swc) | `ToolsSwcConfig` (from [@rsbuild/core](https://rsbuild.rs/config/)) | The `Tools.swc` controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader). |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="tools" */}
 
 ## Lynx-specific options \{#lynx-options\}

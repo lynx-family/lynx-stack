@@ -8,19 +8,6 @@ Options for how module specifiers are resolved: aliases, extensions and the `lyn
 
 They are standard Rsbuild options: set them under `resolve` in `rsbuild.config.ts`, or in `lynx.config.ts` when you build with Rspeedy. Each one links to the Rsbuild documentation; the Lynx default is listed where it differs.
 
-## At a glance
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="resolve" */}
-
-| Name | Type | Description |
-| --- | --- | --- |
-| [`alias`](#resolve-alias) | `Record<string, string \| false \| string[]>` (from typescript) | Create aliases to `import` or `require` certain modules more easily. |
-| [`aliasStrategy`](#resolve-aliasstrategy) | `"prefer-tsconfig" \| "prefer-alias"` | Set the strategy for path alias resolution, to control the priority relationship between the `paths` option in `tsconfig.json` and the `resolve.alias` option of Rsbuild. |
-| [`dedupe`](#resolve-dedupe) | `string[]` | Force to resolve the specified packages from project root, which is useful for deduplicating packages and reducing the bundle size. |
-| [`extensions`](#resolve-extensions) | `string[]` | Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions. |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="resolve" */}
 
 ## Rsbuild options \{#rsbuild-options\}

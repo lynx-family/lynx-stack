@@ -86,13 +86,6 @@ title: ${ns}
 
 ${CONFIG_INTROS[ns]}
 
-## At a glance
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="${ns}" */}
-{/* @api-end */}
-
-## Options
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="${ns}" */}
 {/* @api-end */}
 `,

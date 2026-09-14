@@ -8,25 +8,6 @@ title: source
 
 其中大多数是标准的 Rsbuild 配置：在 `rsbuild.config.ts` 的 `source` 下设置，使用 Rspeedy 构建时则在 `lynx.config.ts` 中设置，详细说明请查看 Rsbuild 文档。Lynx 特有的配置项在下文完整说明，并注明使用 Rsbuild 构建时应在哪里设置。
 
-## 概览
-
-{/* @api ConfigOverview package="rspeedy" type="Config" path="source" */}
-
-| 名称 | 类型 | 说明 |
-| --- | --- | --- |
-| [`alias`](#source-alias) <span className="api-badge api-badge-deprecated">已废弃</span> <span className="api-badge api-badge-lynx">Lynx</span> | `Record<string, string \| false \| string[]>` (来自 typescript) | `Resolve.alias`  - 请改用 [`Resolve.alias`](/zh/config/resolve)。 |
-| [`assetsInclude`](#source-assetsinclude) | `RuleSetCondition` (来自 [@rspack/core](https://rspack.rs/config/)) | 指定额外需要被视为静态资源的文件。 |
-| [`decorators`](#source-decorators) | [`Decorators`](#source-decorators) | 用于配置装饰器语法。 |
-| [`define`](#source-define) | `DefinePluginOptions` (来自 [@rspack/core](https://rspack.rs/config/)) | `define` 选项用于在编译时定义一些值或表达式。 |
-| [`entry`](#source-entry) | `Entry` | `Entry` 选项用于设置入口模块。 |
-| [`exclude`](#source-exclude) | `RuleSetCondition[]` | `source.exclude` 用于指定需要从编译中排除的 JavaScript 文件。 |
-| [`include`](#source-include) | `RuleSetCondition[]` | `source.include` 用于指定额外需要编译的 JavaScript 文件。 |
-| [`preEntry`](#source-preentry) | `string \| string[]` | 在每个页面的入口文件之前添加一段脚本。该脚本会在页面代码之前执行。 它可以用于执行全局逻辑，如注入 polyfill、设置全局样式等。 |
-| [`transformImport`](#source-transformimport) | `TransformImport[]` | `TransformImport` 选项用于转换导入路径，以便从第三方包的子路径中按需导入模块，功能类似于 [babel-plugin-import](https://npmjs.com/package/babel-plugin-import)。 |
-| [`tsconfigPath`](#source-tsconfigpath) | `string` | 配置自定义的 `tsconfig.json` 文件路径，可以是相对路径或绝对路径。 |
-
-{/* @api-end */}
-
 {/* @api ConfigOptions package="rspeedy" type="Config" path="source" */}
 
 ## Lynx 特有配置 \{#lynx-options\}
