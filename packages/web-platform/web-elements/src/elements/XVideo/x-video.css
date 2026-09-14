@@ -1,0 +1,10 @@
+x-video {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+
+x-video::part(video) {
+  width: 100%;
+  height: 100%;
+}

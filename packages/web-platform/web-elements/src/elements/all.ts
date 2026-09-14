@@ -1,6 +1,7 @@
 import './LynxWrapper/index.js';
 import './ScrollView/index.js';
 import './XAudioTT/index.js';
+import './XVideo/index.js';
 import './XCanvas/XCanvas.js';
 import './XFoldViewNg/index.js';
 import './XImage/index.js';
